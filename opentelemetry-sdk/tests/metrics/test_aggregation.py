@@ -271,7 +271,7 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         explicit_bucket_histogram_aggregation = (
             _ExplicitBucketHistogramAggregation(
                 Mock(),
-                AggregationTemporality.CUMULATIVE,
+                AggregationTemporality.DELTA,
                 0,
                 boundaries=[0, 2, 4],
             )
@@ -357,7 +357,7 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         explicit_bucket_histogram_aggregation = (
             _ExplicitBucketHistogramAggregation(
                 Mock(),
-                AggregationTemporality.CUMULATIVE,
+                AggregationTemporality.DELTA,
                 0,
                 boundaries=[0, 1, 2],
             )
@@ -376,8 +376,6 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         # CI fails the last assertion without this
         sleep(0.1)
 
-        from ipdb import set_trace
-        set_trace()
         explicit_bucket_histogram_aggregation.aggregate(measurement(1))
         # 2 is used here directly to simulate the instant the second
         # collection process starts.

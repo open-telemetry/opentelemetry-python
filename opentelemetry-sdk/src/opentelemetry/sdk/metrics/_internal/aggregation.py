@@ -415,6 +415,9 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
         self._previous_collection_start_nano = self._start_time_unix_nano
         self._previous_cumulative_value = self._get_empty_bucket_counts()
+        self._previous_min = inf
+        self._previous_max = -inf
+        self._previous_sum = 0
 
     def _get_empty_bucket_counts(self) -> List[int]:
         return [0] * (len(self._boundaries) + 1)
@@ -497,70 +500,21 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                         previous_cumulative_value_element,
                     ) in zip(current_value, self._previous_cumulative_value)
                 ]
+                self._previous_min = min(min_, self._previous_min)
+                self._previous_max = max(max_, self._previous_max)
+                self._previous_sum = sum_ + self._previous_sum
 
                 return HistogramDataPoint(
                     attributes=self._attributes,
                     start_time_unix_nano=self._start_time_unix_nano,
                     time_unix_nano=collection_start_nano,
                     count=sum(self._previous_cumulative_value),
-                    sum=sum_,
+                    sum=self._previous_sum,
                     bucket_counts=tuple(self._previous_cumulative_value),
                     explicit_bounds=self._boundaries,
-                    min=min_,
-                    max=max_,
+                    min=self._previous_min,
+                    max=self._previous_max,
                 )
-
-            # This happens when the corresponding instrument for this
-            # aggregation is asynchronous.
-
-            if current_value is None:
-                # This happens when the corresponding instrument callback
-                # does not produce measurements.
-                return None
-
-            if (
-                collection_aggregation_temporality
-                is AggregationTemporality.DELTA
-            ):
-
-                result_value = [
-                    current_value_element - previous_cumulative_value_element
-                    for (
-                        current_value_element,
-                        previous_cumulative_value_element,
-                    ) in zip(current_value, self._previous_cumulative_value)
-                ]
-
-                self._previous_cumulative_value = current_value
-
-                previous_collection_start_nano = (
-                    self._previous_collection_start_nano
-                )
-                self._previous_collection_start_nano = collection_start_nano
-
-                return HistogramDataPoint(
-                    attributes=self._attributes,
-                    start_time_unix_nano=previous_collection_start_nano,
-                    time_unix_nano=collection_start_nano,
-                    count=sum(result_value),
-                    sum=sum_,
-                    bucket_counts=tuple(result_value),
-                    explicit_bounds=self._boundaries,
-                    min=min_,
-                    max=max_,
-                )
-
-            return HistogramDataPoint(
-                attributes=self._attributes,
-                start_time_unix_nano=self._start_time_unix_nano,
-                time_unix_nano=collection_start_nano,
-                count=sum(current_value),
-                sum=sum_,
-                bucket_counts=tuple(current_value),
-                explicit_bounds=self._boundaries,
-                min=min_,
-                max=max_,
-            )
 
 
 # pylint: disable=protected-access

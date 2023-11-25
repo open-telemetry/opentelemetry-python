@@ -27,8 +27,7 @@ from opentelemetry.sdk.metrics.view import ExplicitBucketHistogramAggregation
 
 class TestExplicitBucketHistogramAggregation(TestCase):
 
-    def setUp(self):
-        self.test_values = iter([1, 6, 11, 26, 51, 76, 101, 251, 501, 751])
+    test_values = [1, 6, 11, 26, 51, 76, 101, 251, 501, 751]
 
     @mark.skipif(
         system() != "Linux",
@@ -67,38 +66,29 @@ class TestExplicitBucketHistogramAggregation(TestCase):
             histogram.record(test_value)
             results.append(reader.get_metrics_data())
 
-        previous_time_unix_nano = (
+        metric_data = (
             results[0]
             .resource_metrics[0]
             .scope_metrics[0]
             .metrics[0]
-            .data.data_points[0]
-            .time_unix_nano
+            .data.
+            data_points[0]
         )
 
+        previous_time_unix_nano = metric_data.time_unix_nano
+
         self.assertEqual(
-            (
-                results[0]
-                .resource_metrics[0]
-                .scope_metrics[0]
-                .metrics[0]
-                .data.data_points[0]
-                .bucket_counts
-            ),
+            metric_data.bucket_counts,
             (0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
         )
 
         self.assertLess(
-            (
-                results[0]
-                .resource_metrics[0]
-                .scope_metrics[0]
-                .metrics[0]
-                .data.data_points[0]
-                .start_time_unix_nano
-            ),
+            metric_data.start_time_unix_nano,
             previous_time_unix_nano,
         )
+        self.assertEqual(metric_data.min, self.test_values[0])
+        self.assertEqual(metric_data.max, self.test_values[0])
+        self.assertEqual(metric_data.sum, self.test_values[0])
 
         for index, metrics_data in enumerate(results[1:]):
             metric_data = (
@@ -125,6 +115,9 @@ class TestExplicitBucketHistogramAggregation(TestCase):
             self.assertLess(
                 metric_data.start_time_unix_nano, metric_data.time_unix_nano
             )
+            self.assertEqual(metric_data.min, self.test_values[index + 1])
+            self.assertEqual(metric_data.max, self.test_values[index + 1])
+            self.assertEqual(metric_data.sum, self.test_values[index + 1])
 
         results = []
 
@@ -205,6 +198,11 @@ class TestExplicitBucketHistogramAggregation(TestCase):
                     ]
                 )
             )
+            self.assertEqual(metric_data.min, self.test_values[0])
+            self.assertEqual(metric_data.max, self.test_values[index])
+            self.assertEqual(
+                metric_data.sum, sum(self.test_values[:index + 1])
+            )
 
         results = []
 
@@ -238,4 +236,9 @@ class TestExplicitBucketHistogramAggregation(TestCase):
             self.assertEqual(
                 metric_data.bucket_counts,
                 (0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0)
+            )
+            self.assertEqual(metric_data.min, self.test_values[0])
+            self.assertEqual(metric_data.max, self.test_values[-1])
+            self.assertEqual(
+                metric_data.sum, sum(self.test_values)
             )
