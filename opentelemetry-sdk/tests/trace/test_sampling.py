@@ -20,6 +20,7 @@ import unittest
 from opentelemetry import context as context_api
 from opentelemetry import trace
 from opentelemetry.sdk.trace import sampling
+from opentelemetry.util.types import Attributes
 
 TO_DEFAULT = trace.TraceFlags(trace.TraceFlags.DEFAULT)
 TO_SAMPLED = trace.TraceFlags(trace.TraceFlags.SAMPLED)
@@ -537,3 +538,98 @@ class TestSampler(unittest.TestCase):
             context_api.detach(token)
 
         self.exec_parent_based(implicit_parent_context)
+
+    def test_sample_using_span_id(self):
+
+        max_span_id = (2 ** 32) - 1  # span ids are 32 bit integers
+
+        class AttributeBasedSampler(sampling.Sampler):
+            def __init__(self) -> None:
+                super().__init__()
+
+            def should_sample(
+                self,
+                parent_context: typing.Optional[context_api.Context],
+                trace_id: int,
+                name: str,
+                kind: trace.SpanKind = None,
+                attributes: Attributes = None,
+                links: typing.Sequence[trace.Link] = None,
+                trace_state: trace.TraceState = None,
+                span_id: typing.Optional[int] = None,
+            ) -> sampling.SamplingResult:
+                sample_rate = typing.cast(
+                    typing.Optional[float], (attributes or {}).get("sample_rate")
+                )
+                if sample_rate is not None:
+                    assert span_id is not None  # or maybe always sample?
+                    bound = round(sample_rate * (max_span_id + 1))
+                    if span_id & max_span_id < bound:
+                        decision = sampling.Decision.RECORD_AND_SAMPLE
+                    else:
+                        decision = sampling.Decision.DROP
+                        attributes = None
+                    return sampling.SamplingResult(
+                        decision,
+                        attributes,
+                    )
+                return sampling.SamplingResult(
+                    sampling.Decision.RECORD_AND_SAMPLE,
+                    attributes,
+                )
+
+            def get_description(self) -> str:
+                return "AttributeBasedSampler"
+
+        # sample rate of 0 is never sampled
+        trace_state = trace.TraceState([])
+        context = self._create_parent(TO_SAMPLED, False, trace_state)
+        sample_result = AttributeBasedSampler().should_sample(
+            context,
+            1,
+            "child",
+            trace.SpanKind.INTERNAL,
+            attributes={"sample_rate": 0, "foo": "bar"},
+            span_id=1,
+        )
+        self.assertFalse(sample_result.decision.is_sampled())
+        self.assertEqual(sample_result.attributes, {})
+
+        # sample rate of 1 is always sampled
+        trace_state = trace.TraceState([])
+        context = self._create_parent(TO_SAMPLED, False, trace_state)
+        sample_result = AttributeBasedSampler().should_sample(
+            context,
+            1,
+            "child",
+            trace.SpanKind.INTERNAL,
+            attributes={"sample_rate": 1, "foo": "bar"},
+            span_id=max_span_id - 1,
+        )
+        self.assertTrue(sample_result.decision.is_sampled())
+        self.assertEqual(sample_result.attributes, {"sample_rate": 1, "foo": "bar"})
+
+        # sample rate of 0.5 is sampled only if the span id is less than 2^64 * 0.5
+        trace_state = trace.TraceState([])
+        context = self._create_parent(TO_SAMPLED, False, trace_state)
+        sample_result = AttributeBasedSampler().should_sample(
+            context,
+            1,
+            "child",
+            trace.SpanKind.INTERNAL,
+            attributes={"sample_rate": 0.5, "foo": "bar"},
+            span_id=int(max_span_id * 0.4),
+        )
+        self.assertTrue(sample_result.decision.is_sampled())
+        self.assertEqual(sample_result.attributes, {"sample_rate": 0.5, "foo": "bar"})
+
+        sample_result = AttributeBasedSampler().should_sample(
+            context,
+            1,
+            "child",
+            trace.SpanKind.INTERNAL,
+            attributes={"sample_rate": 0.5, "foo": "bar"},
+            span_id=int(max_span_id * 0.6),
+        )
+        self.assertFalse(sample_result.decision.is_sampled())
+        self.assertEqual(sample_result.attributes, {})

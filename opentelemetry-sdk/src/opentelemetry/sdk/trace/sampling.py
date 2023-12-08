@@ -205,6 +205,7 @@ class Sampler(abc.ABC):
         attributes: Attributes = None,
         links: Sequence["Link"] = None,
         trace_state: "TraceState" = None,
+        span_id: Optional[int] = None,
     ) -> "SamplingResult":
         pass
 
@@ -228,6 +229,7 @@ class StaticSampler(Sampler):
         attributes: Attributes = None,
         links: Sequence["Link"] = None,
         trace_state: "TraceState" = None,
+        span_id: Optional[int] = None,
     ) -> "SamplingResult":
         if self._decision is Decision.DROP:
             attributes = None
@@ -289,6 +291,7 @@ class TraceIdRatioBased(Sampler):
         attributes: Attributes = None,
         links: Sequence["Link"] = None,
         trace_state: "TraceState" = None,
+        span_id: Optional[int] = None,
     ) -> "SamplingResult":
         decision = Decision.DROP
         if trace_id & self.TRACE_ID_LIMIT < self.bound:
@@ -344,6 +347,7 @@ class ParentBased(Sampler):
         attributes: Attributes = None,
         links: Sequence["Link"] = None,
         trace_state: "TraceState" = None,
+        span_id: Optional[int] = None,
     ) -> "SamplingResult":
         parent_span_context = get_current_span(
             parent_context
