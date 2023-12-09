@@ -112,6 +112,37 @@ class NoOpLogger(Logger):
         pass
 
 
+class ProxyLogger(Logger):
+    def __init__(
+        self,
+        name: str,
+        version: Optional[str] = None,
+        schema_url: Optional[str] = None,
+    ):
+        self._name = name
+        self._version = version
+        self._schema_url = schema_url
+        self._real_logger: Optional[Logger] = None
+        self._noop_logger = NoOpLogger(name)
+
+    @property
+    def _logger(self) -> Logger:
+        if self._real_logger:
+            return self._real_logger
+
+        if _LOGGER_PROVIDER:
+            self._real_logger = _LOGGER_PROVIDER.get_logger(
+                self._name,
+                self._version,
+                self._schema_url,
+            )
+            return self._real_logger
+        return self._noop_logger
+
+    def emit(self, record: LogRecord):
+        self._logger.emit(record)
+
+
 class LoggerProvider(ABC):
     """
     LoggerProvider is the entry point of the API. It provides access to Logger instances.
@@ -166,11 +197,29 @@ class NoOpLoggerProvider(LoggerProvider):
         return NoOpLogger(name, version=version, schema_url=schema_url)
 
 
-# TODO: ProxyLoggerProvider
+class ProxyLoggerProvider(LoggerProvider):
+    def get_logger(
+        self,
+        name: str,
+        version: Optional[str] = None,
+        schema_url: Optional[str] = None,
+    ) -> Logger:
+        if _LOGGER_PROVIDER:
+            return _LOGGER_PROVIDER.get_logger(
+                name,
+                version=version,
+                schema_url=schema_url,
+            )
+        return ProxyLogger(
+            name,
+            version=version,
+            schema_url=schema_url,
+        )
 
 
 _LOGGER_PROVIDER_SET_ONCE = Once()
-_LOGGER_PROVIDER = None
+_LOGGER_PROVIDER: Optional[LoggerProvider] = None
+_PROXY_LOGGER_PROVIDER = ProxyLoggerProvider()
 
 
 def get_logger_provider() -> LoggerProvider:
@@ -178,9 +227,7 @@ def get_logger_provider() -> LoggerProvider:
     global _LOGGER_PROVIDER  # pylint: disable=global-statement
     if _LOGGER_PROVIDER is None:
         if _OTEL_PYTHON_LOGGER_PROVIDER not in environ:
-            # TODO: return proxy
-            _LOGGER_PROVIDER = NoOpLoggerProvider()
-            return _LOGGER_PROVIDER
+            return _PROXY_LOGGER_PROVIDER
 
         logger_provider: LoggerProvider = _load_provider(  # type: ignore
             _OTEL_PYTHON_LOGGER_PROVIDER, "logger_provider"

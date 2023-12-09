@@ -39,6 +39,8 @@ from opentelemetry._logs._internal import (
     LogRecord,
     NoOpLogger,
     NoOpLoggerProvider,
+    ProxyLogger,
+    ProxyLoggerProvider,
     get_logger,
     get_logger_provider,
     set_logger_provider,
