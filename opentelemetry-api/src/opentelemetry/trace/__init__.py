@@ -79,8 +79,9 @@ import typing
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from enum import Enum
+from functools import wraps
 from logging import getLogger
-from typing import Iterator, Optional, Sequence, cast
+from typing import Callable, Iterator, Optional, Sequence, cast
 
 from deprecated import deprecated
 
@@ -272,6 +273,35 @@ class Tracer(ABC):
     This class provides methods for manipulating the context, creating spans,
     and controlling spans' lifecycles.
     """
+
+    def _with_span_sync(self, func: Callable) -> Callable:
+        """Decorate sync functions."""
+
+        @wraps(func)
+        def func_wrapper(*args, **kwargs):
+            with self.start_as_current_span(func.__name__):
+                return func(*args, **kwargs)
+
+        return func_wrapper
+
+    def _with_span_async(self, func: Callable) -> Callable:
+        """Decorate async functions."""
+
+        @wraps(func)
+        async def func_wrapper(*args, **kwargs):
+            with self.start_as_current_span(func.__name__):
+                return await func(*args, **kwargs)
+
+        return func_wrapper
+
+    def decorate(self, func: Callable) -> Callable:
+        # define if a function is async or not
+        CO_COROUTINE = 0x0080
+
+        if bool(func.__code__.co_flags & CO_COROUTINE):
+            return self._with_span_async(func)
+
+        return self._with_span_sync(func)
 
     @abstractmethod
     def start_span(
