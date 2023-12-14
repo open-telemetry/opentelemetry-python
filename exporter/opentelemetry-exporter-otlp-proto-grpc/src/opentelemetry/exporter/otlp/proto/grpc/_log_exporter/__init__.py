@@ -34,6 +34,8 @@ from opentelemetry.sdk._logs.export import LogExporter, LogExportResult
 
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY,
     OTEL_EXPORTER_OTLP_LOGS_COMPRESSION,
     OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
     OTEL_EXPORTER_OTLP_LOGS_HEADERS,
@@ -71,7 +73,10 @@ class OTLPLogExporter(
             and environ.get(OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE) is not None
         ):
             credentials = _get_credentials(
-                credentials, OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE
+                credentials,
+                OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
+                OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY,
+                OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE,
             )
 
         environ_timeout = environ.get(OTEL_EXPORTER_OTLP_LOGS_TIMEOUT)
