@@ -24,6 +24,10 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
 ]
 
+dependencies = [
+  "opentelemetry-api == 1.22.0.dev",
+]
+
 [project.optional-dependencies]
 test = []
 

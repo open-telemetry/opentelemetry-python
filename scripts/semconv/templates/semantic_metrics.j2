@@ -1,3 +1,27 @@
+{%- macro to_python_instrument_factory(instrument) -%}
+  {%- if instrument == "counter" -%}
+    counter
+  {%- elif instrument == "histogram" -%}
+    histogram
+  {%- elif instrument == "updowncounter" -%}
+    up_down_counter
+  {%- elif instrument == "gauge" -%}
+    observable_gauge
+  {%- endif -%}
+{%- endmacro %}
+{%- macro to_python_instrument_type(instrument) -%}
+  {%- if instrument == "counter" -%}
+    Counter
+  {%- elif instrument == "histogram" -%}
+    Histogram
+  {%- elif instrument == "updowncounter" -%}
+    UpDownCounter
+  {%- elif instrument == "gauge" -%}
+    ObservableGauge
+  {%- endif -%}
+{%- endmacro %}
+{%- set filtered_metrics = metrics | select(filter) | list %}
+{%- if filtered_metrics | count > 0 %}
 # Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,29 +36,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-class {{class}}:
-    SCHEMA_URL = "{{schemaUrl}}"
-    """
-    The URL of the OpenTelemetry schema for these keys and values.
-    """
-    {% for id in semconvs %}{%- if semconvs[id].GROUP_TYPE_NAME == 'metric' %}{% set metric = semconvs[id] %}
-    {{metric.metric_name | to_const_name}} = "{{metric.metric_name}}"
+from opentelemetry.metrics import (
+    Counter,
+    Histogram,
+    Meter,
+    UpDownCounter,
+    ObservableGauge,
+)
+from typing import Callable, Sequence
+
+class {{ root_namespace | to_camelcase(True) }}Metrics:
+{%- for metric in filtered_metrics %}
+
     """
     {{metric.brief | to_doc_brief}}
-    Instrument: {{ metric.instrument }}
-    Unit: {{ metric.unit }}
     """
-{# Extra line #}
-    {%- endif %}{% endfor %}
-
-    # Manually defined metrics
-    {#
-       Metrics defined here manually were not yaml-ified in 1.21.0 release
-       and therefore are not auto-generated.
-    #}
-    DB_CLIENT_CONNECTIONS_USAGE = "db.client.connections.usage"
-    """
-    The number of connections that are currently in state described by the `state` attribute
-    Instrument: UpDownCounter
-    Unit: {connection}
-    """
+    @staticmethod
+  {% if metric.instrument == "gauge" %}
+    def create_{{ metric.metric_name | replace(".", "_") }}(meter: Meter, callback: Sequence[Callable]) -> {{to_python_instrument_type(metric.instrument)}}:
+  {% else %}
+    def create_{{ metric.metric_name | replace(".", "_") }}(meter: Meter) -> {{to_python_instrument_type(metric.instrument)}}:
+  {% endif %}
+        return meter.create_{{to_python_instrument_factory(metric.instrument)}}(
+            name="{{ metric.metric_name }}",
+  {%- if metric.instrument == "gauge" %}
+            callback=callback,
+  {%- endif %}
+            description="{{metric.brief }}",
+            unit="{{metric.unit }}",
+        )
+{% endfor %}
+{% endif %}
