@@ -27,7 +27,7 @@ class RpcAttributes:
     """
 
     
-    RPC_CONNECT_RPC_REQUEST_METADATA_template = "rpc.connect_rpc.request.metadata"
+    RPC_CONNECT_RPC_REQUEST_METADATA_TEMPLATE = "rpc.connect_rpc.request.metadata"
     
     """
     Connect request metadata, `<key>` being the normalized Connect Metadata key (lowercase), the value being the metadata values.
@@ -35,7 +35,7 @@ class RpcAttributes:
     """
 
     
-    RPC_CONNECT_RPC_RESPONSE_METADATA_template = "rpc.connect_rpc.response.metadata"
+    RPC_CONNECT_RPC_RESPONSE_METADATA_TEMPLATE = "rpc.connect_rpc.response.metadata"
     
     """
     Connect response metadata, `<key>` being the normalized Connect Metadata key (lowercase), the value being the metadata values.
@@ -43,7 +43,7 @@ class RpcAttributes:
     """
 
     
-    RPC_GRPC_REQUEST_METADATA_template = "rpc.grpc.request.metadata"
+    RPC_GRPC_REQUEST_METADATA_TEMPLATE = "rpc.grpc.request.metadata"
     
     """
     gRPC request metadata, `<key>` being the normalized gRPC Metadata key (lowercase), the value being the metadata values.
@@ -51,7 +51,7 @@ class RpcAttributes:
     """
 
     
-    RPC_GRPC_RESPONSE_METADATA_template = "rpc.grpc.response.metadata"
+    RPC_GRPC_RESPONSE_METADATA_TEMPLATE = "rpc.grpc.response.metadata"
     
     """
     gRPC response metadata, `<key>` being the normalized gRPC Metadata key (lowercase), the value being the metadata values.

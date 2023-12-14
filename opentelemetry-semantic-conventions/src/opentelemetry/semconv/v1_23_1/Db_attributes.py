@@ -147,7 +147,7 @@ class DbAttributes:
     """
 
     
-    DB_ELASTICSEARCH_PATH_PARTS_template = "db.elasticsearch.path_parts"
+    DB_ELASTICSEARCH_PATH_PARTS_TEMPLATE = "db.elasticsearch.path_parts"
     
     """
     A dynamic value in the url path.
