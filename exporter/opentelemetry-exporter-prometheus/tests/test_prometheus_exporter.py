@@ -394,7 +394,12 @@ class TestPrometheusMetricReader(TestCase):
         metric_reader = PrometheusMetricReader()
         provider = MeterProvider(
             metric_readers=[metric_reader],
-            resource=Resource({"system.os": "Unix", "system.name": "Prometheus Target Sanitize"}),
+            resource=Resource(
+                {
+                    "system.os": "Unix",
+                    "system.name": "Prometheus Target Sanitize",
+                }
+            ),
         )
         meter = provider.get_meter("getting-started", "0.1.2")
         counter = meter.create_counter("counter")
@@ -403,13 +408,16 @@ class TestPrometheusMetricReader(TestCase):
 
         self.assertEqual(type(prometheus_metric), InfoMetricFamily)
         self.assertEqual(prometheus_metric.name, "target")
-        self.assertEqual(
-            prometheus_metric.documentation, "Target metadata"
-        )
+        self.assertEqual(prometheus_metric.documentation, "Target metadata")
         self.assertTrue(len(prometheus_metric.samples) == 1)
         self.assertEqual(prometheus_metric.samples[0].value, 1)
         self.assertTrue(len(prometheus_metric.samples[0].labels) == 2)
         self.assertTrue("system_os" in prometheus_metric.samples[0].labels)
-        self.assertEqual(prometheus_metric.samples[0].labels["system_os"], "Unix")
+        self.assertEqual(
+            prometheus_metric.samples[0].labels["system_os"], "Unix"
+        )
         self.assertTrue("system_name" in prometheus_metric.samples[0].labels)
-        self.assertEqual(prometheus_metric.samples[0].labels["system_name"], "Prometheus Target Sanitize")
+        self.assertEqual(
+            prometheus_metric.samples[0].labels["system_name"],
+            "Prometheus Target Sanitize",
+        )
