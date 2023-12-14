@@ -25,7 +25,6 @@ from typing import Generic, List, Optional, Sequence, TypeVar
 from opentelemetry.metrics import (
     Asynchronous,
     Counter,
-    Gauge,
     Histogram,
     Instrument,
     ObservableCounter,
@@ -33,6 +32,7 @@ from opentelemetry.metrics import (
     ObservableUpDownCounter,
     Synchronous,
     UpDownCounter,
+    _Gauge,
 )
 from opentelemetry.sdk.metrics._internal.exponential_histogram.buckets import (
     Buckets,
@@ -1047,7 +1047,7 @@ class DefaultAggregation(Aggregation):
     `opentelemetry.sdk.metrics.ObservableCounter`        `SumAggregation`
     `opentelemetry.sdk.metrics.ObservableUpDownCounter`  `SumAggregation`
     `opentelemetry.sdk.metrics.Histogram`                `ExplicitBucketHistogramAggregation`
-    `opentelemetry.sdk.metrics.Gauge`                    `LastValueAggregation`
+    `opentelemetry.sdk.metrics._Gauge`                    `LastValueAggregation`
     `opentelemetry.sdk.metrics.ObservableGauge`          `LastValueAggregation`
     ==================================================== ====================================
     """
@@ -1107,7 +1107,7 @@ class DefaultAggregation(Aggregation):
         if isinstance(instrument, ObservableGauge):
             return _LastValueAggregation(attributes)
 
-        if isinstance(instrument, Gauge):
+        if isinstance(instrument, _Gauge):
             return _LastValueAggregation(attributes)
 
         raise Exception(f"Invalid instrument type {type(instrument)} found")

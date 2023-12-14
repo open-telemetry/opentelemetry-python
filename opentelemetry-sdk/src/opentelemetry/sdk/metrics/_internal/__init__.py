@@ -21,7 +21,6 @@ from typing import Optional, Sequence
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics
 from opentelemetry.metrics import Counter as APICounter
-from opentelemetry.metrics import Gauge as APIGauge
 from opentelemetry.metrics import Histogram as APIHistogram
 from opentelemetry.metrics import Meter as APIMeter
 from opentelemetry.metrics import MeterProvider as APIMeterProvider
@@ -32,6 +31,7 @@ from opentelemetry.metrics import (
     ObservableUpDownCounter as APIObservableUpDownCounter,
 )
 from opentelemetry.metrics import UpDownCounter as APIUpDownCounter
+from opentelemetry.metrics import _Gauge as APIGauge
 from opentelemetry.sdk.metrics._internal.exceptions import MetricsTimeoutError
 from opentelemetry.sdk.metrics._internal.instrument import (
     _Counter,

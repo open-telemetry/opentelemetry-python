@@ -21,7 +21,6 @@ from typing import Dict, Generator, Iterable, List, Optional, Union
 import opentelemetry.sdk.metrics
 from opentelemetry.metrics import CallbackT
 from opentelemetry.metrics import Counter as APICounter
-from opentelemetry.metrics import Gauge as APIGauge
 from opentelemetry.metrics import Histogram as APIHistogram
 from opentelemetry.metrics import ObservableCounter as APIObservableCounter
 from opentelemetry.metrics import ObservableGauge as APIObservableGauge
@@ -29,6 +28,7 @@ from opentelemetry.metrics import (
     ObservableUpDownCounter as APIObservableUpDownCounter,
 )
 from opentelemetry.metrics import UpDownCounter as APIUpDownCounter
+from opentelemetry.metrics import _Gauge as APIGauge
 from opentelemetry.metrics._internal.instrument import CallbackOptions
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope

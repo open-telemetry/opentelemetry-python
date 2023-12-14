@@ -18,7 +18,6 @@ from unittest import TestCase
 
 from opentelemetry.metrics import (
     Counter,
-    Gauge,
     Histogram,
     Instrument,
     Meter,
@@ -30,6 +29,7 @@ from opentelemetry.metrics import (
     ObservableGauge,
     ObservableUpDownCounter,
     UpDownCounter,
+    _Gauge,
 )
 
 # FIXME Test that the instrument methods can be called concurrently safely.
@@ -285,7 +285,7 @@ class TestGauge(TestCase):
         """
 
         self.assertTrue(
-            isinstance(NoOpMeter("name").create_gauge("name"), Gauge)
+            isinstance(NoOpMeter("name").create_gauge("name"), _Gauge)
         )
 
     def test_api_gauge_abstract(self):
@@ -293,7 +293,7 @@ class TestGauge(TestCase):
         Test that the API Gauge is an abstract class.
         """
 
-        self.assertTrue(isabstract(Gauge))
+        self.assertTrue(isabstract(_Gauge))
 
     def test_create_gauge_api(self):
         """
