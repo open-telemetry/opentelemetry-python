@@ -81,7 +81,7 @@ class ContainerAttributes:
     """
 
     
-    CONTAINER_LABELS_template = "container.labels"
+    CONTAINER_LABELS_TEMPLATE = "container.labels"
     
     """
     Container labels, `<key>` being the label name, the value being the label value.

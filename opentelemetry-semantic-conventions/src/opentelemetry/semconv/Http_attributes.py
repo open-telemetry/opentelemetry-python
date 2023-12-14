@@ -20,7 +20,7 @@ from enum import Enum
 class HttpAttributes:
 
     
-    HTTP_REQUEST_HEADER_template = "http.request.header"
+    HTTP_REQUEST_HEADER_TEMPLATE = "http.request.header"
     
     """
     HTTP request headers, `<key>` being the normalized HTTP Header name (lowercase), the value being the header values.
@@ -66,7 +66,7 @@ class HttpAttributes:
     """
 
     
-    HTTP_RESPONSE_HEADER_template = "http.response.header"
+    HTTP_RESPONSE_HEADER_TEMPLATE = "http.response.header"
     
     """
     HTTP response headers, `<key>` being the normalized HTTP Header name (lowercase), the value being the header values.

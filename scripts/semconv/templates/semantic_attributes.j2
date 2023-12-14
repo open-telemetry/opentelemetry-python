@@ -26,7 +26,7 @@ class {{ root_namespace | to_camelcase(True) }}Attributes:
   {%- for attribute in filtered_attributes %}
 
     {% if attribute | is_template %}
-    {{attribute.fqn | to_const_name}}_template = "{{attribute.fqn}}"
+    {{attribute.fqn | to_const_name}}_TEMPLATE = "{{attribute.fqn}}"
     {% else %}
     {{attribute.fqn | to_const_name}} = "{{attribute.fqn}}"
     {% endif %}
