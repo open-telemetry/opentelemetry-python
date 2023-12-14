@@ -76,7 +76,7 @@ histogram.record(99.9)
 
 # Async Gauge
 observable_gauge = meter.create_observable_gauge(
-    "gauge", [observable_gauge_func]
+    "observable_gauge", [observable_gauge_func]
 )
 
 # Sync Gauge
