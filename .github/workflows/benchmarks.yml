@@ -43,7 +43,7 @@ jobs:
         name: OpenTelemetry Python SDK Benchmarks - Python ${{ env[matrix.python-version ]}} - SDK
         tool: pytest
         output-file-path: opentelemetry-sdk/tests/output.json
-        gh-pages-branch: benchmarks
+        gh-pages-branch: gh-pages
         github-token: ${{ secrets.GITHUB_TOKEN }}
         # Make a commit on `gh-pages` with benchmarks from previous step
         benchmark-data-dir-path: "benchmarks"
