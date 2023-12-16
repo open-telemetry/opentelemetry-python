@@ -296,6 +296,7 @@ class Tracer(ABC):
         record_exception: bool = True,
         set_status_on_exception: bool = True,
         end_on_exit: bool = True,
+        span_arg_name: str | None = "span",
     ) -> Callable[[Callable[P, R]], Callable[P, R]]:
         """Decorate the function with a span.
 
@@ -326,6 +327,9 @@ class Tracer(ABC):
                 this mechanism if it was previously set manually.
             end_on_exit: Whether to end the span automatically when leaving the
                 context manager.
+            span_arg_name: Lookup for this span in the function's kwargs to pass
+                the span to the function. If None, the span will not be passed
+                to the function.
         """
 
         def __decorator(func: Callable[P, R]) -> Callable[P, R]:
@@ -344,7 +348,12 @@ class Tracer(ABC):
                         record_exception=record_exception,
                         set_status_on_exception=set_status_on_exception,
                         end_on_exit=end_on_exit,
-                    ):
+                    ) as span:
+                        if (
+                            span_arg_name in func.__annotations__
+                            and span_arg_name not in kwargs
+                        ):
+                            kwargs[span_arg_name] = span
                         return await func(*args, **kwargs)
 
             else:
@@ -361,7 +370,12 @@ class Tracer(ABC):
                         record_exception=record_exception,
                         set_status_on_exception=set_status_on_exception,
                         end_on_exit=end_on_exit,
-                    ):
+                    ) as span:
+                        if (
+                            span_arg_name in func.__annotations__
+                            and span_arg_name not in kwargs
+                        ):
+                            kwargs[span_arg_name] = span
                         return func(*args, **kwargs)
 
             return __decorated
