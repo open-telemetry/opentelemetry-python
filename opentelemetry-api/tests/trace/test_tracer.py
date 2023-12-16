@@ -16,6 +16,7 @@
 from contextlib import contextmanager
 from unittest import TestCase
 from unittest.mock import Mock
+import asyncio
 
 from opentelemetry.trace import (
     INVALID_SPAN,
@@ -29,6 +30,7 @@ from opentelemetry.trace import (
 class TestTracer(TestCase):
     def setUp(self):
         self.tracer = NoOpTracer()
+        self.loop = asyncio.get_event_loop()
 
     def test_start_span(self):
         with self.tracer.start_span("") as span:
@@ -62,6 +64,54 @@ class TestTracer(TestCase):
         function()  # type: ignore
 
         self.assertEqual(mock_call.call_count, 3)
+
+    def test_decorator(self):
+        """decorated functions should have a span"""
+        mock_call = Mock()
+
+        class MockTracer(Tracer):
+            def start_span(self, *args, **kwargs):
+                return INVALID_SPAN
+
+            @contextmanager
+            def start_as_current_span(self, *args, **kwargs):  # type: ignore
+                mock_call()
+                yield INVALID_SPAN
+
+        mock_tracer = MockTracer()
+
+        @mock_tracer.decorate()
+        def function():  # type: ignore
+            self.assertIs(get_current_span(), INVALID_SPAN)
+
+        function()  # type: ignore
+        function()  # type: ignore
+        function()  # type: ignore
+
+        self.assertEqual(mock_call.call_count, 3)
+
+    def test_decorator_async(self):
+        """decorated async functions should have a span"""
+        mock_call = Mock()
+
+        class MockTracer(Tracer):
+            def start_span(self, *args, **kwargs):
+                return INVALID_SPAN
+
+            @contextmanager
+            def start_as_current_span(self, *args, **kwargs):  # type: ignore
+                mock_call()
+                yield INVALID_SPAN
+
+        mock_tracer = MockTracer()
+
+        @mock_tracer.decorate()
+        async def function():  # type: ignore
+            self.assertIs(get_current_span(), INVALID_SPAN)
+
+        self.loop.run_until_complete(function())
+
+        self.assertEqual(mock_call.call_count, 1)
 
     def test_get_current_span(self):
         with self.tracer.start_as_current_span("test") as span:

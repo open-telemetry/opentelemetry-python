@@ -287,7 +287,7 @@ class Tracer(ABC):
 
     def decorate(
         self,
-        name: str,
+        name: str = None,
         context: Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
