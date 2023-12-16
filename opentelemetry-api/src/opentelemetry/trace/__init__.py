@@ -287,11 +287,15 @@ class Tracer(ABC):
 
     def decorate(
         self,
-        name: str = None,
+        name: str,
+        context: Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
+        links: _Links = None,
+        start_time: Optional[int] = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
+        end_on_exit: bool = True,
     ) -> Callable[[Callable[P, R]], Callable[P, R]]:
         """Decorate the function with a span.
 
@@ -306,9 +310,13 @@ class Tracer(ABC):
         Args:
             name: The name of the span to be created, if not provided, the function
                 name will be used.
+            context: An optional Context containing the span's parent. Defaults to the
+                global context.
             kind: The span's kind (relationship to parent). Note that is
                 meaningful even if there is no parent.
             attributes: The span's attributes.
+            links: Links span to other spans
+            start_time: Sets the start time of a span
             record_exception: Whether to record any exceptions raised within the
                 context as error event on the span.
             set_status_on_exception: Only relevant if the returned span is used
@@ -316,6 +324,8 @@ class Tracer(ABC):
                 be automatically set to ERROR when an uncaught exception is
                 raised in the span with block. The span status won't be set by
                 this mechanism if it was previously set manually.
+            end_on_exit: Whether to end the span automatically when leaving the
+                context manager.
         """
 
         def __decorator(func: Callable[P, R]) -> Callable[P, R]:
@@ -326,10 +336,14 @@ class Tracer(ABC):
                 async def __decorated(*args, **kwargs):
                     with self.start_as_current_span(
                         name=_span_name,
+                        context=context,
                         kind=kind,
                         attributes=attributes,
+                        links=links,
+                        start_time=start_time,
                         record_exception=record_exception,
                         set_status_on_exception=set_status_on_exception,
+                        end_on_exit=end_on_exit,
                     ):
                         return await func(*args, **kwargs)
 
@@ -339,10 +353,14 @@ class Tracer(ABC):
                 def __decorated(*args, **kwargs):
                     with self.start_as_current_span(
                         name=_span_name,
+                        context=context,
                         kind=kind,
                         attributes=attributes,
+                        links=links,
+                        start_time=start_time,
                         record_exception=record_exception,
                         set_status_on_exception=set_status_on_exception,
+                        end_on_exit=end_on_exit,
                     ):
                         return func(*args, **kwargs)
 
