@@ -81,7 +81,15 @@ from contextlib import contextmanager
 from enum import Enum
 from functools import wraps
 from logging import getLogger
-from typing import Callable, Iterator, Optional, Sequence, cast
+from typing import (
+    Callable,
+    Iterator,
+    Optional,
+    ParamSpec,
+    Sequence,
+    TypeVar,
+    cast,
+)
 
 from deprecated import deprecated
 
@@ -115,6 +123,9 @@ from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
 
 logger = getLogger(__name__)
+
+P = ParamSpec("P")
+R = TypeVar("R")
 
 
 class _LinkBase(ABC):
@@ -274,34 +285,70 @@ class Tracer(ABC):
     and controlling spans' lifecycles.
     """
 
-    def _with_span_sync(self, func: Callable) -> Callable:
-        """Decorate sync functions."""
+    def decorate(
+        self,
+        name: str = None,
+        kind: SpanKind = SpanKind.INTERNAL,
+        attributes: types.Attributes = None,
+        record_exception: bool = True,
+        set_status_on_exception: bool = True,
+    ) -> Callable[[Callable[P, R]], Callable[P, R]]:
+        """Decorate the function with a span.
 
-        @wraps(func)
-        def func_wrapper(*args, **kwargs):
-            with self.start_as_current_span(func.__name__):
-                return func(*args, **kwargs)
+        Decorate the function with a span. For more information see `start_as_current_span`.
 
-        return func_wrapper
+        Example::
 
-    def _with_span_async(self, func: Callable) -> Callable:
-        """Decorate async functions."""
+            @tracer.decorate()
+            def foo():
+                pass
 
-        @wraps(func)
-        async def func_wrapper(*args, **kwargs):
-            with self.start_as_current_span(func.__name__):
-                return await func(*args, **kwargs)
+        Args:
+            name: The name of the span to be created, if not provided, the function
+                name will be used.
+            kind: The span's kind (relationship to parent). Note that is
+                meaningful even if there is no parent.
+            attributes: The span's attributes.
+            record_exception: Whether to record any exceptions raised within the
+                context as error event on the span.
+            set_status_on_exception: Only relevant if the returned span is used
+                in a with/context manager. Defines whether the span status will
+                be automatically set to ERROR when an uncaught exception is
+                raised in the span with block. The span status won't be set by
+                this mechanism if it was previously set manually.
+        """
 
-        return func_wrapper
+        def __decorator(func: Callable[P, R]) -> Callable[P, R]:
+            _span_name = name or func.__name__
+            if bool(func.__code__.co_flags & 0x80):
 
-    def decorate(self, func: Callable) -> Callable:
-        # define if a function is async or not
-        CO_COROUTINE = 0x0080
+                @wraps(func)
+                async def __decorated(*args, **kwargs):
+                    with self.start_as_current_span(
+                        name=_span_name,
+                        kind=kind,
+                        attributes=attributes,
+                        record_exception=record_exception,
+                        set_status_on_exception=set_status_on_exception,
+                    ):
+                        return await func(*args, **kwargs)
 
-        if bool(func.__code__.co_flags & CO_COROUTINE):
-            return self._with_span_async(func)
+            else:
 
-        return self._with_span_sync(func)
+                @wraps(func)
+                def __decorated(*args, **kwargs):
+                    with self.start_as_current_span(
+                        name=_span_name,
+                        kind=kind,
+                        attributes=attributes,
+                        record_exception=record_exception,
+                        set_status_on_exception=set_status_on_exception,
+                    ):
+                        return func(*args, **kwargs)
+
+            return __decorated
+
+        return __decorator
 
     @abstractmethod
     def start_span(
