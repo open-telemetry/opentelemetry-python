@@ -21,6 +21,7 @@ Start the Collector locally to see data being exported. Write the following file
 
     exporters:
       logging:
+        loglevel: debug
 
     service:
         pipelines:
