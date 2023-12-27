@@ -33,7 +33,6 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
-    DefaultAggregation,
 )
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
     ExportMetricsServiceRequest,
