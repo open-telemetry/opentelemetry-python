@@ -33,6 +33,7 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
+    DefaultAggregation,
 )
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
     ExportMetricsServiceRequest,
@@ -65,6 +66,7 @@ class OTLPMetricExporterMixin:
     def _common_configuration(
         self,
         preferred_temporality: Dict[type, AggregationTemporality] = None,
+        preferred_aggregation: Dict[type, "opentelemetry.sdk.metrics.view.Aggregation"] = None,
     ) -> None:
 
         instrument_class_temporality = {}
@@ -119,6 +121,8 @@ class OTLPMetricExporterMixin:
 
         instrument_class_temporality.update(preferred_temporality or {})
 
+        instrument_class_aggregation = {}
+
         otel_exporter_otlp_metrics_default_histogram_aggregation = environ.get(
             OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION,
             "explicit_bucket_histogram",
@@ -128,7 +132,9 @@ class OTLPMetricExporterMixin:
             "base2_exponential_bucket_histogram"
         ):
 
-            histogram_aggregation_type = ExponentialBucketHistogramAggregation
+            instrument_class_aggregation = {
+                Histogram: ExponentialBucketHistogramAggregation(),
+            }
 
         else:
 
@@ -145,12 +151,16 @@ class OTLPMetricExporterMixin:
                     otel_exporter_otlp_metrics_default_histogram_aggregation,
                 )
 
-            histogram_aggregation_type = ExplicitBucketHistogramAggregation
+            instrument_class_aggregation = {
+                Histogram: ExplicitBucketHistogramAggregation(),
+            }
+
+        instrument_class_aggregation.update(preferred_aggregation or {})
 
         MetricExporter.__init__(
             self,
             preferred_temporality=instrument_class_temporality,
-            preferred_aggregation={Histogram: histogram_aggregation_type()},
+            preferred_aggregation=instrument_class_aggregation,
         )
 
 
