@@ -135,7 +135,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                 {"Content-Encoding": self._compression.value}
             )
 
-        self._common_configuration(preferred_temporality)
+        self._common_configuration(preferred_temporality, preferred_aggregation)
 
     def _export(self, serialized_data: str):
         data = serialized_data
