@@ -81,7 +81,7 @@ class TestAttributes(unittest.TestCase):
             None,
             "Content-Disposition",
             "Content-Type",
-            None,
+            b"\x81",
             "Keep-Alive",
         ]
         self.assertEqual(
