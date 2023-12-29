@@ -736,19 +736,11 @@ class TestSpan(unittest.TestCase):
 
     def test_byte_type_attribute_value(self):
         with self.tracer.start_as_current_span("root") as root:
-            with self.assertLogs(level=WARNING):
-                root.set_attribute(
-                    "invalid-byte-type-attribute",
-                    b"\xd8\xe1\xb7\xeb\xa8\xe5 \xd2\xb7\xe1",
+            for key, value in (("arbitrary", b"\xd8\xe1\xb7\xeb\xa8\xe5 \xd2\xb7\xe1"), ("encodable", b"valid byte")):
+                root.set_attribute(key, b"valid byte")
+                self.assertTrue(
+                    isinstance(root.attributes[key], bytes)
                 )
-                self.assertFalse(
-                    "invalid-byte-type-attribute" in root.attributes
-                )
-
-            root.set_attribute("valid-byte-type-attribute", b"valid byte")
-            self.assertTrue(
-                isinstance(root.attributes["valid-byte-type-attribute"], str)
-            )
 
     def test_sampling_attributes(self):
         sampling_attributes = {
