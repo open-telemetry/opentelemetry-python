@@ -79,10 +79,10 @@ class TestAttributes(unittest.TestCase):
         ]
         expected = [
             None,
-            "Content-Disposition",
-            "Content-Type",
+            b"Content-Disposition",
+            b"Content-Type",
             b"\x81",
-            "Keep-Alive",
+            b"Keep-Alive",
         ]
         self.assertEqual(
             _clean_attribute("headers", seq, None), tuple(expected)
