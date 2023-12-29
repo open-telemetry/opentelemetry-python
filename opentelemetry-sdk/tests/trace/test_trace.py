@@ -26,6 +26,7 @@ from unittest import mock
 from unittest.mock import Mock, patch
 
 from opentelemetry import trace as trace_api
+from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.context import Context
 from opentelemetry.sdk import resources, trace
 from opentelemetry.sdk.environment_variables import (
@@ -625,6 +626,10 @@ class TestReadableSpan(unittest.TestCase):
         ]
         span = trace.ReadableSpan("test", events=events)
         self.assertEqual(span.events, tuple(events))
+
+    def test_attributes(self):
+        span = trace.ReadableSpan("test", attributes={'x': 'y'})
+        self.assertIsInstance(span.attributes, BoundedAttributes)
 
 
 class TestSpan(unittest.TestCase):

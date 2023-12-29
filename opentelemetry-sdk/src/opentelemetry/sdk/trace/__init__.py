@@ -377,7 +377,7 @@ class ReadableSpan:
         self._parent = parent
         self._start_time = start_time
         self._end_time = end_time
-        self._attributes = attributes
+        self._attributes = BoundedAttributes(attributes=attributes)
         self._events = events
         self._links = links
         if resource is None:

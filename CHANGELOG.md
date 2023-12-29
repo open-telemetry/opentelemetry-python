@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Allow plain dicts as arguments to `attributes` in `ReadableSpan.__init__`
+  ([#3606](https://github.com/open-telemetry/opentelemetry-python/pull/3606))
+
 ## Version 1.22.0/0.43b0 (2023-12-15)
 
 - Prometheus exporter sanitize info metric ([#3572](https://github.com/open-telemetry/opentelemetry-python/pull/3572))
