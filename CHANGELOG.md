@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Use Attribute rather than boundattribute in logrecord
+  ([#3567](https://github.com/open-telemetry/opentelemetry-python/pull/3567))
 - Fix flush error when no LoggerProvider configured for LoggingHandler
   ([#3608](https://github.com/open-telemetry/opentelemetry-python/pull/3608))
 - Fix `OTLPMetricExporter` ignores `preferred_aggregation` property
