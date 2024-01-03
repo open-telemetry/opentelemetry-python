@@ -7,10 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-- Pin docker dependency to fix docker-compose incompatibility in
-  docker proto tests
-  ([#3611](https://github.com/open-telemetry/opentelemetry-python/pull/3611))
-
 ## Version 1.22.0/0.43b0 (2023-12-15)
 
 - Prometheus exporter sanitize info metric ([#3572](https://github.com/open-telemetry/opentelemetry-python/pull/3572))
