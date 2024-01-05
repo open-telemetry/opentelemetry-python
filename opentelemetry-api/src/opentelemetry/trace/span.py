@@ -119,6 +119,23 @@ class Span(abc.ABC):
         """
 
     @abc.abstractmethod
+    def add_link(
+        self,
+        context: "SpanContext",
+        attributes: types.Attributes = None,
+    ) -> None:
+        """Adds a `Link`.
+
+        Adds a single `Link` with the `SpanContext` of the span to link to and,
+        optionally, attributes passed as arguments. Implementations may ignore
+        calls with an invalid span context.
+
+        Note: It is preferred to add links at span creation, instead of calling
+        this method later since samplers can only consider information already
+        present during span creation.
+        """
+
+    @abc.abstractmethod
     def update_name(self, name: str) -> None:
         """Updates the `Span` name.
 
@@ -522,6 +539,13 @@ class NonRecordingSpan(Span):
         name: str,
         attributes: types.Attributes = None,
         timestamp: typing.Optional[int] = None,
+    ) -> None:
+        pass
+
+    def add_link(
+        self,
+        context: "SpanContext",
+        attributes: types.Attributes = None,
     ) -> None:
         pass
 
