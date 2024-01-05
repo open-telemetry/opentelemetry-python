@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## Version 1.22.0/0.43b0 (2023-12-15)
+
+- Prometheus exporter sanitize info metric ([#3572](https://github.com/open-telemetry/opentelemetry-python/pull/3572))
+- Remove Jaeger exporters
+  ([#3554](https://github.com/open-telemetry/opentelemetry-python/pull/3554))
+- Log stacktrace on `UNKNOWN` status OTLP export error 
+  ([#3536](https://github.com/open-telemetry/opentelemetry-python/pull/3536))
+- Fix OTLPExporterMixin shutdown timeout period
+  ([#3524](https://github.com/open-telemetry/opentelemetry-python/pull/3524))
+- Handle `taskName` `logrecord` attribute
+  ([#3557](https://github.com/open-telemetry/opentelemetry-python/pull/3557))
+
+## Version 1.21.0/0.42b0 (2023-11-01)
+
 - Fix `SumAggregation`
 ￼  ([#3390](https://github.com/open-telemetry/opentelemetry-python/pull/3390))
 - Fix handling of empty metric collection cycles
@@ -25,6 +39,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3251](https://github.com/open-telemetry/opentelemetry-python/pull/3251))
 - Prometheus exporter support for auto instrumentation 
   ([#3413](https://github.com/open-telemetry/opentelemetry-python/pull/3413))
+- Implement Process Resource detector
+  ([#3472](https://github.com/open-telemetry/opentelemetry-python/pull/3472))
+
 
 ## Version 1.20.0/0.41b0 (2023-09-04)
 

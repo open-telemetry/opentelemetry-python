@@ -308,6 +308,7 @@ class OTLPExporterMixin(
                             self._exporting,
                             self._endpoint,
                             error.code(),
+                            exc_info=error.code() == StatusCode.UNKNOWN,
                         )
 
                     if error.code() == StatusCode.OK:
@@ -322,7 +323,7 @@ class OTLPExporterMixin(
             logger.warning("Exporter already shutdown, ignoring call")
             return
         # wait for the last export if any
-        self._export_lock.acquire(timeout=timeout_millis)
+        self._export_lock.acquire(timeout=timeout_millis / 1e3)
         self._shutdown = True
         self._export_lock.release()
 

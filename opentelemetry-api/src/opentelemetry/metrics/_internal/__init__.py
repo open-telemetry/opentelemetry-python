@@ -75,6 +75,7 @@ from opentelemetry.util._providers import _load_provider
 _logger = getLogger(__name__)
 
 
+# pylint: disable=invalid-name
 _ProxyInstrumentT = Union[
     _ProxyCounter,
     _ProxyHistogram,
@@ -760,7 +761,7 @@ def get_meter_provider() -> MeterProvider:
     """Gets the current global :class:`~.MeterProvider` object."""
 
     if _METER_PROVIDER is None:
-        if OTEL_PYTHON_METER_PROVIDER not in environ.keys():
+        if OTEL_PYTHON_METER_PROVIDER not in environ:
             return _PROXY_METER_PROVIDER
 
         meter_provider: MeterProvider = _load_provider(  # type: ignore

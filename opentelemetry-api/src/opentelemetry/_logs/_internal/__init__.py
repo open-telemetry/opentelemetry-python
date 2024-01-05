@@ -177,7 +177,7 @@ def get_logger_provider() -> LoggerProvider:
     """Gets the current global :class:`~.LoggerProvider` object."""
     global _LOGGER_PROVIDER  # pylint: disable=global-statement
     if _LOGGER_PROVIDER is None:
-        if _OTEL_PYTHON_LOGGER_PROVIDER not in environ.keys():
+        if _OTEL_PYTHON_LOGGER_PROVIDER not in environ:
             # TODO: return proxy
             _LOGGER_PROVIDER = NoOpLoggerProvider()
             return _LOGGER_PROVIDER
@@ -202,13 +202,13 @@ def _set_logger_provider(logger_provider: LoggerProvider, log: bool) -> None:
         _logger.warning("Overriding of current LoggerProvider is not allowed")
 
 
-def set_logger_provider(meter_provider: LoggerProvider) -> None:
+def set_logger_provider(logger_provider: LoggerProvider) -> None:
     """Sets the current global :class:`~.LoggerProvider` object.
 
     This can only be done once, a warning will be logged if any further attempt
     is made.
     """
-    _set_logger_provider(meter_provider, log=True)
+    _set_logger_provider(logger_provider, log=True)
 
 
 def get_logger(

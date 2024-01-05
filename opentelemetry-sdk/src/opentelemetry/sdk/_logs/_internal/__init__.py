@@ -428,6 +428,7 @@ _RESERVED_ATTRS = frozenset(
         "stack_info",
         "thread",
         "threadName",
+        "taskName",
     )
 )
 

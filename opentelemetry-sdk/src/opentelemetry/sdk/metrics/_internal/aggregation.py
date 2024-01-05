@@ -646,6 +646,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
             # 3. Determine if a change of scale is needed.
             is_rescaling_needed = False
+            low, high = 0, 0
 
             if len(buckets) == 0:
                 buckets.index_start = index
