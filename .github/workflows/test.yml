@@ -55,6 +55,10 @@ jobs:
           - "propagator-b3"
           - "propagator-jaeger"
         os: [ubuntu-20.04, windows-2019]
+        exclude:
+          - python-version: py37
+            package: "getting-started"
+
     steps:
     - name: Checkout Core Repo @ SHA - ${{ github.sha }}
       uses: actions/checkout@v2
