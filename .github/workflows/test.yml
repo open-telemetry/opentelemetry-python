@@ -204,8 +204,7 @@ jobs:
         python-version: ${{ env[matrix.python-version] }}
         architecture: 'x64'
     - name: Install tox
-      # TODO: Bump contrib tox to v4
-      run: pip install tox==3.27.1 -U tox-factor
+      run: pip install tox
     - name: Cache tox environment
         # Preserves .tox directory between runs for faster installs
       uses: actions/cache@v2
