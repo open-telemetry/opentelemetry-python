@@ -57,7 +57,16 @@ jobs:
         os: [ubuntu-20.04, windows-2019]
         exclude:
           - python-version: py37
-            package: "getting-started"
+            package:
+              - "getting-started"
+          - python-version: pypy3
+            package:
+              - "getting-started"
+              - "opencensus-shim"
+              - "exporter-opencensus"
+              - "exporter-otlp-proto-common"
+              - "exporter-otlp-combined"
+              - "exporter-otlp-proto-grpc"
 
     steps:
     - name: Checkout Core Repo @ SHA - ${{ github.sha }}
