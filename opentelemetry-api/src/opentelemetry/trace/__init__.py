@@ -76,6 +76,7 @@ either implicit or explicit context propagation consistently throughout.
 
 import os
 import typing
+import inspect
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from enum import Enum
@@ -334,7 +335,7 @@ class Tracer(ABC):
 
         def __decorator(func: Callable[P, R]) -> Callable[P, R]:
             _span_name = name or func.__name__
-            if bool(func.__code__.co_flags & 0x80):
+            if inspect.iscoroutinefunction(func):
 
                 @wraps(func)
                 async def __decorated(*args, **kwargs):
