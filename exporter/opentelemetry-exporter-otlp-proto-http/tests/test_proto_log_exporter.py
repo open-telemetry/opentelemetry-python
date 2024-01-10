@@ -16,7 +16,7 @@
 
 import unittest
 from typing import List
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import requests
 import responses
@@ -34,6 +34,7 @@ from opentelemetry.exporter.otlp.proto.http._log_exporter import (
 from opentelemetry.exporter.otlp.proto.http.version import __version__
 from opentelemetry.sdk._logs import LogData
 from opentelemetry.sdk._logs import LogRecord as SDKLogRecord
+from opentelemetry.sdk._logs.export import LogExportResult
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_COMPRESSION,
@@ -262,3 +263,13 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         )
 
         return [log1, log2, log3, log4]
+
+    @patch.object(OTLPLogExporter, "_export", return_value=Mock(ok=True))
+    def test_2XX_status_code(self, mock_otlp_metric_exporter):
+        """
+        Test that any HTTP 2XX code returns a successful result
+        """
+
+        self.assertEqual(
+            OTLPLogExporter().export(MagicMock()), LogExportResult.SUCCESS
+        )
