@@ -478,7 +478,7 @@ class TestOTLPMetricExporter(TestCase):
             )
 
     @patch.object(OTLPMetricExporter, "_export", return_value=Mock(ok=True))
-    def test_2XX_status_code(self, mock_otlp_metric_exporter):
+    def test_2xx_status_code(self, mock_otlp_metric_exporter):
         """
         Test that any HTTP 2XX code returns a successful result
         """
