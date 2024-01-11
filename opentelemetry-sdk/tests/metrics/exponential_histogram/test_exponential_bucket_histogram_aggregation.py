@@ -19,6 +19,9 @@ from sys import float_info
 from types import MethodType
 from unittest import TestCase
 from unittest.mock import Mock, patch
+from opentelemetry.sdk.metrics.view import View
+from opentelemetry.sdk.metrics.export import InMemoryMetricReader
+from opentelemetry.sdk.metrics import MeterProvider, Histogram
 
 from opentelemetry.sdk.metrics._internal.aggregation import (
     AggregationTemporality,
@@ -1043,3 +1046,33 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         )
 
         self.assertEqual(result.scale, result_1.scale)
+
+    def test_record(self):
+
+        try:
+
+            in_memory_metric_reader = InMemoryMetricReader()
+
+            histogram = MeterProvider(
+                resource=Mock(),
+                metric_readers=[in_memory_metric_reader],
+                views=[
+                    View(
+                        instrument_type=Histogram,
+                        instrument_name="histogram",
+                        aggregation=ExponentialBucketHistogramAggregation()
+                    )
+                ]
+            ).get_meter(
+                "name",
+                version="version",
+                schema_url="schema_url",
+            ).create_histogram(name="histogram")
+
+            histogram.record(-999)
+            in_memory_metric_reader.get_metrics_data()
+            histogram.record(99999999)
+            in_memory_metric_reader.get_metrics_data()
+
+        except Exception as error:
+            self.fail(error)
