@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Fix typo in exponential bucket aggregation resizing logic
+  ([#3599](https://github.com/open-telemetry/opentelemetry-python/pull/3599))
+
 ## Version 1.22.0/0.43b0 (2023-12-15)
 
-- Prometheus exporter sanitize info metric ([#3572](https://github.com/open-telemetry/opentelemetry-python/pull/3572))
+- Prometheus exporter sanitize info metric
+  ([#3572](https://github.com/open-telemetry/opentelemetry-python/pull/3572))
 - Remove Jaeger exporters
   ([#3554](https://github.com/open-telemetry/opentelemetry-python/pull/3554))
 - Log stacktrace on `UNKNOWN` status OTLP export error 
