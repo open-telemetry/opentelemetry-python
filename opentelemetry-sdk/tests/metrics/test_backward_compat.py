@@ -26,7 +26,6 @@ Ideally, we could use mypy for this as well, but SDK is not type checked atm.
 """
 
 from typing import Iterable, Sequence
-from unittest import TestCase
 
 from opentelemetry.metrics import CallbackOptions, Observation
 from opentelemetry.sdk.metrics import MeterProvider
@@ -38,6 +37,7 @@ from opentelemetry.sdk.metrics.export import (
     MetricReader,
     PeriodicExportingMetricReader,
 )
+from opentelemetry.test import TestCase
 
 
 # Do not change these classes until after major version 1
@@ -82,30 +82,24 @@ class TestBackwardCompat(TestCase):
         )
         # produce some data
         meter_provider.get_meter("foo").create_counter("mycounter").add(12)
-        try:
+        with self.assertNotRaises(Exception):
             meter_provider.shutdown()
-        except Exception:
-            self.fail()
 
     def test_metric_reader(self):
         reader = OrigMetricReader()
         meter_provider = MeterProvider(metric_readers=[reader])
         # produce some data
         meter_provider.get_meter("foo").create_counter("mycounter").add(12)
-        try:
+        with self.assertNotRaises(Exception):
             meter_provider.shutdown()
-        except Exception:
-            self.fail()
 
     def test_observable_callback(self):
         reader = InMemoryMetricReader()
         meter_provider = MeterProvider(metric_readers=[reader])
         # produce some data
         meter_provider.get_meter("foo").create_counter("mycounter").add(12)
-        try:
+        with self.assertNotRaises(Exception):
             metrics_data = reader.get_metrics_data()
-        except Exception:
-            self.fail()
 
         self.assertEqual(len(metrics_data.resource_metrics), 1)
         self.assertEqual(
