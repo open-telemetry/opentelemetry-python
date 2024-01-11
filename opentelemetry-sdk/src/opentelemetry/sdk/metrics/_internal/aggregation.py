@@ -993,7 +993,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 previous_buckets.index_start = index
 
             if index > previous_buckets.index_end:
-                span = index - previous_buckets.index_end
+                span = index - previous_buckets.index_start
 
                 if span >= self._max_size:
                     raise Exception("Incorrect merge scale")
