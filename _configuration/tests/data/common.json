@@ -1,0 +1,58 @@
+{
+    "$id": "https://opentelemetry.io/otelconfig/common.json",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Common",
+    "type": "object",
+    "$defs": {
+        "Headers": {
+            "type": "object",
+            "title": "Headers",
+            "patternProperties": {
+                ".*": {
+                    "type": "string"
+                }
+            }
+        },
+        "Otlp": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "protocol": {
+                    "type": "string",
+                    "pattern": "^(http|grpc)\\/(protobuf|json)"
+                },
+                "endpoint": {
+                    "type": "string"
+                },
+                "certificate": {
+                    "type": "string"
+                },
+                "client_key": {
+                    "type": "string"
+                },
+                "client_certificate": {
+                    "type": "string"
+                },
+                "headers": {
+                    "$ref": "#/$defs/Headers"
+                },
+                "compression": {
+                    "type": "string"
+                },
+                "timeout": {
+                    "type": "integer",
+                    "minimum": 0
+                }
+            },
+            "required": [
+                "endpoint",
+                "protocol"
+            ],
+            "title": "Otlp"
+        },
+        "Console": {
+            "type": "object",
+            "additionalProperties": false
+        }
+    }
+}

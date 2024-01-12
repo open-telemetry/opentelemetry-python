@@ -1,0 +1,50 @@
+{
+    "$id": "https://opentelemetry.io/otelconfig/opentelemetry_configuration.json",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "OpenTelemetryConfiguration",
+    "type": "object",
+    "additionalProperties": true,
+    "properties": {
+        "file_format": {
+            "type": "string"
+        },
+        "disabled": {
+            "type": "boolean"
+        },
+        "attribute_limits": {
+            "$ref": "#/$defs/AttributeLimits"
+        },
+        "logger_provider": {
+            "$ref": "logger_provider.json"
+        },
+        "meter_provider": {
+            "$ref": "meter_provider.json"
+        },
+        "propagator": {
+            "$ref": "propagator.json"
+        },
+        "tracer_provider": {
+            "$ref": "tracer_provider.json"
+        },
+        "resource": {
+            "$ref": "resource.json"
+        }
+    },
+    "required": [
+        "file_format"
+    ],
+    "$defs": {
+        "AttributeLimits": {
+            "type": "object",
+            "additionalProperties": true,
+            "properties": {
+                "attribute_value_length_limit": {
+                    "type": "integer"
+                },
+                "attribute_count_limit": {
+                    "type": "integer"
+                }
+            }
+        }
+    }
+}
