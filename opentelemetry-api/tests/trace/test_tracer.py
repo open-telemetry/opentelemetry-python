@@ -13,6 +13,8 @@
 # limitations under the License.
 
 
+import time
+import asyncio
 from contextlib import contextmanager
 from unittest import TestCase
 from unittest.mock import Mock
@@ -39,7 +41,6 @@ class TestTracer(TestCase):
             self.assertIsInstance(span, Span)
 
     def test_start_as_current_span_decorator(self):
-
         mock_call = Mock()
 
         class MockTracer(Tracer):
@@ -62,6 +63,40 @@ class TestTracer(TestCase):
         function()  # type: ignore
 
         self.assertEqual(mock_call.call_count, 3)
+
+    def test_start_as_current_span_decorator_work_with_async(self):
+        # As explored in GH issue #3270 the start_as_current_span decorator
+        # does work with async functions but expose a near zero timing issue
+        # this test entend to reproduce the issue and validate the fix
+
+        # create a near zero time to not slow down the test but it must be
+        # greater 1.5e-6 to reproduce the issue
+        near_zero = 1e-5
+        mock_call = Mock()
+
+        class MockTracer(Tracer):
+            waited: float = 0
+
+            def start_span(self, *args, **kwargs):
+                return INVALID_SPAN
+
+            @contextmanager
+            def start_as_current_span(self, *args, **kwargs):  # type: ignore
+                mock_call()
+                i = time.monotonic()
+                yield INVALID_SPAN
+                self.waited = time.monotonic() - i
+
+        mock_tracer = MockTracer()
+
+        @mock_tracer.start_as_current_span("name")
+        async def function():  # type: ignore
+            time.sleep(near_zero)
+
+        asyncio.run(function())  # type: ignore
+
+        self.assertEqual(mock_call.call_count, 1)
+        self.assertTrue(mock_tracer.waited > near_zero)
 
     def test_get_current_span(self):
         with self.tracer.start_as_current_span("test") as span:
