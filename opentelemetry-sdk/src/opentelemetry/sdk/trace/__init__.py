@@ -21,7 +21,6 @@ import logging
 import threading
 import traceback
 import typing
-from contextlib import contextmanager
 from os import environ
 from time import time_ns
 from types import MappingProxyType, TracebackType
@@ -1038,7 +1037,7 @@ class Tracer(trace_api.Tracer):
         self._span_limits = span_limits
         self._instrumentation_scope = instrumentation_scope
 
-    @contextmanager
+    @trace_api.agnosticcontextmanager
     def start_as_current_span(
         self,
         name: str,

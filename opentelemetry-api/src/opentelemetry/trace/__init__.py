@@ -74,6 +74,9 @@ either implicit or explicit context propagation consistently throughout.
 """
 
 
+import asyncio
+import contextlib
+import functools
 import os
 import typing
 from abc import ABC, abstractmethod
@@ -113,6 +116,34 @@ from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
 
 logger = getLogger(__name__)
+
+
+class _AgnosticContextManager(contextlib._GeneratorContextManager):
+    def __call__(self, func):
+        if asyncio.iscoroutinefunction(func):
+
+            @functools.wraps(func)
+            async def async_wrapper(*args, **kwargs):
+                with self._recreate_cm():
+                    return await func(*args, **kwargs)
+
+            return async_wrapper
+        else:
+
+            @functools.wraps(func)
+            def wrapper(*args, **kwargs):
+                with self._recreate_cm():
+                    return func(*args, **kwargs)
+
+            return wrapper
+
+
+def agnosticcontextmanager(func):
+    @functools.wraps(func)
+    def helper(*args, **kwds):
+        return _AgnosticContextManager(func, args, kwds)
+
+    return helper
 
 
 class _LinkBase(ABC):
@@ -324,7 +355,7 @@ class Tracer(ABC):
             The newly-created span.
         """
 
-    @contextmanager
+    @agnosticcontextmanager
     @abstractmethod
     def start_as_current_span(
         self,
@@ -457,7 +488,7 @@ class NoOpTracer(Tracer):
         # pylint: disable=unused-argument,no-self-use
         return INVALID_SPAN
 
-    @contextmanager
+    @agnosticcontextmanager
     def start_as_current_span(
         self,
         name: str,

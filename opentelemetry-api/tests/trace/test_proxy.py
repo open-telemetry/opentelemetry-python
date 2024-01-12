@@ -15,7 +15,6 @@
 # pylint: disable=W0212,W0222,W0221
 import typing
 import unittest
-from contextlib import contextmanager
 
 from opentelemetry import trace
 from opentelemetry.test.globals_test import TraceGlobalsTest
@@ -40,7 +39,7 @@ class TestTracer(trace.NoOpTracer):
     def start_span(self, *args, **kwargs):
         return TestSpan(INVALID_SPAN_CONTEXT)
 
-    @contextmanager
+    @trace.agnosticcontextmanager
     def start_as_current_span(self, *args, **kwargs):  # type: ignore
         with trace.use_span(self.start_span(*args, **kwargs)) as span:  # type: ignore
             yield span

@@ -13,9 +13,8 @@
 # limitations under the License.
 
 
-import time
 import asyncio
-from contextlib import contextmanager
+import time
 from unittest import TestCase
 from unittest.mock import Mock
 
@@ -24,6 +23,7 @@ from opentelemetry.trace import (
     NoOpTracer,
     Span,
     Tracer,
+    agnosticcontextmanager,
     get_current_span,
 )
 
@@ -47,7 +47,7 @@ class TestTracer(TestCase):
             def start_span(self, *args, **kwargs):
                 return INVALID_SPAN
 
-            @contextmanager
+            @agnosticcontextmanager
             def start_as_current_span(self, *args, **kwargs):  # type: ignore
                 mock_call()
                 yield INVALID_SPAN
@@ -80,7 +80,7 @@ class TestTracer(TestCase):
             def start_span(self, *args, **kwargs):
                 return INVALID_SPAN
 
-            @contextmanager
+            @agnosticcontextmanager
             def start_as_current_span(self, *args, **kwargs):  # type: ignore
                 mock_call()
                 i = time.monotonic()
