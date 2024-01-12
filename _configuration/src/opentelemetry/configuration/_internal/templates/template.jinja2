@@ -1,0 +1,70 @@
+# Copyright The OpenTelemetry Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+_resource = None
+
+
+def set_resource(resource):
+    global _resource
+    _resource = resource
+
+
+{% for function_argument_key, function_argument_value in function_arguments.items() -%}
+  def {{ function_argument_key }}(
+  {%- if function_argument_value["positional_attributes"]|length == 0 and function_argument_value["optional_attributes"]|length == 0 and not function_argument_value["additional_properties"] -%}
+    ):
+  {%- else -%}
+    {{- "\n" -}}
+    {%- for positional_attribute_key, positional_attribute_value in function_argument_value["positional_attributes"].items() -%}
+      {{- "    " }}{{ positional_attribute_key }}: {{ positional_attribute_value -}}
+      {%- if not loop.last or function_argument_value["optional_attributes"]|length > 0 or function_argument_value["additional_properties"]-%}
+        {{ ",\n" }}
+      {%- endif -%}
+    {%- endfor -%}
+    {%- for optional_attribute_key, optional_attribute_value in function_argument_value["optional_attributes"].items() -%}
+      {{- "    " }}{{ optional_attribute_key }}: {{ optional_attribute_value }} = None
+      {%- if not loop.last or function_argument_value["additional_properties"]-%}
+        {{ ",\n" }}
+      {%- endif -%}
+    {%- endfor -%}
+    {%- if function_argument_value["additional_properties"] -%}
+      {{ "    **kwargs" }}
+    {%- endif -%}
+    {{- "\n" -}}
+    ):
+  {%- endif -%}
+  {{- "\n    pass\n\n\n" -}}
+{%- endfor -%}
+
+{%- macro render_dict(schema_function, indentation) -%}
+  {%- for key, value in schema_function.items() -%}
+    {{- " " * indentation * 4 }}"{{ key }}":{{ " " -}}
+    {%- if value is mapping -%}
+      {%- if value|length == 0 -%}
+        {{- "{},\n" -}}
+      {%- else -%}
+        {{- "{\n" -}}
+        {{- render_dict(value, indentation + 1) -}}
+        {{- " " * indentation * 4 }}{{ "},\n" -}}
+      {%- endif -%}
+    {%- else -%}
+      {{- value }}{{ ",\n" -}}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endmacro -%}
+
+path_function = {{ "{\n" -}}
+{{- render_dict(schema_function, 1) -}}
+{{- "}" -}}
