@@ -67,7 +67,7 @@ class TestTracer(TestCase):
     def test_start_as_current_span_decorator_work_with_async(self):
         # As explored in GH issue #3270 the start_as_current_span decorator
         # does work with async functions but expose a near zero timing issue
-        # this test entend to reproduce the issue and validate the fix
+        # this test intend to reproduce the issue and validate the fix
 
         # create a near zero time to not slow down the test but it must be
         # greater 1.5e-6 to reproduce the issue
