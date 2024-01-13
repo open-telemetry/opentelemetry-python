@@ -118,7 +118,9 @@ from opentelemetry.util._providers import _load_provider
 logger = getLogger(__name__)
 
 
-class _AgnosticContextManager(contextlib._GeneratorContextManager):
+class _AgnosticContextManager(
+    contextlib._GeneratorContextManager
+):  # pylint: disable=protected-access
     def __call__(self, func):
         if asyncio.iscoroutinefunction(func):
 
@@ -128,14 +130,13 @@ class _AgnosticContextManager(contextlib._GeneratorContextManager):
                     return await func(*args, **kwargs)
 
             return async_wrapper
-        else:
 
-            @functools.wraps(func)
-            def wrapper(*args, **kwargs):
-                with self._recreate_cm():
-                    return func(*args, **kwargs)
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            with self._recreate_cm():
+                return func(*args, **kwargs)
 
-            return wrapper
+        return wrapper
 
 
 def agnosticcontextmanager(func):
