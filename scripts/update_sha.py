@@ -25,7 +25,7 @@ WORKFLOW_FILE = ".github/workflows/test.yml"
 
 def get_sha(branch):
     url = API_URL + branch
-    response = requests.get(url)
+    response = requests.get(url, timeout=15)
     response.raise_for_status()
     return response.json()["sha"]
 

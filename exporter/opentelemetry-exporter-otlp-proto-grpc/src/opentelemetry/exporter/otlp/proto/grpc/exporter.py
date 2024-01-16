@@ -308,6 +308,7 @@ class OTLPExporterMixin(
                             self._exporting,
                             self._endpoint,
                             error.code(),
+                            exc_info=error.code() == StatusCode.UNKNOWN,
                         )
 
                     if error.code() == StatusCode.OK:

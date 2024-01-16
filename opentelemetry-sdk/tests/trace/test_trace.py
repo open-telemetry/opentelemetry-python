@@ -1220,6 +1220,7 @@ class TestSpan(unittest.TestCase):
         self.assertEqual(1604238587112021089, exception_event.timestamp)
 
     def test_record_exception_context_manager(self):
+        span = None
         try:
             with self.tracer.start_as_current_span("span") as span:
                 raise RuntimeError("example error")
