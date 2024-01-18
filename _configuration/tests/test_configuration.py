@@ -34,19 +34,21 @@ data_path = Path(__file__).parent.joinpath("data")
 def test_create_object():
 
     configuration = load_configuration(
-        data_path.joinpath("configuration_0.yaml")
+        data_path.joinpath("configuration").joinpath("configuration_0.yaml")
+    )
+
+    schema_path = (
+        data_path.
+        joinpath("schema").
+        joinpath("opentelemetry_configuration.json")
     )
 
     try:
-        validate_configuration(configuration)
+        validate_configuration(schema_path, configuration)
     except Exception as error:
         fail(f"Unexpected exception raised: {error}")
 
-    processed_schema = process_schema(
-        resolve_schema(
-            data_path.joinpath("opentelemetry_configuration.json")
-        )
-    )
+    processed_schema = process_schema(resolve_schema(schema_path))
 
     set_resource(
         create_object(configuration, processed_schema, "resource")
@@ -126,14 +128,16 @@ def test_create_object():
 @patch.dict(environ, {"OTEL_BLRB_EXPORT_TIMEOUT": "943"}, clear=True)
 def test_substitute_environment_variables():
     configuration = load_configuration(
-        data_path.joinpath("configuration_1.yaml")
+        data_path.joinpath("configuration").joinpath("configuration_1.yaml")
     )
 
-    processed_schema = process_schema(
-        resolve_schema(
-            data_path.joinpath("opentelemetry_configuration.json")
-        )
+    schema_path = (
+        data_path.
+        joinpath("schema").
+        joinpath("opentelemetry_configuration.json")
     )
+
+    processed_schema = process_schema(resolve_schema(schema_path))
     configuration = substitute_environment_variables(
         configuration, processed_schema
     )
@@ -147,18 +151,23 @@ def test_substitute_environment_variables():
         ["export_timeout"]
     ) == 943
     try:
-        validate_configuration(configuration)
+        validate_configuration(schema_path, configuration)
     except Exception as error:
         fail(f"Unexpected exception raised: {error}")
 
 
 def test_render(tmpdir):
 
-    render_schema(
-        process_schema(
-            resolve_schema(
-                data_path.joinpath("opentelemetry_configuration.json")
-            )
-        ),
-        tmpdir.join("path_function.py")
-    )
+    try:
+        render_schema(
+            process_schema(
+                resolve_schema(
+                    data_path.
+                    joinpath("schema").
+                    joinpath("opentelemetry_configuration.json")
+                )
+            ),
+            tmpdir.join("path_function.py")
+        )
+    except Exception as error:
+        fail(f"Unexpected exception raised: {error}")
