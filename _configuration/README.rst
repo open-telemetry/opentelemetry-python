@@ -40,3 +40,5 @@ To create any provider object first create a ``Resource`` object:
     tracer_provider = create_object(
         configuration, processed_schema, "tracer_provider"
     )
+
+To run the tests, just run ``nox`` from the directory where ``noxfile.py`` is.
