@@ -19,7 +19,6 @@ from re import compile as re_compile
 from jsonref import JsonRef
 from os.path import exists
 from pathlib import Path
-from os import getcwd
 from collections import OrderedDict
 from json import loads as json_loads
 from jsonref import loads as jsonref_loads
@@ -60,15 +59,9 @@ def load_configuration(configuration_file_path: str) -> dict:
         return safe_load(configuration_file)
 
 
-def validate_configuration(configuration: dict):
+def validate_configuration(schema_path: Path, configuration: dict):
 
-    root_path = Path(getcwd()).parent.parent
-
-    schema_path = str(
-        root_path.
-        joinpath("schema").
-        joinpath("opentelemetry_configuration.json")
-    )
+    schema_path = str(schema_path)
 
     if not exists(schema_path):
         raise Exception(f"{schema_path} does not exist")
