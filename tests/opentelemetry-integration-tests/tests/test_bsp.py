@@ -128,15 +128,6 @@ class OTLPServer:
         return self.trace_servicer.get_num_spans()
 
 
-class LogsServiceServicer(logs_service_pb2_grpc.LogsServiceServicer):
-    def __init__(self):
-        self.requests_received = []
-
-    def Export(self, request, context):
-        self.requests_received.append(request)
-        return logs_service_pb2.ExportLogsServiceResponse()
-
-
 class TraceServiceServicer(trace_service_pb2_grpc.TraceServiceServicer):
     def __init__(self):
         self.requests_received = []
@@ -161,3 +152,12 @@ class MetricsServiceServicer(metrics_service_pb2_grpc.MetricsServiceServicer):
     def Export(self, request, context):
         self.requests_received.append(request)
         return metrics_service_pb2.ExportMetricsServiceResponse()
+
+
+class LogsServiceServicer(logs_service_pb2_grpc.LogsServiceServicer):
+    def __init__(self):
+        self.requests_received = []
+
+    def Export(self, request, context):
+        self.requests_received.append(request)
+        return logs_service_pb2.ExportLogsServiceResponse()
