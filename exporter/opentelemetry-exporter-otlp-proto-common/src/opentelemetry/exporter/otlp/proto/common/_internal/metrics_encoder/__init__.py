@@ -132,8 +132,6 @@ class OTLPMetricExporterMixin:
 
     def get_aggregation(self, preferred_aggregation: Dict[type, "opentelemetry.sdk.metrics.view.Aggregation"]) -> Dict[type, "opentelemetry.sdk.metrics.view.Aggregation"]:
 
-        instrument_class_aggregation = {}
-
         otel_exporter_otlp_metrics_default_histogram_aggregation = environ.get(
             OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION,
             "explicit_bucket_histogram",
