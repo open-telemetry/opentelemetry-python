@@ -391,11 +391,18 @@ def get_aggregated_resources(
             try:
                 detected_resource = future.result(timeout=timeout)
             # pylint: disable=broad-except
+            except concurrent.futures._base.TimeoutError:
+                logger.warning(
+                    "Detector %s took longer than %s seconds, skipping", detector, timeout
+                )
             except Exception as ex:
                 if detector.raise_on_error:
                     raise ex
                 logger.warning(
                     "Exception %s in detector %s, ignoring", ex, detector
+                )
+                print(
+                    "Exception %s in detector %s, ignoring" % (ex, detector)
                 )
             finally:
                 detectors_merged_resource = detectors_merged_resource.merge(
