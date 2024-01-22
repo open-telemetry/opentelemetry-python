@@ -76,8 +76,6 @@ class OTLPMetricExporterMixin:
 
     def get_temporality(self, preferred_temporality: Dict[type, AggregationTemporality]) -> Dict[type, AggregationTemporality]:
 
-        instrument_class_temporality = {}
-
         otel_exporter_otlp_metrics_temporality_preference = (
             environ.get(
                 OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
