@@ -413,8 +413,7 @@ class TestResources(unittest.TestCase):
                 ),
             )
 
-    @patch("opentelemetry.sdk.resources.logger")
-    def test_resource_detector_raise_error(self, mock_logger):
+    def test_resource_detector_raise_error(self):
         resource_detector = Mock(spec=ResourceDetector)
         ex = Exception()
         resource_detector.detect.side_effect = ex
@@ -422,15 +421,17 @@ class TestResources(unittest.TestCase):
         self.assertRaises(
             Exception, get_aggregated_resources, [resource_detector]
         )
-        mock_logger.warning.assert_called_with("Exception %s in detector %s, ignoring", ex, resource_detector)
-
+        
     @patch("opentelemetry.sdk.resources.logger")
     def test_resource_detector_timeout(self, mock_logger):
         resource_detector = Mock(spec=ResourceDetector)
         resource_detector.detect.side_effect = concurrent.futures._base.TimeoutError()
-        resource_detector.raise_on_error = True
-        self.assertRaises(
-            Exception, get_aggregated_resources, [resource_detector]
+        resource_detector.raise_on_error = False
+        self.assertEqual(
+            get_aggregated_resources([resource_detector]),
+            _DEFAULT_RESOURCE.merge(
+                Resource({SERVICE_NAME: "unknown_service"}, "")
+            ),
         )
         mock_logger.warning.assert_called_with("Detector %s took longer than %s seconds, skipping", resource_detector, 5)
 

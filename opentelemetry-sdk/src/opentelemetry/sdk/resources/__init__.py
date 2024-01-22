@@ -392,6 +392,8 @@ def get_aggregated_resources(
                 detected_resource = future.result(timeout=timeout)
             # pylint: disable=broad-except
             except concurrent.futures._base.TimeoutError:
+                if detector.raise_on_error:
+                    raise ex
                 logger.warning(
                     "Detector %s took longer than %s seconds, skipping", detector, timeout
                 )
