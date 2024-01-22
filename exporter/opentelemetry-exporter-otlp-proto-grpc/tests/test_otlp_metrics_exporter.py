@@ -1006,3 +1006,19 @@ def _number_data_point(value: int) -> NumberDataPoint:
         time_unix_nano=1641946016139533244,
         value=value,
     )
+
+def test_preferred_aggregation_override(self):
+
+    histogram_aggregation = ExplicitBucketHistogramAggregation(
+        boundaries=[0.05, 0.1, 0.5, 1, 5, 10],
+    )
+
+    exporter = OTLPMetricExporter(
+        preferred_aggregation={
+            Histogram: histogram_aggregation,
+        },
+    )
+
+    self.assertEqual(
+        exporter._preferred_aggregation[Histogram], histogram_aggregation
+    )
