@@ -11,11 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import concurrent.futures
 import os
 import sys
 import unittest
 import uuid
+from concurrent.futures import TimeoutError
 from logging import ERROR, WARNING
 from os import environ
 from unittest.mock import Mock, patch
@@ -415,8 +415,7 @@ class TestResources(unittest.TestCase):
 
     def test_resource_detector_raise_error(self):
         resource_detector = Mock(spec=ResourceDetector)
-        ex = Exception()
-        resource_detector.detect.side_effect = ex
+        resource_detector.detect.side_effect = Exception()
         resource_detector.raise_on_error = True
         self.assertRaises(
             Exception, get_aggregated_resources, [resource_detector]
@@ -425,7 +424,7 @@ class TestResources(unittest.TestCase):
     @patch("opentelemetry.sdk.resources.logger")
     def test_resource_detector_timeout(self, mock_logger):
         resource_detector = Mock(spec=ResourceDetector)
-        resource_detector.detect.side_effect = concurrent.futures._base.TimeoutError()
+        resource_detector.detect.side_effect = TimeoutError()
         resource_detector.raise_on_error = False
         self.assertEqual(
             get_aggregated_resources([resource_detector]),
