@@ -27,6 +27,8 @@ from unittest.mock import patch
 from os import environ
 from pathlib import Path
 from pytest import fail
+from jsonschema.validators import Draft202012Validator
+from ipdb import set_trace
 
 data_path = Path(__file__).parent.joinpath("data")
 
@@ -171,3 +173,28 @@ def test_render(tmpdir):
         )
     except Exception as error:
         fail(f"Unexpected exception raised: {error}")
+
+
+def test_subschemas():
+
+    schema_path = (
+        data_path.
+        joinpath("schema").
+        joinpath("opentelemetry_configuration.json")
+    )
+    resolved_schema = resolve_schema(schema_path)
+    resolved_schema
+
+    # FIXME once the schema has been resolved, we get a dictionary. Add to this
+    # dictionary the schema components of each plugin component sub schema then
+    # use the resulting schema dictionary to do the validation.
+
+    set_trace()
+
+    configuration = load_configuration(
+        data_path.joinpath("configuration").joinpath("configuration_0.yaml")
+    )
+
+    # FIXME do the same for configuration components
+
+    Draft202012Validator(resolved_schema).validate(configuration)

@@ -67,6 +67,7 @@ def validate_configuration(schema_path: Path, configuration: dict):
         raise Exception(f"{schema_path} does not exist")
 
     def retrieve_from_path(path: str):
+        set_trace()
         return Resource.from_contents(json_loads(Path(path).read_text()))
 
     Draft202012Validator(
