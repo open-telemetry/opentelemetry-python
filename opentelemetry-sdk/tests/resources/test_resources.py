@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import concurrent.futures
 import os
 import sys
 import unittest
@@ -412,13 +413,26 @@ class TestResources(unittest.TestCase):
                 ),
             )
 
-    def test_resource_detector_raise_error(self):
+    @patch("opentelemetry.sdk.resources.logger")
+    def test_resource_detector_raise_error(self, mock_logger):
         resource_detector = Mock(spec=ResourceDetector)
-        resource_detector.detect.side_effect = Exception()
+        ex = Exception()
+        resource_detector.detect.side_effect = ex
         resource_detector.raise_on_error = True
         self.assertRaises(
             Exception, get_aggregated_resources, [resource_detector]
         )
+        mock_logger.warning.assert_called_with("Exception %s in detector %s, ignoring", ex, resource_detector)
+
+    @patch("opentelemetry.sdk.resources.logger")
+    def test_resource_detector_timeout(self, mock_logger):
+        resource_detector = Mock(spec=ResourceDetector)
+        resource_detector.detect.side_effect = concurrent.futures._base.TimeoutError()
+        resource_detector.raise_on_error = True
+        self.assertRaises(
+            Exception, get_aggregated_resources, [resource_detector]
+        )
+        mock_logger.warning.assert_called_with("Detector %s took longer than %s seconds, skipping", resource_detector, 5)
 
     @patch.dict(
         environ,
