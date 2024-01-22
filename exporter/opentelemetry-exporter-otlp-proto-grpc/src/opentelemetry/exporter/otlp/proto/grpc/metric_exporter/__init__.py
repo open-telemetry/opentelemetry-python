@@ -127,7 +127,7 @@ class OTLPMetricExporter(
             else compression
         )
 
-        self._common_configuration(preferred_temporality)
+        self._common_configuration(preferred_temporality, preferred_aggregation)
 
         OTLPExporterMixin.__init__(
             self,
