@@ -390,7 +390,7 @@ def get_aggregated_resources(
             detected_resource: Resource = _EMPTY_RESOURCE
             try:
                 detected_resource = future.result(timeout=timeout)
-            except concurrent.futures.TimeoutError:
+            except concurrent.futures.TimeoutError as ex:
                 if detector.raise_on_error:
                     raise ex
                 logger.warning(
