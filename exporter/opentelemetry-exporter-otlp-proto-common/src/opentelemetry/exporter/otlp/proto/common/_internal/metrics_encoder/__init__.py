@@ -66,6 +66,9 @@ class OTLPMetricExporterMixin:
         self,
         preferred_temporality: Dict[type, AggregationTemporality] = None,
         preferred_aggregation: Dict[type, "opentelemetry.sdk.metrics.view.Aggregation"] = None,
+        preferred_aggregation: Dict[
+            type, "opentelemetry.sdk.metrics.view.Aggregation"
+        ] = None,
     ) -> None:
 
         MetricExporter.__init__(
@@ -74,7 +77,9 @@ class OTLPMetricExporterMixin:
             preferred_aggregation=self.get_aggregation(preferred_aggregation),
         )
 
-    def get_temporality(self, preferred_temporality: Dict[type, AggregationTemporality]) -> Dict[type, AggregationTemporality]:
+    def get_temporality(
+        self, preferred_temporality: Dict[type, AggregationTemporality]
+    ) -> Dict[type, AggregationTemporality]:
 
         otel_exporter_otlp_metrics_temporality_preference = (
             environ.get(
@@ -128,7 +133,12 @@ class OTLPMetricExporterMixin:
 
         return instrument_class_temporality
 
-    def get_aggregation(self, preferred_aggregation: Dict[type, "opentelemetry.sdk.metrics.view.Aggregation"]) -> Dict[type, "opentelemetry.sdk.metrics.view.Aggregation"]:
+    def get_aggregation(
+        self,
+        preferred_aggregation: Dict[
+            type, "opentelemetry.sdk.metrics.view.Aggregation"
+        ],
+    ) -> Dict[type, "opentelemetry.sdk.metrics.view.Aggregation"]:
 
         otel_exporter_otlp_metrics_default_histogram_aggregation = environ.get(
             OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION,
