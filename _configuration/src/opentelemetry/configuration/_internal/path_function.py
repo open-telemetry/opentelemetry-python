@@ -42,6 +42,23 @@ from opentelemetry.sdk.trace.sampling import (
 _resource = None
 
 
+class MockSampler(Mock):
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self._args = args
+        self._kwargs = kwargs
+
+    def __repr__(self) -> str:
+        args = list(self._args).copy()
+        kwargs = self._kwargs.copy()
+
+        kwargs.pop("type")
+        args.extend([f"{key}={value}" for key, value in kwargs.items()])
+
+        return f'{self.type}({", ".join(args)})'
+
+
 def set_resource(resource):
     global _resource
     _resource = resource
@@ -468,8 +485,8 @@ def tracer_provider_sampler(
     trace_id_ratio_based: object = None,
     **kwargs
 ):
-    return Mock(
-        type="sampler",
+    return MockSampler(
+        type="Sampler",
         always_off=always_off,
         always_on=always_on,
         jaeger_remote=jaeger_remote,
@@ -490,8 +507,8 @@ def tracer_provider_sampler_always_on():
 def tracer_provider_sampler_jaeger_remote(
     endpoint: str = None, initial_sampler: object = None, interval: int = None
 ):
-    return Mock(
-        type="jaeger_remote",
+    return MockSampler(
+        type="JaegerRemoteSampler",
         endpoint=endpoint,
         initial_sampler=initial_sampler,
         interval=interval,
@@ -506,8 +523,8 @@ def tracer_provider_sampler_jaeger_remote_initial_sampler(
     trace_id_ratio_based: object = None,
     **kwargs
 ):
-    return Mock(
-        type="initial_sampler",
+    return MockSampler(
+        type="InitialSamplerSampler",
         always_off=always_off,
         always_on=always_on,
         jaeger_remote=jaeger_remote,
@@ -524,8 +541,8 @@ def tracer_provider_sampler_parent_based(
     remote_parent_sampled: object = None,
     root: object = None,
 ):
-    return Mock(
-        type="parent_based",
+    return MockSampler(
+        type="ParentBasedSampler",
         local_parent_not_sampled=local_parent_not_sampled,
         local_parent_sampled=local_parent_sampled,
         remote_parent_not_sampled=remote_parent_not_sampled,
@@ -542,8 +559,8 @@ def tracer_provider_sampler_parent_based_root(
     trace_id_ratio_based: object = None,
     **kwargs
 ):
-    return Mock(
-        type="root",
+    return MockSampler(
+        type="RootSampler",
         always_off=always_off,
         always_on=always_on,
         jaeger_remote=jaeger_remote,
@@ -561,8 +578,8 @@ def tracer_provider_sampler_parent_based_remote_parent_sampled(
     trace_id_ratio_based: object = None,
     **kwargs
 ):
-    return Mock(
-        type="remote_parent_sampled",
+    return MockSampler(
+        type="RemoteParentSampledSampler",
         always_off=always_off,
         always_on=always_on,
         jaeger_remote=jaeger_remote,
@@ -580,8 +597,8 @@ def tracer_provider_sampler_parent_based_remote_parent_not_sampled(
     trace_id_ratio_based: object = None,
     **kwargs
 ):
-    return Mock(
-        type="remote_parent_not_sampled",
+    return MockSampler(
+        type="RemoteParentNotSampledSampler",
         always_off=always_off,
         always_on=always_on,
         jaeger_remote=jaeger_remote,
@@ -599,8 +616,8 @@ def tracer_provider_sampler_parent_based_local_parent_sampled(
     trace_id_ratio_based: object = None,
     **kwargs
 ):
-    return Mock(
-        type="local_parent_sampled",
+    return MockSampler(
+        type="LocalParentSampledSampler",
         always_off=always_off,
         always_on=always_on,
         jaeger_remote=jaeger_remote,
@@ -618,8 +635,8 @@ def tracer_provider_sampler_parent_based_local_parent_not_sampled(
     trace_id_ratio_based: object = None,
     **kwargs
 ):
-    return Mock(
-        type="local_parent_not_sampled",
+    return MockSampler(
+        type="LocalParentNotSampledSampler",
         always_off=always_off,
         always_on=always_on,
         jaeger_remote=jaeger_remote,

@@ -32,6 +32,8 @@ from opentelemetry.configuration import (
 )
 from opentelemetry.configuration._internal.path_function import set_resource
 
+set_trace
+
 data_path = Path(__file__).parent.joinpath("data")
 
 
@@ -152,8 +154,6 @@ def test_subschemas():
     # dictionary the schema components of each plugin component sub schema then
     # use the resulting schema dictionary to do the validation.
 
-    set_trace()
-
     configuration = load_configuration(
         data_path.joinpath("configuration").joinpath("configuration_0.yaml")
     )
@@ -161,3 +161,30 @@ def test_subschemas():
     # FIXME do the same for configuration components
 
     Draft202012Validator(resolved_schema).validate(configuration)
+
+
+def test_dry_run():
+
+    configuration = load_configuration(
+        data_path.joinpath("configuration").joinpath("configuration_0.yaml")
+    )
+
+    schema_path = data_path.joinpath("schema").joinpath(
+        "opentelemetry_configuration.json"
+    )
+
+    try:
+        validate_configuration(schema_path, configuration)
+    except Exception as error:
+        fail(f"Unexpected exception raised: {error}")
+
+    processed_schema = process_schema(resolve_schema(schema_path))
+
+    set_resource(create_object(configuration, processed_schema, "resource"))
+
+    print()
+    print(
+        create_object(
+            configuration, processed_schema, "tracer_provider", dry_run=True
+        )
+    )

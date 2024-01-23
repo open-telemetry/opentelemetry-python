@@ -5,6 +5,9 @@ from nox import session
 def test(session):
     session.install(".")
     session.install("-r", "requirements.txt")
+    session.install("../opentelemetry-api")
+    session.install("../opentelemetry-semantic-conventions")
+    session.install("../opentelemetry-sdk")
 
     if session.posargs:
         session.run("pytest", *session.posargs)
