@@ -420,7 +420,7 @@ class TestResources(unittest.TestCase):
         self.assertRaises(
             Exception, get_aggregated_resources, [resource_detector]
         )
-        
+
     @patch("opentelemetry.sdk.resources.logger")
     def test_resource_detector_timeout(self, mock_logger):
         resource_detector = Mock(spec=ResourceDetector)
@@ -432,7 +432,11 @@ class TestResources(unittest.TestCase):
                 Resource({SERVICE_NAME: "unknown_service"}, "")
             ),
         )
-        mock_logger.warning.assert_called_with("Detector %s took longer than %s seconds, skipping", resource_detector, 5)
+        mock_logger.warning.assert_called_with(
+            "Detector %s took longer than %s seconds, skipping",
+            resource_detector,
+            5,
+        )
 
     @patch.dict(
         environ,

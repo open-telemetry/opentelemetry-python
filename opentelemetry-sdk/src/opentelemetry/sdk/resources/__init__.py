@@ -394,7 +394,9 @@ def get_aggregated_resources(
                 if detector.raise_on_error:
                     raise ex
                 logger.warning(
-                    "Detector %s took longer than %s seconds, skipping", detector, timeout
+                    "Detector %s took longer than %s seconds, skipping",
+                    detector,
+                    timeout,
                 )
             # pylint: disable=broad-except
             except Exception as ex:
