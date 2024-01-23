@@ -13,22 +13,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from opentelemetry.configuration._internal.path_function import set_resource
-from opentelemetry.configuration import (
-    resolve_schema,
-    process_schema,
-    create_object,
-    validate_configuration,
-    load_configuration,
-    substitute_environment_variables,
-    render_schema,
-)
-from unittest.mock import patch
 from os import environ
 from pathlib import Path
-from pytest import fail
-from jsonschema.validators import Draft202012Validator
+from unittest.mock import patch
+
 from ipdb import set_trace
+from jsonschema.validators import Draft202012Validator
+from pytest import fail
+
+from opentelemetry.configuration import (
+    create_object,
+    load_configuration,
+    process_schema,
+    render_schema,
+    resolve_schema,
+    substitute_environment_variables,
+    validate_configuration,
+)
+from opentelemetry.configuration._internal.path_function import set_resource
 
 data_path = Path(__file__).parent.joinpath("data")
 
@@ -39,10 +41,8 @@ def test_create_object():
         data_path.joinpath("configuration").joinpath("configuration_0.yaml")
     )
 
-    schema_path = (
-        data_path.
-        joinpath("schema").
-        joinpath("opentelemetry_configuration.json")
+    schema_path = data_path.joinpath("schema").joinpath(
+        "opentelemetry_configuration.json"
     )
 
     try:
@@ -52,78 +52,48 @@ def test_create_object():
 
     processed_schema = process_schema(resolve_schema(schema_path))
 
-    set_resource(
-        create_object(configuration, processed_schema, "resource")
-    )
+    set_resource(create_object(configuration, processed_schema, "resource"))
 
     tracer_provider = create_object(
         configuration, processed_schema, "tracer_provider"
     )
 
     assert (
-        tracer_provider.
-        sampler.
-        parent_based.
-        root.
-        trace_id_ratio_based.
-        _root.
-        _rate
+        tracer_provider.sampler.parent_based.root.trace_id_ratio_based._root._rate
     ) == 0.0001
 
     assert (
-        tracer_provider.
-        sampler.
-        parent_based.
-        local_parent_not_sampled.
-        parent_based.
-        remote_parent_not_sampled.
-        trace_id_ratio_based.
-        _root.
-        _rate
+        tracer_provider.sampler.parent_based.local_parent_not_sampled.parent_based.remote_parent_not_sampled.trace_id_ratio_based._root._rate
     ) == 0.0001
 
-    assert (
-        tracer_provider.
-        _span_limits.
-        max_events
-    ) == 128
+    assert (tracer_provider._span_limits.max_events) == 128
 
     assert (
-        tracer_provider.
-        _active_span_processor.
-        _span_processors[0].
-        max_queue_size
+        tracer_provider._active_span_processor._span_processors[
+            0
+        ].max_queue_size
     ) == 2048
 
     assert (
-        tracer_provider.
-        _active_span_processor.
-        _span_processors[0].
-        span_exporter.
-        _headers["api-key"]
+        tracer_provider._active_span_processor._span_processors[
+            0
+        ].span_exporter._headers["api-key"]
     ) == "1234"
 
     assert (
-        tracer_provider.
-        _active_span_processor.
-        _span_processors[1].
-        span_exporter.
-        endpoint
+        tracer_provider._active_span_processor._span_processors[
+            1
+        ].span_exporter.endpoint
     ) == "http://localhost:9411/api/v2/spans"
 
     assert (
-        tracer_provider.
-        _active_span_processor.
-        _span_processors[2].
-        span_exporter.
-        __class__.
-        __name__
+        tracer_provider._active_span_processor._span_processors[
+            2
+        ].span_exporter.__class__.__name__
     ) == "ConsoleSpanExporter"
 
     assert (
-        tracer_provider.
-        _resource.
-        _schema_url
+        tracer_provider._resource._schema_url
     ) == "https://opentelemetry.io/schemas/1.16.0"
 
 
@@ -133,10 +103,8 @@ def test_substitute_environment_variables():
         data_path.joinpath("configuration").joinpath("configuration_1.yaml")
     )
 
-    schema_path = (
-        data_path.
-        joinpath("schema").
-        joinpath("opentelemetry_configuration.json")
+    schema_path = data_path.joinpath("schema").joinpath(
+        "opentelemetry_configuration.json"
     )
 
     processed_schema = process_schema(resolve_schema(schema_path))
@@ -145,12 +113,9 @@ def test_substitute_environment_variables():
     )
 
     assert (
-        configuration
-        ["logger_provider"]
-        ["processors"]
-        [0]
-        ["batch"]
-        ["export_timeout"]
+        configuration["logger_provider"]["processors"][0]["batch"][
+            "export_timeout"
+        ]
     ) == 943
     try:
         validate_configuration(schema_path, configuration)
@@ -164,12 +129,12 @@ def test_render(tmpdir):
         render_schema(
             process_schema(
                 resolve_schema(
-                    data_path.
-                    joinpath("schema").
-                    joinpath("opentelemetry_configuration.json")
+                    data_path.joinpath("schema").joinpath(
+                        "opentelemetry_configuration.json"
+                    )
                 )
             ),
-            tmpdir.join("path_function.py")
+            tmpdir.join("path_function.py"),
         )
     except Exception as error:
         fail(f"Unexpected exception raised: {error}")
@@ -177,10 +142,8 @@ def test_render(tmpdir):
 
 def test_subschemas():
 
-    schema_path = (
-        data_path.
-        joinpath("schema").
-        joinpath("opentelemetry_configuration.json")
+    schema_path = data_path.joinpath("schema").joinpath(
+        "opentelemetry_configuration.json"
     )
     resolved_schema = resolve_schema(schema_path)
     resolved_schema
