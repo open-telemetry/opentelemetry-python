@@ -181,7 +181,7 @@ class Resource:
         self._args_kwargs = ", ".join(self._args_kwargs)
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(repr(self._args_kwargs))"
+        return f"{self.__class__.__name__}(repr{self._args_kwargs})"
 
     @staticmethod
     def create(
