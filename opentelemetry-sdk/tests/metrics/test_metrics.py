@@ -59,7 +59,7 @@ class DummyMetricReader(MetricReader):
         return True
 
 
-class TestMeterProvider(ConcurrencyTestBase):
+class TestMeterProvider(ConcurrencyTestBase, TestCase):
     def tearDown(self):
 
         MeterProvider._all_metric_readers = set()
