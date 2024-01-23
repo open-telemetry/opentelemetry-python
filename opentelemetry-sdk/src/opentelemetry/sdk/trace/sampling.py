@@ -165,6 +165,9 @@ class Decision(enum.Enum):
     def is_sampled(self):
         return self is Decision.RECORD_AND_SAMPLE
 
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.value})"
+
 
 class SamplingResult:
     """A sampling result as applied to a newly-created Span.
@@ -195,6 +198,14 @@ class SamplingResult:
 
 
 class Sampler(abc.ABC):
+
+    def __init__(self, *args, **kwargs) -> None:
+        self._args_kwargs = [repr(arg) for arg in args]
+        self._args_kwargs.extend(
+            [f"{key}={repr(value)}" for key, value in kwargs.items()]
+        )
+        self._args_kwargs = ", ".join(self._args_kwargs)
+
     @abc.abstractmethod
     def should_sample(
         self,
@@ -212,11 +223,15 @@ class Sampler(abc.ABC):
     def get_description(self) -> str:
         pass
 
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}({self._args_kwargs})'
+
 
 class StaticSampler(Sampler):
     """Sampler that always returns the same decision."""
 
     def __init__(self, decision: "Decision") -> None:
+        super().__init__(decision)
         self._decision = decision
 
     def should_sample(
@@ -259,6 +274,7 @@ class TraceIdRatioBased(Sampler):
     """
 
     def __init__(self, rate: float):
+        super().__init__(rate)
         if rate < 0.0 or rate > 1.0:
             raise ValueError("Probability must be in range [0.0, 1.0].")
         self._rate = rate
@@ -329,6 +345,13 @@ class ParentBased(Sampler):
         local_parent_sampled: Sampler = ALWAYS_ON,
         local_parent_not_sampled: Sampler = ALWAYS_OFF,
     ):
+        super().__init__(
+            root,
+            remote_parent_sampled,
+            remote_parent_not_sampled,
+            local_parent_sampled,
+            local_parent_not_sampled
+        )
         self._root = root
         self._remote_parent_sampled = remote_parent_sampled
         self._remote_parent_not_sampled = remote_parent_not_sampled
@@ -390,6 +413,7 @@ class ParentBasedTraceIdRatio(ParentBased):
     """
 
     def __init__(self, rate: float):
+        super().__init__(rate)
         root = TraceIdRatioBased(rate=rate)
         super().__init__(root=root)
 

@@ -166,6 +166,23 @@ class Resource:
             schema_url = ""
         self._schema_url = schema_url
 
+        args = []
+        kwargs = {}
+
+        args.append(attributes)
+
+        if schema_url is not None:
+            kwargs["schema_url"] = schema_url
+
+        self._args_kwargs = [repr(arg) for arg in args]
+        self._args_kwargs.extend(
+            [f"{key}={repr(value)}" for key, value in kwargs.items()]
+        )
+        self._args_kwargs = ", ".join(self._args_kwargs)
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(repr(self._args_kwargs))"
+
     @staticmethod
     def create(
         attributes: typing.Optional[Attributes] = None,

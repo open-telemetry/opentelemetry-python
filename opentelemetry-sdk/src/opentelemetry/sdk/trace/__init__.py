@@ -1221,6 +1221,14 @@ class TracerProvider(trace_api.TracerProvider):
         if shutdown_on_exit:
             self._atexit_handler = atexit.register(self.shutdown)
 
+    def __repr__(self) -> str:
+        return (
+            f"{self.__class__.__name__}("
+            f"{repr(self.sampler)},"
+            f"{repr(self._resource)},"
+            ")"
+        )
+
     @property
     def resource(self) -> Resource:
         return self._resource

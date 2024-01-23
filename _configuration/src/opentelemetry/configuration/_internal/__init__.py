@@ -26,6 +26,7 @@ from jsonref import loads as jsonref_loads
 from jsonschema.validators import Draft202012Validator
 from referencing import Registry, Resource
 from yaml import safe_load
+from black import format_str, Mode
 
 from opentelemetry.configuration._internal.path_function import path_function
 
@@ -69,7 +70,6 @@ def validate_configuration(schema_path: Path, configuration: dict):
         raise Exception(f"{schema_path} does not exist")
 
     def retrieve_from_path(path: str):
-        set_trace()
         return Resource.from_contents(json_loads(Path(path).read_text()))
 
     Draft202012Validator(
@@ -279,7 +279,10 @@ def render_schema(processed_schema: dict, path_function_path: Path):
 
 
 def create_object(
-    configuration: dict, processed_schema: dict, object_name: str
+    configuration: dict,
+    processed_schema: dict,
+    object_name: str,
+    dry_run=False
 ) -> object:
     def create_object(
         configuration: dict,
@@ -359,13 +362,16 @@ def create_object(
             *positional_arguments, **optional_arguments
         )
 
-    return create_object(
+    result = create_object(
         configuration[object_name],
         processed_schema[object_name],
         path_function[object_name],
         processed_schema,
         path_function,
     )
+    if dry_run:
+        return format_str(repr(result), mode=Mode(line_length=1))
+    return result
 
 
 def substitute_environment_variables(
