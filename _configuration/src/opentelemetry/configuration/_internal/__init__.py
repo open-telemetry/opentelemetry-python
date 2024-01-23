@@ -26,7 +26,6 @@ from jsonref import loads as jsonref_loads
 from jsonschema.validators import Draft202012Validator
 from referencing import Registry, Resource
 from yaml import safe_load
-from black import Mode, format_str
 
 from opentelemetry.configuration._internal.path_function import path_function
 
@@ -70,6 +69,7 @@ def validate_configuration(schema_path: Path, configuration: dict):
         raise Exception(f"{schema_path} does not exist")
 
     def retrieve_from_path(path: str):
+        set_trace()
         return Resource.from_contents(json_loads(Path(path).read_text()))
 
     Draft202012Validator(
@@ -279,10 +279,7 @@ def render_schema(processed_schema: dict, path_function_path: Path):
 
 
 def create_object(
-    configuration: dict,
-    processed_schema: dict,
-    object_name: str,
-    dry_run=False
+    configuration: dict, processed_schema: dict, object_name: str
 ) -> object:
     def create_object(
         configuration: dict,
@@ -290,7 +287,6 @@ def create_object(
         path_function: dict,
         original_processed_schema: dict,
         original_path_function: dict,
-        dry_run=False
     ) -> object:
 
         positional_arguments = []
@@ -359,28 +355,17 @@ def create_object(
             else:
                 optional_arguments[configuration_key] = object_
 
-        result = path_function["function"](
+        return path_function["function"](
             *positional_arguments, **optional_arguments
         )
-        if dry_run:
-            return result[1]
-        elif isinstance(result, tuple):
-            return result[0]
-        else:
-            return result
 
-    result = create_object(
+    return create_object(
         configuration[object_name],
         processed_schema[object_name],
         path_function[object_name],
         processed_schema,
         path_function,
-        dry_run=dry_run,
     )
-
-    if isinstance(result, str):
-        return format_str(result, mode=Mode(line_length=1))
-    return result
 
 
 def substitute_environment_variables(

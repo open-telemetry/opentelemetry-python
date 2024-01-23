@@ -22,7 +22,7 @@ from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     OTLPSpanExporter as HTTPOTLPSpanExporter,
 )
 from opentelemetry.exporter.zipkin.proto.http import ZipkinExporter
-from opentelemetry.sdk.resources import Resource  # noqa
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import (
     SpanLimits,
     SynchronousMultiSpanProcessor,
@@ -38,9 +38,6 @@ from opentelemetry.sdk.trace.sampling import (
     ALWAYS_ON,
     ParentBasedTraceIdRatio,
 )
-from ipdb import set_trace
-
-set_trace
 
 _resource = None
 
@@ -637,19 +634,11 @@ def tracer_provider_sampler_trace_id_ratio_based(ratio: float = None):
 
 
 def resource(attributes: object = None, schema_url: str = None):
-    command = (
-        f'resource = Resource.create(attributes={attributes}, '
-        f'schema_url="{schema_url}")'
-    )
-    exec(command)
-    return locals()["resource"], command
+    return Resource.create(attributes=attributes, schema_url=schema_url)
 
 
 def resource_attributes(service_name: str = None, **kwargs):
-    command = str({"service.name": service_name, **kwargs})
-    command = f'resource_attributes = {command}'
-    exec(command)
-    return locals()["resource_attributes"], command
+    return {"service.name": service_name, **kwargs}
 
 
 path_function = {
