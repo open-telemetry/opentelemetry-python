@@ -12,27 +12,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.trace import (
-    TracerProvider, SynchronousMultiSpanProcessor, SpanLimits
-)
-from opentelemetry.sdk.trace.export import (
-    BatchSpanProcessor, ConsoleSpanExporter, SimpleSpanProcessor
-)
+from unittest.mock import Mock
+from urllib.parse import urlparse
+
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
-    OTLPSpanExporter as GRPCOTLPSpanExporter
+    OTLPSpanExporter as GRPCOTLPSpanExporter,
 )
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
-    OTLPSpanExporter as HTTPOTLPSpanExporter
+    OTLPSpanExporter as HTTPOTLPSpanExporter,
 )
 from opentelemetry.exporter.zipkin.proto.http import ZipkinExporter
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import (
+    SpanLimits,
+    SynchronousMultiSpanProcessor,
+    TracerProvider,
+)
+from opentelemetry.sdk.trace.export import (
+    BatchSpanProcessor,
+    ConsoleSpanExporter,
+    SimpleSpanProcessor,
+)
 from opentelemetry.sdk.trace.sampling import (
-    ParentBasedTraceIdRatio,
     ALWAYS_OFF,
     ALWAYS_ON,
+    ParentBasedTraceIdRatio,
 )
-from urllib.parse import urlparse
-from unittest.mock import Mock
 
 _resource = None
 
@@ -50,17 +55,12 @@ def attribute_limits(
     pass
 
 
-def logger_provider(
-    limits: object = None,
-    processors: list = None
-):
+def logger_provider(limits: object = None, processors: list = None):
     pass
 
 
 def logger_provider_processors(
-    batch: object = None,
-    simple: object = None,
-    **kwargs
+    batch: object = None, simple: object = None, **kwargs
 ):
     pass
 
@@ -70,15 +70,12 @@ def logger_provider_processors_batch(
     export_timeout: int = None,
     max_export_batch_size: int = None,
     max_queue_size: int = None,
-    schedule_delay: int = None
+    schedule_delay: int = None,
 ):
     pass
 
 
-def logger_provider_processors_batch_exporter(
-    otlp: object = None,
-    **kwargs
-):
+def logger_provider_processors_batch_exporter(otlp: object = None, **kwargs):
     pass
 
 
@@ -90,27 +87,20 @@ def logger_provider_processors_batch_exporter_otlp(
     client_key: str = None,
     compression: str = None,
     headers: object = None,
-    timeout: int = None
+    timeout: int = None,
 ):
     pass
 
 
-def logger_provider_processors_batch_exporter_otlp_headers(
-    **kwargs
-):
+def logger_provider_processors_batch_exporter_otlp_headers(**kwargs):
     pass
 
 
-def logger_provider_processors_simple(
-    exporter: object
-):
+def logger_provider_processors_simple(exporter: object):
     pass
 
 
-def logger_provider_processors_simple_exporter(
-    otlp: object = None,
-    **kwargs
-):
+def logger_provider_processors_simple_exporter(otlp: object = None, **kwargs):
     pass
 
 
@@ -122,42 +112,31 @@ def logger_provider_processors_simple_exporter_otlp(
     client_key: str = None,
     compression: str = None,
     headers: object = None,
-    timeout: int = None
+    timeout: int = None,
 ):
     pass
 
 
-def logger_provider_processors_simple_exporter_otlp_headers(
-    **kwargs
-):
+def logger_provider_processors_simple_exporter_otlp_headers(**kwargs):
     pass
 
 
 def logger_provider_limits(
-    attribute_count_limit: int = None,
-    attribute_value_length_limit: int = None
+    attribute_count_limit: int = None, attribute_value_length_limit: int = None
 ):
     pass
 
 
-def meter_provider(
-    readers: list = None,
-    views: list = None
-):
+def meter_provider(readers: list = None, views: list = None):
     pass
 
 
-def meter_provider_readers(
-    periodic: object = None,
-    pull: object = None
-):
+def meter_provider_readers(periodic: object = None, pull: object = None):
     pass
 
 
 def meter_provider_readers_periodic(
-    exporter: object,
-    interval: int = None,
-    timeout: int = None
+    exporter: object, interval: int = None, timeout: int = None
 ):
     pass
 
@@ -181,14 +160,12 @@ def meter_provider_readers_periodic_exporter_otlp(
     default_histogram_aggregation: str = None,
     headers: object = None,
     temporality_preference: str = None,
-    timeout: int = None
+    timeout: int = None,
 ):
     pass
 
 
-def meter_provider_readers_periodic_exporter_otlp_headers(
-    **kwargs
-):
+def meter_provider_readers_periodic_exporter_otlp_headers(**kwargs):
     pass
 
 
@@ -197,15 +174,12 @@ def meter_provider_readers_periodic_exporter_console():
 
 
 def meter_provider_readers_periodic_exporter_prometheus(
-    host: str = None,
-    port: int = None
+    host: str = None, port: int = None
 ):
     pass
 
 
-def meter_provider_readers_pull(
-    exporter: object
-):
+def meter_provider_readers_pull(exporter: object):
     pass
 
 
@@ -228,14 +202,12 @@ def meter_provider_readers_pull_exporter_otlp(
     default_histogram_aggregation: str = None,
     headers: object = None,
     temporality_preference: str = None,
-    timeout: int = None
+    timeout: int = None,
 ):
     pass
 
 
-def meter_provider_readers_pull_exporter_otlp_headers(
-    **kwargs
-):
+def meter_provider_readers_pull_exporter_otlp_headers(**kwargs):
     pass
 
 
@@ -244,16 +216,12 @@ def meter_provider_readers_pull_exporter_console():
 
 
 def meter_provider_readers_pull_exporter_prometheus(
-    host: str = None,
-    port: int = None
+    host: str = None, port: int = None
 ):
     pass
 
 
-def meter_provider_views(
-    selector: object = None,
-    stream: object = None
-):
+def meter_provider_views(selector: object = None, stream: object = None):
     pass
 
 
@@ -263,7 +231,7 @@ def meter_provider_views_selector(
     meter_name: str = None,
     meter_schema_url: str = None,
     meter_version: str = None,
-    unit: str = None
+    unit: str = None,
 ):
     pass
 
@@ -272,7 +240,7 @@ def meter_provider_views_stream(
     aggregation: object = None,
     attribute_keys: list = None,
     description: str = None,
-    name: str = None
+    name: str = None,
 ):
     pass
 
@@ -283,7 +251,7 @@ def meter_provider_views_stream_aggregation(
     drop: object = None,
     explicit_bucket_histogram: object = None,
     last_value: object = None,
-    sum: object = None
+    sum: object = None,
 ):
     pass
 
@@ -297,16 +265,13 @@ def meter_provider_views_stream_aggregation_drop():
 
 
 def meter_provider_views_stream_aggregation_explicit_bucket_histogram(
-    boundaries: list = None,
-    record_min_max: bool = None
+    boundaries: list = None, record_min_max: bool = None
 ):
     pass
 
 
 def meter_provider_views_stream_aggregation_base2_exponential_bucket_histogram(
-    max_scale: int = None,
-    max_size: int = None,
-    record_min_max: bool = None
+    max_scale: int = None, max_size: int = None, record_min_max: bool = None
 ):
     pass
 
@@ -319,17 +284,12 @@ def meter_provider_views_stream_aggregation_sum():
     pass
 
 
-def propagator(
-    composite: list = None,
-    **kwargs
-):
+def propagator(composite: list = None, **kwargs):
     pass
 
 
 def tracer_provider(
-    limits: object = None,
-    processors: list = None,
-    sampler: object = None
+    limits: object = None, processors: list = None, sampler: object = None
 ):
     # FIXME how to define shutdown_on_exit?
     # FIXME how to define id_generator?
@@ -345,14 +305,12 @@ def tracer_provider(
         sampler=sampler,
         resource=_resource,
         active_span_processor=synchronous_multi_span_processor,
-        span_limits=limits
+        span_limits=limits,
     )
 
 
 def tracer_provider_processors(
-    batch: object = None,
-    simple: object = None,
-    **kwargs
+    batch: object = None, simple: object = None, **kwargs
 ):
     return batch or simple
 
@@ -362,14 +320,14 @@ def tracer_provider_processors_batch(
     export_timeout: int = None,
     max_export_batch_size: int = None,
     max_queue_size: int = None,
-    schedule_delay: int = None
+    schedule_delay: int = None,
 ):
     return BatchSpanProcessor(
         exporter,
         max_queue_size=max_queue_size,
         schedule_delay_millis=schedule_delay,
         max_export_batch_size=max_export_batch_size,
-        export_timeout_millis=export_timeout
+        export_timeout_millis=export_timeout,
     )
 
 
@@ -390,7 +348,7 @@ def tracer_provider_processors_batch_exporter_otlp(
     client_key: str = None,
     compression: str = None,
     headers: object = None,
-    timeout: int = None
+    timeout: int = None,
 ):
     protocol = urlparse(protocol).scheme
 
@@ -412,9 +370,7 @@ def tracer_provider_processors_batch_exporter_otlp(
     )
 
 
-def tracer_provider_processors_batch_exporter_otlp_headers(
-    **kwargs
-):
+def tracer_provider_processors_batch_exporter_otlp_headers(**kwargs):
     return kwargs
 
 
@@ -424,15 +380,12 @@ def tracer_provider_processors_batch_exporter_console():
 
 
 def tracer_provider_processors_batch_exporter_zipkin(
-    endpoint: str,
-    timeout: int = None
+    endpoint: str, timeout: int = None
 ):
     return ZipkinExporter(endpoint, timeout=timeout)
 
 
-def tracer_provider_processors_simple(
-    exporter: object
-):
+def tracer_provider_processors_simple(exporter: object):
     return SimpleSpanProcessor(exporter)
 
 
@@ -453,7 +406,7 @@ def tracer_provider_processors_simple_exporter_otlp(
     client_key: str = None,
     compression: str = None,
     headers: object = None,
-    timeout: int = None
+    timeout: int = None,
 ):
     protocol = urlparse(protocol).scheme
 
@@ -475,9 +428,7 @@ def tracer_provider_processors_simple_exporter_otlp(
     )
 
 
-def tracer_provider_processors_simple_exporter_otlp_headers(
-    **kwargs
-):
+def tracer_provider_processors_simple_exporter_otlp_headers(**kwargs):
     return kwargs
 
 
@@ -486,8 +437,7 @@ def tracer_provider_processors_simple_exporter_console():
 
 
 def tracer_provider_processors_simple_exporter_zipkin(
-    endpoint: str,
-    timeout: int = None
+    endpoint: str, timeout: int = None
 ):
     return ZipkinExporter(endpoint, timeout=timeout)
 
@@ -498,7 +448,7 @@ def tracer_provider_limits(
     event_attribute_count_limit: int = None,
     event_count_limit: int = None,
     link_attribute_count_limit: int = None,
-    link_count_limit: int = None
+    link_count_limit: int = None,
 ):
     return SpanLimits(
         max_span_attributes=attribute_count_limit,
@@ -538,15 +488,13 @@ def tracer_provider_sampler_always_on():
 
 
 def tracer_provider_sampler_jaeger_remote(
-    endpoint: str = None,
-    initial_sampler: object = None,
-    interval: int = None
+    endpoint: str = None, initial_sampler: object = None, interval: int = None
 ):
     return Mock(
         type="jaeger_remote",
         endpoint=endpoint,
         initial_sampler=initial_sampler,
-        interval=interval
+        interval=interval,
     )
 
 
@@ -574,7 +522,7 @@ def tracer_provider_sampler_parent_based(
     local_parent_sampled: object = None,
     remote_parent_not_sampled: object = None,
     remote_parent_sampled: object = None,
-    root: object = None
+    root: object = None,
 ):
     return Mock(
         type="parent_based",
@@ -681,23 +629,15 @@ def tracer_provider_sampler_parent_based_local_parent_not_sampled(
     )
 
 
-def tracer_provider_sampler_trace_id_ratio_based(
-    ratio: float = None
-):
+def tracer_provider_sampler_trace_id_ratio_based(ratio: float = None):
     return ParentBasedTraceIdRatio(ratio)
 
 
-def resource(
-    attributes: object = None,
-    schema_url: str = None
-):
+def resource(attributes: object = None, schema_url: str = None):
     return Resource.create(attributes=attributes, schema_url=schema_url)
 
 
-def resource_attributes(
-    service_name: str = None,
-    **kwargs
-):
+def resource_attributes(service_name: str = None, **kwargs):
     return {"service.name": service_name, **kwargs}
 
 
@@ -1005,7 +945,10 @@ path_function = {
                             "initial_sampler": {
                                 "function": tracer_provider_sampler_jaeger_remote_initial_sampler,  # noqa
                                 "children": {},
-                                "recursive_path": ['tracer_provider', 'sampler'],  # noqa
+                                "recursive_path": [
+                                    "tracer_provider",
+                                    "sampler",
+                                ],  # noqa
                             },
                         },
                         "recursive_path": [],
@@ -1016,27 +959,42 @@ path_function = {
                             "root": {
                                 "function": tracer_provider_sampler_parent_based_root,  # noqa
                                 "children": {},
-                                "recursive_path": ['tracer_provider', 'sampler'],  # noqa
+                                "recursive_path": [
+                                    "tracer_provider",
+                                    "sampler",
+                                ],  # noqa
                             },
                             "remote_parent_sampled": {
                                 "function": tracer_provider_sampler_parent_based_remote_parent_sampled,  # noqa
                                 "children": {},
-                                "recursive_path": ['tracer_provider', 'sampler'],  # noqa
+                                "recursive_path": [
+                                    "tracer_provider",
+                                    "sampler",
+                                ],  # noqa
                             },
                             "remote_parent_not_sampled": {
                                 "function": tracer_provider_sampler_parent_based_remote_parent_not_sampled,  # noqa
                                 "children": {},
-                                "recursive_path": ['tracer_provider', 'sampler'],  # noqa
+                                "recursive_path": [
+                                    "tracer_provider",
+                                    "sampler",
+                                ],  # noqa
                             },
                             "local_parent_sampled": {
                                 "function": tracer_provider_sampler_parent_based_local_parent_sampled,  # noqa
                                 "children": {},
-                                "recursive_path": ['tracer_provider', 'sampler'],  # noqa
+                                "recursive_path": [
+                                    "tracer_provider",
+                                    "sampler",
+                                ],  # noqa
                             },
                             "local_parent_not_sampled": {
                                 "function": tracer_provider_sampler_parent_based_local_parent_not_sampled,  # noqa
                                 "children": {},
-                                "recursive_path": ['tracer_provider', 'sampler'],  # noqa
+                                "recursive_path": [
+                                    "tracer_provider",
+                                    "sampler",
+                                ],  # noqa
                             },
                         },
                         "recursive_path": [],

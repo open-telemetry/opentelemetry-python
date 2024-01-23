@@ -19,13 +19,13 @@ OpenTelemetry Configuration Specification
 
 
 from opentelemetry.configuration._internal import (
-    resolve_schema,
-    validate_configuration,
-    process_schema,
-    render_schema,
     create_object,
     load_configuration,
+    process_schema,
+    render_schema,
+    resolve_schema,
     substitute_environment_variables,
+    validate_configuration,
 )
 
 __all__ = [

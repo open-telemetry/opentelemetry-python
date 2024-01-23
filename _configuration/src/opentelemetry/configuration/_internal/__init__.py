@@ -12,20 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ipdb import set_trace
-from os import environ
-from yaml import safe_load
-from re import compile as re_compile
-from jsonref import JsonRef
-from os.path import exists
-from pathlib import Path
 from collections import OrderedDict
 from json import loads as json_loads
+from os import environ
+from os.path import exists
+from pathlib import Path
+from re import compile as re_compile
+
+from ipdb import set_trace
+from jinja2 import Environment, FileSystemLoader
+from jsonref import JsonRef
 from jsonref import loads as jsonref_loads
 from jsonschema.validators import Draft202012Validator
 from referencing import Registry, Resource
+from yaml import safe_load
+
 from opentelemetry.configuration._internal.path_function import path_function
-from jinja2 import Environment, FileSystemLoader
 
 set_trace
 
@@ -36,7 +38,7 @@ _type_type = {
     "string": str,
     "array": list,
     "object": object,
-    "number": float
+    "number": float,
 }
 
 
@@ -71,13 +73,11 @@ def validate_configuration(schema_path: Path, configuration: dict):
         return Resource.from_contents(json_loads(Path(path).read_text()))
 
     Draft202012Validator(
-        {"$ref": schema_path},
-        registry=Registry(retrieve=retrieve_from_path)
+        {"$ref": schema_path}, registry=Registry(retrieve=retrieve_from_path)
     ).validate(configuration)
 
 
 def process_schema(schema: dict) -> dict:
-
     def traverse(
         schema: dict,
         schema_value_id_stack: list,
@@ -104,8 +104,8 @@ def process_schema(schema: dict) -> dict:
 
             positional_attributes = set(schema.get("required", []))
 
-            optional_attributes = (
-                all_attributes.difference(positional_attributes)
+            optional_attributes = all_attributes.difference(
+                positional_attributes
             )
 
             positional_attributes = sorted(list(positional_attributes))
@@ -116,22 +116,18 @@ def process_schema(schema: dict) -> dict:
 
             for positional_attribute in positional_attributes:
 
-                result_positional_attributes[positional_attribute] = (
-                    str(
-                        _type_type[
-                            schema_properties[positional_attribute]["type"]
-                        ].__name__
-                    )
+                result_positional_attributes[positional_attribute] = str(
+                    _type_type[
+                        schema_properties[positional_attribute]["type"]
+                    ].__name__
                 )
 
             for optional_attribute in optional_attributes:
 
-                result_optional_attributes[optional_attribute] = (
-                    str(
-                        _type_type[
-                            schema_properties[optional_attribute]["type"]
-                        ].__name__
-                    )
+                result_optional_attributes[optional_attribute] = str(
+                    _type_type[
+                        schema_properties[optional_attribute]["type"]
+                    ].__name__
                 )
 
             children = {}
@@ -148,7 +144,7 @@ def process_schema(schema: dict) -> dict:
                     or "patternProperties" in schema.keys()
                 ),
                 "recursive_path": recursive_path,
-                "children": children
+                "children": children,
             }
 
             if recursive_path:
@@ -156,11 +152,11 @@ def process_schema(schema: dict) -> dict:
 
             for (
                 schema_properties_key,
-                schema_properties_value
+                schema_properties_value,
             ) in schema_properties.items():
 
-                schema_properties_value_type = (
-                    schema_properties_value.get("type")
+                schema_properties_value_type = schema_properties_value.get(
+                    "type"
                 )
 
                 if (
@@ -170,8 +166,8 @@ def process_schema(schema: dict) -> dict:
                     continue
 
                 if isinstance(schema_properties_value, JsonRef):
-                    schema_properties_value_id = (
-                        id(schema_properties_value.__subject__)
+                    schema_properties_value_id = id(
+                        schema_properties_value.__subject__
                     )
 
                 else:
@@ -190,11 +186,8 @@ def process_schema(schema: dict) -> dict:
 
                     for (
                         current_schema_key_stack,
-                        current_schema_value_id
-                    ) in zip(
-                        schema_key_stack[1:],
-                        schema_value_id_stack
-                    ):
+                        current_schema_value_id,
+                    ) in zip(schema_key_stack[1:], schema_value_id_stack):
                         recursive_path.append(current_schema_key_stack)
                         if (
                             schema_properties_value_id
@@ -221,7 +214,6 @@ def process_schema(schema: dict) -> dict:
 
 
 def render_schema(processed_schema: dict, path_function_path: Path):
-
     def traverse(
         processed_schema: dict,
         schema_function: dict,
@@ -230,7 +222,7 @@ def render_schema(processed_schema: dict, path_function_path: Path):
 
         for (
             processed_schema_key,
-            processed_schema_value
+            processed_schema_value,
         ) in processed_schema.items():
 
             if not isinstance(processed_schema_value, dict):
@@ -252,7 +244,7 @@ def render_schema(processed_schema: dict, path_function_path: Path):
             schema_function[processed_schema_key] = {
                 "function": processed_schema_value["function_name"],
                 "children": schema_function_children,
-                "recursive_path": processed_schema_value["recursive_path"]
+                "recursive_path": processed_schema_value["recursive_path"],
             }
 
             children = processed_schema_value["children"]
@@ -278,8 +270,9 @@ def render_schema(processed_schema: dict, path_function_path: Path):
             "\n".join(
                 [
                     f"{line}  # noqa" if len(line) > 80 else line
-                    for line in environment.get_template("template.jinja2").
-                    render(locals()).split("\n")
+                    for line in environment.get_template("template.jinja2")
+                    .render(locals())
+                    .split("\n")
                 ]
             )
         )
@@ -288,7 +281,6 @@ def render_schema(processed_schema: dict, path_function_path: Path):
 def create_object(
     configuration: dict, processed_schema: dict, object_name: str
 ) -> object:
-
     def create_object(
         configuration: dict,
         processed_schema: dict,
@@ -300,9 +292,7 @@ def create_object(
         positional_arguments = []
         optional_arguments = {}
 
-        for configuration_key, configuration_value in (
-            configuration.items()
-        ):
+        for configuration_key, configuration_value in configuration.items():
 
             if isinstance(configuration_value, dict):
 
@@ -312,26 +302,22 @@ def create_object(
                     new_path_function = original_path_function
 
                     for path in processed_schema["recursive_path"]:
-                        new_processed_schema = (
-                            new_processed_schema[path]["children"]
-                        )
-                        new_path_function = (
-                            new_path_function[path]["children"]
-                        )
+                        new_processed_schema = new_processed_schema[path][
+                            "children"
+                        ]
+                        new_path_function = new_path_function[path]["children"]
 
-                    new_processed_schema = (
-                        new_processed_schema[configuration_key]
-                    )
-                    new_path_function = (
-                        new_path_function[configuration_key]
-                    )
+                    new_processed_schema = new_processed_schema[
+                        configuration_key
+                    ]
+                    new_path_function = new_path_function[configuration_key]
                 else:
-                    new_processed_schema = (
-                        processed_schema["children"][configuration_key]
-                    )
-                    new_path_function = (
-                        path_function["children"][configuration_key]
-                    )
+                    new_processed_schema = processed_schema["children"][
+                        configuration_key
+                    ]
+                    new_path_function = path_function["children"][
+                        configuration_key
+                    ]
 
                 object_ = create_object(
                     configuration_value,
@@ -383,14 +369,12 @@ def create_object(
 
 
 def substitute_environment_variables(
-    configuration: dict,
-    processed_schema: dict
+    configuration: dict, processed_schema: dict
 ) -> dict:
-
     def traverse(
         configuration: dict,
         processed_schema: dict,
-        original_processed_schema: dict
+        original_processed_schema: dict,
     ):
 
         for configuration_key, configuration_value in configuration.items():
@@ -400,9 +384,9 @@ def substitute_environment_variables(
 
             if isinstance(configuration_value, dict):
 
-                recursive_paths = (
-                    processed_schema[configuration_key]["recursive_path"]
-                )
+                recursive_paths = processed_schema[configuration_key][
+                    "recursive_path"
+                ]
 
                 if recursive_paths:
 
@@ -415,9 +399,7 @@ def substitute_environment_variables(
                     children = processed_schema[configuration_key]["children"]
 
                 traverse(
-                    configuration_value,
-                    children,
-                    original_processed_schema
+                    configuration_value, children, original_processed_schema
                 )
 
             elif isinstance(configuration_value, list):
@@ -427,7 +409,7 @@ def substitute_environment_variables(
                         traverse(
                             element,
                             processed_schema[configuration_key]["children"],
-                            original_processed_schema
+                            original_processed_schema,
                         )
 
             elif isinstance(configuration_value, str):
@@ -436,10 +418,9 @@ def substitute_environment_variables(
 
                 if match is not None:
 
-                    configuration[configuration_key] = (
-                        __builtins__[processed_schema[configuration_key]]
-                        (environ.get(match.group(1)))
-                    )
+                    configuration[configuration_key] = __builtins__[
+                        processed_schema[configuration_key]
+                    ](environ.get(match.group(1)))
 
     traverse(configuration, processed_schema, processed_schema)
 
