@@ -13,9 +13,7 @@
 # limitations under the License.
 
 from collections import OrderedDict
-from json import loads as json_loads
 from os import environ
-from os.path import exists
 from pathlib import Path
 from re import compile as re_compile
 from abc import ABC, abstractmethod
@@ -34,7 +32,6 @@ from jinja2 import Environment, FileSystemLoader
 from jsonref import JsonRef
 from jsonref import loads as jsonref_loads
 from jsonschema.validators import Draft202012Validator
-from referencing import Registry, Resource
 from yaml import safe_load
 from black import format_str, Mode
 from opentelemetry.util._importlib_metadata import entry_points
@@ -81,7 +78,7 @@ class FileConfigurationPlugin(ABC):
         """
 
 
-class SometimesMondayOnSampler(Sampler):
+class SometimesMondaysOnSampler(Sampler):
     """
     A sampler that samples only on Mondays, but sometimes.
     """
@@ -114,7 +111,7 @@ class SometimesMondaysOnSamplerPlugin(FileConfigurationPlugin):
         Returns the plugin schema.
         """
         return {
-            "sometimes_monday_on": {
+            "sometimes_mondays_on": {
                 "type": "object",
                 "additionalProperties": False,
                 "properties": {
@@ -139,10 +136,11 @@ class SometimesMondaysOnSamplerPlugin(FileConfigurationPlugin):
         ]
 
     @staticmethod
-    def function(probability: float) -> object:
+    def function(probability: float) -> SometimesMondaysOnSampler:
         """
         The function that will instantiate the plugin object.
         """
+        return SometimesMondaysOnSampler(probability)
 
 
 def resolve_schema(json_file_path) -> dict:
@@ -173,6 +171,9 @@ def resolve_schema(json_file_path) -> dict:
                     ",".join(schema_path)
                 )
                 break
+        else:
+            for key, value in plugin.schema.items():
+                sub_dictionary[key] = value
 
     return dictionary
 
@@ -184,19 +185,11 @@ def load_file_configuration(file_configuration_file_path: str) -> dict:
         return safe_load(file_configuration_file)
 
 
-def validate_file_configuration(schema_path: Path, file_configuration: dict):
-
-    schema_path = str(schema_path)
-
-    if not exists(schema_path):
-        raise Exception(f"{schema_path} does not exist")
-
-    def retrieve_from_path(path: str):
-        return Resource.from_contents(json_loads(Path(path).read_text()))
-
-    Draft202012Validator(
-        {"$ref": schema_path}, registry=Registry(retrieve=retrieve_from_path)
-    ).validate(file_configuration)
+def validate_file_configuration(
+    schema: dict,
+    file_configuration: dict
+) -> None:
+    Draft202012Validator(schema).validate(file_configuration)
 
 
 def process_schema(schema: dict) -> dict:
