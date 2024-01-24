@@ -938,20 +938,26 @@ class Span(trace_api.Span, ReadableSpan):
         exc_tb: Optional[TracebackType],
     ) -> None:
         """Ends context manager and calls `end` on the `Span`."""
-        if exc_val is not None and self.is_recording():
-            # Record the exception as an event
-            # pylint:disable=protected-access
-            if self._record_exception:
-                self.record_exception(exception=exc_val, escaped=True)
-            # Records status if span is used as context manager
-            # i.e. with tracer.start_span() as span:
-            if self._set_status_on_exception:
-                self.set_status(
-                    Status(
-                        status_code=StatusCode.ERROR,
-                        description=f"{exc_type.__name__}: {exc_val}",
+        try:
+            if exc_val is not None and self.is_recording():
+                # Record the exception as an event
+                # pylint:disable=protected-access
+                if self._record_exception:
+                    stacktrace = traceback.format_exc()
+                    self.record_exception(exception=exc_val, escaped=True)
+                # Records status if span is used as context manager
+                # i.e. with tracer.start_span() as span:
+                if self._set_status_on_exception:
+                    self.set_status(
+                        Status(
+                            status_code=StatusCode.ERROR,
+                            description=f"{exc_type.__name__}: {exc_val}",
+                        )
                     )
-                )
+        except Exception as record_exception_error:
+            # Log or handle the error appropriately
+            print(f"Error recording exception: {record_exception_error}")
+
 
         super().__exit__(exc_type, exc_val, exc_tb)
 
