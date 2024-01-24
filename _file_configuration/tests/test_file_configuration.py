@@ -18,7 +18,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 from ipdb import set_trace
-from jsonschema.validators import Draft202012Validator
 from pytest import fail
 
 from opentelemetry.file_configuration import (
@@ -40,19 +39,22 @@ data_path = Path(__file__).parent.joinpath("data")
 def test_create_object():
 
     file_configuration = load_file_configuration(
-        data_path.joinpath("file_configuration").joinpath("file_configuration_0.yaml")
+        data_path.joinpath("file_configuration").
+        joinpath("file_configuration_0.yaml")
     )
 
     schema_path = data_path.joinpath("schema").joinpath(
         "opentelemetry_file_configuration.json"
     )
 
+    resolved_schema = resolve_schema(schema_path)
+
     try:
-        validate_file_configuration(schema_path, file_configuration)
+        validate_file_configuration(resolved_schema, file_configuration)
     except Exception as error:
         fail(f"Unexpected exception raised: {error}")
 
-    processed_schema = process_schema(resolve_schema(schema_path))
+    processed_schema = process_schema(resolved_schema)
 
     set_resource(create_object(file_configuration, processed_schema, "resource"))
 
@@ -101,28 +103,34 @@ def test_create_object():
 
 @patch.dict(environ, {"OTEL_BLRB_EXPORT_TIMEOUT": "943"}, clear=True)
 def test_substitute_environment_variables():
+
     file_configuration = load_file_configuration(
-        data_path.joinpath("file_configuration").joinpath("file_configuration_1.yaml")
+        data_path.joinpath("file_configuration").
+        joinpath("file_configuration_1.yaml")
     )
 
     schema_path = data_path.joinpath("schema").joinpath(
         "opentelemetry_file_configuration.json"
     )
 
-    processed_schema = process_schema(resolve_schema(schema_path))
+    resolved_schema = resolve_schema(schema_path)
+
+    processed_schema = process_schema(resolved_schema)
+
     file_configuration = substitute_environment_variables(
         file_configuration, processed_schema
     )
+
+    try:
+        validate_file_configuration(resolved_schema, file_configuration)
+    except Exception as error:
+        fail(f"Unexpected exception raised: {error}")
 
     assert (
         file_configuration["logger_provider"]["processors"][0]["batch"][
             "export_timeout"
         ]
     ) == 943
-    try:
-        validate_file_configuration(schema_path, file_configuration)
-    except Exception as error:
-        fail(f"Unexpected exception raised: {error}")
 
 
 def test_render(tmpdir):
@@ -142,43 +150,25 @@ def test_render(tmpdir):
         fail(f"Unexpected exception raised: {error}")
 
 
-def test_subschemas():
-
-    schema_path = data_path.joinpath("schema").joinpath(
-        "opentelemetry_file_configuration.json"
-    )
-    resolved_schema = resolve_schema(schema_path)
-    resolved_schema
-
-    # FIXME once the schema has been resolved, we get a dictionary. Add to this
-    # dictionary the schema components of each plugin component sub schema then
-    # use the resulting schema dictionary to do the validation.
-
-    file_configuration = load_file_configuration(
-        data_path.joinpath("file_configuration").joinpath("file_configuration_0.yaml")
-    )
-
-    # FIXME do the same for file_configuration components
-
-    Draft202012Validator(resolved_schema).validate(file_configuration)
-
-
 def test_dry_run():
 
     file_configuration = load_file_configuration(
-        data_path.joinpath("file_configuration").joinpath("file_configuration_0.yaml")
+        data_path.joinpath("file_configuration").
+        joinpath("file_configuration_0.yaml")
     )
 
     schema_path = data_path.joinpath("schema").joinpath(
         "opentelemetry_file_configuration.json"
     )
 
+    resolved_schema = resolve_schema(schema_path)
+
     try:
-        validate_file_configuration(schema_path, file_configuration)
+        validate_file_configuration(resolved_schema, file_configuration)
     except Exception as error:
         fail(f"Unexpected exception raised: {error}")
 
-    processed_schema = process_schema(resolve_schema(schema_path))
+    processed_schema = process_schema(resolved_schema)
 
     set_resource(create_object(file_configuration, processed_schema, "resource"))
 
