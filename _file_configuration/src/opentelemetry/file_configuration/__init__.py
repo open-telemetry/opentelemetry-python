@@ -13,27 +13,27 @@
 # limitations under the License.
 
 """
-The OpenTelemetry Configuration package is an implementation of the
-OpenTelemetry Configuration Specification
+The OpenTelemetry File Configuration package is an implementation of the
+OpenTelemetry File Configuration Specification
 """
 
 
-from opentelemetry.configuration._internal import (
+from opentelemetry.file_configuration._internal import (
     create_object,
-    load_configuration,
+    load_file_configuration,
     process_schema,
     render_schema,
     resolve_schema,
     substitute_environment_variables,
-    validate_configuration,
+    validate_file_configuration,
 )
 
 __all__ = [
     "resolve_schema",
-    "validate_configuration",
+    "validate_file_configuration",
     "process_schema",
     "render_schema",
     "create_object",
-    "load_configuration",
+    "load_file_configuration",
     "substitute_environment_variables",
 ]

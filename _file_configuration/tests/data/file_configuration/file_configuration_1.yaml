@@ -1,6 +1,6 @@
 # kitchen-sink.yaml demonstrates all configurable surface area, including explanatory comments.
 #
-# It DOES NOT represent expected real world configuration, as it makes strange configuration
+# It DOES NOT represent expected real world file configuration, as it makes strange file configuration
 # choices in an effort to exercise the full surface area.
 #
 # Configuration values are set to their defaults when default values are defined.
@@ -181,7 +181,7 @@ meter_provider:
         exporter:
           # Configure exporter to be console.
           console: {}
-  # Configure views. Each view has a selector which determines the instrument(s) it applies to, and a configuration for the resulting stream(s).
+  # Configure views. Each view has a selector which determines the instrument(s) it applies to, and a file configuration for the resulting stream(s).
   views:
     # Configure a view.
     - selector:

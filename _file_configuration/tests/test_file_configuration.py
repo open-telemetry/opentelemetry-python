@@ -21,16 +21,16 @@ from ipdb import set_trace
 from jsonschema.validators import Draft202012Validator
 from pytest import fail
 
-from opentelemetry.configuration import (
+from opentelemetry.file_configuration import (
     create_object,
-    load_configuration,
+    load_file_configuration,
     process_schema,
     render_schema,
     resolve_schema,
     substitute_environment_variables,
-    validate_configuration,
+    validate_file_configuration,
 )
-from opentelemetry.configuration._internal.path_function import set_resource
+from opentelemetry.file_configuration._internal.path_function import set_resource
 
 set_trace
 
@@ -39,25 +39,25 @@ data_path = Path(__file__).parent.joinpath("data")
 
 def test_create_object():
 
-    configuration = load_configuration(
-        data_path.joinpath("configuration").joinpath("configuration_0.yaml")
+    file_configuration = load_file_configuration(
+        data_path.joinpath("file_configuration").joinpath("file_configuration_0.yaml")
     )
 
     schema_path = data_path.joinpath("schema").joinpath(
-        "opentelemetry_configuration.json"
+        "opentelemetry_file_configuration.json"
     )
 
     try:
-        validate_configuration(schema_path, configuration)
+        validate_file_configuration(schema_path, file_configuration)
     except Exception as error:
         fail(f"Unexpected exception raised: {error}")
 
     processed_schema = process_schema(resolve_schema(schema_path))
 
-    set_resource(create_object(configuration, processed_schema, "resource"))
+    set_resource(create_object(file_configuration, processed_schema, "resource"))
 
     tracer_provider = create_object(
-        configuration, processed_schema, "tracer_provider"
+        file_configuration, processed_schema, "tracer_provider"
     )
 
     assert (
@@ -101,26 +101,26 @@ def test_create_object():
 
 @patch.dict(environ, {"OTEL_BLRB_EXPORT_TIMEOUT": "943"}, clear=True)
 def test_substitute_environment_variables():
-    configuration = load_configuration(
-        data_path.joinpath("configuration").joinpath("configuration_1.yaml")
+    file_configuration = load_file_configuration(
+        data_path.joinpath("file_configuration").joinpath("file_configuration_1.yaml")
     )
 
     schema_path = data_path.joinpath("schema").joinpath(
-        "opentelemetry_configuration.json"
+        "opentelemetry_file_configuration.json"
     )
 
     processed_schema = process_schema(resolve_schema(schema_path))
-    configuration = substitute_environment_variables(
-        configuration, processed_schema
+    file_configuration = substitute_environment_variables(
+        file_configuration, processed_schema
     )
 
     assert (
-        configuration["logger_provider"]["processors"][0]["batch"][
+        file_configuration["logger_provider"]["processors"][0]["batch"][
             "export_timeout"
         ]
     ) == 943
     try:
-        validate_configuration(schema_path, configuration)
+        validate_file_configuration(schema_path, file_configuration)
     except Exception as error:
         fail(f"Unexpected exception raised: {error}")
 
@@ -132,7 +132,7 @@ def test_render(tmpdir):
             process_schema(
                 resolve_schema(
                     data_path.joinpath("schema").joinpath(
-                        "opentelemetry_configuration.json"
+                        "opentelemetry_file_configuration.json"
                     )
                 )
             ),
@@ -145,7 +145,7 @@ def test_render(tmpdir):
 def test_subschemas():
 
     schema_path = data_path.joinpath("schema").joinpath(
-        "opentelemetry_configuration.json"
+        "opentelemetry_file_configuration.json"
     )
     resolved_schema = resolve_schema(schema_path)
     resolved_schema
@@ -154,37 +154,37 @@ def test_subschemas():
     # dictionary the schema components of each plugin component sub schema then
     # use the resulting schema dictionary to do the validation.
 
-    configuration = load_configuration(
-        data_path.joinpath("configuration").joinpath("configuration_0.yaml")
+    file_configuration = load_file_configuration(
+        data_path.joinpath("file_configuration").joinpath("file_configuration_0.yaml")
     )
 
-    # FIXME do the same for configuration components
+    # FIXME do the same for file_configuration components
 
-    Draft202012Validator(resolved_schema).validate(configuration)
+    Draft202012Validator(resolved_schema).validate(file_configuration)
 
 
 def test_dry_run():
 
-    configuration = load_configuration(
-        data_path.joinpath("configuration").joinpath("configuration_0.yaml")
+    file_configuration = load_file_configuration(
+        data_path.joinpath("file_configuration").joinpath("file_configuration_0.yaml")
     )
 
     schema_path = data_path.joinpath("schema").joinpath(
-        "opentelemetry_configuration.json"
+        "opentelemetry_file_configuration.json"
     )
 
     try:
-        validate_configuration(schema_path, configuration)
+        validate_file_configuration(schema_path, file_configuration)
     except Exception as error:
         fail(f"Unexpected exception raised: {error}")
 
     processed_schema = process_schema(resolve_schema(schema_path))
 
-    set_resource(create_object(configuration, processed_schema, "resource"))
+    set_resource(create_object(file_configuration, processed_schema, "resource"))
 
     print()
     print(
         create_object(
-            configuration, processed_schema, "tracer_provider", dry_run=True
+            file_configuration, processed_schema, "tracer_provider", dry_run=True
         )
     )
