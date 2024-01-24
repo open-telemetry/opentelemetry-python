@@ -18,6 +18,16 @@ from os import environ
 from os.path import exists
 from pathlib import Path
 from re import compile as re_compile
+from abc import ABC, abstractmethod
+from logging import getLogger
+from datetime import datetime
+from random import random
+
+from typing import Optional, Sequence
+from opentelemetry.trace import Link, SpanKind
+from opentelemetry.trace.span import TraceState
+from opentelemetry.util.types import Attributes
+from opentelemetry.context import Context
 
 from ipdb import set_trace
 from jinja2 import Environment, FileSystemLoader
@@ -27,8 +37,12 @@ from jsonschema.validators import Draft202012Validator
 from referencing import Registry, Resource
 from yaml import safe_load
 from black import format_str, Mode
+from opentelemetry.util._importlib_metadata import entry_points
 
-from opentelemetry.configuration._internal.path_function import path_function
+from opentelemetry.file_configuration._internal.path_function import path_function
+from opentelemetry.sdk.trace.sampling import Sampler, SamplingResult
+
+_logger = getLogger(__file__)
 
 set_trace
 
@@ -43,6 +57,94 @@ _type_type = {
 }
 
 
+class FileConfigurationPlugin(ABC):
+
+    @property
+    @abstractmethod
+    def schema(self) -> dict:
+        """
+        Returns the plugin schema.
+        """
+
+    @property
+    @abstractmethod
+    def schema_path(self) -> list:
+        """
+        Returns the path for the plugin schema.
+        """
+
+    @staticmethod
+    @abstractmethod
+    def function(*args, **kwargs) -> object:
+        """
+        The function that will instantiate the plugin object.
+        """
+
+
+class SometimesMondayOnSampler(Sampler):
+    """
+    A sampler that samples only on Mondays, but sometimes.
+    """
+
+    def __init__(self, probability: float) -> None:
+        super().__init__(probability)
+        self._probability = probability
+
+    def should_sample(
+        self,
+        parent_context: Optional["Context"],
+        trace_id: int,
+        name: str,
+        kind: SpanKind = None,
+        attributes: Attributes = None,
+        links: Sequence["Link"] = None,
+        trace_state: "TraceState" = None,
+    ) -> SamplingResult:
+        return datetime.now().weekday() == 0 and random() < self._probability
+
+    def get_description(self) -> str:
+        return self.__class__.__name__
+
+
+class SometimesMondaysOnSamplerPlugin(FileConfigurationPlugin):
+
+    @property
+    def schema(self) -> dict:
+        """
+        Returns the plugin schema.
+        """
+        return {
+            "sometimes_monday_on": {
+                "type": "object",
+                "additionalProperties": False,
+                "properties": {
+                    "probability": {
+                        "type": "number"
+                    },
+                }
+            }
+        }
+
+    @property
+    def schema_path(self) -> list:
+        """
+        Returns the path for the plugin schema.
+        """
+        return [
+            "properties",
+            "tracer_provider",
+            "properties",
+            "sampler",
+            "properties"
+        ]
+
+    @staticmethod
+    def function(probability: float) -> object:
+        """
+        The function that will instantiate the plugin object.
+        """
+
+
 def resolve_schema(json_file_path) -> dict:
 
     root_path = json_file_path.absolute()
@@ -52,17 +154,37 @@ def resolve_schema(json_file_path) -> dict:
             json_file.read(), base_uri=root_path.as_uri()
         )
 
+    for entry_point in entry_points(group="opentelemetry_file_configuration"):
+
+        plugin = entry_point.load()()
+
+        sub_dictionary = dictionary
+
+        schema_path = []
+
+        for schema_path_part in plugin.schema_path:
+            schema_path.append(schema_path_part)
+            try:
+                sub_dictionary = sub_dictionary[schema_path_part]
+            except KeyError:
+                _logger.warning(
+                    "Unable to add plugin %s to schema: wrong path %s",
+                    entry_point.name,
+                    ",".join(schema_path)
+                )
+                break
+
     return dictionary
 
 
-def load_configuration(configuration_file_path: str) -> dict:
+def load_file_configuration(file_configuration_file_path: str) -> dict:
 
-    with open(configuration_file_path, "r") as configuration_file:
+    with open(file_configuration_file_path, "r") as file_configuration_file:
 
-        return safe_load(configuration_file)
+        return safe_load(file_configuration_file)
 
 
-def validate_configuration(schema_path: Path, configuration: dict):
+def validate_file_configuration(schema_path: Path, file_configuration: dict):
 
     schema_path = str(schema_path)
 
@@ -74,7 +196,7 @@ def validate_configuration(schema_path: Path, configuration: dict):
 
     Draft202012Validator(
         {"$ref": schema_path}, registry=Registry(retrieve=retrieve_from_path)
-    ).validate(configuration)
+    ).validate(file_configuration)
 
 
 def process_schema(schema: dict) -> dict:
@@ -279,13 +401,13 @@ def render_schema(processed_schema: dict, path_function_path: Path):
 
 
 def create_object(
-    configuration: dict,
+    file_configuration: dict,
     processed_schema: dict,
     object_name: str,
     dry_run=False
 ) -> object:
     def create_object(
-        configuration: dict,
+        file_configuration: dict,
         processed_schema: dict,
         path_function: dict,
         original_processed_schema: dict,
@@ -295,9 +417,9 @@ def create_object(
         positional_arguments = []
         optional_arguments = {}
 
-        for configuration_key, configuration_value in configuration.items():
+        for file_configuration_key, file_configuration_value in file_configuration.items():
 
-            if isinstance(configuration_value, dict):
+            if isinstance(file_configuration_value, dict):
 
                 if processed_schema["recursive_path"]:
 
@@ -311,36 +433,36 @@ def create_object(
                         new_path_function = new_path_function[path]["children"]
 
                     new_processed_schema = new_processed_schema[
-                        configuration_key
+                        file_configuration_key
                     ]
-                    new_path_function = new_path_function[configuration_key]
+                    new_path_function = new_path_function[file_configuration_key]
                 else:
                     new_processed_schema = processed_schema["children"][
-                        configuration_key
+                        file_configuration_key
                     ]
                     new_path_function = path_function["children"][
-                        configuration_key
+                        file_configuration_key
                     ]
 
                 object_ = create_object(
-                    configuration_value,
+                    file_configuration_value,
                     new_processed_schema,
                     new_path_function,
                     original_processed_schema,
                     original_path_function,
                 )
 
-            elif isinstance(configuration_value, list):
+            elif isinstance(file_configuration_value, list):
 
                 object_ = []
 
-                for element in configuration_value:
+                for element in file_configuration_value:
 
                     object_.append(
                         create_object(
                             element,
-                            processed_schema["children"][configuration_key],
-                            path_function["children"][configuration_key],
+                            processed_schema["children"][file_configuration_key],
+                            path_function["children"][file_configuration_key],
                             original_processed_schema,
                             original_path_function,
                         )
@@ -348,22 +470,22 @@ def create_object(
 
             else:
 
-                object_ = configuration_value
+                object_ = file_configuration_value
 
-            if configuration_key in (
+            if file_configuration_key in (
                 processed_schema["positional_attributes"].keys()
             ):
                 positional_arguments.append(object_)
 
             else:
-                optional_arguments[configuration_key] = object_
+                optional_arguments[file_configuration_key] = object_
 
         return path_function["function"](
             *positional_arguments, **optional_arguments
         )
 
     result = create_object(
-        configuration[object_name],
+        file_configuration[object_name],
         processed_schema[object_name],
         path_function[object_name],
         processed_schema,
@@ -375,22 +497,22 @@ def create_object(
 
 
 def substitute_environment_variables(
-    configuration: dict, processed_schema: dict
+    file_configuration: dict, processed_schema: dict
 ) -> dict:
     def traverse(
-        configuration: dict,
+        file_configuration: dict,
         processed_schema: dict,
         original_processed_schema: dict,
     ):
 
-        for configuration_key, configuration_value in configuration.items():
+        for file_configuration_key, file_configuration_value in file_configuration.items():
 
-            if configuration_key not in processed_schema.keys():
+            if file_configuration_key not in processed_schema.keys():
                 continue
 
-            if isinstance(configuration_value, dict):
+            if isinstance(file_configuration_value, dict):
 
-                recursive_paths = processed_schema[configuration_key][
+                recursive_paths = processed_schema[file_configuration_key][
                     "recursive_path"
                 ]
 
@@ -402,32 +524,32 @@ def substitute_environment_variables(
                         children = children[recursive_path]["children"]
 
                 else:
-                    children = processed_schema[configuration_key]["children"]
+                    children = processed_schema[file_configuration_key]["children"]
 
                 traverse(
-                    configuration_value, children, original_processed_schema
+                    file_configuration_value, children, original_processed_schema
                 )
 
-            elif isinstance(configuration_value, list):
+            elif isinstance(file_configuration_value, list):
 
-                for element in configuration_value:
+                for element in file_configuration_value:
                     if isinstance(element, dict):
                         traverse(
                             element,
-                            processed_schema[configuration_key]["children"],
+                            processed_schema[file_configuration_key]["children"],
                             original_processed_schema,
                         )
 
-            elif isinstance(configuration_value, str):
+            elif isinstance(file_configuration_value, str):
 
-                match = _environment_variable_regex.match(configuration_value)
+                match = _environment_variable_regex.match(file_configuration_value)
 
                 if match is not None:
 
-                    configuration[configuration_key] = __builtins__[
-                        processed_schema[configuration_key]
+                    file_configuration[file_configuration_key] = __builtins__[
+                        processed_schema[file_configuration_key]
                     ](environ.get(match.group(1)))
 
-    traverse(configuration, processed_schema, processed_schema)
+    traverse(file_configuration, processed_schema, processed_schema)
 
-    return configuration
+    return file_configuration

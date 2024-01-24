@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "opentelemetry-configuration"
+name = "opentelemetry-file-configuration"
 dynamic = ["version"]
-description = "OpenTelemetry Python Configuration"
+description = "OpenTelemetry Python File Configuration"
 readme = "README.rst"
 license = "Apache-2.0"
 requires-python = ">=3.7"
@@ -39,10 +39,13 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/opentelemetry-configuration"
+Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/opentelemetry-file-configuration"
+
+[project.entry-points.opentelemetry_id_generator]
+sometimes_monday_on_sampler = "opentelemetry.sdk.trace.id_generator:RandomIdGenerator"
 
 [tool.hatch.version]
-path = "src/opentelemetry/configuration/version.py"
+path = "src/opentelemetry/file_configuration/version.py"
 
 [tool.hatch.build.targets.sdist]
 include = [

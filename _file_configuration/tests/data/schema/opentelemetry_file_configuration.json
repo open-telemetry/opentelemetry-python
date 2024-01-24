@@ -1,7 +1,7 @@
 {
-    "$id": "https://opentelemetry.io/otelconfig/opentelemetry_configuration.json",
+    "$id": "https://opentelemetry.io/otelconfig/opentelemetry_file_configuration.json",
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "title": "OpenTelemetryConfiguration",
+    "title": "OpenTelemetryFileConfiguration",
     "type": "object",
     "additionalProperties": true,
     "properties": {

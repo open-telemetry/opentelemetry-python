@@ -12,4 +12,4 @@ def test(session):
     if session.posargs:
         session.run("pytest", *session.posargs)
     else:
-        session.run("pytest", "tests/test_configuration.py")
+        session.run("pytest", "tests/test_file_configuration.py")
