@@ -188,3 +188,35 @@ def test_dry_run():
             file_configuration, processed_schema, "tracer_provider", dry_run=True
         )
     )
+
+
+def test_plugin():
+
+    file_configuration = load_file_configuration(
+        data_path.joinpath("file_configuration").
+        joinpath("file_configuration_2.yaml")
+    )
+
+    schema_path = data_path.joinpath("schema").joinpath(
+        "opentelemetry_file_configuration.json"
+    )
+
+    resolved_schema = resolve_schema(schema_path)
+
+    try:
+        validate_file_configuration(resolved_schema, file_configuration)
+    except Exception as error:
+        fail(f"Unexpected exception raised: {error}")
+
+    assert (
+        resolved_schema
+        ["properties"]
+        ["tracer_provider"]
+        ["properties"]
+        ["sampler"]
+        ["properties"]
+        ["sometimes_mondays_on"]
+        ["properties"]
+        ["probability"]
+        ["type"]
+    ) == "number"

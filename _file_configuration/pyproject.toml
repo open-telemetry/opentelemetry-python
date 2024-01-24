@@ -41,8 +41,8 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/opentelemetry-file-configuration"
 
-[project.entry-points.opentelemetry_id_generator]
-sometimes_monday_on_sampler = "opentelemetry.sdk.trace.id_generator:RandomIdGenerator"
+[project.entry-points.opentelemetry_file_configuration]
+sometimes_mondays_on_sampler = "opentelemetry.file_configuration:SometimesMondaysOnSamplerPlugin"
 
 [tool.hatch.version]
 path = "src/opentelemetry/file_configuration/version.py"
