@@ -65,7 +65,6 @@ class OTLPMetricExporterMixin:
     def _common_configuration(
         self,
         preferred_temporality: Dict[type, AggregationTemporality] = None,
-        preferred_aggregation: Dict[type, "opentelemetry.sdk.metrics.view.Aggregation"] = None,
         preferred_aggregation: Dict[
             type, "opentelemetry.sdk.metrics.view.Aggregation"
         ] = None,
