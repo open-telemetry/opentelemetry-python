@@ -12,6 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+OTEL_SDK_DISABLED = "OTEL_SDK_DISABLED"
+"""
+.. envvar:: OTEL_SDK_DISABLED
+
+The :envvar:`OTEL_SDK_DISABLED` environment variable disables the SDK for all signals
+Default: "false"
+"""
+
 OTEL_RESOURCE_ATTRIBUTES = "OTEL_RESOURCE_ATTRIBUTES"
 """
 .. envvar:: OTEL_RESOURCE_ATTRIBUTES

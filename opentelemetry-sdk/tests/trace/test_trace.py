@@ -37,6 +37,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT,
     OTEL_SPAN_EVENT_COUNT_LIMIT,
     OTEL_SPAN_LINK_COUNT_LIMIT,
+    OTEL_SDK_DISABLED,
     OTEL_TRACES_SAMPLER,
     OTEL_TRACES_SAMPLER_ARG,
 )
@@ -161,6 +162,11 @@ tracer_provider.add_span_processor(mock_processor)
         self.assertEqual(
             span_processor, tracer_provider._active_span_processor
         )
+
+    @mock.patch.dict("os.environ", {OTEL_SDK_DISABLED: "true"})
+    def test_get_tracer_with_sdk_disabled(self):
+        tracer_provider = trace.TracerProvider()
+        self.assertIsInstance(tracer_provider.get_tracer(Mock()), trace_api.NoOpTracer)
 
 
 class TestTracerSampling(unittest.TestCase):
