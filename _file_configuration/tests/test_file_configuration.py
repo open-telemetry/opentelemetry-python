@@ -29,7 +29,9 @@ from opentelemetry.file_configuration import (
     substitute_environment_variables,
     validate_file_configuration,
 )
-from opentelemetry.file_configuration._internal.path_function import set_resource
+from opentelemetry.file_configuration._internal.path_function import (
+    set_resource,
+)
 
 set_trace
 
@@ -210,3 +212,14 @@ def test_plugin():
         ["probability"]
         ["type"]
     ) == "number"
+
+    processed_schema = process_schema(resolved_schema)
+
+    set_resource(
+        create_object(file_configuration, processed_schema, "resource")
+    )
+
+    tracer_provider = create_object(
+        file_configuration, processed_schema, "tracer_provider"
+    )
+    assert tracer_provider.sampler.sometimes_mondays_on._probability == 0.8

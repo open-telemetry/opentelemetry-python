@@ -53,6 +53,17 @@ _type_type = {
     "number": float,
 }
 
+_path_function = path_function
+
+
+def get_path_function() -> dict:
+    return _path_function
+
+
+def set_path_function(path_function: dict) -> None:
+    global _path_function
+    _path_function = path_function
+
 
 class FileConfigurationPlugin(ABC):
 
@@ -76,6 +87,13 @@ class FileConfigurationPlugin(ABC):
         """
         The function that will instantiate the plugin object.
         """
+
+    @property
+    def recursive_path(self) -> list:
+        """
+        The recursive path for the plugin object if any.
+        """
+        return []
 
 
 class SometimesMondaysOnSampler(Sampler):
@@ -106,12 +124,13 @@ class SometimesMondaysOnSampler(Sampler):
 class SometimesMondaysOnSamplerPlugin(FileConfigurationPlugin):
 
     @property
-    def schema(self) -> dict:
+    def schema(self) -> tuple:
         """
         Returns the plugin schema.
         """
-        return {
-            "sometimes_mondays_on": {
+        return (
+            "sometimes_mondays_on",
+            {
                 "type": "object",
                 "additionalProperties": False,
                 "properties": {
@@ -120,7 +139,7 @@ class SometimesMondaysOnSamplerPlugin(FileConfigurationPlugin):
                     },
                 }
             }
-        }
+        )
 
     @property
     def schema_path(self) -> list:
@@ -148,7 +167,7 @@ def resolve_schema(json_file_path) -> dict:
     root_path = json_file_path.absolute()
 
     with open(json_file_path, "r") as json_file:
-        dictionary = jsonref_loads(
+        resolved_schema = jsonref_loads(
             json_file.read(), base_uri=root_path.as_uri()
         )
 
@@ -156,26 +175,46 @@ def resolve_schema(json_file_path) -> dict:
 
         plugin = entry_point.load()()
 
-        sub_dictionary = dictionary
+        sub_resolved_schema = resolved_schema
 
         schema_path = []
 
         for schema_path_part in plugin.schema_path:
             schema_path.append(schema_path_part)
             try:
-                sub_dictionary = sub_dictionary[schema_path_part]
+                sub_resolved_schema = sub_resolved_schema[schema_path_part]
             except KeyError:
                 _logger.warning(
-                    "Unable to add plugin %s to schema: wrong path %s",
+                    "Unable to add plugin %s to schema: wrong schema path %s",
                     entry_point.name,
                     ",".join(schema_path)
                 )
                 break
         else:
-            for key, value in plugin.schema.items():
-                sub_dictionary[key] = value
+            sub_resolved_schema[plugin.schema[0]] = plugin.schema[1]
 
-    return dictionary
+        original_path_function = get_path_function()
+        sub_path_function = original_path_function
+
+        for schema_path_part in plugin.schema_path:
+
+            if schema_path_part == "properties":
+                continue
+
+            sub_path_function = (
+                sub_path_function[schema_path_part]["children"]
+            )
+
+        sub_path_function[plugin.schema[0]] = {}
+        sub_path_function[plugin.schema[0]]["function"] = plugin.function
+        sub_path_function[plugin.schema[0]]["children"] = {}
+        sub_path_function[plugin.schema[0]]["recursive_path"] = (
+            plugin.recursive_path
+        )
+
+    set_path_function(original_path_function)
+
+    return resolved_schema
 
 
 def load_file_configuration(file_configuration_file_path: str) -> dict:
@@ -231,7 +270,7 @@ def process_schema(schema: dict) -> dict:
 
             for positional_attribute in positional_attributes:
 
-                result_positional_attributes[positional_attribute] = str(
+                result_positional_attributes[positional_attribute] = (
                     _type_type[
                         schema_properties[positional_attribute]["type"]
                     ].__name__
@@ -239,7 +278,7 @@ def process_schema(schema: dict) -> dict:
 
             for optional_attribute in optional_attributes:
 
-                result_optional_attributes[optional_attribute] = str(
+                result_optional_attributes[optional_attribute] = (
                     _type_type[
                         schema_properties[optional_attribute]["type"]
                     ].__name__
@@ -476,6 +515,8 @@ def create_object(
         return path_function["function"](
             *positional_arguments, **optional_arguments
         )
+
+    path_function = get_path_function()
 
     result = create_object(
         file_configuration[object_name],
