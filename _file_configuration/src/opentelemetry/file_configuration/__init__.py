@@ -19,6 +19,7 @@ OpenTelemetry File Configuration Specification
 
 
 from opentelemetry.file_configuration._internal import (
+    SometimesMondaysOnSamplerPlugin,
     create_object,
     load_file_configuration,
     process_schema,
@@ -26,7 +27,6 @@ from opentelemetry.file_configuration._internal import (
     resolve_schema,
     substitute_environment_variables,
     validate_file_configuration,
-    SometimesMondaysOnSamplerPlugin
 )
 
 __all__ = [
@@ -37,5 +37,5 @@ __all__ = [
     "create_object",
     "load_file_configuration",
     "substitute_environment_variables",
-    "SometimesMondayOnSamplerPlugin"
+    "SometimesMondaysOnSamplerPlugin",
 ]

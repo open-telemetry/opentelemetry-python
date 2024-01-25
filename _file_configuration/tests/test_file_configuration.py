@@ -41,8 +41,9 @@ data_path = Path(__file__).parent.joinpath("data")
 def test_create_object():
 
     file_configuration = load_file_configuration(
-        data_path.joinpath("file_configuration").
-        joinpath("file_configuration_0.yaml")
+        data_path.joinpath("file_configuration").joinpath(
+            "file_configuration_0.yaml"
+        )
     )
 
     schema_path = data_path.joinpath("schema").joinpath(
@@ -58,7 +59,9 @@ def test_create_object():
 
     processed_schema = process_schema(resolved_schema)
 
-    set_resource(create_object(file_configuration, processed_schema, "resource"))
+    set_resource(
+        create_object(file_configuration, processed_schema, "resource")
+    )
 
     tracer_provider = create_object(
         file_configuration, processed_schema, "tracer_provider"
@@ -107,8 +110,9 @@ def test_create_object():
 def test_substitute_environment_variables():
 
     file_configuration = load_file_configuration(
-        data_path.joinpath("file_configuration").
-        joinpath("file_configuration_1.yaml")
+        data_path.joinpath("file_configuration").joinpath(
+            "file_configuration_1.yaml"
+        )
     )
 
     schema_path = data_path.joinpath("schema").joinpath(
@@ -155,8 +159,9 @@ def test_render(tmpdir):
 def test_dry_run():
 
     file_configuration = load_file_configuration(
-        data_path.joinpath("file_configuration").
-        joinpath("file_configuration_0.yaml")
+        data_path.joinpath("file_configuration").joinpath(
+            "file_configuration_0.yaml"
+        )
     )
 
     schema_path = data_path.joinpath("schema").joinpath(
@@ -172,12 +177,17 @@ def test_dry_run():
 
     processed_schema = process_schema(resolved_schema)
 
-    set_resource(create_object(file_configuration, processed_schema, "resource"))
+    set_resource(
+        create_object(file_configuration, processed_schema, "resource")
+    )
 
     print()
     print(
         create_object(
-            file_configuration, processed_schema, "tracer_provider", dry_run=True
+            file_configuration,
+            processed_schema,
+            "tracer_provider",
+            dry_run=True,
         )
     )
 
@@ -185,8 +195,9 @@ def test_dry_run():
 def test_plugin():
 
     file_configuration = load_file_configuration(
-        data_path.joinpath("file_configuration").
-        joinpath("file_configuration_2.yaml")
+        data_path.joinpath("file_configuration").joinpath(
+            "file_configuration_2.yaml"
+        )
     )
 
     schema_path = data_path.joinpath("schema").joinpath(
@@ -201,16 +212,11 @@ def test_plugin():
         fail(f"Unexpected exception raised: {error}")
 
     assert (
-        resolved_schema
-        ["properties"]
-        ["tracer_provider"]
-        ["properties"]
-        ["sampler"]
-        ["properties"]
-        ["sometimes_mondays_on"]
-        ["properties"]
-        ["probability"]
-        ["type"]
+        resolved_schema["properties"]["tracer_provider"]["properties"][
+            "sampler"
+        ]["properties"]["sometimes_mondays_on"]["properties"]["probability"][
+            "type"
+        ]
     ) == "number"
 
     processed_schema = process_schema(resolved_schema)

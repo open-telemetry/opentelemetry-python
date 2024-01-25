@@ -43,7 +43,6 @@ _resource = None
 
 
 class MockSampler(Mock):
-
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self._args = args
@@ -67,7 +66,7 @@ def set_resource(resource):
 def attribute_limits(
     attribute_count_limit: int = None,
     attribute_value_length_limit: int = None,
-    **kwargs
+    **kwargs,
 ):
     pass
 
@@ -162,7 +161,7 @@ def meter_provider_readers_periodic_exporter(
     console: object = None,
     otlp: object = None,
     prometheus: object = None,
-    **kwargs
+    **kwargs,
 ):
     pass
 
@@ -204,7 +203,7 @@ def meter_provider_readers_pull_exporter(
     console: object = None,
     otlp: object = None,
     prometheus: object = None,
-    **kwargs
+    **kwargs,
 ):
     pass
 
@@ -352,7 +351,7 @@ def tracer_provider_processors_batch_exporter(
     console: object = None,
     otlp: object = None,
     zipkin: object = None,
-    **kwargs
+    **kwargs,
 ):
     return console or otlp or zipkin
 
@@ -410,7 +409,7 @@ def tracer_provider_processors_simple_exporter(
     console: object = None,
     otlp: object = None,
     zipkin: object = None,
-    **kwargs
+    **kwargs,
 ):
     return console or otlp or zipkin
 
@@ -483,7 +482,7 @@ def tracer_provider_sampler(
     jaeger_remote: object = None,
     parent_based: object = None,
     trace_id_ratio_based: object = None,
-    **kwargs
+    **kwargs,
 ):
     return MockSampler(
         type="Sampler",
@@ -492,7 +491,7 @@ def tracer_provider_sampler(
         jaeger_remote=jaeger_remote,
         parent_based=parent_based,
         trace_id_ratio_based=trace_id_ratio_based,
-        **kwargs
+        **kwargs,
     )
 
 
@@ -521,7 +520,7 @@ def tracer_provider_sampler_jaeger_remote_initial_sampler(
     jaeger_remote: object = None,
     parent_based: object = None,
     trace_id_ratio_based: object = None,
-    **kwargs
+    **kwargs,
 ):
     return MockSampler(
         type="InitialSamplerSampler",
@@ -530,7 +529,7 @@ def tracer_provider_sampler_jaeger_remote_initial_sampler(
         jaeger_remote=jaeger_remote,
         parent_based=parent_based,
         trace_id_ratio_based=trace_id_ratio_based,
-        **kwargs
+        **kwargs,
     )
 
 
@@ -557,7 +556,7 @@ def tracer_provider_sampler_parent_based_root(
     jaeger_remote: object = None,
     parent_based: object = None,
     trace_id_ratio_based: object = None,
-    **kwargs
+    **kwargs,
 ):
     return MockSampler(
         type="RootSampler",
@@ -566,7 +565,7 @@ def tracer_provider_sampler_parent_based_root(
         jaeger_remote=jaeger_remote,
         parent_based=parent_based,
         trace_id_ratio_based=trace_id_ratio_based,
-        **kwargs
+        **kwargs,
     )
 
 
@@ -576,7 +575,7 @@ def tracer_provider_sampler_parent_based_remote_parent_sampled(
     jaeger_remote: object = None,
     parent_based: object = None,
     trace_id_ratio_based: object = None,
-    **kwargs
+    **kwargs,
 ):
     return MockSampler(
         type="RemoteParentSampledSampler",
@@ -585,7 +584,7 @@ def tracer_provider_sampler_parent_based_remote_parent_sampled(
         jaeger_remote=jaeger_remote,
         parent_based=parent_based,
         trace_id_ratio_based=trace_id_ratio_based,
-        **kwargs
+        **kwargs,
     )
 
 
@@ -595,7 +594,7 @@ def tracer_provider_sampler_parent_based_remote_parent_not_sampled(
     jaeger_remote: object = None,
     parent_based: object = None,
     trace_id_ratio_based: object = None,
-    **kwargs
+    **kwargs,
 ):
     return MockSampler(
         type="RemoteParentNotSampledSampler",
@@ -604,7 +603,7 @@ def tracer_provider_sampler_parent_based_remote_parent_not_sampled(
         jaeger_remote=jaeger_remote,
         parent_based=parent_based,
         trace_id_ratio_based=trace_id_ratio_based,
-        **kwargs
+        **kwargs,
     )
 
 
@@ -614,7 +613,7 @@ def tracer_provider_sampler_parent_based_local_parent_sampled(
     jaeger_remote: object = None,
     parent_based: object = None,
     trace_id_ratio_based: object = None,
-    **kwargs
+    **kwargs,
 ):
     return MockSampler(
         type="LocalParentSampledSampler",
@@ -623,7 +622,7 @@ def tracer_provider_sampler_parent_based_local_parent_sampled(
         jaeger_remote=jaeger_remote,
         parent_based=parent_based,
         trace_id_ratio_based=trace_id_ratio_based,
-        **kwargs
+        **kwargs,
     )
 
 
@@ -633,7 +632,7 @@ def tracer_provider_sampler_parent_based_local_parent_not_sampled(
     jaeger_remote: object = None,
     parent_based: object = None,
     trace_id_ratio_based: object = None,
-    **kwargs
+    **kwargs,
 ):
     return MockSampler(
         type="LocalParentNotSampledSampler",
@@ -642,7 +641,7 @@ def tracer_provider_sampler_parent_based_local_parent_not_sampled(
         jaeger_remote=jaeger_remote,
         parent_based=parent_based,
         trace_id_ratio_based=trace_id_ratio_based,
-        **kwargs
+        **kwargs,
     )
 
 

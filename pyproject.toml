@@ -4,6 +4,7 @@ exclude = '''
 (
   /(  # generated files
     .tox|
+    .nox|
     venv|
     venv.*|
     .venv.*|
