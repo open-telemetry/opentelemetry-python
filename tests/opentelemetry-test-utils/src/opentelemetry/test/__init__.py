@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# type: ignore
+
 from traceback import format_tb
 from unittest import TestCase
 
@@ -47,5 +49,7 @@ class _AssertNotRaisesMixin:
         self.assertNotRaises = self._AssertNotRaises(self)
 
 
-class TestCase(_AssertNotRaisesMixin, TestCase):
+class TestCase(
+    _AssertNotRaisesMixin, TestCase
+):  # pylint: disable=function-redefined
     pass

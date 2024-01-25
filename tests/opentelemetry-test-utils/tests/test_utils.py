@@ -26,7 +26,7 @@ class TestAssertNotRaises(TestCase):
         except Exception as error:  # pylint: disable=broad-except
 
             self.fail(  # pylint: disable=no-member
-                "Unexpected exception {} was raised".format(error)
+                f"Unexpected exception {error} was raised"
             )
 
     def test_no_specified_exception_single(self):
@@ -39,7 +39,7 @@ class TestAssertNotRaises(TestCase):
         except Exception as error:  # pylint: disable=broad-except
 
             self.fail(  # pylint: disable=no-member
-                "Unexpected exception {} was raised".format(error)
+                f"Unexpected exception {error} was raised"
             )
 
     def test_no_specified_exception_multiple(self):
@@ -52,7 +52,7 @@ class TestAssertNotRaises(TestCase):
         except Exception as error:  # pylint: disable=broad-except
 
             self.fail(  # pylint: disable=no-member
-                "Unexpected exception was raised:\n{}".format(error)
+                f"Unexpected exception {error} was raised"
             )
 
     def test_exception(self):
