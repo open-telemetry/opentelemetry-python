@@ -15,6 +15,7 @@ import os
 import sys
 import unittest
 import uuid
+from concurrent.futures import TimeoutError
 from logging import ERROR, WARNING
 from os import environ
 from unittest.mock import Mock, patch
@@ -418,6 +419,23 @@ class TestResources(unittest.TestCase):
         resource_detector.raise_on_error = True
         self.assertRaises(
             Exception, get_aggregated_resources, [resource_detector]
+        )
+
+    @patch("opentelemetry.sdk.resources.logger")
+    def test_resource_detector_timeout(self, mock_logger):
+        resource_detector = Mock(spec=ResourceDetector)
+        resource_detector.detect.side_effect = TimeoutError()
+        resource_detector.raise_on_error = False
+        self.assertEqual(
+            get_aggregated_resources([resource_detector]),
+            _DEFAULT_RESOURCE.merge(
+                Resource({SERVICE_NAME: "unknown_service"}, "")
+            ),
+        )
+        mock_logger.warning.assert_called_with(
+            "Detector %s took longer than %s seconds, skipping",
+            resource_detector,
+            5,
         )
 
     @patch.dict(
