@@ -198,7 +198,6 @@ class SamplingResult:
 
 
 class Sampler(abc.ABC):
-
     def __init__(self, *args, **kwargs) -> None:
         self._args_kwargs = [repr(arg) for arg in args]
         self._args_kwargs.extend(
@@ -224,7 +223,7 @@ class Sampler(abc.ABC):
         pass
 
     def __repr__(self) -> str:
-        return f'{self.__class__.__name__}({self._args_kwargs})'
+        return f"{self.__class__.__name__}({self._args_kwargs})"
 
 
 class StaticSampler(Sampler):
@@ -350,7 +349,7 @@ class ParentBased(Sampler):
             remote_parent_sampled,
             remote_parent_not_sampled,
             local_parent_sampled,
-            local_parent_not_sampled
+            local_parent_not_sampled,
         )
         self._root = root
         self._remote_parent_sampled = remote_parent_sampled
