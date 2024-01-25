@@ -16,7 +16,6 @@
 from logging import WARNING
 from time import sleep
 from typing import Iterable, Sequence
-from unittest import TestCase
 from unittest.mock import MagicMock, Mock, patch
 
 from opentelemetry.metrics import NoOpMeter
@@ -40,6 +39,7 @@ from opentelemetry.sdk.metrics.export import (
 )
 from opentelemetry.sdk.metrics.view import SumAggregation, View
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.test import TestCase
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase, MockFunc
 
 
@@ -59,7 +59,7 @@ class DummyMetricReader(MetricReader):
         return True
 
 
-class TestMeterProvider(ConcurrencyTestBase):
+class TestMeterProvider(ConcurrencyTestBase, TestCase):
     def tearDown(self):
 
         MeterProvider._all_metric_readers = set()
@@ -86,11 +86,9 @@ class TestMeterProvider(ConcurrencyTestBase):
         metric_reader_0 = PeriodicExportingMetricReader(mock_exporter)
         metric_reader_1 = PeriodicExportingMetricReader(mock_exporter)
 
-        try:
+        with self.assertNotRaises(Exception):
             MeterProvider(metric_readers=(metric_reader_0,))
             MeterProvider(metric_readers=(metric_reader_1,))
-        except Exception as error:
-            self.fail(f"Unexpected exception {error} raised")
 
         with self.assertRaises(Exception):
             MeterProvider(metric_readers=(metric_reader_0,))
@@ -356,7 +354,7 @@ class TestMeter(TestCase):
         self.meter = Meter(Mock(), Mock())
 
     def test_repeated_instrument_names(self):
-        try:
+        with self.assertNotRaises(Exception):
             self.meter.create_counter("counter")
             self.meter.create_up_down_counter("up_down_counter")
             self.meter.create_observable_counter(
@@ -369,8 +367,6 @@ class TestMeter(TestCase):
             self.meter.create_observable_up_down_counter(
                 "observable_up_down_counter", callbacks=[Mock()]
             )
-        except Exception as error:
-            self.fail(f"Unexpected exception raised {error}")
 
         for instrument_name in [
             "counter",

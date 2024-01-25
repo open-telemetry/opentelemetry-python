@@ -14,7 +14,7 @@
 
 # pylint: disable=unused-import
 
-from unittest import TestCase
+from opentelemetry.test import TestCase
 
 
 class TestImport(TestCase):
@@ -23,7 +23,7 @@ class TestImport(TestCase):
         Test that the metrics root module has the right symbols
         """
 
-        try:
+        with self.assertNotRaises(Exception):
             from opentelemetry.sdk.metrics import (  # noqa: F401
                 Counter,
                 Histogram,
@@ -34,15 +34,13 @@ class TestImport(TestCase):
                 ObservableUpDownCounter,
                 UpDownCounter,
             )
-        except Exception as error:
-            self.fail(f"Unexpected error {error} was raised")
 
     def test_import_export(self):
         """
         Test that the metrics export module has the right symbols
         """
 
-        try:
+        with self.assertNotRaises(Exception):
             from opentelemetry.sdk.metrics.export import (  # noqa: F401
                 AggregationTemporality,
                 ConsoleMetricExporter,
@@ -63,15 +61,13 @@ class TestImport(TestCase):
                 ScopeMetrics,
                 Sum,
             )
-        except Exception as error:
-            self.fail(f"Unexpected error {error} was raised")
 
     def test_import_view(self):
         """
         Test that the metrics view module has the right symbols
         """
 
-        try:
+        with self.assertNotRaises(Exception):
             from opentelemetry.sdk.metrics.view import (  # noqa: F401
                 Aggregation,
                 DefaultAggregation,
@@ -81,5 +77,3 @@ class TestImport(TestCase):
                 SumAggregation,
                 View,
             )
-        except Exception as error:
-            self.fail(f"Unexpected error {error} was raised")
