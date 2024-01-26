@@ -1212,6 +1212,7 @@ class TracerProvider(trace_api.TracerProvider):
             self._resource = resource
         if not sampler:
             sampler = sampling._get_from_env_or_default()
+        self._shutdown_on_exit = self._shutdown_on_exit
         self.sampler = sampler
         self._span_limits = span_limits or SpanLimits()
         disabled = environ.get(OTEL_SDK_DISABLED, "")
@@ -1222,10 +1223,15 @@ class TracerProvider(trace_api.TracerProvider):
             self._atexit_handler = atexit.register(self.shutdown)
 
     def __repr__(self) -> str:
+        from ipdb import set_trace
+        set_trace()
         return (
             f"{self.__class__.__name__}("
-            f"{repr(self.sampler)},"
-            f"{repr(self._resource)},"
+            f"sampler={repr(self.sampler)},"
+            f"resource={repr(self._resource)},"
+            f"shutdown_on_exit={repr(self._shutdown_on_exit)},"
+            f"active_span_processor={repr(self._active_span_processor)},"
+            f"id_generator={repr(self._active_span_processor)},"
             ")"
         )
 

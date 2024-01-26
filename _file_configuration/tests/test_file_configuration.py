@@ -192,6 +192,42 @@ def test_dry_run():
     )
 
 
+def test_dry_run_multiple_span_processors():
+
+    file_configuration = load_file_configuration(
+        data_path.joinpath("file_configuration").joinpath(
+            "file_configuration_3.yaml"
+        )
+    )
+
+    schema_path = data_path.joinpath("schema").joinpath(
+        "opentelemetry_file_configuration.json"
+    )
+
+    resolved_schema = resolve_schema(schema_path)
+
+    try:
+        validate_file_configuration(resolved_schema, file_configuration)
+    except Exception as error:
+        fail(f"Unexpected exception raised: {error}")
+
+    processed_schema = process_schema(resolved_schema)
+
+    set_resource(
+        create_object(file_configuration, processed_schema, "resource")
+    )
+
+    print()
+    print(
+        create_object(
+            file_configuration,
+            processed_schema,
+            "tracer_provider",
+            dry_run=True,
+        )
+    )
+
+
 def test_plugin():
 
     file_configuration = load_file_configuration(
