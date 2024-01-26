@@ -15,7 +15,7 @@
 from logging import WARNING
 from os import environ
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import MagicMock, Mock, patch
 
 from requests import Session
 from requests.models import Response
@@ -476,3 +476,14 @@ class TestOTLPMetricExporter(TestCase):
                 OTLPMetricExporter()._preferred_aggregation[Histogram],
                 ExplicitBucketHistogramAggregation,
             )
+
+    @patch.object(OTLPMetricExporter, "_export", return_value=Mock(ok=True))
+    def test_2xx_status_code(self, mock_otlp_metric_exporter):
+        """
+        Test that any HTTP 2XX code returns a successful result
+        """
+
+        self.assertEqual(
+            OTLPMetricExporter().export(MagicMock()),
+            MetricExportResult.SUCCESS,
+        )
