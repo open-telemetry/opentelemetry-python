@@ -13,6 +13,8 @@
 # limitations under the License.
 import logging
 
+# This kind of import is needed to avoid Sphinx errors.
+import opentelemetry.sdk.metrics._internal
 from opentelemetry.sdk.metrics.export import (
     MetricExporter,
 )
