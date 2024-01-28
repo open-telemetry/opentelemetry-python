@@ -14,9 +14,8 @@
 
 
 import asyncio
-import time
+import contextlib
 from unittest import TestCase
-from unittest.mock import Mock
 
 from opentelemetry.trace import (
     INVALID_SPAN,
@@ -41,62 +40,38 @@ class TestTracer(TestCase):
             self.assertIsInstance(span, Span)
 
     def test_start_as_current_span_decorator(self):
-        mock_call = Mock()
+        # using a list to track the mock call order
+        lst = []
 
         class MockTracer(Tracer):
             def start_span(self, *args, **kwargs):
                 return INVALID_SPAN
 
             @agnosticcontextmanager
-            def start_as_current_span(self, *args, **kwargs):  # type: ignore
-                mock_call()
+            def start_as_current_span(self, *args, **kwargs):
+                lst.append(1)
                 yield INVALID_SPAN
+                lst.append(9)
 
         mock_tracer = MockTracer()
 
+        # test 1 : sync function
         @mock_tracer.start_as_current_span("name")
-        def function():  # type: ignore
-            pass
+        def function_sync():
+            lst.append(5)
 
-        function()  # type: ignore
-        function()  # type: ignore
-        function()  # type: ignore
+        lst = []
+        function_sync()
+        self.assertEqual(lst, [1, 5, 9])
 
-        self.assertEqual(mock_call.call_count, 3)
-
-    def test_start_as_current_span_decorator_work_with_async(self):
-        # As explored in GH issue #3270 the start_as_current_span decorator
-        # does work with async functions but expose a near zero timing issue
-        # this test intend to reproduce the issue and validate the fix
-
-        # create a near zero time to not slow down the test but it must be
-        # greater 1.5e-6 to reproduce the issue
-        near_zero = 1e-5
-        mock_call = Mock()
-
-        class MockTracer(Tracer):
-            waited: float = 0
-
-            def start_span(self, *args, **kwargs):
-                return INVALID_SPAN
-
-            @agnosticcontextmanager
-            def start_as_current_span(self, *args, **kwargs):  # type: ignore
-                mock_call()
-                i = time.monotonic()
-                yield INVALID_SPAN
-                self.waited = time.monotonic() - i
-
-        mock_tracer = MockTracer()
-
+        # test 2 : async function
         @mock_tracer.start_as_current_span("name")
-        async def function():  # type: ignore
-            time.sleep(near_zero)
+        async def function_async():
+            lst.append(5)
 
-        asyncio.run(function())  # type: ignore
-
-        self.assertEqual(mock_call.call_count, 1)
-        self.assertTrue(mock_tracer.waited > near_zero)
+        lst = []
+        asyncio.run(function_async())
+        self.assertEqual(lst, [1, 5, 9])
 
     def test_get_current_span(self):
         with self.tracer.start_as_current_span("test") as span:
