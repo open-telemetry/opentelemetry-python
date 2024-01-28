@@ -14,7 +14,6 @@
 
 
 import asyncio
-import contextlib
 from unittest import TestCase
 
 from opentelemetry.trace import (
@@ -22,7 +21,7 @@ from opentelemetry.trace import (
     NoOpTracer,
     Span,
     Tracer,
-    agnosticcontextmanager,
+    _agnosticcontextmanager,
     get_current_span,
 )
 
@@ -47,7 +46,7 @@ class TestTracer(TestCase):
             def start_span(self, *args, **kwargs):
                 return INVALID_SPAN
 
-            @agnosticcontextmanager
+            @_agnosticcontextmanager  # pylint: disable=protected-access
             def start_as_current_span(self, *args, **kwargs):
                 lst.append(1)
                 yield INVALID_SPAN

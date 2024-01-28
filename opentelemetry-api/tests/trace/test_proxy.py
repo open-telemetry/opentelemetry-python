@@ -39,7 +39,7 @@ class TestTracer(trace.NoOpTracer):
     def start_span(self, *args, **kwargs):
         return TestSpan(INVALID_SPAN_CONTEXT)
 
-    @trace.agnosticcontextmanager
+    @trace._agnosticcontextmanager  # pylint: disable=protected-access
     def start_as_current_span(self, *args, **kwargs):  # type: ignore
         with trace.use_span(self.start_span(*args, **kwargs)) as span:  # type: ignore
             yield span

@@ -1037,7 +1037,7 @@ class Tracer(trace_api.Tracer):
         self._span_limits = span_limits
         self._instrumentation_scope = instrumentation_scope
 
-    @trace_api.agnosticcontextmanager
+    @trace_api._agnosticcontextmanager  # pylint: disable=protected-access
     def start_as_current_span(
         self,
         name: str,
