@@ -46,10 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3639](https://github.com/open-telemetry/opentelemetry-python/pull/3639))
 - Upgrade markupsafe, Flask and related dependencies to dev and test
   environments ([#3609](https://github.com/open-telemetry/opentelemetry-python/pull/3609))
-=======
-- Fix `Tracer.start_as_current_span` to allow decorating a function with a span
+- Make `tracer.start_as_current_span()` decorator work with async functions
   ([#3633](https://github.com/open-telemetry/opentelemetry-python/pull/3633))
->>>>>>> 9baa98d7 (docs: changelog)
 - Handle HTTP 2XX responses as successful in OTLP exporters
   ([#3623](https://github.com/open-telemetry/opentelemetry-python/pull/3623))
 - Improve Resource Detector timeout messaging
