@@ -981,6 +981,7 @@ class TestOTLPMetricExporter(TestCase):
         )
 
         self.assertEqual(
+            # pylint: disable=protected-access
             exporter._preferred_aggregation[Histogram], histogram_aggregation
         )
 
