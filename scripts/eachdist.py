@@ -477,17 +477,8 @@ def install_args(args):
     # note the trailing single quote, to close the quote opened above.
     allfmt += "'"
 
-    execute_args(
-        parse_subargs(
-            args,
-            (
-                "exec",
-                "python -m pip install {} " + join_args(args.pipargs),
-                "--all",
-                allfmt,
-            ),
-        )
-    )
+    subargs = parse_subargs(args, ("exec", "python -m pip install {} " + join_args(args.pipargs), "--all", allfmt,), )
+    execute_args(subargs)
     if args.with_dev_deps:
         rootpath = find_projectroot()
         runsubprocess(
