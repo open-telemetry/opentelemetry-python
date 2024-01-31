@@ -358,17 +358,18 @@ class TestPrometheusMetricReader(TestCase):
         counter.add(1)
         result = list(metric_reader._collector.collect())
 
-        for prometheus_metric in result[:0]:
-            self.assertEqual(type(prometheus_metric), InfoMetricFamily)
-            self.assertEqual(prometheus_metric.name, "target")
-            self.assertEqual(
-                prometheus_metric.documentation, "Target metadata"
-            )
-            self.assertTrue(len(prometheus_metric.samples) == 1)
-            self.assertEqual(prometheus_metric.samples[0].value, 1)
-            self.assertTrue(len(prometheus_metric.samples[0].labels) == 2)
-            self.assertEqual(prometheus_metric.samples[0].labels["os"], "Unix")
-            self.assertEqual(prometheus_metric.samples[0].labels["histo"], "1")
+        self.assertEqual(len(result), 2)
+
+        prometheus_metric = result[0]
+
+        self.assertEqual(type(prometheus_metric), InfoMetricFamily)
+        self.assertEqual(prometheus_metric.name, "target")
+        self.assertEqual(prometheus_metric.documentation, "Target metadata")
+        self.assertTrue(len(prometheus_metric.samples) == 1)
+        self.assertEqual(prometheus_metric.samples[0].value, 1)
+        self.assertTrue(len(prometheus_metric.samples[0].labels) == 2)
+        self.assertEqual(prometheus_metric.samples[0].labels["os"], "Unix")
+        self.assertEqual(prometheus_metric.samples[0].labels["histo"], 1)
 
     def test_target_info_disabled(self):
         metric_reader = PrometheusMetricReader(disable_target_info=True)
