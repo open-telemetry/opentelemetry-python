@@ -144,7 +144,7 @@ class OTLPSpanExporter(SpanExporter):
 
             resp = self._export(serialized_data)
             # pylint: disable=no-else-return
-            if resp.status_code in (200, 202):
+            if resp.ok:
                 return SpanExportResult.SUCCESS
             elif self._retryable(resp):
                 _logger.warning(

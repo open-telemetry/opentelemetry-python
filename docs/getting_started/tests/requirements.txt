@@ -5,7 +5,7 @@ charset-normalizer==2.0.12
 click==8.1.7
 Deprecated==1.2.14
 flaky==3.7.0
-Flask==2.0.1
+Flask==2.3.3
 idna==3.4
 importlib-metadata==6.8.0
 iniconfig==2.0.0
@@ -22,6 +22,6 @@ requests==2.26.0
 tomli==2.0.1
 typing_extensions==4.8.0
 urllib3==1.26.18
-Werkzeug==2.3.7
+Werkzeug==3.0.1
 wrapt==1.15.0
 zipp==3.17.0
