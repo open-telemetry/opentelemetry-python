@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Include key in attribute sequence warning
+  ([#3639](https://github.com/open-telemetry/opentelemetry-python/pull/3639))
 - Upgrade markupsafe, Flask and related dependencies to dev and test
   environments ([#3609](https://github.com/open-telemetry/opentelemetry-python/pull/3609))
 - Handle HTTP 2XX responses as successful in OTLP exporters
