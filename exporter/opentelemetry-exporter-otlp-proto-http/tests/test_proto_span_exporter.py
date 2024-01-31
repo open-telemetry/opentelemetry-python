@@ -14,7 +14,7 @@
 
 import unittest
 from collections import OrderedDict
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import requests
 import responses
@@ -42,6 +42,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TRACES_TIMEOUT,
 )
 from opentelemetry.sdk.trace import _Span
+from opentelemetry.sdk.trace.export import SpanExportResult
 
 OS_ENV_ENDPOINT = "os.env.base"
 OS_ENV_CERTIFICATE = "os/env/base.crt"
@@ -239,3 +240,13 @@ class TestOTLPSpanExporter(unittest.TestCase):
 
         exporter.export([span])
         mock_sleep.assert_called_once_with(1)
+
+    @patch.object(OTLPSpanExporter, "_export", return_value=Mock(ok=True))
+    def test_2xx_status_code(self, mock_otlp_metric_exporter):
+        """
+        Test that any HTTP 2XX code returns a successful result
+        """
+
+        self.assertEqual(
+            OTLPSpanExporter().export(MagicMock()), SpanExportResult.SUCCESS
+        )
