@@ -209,7 +209,11 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
             and thus defining how many span processors can work in parallel.
     """
 
-    def __init__(self, num_threads: int = 2):
+    def __init__(
+            self,
+            num_threads: int = 2,
+            done_callback: Callable[[concurrent.futures.Future], None] | None = None
+        ):
         # use a tuple to avoid race conditions when adding a new span and
         # iterating through it on "on_start" and "on_end".
         self._span_processors = ()  # type: Tuple[SpanProcessor, ...]
@@ -217,6 +221,7 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
         self._executor = concurrent.futures.ThreadPoolExecutor(
             max_workers=num_threads
         )
+        self.done_callback = done_callback
 
     def add_span_processor(self, span_processor: SpanProcessor) -> None:
         """Adds a SpanProcessor to the list handled by this instance."""
@@ -232,9 +237,13 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
         futures = []
         for sp in self._span_processors:
             future = self._executor.submit(func(sp), *args, **kwargs)
-            futures.append(future)
-        for future in futures:
-            future.result()
+            if self.done_callback:
+                future.add_done_callback(self.done_callback)
+            else:
+                futures.append(future)
+        if not self.done_callback:
+            for future in futures:
+                future.result()
 
     def on_start(
         self,
