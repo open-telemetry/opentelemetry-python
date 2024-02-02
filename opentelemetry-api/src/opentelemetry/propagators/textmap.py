@@ -16,6 +16,7 @@ import abc
 import typing
 
 from opentelemetry.context.context import Context
+from opentelemetry.opentelemetry import OpenTelemetry
 
 CarrierT = typing.TypeVar("CarrierT")
 # pylint: disable=invalid-name
@@ -121,7 +122,7 @@ class DefaultSetter(Setter[typing.MutableMapping[str, CarrierValT]]):
 default_setter: Setter[CarrierT] = DefaultSetter()  # type: ignore
 
 
-class TextMapPropagator(abc.ABC):
+class TextMapPropagator(OpenTelemetry, abc.ABC):
     """This class provides an interface that enables extracting and injecting
     context into headers of HTTP requests. HTTP frameworks and clients
     can integrate with TextMapPropagator by providing the object containing the
