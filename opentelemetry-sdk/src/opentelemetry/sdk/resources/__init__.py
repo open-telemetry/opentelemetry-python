@@ -144,6 +144,13 @@ TELEMETRY_SDK_LANGUAGE = ResourceAttributes.TELEMETRY_SDK_LANGUAGE
 _OPENTELEMETRY_SDK_VERSION = version("opentelemetry-sdk")
 
 
+class ResourceDict(typing.TypedDict):
+    """Dictionary representation of a Resource."""
+
+    attributes: Attributes
+    schema_url: typing.Optional[str]
+
+
 class Resource:
     """A Resource is an immutable representation of the entity producing telemetry as Attributes."""
 
@@ -273,14 +280,14 @@ class Resource:
             f"{dumps(self._attributes.copy(), sort_keys=True)}|{self._schema_url}"
         )
 
+    def to_dict(self) -> ResourceDict:
+        return {
+            "attributes": dict(self._attributes),
+            "schema_url": self._schema_url,
+        }
+
     def to_json(self, indent=4) -> str:
-        return dumps(
-            {
-                "attributes": dict(self._attributes),
-                "schema_url": self._schema_url,
-            },
-            indent=indent,
-        )
+        return dumps(self.to_dict(), indent=indent)
 
 
 _EMPTY_RESOURCE = Resource({})

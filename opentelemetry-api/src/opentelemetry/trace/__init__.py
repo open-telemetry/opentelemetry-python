@@ -103,6 +103,7 @@ from opentelemetry.trace.span import (
     NonRecordingSpan,
     Span,
     SpanContext,
+    SpanContextDict,
     TraceFlags,
     TraceState,
     format_span_id,
@@ -130,6 +131,13 @@ class _LinkBase(ABC):
         pass
 
 
+class LinkDict(typing.TypedDict):
+    """Dictionary representation of a span Link."""
+
+    context: SpanContextDict
+    attributes: types.Attributes
+
+
 class Link(_LinkBase):
     """A link to a `Span`. The attributes of a Link are immutable.
 
@@ -151,6 +159,12 @@ class Link(_LinkBase):
     @property
     def attributes(self) -> types.Attributes:
         return self._attributes
+
+    def to_dict(self) -> LinkDict:
+        return {
+            "context": self.context.to_dict(),
+            "attributes": dict(self._attributes),
+        }
 
 
 _Links = Optional[Sequence[Link]]

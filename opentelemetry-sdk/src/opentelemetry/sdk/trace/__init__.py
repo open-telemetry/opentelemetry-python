@@ -55,7 +55,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_SPAN_EVENT_COUNT_LIMIT,
     OTEL_SPAN_LINK_COUNT_LIMIT,
 )
-from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.resources import Resource, ResourceDict
 from opentelemetry.sdk.trace import sampling
 from opentelemetry.sdk.trace.id_generator import IdGenerator, RandomIdGenerator
 from opentelemetry.sdk.util import BoundedList
@@ -63,8 +63,8 @@ from opentelemetry.sdk.util.instrumentation import (
     InstrumentationInfo,
     InstrumentationScope,
 )
-from opentelemetry.trace import SpanContext
-from opentelemetry.trace.status import Status, StatusCode
+from opentelemetry.trace import SpanContext, SpanContextDict
+from opentelemetry.trace.status import Status, StatusCode, StatusDict
 from opentelemetry.util import types
 
 logger = logging.getLogger(__name__)
@@ -304,6 +304,14 @@ class EventBase(abc.ABC):
         pass
 
 
+class EventDict(typing.TypedDict):
+    """Dictionary representation of a span Event."""
+
+    name: str
+    timestamp: str
+    attributes: types.Attributes
+
+
 class Event(EventBase):
     """A text annotation with a set of attributes. The attributes of an event
     are immutable.
@@ -329,6 +337,13 @@ class Event(EventBase):
     def attributes(self) -> types.Attributes:
         return self._attributes
 
+    def to_dict(self) -> EventDict:
+        return {
+            "name": self.name,
+            "timestamp": util.ns_to_iso_str(self.timestamp),
+            "attributes": dict(self._attributes),
+        }
+
 
 def _check_span_ended(func):
     def wrapper(self, *args, **kwargs):
@@ -343,6 +358,22 @@ def _check_span_ended(func):
             logger.warning("Tried calling %s on an ended span.", func.__name__)
 
     return wrapper
+
+
+class ReadableSpanDict(typing.TypedDict):
+    """Dictionary representation of a ReadableSpan."""
+
+    name: typing.Optional[str]
+    context: SpanContextDict
+    kind: str
+    parent_id: typing.Optional[str]
+    start_time: typing.Optional[str]
+    end_time: typing.Optional[str]
+    status: typing.Optional[StatusDict]
+    attributes: types.Attributes
+    events: typing.List[EventDict]
+    links: typing.List[trace_api.LinkDict]
+    resource: ResourceDict
 
 
 class ReadableSpan:
@@ -462,26 +493,27 @@ class ReadableSpan:
     def instrumentation_scope(self) -> Optional[InstrumentationScope]:
         return self._instrumentation_scope
 
-    def to_json(self, indent: int = 4):
-        parent_id = None
+    def to_json(self, indent=4):
+        return json.dumps(self.to_dict(), indent=indent)
+
+    def to_dict(self) -> ReadableSpanDict:
+        parent_id: typing.Optional[str] = None
         if self.parent is not None:
             parent_id = f"0x{trace_api.format_span_id(self.parent.span_id)}"
 
-        start_time = None
+        start_time: typing.Optional[str] = None
         if self._start_time:
             start_time = util.ns_to_iso_str(self._start_time)
 
-        end_time = None
+        end_time: typing.Optional[str] = None
         if self._end_time:
             end_time = util.ns_to_iso_str(self._end_time)
 
-        status = {
-            "status_code": str(self._status.status_code.name),
-        }
-        if self._status.description:
-            status["description"] = self._status.description
+        status: typing.Optional[StatusDict] = None
+        if self._status is not None:
+            status = self.status.to_dict()
 
-        f_span = {
+        return {
             "name": self._name,
             "context": self._format_context(self._context)
             if self._context
@@ -491,13 +523,11 @@ class ReadableSpan:
             "start_time": start_time,
             "end_time": end_time,
             "status": status,
-            "attributes": self._format_attributes(self._attributes),
-            "events": self._format_events(self._events),
-            "links": self._format_links(self._links),
-            "resource": json.loads(self.resource.to_json()),
+            "attributes": dict(self._attributes),
+            "events": [event.to_dict() for event in self._events],
+            "links": [link.to_dict() for link in self._links],
+            "resource": self.resource.to_dict(),
         }
-
-        return json.dumps(f_span, indent=indent)
 
     @staticmethod
     def _format_context(context: SpanContext) -> Dict[str, str]:
