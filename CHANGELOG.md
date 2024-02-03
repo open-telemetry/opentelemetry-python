@@ -15,11 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3623](https://github.com/open-telemetry/opentelemetry-python/pull/3623))
 - Improve Resource Detector timeout messaging
   ([#3645](https://github.com/open-telemetry/opentelemetry-python/pull/3645))
+- Logs: ObservedTimestamp field is missing in console exporter output
+  ([#3564](https://github.com/open-telemetry/opentelemetry-python/pull/3564))
 
 ## Version 1.22.0/0.43b0 (2023-12-15)
 
-- Logs: ObservedTimestamp field is missing in console exporter output
-  ([#3564](https://github.com/open-telemetry/opentelemetry-python/pull/3564))
 - Prometheus exporter sanitize info metric
   ([#3572](https://github.com/open-telemetry/opentelemetry-python/pull/3572))
 - Remove Jaeger exporters
