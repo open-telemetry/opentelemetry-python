@@ -1047,7 +1047,6 @@ class DefaultAggregation(Aggregation):
     `opentelemetry.sdk.metrics.ObservableCounter`        `SumAggregation`
     `opentelemetry.sdk.metrics.ObservableUpDownCounter`  `SumAggregation`
     `opentelemetry.sdk.metrics.Histogram`                `ExplicitBucketHistogramAggregation`
-    `opentelemetry.sdk.metrics._Gauge`                    `LastValueAggregation`
     `opentelemetry.sdk.metrics.ObservableGauge`          `LastValueAggregation`
     ==================================================== ====================================
     """
