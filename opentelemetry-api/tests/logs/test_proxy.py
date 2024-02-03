@@ -18,6 +18,7 @@ import unittest
 from contextlib import contextmanager
 
 from opentelemetry import _logs
+import opentelemetry._logs._internal as _logs_internal
 from opentelemetry.sdk._logs import LogRecord
 from opentelemetry.test.globals_test import LoggingGlobalsTest
 
@@ -41,11 +42,11 @@ class TestProxy(LoggingGlobalsTest, unittest.TestCase):
     def test_proxy_logger(self):
         provider = _logs.get_logger_provider()
         # proxy provider
-        self.assertIsInstance(provider, _logs.ProxyLoggerProvider)
+        self.assertIsInstance(provider, _logs_internal.ProxyLoggerProvider)
 
         # provider returns proxy logger
         logger = provider.get_logger("proxy-test")
-        self.assertIsInstance(logger, _logs.ProxyLogger)
+        self.assertIsInstance(logger, _logs_internal.ProxyLogger)
 
         # set a real provider
         _logs.set_logger_provider(TestProvider())
@@ -54,7 +55,9 @@ class TestProxy(LoggingGlobalsTest, unittest.TestCase):
         self.assertIsInstance(_logs.get_logger_provider(), TestProvider)
 
         # logger provider now returns real instance
-        self.assertIsInstance(_logs.get_logger_provider().get_logger("fresh"), TestLogger)
+        self.assertIsInstance(
+            _logs.get_logger_provider().get_logger("fresh"), TestLogger
+        )
 
         # references to the old provider still work but return real logger now
         real_logger = provider.get_logger("proxy-test")
