@@ -119,7 +119,7 @@ jobs:
   contrib-build:
     env:
       # We use these variables to convert between tox and GHA version literals
-      py37: 3.8
+      py38: 3.8
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false  # ensures the entire test matrix is run, even if one permutation fails
