@@ -26,7 +26,6 @@ class TestImport(TestCase):
         with self.assertNotRaises(Exception):
             from opentelemetry.sdk.metrics import (  # noqa: F401
                 Counter,
-                Gauge,
                 Histogram,
                 Meter,
                 MeterProvider,
@@ -34,6 +33,7 @@ class TestImport(TestCase):
                 ObservableGauge,
                 ObservableUpDownCounter,
                 UpDownCounter,
+                _Gauge,
             )
 
     def test_import_export(self):

@@ -16,12 +16,8 @@ from typing import Dict, Iterable
 from unittest import TestCase
 from unittest.mock import patch
 
-from opentelemetry.sdk.metrics import (
-    Counter,
-    Gauge,
-    Histogram,
-    ObservableGauge,
-)
+from opentelemetry.sdk.metrics import Counter, Histogram, ObservableGauge
+from opentelemetry.sdk.metrics import _Gauge as _SDKGauge
 from opentelemetry.sdk.metrics._internal.instrument import (
     _Counter,
     _Gauge,
@@ -83,7 +79,7 @@ class TestMetricReader(TestCase):
             preferred_temporality={
                 Histogram: AggregationTemporality.DELTA,
                 ObservableGauge: AggregationTemporality.DELTA,
-                Gauge: AggregationTemporality.DELTA,
+                _SDKGauge: AggregationTemporality.DELTA,
             }
         )
 

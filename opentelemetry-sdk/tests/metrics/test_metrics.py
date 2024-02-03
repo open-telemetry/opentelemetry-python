@@ -21,7 +21,6 @@ from unittest.mock import MagicMock, Mock, patch
 from opentelemetry.metrics import NoOpMeter
 from opentelemetry.sdk.metrics import (
     Counter,
-    Gauge,
     Histogram,
     Meter,
     MeterProvider,
@@ -29,6 +28,7 @@ from opentelemetry.sdk.metrics import (
     ObservableGauge,
     ObservableUpDownCounter,
     UpDownCounter,
+    _Gauge,
 )
 from opentelemetry.sdk.metrics._internal import SynchronousMeasurementConsumer
 from opentelemetry.sdk.metrics.export import (
@@ -448,7 +448,7 @@ class TestMeter(TestCase):
             "name", unit="unit", description="description"
         )
 
-        self.assertIsInstance(gauge, Gauge)
+        self.assertIsInstance(gauge, _Gauge)
         self.assertEqual(gauge.name, "name")
 
     def test_create_observable_up_down_counter(self):

@@ -411,7 +411,7 @@ class Gauge(Synchronous):
 
 
 class NoOpGauge(Gauge):
-    """No-op implementation of `Gauge`."""
+    """No-op implementation of ``Gauge``."""
 
     def __init__(
         self,

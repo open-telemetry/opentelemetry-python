@@ -15,9 +15,9 @@
 
 from opentelemetry.sdk.metrics._internal import Meter, MeterProvider
 from opentelemetry.sdk.metrics._internal.exceptions import MetricsTimeoutError
+from opentelemetry.sdk.metrics._internal.instrument import Counter
+from opentelemetry.sdk.metrics._internal.instrument import Gauge as _Gauge
 from opentelemetry.sdk.metrics._internal.instrument import (
-    Counter,
-    Gauge,
     Histogram,
     ObservableCounter,
     ObservableGauge,
@@ -31,7 +31,7 @@ __all__ = [
     "MetricsTimeoutError",
     "Counter",
     "Histogram",
-    "Gauge",
+    "_Gauge",
     "ObservableCounter",
     "ObservableGauge",
     "ObservableUpDownCounter",

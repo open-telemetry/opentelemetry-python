@@ -59,6 +59,9 @@ from opentelemetry.metrics._internal.instrument import (
     Histogram,
     Instrument,
     NoOpCounter,
+)
+from opentelemetry.metrics._internal.instrument import NoOpGauge as _NoOpGauge
+from opentelemetry.metrics._internal.instrument import (
     NoOpHistogram,
     NoOpObservableCounter,
     NoOpObservableGauge,
@@ -78,6 +81,7 @@ for obj in [
     Asynchronous,
     CallbackOptions,
     _Gauge,
+    _NoOpGauge,
     get_meter_provider,
     get_meter,
     Histogram,
@@ -108,6 +112,7 @@ __all__ = [
     "Meter",
     "Counter",
     "_Gauge",
+    "_NoOpGauge",
     "NoOpCounter",
     "UpDownCounter",
     "NoOpUpDownCounter",
