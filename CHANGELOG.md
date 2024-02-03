@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3623](https://github.com/open-telemetry/opentelemetry-python/pull/3623))
 - Improve Resource Detector timeout messaging
   ([#3645](https://github.com/open-telemetry/opentelemetry-python/pull/3645))
+- Logs: set `observed_timestamp` field
+  ([#3565](https://github.com/open-telemetry/opentelemetry-python/pull/3565))
 
 ## Version 1.22.0/0.43b0 (2023-12-15)
 
@@ -28,8 +30,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3524](https://github.com/open-telemetry/opentelemetry-python/pull/3524))
 - Handle `taskName` `logrecord` attribute
   ([#3557](https://github.com/open-telemetry/opentelemetry-python/pull/3557))
-- Logs: set `observed_timestamp` field
-  ([#3565](https://github.com/open-telemetry/opentelemetry-python/pull/3565))
 
 ## Version 1.21.0/0.42b0 (2023-11-01)
 
