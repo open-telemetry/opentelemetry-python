@@ -28,6 +28,7 @@ from opentelemetry.sdk.metrics import (
     ObservableGauge,
     ObservableUpDownCounter,
     UpDownCounter,
+    _Gauge,
 )
 from opentelemetry.sdk.metrics._internal import SynchronousMeasurementConsumer
 from opentelemetry.sdk.metrics.export import (
@@ -348,6 +349,18 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
 
         sync_consumer_instance.consume_measurement.assert_called()
 
+    @patch(
+        "opentelemetry.sdk.metrics._internal." "SynchronousMeasurementConsumer"
+    )
+    def test_consume_measurement_gauge(self, mock_sync_measurement_consumer):
+        sync_consumer_instance = mock_sync_measurement_consumer()
+        meter_provider = MeterProvider()
+        gauge = meter_provider.get_meter("name").create_gauge("name")
+
+        gauge.set(1)
+
+        sync_consumer_instance.consume_measurement.assert_called()
+
 
 class TestMeter(TestCase):
     def setUp(self):
@@ -361,6 +374,7 @@ class TestMeter(TestCase):
                 "observable_counter", callbacks=[Mock()]
             )
             self.meter.create_histogram("histogram")
+            self.meter.create_gauge("gauge")
             self.meter.create_observable_gauge(
                 "observable_gauge", callbacks=[Mock()]
             )
@@ -372,6 +386,7 @@ class TestMeter(TestCase):
             "counter",
             "up_down_counter",
             "histogram",
+            "gauge",
         ]:
             with self.assertLogs(level=WARNING):
                 getattr(self.meter, f"create_{instrument_name}")(
@@ -427,6 +442,14 @@ class TestMeter(TestCase):
 
         self.assertIsInstance(observable_gauge, ObservableGauge)
         self.assertEqual(observable_gauge.name, "name")
+
+    def test_create_gauge(self):
+        gauge = self.meter.create_gauge(
+            "name", unit="unit", description="description"
+        )
+
+        self.assertIsInstance(gauge, _Gauge)
+        self.assertEqual(gauge.name, "name")
 
     def test_create_observable_up_down_counter(self):
         observable_up_down_counter = (
