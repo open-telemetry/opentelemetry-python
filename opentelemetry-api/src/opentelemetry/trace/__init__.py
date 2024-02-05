@@ -74,9 +74,6 @@ either implicit or explicit context propagation consistently throughout.
 """
 
 
-import asyncio
-import contextlib
-import functools
 import os
 import typing
 from abc import ABC, abstractmethod
@@ -114,99 +111,9 @@ from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
 from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
+from opentelemetry.util._decorator import _agnosticcontextmanager
 
 logger = getLogger(__name__)
-
-
-class _AgnosticContextManager(
-    contextlib.AbstractContextManager,
-    contextlib.ContextDecorator,
-):
-    """A reimplementation of contextlib._GeneratorContextManager that supports decorating async functions.
-
-    All credit goes to the CPython team for the original implementation.
-    https://github.com/python/cpython/blob/3.12/Lib/contextlib.py
-    """
-
-    def __init__(self, func, args, kwds):
-        """https://github.com/python/cpython/blob/3.12/Lib/contextlib.py#L104"""
-        self.gen = func(*args, **kwds)
-        self.func, self.args, self.kwds = func, args, kwds
-        doc = getattr(func, "__doc__", None)
-        if doc is None:
-            doc = type(self).__doc__
-        self.__doc__ = doc
-
-    def _recreate_cm(self):
-        """https://github.com/python/cpython/blob/3.12/Lib/contextlib.py#L122C9-L122C21"""
-        return self.__class__(self.func, self.args, self.kwds)
-
-    def __enter__(self):
-        """https://github.com/python/cpython/blob/3.12/Lib/contextlib.py#L132"""
-        del self.args, self.kwds, self.func
-        try:
-            return next(self.gen)
-        except StopIteration:
-            raise RuntimeError("generator didn't yield") from None
-
-    def __exit__(self, typ, value, traceback):
-        """https://github.com/python/cpython/blob/3.12/Lib/contextlib.py#L141"""
-        if typ is None:
-            try:
-                next(self.gen)
-            except StopIteration:
-                return False
-            raise RuntimeError("generator didn't stop")
-        if value is None:
-            value = typ()
-        try:
-            self.gen.throw(typ, value, traceback)
-        except StopIteration as exc:
-            return exc is not value
-        except RuntimeError as exc:
-            if exc is value:
-                exc.__traceback__ = traceback
-                return False
-            if isinstance(value, StopIteration) and exc.__cause__ is value:
-                exc.__traceback__ = traceback
-                return False
-            raise
-        except BaseException as exc:
-            if exc is not value:
-                raise
-            exc.__traceback__ = traceback
-            return False
-        raise RuntimeError("generator didn't stop after throw()")
-
-    def __call__(self, func):
-        """Mixing contextlib.ContextDecorator.__call__ and contextlib.AsyncContextDecorator.__call__
-
-        https://github.com/python/cpython/blob/3.12/Lib/contextlib.py#L77
-        https://github.com/python/cpython/blob/3.12/Lib/contextlib.py#L93
-        """
-        if asyncio.iscoroutinefunction(func):
-
-            @functools.wraps(func)
-            async def async_wrapper(*args, **kwargs):
-                with self._recreate_cm():
-                    return await func(*args, **kwargs)
-
-            return async_wrapper
-
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            with self._recreate_cm():
-                return func(*args, **kwargs)
-
-        return wrapper
-
-
-def _agnosticcontextmanager(func):
-    @functools.wraps(func)
-    def helper(*args, **kwds):
-        return _AgnosticContextManager(func, args, kwds)
-
-    return helper
 
 
 class _LinkBase(ABC):
