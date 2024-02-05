@@ -47,7 +47,7 @@ class TestTracer(TestCase):
                 return INVALID_SPAN
 
             @_agnosticcontextmanager  # pylint: disable=protected-access
-            def start_as_current_span(self, *args, **kwargs):
+            def start_as_current_span(self, *args, **kwargs):  # type: ignore
                 lst.append(1)
                 yield INVALID_SPAN
                 lst.append(9)
@@ -56,7 +56,7 @@ class TestTracer(TestCase):
 
         # test 1 : sync function
         @mock_tracer.start_as_current_span("name")
-        def function_sync():
+        def function_sync():  # type: ignore
             lst.append(5)
 
         lst = []
@@ -65,7 +65,7 @@ class TestTracer(TestCase):
 
         # test 2 : async function
         @mock_tracer.start_as_current_span("name")
-        async def function_async():
+        async def function_async():  # type: ignore
             lst.append(5)
 
         lst = []
