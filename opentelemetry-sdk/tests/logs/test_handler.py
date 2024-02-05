@@ -216,7 +216,6 @@ class TestLoggingHandler(unittest.TestCase):
         self.assertEqual(
             set(log_record.attributes),
             {
-                "message",
                 "created",
                 "filename",
                 "funcName",

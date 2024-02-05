@@ -54,6 +54,14 @@ _logger = logging.getLogger(__name__)
 
 _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
 _ENV_VALUE_UNSET = ""
+_PRIVATE_RECORD_ATTRS = {
+    "args",
+    "msg",
+    "message",
+    "stack_info",
+    "exc_info",
+    "exc_text",
+}
 
 
 class LogLimits:
@@ -412,26 +420,22 @@ class LoggingHandler(logging.Handler):
         self,
         level=logging.NOTSET,
         logger_provider=None,
+        exclude_attributes=None,
     ) -> None:
         super().__init__(level=level)
         self._logger_provider = logger_provider or get_logger_provider()
         self._logger = get_logger(
             __name__, logger_provider=self._logger_provider
         )
+        if exclude_attributes is None:
+            exclude_attributes = set()
+        self.exclude_attributes = _PRIVATE_RECORD_ATTRS | exclude_attributes
 
-    @staticmethod
-    def _get_attributes(record: logging.LogRecord) -> Attributes:
-        private_record_attrs = (
-            "args",
-            "msg",
-            "stack_info",
-            "exc_info",
-            "exc_text",
-        )
+    def _get_attributes(self, record: logging.LogRecord) -> Attributes:
         attributes = {
             k: v
             for k, v in vars(record).items()
-            if k not in private_record_attrs
+            if k not in self.exclude_attributes
         }
         if record.exc_info:
             exc_type = ""
