@@ -68,9 +68,10 @@ def _clean_attribute(
             # Reject attribute value if sequence contains a value with an incompatible type.
             if element_type not in _VALID_ATTR_VALUE_TYPES:
                 _logger.warning(
-                    "Invalid type %s in attribute value sequence. Expected one of "
+                    "Invalid type %s in attribute '%s' value sequence. Expected one of "
                     "%s or None",
                     element_type.__name__,
+                    key,
                     [
                         valid_type.__name__
                         for valid_type in _VALID_ATTR_VALUE_TYPES
