@@ -24,9 +24,11 @@ from opentelemetry.semconv.trace import SpanAttributes
 from opentelemetry.trace import INVALID_SPAN_CONTEXT
 
 
-def get_logger(level=logging.NOTSET, logger_provider=None):
+def get_logger(level=logging.NOTSET, logger_provider=None, formatter=None):
     logger = logging.getLogger(__name__)
     handler = LoggingHandler(level=level, logger_provider=logger_provider)
+    if formatter:
+        handler.setFormatter(formatter)
     logger.addHandler(handler)
     return logger
 
@@ -112,7 +114,10 @@ class TestLoggingHandler(unittest.TestCase):
         log_record = args[0]
 
         self.assertIsNotNone(log_record)
-        self.assertEqual(log_record.attributes, {"http.status_code": 200})
+        self.assertEqual(
+            log_record.attributes,
+            {**log_record.attributes, **{"http.status_code": 200}},
+        )
         self.assertTrue(isinstance(log_record.attributes, BoundedAttributes))
 
     def test_log_record_exception(self):
@@ -131,7 +136,7 @@ class TestLoggingHandler(unittest.TestCase):
         log_record = args[0]
 
         self.assertIsNotNone(log_record)
-        self.assertEqual(log_record.body, "Zero Division Error")
+        self.assertIn("Zero Division Error", log_record.body)
         self.assertEqual(
             log_record.attributes[SpanAttributes.EXCEPTION_TYPE],
             ZeroDivisionError.__name__,
@@ -195,3 +200,70 @@ class TestLoggingHandler(unittest.TestCase):
             self.assertEqual(log_record.trace_id, span_context.trace_id)
             self.assertEqual(log_record.span_id, span_context.span_id)
             self.assertEqual(log_record.trace_flags, span_context.trace_flags)
+
+    def test_original_record_args_are_retained(self):
+        emitter_provider_mock = Mock(spec=LoggerProvider)
+        emitter_mock = APIGetLogger(
+            __name__, logger_provider=emitter_provider_mock
+        )
+        logger = get_logger(logger_provider=emitter_provider_mock)
+
+        with self.assertLogs(level=logging.INFO):
+            logger.info("Test message")
+        args, _ = emitter_mock.emit.call_args_list[0]
+        log_record = args[0]
+
+        self.assertEqual(
+            set(log_record.attributes),
+            {
+                "message",
+                "created",
+                "filename",
+                "funcName",
+                "levelname",
+                "levelno",
+                "lineno",
+                "module",
+                "msecs",
+                "name",
+                "pathname",
+                "process",
+                "processName",
+                "relativeCreated",
+                "thread",
+                "threadName",
+            },
+        )
+
+    def test_format_is_called(self):
+        emitter_provider_mock = Mock(spec=LoggerProvider)
+        emitter_mock = APIGetLogger(
+            __name__, logger_provider=emitter_provider_mock
+        )
+        formatter = logging.Formatter("%(name)s - %(levelname)s - %(message)s")
+        logger = get_logger(
+            logger_provider=emitter_provider_mock, formatter=formatter
+        )
+
+        with self.assertLogs(level=logging.INFO):
+            logger.info("Test message")
+        args, _ = emitter_mock.emit.call_args_list[0]
+        log_record = args[0]
+
+        self.assertEqual(
+            log_record.body, "tests.logs.test_handler - INFO - Test message"
+        )
+
+    def test_log_body_is_always_string(self):
+        emitter_provider_mock = Mock(spec=LoggerProvider)
+        emitter_mock = APIGetLogger(
+            __name__, logger_provider=emitter_provider_mock
+        )
+        logger = get_logger(logger_provider=emitter_provider_mock)
+
+        with self.assertLogs(level=logging.INFO):
+            logger.info(["something", "of", "note"])
+        args, _ = emitter_mock.emit.call_args_list[0]
+        log_record = args[0]
+
+        self.assertIsInstance(log_record.body, str)

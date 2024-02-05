@@ -198,8 +198,8 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
                 "Temperature hits high 420 C in Hyderabad",
                 "CRITICAL",
             ),
-            (["list", "of", "strings"], "WARNING"),
-            ({"key": "value"}, "ERROR"),
+            ("['list', 'of', 'strings']", "WARNING"),
+            ("{'key': 'value'}", "ERROR"),
         ]
         emitted = [
             (item.log_record.body, item.log_record.severity_text)
