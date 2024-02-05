@@ -201,7 +201,7 @@ class TestLoggingHandler(unittest.TestCase):
             self.assertEqual(log_record.span_id, span_context.span_id)
             self.assertEqual(log_record.trace_flags, span_context.trace_flags)
 
-    def test_original_record_args_are_retained(self):
+    def test_log_record_args_are_translated(self):
         emitter_provider_mock = Mock(spec=LoggerProvider)
         emitter_mock = APIGetLogger(
             __name__, logger_provider=emitter_provider_mock
@@ -216,21 +216,21 @@ class TestLoggingHandler(unittest.TestCase):
         self.assertEqual(
             set(log_record.attributes),
             {
+                "code.filepath",
+                "code.function",
+                "code.lineno",
                 "created",
                 "filename",
-                "funcName",
                 "levelname",
                 "levelno",
-                "lineno",
                 "module",
                 "msecs",
                 "name",
-                "pathname",
                 "process",
                 "processName",
                 "relativeCreated",
-                "thread",
-                "threadName",
+                "thread.id",
+                "thread.name",
             },
         )
 

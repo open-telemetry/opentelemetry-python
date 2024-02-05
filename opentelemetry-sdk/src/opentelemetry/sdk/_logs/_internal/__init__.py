@@ -62,6 +62,13 @@ _PRIVATE_RECORD_ATTRS = {
     "exc_info",
     "exc_text",
 }
+_SEMANTIC_CONVENTION_ATTRS = {
+    "pathname",
+    "funcName",
+    "lineno",
+    "thread",
+    "threadName",
+}
 
 
 class LogLimits:
@@ -416,26 +423,21 @@ class LoggingHandler(logging.Handler):
     https://docs.python.org/3/library/logging.html
     """
 
-    def __init__(
-        self,
-        level=logging.NOTSET,
-        logger_provider=None,
-        exclude_attributes=None,
-    ) -> None:
+    def __init__(self, level=logging.NOTSET, logger_provider=None) -> None:
         super().__init__(level=level)
         self._logger_provider = logger_provider or get_logger_provider()
         self._logger = get_logger(
             __name__, logger_provider=self._logger_provider
         )
-        if exclude_attributes is None:
-            exclude_attributes = set()
-        self.exclude_attributes = _PRIVATE_RECORD_ATTRS | exclude_attributes
+        self._exclude_attributes = (
+            _PRIVATE_RECORD_ATTRS | _SEMANTIC_CONVENTION_ATTRS
+        )
 
     def _get_attributes(self, record: logging.LogRecord) -> Attributes:
         attributes = {
             k: v
             for k, v in vars(record).items()
-            if k not in self.exclude_attributes
+            if k not in self._exclude_attributes
         }
         if record.exc_info:
             exc_type = ""
@@ -454,6 +456,13 @@ class LoggingHandler(logging.Handler):
             attributes[SpanAttributes.EXCEPTION_TYPE] = exc_type
             attributes[SpanAttributes.EXCEPTION_MESSAGE] = message
             attributes[SpanAttributes.EXCEPTION_STACKTRACE] = stack_trace
+
+        # adding these attributes with their semantic convention names
+        attributes[SpanAttributes.CODE_FILEPATH] = record.pathname
+        attributes[SpanAttributes.CODE_FUNCTION] = record.funcName
+        attributes[SpanAttributes.CODE_LINENO] = record.lineno
+        attributes[SpanAttributes.THREAD_ID] = record.thread
+        attributes[SpanAttributes.THREAD_NAME] = record.threadName
         return attributes
 
     def _translate(self, record: logging.LogRecord) -> LogRecord:
