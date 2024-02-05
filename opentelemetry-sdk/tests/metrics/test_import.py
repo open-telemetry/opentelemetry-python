@@ -33,6 +33,7 @@ class TestImport(TestCase):
                 ObservableGauge,
                 ObservableUpDownCounter,
                 UpDownCounter,
+                _Gauge,
             )
 
     def test_import_export(self):
