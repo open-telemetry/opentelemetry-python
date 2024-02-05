@@ -516,6 +516,8 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     max=self._previous_max,
                 )
 
+            return None
+
 
 # pylint: disable=protected-access
 class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
