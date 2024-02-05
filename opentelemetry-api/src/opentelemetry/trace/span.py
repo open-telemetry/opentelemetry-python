@@ -117,8 +117,7 @@ class Span(abc.ABC):
         timestamp if the `timestamp` argument is omitted.
         """
 
-    @abc.abstractmethod
-    def add_link(
+    def add_link(  # pylint: disable=no-self-use
         self,
         context: "SpanContext",
         attributes: types.Attributes = None,
@@ -133,6 +132,7 @@ class Span(abc.ABC):
         this method later since samplers can only consider information already
         present during span creation.
         """
+        _logger.warning("Span.add_link() is a no-op.")
 
     @abc.abstractmethod
     def update_name(self, name: str) -> None:
