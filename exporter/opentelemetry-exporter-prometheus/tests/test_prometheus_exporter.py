@@ -351,7 +351,7 @@ class TestPrometheusMetricReader(TestCase):
         metric_reader = PrometheusMetricReader()
         provider = MeterProvider(
             metric_readers=[metric_reader],
-            resource=Resource({"os": "Unix", "histo": 1}),
+            resource=Resource({"os": "Unix", "version": "1.2.3"}),
         )
         meter = provider.get_meter("getting-started", "0.1.2")
         counter = meter.create_counter("counter")
@@ -369,13 +369,15 @@ class TestPrometheusMetricReader(TestCase):
         self.assertEqual(prometheus_metric.samples[0].value, 1)
         self.assertTrue(len(prometheus_metric.samples[0].labels) == 2)
         self.assertEqual(prometheus_metric.samples[0].labels["os"], "Unix")
-        self.assertEqual(prometheus_metric.samples[0].labels["histo"], 1)
+        self.assertEqual(
+            prometheus_metric.samples[0].labels["version"], "1.2.3"
+        )
 
     def test_target_info_disabled(self):
         metric_reader = PrometheusMetricReader(disable_target_info=True)
         provider = MeterProvider(
             metric_readers=[metric_reader],
-            resource=Resource({"os": "Unix", "histo": 1}),
+            resource=Resource({"os": "Unix", "version": "1.2.3"}),
         )
         meter = provider.get_meter("getting-started", "0.1.2")
         counter = meter.create_counter("counter")
@@ -389,7 +391,7 @@ class TestPrometheusMetricReader(TestCase):
                 prometheus_metric.documentation, "Target metadata"
             )
             self.assertNotIn("os", prometheus_metric.samples[0].labels)
-            self.assertNotIn("histo", prometheus_metric.samples[0].labels)
+            self.assertNotIn("version", prometheus_metric.samples[0].labels)
 
     def test_target_info_sanitize(self):
         metric_reader = PrometheusMetricReader()
@@ -399,6 +401,8 @@ class TestPrometheusMetricReader(TestCase):
                 {
                     "system.os": "Unix",
                     "system.name": "Prometheus Target Sanitize",
+                    "histo": 1,
+                    "ratio": 0.1,
                 }
             ),
         )
@@ -412,7 +416,7 @@ class TestPrometheusMetricReader(TestCase):
         self.assertEqual(prometheus_metric.documentation, "Target metadata")
         self.assertTrue(len(prometheus_metric.samples) == 1)
         self.assertEqual(prometheus_metric.samples[0].value, 1)
-        self.assertTrue(len(prometheus_metric.samples[0].labels) == 2)
+        self.assertTrue(len(prometheus_metric.samples[0].labels) == 4)
         self.assertTrue("system_os" in prometheus_metric.samples[0].labels)
         self.assertEqual(
             prometheus_metric.samples[0].labels["system_os"], "Unix"
@@ -421,4 +425,14 @@ class TestPrometheusMetricReader(TestCase):
         self.assertEqual(
             prometheus_metric.samples[0].labels["system_name"],
             "Prometheus Target Sanitize",
+        )
+        self.assertTrue("histo" in prometheus_metric.samples[0].labels)
+        self.assertEqual(
+            prometheus_metric.samples[0].labels["histo"],
+            "1",
+        )
+        self.assertTrue("ratio" in prometheus_metric.samples[0].labels)
+        self.assertEqual(
+            prometheus_metric.samples[0].labels["ratio"],
+            "0.1",
         )
