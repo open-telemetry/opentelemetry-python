@@ -455,6 +455,12 @@ class LoggingHandler(logging.Handler):
         attributes = {
             k: v for k, v in vars(record).items() if k not in _RESERVED_ATTRS
         }
+
+        # Add standard code attributes for logs.
+        attributes[SpanAttributes.CODE_FILEPATH] = record.pathname
+        attributes[SpanAttributes.CODE_FUNCTION] = record.funcName
+        attributes[SpanAttributes.CODE_LINENO] = record.lineno
+
         if record.exc_info:
             exc_type = ""
             message = ""
