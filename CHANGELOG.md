@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Logs: set `observed_timestamp` field
+  ([#3565](https://github.com/open-telemetry/opentelemetry-python/pull/3565))
+- Add `code.lineno`, `code.function` and `code.filepath` to all logs 
+  ([#3645](https://github.com/open-telemetry/opentelemetry-python/pull/3645))
+- Add Synchronous Gauge instrument
+  ([#3462](https://github.com/open-telemetry/opentelemetry-python/pull/3462))
 - Drop support for 3.7
   ([#3668](https://github.com/open-telemetry/opentelemetry-python/pull/3668))
 - Include key in attribute sequence warning
@@ -17,8 +23,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3623](https://github.com/open-telemetry/opentelemetry-python/pull/3623))
 - Improve Resource Detector timeout messaging
   ([#3645](https://github.com/open-telemetry/opentelemetry-python/pull/3645))
-- Logs: set `observed_timestamp` field
-  ([#3565](https://github.com/open-telemetry/opentelemetry-python/pull/3565))
 
 ## Version 1.22.0/0.43b0 (2023-12-15)
 
