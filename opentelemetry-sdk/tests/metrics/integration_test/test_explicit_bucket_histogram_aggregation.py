@@ -30,7 +30,7 @@ class TestExplicitBucketHistogramAggregation(TestCase):
     test_values = [1, 6, 11, 26, 51, 76, 101, 251, 501, 751]
 
     @mark.skipif(
-        system() != "Linux",
+        system() == "Windows",
         reason=(
             "Tests fail because Windows time_ns resolution is too low so "
             "two different time measurements may end up having the exact same"
