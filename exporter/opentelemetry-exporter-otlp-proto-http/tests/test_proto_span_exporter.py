@@ -229,7 +229,9 @@ class TestOTLPSpanExporter(unittest.TestCase):
         )
 
         exporter.export([span])
-        mock_sleep.assert_has_calls([call(1), call(2), call(4), call(8), call(16), call(32)])
+        mock_sleep.assert_has_calls(
+            [call(1), call(2), call(4), call(8), call(16), call(32)]
+        )
 
     @patch.object(OTLPSpanExporter, "_export", return_value=Mock(ok=True))
     def test_2xx_status_code(self, mock_otlp_metric_exporter):

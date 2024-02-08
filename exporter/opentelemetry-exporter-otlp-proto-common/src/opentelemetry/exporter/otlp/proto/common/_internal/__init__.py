@@ -159,8 +159,7 @@ def _create_exp_backoff_generator(max_value: int = 0) -> Iterator[int]:
     8
     10
 
-    Note: this functionality used to be handled by the 'backoff' package but the dependency
-    was replaced by the implementation below.
+    Note: this functionality used to be handled by the 'backoff' package.
     """
     for i in count(0):
         out = 2 ** i

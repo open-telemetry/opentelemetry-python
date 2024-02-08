@@ -313,7 +313,9 @@ class TestOTLPMetricExporter(TestCase):
         metrics_data = self.metrics["sum_int"]
 
         exporter.export(metrics_data)
-        mock_sleep.assert_has_calls([call(1), call(2), call(4), call(8), call(16), call(32)])
+        mock_sleep.assert_has_calls(
+            [call(1), call(2), call(4), call(8), call(16), call(32)]
+        )
 
     def test_aggregation_temporality(self):
 
