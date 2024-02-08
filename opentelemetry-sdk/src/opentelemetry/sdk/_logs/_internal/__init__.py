@@ -221,6 +221,7 @@ class LogRecord(APILogRecord):
                 else None,
                 "dropped_attributes": self.dropped_attributes,
                 "timestamp": ns_to_iso_str(self.timestamp),
+                "observed_timestamp": ns_to_iso_str(self.observed_timestamp),
                 "trace_id": f"0x{format_trace_id(self.trace_id)}"
                 if self.trace_id is not None
                 else "",
@@ -423,7 +424,11 @@ class LoggingHandler(logging.Handler):
     https://docs.python.org/3/library/logging.html
     """
 
-    def __init__(self, level=logging.NOTSET, logger_provider=None) -> None:
+    def __init__(
+        self,
+        level=logging.NOTSET,
+        logger_provider=None,
+    ) -> None:
         super().__init__(level=level)
         self._logger_provider = logger_provider or get_logger_provider()
         self._logger = get_logger(
@@ -439,30 +444,26 @@ class LoggingHandler(logging.Handler):
             for k, v in vars(record).items()
             if k not in self._exclude_attributes
         }
-        if record.exc_info:
-            exc_type = ""
-            message = ""
-            stack_trace = ""
-            exctype, value, tb = record.exc_info
-            if exctype is not None:
-                exc_type = exctype.__name__
-            if value is not None and value.args:
-                message = value.args[0]
-            if tb is not None:
-                # https://github.com/open-telemetry/opentelemetry-specification/blob/9fa7c656b26647b27e485a6af7e38dc716eba98a/specification/trace/semantic_conventions/exceptions.md#stacktrace-representation
-                stack_trace = "".join(
-                    traceback.format_exception(*record.exc_info)
-                )
-            attributes[SpanAttributes.EXCEPTION_TYPE] = exc_type
-            attributes[SpanAttributes.EXCEPTION_MESSAGE] = message
-            attributes[SpanAttributes.EXCEPTION_STACKTRACE] = stack_trace
 
-        # adding these attributes with their semantic convention names
+        # Add standard code attributes for logs.
         attributes[SpanAttributes.CODE_FILEPATH] = record.pathname
         attributes[SpanAttributes.CODE_FUNCTION] = record.funcName
         attributes[SpanAttributes.CODE_LINENO] = record.lineno
+        # Add thread identifiers for logs.
         attributes[SpanAttributes.THREAD_ID] = record.thread
         attributes[SpanAttributes.THREAD_NAME] = record.threadName
+
+        if record.exc_info:
+            exctype, value, tb = record.exc_info
+            if exctype is not None:
+                attributes[SpanAttributes.EXCEPTION_TYPE] = exctype.__name__
+            if value is not None and value.args:
+                attributes[SpanAttributes.EXCEPTION_MESSAGE] = value.args[0]
+            if tb is not None:
+                # https://github.com/open-telemetry/opentelemetry-specification/blob/9fa7c656b26647b27e485a6af7e38dc716eba98a/specification/trace/semantic_conventions/exceptions.md#stacktrace-representation
+                attributes[SpanAttributes.EXCEPTION_STACKTRACE] = "".join(
+                    traceback.format_exception(*record.exc_info)
+                )
         return attributes
 
     def _translate(self, record: logging.LogRecord) -> LogRecord:

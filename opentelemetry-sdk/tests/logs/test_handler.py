@@ -114,10 +114,23 @@ class TestLoggingHandler(unittest.TestCase):
         log_record = args[0]
 
         self.assertIsNotNone(log_record)
+        self.assertEqual(len(log_record.attributes), 4)
         self.assertEqual(
             log_record.attributes,
             {**log_record.attributes, **{"http.status_code": 200}},
         )
+        self.assertTrue(
+            log_record.attributes[SpanAttributes.CODE_FILEPATH].endswith(
+                "test_handler.py"
+            )
+        )
+        self.assertEqual(
+            log_record.attributes[SpanAttributes.CODE_FUNCTION],
+            "test_log_record_user_attributes",
+        )
+        # The line of the log statement is not a constant (changing tests may change that),
+        # so only check that the attribute is present.
+        self.assertTrue(SpanAttributes.CODE_LINENO in log_record.attributes)
         self.assertTrue(isinstance(log_record.attributes, BoundedAttributes))
 
     def test_log_record_exception(self):

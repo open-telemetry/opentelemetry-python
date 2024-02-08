@@ -6,7 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
-
+- Retain meaningful logrecord attributes and apply log-message 
+  formatting ([#3673](https://github.com/open-telemetry/opentelemetry-python/pull/3673))
+- Logs: ObservedTimestamp field is missing in console exporter output
+  ([#3564](https://github.com/open-telemetry/opentelemetry-python/pull/3564))
+- Fix explicit bucket histogram aggregation
+  ([#3429](https://github.com/open-telemetry/opentelemetry-python/pull/3429))
+- Add `code.lineno`, `code.function` and `code.filepath` to all logs 
+  ([#3645](https://github.com/open-telemetry/opentelemetry-python/pull/3645))
+- Add Synchronous Gauge instrument
+  ([#3462](https://github.com/open-telemetry/opentelemetry-python/pull/3462))
 - Drop support for 3.7
   ([#3668](https://github.com/open-telemetry/opentelemetry-python/pull/3668))
 - Include key in attribute sequence warning
