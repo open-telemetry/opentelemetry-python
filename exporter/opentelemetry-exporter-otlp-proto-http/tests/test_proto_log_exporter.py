@@ -16,7 +16,7 @@
 
 import unittest
 from typing import List
-from unittest.mock import MagicMock, Mock, patch, call
+from unittest.mock import MagicMock, Mock, call, patch
 
 import requests
 import responses
@@ -182,7 +182,9 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         logs = self._get_sdk_log_data()
 
         exporter.export(logs)
-        mock_sleep.assert_has_calls([call(1), call(2), call(4), call(8), call(16), call(32)])
+        mock_sleep.assert_has_calls(
+            [call(1), call(2), call(4), call(8), call(16), call(32)]
+        )
 
     @staticmethod
     def _get_sdk_log_data() -> List[LogData]:

@@ -16,7 +16,16 @@
 import logging
 from collections.abc import Sequence
 from itertools import count
-from typing import Any, Mapping, Optional, List, Callable, TypeVar, Dict, Iterator
+from typing import (
+    Any,
+    Mapping,
+    Optional,
+    List,
+    Callable,
+    TypeVar,
+    Dict,
+    Iterator,
+)
 
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.proto.common.v1.common_pb2 import (
@@ -159,10 +168,8 @@ def _create_exp_backoff_generator(max_value: int = 0) -> Iterator[int]:
     8
     10
 
-    Note: this functionality used to be handled by the 'backoff' package but the dependency
-    was replaced by the implementation below.
+    Note: this functionality used to be handled by the 'backoff' package.
     """
     for i in count(0):
-        out = 2 ** i
+        out = 2**i
         yield min(out, max_value) if max_value else out
-

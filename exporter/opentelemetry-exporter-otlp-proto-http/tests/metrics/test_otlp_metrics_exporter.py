@@ -15,7 +15,7 @@
 from logging import WARNING
 from os import environ
 from unittest import TestCase
-from unittest.mock import MagicMock, Mock, patch, call
+from unittest.mock import MagicMock, Mock, call, patch
 
 from requests import Session
 from requests.models import Response
@@ -313,7 +313,9 @@ class TestOTLPMetricExporter(TestCase):
         metrics_data = self.metrics["sum_int"]
 
         exporter.export(metrics_data)
-        mock_sleep.assert_has_calls([call(1), call(2), call(4), call(8), call(16), call(32)])
+        mock_sleep.assert_has_calls(
+            [call(1), call(2), call(4), call(8), call(16), call(32)]
+        )
 
     def test_aggregation_temporality(self):
 

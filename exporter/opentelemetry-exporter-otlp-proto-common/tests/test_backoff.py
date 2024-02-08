@@ -1,10 +1,11 @@
 import unittest
 
-from opentelemetry.exporter.otlp.proto.common._internal import _create_exp_backoff_generator
+from opentelemetry.exporter.otlp.proto.common._internal import (
+    _create_exp_backoff_generator,
+)
 
 
 class TestBackoffGenerator(unittest.TestCase):
-
     def test_exp_backoff_generator(self):
         generator = _create_exp_backoff_generator()
         self.assertEqual(next(generator), 1)
@@ -29,4 +30,3 @@ class TestBackoffGenerator(unittest.TestCase):
         self.assertEqual(next(generator), 4)
         self.assertEqual(next(generator), 8)
         self.assertEqual(next(generator), 11)
-
