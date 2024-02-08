@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Logs: ObservedTimestamp field is missing in console exporter output
+  ([#3564](https://github.com/open-telemetry/opentelemetry-python/pull/3564))
 - Fix explicit bucket histogram aggregation
   ([#3429](https://github.com/open-telemetry/opentelemetry-python/pull/3429))
 - Add `code.lineno`, `code.function` and `code.filepath` to all logs 
