@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Fix explicit bucket histogram aggregation
+  ([#3429](https://github.com/open-telemetry/opentelemetry-python/pull/3429))
+- Add `code.lineno`, `code.function` and `code.filepath` to all logs 
+  ([#3645](https://github.com/open-telemetry/opentelemetry-python/pull/3645))
 - Add Synchronous Gauge instrument
   ([#3462](https://github.com/open-telemetry/opentelemetry-python/pull/3462))
 - Drop support for 3.7
@@ -18,8 +22,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Handle HTTP 2XX responses as successful in OTLP exporters
   ([#3623](https://github.com/open-telemetry/opentelemetry-python/pull/3623))
 - Improve Resource Detector timeout messaging
-  ([#3645](https://github.com/open-telemetry/opentelemetry-python/pull/3645))
-- Add `code.lineno`, `code.function` and `code.filepath` to all logs 
   ([#3645](https://github.com/open-telemetry/opentelemetry-python/pull/3645))
 
 ## Version 1.22.0/0.43b0 (2023-12-15)
