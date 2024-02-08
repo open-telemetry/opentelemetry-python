@@ -113,7 +113,7 @@ class NoOpLogger(Logger):
 
 
 class ProxyLogger(Logger):
-    def __init__(
+    def __init__(  # pylint: disable=super-init-not-called
         self,
         name: str,
         version: Optional[str] = None,
@@ -224,7 +224,7 @@ _PROXY_LOGGER_PROVIDER = ProxyLoggerProvider()
 
 def get_logger_provider() -> LoggerProvider:
     """Gets the current global :class:`~.LoggerProvider` object."""
-    global _LOGGER_PROVIDER  # pylint: disable=global-statement
+    global _LOGGER_PROVIDER  # pylint: disable=global-variable-not-assigned
     if _LOGGER_PROVIDER is None:
         if _OTEL_PYTHON_LOGGER_PROVIDER not in environ:
             return _PROXY_LOGGER_PROVIDER

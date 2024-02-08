@@ -15,11 +15,10 @@
 # pylint: disable=W0212,W0222,W0221
 import typing
 import unittest
-from contextlib import contextmanager
 
-from opentelemetry import _logs
 import opentelemetry._logs._internal as _logs_internal
-from opentelemetry.sdk._logs import LogRecord
+from opentelemetry import _logs
+from opentelemetry.sdk._logs import LogRecord  # type: ignore
 from opentelemetry.test.globals_test import LoggingGlobalsTest
 
 
