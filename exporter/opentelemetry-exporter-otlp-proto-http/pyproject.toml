@@ -25,7 +25,6 @@ classifiers = [
 ]
 dependencies = [
   "Deprecated >= 1.2.6",
-  "backoff >= 1.10.0, < 3.0.0",
   "googleapis-common-protos ~= 1.52",
   "opentelemetry-api ~= 1.15",
   "opentelemetry-proto == 1.23.0.dev",
