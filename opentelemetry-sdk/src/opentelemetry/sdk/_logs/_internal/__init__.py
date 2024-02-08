@@ -206,6 +206,7 @@ class LogRecord(APILogRecord):
                 else None,
                 "dropped_attributes": self.dropped_attributes,
                 "timestamp": ns_to_iso_str(self.timestamp),
+                "observed_timestamp": ns_to_iso_str(self.observed_timestamp),
                 "trace_id": f"0x{format_trace_id(self.trace_id)}"
                 if self.trace_id is not None
                 else "",
@@ -462,22 +463,16 @@ class LoggingHandler(logging.Handler):
         attributes[SpanAttributes.CODE_LINENO] = record.lineno
 
         if record.exc_info:
-            exc_type = ""
-            message = ""
-            stack_trace = ""
             exctype, value, tb = record.exc_info
             if exctype is not None:
-                exc_type = exctype.__name__
+                attributes[SpanAttributes.EXCEPTION_TYPE] = exctype.__name__
             if value is not None and value.args:
-                message = value.args[0]
+                attributes[SpanAttributes.EXCEPTION_MESSAGE] = value.args[0]
             if tb is not None:
                 # https://github.com/open-telemetry/opentelemetry-specification/blob/9fa7c656b26647b27e485a6af7e38dc716eba98a/specification/trace/semantic_conventions/exceptions.md#stacktrace-representation
-                stack_trace = "".join(
+                attributes[SpanAttributes.EXCEPTION_STACKTRACE] = "".join(
                     traceback.format_exception(*record.exc_info)
                 )
-            attributes[SpanAttributes.EXCEPTION_TYPE] = exc_type
-            attributes[SpanAttributes.EXCEPTION_MESSAGE] = message
-            attributes[SpanAttributes.EXCEPTION_STACKTRACE] = stack_trace
         return attributes
 
     def _translate(self, record: logging.LogRecord) -> LogRecord:
