@@ -36,14 +36,7 @@ class _AgnosticContextManager(
                     return await func(*args, **kwargs)  # type: ignore
 
             return async_wrapper
-        else:
-
-            @functools.wraps(func)
-            def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
-                with self._recreate_cm():  # type: ignore
-                    return func(*args, **kwargs)  # type: ignore
-
-            return wrapper
+        return super().__call__(func)
 
 
 def _agnosticcontextmanager(
