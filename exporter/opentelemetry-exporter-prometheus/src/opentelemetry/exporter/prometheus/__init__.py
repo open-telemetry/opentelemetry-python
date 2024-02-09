@@ -380,7 +380,8 @@ class _CustomCollector:
         """Create an Info Metric Family with list of attributes"""
         # sanitize the attribute names according to Prometheus rule
         attributes = {
-            self._sanitize(key): value for key, value in attributes.items()
+            self._sanitize(key): self._check_value(value)
+            for key, value in attributes.items()
         }
         info = InfoMetricFamily(name, description, labels=attributes)
         info.add_metric(labels=list(attributes.keys()), value=attributes)
