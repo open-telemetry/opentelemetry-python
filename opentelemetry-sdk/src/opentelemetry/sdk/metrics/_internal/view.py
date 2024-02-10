@@ -17,9 +17,6 @@ from fnmatch import fnmatch
 from logging import getLogger
 from typing import Optional, Set, Type
 
-# FIXME import from typing when support for 3.7 is removed
-from typing_extensions import final
-
 from opentelemetry.metrics import Instrument
 from opentelemetry.sdk.metrics._internal.aggregation import (
     Aggregation,
@@ -138,7 +135,6 @@ class View:
 
     # pylint: disable=too-many-return-statements
     # pylint: disable=too-many-branches
-    @final
     def _match(self, instrument: Instrument) -> bool:
 
         if self._instrument_type is not None:

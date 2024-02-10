@@ -112,6 +112,14 @@ class MetricsServiceServicerUNAVAILABLE(MetricsServiceServicer):
         return ExportMetricsServiceResponse()
 
 
+class MetricsServiceServicerUNKNOWN(MetricsServiceServicer):
+    # pylint: disable=invalid-name,unused-argument,no-self-use
+    def Export(self, request, context):
+        context.set_code(StatusCode.UNKNOWN)
+
+        return ExportMetricsServiceResponse()
+
+
 class MetricsServiceServicerSUCCESS(MetricsServiceServicer):
     # pylint: disable=invalid-name,unused-argument,no-self-use
     def Export(self, request, context):
@@ -440,6 +448,31 @@ class TestOTLPMetricExporter(TestCase):
             MetricExportResult.FAILURE,
         )
         mock_sleep.assert_called_with(4)
+
+    @patch(
+        "opentelemetry.exporter.otlp.proto.grpc.exporter._create_exp_backoff_generator"
+    )
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.logger.error")
+    def test_unknown_logs(self, mock_logger_error, mock_sleep, mock_expo):
+
+        mock_expo.configure_mock(**{"return_value": [1]})
+
+        add_MetricsServiceServicer_to_server(
+            MetricsServiceServicerUNKNOWN(), self.server
+        )
+        self.assertEqual(
+            self.exporter.export(self.metrics["sum_int"]),
+            MetricExportResult.FAILURE,
+        )
+        mock_sleep.assert_not_called()
+        mock_logger_error.assert_called_with(
+            "Failed to export %s to %s, error code: %s",
+            "metrics",
+            "localhost:4317",
+            StatusCode.UNKNOWN,
+            exc_info=True,
+        )
 
     def test_success(self):
         add_MetricsServiceServicer_to_server(
