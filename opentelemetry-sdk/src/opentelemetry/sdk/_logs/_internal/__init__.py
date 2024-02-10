@@ -521,12 +521,19 @@ class LoggingHandler(logging.Handler):
             body = record.msg % record.args
         else:
             body = record.msg
+
+        # related to https://github.com/open-telemetry/opentelemetry-python/issues/3548
+        # Severity Text = WARN as defined in https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/logs/data-model.md#displaying-severity.
+        level_name = (
+            "WARN" if record.levelname == "WARNING" else record.levelname
+        )
+
         return LogRecord(
             timestamp=timestamp,
             trace_id=span_context.trace_id,
             span_id=span_context.span_id,
             trace_flags=span_context.trace_flags,
-            severity_text=record.levelname,
+            severity_text=level_name,
             severity_number=severity_number,
             body=body,
             resource=self._logger.resource,
