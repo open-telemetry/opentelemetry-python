@@ -605,10 +605,11 @@ class TestSpanCreation(unittest.TestCase):
 
 class TestReadableSpan(unittest.TestCase):
     def test_links(self):
-        span = trace.ReadableSpan()
+        span = trace.ReadableSpan("test")
         self.assertEqual(span.links, ())
 
         span = trace.ReadableSpan(
+            "test",
             links=[trace_api.Link(context=trace_api.INVALID_SPAN_CONTEXT)] * 2,
         )
         self.assertEqual(len(span.links), 2)
@@ -616,13 +617,13 @@ class TestReadableSpan(unittest.TestCase):
             self.assertFalse(link.context.is_valid)
 
     def test_events(self):
-        span = trace.ReadableSpan()
+        span = trace.ReadableSpan("test")
         self.assertEqual(span.events, ())
         events = [
             trace.Event("foo1", {"bar1": "baz1"}),
             trace.Event("foo2", {"bar2": "baz2"}),
         ]
-        span = trace.ReadableSpan(events=events)
+        span = trace.ReadableSpan("test", events=events)
         self.assertEqual(span.events, tuple(events))
 
 
@@ -1219,6 +1220,7 @@ class TestSpan(unittest.TestCase):
         self.assertEqual(1604238587112021089, exception_event.timestamp)
 
     def test_record_exception_context_manager(self):
+        span = None
         try:
             with self.tracer.start_as_current_span("span") as span:
                 raise RuntimeError("example error")
@@ -1376,7 +1378,7 @@ class TestSpanProcessor(unittest.TestCase):
         )
         parent = trace._Span("parent-name", context, resource=Resource({}))
         span = trace._Span(
-            "span-name", context, resource=Resource({}), parent=parent
+            "span-name", context, resource=Resource({}), parent=parent.context
         )
 
         self.assertEqual(

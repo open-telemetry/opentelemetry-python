@@ -58,6 +58,7 @@ above example.
 import abc
 import concurrent.futures
 import logging
+import os
 import sys
 import typing
 from json import dumps
@@ -74,10 +75,14 @@ from opentelemetry.semconv.resource import ResourceAttributes
 from opentelemetry.util._importlib_metadata import entry_points, version
 from opentelemetry.util.types import AttributeValue
 
+try:
+    import psutil
+except ImportError:
+    psutil = None
+
 LabelValue = AttributeValue
 Attributes = typing.Dict[str, LabelValue]
 logger = logging.getLogger(__name__)
-
 
 CLOUD_PROVIDER = ResourceAttributes.CLOUD_PROVIDER
 CLOUD_ACCOUNT_ID = ResourceAttributes.CLOUD_ACCOUNT_ID
@@ -117,6 +122,7 @@ KUBERNETES_CRON_JOB_NAME = ResourceAttributes.K8S_CRONJOB_NAME
 OS_TYPE = ResourceAttributes.OS_TYPE
 OS_DESCRIPTION = ResourceAttributes.OS_DESCRIPTION
 PROCESS_PID = ResourceAttributes.PROCESS_PID
+PROCESS_PARENT_PID = ResourceAttributes.PROCESS_PARENT_PID
 PROCESS_EXECUTABLE_NAME = ResourceAttributes.PROCESS_EXECUTABLE_NAME
 PROCESS_EXECUTABLE_PATH = ResourceAttributes.PROCESS_EXECUTABLE_PATH
 PROCESS_COMMAND = ResourceAttributes.PROCESS_COMMAND
@@ -134,7 +140,6 @@ TELEMETRY_SDK_NAME = ResourceAttributes.TELEMETRY_SDK_NAME
 TELEMETRY_SDK_VERSION = ResourceAttributes.TELEMETRY_SDK_VERSION
 TELEMETRY_AUTO_VERSION = ResourceAttributes.TELEMETRY_AUTO_VERSION
 TELEMETRY_SDK_LANGUAGE = ResourceAttributes.TELEMETRY_SDK_LANGUAGE
-
 
 _OPENTELEMETRY_SDK_VERSION = version("opentelemetry-sdk")
 
@@ -180,7 +185,6 @@ class Resource:
             otel_experimental_resource_detectors.append("otel")
 
         for resource_detector in otel_experimental_resource_detectors:
-
             resource_detectors.append(
                 next(
                     iter(
@@ -337,14 +341,32 @@ class ProcessResourceDetector(ResourceDetector):
                 else sys.version_info,
             )
         )
+        _process_pid = os.getpid()
+        _process_executable_name = sys.executable
+        _process_executable_path = os.path.dirname(_process_executable_name)
+        _process_command = sys.argv[0]
+        _process_command_line = " ".join(sys.argv)
+        _process_command_args = sys.argv[1:]
+        resource_info = {
+            PROCESS_RUNTIME_DESCRIPTION: sys.version,
+            PROCESS_RUNTIME_NAME: sys.implementation.name,
+            PROCESS_RUNTIME_VERSION: _runtime_version,
+            PROCESS_PID: _process_pid,
+            PROCESS_EXECUTABLE_NAME: _process_executable_name,
+            PROCESS_EXECUTABLE_PATH: _process_executable_path,
+            PROCESS_COMMAND: _process_command,
+            PROCESS_COMMAND_LINE: _process_command_line,
+            PROCESS_COMMAND_ARGS: _process_command_args,
+        }
+        if hasattr(os, "getppid"):
+            # pypy3 does not have getppid()
+            resource_info[PROCESS_PARENT_PID] = os.getppid()
 
-        return Resource(
-            {
-                PROCESS_RUNTIME_DESCRIPTION: sys.version,
-                PROCESS_RUNTIME_NAME: sys.implementation.name,
-                PROCESS_RUNTIME_VERSION: _runtime_version,
-            }
-        )
+        if psutil is not None:
+            process = psutil.Process()
+            resource_info[PROCESS_OWNER] = process.username()
+
+        return Resource(resource_info)
 
 
 def get_aggregated_resources(
@@ -365,11 +387,19 @@ def get_aggregated_resources(
         futures = [executor.submit(detector.detect) for detector in detectors]
         for detector_ind, future in enumerate(futures):
             detector = detectors[detector_ind]
+            detected_resource: Resource = _EMPTY_RESOURCE
             try:
                 detected_resource = future.result(timeout=timeout)
+            except concurrent.futures.TimeoutError as ex:
+                if detector.raise_on_error:
+                    raise ex
+                logger.warning(
+                    "Detector %s took longer than %s seconds, skipping",
+                    detector,
+                    timeout,
+                )
             # pylint: disable=broad-except
             except Exception as ex:
-                detected_resource = _EMPTY_RESOURCE
                 if detector.raise_on_error:
                     raise ex
                 logger.warning(

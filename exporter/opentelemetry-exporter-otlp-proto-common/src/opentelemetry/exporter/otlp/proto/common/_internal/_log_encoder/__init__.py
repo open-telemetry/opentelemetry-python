@@ -77,6 +77,7 @@ def _encode_resource_logs(batch: Sequence[LogData]) -> List[ResourceLogs]:
             ResourceLogs(
                 resource=_encode_resource(sdk_resource),
                 scope_logs=scope_logs,
+                schema_url=sdk_resource.schema_url,
             )
         )
 
