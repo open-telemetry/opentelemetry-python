@@ -140,6 +140,7 @@ from typing import Optional, Sequence
 
 # pylint: disable=unused-import
 from opentelemetry.context import Context
+from opentelemetry.opentelemetry import OpenTelemetry
 from opentelemetry.sdk.environment_variables import (
     OTEL_TRACES_SAMPLER,
     OTEL_TRACES_SAMPLER_ARG,
@@ -166,7 +167,7 @@ class Decision(enum.Enum):
         return self is Decision.RECORD_AND_SAMPLE
 
 
-class SamplingResult:
+class SamplingResult(OpenTelemetry):
     """A sampling result as applied to a newly-created Span.
 
     Args:
@@ -176,9 +177,6 @@ class SamplingResult:
         trace_state: The tracestate used for the `opentelemetry.trace.Span`.
             Could possibly have been modified by the sampler.
     """
-
-    def __repr__(self) -> str:
-        return f"{type(self).__name__}({str(self.decision)}, attributes={str(self.attributes)})"
 
     def __init__(
         self,

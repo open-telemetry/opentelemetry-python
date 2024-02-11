@@ -19,6 +19,7 @@ from collections import OrderedDict
 from collections.abc import MutableMapping
 from typing import Optional, Sequence, Union
 
+from opentelemetry.opentelemetry import OpenTelemetry
 from opentelemetry.util import types
 
 # bytes are accepted as a user supplied value for attributes but
@@ -126,7 +127,7 @@ def _clean_attribute_value(
     return value
 
 
-class BoundedAttributes(MutableMapping):
+class BoundedAttributes(OpenTelemetry, MutableMapping):
     """An ordered dict with a fixed max capacity.
 
     Oldest elements are dropped when the dict is full and a new element is
@@ -140,6 +141,12 @@ class BoundedAttributes(MutableMapping):
         immutable: bool = True,
         max_value_len: Optional[int] = None,
     ):
+        super().__init__(
+            maxlen=maxlen,
+            attributes=attributes,
+            immutable=immutable,
+            max_value_len=max_value_len,
+        )
         if maxlen is not None:
             if not isinstance(maxlen, int) or maxlen < 0:
                 raise ValueError(
@@ -154,11 +161,6 @@ class BoundedAttributes(MutableMapping):
             for key, value in attributes.items():
                 self[key] = value
         self._immutable = immutable
-
-    def __repr__(self):
-        return (
-            f"{type(self).__name__}({dict(self._dict)}, maxlen={self.maxlen})"
-        )
 
     def __getitem__(self, key):
         return self._dict[key]

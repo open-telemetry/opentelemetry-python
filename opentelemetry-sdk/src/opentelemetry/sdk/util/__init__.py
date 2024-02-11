@@ -20,6 +20,8 @@ from typing import Optional
 
 from deprecated import deprecated
 
+from opentelemetry.opentelemetry import OpenTelemetry
+
 
 def ns_to_iso_str(nanoseconds):
     """Get an ISO 8601 string from time_ns value."""
@@ -41,7 +43,7 @@ def get_dict_as_key(labels):
     )
 
 
-class BoundedList(Sequence):
+class BoundedList(OpenTelemetry, Sequence):
     """An append only list with a fixed max size.
 
     Calls to `append` and `extend` will drop the oldest elements if there is
@@ -52,9 +54,6 @@ class BoundedList(Sequence):
         self.dropped = 0
         self._dq = deque(maxlen=maxlen)  # type: deque
         self._lock = threading.Lock()
-
-    def __repr__(self):
-        return f"{type(self).__name__}({list(self._dq)}, maxlen={self._dq.maxlen})"
 
     def __getitem__(self, index):
         return self._dq[index]
@@ -92,7 +91,7 @@ class BoundedList(Sequence):
 
 
 @deprecated(version="1.4.0")  # type: ignore
-class BoundedDict(MutableMapping):
+class BoundedDict(OpenTelemetry, MutableMapping):
     """An ordered dict with a fixed max capacity.
 
     Oldest elements are dropped when the dict is full and a new element is
@@ -109,11 +108,6 @@ class BoundedDict(MutableMapping):
         self.dropped = 0
         self._dict = OrderedDict()  # type: OrderedDict
         self._lock = threading.Lock()  # type: threading.Lock
-
-    def __repr__(self):
-        return (
-            f"{type(self).__name__}({dict(self._dict)}, maxlen={self.maxlen})"
-        )
 
     def __getitem__(self, key):
         return self._dict[key]

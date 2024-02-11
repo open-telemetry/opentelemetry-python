@@ -15,14 +15,11 @@
 import unittest
 
 from opentelemetry.sdk._logs import LogLimits
-from opentelemetry.sdk._logs._internal import (
-    _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT,
-)
 
 
 class TestLogLimits(unittest.TestCase):
     def test_log_limits_repr_unset(self):
-        expected = f"LogLimits(max_attributes={_DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT}, max_attribute_length=None)"
+        expected = "LogLimits()"
         limits = str(LogLimits())
 
         self.assertEqual(expected, limits)

@@ -5,6 +5,7 @@ import types as python_types
 import typing
 from collections import OrderedDict
 
+from opentelemetry.opentelemetry import OpenTelemetry
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
 
@@ -54,7 +55,7 @@ def _is_valid_pair(key: str, value: str) -> bool:
     )
 
 
-class Span(abc.ABC):
+class Span(OpenTelemetry, abc.ABC):
     """A span represents a single operation within a trace."""
 
     @abc.abstractmethod
@@ -201,7 +202,7 @@ class TraceFlags(int):
 DEFAULT_TRACE_OPTIONS = TraceFlags.get_default()
 
 
-class TraceState(typing.Mapping[str, str]):
+class TraceState(OpenTelemetry, typing.Mapping[str, str]):
     """A list of key-value pairs representing vendor-specific trace info.
 
     Keys and values are strings of up to 256 printable US-ASCII characters.
@@ -218,6 +219,7 @@ class TraceState(typing.Mapping[str, str]):
             typing.Sequence[typing.Tuple[str, str]]
         ] = None,
     ) -> None:
+        super().__init__(entries=entries)
         self._dict = OrderedDict()  # type: OrderedDict[str, str]
         if entries is None:
             return
@@ -250,13 +252,6 @@ class TraceState(typing.Mapping[str, str]):
 
     def __len__(self) -> int:
         return len(self._dict)
-
-    def __repr__(self) -> str:
-        pairs = [
-            f"{{key={key}, value={value}}}"
-            for key, value in self._dict.items()
-        ]
-        return str(pairs)
 
     def add(self, key: str, value: str) -> "TraceState":
         """Adds a key-value pair to tracestate. The provided pair should
@@ -404,7 +399,8 @@ _SPAN_ID_MAX_VALUE = 2**64 - 1
 
 
 class SpanContext(
-    typing.Tuple[int, int, bool, "TraceFlags", "TraceState", bool]
+    OpenTelemetry,
+    typing.Tuple[int, int, bool, "TraceFlags", "TraceState", bool],
 ):
     """The state of a Span to propagate between processes.
 
@@ -437,10 +433,19 @@ class SpanContext(
             and INVALID_SPAN_ID < span_id <= _SPAN_ID_MAX_VALUE
         )
 
-        return tuple.__new__(
+        span_context = tuple.__new__(
             cls,
             (trace_id, span_id, is_remote, trace_flags, trace_state, is_valid),
         )
+        cls.__init__(
+            span_context,
+            trace_id,
+            span_id,
+            is_remote,
+            trace_flags=trace_flags,
+            trace_state=trace_state,
+        )
+        return span_context
 
     def __getnewargs__(
         self,
@@ -486,9 +491,6 @@ class SpanContext(
         _logger.debug(
             "Immutable type, ignoring call to set attribute", stack_info=True
         )
-
-    def __repr__(self) -> str:
-        return f"{type(self).__name__}(trace_id=0x{format_trace_id(self.trace_id)}, span_id=0x{format_span_id(self.span_id)}, trace_flags=0x{self.trace_flags:02x}, trace_state={self.trace_state!r}, is_remote={self.is_remote})"
 
 
 class NonRecordingSpan(Span):
@@ -543,9 +545,6 @@ class NonRecordingSpan(Span):
         escaped: bool = False,
     ) -> None:
         pass
-
-    def __repr__(self) -> str:
-        return f"NonRecordingSpan({self._context!r})"
 
 
 INVALID_SPAN_ID = 0x0000000000000000

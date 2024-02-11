@@ -16,8 +16,10 @@ from typing import Optional
 
 from deprecated import deprecated
 
+from opentelemetry.opentelemetry import OpenTelemetry
 
-class InstrumentationInfo:
+
+class InstrumentationInfo(OpenTelemetry):
     """Immutable information about an instrumentation library module.
 
     See `opentelemetry.trace.TracerProvider.get_tracer` for the meaning of these
@@ -38,9 +40,6 @@ class InstrumentationInfo:
         if schema_url is None:
             schema_url = ""
         self._schema_url = schema_url
-
-    def __repr__(self):
-        return f"{type(self).__name__}({self._name}, {self._version}, {self._schema_url})"
 
     def __hash__(self):
         return hash((self._name, self._version, self._schema_url))
@@ -74,7 +73,7 @@ class InstrumentationInfo:
         return self._name
 
 
-class InstrumentationScope:
+class InstrumentationScope(OpenTelemetry):
     """A logical unit of the application code with which the emitted telemetry can be
     associated.
 
@@ -95,9 +94,6 @@ class InstrumentationScope:
         if schema_url is None:
             schema_url = ""
         self._schema_url = schema_url
-
-    def __repr__(self) -> str:
-        return f"{type(self).__name__}({self._name}, {self._version}, {self._schema_url})"
 
     def __hash__(self) -> int:
         return hash((self._name, self._version, self._schema_url))

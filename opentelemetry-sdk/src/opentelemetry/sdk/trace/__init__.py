@@ -44,6 +44,7 @@ from deprecated import deprecated
 from opentelemetry import context as context_api
 from opentelemetry import trace as trace_api
 from opentelemetry.attributes import BoundedAttributes
+from opentelemetry.opentelemetry import OpenTelemetry
 from opentelemetry.sdk import util
 from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_COUNT_LIMIT,
@@ -543,7 +544,7 @@ class ReadableSpan:
         ]
 
 
-class SpanLimits:
+class SpanLimits(OpenTelemetry):
     """The limits that should be enforce on recorded data such as events, links, attributes etc.
 
     This class does not enforce any limits itself. It only provides an a way read limits from env,
@@ -656,9 +657,6 @@ class SpanLimits:
             self.max_attribute_length,
         )
 
-    def __repr__(self):
-        return f"{type(self).__name__}(max_span_attributes={self.max_span_attributes}, max_events_attributes={self.max_event_attributes}, max_link_attributes={self.max_link_attributes}, max_attributes={self.max_attributes}, max_events={self.max_events}, max_links={self.max_links}, max_attribute_length={self.max_attribute_length})"
-
     @classmethod
     def _from_env_if_absent(
         cls, value: Optional[int], env_var: str, default: Optional[int] = None
@@ -709,7 +707,7 @@ SPAN_ATTRIBUTE_COUNT_LIMIT = (
 )
 
 
-class Span(trace_api.Span, ReadableSpan):
+class Span(trace_api.Span, ReadableSpan, OpenTelemetry):
     """See `opentelemetry.trace.Span`.
 
     Users should create `Span` objects via the `Tracer` instead of this
@@ -800,9 +798,6 @@ class Span(trace_api.Span, ReadableSpan):
                     max_value_len=self._limits.max_attribute_length,
                 )
             self._links = BoundedList.from_seq(self._limits.max_links, links)
-
-    def __repr__(self):
-        return f'{type(self).__name__}(name="{self._name}", context={self._context})'
 
     def _new_events(self):
         return BoundedList(self._limits.max_events)

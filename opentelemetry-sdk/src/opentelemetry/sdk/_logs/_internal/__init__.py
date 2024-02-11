@@ -34,6 +34,7 @@ from opentelemetry._logs import (
     std_to_otel,
 )
 from opentelemetry.attributes import BoundedAttributes
+from opentelemetry.opentelemetry import OpenTelemetry
 from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_COUNT_LIMIT,
     OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
@@ -56,7 +57,7 @@ _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
 _ENV_VALUE_UNSET = ""
 
 
-class LogLimits:
+class LogLimits(OpenTelemetry):
     """This class is based on a SpanLimits class in the Tracing module.
 
     This class represents the limits that should be enforced on recorded data such as events, links, attributes etc.
@@ -90,10 +91,13 @@ class LogLimits:
 
     def __init__(
         self,
-        max_attributes: Optional[int] = None,
+        max_attributes: Optional[int] = _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT,
         max_attribute_length: Optional[int] = None,
     ):
-
+        super().__init__(
+            max_attributes=max_attributes,
+            max_attribute_length=max_attribute_length,
+        )
         # attribute count
         global_max_attributes = self._from_env_if_absent(
             max_attributes, OTEL_ATTRIBUTE_COUNT_LIMIT
@@ -109,9 +113,6 @@ class LogLimits:
             max_attribute_length,
             OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
         )
-
-    def __repr__(self):
-        return f"{type(self).__name__}(max_attributes={self.max_attributes}, max_attribute_length={self.max_attribute_length})"
 
     @classmethod
     def _from_env_if_absent(
