@@ -1074,6 +1074,8 @@ class Tracer(trace_api.Tracer):
             trace_id = self.id_generator.generate_trace_id()
         else:
             trace_id = parent_span_context.trace_id
+        
+        span_id = self.id_generator.generate_span_id()
 
         # The sampler decides whether to create a real or no-op span at the
         # time of span creation. No-op spans do not record events, and are not
@@ -1082,7 +1084,7 @@ class Tracer(trace_api.Tracer):
         # to include information about the sampling result.
         # The sampler may also modify the parent span context's tracestate
         sampling_result = self.sampler.should_sample(
-            context, trace_id, name, kind, attributes, links
+            context, trace_id, name, kind, attributes, links, span_id=span_id,
         )
 
         trace_flags = (
@@ -1092,7 +1094,7 @@ class Tracer(trace_api.Tracer):
         )
         span_context = trace_api.SpanContext(
             trace_id,
-            self.id_generator.generate_span_id(),
+            span_id,
             is_remote=False,
             trace_flags=trace_flags,
             trace_state=sampling_result.trace_state,
