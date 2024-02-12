@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Add missing Resource SchemaURL in OTLP exporters
+  ([#3652](https://github.com/open-telemetry/opentelemetry-python/pull/3652))
+- Fix loglevel warning text
+  ([#3566](https://github.com/open-telemetry/opentelemetry-python/pull/3566))
 - Prometheus Exporter string representation for target_info labels
   ([#3659](https://github.com/open-telemetry/opentelemetry-python/pull/3659))
 - Logs: ObservedTimestamp field is missing in console exporter output
