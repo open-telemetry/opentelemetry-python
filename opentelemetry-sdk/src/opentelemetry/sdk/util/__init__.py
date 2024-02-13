@@ -14,7 +14,7 @@
 
 import datetime
 import threading
-from collections import OrderedDict, deque
+from collections import deque
 from collections.abc import MutableMapping, Sequence
 from typing import Optional
 
@@ -107,7 +107,7 @@ class BoundedDict(MutableMapping):
                 raise ValueError
         self.maxlen = maxlen
         self.dropped = 0
-        self._dict = OrderedDict()  # type: OrderedDict
+        self._dict = {}  # type: dict
         self._lock = threading.Lock()  # type: threading.Lock
 
     def __repr__(self):
@@ -143,7 +143,7 @@ class BoundedDict(MutableMapping):
 
     @classmethod
     def from_map(cls, maxlen, mapping):
-        mapping = OrderedDict(mapping)
+        mapping = dict(mapping)
         bounded_dict = cls(maxlen)
         for key, value in mapping.items():
             bounded_dict[key] = value
