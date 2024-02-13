@@ -15,7 +15,6 @@
 import os
 import threading
 import time
-from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from logging import WARNING
 from unittest import TestCase
@@ -153,12 +152,12 @@ class TestOTLPSpanExporter(TestCase):
             "a",
             context=Mock(
                 **{
-                    "trace_state": OrderedDict([("a", "b"), ("c", "d")]),
+                    "trace_state": {"a": "b", "c": "d"},
                     "span_id": 10217189687419569865,
                     "trace_id": 67545097771067222548457157018666467027,
                 }
             ),
-            resource=SDKResource(OrderedDict([("a", 1), ("b", False)])),
+            resource=SDKResource({"a": 1, "b": False}),
             parent=Mock(**{"span_id": 12345}),
             attributes=BoundedAttributes(attributes={"a": 1, "b": True}),
             events=[event_mock],
@@ -183,12 +182,12 @@ class TestOTLPSpanExporter(TestCase):
             "b",
             context=Mock(
                 **{
-                    "trace_state": OrderedDict([("a", "b"), ("c", "d")]),
+                    "trace_state": {"a": "b", "c": "d"},
                     "span_id": 10217189687419569865,
                     "trace_id": 67545097771067222548457157018666467027,
                 }
             ),
-            resource=SDKResource(OrderedDict([("a", 2), ("b", False)])),
+            resource=SDKResource({"a": 2, "b": False}),
             parent=Mock(**{"span_id": 12345}),
             instrumentation_scope=InstrumentationScope(
                 name="name", version="version"
@@ -199,12 +198,12 @@ class TestOTLPSpanExporter(TestCase):
             "c",
             context=Mock(
                 **{
-                    "trace_state": OrderedDict([("a", "b"), ("c", "d")]),
+                    "trace_state": {"a": "b", "c": "d"},
                     "span_id": 10217189687419569865,
                     "trace_id": 67545097771067222548457157018666467027,
                 }
             ),
-            resource=SDKResource(OrderedDict([("a", 1), ("b", False)])),
+            resource=SDKResource({"a": 1, "b": False}),
             parent=Mock(**{"span_id": 12345}),
             instrumentation_scope=InstrumentationScope(
                 name="name2", version="version2"
@@ -964,7 +963,7 @@ def _create_span_with_status(status: SDKStatus):
         "a",
         context=Mock(
             **{
-                "trace_state": OrderedDict([("a", "b"), ("c", "d")]),
+                "trace_state": {"a": "b", "c": "d"},
                 "span_id": 10217189687419569865,
                 "trace_id": 67545097771067222548457157018666467027,
             }
