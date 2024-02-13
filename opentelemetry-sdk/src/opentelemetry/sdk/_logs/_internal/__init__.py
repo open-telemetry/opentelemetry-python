@@ -55,12 +55,15 @@ _logger = logging.getLogger(__name__)
 _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
 _ENV_VALUE_UNSET = ""
 _EXCLUDED_ATTRIBUTES = {
+    # pseudo-private log-record attributes, they just get dropped
     "args",
     "msg",
     "message",
     "stack_info",
     "exc_info",
     "exc_text",
+    # attributes that are retained, but with a different name
+    # following semantic conventions
     "pathname",
     "funcName",
     "lineno",
