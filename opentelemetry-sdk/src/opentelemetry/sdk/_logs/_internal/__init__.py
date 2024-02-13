@@ -54,15 +54,13 @@ _logger = logging.getLogger(__name__)
 
 _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
 _ENV_VALUE_UNSET = ""
-_PRIVATE_RECORD_ATTRS = {
+_EXCLUDED_ATTRIBUTES = {
     "args",
     "msg",
     "message",
     "stack_info",
     "exc_info",
     "exc_text",
-}
-_SEMANTIC_CONVENTION_ATTRS = {
     "pathname",
     "funcName",
     "lineno",
@@ -434,15 +432,12 @@ class LoggingHandler(logging.Handler):
         self._logger = get_logger(
             __name__, logger_provider=self._logger_provider
         )
-        self._exclude_attributes = (
-            _PRIVATE_RECORD_ATTRS | _SEMANTIC_CONVENTION_ATTRS
-        )
 
     def _get_attributes(self, record: logging.LogRecord) -> Attributes:
         attributes = {
             k: v
             for k, v in vars(record).items()
-            if k not in self._exclude_attributes
+            if k not in _EXCLUDED_ATTRIBUTES
         }
 
         # Add standard code attributes for logs.
@@ -473,12 +468,18 @@ class LoggingHandler(logging.Handler):
         severity_number = std_to_otel(record.levelno)
         body = self.format(record)
 
+        # related to https://github.com/open-telemetry/opentelemetry-python/issues/3548
+        # Severity Text = WARN as defined in https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/logs/data-model.md#displaying-severity.
+        level_name = (
+            "WARN" if record.levelname == "WARNING" else record.levelname
+        )
+
         return LogRecord(
             timestamp=timestamp,
             trace_id=span_context.trace_id,
             span_id=span_context.span_id,
             trace_flags=span_context.trace_flags,
-            severity_text=record.levelname,
+            severity_text=level_name,
             severity_number=severity_number,
             body=body,
             resource=self._logger.resource,

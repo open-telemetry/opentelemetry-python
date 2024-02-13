@@ -44,7 +44,7 @@ class TestGlobals(unittest.TestCase):
         assert logs_internal._LOGGER_PROVIDER is None
 
         assert isinstance(
-            get_logger_provider(), logs_internal.NoOpLoggerProvider
+            get_logger_provider(), logs_internal.ProxyLoggerProvider
         )
 
         logs_internal._LOGGER_PROVIDER = None
