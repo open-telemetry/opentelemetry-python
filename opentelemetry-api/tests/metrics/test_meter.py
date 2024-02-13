@@ -41,6 +41,9 @@ class ChildMeter(Meter):
     def create_histogram(self, name, unit="", description=""):
         super().create_histogram(name, unit=unit, description=description)
 
+    def create_gauge(self, name, unit="", description=""):
+        super().create_gauge(name, unit=unit, description=description)
+
     def create_observable_gauge(self, name, callback, unit="", description=""):
         super().create_observable_gauge(
             name, callback, unit=unit, description=description
@@ -64,6 +67,7 @@ class TestMeter(TestCase):
             test_meter.create_up_down_counter("up_down_counter")
             test_meter.create_observable_counter("observable_counter", Mock())
             test_meter.create_histogram("histogram")
+            test_meter.create_gauge("gauge")
             test_meter.create_observable_gauge("observable_gauge", Mock())
             test_meter.create_observable_up_down_counter(
                 "observable_up_down_counter", Mock()
@@ -75,6 +79,7 @@ class TestMeter(TestCase):
             "counter",
             "up_down_counter",
             "histogram",
+            "gauge",
         ]:
             with self.assertLogs(level=WARNING):
                 getattr(test_meter, f"create_{instrument_name}")(
@@ -122,6 +127,14 @@ class TestMeter(TestCase):
 
         self.assertTrue(hasattr(Meter, "create_histogram"))
         self.assertTrue(Meter.create_histogram.__isabstractmethod__)
+
+    def test_create_gauge(self):
+        """
+        Test that the meter provides a function to create a new Gauge
+        """
+
+        self.assertTrue(hasattr(Meter, "create_gauge"))
+        self.assertTrue(Meter.create_gauge.__isabstractmethod__)
 
     def test_create_observable_gauge(self):
         """
