@@ -312,6 +312,7 @@ def encode_metrics(data: MetricsData) -> ExportMetricsServiceRequest:
                     attributes=_encode_attributes(sdk_resource.attributes)
                 ),
                 scope_metrics=scope_data.values(),
+                schema_url=sdk_resource.schema_url,
             )
         )
     resource_metrics = resource_data

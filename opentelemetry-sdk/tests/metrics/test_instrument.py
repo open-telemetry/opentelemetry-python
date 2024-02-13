@@ -26,8 +26,10 @@ from opentelemetry.sdk.metrics import (
     ObservableUpDownCounter,
     UpDownCounter,
 )
+from opentelemetry.sdk.metrics import _Gauge as _SDKGauge
 from opentelemetry.sdk.metrics._internal.instrument import (
     _Counter,
+    _Gauge,
     _Histogram,
     _ObservableCounter,
     _ObservableGauge,
@@ -291,6 +293,23 @@ class TestObservableCounter(TestCase):
         with self.assertRaises(TypeError):
             # pylint: disable=abstract-class-instantiated
             ObservableCounter("name", Mock(), Mock())
+
+
+class TestGauge(TestCase):
+    def testname(self):
+        self.assertEqual(_Gauge("name", Mock(), Mock()).name, "name")
+        self.assertEqual(_Gauge("Name", Mock(), Mock()).name, "name")
+
+    def test_set(self):
+        mc = Mock()
+        gauge = _Gauge("name", Mock(), mc)
+        gauge.set(1.0)
+        mc.consume_measurement.assert_called_once()
+
+    def test_disallow_direct_counter_creation(self):
+        with self.assertRaises(TypeError):
+            # pylint: disable=abstract-class-instantiated
+            _SDKGauge("name", Mock(), Mock())
 
 
 class TestObservableUpDownCounter(TestCase):

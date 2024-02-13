@@ -30,6 +30,7 @@ from opentelemetry.metrics import (
 from opentelemetry.metrics._internal import _ProxyMeter, _ProxyMeterProvider
 from opentelemetry.metrics._internal.instrument import (
     _ProxyCounter,
+    _ProxyGauge,
     _ProxyHistogram,
     _ProxyObservableCounter,
     _ProxyObservableGauge,
@@ -195,6 +196,11 @@ class TestProxy(MetricsGlobalsTest, TestCase):
         proxy_histogram = proxy_meter.create_histogram(
             name, unit=unit, description=description
         )
+
+        proxy_gauge = proxy_meter.create_gauge(
+            name, unit=unit, description=description
+        )
+
         proxy_observable_counter = proxy_meter.create_observable_counter(
             name, callbacks=[callback], unit=unit, description=description
         )
@@ -209,6 +215,7 @@ class TestProxy(MetricsGlobalsTest, TestCase):
         self.assertIsInstance(proxy_counter, _ProxyCounter)
         self.assertIsInstance(proxy_updowncounter, _ProxyUpDownCounter)
         self.assertIsInstance(proxy_histogram, _ProxyHistogram)
+        self.assertIsInstance(proxy_gauge, _ProxyGauge)
         self.assertIsInstance(
             proxy_observable_counter, _ProxyObservableCounter
         )
@@ -223,6 +230,7 @@ class TestProxy(MetricsGlobalsTest, TestCase):
         proxy_counter.add(amount, attributes=attributes)
         proxy_updowncounter.add(amount, attributes=attributes)
         proxy_histogram.record(amount, attributes=attributes)
+        proxy_gauge.set(amount, attributes=attributes)
 
         # Calling _ProxyMeterProvider.on_set_meter_provider() should cascade down
         # to the _ProxyInstruments which should create their own real instruments
@@ -243,6 +251,9 @@ class TestProxy(MetricsGlobalsTest, TestCase):
         real_meter.create_histogram.assert_called_once_with(
             name, unit, description
         )
+        real_meter.create_gauge.assert_called_once_with(
+            name, unit, description
+        )
         real_meter.create_observable_counter.assert_called_once_with(
             name, [callback], unit, description
         )
@@ -258,9 +269,11 @@ class TestProxy(MetricsGlobalsTest, TestCase):
         real_counter: Mock = real_meter.create_counter()
         real_updowncounter: Mock = real_meter.create_up_down_counter()
         real_histogram: Mock = real_meter.create_histogram()
+        real_gauge: Mock = real_meter.create_gauge()
         real_counter.assert_not_called()
         real_updowncounter.assert_not_called()
         real_histogram.assert_not_called()
+        real_gauge.assert_not_called()
 
         proxy_counter.add(amount, attributes=attributes)
         real_counter.add.assert_called_once_with(amount, attributes)
@@ -268,6 +281,8 @@ class TestProxy(MetricsGlobalsTest, TestCase):
         real_updowncounter.add.assert_called_once_with(amount, attributes)
         proxy_histogram.record(amount, attributes=attributes)
         real_histogram.record.assert_called_once_with(amount, attributes)
+        proxy_gauge.set(amount, attributes=attributes)
+        real_gauge.set.assert_called_once_with(amount, attributes)
 
     def test_proxy_meter_with_real_meter(self) -> None:
         # Creating new instruments on the _ProxyMeter with a real meter set
@@ -292,6 +307,9 @@ class TestProxy(MetricsGlobalsTest, TestCase):
         histogram = proxy_meter.create_histogram(
             name, unit=unit, description=description
         )
+        gauge = proxy_meter.create_gauge(
+            name, unit=unit, description=description
+        )
         observable_counter = proxy_meter.create_observable_counter(
             name, callbacks=[callback], unit=unit, description=description
         )
@@ -308,6 +326,7 @@ class TestProxy(MetricsGlobalsTest, TestCase):
         self.assertIs(counter, real_meter.create_counter())
         self.assertIs(updowncounter, real_meter.create_up_down_counter())
         self.assertIs(histogram, real_meter.create_histogram())
+        self.assertIs(gauge, real_meter.create_gauge())
         self.assertIs(
             observable_counter, real_meter.create_observable_counter()
         )
