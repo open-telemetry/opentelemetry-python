@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from unittest import TestCase
+
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _create_exp_backoff_generator,
 )
