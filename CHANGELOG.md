@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Logs: set `observed_timestamp` field
   ([#3565](https://github.com/open-telemetry/opentelemetry-python/pull/3565))
+- Add missing Resource SchemaURL in OTLP exporters
+  ([#3652](https://github.com/open-telemetry/opentelemetry-python/pull/3652))
 - Fix loglevel warning text
   ([#3566](https://github.com/open-telemetry/opentelemetry-python/pull/3566))
 - Prometheus Exporter string representation for target_info labels
