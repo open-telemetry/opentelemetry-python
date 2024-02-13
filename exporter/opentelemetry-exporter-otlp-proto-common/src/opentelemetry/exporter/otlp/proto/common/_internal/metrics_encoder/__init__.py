@@ -13,11 +13,10 @@
 # limitations under the License.
 import logging
 
-# This kind of import is needed to avoid Sphinx errors.
-import opentelemetry.sdk.metrics._internal
 from opentelemetry.sdk.metrics.export import (
     MetricExporter,
 )
+from opentelemetry.sdk.metrics.view import Aggregation
 from os import environ
 from opentelemetry.sdk.metrics import (
     Counter,
@@ -67,9 +66,7 @@ class OTLPMetricExporterMixin:
     def _common_configuration(
         self,
         preferred_temporality: Dict[type, AggregationTemporality] = None,
-        preferred_aggregation: Dict[
-            type, "opentelemetry.sdk.metrics.view.Aggregation"
-        ] = None,
+        preferred_aggregation: Dict[type, Aggregation] = None,
     ) -> None:
 
         MetricExporter.__init__(
@@ -136,10 +133,8 @@ class OTLPMetricExporterMixin:
 
     def get_aggregation(
         self,
-        preferred_aggregation: Dict[
-            type, "opentelemetry.sdk.metrics.view.Aggregation"
-        ],
-    ) -> Dict[type, "opentelemetry.sdk.metrics.view.Aggregation"]:
+        preferred_aggregation: Dict[type, Aggregation],
+    ) -> Dict[type, Aggregation]:
 
         otel_exporter_otlp_metrics_default_histogram_aggregation = environ.get(
             OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION,
