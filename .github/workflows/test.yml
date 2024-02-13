@@ -10,7 +10,7 @@ env:
   # Otherwise, set variable to the commit of your branch on
   # opentelemetry-python-contrib which is compatible with these Core repo
   # changes.
-  CONTRIB_REPO_SHA: 2977f143df1d474735e8bdfecd91d92d534e80dc
+  CONTRIB_REPO_SHA: d167ef7b43941a74378d625fea74628dd7572efa
   # This is needed because we do not clone the core repo in contrib builds anymore.
   # When running contrib builds as part of core builds, we use actions/checkout@v2 which
   # does not set an environment variable (simply just runs tox), which is different when
@@ -23,19 +23,18 @@ jobs:
   build:
     env:
       # We use these variables to convert between tox and GHA version literals
-      py37: 3.7
       py38: 3.8
       py39: 3.9
       py310: "3.10"
       py311: "3.11"
-      pypy3: pypy-3.7
+      pypy3: pypy-3.8
       RUN_MATRIX_COMBINATION: ${{ matrix.python-version }}-${{ matrix.package }}-${{
         matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false  # ensures the entire test matrix is run, even if one permutation fails
       matrix:
-        python-version: [py37, py38, py39, py310, py311, pypy3]
+        python-version: [py38, py39, py310, py311, pypy3]
         package:
           - "api"
           - "sdk"
@@ -115,17 +114,17 @@ jobs:
       run: tox -e ${{ matrix.tox-environment }}
 
   # Contrib unit test suite in order to ensure changes in core do not break anything in contrib.
-  # We only run contrib unit tests on the oldest supported Python version (3.7) as running the same tests
+  # We only run contrib unit tests on the oldest supported Python version (3.8) as running the same tests
   # on all versions is somewhat redundant.
   contrib-build:
     env:
       # We use these variables to convert between tox and GHA version literals
-      py37: 3.7
+      py38: 3.8
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false  # ensures the entire test matrix is run, even if one permutation fails
       matrix:
-        python-version: [py37]
+        python-version: [py38]
         package:
           - "aiohttp-client"
           - "aiohttp-server"

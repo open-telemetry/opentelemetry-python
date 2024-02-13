@@ -42,7 +42,7 @@ def reset_logging_globals() -> None:
     """WARNING: only use this for tests."""
     logging_api._LOGGER_PROVIDER_SET_ONCE = Once()  # type: ignore[attr-defined]
     logging_api._LOGGER_PROVIDER = None  # type: ignore[attr-defined]
-    # logging_api._PROXY_LOGGER_PROVIDER = _ProxyLoggerProvider()  # type: ignore[attr-defined]
+    logging_api._PROXY_LOGGER_PROVIDER = logging_api.ProxyLoggerProvider()  # type: ignore[attr-defined]
 
 
 class TraceGlobalsTest(unittest.TestCase):
@@ -73,3 +73,18 @@ class MetricsGlobalsTest(unittest.TestCase):
     def tearDown(self) -> None:
         super().tearDown()
         reset_metrics_globals()
+
+
+class LoggingGlobalsTest(unittest.TestCase):
+    """Resets logging API globals in setUp/tearDown
+
+    Use as a base class or mixin for your test that modifies logging API globals.
+    """
+
+    def setUp(self) -> None:
+        super().setUp()
+        reset_logging_globals()
+
+    def tearDown(self) -> None:
+        super().tearDown()
+        reset_logging_globals()
