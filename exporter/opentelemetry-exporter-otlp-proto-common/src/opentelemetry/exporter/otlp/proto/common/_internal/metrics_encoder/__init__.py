@@ -71,11 +71,11 @@ class OTLPMetricExporterMixin:
 
         MetricExporter.__init__(
             self,
-            preferred_temporality=self.get_temporality(preferred_temporality),
-            preferred_aggregation=self.get_aggregation(preferred_aggregation),
+            preferred_temporality=self._get_temporality(preferred_temporality),
+            preferred_aggregation=self._get_aggregation(preferred_aggregation),
         )
 
-    def get_temporality(
+    def _get_temporality(
         self, preferred_temporality: Dict[type, AggregationTemporality]
     ) -> Dict[type, AggregationTemporality]:
 
@@ -131,7 +131,7 @@ class OTLPMetricExporterMixin:
 
         return instrument_class_temporality
 
-    def get_aggregation(
+    def _get_aggregation(
         self,
         preferred_aggregation: Dict[type, Aggregation],
     ) -> Dict[type, Aggregation]:
