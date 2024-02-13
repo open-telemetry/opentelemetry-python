@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Logs: set `observed_timestamp` field
+  ([#3565](https://github.com/open-telemetry/opentelemetry-python/pull/3565))
 - Add missing Resource SchemaURL in OTLP exporters
   ([#3652](https://github.com/open-telemetry/opentelemetry-python/pull/3652))
 - Fix loglevel warning text
@@ -33,6 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3645](https://github.com/open-telemetry/opentelemetry-python/pull/3645))
 - Add Proxy classes for logging
   ([#3575](https://github.com/open-telemetry/opentelemetry-python/pull/3575))
+- Remove dependency on 'backoff' library
+  ([#3679](https://github.com/open-telemetry/opentelemetry-python/pull/3679))
 
 ## Version 1.22.0/0.43b0 (2023-12-15)
 

@@ -25,7 +25,6 @@ classifiers = [
 ]
 dependencies = [
   "opentelemetry-proto == 1.23.0.dev",
-  "backoff >= 1.10.0, < 3.0.0; python_version>='3.8'",
 ]
 
 [project.optional-dependencies]
