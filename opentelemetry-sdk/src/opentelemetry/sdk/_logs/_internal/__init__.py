@@ -477,6 +477,7 @@ class LoggingHandler(logging.Handler):
 
     def _translate(self, record: logging.LogRecord) -> LogRecord:
         timestamp = int(record.created * 1e9)
+        observered_timestamp = time_ns()
         span_context = get_current_span().get_span_context()
         attributes = self._get_attributes(record)
         # This comment is taken from GanyedeNil's PR #3343, I have redacted it
@@ -530,6 +531,7 @@ class LoggingHandler(logging.Handler):
 
         return LogRecord(
             timestamp=timestamp,
+            observed_timestamp=observered_timestamp,
             trace_id=span_context.trace_id,
             span_id=span_context.span_id,
             trace_flags=span_context.trace_flags,
