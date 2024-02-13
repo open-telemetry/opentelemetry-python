@@ -1042,7 +1042,7 @@ class Tracer(trace_api.Tracer):
             end_on_exit=end_on_exit,
             record_exception=record_exception,
             set_status_on_exception=set_status_on_exception,
-        ):
+        ) as span:
             yield span
 
     def start_span(  # pylint: disable=too-many-locals
