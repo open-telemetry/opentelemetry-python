@@ -16,14 +16,11 @@ sphinx-jekyll-builder==0.3.0
 grpcio~=1.27
 Deprecated~=1.2
 django~=4.2
-flask~=1.0
+flask~=2.3
 opentracing~=2.2.0
 thrift~=0.10
 wrapt>=1.0.0,<2.0.0
-# temporary fix. we should update the jinja, flask deps
-# See https://github.com/pallets/markupsafe/issues/282
-# breaking change introduced in markupsafe causes jinja, flask to break
-markupsafe==2.0.1
+markupsafe~=2.0
 
 # Jaeger generated protobufs do not currently support protobuf 4.x. This can be removed once
 # they're regenerated.

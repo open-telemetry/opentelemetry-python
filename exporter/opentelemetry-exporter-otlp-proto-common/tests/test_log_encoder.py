@@ -75,7 +75,10 @@ class TestOTLPLogEncoder(unittest.TestCase):
                 severity_text="WARN",
                 severity_number=SeverityNumber.WARN,
                 body="Do not go gentle into that good night. Rage, rage against the dying of the light",
-                resource=SDKResource({"first_resource": "value"}),
+                resource=SDKResource(
+                    {"first_resource": "value"},
+                    "resource_schema_url",
+                ),
                 attributes={"a": 1, "b": "c"},
             ),
             instrumentation_scope=InstrumentationScope(
@@ -124,7 +127,10 @@ class TestOTLPLogEncoder(unittest.TestCase):
                 severity_text="INFO",
                 severity_number=SeverityNumber.INFO,
                 body="Love is the one thing that transcends time and space",
-                resource=SDKResource({"first_resource": "value"}),
+                resource=SDKResource(
+                    {"first_resource": "value"},
+                    "resource_schema_url",
+                ),
                 attributes={"filename": "model.py", "func_name": "run_method"},
             ),
             instrumentation_scope=InstrumentationScope(
@@ -206,6 +212,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
                             ],
                         ),
                     ],
+                    schema_url="resource_schema_url",
                 ),
                 PB2ResourceLogs(
                     resource=PB2Resource(
