@@ -553,9 +553,10 @@ class LoggingHandler(logging.Handler):
 
     def flush(self) -> None:
         """
-        Flushes the logging output.
+        Flushes the logging output. Skip flushing if logger is NoOp.
         """
-        self._logger_provider.force_flush()
+        if not isinstance(self._logger, NoOpLogger):
+            self._logger_provider.force_flush()
 
 
 class Logger(APILogger):
