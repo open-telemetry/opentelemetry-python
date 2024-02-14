@@ -1,0 +1,220 @@
+{
+    "$id": "https://opentelemetry.io/otelconfig/tracer_provider.json",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "TracerProvider",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "processors": {
+            "type": "array",
+            "items": {
+                "$ref": "#/$defs/SpanProcessor"
+            }
+        },
+        "limits": {
+            "$ref": "#/$defs/SpanLimits"
+        },
+        "sampler": {
+            "$ref": "#/$defs/Sampler"
+        }
+    },
+    "$defs": {
+        "BatchSpanProcessor": {
+            "type": "object",
+            "additionalProperties": false,
+            "title": "BatchSpanProcessor",
+            "properties": {
+                "schedule_delay": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "export_timeout": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "max_queue_size": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "max_export_batch_size": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "exporter": {
+                    "$ref": "#/$defs/SpanExporter"
+                }
+            },
+            "required": [
+                "exporter"
+            ]
+        },
+        "Sampler": {
+            "type": "object",
+            "additionalProperties": true,
+            "minProperties": 1,
+            "maxProperties": 1,
+            "properties": {
+                "always_off": {
+                    "type": "object",
+                    "additionalProperties": false
+                },
+                "always_on": {
+                    "type": "object",
+                    "additionalProperties": false
+                },
+                "jaeger_remote": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "endpoint": {
+                            "type": "string"
+                        },
+                        "interval": {
+                            "type": "integer",
+                            "minimum": 0
+                        },
+                        "initial_sampler": {
+                            "$ref": "#/$defs/Sampler"
+                        }
+                    }
+                },
+                "parent_based": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "root": {
+                            "$ref": "#/$defs/Sampler"
+                        },
+                        "remote_parent_sampled": {
+                            "$ref": "#/$defs/Sampler"
+                        },
+                        "remote_parent_not_sampled": {
+                            "$ref": "#/$defs/Sampler"
+                        },
+                        "local_parent_sampled": {
+                            "$ref": "#/$defs/Sampler"
+                        },
+                        "local_parent_not_sampled": {
+                            "$ref": "#/$defs/Sampler"
+                        }
+                    }
+                },
+                "trace_id_ratio_based": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "ratio": {
+                            "type": "number"
+                        }
+                    }
+                }
+            },
+            "patternProperties": {
+                ".*": {
+                    "type": "object"
+                }
+            }
+        },
+        "SimpleSpanProcessor": {
+            "type": "object",
+            "additionalProperties": false,
+            "title": "SimpleSpanProcessor",
+            "properties": {
+                "exporter": {
+                    "$ref": "#/$defs/SpanExporter"
+                }
+            },
+            "required": [
+                "exporter"
+            ]
+        },
+        "SpanExporter": {
+            "type": "object",
+            "additionalProperties": true,
+            "minProperties": 1,
+            "maxProperties": 1,
+            "properties": {
+                "otlp": {
+                    "$ref": "common.json#/$defs/Otlp"
+                },
+                "console": {
+                    "$ref": "common.json#/$defs/Console"
+                },
+                "zipkin": {
+                    "$ref": "#/$defs/Zipkin"
+                }
+            },
+            "patternProperties": {
+                ".*": {
+                    "type": "object"
+                }
+            }
+        },
+        "SpanLimits": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "attribute_value_length_limit": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "attribute_count_limit": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "event_count_limit": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "link_count_limit": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "event_attribute_count_limit": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "link_attribute_count_limit": {
+                    "type": "integer",
+                    "minimum": 0
+                }
+            }
+        },
+        "SpanProcessor": {
+            "type": "object",
+            "additionalProperties": true,
+            "minProperties": 1,
+            "maxProperties": 1,
+            "properties": {
+                "batch": {
+                    "$ref": "#/$defs/BatchSpanProcessor"
+                },
+                "simple": {
+                    "$ref": "#/$defs/SimpleSpanProcessor"
+                }
+            },
+            "patternProperties": {
+                ".*": {
+                    "type": "object"
+                }
+            }
+        },
+        "Zipkin": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "endpoint": {
+                    "type": "string"
+                },
+                "timeout": {
+                    "type": "integer",
+                    "minimum": 0
+                }
+            },
+            "required": [
+                "endpoint"
+            ],
+            "title": "Zipkin"
+        }
+    }
+}

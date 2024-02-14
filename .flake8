@@ -18,6 +18,7 @@ exclude =
   .hg
   .svn
   .tox
+  .nox
   CVS
   .venv*/
   venv*/
