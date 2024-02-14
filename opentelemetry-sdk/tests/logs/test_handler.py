@@ -80,10 +80,17 @@ class TestLoggingHandler(unittest.TestCase):
         handler_mock._translate.assert_not_called()
 
     def test_log_flush_noop(self):
-        emitter_provider_mock = Mock(spec=NoOpLoggerProvider)
-        logger = get_logger(logger_provider=emitter_provider_mock)
+
+        no_op_logger_provider = NoOpLoggerProvider()
+        no_op_logger_provider.force_flush = Mock()
+
+        logger = get_logger(logger_provider=NoOpLoggerProvider())
+
         with self.assertLogs(level=logging.WARNING):
             logger.warning("Warning message")
+
+        logger.handlers[0].flush()
+        no_op_logger_provider.force_flush.assert_not_called()
 
     def test_log_record_no_span_context(self):
         emitter_provider_mock = Mock(spec=LoggerProvider)
