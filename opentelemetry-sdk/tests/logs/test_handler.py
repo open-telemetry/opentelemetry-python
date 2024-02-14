@@ -84,7 +84,7 @@ class TestLoggingHandler(unittest.TestCase):
         no_op_logger_provider = NoOpLoggerProvider()
         no_op_logger_provider.force_flush = Mock()
 
-        logger = get_logger(logger_provider=NoOpLoggerProvider())
+        logger = get_logger(logger_provider=no_op_logger_provider)
 
         with self.assertLogs(level=logging.WARNING):
             logger.warning("Warning message")
