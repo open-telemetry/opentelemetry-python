@@ -10,7 +10,7 @@ env:
   # Otherwise, set variable to the commit of your branch on
   # opentelemetry-python-contrib which is compatible with these Core repo
   # changes.
-  CONTRIB_REPO_SHA: d167ef7b43941a74378d625fea74628dd7572efa
+  CONTRIB_REPO_SHA: 1a984d3ba18d4080c58485b7d807dba241179d41
   # This is needed because we do not clone the core repo in contrib builds anymore.
   # When running contrib builds as part of core builds, we use actions/checkout@v2 which
   # does not set an environment variable (simply just runs tox), which is different when
@@ -42,9 +42,6 @@ jobs:
           - "getting-started"
           - "opentracing-shim"
           - "opencensus-shim"
-          - "exporter-jaeger-combined"
-          - "exporter-jaeger-proto-grpc"
-          - "exporter-jaeger-thrift"
           - "exporter-opencensus"
           - "exporter-otlp-proto-common"
           - "exporter-otlp-combined"
@@ -58,6 +55,16 @@ jobs:
           - "propagator-b3"
           - "propagator-jaeger"
         os: [ubuntu-20.04, windows-2019]
+        exclude:
+          - python-version: pypy3
+            package: "opencensus-shim"
+          - python-version: pypy3
+            package: "exporter-opencensus"
+          - python-version: pypy3
+            package: "exporter-otlp-combined"
+          - python-version: pypy3
+            package: "exporter-otlp-proto-grpc"
+
     steps:
     - name: Checkout Core Repo @ SHA - ${{ github.sha }}
       uses: actions/checkout@v2
@@ -67,7 +74,7 @@ jobs:
         python-version: ${{ env[matrix.python-version] }}
         architecture: 'x64'
     - name: Install tox
-      run: pip install tox==3.27.1 -U tox-factor
+      run: pip install tox
     - name: Cache tox environment
         # Preserves .tox directory between runs for faster installs
       uses: actions/cache@v2
@@ -75,7 +82,7 @@ jobs:
         path: |
           .tox
           ~/.cache/pip
-        key: v3-tox-cache-${{ env.RUN_MATRIX_COMBINATION }}-${{ hashFiles('tox.ini',
+        key: v4-tox-cache-${{ env.RUN_MATRIX_COMBINATION }}-${{ hashFiles('tox.ini',
           'dev-requirements.txt') }}-core
     - name: Windows does not let git check out files with long names
       if: ${{ matrix.os == 'windows-2019'}}
@@ -100,7 +107,7 @@ jobs:
         python-version: '3.10'
         architecture: 'x64'
     - name: Install tox
-      run: pip install tox==3.27.1
+      run: pip install tox
     - name: Cache tox environment
         # Preserves .tox directory between runs for faster installs
       uses: actions/cache@v2
@@ -108,7 +115,7 @@ jobs:
         path: |
           .tox
           ~/.cache/pip
-        key: v3-tox-cache-${{ matrix.tox-environment }}-${{ hashFiles('tox.ini', 'dev-requirements.txt')
+        key: v4-tox-cache-${{ matrix.tox-environment }}-${{ hashFiles('tox.ini', 'dev-requirements.txt')
           }}-core
     - name: run tox
       run: tox -e ${{ matrix.tox-environment }}
@@ -169,7 +176,7 @@ jobs:
           - "tornado"
           - "tortoiseorm"
           - "urllib"
-          - "urllib3"
+          - "urllib3v"
           - "wsgi"
           - "prometheus-remote-write"
           - "richconsole"
@@ -191,7 +198,7 @@ jobs:
         python-version: ${{ env[matrix.python-version] }}
         architecture: 'x64'
     - name: Install tox
-      run: pip install tox==3.27.1 -U tox-factor
+      run: pip install tox
     - name: Cache tox environment
         # Preserves .tox directory between runs for faster installs
       uses: actions/cache@v2

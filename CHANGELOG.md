@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Fix flush error when no LoggerProvider configured for LoggingHandler
+  ([#3608](https://github.com/open-telemetry/opentelemetry-python/pull/3608))
+- Fix `OTLPMetricExporter` ignores `preferred_aggregation` property
+  ([#3603](https://github.com/open-telemetry/opentelemetry-python/pull/3603))
 - Logs: set `observed_timestamp` field
   ([#3565](https://github.com/open-telemetry/opentelemetry-python/pull/3565))
 - Add missing Resource SchemaURL in OTLP exporters
