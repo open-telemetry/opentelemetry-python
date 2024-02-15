@@ -43,7 +43,6 @@ from deprecated import deprecated
 from opentelemetry import context as context_api
 from opentelemetry import trace as trace_api
 from opentelemetry.attributes import BoundedAttributes
-from opentelemetry.util._decorator import _agnosticcontextmanager
 from opentelemetry.sdk import util
 from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_COUNT_LIMIT,
@@ -66,6 +65,7 @@ from opentelemetry.sdk.util.instrumentation import (
 from opentelemetry.trace import SpanContext
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
+from opentelemetry.util._decorator import _agnosticcontextmanager
 
 logger = logging.getLogger(__name__)
 
