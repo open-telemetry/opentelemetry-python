@@ -77,7 +77,6 @@ either implicit or explicit context propagation consistently throughout.
 import os
 import typing
 from abc import ABC, abstractmethod
-from contextlib import contextmanager
 from enum import Enum
 from logging import getLogger
 from typing import Iterator, Optional, Sequence, cast
@@ -544,7 +543,7 @@ def get_tracer_provider() -> TracerProvider:
     return cast("TracerProvider", _TRACER_PROVIDER)
 
 
-@contextmanager
+@_agnosticcontextmanager
 def use_span(
     span: Span,
     end_on_exit: bool = False,
