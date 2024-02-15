@@ -15,10 +15,15 @@
 import asyncio
 import contextlib
 import functools
-from typing import Awaitable, Callable, ParamSpec, TypeVar, Iterator
+from typing import TYPE_CHECKING, Awaitable, Callable, Iterator, Union
 
-P = ParamSpec("P")
-R = TypeVar("R")
+
+if TYPE_CHECKING:
+    from typing import TypeVar
+    R = TypeVar("R")  # Return type
+    P = TypeVar("P")  # Generic type for all arguments
+    Pargs = TypeVar("Pargs")  # Generic type for arguments
+    Pkwargs = TypeVar("Pkwargs")  # Generic type for arguments
 
 
 class _AgnosticContextManager(
@@ -26,12 +31,12 @@ class _AgnosticContextManager(
 ):
 
     def __call__(  # type: ignore
-        self, func: Callable[P, R | Awaitable[R]]
-    ) -> Callable[P, R | Awaitable[R]]:
+        self, func: Callable[..., Union[R, Awaitable[R]]]
+    ) -> Callable[..., Union[R, Awaitable[R]]]:
         if asyncio.iscoroutinefunction(func):
 
             @functools.wraps(func)
-            async def async_wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+            async def async_wrapper(*args: Pargs, **kwargs: Pkwargs) -> R:
                 with self._recreate_cm():  # type: ignore
                     return await func(*args, **kwargs)  # type: ignore
 
@@ -40,10 +45,10 @@ class _AgnosticContextManager(
 
 
 def _agnosticcontextmanager(
-    func: Callable[P, Iterator[R]]
-) -> Callable[P, _AgnosticContextManager[R]]:
+    func: Callable[..., Iterator[R]]
+) -> Callable[..., _AgnosticContextManager[R]]:
     @functools.wraps(func)
-    def helper(*args: P.args, **kwargs: P.kwargs) -> _AgnosticContextManager[R]:
+    def helper(*args: Pargs, **kwargs: Pkwargs) -> _AgnosticContextManager[R]:
         return _AgnosticContextManager(func, args, kwargs)  # type: ignore
 
     return helper
