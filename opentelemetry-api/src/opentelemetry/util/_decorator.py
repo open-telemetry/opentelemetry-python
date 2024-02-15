@@ -26,6 +26,16 @@ Pkwargs = TypeVar("Pkwargs")  # Generic type for arguments
 class _AgnosticContextManager(
     contextlib._GeneratorContextManager[R]
 ):  # pylint: disable=protected-access
+    """Context manager that can decorate both async and sync functions.
+
+    This is an overriden version of the contextlib._GeneratorContextManager
+    class that will decorate async functions with an async context manager
+    to end the span AFTER the entire async function coroutine finishes.
+
+    Else it will report near zero spans durations for async functions.
+    https://github.com/open-telemetry/opentelemetry-python/pull/3633
+    """
+
     def __call__(  # type: ignore
         self, func: Callable[..., Union[R, Awaitable[R]]]
     ) -> Callable[..., Union[R, Awaitable[R]]]:
