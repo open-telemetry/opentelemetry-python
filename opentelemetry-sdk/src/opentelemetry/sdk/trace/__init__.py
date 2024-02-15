@@ -43,6 +43,7 @@ from deprecated import deprecated
 from opentelemetry import context as context_api
 from opentelemetry import trace as trace_api
 from opentelemetry.attributes import BoundedAttributes
+from opentelemetry.util._decorator import _agnosticcontextmanager
 from opentelemetry.sdk import util
 from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_COUNT_LIMIT,
@@ -1037,7 +1038,7 @@ class Tracer(trace_api.Tracer):
         self._span_limits = span_limits
         self._instrumentation_scope = instrumentation_scope
 
-    @trace_api._agnosticcontextmanager  # pylint: disable=protected-access
+    @_agnosticcontextmanager  # pylint: disable=protected-access
     def start_as_current_span(
         self,
         name: str,

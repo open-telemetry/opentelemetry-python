@@ -20,16 +20,14 @@ from typing import TYPE_CHECKING, Awaitable, Callable, Iterator, Union
 
 if TYPE_CHECKING:
     from typing import TypeVar
+
     R = TypeVar("R")  # Return type
     P = TypeVar("P")  # Generic type for all arguments
     Pargs = TypeVar("Pargs")  # Generic type for arguments
     Pkwargs = TypeVar("Pkwargs")  # Generic type for arguments
 
 
-class _AgnosticContextManager(
-    contextlib._GeneratorContextManager[R]
-):
-
+class _AgnosticContextManager(contextlib._GeneratorContextManager[R]):
     def __call__(  # type: ignore
         self, func: Callable[..., Union[R, Awaitable[R]]]
     ) -> Callable[..., Union[R, Awaitable[R]]]:
