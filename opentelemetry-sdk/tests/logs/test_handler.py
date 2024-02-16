@@ -79,6 +79,19 @@ class TestLoggingHandler(unittest.TestCase):
             logger.warning("Warning message")
         handler_mock._translate.assert_not_called()
 
+    def test_log_flush_noop(self):
+
+        no_op_logger_provider = NoOpLoggerProvider()
+        no_op_logger_provider.force_flush = Mock()
+
+        logger = get_logger(logger_provider=no_op_logger_provider)
+
+        with self.assertLogs(level=logging.WARNING):
+            logger.warning("Warning message")
+
+        logger.handlers[0].flush()
+        no_op_logger_provider.force_flush.assert_not_called()
+
     def test_log_record_no_span_context(self):
         emitter_provider_mock = Mock(spec=LoggerProvider)
         emitter_mock = APIGetLogger(
@@ -98,6 +111,20 @@ class TestLoggingHandler(unittest.TestCase):
             log_record.trace_flags, INVALID_SPAN_CONTEXT.trace_flags
         )
 
+    def test_log_record_observed_timestamp(self):
+        emitter_provider_mock = Mock(spec=LoggerProvider)
+        emitter_mock = APIGetLogger(
+            __name__, logger_provider=emitter_provider_mock
+        )
+        logger = get_logger(logger_provider=emitter_provider_mock)
+        # Assert emit gets called for warning message
+        with self.assertLogs(level=logging.WARNING):
+            logger.warning("Warning message")
+        args, _ = emitter_mock.emit.call_args_list[0]
+        log_record = args[0]
+
+        self.assertIsNotNone(log_record.observed_timestamp)
+
     def test_log_record_user_attributes(self):
         """Attributes can be injected into logs by adding them to the LogRecord"""
         emitter_provider_mock = Mock(spec=LoggerProvider)
@@ -112,7 +139,20 @@ class TestLoggingHandler(unittest.TestCase):
         log_record = args[0]
 
         self.assertIsNotNone(log_record)
-        self.assertEqual(log_record.attributes, {"http.status_code": 200})
+        self.assertEqual(len(log_record.attributes), 4)
+        self.assertEqual(log_record.attributes["http.status_code"], 200)
+        self.assertTrue(
+            log_record.attributes[SpanAttributes.CODE_FILEPATH].endswith(
+                "test_handler.py"
+            )
+        )
+        self.assertEqual(
+            log_record.attributes[SpanAttributes.CODE_FUNCTION],
+            "test_log_record_user_attributes",
+        )
+        # The line of the log statement is not a constant (changing tests may change that),
+        # so only check that the attribute is present.
+        self.assertTrue(SpanAttributes.CODE_LINENO in log_record.attributes)
         self.assertTrue(isinstance(log_record.attributes, BoundedAttributes))
 
     def test_log_record_exception(self):

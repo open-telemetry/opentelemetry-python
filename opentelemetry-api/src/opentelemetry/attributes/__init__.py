@@ -68,9 +68,10 @@ def _clean_attribute(
             # Reject attribute value if sequence contains a value with an incompatible type.
             if element_type not in _VALID_ATTR_VALUE_TYPES:
                 _logger.warning(
-                    "Invalid type %s in attribute value sequence. Expected one of "
+                    "Invalid type %s in attribute '%s' value sequence. Expected one of "
                     "%s or None",
                     element_type.__name__,
+                    key,
                     [
                         valid_type.__name__
                         for valid_type in _VALID_ATTR_VALUE_TYPES
@@ -147,7 +148,8 @@ class BoundedAttributes(MutableMapping):
         self.maxlen = maxlen
         self.dropped = 0
         self.max_value_len = max_value_len
-        self._dict = OrderedDict()  # type: OrderedDict
+        # OrderedDict is not used until the maxlen is reached for efficiency.
+        self._dict = {}  # type: dict | OrderedDict
         self._lock = threading.Lock()  # type: threading.Lock
         if attributes:
             for key, value in attributes.items():
@@ -155,9 +157,7 @@ class BoundedAttributes(MutableMapping):
         self._immutable = immutable
 
     def __repr__(self):
-        return (
-            f"{type(self).__name__}({dict(self._dict)}, maxlen={self.maxlen})"
-        )
+        return f"{dict(self._dict)}"
 
     def __getitem__(self, key):
         return self._dict[key]
@@ -177,6 +177,8 @@ class BoundedAttributes(MutableMapping):
                 elif (
                     self.maxlen is not None and len(self._dict) == self.maxlen
                 ):
+                    if not isinstance(self._dict, OrderedDict):
+                        self._dict = OrderedDict(self._dict)
                     self._dict.popitem(last=False)
                     self.dropped += 1
 
