@@ -15,9 +15,10 @@
 import asyncio
 import contextlib
 import functools
-from typing import Coroutine, Callable, Generic, Iterator, TypeVar, Union
+from typing import Callable, Generic, Iterator, TypeVar
 import typing
 
+V = TypeVar("V")
 R = TypeVar("R")  # Return type
 Pargs = TypeVar("Pargs")  # Generic type for arguments
 Pkwargs = TypeVar("Pkwargs")  # Generic type for arguments
@@ -40,18 +41,16 @@ class _AgnosticContextManager(
     https://github.com/open-telemetry/opentelemetry-python/pull/3633
     """
 
-    def __call__(  # type: ignore
-        self, func: Callable["P", Union[R, Coroutine[None, None, R]]]
-    ) -> Callable["P", Union[R, Coroutine[None, None, R]]]:
+    def __call__(self, func: V) -> V:
         if asyncio.iscoroutinefunction(func):
 
-            @functools.wraps(func)
+            @functools.wraps(func)  # type: ignore
             async def async_wrapper(*args: Pargs, **kwargs: Pkwargs) -> R:
                 with self._recreate_cm():  # type: ignore
                     return await func(*args, **kwargs)  # type: ignore
 
-            return async_wrapper
-        return super().__call__(func)
+            return async_wrapper  # type: ignore
+        return super().__call__(func)  # type: ignore
 
 
 def _agnosticcontextmanager(

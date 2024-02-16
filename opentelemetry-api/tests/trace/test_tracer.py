@@ -56,20 +56,24 @@ class TestTracer(TestCase):
 
         # test 1 : sync function
         @mock_tracer.start_as_current_span("name")
-        def function_sync():  # type: ignore
+        def function_sync(data: str) -> int:
             lst.append(5)
+            return len(data)
 
         lst = []
-        function_sync()
+        res = function_sync("123")
+        self.assertEqual(res, 3)
         self.assertEqual(lst, [1, 5, 9])
 
         # test 2 : async function
         @mock_tracer.start_as_current_span("name")
-        async def function_async():  # type: ignore
+        async def function_async(data: str) -> int:
             lst.append(5)
+            return len(data)
 
         lst = []
-        asyncio.run(function_async())
+        res = asyncio.run(function_async("123"))
+        self.assertEqual(res, 3)
         self.assertEqual(lst, [1, 5, 9])
 
     def test_get_current_span(self):
