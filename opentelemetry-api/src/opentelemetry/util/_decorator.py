@@ -47,9 +47,9 @@ class _AgnosticContextManager(
 
         The original __enter__ method returns Any type, but we want to return R.
         """
-        del self.args, self.kwds, self.func
+        del self.args, self.kwds, self.func  # type: ignore
         try:
-            return next(self.gen)
+            return next(self.gen)  # type: ignore
         except StopIteration:
             raise RuntimeError("generator didn't yield") from None
 
