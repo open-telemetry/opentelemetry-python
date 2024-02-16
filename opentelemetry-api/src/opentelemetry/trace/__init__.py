@@ -434,7 +434,7 @@ class ProxyTracer(Tracer):
     @contextmanager  # type: ignore
     def start_as_current_span(self, *args, **kwargs) -> Iterator[Span]:
         with self._tracer.start_as_current_span(*args, **kwargs) as span:  # type: ignore
-            yield span
+            yield span  # type: ignore
 
 
 class NoOpTracer(Tracer):
