@@ -20,7 +20,7 @@ from opentelemetry.util._decorator import _agnosticcontextmanager
 
 
 @_agnosticcontextmanager
-def cm(*args, **kwargs) -> Iterator[int]:
+def cm() -> Iterator[int]:
     yield 3
 
 
@@ -69,7 +69,10 @@ class TestContextManager(unittest.TestCase):
 
     def test_wraps_contextlib(self):
         """It should proxy to the wrapped contextlib.contextmanager to access underlying properties"""
-        instance = cm(1, 2, a="hello")
+        @_agnosticcontextmanager
+        def cm_with_args(*args, **kwargs) -> Iterator[int]: # type: ignore
+            yield 3
+        instance = cm_with_args(1, 2, a="hello")
         self.assertEqual(instance.args, (1, 2))  # type: ignore
         self.assertEqual(instance.kwds, {"a": "hello"})  # type: ignore
         self.assertTrue(hasattr(instance, "gen"))
