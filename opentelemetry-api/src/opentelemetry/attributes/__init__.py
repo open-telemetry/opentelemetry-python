@@ -157,9 +157,7 @@ class BoundedAttributes(MutableMapping):
         self._immutable = immutable
 
     def __repr__(self):
-        return (
-            f"{type(self).__name__}({dict(self._dict)}, maxlen={self.maxlen})"
-        )
+        return f"{dict(self._dict)}"
 
     def __getitem__(self, key):
         return self._dict[key]
