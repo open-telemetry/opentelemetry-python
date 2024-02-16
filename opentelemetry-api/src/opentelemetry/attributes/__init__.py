@@ -148,7 +148,8 @@ class BoundedAttributes(MutableMapping):
         self.maxlen = maxlen
         self.dropped = 0
         self.max_value_len = max_value_len
-        self._dict = OrderedDict()  # type: OrderedDict
+        # OrderedDict is not used until the maxlen is reached for efficiency.
+        self._dict = {}  # type: dict | OrderedDict
         self._lock = threading.Lock()  # type: threading.Lock
         if attributes:
             for key, value in attributes.items():
@@ -178,6 +179,8 @@ class BoundedAttributes(MutableMapping):
                 elif (
                     self.maxlen is not None and len(self._dict) == self.maxlen
                 ):
+                    if not isinstance(self._dict, OrderedDict):
+                        self._dict = OrderedDict(self._dict)
                     self._dict.popitem(last=False)
                     self.dropped += 1
 
