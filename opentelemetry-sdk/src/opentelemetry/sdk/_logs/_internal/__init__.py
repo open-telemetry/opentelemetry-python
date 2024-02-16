@@ -440,7 +440,7 @@ class LoggingHandler(logging.Handler):
         attributes = {
             k: v
             for k, v in vars(record).items()
-            if k not in _EXCLUDED_ATTRIBUTES
+            if k not in _EXCLUDED_ATTRIBUTES and v is not None
         }
 
         # Add standard code attributes for logs.

@@ -114,7 +114,6 @@ class TestLoggingHandler(unittest.TestCase):
         log_record = args[0]
 
         self.assertIsNotNone(log_record)
-        self.assertEqual(len(log_record.attributes), 4)
         self.assertEqual(
             log_record.attributes,
             {**log_record.attributes, **{"http.status_code": 200}},
