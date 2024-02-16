@@ -28,7 +28,7 @@ class _AgnosticContextManager(
 ):  # pylint: disable=protected-access
     """Context manager that can decorate both async and sync functions.
 
-    This is an overriden version of the contextlib._GeneratorContextManager
+    This is an overridden version of the contextlib._GeneratorContextManager
     class that will decorate async functions with an async context manager
     to end the span AFTER the entire async function coroutine finishes.
 
