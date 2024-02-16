@@ -42,6 +42,17 @@ class _AgnosticContextManager(
     https://github.com/open-telemetry/opentelemetry-python/pull/3633
     """
 
+    def __enter__(self) -> R:
+        """Reimplementing __enter__ to avoid the type error.
+        
+        The original __enter__ method returns Any type, but we want to return R.
+        """
+        del self.args, self.kwds, self.func
+        try:
+            return next(self.gen)
+        except StopIteration:
+            raise RuntimeError("generator didn't yield") from None
+
     def __call__(self, func: V) -> V:
         if asyncio.iscoroutinefunction(func):
 
