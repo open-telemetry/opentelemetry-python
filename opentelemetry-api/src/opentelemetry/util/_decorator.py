@@ -23,9 +23,10 @@ R = TypeVar("R")  # Return type
 Pargs = TypeVar("Pargs")  # Generic type for arguments
 Pkwargs = TypeVar("Pkwargs")  # Generic type for arguments
 
-if typing.TYPE_CHECKING:
-    if hasattr(typing, "ParamSpec"):
-        P = typing.ParamSpec("P")  # Generic type for all arguments
+if hasattr(typing, "ParamSpec"):
+    # only available in python 3.10+
+    # https://peps.python.org/pep-0612/
+    P = typing.ParamSpec("P")  # Generic type for all arguments
 
 
 class _AgnosticContextManager(
@@ -54,8 +55,8 @@ class _AgnosticContextManager(
 
 
 def _agnosticcontextmanager(
-    func: Callable["P", Iterator[R]]
-) -> Callable["P", _AgnosticContextManager[R]]:
+    func: "Callable[P, Iterator[R]]"
+) -> "Callable[P, _AgnosticContextManager[R]]":
     @functools.wraps(func)
     def helper(*args: Pargs, **kwargs: Pkwargs) -> _AgnosticContextManager[R]:
         return _AgnosticContextManager(func, args, kwargs)  # type: ignore
