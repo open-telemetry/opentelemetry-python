@@ -3,7 +3,6 @@ import logging
 import re
 import types as python_types
 import typing
-from collections import OrderedDict
 
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
@@ -235,7 +234,7 @@ class TraceState(typing.Mapping[str, str]):
             typing.Sequence[typing.Tuple[str, str]]
         ] = None,
     ) -> None:
-        self._dict = OrderedDict()  # type: OrderedDict[str, str]
+        self._dict = {}  # type: dict[str, str]
         if entries is None:
             return
         if len(entries) > _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS:
@@ -327,9 +326,8 @@ class TraceState(typing.Mapping[str, str]):
             )
             return self
         prev_state = self._dict.copy()
-        prev_state[key] = value
-        prev_state.move_to_end(key, last=False)
-        new_state = list(prev_state.items())
+        prev_state.pop(key, None)
+        new_state = [(key, value), *prev_state.items()]
         return TraceState(new_state)
 
     def delete(self, key: str) -> "TraceState":
@@ -379,7 +377,7 @@ class TraceState(typing.Mapping[str, str]):
             If the number of keys is beyond the maximum, all values
             will be discarded and an empty tracestate will be returned.
         """
-        pairs = OrderedDict()  # type: OrderedDict[str, str]
+        pairs = {}  # type: dict[str, str]
         for header in header_list:
             members: typing.List[str] = re.split(_delimiter_pattern, header)
             for member in members:

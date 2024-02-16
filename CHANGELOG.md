@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Add `Span.add_link()` method to add link after span start
+  ([#3618](https://github.com/open-telemetry/opentelemetry-python/pull/3618))
+- Fix `OTLPMetricExporter` ignores `preferred_aggregation` property
+  ([#3603](https://github.com/open-telemetry/opentelemetry-python/pull/3603))
+- Logs: set `observed_timestamp` field
+  ([#3565](https://github.com/open-telemetry/opentelemetry-python/pull/3565))
+- Add missing Resource SchemaURL in OTLP exporters
+  ([#3652](https://github.com/open-telemetry/opentelemetry-python/pull/3652))
+- Fix loglevel warning text
+  ([#3566](https://github.com/open-telemetry/opentelemetry-python/pull/3566))
+- Prometheus Exporter string representation for target_info labels
+  ([#3659](https://github.com/open-telemetry/opentelemetry-python/pull/3659))
+- Logs: ObservedTimestamp field is missing in console exporter output
+  ([#3564](https://github.com/open-telemetry/opentelemetry-python/pull/3564))
+- Fix explicit bucket histogram aggregation
+  ([#3429](https://github.com/open-telemetry/opentelemetry-python/pull/3429))
+- Add `code.lineno`, `code.function` and `code.filepath` to all logs 
+  ([#3645](https://github.com/open-telemetry/opentelemetry-python/pull/3645))
 - Add Synchronous Gauge instrument
   ([#3462](https://github.com/open-telemetry/opentelemetry-python/pull/3462))
 - Drop support for 3.7
@@ -19,8 +37,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3623](https://github.com/open-telemetry/opentelemetry-python/pull/3623))
 - Improve Resource Detector timeout messaging
   ([#3645](https://github.com/open-telemetry/opentelemetry-python/pull/3645))
-- Add `Span.add_link()` method to add link after span start
-  ([#3618](https://github.com/open-telemetry/opentelemetry-python/pull/3618))
+- Add Proxy classes for logging
+  ([#3575](https://github.com/open-telemetry/opentelemetry-python/pull/3575))
+- Remove dependency on 'backoff' library
+  ([#3679](https://github.com/open-telemetry/opentelemetry-python/pull/3679))
 
 ## Version 1.22.0/0.43b0 (2023-12-15)
 
