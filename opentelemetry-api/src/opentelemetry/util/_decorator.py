@@ -15,7 +15,7 @@
 import asyncio
 import contextlib
 import functools
-from typing import Awaitable, Callable, Generic, Iterator, TypeVar, Union
+from typing import Coroutine, Callable, Generic, Iterator, TypeVar, Union
 import typing
 
 R = TypeVar("R")  # Return type
@@ -41,8 +41,8 @@ class _AgnosticContextManager(
     """
 
     def __call__(  # type: ignore
-        self, func: Callable["P", Union[R, Awaitable[R]]]
-    ) -> Callable["P", Union[R, Awaitable[R]]]:
+        self, func: Callable["P", Union[R, Coroutine[None, None, R]]]
+    ) -> Callable["P", Union[R, Coroutine[None, None, R]]]:
         if asyncio.iscoroutinefunction(func):
 
             @functools.wraps(func)
