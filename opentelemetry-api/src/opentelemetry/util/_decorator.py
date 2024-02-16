@@ -15,7 +15,7 @@
 import asyncio
 import contextlib
 import functools
-from typing import Awaitable, Callable, Iterator, TypeVar, Union
+from typing import Awaitable, Callable, Generic, Iterator, TypeVar, Union
 
 R = TypeVar("R")  # Return type
 P = TypeVar("P")  # Generic type for all arguments
@@ -24,7 +24,7 @@ Pkwargs = TypeVar("Pkwargs")  # Generic type for arguments
 
 
 class _AgnosticContextManager(
-    contextlib._GeneratorContextManager[R]
+    contextlib._GeneratorContextManager, Generic[R]
 ):  # pylint: disable=protected-access
     """Context manager that can decorate both async and sync functions.
 
