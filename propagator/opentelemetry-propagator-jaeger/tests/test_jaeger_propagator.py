@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
 from unittest.mock import Mock
 
 import opentelemetry.trace as trace_api
@@ -24,6 +23,7 @@ from opentelemetry.propagators import (  # pylint: disable=no-name-in-module
 )
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace import id_generator
+from opentelemetry.test import TestCase
 
 FORMAT = jaeger.JaegerPropagator()
 
@@ -57,7 +57,7 @@ def get_context_new_carrier(old_carrier, carrier_baggage=None):
     return ctx, new_carrier
 
 
-class TestJaegerPropagator(unittest.TestCase):
+class TestJaegerPropagator(TestCase):
     @classmethod
     def setUpClass(cls):
         generator = id_generator.RandomIdGenerator()
@@ -236,7 +236,5 @@ class TestJaegerPropagator(unittest.TestCase):
         mock_setter = Mock()
         span = trace_api.NonRecordingSpan(trace_api.SpanContext(1, 1, True))
         with trace_api.use_span(span, end_on_exit=True):
-            try:
+            with self.assertNotRaises(Exception):
                 FORMAT.inject({}, setter=mock_setter)
-            except Exception as exc:  # pylint: disable=broad-except
-                self.fail(f"Injecting failed for NonRecordingSpan with {exc}")

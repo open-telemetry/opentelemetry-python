@@ -15,13 +15,12 @@
 from logging import WARNING
 from os import environ
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import MagicMock, Mock, call, patch
 
 from requests import Session
 from requests.models import Response
 from responses import POST, activate, add
 
-from opentelemetry.exporter.otlp.proto.common._internal import _is_backoff_v2
 from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
     encode_metrics,
 )
@@ -298,17 +297,8 @@ class TestOTLPMetricExporter(TestCase):
         )
 
     @activate
-    @patch("opentelemetry.exporter.otlp.proto.common._internal.backoff")
     @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.sleep")
-    def test_handles_backoff_v2_api(self, mock_sleep, mock_backoff):
-        # In backoff ~= 2.0.0 the first value yielded from expo is None.
-        def generate_delays(*args, **kwargs):
-            if _is_backoff_v2:
-                yield None
-            yield 1
-
-        mock_backoff.expo.configure_mock(**{"side_effect": generate_delays})
-
+    def test_exponential_backoff(self, mock_sleep):
         # return a retryable error
         add(
             POST,
@@ -323,7 +313,9 @@ class TestOTLPMetricExporter(TestCase):
         metrics_data = self.metrics["sum_int"]
 
         exporter.export(metrics_data)
-        mock_sleep.assert_called_once_with(1)
+        mock_sleep.assert_has_calls(
+            [call(1), call(2), call(4), call(8), call(16), call(32)]
+        )
 
     def test_aggregation_temporality(self):
 
@@ -476,3 +468,30 @@ class TestOTLPMetricExporter(TestCase):
                 OTLPMetricExporter()._preferred_aggregation[Histogram],
                 ExplicitBucketHistogramAggregation,
             )
+
+    @patch.object(OTLPMetricExporter, "_export", return_value=Mock(ok=True))
+    def test_2xx_status_code(self, mock_otlp_metric_exporter):
+        """
+        Test that any HTTP 2XX code returns a successful result
+        """
+
+        self.assertEqual(
+            OTLPMetricExporter().export(MagicMock()),
+            MetricExportResult.SUCCESS,
+        )
+
+    def test_preferred_aggregation_override(self):
+
+        histogram_aggregation = ExplicitBucketHistogramAggregation(
+            boundaries=[0.05, 0.1, 0.5, 1, 5, 10],
+        )
+
+        exporter = OTLPMetricExporter(
+            preferred_aggregation={
+                Histogram: histogram_aggregation,
+            },
+        )
+
+        self.assertEqual(
+            exporter._preferred_aggregation[Histogram], histogram_aggregation
+        )

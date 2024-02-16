@@ -20,6 +20,7 @@ from opentelemetry.sdk.metrics._internal.aggregation import (
 )
 from opentelemetry.sdk.metrics._internal.instrument import (
     _Counter,
+    _Gauge,
     _Histogram,
     _ObservableCounter,
     _UpDownCounter,
@@ -728,6 +729,13 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             unit="unit",
             description="description",
         )
+        gauge = _Gauge(
+            "gauge",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description",
+        )
         metric_reader_storage = MetricReaderStorage(
             SdkConfiguration(
                 resource=Mock(),
@@ -735,6 +743,7 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                 views=(
                     View(instrument_name="observable_counter", name="foo"),
                     View(instrument_name="histogram", name="foo"),
+                    View(instrument_name="gauge", name="foo"),
                 ),
             ),
             MagicMock(
@@ -755,6 +764,12 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             with self.assertLogs(level=WARNING):
                 metric_reader_storage.consume_measurement(
                     Measurement(1, histogram)
+                )
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=WARNING):
+                metric_reader_storage.consume_measurement(
+                    Measurement(1, gauge)
                 )
 
     def test_view_instrument_match_conflict_7(self):
