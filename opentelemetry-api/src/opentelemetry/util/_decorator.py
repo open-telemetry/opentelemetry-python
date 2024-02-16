@@ -15,8 +15,8 @@
 import asyncio
 import contextlib
 import functools
-from typing import Callable, Generic, Iterator, TypeVar
 import typing
+from typing import Callable, Generic, Iterator, TypeVar
 
 V = TypeVar("V")
 R = TypeVar("R")  # Return type
@@ -44,7 +44,7 @@ class _AgnosticContextManager(
 
     def __enter__(self) -> R:
         """Reimplementing __enter__ to avoid the type error.
-        
+
         The original __enter__ method returns Any type, but we want to return R.
         """
         del self.args, self.kwds, self.func
@@ -66,7 +66,7 @@ class _AgnosticContextManager(
 
 
 def _agnosticcontextmanager(
-    func: "Callable[P, Iterator[R]]"
+    func: "Callable[P, Iterator[R]]",
 ) -> "Callable[P, _AgnosticContextManager[R]]":
     @functools.wraps(func)
     def helper(*args: Pargs, **kwargs: Pkwargs) -> _AgnosticContextManager[R]:
