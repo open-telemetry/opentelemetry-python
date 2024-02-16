@@ -70,7 +70,7 @@ class TestContextManager(unittest.TestCase):
     def test_wraps_contextlib(self):
         """It should proxy to the wrapped contextlib.contextmanager to access underlying properties"""
         instance = cm(1, 2, a="hello")
-        self.assertEqual(instance.args, (1, 2))
-        self.assertEqual(instance.kwds, {"a": "hello"})
+        self.assertEqual(instance.args, (1, 2))  # type: ignore
+        self.assertEqual(instance.kwds, {"a": "hello"})  # type: ignore
         self.assertTrue(hasattr(instance, "gen"))
         self.assertTrue(hasattr(instance, "func"))
