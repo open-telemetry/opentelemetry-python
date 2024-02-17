@@ -15,20 +15,15 @@
 
 # pylint: disable=too-many-lines
 
-from enum import Enum
 
-class ThreadAttributes:
+THREAD_ID = "thread.id"
+"""
+Current "managed" thread ID (as opposed to OS thread ID).
+"""
 
-    
-    THREAD_ID = "thread.id"
-    
-    """
-    Current "managed" thread ID (as opposed to OS thread ID).
-    """
 
-    
-    THREAD_NAME = "thread.name"
-    
-    """
-    Current thread name.
-    """
+THREAD_NAME = "thread.name"
+"""
+Current thread name.
+"""
+

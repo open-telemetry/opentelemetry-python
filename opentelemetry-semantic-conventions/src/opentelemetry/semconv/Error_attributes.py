@@ -17,14 +17,11 @@
 
 from enum import Enum
 
-class ErrorAttributes:
 
-    
-    ERROR_TYPE = "error.type"
-    
-    """
-    Describes a class of error the operation ended with.
-    Note: The `error.type` SHOULD be predictable and SHOULD have low cardinality.
+ERROR_TYPE = "error.type"
+"""
+Describes a class of error the operation ended with.
+Note: The `error.type` SHOULD be predictable and SHOULD have low cardinality.
     Instrumentations SHOULD document the list of errors they report.
 
     The cardinality of `error.type` within one instrumentation library SHOULD be low.
@@ -38,7 +35,9 @@ class ErrorAttributes:
     it's RECOMMENDED to:
       * Use a domain-specific attribute
       * Set `error.type` to capture all errors, regardless of whether they are defined within the domain-specific set or not.
-    """
+"""
+
+
 class ErrorTypeValues(Enum):
     OTHER = "_OTHER"
     """A fallback error value to be used when the instrumentation doesn&#39;t define a custom value."""

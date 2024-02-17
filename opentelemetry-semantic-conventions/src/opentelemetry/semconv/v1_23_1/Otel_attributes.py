@@ -17,35 +17,31 @@
 
 from enum import Enum
 
-class OtelAttributes:
 
-    
-    OTEL_SCOPE_NAME = "otel.scope.name"
-    
-    """
-    The name of the instrumentation scope - (`InstrumentationScope.Name` in OTLP).
-    """
+OTEL_SCOPE_NAME = "otel.scope.name"
+"""
+The name of the instrumentation scope - (`InstrumentationScope.Name` in OTLP).
+"""
 
-    
-    OTEL_SCOPE_VERSION = "otel.scope.version"
-    
-    """
-    The version of the instrumentation scope - (`InstrumentationScope.Version` in OTLP).
-    """
 
-    
-    OTEL_STATUS_CODE = "otel.status_code"
-    
-    """
-    Name of the code, either "OK" or "ERROR". MUST NOT be set if the status code is UNSET.
-    """
+OTEL_SCOPE_VERSION = "otel.scope.version"
+"""
+The version of the instrumentation scope - (`InstrumentationScope.Version` in OTLP).
+"""
 
-    
-    OTEL_STATUS_DESCRIPTION = "otel.status_description"
-    
-    """
-    Description of the Status if it has a value, otherwise not set.
-    """
+
+OTEL_STATUS_CODE = "otel.status_code"
+"""
+Name of the code, either "OK" or "ERROR". MUST NOT be set if the status code is UNSET.
+"""
+
+
+OTEL_STATUS_DESCRIPTION = "otel.status_description"
+"""
+Description of the Status if it has a value, otherwise not set.
+"""
+
+
 class OtelStatusCodeValues(Enum):
     OK = "OK"
     """The operation has been validated by an Application developer or Operator to have completed successfully."""

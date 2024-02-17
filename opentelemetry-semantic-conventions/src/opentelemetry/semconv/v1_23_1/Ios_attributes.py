@@ -17,15 +17,14 @@
 
 from enum import Enum
 
-class IosAttributes:
 
-    
-    IOS_STATE = "ios.state"
-    
-    """
-    This attribute represents the state the application has transitioned into at the occurrence of the event.
-    Note: The iOS lifecycle states are defined in the [UIApplicationDelegate documentation](https://developer.apple.com/documentation/uikit/uiapplicationdelegate#1656902), and from which the `OS terminology` column values are derived.
-    """
+IOS_STATE = "ios.state"
+"""
+This attribute represents the state the application has transitioned into at the occurrence of the event.
+Note: The iOS lifecycle states are defined in the [UIApplicationDelegate documentation](https://developer.apple.com/documentation/uikit/uiapplicationdelegate#1656902), and from which the `OS terminology` column values are derived.
+"""
+
+
 class IosStateValues(Enum):
     ACTIVE = "active"
     """The app has become `active`. Associated with UIKit notification `applicationDidBecomeActive`."""

@@ -17,14 +17,13 @@
 
 from enum import Enum
 
-class OtherAttributes:
 
-    
-    STATE = "state"
-    
-    """
-    The state of a connection in the pool.
-    """
+STATE = "state"
+"""
+The state of a connection in the pool.
+"""
+
+
 class StateValues(Enum):
     IDLE = "idle"
     """idle."""

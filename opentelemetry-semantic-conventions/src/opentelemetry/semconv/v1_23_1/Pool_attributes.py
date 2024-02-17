@@ -15,13 +15,9 @@
 
 # pylint: disable=too-many-lines
 
-from enum import Enum
 
-class PoolAttributes:
+POOL_NAME = "pool.name"
+"""
+The name of the connection pool; unique within the instrumented application. In case the connection pool implementation doesn't provide a name, then the [db.connection_string](/docs/database/database-spans.md#connection-level-attributes) should be used.
+"""
 
-    
-    POOL_NAME = "pool.name"
-    
-    """
-    The name of the connection pool; unique within the instrumented application. In case the connection pool implementation doesn't provide a name, then the [db.connection_string](/docs/database/database-spans.md#connection-level-attributes) should be used.
-    """

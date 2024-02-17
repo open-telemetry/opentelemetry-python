@@ -17,60 +17,53 @@
 
 from enum import Enum
 
-class JvmAttributes:
 
-    
-    JVM_BUFFER_POOL_NAME = "jvm.buffer.pool.name"
-    
-    """
-    Name of the buffer pool.
-    Note: Pool names are generally obtained via [BufferPoolMXBean#getName()](https://docs.oracle.com/en/java/javase/11/docs/api/java.management/java/lang/management/BufferPoolMXBean.html#getName()).
-    """
+JVM_BUFFER_POOL_NAME = "jvm.buffer.pool.name"
+"""
+Name of the buffer pool.
+Note: Pool names are generally obtained via [BufferPoolMXBean#getName()](https://docs.oracle.com/en/java/javase/11/docs/api/java.management/java/lang/management/BufferPoolMXBean.html#getName()).
+"""
 
-    
-    JVM_GC_ACTION = "jvm.gc.action"
-    
-    """
-    Name of the garbage collector action.
-    Note: Garbage collector action is generally obtained via [GarbageCollectionNotificationInfo#getGcAction()](https://docs.oracle.com/en/java/javase/11/docs/api/jdk.management/com/sun/management/GarbageCollectionNotificationInfo.html#getGcAction()).
-    """
 
-    
-    JVM_GC_NAME = "jvm.gc.name"
-    
-    """
-    Name of the garbage collector.
-    Note: Garbage collector name is generally obtained via [GarbageCollectionNotificationInfo#getGcName()](https://docs.oracle.com/en/java/javase/11/docs/api/jdk.management/com/sun/management/GarbageCollectionNotificationInfo.html#getGcName()).
-    """
+JVM_GC_ACTION = "jvm.gc.action"
+"""
+Name of the garbage collector action.
+Note: Garbage collector action is generally obtained via [GarbageCollectionNotificationInfo#getGcAction()](https://docs.oracle.com/en/java/javase/11/docs/api/jdk.management/com/sun/management/GarbageCollectionNotificationInfo.html#getGcAction()).
+"""
 
-    
-    JVM_MEMORY_POOL_NAME = "jvm.memory.pool.name"
-    
-    """
-    Name of the memory pool.
-    Note: Pool names are generally obtained via [MemoryPoolMXBean#getName()](https://docs.oracle.com/en/java/javase/11/docs/api/java.management/java/lang/management/MemoryPoolMXBean.html#getName()).
-    """
 
-    
-    JVM_MEMORY_TYPE = "jvm.memory.type"
-    
-    """
-    The type of memory.
-    """
+JVM_GC_NAME = "jvm.gc.name"
+"""
+Name of the garbage collector.
+Note: Garbage collector name is generally obtained via [GarbageCollectionNotificationInfo#getGcName()](https://docs.oracle.com/en/java/javase/11/docs/api/jdk.management/com/sun/management/GarbageCollectionNotificationInfo.html#getGcName()).
+"""
 
-    
-    JVM_THREAD_DAEMON = "jvm.thread.daemon"
-    
-    """
-    Whether the thread is daemon or not.
-    """
 
-    
-    JVM_THREAD_STATE = "jvm.thread.state"
-    
-    """
-    State of the thread.
-    """
+JVM_MEMORY_POOL_NAME = "jvm.memory.pool.name"
+"""
+Name of the memory pool.
+Note: Pool names are generally obtained via [MemoryPoolMXBean#getName()](https://docs.oracle.com/en/java/javase/11/docs/api/java.management/java/lang/management/MemoryPoolMXBean.html#getName()).
+"""
+
+
+JVM_MEMORY_TYPE = "jvm.memory.type"
+"""
+The type of memory.
+"""
+
+
+JVM_THREAD_DAEMON = "jvm.thread.daemon"
+"""
+Whether the thread is daemon or not.
+"""
+
+
+JVM_THREAD_STATE = "jvm.thread.state"
+"""
+State of the thread.
+"""
+
+
 class JvmMemoryTypeValues(Enum):
     HEAP = "heap"
     """Heap memory."""

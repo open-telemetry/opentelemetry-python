@@ -17,22 +17,20 @@
 
 from enum import Enum
 
-class AndroidAttributes:
 
-    
-    ANDROID_OS_API_LEVEL = "android.os.api_level"
-    
-    """
-    Uniquely identifies the framework API revision offered by a version (`os.version`) of the android operating system. More information can be found [here](https://developer.android.com/guide/topics/manifest/uses-sdk-element#ApiLevels).
-    """
+ANDROID_OS_API_LEVEL = "android.os.api_level"
+"""
+Uniquely identifies the framework API revision offered by a version (`os.version`) of the android operating system. More information can be found [here](https://developer.android.com/guide/topics/manifest/uses-sdk-element#ApiLevels).
+"""
 
-    
-    ANDROID_STATE = "android.state"
-    
-    """
-    This attribute represents the state the application has transitioned into at the occurrence of the event.
-    Note: The Android lifecycle states are defined in [Activity lifecycle callbacks](https://developer.android.com/guide/components/activities/activity-lifecycle#lc), and from which the `OS identifiers` are derived.
-    """
+
+ANDROID_STATE = "android.state"
+"""
+This attribute represents the state the application has transitioned into at the occurrence of the event.
+Note: The Android lifecycle states are defined in [Activity lifecycle callbacks](https://developer.android.com/guide/components/activities/activity-lifecycle#lc), and from which the `OS identifiers` are derived.
+"""
+
+
 class AndroidStateValues(Enum):
     CREATED = "created"
     """Any time before Activity.onResume() or, if the app has no Activity, Context.startService() has been called in the app for the first time."""

@@ -15,15 +15,11 @@
 
 # pylint: disable=too-many-lines
 
-from enum import Enum
 
-class OciAttributes:
-
-    
-    OCI_MANIFEST_DIGEST = "oci.manifest.digest"
-    
-    """
-    The digest of the OCI image manifest. For container images specifically is the digest by which the container image is known.
-    Note: Follows [OCI Image Manifest Specification](https://github.com/opencontainers/image-spec/blob/main/manifest.md), and specifically the [Digest property](https://github.com/opencontainers/image-spec/blob/main/descriptor.md#digests).
+OCI_MANIFEST_DIGEST = "oci.manifest.digest"
+"""
+The digest of the OCI image manifest. For container images specifically is the digest by which the container image is known.
+Note: Follows [OCI Image Manifest Specification](https://github.com/opencontainers/image-spec/blob/main/manifest.md), and specifically the [Digest property](https://github.com/opencontainers/image-spec/blob/main/descriptor.md#digests).
     An example can be found in [Example Image Manifest](https://docs.docker.com/registry/spec/manifest-v2-2/#example-image-manifest).
-    """
+"""
+

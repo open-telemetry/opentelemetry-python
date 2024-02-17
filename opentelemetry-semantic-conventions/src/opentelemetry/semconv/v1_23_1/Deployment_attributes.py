@@ -15,13 +15,9 @@
 
 # pylint: disable=too-many-lines
 
-from enum import Enum
 
-class DeploymentAttributes:
+DEPLOYMENT_ENVIRONMENT = "deployment.environment"
+"""
+Name of the [deployment environment](https://wikipedia.org/wiki/Deployment_environment) (aka deployment tier).
+"""
 
-    
-    DEPLOYMENT_ENVIRONMENT = "deployment.environment"
-    
-    """
-    Name of the [deployment environment](https://wikipedia.org/wiki/Deployment_environment) (aka deployment tier).
-    """

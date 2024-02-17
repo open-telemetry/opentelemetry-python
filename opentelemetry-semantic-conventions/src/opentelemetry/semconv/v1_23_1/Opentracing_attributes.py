@@ -17,15 +17,14 @@
 
 from enum import Enum
 
-class OpentracingAttributes:
 
-    
-    OPENTRACING_REF_TYPE = "opentracing.ref_type"
-    
-    """
-    Parent-child Reference type.
-    Note: The causal relationship between a child Span and a parent Span.
-    """
+OPENTRACING_REF_TYPE = "opentracing.ref_type"
+"""
+Parent-child Reference type.
+Note: The causal relationship between a child Span and a parent Span.
+"""
+
+
 class OpentracingRefTypeValues(Enum):
     CHILD_OF = "child_of"
     """The parent Span depends on the child Span in some capacity."""
