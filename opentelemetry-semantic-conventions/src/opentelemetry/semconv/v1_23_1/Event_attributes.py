@@ -17,22 +17,20 @@
 
 from enum import Enum
 
-class EventAttributes:
 
-    
-    EVENT_DOMAIN = "event.domain"
-    
-    """
-    The domain identifies the business context for the events.
-    Note: Events across different domains may have same `event.name`, yet be unrelated events.
-    """
+EVENT_DOMAIN = "event.domain"
+"""
+The domain identifies the business context for the events.
+Note: Events across different domains may have same `event.name`, yet be unrelated events.
+"""
 
-    
-    EVENT_NAME = "event.name"
-    
-    """
-    The name identifies the event.
-    """
+
+EVENT_NAME = "event.name"
+"""
+The name identifies the event.
+"""
+
+
 class EventDomainValues(Enum):
     BROWSER = "browser"
     """Events from browser apps."""

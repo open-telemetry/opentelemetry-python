@@ -17,71 +17,63 @@
 
 from enum import Enum
 
-class NetworkAttributes:
 
-    
-    NETWORK_LOCAL_ADDRESS = "network.local.address"
-    
-    """
-    Local address of the network connection - IP address or Unix domain socket name.
-    """
+NETWORK_LOCAL_ADDRESS = "network.local.address"
+"""
+Local address of the network connection - IP address or Unix domain socket name.
+"""
 
-    
-    NETWORK_LOCAL_PORT = "network.local.port"
-    
-    """
-    Local port number of the network connection.
-    """
 
-    
-    NETWORK_PEER_ADDRESS = "network.peer.address"
-    
-    """
-    Peer address of the network connection - IP address or Unix domain socket name.
-    """
+NETWORK_LOCAL_PORT = "network.local.port"
+"""
+Local port number of the network connection.
+"""
 
-    
-    NETWORK_PEER_PORT = "network.peer.port"
-    
-    """
-    Peer port number of the network connection.
-    """
 
-    
-    NETWORK_PROTOCOL_NAME = "network.protocol.name"
-    
-    """
-    [OSI application layer](https://osi-model.com/application-layer/) or non-OSI equivalent.
-    Note: The value SHOULD be normalized to lowercase.
-    """
+NETWORK_PEER_ADDRESS = "network.peer.address"
+"""
+Peer address of the network connection - IP address or Unix domain socket name.
+"""
 
-    
-    NETWORK_PROTOCOL_VERSION = "network.protocol.version"
-    
-    """
-    Version of the protocol specified in `network.protocol.name`.
-    Note: `network.protocol.version` refers to the version of the protocol used and might be different from the protocol client's version. If the HTTP client has a version of `0.27.2`, but sends HTTP version `1.1`, this attribute should be set to `1.1`.
-    """
 
-    
-    NETWORK_TRANSPORT = "network.transport"
-    
-    """
-    [OSI transport layer](https://osi-model.com/transport-layer/) or [inter-process communication method](https://wikipedia.org/wiki/Inter-process_communication).
-    Note: The value SHOULD be normalized to lowercase.
+NETWORK_PEER_PORT = "network.peer.port"
+"""
+Peer port number of the network connection.
+"""
+
+
+NETWORK_PROTOCOL_NAME = "network.protocol.name"
+"""
+[OSI application layer](https://osi-model.com/application-layer/) or non-OSI equivalent.
+Note: The value SHOULD be normalized to lowercase.
+"""
+
+
+NETWORK_PROTOCOL_VERSION = "network.protocol.version"
+"""
+Version of the protocol specified in `network.protocol.name`.
+Note: `network.protocol.version` refers to the version of the protocol used and might be different from the protocol client's version. If the HTTP client has a version of `0.27.2`, but sends HTTP version `1.1`, this attribute should be set to `1.1`.
+"""
+
+
+NETWORK_TRANSPORT = "network.transport"
+"""
+[OSI transport layer](https://osi-model.com/transport-layer/) or [inter-process communication method](https://wikipedia.org/wiki/Inter-process_communication).
+Note: The value SHOULD be normalized to lowercase.
 
     Consider always setting the transport when setting a port number, since
     a port number is ambiguous without knowing the transport. For example
     different processes could be listening on TCP port 12345 and UDP port 12345.
-    """
+"""
 
-    
-    NETWORK_TYPE = "network.type"
-    
-    """
-    [OSI network layer](https://osi-model.com/network-layer/) or non-OSI equivalent.
-    Note: The value SHOULD be normalized to lowercase.
-    """
+
+NETWORK_TYPE = "network.type"
+"""
+[OSI network layer](https://osi-model.com/network-layer/) or non-OSI equivalent.
+Note: The value SHOULD be normalized to lowercase.
+"""
+
+
 class NetworkTransportValues(Enum):
     TCP = "tcp"
     """TCP."""

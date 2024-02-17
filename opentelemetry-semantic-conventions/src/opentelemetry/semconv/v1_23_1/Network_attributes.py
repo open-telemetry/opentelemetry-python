@@ -17,49 +17,43 @@
 
 from enum import Enum
 
-class NetworkAttributes:
 
-    
-    NETWORK_CARRIER_ICC = "network.carrier.icc"
-    
-    """
-    The ISO 3166-1 alpha-2 2-character country code associated with the mobile carrier network.
-    """
+NETWORK_CARRIER_ICC = "network.carrier.icc"
+"""
+The ISO 3166-1 alpha-2 2-character country code associated with the mobile carrier network.
+"""
 
-    
-    NETWORK_CARRIER_MCC = "network.carrier.mcc"
-    
-    """
-    The mobile carrier country code.
-    """
 
-    
-    NETWORK_CARRIER_MNC = "network.carrier.mnc"
-    
-    """
-    The mobile carrier network code.
-    """
+NETWORK_CARRIER_MCC = "network.carrier.mcc"
+"""
+The mobile carrier country code.
+"""
 
-    
-    NETWORK_CARRIER_NAME = "network.carrier.name"
-    
-    """
-    The name of the mobile carrier.
-    """
 
-    
-    NETWORK_CONNECTION_SUBTYPE = "network.connection.subtype"
-    
-    """
-    This describes more details regarding the connection.type. It may be the type of cell technology connection, but it could be used for describing details about a wifi connection.
-    """
+NETWORK_CARRIER_MNC = "network.carrier.mnc"
+"""
+The mobile carrier network code.
+"""
 
-    
-    NETWORK_CONNECTION_TYPE = "network.connection.type"
-    
-    """
-    The internet connection type.
-    """
+
+NETWORK_CARRIER_NAME = "network.carrier.name"
+"""
+The name of the mobile carrier.
+"""
+
+
+NETWORK_CONNECTION_SUBTYPE = "network.connection.subtype"
+"""
+This describes more details regarding the connection.type. It may be the type of cell technology connection, but it could be used for describing details about a wifi connection.
+"""
+
+
+NETWORK_CONNECTION_TYPE = "network.connection.type"
+"""
+The internet connection type.
+"""
+
+
 class NetworkConnectionSubtypeValues(Enum):
     GPRS = "gprs"
     """GPRS."""

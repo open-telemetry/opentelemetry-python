@@ -17,29 +17,26 @@
 
 from enum import Enum
 
-class GraphqlAttributes:
 
-    
-    GRAPHQL_DOCUMENT = "graphql.document"
-    
-    """
-    The GraphQL document being executed.
-    Note: The value may be sanitized to exclude sensitive information.
-    """
+GRAPHQL_DOCUMENT = "graphql.document"
+"""
+The GraphQL document being executed.
+Note: The value may be sanitized to exclude sensitive information.
+"""
 
-    
-    GRAPHQL_OPERATION_NAME = "graphql.operation.name"
-    
-    """
-    The name of the operation being executed.
-    """
 
-    
-    GRAPHQL_OPERATION_TYPE = "graphql.operation.type"
-    
-    """
-    The type of the operation being executed.
-    """
+GRAPHQL_OPERATION_NAME = "graphql.operation.name"
+"""
+The name of the operation being executed.
+"""
+
+
+GRAPHQL_OPERATION_TYPE = "graphql.operation.type"
+"""
+The type of the operation being executed.
+"""
+
+
 class GraphqlOperationTypeValues(Enum):
     QUERY = "query"
     """GraphQL query."""
