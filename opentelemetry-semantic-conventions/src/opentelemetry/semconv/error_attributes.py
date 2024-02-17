@@ -40,5 +40,5 @@ Note: The `error.type` SHOULD be predictable and SHOULD have low cardinality.
 
 class ErrorTypeValues(Enum):
     OTHER = "_OTHER"
-    """A fallback error value to be used when the instrumentation doesn&#39;t define a custom value."""
+    """A fallback error value to be used when the instrumentation doesn't define a custom value."""
 
