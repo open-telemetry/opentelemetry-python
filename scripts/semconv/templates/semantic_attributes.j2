@@ -52,7 +52,7 @@ Deprecated: {{attribute.deprecated | to_doc_brief}}.
 class {{class_name}}(Enum):
     {%- for member in attribute.attr_type.members %}
     {{ member.member_id | to_const_name }} = {{ print_value(type, member.value) }}
-    """{% filter escape %}{{member.brief | to_doc_brief}}.{% endfilter %}"""
+    """{{member.brief | to_doc_brief}}."""
 {# Extra line #}
     {%- endfor %}
 {% endfor %}

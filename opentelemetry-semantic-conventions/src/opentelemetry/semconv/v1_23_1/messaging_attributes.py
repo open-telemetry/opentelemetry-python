@@ -206,10 +206,10 @@ A string identifying the messaging system.
 
 class MessagingOperationValues(Enum):
     PUBLISH = "publish"
-    """One or more messages are provided for publishing to an intermediary. If a single message is published, the context of the &#34;Publish&#34; span can be used as the creation context and no &#34;Create&#34; span needs to be created."""
+    """One or more messages are provided for publishing to an intermediary. If a single message is published, the context of the "Publish" span can be used as the creation context and no "Create" span needs to be created."""
 
     CREATE = "create"
-    """A message is created. &#34;Create&#34; spans always refer to a single message and are used to provide a unique creation context for messages in batch publishing scenarios."""
+    """A message is created. "Create" spans always refer to a single message and are used to provide a unique creation context for messages in batch publishing scenarios."""
 
     RECEIVE = "receive"
     """One or more messages are requested by a consumer. This operation refers to pull-based scenarios, where consumers explicitly call methods of messaging SDKs to receive messages."""

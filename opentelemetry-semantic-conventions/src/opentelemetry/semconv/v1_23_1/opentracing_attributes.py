@@ -30,5 +30,5 @@ class OpentracingRefTypeValues(Enum):
     """The parent Span depends on the child Span in some capacity."""
 
     FOLLOWS_FROM = "follows_from"
-    """The parent Span doesn&#39;t depend in any way on the result of the child Span."""
+    """The parent Span doesn't depend in any way on the result of the child Span."""
 
