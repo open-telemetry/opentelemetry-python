@@ -28,9 +28,7 @@ class RpcMetrics:
     Measures the duration of outbound RPC
     """
     @staticmethod
-  
     def create_rpc_client_duration(meter: Meter) -> Histogram:
-  
         return meter.create_histogram(
             name="rpc.client.duration",
             description="Measures the duration of outbound RPC.",
@@ -42,9 +40,7 @@ class RpcMetrics:
     Measures the size of RPC request messages (uncompressed)
     """
     @staticmethod
-  
     def create_rpc_client_request_size(meter: Meter) -> Histogram:
-  
         return meter.create_histogram(
             name="rpc.client.request.size",
             description="Measures the size of RPC request messages (uncompressed).",
@@ -56,9 +52,7 @@ class RpcMetrics:
     Measures the number of messages received per RPC
     """
     @staticmethod
-  
     def create_rpc_client_requests_per_rpc(meter: Meter) -> Histogram:
-  
         return meter.create_histogram(
             name="rpc.client.requests_per_rpc",
             description="Measures the number of messages received per RPC.",
@@ -70,9 +64,7 @@ class RpcMetrics:
     Measures the size of RPC response messages (uncompressed)
     """
     @staticmethod
-  
     def create_rpc_client_response_size(meter: Meter) -> Histogram:
-  
         return meter.create_histogram(
             name="rpc.client.response.size",
             description="Measures the size of RPC response messages (uncompressed).",
@@ -84,9 +76,7 @@ class RpcMetrics:
     Measures the number of messages sent per RPC
     """
     @staticmethod
-  
     def create_rpc_client_responses_per_rpc(meter: Meter) -> Histogram:
-  
         return meter.create_histogram(
             name="rpc.client.responses_per_rpc",
             description="Measures the number of messages sent per RPC.",
@@ -98,9 +88,7 @@ class RpcMetrics:
     Measures the duration of inbound RPC
     """
     @staticmethod
-  
     def create_rpc_server_duration(meter: Meter) -> Histogram:
-  
         return meter.create_histogram(
             name="rpc.server.duration",
             description="Measures the duration of inbound RPC.",
@@ -112,9 +100,7 @@ class RpcMetrics:
     Measures the size of RPC request messages (uncompressed)
     """
     @staticmethod
-  
     def create_rpc_server_request_size(meter: Meter) -> Histogram:
-  
         return meter.create_histogram(
             name="rpc.server.request.size",
             description="Measures the size of RPC request messages (uncompressed).",
@@ -126,9 +112,7 @@ class RpcMetrics:
     Measures the number of messages received per RPC
     """
     @staticmethod
-  
     def create_rpc_server_requests_per_rpc(meter: Meter) -> Histogram:
-  
         return meter.create_histogram(
             name="rpc.server.requests_per_rpc",
             description="Measures the number of messages received per RPC.",
@@ -140,9 +124,7 @@ class RpcMetrics:
     Measures the size of RPC response messages (uncompressed)
     """
     @staticmethod
-  
     def create_rpc_server_response_size(meter: Meter) -> Histogram:
-  
         return meter.create_histogram(
             name="rpc.server.response.size",
             description="Measures the size of RPC response messages (uncompressed).",
@@ -154,9 +136,7 @@ class RpcMetrics:
     Measures the number of messages sent per RPC
     """
     @staticmethod
-  
     def create_rpc_server_responses_per_rpc(meter: Meter) -> Histogram:
-  
         return meter.create_histogram(
             name="rpc.server.responses_per_rpc",
             description="Measures the number of messages sent per RPC.",

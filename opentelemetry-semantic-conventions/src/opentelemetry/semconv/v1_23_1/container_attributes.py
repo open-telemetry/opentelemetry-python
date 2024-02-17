@@ -70,7 +70,6 @@ Container image tags. An example can be found in [Docker Image Inspect](https://
 
 
 CONTAINER_LABELS_TEMPLATE = "container.labels"
-
 """
 Container labels, `<key>` being the label name, the value being the label value.
 """
