@@ -62,8 +62,8 @@ class {{ root_namespace | to_camelcase(True) }}Metrics:
   {%- if metric.instrument == "gauge" %}
             callback=callback,
   {%- endif %}
-            description="{{metric.brief }}",
-            unit="{{metric.unit }}",
+            description="{{ metric.brief }}",
+            unit="{{ metric.unit }}",
         )
 {% endfor %}
 {% endif %}
