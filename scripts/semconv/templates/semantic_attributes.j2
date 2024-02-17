@@ -30,7 +30,7 @@ from enum import Enum
 
 {% if attribute | is_template %}
 {{attribute.fqn | to_const_name}}_TEMPLATE = "{{attribute.fqn}}"
-{% else %}
+{%- else %}
 {{attribute.fqn | to_const_name}} = "{{attribute.fqn}}"
 {%- endif %}
 """

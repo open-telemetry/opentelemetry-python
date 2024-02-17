@@ -28,9 +28,7 @@ class DbMetrics:
     The time it took to create a new connection
     """
     @staticmethod
-  
     def create_db_client_connections_create_time(meter: Meter) -> Histogram:
-  
         return meter.create_histogram(
             name="db.client.connections.create_time",
             description="The time it took to create a new connection",
@@ -42,9 +40,7 @@ class DbMetrics:
     The maximum number of idle open connections allowed
     """
     @staticmethod
-  
     def create_db_client_connections_idle_max(meter: Meter) -> UpDownCounter:
-  
         return meter.create_up_down_counter(
             name="db.client.connections.idle.max",
             description="The maximum number of idle open connections allowed",
@@ -56,9 +52,7 @@ class DbMetrics:
     The minimum number of idle open connections allowed
     """
     @staticmethod
-  
     def create_db_client_connections_idle_min(meter: Meter) -> UpDownCounter:
-  
         return meter.create_up_down_counter(
             name="db.client.connections.idle.min",
             description="The minimum number of idle open connections allowed",
@@ -70,9 +64,7 @@ class DbMetrics:
     The maximum number of open connections allowed
     """
     @staticmethod
-  
     def create_db_client_connections_max(meter: Meter) -> UpDownCounter:
-  
         return meter.create_up_down_counter(
             name="db.client.connections.max",
             description="The maximum number of open connections allowed",
@@ -84,9 +76,7 @@ class DbMetrics:
     The number of pending requests for an open connection, cumulative for the entire pool
     """
     @staticmethod
-  
     def create_db_client_connections_pending_requests(meter: Meter) -> UpDownCounter:
-  
         return meter.create_up_down_counter(
             name="db.client.connections.pending_requests",
             description="The number of pending requests for an open connection, cumulative for the entire pool",
@@ -98,9 +88,7 @@ class DbMetrics:
     The number of connection timeouts that have occurred trying to obtain a connection from the pool
     """
     @staticmethod
-  
     def create_db_client_connections_timeouts(meter: Meter) -> Counter:
-  
         return meter.create_counter(
             name="db.client.connections.timeouts",
             description="The number of connection timeouts that have occurred trying to obtain a connection from the pool",
@@ -112,9 +100,7 @@ class DbMetrics:
     The number of connections that are currently in state described by the `state` attribute
     """
     @staticmethod
-  
     def create_db_client_connections_usage(meter: Meter) -> UpDownCounter:
-  
         return meter.create_up_down_counter(
             name="db.client.connections.usage",
             description="The number of connections that are currently in state described by the `state` attribute",
@@ -126,9 +112,7 @@ class DbMetrics:
     The time between borrowing a connection and returning it to the pool
     """
     @staticmethod
-  
     def create_db_client_connections_use_time(meter: Meter) -> Histogram:
-  
         return meter.create_histogram(
             name="db.client.connections.use_time",
             description="The time between borrowing a connection and returning it to the pool",
@@ -140,9 +124,7 @@ class DbMetrics:
     The time it took to obtain an open connection from the pool
     """
     @staticmethod
-  
     def create_db_client_connections_wait_time(meter: Meter) -> Histogram:
-  
         return meter.create_histogram(
             name="db.client.connections.wait_time",
             description="The time it took to obtain an open connection from the pool",

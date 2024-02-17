@@ -28,9 +28,7 @@ class FaasMetrics:
     Number of invocation cold starts
     """
     @staticmethod
-  
     def create_faas_coldstarts(meter: Meter) -> Counter:
-  
         return meter.create_counter(
             name="faas.coldstarts",
             description="Number of invocation cold starts",
@@ -42,9 +40,7 @@ class FaasMetrics:
     Distribution of CPU usage per invocation
     """
     @staticmethod
-  
     def create_faas_cpu_usage(meter: Meter) -> Histogram:
-  
         return meter.create_histogram(
             name="faas.cpu_usage",
             description="Distribution of CPU usage per invocation",
@@ -56,9 +52,7 @@ class FaasMetrics:
     Number of invocation errors
     """
     @staticmethod
-  
     def create_faas_errors(meter: Meter) -> Counter:
-  
         return meter.create_counter(
             name="faas.errors",
             description="Number of invocation errors",
@@ -70,9 +64,7 @@ class FaasMetrics:
     Measures the duration of the function's initialization, such as a cold start
     """
     @staticmethod
-  
     def create_faas_init_duration(meter: Meter) -> Histogram:
-  
         return meter.create_histogram(
             name="faas.init_duration",
             description="Measures the duration of the function's initialization, such as a cold start",
@@ -84,9 +76,7 @@ class FaasMetrics:
     Number of successful invocations
     """
     @staticmethod
-  
     def create_faas_invocations(meter: Meter) -> Counter:
-  
         return meter.create_counter(
             name="faas.invocations",
             description="Number of successful invocations",
@@ -98,9 +88,7 @@ class FaasMetrics:
     Measures the duration of the function's logic execution
     """
     @staticmethod
-  
     def create_faas_invoke_duration(meter: Meter) -> Histogram:
-  
         return meter.create_histogram(
             name="faas.invoke_duration",
             description="Measures the duration of the function's logic execution",
@@ -112,9 +100,7 @@ class FaasMetrics:
     Distribution of max memory usage per invocation
     """
     @staticmethod
-  
     def create_faas_mem_usage(meter: Meter) -> Histogram:
-  
         return meter.create_histogram(
             name="faas.mem_usage",
             description="Distribution of max memory usage per invocation",
@@ -126,9 +112,7 @@ class FaasMetrics:
     Distribution of net I/O usage per invocation
     """
     @staticmethod
-  
     def create_faas_net_io(meter: Meter) -> Histogram:
-  
         return meter.create_histogram(
             name="faas.net_io",
             description="Distribution of net I/O usage per invocation",
@@ -140,9 +124,7 @@ class FaasMetrics:
     Number of invocation timeouts
     """
     @staticmethod
-  
     def create_faas_timeouts(meter: Meter) -> Counter:
-  
         return meter.create_counter(
             name="faas.timeouts",
             description="Number of invocation timeouts",

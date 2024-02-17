@@ -28,9 +28,7 @@ class JvmMetrics:
     Number of buffers in the pool
     """
     @staticmethod
-  
     def create_jvm_buffer_count(meter: Meter) -> UpDownCounter:
-  
         return meter.create_up_down_counter(
             name="jvm.buffer.count",
             description="Number of buffers in the pool.",
@@ -42,9 +40,7 @@ class JvmMetrics:
     Measure of total memory capacity of buffers
     """
     @staticmethod
-  
     def create_jvm_buffer_memory_limit(meter: Meter) -> UpDownCounter:
-  
         return meter.create_up_down_counter(
             name="jvm.buffer.memory.limit",
             description="Measure of total memory capacity of buffers.",
@@ -56,9 +52,7 @@ class JvmMetrics:
     Measure of memory used by buffers
     """
     @staticmethod
-  
     def create_jvm_buffer_memory_usage(meter: Meter) -> UpDownCounter:
-  
         return meter.create_up_down_counter(
             name="jvm.buffer.memory.usage",
             description="Measure of memory used by buffers.",
@@ -70,9 +64,7 @@ class JvmMetrics:
     Number of classes currently loaded
     """
     @staticmethod
-  
     def create_jvm_class_count(meter: Meter) -> UpDownCounter:
-  
         return meter.create_up_down_counter(
             name="jvm.class.count",
             description="Number of classes currently loaded.",
@@ -84,9 +76,7 @@ class JvmMetrics:
     Number of classes loaded since JVM start
     """
     @staticmethod
-  
     def create_jvm_class_loaded(meter: Meter) -> Counter:
-  
         return meter.create_counter(
             name="jvm.class.loaded",
             description="Number of classes loaded since JVM start.",
@@ -98,9 +88,7 @@ class JvmMetrics:
     Number of classes unloaded since JVM start
     """
     @staticmethod
-  
     def create_jvm_class_unloaded(meter: Meter) -> Counter:
-  
         return meter.create_counter(
             name="jvm.class.unloaded",
             description="Number of classes unloaded since JVM start.",
@@ -112,9 +100,7 @@ class JvmMetrics:
     Number of processors available to the Java virtual machine
     """
     @staticmethod
-  
     def create_jvm_cpu_count(meter: Meter) -> UpDownCounter:
-  
         return meter.create_up_down_counter(
             name="jvm.cpu.count",
             description="Number of processors available to the Java virtual machine.",
@@ -126,9 +112,7 @@ class JvmMetrics:
     Recent CPU utilization for the process as reported by the JVM
     """
     @staticmethod
-  
     def create_jvm_cpu_recent_utilization(meter: Meter, callback: Sequence[Callable]) -> ObservableGauge:
-  
         return meter.create_observable_gauge(
             name="jvm.cpu.recent_utilization",
             callback=callback,
@@ -141,9 +125,7 @@ class JvmMetrics:
     CPU time used by the process as reported by the JVM
     """
     @staticmethod
-  
     def create_jvm_cpu_time(meter: Meter) -> Counter:
-  
         return meter.create_counter(
             name="jvm.cpu.time",
             description="CPU time used by the process as reported by the JVM.",
@@ -155,9 +137,7 @@ class JvmMetrics:
     Duration of JVM garbage collection actions
     """
     @staticmethod
-  
     def create_jvm_gc_duration(meter: Meter) -> Histogram:
-  
         return meter.create_histogram(
             name="jvm.gc.duration",
             description="Duration of JVM garbage collection actions.",
@@ -169,9 +149,7 @@ class JvmMetrics:
     Measure of memory committed
     """
     @staticmethod
-  
     def create_jvm_memory_committed(meter: Meter) -> UpDownCounter:
-  
         return meter.create_up_down_counter(
             name="jvm.memory.committed",
             description="Measure of memory committed.",
@@ -183,9 +161,7 @@ class JvmMetrics:
     Measure of initial memory requested
     """
     @staticmethod
-  
     def create_jvm_memory_init(meter: Meter) -> UpDownCounter:
-  
         return meter.create_up_down_counter(
             name="jvm.memory.init",
             description="Measure of initial memory requested.",
@@ -197,9 +173,7 @@ class JvmMetrics:
     Measure of max obtainable memory
     """
     @staticmethod
-  
     def create_jvm_memory_limit(meter: Meter) -> UpDownCounter:
-  
         return meter.create_up_down_counter(
             name="jvm.memory.limit",
             description="Measure of max obtainable memory.",
@@ -211,9 +185,7 @@ class JvmMetrics:
     Measure of memory used
     """
     @staticmethod
-  
     def create_jvm_memory_usage(meter: Meter) -> UpDownCounter:
-  
         return meter.create_up_down_counter(
             name="jvm.memory.usage",
             description="Measure of memory used.",
@@ -225,9 +197,7 @@ class JvmMetrics:
     Measure of memory used, as measured after the most recent garbage collection event on this pool
     """
     @staticmethod
-  
     def create_jvm_memory_usage_after_last_gc(meter: Meter) -> UpDownCounter:
-  
         return meter.create_up_down_counter(
             name="jvm.memory.usage_after_last_gc",
             description="Measure of memory used, as measured after the most recent garbage collection event on this pool.",
@@ -239,9 +209,7 @@ class JvmMetrics:
     Average CPU load of the whole system for the last minute as reported by the JVM
     """
     @staticmethod
-  
     def create_jvm_system_cpu_load_1m(meter: Meter, callback: Sequence[Callable]) -> ObservableGauge:
-  
         return meter.create_observable_gauge(
             name="jvm.system.cpu.load_1m",
             callback=callback,
@@ -254,9 +222,7 @@ class JvmMetrics:
     Recent CPU utilization for the whole system as reported by the JVM
     """
     @staticmethod
-  
     def create_jvm_system_cpu_utilization(meter: Meter, callback: Sequence[Callable]) -> ObservableGauge:
-  
         return meter.create_observable_gauge(
             name="jvm.system.cpu.utilization",
             callback=callback,
@@ -269,9 +235,7 @@ class JvmMetrics:
     Number of executing platform threads
     """
     @staticmethod
-  
     def create_jvm_thread_count(meter: Meter) -> UpDownCounter:
-  
         return meter.create_up_down_counter(
             name="jvm.thread.count",
             description="Number of executing platform threads.",

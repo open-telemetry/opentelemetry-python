@@ -19,7 +19,6 @@ from enum import Enum
 
 
 HTTP_REQUEST_HEADER_TEMPLATE = "http.request.header"
-
 """
 HTTP request headers, `<key>` being the normalized HTTP Header name (lowercase), the value being the header values.
 Note: Instrumentations SHOULD require an explicit configuration of which headers are to be captured. Including all request headers can be a security risk - explicit configuration helps avoid leaking sensitive information.
@@ -62,7 +61,6 @@ Note: The resend count SHOULD be updated each time an HTTP request gets resent b
 
 
 HTTP_RESPONSE_HEADER_TEMPLATE = "http.response.header"
-
 """
 HTTP response headers, `<key>` being the normalized HTTP Header name (lowercase), the value being the header values.
 Note: Instrumentations SHOULD require an explicit configuration of which headers are to be captured. Including all response headers can be a security risk - explicit configuration helps avoid leaking sensitive information.

@@ -25,7 +25,6 @@ The [error codes](https://connect.build/docs/protocol/#error-codes) of the Conne
 
 
 RPC_CONNECT_RPC_REQUEST_METADATA_TEMPLATE = "rpc.connect_rpc.request.metadata"
-
 """
 Connect request metadata, `<key>` being the normalized Connect Metadata key (lowercase), the value being the metadata values.
 Note: Instrumentations SHOULD require an explicit configuration of which metadata values are to be captured. Including all request metadata values can be a security risk - explicit configuration helps avoid leaking sensitive information.
@@ -33,7 +32,6 @@ Note: Instrumentations SHOULD require an explicit configuration of which metadat
 
 
 RPC_CONNECT_RPC_RESPONSE_METADATA_TEMPLATE = "rpc.connect_rpc.response.metadata"
-
 """
 Connect response metadata, `<key>` being the normalized Connect Metadata key (lowercase), the value being the metadata values.
 Note: Instrumentations SHOULD require an explicit configuration of which metadata values are to be captured. Including all response metadata values can be a security risk - explicit configuration helps avoid leaking sensitive information.
@@ -41,7 +39,6 @@ Note: Instrumentations SHOULD require an explicit configuration of which metadat
 
 
 RPC_GRPC_REQUEST_METADATA_TEMPLATE = "rpc.grpc.request.metadata"
-
 """
 gRPC request metadata, `<key>` being the normalized gRPC Metadata key (lowercase), the value being the metadata values.
 Note: Instrumentations SHOULD require an explicit configuration of which metadata values are to be captured. Including all request metadata values can be a security risk - explicit configuration helps avoid leaking sensitive information.
@@ -49,7 +46,6 @@ Note: Instrumentations SHOULD require an explicit configuration of which metadat
 
 
 RPC_GRPC_RESPONSE_METADATA_TEMPLATE = "rpc.grpc.response.metadata"
-
 """
 gRPC response metadata, `<key>` being the normalized gRPC Metadata key (lowercase), the value being the metadata values.
 Note: Instrumentations SHOULD require an explicit configuration of which metadata values are to be captured. Including all response metadata values can be a security risk - explicit configuration helps avoid leaking sensitive information.
