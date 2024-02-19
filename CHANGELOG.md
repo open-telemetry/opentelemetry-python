@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Use Attribute rather than boundattribute in logrecord
+  ([#3567](https://github.com/open-telemetry/opentelemetry-python/pull/3567))
+- Fix flush error when no LoggerProvider configured for LoggingHandler
+  ([#3608](https://github.com/open-telemetry/opentelemetry-python/pull/3608))
 - Add `Span.add_link()` method to add link after span start
   ([#3618](https://github.com/open-telemetry/opentelemetry-python/pull/3618))
 - Fix `OTLPMetricExporter` ignores `preferred_aggregation` property
