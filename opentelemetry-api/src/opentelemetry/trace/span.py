@@ -3,6 +3,7 @@ import logging
 import re
 import types as python_types
 import typing
+import warnings
 
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
@@ -132,7 +133,10 @@ class Span(abc.ABC):
         this method later since samplers can only consider information already
         present during span creation.
         """
-        _logger.warning("Span.add_link() is a no-op.")
+        warnings.warn(
+            "Span.add_link() not implemented and will be a no-op. "
+            "Use opentelemetry-sdk >= 1.23 to add links after span creation"
+        )
 
     @abc.abstractmethod
     def update_name(self, name: str) -> None:
