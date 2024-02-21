@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Retain meaningful logrecord attributes and apply log-message formatting 
+- ([#3673](https://github.com/open-telemetry/opentelemetry-python/pull/3673))
+- Use Attribute rather than boundattribute in logrecord
+  ([#3567](https://github.com/open-telemetry/opentelemetry-python/pull/3567))
 - Fix flush error when no LoggerProvider configured for LoggingHandler
   ([#3608](https://github.com/open-telemetry/opentelemetry-python/pull/3608))
 - Fix `OTLPMetricExporter` ignores `preferred_aggregation` property
@@ -19,8 +23,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3566](https://github.com/open-telemetry/opentelemetry-python/pull/3566))
 - Prometheus Exporter string representation for target_info labels
   ([#3659](https://github.com/open-telemetry/opentelemetry-python/pull/3659))
-- Retain meaningful logrecord attributes and apply log-message 
-  formatting ([#3673](https://github.com/open-telemetry/opentelemetry-python/pull/3673))
 - Logs: ObservedTimestamp field is missing in console exporter output
   ([#3564](https://github.com/open-telemetry/opentelemetry-python/pull/3564))
 - Fix explicit bucket histogram aggregation
