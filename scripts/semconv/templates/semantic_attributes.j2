@@ -16,12 +16,8 @@
 
 # pylint: disable=too-many-lines
 
-{%- macro print_value(type, value) -%}
-    {{ "\"" if type == "string"}}{{value}}{{ "\"" if type == "string"}}
-{%- endmacro %}
-
-{%- set enum_attributes = filtered_attributes | selectattr("is_enum", "true") | list %}
-{%- if enum_attributes | count > 0 %}
+{%- set filtered_enum_attributes = enum_attributes | select(filter) | list %}
+{%- if filtered_enum_attributes | count > 0 %}
 
 from enum import Enum
 {%- endif %}
@@ -46,12 +42,11 @@ Deprecated: {{attribute.deprecated | to_doc_brief}}.
 {%- endfor %}
 {# Extra line #}
 {# Extra line #}
-{%- for attribute in enum_attributes %}
+{%- for attribute in filtered_enum_attributes %}
 {%- set class_name = attribute.fqn | to_camelcase(True) ~ "Values" %}
-{%- set type = attribute.attr_type.enum_type %}
 class {{class_name}}(Enum):
     {%- for member in attribute.attr_type.members %}
-    {{ member.member_id | to_const_name }} = {{ print_value(type, member.value) }}
+    {{ member.member_id | to_const_name }} = {{ attribute | print_member_value(member) }}
     """{{member.brief | to_doc_brief}}."""
 {# Extra line #}
     {%- endfor %}
