@@ -27,9 +27,9 @@ dependencies = [
   "Deprecated >= 1.2.6",
   "googleapis-common-protos ~= 1.52",
   "opentelemetry-api ~= 1.15",
-  "opentelemetry-proto == 1.23.0.dev",
-  "opentelemetry-sdk ~= 1.23.0.dev",
-  "opentelemetry-exporter-otlp-proto-common == 1.23.0.dev",
+  "opentelemetry-proto == 1.24.0.dev",
+  "opentelemetry-sdk ~= 1.24.0.dev",
+  "opentelemetry-exporter-otlp-proto-common == 1.24.0.dev",
   "requests ~= 2.7",
 ]
 
