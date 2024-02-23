@@ -71,7 +71,7 @@
 ## After the release
 
 * Check PyPI
-  * This should be handled automatically on release by the [publish action](https://github.com/open-telemetry/opentelemetry-python/blob/main/.github/workflows/publish.yml).
+  * This should be handled automatically on release by the [publish action](https://github.com/open-telemetry/opentelemetry-python/blob/main/.github/workflows/release.yml).
   * Check the [action logs](https://github.com/open-telemetry/opentelemetry-python/actions?query=workflow%3APublish) to make sure packages have been uploaded to PyPI
   * Check the release history (e.g. https://pypi.org/project/opentelemetry-api/#history) on PyPI
   * If for some reason the action failed, see [Publish failed](#publish-failed) below
