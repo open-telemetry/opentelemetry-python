@@ -1,0 +1,76 @@
+# Copyright The OpenTelemetry Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""
+This an implementation of the API where every function or method is safe.
+
+Any call to a function or method defined here passes its arguments to a
+corresponding underlying SDK function or method. In this way, objects defined
+in this module act as proxies and (with the SDK setting function) are the only
+objects the user has contact with.
+"""
+from contextlib import contextmanager
+
+from opentelemetry._safety import _safe_function
+from opentelemetry.trace.api import Class0, Class1, Class2
+from opentelemetry.configuration import _get_sdk_module
+
+
+@_safe_function(0.0)
+def function(a: int, b: int) -> float:
+    return _get_sdk_module("trace").function(a, b)
+
+
+class Class0(Class0):
+
+    @_safe_function(0.0)
+    def method_0(self, a: int, b: int) -> float:
+        return self._sdk_instance.method_0(a, b)
+
+
+class Class1(Class1):
+
+    @_safe_function(Class0(0))
+    def method_0(self, a: int) -> Class0:
+        safe_instance = Class0(0)
+        safe_instance._sdk_instance = self._sdk_instance.method_0(a)
+        return safe_instance
+
+
+class Class2(Class2):
+
+    @contextmanager
+    @_safe_function(Class0(0))
+    def method_0(self, a: int) -> Class0:
+        safe_instance = Class0(0)
+        with self._sdk_instance.method_0(a) as sdk_instance:
+            safe_instance._sdk_instance = sdk_instance
+            yield safe_instance
+
+
+# This is a class that is implemented completely in the API and not in any SDK.
+class Class3:
+
+    @_safe_function(None)
+    def __init__(self, a: int, b: int):
+        self._c = a / b
+
+    @property
+    @_safe_function(0)
+    def c(self):
+        return self._c
+
+    @_safe_function(0)
+    def method_0(self, a: int) -> float:
+        return a / self._c
