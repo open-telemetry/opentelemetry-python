@@ -45,12 +45,6 @@ jobs:
 
           echo "PRIOR_VERSION_WHEN_PATCH=$prior_version_when_patch" >> $GITHUB_ENV
 
-        # check out main branch to verify there won't be problems with merging the change log
-        # at the end of this workflow
-      - uses: actions/checkout@v3
-        with:
-          ref: main
-
       - run: |
           if [[ -z $PRIOR_VERSION_WHEN_PATCH ]]; then
             # not making a patch release
@@ -59,6 +53,12 @@ jobs:
               exit 1
             fi
           fi
+
+      # check out main branch to verify there won't be problems with merging the change log
+      # at the end of this workflow
+      - uses: actions/checkout@v3
+        with:
+          ref: main
 
         # back to the release branch
       - uses: actions/checkout@v3
