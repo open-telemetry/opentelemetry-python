@@ -955,10 +955,6 @@ class Span(trace_api.Span, ReadableSpan):
                         )
                     )
         except Exception as record_exception_error:
-            # Log or handle the error appropriately
-            print(f"Error recording exception: {record_exception_error}")
-
-
         super().__exit__(exc_type, exc_val, exc_tb)
 
     def record_exception(
