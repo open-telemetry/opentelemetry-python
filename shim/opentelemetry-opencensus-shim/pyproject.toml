@@ -33,7 +33,7 @@ dependencies = [
 
 [project.optional-dependencies]
 test = [
-  "opentelemetry-test-utils == 0.44b0.dev",
+  "opentelemetry-test-utils == 0.45b0.dev",
   "opencensus == 0.11.1",
   # Temporary fix for https://github.com/census-instrumentation/opencensus-python/issues/1219
   "six == 1.16.0",

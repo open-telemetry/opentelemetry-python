@@ -15,9 +15,17 @@
 
 import logging
 from collections.abc import Sequence
-from typing import Any, Mapping, Optional, List, Callable, TypeVar, Dict
-
-import backoff
+from itertools import count
+from typing import (
+    Any,
+    Mapping,
+    Optional,
+    List,
+    Callable,
+    TypeVar,
+    Dict,
+    Iterator,
+)
 
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.proto.common.v1.common_pb2 import (
@@ -36,7 +44,6 @@ from opentelemetry.proto.common.v1.common_pb2 import (
 )
 from opentelemetry.sdk.trace import Resource
 from opentelemetry.util.types import Attributes
-
 
 _logger = logging.getLogger(__name__)
 
@@ -113,7 +120,6 @@ def _get_resource_data(
     resource_class: Callable[..., _TypingResourceT],
     name: str,
 ) -> List[_TypingResourceT]:
-
     resource_data = []
 
     for (
@@ -134,14 +140,36 @@ def _get_resource_data(
     return resource_data
 
 
-# Work around API change between backoff 1.x and 2.x. Since 2.0.0 the backoff
-# wait generator API requires a first .send(None) before reading the backoff
-# values from the generator.
-_is_backoff_v2 = next(backoff.expo()) is None
+def _create_exp_backoff_generator(max_value: int = 0) -> Iterator[int]:
+    """
+    Generates an infinite sequence of exponential backoff values. The sequence starts
+    from 1 (2^0) and doubles each time (2^1, 2^2, 2^3, ...). If a max_value is specified
+    and non-zero, the generated values will not exceed this maximum, capping at max_value
+    instead of growing indefinitely.
 
+    Parameters:
+    - max_value (int, optional): The maximum value to yield. If 0 or not provided, the
+      sequence grows without bound.
 
-def _create_exp_backoff_generator(*args, **kwargs):
-    gen = backoff.expo(*args, **kwargs)
-    if _is_backoff_v2:
-        gen.send(None)
-    return gen
+    Returns:
+    Iterator[int]: An iterator that yields the exponential backoff values, either uncapped or
+    capped at max_value.
+
+    Example:
+    ```
+    gen = _create_exp_backoff_generator(max_value=10)
+    for _ in range(5):
+        print(next(gen))
+    ```
+    This will print:
+    1
+    2
+    4
+    8
+    10
+
+    Note: this functionality used to be handled by the 'backoff' package.
+    """
+    for i in count(0):
+        out = 2**i
+        yield min(out, max_value) if max_value else out
