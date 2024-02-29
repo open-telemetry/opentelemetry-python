@@ -7,8 +7,10 @@
     * If making a pre-release of stable components (e.g. release candidate),
       enter the pre-release version number, e.g. `1.9.0rc2`.
       (otherwise the workflow will pick up the version from `main` and just remove the `.dev` suffix).
-  * Review and merge the two pull requests that it creates
+  * Review the two pull requests that it creates.
     (one is targeted to the release branch and one is targeted to `main`).
+    * Merge the one targeted towards the release branch.
+    * The builds will fail for the `main` pr because of validation rules. Follow the [release workflow](https://github.com/open-telemetry/opentelemetry-python-contrib/blob/main/RELEASING.md) for the contrib repo up until this same point. Change the SHAs of each PR to point at each other to get the `main` builds to pass.
 
 ## Preparing a new patch release
 
@@ -69,7 +71,7 @@
 ## After the release
 
 * Check PyPI
-  * This should be handled automatically on release by the [publish action](https://github.com/open-telemetry/opentelemetry-python/blob/main/.github/workflows/publish.yml).
+  * This should be handled automatically on release by the [publish action](https://github.com/open-telemetry/opentelemetry-python/blob/main/.github/workflows/release.yml).
   * Check the [action logs](https://github.com/open-telemetry/opentelemetry-python/actions?query=workflow%3APublish) to make sure packages have been uploaded to PyPI
   * Check the release history (e.g. https://pypi.org/project/opentelemetry-api/#history) on PyPI
   * If for some reason the action failed, see [Publish failed](#publish-failed) below
