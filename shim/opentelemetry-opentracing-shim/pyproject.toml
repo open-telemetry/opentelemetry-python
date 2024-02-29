@@ -32,7 +32,7 @@ dependencies = [
 
 [project.optional-dependencies]
 test = [
-  "opentelemetry-test-utils == 0.44b0.dev",
+  "opentelemetry-test-utils == 0.45b0.dev",
   "opentracing >= 2.2.0, <3",
 ]
 
