@@ -850,6 +850,30 @@ class Span(trace_api.Span, ReadableSpan):
             )
         )
 
+    @_check_span_ended
+    def _add_link(self, link: trace_api.Link) -> None:
+        self._links.append(link)
+
+    def add_link(
+        self,
+        context: SpanContext,
+        attributes: types.Attributes = None,
+    ) -> None:
+        if context is None or not context.is_valid:
+            return
+
+        attributes = BoundedAttributes(
+            self._limits.max_link_attributes,
+            attributes,
+            max_value_len=self._limits.max_attribute_length,
+        )
+        self._add_link(
+            trace_api.Link(
+                context=context,
+                attributes=attributes,
+            )
+        )
+
     def _readable_span(self) -> ReadableSpan:
         return ReadableSpan(
             name=self._name,
