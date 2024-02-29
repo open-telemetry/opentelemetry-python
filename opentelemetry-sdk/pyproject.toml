@@ -30,9 +30,6 @@ dependencies = [
   "typing-extensions >= 3.7.4",
 ]
 
-[project.optional-dependencies]
-test = []
-
 [project.entry-points.opentelemetry_environment_variables]
 sdk = "opentelemetry.sdk.environment_variables"
 
