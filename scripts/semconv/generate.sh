@@ -10,15 +10,15 @@ OTEL_SEMCONV_GEN_IMG_VERSION=feature-codegen-by-namespace
 EXPERIMENTAL_DIR=experimental
 cd ${SCRIPT_DIR}
 
-#rm -rf semantic-conventions || true
-#mkdir semantic-conventions
-#cd semantic-conventions
+rm -rf semantic-conventions || true
+mkdir semantic-conventions
+cd semantic-conventions
 
-#git init
-#git remote add origin https://github.com/open-telemetry/semantic-conventions.git
-#git fetch origin "$SEMCONV_VERSION"
-#git reset --hard FETCH_HEAD
-#cd ${SCRIPT_DIR}
+git init
+git remote add origin https://github.com/open-telemetry/semantic-conventions.git
+git fetch origin "$SEMCONV_VERSION"
+git reset --hard FETCH_HEAD
+cd ${SCRIPT_DIR}
 
 # Check new schema version was added to schemas.py manually
 SCHEMAS_PY_PATH=${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/schemas.py
