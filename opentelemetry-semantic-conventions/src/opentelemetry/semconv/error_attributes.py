@@ -1,4 +1,3 @@
-
 # Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,12 +32,11 @@ Note: The `error.type` SHOULD be predictable and SHOULD have low cardinality.
 
     If a specific domain defines its own set of error identifiers (such as HTTP or gRPC status codes),
     it's RECOMMENDED to:
-      * Use a domain-specific attribute
-      * Set `error.type` to capture all errors, regardless of whether they are defined within the domain-specific set or not.
-"""
 
+    * Use a domain-specific attribute
+    * Set `error.type` to capture all errors, regardless of whether they are defined within the domain-specific set or not.
+"""
 
 class ErrorTypeValues(Enum):
     OTHER = "_OTHER"
     """A fallback error value to be used when the instrumentation doesn't define a custom value."""
-

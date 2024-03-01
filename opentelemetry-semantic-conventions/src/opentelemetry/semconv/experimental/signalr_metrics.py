@@ -1,0 +1,47 @@
+# Copyright The OpenTelemetry Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+from opentelemetry.metrics import (
+    Counter,
+    Histogram,
+    Meter,
+    UpDownCounter,
+    ObservableGauge,
+)
+from typing import Callable, Sequence
+
+class SignalrMetrics:
+
+    """
+    Number of connections that are currently active on the server
+    """
+    @staticmethod
+    def create_signalr_server_active_connections(meter: Meter) -> UpDownCounter:
+        return meter.create_up_down_counter(
+            name="signalr.server.active_connections",
+            description="Number of connections that are currently active on the server.",
+            unit="{connection}",
+        )
+
+
+    """
+    The duration of connections on the server
+    """
+    @staticmethod
+    def create_signalr_server_connection_duration(meter: Meter) -> Histogram:
+        return meter.create_histogram(
+            name="signalr.server.connection.duration",
+            description="The duration of connections on the server.",
+            unit="s",
+        )

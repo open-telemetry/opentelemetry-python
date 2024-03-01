@@ -15,16 +15,10 @@
 # pylint: disable=too-many-lines
 
 
-SERVER_ADDRESS = "server.address"
+OCI_MANIFEST_DIGEST = "oci.manifest.digest"
 """
-Server domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name.
-Note: When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it's available.
-"""
-
-
-SERVER_PORT = "server.port"
-"""
-Server port number.
-Note: When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it's available.
+The digest of the OCI image manifest. For container images specifically is the digest by which the container image is known.
+Note: Follows [OCI Image Manifest Specification](https://github.com/opencontainers/image-spec/blob/main/manifest.md), and specifically the [Digest property](https://github.com/opencontainers/image-spec/blob/main/descriptor.md#digests).
+    An example can be found in [Example Image Manifest](https://docs.docker.com/registry/spec/manifest-v2-2/#example-image-manifest).
 """
 

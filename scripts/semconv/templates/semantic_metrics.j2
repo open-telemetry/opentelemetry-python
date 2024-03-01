@@ -20,8 +20,8 @@
     ObservableGauge
   {%- endif -%}
 {%- endmacro %}
-{%- set filtered_metrics = metrics | select(filter) | list %}
-{%- if filtered_metrics | count > 0 %}
+{%- set filtered_metrics = metrics | select(filter) | list -%}
+{%- if filtered_metrics | count > 0 -%}
 # Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -66,4 +66,4 @@ class {{ root_namespace | to_camelcase(True) }}Metrics:
             unit="{{ metric.unit }}",
         )
 {% endfor %}
-{% endif %}
+{%- endif -%}

@@ -15,16 +15,20 @@
 # pylint: disable=too-many-lines
 
 
-SERVER_ADDRESS = "server.address"
+WEBENGINE_DESCRIPTION = "webengine.description"
 """
-Server domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name.
-Note: When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it's available.
+Additional description of the web engine (e.g. detailed version and edition information).
 """
 
 
-SERVER_PORT = "server.port"
+WEBENGINE_NAME = "webengine.name"
 """
-Server port number.
-Note: When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it's available.
+The name of the web engine.
+"""
+
+
+WEBENGINE_VERSION = "webengine.version"
+"""
+The version of the web engine.
 """
 
