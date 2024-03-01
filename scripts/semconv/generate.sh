@@ -29,6 +29,7 @@ if ! grep -q $SEMCONV_VERSION "$SCHEMAS_PY_PATH"; then
   exit 1
 fi
 
+EXCLUDED_NAMESPACES="jvm aspnetcore dotnet signalr ios android"
 # stable attributes
 docker run --rm \
   -v ${SCRIPT_DIR}/semantic-conventions/model:/source \
@@ -41,9 +42,25 @@ docker run --rm \
   --template /templates/semantic_attributes.j2 \
   --output /output/{{snake_prefix}}_attributes.py \
   --file-per-group root_namespace \
-  -Dfilter=is_stable
+  -Dfilter=is_stable \
+  -Dexcluded_namespaces="$EXCLUDED_NAMESPACES"
 
-# experimental attributes and metrics
+# stable metrics
+docker run --rm \
+  -v ${SCRIPT_DIR}/semantic-conventions/model:/source \
+  -v ${SCRIPT_DIR}/templates:/templates \
+  -v ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/:/output \
+  otel/semconvgen:$OTEL_SEMCONV_GEN_IMG_VERSION \
+  -f /source \
+  --strict-validation false \
+  code \
+  --template /templates/semantic_metrics.j2 \
+  --output /output/metrics/{{snake_prefix}}_metrics.py \
+  --file-per-group root_namespace \
+  -Dfilter=is_stable \
+  -Dexcluded_namespaces="$EXCLUDED_NAMESPACES"
+
+# experimental attributes
 mkdir -p ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/$EXPERIMENTAL_DIR
 docker run --rm \
   -v ${SCRIPT_DIR}/semantic-conventions/model:/source \
@@ -56,9 +73,11 @@ docker run --rm \
   --template /templates/semantic_attributes.j2 \
   --output /output/$EXPERIMENTAL_DIR/{{snake_prefix}}_attributes.py \
   --file-per-group root_namespace \
-  -Dfilter=is_experimental
+  -Dfilter=is_experimental \
+  -Dexcluded_namespaces="$EXCLUDED_NAMESPACES"
 
 # experimental metrics
+mkdir -p ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/metrics/$EXPERIMENTAL_DIR
 docker run --rm \
   -v ${SCRIPT_DIR}/semantic-conventions/model:/source \
   -v ${SCRIPT_DIR}/templates:/templates \
@@ -68,8 +87,9 @@ docker run --rm \
   --strict-validation false \
   code \
   --template /templates/semantic_metrics.j2 \
-  --output /output/$EXPERIMENTAL_DIR/{{snake_prefix}}_metrics.py \
+  --output /output/metrics/$EXPERIMENTAL_DIR/{{snake_prefix}}_metrics.py \
   --file-per-group root_namespace \
-  -Dfilter=is_experimental
+  -Dfilter=is_experimental \
+  -Dexcluded_namespaces="$EXCLUDED_NAMESPACES"
 
 cd "$ROOT_DIR"

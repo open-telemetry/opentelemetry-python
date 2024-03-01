@@ -1,3 +1,4 @@
+{%- if root_namespace not in excluded_namespaces -%}
 {%- set filtered_attributes = attributes_and_templates | select(filter) | list -%}
 {%- if filtered_attributes | count > 0 -%}
 # Copyright The OpenTelemetry Authors
@@ -50,5 +51,7 @@ class {{class_name}}(Enum):
     """{{member.brief | to_doc_brief}}."""
 {# Extra line #}
     {%- endfor -%}
-{% endfor %}
+{# Extra line #}
+{%- endfor -%}
+{%- endif -%}
 {%- endif -%}

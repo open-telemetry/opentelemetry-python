@@ -1,3 +1,4 @@
+{%- if root_namespace not in excluded_namespaces -%}
 {%- macro to_python_instrument_factory(instrument) -%}
   {%- if instrument == "counter" -%}
     counter
@@ -43,27 +44,27 @@ from opentelemetry.metrics import (
     UpDownCounter,
     ObservableGauge,
 )
+{# Extra line #}
 from typing import Callable, Sequence
-
-class {{ root_namespace | to_camelcase(True) }}Metrics:
+{# Extra line #}
 {%- for metric in filtered_metrics %}
-
-    """
-    {{metric.brief | to_doc_brief}}
-    """
-    @staticmethod
-  {%- if metric.instrument == "gauge" %}
-    def create_{{ metric.metric_name | replace(".", "_") }}(meter: Meter, callback: Sequence[Callable]) -> {{to_python_instrument_type(metric.instrument)}}:
-  {%- else %}
-    def create_{{ metric.metric_name | replace(".", "_") }}(meter: Meter) -> {{to_python_instrument_type(metric.instrument)}}:
-  {%- endif %}
-        return meter.create_{{to_python_instrument_factory(metric.instrument)}}(
-            name="{{ metric.metric_name }}",
-  {%- if metric.instrument == "gauge" %}
-            callback=callback,
-  {%- endif %}
-            description="{{ metric.brief }}",
-            unit="{{ metric.unit }}",
-        )
-{% endfor %}
+@staticmethod
+{%- if metric.instrument == "gauge" %}
+def create_{{ metric.metric_name | replace(".", "_") }}(meter: Meter, callback: Sequence[Callable]) -> {{to_python_instrument_type(metric.instrument)}}:
+{%- else %}
+def create_{{ metric.metric_name | replace(".", "_") }}(meter: Meter) -> {{to_python_instrument_type(metric.instrument)}}:
+{%- endif %}
+    """{{ metric.brief | to_doc_brief }}"""
+    return meter.create_{{to_python_instrument_factory(metric.instrument)}}(
+        name="{{ metric.metric_name }}",
+{%- if metric.instrument == "gauge" %}
+        callback=callback,
+{%- endif %}
+        description="{{ metric.brief }}",
+        unit="{{ metric.unit }}",
+    )
+{# Extra line #}
+{# Extra line #}
+{%- endfor -%}
+{%- endif -%}
 {%- endif -%}
