@@ -12,12 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=too-many-lines
+from opentelemetry.metrics import (
+    Counter,
+    Histogram,
+    Meter,
+    UpDownCounter,
+    ObservableGauge,
+)
 
+from typing import Callable, Sequence
 
-JVM_BUFFER_POOL_NAME = "jvm.buffer.pool.name"
-"""
-Name of the buffer pool.
-Note: Pool names are generally obtained via [BufferPoolMXBean#getName()](https://docs.oracle.com/en/java/javase/11/docs/api/java.management/java/lang/management/BufferPoolMXBean.html#getName()).
-"""
+@staticmethod
+def create_dns_lookup_duration(meter: Meter) -> Histogram:
+    """Measures the time taken to perform a DNS lookup"""
+    return meter.create_histogram(
+        name="dns.lookup.duration",
+        description="Measures the time taken to perform a DNS lookup.",
+        unit="s",
+    )
 
