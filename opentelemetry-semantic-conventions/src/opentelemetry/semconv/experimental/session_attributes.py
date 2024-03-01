@@ -15,16 +15,14 @@
 # pylint: disable=too-many-lines
 
 
-SERVER_ADDRESS = "server.address"
+SESSION_ID = "session.id"
 """
-Server domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name.
-Note: When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it's available.
+A unique id to identify a session.
 """
 
 
-SERVER_PORT = "server.port"
+SESSION_PREVIOUS_ID = "session.previous_id"
 """
-Server port number.
-Note: When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it's available.
+The previous `session.id` for this user, when known.
 """
 

@@ -15,16 +15,9 @@
 # pylint: disable=too-many-lines
 
 
-SERVER_ADDRESS = "server.address"
+EVENT_NAME = "event.name"
 """
-Server domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name.
-Note: When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it's available.
-"""
-
-
-SERVER_PORT = "server.port"
-"""
-Server port number.
-Note: When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it's available.
+Identifies the class / type of event.
+Note: Event names are subject to the same rules as [attribute names](https://github.com/open-telemetry/opentelemetry-specification/tree/v1.26.0/specification/common/attribute-naming.md). Notably, event names are namespaced to avoid collisions and provide a clean separation of semantics for events in separate domains like browser, mobile, and kubernetes.
 """
 

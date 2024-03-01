@@ -14,17 +14,33 @@
 
 # pylint: disable=too-many-lines
 
-
-SERVER_ADDRESS = "server.address"
-"""
-Server domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name.
-Note: When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it's available.
-"""
+from enum import Enum
 
 
-SERVER_PORT = "server.port"
+GRAPHQL_DOCUMENT = "graphql.document"
 """
-Server port number.
-Note: When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it's available.
+The GraphQL document being executed.
+Note: The value may be sanitized to exclude sensitive information.
 """
 
+
+GRAPHQL_OPERATION_NAME = "graphql.operation.name"
+"""
+The name of the operation being executed.
+"""
+
+
+GRAPHQL_OPERATION_TYPE = "graphql.operation.type"
+"""
+The type of the operation being executed.
+"""
+
+class GraphqlOperationTypeValues(Enum):
+    QUERY = "query"
+    """GraphQL query."""
+
+    MUTATION = "mutation"
+    """GraphQL mutation."""
+
+    SUBSCRIPTION = "subscription"
+    """GraphQL subscription."""

@@ -1,4 +1,3 @@
-
 # Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -82,7 +81,6 @@ Note: MUST NOT be populated when this is not supported by the HTTP server framew
     SHOULD include the [application root](/docs/http/http-spans.md#http-server-definitions) if there is one.
 """
 
-
 class HttpRequestMethodValues(Enum):
     CONNECT = "CONNECT"
     """CONNECT method."""
@@ -113,4 +111,3 @@ class HttpRequestMethodValues(Enum):
 
     OTHER = "_OTHER"
     """Any HTTP method that the instrumentation has no prior knowledge of."""
-

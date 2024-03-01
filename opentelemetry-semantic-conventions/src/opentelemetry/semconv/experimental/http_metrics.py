@@ -1,0 +1,131 @@
+# Copyright The OpenTelemetry Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+from opentelemetry.metrics import (
+    Counter,
+    Histogram,
+    Meter,
+    UpDownCounter,
+    ObservableGauge,
+)
+from typing import Callable, Sequence
+
+class HttpMetrics:
+
+    """
+    Number of active HTTP requests
+    """
+    @staticmethod
+    def create_http_client_active_requests(meter: Meter) -> UpDownCounter:
+        return meter.create_up_down_counter(
+            name="http.client.active_requests",
+            description="Number of active HTTP requests.",
+            unit="{request}",
+        )
+
+
+    """
+    The duration of the successfully established outbound HTTP connections
+    """
+    @staticmethod
+    def create_http_client_connection_duration(meter: Meter) -> Histogram:
+        return meter.create_histogram(
+            name="http.client.connection.duration",
+            description="The duration of the successfully established outbound HTTP connections.",
+            unit="s",
+        )
+
+
+    """
+    Number of outbound HTTP connections that are currently active or idle on the client
+    """
+    @staticmethod
+    def create_http_client_open_connections(meter: Meter) -> UpDownCounter:
+        return meter.create_up_down_counter(
+            name="http.client.open_connections",
+            description="Number of outbound HTTP connections that are currently active or idle on the client.",
+            unit="{connection}",
+        )
+
+
+    """
+    Size of HTTP client request bodies
+    """
+    @staticmethod
+    def create_http_client_request_body_size(meter: Meter) -> Histogram:
+        return meter.create_histogram(
+            name="http.client.request.body.size",
+            description="Size of HTTP client request bodies.",
+            unit="By",
+        )
+
+
+    """
+    The amount of time requests spent on a queue waiting for an available connection
+    """
+    @staticmethod
+    def create_http_client_request_time_in_queue(meter: Meter) -> Histogram:
+        return meter.create_histogram(
+            name="http.client.request.time_in_queue",
+            description="The amount of time requests spent on a queue waiting for an available connection.",
+            unit="s",
+        )
+
+
+    """
+    Size of HTTP client response bodies
+    """
+    @staticmethod
+    def create_http_client_response_body_size(meter: Meter) -> Histogram:
+        return meter.create_histogram(
+            name="http.client.response.body.size",
+            description="Size of HTTP client response bodies.",
+            unit="By",
+        )
+
+
+    """
+    Number of active HTTP server requests
+    """
+    @staticmethod
+    def create_http_server_active_requests(meter: Meter) -> UpDownCounter:
+        return meter.create_up_down_counter(
+            name="http.server.active_requests",
+            description="Number of active HTTP server requests.",
+            unit="{request}",
+        )
+
+
+    """
+    Size of HTTP server request bodies
+    """
+    @staticmethod
+    def create_http_server_request_body_size(meter: Meter) -> Histogram:
+        return meter.create_histogram(
+            name="http.server.request.body.size",
+            description="Size of HTTP server request bodies.",
+            unit="By",
+        )
+
+
+    """
+    Size of HTTP server response bodies
+    """
+    @staticmethod
+    def create_http_server_response_body_size(meter: Meter) -> Histogram:
+        return meter.create_histogram(
+            name="http.server.response.body.size",
+            description="Size of HTTP server response bodies.",
+            unit="By",
+        )

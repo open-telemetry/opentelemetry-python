@@ -1,4 +1,3 @@
-
 # Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -73,7 +72,6 @@ NETWORK_TYPE = "network.type"
 Note: The value SHOULD be normalized to lowercase.
 """
 
-
 class NetworkTransportValues(Enum):
     TCP = "tcp"
     """TCP."""
@@ -86,12 +84,9 @@ class NetworkTransportValues(Enum):
 
     UNIX = "unix"
     """Unix domain socket."""
-
-
 class NetworkTypeValues(Enum):
     IPV4 = "ipv4"
     """IPv4."""
 
     IPV6 = "ipv6"
     """IPv6."""
-

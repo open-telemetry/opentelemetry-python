@@ -15,16 +15,15 @@
 # pylint: disable=too-many-lines
 
 
-SERVER_ADDRESS = "server.address"
+DEPLOYMENT_ENVIRONMENT = "deployment.environment"
 """
-Server domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name.
-Note: When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it's available.
-"""
+Name of the [deployment environment](https://wikipedia.org/wiki/Deployment_environment) (aka deployment tier).
+Note: `deployment.environment` does not affect the uniqueness constraints defined through
+    the `service.namespace`, `service.name` and `service.instance.id` resource attributes.
+    This implies that resources carrying the following attribute combinations MUST be
+    considered to be identifying the same service:
 
-
-SERVER_PORT = "server.port"
-"""
-Server port number.
-Note: When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it's available.
+    * `service.name=frontend`, `deployment.environment=production`
+    * `service.name=frontend`, `deployment.environment=staging`.
 """
 
