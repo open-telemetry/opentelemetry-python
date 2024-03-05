@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=too-many-lines
-
 from enum import Enum
 
 
@@ -43,22 +41,19 @@ Peer port number of the network connection.
 
 NETWORK_PROTOCOL_NAME = "network.protocol.name"
 """
-[OSI application layer](https://osi-model.com/application-layer/) or non-OSI equivalent.
-Note: The value SHOULD be normalized to lowercase.
+[OSI application layer](https://osi-model.com/application-layer/) or non-OSI equivalent.Note: The value SHOULD be normalized to lowercase.
 """
 
 
 NETWORK_PROTOCOL_VERSION = "network.protocol.version"
 """
-Version of the protocol specified in `network.protocol.name`.
-Note: `network.protocol.version` refers to the version of the protocol used and might be different from the protocol client's version. If the HTTP client has a version of `0.27.2`, but sends HTTP version `1.1`, this attribute should be set to `1.1`.
+Version of the protocol specified in `network.protocol.name`.Note: `network.protocol.version` refers to the version of the protocol used and might be different from the protocol client's version. If the HTTP client has a version of `0.27.2`, but sends HTTP version `1.1`, this attribute should be set to `1.1`.
 """
 
 
 NETWORK_TRANSPORT = "network.transport"
 """
-[OSI transport layer](https://osi-model.com/transport-layer/) or [inter-process communication method](https://wikipedia.org/wiki/Inter-process_communication).
-Note: The value SHOULD be normalized to lowercase.
+[OSI transport layer](https://osi-model.com/transport-layer/) or [inter-process communication method](https://wikipedia.org/wiki/Inter-process_communication).Note: The value SHOULD be normalized to lowercase.
 
     Consider always setting the transport when setting a port number, since
     a port number is ambiguous without knowing the transport. For example
@@ -68,9 +63,9 @@ Note: The value SHOULD be normalized to lowercase.
 
 NETWORK_TYPE = "network.type"
 """
-[OSI network layer](https://osi-model.com/network-layer/) or non-OSI equivalent.
-Note: The value SHOULD be normalized to lowercase.
+[OSI network layer](https://osi-model.com/network-layer/) or non-OSI equivalent.Note: The value SHOULD be normalized to lowercase.
 """
+
 
 class NetworkTransportValues(Enum):
     TCP = "tcp"
@@ -84,9 +79,13 @@ class NetworkTransportValues(Enum):
 
     UNIX = "unix"
     """Unix domain socket."""
+
+
 class NetworkTypeValues(Enum):
     IPV4 = "ipv4"
     """IPv4."""
 
     IPV6 = "ipv6"
     """IPv6."""
+
+

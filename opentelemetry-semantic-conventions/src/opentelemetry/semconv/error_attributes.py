@@ -12,15 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=too-many-lines
-
 from enum import Enum
 
 
 ERROR_TYPE = "error.type"
 """
-Describes a class of error the operation ended with.
-Note: The `error.type` SHOULD be predictable and SHOULD have low cardinality.
+Describes a class of error the operation ended with.Note: The `error.type` SHOULD be predictable and SHOULD have low cardinality.
     Instrumentations SHOULD document the list of errors they report.
 
     The cardinality of `error.type` within one instrumentation library SHOULD be low.
@@ -37,6 +34,9 @@ Note: The `error.type` SHOULD be predictable and SHOULD have low cardinality.
     * Set `error.type` to capture all errors, regardless of whether they are defined within the domain-specific set or not.
 """
 
+
 class ErrorTypeValues(Enum):
     OTHER = "_OTHER"
     """A fallback error value to be used when the instrumentation doesn't define a custom value."""
+
+

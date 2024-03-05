@@ -10,21 +10,15 @@
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
-# limitations under the License.
-
-# pylint: disable=too-many-lines
-
-
-SERVER_ADDRESS = "server.address"
+# limitations under the License.SERVER_ADDRESS = "server.address"
 """
-Server domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name.
-Note: When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it's available.
+Server domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name.Note: When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it's available.
 """
 
 
 SERVER_PORT = "server.port"
 """
-Server port number.
-Note: When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it's available.
+Server port number.Note: When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it's available.
 """
+
 

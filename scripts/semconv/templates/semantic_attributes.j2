@@ -1,5 +1,24 @@
 {%- if root_namespace not in excluded_namespaces -%}
 {%- set filtered_attributes = attributes_and_templates | select(filter) | list -%}
+
+{%- macro attribute_name(attribute) -%}
+    {%- if attribute | is_template -%}
+    {{attribute.fqn | to_const_name}}_TEMPLATE
+    {%- else -%}
+    {{attribute.fqn | to_const_name}}
+    {%- endif -%}
+{%- endmacro -%}
+{%- macro attribute_brief(attribute) -%}
+    {%- if attribute | is_deprecated -%}
+Deprecated: {{attribute.deprecated | to_doc_brief}}.
+    {%- else -%}
+    {{attribute.brief | to_doc_brief}}.
+        {%- if attribute.note -%}
+Note: {{attribute.note | to_doc_brief | indent}}.
+        {%- endif -%}
+    {%- endif -%}
+{%- endmacro -%}
+
 {%- if filtered_attributes | count > 0 -%}
 # Copyright The OpenTelemetry Authors
 #
@@ -15,34 +34,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=too-many-lines
-
 {%- set filtered_enum_attributes = enum_attributes | select(filter) | list %}
 {%- if filtered_enum_attributes | count > 0 %}
 
 from enum import Enum
-{%- endif %}
 
-{%- for attribute in filtered_attributes %}
 
-{% if attribute | is_template %}
-{{attribute.fqn | to_const_name}}_TEMPLATE = "{{attribute.fqn}}"
-{%- else %}
-{{attribute.fqn | to_const_name}} = "{{attribute.fqn}}"
-{%- endif %}
+{% endif -%}
+{%- for attribute in filtered_attributes -%}
+{{attribute_name(attribute)}} = "{{attribute.fqn}}"
 """
-{{attribute.brief | to_doc_brief}}.
-{%- if attribute.note %}
-Note: {{attribute.note | to_doc_brief | indent}}.
-{%- endif %}
-
-{%- if attribute | is_deprecated %}
-Deprecated: {{attribute.deprecated | to_doc_brief}}.
-{%- endif %}
+{{attribute_brief(attribute)}}
+{% if stable_package and attribute | is_stable -%}
+See Also: the attribute is stable now, use :py:const:`{{stable_package}}.{{file_name[:-3]}}.{{attribute_name(attribute)}}` instead.
+{% endif -%}
 """
-{%- endfor %}
 {# Extra line #}
 {# Extra line #}
+{% endfor %}
 {%- for attribute in filtered_enum_attributes -%}
 {%- set class_name = attribute.fqn | to_camelcase(True) ~ "Values" -%}
 class {{class_name}}(Enum):
@@ -50,7 +59,8 @@ class {{class_name}}(Enum):
     {{ member.member_id | to_const_name }} = {{ attribute | print_member_value(member) }}
     """{{member.brief | to_doc_brief}}."""
 {# Extra line #}
-    {%- endfor -%}
+    {%- endfor %}
+{# Extra line #}
 {# Extra line #}
 {%- endfor -%}
 {%- endif -%}

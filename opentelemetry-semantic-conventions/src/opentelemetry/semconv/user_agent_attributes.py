@@ -10,13 +10,9 @@
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
-# limitations under the License.
-
-# pylint: disable=too-many-lines
-
-
-USER_AGENT_ORIGINAL = "user_agent.original"
+# limitations under the License.USER_AGENT_ORIGINAL = "user_agent.original"
 """
 Value of the [HTTP User-Agent](https://www.rfc-editor.org/rfc/rfc9110.html#field.user-agent) header sent by the client.
 """
+
 
