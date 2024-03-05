@@ -7,7 +7,7 @@ ROOT_DIR="${SCRIPT_DIR}/../../"
 # freeze the spec version to make SemanticAttributes generation reproducible
 SEMCONV_VERSION=v1.24.0
 OTEL_SEMCONV_GEN_IMG_VERSION=feature-codegen-by-namespace
-EXPERIMENTAL_DIR=experimental
+INCUBATING_DIR=incubating
 cd ${SCRIPT_DIR}
 
 rm -rf semantic-conventions || true
@@ -30,6 +30,7 @@ if ! grep -q $SEMCONV_VERSION "$SCHEMAS_PY_PATH"; then
 fi
 
 EXCLUDED_NAMESPACES="jvm aspnetcore dotnet signalr ios android"
+
 # stable attributes
 docker run --rm \
   -v ${SCRIPT_DIR}/semantic-conventions/model:/source \
@@ -43,7 +44,7 @@ docker run --rm \
   --output /output/{{snake_prefix}}_attributes.py \
   --file-per-group root_namespace \
   -Dfilter=is_stable \
-  -Dexcluded_namespaces="$EXCLUDED_NAMESPACES"
+  -Dexcluded_namespaces="$EXCLUDED_NAMESPACES" \
 
 # stable metrics
 docker run --rm \
@@ -60,8 +61,8 @@ docker run --rm \
   -Dfilter=is_stable \
   -Dexcluded_namespaces="$EXCLUDED_NAMESPACES"
 
-# experimental attributes
-mkdir -p ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/$EXPERIMENTAL_DIR
+# all attributes
+mkdir -p ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/$INCUBATING_DIR
 docker run --rm \
   -v ${SCRIPT_DIR}/semantic-conventions/model:/source \
   -v ${SCRIPT_DIR}/templates:/templates \
@@ -71,13 +72,14 @@ docker run --rm \
   --strict-validation false \
   code \
   --template /templates/semantic_attributes.j2 \
-  --output /output/$EXPERIMENTAL_DIR/{{snake_prefix}}_attributes.py \
+  --output /output/$INCUBATING_DIR/{{snake_prefix}}_attributes.py \
   --file-per-group root_namespace \
-  -Dfilter=is_experimental \
+  -Dfilter=any \
+  -Dstable_package=opentelemetry.semconv \
   -Dexcluded_namespaces="$EXCLUDED_NAMESPACES"
 
-# experimental metrics
-mkdir -p ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/metrics/$EXPERIMENTAL_DIR
+# all metrics
+mkdir -p ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/metrics/$INCUBATING_DIR
 docker run --rm \
   -v ${SCRIPT_DIR}/semantic-conventions/model:/source \
   -v ${SCRIPT_DIR}/templates:/templates \
@@ -87,9 +89,10 @@ docker run --rm \
   --strict-validation false \
   code \
   --template /templates/semantic_metrics.j2 \
-  --output /output/metrics/$EXPERIMENTAL_DIR/{{snake_prefix}}_metrics.py \
+  --output /output/metrics/$INCUBATING_DIR/{{snake_prefix}}_metrics.py \
   --file-per-group root_namespace \
-  -Dfilter=is_experimental \
+  -Dfilter=any \
+  -Dstable_package=opentelemetry.semconv.metrics \
   -Dexcluded_namespaces="$EXCLUDED_NAMESPACES"
 
 cd "$ROOT_DIR"
