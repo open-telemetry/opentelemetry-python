@@ -28,9 +28,6 @@ dependencies = [
   "opentelemetry-sdk == 1.24.0.dev",
 ]
 
-[project.optional-dependencies]
-test = []
-
 [project.urls]
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tests/opentelemetry-test-utils"
 
