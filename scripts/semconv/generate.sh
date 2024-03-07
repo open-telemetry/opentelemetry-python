@@ -5,7 +5,7 @@ ROOT_DIR="${SCRIPT_DIR}/../../"
 
 # freeze the spec version to make SemanticAttributes generation reproducible
 SEMCONV_VERSION=v1.24.0
-OTEL_SEMCONV_GEN_IMG_VERSION=feature-codegen-by-namespace
+OTEL_SEMCONV_GEN_IMG_VERSION=0.0.7
 INCUBATING_DIR=incubating
 cd ${SCRIPT_DIR}
 
@@ -35,7 +35,7 @@ docker run --rm \
   -v ${SCRIPT_DIR}/semantic-conventions/model:/source \
   -v ${SCRIPT_DIR}/templates:/templates \
   -v ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/:/output \
-  otel/semconvgen:$OTEL_SEMCONV_GEN_IMG_VERSION \
+  semconvgen:$OTEL_SEMCONV_GEN_IMG_VERSION \
   -f /source \
   --strict-validation false \
   code \
@@ -50,7 +50,7 @@ docker run --rm \
   -v ${SCRIPT_DIR}/semantic-conventions/model:/source \
   -v ${SCRIPT_DIR}/templates:/templates \
   -v ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/:/output \
-  otel/semconvgen:$OTEL_SEMCONV_GEN_IMG_VERSION \
+  semconvgen:$OTEL_SEMCONV_GEN_IMG_VERSION \
   -f /source \
   --strict-validation false \
   code \
@@ -66,7 +66,7 @@ docker run --rm \
   -v ${SCRIPT_DIR}/semantic-conventions/model:/source \
   -v ${SCRIPT_DIR}/templates:/templates \
   -v ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/:/output \
-  otel/semconvgen:$OTEL_SEMCONV_GEN_IMG_VERSION \
+  semconvgen:$OTEL_SEMCONV_GEN_IMG_VERSION \
   -f /source \
   --strict-validation false \
   code \
@@ -83,7 +83,7 @@ docker run --rm \
   -v ${SCRIPT_DIR}/semantic-conventions/model:/source \
   -v ${SCRIPT_DIR}/templates:/templates \
   -v ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/:/output \
-  otel/semconvgen:$OTEL_SEMCONV_GEN_IMG_VERSION \
+  semconvgen:$OTEL_SEMCONV_GEN_IMG_VERSION \
   -f /source \
   --strict-validation false \
   code \

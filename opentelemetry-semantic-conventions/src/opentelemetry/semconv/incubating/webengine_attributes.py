@@ -12,9 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-USER_AGENT_ORIGINAL = "user_agent.original"
+WEBENGINE_DESCRIPTION = "webengine.description"
 """
-Value of the [HTTP User-Agent](https://www.rfc-editor.org/rfc/rfc9110.html#field.user-agent) header sent by the client.
+Additional description of the web engine (e.g. detailed version and edition information).
+"""
+
+
+WEBENGINE_NAME = "webengine.name"
+"""
+The name of the web engine.
+"""
+
+
+WEBENGINE_VERSION = "webengine.version"
+"""
+The version of the web engine.
 """
 
 

@@ -15,6 +15,7 @@
 USER_AGENT_ORIGINAL = "user_agent.original"
 """
 Value of the [HTTP User-Agent](https://www.rfc-editor.org/rfc/rfc9110.html#field.user-agent) header sent by the client.
+See Also: the attribute is stable now, use :py:const:`opentelemetry.semconv.user_agent_attributes.USER_AGENT_ORIGINAL` instead.
 """
 
 

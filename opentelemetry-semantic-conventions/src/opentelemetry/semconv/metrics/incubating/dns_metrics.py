@@ -12,9 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-USER_AGENT_ORIGINAL = "user_agent.original"
-"""
-Value of the [HTTP User-Agent](https://www.rfc-editor.org/rfc/rfc9110.html#field.user-agent) header sent by the client.
-"""
+from opentelemetry.metrics import (
+    Counter,
+    Histogram,
+    Meter,
+    UpDownCounter,
+    ObservableGauge,
+)
 
+from typing import Callable, Sequence
+
+@staticmethod
+def create_dns_lookup_duration(meter: Meter) -> Histogram:
+    """Measures the time taken to perform a DNS lookup"""
+    return meter.create_histogram(
+        name="dns.lookup.duration",
+        description="Measures the time taken to perform a DNS lookup.",
+        unit="s",
+    )
 

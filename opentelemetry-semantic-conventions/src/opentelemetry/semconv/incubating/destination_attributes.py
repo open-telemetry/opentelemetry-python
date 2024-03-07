@@ -12,9 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-USER_AGENT_ORIGINAL = "user_agent.original"
+DESTINATION_ADDRESS = "destination.address"
 """
-Value of the [HTTP User-Agent](https://www.rfc-editor.org/rfc/rfc9110.html#field.user-agent) header sent by the client.
+Destination address - domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name.Note: When observed from the source side, and when communicating through an intermediary, `destination.address` SHOULD represent the destination address behind any intermediaries, for example proxies, if it's available.
+"""
+
+
+DESTINATION_PORT = "destination.port"
+"""
+Destination port number.
 """
 
 

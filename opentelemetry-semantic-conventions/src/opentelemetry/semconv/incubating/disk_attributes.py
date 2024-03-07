@@ -12,9 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-USER_AGENT_ORIGINAL = "user_agent.original"
+
+from enum import Enum
+
+
+DISK_IO_DIRECTION = "disk.io.direction"
 """
-Value of the [HTTP User-Agent](https://www.rfc-editor.org/rfc/rfc9110.html#field.user-agent) header sent by the client.
+The disk IO operation direction.
 """
+
+
+class DiskIoDirectionValues(Enum):
+    READ = "read"
+    """read."""
+
+    WRITE = "write"
+    """write."""
 
 

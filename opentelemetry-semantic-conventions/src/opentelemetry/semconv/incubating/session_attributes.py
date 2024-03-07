@@ -12,9 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-USER_AGENT_ORIGINAL = "user_agent.original"
+SESSION_ID = "session.id"
 """
-Value of the [HTTP User-Agent](https://www.rfc-editor.org/rfc/rfc9110.html#field.user-agent) header sent by the client.
+A unique id to identify a session.
+"""
+
+
+SESSION_PREVIOUS_ID = "session.previous_id"
+"""
+The previous `session.id` for this user, when known.
 """
 
 

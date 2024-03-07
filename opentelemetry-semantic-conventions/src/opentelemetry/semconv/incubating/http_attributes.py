@@ -16,11 +16,36 @@
 from enum import Enum
 
 
+HTTP_CONNECTION_STATE = "http.connection.state"
+"""
+State of the HTTP connection in the HTTP connection pool.
+"""
+
+
+HTTP_FLAVOR = "http.flavor"
+"""
+Deprecated: Replaced by `network.protocol.name`.
+"""
+
+
+HTTP_METHOD = "http.method"
+"""
+Deprecated: Replaced by `http.request.method`.
+"""
+
+
+HTTP_REQUEST_BODY_SIZE = "http.request.body.size"
+"""
+The size of the request payload body in bytes. This is the number of bytes transferred excluding headers and is often, but not always, present as the [Content-Length](https://www.rfc-editor.org/rfc/rfc9110.html#field.content-length) header. For requests using transport encoding, this should be the compressed size.
+"""
+
+
 HTTP_REQUEST_HEADER_TEMPLATE = "http.request.header"
 """
 HTTP request headers, `<key>` being the normalized HTTP Header name (lowercase), the value being the header values.Note: Instrumentations SHOULD require an explicit configuration of which headers are to be captured. Including all request headers can be a security risk - explicit configuration helps avoid leaking sensitive information.
     The `User-Agent` header is already captured in the `user_agent.original` attribute. Users MAY explicitly configure instrumentations to capture them even though it is not recommended.
     The attribute value MUST consist of either multiple header values as an array of strings or a single-item array containing a possibly comma-concatenated string, depending on the way the HTTP library provides access to headers.
+See Also: the attribute is stable now, use :py:const:`opentelemetry.semconv.http_attributes.HTTP_REQUEST_HEADER_TEMPLATE` instead.
 """
 
 
@@ -40,18 +65,33 @@ HTTP request method.Note: HTTP request method value SHOULD be "known" to the ins
     HTTP method names are case-sensitive and `http.request.method` attribute value MUST match a known HTTP method name exactly.
     Instrumentations for specific web frameworks that consider HTTP methods to be case insensitive, SHOULD populate a canonical equivalent.
     Tracing instrumentations that do so, MUST also set `http.request.method_original` to the original value.
+See Also: the attribute is stable now, use :py:const:`opentelemetry.semconv.http_attributes.HTTP_REQUEST_METHOD` instead.
 """
 
 
 HTTP_REQUEST_METHOD_ORIGINAL = "http.request.method_original"
 """
 Original HTTP method sent by the client in the request line.
+See Also: the attribute is stable now, use :py:const:`opentelemetry.semconv.http_attributes.HTTP_REQUEST_METHOD_ORIGINAL` instead.
 """
 
 
 HTTP_REQUEST_RESEND_COUNT = "http.request.resend_count"
 """
 The ordinal number of request resending attempt (for any reason, including redirects).Note: The resend count SHOULD be updated each time an HTTP request gets resent by the client, regardless of what was the cause of the resending (e.g. redirection, authorization failure, 503 Server Unavailable, network issues, or any other).
+See Also: the attribute is stable now, use :py:const:`opentelemetry.semconv.http_attributes.HTTP_REQUEST_RESEND_COUNT` instead.
+"""
+
+
+HTTP_REQUEST_CONTENT_LENGTH = "http.request_content_length"
+"""
+Deprecated: Replaced by `http.request.header.content-length`.
+"""
+
+
+HTTP_RESPONSE_BODY_SIZE = "http.response.body.size"
+"""
+The size of the response payload body in bytes. This is the number of bytes transferred excluding headers and is often, but not always, present as the [Content-Length](https://www.rfc-editor.org/rfc/rfc9110.html#field.content-length) header. For requests using transport encoding, this should be the compressed size.
 """
 
 
@@ -60,12 +100,20 @@ HTTP_RESPONSE_HEADER_TEMPLATE = "http.response.header"
 HTTP response headers, `<key>` being the normalized HTTP Header name (lowercase), the value being the header values.Note: Instrumentations SHOULD require an explicit configuration of which headers are to be captured. Including all response headers can be a security risk - explicit configuration helps avoid leaking sensitive information.
     Users MAY explicitly configure instrumentations to capture them even though it is not recommended.
     The attribute value MUST consist of either multiple header values as an array of strings or a single-item array containing a possibly comma-concatenated string, depending on the way the HTTP library provides access to headers.
+See Also: the attribute is stable now, use :py:const:`opentelemetry.semconv.http_attributes.HTTP_RESPONSE_HEADER_TEMPLATE` instead.
 """
 
 
 HTTP_RESPONSE_STATUS_CODE = "http.response.status_code"
 """
 [HTTP response status code](https://tools.ietf.org/html/rfc7231#section-6).
+See Also: the attribute is stable now, use :py:const:`opentelemetry.semconv.http_attributes.HTTP_RESPONSE_STATUS_CODE` instead.
+"""
+
+
+HTTP_RESPONSE_CONTENT_LENGTH = "http.response_content_length"
+"""
+Deprecated: Replaced by `http.response.header.content-length`.
 """
 
 
@@ -73,7 +121,66 @@ HTTP_ROUTE = "http.route"
 """
 The matched route, that is, the path template in the format used by the respective server framework.Note: MUST NOT be populated when this is not supported by the HTTP server framework as the route attribute should have low-cardinality and the URI path can NOT substitute it.
     SHOULD include the [application root](/docs/http/http-spans.md#http-server-definitions) if there is one.
+See Also: the attribute is stable now, use :py:const:`opentelemetry.semconv.http_attributes.HTTP_ROUTE` instead.
 """
+
+
+HTTP_SCHEME = "http.scheme"
+"""
+Deprecated: Replaced by `url.scheme` instead.
+"""
+
+
+HTTP_STATUS_CODE = "http.status_code"
+"""
+Deprecated: Replaced by `http.response.status_code`.
+"""
+
+
+HTTP_TARGET = "http.target"
+"""
+Deprecated: Split to `url.path` and `url.query.
+"""
+
+
+HTTP_URL = "http.url"
+"""
+Deprecated: Replaced by `url.full`.
+"""
+
+
+HTTP_USER_AGENT = "http.user_agent"
+"""
+Deprecated: Replaced by `user_agent.original`.
+"""
+
+
+class HttpConnectionStateValues(Enum):
+    ACTIVE = "active"
+    """active state."""
+
+    IDLE = "idle"
+    """idle state."""
+
+
+class HttpFlavorValues(Enum):
+    HTTP_1_0 = "1.0"
+    """HTTP/1.0."""
+
+    HTTP_1_1 = "1.1"
+    """HTTP/1.1."""
+
+    HTTP_2_0 = "2.0"
+    """HTTP/2."""
+
+    HTTP_3_0 = "3.0"
+    """HTTP/3."""
+
+    SPDY = "SPDY"
+    """SPDY protocol."""
+
+    QUIC = "QUIC"
+    """QUIC protocol."""
 
 
 class HttpRequestMethodValues(Enum):

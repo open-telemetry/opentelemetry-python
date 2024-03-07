@@ -33,6 +33,7 @@ Describes a class of error the operation ended with.Note: The `error.type` SHOUL
 
     * Use a domain-specific attribute
     * Set `error.type` to capture all errors, regardless of whether they are defined within the domain-specific set or not.
+See Also: the attribute is stable now, use :py:const:`opentelemetry.semconv.error_attributes.ERROR_TYPE` instead.
 """
 
 

@@ -12,9 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-USER_AGENT_ORIGINAL = "user_agent.original"
+
+from enum import Enum
+
+
+STATE = "state"
 """
-Value of the [HTTP User-Agent](https://www.rfc-editor.org/rfc/rfc9110.html#field.user-agent) header sent by the client.
+The state of a connection in the pool.
 """
+
+
+class StateValues(Enum):
+    IDLE = "idle"
+    """idle."""
+
+    USED = "used"
+    """used."""
 
 
