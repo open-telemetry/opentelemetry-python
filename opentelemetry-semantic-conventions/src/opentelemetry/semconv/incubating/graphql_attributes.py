@@ -12,9 +12,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-USER_AGENT_ORIGINAL = "user_agent.original"
+
+from enum import Enum
+
+
+GRAPHQL_DOCUMENT = "graphql.document"
 """
-Value of the [HTTP User-Agent](https://www.rfc-editor.org/rfc/rfc9110.html#field.user-agent) header sent by the client.
+The GraphQL document being executed.Note: The value may be sanitized to exclude sensitive information.
 """
+
+
+GRAPHQL_OPERATION_NAME = "graphql.operation.name"
+"""
+The name of the operation being executed.
+"""
+
+
+GRAPHQL_OPERATION_TYPE = "graphql.operation.type"
+"""
+The type of the operation being executed.
+"""
+
+
+class GraphqlOperationTypeValues(Enum):
+    QUERY = "query"
+    """GraphQL query."""
+
+    MUTATION = "mutation"
+    """GraphQL mutation."""
+
+    SUBSCRIPTION = "subscription"
+    """GraphQL subscription."""
 
 

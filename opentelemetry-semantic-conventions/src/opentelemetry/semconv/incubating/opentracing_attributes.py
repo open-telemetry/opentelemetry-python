@@ -12,9 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-USER_AGENT_ORIGINAL = "user_agent.original"
+
+from enum import Enum
+
+
+OPENTRACING_REF_TYPE = "opentracing.ref_type"
 """
-Value of the [HTTP User-Agent](https://www.rfc-editor.org/rfc/rfc9110.html#field.user-agent) header sent by the client.
+Parent-child Reference type.Note: The causal relationship between a child Span and a parent Span.
 """
+
+
+class OpentracingRefTypeValues(Enum):
+    CHILD_OF = "child_of"
+    """The parent Span depends on the child Span in some capacity."""
+
+    FOLLOWS_FROM = "follows_from"
+    """The parent Span doesn't depend in any way on the result of the child Span."""
 
 

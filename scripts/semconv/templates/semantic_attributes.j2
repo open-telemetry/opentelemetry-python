@@ -35,13 +35,12 @@ Note: {{attribute.note | to_doc_brief | indent}}.
 # limitations under the License.
 
 {%- set filtered_enum_attributes = enum_attributes | select(filter) | list %}
-{%- if filtered_enum_attributes | count > 0 %}
+{% if filtered_enum_attributes | count > 0 %}
 
 from enum import Enum
 
-
-{% endif -%}
-{%- for attribute in filtered_attributes -%}
+{% endif %}
+{% for attribute in filtered_attributes -%}
 {{attribute_name(attribute)}} = "{{attribute.fqn}}"
 """
 {{attribute_brief(attribute)}}

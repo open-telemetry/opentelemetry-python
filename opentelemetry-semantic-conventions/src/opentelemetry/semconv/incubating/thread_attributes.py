@@ -12,9 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-USER_AGENT_ORIGINAL = "user_agent.original"
+THREAD_ID = "thread.id"
 """
-Value of the [HTTP User-Agent](https://www.rfc-editor.org/rfc/rfc9110.html#field.user-agent) header sent by the client.
+Current "managed" thread ID (as opposed to OS thread ID).
+"""
+
+
+THREAD_NAME = "thread.name"
+"""
+Current thread name.
 """
 
 

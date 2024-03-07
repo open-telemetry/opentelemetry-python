@@ -15,12 +15,14 @@
 SERVER_ADDRESS = "server.address"
 """
 Server domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name.Note: When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it's available.
+See Also: the attribute is stable now, use :py:const:`opentelemetry.semconv.server_attributes.SERVER_ADDRESS` instead.
 """
 
 
 SERVER_PORT = "server.port"
 """
 Server port number.Note: When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it's available.
+See Also: the attribute is stable now, use :py:const:`opentelemetry.semconv.server_attributes.SERVER_PORT` instead.
 """
 
 

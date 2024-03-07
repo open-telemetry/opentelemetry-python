@@ -12,9 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-USER_AGENT_ORIGINAL = "user_agent.original"
+HEROKU_APP_ID = "heroku.app.id"
 """
-Value of the [HTTP User-Agent](https://www.rfc-editor.org/rfc/rfc9110.html#field.user-agent) header sent by the client.
+Unique identifier for the application.
+"""
+
+
+HEROKU_RELEASE_COMMIT = "heroku.release.commit"
+"""
+Commit hash for the current release.
+"""
+
+
+HEROKU_RELEASE_CREATION_TIMESTAMP = "heroku.release.creation_timestamp"
+"""
+Time and date the release was created.
 """
 
 
