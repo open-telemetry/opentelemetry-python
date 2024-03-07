@@ -23,7 +23,9 @@ from deprecated import deprecated
 
 def ns_to_iso_str(nanoseconds):
     """Get an ISO 8601 string from time_ns value."""
-    ts = datetime.datetime.utcfromtimestamp(nanoseconds / 1e9)
+    ts = datetime.datetime.fromtimestamp(
+        nanoseconds / 1e9, tz=datetime.timezone.utc
+    )
     return ts.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
 
