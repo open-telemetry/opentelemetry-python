@@ -25,55 +25,38 @@ from opentelemetry.environment_variables import OTEL_PYTHON_CONTEXT
 from opentelemetry.util._importlib_metadata import entry_points
 
 logger = logging.getLogger(__name__)
-_RUNTIME_CONTEXT = None  # type: typing.Optional[_RuntimeContext]
-_RUNTIME_CONTEXT_LOCK = threading.Lock()
 
-_F = typing.TypeVar("_F", bound=typing.Callable[..., typing.Any])
-
-
-def _load_runtime_context(func: _F) -> _F:
-    """A decorator used to initialize the global RuntimeContext
+def _load_runtime_context() -> typing.Optional[_RuntimeContext]:
+    """Initialize the RuntimeContext
 
     Returns:
-        A wrapper of the decorated method.
+        An instance of RuntimeContext.
     """
 
-    @wraps(func)  # type: ignore[misc]
-    def wrapper(
-        *args: typing.Tuple[typing.Any, typing.Any],
-        **kwargs: typing.Dict[typing.Any, typing.Any],
-    ) -> typing.Optional[typing.Any]:
-        global _RUNTIME_CONTEXT  # pylint: disable=global-statement
+    # FIXME use a better implementation of a configuration manager
+    # to avoid having to get configuration values straight from
+    # environment variables
+    default_context = "contextvars_context"
 
-        with _RUNTIME_CONTEXT_LOCK:
-            if _RUNTIME_CONTEXT is None:
-                # FIXME use a better implementation of a configuration manager
-                # to avoid having to get configuration values straight from
-                # environment variables
-                default_context = "contextvars_context"
+    configured_context = environ.get(
+        OTEL_PYTHON_CONTEXT, default_context
+    )  # type: str
 
-                configured_context = environ.get(
-                    OTEL_PYTHON_CONTEXT, default_context
-                )  # type: str
-                try:
+    try:
+        return next(  # type: ignore
+            iter(  # type: ignore
+                entry_points(  # type: ignore
+                    group="opentelemetry_context",
+                    name=configured_context,
+                )
+            )
+        ).load()()
+    except Exception:  # pylint: disable=broad-except
+        logger.exception(
+            "Failed to load context: %s", configured_context
+        )
 
-                    _RUNTIME_CONTEXT = next(  # type: ignore
-                        iter(  # type: ignore
-                            entry_points(  # type: ignore
-                                group="opentelemetry_context",
-                                name=configured_context,
-                            )
-                        )
-                    ).load()()
-
-                except Exception:  # pylint: disable=broad-except
-                    logger.exception(
-                        "Failed to load context: %s", configured_context
-                    )
-        return func(*args, **kwargs)  # type: ignore[misc]
-
-    return typing.cast(_F, wrapper)  # type: ignore[misc]
-
+_RUNTIME_CONTEXT = _load_runtime_context()
 
 def create_key(keyname: str) -> str:
     """To allow cross-cutting concern to control access to their local state,
@@ -125,7 +108,6 @@ def set_value(
     return Context(new_values)
 
 
-@_load_runtime_context  # type: ignore
 def get_current() -> Context:
     """To access the context associated with program execution,
     the Context API provides a function which takes no arguments
@@ -137,7 +119,6 @@ def get_current() -> Context:
     return _RUNTIME_CONTEXT.get_current()  # type:ignore
 
 
-@_load_runtime_context  # type: ignore
 def attach(context: Context) -> object:
     """Associates a Context with the caller's current execution unit. Returns
     a token that can be used to restore the previous Context.
@@ -151,7 +132,6 @@ def attach(context: Context) -> object:
     return _RUNTIME_CONTEXT.attach(context)  # type:ignore
 
 
-@_load_runtime_context  # type: ignore
 def detach(token: object) -> None:
     """Resets the Context associated with the caller's current execution unit
     to the value it had before attaching a specified Context.
