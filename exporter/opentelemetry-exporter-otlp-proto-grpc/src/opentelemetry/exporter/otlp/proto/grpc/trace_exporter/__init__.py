@@ -16,8 +16,6 @@
 import logging
 from os import environ
 from typing import Dict, Optional, Sequence, Tuple, Union
-from typing import Sequence as TypingSequence
-
 
 from grpc import ChannelCredentials, Compression
 
@@ -89,9 +87,9 @@ class OTLPSpanExporter(
         insecure: Optional[bool] = None,
         credentials: Optional[ChannelCredentials] = None,
         headers: Optional[
-            Union[TypingSequence[Tuple[str, str]], Dict[str, str], str]
+            Union[Sequence[Tuple[str, str]], Dict[str, str], str]
         ] = None,
-        timeout: Optional[int] = None,
+        timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
     ):
 
@@ -110,7 +108,7 @@ class OTLPSpanExporter(
 
         environ_timeout = environ.get(OTEL_EXPORTER_OTLP_TRACES_TIMEOUT)
         environ_timeout = (
-            int(environ_timeout) if environ_timeout is not None else None
+            float(environ_timeout) if environ_timeout is not None else None
         )
 
         compression = (
@@ -137,8 +135,13 @@ class OTLPSpanExporter(
     ) -> ExportTraceServiceRequest:
         return encode_spans(data)
 
-    def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
-        return self._export(spans)
+    def export(
+        self,
+        spans: Sequence[ReadableSpan],
+        timeout_millis: float = 10000,
+        **kwargs
+    ) -> SpanExportResult:
+        return self._exporter.export_with_retry(timeout_millis, spans)
 
     def shutdown(self) -> None:
         OTLPExporterMixin.shutdown(self)

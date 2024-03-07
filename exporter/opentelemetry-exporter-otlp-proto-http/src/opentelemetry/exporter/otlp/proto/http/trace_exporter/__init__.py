@@ -18,12 +18,12 @@ import zlib
 from io import BytesIO
 from os import environ
 from typing import Dict, Optional
-from time import sleep
 
 import requests
 
-from opentelemetry.exporter.otlp.proto.common._internal import (
-    _create_exp_backoff_generator,
+from opentelemetry.exporter.otlp.proto.common.exporter import (
+    RetryableExportError,
+    RetryingExporter,
 )
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
@@ -57,10 +57,15 @@ DEFAULT_TRACES_EXPORT_PATH = "v1/traces"
 DEFAULT_TIMEOUT = 10  # in seconds
 
 
+def _retryable(resp: requests.Response) -> bool:
+    if resp.status_code == 408:
+        return True
+    if resp.status_code >= 500 and resp.status_code <= 599:
+        return True
+    return False
+
+
 class OTLPSpanExporter(SpanExporter):
-
-    _MAX_RETRY_TIMEOUT = 64
-
     def __init__(
         self,
         endpoint: Optional[str] = None,
@@ -100,33 +105,33 @@ class OTLPSpanExporter(SpanExporter):
                 {"Content-Encoding": self._compression.value}
             )
         self._shutdown = False
-
-    def _export(self, serialized_data: bytes):
-        data = serialized_data
-        if self._compression == Compression.Gzip:
-            gzip_data = BytesIO()
-            with gzip.GzipFile(fileobj=gzip_data, mode="w") as gzip_stream:
-                gzip_stream.write(serialized_data)
-            data = gzip_data.getvalue()
-        elif self._compression == Compression.Deflate:
-            data = zlib.compress(serialized_data)
-
-        return self._session.post(
-            url=self._endpoint,
-            data=data,
-            verify=self._certificate_file,
-            timeout=self._timeout,
+        self._exporter = RetryingExporter(
+            self._export, SpanExportResult, self._timeout
         )
 
-    @staticmethod
-    def _retryable(resp: requests.Response) -> bool:
-        if resp.status_code == 408:
-            return True
-        if resp.status_code >= 500 and resp.status_code <= 599:
-            return True
-        return False
+    def _export(self, timeout_s: float, serialized_data: bytes):
+        resp = self._session.post(
+            url=self._endpoint,
+            data=serialized_data,
+            verify=self._certificate_file,
+            timeout=timeout_s,
+        )
+        if resp.ok:
+            return SpanExportResult.SUCCESS
+        elif _retryable(resp):
+            _logger.warning(
+                "Transient error %s encountered while exporting span batch",
+                resp.reason,
+            )
+            raise RetryableExportError()
+        _logger.error(
+            "Failed to export batch code: %s, reason: %s",
+            resp.status_code,
+            resp.text,
+        )
+        return SpanExportResult.FAILURE
 
-    def export(self, spans) -> SpanExportResult:
+    def export(self, spans, timeout_millis=10_000) -> SpanExportResult:
         # After the call to Shutdown subsequent calls to Export are
         # not allowed and should return a Failure result.
         if self._shutdown:
@@ -135,38 +140,23 @@ class OTLPSpanExporter(SpanExporter):
 
         serialized_data = encode_spans(spans).SerializeToString()
 
-        for delay in _create_exp_backoff_generator(
-            max_value=self._MAX_RETRY_TIMEOUT
-        ):
+        if self._compression == Compression.Gzip:
+            gzip_data = BytesIO()
+            with gzip.GzipFile(fileobj=gzip_data, mode="w") as gzip_stream:
+                gzip_stream.write(serialized_data)
+            serialized_data = gzip_data.getvalue()
+        elif self._compression == Compression.Deflate:
+            serialized_data = zlib.compress(serialized_data)
 
-            if delay == self._MAX_RETRY_TIMEOUT:
-                return SpanExportResult.FAILURE
+        return self._exporter.export_with_retry(
+            timeout_millis * 1e-3, serialized_data
+        )
 
-            resp = self._export(serialized_data)
-            # pylint: disable=no-else-return
-            if resp.ok:
-                return SpanExportResult.SUCCESS
-            elif self._retryable(resp):
-                _logger.warning(
-                    "Transient error %s encountered while exporting span batch, retrying in %ss.",
-                    resp.reason,
-                    delay,
-                )
-                sleep(delay)
-                continue
-            else:
-                _logger.error(
-                    "Failed to export batch code: %s, reason: %s",
-                    resp.status_code,
-                    resp.text,
-                )
-                return SpanExportResult.FAILURE
-        return SpanExportResult.FAILURE
-
-    def shutdown(self):
+    def shutdown(self, timeout_millis: int = 30000):
         if self._shutdown:
             _logger.warning("Exporter already shutdown, ignoring call")
             return
+        self._exporter.shutdown(timeout_millis=timeout_millis)
         self._session.close()
         self._shutdown = True
 

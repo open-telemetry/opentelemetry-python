@@ -58,7 +58,7 @@ class OTLPLogExporter(
         headers: Optional[
             Union[TypingSequence[Tuple[str, str]], Dict[str, str], str]
         ] = None,
-        timeout: Optional[int] = None,
+        timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
     ):
         if insecure is None:
@@ -76,7 +76,7 @@ class OTLPLogExporter(
 
         environ_timeout = environ.get(OTEL_EXPORTER_OTLP_LOGS_TIMEOUT)
         environ_timeout = (
-            int(environ_timeout) if environ_timeout is not None else None
+            float(environ_timeout) if environ_timeout is not None else None
         )
 
         compression = (
@@ -104,8 +104,10 @@ class OTLPLogExporter(
     ) -> ExportLogsServiceRequest:
         return encode_logs(data)
 
-    def export(self, batch: Sequence[LogData]) -> LogExportResult:
-        return self._export(batch)
+    def export(
+        self, data: Sequence[LogData], timeout_millis: float = 10_000, **kwargs
+    ) -> LogExportResult:
+        return self._exporter.export_with_retry(timeout_millis * 1e-3, data)
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         OTLPExporterMixin.shutdown(self, timeout_millis=timeout_millis)

@@ -16,10 +16,11 @@
 
 import unittest
 from typing import List
-from unittest.mock import MagicMock, Mock, call, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import requests
 import responses
+from responses.registries import OrderedRegistry
 
 from opentelemetry._logs import SeverityNumber
 from opentelemetry.exporter.otlp.proto.http import Compression
@@ -167,24 +168,38 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         )
         self.assertIsInstance(exporter._session, requests.Session)
 
-    @responses.activate
-    @patch("opentelemetry.exporter.otlp.proto.http._log_exporter.sleep")
-    def test_exponential_backoff(self, mock_sleep):
-        # return a retryable error
-        responses.add(
-            responses.POST,
+    # pylint: disable=unexpected-keyword-arg,no-value-for-parameter
+    @responses.activate(registry=OrderedRegistry)
+    def test_exponential_backoff(self):
+        # return 3 retryable errors and then success
+        responses.post(
             "http://logs.example.com/export",
             json={"error": "something exploded"},
             status=500,
         )
-
+        responses.post(
+            "http://logs.example.com/export",
+            json={"error": "something exploded"},
+            status=500,
+        )
+        responses.post(
+            "http://logs.example.com/export",
+            json={"error": "something exploded"},
+            status=500,
+        )
+        responses.post(
+            "http://logs.example.com/export",
+            status=200,
+        )
         exporter = OTLPLogExporter(endpoint="http://logs.example.com/export")
         logs = self._get_sdk_log_data()
 
-        exporter.export(logs)
-        mock_sleep.assert_has_calls(
-            [call(1), call(2), call(4), call(8), call(16), call(32)]
-        )
+        with patch.object(
+            exporter._exporter._shutdown_event, "wait"
+        ) as mock_wait:
+            with self.assertLogs(level="WARNING"):
+                self.assertIs(exporter.export(logs), LogExportResult.SUCCESS)
+        self.assertEqual(mock_wait.call_count, 3)
 
     @staticmethod
     def _get_sdk_log_data() -> List[LogData]:
@@ -256,12 +271,11 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
 
         return [log1, log2, log3, log4]
 
-    @patch.object(OTLPLogExporter, "_export", return_value=Mock(ok=True))
-    def test_2xx_status_code(self, mock_otlp_metric_exporter):
+    def test_2xx_status_code(self):
         """
         Test that any HTTP 2XX code returns a successful result
         """
-
-        self.assertEqual(
-            OTLPLogExporter().export(MagicMock()), LogExportResult.SUCCESS
+        exporter = OTLPLogExporter(
+            session=Mock(**{"post.return_value": Mock(ok=True)})
         )
+        self.assertEqual(exporter.export(MagicMock()), LogExportResult.SUCCESS)

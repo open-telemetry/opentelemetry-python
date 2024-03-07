@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import random
 from unittest import TestCase
 
-from opentelemetry.exporter.otlp.proto.common._internal import (
+from opentelemetry.exporter.otlp.proto.common.exporter import (
     _create_exp_backoff_generator,
+    _create_exp_backoff_with_jitter_generator,
 )
 
 
@@ -44,3 +46,20 @@ class TestBackoffGenerator(TestCase):
         self.assertEqual(next(generator), 4)
         self.assertEqual(next(generator), 8)
         self.assertEqual(next(generator), 11)
+
+
+class TestBackoffWithJitterGenerator(TestCase):
+    def setUp(self):
+        self.initial_state = random.getstate()
+
+    def tearDown(self):
+        return random.setstate(self.initial_state)
+
+    def test_exp_backoff_with_jitter_generator(self):
+        random.seed(20240220)
+        generator = _create_exp_backoff_with_jitter_generator(max_value=10)
+        self.assertAlmostEqual(next(generator), 0.1341603010697452)
+        self.assertAlmostEqual(next(generator), 0.34773275270578097)
+        self.assertAlmostEqual(next(generator), 3.6022913287022913)
+        self.assertAlmostEqual(next(generator), 6.663388602254524)
+        self.assertAlmostEqual(next(generator), 6.492676168164246)
