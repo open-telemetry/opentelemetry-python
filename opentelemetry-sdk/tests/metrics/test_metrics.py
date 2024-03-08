@@ -465,7 +465,7 @@ class TestMeter(TestCase):
             observable_up_down_counter, ObservableUpDownCounter
         )
         self.assertEqual(observable_up_down_counter.name, "name")
-    
+
     @patch.dict("os.environ", {OTEL_SDK_DISABLED: "true"})
     def test_get_meter_with_sdk_disabled(self):
         meter_provider = MeterProvider()

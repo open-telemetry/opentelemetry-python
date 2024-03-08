@@ -396,9 +396,7 @@ class MeterProvider(APIMeterProvider):
         self._measurement_consumer = SynchronousMeasurementConsumer(
             sdk_config=self._sdk_config
         )
-        disabled = environ.get(OTEL_SDK_DISABLED)
-        if disabled is None:
-            disabled = "false"
+        disabled = environ.get(OTEL_SDK_DISABLED, "")
         self._disabled = disabled.lower().strip() == "true"
 
         if shutdown_on_exit:
@@ -520,7 +518,7 @@ class MeterProvider(APIMeterProvider):
 
         if self._disabled:
             _logger.warning("SDK is disabled.")
-            return NoOpMeter(name)
+            return NoOpMeter(name, version=version, schema_url=schema_url)
 
         if self._shutdown:
             _logger.warning(

@@ -1177,9 +1177,7 @@ class TracerProvider(trace_api.TracerProvider):
             sampler = sampling._get_from_env_or_default()
         self.sampler = sampler
         self._span_limits = span_limits or SpanLimits()
-        disabled = environ.get(OTEL_SDK_DISABLED)
-        if disabled is None:
-            disabled = "false"
+        disabled = environ.get(OTEL_SDK_DISABLED, "")
         self._disabled = disabled.lower().strip() == "true"
         self._atexit_handler = None
 

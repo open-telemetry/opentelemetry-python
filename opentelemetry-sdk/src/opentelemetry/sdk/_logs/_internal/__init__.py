@@ -608,9 +608,7 @@ class LoggerProvider(APILoggerProvider):
         self._multi_log_record_processor = (
             multi_log_record_processor or SynchronousMultiLogRecordProcessor()
         )
-        disabled = environ.get(OTEL_SDK_DISABLED)
-        if disabled is None:
-            disabled = "false"
+        disabled = environ.get(OTEL_SDK_DISABLED, "")
         self._disabled = disabled.lower().strip() == "true"
         self._at_exit_handler = None
         if shutdown_on_exit:
@@ -628,7 +626,7 @@ class LoggerProvider(APILoggerProvider):
     ) -> Logger:
         if self._disabled:
             _logger.warning("SDK is disabled.")
-            return NoOpLogger(name)
+            return NoOpLogger(name, version=version, schema_url=schema_url)
         return Logger(
             self._resource,
             self._multi_log_record_processor,

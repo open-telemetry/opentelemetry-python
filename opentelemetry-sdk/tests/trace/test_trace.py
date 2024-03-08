@@ -166,7 +166,9 @@ tracer_provider.add_span_processor(mock_processor)
     @mock.patch.dict("os.environ", {OTEL_SDK_DISABLED: "true"})
     def test_get_tracer_with_sdk_disabled(self):
         tracer_provider = trace.TracerProvider()
-        self.assertIsInstance(tracer_provider.get_tracer(Mock()), trace_api.NoOpTracer)
+        self.assertIsInstance(
+            tracer_provider.get_tracer(Mock()), trace_api.NoOpTracer
+        )
 
 
 class TestTracerSampling(unittest.TestCase):
