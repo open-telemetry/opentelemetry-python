@@ -33,7 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix explicit bucket histogram aggregation
   ([#3429](https://github.com/open-telemetry/opentelemetry-python/pull/3429))
 - Add `code.lineno`, `code.function` and `code.filepath` to all logs 
-  ([#3645](https://github.com/open-telemetry/opentelemetry-python/pull/3645))
+  ([#3675](https://github.com/open-telemetry/opentelemetry-python/pull/3675))
 - Add Synchronous Gauge instrument
   ([#3462](https://github.com/open-telemetry/opentelemetry-python/pull/3462))
 - Drop support for 3.7
