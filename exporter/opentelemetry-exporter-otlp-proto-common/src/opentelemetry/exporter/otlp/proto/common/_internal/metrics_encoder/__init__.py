@@ -47,7 +47,7 @@ from opentelemetry.sdk.metrics.export import (
     Sum,
     ExponentialHistogram as ExponentialHistogramType,
 )
-from typing import Dict
+from typing import Dict, Sequence
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as PB2Resource,
 )
@@ -172,6 +172,12 @@ class OTLPMetricExporterMixin:
 
         return instrument_class_aggregation
 
+def truncate_trailing_zeros(lst: Sequence[int]) -> Sequence[int]:
+    if lst:
+        for i, value in enumerate(reversed(lst)):
+            if value != 0:
+                return lst[0:len(lst)-i]
+    return []
 
 def encode_metrics(data: MetricsData) -> ExportMetricsServiceRequest:
     resource_metrics_dict = {}
@@ -272,18 +278,18 @@ def encode_metrics(data: MetricsData) -> ExportMetricsServiceRequest:
                 elif isinstance(metric.data, ExponentialHistogramType):
                     for data_point in metric.data.data_points:
 
-                        if data_point.positive.bucket_counts:
+                        if positive_buckets := truncate_trailing_zeros(data_point.positive.bucket_counts):
                             positive = pb2.ExponentialHistogramDataPoint.Buckets(
                                 offset=data_point.positive.offset,
-                                bucket_counts=data_point.positive.bucket_counts,
+                                bucket_counts=positive_buckets,
                             )
                         else:
                             positive = None
 
-                        if data_point.negative.bucket_counts:
+                        if negative_buckets := truncate_trailing_zeros(data_point.negative.bucket_counts):
                             negative = pb2.ExponentialHistogramDataPoint.Buckets(
                                 offset=data_point.negative.offset,
-                                bucket_counts=data_point.negative.bucket_counts,
+                                bucket_counts=negative_buckets,
                             )
                         else:
                             negative = None
