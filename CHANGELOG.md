@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix python 3.12 deprecation warning
   ([#3751](https://github.com/open-telemetry/opentelemetry-python/pull/3751))
+- Remove unnecessary buckets from exponential histogram serialization
+  ([#3767](https://github.com/open-telemetry/opentelemetry-python/pull/3767))
 
 ## Version 1.23.0/0.44b0 (2024-02-23)
 
@@ -32,7 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3564](https://github.com/open-telemetry/opentelemetry-python/pull/3564))
 - Fix explicit bucket histogram aggregation
   ([#3429](https://github.com/open-telemetry/opentelemetry-python/pull/3429))
-- Add `code.lineno`, `code.function` and `code.filepath` to all logs 
+- Add `code.lineno`, `code.function` and `code.filepath` to all logs
   ([#3675](https://github.com/open-telemetry/opentelemetry-python/pull/3675))
 - Add Synchronous Gauge instrument
   ([#3462](https://github.com/open-telemetry/opentelemetry-python/pull/3462))
@@ -57,7 +59,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3572](https://github.com/open-telemetry/opentelemetry-python/pull/3572))
 - Remove Jaeger exporters
   ([#3554](https://github.com/open-telemetry/opentelemetry-python/pull/3554))
-- Log stacktrace on `UNKNOWN` status OTLP export error 
+- Log stacktrace on `UNKNOWN` status OTLP export error
   ([#3536](https://github.com/open-telemetry/opentelemetry-python/pull/3536))
 - Fix OTLPExporterMixin shutdown timeout period
   ([#3524](https://github.com/open-telemetry/opentelemetry-python/pull/3524))
@@ -82,7 +84,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3251](https://github.com/open-telemetry/opentelemetry-python/pull/3251))
 - Add missing schema_url in global api for logging and metrics
   ([#3251](https://github.com/open-telemetry/opentelemetry-python/pull/3251))
-- Prometheus exporter support for auto instrumentation 
+- Prometheus exporter support for auto instrumentation
   ([#3413](https://github.com/open-telemetry/opentelemetry-python/pull/3413))
 - Implement Process Resource detector
   ([#3472](https://github.com/open-telemetry/opentelemetry-python/pull/3472))
@@ -1465,7 +1467,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3564](https://github.com/open-telemetry/opentelemetry-python/pull/3564))
 - Fix explicit bucket histogram aggregation
   ([#3429](https://github.com/open-telemetry/opentelemetry-python/pull/3429))
-- Add `code.lineno`, `code.function` and `code.filepath` to all logs 
+- Add `code.lineno`, `code.function` and `code.filepath` to all logs
   ([#3645](https://github.com/open-telemetry/opentelemetry-python/pull/3645))
 - Add Synchronous Gauge instrument
   ([#3462](https://github.com/open-telemetry/opentelemetry-python/pull/3462))
