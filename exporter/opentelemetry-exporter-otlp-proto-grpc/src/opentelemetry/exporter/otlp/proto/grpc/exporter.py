@@ -38,8 +38,8 @@ from deprecated import deprecated
 
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _get_resource_data,
+    _create_exp_backoff_generator,
 )
-import backoff
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import (
     ChannelCredentials,
@@ -137,19 +137,6 @@ def _get_credentials(creds, environ_key):
     return ssl_channel_credentials()
 
 
-# Work around API change between backoff 1.x and 2.x. Since 2.0.0 the backoff
-# wait generator API requires a first .send(None) before reading the backoff
-# values from the generator.
-_is_backoff_v2 = next(backoff.expo()) is None
-
-
-def _expo(*args, **kwargs):
-    gen = backoff.expo(*args, **kwargs)
-    if _is_backoff_v2:
-        gen.send(None)
-    return gen
-
-
 # pylint: disable=no-member
 class OTLPExporterMixin(
     ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResultT]
@@ -178,11 +165,11 @@ class OTLPExporterMixin(
     ):
         super().__init__()
 
-        endpoint = endpoint or environ.get(
+        self._endpoint = endpoint or environ.get(
             OTEL_EXPORTER_OTLP_ENDPOINT, "http://localhost:4317"
         )
 
-        parsed_url = urlparse(endpoint)
+        parsed_url = urlparse(self._endpoint)
 
         if parsed_url.scheme == "https":
             insecure = False
@@ -197,7 +184,7 @@ class OTLPExporterMixin(
                     insecure = False
 
         if parsed_url.netloc:
-            endpoint = parsed_url.netloc
+            self._endpoint = parsed_url.netloc
 
         self._headers = headers or environ.get(OTEL_EXPORTER_OTLP_HEADERS)
         if isinstance(self._headers, str):
@@ -223,14 +210,16 @@ class OTLPExporterMixin(
 
         if insecure:
             self._client = self._stub(
-                insecure_channel(endpoint, compression=compression)
+                insecure_channel(self._endpoint, compression=compression)
             )
         else:
             credentials = _get_credentials(
                 credentials, OTEL_EXPORTER_OTLP_CERTIFICATE
             )
             self._client = self._stub(
-                secure_channel(endpoint, credentials, compression=compression)
+                secure_channel(
+                    self._endpoint, credentials, compression=compression
+                )
             )
 
         self._export_lock = threading.Lock()
@@ -264,7 +253,7 @@ class OTLPExporterMixin(
         # expo returns a generator that yields delay values which grow
         # exponentially. Once delay is greater than max_value, the yielded
         # value will remain constant.
-        for delay in _expo(max_value=max_value):
+        for delay in _create_exp_backoff_generator(max_value=max_value):
             if delay == max_value or self._shutdown:
                 return self._result.FAILURE
 
@@ -304,19 +293,22 @@ class OTLPExporterMixin(
                         logger.warning(
                             (
                                 "Transient error %s encountered while exporting "
-                                "%s, retrying in %ss."
+                                "%s to %s, retrying in %ss."
                             ),
                             error.code(),
                             self._exporting,
+                            self._endpoint,
                             delay,
                         )
                         sleep(delay)
                         continue
                     else:
                         logger.error(
-                            "Failed to export %s, error code: %s",
+                            "Failed to export %s to %s, error code: %s",
                             self._exporting,
+                            self._endpoint,
                             error.code(),
+                            exc_info=error.code() == StatusCode.UNKNOWN,
                         )
 
                     if error.code() == StatusCode.OK:
@@ -331,7 +323,7 @@ class OTLPExporterMixin(
             logger.warning("Exporter already shutdown, ignoring call")
             return
         # wait for the last export if any
-        self._export_lock.acquire(timeout=timeout_millis)
+        self._export_lock.acquire(timeout=timeout_millis / 1e3)
         self._shutdown = True
         self._export_lock.release()
 

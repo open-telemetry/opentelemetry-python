@@ -29,6 +29,7 @@ from opentelemetry.sdk._logs import (
     LoggingHandler,
     LogRecord,
 )
+from opentelemetry.sdk._logs._internal.export import _logger
 from opentelemetry.sdk._logs.export import (
     BatchLogRecordProcessor,
     ConsoleLogExporter,
@@ -66,7 +67,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         self.assertEqual(len(finished_logs), 1)
         warning_log_record = finished_logs[0].log_record
         self.assertEqual(warning_log_record.body, "Something is wrong")
-        self.assertEqual(warning_log_record.severity_text, "WARNING")
+        self.assertEqual(warning_log_record.severity_text, "WARN")
         self.assertEqual(
             warning_log_record.severity_number, SeverityNumber.WARN
         )
@@ -121,7 +122,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         self.assertEqual(len(finished_logs), 1)
         log_record = finished_logs[0].log_record
         self.assertEqual(log_record.body, "Warning message")
-        self.assertEqual(log_record.severity_text, "WARNING")
+        self.assertEqual(log_record.severity_text, "WARN")
         self.assertEqual(log_record.severity_number, SeverityNumber.WARN)
         self.assertEqual(log_record.trace_id, INVALID_SPAN_CONTEXT.trace_id)
         self.assertEqual(log_record.span_id, INVALID_SPAN_CONTEXT.span_id)
@@ -161,15 +162,50 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         self.assertEqual(len(finished_logs), 1)
         warning_log_record = finished_logs[0].log_record
         self.assertEqual(warning_log_record.body, "Something is wrong")
-        self.assertEqual(warning_log_record.severity_text, "WARNING")
+        self.assertEqual(warning_log_record.severity_text, "WARN")
         self.assertEqual(
             warning_log_record.severity_number, SeverityNumber.WARN
         )
         exporter.clear()
         logger_provider.shutdown()
-        logger.warning("Log after shutdown")
+        with self.assertLogs(level=logging.WARNING):
+            logger.warning("Log after shutdown")
         finished_logs = exporter.get_finished_logs()
         self.assertEqual(len(finished_logs), 0)
+
+    def test_simple_log_record_processor_different_msg_types(self):
+        exporter = InMemoryLogExporter()
+        log_record_processor = BatchLogRecordProcessor(exporter)
+
+        provider = LoggerProvider()
+        provider.add_log_record_processor(log_record_processor)
+
+        logger = logging.getLogger("different_msg_types")
+        logger.addHandler(LoggingHandler(logger_provider=provider))
+
+        logger.warning("warning message: %s", "possible upcoming heatwave")
+        logger.error("Very high rise in temperatures across the globe")
+        logger.critical("Temperature hits high 420 C in Hyderabad")
+        logger.warning(["list", "of", "strings"])
+        logger.error({"key": "value"})
+        log_record_processor.shutdown()
+
+        finished_logs = exporter.get_finished_logs()
+        expected = [
+            ("warning message: possible upcoming heatwave", "WARN"),
+            ("Very high rise in temperatures across the globe", "ERROR"),
+            (
+                "Temperature hits high 420 C in Hyderabad",
+                "CRITICAL",
+            ),
+            (["list", "of", "strings"], "WARN"),
+            ({"key": "value"}, "ERROR"),
+        ]
+        emitted = [
+            (item.log_record.body, item.log_record.severity_text)
+            for item in finished_logs
+        ]
+        self.assertEqual(expected, emitted)
 
 
 class TestBatchLogRecordProcessor(ConcurrencyTestBase):
@@ -239,7 +275,9 @@ class TestBatchLogRecordProcessor(ConcurrencyTestBase):
     )
     def test_args_env_var_value_error(self):
         exporter = InMemoryLogExporter()
+        _logger.disabled = True
         log_record_processor = BatchLogRecordProcessor(exporter)
+        _logger.disabled = False
         self.assertEqual(log_record_processor._exporter, exporter)
         self.assertEqual(log_record_processor._max_queue_size, 2048)
         self.assertEqual(log_record_processor._schedule_delay_millis, 5000)
@@ -315,19 +353,21 @@ class TestBatchLogRecordProcessor(ConcurrencyTestBase):
         provider.add_log_record_processor(log_record_processor)
 
         logger = logging.getLogger("shutdown")
-        logger.propagate = False
         logger.addHandler(LoggingHandler(logger_provider=provider))
 
-        logger.warning("warning message: %s", "possible upcoming heatwave")
-        logger.error("Very high rise in temperatures across the globe")
-        logger.critical("Temperature hits high 420 C in Hyderabad")
+        with self.assertLogs(level=logging.WARNING):
+            logger.warning("warning message: %s", "possible upcoming heatwave")
+        with self.assertLogs(level=logging.WARNING):
+            logger.error("Very high rise in temperatures across the globe")
+        with self.assertLogs(level=logging.WARNING):
+            logger.critical("Temperature hits high 420 C in Hyderabad")
 
         log_record_processor.shutdown()
         self.assertTrue(exporter._stopped)
 
         finished_logs = exporter.get_finished_logs()
         expected = [
-            ("warning message: possible upcoming heatwave", "WARNING"),
+            ("warning message: possible upcoming heatwave", "WARN"),
             ("Very high rise in temperatures across the globe", "ERROR"),
             (
                 "Temperature hits high 420 C in Hyderabad",

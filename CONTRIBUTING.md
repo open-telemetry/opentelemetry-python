@@ -38,13 +38,11 @@ during their normal contribution hours.
 
 This project uses [tox](https://tox.readthedocs.io) to automate
 some aspects of development, including testing against multiple Python versions.
-To install `tox`, run[^1]:
+To install `tox`, run:
 
 ```console
-$ pip install tox==3.27.1
+$ pip install tox
 ```
-
-[^1]: Right now we are experiencing issues with `tox==4.x.y`, so we recommend you use this version.
 
 You can run `tox` with the following arguments:
 
@@ -52,7 +50,7 @@ You can run `tox` with the following arguments:
   under multiple Python versions
 - `tox -e docs` to regenerate the API docs
 - `tox -e opentelemetry-api` and `tox -e opentelemetry-sdk` to run the API and SDK unit tests
-- `tox -e py37-opentelemetry-api` to e.g. run the API unit tests under a specific
+- `tox -e py311-opentelemetry-api` to e.g. run the API unit tests under a specific
   Python version
 - `tox -e spellcheck` to run a spellcheck on all the code
 - `tox -e lint` to run lint checks on all code
@@ -70,6 +68,28 @@ To check if your PR is adding public symbols, run `tox -e public-symbols-check`.
 behind this is that every PR that adds/removes public symbols fails in CI, forcing reviewers to check the symbols to make sure they are strictly necessary.
 If after checking them, it is considered that they are indeed necessary, the PR will be labeled with `Skip Public API check` so that this check is not
 run.
+
+Also, we try to keep our console output as clean as possible. Most of the time this means catching expected log messages in the test cases:
+
+``` python
+from logging import WARNING
+
+...
+
+    def test_case(self):
+        with self.assertLogs(level=WARNING):
+            some_function_that_will_log_a_warning_message()
+```
+
+Other options can be to disable logging propagation or disabling a logger altogether.
+
+A similar approach can be followed to catch warnings:
+
+``` python
+    def test_case(self):
+        with self.assertWarns(DeprecationWarning):
+            some_function_that_will_raise_a_deprecation_warning()
+```
 
 See
 [`tox.ini`](https://github.com/open-telemetry/opentelemetry-python/blob/main/tox.ini)

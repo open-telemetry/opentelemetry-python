@@ -170,6 +170,7 @@ class Histogram:
         )
 
 
+# pylint: disable=invalid-name
 DataT = Union[Sum, Gauge, Histogram]
 DataPointT = Union[NumberDataPoint, HistogramDataPoint]
 

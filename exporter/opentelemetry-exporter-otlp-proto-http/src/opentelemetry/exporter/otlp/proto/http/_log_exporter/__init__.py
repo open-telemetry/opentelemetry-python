@@ -20,9 +20,11 @@ from os import environ
 from typing import Dict, Optional, Sequence
 from time import sleep
 
-import backoff
 import requests
 
+from opentelemetry.exporter.otlp.proto.common._internal import (
+    _create_exp_backoff_generator,
+)
 from opentelemetry.exporter.otlp.proto.common._log_encoder import encode_logs
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
@@ -55,18 +57,6 @@ DEFAULT_COMPRESSION = Compression.NoCompression
 DEFAULT_ENDPOINT = "http://localhost:4318/"
 DEFAULT_LOGS_EXPORT_PATH = "v1/logs"
 DEFAULT_TIMEOUT = 10  # in seconds
-
-# Work around API change between backoff 1.x and 2.x. Since 2.0.0 the backoff
-# wait generator API requires a first .send(None) before reading the backoff
-# values from the generator.
-_is_backoff_v2 = next(backoff.expo()) is None
-
-
-def _expo(*args, **kwargs):
-    gen = backoff.expo(*args, **kwargs)
-    if _is_backoff_v2:
-        gen.send(None)
-    return gen
 
 
 class OTLPLogExporter(LogExporter):
@@ -113,7 +103,7 @@ class OTLPLogExporter(LogExporter):
             )
         self._shutdown = False
 
-    def _export(self, serialized_data: str):
+    def _export(self, serialized_data: bytes):
         data = serialized_data
         if self._compression == Compression.Gzip:
             gzip_data = BytesIO()
@@ -121,7 +111,7 @@ class OTLPLogExporter(LogExporter):
                 gzip_stream.write(serialized_data)
             data = gzip_data.getvalue()
         elif self._compression == Compression.Deflate:
-            data = zlib.compress(bytes(serialized_data))
+            data = zlib.compress(serialized_data)
 
         return self._session.post(
             url=self._endpoint,
@@ -147,14 +137,16 @@ class OTLPLogExporter(LogExporter):
 
         serialized_data = encode_logs(batch).SerializeToString()
 
-        for delay in _expo(max_value=self._MAX_RETRY_TIMEOUT):
+        for delay in _create_exp_backoff_generator(
+            max_value=self._MAX_RETRY_TIMEOUT
+        ):
 
             if delay == self._MAX_RETRY_TIMEOUT:
                 return LogExportResult.FAILURE
 
             resp = self._export(serialized_data)
             # pylint: disable=no-else-return
-            if resp.status_code in (200, 202):
+            if resp.ok:
                 return LogExportResult.SUCCESS
             elif self._retryable(resp):
                 _logger.warning(

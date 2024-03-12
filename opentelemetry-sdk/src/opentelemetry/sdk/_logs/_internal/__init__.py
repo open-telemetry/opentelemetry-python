@@ -21,12 +21,13 @@ import threading
 import traceback
 from os import environ
 from time import time_ns
-from typing import Any, Callable, Optional, Tuple, Union
+from typing import Any, Callable, Optional, Tuple, Union  # noqa
 
 from opentelemetry._logs import Logger as APILogger
 from opentelemetry._logs import LoggerProvider as APILoggerProvider
 from opentelemetry._logs import LogRecord as APILogRecord
 from opentelemetry._logs import (
+    NoOpLogger,
     SeverityNumber,
     get_logger,
     get_logger_provider,
@@ -205,6 +206,7 @@ class LogRecord(APILogRecord):
                 else None,
                 "dropped_attributes": self.dropped_attributes,
                 "timestamp": ns_to_iso_str(self.timestamp),
+                "observed_timestamp": ns_to_iso_str(self.observed_timestamp),
                 "trace_id": f"0x{format_trace_id(self.trace_id)}"
                 if self.trace_id is not None
                 else "",
@@ -427,6 +429,7 @@ _RESERVED_ATTRS = frozenset(
         "stack_info",
         "thread",
         "threadName",
+        "taskName",
     )
 )
 
@@ -453,55 +456,107 @@ class LoggingHandler(logging.Handler):
         attributes = {
             k: v for k, v in vars(record).items() if k not in _RESERVED_ATTRS
         }
+
+        # Add standard code attributes for logs.
+        attributes[SpanAttributes.CODE_FILEPATH] = record.pathname
+        attributes[SpanAttributes.CODE_FUNCTION] = record.funcName
+        attributes[SpanAttributes.CODE_LINENO] = record.lineno
+
         if record.exc_info:
-            exc_type = ""
-            message = ""
-            stack_trace = ""
             exctype, value, tb = record.exc_info
             if exctype is not None:
-                exc_type = exctype.__name__
+                attributes[SpanAttributes.EXCEPTION_TYPE] = exctype.__name__
             if value is not None and value.args:
-                message = value.args[0]
+                attributes[SpanAttributes.EXCEPTION_MESSAGE] = value.args[0]
             if tb is not None:
                 # https://github.com/open-telemetry/opentelemetry-specification/blob/9fa7c656b26647b27e485a6af7e38dc716eba98a/specification/trace/semantic_conventions/exceptions.md#stacktrace-representation
-                stack_trace = "".join(
+                attributes[SpanAttributes.EXCEPTION_STACKTRACE] = "".join(
                     traceback.format_exception(*record.exc_info)
                 )
-            attributes[SpanAttributes.EXCEPTION_TYPE] = exc_type
-            attributes[SpanAttributes.EXCEPTION_MESSAGE] = message
-            attributes[SpanAttributes.EXCEPTION_STACKTRACE] = stack_trace
         return attributes
 
     def _translate(self, record: logging.LogRecord) -> LogRecord:
         timestamp = int(record.created * 1e9)
+        observered_timestamp = time_ns()
         span_context = get_current_span().get_span_context()
         attributes = self._get_attributes(record)
+        # This comment is taken from GanyedeNil's PR #3343, I have redacted it
+        # slightly for clarity:
+        # According to the definition of the Body field type in the
+        # OTel 1.22.0 Logs Data Model article, the Body field should be of
+        # type 'any' and should not use the str method to directly translate
+        # the msg. This is because str only converts non-text types into a
+        # human-readable form, rather than a standard format, which leads to
+        # the need for additional operations when collected through a log
+        # collector.
+        # Considering that he Body field should be of type 'any' and should not
+        # use the str method but record.msg is also a string type, then the
+        # difference is just the self.args formatting?
+        # The primary consideration depends on the ultimate purpose of the log.
+        # Converting the default log directly into a string is acceptable as it
+        # will be required to be presented in a more readable format. However,
+        # this approach might not be as "standard" when hoping to aggregate
+        # logs and perform subsequent data analysis. In the context of log
+        # extraction, it would be more appropriate for the msg to be
+        # converted into JSON format or remain unchanged, as it will eventually
+        # be transformed into JSON. If the final output JSON data contains a
+        # structure that appears similar to JSON but is not, it may confuse
+        # users. This is particularly true for operation and maintenance
+        # personnel who need to deal with log data in various languages.
+        # Where is the JSON converting occur? and what about when the msg
+        # represents something else but JSON, the expected behavior change?
+        # For the ConsoleLogExporter, it performs the to_json operation in
+        # opentelemetry.sdk._logs._internal.export.ConsoleLogExporter.__init__,
+        # so it can handle any type of input without problems. As for the
+        # OTLPLogExporter, it also handles any type of input encoding in
+        # _encode_log located in
+        # opentelemetry.exporter.otlp.proto.common._internal._log_encoder.
+        # Therefore, no extra operation is needed to support this change.
+        # The only thing to consider is the users who have already been using
+        # this SDK. If they upgrade the SDK after this change, they will need
+        # to readjust their logging collection rules to adapt to the latest
+        # output format. Therefore, this change is considered a breaking
+        # change and needs to be upgraded at an appropriate time.
         severity_number = std_to_otel(record.levelno)
+        if isinstance(record.msg, str) and record.args:
+            body = record.msg % record.args
+        else:
+            body = record.msg
+
+        # related to https://github.com/open-telemetry/opentelemetry-python/issues/3548
+        # Severity Text = WARN as defined in https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/logs/data-model.md#displaying-severity.
+        level_name = (
+            "WARN" if record.levelname == "WARNING" else record.levelname
+        )
+
         return LogRecord(
             timestamp=timestamp,
+            observed_timestamp=observered_timestamp,
             trace_id=span_context.trace_id,
             span_id=span_context.span_id,
             trace_flags=span_context.trace_flags,
-            severity_text=record.levelname,
+            severity_text=level_name,
             severity_number=severity_number,
-            body=record.getMessage(),
+            body=body,
             resource=self._logger.resource,
             attributes=attributes,
         )
 
     def emit(self, record: logging.LogRecord) -> None:
         """
-        Emit a record.
+        Emit a record. Skip emitting if logger is NoOp.
 
         The record is translated to OTel format, and then sent across the pipeline.
         """
-        self._logger.emit(self._translate(record))
+        if not isinstance(self._logger, NoOpLogger):
+            self._logger.emit(self._translate(record))
 
     def flush(self) -> None:
         """
-        Flushes the logging output.
+        Flushes the logging output. Skip flushing if logger is NoOp.
         """
-        self._logger_provider.force_flush()
+        if not isinstance(self._logger, NoOpLogger):
+            self._logger_provider.force_flush()
 
 
 class Logger(APILogger):
@@ -538,14 +593,17 @@ class Logger(APILogger):
 class LoggerProvider(APILoggerProvider):
     def __init__(
         self,
-        resource: Resource = Resource.create(),
+        resource: Resource = None,
         shutdown_on_exit: bool = True,
         multi_log_record_processor: Union[
             SynchronousMultiLogRecordProcessor,
             ConcurrentMultiLogRecordProcessor,
         ] = None,
     ):
-        self._resource = resource
+        if resource is None:
+            self._resource = Resource.create({})
+        else:
+            self._resource = resource
         self._multi_log_record_processor = (
             multi_log_record_processor or SynchronousMultiLogRecordProcessor()
         )

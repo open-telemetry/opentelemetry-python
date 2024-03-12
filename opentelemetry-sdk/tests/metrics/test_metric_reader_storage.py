@@ -20,6 +20,7 @@ from opentelemetry.sdk.metrics._internal.aggregation import (
 )
 from opentelemetry.sdk.metrics._internal.instrument import (
     _Counter,
+    _Gauge,
     _Histogram,
     _ObservableCounter,
     _UpDownCounter,
@@ -99,7 +100,8 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         # instrument2 matches view2, so should create a single
         # ViewInstrumentMatch
         MockViewInstrumentMatch.call_args_list.clear()
-        storage.consume_measurement(Measurement(1, instrument2))
+        with self.assertLogs(level=WARNING):
+            storage.consume_measurement(Measurement(1, instrument2))
         self.assertEqual(len(MockViewInstrumentMatch.call_args_list), 1)
 
     @patch(
@@ -150,7 +152,8 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         view_instrument_match3.consume_measurement.assert_not_called()
 
         measurement = Measurement(1, instrument2)
-        storage.consume_measurement(measurement)
+        with self.assertLogs(level=WARNING):
+            storage.consume_measurement(measurement)
         view_instrument_match3.consume_measurement.assert_called_once_with(
             measurement
         )
@@ -312,15 +315,7 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         )
         metric_reader_storage.consume_measurement(Measurement(1, counter))
 
-        self.assertEqual(
-            [],
-            (
-                metric_reader_storage.collect()
-                .resource_metrics[0]
-                .scope_metrics[0]
-                .metrics
-            ),
-        )
+        self.assertIsNone(metric_reader_storage.collect())
 
     def test_same_collection_start(self):
 
@@ -734,6 +729,13 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             unit="unit",
             description="description",
         )
+        gauge = _Gauge(
+            "gauge",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description",
+        )
         metric_reader_storage = MetricReaderStorage(
             SdkConfiguration(
                 resource=Mock(),
@@ -741,6 +743,7 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                 views=(
                     View(instrument_name="observable_counter", name="foo"),
                     View(instrument_name="histogram", name="foo"),
+                    View(instrument_name="gauge", name="foo"),
                 ),
             ),
             MagicMock(
@@ -761,6 +764,12 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             with self.assertLogs(level=WARNING):
                 metric_reader_storage.consume_measurement(
                     Measurement(1, histogram)
+                )
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=WARNING):
+                metric_reader_storage.consume_measurement(
+                    Measurement(1, gauge)
                 )
 
     def test_view_instrument_match_conflict_7(self):

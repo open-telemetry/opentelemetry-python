@@ -203,7 +203,6 @@ class BatchSpanProcessor(SpanProcessor):
             None
         ] * self.max_export_batch_size  # type: typing.List[typing.Optional[Span]]
         self.worker_thread.start()
-        # Only available in *nix since py37.
         if hasattr(os, "register_at_fork"):
             os.register_at_fork(
                 after_in_child=self._at_fork_reinit

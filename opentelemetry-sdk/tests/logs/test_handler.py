@@ -15,7 +15,7 @@ import logging
 import unittest
 from unittest.mock import Mock
 
-from opentelemetry._logs import SeverityNumber
+from opentelemetry._logs import NoOpLoggerProvider, SeverityNumber
 from opentelemetry._logs import get_logger as APIGetLogger
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk import trace
@@ -42,7 +42,8 @@ class TestLoggingHandler(unittest.TestCase):
         logger.debug("Debug message")
         self.assertEqual(emitter_mock.emit.call_count, 0)
         # Assert emit gets called for warning message
-        logger.warning("Warning message")
+        with self.assertLogs(level=logging.WARNING):
+            logger.warning("Warning message")
         self.assertEqual(emitter_mock.emit.call_count, 1)
 
     def test_handler_custom_log_level(self):
@@ -53,12 +54,43 @@ class TestLoggingHandler(unittest.TestCase):
         logger = get_logger(
             level=logging.ERROR, logger_provider=emitter_provider_mock
         )
-        logger.warning("Warning message test custom log level")
+        with self.assertLogs(level=logging.WARNING):
+            logger.warning("Warning message test custom log level")
         # Make sure any log with level < ERROR is ignored
         self.assertEqual(emitter_mock.emit.call_count, 0)
-        logger.error("Mumbai, we have a major problem")
-        logger.critical("No Time For Caution")
+        with self.assertLogs(level=logging.ERROR):
+            logger.error("Mumbai, we have a major problem")
+        with self.assertLogs(level=logging.CRITICAL):
+            logger.critical("No Time For Caution")
         self.assertEqual(emitter_mock.emit.call_count, 2)
+
+    # pylint: disable=protected-access
+    def test_log_record_emit_noop(self):
+        noop_logger_provder = NoOpLoggerProvider()
+        logger_mock = APIGetLogger(
+            __name__, logger_provider=noop_logger_provder
+        )
+        logger = logging.getLogger(__name__)
+        handler_mock = Mock(spec=LoggingHandler)
+        handler_mock._logger = logger_mock
+        handler_mock.level = logging.WARNING
+        logger.addHandler(handler_mock)
+        with self.assertLogs(level=logging.WARNING):
+            logger.warning("Warning message")
+        handler_mock._translate.assert_not_called()
+
+    def test_log_flush_noop(self):
+
+        no_op_logger_provider = NoOpLoggerProvider()
+        no_op_logger_provider.force_flush = Mock()
+
+        logger = get_logger(logger_provider=no_op_logger_provider)
+
+        with self.assertLogs(level=logging.WARNING):
+            logger.warning("Warning message")
+
+        logger.handlers[0].flush()
+        no_op_logger_provider.force_flush.assert_not_called()
 
     def test_log_record_no_span_context(self):
         emitter_provider_mock = Mock(spec=LoggerProvider)
@@ -67,7 +99,8 @@ class TestLoggingHandler(unittest.TestCase):
         )
         logger = get_logger(logger_provider=emitter_provider_mock)
         # Assert emit gets called for warning message
-        logger.warning("Warning message")
+        with self.assertLogs(level=logging.WARNING):
+            logger.warning("Warning message")
         args, _ = emitter_mock.emit.call_args_list[0]
         log_record = args[0]
 
@@ -78,6 +111,20 @@ class TestLoggingHandler(unittest.TestCase):
             log_record.trace_flags, INVALID_SPAN_CONTEXT.trace_flags
         )
 
+    def test_log_record_observed_timestamp(self):
+        emitter_provider_mock = Mock(spec=LoggerProvider)
+        emitter_mock = APIGetLogger(
+            __name__, logger_provider=emitter_provider_mock
+        )
+        logger = get_logger(logger_provider=emitter_provider_mock)
+        # Assert emit gets called for warning message
+        with self.assertLogs(level=logging.WARNING):
+            logger.warning("Warning message")
+        args, _ = emitter_mock.emit.call_args_list[0]
+        log_record = args[0]
+
+        self.assertIsNotNone(log_record.observed_timestamp)
+
     def test_log_record_user_attributes(self):
         """Attributes can be injected into logs by adding them to the LogRecord"""
         emitter_provider_mock = Mock(spec=LoggerProvider)
@@ -86,12 +133,26 @@ class TestLoggingHandler(unittest.TestCase):
         )
         logger = get_logger(logger_provider=emitter_provider_mock)
         # Assert emit gets called for warning message
-        logger.warning("Warning message", extra={"http.status_code": 200})
+        with self.assertLogs(level=logging.WARNING):
+            logger.warning("Warning message", extra={"http.status_code": 200})
         args, _ = emitter_mock.emit.call_args_list[0]
         log_record = args[0]
 
         self.assertIsNotNone(log_record)
-        self.assertEqual(log_record.attributes, {"http.status_code": 200})
+        self.assertEqual(len(log_record.attributes), 4)
+        self.assertEqual(log_record.attributes["http.status_code"], 200)
+        self.assertTrue(
+            log_record.attributes[SpanAttributes.CODE_FILEPATH].endswith(
+                "test_handler.py"
+            )
+        )
+        self.assertEqual(
+            log_record.attributes[SpanAttributes.CODE_FUNCTION],
+            "test_log_record_user_attributes",
+        )
+        # The line of the log statement is not a constant (changing tests may change that),
+        # so only check that the attribute is present.
+        self.assertTrue(SpanAttributes.CODE_LINENO in log_record.attributes)
         self.assertTrue(isinstance(log_record.attributes, BoundedAttributes))
 
     def test_log_record_exception(self):
@@ -104,7 +165,8 @@ class TestLoggingHandler(unittest.TestCase):
         try:
             raise ZeroDivisionError("division by zero")
         except ZeroDivisionError:
-            logger.exception("Zero Division Error")
+            with self.assertLogs(level=logging.ERROR):
+                logger.exception("Zero Division Error")
         args, _ = emitter_mock.emit.call_args_list[0]
         log_record = args[0]
 
@@ -137,7 +199,8 @@ class TestLoggingHandler(unittest.TestCase):
         try:
             raise ZeroDivisionError("division by zero")
         except ZeroDivisionError:
-            logger.error("Zero Division Error", exc_info=False)
+            with self.assertLogs(level=logging.ERROR):
+                logger.error("Zero Division Error", exc_info=False)
         args, _ = emitter_mock.emit.call_args_list[0]
         log_record = args[0]
 
@@ -160,7 +223,8 @@ class TestLoggingHandler(unittest.TestCase):
 
         tracer = trace.TracerProvider().get_tracer(__name__)
         with tracer.start_as_current_span("test") as span:
-            logger.critical("Critical message within span")
+            with self.assertLogs(level=logging.CRITICAL):
+                logger.critical("Critical message within span")
 
             args, _ = emitter_mock.emit.call_args_list[0]
             log_record = args[0]

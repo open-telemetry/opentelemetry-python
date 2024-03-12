@@ -66,9 +66,11 @@ from collections import deque
 from itertools import chain
 from json import dumps
 from logging import getLogger
+from os import environ
 from re import IGNORECASE, UNICODE, compile
 from typing import Dict, Sequence, Tuple, Union
 
+from prometheus_client import start_http_server
 from prometheus_client.core import (
     REGISTRY,
     CounterMetricFamily,
@@ -78,6 +80,10 @@ from prometheus_client.core import (
 )
 from prometheus_client.core import Metric as PrometheusMetric
 
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_PROMETHEUS_HOST,
+    OTEL_EXPORTER_PROMETHEUS_PORT,
+)
 from opentelemetry.sdk.metrics import Counter
 from opentelemetry.sdk.metrics import Histogram as HistogramInstrument
 from opentelemetry.sdk.metrics import (
@@ -263,7 +269,25 @@ class _CustomCollector:
             for pre_metric_family_id, label_values, value in zip(
                 pre_metric_family_ids, label_valuess, values
             ):
-                if isinstance(metric.data, Sum):
+                is_non_monotonic_sum = (
+                    isinstance(metric.data, Sum)
+                    and metric.data.is_monotonic is False
+                )
+                is_cumulative = (
+                    isinstance(metric.data, Sum)
+                    and metric.data.aggregation_temporality
+                    == AggregationTemporality.CUMULATIVE
+                )
+
+                # The prometheus compatibility spec for sums says: If the aggregation temporality is cumulative and the sum is non-monotonic, it MUST be converted to a Prometheus Gauge.
+                should_convert_sum_to_gauge = (
+                    is_non_monotonic_sum and is_cumulative
+                )
+
+                if (
+                    isinstance(metric.data, Sum)
+                    and not should_convert_sum_to_gauge
+                ):
 
                     metric_family_id = "|".join(
                         [pre_metric_family_id, CounterMetricFamily.__name__]
@@ -281,7 +305,10 @@ class _CustomCollector:
                     metric_family_id_metric_family[
                         metric_family_id
                     ].add_metric(labels=label_values, value=value)
-                elif isinstance(metric.data, Gauge):
+                elif (
+                    isinstance(metric.data, Gauge)
+                    or should_convert_sum_to_gauge
+                ):
 
                     metric_family_id = "|".join(
                         [pre_metric_family_id, GaugeMetricFamily.__name__]
@@ -351,6 +378,29 @@ class _CustomCollector:
         self, name: str, description: str, attributes: Dict[str, str]
     ) -> InfoMetricFamily:
         """Create an Info Metric Family with list of attributes"""
+        # sanitize the attribute names according to Prometheus rule
+        attributes = {
+            self._sanitize(key): self._check_value(value)
+            for key, value in attributes.items()
+        }
         info = InfoMetricFamily(name, description, labels=attributes)
         info.add_metric(labels=list(attributes.keys()), value=attributes)
         return info
+
+
+class _AutoPrometheusMetricReader(PrometheusMetricReader):
+    """Thin wrapper around PrometheusMetricReader used for the opentelemetry_metrics_exporter entry point.
+
+    This allows users to use the prometheus exporter with opentelemetry-instrument. It handles
+    starting the Prometheus http server on the the correct port and host.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        # Default values are specified in
+        # https://github.com/open-telemetry/opentelemetry-specification/blob/v1.24.0/specification/configuration/sdk-environment-variables.md#prometheus-exporter
+        start_http_server(
+            port=int(environ.get(OTEL_EXPORTER_PROMETHEUS_PORT, "9464")),
+            addr=environ.get(OTEL_EXPORTER_PROMETHEUS_HOST, "localhost"),
+        )

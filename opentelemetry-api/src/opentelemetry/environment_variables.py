@@ -22,6 +22,29 @@ OTEL_METRICS_EXPORTER = "OTEL_METRICS_EXPORTER"
 """
 .. envvar:: OTEL_METRICS_EXPORTER
 
+Specifies which exporter is used for metrics. See `General SDK Configuration
+<https://opentelemetry.io/docs/concepts/sdk-configuration/general-sdk-configuration/#otel_metrics_exporter>`_.
+
+**Default value:** ``"otlp"``
+
+**Example:**
+
+``export OTEL_METRICS_EXPORTER="prometheus"``
+
+Accepted values for ``OTEL_METRICS_EXPORTER`` are:
+
+- ``"otlp"``
+- ``"prometheus"``
+- ``"none"``: No automatically configured exporter for metrics.
+
+.. note::
+
+    Exporter packages may add entry points for group ``opentelemetry_metrics_exporter`` which
+    can then be used with this environment variable by name. The entry point should point to
+    either a `opentelemetry.sdk.metrics.export.MetricExporter` (push exporter) or
+    `opentelemetry.sdk.metrics.export.MetricReader` (pull exporter) subclass; it must be
+    constructable without any required arguments. This mechanism is considered experimental and
+    may change in subsequent releases.
 """
 
 OTEL_PROPAGATORS = "OTEL_PROPAGATORS"

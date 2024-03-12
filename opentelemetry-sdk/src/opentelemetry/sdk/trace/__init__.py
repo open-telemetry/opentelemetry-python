@@ -21,7 +21,6 @@ import logging
 import threading
 import traceback
 import typing
-from collections import OrderedDict
 from contextlib import contextmanager
 from os import environ
 from time import time_ns
@@ -31,6 +30,7 @@ from typing import (
     Callable,
     Dict,
     Iterator,
+    List,
     Optional,
     Sequence,
     Tuple,
@@ -140,10 +140,12 @@ class SynchronousMultiSpanProcessor(SpanProcessor):
     added.
     """
 
+    _span_processors: Tuple[SpanProcessor, ...]
+
     def __init__(self):
         # use a tuple to avoid race conditions when adding a new span and
         # iterating through it on "on_start" and "on_end".
-        self._span_processors = ()  # type: Tuple[SpanProcessor, ...]
+        self._span_processors = ()
         self._lock = threading.Lock()
 
     def add_span_processor(self, span_processor: SpanProcessor) -> None:
@@ -344,23 +346,28 @@ def _check_span_ended(func):
 
 
 class ReadableSpan:
-    """Provides read-only access to span attributes"""
+    """Provides read-only access to span attributes.
+
+    Users should NOT be creating these objects directly. `ReadableSpan`s are created as
+    a direct result from using the tracing pipeline via the `Tracer`.
+
+    """
 
     def __init__(
         self,
-        name: str = None,
-        context: trace_api.SpanContext = None,
+        name: str,
+        context: Optional[trace_api.SpanContext] = None,
         parent: Optional[trace_api.SpanContext] = None,
-        resource: Resource = Resource.create({}),
+        resource: Optional[Resource] = None,
         attributes: types.Attributes = None,
         events: Sequence[Event] = (),
         links: Sequence[trace_api.Link] = (),
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
-        instrumentation_info: InstrumentationInfo = None,
+        instrumentation_info: Optional[InstrumentationInfo] = None,
         status: Status = Status(StatusCode.UNSET),
         start_time: Optional[int] = None,
         end_time: Optional[int] = None,
-        instrumentation_scope: InstrumentationScope = None,
+        instrumentation_scope: Optional[InstrumentationScope] = None,
     ) -> None:
         self._name = name
         self._context = context
@@ -373,24 +380,27 @@ class ReadableSpan:
         self._attributes = attributes
         self._events = events
         self._links = links
-        self._resource = resource
+        if resource is None:
+            self._resource = Resource.create({})
+        else:
+            self._resource = resource
         self._status = status
 
     @property
     def dropped_attributes(self) -> int:
-        if self._attributes:
+        if isinstance(self._attributes, BoundedAttributes):
             return self._attributes.dropped
         return 0
 
     @property
     def dropped_events(self) -> int:
-        if self._events:
+        if isinstance(self._events, BoundedList):
             return self._events.dropped
         return 0
 
     @property
     def dropped_links(self) -> int:
-        if self._links:
+        if isinstance(self._links, BoundedList):
             return self._links.dropped
         return 0
 
@@ -427,7 +437,7 @@ class ReadableSpan:
 
     @property
     def attributes(self) -> types.Attributes:
-        return MappingProxyType(self._attributes)
+        return MappingProxyType(self._attributes or {})
 
     @property
     def events(self) -> Sequence[Event]:
@@ -445,23 +455,17 @@ class ReadableSpan:
     @deprecated(
         version="1.11.1", reason="You should use instrumentation_scope"
     )
-    def instrumentation_info(self) -> InstrumentationInfo:
+    def instrumentation_info(self) -> Optional[InstrumentationInfo]:
         return self._instrumentation_info
 
     @property
-    def instrumentation_scope(self) -> InstrumentationScope:
+    def instrumentation_scope(self) -> Optional[InstrumentationScope]:
         return self._instrumentation_scope
 
-    def to_json(self, indent=4):
+    def to_json(self, indent: int = 4):
         parent_id = None
         if self.parent is not None:
-            if isinstance(self.parent, Span):
-                ctx = self.parent.context
-                parent_id = f"0x{trace_api.format_span_id(ctx.span_id)}"
-            elif isinstance(self.parent, SpanContext):
-                parent_id = (
-                    f"0x{trace_api.format_span_id(self.parent.span_id)}"
-                )
+            parent_id = f"0x{trace_api.format_span_id(self.parent.span_id)}"
 
         start_time = None
         if self._start_time:
@@ -471,77 +475,72 @@ class ReadableSpan:
         if self._end_time:
             end_time = util.ns_to_iso_str(self._end_time)
 
-        if self._status is not None:
-            status = OrderedDict()
-            status["status_code"] = str(self._status.status_code.name)
-            if self._status.description:
-                status["description"] = self._status.description
+        status = {
+            "status_code": str(self._status.status_code.name),
+        }
+        if self._status.description:
+            status["description"] = self._status.description
 
-        f_span = OrderedDict()
-
-        f_span["name"] = self._name
-        f_span["context"] = self._format_context(self._context)
-        f_span["kind"] = str(self.kind)
-        f_span["parent_id"] = parent_id
-        f_span["start_time"] = start_time
-        f_span["end_time"] = end_time
-        if self._status is not None:
-            f_span["status"] = status
-        f_span["attributes"] = self._format_attributes(self._attributes)
-        f_span["events"] = self._format_events(self._events)
-        f_span["links"] = self._format_links(self._links)
-        f_span["resource"] = json.loads(self.resource.to_json())
+        f_span = {
+            "name": self._name,
+            "context": self._format_context(self._context)
+            if self._context
+            else None,
+            "kind": str(self.kind),
+            "parent_id": parent_id,
+            "start_time": start_time,
+            "end_time": end_time,
+            "status": status,
+            "attributes": self._format_attributes(self._attributes),
+            "events": self._format_events(self._events),
+            "links": self._format_links(self._links),
+            "resource": json.loads(self.resource.to_json()),
+        }
 
         return json.dumps(f_span, indent=indent)
 
     @staticmethod
-    def _format_context(context):
-        x_ctx = OrderedDict()
-        x_ctx["trace_id"] = f"0x{trace_api.format_trace_id(context.trace_id)}"
-        x_ctx["span_id"] = f"0x{trace_api.format_span_id(context.span_id)}"
-        x_ctx["trace_state"] = repr(context.trace_state)
-        return x_ctx
+    def _format_context(context: SpanContext) -> Dict[str, str]:
+        return {
+            "trace_id": f"0x{trace_api.format_trace_id(context.trace_id)}",
+            "span_id": f"0x{trace_api.format_span_id(context.span_id)}",
+            "trace_state": repr(context.trace_state),
+        }
 
     @staticmethod
-    def _format_attributes(attributes):
-        if isinstance(attributes, BoundedAttributes):
-            return attributes._dict  # pylint: disable=protected-access
-        if isinstance(attributes, MappingProxyType):
-            return attributes.copy()
+    def _format_attributes(
+        attributes: types.Attributes,
+    ) -> Optional[Dict[str, Any]]:
+        if attributes is not None and not isinstance(attributes, dict):
+            return dict(attributes)
         return attributes
 
     @staticmethod
-    def _format_events(events):
-        f_events = []
-        for event in events:
-            f_event = OrderedDict()
-            f_event["name"] = event.name
-            f_event["timestamp"] = util.ns_to_iso_str(event.timestamp)
-            f_event[
-                "attributes"
-            ] = Span._format_attributes(  # pylint: disable=protected-access
-                event.attributes
-            )
-            f_events.append(f_event)
-        return f_events
+    def _format_events(events: Sequence[Event]) -> List[Dict[str, Any]]:
+        return [
+            {
+                "name": event.name,
+                "timestamp": util.ns_to_iso_str(event.timestamp),
+                "attributes": Span._format_attributes(  # pylint: disable=protected-access
+                    event.attributes
+                ),
+            }
+            for event in events
+        ]
 
     @staticmethod
-    def _format_links(links):
-        f_links = []
-        for link in links:
-            f_link = OrderedDict()
-            f_link[
-                "context"
-            ] = Span._format_context(  # pylint: disable=protected-access
-                link.context
-            )
-            f_link[
-                "attributes"
-            ] = Span._format_attributes(  # pylint: disable=protected-access
-                link.attributes
-            )
-            f_links.append(f_link)
-        return f_links
+    def _format_links(links: Sequence[trace_api.Link]) -> List[Dict[str, Any]]:
+        return [
+            {
+                "context": Span._format_context(  # pylint: disable=protected-access
+                    link.context
+                ),
+                "attributes": Span._format_attributes(  # pylint: disable=protected-access
+                    link.attributes
+                ),
+            }
+            for link in links
+        ]
 
 
 class SpanLimits:
@@ -745,7 +744,7 @@ class Span(trace_api.Span, ReadableSpan):
         parent: Optional[trace_api.SpanContext] = None,
         sampler: Optional[sampling.Sampler] = None,
         trace_config: None = None,  # TODO
-        resource: Resource = Resource.create({}),
+        resource: Resource = None,
         attributes: types.Attributes = None,
         events: Sequence[Event] = None,
         links: Sequence[trace_api.Link] = (),
@@ -757,6 +756,8 @@ class Span(trace_api.Span, ReadableSpan):
         limits=_UnsetLimits,
         instrumentation_scope: InstrumentationScope = None,
     ) -> None:
+        if resource is None:
+            resource = Resource.create({})
         super().__init__(
             name=name,
             context=context,
@@ -846,6 +847,30 @@ class Span(trace_api.Span, ReadableSpan):
                 name=name,
                 attributes=attributes,
                 timestamp=timestamp,
+            )
+        )
+
+    @_check_span_ended
+    def _add_link(self, link: trace_api.Link) -> None:
+        self._links.append(link)
+
+    def add_link(
+        self,
+        context: SpanContext,
+        attributes: types.Attributes = None,
+    ) -> None:
+        if context is None or not context.is_valid:
+            return
+
+        attributes = BoundedAttributes(
+            self._limits.max_link_attributes,
+            attributes,
+            max_value_len=self._limits.max_attribute_length,
+        )
+        self._add_link(
+            trace_api.Link(
+                context=context,
+                attributes=attributes,
             )
         )
 
@@ -1041,8 +1066,8 @@ class Tracer(trace_api.Tracer):
             end_on_exit=end_on_exit,
             record_exception=record_exception,
             set_status_on_exception=set_status_on_exception,
-        ) as span_context:
-            yield span_context
+        ) as span:
+            yield span
 
     def start_span(  # pylint: disable=too-many-locals
         self,
@@ -1128,7 +1153,7 @@ class TracerProvider(trace_api.TracerProvider):
     def __init__(
         self,
         sampler: sampling.Sampler = None,
-        resource: Resource = Resource.create({}),
+        resource: Resource = None,
         shutdown_on_exit: bool = True,
         active_span_processor: Union[
             SynchronousMultiSpanProcessor, ConcurrentMultiSpanProcessor
@@ -1143,7 +1168,10 @@ class TracerProvider(trace_api.TracerProvider):
             self.id_generator = RandomIdGenerator()
         else:
             self.id_generator = id_generator
-        self._resource = resource
+        if resource is None:
+            self._resource = Resource.create({})
+        else:
+            self._resource = resource
         if not sampler:
             sampler = sampling._get_from_env_or_default()
         self.sampler = sampler

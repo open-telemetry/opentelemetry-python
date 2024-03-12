@@ -277,14 +277,14 @@ OTEL_EXPORTER_OTLP_METRICS_PROTOCOL = "OTEL_EXPORTER_OTLP_METRICS_PROTOCOL"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_METRICS_PROTOCOL
 
-The :envvar:`OTEL_EXPORTER_OTLP_TRACES_PROTOCOL` represents the the transport protocol for metrics.
+The :envvar:`OTEL_EXPORTER_OTLP_METRICS_PROTOCOL` represents the the transport protocol for metrics.
 """
 
 OTEL_EXPORTER_OTLP_LOGS_PROTOCOL = "OTEL_EXPORTER_OTLP_LOGS_PROTOCOL"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_LOGS_PROTOCOL
 
-The :envvar:`OTEL_EXPORTER_OTLP_TRACES_PROTOCOL` represents the the transport protocol for logs.
+The :envvar:`OTEL_EXPORTER_OTLP_LOGS_PROTOCOL` represents the the transport protocol for logs.
 """
 
 OTEL_EXPORTER_OTLP_CERTIFICATE = "OTEL_EXPORTER_OTLP_CERTIFICATE"
@@ -674,7 +674,31 @@ OTEL_EXPERIMENTAL_RESOURCE_DETECTORS = "OTEL_EXPERIMENTAL_RESOURCE_DETECTORS"
 
 The :envvar:`OTEL_EXPERIMENTAL_RESOURCE_DETECTORS` is a comma-separated string
 of names of resource detectors. These names must be the same as the names of
-entry points for the `opentelemetry_resource_detector` entry point. This is an
+entry points for the ```opentelemetry_resource_detector``` entry point. This is an
 experimental feature and the name of this variable and its behavior can change
 in a non-backwards compatible way.
+"""
+
+OTEL_EXPORTER_PROMETHEUS_HOST = "OTEL_EXPORTER_PROMETHEUS_HOST"
+"""
+.. envvar:: OTEL_EXPORTER_PROMETHEUS_HOST
+
+The :envvar:`OTEL_EXPORTER_PROMETHEUS_HOST` environment variable configures the host used by
+the Prometheus exporter.
+Default: "localhost"
+
+This is an experimental environment variable and the name of this variable and its behavior can
+change in a non-backwards compatible way.
+"""
+
+OTEL_EXPORTER_PROMETHEUS_PORT = "OTEL_EXPORTER_PROMETHEUS_PORT"
+"""
+.. envvar:: OTEL_EXPORTER_PROMETHEUS_PORT
+
+The :envvar:`OTEL_EXPORTER_PROMETHEUS_PORT` environment variable configures the port used by
+the Prometheus exporter.
+Default: 9464
+
+This is an experimental environment variable and the name of this variable and its behavior can
+change in a non-backwards compatible way.
 """

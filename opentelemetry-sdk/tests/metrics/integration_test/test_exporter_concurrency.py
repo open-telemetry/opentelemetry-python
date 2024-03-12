@@ -74,6 +74,15 @@ class TestExporterConcurrency(ConcurrencyTestBase):
     > be called again only after the current call returns.
 
     https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/sdk.md#exportbatch
+
+    This test also tests that a thread that calls the a
+    ``MetricReader.collect`` method using an asynchronous instrument is able
+    to perform two actions in the same thread lock space (without it being
+    interrupted by another thread):
+
+    1. Consume the measurement produced by the callback associated to the
+       asynchronous instrument.
+    2. Export the measurement mentioned in the step above.
     """
 
     def test_exporter_not_called_concurrently(self):
@@ -84,7 +93,11 @@ class TestExporterConcurrency(ConcurrencyTestBase):
         )
         meter_provider = MeterProvider(metric_readers=[reader])
 
+        counter_cb_counter = 0
+
         def counter_cb(options: CallbackOptions):
+            nonlocal counter_cb_counter
+            counter_cb_counter += 1
             yield Observation(2)
 
         meter_provider.get_meter(__name__).create_observable_counter(
@@ -97,6 +110,7 @@ class TestExporterConcurrency(ConcurrencyTestBase):
 
         self.run_with_many_threads(test_many_threads, num_threads=100)
 
+        self.assertEqual(counter_cb_counter, 100)
         # no thread should be in export() now
         self.assertEqual(exporter.count_in_export, 0)
         # should be one call for each thread

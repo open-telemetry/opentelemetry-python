@@ -41,7 +41,11 @@ def get_symbols(change_type, diff_lines_getter, prefix):
         .iter_change_type(change_type)
     ):
 
-        b_file_path = diff_lines.b_blob.path
+        if diff_lines.b_blob is None:
+            # This happens if a file has been removed completely.
+            b_file_path = diff_lines.a_blob.path
+        else:
+            b_file_path = diff_lines.b_blob.path
         b_file_path_obj = Path(b_file_path)
 
         if (

@@ -125,10 +125,10 @@ class TestPrometheusMetricReader(TestCase):
             ),
         )
 
-    def test_sum_to_prometheus(self):
+    def test_monotonic_sum_to_prometheus(self):
         labels = {"environment@": "staging", "os": "Windows"}
         metric = _generate_sum(
-            "test@sum",
+            "test@sum_monotonic",
             123,
             attributes=labels,
             description="testdesc",
@@ -156,7 +156,55 @@ class TestPrometheusMetricReader(TestCase):
 
         for prometheus_metric in collector.collect():
             self.assertEqual(type(prometheus_metric), CounterMetricFamily)
-            self.assertEqual(prometheus_metric.name, "test_sum_testunit")
+            self.assertEqual(
+                prometheus_metric.name, "test_sum_monotonic_testunit"
+            )
+            self.assertEqual(prometheus_metric.documentation, "testdesc")
+            self.assertTrue(len(prometheus_metric.samples) == 1)
+            self.assertEqual(prometheus_metric.samples[0].value, 123)
+            self.assertTrue(len(prometheus_metric.samples[0].labels) == 2)
+            self.assertEqual(
+                prometheus_metric.samples[0].labels["environment_"], "staging"
+            )
+            self.assertEqual(
+                prometheus_metric.samples[0].labels["os"], "Windows"
+            )
+
+    def test_non_monotonic_sum_to_prometheus(self):
+        labels = {"environment@": "staging", "os": "Windows"}
+        metric = _generate_sum(
+            "test@sum_nonmonotonic",
+            123,
+            attributes=labels,
+            description="testdesc",
+            unit="testunit",
+            is_monotonic=False,
+        )
+
+        metrics_data = MetricsData(
+            resource_metrics=[
+                ResourceMetrics(
+                    resource=Mock(),
+                    scope_metrics=[
+                        ScopeMetrics(
+                            scope=Mock(),
+                            metrics=[metric],
+                            schema_url="schema_url",
+                        )
+                    ],
+                    schema_url="schema_url",
+                )
+            ]
+        )
+
+        collector = _CustomCollector(disable_target_info=True)
+        collector.add_metrics_data(metrics_data)
+
+        for prometheus_metric in collector.collect():
+            self.assertEqual(type(prometheus_metric), GaugeMetricFamily)
+            self.assertEqual(
+                prometheus_metric.name, "test_sum_nonmonotonic_testunit"
+            )
             self.assertEqual(prometheus_metric.documentation, "testdesc")
             self.assertTrue(len(prometheus_metric.samples) == 1)
             self.assertEqual(prometheus_metric.samples[0].value, 123)
@@ -303,30 +351,33 @@ class TestPrometheusMetricReader(TestCase):
         metric_reader = PrometheusMetricReader()
         provider = MeterProvider(
             metric_readers=[metric_reader],
-            resource=Resource({"os": "Unix", "histo": 1}),
+            resource=Resource({"os": "Unix", "version": "1.2.3"}),
         )
         meter = provider.get_meter("getting-started", "0.1.2")
         counter = meter.create_counter("counter")
         counter.add(1)
         result = list(metric_reader._collector.collect())
 
-        for prometheus_metric in result[:0]:
-            self.assertEqual(type(prometheus_metric), InfoMetricFamily)
-            self.assertEqual(prometheus_metric.name, "target")
-            self.assertEqual(
-                prometheus_metric.documentation, "Target metadata"
-            )
-            self.assertTrue(len(prometheus_metric.samples) == 1)
-            self.assertEqual(prometheus_metric.samples[0].value, 1)
-            self.assertTrue(len(prometheus_metric.samples[0].labels) == 2)
-            self.assertEqual(prometheus_metric.samples[0].labels["os"], "Unix")
-            self.assertEqual(prometheus_metric.samples[0].labels["histo"], "1")
+        self.assertEqual(len(result), 2)
+
+        prometheus_metric = result[0]
+
+        self.assertEqual(type(prometheus_metric), InfoMetricFamily)
+        self.assertEqual(prometheus_metric.name, "target")
+        self.assertEqual(prometheus_metric.documentation, "Target metadata")
+        self.assertTrue(len(prometheus_metric.samples) == 1)
+        self.assertEqual(prometheus_metric.samples[0].value, 1)
+        self.assertTrue(len(prometheus_metric.samples[0].labels) == 2)
+        self.assertEqual(prometheus_metric.samples[0].labels["os"], "Unix")
+        self.assertEqual(
+            prometheus_metric.samples[0].labels["version"], "1.2.3"
+        )
 
     def test_target_info_disabled(self):
         metric_reader = PrometheusMetricReader(disable_target_info=True)
         provider = MeterProvider(
             metric_readers=[metric_reader],
-            resource=Resource({"os": "Unix", "histo": 1}),
+            resource=Resource({"os": "Unix", "version": "1.2.3"}),
         )
         meter = provider.get_meter("getting-started", "0.1.2")
         counter = meter.create_counter("counter")
@@ -340,4 +391,48 @@ class TestPrometheusMetricReader(TestCase):
                 prometheus_metric.documentation, "Target metadata"
             )
             self.assertNotIn("os", prometheus_metric.samples[0].labels)
-            self.assertNotIn("histo", prometheus_metric.samples[0].labels)
+            self.assertNotIn("version", prometheus_metric.samples[0].labels)
+
+    def test_target_info_sanitize(self):
+        metric_reader = PrometheusMetricReader()
+        provider = MeterProvider(
+            metric_readers=[metric_reader],
+            resource=Resource(
+                {
+                    "system.os": "Unix",
+                    "system.name": "Prometheus Target Sanitize",
+                    "histo": 1,
+                    "ratio": 0.1,
+                }
+            ),
+        )
+        meter = provider.get_meter("getting-started", "0.1.2")
+        counter = meter.create_counter("counter")
+        counter.add(1)
+        prometheus_metric = list(metric_reader._collector.collect())[0]
+
+        self.assertEqual(type(prometheus_metric), InfoMetricFamily)
+        self.assertEqual(prometheus_metric.name, "target")
+        self.assertEqual(prometheus_metric.documentation, "Target metadata")
+        self.assertTrue(len(prometheus_metric.samples) == 1)
+        self.assertEqual(prometheus_metric.samples[0].value, 1)
+        self.assertTrue(len(prometheus_metric.samples[0].labels) == 4)
+        self.assertTrue("system_os" in prometheus_metric.samples[0].labels)
+        self.assertEqual(
+            prometheus_metric.samples[0].labels["system_os"], "Unix"
+        )
+        self.assertTrue("system_name" in prometheus_metric.samples[0].labels)
+        self.assertEqual(
+            prometheus_metric.samples[0].labels["system_name"],
+            "Prometheus Target Sanitize",
+        )
+        self.assertTrue("histo" in prometheus_metric.samples[0].labels)
+        self.assertEqual(
+            prometheus_metric.samples[0].labels["histo"],
+            "1",
+        )
+        self.assertTrue("ratio" in prometheus_metric.samples[0].labels)
+        self.assertEqual(
+            prometheus_metric.samples[0].labels["ratio"],
+            "0.1",
+        )

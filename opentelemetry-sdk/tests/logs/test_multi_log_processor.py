@@ -68,25 +68,29 @@ class TestLogRecordProcessor(unittest.TestCase):
         logger.addHandler(handler)
 
         # Test no proessor added
-        logger.critical("Odisha, we have another major cyclone")
+        with self.assertLogs(level=logging.CRITICAL):
+            logger.critical("Odisha, we have another major cyclone")
 
         self.assertEqual(len(logs_list_1), 0)
         self.assertEqual(len(logs_list_2), 0)
 
         # Add one processor
         provider.add_log_record_processor(processor1)
-        logger.warning("Brace yourself")
-        logger.error("Some error message")
+        with self.assertLogs(level=logging.WARNING):
+            logger.warning("Brace yourself")
+        with self.assertLogs(level=logging.ERROR):
+            logger.error("Some error message")
 
         expected_list_1 = [
-            ("Brace yourself", "WARNING"),
+            ("Brace yourself", "WARN"),
             ("Some error message", "ERROR"),
         ]
         self.assertEqual(logs_list_1, expected_list_1)
 
         # Add another processor
         provider.add_log_record_processor(processor2)
-        logger.critical("Something disastrous")
+        with self.assertLogs(level=logging.CRITICAL):
+            logger.critical("Something disastrous")
         expected_list_1.append(("Something disastrous", "CRITICAL"))
 
         expected_list_2 = [("Something disastrous", "CRITICAL")]
@@ -103,7 +107,7 @@ class MultiLogRecordProcessorTestBase(ABC):
     def make_record(self):
         return LogRecord(
             timestamp=1622300111608942000,
-            severity_text="WARNING",
+            severity_text="WARN",
             severity_number=SeverityNumber.WARN,
             body="Warning message",
         )

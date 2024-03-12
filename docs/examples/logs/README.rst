@@ -12,20 +12,21 @@ Start the Collector locally to see data being exported. Write the following file
 
     # otel-collector-config.yaml
     receivers:
-    otlp:
+      otlp:
         protocols:
-        grpc:
-
-    exporters:
-    logging:
+          grpc:
 
     processors:
-    batch:
+      batch:
+
+    exporters:
+      logging:
 
     service:
         pipelines:
             logs:
                 receivers: [otlp]
+                processors: [batch]
                 exporters: [logging]
   
 Then start the Docker container:

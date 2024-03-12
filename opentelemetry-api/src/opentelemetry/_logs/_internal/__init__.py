@@ -37,6 +37,7 @@ The following code shows how to obtain a logger using the global :class:`.Logger
 from abc import ABC, abstractmethod
 from logging import getLogger
 from os import environ
+from time import time_ns
 from typing import Any, Optional, cast
 
 from opentelemetry._logs.severity import SeverityNumber
@@ -70,6 +71,8 @@ class LogRecord(ABC):
         attributes: Optional["Attributes"] = None,
     ):
         self.timestamp = timestamp
+        if observed_timestamp is None:
+            observed_timestamp = time_ns()
         self.observed_timestamp = observed_timestamp
         self.trace_id = trace_id
         self.span_id = span_id
@@ -109,6 +112,37 @@ class NoOpLogger(Logger):
         pass
 
 
+class ProxyLogger(Logger):
+    def __init__(  # pylint: disable=super-init-not-called
+        self,
+        name: str,
+        version: Optional[str] = None,
+        schema_url: Optional[str] = None,
+    ):
+        self._name = name
+        self._version = version
+        self._schema_url = schema_url
+        self._real_logger: Optional[Logger] = None
+        self._noop_logger = NoOpLogger(name)
+
+    @property
+    def _logger(self) -> Logger:
+        if self._real_logger:
+            return self._real_logger
+
+        if _LOGGER_PROVIDER:
+            self._real_logger = _LOGGER_PROVIDER.get_logger(
+                self._name,
+                self._version,
+                self._schema_url,
+            )
+            return self._real_logger
+        return self._noop_logger
+
+    def emit(self, record: LogRecord) -> None:
+        self._logger.emit(record)
+
+
 class LoggerProvider(ABC):
     """
     LoggerProvider is the entry point of the API. It provides access to Logger instances.
@@ -143,7 +177,7 @@ class LoggerProvider(ABC):
 
             version: Optional. The version string of the
                 instrumenting library.  Usually this should be the same as
-                ``pkg_resources.get_distribution(instrumenting_library_name).version``.
+                ``importlib.metadata.version(instrumenting_library_name)``.
 
             schema_url: Optional. Specifies the Schema URL of the emitted telemetry.
         """
@@ -163,21 +197,37 @@ class NoOpLoggerProvider(LoggerProvider):
         return NoOpLogger(name, version=version, schema_url=schema_url)
 
 
-# TODO: ProxyLoggerProvider
+class ProxyLoggerProvider(LoggerProvider):
+    def get_logger(
+        self,
+        name: str,
+        version: Optional[str] = None,
+        schema_url: Optional[str] = None,
+    ) -> Logger:
+        if _LOGGER_PROVIDER:
+            return _LOGGER_PROVIDER.get_logger(
+                name,
+                version=version,
+                schema_url=schema_url,
+            )
+        return ProxyLogger(
+            name,
+            version=version,
+            schema_url=schema_url,
+        )
 
 
 _LOGGER_PROVIDER_SET_ONCE = Once()
-_LOGGER_PROVIDER = None
+_LOGGER_PROVIDER: Optional[LoggerProvider] = None
+_PROXY_LOGGER_PROVIDER = ProxyLoggerProvider()
 
 
 def get_logger_provider() -> LoggerProvider:
     """Gets the current global :class:`~.LoggerProvider` object."""
-    global _LOGGER_PROVIDER  # pylint: disable=global-statement
+    global _LOGGER_PROVIDER  # pylint: disable=global-variable-not-assigned
     if _LOGGER_PROVIDER is None:
-        if _OTEL_PYTHON_LOGGER_PROVIDER not in environ.keys():
-            # TODO: return proxy
-            _LOGGER_PROVIDER = NoOpLoggerProvider()
-            return _LOGGER_PROVIDER
+        if _OTEL_PYTHON_LOGGER_PROVIDER not in environ:
+            return _PROXY_LOGGER_PROVIDER
 
         logger_provider: LoggerProvider = _load_provider(  # type: ignore
             _OTEL_PYTHON_LOGGER_PROVIDER, "logger_provider"
@@ -191,7 +241,7 @@ def get_logger_provider() -> LoggerProvider:
 def _set_logger_provider(logger_provider: LoggerProvider, log: bool) -> None:
     def set_lp() -> None:
         global _LOGGER_PROVIDER  # pylint: disable=global-statement
-        _LOGGER_PROVIDER = logger_provider  # type: ignore
+        _LOGGER_PROVIDER = logger_provider
 
     did_set = _LOGGER_PROVIDER_SET_ONCE.do_once(set_lp)
 
@@ -199,19 +249,20 @@ def _set_logger_provider(logger_provider: LoggerProvider, log: bool) -> None:
         _logger.warning("Overriding of current LoggerProvider is not allowed")
 
 
-def set_logger_provider(meter_provider: LoggerProvider) -> None:
+def set_logger_provider(logger_provider: LoggerProvider) -> None:
     """Sets the current global :class:`~.LoggerProvider` object.
 
     This can only be done once, a warning will be logged if any further attempt
     is made.
     """
-    _set_logger_provider(meter_provider, log=True)
+    _set_logger_provider(logger_provider, log=True)
 
 
 def get_logger(
     instrumenting_module_name: str,
     instrumenting_library_version: str = "",
     logger_provider: Optional[LoggerProvider] = None,
+    schema_url: Optional[str] = None,
 ) -> "Logger":
     """Returns a `Logger` for use within a python process.
 
@@ -223,5 +274,5 @@ def get_logger(
     if logger_provider is None:
         logger_provider = get_logger_provider()
     return logger_provider.get_logger(
-        instrumenting_module_name, instrumenting_library_version
+        instrumenting_module_name, instrumenting_library_version, schema_url
     )

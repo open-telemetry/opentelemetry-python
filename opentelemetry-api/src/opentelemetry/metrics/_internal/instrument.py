@@ -38,7 +38,7 @@ from opentelemetry.util.types import Attributes
 
 _logger = getLogger(__name__)
 
-_name_regex = re_compile(r"[a-zA-Z][-_.a-zA-Z0-9]{0,62}")
+_name_regex = re_compile(r"[a-zA-Z][-_./a-zA-Z0-9]{0,254}")
 _unit_regex = re_compile(r"[\x00-\x7F]{0,63}")
 
 
@@ -55,6 +55,7 @@ class CallbackOptions:
 
 
 InstrumentT = TypeVar("InstrumentT", bound="Instrument")
+# pylint: disable=invalid-name
 CallbackT = Union[
     Callable[[CallbackOptions], Iterable[Observation]],
     Generator[Iterable[Observation], CallbackOptions, None],
@@ -395,3 +396,50 @@ class _ProxyObservableGauge(
         return meter.create_observable_gauge(
             self._name, self._callbacks, self._unit, self._description
         )
+
+
+class Gauge(Synchronous):
+    """A Gauge is a synchronous `Instrument` which can be used to record non-additive values as they occur."""
+
+    @abstractmethod
+    def set(
+        self,
+        amount: Union[int, float],
+        attributes: Optional[Attributes] = None,
+    ) -> None:
+        pass
+
+
+class NoOpGauge(Gauge):
+    """No-op implementation of ``Gauge``."""
+
+    def __init__(
+        self,
+        name: str,
+        unit: str = "",
+        description: str = "",
+    ) -> None:
+        super().__init__(name, unit=unit, description=description)
+
+    def set(
+        self,
+        amount: Union[int, float],
+        attributes: Optional[Attributes] = None,
+    ) -> None:
+        return super().set(amount, attributes=attributes)
+
+
+class _ProxyGauge(
+    _ProxyInstrument[Gauge],
+    Gauge,
+):
+    def set(
+        self,
+        amount: Union[int, float],
+        attributes: Optional[Attributes] = None,
+    ) -> None:
+        if self._real_instrument:
+            self._real_instrument.set(amount, attributes)
+
+    def _create_real_instrument(self, meter: "metrics.Meter") -> Gauge:
+        return meter.create_gauge(self._name, self._unit, self._description)

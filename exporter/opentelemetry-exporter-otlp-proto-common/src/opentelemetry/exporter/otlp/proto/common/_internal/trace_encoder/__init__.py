@@ -97,6 +97,7 @@ def _encode_resource_spans(
             PB2ResourceSpans(
                 resource=_encode_resource(sdk_resource),
                 scope_spans=scope_spans,
+                schema_url=sdk_resource.schema_url,
             )
         )
 

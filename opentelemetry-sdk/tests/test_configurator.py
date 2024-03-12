@@ -14,11 +14,11 @@
 # type: ignore
 # pylint: skip-file
 
-from logging import getLogger
+from logging import WARNING, getLogger
 from os import environ
 from typing import Dict, Iterable, Optional, Sequence
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from pytest import raises
 
@@ -153,6 +153,20 @@ class DummyMetricReader(MetricReader):
         **kwargs,
     ) -> None:
         self.exporter.export(None)
+
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
+        return True
+
+
+# MetricReader that can be configured as a pull exporter
+class DummyMetricReaderPullExporter(MetricReader):
+    def _receive_metrics(
+        self,
+        metrics: Iterable[Metric],
+        timeout_millis: float = 10_000,
+        **kwargs,
+    ) -> None:
+        pass
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         return True
@@ -309,7 +323,6 @@ class TestTraceInit(TestCase):
         environ, {"OTEL_RESOURCE_ATTRIBUTES": "service.name=my-test-service"}
     )
     def test_trace_init_default(self):
-
         auto_resource = Resource.create(
             {
                 "telemetry.auto.version": "test-version",
@@ -377,7 +390,8 @@ class TestTraceInit(TestCase):
     )
     def test_trace_init_custom_sampler_with_env_non_existent_entry_point(self):
         sampler_name = _get_sampler()
-        sampler = _import_sampler(sampler_name)
+        with self.assertLogs(level=WARNING):
+            sampler = _import_sampler(sampler_name)
         _init_tracing({}, sampler=sampler)
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsNone(provider.sampler)
@@ -415,7 +429,8 @@ class TestTraceInit(TestCase):
         )
 
         sampler_name = _get_sampler()
-        sampler = _import_sampler(sampler_name)
+        with self.assertLogs(level=WARNING):
+            sampler = _import_sampler(sampler_name)
         _init_tracing({}, sampler=sampler)
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsNone(provider.sampler)
@@ -492,7 +507,8 @@ class TestTraceInit(TestCase):
         )
 
         sampler_name = _get_sampler()
-        sampler = _import_sampler(sampler_name)
+        with self.assertLogs(level=WARNING):
+            sampler = _import_sampler(sampler_name)
         _init_tracing({}, sampler=sampler)
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsNone(provider.sampler)
@@ -517,7 +533,8 @@ class TestTraceInit(TestCase):
         )
 
         sampler_name = _get_sampler()
-        sampler = _import_sampler(sampler_name)
+        with self.assertLogs(level=WARNING):
+            sampler = _import_sampler(sampler_name)
         _init_tracing({}, sampler=sampler)
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsNone(provider.sampler)
@@ -642,7 +659,8 @@ class TestLoggingInit(TestCase):
     @patch("opentelemetry.sdk._configuration._init_tracing")
     @patch("opentelemetry.sdk._configuration._init_logging")
     def test_logging_init_enable_env(self, logging_mock, tracing_mock):
-        _initialize_components("auto-version")
+        with self.assertLogs(level=WARNING):
+            _initialize_components("auto-version")
         self.assertEqual(logging_mock.call_count, 1)
         self.assertEqual(tracing_mock.call_count, 1)
 
@@ -735,6 +753,18 @@ class TestMetricsInit(TestCase):
         self.assertIsInstance(reader, DummyMetricReader)
         self.assertIsInstance(reader.exporter, DummyOTLPMetricExporter)
 
+    def test_metrics_init_pull_exporter(self):
+        resource = Resource.create({})
+        _init_metrics(
+            {"dummy_metric_reader": DummyMetricReaderPullExporter},
+            resource=resource,
+        )
+        self.assertEqual(self.set_provider_mock.call_count, 1)
+        provider = self.set_provider_mock.call_args[0][0]
+        self.assertIsInstance(provider, DummyMeterProvider)
+        reader = provider._sdk_config.metric_readers[0]
+        self.assertIsInstance(reader, DummyMetricReaderPullExporter)
+
 
 class TestExporterNames(TestCase):
     @patch.dict(
@@ -796,11 +826,9 @@ class TestExporterNames(TestCase):
             )
         assert len(logs_context.output) == 1
 
-    @patch.dict(environ, {"OTEL_TRACES_EXPORTER": "jaeger,zipkin"})
+    @patch.dict(environ, {"OTEL_TRACES_EXPORTER": "zipkin"})
     def test_multiple_exporters(self):
-        self.assertEqual(
-            sorted(_get_exporter_names("traces")), ["jaeger", "zipkin"]
-        )
+        self.assertEqual(sorted(_get_exporter_names("traces")), ["zipkin"])
 
     @patch.dict(environ, {"OTEL_TRACES_EXPORTER": "none"})
     def test_none_exporters(self):
@@ -828,6 +856,28 @@ class TestImportExporters(TestCase):
         self.assertEqual(
             metric_exporterts["console"].__class__,
             ConsoleMetricExporter.__class__,
+        )
+
+    @patch(
+        "opentelemetry.sdk._configuration.entry_points",
+    )
+    def test_metric_pull_exporter(self, mock_entry_points: Mock):
+        def mock_entry_points_impl(group, name):
+            if name == "dummy_pull_exporter":
+                return [
+                    IterEntryPoint(
+                        name=name, class_type=DummyMetricReaderPullExporter
+                    )
+                ]
+            return []
+
+        mock_entry_points.side_effect = mock_entry_points_impl
+        _, metric_exporters, _ = _import_exporters(
+            [], ["dummy_pull_exporter"], []
+        )
+        self.assertIs(
+            metric_exporters["dummy_pull_exporter"],
+            DummyMetricReaderPullExporter,
         )
 
 

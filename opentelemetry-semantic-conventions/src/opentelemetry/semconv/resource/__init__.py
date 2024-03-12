@@ -12,10 +12,47 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=too-many-lines
+
 from enum import Enum
 
 
 class ResourceAttributes:
+    SCHEMA_URL = "https://opentelemetry.io/schemas/v1.21.0"
+    """
+    The URL of the OpenTelemetry schema for these keys and values.
+    """
+    BROWSER_BRANDS = "browser.brands"
+    """
+    Array of brand name and version separated by a space.
+    Note: This value is intended to be taken from the [UA client hints API](https://wicg.github.io/ua-client-hints/#interface) (`navigator.userAgentData.brands`).
+    """
+
+    BROWSER_PLATFORM = "browser.platform"
+    """
+    The platform on which the browser is running.
+    Note: This value is intended to be taken from the [UA client hints API](https://wicg.github.io/ua-client-hints/#interface) (`navigator.userAgentData.platform`). If unavailable, the legacy `navigator.platform` API SHOULD NOT be used instead and this attribute SHOULD be left unset in order for the values to be consistent.
+    The list of possible values is defined in the [W3C User-Agent Client Hints specification](https://wicg.github.io/ua-client-hints/#sec-ch-ua-platform). Note that some (but not all) of these values can overlap with values in the [`os.type` and `os.name` attributes](./os.md). However, for consistency, the values in the `browser.platform` attribute should capture the exact value that the user agent provides.
+    """
+
+    BROWSER_MOBILE = "browser.mobile"
+    """
+    A boolean that is true if the browser is running on a mobile device.
+    Note: This value is intended to be taken from the [UA client hints API](https://wicg.github.io/ua-client-hints/#interface) (`navigator.userAgentData.mobile`). If unavailable, this attribute SHOULD be left unset.
+    """
+
+    BROWSER_LANGUAGE = "browser.language"
+    """
+    Preferred language of the user using the browser.
+    Note: This value is intended to be taken from the Navigator API `navigator.language`.
+    """
+
+    USER_AGENT_ORIGINAL = "user_agent.original"
+    """
+    Full user-agent string provided by the browser.
+    Note: The user-agent value SHOULD be provided only from browsers that do not have a mechanism to retrieve brands and platform individually from the User-Agent Client Hints API. To retrieve the value, the legacy `navigator.userAgent` API can be used.
+    """
+
     CLOUD_PROVIDER = "cloud.provider"
     """
     Name of the cloud provider.
@@ -29,7 +66,29 @@ class ResourceAttributes:
     CLOUD_REGION = "cloud.region"
     """
     The geographical region the resource is running.
-    Note: Refer to your provider's docs to see the available regions, for example [Alibaba Cloud regions](https://www.alibabacloud.com/help/doc-detail/40654.htm), [AWS regions](https://aws.amazon.com/about-aws/global-infrastructure/regions_az/), [Azure regions](https://azure.microsoft.com/en-us/global-infrastructure/geographies/), [Google Cloud regions](https://cloud.google.com/about/locations), or [Tencent Cloud regions](https://intl.cloud.tencent.com/document/product/213/6091).
+    Note: Refer to your provider's docs to see the available regions, for example [Alibaba Cloud regions](https://www.alibabacloud.com/help/doc-detail/40654.htm), [AWS regions](https://aws.amazon.com/about-aws/global-infrastructure/regions_az/), [Azure regions](https://azure.microsoft.com/en-us/global-infrastructure/geographies/), [Google Cloud regions](https://cloud.google.com/about/locations), or [Tencent Cloud regions](https://www.tencentcloud.com/document/product/213/6091).
+    """
+
+    CLOUD_RESOURCE_ID = "cloud.resource_id"
+    """
+    Cloud provider-specific native identifier of the monitored cloud resource (e.g. an [ARN](https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html) on AWS, a [fully qualified resource ID](https://learn.microsoft.com/en-us/rest/api/resources/resources/get-by-id) on Azure, a [full resource name](https://cloud.google.com/apis/design/resource_names#full_resource_name) on GCP).
+    Note: On some cloud providers, it may not be possible to determine the full ID at startup,
+    so it may be necessary to set `cloud.resource_id` as a span attribute instead.
+
+    The exact value to use for `cloud.resource_id` depends on the cloud provider.
+    The following well-known definitions MUST be used if you set this attribute and they apply:
+
+    * **AWS Lambda:** The function [ARN](https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html).
+      Take care not to use the "invoked ARN" directly but replace any
+      [alias suffix](https://docs.aws.amazon.com/lambda/latest/dg/configuration-aliases.html)
+      with the resolved function version, as the same runtime instance may be invokable with
+      multiple different aliases.
+    * **GCP:** The [URI of the resource](https://cloud.google.com/iam/docs/full-resource-names)
+    * **Azure:** The [Fully Qualified Resource ID](https://docs.microsoft.com/en-us/rest/api/resources/resources/get-by-id) of the invoked function,
+      *not* the function app, having the form
+      `/subscriptions/<SUBSCIPTION_GUID>/resourceGroups/<RG>/providers/Microsoft.Web/sites/<FUNCAPP>/functions/<FUNC>`.
+      This means that a span attribute MUST be used, as an Azure function app can host multiple functions that would usually share
+      a TracerProvider.
     """
 
     CLOUD_AVAILABILITY_ZONE = "cloud.availability_zone"
@@ -102,6 +161,41 @@ class ResourceAttributes:
     Note: See the [log stream ARN format documentation](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/iam-access-control-overview-cwl.html#CWL_ARN_Format). One log group can contain several log streams, so these ARNs necessarily identify both a log group and a log stream.
     """
 
+    GCP_CLOUD_RUN_JOB_EXECUTION = "gcp.cloud_run.job.execution"
+    """
+    The name of the Cloud Run [execution](https://cloud.google.com/run/docs/managing/job-executions) being run for the Job, as set by the [`CLOUD_RUN_EXECUTION`](https://cloud.google.com/run/docs/container-contract#jobs-env-vars) environment variable.
+    """
+
+    GCP_CLOUD_RUN_JOB_TASK_INDEX = "gcp.cloud_run.job.task_index"
+    """
+    The index for a task within an execution as provided by the [`CLOUD_RUN_TASK_INDEX`](https://cloud.google.com/run/docs/container-contract#jobs-env-vars) environment variable.
+    """
+
+    GCP_GCE_INSTANCE_NAME = "gcp.gce.instance.name"
+    """
+    The instance name of a GCE instance. This is the value provided by `host.name`, the visible name of the instance in the Cloud Console UI, and the prefix for the default hostname of the instance as defined by the [default internal DNS name](https://cloud.google.com/compute/docs/internal-dns#instance-fully-qualified-domain-names).
+    """
+
+    GCP_GCE_INSTANCE_HOSTNAME = "gcp.gce.instance.hostname"
+    """
+    The hostname of a GCE instance. This is the full value of the default or [custom hostname](https://cloud.google.com/compute/docs/instances/custom-hostname-vm).
+    """
+
+    HEROKU_RELEASE_CREATION_TIMESTAMP = "heroku.release.creation_timestamp"
+    """
+    Time and date the release was created.
+    """
+
+    HEROKU_RELEASE_COMMIT = "heroku.release.commit"
+    """
+    Commit hash for the current release.
+    """
+
+    HEROKU_APP_ID = "heroku.app.id"
+    """
+    Unique identifier for the application.
+    """
+
     CONTAINER_NAME = "container.name"
     """
     Container name used by container runtime.
@@ -125,6 +219,30 @@ class ResourceAttributes:
     CONTAINER_IMAGE_TAG = "container.image.tag"
     """
     Container image tag.
+    """
+
+    CONTAINER_IMAGE_ID = "container.image.id"
+    """
+    Runtime specific image identifier. Usually a hash algorithm followed by a UUID.
+    Note: Docker defines a sha256 of the image id; `container.image.id` corresponds to the `Image` field from the Docker container inspect [API](https://docs.docker.com/engine/api/v1.43/#tag/Container/operation/ContainerInspect) endpoint.
+    K8s defines a link to the container registry repository with digest `"imageID": "registry.azurecr.io /namespace/service/dockerfile@sha256:bdeabd40c3a8a492eaf9e8e44d0ebbb84bac7ee25ac0cf8a7159d25f62555625"`.
+    OCI defines a digest of manifest.
+    """
+
+    CONTAINER_COMMAND = "container.command"
+    """
+    The command used to run the container (i.e. the command name).
+    Note: If using embedded credentials or sensitive data, it is recommended to remove them to prevent potential leakage.
+    """
+
+    CONTAINER_COMMAND_LINE = "container.command_line"
+    """
+    The full command run by the container as a single string representing the full command. [2].
+    """
+
+    CONTAINER_COMMAND_ARGS = "container.command_args"
+    """
+    All the command arguments (including the command/executable itself) run by the container. [2].
     """
 
     DEPLOYMENT_ENVIRONMENT = "deployment.environment"
@@ -159,26 +277,22 @@ class ResourceAttributes:
     FAAS_NAME = "faas.name"
     """
     The name of the single function that this runtime instance executes.
-    Note: This is the name of the function as configured/deployed on the FaaS platform and is usually different from the name of the callback function (which may be stored in the [`code.namespace`/`code.function`](../../trace/semantic_conventions/span-general.md#source-code-attributes) span attributes).
-    """
+    Note: This is the name of the function as configured/deployed on the FaaS
+    platform and is usually different from the name of the callback
+    function (which may be stored in the
+    [`code.namespace`/`code.function`](/docs/general/general-attributes.md#source-code-attributes)
+    span attributes).
 
-    FAAS_ID = "faas.id"
-    """
-    The unique ID of the single function that this runtime instance executes.
-    Note: Depending on the cloud provider, use:
+    For some cloud providers, the above definition is ambiguous. The following
+    definition of function name MUST be used for this attribute
+    (and consequently the span name) for the listed cloud providers/products:
 
-* **AWS Lambda:** The function [ARN](https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html).
-Take care not to use the "invoked ARN" directly but replace any
-[alias suffix](https://docs.aws.amazon.com/lambda/latest/dg/configuration-aliases.html) with the resolved function version, as the same runtime instance may be invocable with multiple
-different aliases.
-* **GCP:** The [URI of the resource](https://cloud.google.com/iam/docs/full-resource-names)
-* **Azure:** The [Fully Qualified Resource ID](https://docs.microsoft.com/en-us/rest/api/resources/resources/get-by-id).
-
-On some providers, it may not be possible to determine the full ID at startup,
-which is why this field cannot be made required. For example, on AWS the account ID
-part of the ARN is not available without calling another AWS API
-which may be deemed too slow for a short-running lambda function.
-As an alternative, consider setting `faas.id` as a span attribute instead.
+    * **Azure:**  The full name `<FUNCAPP>/<FUNC>`, i.e., function app name
+      followed by a forward slash followed by the function name (this form
+      can also be seen in the resource JSON for the function).
+      This means that a span attribute MUST be used, as an Azure function
+      app can host multiple functions that would usually share
+      a TracerProvider (see also the `cloud.resource_id` attribute).
     """
 
     FAAS_VERSION = "faas.version"
@@ -186,13 +300,13 @@ As an alternative, consider setting `faas.id` as a span attribute instead.
     The immutable version of the function being executed.
     Note: Depending on the cloud provider and platform, use:
 
-* **AWS Lambda:** The [function version](https://docs.aws.amazon.com/lambda/latest/dg/configuration-versions.html)
-  (an integer represented as a decimal string).
-* **Google Cloud Run:** The [revision](https://cloud.google.com/run/docs/managing/revisions)
-  (i.e., the function name plus the revision suffix).
-* **Google Cloud Functions:** The value of the
-  [`K_REVISION` environment variable](https://cloud.google.com/functions/docs/env-var#runtime_environment_variables_set_automatically).
-* **Azure Functions:** Not applicable. Do not set this attribute.
+    * **AWS Lambda:** The [function version](https://docs.aws.amazon.com/lambda/latest/dg/configuration-versions.html)
+      (an integer represented as a decimal string).
+    * **Google Cloud Run (Services):** The [revision](https://cloud.google.com/run/docs/managing/revisions)
+      (i.e., the function name plus the revision suffix).
+    * **Google Cloud Functions:** The value of the
+      [`K_REVISION` environment variable](https://cloud.google.com/functions/docs/env-var#runtime_environment_variables_set_automatically).
+    * **Azure Functions:** Not applicable. Do not set this attribute.
     """
 
     FAAS_INSTANCE = "faas.instance"
@@ -203,13 +317,13 @@ As an alternative, consider setting `faas.id` as a span attribute instead.
 
     FAAS_MAX_MEMORY = "faas.max_memory"
     """
-    The amount of memory available to the serverless function in MiB.
-    Note: It's recommended to set this attribute since e.g. too little memory can easily stop a Java AWS Lambda function from working correctly. On AWS Lambda, the environment variable `AWS_LAMBDA_FUNCTION_MEMORY_SIZE` provides this information.
+    The amount of memory available to the serverless function converted to Bytes.
+    Note: It's recommended to set this attribute since e.g. too little memory can easily stop a Java AWS Lambda function from working correctly. On AWS Lambda, the environment variable `AWS_LAMBDA_FUNCTION_MEMORY_SIZE` provides this information (which must be multiplied by 1,048,576).
     """
 
     HOST_ID = "host.id"
     """
-    Unique host ID. For Cloud, this must be the instance_id assigned by the cloud provider.
+    Unique host ID. For Cloud, this must be the instance_id assigned by the cloud provider. For non-containerized systems, this should be the `machine-id`. See the table below for the sources to use to determine the `machine-id` based on operating system.
     """
 
     HOST_NAME = "host.name"
@@ -234,17 +348,44 @@ As an alternative, consider setting `faas.id` as a span attribute instead.
 
     HOST_IMAGE_ID = "host.image.id"
     """
-    VM image ID. For Cloud, this value is from the provider.
+    VM image ID or host OS image ID. For Cloud, this value is from the provider.
     """
 
     HOST_IMAGE_VERSION = "host.image.version"
     """
-    The version string of the VM image as defined in [Version Attributes](README.md#version-attributes).
+    The version string of the VM image or host OS as defined in [Version Attributes](README.md#version-attributes).
     """
 
     K8S_CLUSTER_NAME = "k8s.cluster.name"
     """
     The name of the cluster.
+    """
+
+    K8S_CLUSTER_UID = "k8s.cluster.uid"
+    """
+    A pseudo-ID for the cluster, set to the UID of the `kube-system` namespace.
+    Note: K8s does not have support for obtaining a cluster ID. If this is ever
+    added, we will recommend collecting the `k8s.cluster.uid` through the
+    official APIs. In the meantime, we are able to use the `uid` of the
+    `kube-system` namespace as a proxy for cluster ID. Read on for the
+    rationale.
+
+    Every object created in a K8s cluster is assigned a distinct UID. The
+    `kube-system` namespace is used by Kubernetes itself and will exist
+    for the lifetime of the cluster. Using the `uid` of the `kube-system`
+    namespace is a reasonable proxy for the K8s ClusterID as it will only
+    change if the cluster is rebuilt. Furthermore, Kubernetes UIDs are
+    UUIDs as standardized by
+    [ISO/IEC 9834-8 and ITU-T X.667](https://www.itu.int/ITU-T/studygroups/com17/oid.html).
+    Which states:
+
+    > If generated according to one of the mechanisms defined in Rec.
+      ITU-T X.667 | ISO/IEC 9834-8, a UUID is either guaranteed to be
+      different from all other UUIDs generated before 3603 A.D., or is
+      extremely likely to be different (depending on the mechanism chosen).
+
+    Therefore, UIDs between clusters should be extremely unlikely to
+    conflict.
     """
 
     K8S_NODE_NAME = "k8s.node.name"
@@ -359,12 +500,17 @@ As an alternative, consider setting `faas.id` as a span attribute instead.
 
     OS_VERSION = "os.version"
     """
-    The version string of the operating system as defined in [Version Attributes](../../resource/semantic_conventions/README.md#version-attributes).
+    The version string of the operating system as defined in [Version Attributes](/docs/resource/README.md#version-attributes).
     """
 
     PROCESS_PID = "process.pid"
     """
     Process identifier (PID).
+    """
+
+    PROCESS_PARENT_PID = "process.parent_pid"
+    """
+    Parent Process identifier (PID).
     """
 
     PROCESS_EXECUTABLE_NAME = "process.executable.name"
@@ -418,6 +564,11 @@ As an alternative, consider setting `faas.id` as a span attribute instead.
     Note: MUST be the same for all instances of horizontally scaled services. If the value was not specified, SDKs MUST fallback to `unknown_service:` concatenated with [`process.executable.name`](process.md#process), e.g. `unknown_service:bash`. If `process.executable.name` is not available, the value MUST be set to `unknown_service`.
     """
 
+    SERVICE_VERSION = "service.version"
+    """
+    The version string of the service API or implementation. The format is not defined by these conventions.
+    """
+
     SERVICE_NAMESPACE = "service.namespace"
     """
     A namespace for `service.name`.
@@ -430,14 +581,15 @@ As an alternative, consider setting `faas.id` as a span attribute instead.
     Note: MUST be unique for each instance of the same `service.namespace,service.name` pair (in other words `service.namespace,service.name,service.instance.id` triplet MUST be globally unique). The ID helps to distinguish instances of the same service that exist at the same time (e.g. instances of a horizontally scaled service). It is preferable for the ID to be persistent and stay the same for the lifetime of the service instance, however it is acceptable that the ID is ephemeral and changes during important lifetime events for the service (e.g. service restarts). If the service has no inherent unique ID that can be used as the value of this attribute it is recommended to generate a random Version 1 or Version 4 RFC 4122 UUID (services aiming for reproducible UUIDs may also use Version 5, see RFC 4122 for more recommendations).
     """
 
-    SERVICE_VERSION = "service.version"
-    """
-    The version string of the service API or implementation.
-    """
-
     TELEMETRY_SDK_NAME = "telemetry.sdk.name"
     """
     The name of the telemetry SDK as defined above.
+    Note: The OpenTelemetry SDK MUST set the `telemetry.sdk.name` attribute to `opentelemetry`.
+    If another SDK, like a fork or a vendor-provided implementation, is used, this SDK MUST set the
+    `telemetry.sdk.name` attribute to the fully-qualified class or module name of this SDK's main entry point
+    or another suitable identifier depending on the language.
+    The identifier `opentelemetry` is reserved and MUST NOT be used in this case.
+    All custom identifiers SHOULD be stable across different versions of an implementation.
     """
 
     TELEMETRY_SDK_LANGUAGE = "telemetry.sdk.language"
@@ -470,6 +622,33 @@ As an alternative, consider setting `faas.id` as a span attribute instead.
     Additional description of the web engine (e.g. detailed version and edition information).
     """
 
+    OTEL_SCOPE_NAME = "otel.scope.name"
+    """
+    The name of the instrumentation scope - (`InstrumentationScope.Name` in OTLP).
+    """
+
+    OTEL_SCOPE_VERSION = "otel.scope.version"
+    """
+    The version of the instrumentation scope - (`InstrumentationScope.Version` in OTLP).
+    """
+
+    OTEL_LIBRARY_NAME = "otel.library.name"
+    """
+    Deprecated, use the `otel.scope.name` attribute.
+    """
+
+    OTEL_LIBRARY_VERSION = "otel.library.version"
+    """
+    Deprecated, use the `otel.scope.version` attribute.
+    """
+
+    # Manually defined deprecated attributes
+
+    FAAS_ID = "faas.id"
+    """
+    Deprecated, use the `cloud.resource.id` attribute.
+    """
+
 
 class CloudProviderValues(Enum):
     ALIBABA_CLOUD = "alibaba_cloud"
@@ -484,6 +663,12 @@ class CloudProviderValues(Enum):
     GCP = "gcp"
     """Google Cloud Platform."""
 
+    HEROKU = "heroku"
+    """Heroku Platform as a Service."""
+
+    IBM_CLOUD = "ibm_cloud"
+    """IBM Cloud."""
+
     TENCENT_CLOUD = "tencent_cloud"
     """Tencent Cloud."""
 
@@ -494,6 +679,9 @@ class CloudPlatformValues(Enum):
 
     ALIBABA_CLOUD_FC = "alibaba_cloud_fc"
     """Alibaba Cloud Function Compute."""
+
+    ALIBABA_CLOUD_OPENSHIFT = "alibaba_cloud_openshift"
+    """Red Hat OpenShift on Alibaba Cloud."""
 
     AWS_EC2 = "aws_ec2"
     """AWS Elastic Compute Cloud."""
@@ -513,6 +701,9 @@ class CloudPlatformValues(Enum):
     AWS_APP_RUNNER = "aws_app_runner"
     """AWS App Runner."""
 
+    AWS_OPENSHIFT = "aws_openshift"
+    """Red Hat OpenShift on AWS (ROSA)."""
+
     AZURE_VM = "azure_vm"
     """Azure Virtual Machines."""
 
@@ -528,6 +719,12 @@ class CloudPlatformValues(Enum):
     AZURE_APP_SERVICE = "azure_app_service"
     """Azure App Service."""
 
+    AZURE_OPENSHIFT = "azure_openshift"
+    """Azure Red Hat OpenShift."""
+
+    GCP_BARE_METAL_SOLUTION = "gcp_bare_metal_solution"
+    """Google Bare Metal Solution (BMS)."""
+
     GCP_COMPUTE_ENGINE = "gcp_compute_engine"
     """Google Cloud Compute Engine (GCE)."""
 
@@ -542,6 +739,12 @@ class CloudPlatformValues(Enum):
 
     GCP_APP_ENGINE = "gcp_app_engine"
     """Google Cloud App Engine (GAE)."""
+
+    GCP_OPENSHIFT = "gcp_openshift"
+    """Red Hat OpenShift on Google Cloud."""
+
+    IBM_CLOUD_OPENSHIFT = "ibm_cloud_openshift"
+    """Red Hat OpenShift on IBM Cloud."""
 
     TENCENT_CLOUD_CVM = "tencent_cloud_cvm"
     """Tencent Cloud Cloud Virtual Machine (CVM)."""
@@ -650,8 +853,11 @@ class TelemetrySdkLanguageValues(Enum):
     RUBY = "ruby"
     """ruby."""
 
-    WEBJS = "webjs"
-    """webjs."""
+    RUST = "rust"
+    """rust."""
 
     SWIFT = "swift"
     """swift."""
+
+    WEBJS = "webjs"
+    """webjs."""

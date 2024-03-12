@@ -29,6 +29,7 @@ from opentelemetry.metrics import (
     ObservableGauge,
     ObservableUpDownCounter,
     UpDownCounter,
+    _Gauge,
 )
 
 # FIXME Test that the instrument methods can be called concurrently safely.
@@ -275,6 +276,50 @@ class TestHistogram(TestCase):
         )
 
         self.assertIsNone(NoOpHistogram("name").record(1))
+
+
+class TestGauge(TestCase):
+    def test_create_gauge(self):
+        """
+        Test that the Gauge can be created with create_gauge.
+        """
+
+        self.assertTrue(
+            isinstance(NoOpMeter("name").create_gauge("name"), _Gauge)
+        )
+
+    def test_api_gauge_abstract(self):
+        """
+        Test that the API Gauge is an abstract class.
+        """
+
+        self.assertTrue(isabstract(_Gauge))
+
+    def test_create_gauge_api(self):
+        """
+        Test that the API for creating a gauge accepts the name of the instrument.
+        Test that the API for creating a gauge accepts a sequence of callbacks.
+        Test that the API for creating a gauge accepts the unit of the instrument.
+        Test that the API for creating a gauge accepts the description of the instrument
+        """
+
+        create_gauge_signature = signature(Meter.create_gauge)
+        self.assertIn("name", create_gauge_signature.parameters.keys())
+        self.assertIs(
+            create_gauge_signature.parameters["name"].default,
+            Signature.empty,
+        )
+        create_gauge_signature = signature(Meter.create_gauge)
+        create_gauge_signature = signature(Meter.create_gauge)
+        self.assertIn("unit", create_gauge_signature.parameters.keys())
+        self.assertIs(create_gauge_signature.parameters["unit"].default, "")
+
+        create_gauge_signature = signature(Meter.create_gauge)
+        self.assertIn("description", create_gauge_signature.parameters.keys())
+        self.assertIs(
+            create_gauge_signature.parameters["description"].default,
+            "",
+        )
 
 
 class TestObservableGauge(TestCase):
@@ -564,14 +609,13 @@ class TestObservableUpDownCounter(TestCase):
         )
 
     def test_name_check(self):
-
         instrument = ChildInstrument("name")
 
         self.assertEqual(
             instrument._check_name_unit_description(
-                "a" * 63, "unit", "description"
+                "a" * 255, "unit", "description"
             )["name"],
-            "a" * 63,
+            "a" * 255,
         )
         self.assertEqual(
             instrument._check_name_unit_description(
@@ -591,10 +635,22 @@ class TestObservableUpDownCounter(TestCase):
             )["name"],
             "a_",
         )
+        self.assertEqual(
+            instrument._check_name_unit_description(
+                "a/", "unit", "description"
+            )["name"],
+            "a/",
+        )
 
-        self.assertIsNone(
+        # the old max length
+        self.assertIsNotNone(
             instrument._check_name_unit_description(
                 "a" * 64, "unit", "description"
+            )["name"]
+        )
+        self.assertIsNone(
+            instrument._check_name_unit_description(
+                "a" * 256, "unit", "description"
             )["name"]
         )
         self.assertIsNone(

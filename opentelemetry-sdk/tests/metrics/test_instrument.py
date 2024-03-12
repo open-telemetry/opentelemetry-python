@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from logging import WARNING
 from unittest import TestCase
 from unittest.mock import Mock
 
@@ -25,8 +26,10 @@ from opentelemetry.sdk.metrics import (
     ObservableUpDownCounter,
     UpDownCounter,
 )
+from opentelemetry.sdk.metrics import _Gauge as _SDKGauge
 from opentelemetry.sdk.metrics._internal.instrument import (
     _Counter,
+    _Gauge,
     _Histogram,
     _ObservableCounter,
     _ObservableGauge,
@@ -50,7 +53,8 @@ class TestCounter(TestCase):
     def test_add_non_monotonic(self):
         mc = Mock()
         counter = _Counter("name", Mock(), mc)
-        counter.add(-1.0)
+        with self.assertLogs(level=WARNING):
+            counter.add(-1.0)
         mc.consume_measurement.assert_not_called()
 
     def test_disallow_direct_counter_creation(self):
@@ -291,6 +295,23 @@ class TestObservableCounter(TestCase):
             ObservableCounter("name", Mock(), Mock())
 
 
+class TestGauge(TestCase):
+    def testname(self):
+        self.assertEqual(_Gauge("name", Mock(), Mock()).name, "name")
+        self.assertEqual(_Gauge("Name", Mock(), Mock()).name, "name")
+
+    def test_set(self):
+        mc = Mock()
+        gauge = _Gauge("name", Mock(), mc)
+        gauge.set(1.0)
+        mc.consume_measurement.assert_called_once()
+
+    def test_disallow_direct_counter_creation(self):
+        with self.assertRaises(TypeError):
+            # pylint: disable=abstract-class-instantiated
+            _SDKGauge("name", Mock(), Mock())
+
+
 class TestObservableUpDownCounter(TestCase):
     def test_callable_callback_0(self):
         observable_up_down_counter = _ObservableUpDownCounter(
@@ -360,7 +381,8 @@ class TestHistogram(TestCase):
     def test_record_non_monotonic(self):
         mc = Mock()
         hist = _Histogram("name", Mock(), mc)
-        hist.record(-1.0)
+        with self.assertLogs(level=WARNING):
+            hist.record(-1.0)
         mc.consume_measurement.assert_not_called()
 
     def test_disallow_direct_histogram_creation(self):
