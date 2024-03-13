@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix python 3.12 deprecation warning
   ([#3751](https://github.com/open-telemetry/opentelemetry-python/pull/3751))
+- bump mypy to 0.982
+  ([#3776](https://github.com/open-telemetry/opentelemetry-python/pull/3776))
 
 ## Version 1.23.0/0.44b0 (2024-02-23)
 
