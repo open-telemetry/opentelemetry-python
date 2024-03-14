@@ -85,7 +85,6 @@ from typing import Iterator, Optional, Sequence, cast
 from deprecated import deprecated
 
 from opentelemetry import context as context_api
-from opentelemetry.attributes import BoundedAttributes  # type: ignore
 from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import OTEL_PYTHON_TRACER_PROVIDER
 from opentelemetry.trace.propagation import (
@@ -144,9 +143,7 @@ class Link(_LinkBase):
         attributes: types.Attributes = None,
     ) -> None:
         super().__init__(context)
-        self._attributes = BoundedAttributes(
-            attributes=attributes
-        )  # type: types.Attributes
+        self._attributes = attributes
 
     @property
     def attributes(self) -> types.Attributes:
@@ -435,7 +432,7 @@ class ProxyTracer(Tracer):
         return self._tracer.start_span(*args, **kwargs)  # type: ignore
 
     @contextmanager  # type: ignore
-    def start_as_current_span(self, *args, **kwargs) -> Iterator[Span]:  # type: ignore
+    def start_as_current_span(self, *args, **kwargs) -> Iterator[Span]:
         with self._tracer.start_as_current_span(*args, **kwargs) as span:  # type: ignore
             yield span
 

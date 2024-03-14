@@ -45,7 +45,7 @@ class ProtobufEncoder(Encoder):
 
     def serialize(
         self, spans: Sequence[Span], local_endpoint: NodeEndpoint
-    ) -> str:
+    ) -> bytes:
         encoded_local_endpoint = self._encode_local_endpoint(local_endpoint)
         # pylint: disable=no-member
         encoded_spans = zipkin_pb2.ListOfSpans()
