@@ -16,11 +16,15 @@ from io import StringIO
 from json import loads
 from unittest import TestCase
 
-from opentelemetry.metrics import get_meter, set_meter_provider
+from opentelemetry.metrics import Histogram, get_meter, set_meter_provider
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import (
     ConsoleMetricExporter,
     PeriodicExportingMetricReader,
+)
+from opentelemetry.sdk.metrics.view import (
+    ExponentialBucketHistogramAggregation,
+    View,
 )
 from opentelemetry.test.globals_test import reset_metrics_globals
 
@@ -72,6 +76,56 @@ class TestConsoleExporter(TestCase):
 
         self.assertEqual(metrics["attributes"], {"a": "b"})
         self.assertEqual(metrics["value"], 1)
+
+    def test_exp_histogram_exporter(self):
+        output = StringIO()
+        exporter = ConsoleMetricExporter(out=output)
+        reader = PeriodicExportingMetricReader(
+            exporter, export_interval_millis=100
+        )
+        provider = MeterProvider(
+            metric_readers=[reader],
+            views=[
+                View(
+                    instrument_type=Histogram,
+                    aggregation=ExponentialBucketHistogramAggregation(),
+                ),
+            ],
+        )
+        set_meter_provider(provider)
+        meter = get_meter(__name__)
+        hist = meter.create_histogram(
+            "name", description="description", unit="unit"
+        )
+        hist.record(1, attributes={"a": "b"})
+        provider.shutdown()
+
+        output.seek(0)
+        result_0 = loads("".join(output.readlines()))
+
+        self.assertGreater(len(result_0), 0)
+
+        metrics = result_0["resource_metrics"][0]["scope_metrics"][0]
+
+        self.assertEqual(metrics["scope"]["name"], "test_console_exporter")
+
+        metrics = metrics["metrics"][0]
+
+        self.assertEqual(metrics["name"], "name")
+        self.assertEqual(metrics["description"], "description")
+        self.assertEqual(metrics["unit"], "unit")
+
+        metrics = metrics["data"]
+
+        self.assertEqual(metrics["aggregation_temporality"], 2)
+        self.assertEqual(len(metrics["data_points"]), 1)
+
+        metrics = metrics["data_points"][0]
+
+        self.assertEqual(metrics["attributes"], {"a": "b"})
+        self.assertEqual(metrics["count"], 1)
+        self.assertEqual(metrics["sum"], 1)
+        self.assertEqual(metrics["zero_count"], 0)
 
     def test_console_exporter_no_export(self):
 
