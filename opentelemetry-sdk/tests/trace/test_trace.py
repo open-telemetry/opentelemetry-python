@@ -1283,6 +1283,23 @@ RuntimeError: example error"""
         finally:
             self.assertEqual(len(span.events), 0)
 
+    def test_record_exception_out_of_scope(self):
+        span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))
+        out_of_scope_exception = ValueError("invalid")
+        span.record_exception(out_of_scope_exception)
+        exception_event = span.events[0]
+        self.assertEqual("exception", exception_event.name)
+        self.assertEqual(
+            "invalid", exception_event.attributes["exception.message"]
+        )
+        self.assertEqual(
+            "ValueError", exception_event.attributes["exception.type"]
+        )
+        self.assertIn(
+            "ValueError: invalid",
+            exception_event.attributes["exception.stacktrace"],
+        )
+
 
 def span_event_start_fmt(span_processor_name, span_name):
     return span_processor_name + ":" + span_name + ":start"
