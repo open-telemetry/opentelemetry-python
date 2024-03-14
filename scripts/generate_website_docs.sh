@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e
+
 # this script generates the documentation required for
 # opentelemetry.io
 
