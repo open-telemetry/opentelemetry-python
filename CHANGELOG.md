@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix python 3.12 deprecation warning
   ([#3751](https://github.com/open-telemetry/opentelemetry-python/pull/3751))
+- bump mypy to 0.982
+  ([#3776](https://github.com/open-telemetry/opentelemetry-python/pull/3776))
 
 ## Version 1.23.0/0.44b0 (2024-02-23)
 
@@ -33,7 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix explicit bucket histogram aggregation
   ([#3429](https://github.com/open-telemetry/opentelemetry-python/pull/3429))
 - Add `code.lineno`, `code.function` and `code.filepath` to all logs 
-  ([#3645](https://github.com/open-telemetry/opentelemetry-python/pull/3645))
+  ([#3675](https://github.com/open-telemetry/opentelemetry-python/pull/3675))
 - Add Synchronous Gauge instrument
   ([#3462](https://github.com/open-telemetry/opentelemetry-python/pull/3462))
 - Drop support for 3.7
