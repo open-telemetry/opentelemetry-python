@@ -44,32 +44,32 @@ def _load_runtime_context(func: _F) -> _F:
         **kwargs: typing.Dict[typing.Any, typing.Any],
     ) -> typing.Optional[typing.Any]:
         global _RUNTIME_CONTEXT  # pylint: disable=global-statement
+        if _RUNTIME_CONTEXT is None:
+            with _RUNTIME_CONTEXT_LOCK:
+                if _RUNTIME_CONTEXT is None:
+                    # FIXME use a better implementation of a configuration manager
+                    # to avoid having to get configuration values straight from
+                    # environment variables
+                    default_context = "contextvars_context"
 
-        with _RUNTIME_CONTEXT_LOCK:
-            if _RUNTIME_CONTEXT is None:
-                # FIXME use a better implementation of a configuration manager
-                # to avoid having to get configuration values straight from
-                # environment variables
-                default_context = "contextvars_context"
+                    configured_context = environ.get(
+                        OTEL_PYTHON_CONTEXT, default_context
+                    )  # type: str
+                    try:
 
-                configured_context = environ.get(
-                    OTEL_PYTHON_CONTEXT, default_context
-                )  # type: str
-                try:
-
-                    _RUNTIME_CONTEXT = next(  # type: ignore
-                        iter(  # type: ignore
-                            entry_points(  # type: ignore
-                                group="opentelemetry_context",
-                                name=configured_context,
+                        _RUNTIME_CONTEXT = next(  # type: ignore
+                            iter(  # type: ignore
+                                entry_points(  # type: ignore
+                                    group="opentelemetry_context",
+                                    name=configured_context,
+                                )
                             )
-                        )
-                    ).load()()
+                        ).load()()
 
-                except Exception:  # pylint: disable=broad-except
-                    logger.exception(
-                        "Failed to load context: %s", configured_context
-                    )
+                    except Exception:  # pylint: disable=broad-except
+                        logger.exception(
+                            "Failed to load context: %s", configured_context
+                        )
         return func(*args, **kwargs)  # type: ignore[misc]
 
     return typing.cast(_F, wrapper)  # type: ignore[misc]
