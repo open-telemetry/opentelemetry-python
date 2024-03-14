@@ -5,10 +5,9 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ROOT_DIR="${SCRIPT_DIR}/../../"
 
 # freeze the spec version to make SemanticAttributes generation reproducible
-SPEC_VERSION=v1.21.0
-SCHEMA_URL=https://opentelemetry.io/schemas/$SPEC_VERSION
-OTEL_SEMCONV_GEN_IMG_VERSION=0.21.0
-
+SEMCONV_VERSION=v1.24.0
+OTEL_SEMCONV_GEN_IMG_VERSION=0.0.7
+INCUBATING_DIR=incubating
 cd ${SCRIPT_DIR}
 
 rm -rf semantic-conventions || true
@@ -17,44 +16,83 @@ cd semantic-conventions
 
 git init
 git remote add origin https://github.com/open-telemetry/semantic-conventions.git
-git fetch origin "$SPEC_VERSION"
+git fetch origin "$SEMCONV_VERSION"
 git reset --hard FETCH_HEAD
 cd ${SCRIPT_DIR}
 
-docker run --rm \
-  -v ${SCRIPT_DIR}/semantic-conventions/model:/source \
-  -v ${SCRIPT_DIR}/templates:/templates \
-  -v ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/trace/:/output \
-  otel/semconvgen:$OTEL_SEMCONV_GEN_IMG_VERSION \
-  --only span,event,attribute_group \
-  -f /source code \
-  --template /templates/semantic_attributes.j2 \
-  --output /output/__init__.py \
-  -Dclass=SpanAttributes \
-  -DschemaUrl=$SCHEMA_URL
+# Check new schema version was added to schemas.py manually
+SCHEMAS_PY_PATH=${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/schemas.py
+CURRENT_SCHEMAS=$(cat $SCHEMAS_PY_PATH)
 
-docker run --rm \
-  -v ${SCRIPT_DIR}/semantic-conventions/model:/source \
-  -v ${SCRIPT_DIR}/templates:/templates \
-  -v ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/resource/:/output \
-  otel/semconvgen:$OTEL_SEMCONV_GEN_IMG_VERSION \
-  --only resource \
-  -f /source code \
-  --template /templates/semantic_attributes.j2 \
-  --output /output/__init__.py \
-  -Dclass=ResourceAttributes \
-  -DschemaUrl=$SCHEMA_URL
+if ! grep -q $SEMCONV_VERSION "$SCHEMAS_PY_PATH"; then
+  echo "Error: schema version $SEMCONV_VERSION is not found in $SCHEMAS_PY_PATH. Please add it manually."
+  exit 1
+fi
 
+EXCLUDED_NAMESPACES="jvm aspnetcore dotnet signalr ios android"
+
+# stable attributes
 docker run --rm \
   -v ${SCRIPT_DIR}/semantic-conventions/model:/source \
   -v ${SCRIPT_DIR}/templates:/templates \
-  -v ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/metrics/:/output \
-  otel/semconvgen:$OTEL_SEMCONV_GEN_IMG_VERSION \
-  --only metric \
-  -f /source code \
+  -v ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/:/output \
+  semconvgen:$OTEL_SEMCONV_GEN_IMG_VERSION \
+  -f /source \
+  --strict-validation false \
+  code \
+  --template /templates/semantic_attributes.j2 \
+  --output /output/{{snake_prefix}}_attributes.py \
+  --file-per-group root_namespace \
+  -Dfilter=is_stable \
+  -Dexcluded_namespaces="$EXCLUDED_NAMESPACES" \
+
+# stable metrics
+docker run --rm \
+  -v ${SCRIPT_DIR}/semantic-conventions/model:/source \
+  -v ${SCRIPT_DIR}/templates:/templates \
+  -v ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/:/output \
+  semconvgen:$OTEL_SEMCONV_GEN_IMG_VERSION \
+  -f /source \
+  --strict-validation false \
+  code \
   --template /templates/semantic_metrics.j2 \
-  --output /output/__init__.py \
-  -Dclass=MetricInstruments \
-  -DschemaUrl=$SCHEMA_URL
+  --output /output/metrics/{{snake_prefix}}_metrics.py \
+  --file-per-group root_namespace \
+  -Dfilter=is_stable \
+  -Dexcluded_namespaces="$EXCLUDED_NAMESPACES"
+
+# all attributes
+mkdir -p ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/$INCUBATING_DIR
+docker run --rm \
+  -v ${SCRIPT_DIR}/semantic-conventions/model:/source \
+  -v ${SCRIPT_DIR}/templates:/templates \
+  -v ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/:/output \
+  semconvgen:$OTEL_SEMCONV_GEN_IMG_VERSION \
+  -f /source \
+  --strict-validation false \
+  code \
+  --template /templates/semantic_attributes.j2 \
+  --output /output/$INCUBATING_DIR/{{snake_prefix}}_attributes.py \
+  --file-per-group root_namespace \
+  -Dfilter=any \
+  -Dstable_package=opentelemetry.semconv \
+  -Dexcluded_namespaces="$EXCLUDED_NAMESPACES"
+
+# all metrics
+mkdir -p ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/metrics/$INCUBATING_DIR
+docker run --rm \
+  -v ${SCRIPT_DIR}/semantic-conventions/model:/source \
+  -v ${SCRIPT_DIR}/templates:/templates \
+  -v ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/:/output \
+  semconvgen:$OTEL_SEMCONV_GEN_IMG_VERSION \
+  -f /source \
+  --strict-validation false \
+  code \
+  --template /templates/semantic_metrics.j2 \
+  --output /output/metrics/$INCUBATING_DIR/{{snake_prefix}}_metrics.py \
+  --file-per-group root_namespace \
+  -Dfilter=any \
+  -Dstable_package=opentelemetry.semconv.metrics \
+  -Dexcluded_namespaces="$EXCLUDED_NAMESPACES"
 
 cd "$ROOT_DIR"

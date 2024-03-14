@@ -84,9 +84,7 @@ class MetricInstruments:
     Unit: 1
     """
 
-    PROCESS_RUNTIME_JVM_SYSTEM_CPU_LOAD_1M = (
-        "process.runtime.jvm.system.cpu.load_1m"
-    )
+    PROCESS_RUNTIME_JVM_SYSTEM_CPU_LOAD_1M = "process.runtime.jvm.system.cpu.load_1m"
     """
     Average CPU load of the whole system for the last minute as reported by the JVM
     Instrument: gauge
@@ -121,9 +119,7 @@ class MetricInstruments:
     Unit: By
     """
 
-    PROCESS_RUNTIME_JVM_MEMORY_COMMITTED = (
-        "process.runtime.jvm.memory.committed"
-    )
+    PROCESS_RUNTIME_JVM_MEMORY_COMMITTED = "process.runtime.jvm.memory.committed"
     """
     Measure of memory committed
     Instrument: updowncounter
@@ -167,9 +163,7 @@ class MetricInstruments:
     Unit: {class}
     """
 
-    PROCESS_RUNTIME_JVM_CLASSES_UNLOADED = (
-        "process.runtime.jvm.classes.unloaded"
-    )
+    PROCESS_RUNTIME_JVM_CLASSES_UNLOADED = "process.runtime.jvm.classes.unloaded"
     """
     Number of classes unloaded since JVM start
     Instrument: counter
