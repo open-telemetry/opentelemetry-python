@@ -39,7 +39,7 @@ def _load_runtime_context(func: _F) -> _F:
     """
 
     @wraps(func)  # type: ignore[misc]
-    def wrapper(  # type: ignore[misc]
+    def wrapper(
         *args: typing.Tuple[typing.Any, typing.Any],
         **kwargs: typing.Dict[typing.Any, typing.Any],
     ) -> typing.Optional[typing.Any]:

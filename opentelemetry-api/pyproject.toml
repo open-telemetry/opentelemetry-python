@@ -27,14 +27,11 @@ dependencies = [
     "Deprecated >= 1.2.6",
     # FIXME This should be able to be removed after 3.12 is released if there is a reliable API
     # in importlib.metadata.
-    "importlib-metadata >= 6.0, < 7.0",
+    "importlib-metadata >= 6.0, <= 7.0",
 ]
 dynamic = [
     "version",
 ]
-
-[project.optional-dependencies]
-test = []
 
 [project.entry-points.opentelemetry_context]
 contextvars_context = "opentelemetry.context.contextvars_context:ContextVarsRuntimeContext"

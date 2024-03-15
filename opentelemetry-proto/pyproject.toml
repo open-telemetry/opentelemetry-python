@@ -27,9 +27,6 @@ dependencies = [
   "protobuf>=3.19, < 5.0",
 ]
 
-[project.optional-dependencies]
-test = []
-
 [project.urls]
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/opentelemetry-proto"
 

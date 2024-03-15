@@ -32,9 +32,6 @@ dependencies = [
   "requests ~= 2.7",
 ]
 
-[project.optional-dependencies]
-test = []
-
 [project.entry-points.opentelemetry_traces_exporter]
 zipkin_proto = "opentelemetry.exporter.zipkin.proto.http:ZipkinExporter"
 
