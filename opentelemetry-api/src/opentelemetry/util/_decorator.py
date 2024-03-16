@@ -39,6 +39,12 @@ class _AgnosticContextManager(
     to end the span AFTER the entire async function coroutine finishes.
 
     Else it will report near zero spans durations for async functions.
+
+    We are overriding the contextlib._GeneratorContextManager class as
+    reimplementing it is a lot of code to maintain and this class (even if it's
+    marked as protected) doesn't seems like to be evolving a lot.
+
+    For more information, see:
     https://github.com/open-telemetry/opentelemetry-python/pull/3633
     """
 
