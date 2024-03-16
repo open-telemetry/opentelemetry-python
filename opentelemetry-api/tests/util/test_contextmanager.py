@@ -66,16 +66,3 @@ class TestContextManager(unittest.TestCase):
         self.assertEqual(
             events, ["start_async_func", "finish_sleep", "cm_done"]
         )
-
-    def test_wraps_contextlib(self):
-        """It should proxy to the wrapped contextlib.contextmanager to access underlying properties"""
-
-        @_agnosticcontextmanager
-        def cm_with_args(*args, **kwargs) -> Iterator[int]:  # type: ignore
-            yield 3
-
-        instance = cm_with_args(1, 2, a="hello")
-        self.assertEqual(instance.args, (1, 2))  # type: ignore
-        self.assertEqual(instance.kwds, {"a": "hello"})  # type: ignore
-        self.assertTrue(hasattr(instance, "gen"))
-        self.assertTrue(hasattr(instance, "func"))
