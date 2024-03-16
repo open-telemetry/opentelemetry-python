@@ -40,7 +40,7 @@ class TestTracer(TestCase):
 
     def test_start_as_current_span_decorator(self):
         # using a list to track the mock call order
-        lst = []
+        calls = []
 
         class MockTracer(Tracer):
             def start_span(self, *args, **kwargs):
@@ -48,33 +48,33 @@ class TestTracer(TestCase):
 
             @_agnosticcontextmanager  # pylint: disable=protected-access
             def start_as_current_span(self, *args, **kwargs):  # type: ignore
-                lst.append(1)
+                calls.append(1)
                 yield INVALID_SPAN
-                lst.append(9)
+                calls.append(9)
 
         mock_tracer = MockTracer()
 
         # test 1 : sync function
         @mock_tracer.start_as_current_span("name")
         def function_sync(data: str) -> int:
-            lst.append(5)
+            calls.append(5)
             return len(data)
 
-        lst = []
+        calls = []
         res = function_sync("123")
         self.assertEqual(res, 3)
-        self.assertEqual(lst, [1, 5, 9])
+        self.assertEqual(calls, [1, 5, 9])
 
         # test 2 : async function
         @mock_tracer.start_as_current_span("name")
         async def function_async(data: str) -> int:
-            lst.append(5)
+            calls.append(5)
             return len(data)
 
-        lst = []
+        calls = []
         res = asyncio.run(function_async("123"))
         self.assertEqual(res, 3)
-        self.assertEqual(lst, [1, 5, 9])
+        self.assertEqual(calls, [1, 5, 9])
 
     def test_get_current_span(self):
         with self.tracer.start_as_current_span("test") as span:
