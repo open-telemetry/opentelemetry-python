@@ -1,44 +1,27 @@
-import requests
-import json
+from requests import get
+from ipdb import set_trace
+from os import environ
+from json import dumps
 
-# Authentication
+
+sbom_access_token = environ.get("SBOM_ACCESS_TOKEN")
+
+if sbom_access_token is None:
+    raise Exception("SBOM access token is not set")
+
 headers = {
-    'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
+    'Authorization': f'Bearer {sbom_access_token}'
 }
 
-# Repository information
-repo_owner = 'open-telemetry'
+repo_owner = 'ocelotl'
 repo_name = 'opentelemetry-python'
 base_url = f'https://api.github.com/repos/{repo_owner}/{repo_name}'
-base_url = f'https://api.github.com/repos/{repo_owner}/{repo_name}'
 
-# Get repository contents
 contents_url = f'{base_url}/contents'
-repo_contents = requests.get(contents_url, headers=headers).json()
+result_list = get(contents_url, headers=headers).json()
 
-# List to store dependency information
-dependencies = []
+result_str = dumps(result_list, indent=4)
 
-# Look for dependency files
-dependency_files = [
-    'requirements.txt', 'setup.py', 'Pipfile', 'requirements.in'
-]
+set_trace()
 
-for file_data in repo_contents:
-    if file_data['name'] in dependency_files:
-        file_content = requests.get(
-            file_data['download_url'], headers=headers
-        ).text
-        # Parse dependency information
-        # Example: Extract dependencies from requirements.txt
-        if file_data['name'] == 'requirements.txt':
-            dependencies.extend(file_content.strip().split('\n'))
-
-# Generate SBOM file (dummy example)
-sbom_content = json.dumps({'dependencies': dependencies}, indent=4)
-
-# Write SBOM to file
-with open('sbom.json', 'w') as sbom_file:
-    sbom_file.write(sbom_content)
-
-print("SBOM file generated successfully.")
+print(result_str)
