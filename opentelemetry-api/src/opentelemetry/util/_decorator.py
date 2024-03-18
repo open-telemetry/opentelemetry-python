@@ -76,6 +76,6 @@ def _agnosticcontextmanager(
 ) -> "Callable[P, _AgnosticContextManager[R]]":
     @functools.wraps(func)
     def helper(*args: Pargs, **kwargs: Pkwargs) -> _AgnosticContextManager[R]:
-        return _AgnosticContextManager(func, args, kwargs)  # type: ignore
+        return _AgnosticContextManager(func, args, kwargs)
 
     return helper
