@@ -29,9 +29,6 @@ dependencies = [
   "opentelemetry-exporter-otlp-proto-http == 1.24.0.dev",
 ]
 
-[project.optional-dependencies]
-test = []
-
 [project.entry-points.opentelemetry_logs_exporter]
 otlp = "opentelemetry.exporter.otlp.proto.grpc._log_exporter:OTLPLogExporter"
 
