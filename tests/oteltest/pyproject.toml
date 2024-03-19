@@ -1,0 +1,51 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "oteltest"
+dynamic = ["version"]
+description = "OpenTelemetry Tester"
+readme = "README.md"
+requires-python = ">=3.8"
+license = "Apache-2.0"
+keywords = []
+authors = [
+  { name = "OpenTelemetry Authors", email = "cncf-opentelemetry-contributors@lists.cncf.io" },
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Typing :: Typed",
+]
+dependencies = [
+  "opentelemetry-proto",
+  "opentelemetry-api",
+  "grpcio",
+  "protobuf",
+]
+
+[project.urls]
+Documentation = "https://github.com/open-telemetry/opentelemetry-python#readme"
+Issues = "https://github.com/open-telemetry/opentelemetry-python/issues"
+Source = "https://github.com/open-telemetry/opentelemetry-python/"
+
+[project.scripts]
+oteltest = "oteltest.main:main"
+otelsink = "oteltest.sink:run_with_print_handler"
+
+[tool.hatch.version]
+path = "src/oteltest/version.py"
+
+[tool.hatch.envs.default]
+dependencies = [
+  "coverage[toml]>=6.5",
+  "pytest",
+]
