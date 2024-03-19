@@ -28,5 +28,5 @@ def lint(session):
     session.install(".")
 
     session.run("black", "src")
-    session.run("isort", "--recursive", "src")
+    session.run("isort", "src")
     session.run("pylint", "src")
