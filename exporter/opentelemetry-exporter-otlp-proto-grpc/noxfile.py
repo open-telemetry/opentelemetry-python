@@ -8,7 +8,7 @@ def test(session, number):
     if session.posargs:
         session.run("pytest", *session.posargs)
     else:
-        session.run("pytest", "tests")
+        session.run("pytest", "-rf", "tests")
 
 
 @session(python=["3.8", "3.9", "3.10", "3.11"], reuse_venv=True)
