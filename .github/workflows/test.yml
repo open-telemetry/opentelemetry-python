@@ -258,3 +258,29 @@ jobs:
 
       - name: run nox
         run: nox -f ${{ matrix.package-path }}/noxfile.py -e test_${{ matrix.requirements_number }}-${{ matrix.python-version }} -- -ra --benchmark-json=${{env.RUN_MATRIX_COMBINATION }}-benchmark.json
+
+  lint:
+    strategy:
+      fail-fast: false
+      matrix:
+        package-path:
+          - "exporter/exporter-otlp-proto-grpc"
+
+    name: "lint"
+      runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout Core Repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+          architecture: 'x64'
+
+      - name: Install nox
+        run: pip install nox
+
+      - name: run nox
+        run: nox -f ${{ matrix.package-path }}/noxfile.py -e lint
