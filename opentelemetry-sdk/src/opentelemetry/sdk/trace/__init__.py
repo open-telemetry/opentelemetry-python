@@ -21,7 +21,6 @@ import logging
 import threading
 import traceback
 import typing
-from contextlib import contextmanager
 from os import environ
 from time import time_ns
 from types import MappingProxyType, TracebackType
@@ -66,6 +65,7 @@ from opentelemetry.sdk.util.instrumentation import (
 from opentelemetry.trace import SpanContext
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
+from opentelemetry.util._decorator import _agnosticcontextmanager
 
 logger = logging.getLogger(__name__)
 
@@ -850,6 +850,30 @@ class Span(trace_api.Span, ReadableSpan):
             )
         )
 
+    @_check_span_ended
+    def _add_link(self, link: trace_api.Link) -> None:
+        self._links.append(link)
+
+    def add_link(
+        self,
+        context: SpanContext,
+        attributes: types.Attributes = None,
+    ) -> None:
+        if context is None or not context.is_valid:
+            return
+
+        attributes = BoundedAttributes(
+            self._limits.max_link_attributes,
+            attributes,
+            max_value_len=self._limits.max_attribute_length,
+        )
+        self._add_link(
+            trace_api.Link(
+                context=context,
+                attributes=attributes,
+            )
+        )
+
     def _readable_span(self) -> ReadableSpan:
         return ReadableSpan(
             name=self._name,
@@ -1014,7 +1038,7 @@ class Tracer(trace_api.Tracer):
         self._span_limits = span_limits
         self._instrumentation_scope = instrumentation_scope
 
-    @contextmanager
+    @_agnosticcontextmanager  # pylint: disable=protected-access
     def start_as_current_span(
         self,
         name: str,

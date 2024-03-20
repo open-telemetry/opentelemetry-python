@@ -25,13 +25,10 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
-  "opentelemetry-api == 1.23.0.dev",
-  "opentelemetry-semantic-conventions == 0.44b0.dev",
+  "opentelemetry-api == 1.24.0.dev",
+  "opentelemetry-semantic-conventions == 0.45b0.dev",
   "typing-extensions >= 3.7.4",
 ]
-
-[project.optional-dependencies]
-test = []
 
 [project.entry-points.opentelemetry_environment_variables]
 sdk = "opentelemetry.sdk.environment_variables"

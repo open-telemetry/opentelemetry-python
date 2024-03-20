@@ -8,11 +8,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 - Retain meaningful logrecord attributes and apply log-message formatting 
-- ([#3673](https://github.com/open-telemetry/opentelemetry-python/pull/3673))
+  ([#3673](https://github.com/open-telemetry/opentelemetry-python/pull/3673))
+- Make `tracer.start_as_current_span()` decorator work with async functions
+  ([#3633](https://github.com/open-telemetry/opentelemetry-python/pull/3633))
+- Fix python 3.12 deprecation warning
+  ([#3751](https://github.com/open-telemetry/opentelemetry-python/pull/3751))
+- bump mypy to 0.982
+  ([#3776](https://github.com/open-telemetry/opentelemetry-python/pull/3776))
+- Fix ValueError message for PeriodicExportingMetricsReader
+  ([#3769](https://github.com/open-telemetry/opentelemetry-python/pull/3769))
+
+## Version 1.23.0/0.44b0 (2024-02-23)
+
 - Use Attribute rather than boundattribute in logrecord
   ([#3567](https://github.com/open-telemetry/opentelemetry-python/pull/3567))
 - Fix flush error when no LoggerProvider configured for LoggingHandler
   ([#3608](https://github.com/open-telemetry/opentelemetry-python/pull/3608))
+- Add `Span.add_link()` method to add link after span start
+  ([#3618](https://github.com/open-telemetry/opentelemetry-python/pull/3618))
 - Fix `OTLPMetricExporter` ignores `preferred_aggregation` property
   ([#3603](https://github.com/open-telemetry/opentelemetry-python/pull/3603))
 - Logs: set `observed_timestamp` field
@@ -28,7 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix explicit bucket histogram aggregation
   ([#3429](https://github.com/open-telemetry/opentelemetry-python/pull/3429))
 - Add `code.lineno`, `code.function` and `code.filepath` to all logs 
-  ([#3645](https://github.com/open-telemetry/opentelemetry-python/pull/3645))
+  ([#3675](https://github.com/open-telemetry/opentelemetry-python/pull/3675))
 - Add Synchronous Gauge instrument
   ([#3462](https://github.com/open-telemetry/opentelemetry-python/pull/3462))
 - Drop support for 3.7
@@ -1441,3 +1454,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Initial release api/sdk
+
+- Use Attribute rather than boundattribute in logrecord
+  ([#3567](https://github.com/open-telemetry/opentelemetry-python/pull/3567))
+- Fix flush error when no LoggerProvider configured for LoggingHandler
+  ([#3608](https://github.com/open-telemetry/opentelemetry-python/pull/3608))
+- Fix `OTLPMetricExporter` ignores `preferred_aggregation` property
+  ([#3603](https://github.com/open-telemetry/opentelemetry-python/pull/3603))
+- Logs: set `observed_timestamp` field
+  ([#3565](https://github.com/open-telemetry/opentelemetry-python/pull/3565))
+- Add missing Resource SchemaURL in OTLP exporters
+  ([#3652](https://github.com/open-telemetry/opentelemetry-python/pull/3652))
+- Fix loglevel warning text
+  ([#3566](https://github.com/open-telemetry/opentelemetry-python/pull/3566))
+- Prometheus Exporter string representation for target_info labels
+  ([#3659](https://github.com/open-telemetry/opentelemetry-python/pull/3659))
+- Logs: ObservedTimestamp field is missing in console exporter output
+  ([#3564](https://github.com/open-telemetry/opentelemetry-python/pull/3564))
+- Fix explicit bucket histogram aggregation
+  ([#3429](https://github.com/open-telemetry/opentelemetry-python/pull/3429))
+- Add `code.lineno`, `code.function` and `code.filepath` to all logs 
+  ([#3645](https://github.com/open-telemetry/opentelemetry-python/pull/3645))
+- Add Synchronous Gauge instrument
+  ([#3462](https://github.com/open-telemetry/opentelemetry-python/pull/3462))
+- Drop support for 3.7
+  ([#3668](https://github.com/open-telemetry/opentelemetry-python/pull/3668))
+- Include key in attribute sequence warning
+  ([#3639](https://github.com/open-telemetry/opentelemetry-python/pull/3639))
+- Upgrade markupsafe, Flask and related dependencies to dev and test
+  environments ([#3609](https://github.com/open-telemetry/opentelemetry-python/pull/3609))
+- Handle HTTP 2XX responses as successful in OTLP exporters
+  ([#3623](https://github.com/open-telemetry/opentelemetry-python/pull/3623))
+- Improve Resource Detector timeout messaging
+  ([#3645](https://github.com/open-telemetry/opentelemetry-python/pull/3645))
+- Add Proxy classes for logging
+  ([#3575](https://github.com/open-telemetry/opentelemetry-python/pull/3575))
+- Remove dependency on 'backoff' library
+  ([#3679](https://github.com/open-telemetry/opentelemetry-python/pull/3679))
+

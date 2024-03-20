@@ -24,11 +24,8 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
 ]
 dependencies = [
-  "opentelemetry-proto == 1.23.0.dev",
+  "opentelemetry-proto == 1.24.0.dev",
 ]
-
-[project.optional-dependencies]
-test = []
 
 [project.urls]
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/exporter/opentelemetry-exporter-otlp-proto-common"

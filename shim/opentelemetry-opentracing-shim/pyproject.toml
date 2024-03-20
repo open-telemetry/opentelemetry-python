@@ -30,12 +30,6 @@ dependencies = [
   "opentracing ~= 2.0",
 ]
 
-[project.optional-dependencies]
-test = [
-  "opentelemetry-test-utils == 0.44b0.dev",
-  "opentracing >= 2.2.0, <3",
-]
-
 [project.urls]
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/shim/opentelemetry-opentracing-shim"
 

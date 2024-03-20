@@ -26,12 +26,9 @@ classifiers = [
 dependencies = [
   "opentelemetry-api ~= 1.12",
   # DONOTMERGE: confirm that this will becomes ~= 1.21 in the next release
-  "opentelemetry-sdk ~= 1.23.0.dev",
+  "opentelemetry-sdk ~= 1.24.0.dev",
   "prometheus_client >= 0.5.0, < 1.0.0",
 ]
-
-[project.optional-dependencies]
-test = []
 
 [project.entry-points.opentelemetry_metrics_exporter]
 prometheus = "opentelemetry.exporter.prometheus:_AutoPrometheusMetricReader"
