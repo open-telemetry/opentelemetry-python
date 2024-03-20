@@ -952,7 +952,8 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
         return low, high
 
-    def _get_low_high(self, buckets, scale, min_scale):
+    @staticmethod
+    def _get_low_high(buckets, scale, min_scale):
         if buckets.counts == [0]:
             return 0, -1
 
@@ -972,7 +973,8 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
         return change
 
-    def _downscale(self, change: int, positive, negative):
+    @staticmethod
+    def _downscale(change: int, positive, negative):
 
         if change == 0:
             return
