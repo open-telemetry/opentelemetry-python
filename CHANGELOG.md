@@ -11,8 +11,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3633](https://github.com/open-telemetry/opentelemetry-python/pull/3633))
 - Fix python 3.12 deprecation warning
   ([#3751](https://github.com/open-telemetry/opentelemetry-python/pull/3751))
-- bump mypy to 0.982
-  ([#3776](https://github.com/open-telemetry/opentelemetry-python/pull/3776))
 - Add support for OTEL_SDK_DISABLED environment variable
   ([#3648](https://github.com/open-telemetry/opentelemetry-python/pull/3648))
 - Fix ValueError message for PeriodicExportingMetricsReader
@@ -21,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3778](https://github.com/open-telemetry/opentelemetry-python/pull/3778))
 - Fix license field in pyproject.toml files
   ([#3803](https://github.com/open-telemetry/opentelemetry-python/pull/3803))
+- Bump mypy to 1.9.0
+  ([#3795](https://github.com/open-telemetry/opentelemetry-python/pull/3795))
 
 ## Version 1.23.0/0.44b0 (2024-02-23)
 
