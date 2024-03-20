@@ -496,7 +496,7 @@ class PeriodicExportingMetricReader(MetricReader):
         elif self._export_interval_millis <= 0:
             raise ValueError(
                 f"interval value {self._export_interval_millis} is invalid \
-                and needs to be larger than zero and lower than infinity."
+                and needs to be larger than zero."
             )
 
     def _at_fork_reinit(self):

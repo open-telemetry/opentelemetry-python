@@ -24,9 +24,6 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
 ]
 
-[project.optional-dependencies]
-test = []
-
 [project.urls]
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/opentelemetry-semantic-conventions"
 

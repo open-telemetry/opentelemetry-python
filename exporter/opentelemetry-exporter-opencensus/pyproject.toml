@@ -33,9 +33,6 @@ dependencies = [
   "setuptools >= 16.0",
 ]
 
-[project.optional-dependencies]
-test = []
-
 [project.entry-points.opentelemetry_traces_exporter]
 opencensus = "opentelemetry.exporter.opencensus.trace_exporter:OpenCensusSpanExporter"
 
