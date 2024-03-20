@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import random as insecure_random
 from itertools import permutations
 from logging import WARNING
 from math import ldexp
 from sys import float_info
 from types import MethodType
 from unittest.mock import Mock, patch
-import random as insecure_random
 
 from opentelemetry.sdk.metrics._internal.aggregation import (
     AggregationTemporality,
@@ -38,11 +38,11 @@ from opentelemetry.sdk.metrics._internal.exponential_histogram.mapping.logarithm
     LogarithmMapping,
 )
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
-from opentelemetry.sdk.metrics.view import (
-    ExponentialBucketHistogramAggregation,
-)
 from opentelemetry.sdk.metrics._internal.point import (
     ExponentialHistogramDataPoint,
+)
+from opentelemetry.sdk.metrics.view import (
+    ExponentialBucketHistogramAggregation,
 )
 from opentelemetry.test import TestCase
 
