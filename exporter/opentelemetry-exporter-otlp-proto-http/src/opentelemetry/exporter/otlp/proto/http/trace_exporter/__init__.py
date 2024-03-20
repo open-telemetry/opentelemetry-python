@@ -101,7 +101,7 @@ class OTLPSpanExporter(SpanExporter):
             )
         self._shutdown = False
 
-    def _export(self, serialized_data: str):
+    def _export(self, serialized_data: bytes):
         data = serialized_data
         if self._compression == Compression.Gzip:
             gzip_data = BytesIO()
@@ -109,7 +109,7 @@ class OTLPSpanExporter(SpanExporter):
                 gzip_stream.write(serialized_data)
             data = gzip_data.getvalue()
         elif self._compression == Compression.Deflate:
-            data = zlib.compress(bytes(serialized_data))
+            data = zlib.compress(serialized_data)
 
         return self._session.post(
             url=self._endpoint,
@@ -144,7 +144,7 @@ class OTLPSpanExporter(SpanExporter):
 
             resp = self._export(serialized_data)
             # pylint: disable=no-else-return
-            if resp.status_code in (200, 202):
+            if resp.ok:
                 return SpanExportResult.SUCCESS
             elif self._retryable(resp):
                 _logger.warning(

@@ -10,7 +10,7 @@ env:
   # Otherwise, set variable to the commit of your branch on
   # opentelemetry-python-contrib which is compatible with these Core repo
   # changes.
-  CONTRIB_REPO_SHA: 21b26b39c62b27b116978813d47b9b7d104b54be
+  CONTRIB_REPO_SHA: 9a7c2f7ba16669d00be273aa9e988af0df7aba4c
   # This is needed because we do not clone the core repo in contrib builds anymore.
   # When running contrib builds as part of core builds, we use actions/checkout@v2 which
   # does not set an environment variable (simply just runs tox), which is different when
@@ -23,22 +23,48 @@ jobs:
   build:
     env:
       # We use these variables to convert between tox and GHA version literals
-      py37: 3.7
       py38: 3.8
       py39: 3.9
       py310: "3.10"
       py311: "3.11"
-      pypy3: pypy-3.7
+      pypy3: pypy-3.8
       RUN_MATRIX_COMBINATION: ${{ matrix.python-version }}-${{ matrix.package }}-${{
         matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false  # ensures the entire test matrix is run, even if one permutation fails
       matrix:
-        python-version: [py37, py38, py39, py310, py311, pypy3]
-        package: ["api", "sdk", "semantic", "getting", "shim", "exporter", "protobuf",
-          "propagator"]
+        python-version: [py38, py39, py310, py311, pypy3]
+        package:
+          - "api"
+          - "sdk"
+          - "semantic-conventions"
+          - "getting-started"
+          - "opentracing-shim"
+          - "opencensus-shim"
+          - "exporter-opencensus"
+          - "exporter-otlp-proto-common"
+          - "exporter-otlp-combined"
+          - "exporter-otlp-proto-grpc"
+          - "exporter-otlp-proto-http"
+          - "exporter-prometheus"
+          - "exporter-zipkin-combined"
+          - "exporter-zipkin-proto-http"
+          - "exporter-zipkin-json"
+          - "protobuf"
+          - "propagator-b3"
+          - "propagator-jaeger"
         os: [ubuntu-20.04, windows-2019]
+        exclude:
+          - python-version: pypy3
+            package: "opencensus-shim"
+          - python-version: pypy3
+            package: "exporter-opencensus"
+          - python-version: pypy3
+            package: "exporter-otlp-combined"
+          - python-version: pypy3
+            package: "exporter-otlp-proto-grpc"
+
     steps:
     - name: Checkout Core Repo @ SHA - ${{ github.sha }}
       uses: actions/checkout@v2
@@ -48,7 +74,7 @@ jobs:
         python-version: ${{ env[matrix.python-version] }}
         architecture: 'x64'
     - name: Install tox
-      run: pip install tox==3.27.1 -U tox-factor
+      run: pip install tox
     - name: Cache tox environment
         # Preserves .tox directory between runs for faster installs
       uses: actions/cache@v2
@@ -56,7 +82,7 @@ jobs:
         path: |
           .tox
           ~/.cache/pip
-        key: v3-tox-cache-${{ env.RUN_MATRIX_COMBINATION }}-${{ hashFiles('tox.ini',
+        key: v4-tox-cache-${{ env.RUN_MATRIX_COMBINATION }}-${{ hashFiles('tox.ini',
           'dev-requirements.txt') }}-core
     - name: Windows does not let git check out files with long names
       if: ${{ matrix.os == 'windows-2019'}}
@@ -81,7 +107,7 @@ jobs:
         python-version: '3.10'
         architecture: 'x64'
     - name: Install tox
-      run: pip install tox==3.27.1
+      run: pip install tox
     - name: Cache tox environment
         # Preserves .tox directory between runs for faster installs
       uses: actions/cache@v2
@@ -89,24 +115,71 @@ jobs:
         path: |
           .tox
           ~/.cache/pip
-        key: v3-tox-cache-${{ matrix.tox-environment }}-${{ hashFiles('tox.ini', 'dev-requirements.txt')
+        key: v4-tox-cache-${{ matrix.tox-environment }}-${{ hashFiles('tox.ini', 'dev-requirements.txt')
           }}-core
     - name: run tox
       run: tox -e ${{ matrix.tox-environment }}
 
   # Contrib unit test suite in order to ensure changes in core do not break anything in contrib.
-  # We only run contrib unit tests on the oldest supported Python version (3.7) as running the same tests
+  # We only run contrib unit tests on the oldest supported Python version (3.8) as running the same tests
   # on all versions is somewhat redundant.
   contrib-build:
     env:
       # We use these variables to convert between tox and GHA version literals
-      py37: 3.7
+      py38: 3.8
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false  # ensures the entire test matrix is run, even if one permutation fails
       matrix:
-        python-version: [py37]
-        package: ["instrumentation", "exporter"]
+        python-version: [py38]
+        package:
+          - "aiohttp-client"
+          - "aiohttp-server"
+          - "aiopg"
+          - "aio-pika"
+          - "asgi"
+          - "asyncpg"
+          - "aws-lambda"
+          - "boto"
+          - "boto3sqs"
+          - "botocore"
+          - "cassandra"
+          - "celery"
+          - "confluent-kafka"
+          - "dbapi"
+          - "django"
+          - "elasticsearch"
+          - "falcon"
+          - "fastapi"
+          - "flask"
+          - "grpc"
+          - "httpx"
+          - "jinja2"
+          - "kafka-python"
+          - "logging"
+          - "mysql"
+          - "mysqlclient"
+          - "pika"
+          - "psycopg2"
+          - "pymemcache"
+          - "pymongo"
+          - "pymysql"
+          - "pyramid"
+          - "redis"
+          - "remoulade"
+          - "requests"
+          - "sklearn"
+          - "sqlalchemy"
+          - "sqlite3"
+          - "starlette"
+          - "system-metrics"
+          - "tornado"
+          - "tortoiseorm"
+          - "urllib"
+          - "urllib3v"
+          - "wsgi"
+          - "prometheus-remote-write"
+          - "richconsole"
         os: [ubuntu-20.04]
     steps:
     - name: Checkout Contrib Repo @ SHA - ${{ env.CONTRIB_REPO_SHA }}
@@ -125,7 +198,7 @@ jobs:
         python-version: ${{ env[matrix.python-version] }}
         architecture: 'x64'
     - name: Install tox
-      run: pip install tox==3.27.1 -U tox-factor
+      run: pip install tox
     - name: Cache tox environment
         # Preserves .tox directory between runs for faster installs
       uses: actions/cache@v2

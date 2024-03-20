@@ -9,7 +9,7 @@ Build and test.
 
 .. code-block:: sh
 
-   tox -e py37-test-opentracing-shim
+   tox -e py311-test-opentracing-shim
 
 Alternatively, due to the organization of the suite, it's possible to run directly the tests using ``py.test``\ :
 

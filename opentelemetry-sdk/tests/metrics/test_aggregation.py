@@ -25,6 +25,7 @@ from opentelemetry.sdk.metrics._internal.aggregation import (
 )
 from opentelemetry.sdk.metrics._internal.instrument import (
     _Counter,
+    _Gauge,
     _Histogram,
     _ObservableCounter,
     _ObservableGauge,
@@ -269,7 +270,10 @@ class TestExplicitBucketHistogramAggregation(TestCase):
 
         explicit_bucket_histogram_aggregation = (
             _ExplicitBucketHistogramAggregation(
-                Mock(), 0, boundaries=[0, 2, 4]
+                Mock(),
+                AggregationTemporality.DELTA,
+                0,
+                boundaries=[0, 2, 4],
             )
         )
 
@@ -283,22 +287,22 @@ class TestExplicitBucketHistogramAggregation(TestCase):
 
         # The first bucket keeps count of values between (-inf, 0] (-1 and 0)
         self.assertEqual(
-            explicit_bucket_histogram_aggregation._bucket_counts[0], 2
+            explicit_bucket_histogram_aggregation._current_value[0], 2
         )
 
         # The second bucket keeps count of values between (0, 2] (1 and 2)
         self.assertEqual(
-            explicit_bucket_histogram_aggregation._bucket_counts[1], 2
+            explicit_bucket_histogram_aggregation._current_value[1], 2
         )
 
         # The third bucket keeps count of values between (2, 4] (3 and 4)
         self.assertEqual(
-            explicit_bucket_histogram_aggregation._bucket_counts[2], 2
+            explicit_bucket_histogram_aggregation._current_value[2], 2
         )
 
         # The fourth bucket keeps count of values between (4, inf) (3 and 4)
         self.assertEqual(
-            explicit_bucket_histogram_aggregation._bucket_counts[3], 1
+            explicit_bucket_histogram_aggregation._current_value[3], 1
         )
 
         histo = explicit_bucket_histogram_aggregation.collect(
@@ -313,7 +317,9 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         """
 
         explicit_bucket_histogram_aggregation = (
-            _ExplicitBucketHistogramAggregation(Mock(), 0)
+            _ExplicitBucketHistogramAggregation(
+                Mock(), AggregationTemporality.CUMULATIVE, 0
+            )
         )
 
         explicit_bucket_histogram_aggregation.aggregate(measurement(-1))
@@ -327,7 +333,10 @@ class TestExplicitBucketHistogramAggregation(TestCase):
 
         explicit_bucket_histogram_aggregation = (
             _ExplicitBucketHistogramAggregation(
-                Mock(), 0, record_min_max=False
+                Mock(),
+                AggregationTemporality.CUMULATIVE,
+                0,
+                record_min_max=False,
             )
         )
 
@@ -347,7 +356,10 @@ class TestExplicitBucketHistogramAggregation(TestCase):
 
         explicit_bucket_histogram_aggregation = (
             _ExplicitBucketHistogramAggregation(
-                Mock(), 0, boundaries=[0, 1, 2]
+                Mock(),
+                AggregationTemporality.DELTA,
+                0,
+                boundaries=[0, 1, 2],
             )
         )
 
@@ -367,6 +379,7 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         explicit_bucket_histogram_aggregation.aggregate(measurement(1))
         # 2 is used here directly to simulate the instant the second
         # collection process starts.
+
         second_histogram = explicit_bucket_histogram_aggregation.collect(
             AggregationTemporality.CUMULATIVE, 2
         )
@@ -380,7 +393,9 @@ class TestExplicitBucketHistogramAggregation(TestCase):
 
     def test_boundaries(self):
         self.assertEqual(
-            _ExplicitBucketHistogramAggregation(Mock(), 0)._boundaries,
+            _ExplicitBucketHistogramAggregation(
+                Mock(), AggregationTemporality.CUMULATIVE, 0
+            )._boundaries,
             (
                 0.0,
                 5.0,
@@ -531,6 +546,19 @@ class TestDefaultAggregation(TestCase):
             0,
         )
         self.assertIsInstance(aggregation, _ExplicitBucketHistogramAggregation)
+
+    def test_gauge(self):
+
+        aggregation = self.default_aggregation._create_aggregation(
+            _Gauge(
+                "name",
+                Mock(),
+                Mock(),
+            ),
+            Mock(),
+            0,
+        )
+        self.assertIsInstance(aggregation, _LastValueAggregation)
 
     def test_observable_gauge(self):
 

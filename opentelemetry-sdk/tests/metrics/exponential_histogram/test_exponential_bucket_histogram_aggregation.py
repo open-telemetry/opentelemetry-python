@@ -17,7 +17,6 @@ from logging import WARNING
 from math import ldexp
 from sys import float_info
 from types import MethodType
-from unittest import TestCase
 from unittest.mock import Mock, patch
 
 from opentelemetry.sdk.metrics._internal.aggregation import (
@@ -41,6 +40,7 @@ from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics.view import (
     ExponentialBucketHistogramAggregation,
 )
+from opentelemetry.test import TestCase
 
 
 def get_counts(buckets: Buckets) -> int:
@@ -793,11 +793,8 @@ class TestExponentialBucketHistogramAggregation(TestCase):
 
                 index = mapping.map_to_index(value)
 
-                try:
+                with self.assertNotRaises(Exception):
                     boundary = mapping.get_lower_boundary(index + 1)
-                except Exception as error:
-                    raise error
-                    self.fail(f"Unexpected exception {error} raised")
 
                 if boundary < value:
                     above += 1
@@ -835,30 +832,6 @@ class TestExponentialBucketHistogramAggregation(TestCase):
     def test_aggregate_collect(self):
         """
         Tests a repeated cycle of aggregation and collection.
-        """
-        """
-        try:
-            exponential_histogram_aggregation = (
-                _ExponentialBucketHistogramAggregation(
-                    Mock(),
-                    Mock(),
-                )
-            )
-
-            exponential_histogram_aggregation.aggregate(Measurement(2, Mock()))
-            exponential_histogram_aggregation.collect(
-                AggregationTemporality.CUMULATIVE, 0
-            )
-            exponential_histogram_aggregation.aggregate(Measurement(2, Mock()))
-            exponential_histogram_aggregation.collect(
-                AggregationTemporality.CUMULATIVE, 0
-            )
-            exponential_histogram_aggregation.aggregate(Measurement(2, Mock()))
-            exponential_histogram_aggregation.collect(
-                AggregationTemporality.CUMULATIVE, 0
-            )
-        except Exception as error:
-            self.fail(f"Unexpected exception raised: {error}")
         """
         exponential_histogram_aggregation = (
             _ExponentialBucketHistogramAggregation(

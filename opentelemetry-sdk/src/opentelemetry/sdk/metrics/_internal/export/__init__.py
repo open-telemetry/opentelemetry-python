@@ -44,12 +44,14 @@ from opentelemetry.sdk.metrics._internal.aggregation import (
 from opentelemetry.sdk.metrics._internal.exceptions import MetricsTimeoutError
 from opentelemetry.sdk.metrics._internal.instrument import (
     Counter,
+    Gauge,
     Histogram,
     ObservableCounter,
     ObservableGauge,
     ObservableUpDownCounter,
     UpDownCounter,
     _Counter,
+    _Gauge,
     _Histogram,
     _ObservableCounter,
     _ObservableGauge,
@@ -224,6 +226,7 @@ class MetricReader(ABC):
             _Counter: AggregationTemporality.CUMULATIVE,
             _UpDownCounter: AggregationTemporality.CUMULATIVE,
             _Histogram: AggregationTemporality.CUMULATIVE,
+            _Gauge: AggregationTemporality.CUMULATIVE,
             _ObservableCounter: AggregationTemporality.CUMULATIVE,
             _ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
             _ObservableGauge: AggregationTemporality.CUMULATIVE,
@@ -251,6 +254,8 @@ class MetricReader(ABC):
                     self._instrument_class_temporality[
                         _Histogram
                     ] = temporality
+                elif typ is Gauge:
+                    self._instrument_class_temporality[_Gauge] = temporality
                 elif typ is ObservableCounter:
                     self._instrument_class_temporality[
                         _ObservableCounter
@@ -271,6 +276,7 @@ class MetricReader(ABC):
             _Counter: DefaultAggregation(),
             _UpDownCounter: DefaultAggregation(),
             _Histogram: DefaultAggregation(),
+            _Gauge: DefaultAggregation(),
             _ObservableCounter: DefaultAggregation(),
             _ObservableUpDownCounter: DefaultAggregation(),
             _ObservableGauge: DefaultAggregation(),
@@ -288,6 +294,8 @@ class MetricReader(ABC):
                     self._instrument_class_aggregation[
                         _Histogram
                     ] = aggregation
+                elif typ is Gauge:
+                    self._instrument_class_aggregation[_Gauge] = aggregation
                 elif typ is ObservableCounter:
                     self._instrument_class_aggregation[
                         _ObservableCounter
@@ -488,7 +496,7 @@ class PeriodicExportingMetricReader(MetricReader):
         elif self._export_interval_millis <= 0:
             raise ValueError(
                 f"interval value {self._export_interval_millis} is invalid \
-                and needs to be larger than zero and lower than infinity."
+                and needs to be larger than zero."
             )
 
     def _at_fork_reinit(self):

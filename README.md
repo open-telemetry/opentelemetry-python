@@ -1,7 +1,7 @@
 # OpenTelemetry Python
 [![Slack](https://img.shields.io/badge/slack-@cncf/otel/python-brightgreen.svg?logo=slack)](https://cloud-native.slack.com/archives/C01PD4HUVBL)
 [![Build Status](https://github.com/open-telemetry/opentelemetry-python/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/open-telemetry/opentelemetry-python/actions)
-[![Minimum Python Version](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
+[![Minimum Python Version](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Release](https://img.shields.io/github/v/release/open-telemetry/opentelemetry-python?include_prereleases&style=)](https://github.com/open-telemetry/opentelemetry-python/releases/)
 [![Read the Docs](https://readthedocs.org/projects/opentelemetry-python/badge/?version=latest)](https://opentelemetry-python.readthedocs.io/en/latest/)
 

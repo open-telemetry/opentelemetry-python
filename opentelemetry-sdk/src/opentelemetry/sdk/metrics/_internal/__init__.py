@@ -31,9 +31,11 @@ from opentelemetry.metrics import (
     ObservableUpDownCounter as APIObservableUpDownCounter,
 )
 from opentelemetry.metrics import UpDownCounter as APIUpDownCounter
+from opentelemetry.metrics import _Gauge as APIGauge
 from opentelemetry.sdk.metrics._internal.exceptions import MetricsTimeoutError
 from opentelemetry.sdk.metrics._internal.instrument import (
     _Counter,
+    _Gauge,
     _Histogram,
     _ObservableCounter,
     _ObservableGauge,
@@ -214,6 +216,40 @@ class Meter(APIMeter):
             unit,
             description,
         )
+        with self._instrument_id_instrument_lock:
+            self._instrument_id_instrument[instrument_id] = instrument
+            return instrument
+
+    def create_gauge(self, name, unit="", description="") -> APIGauge:
+
+        (
+            is_instrument_registered,
+            instrument_id,
+        ) = self._is_instrument_registered(name, _Gauge, unit, description)
+
+        if is_instrument_registered:
+            # FIXME #2558 go through all views here and check if this
+            # instrument registration conflict can be fixed. If it can be, do
+            # not log the following warning.
+            _logger.warning(
+                "An instrument with name %s, type %s, unit %s and "
+                "description %s has been created already.",
+                name,
+                APIGauge.__name__,
+                unit,
+                description,
+            )
+            with self._instrument_id_instrument_lock:
+                return self._instrument_id_instrument[instrument_id]
+
+        instrument = _Gauge(
+            name,
+            self._instrumentation_scope,
+            self._measurement_consumer,
+            unit,
+            description,
+        )
+
         with self._instrument_id_instrument_lock:
             self._instrument_id_instrument[instrument_id] = instrument
             return instrument

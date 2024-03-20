@@ -14,7 +14,6 @@
 
 from math import inf
 from sys import float_info, version_info
-from unittest import TestCase
 from unittest.mock import patch
 
 from pytest import mark
@@ -31,6 +30,7 @@ from opentelemetry.sdk.metrics._internal.exponential_histogram.mapping.ieee_754 
     MIN_NORMAL_EXPONENT,
     MIN_NORMAL_VALUE,
 )
+from opentelemetry.test import TestCase
 
 if version_info >= (3, 9):
     from math import nextafter
@@ -69,11 +69,8 @@ class TestExponentMapping(TestCase):
 
     def test_exponent_mapping_0(self):
 
-        try:
+        with self.assertNotRaises(Exception):
             ExponentMapping(0)
-
-        except Exception as error:
-            self.fail(f"Unexpected exception raised: {error}")
 
     def test_exponent_mapping_zero(self):
 

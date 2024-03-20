@@ -82,7 +82,7 @@ class TestLogRecordProcessor(unittest.TestCase):
             logger.error("Some error message")
 
         expected_list_1 = [
-            ("Brace yourself", "WARNING"),
+            ("Brace yourself", "WARN"),
             ("Some error message", "ERROR"),
         ]
         self.assertEqual(logs_list_1, expected_list_1)
@@ -107,7 +107,7 @@ class MultiLogRecordProcessorTestBase(ABC):
     def make_record(self):
         return LogRecord(
             timestamp=1622300111608942000,
-            severity_text="WARNING",
+            severity_text="WARN",
             severity_number=SeverityNumber.WARN,
             body="Warning message",
         )

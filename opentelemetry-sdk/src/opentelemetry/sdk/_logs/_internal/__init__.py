@@ -206,6 +206,7 @@ class LogRecord(APILogRecord):
                 else None,
                 "dropped_attributes": self.dropped_attributes,
                 "timestamp": ns_to_iso_str(self.timestamp),
+                "observed_timestamp": ns_to_iso_str(self.observed_timestamp),
                 "trace_id": f"0x{format_trace_id(self.trace_id)}"
                 if self.trace_id is not None
                 else "",
@@ -428,6 +429,7 @@ _RESERVED_ATTRS = frozenset(
         "stack_info",
         "thread",
         "threadName",
+        "taskName",
     )
 )
 
@@ -454,27 +456,28 @@ class LoggingHandler(logging.Handler):
         attributes = {
             k: v for k, v in vars(record).items() if k not in _RESERVED_ATTRS
         }
+
+        # Add standard code attributes for logs.
+        attributes[SpanAttributes.CODE_FILEPATH] = record.pathname
+        attributes[SpanAttributes.CODE_FUNCTION] = record.funcName
+        attributes[SpanAttributes.CODE_LINENO] = record.lineno
+
         if record.exc_info:
-            exc_type = ""
-            message = ""
-            stack_trace = ""
             exctype, value, tb = record.exc_info
             if exctype is not None:
-                exc_type = exctype.__name__
+                attributes[SpanAttributes.EXCEPTION_TYPE] = exctype.__name__
             if value is not None and value.args:
-                message = value.args[0]
+                attributes[SpanAttributes.EXCEPTION_MESSAGE] = value.args[0]
             if tb is not None:
                 # https://github.com/open-telemetry/opentelemetry-specification/blob/9fa7c656b26647b27e485a6af7e38dc716eba98a/specification/trace/semantic_conventions/exceptions.md#stacktrace-representation
-                stack_trace = "".join(
+                attributes[SpanAttributes.EXCEPTION_STACKTRACE] = "".join(
                     traceback.format_exception(*record.exc_info)
                 )
-            attributes[SpanAttributes.EXCEPTION_TYPE] = exc_type
-            attributes[SpanAttributes.EXCEPTION_MESSAGE] = message
-            attributes[SpanAttributes.EXCEPTION_STACKTRACE] = stack_trace
         return attributes
 
     def _translate(self, record: logging.LogRecord) -> LogRecord:
         timestamp = int(record.created * 1e9)
+        observered_timestamp = time_ns()
         span_context = get_current_span().get_span_context()
         attributes = self._get_attributes(record)
         # This comment is taken from GanyedeNil's PR #3343, I have redacted it
@@ -519,12 +522,20 @@ class LoggingHandler(logging.Handler):
             body = record.msg % record.args
         else:
             body = record.msg
+
+        # related to https://github.com/open-telemetry/opentelemetry-python/issues/3548
+        # Severity Text = WARN as defined in https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/logs/data-model.md#displaying-severity.
+        level_name = (
+            "WARN" if record.levelname == "WARNING" else record.levelname
+        )
+
         return LogRecord(
             timestamp=timestamp,
+            observed_timestamp=observered_timestamp,
             trace_id=span_context.trace_id,
             span_id=span_context.span_id,
             trace_flags=span_context.trace_flags,
-            severity_text=record.levelname,
+            severity_text=level_name,
             severity_number=severity_number,
             body=body,
             resource=self._logger.resource,
@@ -542,9 +553,10 @@ class LoggingHandler(logging.Handler):
 
     def flush(self) -> None:
         """
-        Flushes the logging output.
+        Flushes the logging output. Skip flushing if logger is NoOp.
         """
-        self._logger_provider.force_flush()
+        if not isinstance(self._logger, NoOpLogger):
+            self._logger_provider.force_flush()
 
 
 class Logger(APILogger):

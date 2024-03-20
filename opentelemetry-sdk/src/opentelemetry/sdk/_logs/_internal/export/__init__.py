@@ -216,7 +216,6 @@ class BatchLogRecordProcessor(LogRecordProcessor):
         self._flush_request = None
         self._log_records = [None] * self._max_export_batch_size
         self._worker_thread.start()
-        # Only available in *nix since py37.
         if hasattr(os, "register_at_fork"):
             os.register_at_fork(
                 after_in_child=self._at_fork_reinit

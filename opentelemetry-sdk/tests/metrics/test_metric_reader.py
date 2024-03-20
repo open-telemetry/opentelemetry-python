@@ -17,8 +17,10 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from opentelemetry.sdk.metrics import Counter, Histogram, ObservableGauge
+from opentelemetry.sdk.metrics import _Gauge as _SDKGauge
 from opentelemetry.sdk.metrics._internal.instrument import (
     _Counter,
+    _Gauge,
     _Histogram,
     _ObservableCounter,
     _ObservableGauge,
@@ -39,6 +41,7 @@ from opentelemetry.sdk.metrics.view import (
 _expected_keys = [
     _Counter,
     _UpDownCounter,
+    _Gauge,
     _Histogram,
     _ObservableCounter,
     _ObservableUpDownCounter,
@@ -76,6 +79,7 @@ class TestMetricReader(TestCase):
             preferred_temporality={
                 Histogram: AggregationTemporality.DELTA,
                 ObservableGauge: AggregationTemporality.DELTA,
+                _SDKGauge: AggregationTemporality.DELTA,
             }
         )
 
@@ -111,6 +115,11 @@ class TestMetricReader(TestCase):
             dummy_metric_reader._instrument_class_temporality[
                 _ObservableGauge
             ],
+            AggregationTemporality.DELTA,
+        )
+
+        self.assertEqual(
+            dummy_metric_reader._instrument_class_temporality[_Gauge],
             AggregationTemporality.DELTA,
         )
 

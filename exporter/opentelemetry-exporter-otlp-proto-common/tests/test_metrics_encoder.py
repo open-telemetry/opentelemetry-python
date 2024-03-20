@@ -99,6 +99,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
         expected = ExportMetricsServiceRequest(
             resource_metrics=[
                 pb2.ResourceMetrics(
+                    schema_url="resource_schema_url",
                     resource=OTLPResource(
                         attributes=[
                             KeyValue(key="a", value=AnyValue(int_value=1)),
@@ -178,6 +179,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
         expected = ExportMetricsServiceRequest(
             resource_metrics=[
                 pb2.ResourceMetrics(
+                    schema_url="resource_schema_url",
                     resource=OTLPResource(
                         attributes=[
                             KeyValue(key="a", value=AnyValue(int_value=1)),
@@ -257,6 +259,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
         expected = ExportMetricsServiceRequest(
             resource_metrics=[
                 pb2.ResourceMetrics(
+                    schema_url="resource_schema_url",
                     resource=OTLPResource(
                         attributes=[
                             KeyValue(key="a", value=AnyValue(int_value=1)),
@@ -333,6 +336,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
         expected = ExportMetricsServiceRequest(
             resource_metrics=[
                 pb2.ResourceMetrics(
+                    schema_url="resource_schema_url",
                     resource=OTLPResource(
                         attributes=[
                             KeyValue(key="a", value=AnyValue(int_value=1)),
@@ -409,6 +413,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
         expected = ExportMetricsServiceRequest(
             resource_metrics=[
                 pb2.ResourceMetrics(
+                    schema_url="resource_schema_url",
                     resource=OTLPResource(
                         attributes=[
                             KeyValue(key="a", value=AnyValue(int_value=1)),
@@ -511,6 +516,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
         expected = ExportMetricsServiceRequest(
             resource_metrics=[
                 pb2.ResourceMetrics(
+                    schema_url="resource_schema_url",
                     resource=OTLPResource(
                         attributes=[
                             KeyValue(key="a", value=AnyValue(int_value=1)),
@@ -739,6 +745,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
         expected = ExportMetricsServiceRequest(
             resource_metrics=[
                 pb2.ResourceMetrics(
+                    schema_url="resource_schema_url",
                     resource=OTLPResource(
                         attributes=[
                             KeyValue(key="a", value=AnyValue(int_value=1)),
