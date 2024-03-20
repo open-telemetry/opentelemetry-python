@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix python 3.12 deprecation warning
   ([#3751](https://github.com/open-telemetry/opentelemetry-python/pull/3751))
+- Fix exponential histograms
+  ([#3798](https://github.com/open-telemetry/opentelemetry-python/pull/3798))
 - bump mypy to 0.982
   ([#3776](https://github.com/open-telemetry/opentelemetry-python/pull/3776))
 - Fix ValueError message for PeriodicExportingMetricsReader
