@@ -18,6 +18,8 @@ import typing
 from functools import wraps
 from os import environ
 from uuid import uuid4
+from sys import version_info
+from platform import system
 
 # pylint: disable=wrong-import-position
 from opentelemetry.context.context import Context, _RuntimeContext  # noqa
@@ -56,6 +58,22 @@ def _load_runtime_context(func: _F) -> _F:
                     OTEL_PYTHON_CONTEXT, default_context
                 )  # type: str
                 try:
+
+                    from ipdb import set_trace
+                    set_trace
+
+                    logger.critical(system())
+
+                    logger.critical(version_info)
+
+                    the_entry_points = entry_points(  # type: ignore
+                        group="opentelemetry_context",
+                        name=configured_context,
+                    )
+
+                    logger.critical(the_entry_points)
+
+                    raise Exception(the_entry_points)
 
                     _RUNTIME_CONTEXT = next(  # type: ignore
                         iter(  # type: ignore
