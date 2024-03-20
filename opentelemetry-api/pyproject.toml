@@ -33,9 +33,6 @@ dynamic = [
     "version",
 ]
 
-[project.optional-dependencies]
-test = []
-
 [project.entry-points.opentelemetry_context]
 contextvars_context = "opentelemetry.context.contextvars_context:ContextVarsRuntimeContext"
 
