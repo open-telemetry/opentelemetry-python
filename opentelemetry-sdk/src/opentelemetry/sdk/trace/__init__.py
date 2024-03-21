@@ -756,7 +756,7 @@ class Span(trace_api.Span, ReadableSpan):
         record_exception: bool = True,
         set_status_on_exception: bool = True,
         limits=_UnsetLimits,
-        instrumentation_scope: InstrumentationScope = None,
+        instrumentation_scope: Optional[InstrumentationScope] = None,
     ) -> None:
         if resource is None:
             resource = Resource.create({})
