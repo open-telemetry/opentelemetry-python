@@ -49,6 +49,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
     OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT,
     OTEL_LINK_ATTRIBUTE_COUNT_LIMIT,
+    OTEL_SDK_DISABLED,
     OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
     OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT,
     OTEL_SPAN_EVENT_COUNT_LIMIT,
@@ -62,7 +63,7 @@ from opentelemetry.sdk.util.instrumentation import (
     InstrumentationInfo,
     InstrumentationScope,
 )
-from opentelemetry.trace import SpanContext
+from opentelemetry.trace import NoOpTracer, SpanContext
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
 from opentelemetry.util._decorator import _agnosticcontextmanager
@@ -987,13 +988,12 @@ class Span(trace_api.Span, ReadableSpan):
         escaped: bool = False,
     ) -> None:
         """Records an exception as a span event."""
-        try:
-            stacktrace = traceback.format_exc()
-        except Exception:  # pylint: disable=broad-except
-            # workaround for python 3.4, format_exc can raise
-            # an AttributeError if the __context__ on
-            # an exception is None
-            stacktrace = "Exception occurred on stacktrace formatting"
+        # TODO: keep only exception as first argument after baseline is 3.10
+        stacktrace = "".join(
+            traceback.format_exception(
+                type(exception), value=exception, tb=exception.__traceback__
+            )
+        )
         _attributes = {
             "exception.type": exception.__class__.__name__,
             "exception.message": str(exception),
@@ -1176,6 +1176,8 @@ class TracerProvider(trace_api.TracerProvider):
             sampler = sampling._get_from_env_or_default()
         self.sampler = sampler
         self._span_limits = span_limits or SpanLimits()
+        disabled = environ.get(OTEL_SDK_DISABLED, "")
+        self._disabled = disabled.lower().strip() == "true"
         self._atexit_handler = None
 
         if shutdown_on_exit:
@@ -1191,6 +1193,9 @@ class TracerProvider(trace_api.TracerProvider):
         instrumenting_library_version: typing.Optional[str] = None,
         schema_url: typing.Optional[str] = None,
     ) -> "trace_api.Tracer":
+        if self._disabled:
+            logger.warning("SDK is disabled.")
+            return NoOpTracer()
         if not instrumenting_module_name:  # Reject empty strings too.
             instrumenting_module_name = ""
             logger.error("get_tracer called with missing module name.")
