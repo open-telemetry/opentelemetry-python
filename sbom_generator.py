@@ -1,5 +1,4 @@
 from requests import get
-from ipdb import set_trace
 from os import environ
 from json import dumps
 
@@ -10,7 +9,7 @@ if sbom_access_token is None:
     raise Exception("SBOM access token is not set")
 
 headers = {
-    'Authorization': f'Bearer {sbom_access_token}',
+    # 'Authorization': f'Bearer {sbom_access_token}',
     "Accept": "application/vnd.github+json",
     "X-GitHub-Api-Version": "2022-11-28"
 }

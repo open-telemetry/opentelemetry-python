@@ -3,7 +3,7 @@
         "SPDXID": "SPDXRef-DOCUMENT",
         "spdxVersion": "SPDX-2.3",
         "creationInfo": {
-            "created": "2024-03-21T00:13:09Z",
+            "created": "2024-03-21T00:14:41Z",
             "creators": [
                 "Tool: GitHub.com-Dependency-Graph"
             ],
@@ -14,7 +14,7 @@
         "documentDescribes": [
             "SPDXRef-com.github.open-telemetry-opentelemetry-python"
         ],
-        "documentNamespace": "https://github.com/open-telemetry/opentelemetry-python/dependency_graph/sbom-b7c176264c5e1cbe",
+        "documentNamespace": "https://github.com/open-telemetry/opentelemetry-python/dependency_graph/sbom-cd29e576f6c3676a",
         "packages": [
             {
                 "SPDXID": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
