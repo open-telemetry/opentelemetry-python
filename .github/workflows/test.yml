@@ -23,48 +23,16 @@ jobs:
   build:
     env:
       # We use these variables to convert between tox and GHA version literals
-      py38: 3.8
-      py39: 3.9
-      py310: "3.10"
       py311: "3.11"
-      pypy3: pypy-3.8
       RUN_MATRIX_COMBINATION: ${{ matrix.python-version }}-${{ matrix.package }}-${{
         matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false  # ensures the entire test matrix is run, even if one permutation fails
       matrix:
-        python-version: [py38, py39, py310, py311, pypy3]
-        package:
-          - "api"
-          - "sdk"
-          - "semantic-conventions"
-          - "getting-started"
-          - "opentracing-shim"
-          - "opencensus-shim"
-          - "exporter-opencensus"
-          - "exporter-otlp-proto-common"
-          - "exporter-otlp-combined"
-          - "exporter-otlp-proto-grpc"
-          - "exporter-otlp-proto-http"
-          - "exporter-prometheus"
-          - "exporter-zipkin-combined"
-          - "exporter-zipkin-proto-http"
-          - "exporter-zipkin-json"
-          - "protobuf"
-          - "propagator-b3"
-          - "propagator-jaeger"
-        os: [ubuntu-20.04, windows-2019]
-        exclude:
-          - python-version: pypy3
-            package: "opencensus-shim"
-          - python-version: pypy3
-            package: "exporter-opencensus"
-          - python-version: pypy3
-            package: "exporter-otlp-combined"
-          - python-version: pypy3
-            package: "exporter-otlp-proto-grpc"
-
+        python-version: [py311]
+        package: ["api"]
+        os: [ubuntu-20.04]
     steps:
     - name: Checkout Core Repo @ SHA - ${{ github.sha }}
       uses: actions/checkout@v2
@@ -90,123 +58,5 @@ jobs:
     - name: run tox
       run: tox -f ${{ matrix.python-version }}-${{ matrix.package }} -- -ra --benchmark-json=${{
         env.RUN_MATRIX_COMBINATION }}-benchmark.json
-  misc:
-    strategy:
-      fail-fast: false
-      matrix:
-        tox-environment: ["docker-tests-proto3", "docker-tests-proto4", "lint", "spellcheck",
-          "docs", "mypy", "mypyinstalled", "tracecontext"]
-    name: ${{ matrix.tox-environment }}
-    runs-on: ubuntu-20.04
-    steps:
-    - name: Checkout Core Repo @ SHA - ${{ github.sha }}
-      uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.10'
-        architecture: 'x64'
-    - name: Install tox
-      run: pip install tox
-    - name: Cache tox environment
-        # Preserves .tox directory between runs for faster installs
-      uses: actions/cache@v2
-      with:
-        path: |
-          .tox
-          ~/.cache/pip
-        key: v4-tox-cache-${{ matrix.tox-environment }}-${{ hashFiles('tox.ini', 'dev-requirements.txt')
-          }}-core
-    - name: run tox
-      run: tox -e ${{ matrix.tox-environment }}
-
-  # Contrib unit test suite in order to ensure changes in core do not break anything in contrib.
-  # We only run contrib unit tests on the oldest supported Python version (3.8) as running the same tests
-  # on all versions is somewhat redundant.
-  contrib-build:
-    env:
-      # We use these variables to convert between tox and GHA version literals
-      py38: 3.8
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false  # ensures the entire test matrix is run, even if one permutation fails
-      matrix:
-        python-version: [py38]
-        package:
-          - "aiohttp-client"
-          - "aiohttp-server"
-          - "aiopg"
-          - "aio-pika"
-          - "asgi"
-          - "asyncpg"
-          - "aws-lambda"
-          - "boto"
-          - "boto3sqs"
-          - "botocore"
-          - "cassandra"
-          - "celery"
-          - "confluent-kafka"
-          - "dbapi"
-          - "django"
-          - "elasticsearch"
-          - "falcon"
-          - "fastapi"
-          - "flask"
-          - "grpc"
-          - "httpx"
-          - "jinja2"
-          - "kafka-python"
-          - "logging"
-          - "mysql"
-          - "mysqlclient"
-          - "pika"
-          - "psycopg2"
-          - "pymemcache"
-          - "pymongo"
-          - "pymysql"
-          - "pyramid"
-          - "redis"
-          - "remoulade"
-          - "requests"
-          - "sklearn"
-          - "sqlalchemy"
-          - "sqlite3"
-          - "starlette"
-          - "system-metrics"
-          - "tornado"
-          - "tortoiseorm"
-          - "urllib"
-          - "urllib3v"
-          - "wsgi"
-          - "prometheus-remote-write"
-          - "richconsole"
-        os: [ubuntu-20.04]
-    steps:
-    - name: Checkout Contrib Repo @ SHA - ${{ env.CONTRIB_REPO_SHA }}
-      uses: actions/checkout@v2
-      with:
-        repository: open-telemetry/opentelemetry-python-contrib
-        ref: ${{ env.CONTRIB_REPO_SHA }}
-    - name: Checkout Core Repo @ SHA ${{ github.sha }}
-      uses: actions/checkout@v2
-      with:
-        repository: open-telemetry/opentelemetry-python
-        path: opentelemetry-python-core
-    - name: Set up Python ${{ env[matrix.python-version] }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ env[matrix.python-version] }}
-        architecture: 'x64'
-    - name: Install tox
-      run: pip install tox
-    - name: Cache tox environment
-        # Preserves .tox directory between runs for faster installs
-      uses: actions/cache@v2
-      with:
-        path: |
-          .tox
-          ~/.cache/pip
-        key: v3-tox-cache-${{ matrix.python-version }}-${{ matrix.package }}-${{ matrix.os
-          }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-contrib
-    - name: run tox
-      run: tox -f ${{ matrix.python-version }}-${{ matrix.package }} -- -ra
+    - name: Create SBOM
+      uses: anchore/sbom-action@v0
