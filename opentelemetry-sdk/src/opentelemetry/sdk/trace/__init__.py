@@ -988,13 +988,12 @@ class Span(trace_api.Span, ReadableSpan):
         escaped: bool = False,
     ) -> None:
         """Records an exception as a span event."""
-        try:
-            stacktrace = traceback.format_exc()
-        except Exception:  # pylint: disable=broad-except
-            # workaround for python 3.4, format_exc can raise
-            # an AttributeError if the __context__ on
-            # an exception is None
-            stacktrace = "Exception occurred on stacktrace formatting"
+        # TODO: keep only exception as first argument after baseline is 3.10
+        stacktrace = "".join(
+            traceback.format_exception(
+                type(exception), value=exception, tb=exception.__traceback__
+            )
+        )
         _attributes = {
             "exception.type": exception.__class__.__name__,
             "exception.message": str(exception),
