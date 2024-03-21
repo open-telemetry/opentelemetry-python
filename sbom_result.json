@@ -1,0 +1,2836 @@
+{
+    "sbom": {
+        "SPDXID": "SPDXRef-DOCUMENT",
+        "spdxVersion": "SPDX-2.3",
+        "creationInfo": {
+            "created": "2024-03-21T00:13:09Z",
+            "creators": [
+                "Tool: GitHub.com-Dependency-Graph"
+            ],
+            "comment": "Exact versions could not be resolved for some packages. For more information: https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/about-the-dependency-graph#dependencies-included."
+        },
+        "name": "com.github.open-telemetry/opentelemetry-python",
+        "dataLicense": "CC0-1.0",
+        "documentDescribes": [
+            "SPDXRef-com.github.open-telemetry-opentelemetry-python"
+        ],
+        "documentNamespace": "https://github.com/open-telemetry/opentelemetry-python/dependency_graph/sbom-b7c176264c5e1cbe",
+        "packages": [
+            {
+                "SPDXID": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "name": "com.github.open-telemetry/opentelemetry-python",
+                "versionInfo": "",
+                "downloadLocation": "git+https://github.com/open-telemetry/opentelemetry-python",
+                "licenseDeclared": "Apache-2.0",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceType": "purl",
+                        "referenceLocator": "pkg:github/open-telemetry/opentelemetry-python"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-asgiref-3.7.2",
+                "name": "pip:asgiref",
+                "versionInfo": "3.7.2",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "BSD-2-Clause AND BSD-3-Clause",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/asgiref@3.7.2",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-black-22.3.0",
+                "name": "pip:black",
+                "versionInfo": "22.3.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "MIT",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/black@22.3.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-bleach-4.1.0",
+                "name": "pip:bleach",
+                "versionInfo": "4.1.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Apache-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/bleach@4.1.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-codespell-2.1.0",
+                "name": "pip:codespell",
+                "versionInfo": "2.1.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "GPL-2.0 AND GPL-2.0-only",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/codespell@2.1.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-flake8-6.1.0",
+                "name": "pip:flake8",
+                "versionInfo": "6.1.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/flake8@6.1.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-flaky-3.7.0",
+                "name": "pip:flaky",
+                "versionInfo": "3.7.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Apache-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/flaky@3.7.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-gitpython-3.1.41",
+                "name": "pip:gitpython",
+                "versionInfo": "3.1.41",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "BSD-2-Clause AND BSD-3-Clause",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/gitpython@3.1.41",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-httpretty-1.1.4",
+                "name": "pip:httpretty",
+                "versionInfo": "1.1.4",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "MIT",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/httpretty@1.1.4",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-isort-5.12.0",
+                "name": "pip:isort",
+                "versionInfo": "5.12.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "MIT",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/isort@5.12.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-markupsafe-2.1.3",
+                "name": "pip:markupsafe",
+                "versionInfo": "2.1.3",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "BSD-2-Clause AND BSD-3-Clause",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/markupsafe@2.1.3",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-mypy-0.982",
+                "name": "pip:mypy",
+                "versionInfo": "0.982",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "MIT",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/mypy@0.982",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-psutil-5.9.6",
+                "name": "pip:psutil",
+                "versionInfo": "5.9.6",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "BSD-2-Clause AND BSD-3-Clause",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/psutil@5.9.6",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-pylint-3.0.2",
+                "name": "pip:pylint",
+                "versionInfo": "3.0.2",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "GPL-2.0-or-later",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/pylint@3.0.2",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-pytest-7.1.3",
+                "name": "pip:pytest",
+                "versionInfo": "7.1.3",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "MIT",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/pytest@7.1.3",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-pytest-cov-4.1.0",
+                "name": "pip:pytest-cov",
+                "versionInfo": "4.1.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "MIT",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/pytest-cov@4.1.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-readme-renderer-42.0",
+                "name": "pip:readme-renderer",
+                "versionInfo": "42.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Apache-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/readme-renderer@42.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-requests-2.31.0",
+                "name": "pip:requests",
+                "versionInfo": "2.31.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Apache-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/requests@2.31.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-ruamel-yaml-0.17.21",
+                "name": "pip:ruamel-yaml",
+                "versionInfo": "0.17.21",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "MIT",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/ruamel-yaml@0.17.21",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-sphinx-7.1.2",
+                "name": "pip:sphinx",
+                "versionInfo": "7.1.2",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "BSD-2-Clause",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/sphinx@7.1.2",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-sphinx-autodoc-typehints-1.25.2",
+                "name": "pip:sphinx-autodoc-typehints",
+                "versionInfo": "1.25.2",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "MIT",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/sphinx-autodoc-typehints@1.25.2",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-sphinx-rtd-theme-2.0.0rc4",
+                "name": "pip:sphinx-rtd-theme",
+                "versionInfo": "2.0.0rc4",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "MIT",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/sphinx-rtd-theme@2.0.0rc4",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-deprecated",
+                "name": "pip:deprecated",
+                "versionInfo": "~> 1.2",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION"
+            },
+            {
+                "SPDXID": "SPDXRef-pip-django",
+                "name": "pip:django",
+                "versionInfo": "~> 4.2",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION"
+            },
+            {
+                "SPDXID": "SPDXRef-pip-flask",
+                "name": "pip:flask",
+                "versionInfo": "~> 2.3",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION"
+            },
+            {
+                "SPDXID": "SPDXRef-pip-grpcio",
+                "name": "pip:grpcio",
+                "versionInfo": "~> 1.27",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION"
+            },
+            {
+                "SPDXID": "SPDXRef-pip-markupsafe",
+                "name": "pip:markupsafe",
+                "versionInfo": "~> 2.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION"
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opentracing",
+                "name": "pip:opentracing",
+                "versionInfo": "~> 2.2.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION"
+            },
+            {
+                "SPDXID": "SPDXRef-pip-protobuf",
+                "name": "pip:protobuf",
+                "versionInfo": "~> 3.19",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION"
+            },
+            {
+                "SPDXID": "SPDXRef-pip-sphinx-jekyll-builder-0.3.0",
+                "name": "pip:sphinx-jekyll-builder",
+                "versionInfo": "0.3.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "MIT",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/sphinx-jekyll-builder@0.3.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-thrift",
+                "name": "pip:thrift",
+                "versionInfo": "~> 0.10",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION"
+            },
+            {
+                "SPDXID": "SPDXRef-pip-wrapt",
+                "name": "pip:wrapt",
+                "versionInfo": ">= 1.0.0,< 2.0.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION"
+            },
+            {
+                "SPDXID": "SPDXRef-pip-grpcio-tools-1.48.1",
+                "name": "pip:grpcio-tools",
+                "versionInfo": "1.48.1",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Apache-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/grpcio-tools@1.48.1",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-mypy-protobuf",
+                "name": "pip:mypy-protobuf",
+                "versionInfo": "~> 3.0.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION"
+            },
+            {
+                "SPDXID": "SPDXRef-pip-click-8.1.7",
+                "name": "pip:click",
+                "versionInfo": "8.1.7",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "BSD-2-Clause AND BSD-3-Clause",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/click@8.1.7",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-flask-2.3.3",
+                "name": "pip:flask",
+                "versionInfo": "2.3.3",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "BSD-2-Clause",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/flask@2.3.3",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-googleapis-common-protos-1.52.0",
+                "name": "pip:googleapis-common-protos",
+                "versionInfo": "1.52.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Apache-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/googleapis-common-protos@1.52.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-grpcio-1.56.0",
+                "name": "pip:grpcio",
+                "versionInfo": "1.56.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Apache-2.0 AND BSD-3-Clause AND MPL-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/grpcio@1.56.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-gunicorn-20.0.4",
+                "name": "pip:gunicorn",
+                "versionInfo": "20.0.4",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "MIT",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/gunicorn@20.0.4",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-itsdangerous-2.1.2",
+                "name": "pip:itsdangerous",
+                "versionInfo": "2.1.2",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "BSD-2-Clause AND BSD-3-Clause",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/itsdangerous@2.1.2",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-jinja2-3.1.2",
+                "name": "pip:jinja2",
+                "versionInfo": "3.1.2",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "BSD-2-Clause",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/jinja2@3.1.2",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opentelemetry-api-1.20.0",
+                "name": "pip:opentelemetry-api",
+                "versionInfo": "1.20.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Apache-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/opentelemetry-api@1.20.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opentelemetry-exporter-otlp-1.20.0",
+                "name": "pip:opentelemetry-exporter-otlp",
+                "versionInfo": "1.20.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Apache-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/opentelemetry-exporter-otlp@1.20.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opentelemetry-instrumentation-0.41b0",
+                "name": "pip:opentelemetry-instrumentation",
+                "versionInfo": "0.41b0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Apache-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/opentelemetry-instrumentation@0.41b0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opentelemetry-instrumentation-flask-0.41b0",
+                "name": "pip:opentelemetry-instrumentation-flask",
+                "versionInfo": "0.41b0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Apache-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/opentelemetry-instrumentation-flask@0.41b0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opentelemetry-instrumentation-wsgi-0.41b0",
+                "name": "pip:opentelemetry-instrumentation-wsgi",
+                "versionInfo": "0.41b0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Apache-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/opentelemetry-instrumentation-wsgi@0.41b0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opentelemetry-sdk-1.20.0",
+                "name": "pip:opentelemetry-sdk",
+                "versionInfo": "1.20.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Apache-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/opentelemetry-sdk@1.20.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-protobuf-3.19.5",
+                "name": "pip:protobuf",
+                "versionInfo": "3.19.5",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "BSD-3-Clause",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/protobuf@3.19.5",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-six-1.15.0",
+                "name": "pip:six",
+                "versionInfo": "1.15.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "MIT",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/six@1.15.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-thrift-0.13.0",
+                "name": "pip:thrift",
+                "versionInfo": "0.13.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Apache-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/thrift@0.13.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-uwsgi-2.0.22",
+                "name": "pip:uwsgi",
+                "versionInfo": "2.0.22",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/uwsgi@2.0.22",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-werkzeug-3.0.1",
+                "name": "pip:werkzeug",
+                "versionInfo": "3.0.1",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "BSD-2-Clause AND BSD-3-Clause",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/werkzeug@3.0.1",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-wrapt-1.16.0",
+                "name": "pip:wrapt",
+                "versionInfo": "1.16.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/wrapt@1.16.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opentelemetry-exporter-prometheus-1.12.0rc1",
+                "name": "pip:opentelemetry-exporter-prometheus",
+                "versionInfo": "1.12.0rc1",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Apache-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/opentelemetry-exporter-prometheus@1.12.0rc1",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-deprecated-1.2.13",
+                "name": "pip:deprecated",
+                "versionInfo": "1.2.13",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "MIT",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/deprecated@1.2.13",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opentelemetry-api-1.15.0",
+                "name": "pip:opentelemetry-api",
+                "versionInfo": "1.15.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Apache-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/opentelemetry-api@1.15.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opentelemetry-sdk-1.15.0",
+                "name": "pip:opentelemetry-sdk",
+                "versionInfo": "1.15.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Apache-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/opentelemetry-sdk@1.15.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opentelemetry-semantic-conventions-0.36b0",
+                "name": "pip:opentelemetry-semantic-conventions",
+                "versionInfo": "0.36b0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Apache-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/opentelemetry-semantic-conventions@0.36b0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-typing-extensions-4.3.0",
+                "name": "pip:typing-extensions",
+                "versionInfo": "4.3.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Python-2.0.1",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/typing-extensions@4.3.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-wrapt-1.14.1",
+                "name": "pip:wrapt",
+                "versionInfo": "1.14.1",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "BSD-2-Clause",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/wrapt@1.14.1",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opentelemetry-api-1.12.0",
+                "name": "pip:opentelemetry-api",
+                "versionInfo": "1.12.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Apache-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/opentelemetry-api@1.12.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opentelemetry-sdk-1.12.0",
+                "name": "pip:opentelemetry-sdk",
+                "versionInfo": "1.12.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Apache-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/opentelemetry-sdk@1.12.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opentelemetry-semantic-conventions-0.33b0",
+                "name": "pip:opentelemetry-semantic-conventions",
+                "versionInfo": "0.33b0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Apache-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/opentelemetry-semantic-conventions@0.33b0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opencensus",
+                "name": "pip:opencensus",
+                "versionInfo": "",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION"
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opencensus-ext-flask",
+                "name": "pip:opencensus-ext-flask",
+                "versionInfo": "",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION"
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opentelemetry-api",
+                "name": "pip:opentelemetry-api",
+                "versionInfo": "",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION"
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opentelemetry-exporter-jaeger",
+                "name": "pip:opentelemetry-exporter-jaeger",
+                "versionInfo": "",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION"
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opentelemetry-instrumentation-sqlite3",
+                "name": "pip:opentelemetry-instrumentation-sqlite3",
+                "versionInfo": "",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION"
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opentelemetry-opencensus-shim",
+                "name": "pip:opentelemetry-opencensus-shim",
+                "versionInfo": "",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION"
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opentelemetry-sdk",
+                "name": "pip:opentelemetry-sdk",
+                "versionInfo": "",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION"
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opentelemetry-opentracing-shim",
+                "name": "pip:opentelemetry-opentracing-shim",
+                "versionInfo": "",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION"
+            },
+            {
+                "SPDXID": "SPDXRef-pip-redis",
+                "name": "pip:redis",
+                "versionInfo": "",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION"
+            },
+            {
+                "SPDXID": "SPDXRef-pip-redis-opentracing",
+                "name": "pip:redis-opentracing",
+                "versionInfo": "",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION"
+            },
+            {
+                "SPDXID": "SPDXRef-pip-attrs-23.1.0",
+                "name": "pip:attrs",
+                "versionInfo": "23.1.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "MIT",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/attrs@23.1.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-certifi-2023.7.22",
+                "name": "pip:certifi",
+                "versionInfo": "2023.7.22",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "MPL-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/certifi@2023.7.22",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-charset-normalizer-2.0.12",
+                "name": "pip:charset-normalizer",
+                "versionInfo": "2.0.12",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "MIT",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/charset-normalizer@2.0.12",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-deprecated-1.2.14",
+                "name": "pip:deprecated",
+                "versionInfo": "1.2.14",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "MIT",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/deprecated@1.2.14",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-idna-3.4",
+                "name": "pip:idna",
+                "versionInfo": "3.4",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "BSD-2-Clause AND BSD-3-Clause",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/idna@3.4",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-importlib-metadata-6.8.0",
+                "name": "pip:importlib-metadata",
+                "versionInfo": "6.8.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Apache-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/importlib-metadata@6.8.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-iniconfig-2.0.0",
+                "name": "pip:iniconfig",
+                "versionInfo": "2.0.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "MIT",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/iniconfig@2.0.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-jinja2-3.1.3",
+                "name": "pip:jinja2",
+                "versionInfo": "3.1.3",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "BSD-2-Clause AND BSD-3-Clause",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/jinja2@3.1.3",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-packaging-23.2",
+                "name": "pip:packaging",
+                "versionInfo": "23.2",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Apache-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/packaging@23.2",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-pluggy-1.3.0",
+                "name": "pip:pluggy",
+                "versionInfo": "1.3.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "MIT",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/pluggy@1.3.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-py-1.11.0",
+                "name": "pip:py",
+                "versionInfo": "1.11.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "MIT",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/py@1.11.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-py-cpuinfo-9.0.0",
+                "name": "pip:py-cpuinfo",
+                "versionInfo": "9.0.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "MIT",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/py-cpuinfo@9.0.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-pytest-benchmark-4.0.0",
+                "name": "pip:pytest-benchmark",
+                "versionInfo": "4.0.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "BSD-2-Clause",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/pytest-benchmark@4.0.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-tomli-2.0.1",
+                "name": "pip:tomli",
+                "versionInfo": "2.0.1",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "MIT",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/tomli@2.0.1",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-typing-extensions-4.8.0",
+                "name": "pip:typing-extensions",
+                "versionInfo": "4.8.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Python-2.0.1",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/typing-extensions@4.8.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-urllib3-1.26.18",
+                "name": "pip:urllib3",
+                "versionInfo": "1.26.18",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "MIT",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/urllib3@1.26.18",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-wrapt-1.15.0",
+                "name": "pip:wrapt",
+                "versionInfo": "1.15.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "BSD-2-Clause",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/wrapt@1.15.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-zipp-3.17.0",
+                "name": "pip:zipp",
+                "versionInfo": "3.17.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "MIT",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/zipp@3.17.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-attrs-23.2.0",
+                "name": "pip:attrs",
+                "versionInfo": "23.2.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "MIT",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/attrs@23.2.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-grpcio-1.62.0",
+                "name": "pip:grpcio",
+                "versionInfo": "1.62.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Apache-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/grpcio@1.62.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-importlib-metadata-6.11.0",
+                "name": "pip:importlib-metadata",
+                "versionInfo": "6.11.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Apache-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/importlib-metadata@6.11.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opencensus-proto-0.1.0",
+                "name": "pip:opencensus-proto",
+                "versionInfo": "0.1.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Apache-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/opencensus-proto@0.1.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-pluggy-1.4.0",
+                "name": "pip:pluggy",
+                "versionInfo": "1.4.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "MIT",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/pluggy@1.4.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-protobuf-3.20.3",
+                "name": "pip:protobuf",
+                "versionInfo": "3.20.3",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "BSD-3-Clause",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/protobuf@3.20.3",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-typing-extensions-4.10.0",
+                "name": "pip:typing-extensions",
+                "versionInfo": "4.10.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Python-2.0.1",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/typing-extensions@4.10.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-protobuf-4.25.3",
+                "name": "pip:protobuf",
+                "versionInfo": "4.25.3",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "BSD-3-Clause",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/protobuf@4.25.3",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-certifi-2024.2.2",
+                "name": "pip:certifi",
+                "versionInfo": "2024.2.2",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "MPL-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/certifi@2024.2.2",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-charset-normalizer-3.3.2",
+                "name": "pip:charset-normalizer",
+                "versionInfo": "3.3.2",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "MIT",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/charset-normalizer@3.3.2",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-googleapis-common-protos-1.62.0",
+                "name": "pip:googleapis-common-protos",
+                "versionInfo": "1.62.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Apache-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/googleapis-common-protos@1.62.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-idna-3.6",
+                "name": "pip:idna",
+                "versionInfo": "3.6",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "BSD-2-Clause AND BSD-3-Clause",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/idna@3.6",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-protobuf-3.19.6",
+                "name": "pip:protobuf",
+                "versionInfo": "3.19.6",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "BSD-3-Clause",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/protobuf@3.19.6",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-pyyaml-6.0.1",
+                "name": "pip:pyyaml",
+                "versionInfo": "6.0.1",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "MIT",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/pyyaml@6.0.1",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-responses-0.24.1",
+                "name": "pip:responses",
+                "versionInfo": "0.24.1",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/responses@0.24.1",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-urllib3-2.2.1",
+                "name": "pip:urllib3",
+                "versionInfo": "2.2.1",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "MIT",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/urllib3@2.2.1",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-prometheus-client-0.20.0",
+                "name": "pip:prometheus-client",
+                "versionInfo": "0.20.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Apache-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/prometheus-client@0.20.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-cachetools-5.3.3",
+                "name": "pip:cachetools",
+                "versionInfo": "5.3.3",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "MIT",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/cachetools@5.3.3",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-google-api-core-2.17.1",
+                "name": "pip:google-api-core",
+                "versionInfo": "2.17.1",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Apache-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/google-api-core@2.17.1",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-google-auth-2.28.1",
+                "name": "pip:google-auth",
+                "versionInfo": "2.28.1",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Apache-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/google-auth@2.28.1",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opencensus-0.11.1",
+                "name": "pip:opencensus",
+                "versionInfo": "0.11.1",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Apache-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/opencensus@0.11.1",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opencensus-context-0.1.3",
+                "name": "pip:opencensus-context",
+                "versionInfo": "0.1.3",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Apache-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/opencensus-context@0.1.3",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-pyasn1-0.5.1",
+                "name": "pip:pyasn1",
+                "versionInfo": "0.5.1",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "BSD-2-Clause",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/pyasn1@0.5.1",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-pyasn1-modules-0.3.0",
+                "name": "pip:pyasn1-modules",
+                "versionInfo": "0.3.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "BSD-2-Clause",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/pyasn1-modules@0.3.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-rsa-4.9",
+                "name": "pip:rsa",
+                "versionInfo": "4.9",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Apache-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/rsa@4.9",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-six-1.16.0",
+                "name": "pip:six",
+                "versionInfo": "1.16.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "MIT",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/six@1.16.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opentracing-2.4.0",
+                "name": "pip:opentracing",
+                "versionInfo": "2.4.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "licenseConcluded": "Apache-2.0",
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/opentracing@2.4.0",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opencensus-proto",
+                "name": "pip:opencensus-proto",
+                "versionInfo": ">= 0.1.0,< 1.0.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION"
+            },
+            {
+                "SPDXID": "SPDXRef-pip-setuptools",
+                "name": "pip:setuptools",
+                "versionInfo": ">= 16.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION"
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opentelemetry-exporter-otlp-proto-grpc-1.24.0.dev",
+                "name": "pip:opentelemetry-exporter-otlp-proto-grpc",
+                "versionInfo": "1.24.0.dev",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/opentelemetry-exporter-otlp-proto-grpc@1.24.0.dev",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opentelemetry-exporter-otlp-proto-http-1.24.0.dev",
+                "name": "pip:opentelemetry-exporter-otlp-proto-http",
+                "versionInfo": "1.24.0.dev",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/opentelemetry-exporter-otlp-proto-http@1.24.0.dev",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opentelemetry-proto-1.24.0.dev",
+                "name": "pip:opentelemetry-proto",
+                "versionInfo": "1.24.0.dev",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/opentelemetry-proto@1.24.0.dev",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-googleapis-common-protos",
+                "name": "pip:googleapis-common-protos",
+                "versionInfo": "",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION"
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opentelemetry-exporter-otlp-proto-common-1.24.0.dev",
+                "name": "pip:opentelemetry-exporter-otlp-proto-common",
+                "versionInfo": "1.24.0.dev",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/opentelemetry-exporter-otlp-proto-common@1.24.0.dev",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-requests",
+                "name": "pip:requests",
+                "versionInfo": "",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION"
+            },
+            {
+                "SPDXID": "SPDXRef-pip-prometheus-client",
+                "name": "pip:prometheus-client",
+                "versionInfo": ">= 0.5.0,< 1.0.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION"
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opentelemetry-exporter-zipkin-json-1.24.0.dev",
+                "name": "pip:opentelemetry-exporter-zipkin-json",
+                "versionInfo": "1.24.0.dev",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/opentelemetry-exporter-zipkin-json@1.24.0.dev",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opentelemetry-exporter-zipkin-proto-http-1.24.0.dev",
+                "name": "pip:opentelemetry-exporter-zipkin-proto-http",
+                "versionInfo": "1.24.0.dev",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/opentelemetry-exporter-zipkin-proto-http@1.24.0.dev",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-importlib-metadata",
+                "name": "pip:importlib-metadata",
+                "versionInfo": ">= 6.0,<= 7.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION"
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opentelemetry-api-1.24.0.dev",
+                "name": "pip:opentelemetry-api",
+                "versionInfo": "1.24.0.dev",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/opentelemetry-api@1.24.0.dev",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opentelemetry-semantic-conventions-0.45b0.dev",
+                "name": "pip:opentelemetry-semantic-conventions",
+                "versionInfo": "0.45b0.dev",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/opentelemetry-semantic-conventions@0.45b0.dev",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-pip-typing-extensions",
+                "name": "pip:typing-extensions",
+                "versionInfo": ">= 3.7.4",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION"
+            },
+            {
+                "SPDXID": "SPDXRef-pip-asgiref",
+                "name": "pip:asgiref",
+                "versionInfo": "",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION"
+            },
+            {
+                "SPDXID": "SPDXRef-pip-opentelemetry-sdk-1.24.0.dev",
+                "name": "pip:opentelemetry-sdk",
+                "versionInfo": "1.24.0.dev",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:pypi/opentelemetry-sdk@1.24.0.dev",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-actions-actions-checkout-3",
+                "name": "actions:actions/checkout",
+                "versionInfo": "3",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:githubactions/actions/checkout@3",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-actions-actions-cache-2.*.*",
+                "name": "actions:actions/cache",
+                "versionInfo": "2.*.*",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:githubactions/actions/cache@2.%2A.%2A",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-actions-actions-checkout-2.*.*",
+                "name": "actions:actions/checkout",
+                "versionInfo": "2.*.*",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:githubactions/actions/checkout@2.%2A.%2A",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-actions-actions-setup-python-2.*.*",
+                "name": "actions:actions/setup-python",
+                "versionInfo": "2.*.*",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:githubactions/actions/setup-python@2.%2A.%2A",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-actions-benchmark-action-github-action-benchmark-1.*.*",
+                "name": "actions:benchmark-action/github-action-benchmark",
+                "versionInfo": "1.*.*",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:githubactions/benchmark-action/github-action-benchmark@1.%2A.%2A",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-actions-actions-checkout-2",
+                "name": "actions:actions/checkout",
+                "versionInfo": "2",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:githubactions/actions/checkout@2",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-actions-github-codeql-action-analyze-1",
+                "name": "actions:github/codeql-action/analyze",
+                "versionInfo": "1",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:githubactions/github/codeql-action/analyze@1",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-actions-github-codeql-action-autobuild-1",
+                "name": "actions:github/codeql-action/autobuild",
+                "versionInfo": "1",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:githubactions/github/codeql-action/autobuild@1",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-actions-github-codeql-action-init-1",
+                "name": "actions:github/codeql-action/init",
+                "versionInfo": "1",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:githubactions/github/codeql-action/init@1",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-actions-actions-checkout-3.*.*",
+                "name": "actions:actions/checkout",
+                "versionInfo": "3.*.*",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:githubactions/actions/checkout@3.%2A.%2A",
+                        "referenceType": "purl"
+                    }
+                ]
+            },
+            {
+                "SPDXID": "SPDXRef-actions-actions-setup-python-1.*.*",
+                "name": "actions:actions/setup-python",
+                "versionInfo": "1.*.*",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": false,
+                "supplier": "NOASSERTION",
+                "externalRefs": [
+                    {
+                        "referenceCategory": "PACKAGE-MANAGER",
+                        "referenceLocator": "pkg:githubactions/actions/setup-python@1.%2A.%2A",
+                        "referenceType": "purl"
+                    }
+                ]
+            }
+        ],
+        "relationships": [
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-asgiref-3.7.2"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-black-22.3.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-bleach-4.1.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-codespell-2.1.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-flake8-6.1.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-flaky-3.7.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-gitpython-3.1.41"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-httpretty-1.1.4"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-isort-5.12.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-markupsafe-2.1.3"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-mypy-0.982"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-psutil-5.9.6"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-pylint-3.0.2"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-pytest-7.1.3"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-pytest-cov-4.1.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-readme-renderer-42.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-requests-2.31.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-ruamel-yaml-0.17.21"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-sphinx-7.1.2"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-sphinx-autodoc-typehints-1.25.2"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-sphinx-rtd-theme-2.0.0rc4"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-deprecated"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-django"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-flask"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-grpcio"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-markupsafe"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opentracing"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-protobuf"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-sphinx-jekyll-builder-0.3.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-thrift"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-wrapt"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-grpcio-tools-1.48.1"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-mypy-protobuf"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-click-8.1.7"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-flask-2.3.3"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-googleapis-common-protos-1.52.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-grpcio-1.56.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-gunicorn-20.0.4"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-itsdangerous-2.1.2"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-jinja2-3.1.2"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opentelemetry-api-1.20.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opentelemetry-exporter-otlp-1.20.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opentelemetry-instrumentation-0.41b0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opentelemetry-instrumentation-flask-0.41b0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opentelemetry-instrumentation-wsgi-0.41b0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opentelemetry-sdk-1.20.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-protobuf-3.19.5"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-six-1.15.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-thrift-0.13.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-uwsgi-2.0.22"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-werkzeug-3.0.1"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-wrapt-1.16.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opentelemetry-exporter-prometheus-1.12.0rc1"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-deprecated-1.2.13"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opentelemetry-api-1.15.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opentelemetry-sdk-1.15.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opentelemetry-semantic-conventions-0.36b0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-typing-extensions-4.3.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-wrapt-1.14.1"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opentelemetry-api-1.12.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opentelemetry-sdk-1.12.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opentelemetry-semantic-conventions-0.33b0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opencensus"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opencensus-ext-flask"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opentelemetry-api"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opentelemetry-exporter-jaeger"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opentelemetry-instrumentation-sqlite3"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opentelemetry-opencensus-shim"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opentelemetry-sdk"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opentelemetry-opentracing-shim"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-redis"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-redis-opentracing"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-attrs-23.1.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-certifi-2023.7.22"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-charset-normalizer-2.0.12"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-deprecated-1.2.14"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-idna-3.4"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-importlib-metadata-6.8.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-iniconfig-2.0.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-jinja2-3.1.3"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-packaging-23.2"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-pluggy-1.3.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-py-1.11.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-py-cpuinfo-9.0.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-pytest-benchmark-4.0.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-tomli-2.0.1"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-typing-extensions-4.8.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-urllib3-1.26.18"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-wrapt-1.15.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-zipp-3.17.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-attrs-23.2.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-grpcio-1.62.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-importlib-metadata-6.11.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opencensus-proto-0.1.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-pluggy-1.4.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-protobuf-3.20.3"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-typing-extensions-4.10.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-protobuf-4.25.3"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-certifi-2024.2.2"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-charset-normalizer-3.3.2"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-googleapis-common-protos-1.62.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-idna-3.6"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-protobuf-3.19.6"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-pyyaml-6.0.1"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-responses-0.24.1"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-urllib3-2.2.1"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-prometheus-client-0.20.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-cachetools-5.3.3"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-google-api-core-2.17.1"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-google-auth-2.28.1"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opencensus-0.11.1"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opencensus-context-0.1.3"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-pyasn1-0.5.1"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-pyasn1-modules-0.3.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-rsa-4.9"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-six-1.16.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opentracing-2.4.0"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opencensus-proto"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-setuptools"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opentelemetry-exporter-otlp-proto-grpc-1.24.0.dev"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opentelemetry-exporter-otlp-proto-http-1.24.0.dev"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opentelemetry-proto-1.24.0.dev"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-googleapis-common-protos"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opentelemetry-exporter-otlp-proto-common-1.24.0.dev"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-requests"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-prometheus-client"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opentelemetry-exporter-zipkin-json-1.24.0.dev"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opentelemetry-exporter-zipkin-proto-http-1.24.0.dev"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-importlib-metadata"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opentelemetry-api-1.24.0.dev"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opentelemetry-semantic-conventions-0.45b0.dev"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-typing-extensions"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-asgiref"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-pip-opentelemetry-sdk-1.24.0.dev"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-actions-actions-checkout-3"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-actions-actions-cache-2.*.*"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-actions-actions-checkout-2.*.*"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-actions-actions-setup-python-2.*.*"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-actions-benchmark-action-github-action-benchmark-1.*.*"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-actions-actions-checkout-2"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-actions-github-codeql-action-analyze-1"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-actions-github-codeql-action-autobuild-1"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-actions-github-codeql-action-init-1"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-actions-actions-checkout-3.*.*"
+            },
+            {
+                "relationshipType": "DEPENDS_ON",
+                "spdxElementId": "SPDXRef-com.github.open-telemetry-opentelemetry-python",
+                "relatedSpdxElement": "SPDXRef-actions-actions-setup-python-1.*.*"
+            }
+        ]
+    }
+}

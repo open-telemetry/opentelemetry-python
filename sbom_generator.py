@@ -28,6 +28,5 @@ result_list = get(base_url, headers=headers).json()
 
 result_str = dumps(result_list, indent=4)
 
-set_trace()
-
-print(result_str)
+with open("sbom_result.json", "w") as sbom_result_file:
+    sbom_result_file.write(result_str)
