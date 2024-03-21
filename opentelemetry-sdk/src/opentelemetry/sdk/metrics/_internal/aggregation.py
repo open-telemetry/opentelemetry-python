@@ -869,6 +869,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     min_scale,
                     collection_aggregation_temporality,
                 )
+                current_scale = min_scale
 
                 current_positive = self._previous_positive
                 current_negative = self._previous_negative

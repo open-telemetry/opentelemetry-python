@@ -966,7 +966,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
                         matches += 1
                 assert (
                     matches == count
-                ), f"index: {index}, count: {count}, lower_bound: {lower_bound}, upper_bound: {upper_bound}, matches: {matches}"
+                ), f"index: {index}, count: {count}, scale: {scale}, lower_bound: {lower_bound}, upper_bound: {upper_bound}, matches: {matches}"
 
             assert sum(buckets) + result.zero_count == len(values)
             assert result.sum == sum(values)
@@ -974,9 +974,9 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             assert result.min == min(values)
             assert result.max == max(values)
             assert result.zero_count == len([v for v in values if v == 0])
-            assert scale >= 4
+            assert scale >= 3
 
-        random = insecure_random.Random("opentelemetry")
+        random = insecure_random.Random("opentelemetry2")
         values = []
         for i in range(2000):
             value = random.randint(0, 1000)
@@ -1026,7 +1026,8 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             0,
         )
 
-        self.assertEqual(result.scale, result_1.scale)
+        self.assertEqual(result.scale, 0)
+        self.assertEqual(result_1.scale, -1)
 
     def test_merge_collect_delta(self):
         exponential_histogram_aggregation = (
