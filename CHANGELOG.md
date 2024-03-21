@@ -15,8 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3798](https://github.com/open-telemetry/opentelemetry-python/pull/3798))
 - bump mypy to 0.982
   ([#3776](https://github.com/open-telemetry/opentelemetry-python/pull/3776))
+- Add support for OTEL_SDK_DISABLED environment variable
+  ([#3648](https://github.com/open-telemetry/opentelemetry-python/pull/3648))
 - Fix ValueError message for PeriodicExportingMetricsReader
   ([#3769](https://github.com/open-telemetry/opentelemetry-python/pull/3769))
+- Make span.record_exception more robust
+  ([#3778](https://github.com/open-telemetry/opentelemetry-python/pull/3778))
 
 ## Version 1.23.0/0.44b0 (2024-02-23)
 
