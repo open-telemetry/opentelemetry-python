@@ -1,0 +1,55 @@
+name: SBOM
+on:
+  release:
+    types: [published]
+
+permissions: read-all
+
+jobs:
+  generate-sbom:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout core repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          architecture: 'x64'
+
+      - name: Install requests
+        run: pip install requests
+
+      - name: Generate SBOM
+        run: python3 .github/workflows/generate_sbom.py
+
+      - name: Zip the SBOM file
+        run: zip sbom.zip opentelemetry-python.spdx.json
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SBOM.zip
+          path: ./sbom.zip
+
+  add-release-artifact:
+    needs: generate-sbom
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download artifact from generate-sboms
+        uses: actions/download-artifact@v4
+        with:
+          name: SBOM.zip
+
+      - name: Upload release asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./sbom.zip
+          asset_name: SBOM.zip
+          asset_content_type: application/zip
