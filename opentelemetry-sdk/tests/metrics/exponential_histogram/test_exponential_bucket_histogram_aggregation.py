@@ -916,7 +916,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
                 previous_count = count
                 count_counts.append([previous_count, 1])
 
-        self.assertEqual(collection_1.count, 5)
+        self.assertEqual(collection_1.count, 8)
         self.assertEqual(collection_1.sum, 16.645)
         self.assertEqual(collection_1.scale, 4)
         self.assertEqual(collection_1.zero_count, 0)
@@ -969,6 +969,11 @@ class TestExponentialBucketHistogramAggregation(TestCase):
                 ), f"index: {index}, count: {count}, lower_bound: {lower_bound}, upper_bound: {upper_bound}, matches: {matches}"
 
             assert sum(buckets) + result.zero_count == len(values)
+            assert result.sum == sum(values)
+            assert result.count == len(values)
+            assert result.min == min(values)
+            assert result.max == max(values)
+            assert result.zero_count == len([v for v in values if v == 0])
             assert scale >= 4
 
         random = insecure_random.Random("opentelemetry")
