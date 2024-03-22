@@ -34,9 +34,9 @@ def get_dict_as_key(labels):
     return tuple(
         sorted(
             map(
-                lambda kv: (kv[0], tuple(kv[1]))
-                if isinstance(kv[1], list)
-                else kv,
+                lambda kv: (
+                    (kv[0], tuple(kv[1])) if isinstance(kv[1], list) else kv
+                ),
                 labels.items(),
             )
         )
