@@ -133,11 +133,11 @@ def translate_to_collector(spans: Sequence[ReadableSpan]):
         collector_span.parent_span_id = parent_id.to_bytes(8, "big")
 
         if span.context.trace_state is not None:
-            for (key, value) in span.context.trace_state.items():
+            for key, value in span.context.trace_state.items():
                 collector_span.tracestate.entries.add(key=key, value=value)
 
         if span.attributes:
-            for (key, value) in span.attributes.items():
+            for key, value in span.attributes.items():
                 utils.add_proto_attribute_value(
                     collector_span.attributes, key, value
                 )
@@ -150,7 +150,7 @@ def translate_to_collector(spans: Sequence[ReadableSpan]):
                 )
 
                 if event.attributes:
-                    for (key, value) in event.attributes.items():
+                    for key, value in event.attributes.items():
                         utils.add_proto_attribute_value(
                             collector_annotation.attributes, key, value
                         )
@@ -183,7 +183,7 @@ def translate_to_collector(spans: Sequence[ReadableSpan]):
                         )
 
                 if link.attributes:
-                    for (key, value) in link.attributes.items():
+                    for key, value in link.attributes.items():
                         utils.add_proto_attribute_value(
                             collector_span_link.attributes, key, value
                         )
