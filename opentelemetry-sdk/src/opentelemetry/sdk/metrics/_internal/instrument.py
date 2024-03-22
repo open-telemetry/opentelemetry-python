@@ -46,29 +46,29 @@ class _Synchronous:
         self,
         name: str,
         instrumentation_scope: InstrumentationScope,
-        measurement_consumer: "opentelemetry.sdk.metrics.MeasurementConsumer",
+        measurement_consumer: "opentelemetry.sdk.metrics.MeasurementConsumer",  # type: ignore[name-defined] # <will add tracking issue num>
         unit: str = "",
         description: str = "",
     ):
         # pylint: disable=no-member
-        result = self._check_name_unit_description(name, unit, description)
+        result = self._check_name_unit_description(name, unit, description)  # type: ignore[attr-defined, misc] # <will add tracking issue num>
 
-        if result["name"] is None:
+        if result["name"] is None:  # type: ignore[misc] # <will add tracking issue num>
             raise Exception(_ERROR_MESSAGE.format(name))
 
-        if result["unit"] is None:
+        if result["unit"] is None:  # type: ignore[misc] # <will add tracking issue num>
             raise Exception(_ERROR_MESSAGE.format(unit))
 
-        name = result["name"]
-        unit = result["unit"]
-        description = result["description"]
+        name = result["name"]  # type: ignore[misc] # <will add tracking issue num>
+        unit = result["unit"]  # type: ignore[misc] # <will add tracking issue num>
+        description = result["description"]  # type: ignore[misc] # <will add tracking issue num>
 
         self.name = name.lower()
         self.unit = unit
         self.description = description
         self.instrumentation_scope = instrumentation_scope
         self._measurement_consumer = measurement_consumer
-        super().__init__(name, unit=unit, description=description)
+        super().__init__(name, unit=unit, description=description)  # type: ignore[call-arg] # <will add tracking issue num>
 
 
 class _Asynchronous:
@@ -76,30 +76,30 @@ class _Asynchronous:
         self,
         name: str,
         instrumentation_scope: InstrumentationScope,
-        measurement_consumer: "opentelemetry.sdk.metrics.MeasurementConsumer",
+        measurement_consumer: "opentelemetry.sdk.metrics.MeasurementConsumer",  # type: ignore[name-defined] # <will add tracking issue num>
         callbacks: Optional[Iterable[CallbackT]] = None,
         unit: str = "",
         description: str = "",
     ):
         # pylint: disable=no-member
-        result = self._check_name_unit_description(name, unit, description)
+        result = self._check_name_unit_description(name, unit, description)  # type: ignore[attr-defined, misc] # <will add tracking issue num>
 
-        if result["name"] is None:
+        if result["name"] is None:  # type: ignore[misc] # <will add tracking issue num>
             raise Exception(_ERROR_MESSAGE.format(name))
 
-        if result["unit"] is None:
+        if result["unit"] is None:  # type: ignore[misc] # <will add tracking issue num>
             raise Exception(_ERROR_MESSAGE.format(unit))
 
-        name = result["name"]
-        unit = result["unit"]
-        description = result["description"]
+        name = result["name"]  # type: ignore[misc] # <will add tracking issue num>
+        unit = result["unit"]  # type: ignore[misc] # <will add tracking issue num>
+        description = result["description"]  # type: ignore[misc] # <will add tracking issue num>
 
         self.name = name.lower()
         self.unit = unit
         self.description = description
         self.instrumentation_scope = instrumentation_scope
         self._measurement_consumer = measurement_consumer
-        super().__init__(name, callbacks, unit=unit, description=description)
+        super().__init__(name, callbacks, unit=unit, description=description)  # type: ignore[call-arg] # <will add tracking issue num>
 
         self._callbacks: List[CallbackT] = []
 
@@ -112,16 +112,16 @@ class _Asynchronous:
                     # advance generator to it's first yield
                     next(callback)
 
-                    def inner(
+                    def inner(  # type: ignore[no-untyped-def] # <will add tracking issue num>
                         options: CallbackOptions,
                         callback=callback,
                     ) -> Iterable[Measurement]:
                         try:
-                            return callback.send(options)
+                            return callback.send(options)  # type: ignore[misc, no-any-return] # <will add tracking issue num>
                         except StopIteration:
                             return []
 
-                    self._callbacks.append(inner)
+                    self._callbacks.append(inner)  # type: ignore[arg-type, misc] # <will add tracking issue num>
                 else:
                     self._callbacks.append(callback)
 
@@ -130,11 +130,11 @@ class _Asynchronous:
     ) -> Iterable[Measurement]:
         for callback in self._callbacks:
             try:
-                for api_measurement in callback(callback_options):
+                for api_measurement in callback(callback_options):  # type: ignore[misc, operator] # <will add tracking issue num>
                     yield Measurement(
-                        api_measurement.value,
-                        instrument=self,
-                        attributes=api_measurement.attributes,
+                        api_measurement.value,  # type: ignore[misc] # <will add tracking issue num>
+                        instrument=self,  # type: ignore[arg-type] # <will add tracking issue num>
+                        attributes=api_measurement.attributes,  # type: ignore[misc] # <will add tracking issue num>
                     )
             except Exception:  # pylint: disable=broad-except
                 _logger.exception(
@@ -143,13 +143,13 @@ class _Asynchronous:
 
 
 class Counter(_Synchronous, APICounter):
-    def __new__(cls, *args, **kwargs):
-        if cls is Counter:
+    def __new__(cls, *args, **kwargs):  # type: ignore[no-untyped-def] # <will add tracking issue num>
+        if cls is Counter:  # type: ignore[misc] # <will add tracking issue num>
             raise TypeError("Counter must be instantiated via a meter.")
         return super().__new__(cls)
 
-    def add(
-        self, amount: Union[int, float], attributes: Dict[str, str] = None
+    def add(  # type: ignore[no-untyped-def, override] # <will add tracking issue num>
+        self, amount: Union[int, float], attributes: Dict[str, str] = None  # type: ignore[assignment] # <will add tracking issue num>
     ):
         if amount < 0:
             _logger.warning(
@@ -162,13 +162,13 @@ class Counter(_Synchronous, APICounter):
 
 
 class UpDownCounter(_Synchronous, APIUpDownCounter):
-    def __new__(cls, *args, **kwargs):
-        if cls is UpDownCounter:
+    def __new__(cls, *args, **kwargs):  # type: ignore[no-untyped-def] # <will add tracking issue num>
+        if cls is UpDownCounter:  # type: ignore[misc] # <will add tracking issue num>
             raise TypeError("UpDownCounter must be instantiated via a meter.")
         return super().__new__(cls)
 
-    def add(
-        self, amount: Union[int, float], attributes: Dict[str, str] = None
+    def add(  # type: ignore[no-untyped-def, override] # <will add tracking issue num>
+        self, amount: Union[int, float], attributes: Dict[str, str] = None  # type: ignore[assignment] # <will add tracking issue num>
     ):
         self._measurement_consumer.consume_measurement(
             Measurement(amount, self, attributes)
@@ -176,8 +176,8 @@ class UpDownCounter(_Synchronous, APIUpDownCounter):
 
 
 class ObservableCounter(_Asynchronous, APIObservableCounter):
-    def __new__(cls, *args, **kwargs):
-        if cls is ObservableCounter:
+    def __new__(cls, *args, **kwargs):  # type: ignore[no-untyped-def] # <will add tracking issue num>
+        if cls is ObservableCounter:  # type: ignore[misc] # <will add tracking issue num>
             raise TypeError(
                 "ObservableCounter must be instantiated via a meter."
             )
@@ -185,8 +185,8 @@ class ObservableCounter(_Asynchronous, APIObservableCounter):
 
 
 class ObservableUpDownCounter(_Asynchronous, APIObservableUpDownCounter):
-    def __new__(cls, *args, **kwargs):
-        if cls is ObservableUpDownCounter:
+    def __new__(cls, *args, **kwargs):  # type: ignore[no-untyped-def] # <will add tracking issue num>
+        if cls is ObservableUpDownCounter:  # type: ignore[misc] # <will add tracking issue num>
             raise TypeError(
                 "ObservableUpDownCounter must be instantiated via a meter."
             )
@@ -194,13 +194,13 @@ class ObservableUpDownCounter(_Asynchronous, APIObservableUpDownCounter):
 
 
 class Histogram(_Synchronous, APIHistogram):
-    def __new__(cls, *args, **kwargs):
-        if cls is Histogram:
+    def __new__(cls, *args, **kwargs):  # type: ignore[no-untyped-def] # <will add tracking issue num>
+        if cls is Histogram:  # type: ignore[misc] # <will add tracking issue num>
             raise TypeError("Histogram must be instantiated via a meter.")
         return super().__new__(cls)
 
-    def record(
-        self, amount: Union[int, float], attributes: Dict[str, str] = None
+    def record(  # type: ignore[no-untyped-def, override] # <will add tracking issue num>
+        self, amount: Union[int, float], attributes: Dict[str, str] = None  # type: ignore[assignment] # <will add tracking issue num>
     ):
         if amount < 0:
             _logger.warning(
@@ -214,13 +214,13 @@ class Histogram(_Synchronous, APIHistogram):
 
 
 class Gauge(_Synchronous, APIGauge):
-    def __new__(cls, *args, **kwargs):
-        if cls is Gauge:
+    def __new__(cls, *args, **kwargs):  # type: ignore[no-untyped-def] # <will add tracking issue num>
+        if cls is Gauge:  # type: ignore[misc] # <will add tracking issue num>
             raise TypeError("Gauge must be instantiated via a meter.")
         return super().__new__(cls)
 
-    def set(
-        self, amount: Union[int, float], attributes: Dict[str, str] = None
+    def set(  # type: ignore[no-untyped-def, override] # <will add tracking issue num>
+        self, amount: Union[int, float], attributes: Dict[str, str] = None  # type: ignore[assignment] # <will add tracking issue num>
     ):
         self._measurement_consumer.consume_measurement(
             Measurement(amount, self, attributes)
@@ -228,8 +228,8 @@ class Gauge(_Synchronous, APIGauge):
 
 
 class ObservableGauge(_Asynchronous, APIObservableGauge):
-    def __new__(cls, *args, **kwargs):
-        if cls is ObservableGauge:
+    def __new__(cls, *args, **kwargs):  # type: ignore[no-untyped-def] # <will add tracking issue num>
+        if cls is ObservableGauge:  # type: ignore[misc] # <will add tracking issue num>
             raise TypeError(
                 "ObservableGauge must be instantiated via a meter."
             )

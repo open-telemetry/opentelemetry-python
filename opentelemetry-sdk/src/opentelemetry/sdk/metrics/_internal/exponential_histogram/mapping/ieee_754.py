@@ -29,7 +29,7 @@ MANTISSA_MASK = (1 << MANTISSA_WIDTH) - 1
 # from 1 to 2046. To calculate the exponent value, 1023 (the bias) is
 # subtracted from the exponent, so the exponent value range is from -1022 to
 # +1023.
-EXPONENT_BIAS = (2 ** (EXPONENT_WIDTH - 1)) - 1
+EXPONENT_BIAS = (2 ** (EXPONENT_WIDTH - 1)) - 1  # type: ignore[misc] # <will add tracking issue num>
 
 # All the exponent mask bits are set to 1 for the 11 exponent bits.
 EXPONENT_MASK = ((1 << EXPONENT_WIDTH) - 1) << MANTISSA_WIDTH
@@ -39,8 +39,8 @@ SIGN_MASK = 1 << (EXPONENT_WIDTH + MANTISSA_WIDTH)
 
 # For normal floating point numbers, the exponent can have a value in the
 # range [-1022, 1023].
-MIN_NORMAL_EXPONENT = -EXPONENT_BIAS + 1
-MAX_NORMAL_EXPONENT = EXPONENT_BIAS
+MIN_NORMAL_EXPONENT = -EXPONENT_BIAS + 1  # type: ignore[misc] # <will add tracking issue num>
+MAX_NORMAL_EXPONENT = EXPONENT_BIAS  # type: ignore[misc] # <will add tracking issue num>
 
 # The smallest possible normal value is 2.2250738585072014e-308.
 # This value is the result of using the smallest possible number in the
@@ -65,7 +65,7 @@ def get_ieee_754_exponent(value: float) -> int:
     Gets the exponent of the IEEE 754 representation of a float.
     """
 
-    return (
+    return (  # type: ignore[misc, no-any-return] # <will add tracking issue num>
         (
             # This step gives the integer that corresponds to the IEEE 754
             # representation of a float. For example, consider
@@ -102,7 +102,7 @@ def get_ieee_754_exponent(value: float) -> int:
         # exponent.
         # This step subtracts the exponent bias from the IEEE 754 value,
         # leaving the actual exponent value.
-    ) - EXPONENT_BIAS
+    ) - EXPONENT_BIAS  # type: ignore[misc] # <will add tracking issue num>
     # For the example this means:
     # 2046 - EXPONENT_BIAS == 1023
     # As mentioned in a comment above, the largest value for the exponent is

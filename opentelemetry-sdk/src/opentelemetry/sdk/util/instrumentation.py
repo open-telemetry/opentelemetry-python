@@ -26,7 +26,7 @@ class InstrumentationInfo:
 
     __slots__ = ("_name", "_version", "_schema_url")
 
-    @deprecated(version="1.11.1", reason="You should use InstrumentationScope")
+    @deprecated(version="1.11.1", reason="You should use InstrumentationScope")  # type: ignore[misc] # <will add tracking issue num>
     def __init__(
         self,
         name: str,
@@ -39,26 +39,30 @@ class InstrumentationInfo:
             schema_url = ""
         self._schema_url = schema_url
 
-    def __repr__(self):
+    def __repr__(self):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         return f"{type(self).__name__}({self._name}, {self._version}, {self._schema_url})"
 
-    def __hash__(self):
+    def __hash__(self):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         return hash((self._name, self._version, self._schema_url))
 
-    def __eq__(self, value):
-        return type(value) is type(self) and (
+    def __eq__(self, value):  # type: ignore[no-untyped-def] # <will add tracking issue num>
+        return type(value) is type(self) and (  # type: ignore[misc] # <will add tracking issue num>
             self._name,
             self._version,
             self._schema_url,
-        ) == (value._name, value._version, value._schema_url)
-
-    def __lt__(self, value):
-        if type(value) is not type(self):
-            return NotImplemented
-        return (self._name, self._version, self._schema_url) < (
+        ) == (
             value._name,
             value._version,
             value._schema_url,
+        )  # type: ignore[misc] # <will add tracking issue num>
+
+    def __lt__(self, value):  # type: ignore[no-untyped-def] # <will add tracking issue num>
+        if type(value) is not type(self):  # type: ignore[misc] # <will add tracking issue num>
+            return NotImplemented
+        return (self._name, self._version, self._schema_url) < (  # type: ignore[misc] # <will add tracking issue num>
+            value._name,  # type: ignore[misc] # <will add tracking issue num>
+            value._version,  # type: ignore[misc] # <will add tracking issue num>
+            value._schema_url,  # type: ignore[misc] # <will add tracking issue num>
         )
 
     @property
@@ -132,12 +136,12 @@ class InstrumentationScope:
     def name(self) -> str:
         return self._name
 
-    def to_json(self, indent=4) -> str:
+    def to_json(self, indent=4) -> str:  # type: ignore[no-untyped-def] # <will add tracking issue num>
         return dumps(
-            {
+            {  # type: ignore[misc] # <will add tracking issue num>
                 "name": self._name,
                 "version": self._version,
                 "schema_url": self._schema_url,
             },
-            indent=indent,
+            indent=indent,  # type: ignore[misc] # <will add tracking issue num>
         )

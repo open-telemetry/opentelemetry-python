@@ -95,11 +95,11 @@ class _Aggregation(ABC, Generic[_DataPointVarT]):
         pass
 
 
-class _DropAggregation(_Aggregation):
+class _DropAggregation(_Aggregation):  # type: ignore[type-arg] # <will add tracking issue num>
     def aggregate(self, measurement: Measurement) -> None:
         pass
 
-    def collect(
+    def collect(  # type: ignore[override] # <will add tracking issue num>
         self,
         collection_aggregation_temporality: AggregationTemporality,
         collection_start_nano: int,
@@ -107,7 +107,7 @@ class _DropAggregation(_Aggregation):
         pass
 
 
-class _SumAggregation(_Aggregation[Sum]):
+class _SumAggregation(_Aggregation[Sum]):  # type: ignore[type-var] # <will add tracking issue num>
     def __init__(
         self,
         attributes: Attributes,
@@ -131,11 +131,11 @@ class _SumAggregation(_Aggregation[Sum]):
     def aggregate(self, measurement: Measurement) -> None:
         with self._lock:
             if self._current_value is None:
-                self._current_value = 0
+                self._current_value = 0  # type: ignore[assignment] # <will add tracking issue num>
 
-            self._current_value = self._current_value + measurement.value
+            self._current_value = self._current_value + measurement.value  # type: ignore[assignment, operator] # <will add tracking issue num>
 
-    def collect(
+    def collect(  # type: ignore[override] # <will add tracking issue num>
         self,
         collection_aggregation_temporality: AggregationTemporality,
         collection_start_nano: int,
@@ -342,16 +342,16 @@ class _SumAggregation(_Aggregation[Sum]):
             )
 
 
-class _LastValueAggregation(_Aggregation[GaugePoint]):
+class _LastValueAggregation(_Aggregation[GaugePoint]):  # type: ignore[type-var] # <will add tracking issue num>
     def __init__(self, attributes: Attributes):
         super().__init__(attributes)
         self._value = None
 
-    def aggregate(self, measurement: Measurement):
+    def aggregate(self, measurement: Measurement):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         with self._lock:
-            self._value = measurement.value
+            self._value = measurement.value  # type: ignore[assignment] # <will add tracking issue num>
 
-    def collect(
+    def collect(  # type: ignore[override] # <will add tracking issue num>
         self,
         collection_aggregation_temporality: AggregationTemporality,
         collection_start_nano: int,
@@ -373,7 +373,7 @@ class _LastValueAggregation(_Aggregation[GaugePoint]):
         )
 
 
-class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
+class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):  # type: ignore[type-var] # <will add tracking issue num>
     def __init__(
         self,
         attributes: Attributes,
@@ -425,19 +425,19 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
     def aggregate(self, measurement: Measurement) -> None:
         with self._lock:
             if self._current_value is None:
-                self._current_value = self._get_empty_bucket_counts()
+                self._current_value = self._get_empty_bucket_counts()  # type: ignore[assignment] # <will add tracking issue num>
 
             value = measurement.value
 
-            self._sum += value
+            self._sum += value  # type: ignore[assignment] # <will add tracking issue num>
 
             if self._record_min_max:
                 self._min = min(self._min, value)
                 self._max = max(self._max, value)
 
-            self._current_value[bisect_left(self._boundaries, value)] += 1
+            self._current_value[bisect_left(self._boundaries, value)] += 1  # type: ignore[index, misc] # <will add tracking issue num>
 
-    def collect(
+    def collect(  # type: ignore[override] # <will add tracking issue num>
         self,
         collection_aggregation_temporality: AggregationTemporality,
         collection_start_nano: int,
@@ -504,7 +504,7 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 self._previous_max = max(max_, self._previous_max)
                 self._previous_sum = sum_ + self._previous_sum
 
-                return HistogramDataPoint(
+                return HistogramDataPoint(  # type: ignore[return-value] # <will add tracking issue num>
                     attributes=self._attributes,
                     start_time_unix_nano=self._start_time_unix_nano,
                     time_unix_nano=collection_start_nano,
@@ -520,7 +520,7 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
 
 # pylint: disable=protected-access
-class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
+class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):  # type: ignore[type-var] # <will add tracking issue num>
     # _min_max_size and _max_max_size are the smallest and largest values
     # the max_size parameter may have, respectively.
 
@@ -578,10 +578,10 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         self._max = -inf
 
         # _positive holds the positive values.
-        self._positive = Buckets()
+        self._positive = Buckets()  # type: ignore[no-untyped-call] # <will add tracking issue num>
 
         # _negative holds the negative values by their absolute value.
-        self._negative = Buckets()
+        self._negative = Buckets()  # type: ignore[no-untyped-call] # <will add tracking issue num>
 
         # _mapping corresponds to the current scale, is shared by both the
         # positive and negative buckets.
@@ -632,7 +632,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 # zero count.
                 return
 
-            self._sum += value
+            self._sum += value  # type: ignore[assignment] # <will add tracking issue num>
 
             # 1. Use the positive buckets for positive values and the negative
             # buckets for negative values.
@@ -679,7 +679,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             if is_rescaling_needed:
 
                 self._downscale(
-                    self._get_scale_change(low, high),
+                    self._get_scale_change(low, high),  # type: ignore[misc, no-untyped-call] # <will add tracking issue num>
                     self._positive,
                     self._negative,
                 )
@@ -692,7 +692,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             if index < buckets.index_start:
                 span = buckets.index_end - index
 
-                if span >= len(buckets.counts):
+                if span >= len(buckets.counts):  # type: ignore[misc] # <will add tracking issue num>
                     buckets.grow(span + 1, self._max_size)
 
                 buckets.index_start = index
@@ -700,7 +700,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             elif index > buckets.index_end:
                 span = index - buckets.index_start
 
-                if span >= len(buckets.counts):
+                if span >= len(buckets.counts):  # type: ignore[misc] # <will add tracking issue num>
                     buckets.grow(span + 1, self._max_size)
 
                 buckets.index_end = index
@@ -709,12 +709,12 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             bucket_index = index - buckets.index_base
 
             if bucket_index < 0:
-                bucket_index += len(buckets.counts)
+                bucket_index += len(buckets.counts)  # type: ignore[misc] # <will add tracking issue num>
 
             # 7. Increment the bucket.
             buckets.increment_bucket(bucket_index)
 
-    def collect(
+    def collect(  # type: ignore[override] # <will add tracking issue num>
         self,
         collection_aggregation_temporality: AggregationTemporality,
         collection_start_nano: int,
@@ -736,10 +736,10 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             current_sum = self._sum
             current_max = self._max
             if current_max == -inf:
-                current_max = None
+                current_max = None  # type: ignore[assignment] # <will add tracking issue num>
             current_min = self._min
             if current_min == inf:
-                current_min = None
+                current_min = None  # type: ignore[assignment] # <will add tracking issue num>
 
             if self._count == self._zero_count:
                 current_scale = 0
@@ -747,8 +747,8 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             else:
                 current_scale = self._mapping.scale
 
-            self._negative = Buckets()
-            self._positive = Buckets()
+            self._negative = Buckets()  # type: ignore[no-untyped-call] # <will add tracking issue num>
+            self._positive = Buckets()  # type: ignore[no-untyped-call] # <will add tracking issue num>
             self._start_time_unix_nano = collection_start_nano
             self._sum = 0
             self._count = 0
@@ -766,11 +766,11 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 zero_count=current_zero_count,
                 positive=BucketsPoint(
                     offset=current_positive.offset,
-                    bucket_counts=current_positive.counts,
+                    bucket_counts=current_positive.counts,  # type: ignore[misc] # <will add tracking issue num>
                 ),
                 negative=BucketsPoint(
                     offset=current_negative.offset,
-                    bucket_counts=current_negative.counts,
+                    bucket_counts=current_negative.counts,  # type: ignore[misc] # <will add tracking issue num>
                 ),
                 # FIXME: Find the right value for flags
                 flags=0,
@@ -782,17 +782,15 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 self._instrument_aggregation_temporality
                 is collection_aggregation_temporality
             ):
-                self._previous_scale = current_scale
-                self._previous_start_time_unix_nano = (
-                    current_start_time_unix_nano
-                )
-                self._previous_max = current_max
-                self._previous_min = current_min
-                self._previous_sum = current_sum
-                self._previous_positive = current_positive
-                self._previous_negative = current_negative
+                self._previous_scale = current_scale  # type: ignore[assignment] # <will add tracking issue num>
+                self._previous_start_time_unix_nano = current_start_time_unix_nano  # type: ignore[assignment] # <will add tracking issue num>
+                self._previous_max = current_max  # type: ignore[assignment] # <will add tracking issue num>
+                self._previous_min = current_min  # type: ignore[assignment] # <will add tracking issue num>
+                self._previous_sum = current_sum  # type: ignore[assignment] # <will add tracking issue num>
+                self._previous_positive = current_positive  # type: ignore[assignment] # <will add tracking issue num>
+                self._previous_negative = current_negative  # type: ignore[assignment] # <will add tracking issue num>
 
-                return current_point
+                return current_point  # type: ignore[return-value] # <will add tracking issue num>
 
             min_scale = min(self._previous_scale, current_scale)
 
@@ -896,52 +894,52 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
             return current_point
 
-    def _get_low_high_previous_current(
+    def _get_low_high_previous_current(  # type: ignore[no-untyped-def] # <will add tracking issue num>
         self, previous_point_buckets, current_point_buckets, min_scale
     ):
 
-        (previous_point_low, previous_point_high) = self._get_low_high(
-            previous_point_buckets, min_scale
+        (previous_point_low, previous_point_high) = self._get_low_high(  # type: ignore[misc, no-untyped-call] # <will add tracking issue num>
+            previous_point_buckets, min_scale  # type: ignore[misc] # <will add tracking issue num>
         )
-        (current_point_low, current_point_high) = self._get_low_high(
-            current_point_buckets, min_scale
+        (current_point_low, current_point_high) = self._get_low_high(  # type: ignore[misc, no-untyped-call] # <will add tracking issue num>
+            current_point_buckets, min_scale  # type: ignore[misc] # <will add tracking issue num>
         )
 
-        if current_point_low > current_point_high:
-            low = previous_point_low
-            high = previous_point_high
+        if current_point_low > current_point_high:  # type: ignore[misc] # <will add tracking issue num>
+            low = previous_point_low  # type: ignore[misc] # <will add tracking issue num>
+            high = previous_point_high  # type: ignore[misc] # <will add tracking issue num>
 
-        elif previous_point_low > previous_point_high:
-            low = current_point_low
-            high = current_point_high
+        elif previous_point_low > previous_point_high:  # type: ignore[misc] # <will add tracking issue num>
+            low = current_point_low  # type: ignore[misc] # <will add tracking issue num>
+            high = current_point_high  # type: ignore[misc] # <will add tracking issue num>
 
         else:
-            low = min(previous_point_low, current_point_low)
-            high = max(previous_point_high, current_point_high)
+            low = min(previous_point_low, current_point_low)  # type: ignore[misc] # <will add tracking issue num>
+            high = max(previous_point_high, current_point_high)  # type: ignore[misc] # <will add tracking issue num>
 
-        return low, high
+        return low, high  # type: ignore[misc] # <will add tracking issue num>
 
-    def _get_low_high(self, buckets, min_scale):
-        if buckets.counts == [0]:
+    def _get_low_high(self, buckets, min_scale):  # type: ignore[no-untyped-def] # <will add tracking issue num>
+        if buckets.counts == [0]:  # type: ignore[misc] # <will add tracking issue num>
             return 0, -1
 
-        shift = self._mapping._scale - min_scale
+        shift = self._mapping._scale - min_scale  # type: ignore[misc] # <will add tracking issue num>
 
-        return buckets.index_start >> shift, buckets.index_end >> shift
+        return buckets.index_start >> shift, buckets.index_end >> shift  # type: ignore[misc] # <will add tracking issue num>
 
-    def _get_scale_change(self, low, high):
+    def _get_scale_change(self, low, high):  # type: ignore[no-untyped-def] # <will add tracking issue num>
 
         change = 0
 
-        while high - low >= self._max_size:
-            high = high >> 1
-            low = low >> 1
+        while high - low >= self._max_size:  # type: ignore[misc] # <will add tracking issue num>
+            high = high >> 1  # type: ignore[misc] # <will add tracking issue num>
+            low = low >> 1  # type: ignore[misc] # <will add tracking issue num>
 
             change += 1
 
         return change
 
-    def _downscale(self, change: int, positive, negative):
+    def _downscale(self, change: int, positive, negative):  # type: ignore[no-untyped-def] # <will add tracking issue num>
 
         if change == 0:
             return
@@ -951,17 +949,17 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
         new_scale = self._mapping.scale - change
 
-        positive.downscale(change)
-        negative.downscale(change)
+        positive.downscale(change)  # type: ignore[misc] # <will add tracking issue num>
+        negative.downscale(change)  # type: ignore[misc] # <will add tracking issue num>
 
         if new_scale <= 0:
             mapping = ExponentMapping(new_scale)
         else:
-            mapping = LogarithmMapping(new_scale)
+            mapping = LogarithmMapping(new_scale)  # type: ignore[assignment] # <will add tracking issue num>
 
-        self._mapping = mapping
+        self._mapping = mapping  # type: ignore[assignment] # <will add tracking issue num>
 
-    def _merge(
+    def _merge(  # type: ignore[no-untyped-def] # <will add tracking issue num>
         self,
         previous_buckets,
         current_buckets,
@@ -970,55 +968,55 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         aggregation_temporality,
     ):
 
-        current_change = current_scale - min_scale
+        current_change = current_scale - min_scale  # type: ignore[misc] # <will add tracking issue num>
 
-        for current_bucket_index, current_bucket in enumerate(
-            current_buckets.counts
+        for current_bucket_index, current_bucket in enumerate(  # type: ignore[misc] # <will add tracking issue num>
+            current_buckets.counts  # type: ignore[misc] # <will add tracking issue num>
         ):
 
-            if current_bucket == 0:
+            if current_bucket == 0:  # type: ignore[misc] # <will add tracking issue num>
                 continue
 
             # Not considering the case where len(previous_buckets) == 0. This
             # would not happen because self._previous_point is only assigned to
             # an ExponentialHistogramDataPoint object if self._count != 0.
 
-            index = (
-                current_buckets.offset + current_bucket_index
-            ) >> current_change
+            index = (  # type: ignore[misc] # <will add tracking issue num>
+                current_buckets.offset + current_bucket_index  # type: ignore[misc] # <will add tracking issue num>
+            ) >> current_change  # type: ignore[misc] # <will add tracking issue num>
 
-            if index < previous_buckets.index_start:
-                span = previous_buckets.index_end - index
+            if index < previous_buckets.index_start:  # type: ignore[misc] # <will add tracking issue num>
+                span = previous_buckets.index_end - index  # type: ignore[misc] # <will add tracking issue num>
 
-                if span >= self._max_size:
+                if span >= self._max_size:  # type: ignore[misc] # <will add tracking issue num>
                     raise Exception("Incorrect merge scale")
 
-                if span >= len(previous_buckets.counts):
-                    previous_buckets.grow(span + 1, self._max_size)
+                if span >= len(previous_buckets.counts):  # type: ignore[misc] # <will add tracking issue num>
+                    previous_buckets.grow(span + 1, self._max_size)  # type: ignore[misc] # <will add tracking issue num>
 
-                previous_buckets.index_start = index
+                previous_buckets.index_start = index  # type: ignore[misc] # <will add tracking issue num>
 
-            if index > previous_buckets.index_end:
-                span = index - previous_buckets.index_end
+            if index > previous_buckets.index_end:  # type: ignore[misc] # <will add tracking issue num>
+                span = index - previous_buckets.index_end  # type: ignore[misc] # <will add tracking issue num>
 
-                if span >= self._max_size:
+                if span >= self._max_size:  # type: ignore[misc] # <will add tracking issue num>
                     raise Exception("Incorrect merge scale")
 
-                if span >= len(previous_buckets.counts):
-                    previous_buckets.grow(span + 1, self._max_size)
+                if span >= len(previous_buckets.counts):  # type: ignore[misc] # <will add tracking issue num>
+                    previous_buckets.grow(span + 1, self._max_size)  # type: ignore[misc] # <will add tracking issue num>
 
-                previous_buckets.index_end = index
+                previous_buckets.index_end = index  # type: ignore[misc] # <will add tracking issue num>
 
-            bucket_index = index - previous_buckets.index_base
+            bucket_index = index - previous_buckets.index_base  # type: ignore[misc] # <will add tracking issue num>
 
-            if bucket_index < 0:
-                bucket_index += len(previous_buckets.counts)
+            if bucket_index < 0:  # type: ignore[misc] # <will add tracking issue num>
+                bucket_index += len(previous_buckets.counts)  # type: ignore[misc] # <will add tracking issue num>
 
-            if aggregation_temporality is AggregationTemporality.DELTA:
-                current_bucket = -current_bucket
+            if aggregation_temporality is AggregationTemporality.DELTA:  # type: ignore[misc] # <will add tracking issue num>
+                current_bucket = -current_bucket  # type: ignore[misc] # <will add tracking issue num>
 
-            previous_buckets.increment_bucket(
-                bucket_index, increment=current_bucket
+            previous_buckets.increment_bucket(  # type: ignore[misc] # <will add tracking issue num>
+                bucket_index, increment=current_bucket  # type: ignore[misc] # <will add tracking issue num>
             )
 
 
@@ -1028,12 +1026,12 @@ class Aggregation(ABC):
     """
 
     @abstractmethod
-    def _create_aggregation(
+    def _create_aggregation(  # type: ignore[misc] # <will add tracking issue num>
         self,
         instrument: Instrument,
         attributes: Attributes,
         start_time_unix_nano: int,
-    ) -> _Aggregation:
+    ) -> _Aggregation:  # type: ignore[type-arg] # <will add tracking issue num>
         """Creates an aggregation"""
 
 
@@ -1061,7 +1059,7 @@ class DefaultAggregation(Aggregation):
         instrument: Instrument,
         attributes: Attributes,
         start_time_unix_nano: int,
-    ) -> _Aggregation:
+    ) -> _Aggregation:  # type: ignore[type-arg] # <will add tracking issue num>
 
         # pylint: disable=too-many-return-statements
         if isinstance(instrument, Counter):
@@ -1135,7 +1133,7 @@ class ExponentialBucketHistogramAggregation(Aggregation):
         instrument: Instrument,
         attributes: Attributes,
         start_time_unix_nano: int,
-    ) -> _Aggregation:
+    ) -> _Aggregation:  # type: ignore[type-arg] # <will add tracking issue num>
         return _ExponentialBucketHistogramAggregation(
             attributes,
             start_time_unix_nano,
@@ -1187,7 +1185,7 @@ class ExplicitBucketHistogramAggregation(Aggregation):
         instrument: Instrument,
         attributes: Attributes,
         start_time_unix_nano: int,
-    ) -> _Aggregation:
+    ) -> _Aggregation:  # type: ignore[type-arg] # <will add tracking issue num>
 
         instrument_aggregation_temporality = AggregationTemporality.UNSPECIFIED
         if isinstance(instrument, Synchronous):
@@ -1217,7 +1215,7 @@ class SumAggregation(Aggregation):
         instrument: Instrument,
         attributes: Attributes,
         start_time_unix_nano: int,
-    ) -> _Aggregation:
+    ) -> _Aggregation:  # type: ignore[type-arg] # <will add tracking issue num>
 
         instrument_aggregation_temporality = AggregationTemporality.UNSPECIFIED
         if isinstance(instrument, Synchronous):
@@ -1248,7 +1246,7 @@ class LastValueAggregation(Aggregation):
         instrument: Instrument,
         attributes: Attributes,
         start_time_unix_nano: int,
-    ) -> _Aggregation:
+    ) -> _Aggregation:  # type: ignore[type-arg] # <will add tracking issue num>
         return _LastValueAggregation(attributes)
 
 
@@ -1260,5 +1258,5 @@ class DropAggregation(Aggregation):
         instrument: Instrument,
         attributes: Attributes,
         start_time_unix_nano: int,
-    ) -> _Aggregation:
+    ) -> _Aggregation:  # type: ignore[type-arg] # <will add tracking issue num>
         return _DropAggregation(attributes)

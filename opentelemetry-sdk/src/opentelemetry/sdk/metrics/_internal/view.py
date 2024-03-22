@@ -95,7 +95,7 @@ class View:
         instrument_unit: Optional[str] = None,
     ):
         if (
-            instrument_type
+            instrument_type  # type: ignore[comparison-overlap] # <will add tracking issue num>
             is instrument_name
             is instrument_unit
             is meter_name
@@ -142,24 +142,24 @@ class View:
                 return False
 
         if self._instrument_name is not None:
-            if not fnmatch(instrument.name, self._instrument_name):
+            if not fnmatch(instrument.name, self._instrument_name):  # type: ignore[attr-defined, misc] # <will add tracking issue num>
                 return False
 
         if self._instrument_unit is not None:
-            if not fnmatch(instrument.unit, self._instrument_unit):
+            if not fnmatch(instrument.unit, self._instrument_unit):  # type: ignore[attr-defined, misc] # <will add tracking issue num>
                 return False
 
         if self._meter_name is not None:
-            if instrument.instrumentation_scope.name != self._meter_name:
+            if instrument.instrumentation_scope.name != self._meter_name:  # type: ignore[attr-defined, misc] # <will add tracking issue num>
                 return False
 
         if self._meter_version is not None:
-            if instrument.instrumentation_scope.version != self._meter_version:
+            if instrument.instrumentation_scope.version != self._meter_version:  # type: ignore[attr-defined, misc] # <will add tracking issue num>
                 return False
 
         if self._meter_schema_url is not None:
             if (
-                instrument.instrumentation_scope.schema_url
+                instrument.instrumentation_scope.schema_url  # type: ignore[attr-defined, misc] # <will add tracking issue num>
                 != self._meter_schema_url
             ):
                 return False

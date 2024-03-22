@@ -36,8 +36,8 @@ class NumberDataPoint:
     time_unix_nano: int
     value: Union[int, float]
 
-    def to_json(self, indent=4) -> str:
-        return dumps(asdict(self), indent=indent)
+    def to_json(self, indent=4) -> str:  # type: ignore[no-untyped-def] # <will add tracking issue num>
+        return dumps(asdict(self), indent=indent)  # type: ignore[misc] # <will add tracking issue num>
 
 
 @dataclass(frozen=True)
@@ -56,8 +56,8 @@ class HistogramDataPoint:
     min: float
     max: float
 
-    def to_json(self, indent=4) -> str:
-        return dumps(asdict(self), indent=indent)
+    def to_json(self, indent=4) -> str:  # type: ignore[no-untyped-def] # <will add tracking issue num>
+        return dumps(asdict(self), indent=indent)  # type: ignore[misc] # <will add tracking issue num>
 
 
 @dataclass(frozen=True)
@@ -86,8 +86,8 @@ class ExponentialHistogramDataPoint:
     min: float
     max: float
 
-    def to_json(self, indent=4) -> str:
-        return dumps(asdict(self), indent=indent)
+    def to_json(self, indent=4) -> str:  # type: ignore[no-untyped-def] # <will add tracking issue num>
+        return dumps(asdict(self), indent=indent)  # type: ignore[misc] # <will add tracking issue num>
 
 
 @dataclass(frozen=True)
@@ -97,7 +97,7 @@ class ExponentialHistogram:
     """
 
     data_points: Sequence[ExponentialHistogramDataPoint]
-    aggregation_temporality: (
+    aggregation_temporality: (  # type: ignore[name-defined] # <will add tracking issue num>
         "opentelemetry.sdk.metrics.export.AggregationTemporality"
     )
 
@@ -108,22 +108,22 @@ class Sum:
     all reported measurements over a time interval."""
 
     data_points: Sequence[NumberDataPoint]
-    aggregation_temporality: (
+    aggregation_temporality: (  # type: ignore[name-defined] # <will add tracking issue num>
         "opentelemetry.sdk.metrics.export.AggregationTemporality"
     )
     is_monotonic: bool
 
-    def to_json(self, indent=4) -> str:
+    def to_json(self, indent=4) -> str:  # type: ignore[no-untyped-def] # <will add tracking issue num>
         return dumps(
-            {
-                "data_points": [
-                    loads(data_point.to_json(indent=indent))
+            {  # type: ignore[misc] # <will add tracking issue num>
+                "data_points": [  # type: ignore[misc] # <will add tracking issue num>
+                    loads(data_point.to_json(indent=indent))  # type: ignore[misc] # <will add tracking issue num>
                     for data_point in self.data_points
                 ],
                 "aggregation_temporality": self.aggregation_temporality,
                 "is_monotonic": self.is_monotonic,
             },
-            indent=indent,
+            indent=indent,  # type: ignore[misc] # <will add tracking issue num>
         )
 
 
@@ -135,15 +135,15 @@ class Gauge:
 
     data_points: Sequence[NumberDataPoint]
 
-    def to_json(self, indent=4) -> str:
+    def to_json(self, indent=4) -> str:  # type: ignore[no-untyped-def] # <will add tracking issue num>
         return dumps(
-            {
-                "data_points": [
-                    loads(data_point.to_json(indent=indent))
+            {  # type: ignore[misc] # <will add tracking issue num>
+                "data_points": [  # type: ignore[misc] # <will add tracking issue num>
+                    loads(data_point.to_json(indent=indent))  # type: ignore[misc] # <will add tracking issue num>
                     for data_point in self.data_points
                 ],
             },
-            indent=indent,
+            indent=indent,  # type: ignore[misc] # <will add tracking issue num>
         )
 
 
@@ -153,20 +153,20 @@ class Histogram:
     histogram of all reported measurements over a time interval."""
 
     data_points: Sequence[HistogramDataPoint]
-    aggregation_temporality: (
+    aggregation_temporality: (  # type: ignore[name-defined] # <will add tracking issue num>
         "opentelemetry.sdk.metrics.export.AggregationTemporality"
     )
 
-    def to_json(self, indent=4) -> str:
+    def to_json(self, indent=4) -> str:  # type: ignore[no-untyped-def] # <will add tracking issue num>
         return dumps(
-            {
-                "data_points": [
-                    loads(data_point.to_json(indent=indent))
+            {  # type: ignore[misc] # <will add tracking issue num>
+                "data_points": [  # type: ignore[misc] # <will add tracking issue num>
+                    loads(data_point.to_json(indent=indent))  # type: ignore[misc] # <will add tracking issue num>
                     for data_point in self.data_points
                 ],
                 "aggregation_temporality": self.aggregation_temporality,
             },
-            indent=indent,
+            indent=indent,  # type: ignore[misc] # <will add tracking issue num>
         )
 
 
@@ -185,15 +185,15 @@ class Metric:
     unit: Optional[str]
     data: DataT
 
-    def to_json(self, indent=4) -> str:
+    def to_json(self, indent=4) -> str:  # type: ignore[no-untyped-def] # <will add tracking issue num>
         return dumps(
-            {
+            {  # type: ignore[misc] # <will add tracking issue num>
                 "name": self.name,
                 "description": self.description or "",
                 "unit": self.unit or "",
-                "data": loads(self.data.to_json(indent=indent)),
+                "data": loads(self.data.to_json(indent=indent)),  # type: ignore[misc] # <will add tracking issue num>
             },
-            indent=indent,
+            indent=indent,  # type: ignore[misc] # <will add tracking issue num>
         )
 
 
@@ -205,17 +205,17 @@ class ScopeMetrics:
     metrics: Sequence[Metric]
     schema_url: str
 
-    def to_json(self, indent=4) -> str:
+    def to_json(self, indent=4) -> str:  # type: ignore[no-untyped-def] # <will add tracking issue num>
         return dumps(
-            {
-                "scope": loads(self.scope.to_json(indent=indent)),
-                "metrics": [
-                    loads(metric.to_json(indent=indent))
+            {  # type: ignore[misc] # <will add tracking issue num>
+                "scope": loads(self.scope.to_json(indent=indent)),  # type: ignore[misc] # <will add tracking issue num>
+                "metrics": [  # type: ignore[misc] # <will add tracking issue num>
+                    loads(metric.to_json(indent=indent))  # type: ignore[misc] # <will add tracking issue num>
                     for metric in self.metrics
                 ],
                 "schema_url": self.schema_url,
             },
-            indent=indent,
+            indent=indent,  # type: ignore[misc] # <will add tracking issue num>
         )
 
 
@@ -227,17 +227,17 @@ class ResourceMetrics:
     scope_metrics: Sequence[ScopeMetrics]
     schema_url: str
 
-    def to_json(self, indent=4) -> str:
+    def to_json(self, indent=4) -> str:  # type: ignore[no-untyped-def] # <will add tracking issue num>
         return dumps(
-            {
-                "resource": loads(self.resource.to_json(indent=indent)),
-                "scope_metrics": [
-                    loads(scope_metrics.to_json(indent=indent))
+            {  # type: ignore[misc] # <will add tracking issue num>
+                "resource": loads(self.resource.to_json(indent=indent)),  # type: ignore[misc] # <will add tracking issue num>
+                "scope_metrics": [  # type: ignore[misc] # <will add tracking issue num>
+                    loads(scope_metrics.to_json(indent=indent))  # type: ignore[misc] # <will add tracking issue num>
                     for scope_metrics in self.scope_metrics
                 ],
                 "schema_url": self.schema_url,
             },
-            indent=indent,
+            indent=indent,  # type: ignore[misc] # <will add tracking issue num>
         )
 
 
@@ -247,13 +247,13 @@ class MetricsData:
 
     resource_metrics: Sequence[ResourceMetrics]
 
-    def to_json(self, indent=4) -> str:
+    def to_json(self, indent=4) -> str:  # type: ignore[no-untyped-def] # <will add tracking issue num>
         return dumps(
-            {
-                "resource_metrics": [
-                    loads(resource_metrics.to_json(indent=indent))
+            {  # type: ignore[misc] # <will add tracking issue num>
+                "resource_metrics": [  # type: ignore[misc] # <will add tracking issue num>
+                    loads(resource_metrics.to_json(indent=indent))  # type: ignore[misc] # <will add tracking issue num>
                     for resource_metrics in self.resource_metrics
                 ]
             },
-            indent=indent,
+            indent=indent,  # type: ignore[misc] # <will add tracking issue num>
         )

@@ -27,24 +27,24 @@ class InMemoryLogExporter(LogExporter):
     :func:`.get_finished_logs` method.
     """
 
-    def __init__(self):
+    def __init__(self):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         self._logs = []
         self._lock = threading.Lock()
         self._stopped = False
 
     def clear(self) -> None:
         with self._lock:
-            self._logs.clear()
+            self._logs.clear()  # type: ignore[misc] # <will add tracking issue num>
 
     def get_finished_logs(self) -> typing.Tuple[LogData, ...]:
         with self._lock:
-            return tuple(self._logs)
+            return tuple(self._logs)  # type: ignore[misc] # <will add tracking issue num>
 
     def export(self, batch: typing.Sequence[LogData]) -> LogExportResult:
         if self._stopped:
             return LogExportResult.FAILURE
         with self._lock:
-            self._logs.extend(batch)
+            self._logs.extend(batch)  # type: ignore[misc] # <will add tracking issue num>
         return LogExportResult.SUCCESS
 
     def shutdown(self) -> None:

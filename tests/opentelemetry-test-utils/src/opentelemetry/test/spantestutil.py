@@ -19,10 +19,10 @@ from opentelemetry.sdk import trace as trace_sdk
 from opentelemetry.sdk.trace import Resource
 
 
-def new_tracer(span_limits=None, resource=None) -> trace_api.Tracer:
+def new_tracer(span_limits=None, resource=None) -> trace_api.Tracer:  # type: ignore[no-untyped-def] # <will add tracking issue num>
     provider_factory = trace_sdk.TracerProvider
     if resource is not None:
-        provider_factory = partial(provider_factory, resource=resource)
+        provider_factory = partial(provider_factory, resource=resource)  # type: ignore[assignment] # <will add tracking issue num>
     return provider_factory(span_limits=span_limits).get_tracer(__name__)
 
 
@@ -34,7 +34,7 @@ def get_span_with_dropped_attributes_events_links():
     for index in range(129):
         links.append(
             trace_api.Link(
-                trace_sdk._Span(
+                trace_sdk._Span(  # type: ignore[no-untyped-call] # <will add tracking issue num>
                     name=f"span{index}",
                     context=trace_api.INVALID_SPAN_CONTEXT,
                     attributes=attributes,
@@ -45,7 +45,7 @@ def get_span_with_dropped_attributes_events_links():
 
     tracer = new_tracer(
         span_limits=trace_sdk.SpanLimits(),
-        resource=Resource(attributes=attributes),
+        resource=Resource(attributes=attributes),  # type: ignore[arg-type] # <will add tracking issue num>
     )
     with tracer.start_as_current_span(
         "span", links=links, attributes=attributes
