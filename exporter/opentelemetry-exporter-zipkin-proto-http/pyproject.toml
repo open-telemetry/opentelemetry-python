@@ -7,7 +7,7 @@ name = "opentelemetry-exporter-zipkin-proto-http"
 dynamic = ["version"]
 description = "Zipkin Span Protobuf Exporter for OpenTelemetry"
 readme = "README.rst"
-license = "Apache-2.0"
+license = {text = "Apache-2.0"}
 requires-python = ">=3.8"
 authors = [
   { name = "OpenTelemetry Authors", email = "cncf-opentelemetry-contributors@lists.cncf.io" },
@@ -31,9 +31,6 @@ dependencies = [
   "protobuf ~= 3.12",
   "requests ~= 2.7",
 ]
-
-[project.optional-dependencies]
-test = []
 
 [project.entry-points.opentelemetry_traces_exporter]
 zipkin_proto = "opentelemetry.exporter.zipkin.proto.http:ZipkinExporter"

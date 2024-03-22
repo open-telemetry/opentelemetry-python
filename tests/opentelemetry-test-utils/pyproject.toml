@@ -7,7 +7,7 @@ name = "opentelemetry-test-utils"
 dynamic = ["version"]
 description = "Test utilities for OpenTelemetry unit tests"
 readme = "README.rst"
-license = "Apache-2.0"
+license = {text = "Apache-2.0"}
 requires-python = ">=3.8"
 authors = [
   { name = "OpenTelemetry Authors", email = "cncf-opentelemetry-contributors@lists.cncf.io" },
@@ -27,9 +27,6 @@ dependencies = [
   "opentelemetry-api == 1.24.0.dev",
   "opentelemetry-sdk == 1.24.0.dev",
 ]
-
-[project.optional-dependencies]
-test = []
 
 [project.urls]
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tests/opentelemetry-test-utils"

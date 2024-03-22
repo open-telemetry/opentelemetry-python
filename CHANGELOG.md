@@ -7,9 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Make `tracer.start_as_current_span()` decorator work with async functions
+  ([#3633](https://github.com/open-telemetry/opentelemetry-python/pull/3633))
 - Fix python 3.12 deprecation warning
   ([#3751](https://github.com/open-telemetry/opentelemetry-python/pull/3751))
-- Prometheus exporter sort label keys to prevent duplicate metrics when user input changes order ([#3698]https://github.com/open-telemetry/opentelemetry-python/pull/3698)
+- Prometheus exporter sort label keys to prevent duplicate metrics when user input changes order 
+  ([#3698](https://github.com/open-telemetry/opentelemetry-python/pull/3698))
+- bump mypy to 0.982
+  ([#3776](https://github.com/open-telemetry/opentelemetry-python/pull/3776))
+- Add support for OTEL_SDK_DISABLED environment variable
+  ([#3648](https://github.com/open-telemetry/opentelemetry-python/pull/3648))
+- Fix ValueError message for PeriodicExportingMetricsReader
+  ([#3769](https://github.com/open-telemetry/opentelemetry-python/pull/3769))
+- Make span.record_exception more robust
+  ([#3778](https://github.com/open-telemetry/opentelemetry-python/pull/3778))
+- Fix license field in pyproject.toml files
+  ([#3803](https://github.com/open-telemetry/opentelemetry-python/pull/3803))
 
 ## Version 1.23.0/0.44b0 (2024-02-23)
 
@@ -34,7 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix explicit bucket histogram aggregation
   ([#3429](https://github.com/open-telemetry/opentelemetry-python/pull/3429))
 - Add `code.lineno`, `code.function` and `code.filepath` to all logs 
-  ([#3645](https://github.com/open-telemetry/opentelemetry-python/pull/3645))
+  ([#3675](https://github.com/open-telemetry/opentelemetry-python/pull/3675))
 - Add Synchronous Gauge instrument
   ([#3462](https://github.com/open-telemetry/opentelemetry-python/pull/3462))
 - Drop support for 3.7

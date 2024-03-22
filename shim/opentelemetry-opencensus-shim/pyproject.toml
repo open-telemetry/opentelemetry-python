@@ -7,7 +7,7 @@ name = "opentelemetry-opencensus-shim"
 dynamic = ["version"]
 description = "OpenCensus Shim for OpenTelemetry"
 readme = "README.rst"
-license = "Apache-2.0"
+license = {text = "Apache-2.0"}
 requires-python = ">=3.8"
 authors = [
   { name = "OpenTelemetry Authors", email = "cncf-opentelemetry-contributors@lists.cncf.io" },
@@ -32,12 +32,6 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-test = [
-  "opentelemetry-test-utils == 0.45b0.dev",
-  "opencensus == 0.11.1",
-  # Temporary fix for https://github.com/census-instrumentation/opencensus-python/issues/1219
-  "six == 1.16.0",
-]
 
 [project.urls]
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/shim/opentelemetry-opencensus-shim"
