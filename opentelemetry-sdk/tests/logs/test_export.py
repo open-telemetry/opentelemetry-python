@@ -71,6 +71,9 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         self.assertEqual(
             warning_log_record.severity_number, SeverityNumber.WARN
         )
+        self.assertEqual(
+            finished_logs[0].instrumentation_scope.name, "default_level"
+        )
 
     def test_simple_log_record_processor_custom_level(self):
         exporter = InMemoryLogExporter()
@@ -104,6 +107,12 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         self.assertEqual(
             fatal_log_record.severity_number, SeverityNumber.FATAL
         )
+        self.assertEqual(
+            finished_logs[0].instrumentation_scope.name, "custom_level"
+        )
+        self.assertEqual(
+            finished_logs[1].instrumentation_scope.name, "custom_level"
+        )
 
     def test_simple_log_record_processor_trace_correlation(self):
         exporter = InMemoryLogExporter()
@@ -129,6 +138,9 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         self.assertEqual(
             log_record.trace_flags, INVALID_SPAN_CONTEXT.trace_flags
         )
+        self.assertEqual(
+            finished_logs[0].instrumentation_scope.name, "trace_correlation"
+        )
         exporter.clear()
 
         tracer = trace.TracerProvider().get_tracer(__name__)
@@ -140,6 +152,10 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
             self.assertEqual(log_record.body, "Critical message within span")
             self.assertEqual(log_record.severity_text, "CRITICAL")
             self.assertEqual(log_record.severity_number, SeverityNumber.FATAL)
+            self.assertEqual(
+                finished_logs[0].instrumentation_scope.name,
+                "trace_correlation",
+            )
             span_context = span.get_span_context()
             self.assertEqual(log_record.trace_id, span_context.trace_id)
             self.assertEqual(log_record.span_id, span_context.span_id)
@@ -165,6 +181,9 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         self.assertEqual(warning_log_record.severity_text, "WARN")
         self.assertEqual(
             warning_log_record.severity_number, SeverityNumber.WARN
+        )
+        self.assertEqual(
+            finished_logs[0].instrumentation_scope.name, "shutdown"
         )
         exporter.clear()
         logger_provider.shutdown()
@@ -206,6 +225,10 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
             for item in finished_logs
         ]
         self.assertEqual(expected, emitted)
+        for item in finished_logs:
+            self.assertEqual(
+                item.instrumentation_scope.name, "different_msg_types"
+            )
 
     def test_simple_log_record_processor_different_msg_types_with_formatter(
         self,
@@ -428,6 +451,8 @@ class TestBatchLogRecordProcessor(ConcurrencyTestBase):
             for item in finished_logs
         ]
         self.assertEqual(expected, emitted)
+        for item in finished_logs:
+            self.assertEqual(item.instrumentation_scope.name, "shutdown")
 
     def test_force_flush(self):
         exporter = InMemoryLogExporter()
@@ -447,6 +472,9 @@ class TestBatchLogRecordProcessor(ConcurrencyTestBase):
         log_record = finished_logs[0].log_record
         self.assertEqual(log_record.body, "Earth is burning")
         self.assertEqual(log_record.severity_number, SeverityNumber.FATAL)
+        self.assertEqual(
+            finished_logs[0].instrumentation_scope.name, "force_flush"
+        )
 
     def test_log_record_processor_too_many_logs(self):
         exporter = InMemoryLogExporter()
@@ -465,6 +493,8 @@ class TestBatchLogRecordProcessor(ConcurrencyTestBase):
         self.assertTrue(log_record_processor.force_flush())
         finised_logs = exporter.get_finished_logs()
         self.assertEqual(len(finised_logs), 1000)
+        for item in finised_logs:
+            self.assertEqual(item.instrumentation_scope.name, "many_logs")
 
     def test_with_multiple_threads(self):
         exporter = InMemoryLogExporter()
@@ -492,6 +522,8 @@ class TestBatchLogRecordProcessor(ConcurrencyTestBase):
 
         finished_logs = exporter.get_finished_logs()
         self.assertEqual(len(finished_logs), 2415)
+        for item in finished_logs:
+            self.assertEqual(item.instrumentation_scope.name, "threads")
 
     @unittest.skipUnless(
         hasattr(os, "fork"),
