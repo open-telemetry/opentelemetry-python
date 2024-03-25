@@ -74,3 +74,17 @@ class TestContext(unittest.TestCase):
 
         context.detach(token)
         self.assertEqual("yyy", context.get_value("a"))
+
+class TestInitContext(unittest.TestCase):
+    def test_load_runtime_context(self):
+        from os import environ
+        from opentelemetry.environment_variables import OTEL_PYTHON_CONTEXT
+        from opentelemetry.context.contextvars_context import ContextVarsRuntimeContext
+
+        environ[OTEL_PYTHON_CONTEXT] = "contextvars_context"
+        ctx = context._load_runtime_context()
+        self.assertIsInstance(ctx, ContextVarsRuntimeContext)
+
+        environ.pop(OTEL_PYTHON_CONTEXT)
+        ctx = context._load_runtime_context()
+        self.assertIsInstance(ctx, ContextVarsRuntimeContext)
