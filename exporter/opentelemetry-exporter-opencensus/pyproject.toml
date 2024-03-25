@@ -7,7 +7,7 @@ name = "opentelemetry-exporter-opencensus"
 dynamic = ["version"]
 description = "OpenCensus Exporter"
 readme = "README.rst"
-license = "Apache-2.0"
+license = {text = "Apache-2.0"}
 requires-python = ">=3.8"
 authors = [
   { name = "OpenTelemetry Authors", email = "cncf-opentelemetry-contributors@lists.cncf.io" },
