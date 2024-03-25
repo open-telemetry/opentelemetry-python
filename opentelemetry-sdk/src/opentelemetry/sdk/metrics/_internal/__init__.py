@@ -14,6 +14,7 @@
 
 from atexit import register, unregister
 from logging import getLogger
+from os import environ
 from threading import Lock
 from time import time_ns
 from typing import Optional, Sequence
@@ -32,6 +33,7 @@ from opentelemetry.metrics import (
 )
 from opentelemetry.metrics import UpDownCounter as APIUpDownCounter
 from opentelemetry.metrics import _Gauge as APIGauge
+from opentelemetry.sdk.environment_variables import OTEL_SDK_DISABLED
 from opentelemetry.sdk.metrics._internal.exceptions import MetricsTimeoutError
 from opentelemetry.sdk.metrics._internal.instrument import (
     _Counter,
@@ -394,6 +396,8 @@ class MeterProvider(APIMeterProvider):
         self._measurement_consumer = SynchronousMeasurementConsumer(
             sdk_config=self._sdk_config
         )
+        disabled = environ.get(OTEL_SDK_DISABLED, "")
+        self._disabled = disabled.lower().strip() == "true"
 
         if shutdown_on_exit:
             self._atexit_handler = register(self.shutdown)
@@ -511,6 +515,10 @@ class MeterProvider(APIMeterProvider):
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
     ) -> Meter:
+
+        if self._disabled:
+            _logger.warning("SDK is disabled.")
+            return NoOpMeter(name, version=version, schema_url=schema_url)
 
         if self._shutdown:
             _logger.warning(

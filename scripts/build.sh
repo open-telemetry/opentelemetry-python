@@ -8,13 +8,13 @@ set -ev
 # Get the latest versions of packaging tools
 python3 -m pip install --upgrade pip build setuptools wheel
 
-BASEDIR=$(dirname $(readlink -f $(dirname $0)))
+BASEDIR=$(dirname "$(readlink -f "$(dirname $0)")")
 DISTDIR=dist
 
 (
   cd $BASEDIR
   mkdir -p $DISTDIR
-  rm -rf $DISTDIR/*
+  rm -rf ${DISTDIR:?}/*
 
  for d in opentelemetry-api/ opentelemetry-sdk/ opentelemetry-proto/ opentelemetry-semantic-conventions/ exporter/*/ shim/opentelemetry-opentracing-shim/ propagator/*/ tests/opentelemetry-test-utils/; do
    (
