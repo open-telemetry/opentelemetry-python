@@ -27,6 +27,8 @@ classifiers = [
 dependencies = [
   "opentelemetry-api == 1.24.0.dev",
   "opentelemetry-semantic-conventions == 0.45b0.dev",
+  "threadloop>=1.0.2",
+  "tornado>=6.4",
   "typing-extensions >= 3.7.4",
 ]
 
