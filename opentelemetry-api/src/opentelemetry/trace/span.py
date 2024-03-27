@@ -169,7 +169,7 @@ class Span(abc.ABC):
     @abc.abstractmethod
     def record_exception(
         self,
-        exception: Exception,
+        exception: BaseException,
         attributes: types.Attributes = None,
         timestamp: typing.Optional[int] = None,
         escaped: bool = False,
@@ -563,7 +563,7 @@ class NonRecordingSpan(Span):
 
     def record_exception(
         self,
-        exception: Exception,
+        exception: BaseException,
         attributes: types.Attributes = None,
         timestamp: typing.Optional[int] = None,
         escaped: bool = False,
