@@ -14,6 +14,7 @@
 from dataclasses import replace
 from logging import getLogger
 from os import environ
+from time import time
 from typing import Dict, Iterable, List, Optional, Tuple, Union
 from typing import Sequence as TypingSequence
 from grpc import ChannelCredentials, Compression
@@ -96,7 +97,7 @@ class OTLPMetricExporter(
         headers: Optional[
             Union[TypingSequence[Tuple[str, str]], Dict[str, str], str]
         ] = None,
-        timeout: Optional[int] = None,
+        timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
         preferred_temporality: Dict[type, AggregationTemporality] = None,
         preferred_aggregation: Dict[type, Aggregation] = None,
@@ -118,7 +119,7 @@ class OTLPMetricExporter(
 
         environ_timeout = environ.get(OTEL_EXPORTER_OTLP_METRICS_TIMEOUT)
         environ_timeout = (
-            int(environ_timeout) if environ_timeout is not None else None
+            float(environ_timeout) if environ_timeout is not None else None
         )
 
         compression = (
@@ -155,14 +156,18 @@ class OTLPMetricExporter(
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> MetricExportResult:
-        # TODO(#2663): OTLPExporterMixin should pass timeout to gRPC
         if self._max_export_batch_size is None:
-            return self._export(data=metrics_data)
+            return self._exporter.export_with_retry(
+                timeout_millis * 1e-3, metrics_data
+            )
 
         export_result = MetricExportResult.SUCCESS
-
+        deadline_s = time() + timeout_millis * 1e-3
         for split_metrics_data in self._split_metrics_data(metrics_data):
-            split_export_result = self._export(data=split_metrics_data)
+            time_remaining_s = deadline_s - time()
+            split_export_result = self._exporter.export_with_retry(
+                time_remaining_s, split_metrics_data
+            )
 
             if split_export_result is MetricExportResult.FAILURE:
                 export_result = MetricExportResult.FAILURE

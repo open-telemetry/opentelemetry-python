@@ -16,15 +16,16 @@ import logging
 import zlib
 from os import environ
 from typing import Dict, Optional, Any, Callable, List
-from typing import Sequence, Mapping  # noqa: F401
 
 from io import BytesIO
-from time import sleep
 from deprecated import deprecated
 
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _get_resource_data,
-    _create_exp_backoff_generator,
+)
+from opentelemetry.exporter.otlp.proto.common.exporter import (
+    RetryableExportError,
+    RetryingExporter,
 )
 from opentelemetry.exporter.otlp.proto.common._internal.metrics_encoder import (
     OTLPMetricExporterMixin,
@@ -88,10 +89,15 @@ DEFAULT_METRICS_EXPORT_PATH = "v1/metrics"
 DEFAULT_TIMEOUT = 10  # in seconds
 
 
+def _retryable(resp: requests.Response) -> bool:
+    if resp.status_code == 408:
+        return True
+    if resp.status_code >= 500 and resp.status_code <= 599:
+        return True
+    return False
+
+
 class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
-
-    _MAX_RETRY_TIMEOUT = 64
-
     def __init__(
         self,
         endpoint: Optional[str] = None,
@@ -138,8 +144,14 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         self._common_configuration(
             preferred_temporality, preferred_aggregation
         )
+        self._shutdown = False
+        self._exporter = RetryingExporter(
+            self._export, MetricExportResult, self._timeout
+        )
 
-    def _export(self, serialized_data: bytes):
+    def _export(
+        self, timeout_s: float, serialized_data: bytes, *args, **kwargs
+    ):
         data = serialized_data
         if self._compression == Compression.Gzip:
             gzip_data = BytesIO()
@@ -149,20 +161,27 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         elif self._compression == Compression.Deflate:
             data = zlib.compress(serialized_data)
 
-        return self._session.post(
+        resp = self._session.post(
             url=self._endpoint,
             data=data,
             verify=self._certificate_file,
-            timeout=self._timeout,
+            timeout=timeout_s,
         )
 
-    @staticmethod
-    def _retryable(resp: requests.Response) -> bool:
-        if resp.status_code == 408:
-            return True
-        if resp.status_code >= 500 and resp.status_code <= 599:
-            return True
-        return False
+        if resp.ok:
+            return MetricExportResult.SUCCESS
+        elif _retryable(resp):
+            _logger.warning(
+                "Transient error %s encountered while exporting metric batch.",
+                resp.reason,
+            )
+            raise RetryableExportError()
+        _logger.error(
+            "Failed to export batch code: %s, reason: %s",
+            resp.status_code,
+            resp.text,
+        )
+        return MetricExportResult.FAILURE
 
     def export(
         self,
@@ -170,37 +189,30 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> MetricExportResult:
-        serialized_data = encode_metrics(metrics_data)
-        for delay in _create_exp_backoff_generator(
-            max_value=self._MAX_RETRY_TIMEOUT
-        ):
+        if self._shutdown:
+            _logger.warning("Exporter already shutdown, ignoring batch")
+            return MetricExportResult.FAILURE
 
-            if delay == self._MAX_RETRY_TIMEOUT:
-                return MetricExportResult.FAILURE
+        serialized_data = encode_metrics(metrics_data).SerializeToString()
+        if self._compression == Compression.Gzip:
+            gzip_data = BytesIO()
+            with gzip.GzipFile(fileobj=gzip_data, mode="w") as gzip_stream:
+                gzip_stream.write(serialized_data)
+            serialized_data = gzip_data.getvalue()
+        elif self._compression == Compression.Deflate:
+            serialized_data = zlib.compress(serialized_data)
 
-            resp = self._export(serialized_data.SerializeToString())
-            # pylint: disable=no-else-return
-            if resp.ok:
-                return MetricExportResult.SUCCESS
-            elif self._retryable(resp):
-                _logger.warning(
-                    "Transient error %s encountered while exporting metric batch, retrying in %ss.",
-                    resp.reason,
-                    delay,
-                )
-                sleep(delay)
-                continue
-            else:
-                _logger.error(
-                    "Failed to export batch code: %s, reason: %s",
-                    resp.status_code,
-                    resp.text,
-                )
-                return MetricExportResult.FAILURE
-        return MetricExportResult.FAILURE
+        return self._exporter.export_with_retry(
+            timeout_millis * 1e-3, serialized_data
+        )
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
-        pass
+        if self._shutdown:
+            _logger.warning("Exporter already shutdown, ignoring call")
+            return
+        self._exporter.shutdown(timeout_millis=timeout_millis)
+        self._session.close()
+        self._shutdown = True
 
     @property
     def _exporting(self) -> str:
