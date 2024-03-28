@@ -29,10 +29,10 @@ class TestProvider(_logs.NoOpLoggerProvider):
         version: typing.Optional[str] = None,
         schema_url: typing.Optional[str] = None,
     ) -> _logs.Logger:
-        return TestLogger(name)
+        return LoggerTest(name)
 
 
-class TestLogger(_logs.NoOpLogger):
+class LoggerTest(_logs.NoOpLogger):
     def emit(self, *args, **kwargs):
         return LogRecord(timestamp=0)
 
@@ -55,9 +55,9 @@ class TestProxy(LoggingGlobalsTest, unittest.TestCase):
 
         # logger provider now returns real instance
         self.assertIsInstance(
-            _logs.get_logger_provider().get_logger("fresh"), TestLogger
+            _logs.get_logger_provider().get_logger("fresh"), LoggerTest
         )
 
         # references to the old provider still work but return real logger now
         real_logger = provider.get_logger("proxy-test")
-        self.assertIsInstance(real_logger, TestLogger)
+        self.assertIsInstance(real_logger, LoggerTest)
