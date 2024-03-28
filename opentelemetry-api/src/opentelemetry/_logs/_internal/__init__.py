@@ -239,7 +239,7 @@ def get_logger_provider() -> LoggerProvider:
 
 def _set_logger_provider(logger_provider: LoggerProvider, log: bool) -> None:
     def set_lp() -> None:
-        global _LOGGER_PROVIDER  
+        global _LOGGER_PROVIDER  # noqa: PLW0603
         _LOGGER_PROVIDER = logger_provider
 
     did_set = _LOGGER_PROVIDER_SET_ONCE.do_once(set_lp)

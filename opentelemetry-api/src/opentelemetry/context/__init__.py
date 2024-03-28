@@ -42,7 +42,7 @@ def _load_runtime_context(func: _F) -> _F:
         *args: typing.Tuple[typing.Any, typing.Any],
         **kwargs: typing.Dict[typing.Any, typing.Any],
     ) -> typing.Optional[typing.Any]:
-        global _RUNTIME_CONTEXT  
+        global _RUNTIME_CONTEXT  # noqa: PLW0603
 
         with _RUNTIME_CONTEXT_LOCK:
             if _RUNTIME_CONTEXT is None:
