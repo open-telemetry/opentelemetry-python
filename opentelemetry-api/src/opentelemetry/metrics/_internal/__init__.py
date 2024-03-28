@@ -41,6 +41,8 @@ The following code shows how to obtain a meter using the global :class:`.MeterPr
 """
 
 
+import warnings
+
 from abc import ABC, abstractmethod
 from logging import getLogger
 from os import environ
@@ -385,7 +387,6 @@ class Meter(ABC):
             description: A description for this instrument and what it measures.
         """
 
-    @abstractmethod
     def create_gauge(
         self,
         name: str,
@@ -400,6 +401,9 @@ class Meter(ABC):
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
         """
+        warnings.warn(
+            "create_gauge() is not implemented and will be a no-op"
+        )
 
     @abstractmethod
     def create_observable_gauge(
