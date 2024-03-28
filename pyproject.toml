@@ -1,20 +1,3 @@
-[tool.black]
-line-length = 79
-exclude = '''
-(
-  /(  # generated files
-    .tox|
-    venv|
-    venv.*|
-    .venv.*|
-    target.*|
-    .*/build/lib/.*|
-    exporter/opentelemetry-exporter-zipkin-proto-http/src/opentelemetry/exporter/zipkin/proto/http/v2/gen|
-    opentelemetry-proto/src/opentelemetry/proto/.*/.*|
-    scripts
-  )/
-)
-'''
 [tool.pytest.ini_options]
 addopts = "-rs -v"
 log_cli = true
