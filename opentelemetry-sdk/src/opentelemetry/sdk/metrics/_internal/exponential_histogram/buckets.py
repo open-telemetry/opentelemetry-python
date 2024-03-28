@@ -20,7 +20,7 @@ class Buckets:
     # No method of this class is protected by locks because instances of this
     # class are only used in methods that are protected by locks themselves.
 
-    def __init__(self):
+    def __init__(self):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         self._counts = [0]
 
         # The term index refers to the number of the exponential histogram bucket
@@ -70,7 +70,7 @@ class Buckets:
         self.__index_base = value
 
     @property
-    def counts(self):
+    def counts(self):  # type: ignore[misc, no-untyped-def] # <will add tracking issue num>
         return self._counts
 
     def grow(self, needed: int, max_size: int) -> None:
@@ -89,12 +89,12 @@ class Buckets:
         # 2 ** ceil(log2(6)) == 8
         # 2 ** ceil(log2(7)) == 8
         # 2 ** ceil(log2(8)) == 8
-        new_size = min(2 ** ceil(log2(needed)), max_size)
+        new_size = min(2 ** ceil(log2(needed)), max_size)  # type: ignore[misc] # <will add tracking issue num>
 
-        new_positive_limit = new_size - bias
+        new_positive_limit = new_size - bias  # type: ignore[misc] # <will add tracking issue num>
 
-        tmp = [0] * new_size
-        tmp[new_positive_limit:] = self._counts[old_positive_limit:]
+        tmp = [0] * new_size  # type: ignore[misc] # <will add tracking issue num>
+        tmp[new_positive_limit:] = self._counts[old_positive_limit:]  # type: ignore[misc] # <will add tracking issue num>
         tmp[0:old_positive_limit] = self._counts[0:old_positive_limit]
         self._counts = tmp
 

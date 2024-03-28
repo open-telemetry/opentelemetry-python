@@ -25,5 +25,5 @@ import opentelemetry.sdk.resources
 @dataclass
 class SdkConfiguration:
     resource: "opentelemetry.sdk.resources.Resource"
-    metric_readers: Sequence["opentelemetry.sdk.metrics.MetricReader"]
-    views: Sequence["opentelemetry.sdk.metrics.View"]
+    metric_readers: Sequence["opentelemetry.sdk.metrics.MetricReader"]  # type: ignore[name-defined] # <will add tracking issue num>
+    views: Sequence["opentelemetry.sdk.metrics.View"]  # type: ignore[name-defined] # <will add tracking issue num>

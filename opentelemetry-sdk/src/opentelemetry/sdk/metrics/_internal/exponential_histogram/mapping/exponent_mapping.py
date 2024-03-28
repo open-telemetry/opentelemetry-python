@@ -36,24 +36,24 @@ class ExponentMapping(Mapping):
     # Reference implementation here:
     # https://github.com/open-telemetry/opentelemetry-go/blob/0e6f9c29c10d6078e8131418e1d1d166c7195d61/sdk/metric/aggregator/exponential/mapping/exponent/exponent.go
 
-    _mappings = {}
+    _mappings = {}  # type: ignore[var-annotated] # <will add tracking issue num>
     _mappings_lock = Lock()
 
     _min_scale = -10
     _max_scale = 0
 
-    def _get_min_scale(self):
+    def _get_min_scale(self):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         # _min_scale defines the point at which the exponential mapping
         # function becomes useless for 64-bit floats. With scale -10, ignoring
         # subnormal values, bucket indices range from -1 to 1.
         return -10
 
-    def _get_max_scale(self):
+    def _get_max_scale(self):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         # _max_scale is the largest scale supported by exponential mapping. Use
         # a logarithm mapping for larger scales.
         return 0
 
-    def _init(self, scale: int):
+    def _init(self, scale: int):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         # pylint: disable=attribute-defined-outside-init
 
         super()._init(scale)
@@ -64,15 +64,15 @@ class ExponentMapping(Mapping):
         # bucket with this index covers the range
         # (base ** index, base (index + 1)], including MIN_NORMAL_VALUE. This
         # is the smallest valid index that contains at least one normal value.
-        index = MIN_NORMAL_EXPONENT >> -self._scale
+        index = MIN_NORMAL_EXPONENT >> -self._scale  # type: ignore[misc] # <will add tracking issue num>
 
         if -self._scale < 2:
             # For scales -1 and 0, the maximum value 2 ** -1022 is a
             # power-of-two multiple, meaning base ** index == MIN_NORMAL_VALUE.
             # Subtracting 1 so that base ** (index + 1) == MIN_NORMAL_VALUE.
-            index -= 1
+            index -= 1  # type: ignore[misc] # <will add tracking issue num>
 
-        self._min_normal_lower_boundary_index = index
+        self._min_normal_lower_boundary_index = index  # type: ignore[misc] # <will add tracking issue num>
 
         # self._max_normal_lower_boundary_index is the index such that
         # base**index equals the greatest representable lower boundary. An
@@ -83,12 +83,12 @@ class ExponentMapping(Mapping):
         # represented. One greater than this index corresponds with the bucket
         # containing values > 2 ** 1024.
         self._max_normal_lower_boundary_index = (
-            MAX_NORMAL_EXPONENT >> -self._scale
+            MAX_NORMAL_EXPONENT >> -self._scale  # type: ignore[misc] # <will add tracking issue num>
         )
 
     def map_to_index(self, value: float) -> int:
         if value < MIN_NORMAL_VALUE:
-            return self._min_normal_lower_boundary_index
+            return self._min_normal_lower_boundary_index  # type: ignore[misc, no-any-return] # <will add tracking issue num>
 
         exponent = get_ieee_754_exponent(value)
 
@@ -128,10 +128,10 @@ class ExponentMapping(Mapping):
         return (exponent + correction) >> -self._scale
 
     def get_lower_boundary(self, index: int) -> float:
-        if index < self._min_normal_lower_boundary_index:
+        if index < self._min_normal_lower_boundary_index:  # type: ignore[misc] # <will add tracking issue num>
             raise MappingUnderflowError()
 
-        if index > self._max_normal_lower_boundary_index:
+        if index > self._max_normal_lower_boundary_index:  # type: ignore[misc] # <will add tracking issue num>
             raise MappingOverflowError()
 
         return ldexp(1, index << -self._scale)

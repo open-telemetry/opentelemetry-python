@@ -90,16 +90,16 @@ class MetricExporter(ABC):
 
     def __init__(
         self,
-        preferred_temporality: Dict[type, AggregationTemporality] = None,
-        preferred_aggregation: Dict[
+        preferred_temporality: Dict[type, AggregationTemporality] = None,  # type: ignore[assignment] # <will add tracking issue num>
+        preferred_aggregation: Dict[  # type: ignore[name-defined] # <will add tracking issue num>
             type, "opentelemetry.sdk.metrics.view.Aggregation"
-        ] = None,
+        ] = None,  # type: ignore[assignment] # <will add tracking issue num>
     ) -> None:
         self._preferred_temporality = preferred_temporality
         self._preferred_aggregation = preferred_aggregation
 
     @abstractmethod
-    def export(
+    def export(  # type: ignore[misc, no-untyped-def] # <will add tracking issue num>
         self,
         metrics_data: MetricsData,
         timeout_millis: float = 10_000,
@@ -122,7 +122,7 @@ class MetricExporter(ABC):
         """
 
     @abstractmethod
-    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:  # type: ignore[misc, no-untyped-def] # <will add tracking issue num>
         """Shuts down the exporter.
 
         Called when the SDK is shut down.
@@ -139,34 +139,34 @@ class ConsoleMetricExporter(MetricExporter):
 
     def __init__(
         self,
-        out: IO = stdout,
-        formatter: Callable[
+        out: IO = stdout,  # type: ignore[type-arg] # <will add tracking issue num>
+        formatter: Callable[  # type: ignore[name-defined] # <will add tracking issue num>
             ["opentelemetry.sdk.metrics.export.MetricsData"], str
-        ] = lambda metrics_data: metrics_data.to_json()
+        ] = lambda metrics_data: metrics_data.to_json()  # type: ignore[misc, no-any-return] # <will add tracking issue num>
         + linesep,
-        preferred_temporality: Dict[type, AggregationTemporality] = None,
-        preferred_aggregation: Dict[
+        preferred_temporality: Dict[type, AggregationTemporality] = None,  # type: ignore[assignment] # <will add tracking issue num>
+        preferred_aggregation: Dict[  # type: ignore[name-defined] # <will add tracking issue num>
             type, "opentelemetry.sdk.metrics.view.Aggregation"
-        ] = None,
+        ] = None,  # type: ignore[assignment] # <will add tracking issue num>
     ):
         super().__init__(
             preferred_temporality=preferred_temporality,
             preferred_aggregation=preferred_aggregation,
         )
-        self.out = out
+        self.out = out  # type: ignore[misc] # <will add tracking issue num>
         self.formatter = formatter
 
-    def export(
+    def export(  # type: ignore[no-untyped-def] # <will add tracking issue num>
         self,
         metrics_data: MetricsData,
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> MetricExportResult:
-        self.out.write(self.formatter(metrics_data))
-        self.out.flush()
+        self.out.write(self.formatter(metrics_data))  # type: ignore[misc] # <will add tracking issue num>
+        self.out.flush()  # type: ignore[misc] # <will add tracking issue num>
         return MetricExportResult.SUCCESS
 
-    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:  # type: ignore[no-untyped-def] # <will add tracking issue num>
         pass
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
@@ -209,27 +209,27 @@ class MetricReader(ABC):
 
     def __init__(
         self,
-        preferred_temporality: Dict[type, AggregationTemporality] = None,
-        preferred_aggregation: Dict[
+        preferred_temporality: Dict[type, AggregationTemporality] = None,  # type: ignore[assignment] # <will add tracking issue num>
+        preferred_aggregation: Dict[  # type: ignore[name-defined] # <will add tracking issue num>
             type, "opentelemetry.sdk.metrics.view.Aggregation"
-        ] = None,
+        ] = None,  # type: ignore[assignment] # <will add tracking issue num>
     ) -> None:
-        self._collect: Callable[
+        self._collect: Callable[  # type: ignore[name-defined] # <will add tracking issue num>
             [
                 "opentelemetry.sdk.metrics.export.MetricReader",
                 AggregationTemporality,
             ],
             Iterable["opentelemetry.sdk.metrics.export.Metric"],
-        ] = None
+        ] = None  # type: ignore[assignment] # <will add tracking issue num>
 
-        self._instrument_class_temporality = {
-            _Counter: AggregationTemporality.CUMULATIVE,
-            _UpDownCounter: AggregationTemporality.CUMULATIVE,
-            _Histogram: AggregationTemporality.CUMULATIVE,
-            _Gauge: AggregationTemporality.CUMULATIVE,
-            _ObservableCounter: AggregationTemporality.CUMULATIVE,
-            _ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
-            _ObservableGauge: AggregationTemporality.CUMULATIVE,
+        self._instrument_class_temporality = {  # type: ignore[misc] # <will add tracking issue num>
+            _Counter: AggregationTemporality.CUMULATIVE,  # type: ignore[misc] # <will add tracking issue num>
+            _UpDownCounter: AggregationTemporality.CUMULATIVE,  # type: ignore[misc] # <will add tracking issue num>
+            _Histogram: AggregationTemporality.CUMULATIVE,  # type: ignore[misc] # <will add tracking issue num>
+            _Gauge: AggregationTemporality.CUMULATIVE,  # type: ignore[misc] # <will add tracking issue num>
+            _ObservableCounter: AggregationTemporality.CUMULATIVE,  # type: ignore[misc] # <will add tracking issue num>
+            _ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,  # type: ignore[misc] # <will add tracking issue num>
+            _ObservableGauge: AggregationTemporality.CUMULATIVE,  # type: ignore[misc] # <will add tracking issue num>
         }
 
         if preferred_temporality is not None:
@@ -244,69 +244,69 @@ class MetricReader(ABC):
 
         if preferred_temporality is not None:
             for typ, temporality in preferred_temporality.items():
-                if typ is Counter:
-                    self._instrument_class_temporality[_Counter] = temporality
-                elif typ is UpDownCounter:
-                    self._instrument_class_temporality[
-                        _UpDownCounter
+                if typ is Counter:  # type: ignore[misc] # <will add tracking issue num>
+                    self._instrument_class_temporality[_Counter] = temporality  # type: ignore[misc] # <will add tracking issue num>
+                elif typ is UpDownCounter:  # type: ignore[misc] # <will add tracking issue num>
+                    self._instrument_class_temporality[  # type: ignore[misc] # <will add tracking issue num>
+                        _UpDownCounter  # type: ignore[misc] # <will add tracking issue num>
                     ] = temporality
-                elif typ is Histogram:
-                    self._instrument_class_temporality[
-                        _Histogram
+                elif typ is Histogram:  # type: ignore[misc] # <will add tracking issue num>
+                    self._instrument_class_temporality[  # type: ignore[misc] # <will add tracking issue num>
+                        _Histogram  # type: ignore[misc] # <will add tracking issue num>
                     ] = temporality
-                elif typ is Gauge:
-                    self._instrument_class_temporality[_Gauge] = temporality
-                elif typ is ObservableCounter:
-                    self._instrument_class_temporality[
-                        _ObservableCounter
+                elif typ is Gauge:  # type: ignore[misc] # <will add tracking issue num>
+                    self._instrument_class_temporality[_Gauge] = temporality  # type: ignore[misc] # <will add tracking issue num>
+                elif typ is ObservableCounter:  # type: ignore[misc] # <will add tracking issue num>
+                    self._instrument_class_temporality[  # type: ignore[misc] # <will add tracking issue num>
+                        _ObservableCounter  # type: ignore[misc] # <will add tracking issue num>
                     ] = temporality
-                elif typ is ObservableUpDownCounter:
-                    self._instrument_class_temporality[
-                        _ObservableUpDownCounter
+                elif typ is ObservableUpDownCounter:  # type: ignore[misc] # <will add tracking issue num>
+                    self._instrument_class_temporality[  # type: ignore[misc] # <will add tracking issue num>
+                        _ObservableUpDownCounter  # type: ignore[misc] # <will add tracking issue num>
                     ] = temporality
-                elif typ is ObservableGauge:
-                    self._instrument_class_temporality[
-                        _ObservableGauge
+                elif typ is ObservableGauge:  # type: ignore[misc] # <will add tracking issue num>
+                    self._instrument_class_temporality[  # type: ignore[misc] # <will add tracking issue num>
+                        _ObservableGauge  # type: ignore[misc] # <will add tracking issue num>
                     ] = temporality
                 else:
                     raise Exception(f"Invalid instrument class found {typ}")
 
         self._preferred_temporality = preferred_temporality
-        self._instrument_class_aggregation = {
-            _Counter: DefaultAggregation(),
-            _UpDownCounter: DefaultAggregation(),
-            _Histogram: DefaultAggregation(),
-            _Gauge: DefaultAggregation(),
-            _ObservableCounter: DefaultAggregation(),
-            _ObservableUpDownCounter: DefaultAggregation(),
-            _ObservableGauge: DefaultAggregation(),
+        self._instrument_class_aggregation = {  # type: ignore[misc] # <will add tracking issue num>
+            _Counter: DefaultAggregation(),  # type: ignore[misc] # <will add tracking issue num>
+            _UpDownCounter: DefaultAggregation(),  # type: ignore[misc] # <will add tracking issue num>
+            _Histogram: DefaultAggregation(),  # type: ignore[misc] # <will add tracking issue num>
+            _Gauge: DefaultAggregation(),  # type: ignore[misc] # <will add tracking issue num>
+            _ObservableCounter: DefaultAggregation(),  # type: ignore[misc] # <will add tracking issue num>
+            _ObservableUpDownCounter: DefaultAggregation(),  # type: ignore[misc] # <will add tracking issue num>
+            _ObservableGauge: DefaultAggregation(),  # type: ignore[misc] # <will add tracking issue num>
         }
 
         if preferred_aggregation is not None:
             for typ, aggregation in preferred_aggregation.items():
-                if typ is Counter:
-                    self._instrument_class_aggregation[_Counter] = aggregation
-                elif typ is UpDownCounter:
-                    self._instrument_class_aggregation[
-                        _UpDownCounter
+                if typ is Counter:  # type: ignore[misc] # <will add tracking issue num>
+                    self._instrument_class_aggregation[_Counter] = aggregation  # type: ignore[misc] # <will add tracking issue num>
+                elif typ is UpDownCounter:  # type: ignore[misc] # <will add tracking issue num>
+                    self._instrument_class_aggregation[  # type: ignore[misc] # <will add tracking issue num>
+                        _UpDownCounter  # type: ignore[misc] # <will add tracking issue num>
                     ] = aggregation
-                elif typ is Histogram:
-                    self._instrument_class_aggregation[
-                        _Histogram
+                elif typ is Histogram:  # type: ignore[misc] # <will add tracking issue num>
+                    self._instrument_class_aggregation[  # type: ignore[misc] # <will add tracking issue num>
+                        _Histogram  # type: ignore[misc] # <will add tracking issue num>
                     ] = aggregation
-                elif typ is Gauge:
-                    self._instrument_class_aggregation[_Gauge] = aggregation
-                elif typ is ObservableCounter:
-                    self._instrument_class_aggregation[
-                        _ObservableCounter
+                elif typ is Gauge:  # type: ignore[misc] # <will add tracking issue num>
+                    self._instrument_class_aggregation[_Gauge] = aggregation  # type: ignore[misc] # <will add tracking issue num>
+                elif typ is ObservableCounter:  # type: ignore[misc] # <will add tracking issue num>
+                    self._instrument_class_aggregation[  # type: ignore[misc] # <will add tracking issue num>
+                        _ObservableCounter  # type: ignore[misc] # <will add tracking issue num>
                     ] = aggregation
-                elif typ is ObservableUpDownCounter:
-                    self._instrument_class_aggregation[
-                        _ObservableUpDownCounter
+                elif typ is ObservableUpDownCounter:  # type: ignore[misc] # <will add tracking issue num>
+                    self._instrument_class_aggregation[  # type: ignore[misc] # <will add tracking issue num>
+                        _ObservableUpDownCounter  # type: ignore[misc] # <will add tracking issue num>
                     ] = aggregation
-                elif typ is ObservableGauge:
-                    self._instrument_class_aggregation[
-                        _ObservableGauge
+                elif typ is ObservableGauge:  # type: ignore[misc] # <will add tracking issue num>
+                    self._instrument_class_aggregation[  # type: ignore[misc] # <will add tracking issue num>
+                        _ObservableGauge  # type: ignore[misc] # <will add tracking issue num>
                     ] = aggregation
                 else:
                     raise Exception(f"Invalid instrument class found {typ}")
@@ -330,7 +330,7 @@ class MetricReader(ABC):
             )
             return
 
-        metrics = self._collect(self, timeout_millis=timeout_millis)
+        metrics = self._collect(self, timeout_millis=timeout_millis)  # type: ignore[call-arg] # <will add tracking issue num>
 
         if metrics is not None:
 
@@ -342,7 +342,7 @@ class MetricReader(ABC):
     @final
     def _set_collect_callback(
         self,
-        func: Callable[
+        func: Callable[  # type: ignore[name-defined] # <will add tracking issue num>
             [
                 "opentelemetry.sdk.metrics.export.MetricReader",
                 AggregationTemporality,
@@ -354,9 +354,9 @@ class MetricReader(ABC):
         self._collect = func
 
     @abstractmethod
-    def _receive_metrics(
+    def _receive_metrics(  # type: ignore[misc, no-untyped-def] # <will add tracking issue num>
         self,
-        metrics_data: "opentelemetry.sdk.metrics.export.MetricsData",
+        metrics_data: "opentelemetry.sdk.metrics.export.MetricsData",  # type: ignore[name-defined] # <will add tracking issue num>
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> None:
@@ -367,7 +367,7 @@ class MetricReader(ABC):
         return True
 
     @abstractmethod
-    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:  # type: ignore[misc, no-untyped-def] # <will add tracking issue num>
         """Shuts down the MetricReader. This method provides a way
         for the MetricReader to do any cleanup required. A metric reader can
         only be shutdown once, any subsequent calls are ignored and return
@@ -388,23 +388,23 @@ class InMemoryMetricReader(MetricReader):
 
     def __init__(
         self,
-        preferred_temporality: Dict[type, AggregationTemporality] = None,
-        preferred_aggregation: Dict[
+        preferred_temporality: Dict[type, AggregationTemporality] = None,  # type: ignore[assignment] # <will add tracking issue num>
+        preferred_aggregation: Dict[  # type: ignore[name-defined] # <will add tracking issue num>
             type, "opentelemetry.sdk.metrics.view.Aggregation"
-        ] = None,
+        ] = None,  # type: ignore[assignment] # <will add tracking issue num>
     ) -> None:
         super().__init__(
             preferred_temporality=preferred_temporality,
             preferred_aggregation=preferred_aggregation,
         )
         self._lock = RLock()
-        self._metrics_data: (
+        self._metrics_data: (  # type: ignore[name-defined] # <will add tracking issue num>
             "opentelemetry.sdk.metrics.export.MetricsData"
         ) = None
 
     def get_metrics_data(
         self,
-    ) -> ("opentelemetry.sdk.metrics.export.MetricsData"):
+    ) -> ("opentelemetry.sdk.metrics.export.MetricsData"):  # type: ignore[name-defined] # <will add tracking issue num>
         """Reads and returns current metrics from the SDK"""
         with self._lock:
             self.collect()
@@ -412,16 +412,16 @@ class InMemoryMetricReader(MetricReader):
             self._metrics_data = None
         return metrics_data
 
-    def _receive_metrics(
+    def _receive_metrics(  # type: ignore[no-untyped-def] # <will add tracking issue num>
         self,
-        metrics_data: "opentelemetry.sdk.metrics.export.MetricsData",
+        metrics_data: "opentelemetry.sdk.metrics.export.MetricsData",  # type: ignore[name-defined] # <will add tracking issue num>
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> None:
         with self._lock:
             self._metrics_data = metrics_data
 
-    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:  # type: ignore[no-untyped-def] # <will add tracking issue num>
         pass
 
 
@@ -491,7 +491,7 @@ class PeriodicExportingMetricReader(MetricReader):
             self._daemon_thread.start()
             if hasattr(os, "register_at_fork"):
                 os.register_at_fork(
-                    after_in_child=self._at_fork_reinit
+                    after_in_child=self._at_fork_reinit  # type: ignore[misc] # <will add tracking issue num>
                 )  # pylint: disable=protected-access
         elif self._export_interval_millis <= 0:
             raise ValueError(
@@ -499,7 +499,7 @@ class PeriodicExportingMetricReader(MetricReader):
                 and needs to be larger than zero."
             )
 
-    def _at_fork_reinit(self):
+    def _at_fork_reinit(self):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         self._daemon_thread = Thread(
             name="OtelPeriodicExportingMetricReader",
             target=self._ticker,
@@ -521,7 +521,7 @@ class PeriodicExportingMetricReader(MetricReader):
         # one last collection below before shutting down completely
         self.collect(timeout_millis=self._export_interval_millis)
 
-    def _receive_metrics(
+    def _receive_metrics(  # type: ignore[no-untyped-def] # <will add tracking issue num>
         self,
         metrics_data: MetricsData,
         timeout_millis: float = 10_000,
@@ -538,13 +538,13 @@ class PeriodicExportingMetricReader(MetricReader):
             _logger.exception("Exception while exporting metrics %s", str(e))
         detach(token)
 
-    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:  # type: ignore[no-untyped-def] # <will add tracking issue num>
         deadline_ns = time_ns() + timeout_millis * 10**6
 
-        def _shutdown():
+        def _shutdown():  # type: ignore[no-untyped-def] # <will add tracking issue num>
             self._shutdown = True
 
-        did_set = self._shutdown_once.do_once(_shutdown)
+        did_set = self._shutdown_once.do_once(_shutdown)  # type: ignore[misc] # <will add tracking issue num>
         if not did_set:
             _logger.warning("Can't shutdown multiple times")
             return

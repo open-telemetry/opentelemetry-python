@@ -73,15 +73,17 @@ class Meter(APIMeter):
         )
         self._instrumentation_scope = instrumentation_scope
         self._measurement_consumer = measurement_consumer
-        self._instrument_id_instrument = {}
+        self._instrument_id_instrument = {}  # type: ignore[var-annotated] # <will add tracking issue num>
         self._instrument_id_instrument_lock = Lock()
 
-    def create_counter(self, name, unit="", description="") -> APICounter:
+    def create_counter(self, name, unit="", description="") -> APICounter:  # type: ignore[no-untyped-def] # <will add tracking issue num>
 
         (
             is_instrument_registered,
             instrument_id,
-        ) = self._is_instrument_registered(name, _Counter, unit, description)
+        ) = self._is_instrument_registered(
+            name, _Counter, unit, description
+        )  # type: ignore[misc] # <will add tracking issue num>
 
         if is_instrument_registered:
             # FIXME #2558 go through all views here and check if this
@@ -90,27 +92,27 @@ class Meter(APIMeter):
             _logger.warning(
                 "An instrument with name %s, type %s, unit %s and "
                 "description %s has been created already.",
-                name,
+                name,  # type: ignore[misc] # <will add tracking issue num>
                 APICounter.__name__,
-                unit,
-                description,
+                unit,  # type: ignore[misc] # <will add tracking issue num>
+                description,  # type: ignore[misc] # <will add tracking issue num>
             )
             with self._instrument_id_instrument_lock:
-                return self._instrument_id_instrument[instrument_id]
+                return self._instrument_id_instrument[instrument_id]  # type: ignore[misc, no-any-return] # <will add tracking issue num>
 
-        instrument = _Counter(
-            name,
+        instrument = _Counter(  # type: ignore[no-untyped-call] # <will add tracking issue num>
+            name,  # type: ignore[misc] # <will add tracking issue num>
             self._instrumentation_scope,
             self._measurement_consumer,
-            unit,
-            description,
+            unit,  # type: ignore[misc] # <will add tracking issue num>
+            description,  # type: ignore[misc] # <will add tracking issue num>
         )
 
         with self._instrument_id_instrument_lock:
-            self._instrument_id_instrument[instrument_id] = instrument
+            self._instrument_id_instrument[instrument_id] = instrument  # type: ignore[misc] # <will add tracking issue num>
             return instrument
 
-    def create_up_down_counter(
+    def create_up_down_counter(  # type: ignore[no-untyped-def] # <will add tracking issue num>
         self, name, unit="", description=""
     ) -> APIUpDownCounter:
 
@@ -118,7 +120,7 @@ class Meter(APIMeter):
             is_instrument_registered,
             instrument_id,
         ) = self._is_instrument_registered(
-            name, _UpDownCounter, unit, description
+            name, _UpDownCounter, unit, description  # type: ignore[misc] # <will add tracking issue num>
         )
 
         if is_instrument_registered:
@@ -128,27 +130,27 @@ class Meter(APIMeter):
             _logger.warning(
                 "An instrument with name %s, type %s, unit %s and "
                 "description %s has been created already.",
-                name,
+                name,  # type: ignore[misc] # <will add tracking issue num>
                 APIUpDownCounter.__name__,
-                unit,
-                description,
+                unit,  # type: ignore[misc] # <will add tracking issue num>
+                description,  # type: ignore[misc] # <will add tracking issue num>
             )
             with self._instrument_id_instrument_lock:
-                return self._instrument_id_instrument[instrument_id]
+                return self._instrument_id_instrument[instrument_id]  # type: ignore[misc, no-any-return] # <will add tracking issue num>
 
-        instrument = _UpDownCounter(
-            name,
+        instrument = _UpDownCounter(  # type: ignore[no-untyped-call] # <will add tracking issue num>
+            name,  # type: ignore[misc] # <will add tracking issue num>
             self._instrumentation_scope,
             self._measurement_consumer,
-            unit,
-            description,
+            unit,  # type: ignore[misc] # <will add tracking issue num>
+            description,  # type: ignore[misc] # <will add tracking issue num>
         )
 
         with self._instrument_id_instrument_lock:
-            self._instrument_id_instrument[instrument_id] = instrument
+            self._instrument_id_instrument[instrument_id] = instrument  # type: ignore[misc] # <will add tracking issue num>
             return instrument
 
-    def create_observable_counter(
+    def create_observable_counter(  # type: ignore[no-untyped-def] # <will add tracking issue num>
         self, name, callbacks=None, unit="", description=""
     ) -> APIObservableCounter:
 
@@ -156,7 +158,7 @@ class Meter(APIMeter):
             is_instrument_registered,
             instrument_id,
         ) = self._is_instrument_registered(
-            name, _ObservableCounter, unit, description
+            name, _ObservableCounter, unit, description  # type: ignore[misc] # <will add tracking issue num>
         )
 
         if is_instrument_registered:
@@ -166,35 +168,37 @@ class Meter(APIMeter):
             _logger.warning(
                 "An instrument with name %s, type %s, unit %s and "
                 "description %s has been created already.",
-                name,
+                name,  # type: ignore[misc] # <will add tracking issue num>
                 APIObservableCounter.__name__,
-                unit,
-                description,
+                unit,  # type: ignore[misc] # <will add tracking issue num>
+                description,  # type: ignore[misc] # <will add tracking issue num>
             )
             with self._instrument_id_instrument_lock:
-                return self._instrument_id_instrument[instrument_id]
+                return self._instrument_id_instrument[instrument_id]  # type: ignore[misc, no-any-return] # <will add tracking issue num>
 
-        instrument = _ObservableCounter(
-            name,
+        instrument = _ObservableCounter(  # type: ignore[no-untyped-call] # <will add tracking issue num>
+            name,  # type: ignore[misc] # <will add tracking issue num>
             self._instrumentation_scope,
             self._measurement_consumer,
-            callbacks,
-            unit,
-            description,
+            callbacks,  # type: ignore[misc] # <will add tracking issue num>
+            unit,  # type: ignore[misc] # <will add tracking issue num>
+            description,  # type: ignore[misc] # <will add tracking issue num>
         )
 
         self._measurement_consumer.register_asynchronous_instrument(instrument)
 
         with self._instrument_id_instrument_lock:
-            self._instrument_id_instrument[instrument_id] = instrument
+            self._instrument_id_instrument[instrument_id] = instrument  # type: ignore[misc] # <will add tracking issue num>
             return instrument
 
-    def create_histogram(self, name, unit="", description="") -> APIHistogram:
+    def create_histogram(self, name, unit="", description="") -> APIHistogram:  # type: ignore[no-untyped-def] # <will add tracking issue num>
 
         (
             is_instrument_registered,
             instrument_id,
-        ) = self._is_instrument_registered(name, _Histogram, unit, description)
+        ) = self._is_instrument_registered(
+            name, _Histogram, unit, description
+        )  # type: ignore[misc] # <will add tracking issue num>
 
         if is_instrument_registered:
             # FIXME #2558 go through all views here and check if this
@@ -203,31 +207,33 @@ class Meter(APIMeter):
             _logger.warning(
                 "An instrument with name %s, type %s, unit %s and "
                 "description %s has been created already.",
-                name,
+                name,  # type: ignore[misc] # <will add tracking issue num>
                 APIHistogram.__name__,
-                unit,
-                description,
+                unit,  # type: ignore[misc] # <will add tracking issue num>
+                description,  # type: ignore[misc] # <will add tracking issue num>
             )
             with self._instrument_id_instrument_lock:
-                return self._instrument_id_instrument[instrument_id]
+                return self._instrument_id_instrument[instrument_id]  # type: ignore[misc, no-any-return] # <will add tracking issue num>
 
-        instrument = _Histogram(
-            name,
+        instrument = _Histogram(  # type: ignore[no-untyped-call] # <will add tracking issue num>
+            name,  # type: ignore[misc] # <will add tracking issue num>
             self._instrumentation_scope,
             self._measurement_consumer,
-            unit,
-            description,
+            unit,  # type: ignore[misc] # <will add tracking issue num>
+            description,  # type: ignore[misc] # <will add tracking issue num>
         )
         with self._instrument_id_instrument_lock:
-            self._instrument_id_instrument[instrument_id] = instrument
+            self._instrument_id_instrument[instrument_id] = instrument  # type: ignore[misc] # <will add tracking issue num>
             return instrument
 
-    def create_gauge(self, name, unit="", description="") -> APIGauge:
+    def create_gauge(self, name, unit="", description="") -> APIGauge:  # type: ignore[no-untyped-def] # <will add tracking issue num>
 
         (
             is_instrument_registered,
             instrument_id,
-        ) = self._is_instrument_registered(name, _Gauge, unit, description)
+        ) = self._is_instrument_registered(
+            name, _Gauge, unit, description
+        )  # type: ignore[misc] # <will add tracking issue num>
 
         if is_instrument_registered:
             # FIXME #2558 go through all views here and check if this
@@ -236,27 +242,27 @@ class Meter(APIMeter):
             _logger.warning(
                 "An instrument with name %s, type %s, unit %s and "
                 "description %s has been created already.",
-                name,
+                name,  # type: ignore[misc] # <will add tracking issue num>
                 APIGauge.__name__,
-                unit,
-                description,
+                unit,  # type: ignore[misc] # <will add tracking issue num>
+                description,  # type: ignore[misc] # <will add tracking issue num>
             )
             with self._instrument_id_instrument_lock:
-                return self._instrument_id_instrument[instrument_id]
+                return self._instrument_id_instrument[instrument_id]  # type: ignore[misc, no-any-return] # <will add tracking issue num>
 
-        instrument = _Gauge(
-            name,
+        instrument = _Gauge(  # type: ignore[no-untyped-call] # <will add tracking issue num>
+            name,  # type: ignore[misc] # <will add tracking issue num>
             self._instrumentation_scope,
             self._measurement_consumer,
-            unit,
-            description,
+            unit,  # type: ignore[misc] # <will add tracking issue num>
+            description,  # type: ignore[misc] # <will add tracking issue num>
         )
 
         with self._instrument_id_instrument_lock:
-            self._instrument_id_instrument[instrument_id] = instrument
+            self._instrument_id_instrument[instrument_id] = instrument  # type: ignore[misc] # <will add tracking issue num>
             return instrument
 
-    def create_observable_gauge(
+    def create_observable_gauge(  # type: ignore[no-untyped-def] # <will add tracking issue num>
         self, name, callbacks=None, unit="", description=""
     ) -> APIObservableGauge:
 
@@ -264,7 +270,7 @@ class Meter(APIMeter):
             is_instrument_registered,
             instrument_id,
         ) = self._is_instrument_registered(
-            name, _ObservableGauge, unit, description
+            name, _ObservableGauge, unit, description  # type: ignore[misc] # <will add tracking issue num>
         )
 
         if is_instrument_registered:
@@ -274,30 +280,30 @@ class Meter(APIMeter):
             _logger.warning(
                 "An instrument with name %s, type %s, unit %s and "
                 "description %s has been created already.",
-                name,
+                name,  # type: ignore[misc] # <will add tracking issue num>
                 APIObservableGauge.__name__,
-                unit,
-                description,
+                unit,  # type: ignore[misc] # <will add tracking issue num>
+                description,  # type: ignore[misc] # <will add tracking issue num>
             )
             with self._instrument_id_instrument_lock:
-                return self._instrument_id_instrument[instrument_id]
+                return self._instrument_id_instrument[instrument_id]  # type: ignore[misc, no-any-return] # <will add tracking issue num>
 
-        instrument = _ObservableGauge(
-            name,
+        instrument = _ObservableGauge(  # type: ignore[no-untyped-call] # <will add tracking issue num>
+            name,  # type: ignore[misc] # <will add tracking issue num>
             self._instrumentation_scope,
             self._measurement_consumer,
-            callbacks,
-            unit,
-            description,
+            callbacks,  # type: ignore[misc] # <will add tracking issue num>
+            unit,  # type: ignore[misc] # <will add tracking issue num>
+            description,  # type: ignore[misc] # <will add tracking issue num>
         )
 
         self._measurement_consumer.register_asynchronous_instrument(instrument)
 
         with self._instrument_id_instrument_lock:
-            self._instrument_id_instrument[instrument_id] = instrument
+            self._instrument_id_instrument[instrument_id] = instrument  # type: ignore[misc] # <will add tracking issue num>
             return instrument
 
-    def create_observable_up_down_counter(
+    def create_observable_up_down_counter(  # type: ignore[no-untyped-def] # <will add tracking issue num>
         self, name, callbacks=None, unit="", description=""
     ) -> APIObservableUpDownCounter:
 
@@ -305,7 +311,7 @@ class Meter(APIMeter):
             is_instrument_registered,
             instrument_id,
         ) = self._is_instrument_registered(
-            name, _ObservableUpDownCounter, unit, description
+            name, _ObservableUpDownCounter, unit, description  # type: ignore[misc] # <will add tracking issue num>
         )
 
         if is_instrument_registered:
@@ -315,27 +321,27 @@ class Meter(APIMeter):
             _logger.warning(
                 "An instrument with name %s, type %s, unit %s and "
                 "description %s has been created already.",
-                name,
+                name,  # type: ignore[misc] # <will add tracking issue num>
                 APIObservableUpDownCounter.__name__,
-                unit,
-                description,
+                unit,  # type: ignore[misc] # <will add tracking issue num>
+                description,  # type: ignore[misc] # <will add tracking issue num>
             )
             with self._instrument_id_instrument_lock:
-                return self._instrument_id_instrument[instrument_id]
+                return self._instrument_id_instrument[instrument_id]  # type: ignore[misc, no-any-return] # <will add tracking issue num>
 
-        instrument = _ObservableUpDownCounter(
-            name,
+        instrument = _ObservableUpDownCounter(  # type: ignore[no-untyped-call] # <will add tracking issue num>
+            name,  # type: ignore[misc] # <will add tracking issue num>
             self._instrumentation_scope,
             self._measurement_consumer,
-            callbacks,
-            unit,
-            description,
+            callbacks,  # type: ignore[misc] # <will add tracking issue num>
+            unit,  # type: ignore[misc] # <will add tracking issue num>
+            description,  # type: ignore[misc] # <will add tracking issue num>
         )
 
         self._measurement_consumer.register_asynchronous_instrument(instrument)
 
         with self._instrument_id_instrument_lock:
-            self._instrument_id_instrument[instrument_id] = instrument
+            self._instrument_id_instrument[instrument_id] = instrument  # type: ignore[misc] # <will add tracking issue num>
             return instrument
 
 
@@ -372,16 +378,16 @@ class MeterProvider(APIMeterProvider):
     """
 
     _all_metric_readers_lock = Lock()
-    _all_metric_readers = set()
+    _all_metric_readers = set()  # type: ignore[var-annotated] # <will add tracking issue num>
 
     def __init__(
         self,
-        metric_readers: Sequence[
+        metric_readers: Sequence[  # type: ignore[name-defined] # <will add tracking issue num>
             "opentelemetry.sdk.metrics.export.MetricReader"
         ] = (),
-        resource: Resource = None,
+        resource: Resource = None,  # type: ignore[assignment] # <will add tracking issue num>
         shutdown_on_exit: bool = True,
-        views: Sequence["opentelemetry.sdk.metrics.view.View"] = (),
+        views: Sequence["opentelemetry.sdk.metrics.view.View"] = (),  # type: ignore[name-defined] # <will add tracking issue num>
     ):
         self._lock = Lock()
         self._meter_lock = Lock()
@@ -400,22 +406,22 @@ class MeterProvider(APIMeterProvider):
         self._disabled = disabled.lower().strip() == "true"
 
         if shutdown_on_exit:
-            self._atexit_handler = register(self.shutdown)
+            self._atexit_handler = register(self.shutdown)  # type: ignore[misc] # <will add tracking issue num>
 
-        self._meters = {}
+        self._meters = {}  # type: ignore[var-annotated] # <will add tracking issue num>
         self._shutdown_once = Once()
         self._shutdown = False
 
         for metric_reader in self._sdk_config.metric_readers:
 
             with self._all_metric_readers_lock:
-                if metric_reader in self._all_metric_readers:
+                if metric_reader in self._all_metric_readers:  # type: ignore[misc] # <will add tracking issue num>
                     raise Exception(
                         f"MetricReader {metric_reader} has been registered "
                         "already in other MeterProvider instance"
                     )
 
-                self._all_metric_readers.add(metric_reader)
+                self._all_metric_readers.add(metric_reader)  # type: ignore[misc] # <will add tracking issue num>
 
             metric_reader._set_collect_callback(
                 self._measurement_consumer.collect
@@ -446,7 +452,7 @@ class MeterProvider(APIMeterProvider):
 
             metric_reader_error_string = "\n".join(
                 [
-                    f"{metric_reader.__class__.__name__}: {repr(error)}"
+                    f"{metric_reader.__class__.__name__}: {repr(error)}"  # type: ignore[misc] # <will add tracking issue num>
                     for metric_reader, error in metric_reader_error.items()
                 ]
             )
@@ -458,13 +464,13 @@ class MeterProvider(APIMeterProvider):
             )
         return True
 
-    def shutdown(self, timeout_millis: float = 30_000):
+    def shutdown(self, timeout_millis: float = 30_000):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         deadline_ns = time_ns() + timeout_millis * 10**6
 
-        def _shutdown():
+        def _shutdown():  # type: ignore[no-untyped-def] # <will add tracking issue num>
             self._shutdown = True
 
-        did_shutdown = self._shutdown_once.do_once(_shutdown)
+        did_shutdown = self._shutdown_once.do_once(_shutdown)  # type: ignore[misc] # <will add tracking issue num>
 
         if not did_shutdown:
             _logger.warning("shutdown can only be called once")
@@ -488,15 +494,15 @@ class MeterProvider(APIMeterProvider):
 
                 metric_reader_error[metric_reader] = error
 
-        if self._atexit_handler is not None:
-            unregister(self._atexit_handler)
+        if self._atexit_handler is not None:  # type: ignore[misc] # <will add tracking issue num>
+            unregister(self._atexit_handler)  # type: ignore[misc] # <will add tracking issue num>
             self._atexit_handler = None
 
         if metric_reader_error:
 
             metric_reader_error_string = "\n".join(
                 [
-                    f"{metric_reader.__class__.__name__}: {repr(error)}"
+                    f"{metric_reader.__class__.__name__}: {repr(error)}"  # type: ignore[misc] # <will add tracking issue num>
                     for metric_reader, error in metric_reader_error.items()
                 ]
             )
@@ -518,25 +524,25 @@ class MeterProvider(APIMeterProvider):
 
         if self._disabled:
             _logger.warning("SDK is disabled.")
-            return NoOpMeter(name, version=version, schema_url=schema_url)
+            return NoOpMeter(name, version=version, schema_url=schema_url)  # type: ignore[return-value] # <will add tracking issue num>
 
         if self._shutdown:
             _logger.warning(
                 "A shutdown `MeterProvider` can not provide a `Meter`"
             )
-            return NoOpMeter(name, version=version, schema_url=schema_url)
+            return NoOpMeter(name, version=version, schema_url=schema_url)  # type: ignore[return-value] # <will add tracking issue num>
 
         if not name:
             _logger.warning("Meter name cannot be None or empty.")
-            return NoOpMeter(name, version=version, schema_url=schema_url)
+            return NoOpMeter(name, version=version, schema_url=schema_url)  # type: ignore[return-value] # <will add tracking issue num>
 
         info = InstrumentationScope(name, version, schema_url)
         with self._meter_lock:
-            if not self._meters.get(info):
+            if not self._meters.get(info):  # type: ignore[misc] # <will add tracking issue num>
                 # FIXME #2558 pass SDKConfig object to meter so that the meter
                 # has access to views.
-                self._meters[info] = Meter(
+                self._meters[info] = Meter(  # type: ignore[misc] # <will add tracking issue num>
                     info,
                     self._measurement_consumer,
                 )
-            return self._meters[info]
+            return self._meters[info]  # type: ignore[misc, no-any-return] # <will add tracking issue num>

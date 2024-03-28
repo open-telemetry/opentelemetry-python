@@ -69,7 +69,7 @@ logger = getLogger(__name__)
 
 class ErrorHandler(ABC):
     @abstractmethod
-    def _handle(self, error: Exception, *args, **kwargs):
+    def _handle(self, error: Exception, *args, **kwargs):  # type: ignore[misc, no-untyped-def] # <will add tracking issue num>
         """
         Handle an exception
         """
@@ -83,7 +83,7 @@ class _DefaultErrorHandler(ErrorHandler):
     """
 
     # pylint: disable=useless-return
-    def _handle(self, error: Exception, *args, **kwargs):
+    def _handle(self, error: Exception, *args, **kwargs):  # type: ignore[no-untyped-def] # <will add tracking issue num>
 
         logger.exception("Error handled by default error handler: ")
         return None
@@ -106,13 +106,13 @@ class GlobalErrorHandler:
 
         return cls._instance
 
-    def __enter__(self):
+    def __enter__(self):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         pass
 
     # pylint: disable=no-self-use
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(self, exc_type, exc_value, traceback):  # type: ignore[no-untyped-def] # <will add tracking issue num>
 
-        if exc_value is None:
+        if exc_value is None:  # type: ignore[misc] # <will add tracking issue num>
 
             return None
 
@@ -122,15 +122,15 @@ class GlobalErrorHandler:
             group="opentelemetry_error_handler"
         )
 
-        for error_handler_entry_point in error_handler_entry_points:
+        for error_handler_entry_point in error_handler_entry_points:  # type: ignore[misc] # <will add tracking issue num>
 
-            error_handler_class = error_handler_entry_point.load()
+            error_handler_class = error_handler_entry_point.load()  # type: ignore[misc] # <will add tracking issue num>
 
-            if issubclass(error_handler_class, exc_value.__class__):
+            if issubclass(error_handler_class, exc_value.__class__):  # type: ignore[misc] # <will add tracking issue num>
 
                 try:
 
-                    error_handler_class()._handle(exc_value)
+                    error_handler_class()._handle(exc_value)  # type: ignore[misc] # <will add tracking issue num>
                     plugin_handled = True
 
                 # pylint: disable=broad-except
@@ -140,12 +140,12 @@ class GlobalErrorHandler:
                         "%s error while handling error"
                         " %s by error handler %s",
                         error_handling_error.__class__.__name__,
-                        exc_value.__class__.__name__,
-                        error_handler_class.__name__,
+                        exc_value.__class__.__name__,  # type: ignore[misc] # <will add tracking issue num>
+                        error_handler_class.__name__,  # type: ignore[misc] # <will add tracking issue num>
                     )
 
         if not plugin_handled:
 
-            _DefaultErrorHandler()._handle(exc_value)
+            _DefaultErrorHandler()._handle(exc_value)  # type: ignore[misc] # <will add tracking issue num>
 
         return True

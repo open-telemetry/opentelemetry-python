@@ -43,7 +43,9 @@ from deprecated import deprecated
 
 from opentelemetry import context as context_api
 from opentelemetry import trace as trace_api
-from opentelemetry.attributes import BoundedAttributes
+from opentelemetry.attributes import (
+    BoundedAttributes,  # type: ignore[attr-defined] # <will add tracking issue num>
+)
 from opentelemetry.sdk import util
 from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_COUNT_LIMIT,
@@ -144,7 +146,7 @@ class SynchronousMultiSpanProcessor(SpanProcessor):
 
     _span_processors: Tuple[SpanProcessor, ...]
 
-    def __init__(self):
+    def __init__(self):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         # use a tuple to avoid race conditions when adding a new span and
         # iterating through it on "on_start" and "on_end".
         self._span_processors = ()
@@ -225,7 +227,7 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
         with self._lock:
             self._span_processors += (span_processor,)
 
-    def _submit_and_await(
+    def _submit_and_await(  # type: ignore[no-untyped-def] # <will add tracking issue num>
         self,
         func: Callable[[SpanProcessor], Callable[..., None]],
         *args: Any,
@@ -233,7 +235,7 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
     ):
         futures = []
         for sp in self._span_processors:
-            future = self._executor.submit(func(sp), *args, **kwargs)
+            future = self._executor.submit(func(sp), *args, **kwargs)  # type: ignore[misc] # <will add tracking issue num>
             futures.append(future)
         for future in futures:
             future.result()
@@ -332,19 +334,19 @@ class Event(EventBase):
         return self._attributes
 
 
-def _check_span_ended(func):
-    def wrapper(self, *args, **kwargs):
+def _check_span_ended(func):  # type: ignore[no-untyped-def] # <will add tracking issue num>
+    def wrapper(self, *args, **kwargs):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         already_ended = False
-        with self._lock:  # pylint: disable=protected-access
-            if self._end_time is None:  # pylint: disable=protected-access
-                func(self, *args, **kwargs)
+        with self._lock:  # type: ignore[misc] # pylint: disable=protected-access # <will add tracking issue num>
+            if self._end_time is None:  # type: ignore[misc] # pylint: disable=protected-access # <will add tracking issue num>
+                func(self, *args, **kwargs)  # type: ignore[misc] # <will add tracking issue num>
             else:
                 already_ended = True
 
         if already_ended:
-            logger.warning("Tried calling %s on an ended span.", func.__name__)
+            logger.warning("Tried calling %s on an ended span.", func.__name__)  # type: ignore[misc] # <will add tracking issue num>
 
-    return wrapper
+    return wrapper  # type: ignore[misc] # <will add tracking issue num>
 
 
 class ReadableSpan:
@@ -390,8 +392,8 @@ class ReadableSpan:
 
     @property
     def dropped_attributes(self) -> int:
-        if isinstance(self._attributes, BoundedAttributes):
-            return self._attributes.dropped
+        if isinstance(self._attributes, BoundedAttributes):  # type: ignore[misc] # <will add tracking issue num>
+            return self._attributes.dropped  # type: ignore[misc, no-any-return] # <will add tracking issue num>
         return 0
 
     @property
@@ -410,11 +412,11 @@ class ReadableSpan:
     def name(self) -> str:
         return self._name
 
-    def get_span_context(self):
+    def get_span_context(self):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         return self._context
 
     @property
-    def context(self):
+    def context(self):  # type: ignore[misc, no-untyped-def] # <will add tracking issue num>
         return self._context
 
     @property
@@ -454,7 +456,7 @@ class ReadableSpan:
         return self._resource
 
     @property
-    @deprecated(
+    @deprecated(  # type: ignore[misc] # <will add tracking issue num>
         version="1.11.1", reason="You should use instrumentation_scope"
     )
     def instrumentation_info(self) -> Optional[InstrumentationInfo]:
@@ -464,7 +466,7 @@ class ReadableSpan:
     def instrumentation_scope(self) -> Optional[InstrumentationScope]:
         return self._instrumentation_scope
 
-    def to_json(self, indent: int = 4):
+    def to_json(self, indent: int = 4):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         parent_id = None
         if self.parent is not None:
             parent_id = f"0x{trace_api.format_span_id(self.parent.span_id)}"
@@ -478,12 +480,12 @@ class ReadableSpan:
             end_time = util.ns_to_iso_str(self._end_time)
 
         status = {
-            "status_code": str(self._status.status_code.name),
+            "status_code": str(self._status.status_code.name),  # type: ignore[misc] # <will add tracking issue num>
         }
         if self._status.description:
             status["description"] = self._status.description
 
-        f_span = {
+        f_span = {  # type: ignore[misc] # <will add tracking issue num>
             "name": self._name,
             "context": self._format_context(self._context)
             if self._context
@@ -493,13 +495,13 @@ class ReadableSpan:
             "start_time": start_time,
             "end_time": end_time,
             "status": status,
-            "attributes": self._format_attributes(self._attributes),
-            "events": self._format_events(self._events),
-            "links": self._format_links(self._links),
-            "resource": json.loads(self.resource.to_json()),
+            "attributes": self._format_attributes(self._attributes),  # type: ignore[misc] # <will add tracking issue num>
+            "events": self._format_events(self._events),  # type: ignore[misc] # <will add tracking issue num>
+            "links": self._format_links(self._links),  # type: ignore[misc] # <will add tracking issue num>
+            "resource": json.loads(self.resource.to_json()),  # type: ignore[misc] # <will add tracking issue num>
         }
 
-        return json.dumps(f_span, indent=indent)
+        return json.dumps(f_span, indent=indent)  # type: ignore[misc] # <will add tracking issue num>
 
     @staticmethod
     def _format_context(context: SpanContext) -> Dict[str, str]:
@@ -510,20 +512,20 @@ class ReadableSpan:
         }
 
     @staticmethod
-    def _format_attributes(
+    def _format_attributes(  # type: ignore[misc] # <will add tracking issue num>
         attributes: types.Attributes,
     ) -> Optional[Dict[str, Any]]:
         if attributes is not None and not isinstance(attributes, dict):
-            return dict(attributes)
+            return dict(attributes)  # type: ignore[misc] # <will add tracking issue num>
         return attributes
 
     @staticmethod
-    def _format_events(events: Sequence[Event]) -> List[Dict[str, Any]]:
-        return [
-            {
+    def _format_events(events: Sequence[Event]) -> List[Dict[str, Any]]:  # type: ignore[misc] # <will add tracking issue num>
+        return [  # type: ignore[misc] # <will add tracking issue num>
+            {  # type: ignore[misc] # <will add tracking issue num>
                 "name": event.name,
                 "timestamp": util.ns_to_iso_str(event.timestamp),
-                "attributes": Span._format_attributes(  # pylint: disable=protected-access
+                "attributes": Span._format_attributes(  # type: ignore[misc] # pylint: disable=protected-access # <will add tracking issue num>
                     event.attributes
                 ),
             }
@@ -531,13 +533,13 @@ class ReadableSpan:
         ]
 
     @staticmethod
-    def _format_links(links: Sequence[trace_api.Link]) -> List[Dict[str, Any]]:
-        return [
-            {
-                "context": Span._format_context(  # pylint: disable=protected-access
+    def _format_links(links: Sequence[trace_api.Link]) -> List[Dict[str, Any]]:  # type: ignore[misc] # <will add tracking issue num>
+        return [  # type: ignore[misc] # <will add tracking issue num>
+            {  # type: ignore[misc] # <will add tracking issue num>
+                "context": Span._format_context(  # type: ignore[misc] # pylint: disable=protected-access # <will add tracking issue num>
                     link.context
                 ),
-                "attributes": Span._format_attributes(  # pylint: disable=protected-access
+                "attributes": Span._format_attributes(  # type: ignore[misc] # pylint: disable=protected-access # <will add tracking issue num>
                     link.attributes
                 ),
             }
@@ -658,7 +660,7 @@ class SpanLimits:
             self.max_attribute_length,
         )
 
-    def __repr__(self):
+    def __repr__(self):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         return f"{type(self).__name__}(max_span_attributes={self.max_span_attributes}, max_events_attributes={self.max_event_attributes}, max_link_attributes={self.max_link_attributes}, max_attributes={self.max_attributes}, max_events={self.max_events}, max_links={self.max_links}, max_attribute_length={self.max_attribute_length})"
 
     @classmethod
@@ -733,13 +735,13 @@ class Span(trace_api.Span, ReadableSpan):
         limits: `SpanLimits` instance that was passed to the `TracerProvider`
     """
 
-    def __new__(cls, *args, **kwargs):
-        if cls is Span:
+    def __new__(cls, *args, **kwargs):  # type: ignore[no-untyped-def] # <will add tracking issue num>
+        if cls is Span:  # type: ignore[misc] # <will add tracking issue num>
             raise TypeError("Span must be instantiated via a tracer.")
         return super().__new__(cls)
 
     # pylint: disable=too-many-locals
-    def __init__(
+    def __init__(  # type: ignore[no-untyped-def] # <will add tracking issue num>
         self,
         name: str,
         context: trace_api.SpanContext,
@@ -774,45 +776,45 @@ class Span(trace_api.Span, ReadableSpan):
         self._record_exception = record_exception
         self._set_status_on_exception = set_status_on_exception
         self._span_processor = span_processor
-        self._limits = limits
+        self._limits = limits  # type: ignore[misc] # <will add tracking issue num>
         self._lock = threading.Lock()
         self._attributes = BoundedAttributes(
-            self._limits.max_span_attributes,
+            self._limits.max_span_attributes,  # type: ignore[misc] # <will add tracking issue num>
             attributes,
             immutable=False,
-            max_value_len=self._limits.max_span_attribute_length,
+            max_value_len=self._limits.max_span_attribute_length,  # type: ignore[misc] # <will add tracking issue num>
         )
-        self._events = self._new_events()
+        self._events = self._new_events()  # type: ignore[no-untyped-call] # <will add tracking issue num>
         if events:
             for event in events:
                 event._attributes = BoundedAttributes(
-                    self._limits.max_event_attributes,
+                    self._limits.max_event_attributes,  # type: ignore[misc] # <will add tracking issue num>
                     event.attributes,
-                    max_value_len=self._limits.max_attribute_length,
+                    max_value_len=self._limits.max_attribute_length,  # type: ignore[misc] # <will add tracking issue num>
                 )
-                self._events.append(event)
+                self._events.append(event)  # type: ignore[attr-defined] # <will add tracking issue num>
 
         if links is None:
             self._links = self._new_links()
         else:
             for link in links:
                 link._attributes = BoundedAttributes(
-                    self._limits.max_link_attributes,
+                    self._limits.max_link_attributes,  # type: ignore[misc] # <will add tracking issue num>
                     link.attributes,
-                    max_value_len=self._limits.max_attribute_length,
+                    max_value_len=self._limits.max_attribute_length,  # type: ignore[misc] # <will add tracking issue num>
                 )
-            self._links = BoundedList.from_seq(self._limits.max_links, links)
+            self._links = BoundedList.from_seq(self._limits.max_links, links)  # type: ignore[misc] # <will add tracking issue num>
 
-    def __repr__(self):
+    def __repr__(self):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         return f'{type(self).__name__}(name="{self._name}", context={self._context})'
 
-    def _new_events(self):
-        return BoundedList(self._limits.max_events)
+    def _new_events(self):  # type: ignore[no-untyped-def] # <will add tracking issue num>
+        return BoundedList(self._limits.max_events)  # type: ignore[misc] # <will add tracking issue num>
 
-    def _new_links(self):
-        return BoundedList(self._limits.max_links)
+    def _new_links(self):  # type: ignore[no-untyped-def] # <will add tracking issue num>
+        return BoundedList(self._limits.max_links)  # type: ignore[misc] # <will add tracking issue num>
 
-    def get_span_context(self):
+    def get_span_context(self):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         return self._context
 
     def set_attributes(
@@ -824,14 +826,14 @@ class Span(trace_api.Span, ReadableSpan):
                 return
 
             for key, value in attributes.items():
-                self._attributes[key] = value
+                self._attributes[key] = value  # type: ignore[index] # <will add tracking issue num>
 
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
         return self.set_attributes({key: value})
 
-    @_check_span_ended
+    @_check_span_ended  # type: ignore[misc] # <will add tracking issue num>
     def _add_event(self, event: EventBase) -> None:
-        self._events.append(event)
+        self._events.append(event)  # type: ignore[attr-defined] # <will add tracking issue num>
 
     def add_event(
         self,
@@ -840,9 +842,9 @@ class Span(trace_api.Span, ReadableSpan):
         timestamp: Optional[int] = None,
     ) -> None:
         attributes = BoundedAttributes(
-            self._limits.max_event_attributes,
+            self._limits.max_event_attributes,  # type: ignore[misc] # <will add tracking issue num>
             attributes,
-            max_value_len=self._limits.max_attribute_length,
+            max_value_len=self._limits.max_attribute_length,  # type: ignore[misc] # <will add tracking issue num>
         )
         self._add_event(
             Event(
@@ -852,9 +854,9 @@ class Span(trace_api.Span, ReadableSpan):
             )
         )
 
-    @_check_span_ended
+    @_check_span_ended  # type: ignore[misc] # <will add tracking issue num>
     def _add_link(self, link: trace_api.Link) -> None:
-        self._links.append(link)
+        self._links.append(link)  # type: ignore[attr-defined] # <will add tracking issue num>
 
     def add_link(
         self,
@@ -865,9 +867,9 @@ class Span(trace_api.Span, ReadableSpan):
             return
 
         attributes = BoundedAttributes(
-            self._limits.max_link_attributes,
+            self._limits.max_link_attributes,  # type: ignore[misc] # <will add tracking issue num>
             attributes,
-            max_value_len=self._limits.max_attribute_length,
+            max_value_len=self._limits.max_attribute_length,  # type: ignore[misc] # <will add tracking issue num>
         )
         self._add_link(
             trace_api.Link(
@@ -920,14 +922,14 @@ class Span(trace_api.Span, ReadableSpan):
 
         self._span_processor.on_end(self._readable_span())
 
-    @_check_span_ended
+    @_check_span_ended  # type: ignore[misc] # <will add tracking issue num>
     def update_name(self, name: str) -> None:
         self._name = name
 
     def is_recording(self) -> bool:
         return self._end_time is None
 
-    @_check_span_ended
+    @_check_span_ended  # type: ignore[misc] # <will add tracking issue num>
     def set_status(
         self,
         status: typing.Union[Status, StatusCode],
@@ -968,14 +970,14 @@ class Span(trace_api.Span, ReadableSpan):
             # Record the exception as an event
             # pylint:disable=protected-access
             if self._record_exception:
-                self.record_exception(exception=exc_val, escaped=True)
+                self.record_exception(exception=exc_val, escaped=True)  # type: ignore[arg-type] # <will add tracking issue num>
             # Records status if span is used as context manager
             # i.e. with tracer.start_span() as span:
             if self._set_status_on_exception:
                 self.set_status(
                     Status(
                         status_code=StatusCode.ERROR,
-                        description=f"{exc_type.__name__}: {exc_val}",
+                        description=f"{exc_type.__name__}: {exc_val}",  # type: ignore[misc, union-attr] # <will add tracking issue num>
                     )
                 )
 
@@ -1095,7 +1097,7 @@ class Tracer(trace_api.Tracer):
 
         # is_valid determines root span
         if parent_span_context is None or not parent_span_context.is_valid:
-            parent_span_context = None
+            parent_span_context = None  # type: ignore[assignment] # <will add tracking issue num>
             trace_id = self.id_generator.generate_trace_id()
         else:
             trace_id = parent_span_context.trace_id
@@ -1112,7 +1114,7 @@ class Tracer(trace_api.Tracer):
 
         trace_flags = (
             trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED)
-            if sampling_result.decision.is_sampled()
+            if sampling_result.decision.is_sampled()  # type: ignore[misc, no-untyped-call] # <will add tracking issue num>
             else trace_api.TraceFlags(trace_api.TraceFlags.DEFAULT)
         )
         span_context = trace_api.SpanContext(
@@ -1124,7 +1126,7 @@ class Tracer(trace_api.Tracer):
         )
 
         # Only record if is_recording() is true
-        if sampling_result.decision.is_recording():
+        if sampling_result.decision.is_recording():  # type: ignore[misc, no-untyped-call] # <will add tracking issue num>
             # pylint:disable=protected-access
             span = _Span(
                 name=name,
@@ -1132,10 +1134,10 @@ class Tracer(trace_api.Tracer):
                 parent=parent_span_context,
                 sampler=self.sampler,
                 resource=self.resource,
-                attributes=sampling_result.attributes.copy(),
+                attributes=sampling_result.attributes.copy(),  # type: ignore[misc] # <will add tracking issue num>
                 span_processor=self.span_processor,
                 kind=kind,
-                links=links,
+                links=links,  # type: ignore[arg-type] # <will add tracking issue num>
                 instrumentation_info=self.instrumentation_info,
                 record_exception=record_exception,
                 set_status_on_exception=set_status_on_exception,
@@ -1144,7 +1146,7 @@ class Tracer(trace_api.Tracer):
             )
             span.start(start_time=start_time, parent_context=context)
         else:
-            span = trace_api.NonRecordingSpan(context=span_context)
+            span = trace_api.NonRecordingSpan(context=span_context)  # type: ignore[assignment] # <will add tracking issue num>
         return span
 
 
@@ -1163,12 +1165,12 @@ class TracerProvider(trace_api.TracerProvider):
         span_limits: Optional[SpanLimits] = None,
     ) -> None:
         self._active_span_processor = (
-            active_span_processor or SynchronousMultiSpanProcessor()
+            active_span_processor or SynchronousMultiSpanProcessor()  # type: ignore[no-untyped-call] # <will add tracking issue num>
         )
         if id_generator is None:
             self.id_generator = RandomIdGenerator()
         else:
-            self.id_generator = id_generator
+            self.id_generator = id_generator  # type: ignore[assignment] # <will add tracking issue num>
         if resource is None:
             self._resource = Resource.create({})
         else:
@@ -1182,7 +1184,7 @@ class TracerProvider(trace_api.TracerProvider):
         self._atexit_handler = None
 
         if shutdown_on_exit:
-            self._atexit_handler = atexit.register(self.shutdown)
+            self._atexit_handler = atexit.register(self.shutdown)  # type: ignore[misc] # <will add tracking issue num>
 
     @property
     def resource(self) -> Resource:
@@ -1243,11 +1245,11 @@ class TracerProvider(trace_api.TracerProvider):
         # SynchronousMultiSpanProcessor and ConcurrentMultiSpanProcessor.
         self._active_span_processor.add_span_processor(span_processor)
 
-    def shutdown(self):
+    def shutdown(self):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         """Shut down the span processors added to the tracer provider."""
         self._active_span_processor.shutdown()
-        if self._atexit_handler is not None:
-            atexit.unregister(self._atexit_handler)
+        if self._atexit_handler is not None:  # type: ignore[misc] # <will add tracking issue num>
+            atexit.unregister(self._atexit_handler)  # type: ignore[misc] # <will add tracking issue num>
             self._atexit_handler = None
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:

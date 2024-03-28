@@ -25,7 +25,9 @@ from opentelemetry.sdk.metrics._internal.aggregation import (
     _Aggregation,
     _SumAggregation,
 )
-from opentelemetry.sdk.metrics._internal.export import AggregationTemporality
+from opentelemetry.sdk.metrics._internal.export import (
+    AggregationTemporality,  # type: ignore[attr-defined] # <will add tracking issue num>
+)
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.point import DataPointT
 from opentelemetry.sdk.metrics._internal.view import View
@@ -43,15 +45,15 @@ class _ViewInstrumentMatch:
         self._start_time_unix_nano = time_ns()
         self._view = view
         self._instrument = instrument
-        self._attributes_aggregation: Dict[frozenset, _Aggregation] = {}
+        self._attributes_aggregation: Dict[frozenset, _Aggregation] = {}  # type: ignore[type-arg] # <will add tracking issue num>
         self._lock = Lock()
         self._instrument_class_aggregation = instrument_class_aggregation
-        self._name = self._view._name or self._instrument.name
+        self._name = self._view._name or self._instrument.name  # type: ignore[attr-defined, misc] # <will add tracking issue num>
         self._description = (
-            self._view._description or self._instrument.description
+            self._view._description or self._instrument.description  # type: ignore[attr-defined, misc] # <will add tracking issue num>
         )
         if not isinstance(self._view._aggregation, DefaultAggregation):
-            self._aggregation = self._view._aggregation._create_aggregation(
+            self._aggregation = self._view._aggregation._create_aggregation(  # type: ignore[misc] # <will add tracking issue num>
                 self._instrument, None, 0
             )
         else:
@@ -63,22 +65,22 @@ class _ViewInstrumentMatch:
         # pylint: disable=protected-access
 
         result = (
-            self._name == other._name
-            and self._instrument.unit == other._instrument.unit
+            self._name == other._name  # type: ignore[misc] # <will add tracking issue num>
+            and self._instrument.unit == other._instrument.unit  # type: ignore[attr-defined, misc] # <will add tracking issue num>
             # The aggregation class is being used here instead of data point
             # type since they are functionally equivalent.
-            and self._aggregation.__class__ == other._aggregation.__class__
+            and self._aggregation.__class__ == other._aggregation.__class__  # type: ignore[misc] # <will add tracking issue num>
         )
-        if isinstance(self._aggregation, _SumAggregation):
+        if isinstance(self._aggregation, _SumAggregation):  # type: ignore[misc] # <will add tracking issue num>
             result = (
-                result
-                and self._aggregation._instrument_is_monotonic
-                == other._aggregation._instrument_is_monotonic
-                and self._aggregation._instrument_aggregation_temporality
-                == other._aggregation._instrument_aggregation_temporality
+                result  # type: ignore[misc] # <will add tracking issue num>
+                and self._aggregation._instrument_is_monotonic  # type: ignore[misc] # <will add tracking issue num>
+                == other._aggregation._instrument_is_monotonic  # type: ignore[attr-defined, misc] # <will add tracking issue num>
+                and self._aggregation._instrument_aggregation_temporality  # type: ignore[misc] # <will add tracking issue num>
+                == other._aggregation._instrument_aggregation_temporality  # type: ignore[attr-defined, misc] # <will add tracking issue num>
             )
 
-        return result
+        return result  # type: ignore[misc] # <will add tracking issue num>
 
     # pylint: disable=protected-access
     def consume_measurement(self, measurement: Measurement) -> None:
@@ -91,24 +93,22 @@ class _ViewInstrumentMatch:
                 if key in self._view._attribute_keys:
                     attributes[key] = value
         elif measurement.attributes is not None:
-            attributes = measurement.attributes
+            attributes = measurement.attributes  # type: ignore[assignment] # <will add tracking issue num>
         else:
             attributes = {}
 
         aggr_key = frozenset(attributes.items())
 
-        if aggr_key not in self._attributes_aggregation:
+        if aggr_key not in self._attributes_aggregation:  # type: ignore[misc] # <will add tracking issue num>
             with self._lock:
-                if aggr_key not in self._attributes_aggregation:
+                if aggr_key not in self._attributes_aggregation:  # type: ignore[misc] # <will add tracking issue num>
                     if not isinstance(
                         self._view._aggregation, DefaultAggregation
                     ):
-                        aggregation = (
-                            self._view._aggregation._create_aggregation(
-                                self._instrument,
-                                attributes,
-                                self._start_time_unix_nano,
-                            )
+                        aggregation = self._view._aggregation._create_aggregation(  # type: ignore[misc] # <will add tracking issue num>
+                            self._instrument,
+                            attributes,
+                            self._start_time_unix_nano,
                         )
                     else:
                         aggregation = self._instrument_class_aggregation[
@@ -118,11 +118,11 @@ class _ViewInstrumentMatch:
                             attributes,
                             self._start_time_unix_nano,
                         )
-                    self._attributes_aggregation[aggr_key] = aggregation
+                    self._attributes_aggregation[aggr_key] = aggregation  # type: ignore[misc] # <will add tracking issue num>
 
-        self._attributes_aggregation[aggr_key].aggregate(measurement)
+        self._attributes_aggregation[aggr_key].aggregate(measurement)  # type: ignore[misc] # <will add tracking issue num>
 
-    def collect(
+    def collect(  # type: ignore[no-any-unimported] # <will add tracking issue num>
         self,
         collection_aggregation_temporality: AggregationTemporality,
         collection_start_nanos: int,
@@ -130,12 +130,12 @@ class _ViewInstrumentMatch:
 
         data_points: List[DataPointT] = []
         with self._lock:
-            for aggregation in self._attributes_aggregation.values():
-                data_point = aggregation.collect(
-                    collection_aggregation_temporality, collection_start_nanos
+            for aggregation in self._attributes_aggregation.values():  # type: ignore[misc] # <will add tracking issue num>
+                data_point = aggregation.collect(  # type: ignore[misc] # <will add tracking issue num>
+                    collection_aggregation_temporality, collection_start_nanos  # type: ignore[misc] # <will add tracking issue num>
                 )
-                if data_point is not None:
-                    data_points.append(data_point)
+                if data_point is not None:  # type: ignore[misc] # <will add tracking issue num>
+                    data_points.append(data_point)  # type: ignore[misc] # <will add tracking issue num>
 
         # Returning here None instead of an empty list because the caller
         # does not consume a sequence and to be consistent with the rest of

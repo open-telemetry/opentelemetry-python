@@ -35,7 +35,9 @@ from opentelemetry.sdk.metrics._internal.aggregation import (
     _LastValueAggregation,
     _SumAggregation,
 )
-from opentelemetry.sdk.metrics._internal.export import AggregationTemporality
+from opentelemetry.sdk.metrics._internal.export import (
+    AggregationTemporality,  # type: ignore[attr-defined] # <will add tracking issue num>
+)
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.point import (
     ExponentialHistogram,
@@ -61,7 +63,7 @@ _DEFAULT_VIEW = View(instrument_name="")
 class MetricReaderStorage:
     """The SDK's storage for a given reader"""
 
-    def __init__(
+    def __init__(  # type: ignore[no-any-unimported] # <will add tracking issue num>
         self,
         sdk_config: SdkConfiguration,
         instrument_class_temporality: Dict[type, AggregationTemporality],
@@ -72,7 +74,7 @@ class MetricReaderStorage:
         self._instrument_view_instrument_matches: Dict[
             Instrument, List[_ViewInstrumentMatch]
         ] = {}
-        self._instrument_class_temporality = instrument_class_temporality
+        self._instrument_class_temporality = instrument_class_temporality  # type: ignore[misc] # <will add tracking issue num>
         self._instrument_class_aggregation = instrument_class_aggregation
 
     def _get_or_init_view_instrument_match(
@@ -90,14 +92,14 @@ class MetricReaderStorage:
                 return self._instrument_view_instrument_matches[instrument]
 
             # not present, hold the lock and add a new mapping
-            view_instrument_matches = []
+            view_instrument_matches = []  # type: ignore[var-annotated] # <will add tracking issue num>
 
             self._handle_view_instrument_match(
-                instrument, view_instrument_matches
+                instrument, view_instrument_matches  # type: ignore[misc] # <will add tracking issue num>
             )
 
             # if no view targeted the instrument, use the default
-            if not view_instrument_matches:
+            if not view_instrument_matches:  # type: ignore[misc] # <will add tracking issue num>
                 view_instrument_matches.append(
                     _ViewInstrumentMatch(
                         view=_DEFAULT_VIEW,
@@ -144,7 +146,7 @@ class MetricReaderStorage:
                 instrument,
                 view_instrument_matches,
             ) in self._instrument_view_instrument_matches.items():
-                aggregation_temporality = self._instrument_class_temporality[
+                aggregation_temporality = self._instrument_class_temporality[  # type: ignore[misc] # <will add tracking issue num>
                     instrument.__class__
                 ]
 
@@ -153,7 +155,7 @@ class MetricReaderStorage:
                 for view_instrument_match in view_instrument_matches:
 
                     data_points = view_instrument_match.collect(
-                        aggregation_temporality, collection_start_nanos
+                        aggregation_temporality, collection_start_nanos  # type: ignore[misc] # <will add tracking issue num>
                     )
 
                     if data_points is None:
@@ -161,74 +163,79 @@ class MetricReaderStorage:
 
                     if isinstance(
                         # pylint: disable=protected-access
-                        view_instrument_match._aggregation,
+                        view_instrument_match._aggregation,  # type: ignore[misc] # <will add tracking issue num>
                         _SumAggregation,
                     ):
                         data = Sum(
-                            aggregation_temporality=aggregation_temporality,
-                            data_points=data_points,
+                            aggregation_temporality=aggregation_temporality,  # type: ignore[misc] # <will add tracking issue num>
+                            data_points=data_points,  # type: ignore[arg-type] # <will add tracking issue num>
                             is_monotonic=isinstance(
                                 instrument, (Counter, ObservableCounter)
                             ),
                         )
                     elif isinstance(
                         # pylint: disable=protected-access
-                        view_instrument_match._aggregation,
+                        view_instrument_match._aggregation,  # type: ignore[misc] # <will add tracking issue num>
                         _LastValueAggregation,
                     ):
-                        data = Gauge(data_points=data_points)
+                        data = Gauge(data_points=data_points)  # type: ignore[arg-type, assignment] # <will add tracking issue num>
                     elif isinstance(
                         # pylint: disable=protected-access
-                        view_instrument_match._aggregation,
+                        view_instrument_match._aggregation,  # type: ignore[misc] # <will add tracking issue num>
                         _ExplicitBucketHistogramAggregation,
                     ):
-                        data = Histogram(
-                            data_points=data_points,
-                            aggregation_temporality=aggregation_temporality,
+                        data = Histogram(  # type: ignore[assignment] # <will add tracking issue num>
+                            data_points=data_points,  # type: ignore[arg-type] # <will add tracking issue num>
+                            aggregation_temporality=aggregation_temporality,  # type: ignore[misc] # <will add tracking issue num>
                         )
                     elif isinstance(
                         # pylint: disable=protected-access
-                        view_instrument_match._aggregation,
+                        view_instrument_match._aggregation,  # type: ignore[misc] # <will add tracking issue num>
                         _DropAggregation,
                     ):
                         continue
 
                     elif isinstance(
                         # pylint: disable=protected-access
-                        view_instrument_match._aggregation,
+                        view_instrument_match._aggregation,  # type: ignore[misc] # <will add tracking issue num>
                         _ExponentialBucketHistogramAggregation,
                     ):
-                        data = ExponentialHistogram(
-                            data_points=data_points,
-                            aggregation_temporality=aggregation_temporality,
+                        data = ExponentialHistogram(  # type: ignore[assignment] # <will add tracking issue num>
+                            data_points=data_points,  # type: ignore[arg-type] # <will add tracking issue num>
+                            aggregation_temporality=aggregation_temporality,  # type: ignore[misc] # <will add tracking issue num>
                         )
 
                     metrics.append(
                         Metric(
                             # pylint: disable=protected-access
-                            name=view_instrument_match._name,
-                            description=view_instrument_match._description,
-                            unit=view_instrument_match._instrument.unit,
+                            name=view_instrument_match._name,  # type: ignore[misc] # <will add tracking issue num>
+                            description=view_instrument_match._description,  # type: ignore[misc] # <will add tracking issue num>
+                            unit=view_instrument_match._instrument.unit,  # type: ignore[attr-defined, misc] # <will add tracking issue num>
                             data=data,
                         )
                     )
 
                 if metrics:
 
-                    if instrument.instrumentation_scope not in (
-                        instrumentation_scope_scope_metrics
+                    if (
+                        instrument.instrumentation_scope
+                        not in (  # type: ignore[attr-defined, misc] # <will add tracking issue num>
+                            instrumentation_scope_scope_metrics
+                        )
                     ):
                         instrumentation_scope_scope_metrics[
-                            instrument.instrumentation_scope
+                            instrument.instrumentation_scope  # type: ignore[attr-defined, misc] # <will add tracking issue num>
                         ] = ScopeMetrics(
-                            scope=instrument.instrumentation_scope,
+                            scope=instrument.instrumentation_scope,  # type: ignore[attr-defined, misc] # <will add tracking issue num>
                             metrics=metrics,
-                            schema_url=instrument.instrumentation_scope.schema_url,
+                            schema_url=instrument.instrumentation_scope.schema_url,  # type: ignore[attr-defined, misc] # <will add tracking issue num>
                         )
                     else:
-                        instrumentation_scope_scope_metrics[
-                            instrument.instrumentation_scope
-                        ].metrics.extend(metrics)
+                        instrumentation_scope_scope_metrics[  # type: ignore[attr-defined] # <will add tracking issue num>
+                            instrument.instrumentation_scope  # type: ignore[attr-defined, misc] # <will add tracking issue num>
+                        ].metrics.extend(
+                            metrics
+                        )
 
             if instrumentation_scope_scope_metrics:
 
@@ -253,7 +260,7 @@ class MetricReaderStorage:
     ) -> None:
         for view in self._sdk_config.views:
             # pylint: disable=protected-access
-            if not view._match(instrument):
+            if not view._match(instrument):  # type: ignore[misc] # <will add tracking issue num>
                 continue
 
             if not self._check_view_instrument_compatibility(view, instrument):

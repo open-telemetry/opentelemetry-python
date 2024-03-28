@@ -96,11 +96,11 @@ def _import_config_components(
 
     for selected_component in selected_components:
         try:
-            component_implementations.append(
-                (
+            component_implementations.append(  # type: ignore[misc] # <will add tracking issue num>
+                (  # type: ignore[misc] # <will add tracking issue num>
                     selected_component,
-                    next(
-                        iter(
+                    next(  # type: ignore[misc] # <will add tracking issue num>
+                        iter(  # type: ignore[misc] # <will add tracking issue num>
                             entry_points(
                                 group=entry_point_name, name=selected_component
                             )
@@ -121,7 +121,7 @@ def _import_config_components(
                 f"entry point '{entry_point_name}'"
             )
 
-    return component_implementations
+    return component_implementations  # type: ignore[misc] # <will add tracking issue num>
 
 
 def _get_sampler() -> Optional[str]:
@@ -132,7 +132,7 @@ def _get_id_generator() -> str:
     return environ.get(OTEL_PYTHON_ID_GENERATOR, _DEFAULT_ID_GENERATOR)
 
 
-def _get_exporter_entry_point(
+def _get_exporter_entry_point(  # type: ignore[no-untyped-def] # <will add tracking issue num>
     exporter_name: str, signal_type: Literal["traces", "metrics", "logs"]
 ):
     if exporter_name not in (
@@ -185,16 +185,16 @@ def _get_exporter_names(
         return []
 
     return [
-        _get_exporter_entry_point(_exporter.strip(), signal_type)
+        _get_exporter_entry_point(_exporter.strip(), signal_type)  # type: ignore[misc] # <will add tracking issue num>
         for _exporter in names.split(",")
     ]
 
 
-def _init_tracing(
+def _init_tracing(  # type: ignore[no-untyped-def] # <will add tracking issue num>
     exporters: Dict[str, Type[SpanExporter]],
-    id_generator: IdGenerator = None,
-    sampler: Sampler = None,
-    resource: Resource = None,
+    id_generator: IdGenerator = None,  # type: ignore[assignment] # <will add tracking issue num>
+    sampler: Sampler = None,  # type: ignore[assignment] # <will add tracking issue num>
+    resource: Resource = None,  # type: ignore[assignment] # <will add tracking issue num>
 ):
     provider = TracerProvider(
         id_generator=id_generator,
@@ -204,29 +204,29 @@ def _init_tracing(
     set_tracer_provider(provider)
 
     for _, exporter_class in exporters.items():
-        exporter_args = {}
+        exporter_args = {}  # type: ignore[var-annotated] # <will add tracking issue num>
         provider.add_span_processor(
-            BatchSpanProcessor(exporter_class(**exporter_args))
+            BatchSpanProcessor(exporter_class(**exporter_args))  # type: ignore[misc] # <will add tracking issue num>
         )
 
 
-def _init_metrics(
+def _init_metrics(  # type: ignore[no-untyped-def] # <will add tracking issue num>
     exporters_or_readers: Dict[
         str, Union[Type[MetricExporter], Type[MetricReader]]
     ],
-    resource: Resource = None,
+    resource: Resource = None,  # type: ignore[assignment] # <will add tracking issue num>
 ):
     metric_readers = []
 
     for _, exporter_or_reader_class in exporters_or_readers.items():
-        exporter_args = {}
+        exporter_args = {}  # type: ignore[var-annotated] # <will add tracking issue num>
 
         if issubclass(exporter_or_reader_class, MetricReader):
-            metric_readers.append(exporter_or_reader_class(**exporter_args))
+            metric_readers.append(exporter_or_reader_class(**exporter_args))  # type: ignore[misc] # <will add tracking issue num>
         else:
             metric_readers.append(
                 PeriodicExportingMetricReader(
-                    exporter_or_reader_class(**exporter_args)
+                    exporter_or_reader_class(**exporter_args)  # type: ignore[misc] # <will add tracking issue num>
                 )
             )
 
@@ -234,17 +234,17 @@ def _init_metrics(
     set_meter_provider(provider)
 
 
-def _init_logging(
+def _init_logging(  # type: ignore[no-untyped-def] # <will add tracking issue num>
     exporters: Dict[str, Type[LogExporter]],
-    resource: Resource = None,
+    resource: Resource = None,  # type: ignore[assignment] # <will add tracking issue num>
 ):
     provider = LoggerProvider(resource=resource)
     set_logger_provider(provider)
 
     for _, exporter_class in exporters.items():
-        exporter_args = {}
+        exporter_args = {}  # type: ignore[var-annotated] # <will add tracking issue num>
         provider.add_log_record_processor(
-            BatchLogRecordProcessor(exporter_class(**exporter_args))
+            BatchLogRecordProcessor(exporter_class(**exporter_args))  # type: ignore[misc] # <will add tracking issue num>
         )
 
     handler = LoggingHandler(level=logging.NOTSET, logger_provider=provider)
@@ -266,39 +266,39 @@ def _import_exporters(
     log_exporters = {}
 
     for (exporter_name, exporter_impl,) in _import_config_components(
-        trace_exporter_names, "opentelemetry_traces_exporter"
+        trace_exporter_names, "opentelemetry_traces_exporter"  # type: ignore[arg-type] # <will add tracking issue num>
     ):
-        if issubclass(exporter_impl, SpanExporter):
+        if issubclass(exporter_impl, SpanExporter):  # type: ignore[arg-type] # <will add tracking issue num>
             trace_exporters[exporter_name] = exporter_impl
         else:
             raise RuntimeError(f"{exporter_name} is not a trace exporter")
 
     for (exporter_name, exporter_impl,) in _import_config_components(
-        metric_exporter_names, "opentelemetry_metrics_exporter"
+        metric_exporter_names, "opentelemetry_metrics_exporter"  # type: ignore[arg-type] # <will add tracking issue num>
     ):
         # The metric exporter components may be push MetricExporter or pull exporters which
         # subclass MetricReader directly
-        if issubclass(exporter_impl, (MetricExporter, MetricReader)):
+        if issubclass(exporter_impl, (MetricExporter, MetricReader)):  # type: ignore[arg-type] # <will add tracking issue num>
             metric_exporters[exporter_name] = exporter_impl
         else:
             raise RuntimeError(f"{exporter_name} is not a metric exporter")
 
     for (exporter_name, exporter_impl,) in _import_config_components(
-        log_exporter_names, "opentelemetry_logs_exporter"
+        log_exporter_names, "opentelemetry_logs_exporter"  # type: ignore[arg-type] # <will add tracking issue num>
     ):
-        if issubclass(exporter_impl, LogExporter):
+        if issubclass(exporter_impl, LogExporter):  # type: ignore[arg-type] # <will add tracking issue num>
             log_exporters[exporter_name] = exporter_impl
         else:
             raise RuntimeError(f"{exporter_name} is not a log exporter")
 
-    return trace_exporters, metric_exporters, log_exporters
+    return trace_exporters, metric_exporters, log_exporters  # type: ignore[return-value] # <will add tracking issue num>
 
 
 def _import_sampler_factory(sampler_name: str) -> Callable[[str], Sampler]:
     _, sampler_impl = _import_config_components(
         [sampler_name.strip()], _OTEL_SAMPLER_ENTRY_POINT_GROUP
     )[0]
-    return sampler_impl
+    return sampler_impl  # type: ignore[return-value] # <will add tracking issue num>
 
 
 def _import_sampler(sampler_name: str) -> Optional[Sampler]:
@@ -309,7 +309,7 @@ def _import_sampler(sampler_name: str) -> Optional[Sampler]:
         arg = None
         if sampler_name in ("traceidratio", "parentbased_traceidratio"):
             try:
-                rate = float(os.getenv(OTEL_TRACES_SAMPLER_ARG))
+                rate = float(os.getenv(OTEL_TRACES_SAMPLER_ARG))  # type: ignore[arg-type] # <will add tracking issue num>
             except (ValueError, TypeError):
                 _logger.warning(
                     "Could not convert TRACES_SAMPLER_ARG to float. Using default value 1.0."
@@ -317,9 +317,9 @@ def _import_sampler(sampler_name: str) -> Optional[Sampler]:
                 rate = 1.0
             arg = rate
         else:
-            arg = os.getenv(OTEL_TRACES_SAMPLER_ARG)
+            arg = os.getenv(OTEL_TRACES_SAMPLER_ARG)  # type: ignore[assignment] # <will add tracking issue num>
 
-        sampler = sampler_factory(arg)
+        sampler = sampler_factory(arg)  # type: ignore[arg-type] # <will add tracking issue num>
         if not isinstance(sampler, Sampler):
             message = f"Sampler factory, {sampler_factory}, produced output, {sampler}, which is not a Sampler."
             _logger.warning(message)
@@ -339,36 +339,36 @@ def _import_id_generator(id_generator_name: str) -> IdGenerator:
         [id_generator_name.strip()], "opentelemetry_id_generator"
     )[0]
 
-    if issubclass(id_generator_impl, IdGenerator):
-        return id_generator_impl()
+    if issubclass(id_generator_impl, IdGenerator):  # type: ignore[arg-type] # <will add tracking issue num>
+        return id_generator_impl()  # type: ignore[misc, no-any-return, operator] # <will add tracking issue num>
 
     raise RuntimeError(f"{id_generator_name} is not an IdGenerator")
 
 
-def _initialize_components(auto_instrumentation_version):
+def _initialize_components(auto_instrumentation_version):  # type: ignore[no-untyped-def] # <will add tracking issue num>
     trace_exporters, metric_exporters, log_exporters = _import_exporters(
         _get_exporter_names("traces"),
         _get_exporter_names("metrics"),
         _get_exporter_names("logs"),
     )
     sampler_name = _get_sampler()
-    sampler = _import_sampler(sampler_name)
+    sampler = _import_sampler(sampler_name)  # type: ignore[arg-type] # <will add tracking issue num>
     id_generator_name = _get_id_generator()
     id_generator = _import_id_generator(id_generator_name)
     # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
     # from the env variable else defaults to "unknown_service"
     auto_resource = {}
     # populate version if using auto-instrumentation
-    if auto_instrumentation_version:
-        auto_resource[
+    if auto_instrumentation_version:  # type: ignore[misc] # <will add tracking issue num>
+        auto_resource[  # type: ignore[misc] # <will add tracking issue num>
             ResourceAttributes.TELEMETRY_AUTO_VERSION
-        ] = auto_instrumentation_version
-    resource = Resource.create(auto_resource)
+        ] = auto_instrumentation_version  # type: ignore[misc] # <will add tracking issue num>
+    resource = Resource.create(auto_resource)  # type: ignore[misc] # <will add tracking issue num>
 
     _init_tracing(
         exporters=trace_exporters,
         id_generator=id_generator,
-        sampler=sampler,
+        sampler=sampler,  # type: ignore[arg-type] # <will add tracking issue num>
         resource=resource,
     )
     _init_metrics(metric_exporters, resource)
@@ -390,20 +390,20 @@ class _BaseConfigurator(ABC):
     _instance = None
     _is_instrumented = False
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs):  # type: ignore[no-untyped-def] # <will add tracking issue num>
 
         if cls._instance is None:
-            cls._instance = object.__new__(cls, *args, **kwargs)
+            cls._instance = object.__new__(cls, *args, **kwargs)  # type: ignore[misc] # <will add tracking issue num>
 
         return cls._instance
 
     @abstractmethod
-    def _configure(self, **kwargs):
+    def _configure(self, **kwargs):  # type: ignore[misc, no-untyped-def] # <will add tracking issue num>
         """Configure the SDK"""
 
-    def configure(self, **kwargs):
+    def configure(self, **kwargs):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         """Configure the SDK"""
-        self._configure(**kwargs)
+        self._configure(**kwargs)  # type: ignore[misc, no-untyped-call] # <will add tracking issue num>
 
 
 class _OTelSDKConfigurator(_BaseConfigurator):
@@ -418,5 +418,5 @@ class _OTelSDKConfigurator(_BaseConfigurator):
     this Configurator and enhance it as needed.
     """
 
-    def _configure(self, **kwargs):
-        _initialize_components(kwargs.get("auto_instrumentation_version"))
+    def _configure(self, **kwargs):  # type: ignore[no-untyped-def] # <will add tracking issue num>
+        _initialize_components(kwargs.get("auto_instrumentation_version"))  # type: ignore[misc, no-untyped-call] # <will add tracking issue num>

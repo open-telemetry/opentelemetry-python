@@ -65,7 +65,7 @@ class LogExporter(abc.ABC):
     """
 
     @abc.abstractmethod
-    def export(self, batch: Sequence[LogData]):
+    def export(self, batch: Sequence[LogData]):  # type: ignore[misc, no-untyped-def] # <will add tracking issue num>
         """Exports a batch of logs.
 
         Args:
@@ -76,7 +76,7 @@ class LogExporter(abc.ABC):
         """
 
     @abc.abstractmethod
-    def shutdown(self):
+    def shutdown(self):  # type: ignore[misc, no-untyped-def] # <will add tracking issue num>
         """Shuts down the exporter.
 
         Called when the SDK is shut down.
@@ -93,20 +93,20 @@ class ConsoleLogExporter(LogExporter):
 
     def __init__(
         self,
-        out: IO = sys.stdout,
+        out: IO = sys.stdout,  # type: ignore[type-arg] # <will add tracking issue num>
         formatter: Callable[[LogRecord], str] = lambda record: record.to_json()
         + linesep,
     ):
-        self.out = out
+        self.out = out  # type: ignore[misc] # <will add tracking issue num>
         self.formatter = formatter
 
-    def export(self, batch: Sequence[LogData]):
+    def export(self, batch: Sequence[LogData]):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         for data in batch:
-            self.out.write(self.formatter(data.log_record))
-        self.out.flush()
+            self.out.write(self.formatter(data.log_record))  # type: ignore[misc] # <will add tracking issue num>
+        self.out.flush()  # type: ignore[misc] # <will add tracking issue num>
         return LogExportResult.SUCCESS
 
-    def shutdown(self):
+    def shutdown(self):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         pass
 
 
@@ -120,7 +120,7 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
         self._exporter = exporter
         self._shutdown = False
 
-    def emit(self, log_data: LogData):
+    def emit(self, log_data: LogData):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         if self._shutdown:
             _logger.warning("Processor is already shutdown, ignoring call")
             return
@@ -131,9 +131,9 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
             _logger.exception("Exception while exporting logs.")
         detach(token)
 
-    def shutdown(self):
+    def shutdown(self):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         self._shutdown = True
-        self._exporter.shutdown()
+        self._exporter.shutdown()  # type: ignore[no-untyped-call] # <will add tracking issue num>
 
     def force_flush(
         self, timeout_millis: int = 30000
@@ -144,7 +144,7 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
 class _FlushRequest:
     __slots__ = ["event", "num_log_records"]
 
-    def __init__(self):
+    def __init__(self):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         self.event = threading.Event()
         self.num_log_records = 0
 
@@ -173,10 +173,10 @@ class BatchLogRecordProcessor(LogRecordProcessor):
     def __init__(
         self,
         exporter: LogExporter,
-        schedule_delay_millis: float = None,
-        max_export_batch_size: int = None,
-        export_timeout_millis: float = None,
-        max_queue_size: int = None,
+        schedule_delay_millis: float = None,  # type: ignore[assignment] # <will add tracking issue num>
+        max_export_batch_size: int = None,  # type: ignore[assignment] # <will add tracking issue num>
+        export_timeout_millis: float = None,  # type: ignore[assignment] # <will add tracking issue num>
+        max_queue_size: int = None,  # type: ignore[assignment] # <will add tracking issue num>
     ):
         if max_queue_size is None:
             max_queue_size = BatchLogRecordProcessor._default_max_queue_size()
@@ -196,7 +196,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
                 BatchLogRecordProcessor._default_export_timeout_millis()
             )
 
-        BatchLogRecordProcessor._validate_arguments(
+        BatchLogRecordProcessor._validate_arguments(  # type: ignore[no-untyped-call] # <will add tracking issue num>
             max_queue_size, schedule_delay_millis, max_export_batch_size
         )
 
@@ -208,7 +208,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
         self._queue = collections.deque([], max_queue_size)
         self._worker_thread = threading.Thread(
             name="OtelBatchLogRecordProcessor",
-            target=self.worker,
+            target=self.worker,  # type: ignore[misc] # <will add tracking issue num>
             daemon=True,
         )
         self._condition = threading.Condition(threading.Lock())
@@ -218,22 +218,22 @@ class BatchLogRecordProcessor(LogRecordProcessor):
         self._worker_thread.start()
         if hasattr(os, "register_at_fork"):
             os.register_at_fork(
-                after_in_child=self._at_fork_reinit
+                after_in_child=self._at_fork_reinit  # type: ignore[misc] # <will add tracking issue num>
             )  # pylint: disable=protected-access
         self._pid = os.getpid()
 
-    def _at_fork_reinit(self):
+    def _at_fork_reinit(self):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         self._condition = threading.Condition(threading.Lock())
         self._queue.clear()
         self._worker_thread = threading.Thread(
             name="OtelBatchLogRecordProcessor",
-            target=self.worker,
+            target=self.worker,  # type: ignore[misc] # <will add tracking issue num>
             daemon=True,
         )
         self._worker_thread.start()
         self._pid = os.getpid()
 
-    def worker(self):
+    def worker(self):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         timeout = self._schedule_delay_millis / 1e3
         flush_request: Optional[_FlushRequest] = None
         while not self._shutdown:
@@ -274,11 +274,11 @@ class BatchLogRecordProcessor(LogRecordProcessor):
             shutdown_flush_request = self._get_and_unset_flush_request()
 
         # flush the remaining logs
-        self._drain_queue()
+        self._drain_queue()  # type: ignore[no-untyped-call] # <will add tracking issue num>
         self._notify_flush_request_finished(flush_request)
         self._notify_flush_request_finished(shutdown_flush_request)
 
-    def _export(self, flush_request: Optional[_FlushRequest] = None):
+    def _export(self, flush_request: Optional[_FlushRequest] = None):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         """Exports logs considering the given flush_request.
 
         If flush_request is not None then logs are exported in batches
@@ -317,7 +317,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
             self._log_records[index] = None
         return idx
 
-    def _drain_queue(self):
+    def _drain_queue(self):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         """Export all elements until queue is empty.
 
         Can only be called from the worker thread context because it invokes
@@ -334,7 +334,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
         return flush_request
 
     @staticmethod
-    def _notify_flush_request_finished(
+    def _notify_flush_request_finished(  # type: ignore[misc, no-untyped-def] # <will add tracking issue num>
         flush_request: Optional[_FlushRequest] = None,
     ):
         if flush_request is not None:
@@ -342,7 +342,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
 
     def _get_or_create_flush_request(self) -> _FlushRequest:
         if self._flush_request is None:
-            self._flush_request = _FlushRequest()
+            self._flush_request = _FlushRequest()  # type: ignore[no-untyped-call] # <will add tracking issue num>
         return self._flush_request
 
     def emit(self, log_data: LogData) -> None:
@@ -352,23 +352,23 @@ class BatchLogRecordProcessor(LogRecordProcessor):
         if self._shutdown:
             return
         if self._pid != os.getpid():
-            _BSP_RESET_ONCE.do_once(self._at_fork_reinit)
+            _BSP_RESET_ONCE.do_once(self._at_fork_reinit)  # type: ignore[misc] # <will add tracking issue num>
 
         self._queue.appendleft(log_data)
         if len(self._queue) >= self._max_export_batch_size:
             with self._condition:
                 self._condition.notify()
 
-    def shutdown(self):
+    def shutdown(self):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         self._shutdown = True
         with self._condition:
             self._condition.notify_all()
         self._worker_thread.join()
-        self._exporter.shutdown()
+        self._exporter.shutdown()  # type: ignore[no-untyped-call] # <will add tracking issue num>
 
     def force_flush(self, timeout_millis: Optional[int] = None) -> bool:
         if timeout_millis is None:
-            timeout_millis = self._export_timeout_millis
+            timeout_millis = self._export_timeout_millis  # type: ignore[assignment] # <will add tracking issue num>
         if self._shutdown:
             return True
 
@@ -376,13 +376,13 @@ class BatchLogRecordProcessor(LogRecordProcessor):
             flush_request = self._get_or_create_flush_request()
             self._condition.notify_all()
 
-        ret = flush_request.event.wait(timeout_millis / 1e3)
+        ret = flush_request.event.wait(timeout_millis / 1e3)  # type: ignore[operator] # <will add tracking issue num>
         if not ret:
             _logger.warning("Timeout was exceeded in force_flush().")
         return ret
 
     @staticmethod
-    def _default_max_queue_size():
+    def _default_max_queue_size():  # type: ignore[misc, no-untyped-def] # <will add tracking issue num>
         try:
             return int(
                 environ.get(OTEL_BLRP_MAX_QUEUE_SIZE, _DEFAULT_MAX_QUEUE_SIZE)
@@ -396,7 +396,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
             return _DEFAULT_MAX_QUEUE_SIZE
 
     @staticmethod
-    def _default_schedule_delay_millis():
+    def _default_schedule_delay_millis():  # type: ignore[misc, no-untyped-def] # <will add tracking issue num>
         try:
             return int(
                 environ.get(
@@ -412,7 +412,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
             return _DEFAULT_SCHEDULE_DELAY_MILLIS
 
     @staticmethod
-    def _default_max_export_batch_size():
+    def _default_max_export_batch_size():  # type: ignore[misc, no-untyped-def] # <will add tracking issue num>
         try:
             return int(
                 environ.get(
@@ -429,7 +429,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
             return _DEFAULT_MAX_EXPORT_BATCH_SIZE
 
     @staticmethod
-    def _default_export_timeout_millis():
+    def _default_export_timeout_millis():  # type: ignore[misc, no-untyped-def] # <will add tracking issue num>
         try:
             return int(
                 environ.get(
@@ -445,21 +445,21 @@ class BatchLogRecordProcessor(LogRecordProcessor):
             return _DEFAULT_EXPORT_TIMEOUT_MILLIS
 
     @staticmethod
-    def _validate_arguments(
+    def _validate_arguments(  # type: ignore[misc, no-untyped-def] # <will add tracking issue num>
         max_queue_size, schedule_delay_millis, max_export_batch_size
     ):
-        if max_queue_size <= 0:
+        if max_queue_size <= 0:  # type: ignore[misc] # <will add tracking issue num>
             raise ValueError("max_queue_size must be a positive integer.")
 
-        if schedule_delay_millis <= 0:
+        if schedule_delay_millis <= 0:  # type: ignore[misc] # <will add tracking issue num>
             raise ValueError("schedule_delay_millis must be positive.")
 
-        if max_export_batch_size <= 0:
+        if max_export_batch_size <= 0:  # type: ignore[misc] # <will add tracking issue num>
             raise ValueError(
                 "max_export_batch_size must be a positive integer."
             )
 
-        if max_export_batch_size > max_queue_size:
+        if max_export_batch_size > max_queue_size:  # type: ignore[misc] # <will add tracking issue num>
             raise ValueError(
                 "max_export_batch_size must be less than or equal to max_queue_size."
             )

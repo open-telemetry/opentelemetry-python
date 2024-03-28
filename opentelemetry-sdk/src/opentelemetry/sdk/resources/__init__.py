@@ -65,7 +65,9 @@ from json import dumps
 from os import environ
 from urllib import parse
 
-from opentelemetry.attributes import BoundedAttributes
+from opentelemetry.attributes import (
+    BoundedAttributes,  # type: ignore[attr-defined] # <will add tracking issue num>
+)
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPERIMENTAL_RESOURCE_DETECTORS,
     OTEL_RESOURCE_ATTRIBUTES,
@@ -78,7 +80,7 @@ from opentelemetry.util.types import AttributeValue
 try:
     import psutil
 except ImportError:
-    psutil = None
+    psutil = None  # type: ignore[assignment] # <will add tracking issue num>
 
 LabelValue = AttributeValue
 Attributes = typing.Dict[str, LabelValue]
@@ -150,7 +152,7 @@ class Resource:
     def __init__(
         self, attributes: Attributes, schema_url: typing.Optional[str] = None
     ):
-        self._attributes = BoundedAttributes(attributes=attributes)
+        self._attributes = BoundedAttributes(attributes=attributes)  # type: ignore[misc] # <will add tracking issue num>
         if schema_url is None:
             schema_url = ""
         self._schema_url = schema_url
@@ -185,9 +187,9 @@ class Resource:
             otel_experimental_resource_detectors.append("otel")
 
         for resource_detector in otel_experimental_resource_detectors:
-            resource_detectors.append(
-                next(
-                    iter(
+            resource_detectors.append(  # type: ignore[misc] # <will add tracking issue num>
+                next(  # type: ignore[misc] # <will add tracking issue num>
+                    iter(  # type: ignore[misc] # <will add tracking issue num>
                         entry_points(
                             group="opentelemetry_resource_detector",
                             name=resource_detector.strip(),
@@ -197,7 +199,7 @@ class Resource:
             )
 
         resource = get_aggregated_resources(
-            resource_detectors, _DEFAULT_RESOURCE
+            resource_detectors, _DEFAULT_RESOURCE  # type: ignore[misc] # <will add tracking issue num>
         ).merge(Resource(attributes, schema_url))
 
         if not resource.attributes.get(SERVICE_NAME, None):
@@ -206,7 +208,7 @@ class Resource:
                 PROCESS_EXECUTABLE_NAME, None
             )
             if process_executable_name:
-                default_service_name += ":" + process_executable_name
+                default_service_name += ":" + process_executable_name  # type: ignore[misc, operator] # <will add tracking issue num>
             resource = resource.merge(
                 Resource({SERVICE_NAME: default_service_name}, schema_url)
             )
@@ -218,7 +220,7 @@ class Resource:
 
     @property
     def attributes(self) -> Attributes:
-        return self._attributes
+        return self._attributes  # type: ignore[misc, no-any-return] # <will add tracking issue num>
 
     @property
     def schema_url(self) -> str:
@@ -264,22 +266,22 @@ class Resource:
         if not isinstance(other, Resource):
             return False
         return (
-            self._attributes == other._attributes
+            self._attributes == other._attributes  # type: ignore[misc] # <will add tracking issue num>
             and self._schema_url == other._schema_url
         )
 
-    def __hash__(self):
+    def __hash__(self):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         return hash(
-            f"{dumps(self._attributes.copy(), sort_keys=True)}|{self._schema_url}"
+            f"{dumps(self._attributes.copy(), sort_keys=True)}|{self._schema_url}"  # type: ignore[misc] # <will add tracking issue num>
         )
 
-    def to_json(self, indent=4) -> str:
+    def to_json(self, indent=4) -> str:  # type: ignore[no-untyped-def] # <will add tracking issue num>
         return dumps(
-            {
-                "attributes": dict(self._attributes),
+            {  # type: ignore[misc] # <will add tracking issue num>
+                "attributes": dict(self._attributes),  # type: ignore[misc] # <will add tracking issue num>
                 "schema_url": self._schema_url,
             },
-            indent=indent,
+            indent=indent,  # type: ignore[misc] # <will add tracking issue num>
         )
 
 
@@ -294,8 +296,8 @@ _DEFAULT_RESOURCE = Resource(
 
 
 class ResourceDetector(abc.ABC):
-    def __init__(self, raise_on_error=False):
-        self.raise_on_error = raise_on_error
+    def __init__(self, raise_on_error=False):  # type: ignore[no-untyped-def] # <will add tracking issue num>
+        self.raise_on_error = raise_on_error  # type: ignore[misc] # <will add tracking issue num>
 
     @abc.abstractmethod
     def detect(self) -> "Resource":
@@ -326,7 +328,7 @@ class OTELResourceDetector(ResourceDetector):
         service_name = environ.get(OTEL_SERVICE_NAME)
         if service_name:
             env_resource_map[SERVICE_NAME] = service_name
-        return Resource(env_resource_map)
+        return Resource(env_resource_map)  # type: ignore[arg-type] # <will add tracking issue num>
 
 
 class ProcessResourceDetector(ResourceDetector):
@@ -366,10 +368,10 @@ class ProcessResourceDetector(ResourceDetector):
             process = psutil.Process()
             resource_info[PROCESS_OWNER] = process.username()
 
-        return Resource(resource_info)
+        return Resource(resource_info)  # type: ignore[arg-type] # <will add tracking issue num>
 
 
-def get_aggregated_resources(
+def get_aggregated_resources(  # type: ignore[no-untyped-def] # <will add tracking issue num>
     detectors: typing.List["ResourceDetector"],
     initial_resource: typing.Optional[Resource] = None,
     timeout=5,
@@ -389,18 +391,18 @@ def get_aggregated_resources(
             detector = detectors[detector_ind]
             detected_resource: Resource = _EMPTY_RESOURCE
             try:
-                detected_resource = future.result(timeout=timeout)
+                detected_resource = future.result(timeout=timeout)  # type: ignore[misc] # <will add tracking issue num>
             except concurrent.futures.TimeoutError as ex:
-                if detector.raise_on_error:
+                if detector.raise_on_error:  # type: ignore[misc] # <will add tracking issue num>
                     raise ex
                 logger.warning(
                     "Detector %s took longer than %s seconds, skipping",
                     detector,
-                    timeout,
+                    timeout,  # type: ignore[misc] # <will add tracking issue num>
                 )
             # pylint: disable=broad-except
             except Exception as ex:
-                if detector.raise_on_error:
+                if detector.raise_on_error:  # type: ignore[misc] # <will add tracking issue num>
                     raise ex
                 logger.warning(
                     "Exception %s in detector %s, ignoring", ex, detector
