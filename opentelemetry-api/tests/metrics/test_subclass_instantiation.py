@@ -36,7 +36,10 @@ from opentelemetry.metrics import (
 
 class MeterProviderImplTest(MeterProvider):
     def get_meter(
-        self, name: str, version: Optional[str] = None, schema_url: Optional[str] = None
+        self,
+        name: str,
+        version: Optional[str] = None,
+        schema_url: Optional[str] = None,
     ) -> Meter:
         return super().get_meter(name, version, schema_url)
 
@@ -72,7 +75,9 @@ def test_meter_subclass_instantiation():
 
 
 class SynchronousImplTest(Synchronous):
-    def __init__(self, name: str, unit: str = "", description: str = "") -> None:
+    def __init__(
+        self, name: str, unit: str = "", description: str = ""
+    ) -> None:
         super().__init__(name, unit, description)
 
 
@@ -82,7 +87,9 @@ def test_synchronous_subclass_instantiation():
 
 
 class AsynchronousImplTest(Asynchronous):
-    def __init__(self, name: str, unit: str = "", description: str = "") -> None:
+    def __init__(
+        self, name: str, unit: str = "", description: str = ""
+    ) -> None:
         super().__init__(name, unit, description)
 
 
@@ -92,7 +99,9 @@ def test_asynchronous_subclass_instantiation():
 
 
 class CounterImplTest(Counter):
-    def __init__(self, name: str, unit: str = "", description: str = "") -> None:
+    def __init__(
+        self, name: str, unit: str = "", description: str = ""
+    ) -> None:
         super().__init__(name, unit, description)
 
     def add(self, amount: int, **kwargs):
@@ -105,7 +114,9 @@ def test_counter_subclass_instantiation():
 
 
 class UpDownCounterImplTest(UpDownCounter):
-    def __init__(self, name: str, unit: str = "", description: str = "") -> None:
+    def __init__(
+        self, name: str, unit: str = "", description: str = ""
+    ) -> None:
         super().__init__(name, unit, description)
 
     def add(self, amount: int, **kwargs):
@@ -118,7 +129,9 @@ def test_up_down_counter_subclass_instantiation():
 
 
 class ObservableCounterImplTest(ObservableCounter):
-    def __init__(self, name: str, unit: str = "", description: str = "") -> None:
+    def __init__(
+        self, name: str, unit: str = "", description: str = ""
+    ) -> None:
         super().__init__(name, unit, description)
 
 
@@ -128,7 +141,9 @@ def test_observable_counter_subclass_instantiation():
 
 
 class HistogramImplTest(Histogram):
-    def __init__(self, name: str, unit: str = "", description: str = "") -> None:
+    def __init__(
+        self, name: str, unit: str = "", description: str = ""
+    ) -> None:
         super().__init__(name, unit, description)
 
     def record(self, amount: int, **kwargs):
@@ -141,7 +156,9 @@ def test_histogram_subclass_instantiation():
 
 
 class GaugeImplTest(_Gauge):
-    def __init__(self, name: str, unit: str = "", description: str = "") -> None:
+    def __init__(
+        self, name: str, unit: str = "", description: str = ""
+    ) -> None:
         super().__init__(name, unit, description)
 
     def set(self, amount: int, **kwargs):
@@ -154,7 +171,9 @@ def test_gauge_subclass_instantiation():
 
 
 class InstrumentImplTest(Instrument):
-    def __init__(self, name: str, unit: str = "", description: str = "") -> None:
+    def __init__(
+        self, name: str, unit: str = "", description: str = ""
+    ) -> None:
         super().__init__(name, unit, description)
 
 
@@ -164,7 +183,9 @@ def test_instrument_subclass_instantiation():
 
 
 class ObservableGaugeImplTest(ObservableGauge):
-    def __init__(self, name: str, unit: str = "", description: str = "") -> None:
+    def __init__(
+        self, name: str, unit: str = "", description: str = ""
+    ) -> None:
         super().__init__(name, unit, description)
 
 
@@ -174,10 +195,14 @@ def test_observable_gauge_subclass_instantiation():
 
 
 class ObservableUpDownCounterImplTest(ObservableUpDownCounter):
-    def __init__(self, name: str, unit: str = "", description: str = "") -> None:
+    def __init__(
+        self, name: str, unit: str = "", description: str = ""
+    ) -> None:
         super().__init__(name, unit, description)
 
 
 def test_observable_up_down_counter_subclass_instantiation():
-    observable_up_down_counter = ObservableUpDownCounterImplTest("subclass_test")
+    observable_up_down_counter = ObservableUpDownCounterImplTest(
+        "subclass_test"
+    )
     assert isinstance(observable_up_down_counter, ObservableUpDownCounter)

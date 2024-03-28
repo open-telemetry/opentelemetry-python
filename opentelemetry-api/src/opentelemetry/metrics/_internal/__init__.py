@@ -387,7 +387,7 @@ class Meter(ABC):
             description: A description for this instrument and what it measures.
         """
 
-    def create_gauge(
+    def create_gauge(  # type: ignore
         self,
         name: str,
         unit: str = "",
@@ -401,9 +401,7 @@ class Meter(ABC):
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
         """
-        warnings.warn(
-            "create_gauge() is not implemented and will be a no-op"
-        )
+        warnings.warn("create_gauge() is not implemented and will be a no-op")
 
     @abstractmethod
     def create_observable_gauge(
