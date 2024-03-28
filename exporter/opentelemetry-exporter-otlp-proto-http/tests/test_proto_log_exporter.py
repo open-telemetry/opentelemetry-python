@@ -58,7 +58,6 @@ ENV_TIMEOUT = "30"
 
 class TestOTLPHTTPLogExporter(unittest.TestCase):
     def test_constructor_default(self):
-
         exporter = OTLPLogExporter()
 
         self.assertEqual(
@@ -153,7 +152,6 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         },
     )
     def test_exporter_env(self):
-
         exporter = OTLPLogExporter()
 
         self.assertEqual(
@@ -183,7 +181,14 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
 
         exporter.export(logs)
         mock_sleep.assert_has_calls(
-            [call(1), call(2), call(4), call(8), call(16), call(32)]
+            [
+                call(1),
+                call(2),
+                call(4),
+                call(8),
+                call(16),
+                call(32),
+            ]
         )
 
     @staticmethod

@@ -44,7 +44,6 @@ from opentelemetry.test import TestCase
 
 
 def get_counts(buckets: Buckets) -> int:
-
     counts = []
 
     for index in range(len(buckets)):
@@ -64,7 +63,6 @@ def swap(
     first: _ExponentialBucketHistogramAggregation,
     second: _ExponentialBucketHistogramAggregation,
 ):
-
     for attribute in [
         "_positive",
         "_negative",
@@ -119,7 +117,6 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         self.assertGreaterEqual(first, (second * (1 - epsilon)))
 
     def require_equal(self, a, b):
-
         if a._sum == 0 or b._sum == 0:
             self.assertAlmostEqual(a._sum, b._sum, 1e-6)
         else:
@@ -234,9 +231,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
                 },
             ],
         ]:
-
             for permutation in permutations(test_values):
-
                 exponential_histogram_aggregation = (
                     _ExponentialBucketHistogramAggregation(
                         Mock(), Mock(), max_size=2
@@ -244,7 +239,6 @@ class TestExponentialBucketHistogramAggregation(TestCase):
                 )
 
                 for value in permutation:
-
                     exponential_histogram_aggregation.aggregate(
                         Measurement(value, Mock())
                     )
@@ -271,7 +265,6 @@ class TestExponentialBucketHistogramAggregation(TestCase):
                 )
 
     def test_ascending_sequence(self):
-
         for max_size in [3, 4, 6, 9]:
             for offset in range(-5, 6):
                 for init_scale in [0, 4]:
@@ -280,9 +273,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
     def ascending_sequence_test(
         self, max_size: int, offset: int, init_scale: int
     ):
-
         for step in range(max_size, max_size * 4):
-
             exponential_histogram_aggregation = (
                 _ExponentialBucketHistogramAggregation(
                     Mock(), Mock(), max_size=max_size
@@ -375,7 +366,6 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             )
 
     def test_reset(self):
-
         for increment in [0x1, 0x100, 0x10000, 0x100000000, 0x200000000]:
 
             def mock_increment(self, bucket_index: int) -> None:
@@ -441,7 +431,6 @@ class TestExponentialBucketHistogramAggregation(TestCase):
                 )
 
     def test_move_into(self):
-
         exponential_histogram_aggregation_0 = (
             _ExponentialBucketHistogramAggregation(
                 Mock(), Mock(), max_size=256
@@ -495,7 +484,6 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             )
 
     def test_very_large_numbers(self):
-
         exponential_histogram_aggregation = (
             _ExponentialBucketHistogramAggregation(Mock(), Mock(), max_size=2)
         )
@@ -571,7 +559,6 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         expect_balanced(3)
 
     def test_full_range(self):
-
         exponential_histogram_aggregation = (
             _ExponentialBucketHistogramAggregation(Mock(), Mock(), max_size=2)
         )
@@ -604,7 +591,6 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         self.assertLessEqual(exponential_histogram_aggregation._positive[1], 1)
 
     def test_aggregator_min_max(self):
-
         exponential_histogram_aggregation = (
             _ExponentialBucketHistogramAggregation(Mock(), Mock())
         )
@@ -630,7 +616,6 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         self.assertEqual(-1, exponential_histogram_aggregation._max)
 
     def test_aggregator_copy_swap(self):
-
         exponential_histogram_aggregation_0 = (
             _ExponentialBucketHistogramAggregation(Mock(), Mock())
         )
@@ -687,7 +672,6 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         )
 
     def test_zero_count_by_increment(self):
-
         exponential_histogram_aggregation_0 = (
             _ExponentialBucketHistogramAggregation(Mock(), Mock())
         )
@@ -730,7 +714,6 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         )
 
     def test_one_count_by_increment(self):
-
         exponential_histogram_aggregation_0 = (
             _ExponentialBucketHistogramAggregation(Mock(), Mock())
         )
@@ -773,13 +756,11 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         )
 
     def test_boundary_statistics(self):
-
         total = MAX_NORMAL_EXPONENT - MIN_NORMAL_EXPONENT + 1
 
         for scale in range(
             LogarithmMapping._min_scale, LogarithmMapping._max_scale + 1
         ):
-
             above = 0
             below = 0
 

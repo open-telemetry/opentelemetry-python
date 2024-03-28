@@ -18,18 +18,14 @@ from os import environ
 from typing import Dict, Optional, Sequence, Tuple, Union
 from typing import Sequence as TypingSequence
 
-
 from grpc import ChannelCredentials, Compression
-
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
 )
-from opentelemetry.exporter.otlp.proto.grpc.exporter import (
+from opentelemetry.exporter.otlp.proto.grpc.exporter import (  # noqa: F401
     OTLPExporterMixin,
     _get_credentials,
     environ_to_compression,
-)
-from opentelemetry.exporter.otlp.proto.grpc.exporter import (  # noqa: F401
     get_resource_data,
 )
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
@@ -42,11 +38,13 @@ from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401
     InstrumentationScope,
 )
 from opentelemetry.proto.trace.v1.trace_pb2 import (  # noqa: F401
-    ScopeSpans,
     ResourceSpans,
+    ScopeSpans,
+    Status,  # noqa: F401
+)
+from opentelemetry.proto.trace.v1.trace_pb2 import (
     Span as CollectorSpan,
 )
-from opentelemetry.proto.trace.v1.trace_pb2 import Status  # noqa: F401
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
     OTEL_EXPORTER_OTLP_TRACES_COMPRESSION,
@@ -94,7 +92,6 @@ class OTLPSpanExporter(
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
     ):
-
         if insecure is None:
             insecure = environ.get(OTEL_EXPORTER_OTLP_TRACES_INSECURE)
             if insecure is not None:

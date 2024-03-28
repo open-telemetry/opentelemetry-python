@@ -169,9 +169,7 @@ rst_epilog = """
 .. |SCM_WEB| replace:: {s}
 .. |SCM_RAW_WEB| replace:: {sr}
 .. |SCM_BRANCH| replace:: {b}
-""".format(
-    s=scm_web, sr=scm_raw_web, b=branch
-)
+""".format(s=scm_web, sr=scm_raw_web, b=branch)
 
 # used to have links to repo files
 extlinks = {

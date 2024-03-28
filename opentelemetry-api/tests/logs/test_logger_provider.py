@@ -53,7 +53,6 @@ class TestGlobals(unittest.TestCase):
             "os.environ",
             {_OTEL_PYTHON_LOGGER_PROVIDER: "test_logger_provider"},
         ):
-
             with patch("opentelemetry._logs._internal._load_provider", Mock()):
                 with patch(
                     "opentelemetry._logs._internal.cast",

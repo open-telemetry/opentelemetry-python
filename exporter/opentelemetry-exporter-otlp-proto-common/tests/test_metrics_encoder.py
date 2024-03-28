@@ -30,19 +30,20 @@ from opentelemetry.proto.metrics.v1 import metrics_pb2 as pb2
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as OTLPResource,
 )
-from opentelemetry.sdk.metrics.export import AggregationTemporality, Buckets
 from opentelemetry.sdk.metrics.export import (
-    ExponentialHistogram as ExponentialHistogramType,
-)
-from opentelemetry.sdk.metrics.export import ExponentialHistogramDataPoint
-from opentelemetry.sdk.metrics.export import Histogram as HistogramType
-from opentelemetry.sdk.metrics.export import (
+    AggregationTemporality,
+    Buckets,
+    ExponentialHistogramDataPoint,
     HistogramDataPoint,
     Metric,
     MetricsData,
     ResourceMetrics,
     ScopeMetrics,
 )
+from opentelemetry.sdk.metrics.export import (
+    ExponentialHistogram as ExponentialHistogramType,
+)
+from opentelemetry.sdk.metrics.export import Histogram as HistogramType
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import (
     InstrumentationScope as SDKInstrumentationScope,

@@ -32,7 +32,6 @@ from opentelemetry.sdk.metrics._internal.exponential_histogram.mapping.logarithm
 
 
 def left_boundary(scale: int, index: int) -> float:
-
     # This is implemented in this way to avoid using a third-party bigfloat
     # package. The Go implementation uses a bigfloat package that is part of
     # their standard library. The assumption here is that the smallest float
@@ -67,7 +66,6 @@ class TestLogarithmMapping(TestCase):
         "logarithm_mapping.LogarithmMapping._init"
     )
     def test_init_called_once(self, mock_init):
-
         LogarithmMapping(3)
         LogarithmMapping(3)
 
@@ -78,7 +76,6 @@ class TestLogarithmMapping(TestCase):
             LogarithmMapping(-1)
 
     def test_logarithm_mapping_scale_one(self):
-
         # The exponentiation factor for this logarithm exponent histogram
         # mapping is square_root(2).
         # Scale 1 means 1 division between every power of two, having
@@ -130,12 +127,10 @@ class TestLogarithmMapping(TestCase):
         )
 
     def test_logarithm_boundary(self):
-
         for scale in [1, 2, 3, 4, 10, 15]:
             logarithm_exponent_histogram_mapping = LogarithmMapping(scale)
 
             for index in [-100, -10, -1, 0, 1, 10, 100]:
-
                 lower_boundary = (
                     logarithm_exponent_histogram_mapping.get_lower_boundary(
                         index
@@ -156,7 +151,6 @@ class TestLogarithmMapping(TestCase):
                 )
 
     def test_logarithm_index_max(self):
-
         for scale in range(
             LogarithmMapping._min_scale, LogarithmMapping._max_scale + 1
         ):

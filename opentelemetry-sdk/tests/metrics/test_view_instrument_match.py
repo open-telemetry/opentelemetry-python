@@ -39,7 +39,6 @@ from opentelemetry.sdk.metrics.view import (
 class Test_ViewInstrumentMatch(TestCase):
     @classmethod
     def setUpClass(cls):
-
         cls.mock_aggregation_factory = Mock()
         cls.mock_created_aggregation = (
             cls.mock_aggregation_factory._create_aggregation()
@@ -120,7 +119,10 @@ class Test_ViewInstrumentMatch(TestCase):
             view_instrument_match._attributes_aggregation,
             {
                 frozenset(
-                    [("c", "d"), ("f", "g")]
+                    [
+                        ("c", "d"),
+                        ("f", "g"),
+                    ]
                 ): self.mock_created_aggregation
             },
         )

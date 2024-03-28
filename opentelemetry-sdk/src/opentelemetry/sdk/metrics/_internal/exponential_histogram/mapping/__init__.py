@@ -22,7 +22,6 @@ class Mapping(ABC):
 
     # pylint: disable=no-member
     def __new__(cls, scale: int):
-
         with cls._mappings_lock:
             # cls._mappings and cls._mappings_lock are implemented in each of
             # the child classes as a dictionary and a lock, respectively. They

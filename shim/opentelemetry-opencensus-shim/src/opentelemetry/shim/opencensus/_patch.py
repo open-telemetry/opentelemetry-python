@@ -19,7 +19,6 @@ from typing import Optional
 from opencensus.trace.span_context import SpanContext
 from opencensus.trace.tracer import Tracer
 from opencensus.trace.tracers.noop_tracer import NoopTracer
-
 from opentelemetry import trace
 from opentelemetry.shim.opencensus._shim_tracer import ShimTracer
 from opentelemetry.shim.opencensus.version import __version__

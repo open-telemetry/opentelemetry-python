@@ -59,7 +59,6 @@ class ChildMeter(Meter):
 
 class TestMeter(TestCase):
     def test_repeated_instrument_names(self):
-
         try:
             test_meter = NoOpMeter("name")
 

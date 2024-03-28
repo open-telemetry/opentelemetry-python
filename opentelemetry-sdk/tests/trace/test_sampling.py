@@ -251,7 +251,6 @@ class TestSampler(unittest.TestCase):
         )
 
     def test_probability_sampler_limits(self):
-
         # Sample one of every 2^64 (= 5e-20) traces. This is the lowest
         # possible meaningful sampling rate, only traces with trace ID 0x0
         # should get sampled.

@@ -15,12 +15,12 @@
 import logging
 
 import wrapt
+
 from opencensus.trace import execution_context
 from opencensus.trace.blank_span import BlankSpan
 from opencensus.trace.span_context import SpanContext
 from opencensus.trace.tracers.base import Tracer as BaseTracer
 from opencensus.trace.tracestate import Tracestate
-
 from opentelemetry import context, trace
 from opentelemetry.shim.opencensus._shim_span import ShimSpan
 
@@ -87,7 +87,7 @@ class ShimTracer(wrapt.ObjectProxy):
         wrapped: BaseTracer,
         *,
         oc_span_context: SpanContext,
-        otel_tracer: trace.Tracer
+        otel_tracer: trace.Tracer,
     ) -> None:
         super().__init__(wrapped)
         self._self_oc_span_context = oc_span_context

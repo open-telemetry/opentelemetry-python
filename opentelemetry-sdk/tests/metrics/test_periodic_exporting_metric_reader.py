@@ -134,7 +134,6 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
     def _create_periodic_reader(
         self, metrics, exporter, collect_wait=0, interval=60000, timeout=30000
     ):
-
         pmr = PeriodicExportingMetricReader(
             exporter,
             export_interval_millis=interval,

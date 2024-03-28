@@ -18,9 +18,9 @@ from time import time
 
 # pylint: disable=wrong-import-position
 from google.protobuf.timestamp_pb2 import Timestamp
+
 from opencensus.proto.agent.common.v1 import common_pb2
 from opencensus.proto.trace.v1 import trace_pb2
-
 from opentelemetry.exporter.opencensus.version import (
     __version__ as opencensusexporter_exporter_version,
 )

@@ -14,17 +14,25 @@
 import gzip
 import logging
 import zlib
-from os import environ
-from typing import Dict, Optional, Any, Callable, List
-from typing import Sequence, Mapping  # noqa: F401
-
 from io import BytesIO
+from os import environ
 from time import sleep
+from typing import (  # noqa: F401
+    Any,
+    Callable,
+    Dict,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+)
+
+import requests
 from deprecated import deprecated
 
 from opentelemetry.exporter.otlp.proto.common._internal import (
-    _get_resource_data,
     _create_exp_backoff_generator,
+    _get_resource_data,
 )
 from opentelemetry.exporter.otlp.proto.common._internal.metrics_encoder import (
     OTLPMetricExporterMixin,
@@ -33,51 +41,47 @@ from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
     encode_metrics,
 )
 from opentelemetry.exporter.otlp.proto.http import Compression
-from opentelemetry.sdk.metrics._internal.aggregation import Aggregation
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (  # noqa: F401
     ExportMetricsServiceRequest,
 )
-from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401
+from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401  # noqa: F401
     AnyValue,
     ArrayValue,
+    InstrumentationScope,
     KeyValue,
     KeyValueList,
 )
-from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401
-    InstrumentationScope,
-)
-from opentelemetry.proto.resource.v1.resource_pb2 import Resource  # noqa: F401
 from opentelemetry.proto.metrics.v1 import metrics_pb2 as pb2  # noqa: F401
-from opentelemetry.sdk.environment_variables import (
-    OTEL_EXPORTER_OTLP_ENDPOINT,
-    OTEL_EXPORTER_OTLP_CERTIFICATE,
-    OTEL_EXPORTER_OTLP_HEADERS,
-    OTEL_EXPORTER_OTLP_TIMEOUT,
-    OTEL_EXPORTER_OTLP_COMPRESSION,
-    OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
-    OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,
-    OTEL_EXPORTER_OTLP_METRICS_HEADERS,
-    OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
-    OTEL_EXPORTER_OTLP_METRICS_COMPRESSION,
-)
-from opentelemetry.sdk.metrics.export import (
-    AggregationTemporality,
-    MetricExporter,
-    MetricExportResult,
-    MetricsData,
-)
-from opentelemetry.sdk.metrics.export import (  # noqa: F401
-    Gauge,
-    Histogram as HistogramType,
-    Sum,
-)
-from opentelemetry.sdk.resources import Resource as SDKResource
-from opentelemetry.util.re import parse_env_headers
-
-import requests
+from opentelemetry.proto.resource.v1.resource_pb2 import Resource  # noqa: F401
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as PB2Resource,
 )
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_OTLP_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_COMPRESSION,
+    OTEL_EXPORTER_OTLP_ENDPOINT,
+    OTEL_EXPORTER_OTLP_HEADERS,
+    OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_METRICS_COMPRESSION,
+    OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
+    OTEL_EXPORTER_OTLP_METRICS_HEADERS,
+    OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
+    OTEL_EXPORTER_OTLP_TIMEOUT,
+)
+from opentelemetry.sdk.metrics._internal.aggregation import Aggregation
+from opentelemetry.sdk.metrics.export import (  # noqa: F401
+    AggregationTemporality,
+    Gauge,
+    MetricExporter,
+    MetricExportResult,
+    MetricsData,
+    Sum,
+)
+from opentelemetry.sdk.metrics.export import (
+    Histogram as HistogramType,
+)
+from opentelemetry.sdk.resources import Resource as SDKResource
+from opentelemetry.util.re import parse_env_headers
 
 _logger = logging.getLogger(__name__)
 
@@ -89,7 +93,6 @@ DEFAULT_TIMEOUT = 10  # in seconds
 
 
 class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
-
     _MAX_RETRY_TIMEOUT = 64
 
     def __init__(
@@ -174,7 +177,6 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         for delay in _create_exp_backoff_generator(
             max_value=self._MAX_RETRY_TIMEOUT
         ):
-
             if delay == self._MAX_RETRY_TIMEOUT:
                 return MetricExportResult.FAILURE
 

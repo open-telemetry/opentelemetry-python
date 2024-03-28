@@ -29,7 +29,6 @@ removed_symbols = defaultdict(list)
 
 
 def get_symbols(change_type, diff_lines_getter, prefix):
-
     if change_type == "D" or prefix == r"\-":
         file_path_symbols = removed_symbols
     else:
@@ -40,7 +39,6 @@ def get_symbols(change_type, diff_lines_getter, prefix):
         .diff(repo.head.commit)
         .iter_change_type(change_type)
     ):
-
         if diff_lines.b_blob is None:
             # This happens if a file has been removed completely.
             b_file_path = diff_lines.a_blob.path
@@ -53,7 +51,8 @@ def get_symbols(change_type, diff_lines_getter, prefix):
             or "opentelemetry" not in b_file_path
             or any(
                 # single leading underscore
-                part[0] == "_" and part[1] != "_"
+                part[0] == "_"
+                and part[1] != "_"
                 # tests directories
                 or part == "tests"
                 for part in b_file_path_obj.parts
@@ -124,7 +123,6 @@ def remove_common_symbols():
 
 
 if added_symbols or removed_symbols:
-
     # If a symbol is added and removed in the same commit, we consider it
     # as not added or removed.
     remove_common_symbols()

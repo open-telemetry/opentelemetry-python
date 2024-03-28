@@ -53,15 +53,9 @@ from opentelemetry.metrics._internal.instrument import (
     CallbackOptions,
     CallbackT,
     Counter,
-)
-from opentelemetry.metrics._internal.instrument import Gauge as _Gauge
-from opentelemetry.metrics._internal.instrument import (
     Histogram,
     Instrument,
     NoOpCounter,
-)
-from opentelemetry.metrics._internal.instrument import NoOpGauge as _NoOpGauge
-from opentelemetry.metrics._internal.instrument import (
     NoOpHistogram,
     NoOpObservableCounter,
     NoOpObservableGauge,
@@ -73,6 +67,8 @@ from opentelemetry.metrics._internal.instrument import (
     Synchronous,
     UpDownCounter,
 )
+from opentelemetry.metrics._internal.instrument import Gauge as _Gauge
+from opentelemetry.metrics._internal.instrument import NoOpGauge as _NoOpGauge
 from opentelemetry.metrics._internal.observation import Observation
 
 for obj in [

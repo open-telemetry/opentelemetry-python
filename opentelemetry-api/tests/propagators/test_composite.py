@@ -91,7 +91,10 @@ class TestCompositePropagator(unittest.TestCase):
 
     def test_multiple_propagators(self):
         propagator = CompositePropagator(
-            [self.mock_propagator_0, self.mock_propagator_1]
+            [
+                self.mock_propagator_0,
+                self.mock_propagator_1,
+            ]
         )
 
         new_carrier = {}
@@ -107,7 +110,10 @@ class TestCompositePropagator(unittest.TestCase):
         # test that when multiple propagators extract/inject the same
         # key, the later propagator values are extracted/injected
         propagator = CompositePropagator(
-            [self.mock_propagator_0, self.mock_propagator_2]
+            [
+                self.mock_propagator_0,
+                self.mock_propagator_2,
+            ]
         )
 
         new_carrier = {}

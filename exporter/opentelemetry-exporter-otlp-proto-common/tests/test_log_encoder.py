@@ -177,7 +177,10 @@ class TestOTLPLogEncoder(unittest.TestCase):
                                         "Do not go gentle into that good night. Rage, rage against the dying of the light"
                                     ),
                                     attributes=_encode_attributes(
-                                        {"a": 1, "b": "c"}
+                                        {
+                                            "a": 1,
+                                            "b": "c",
+                                        }
                                     ),
                                 )
                             ],
@@ -260,7 +263,10 @@ class TestOTLPLogEncoder(unittest.TestCase):
                                     severity_number=SeverityNumber.DEBUG.value,
                                     body=_encode_value("To our galaxy"),
                                     attributes=_encode_attributes(
-                                        {"a": 1, "b": "c"}
+                                        {
+                                            "a": 1,
+                                            "b": "c",
+                                        }
                                     ),
                                 ),
                             ],

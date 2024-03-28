@@ -40,7 +40,6 @@ The following code shows how to obtain a meter using the global :class:`.MeterPr
 .. versionadded:: 1.10.0
 """
 
-
 from abc import ABC, abstractmethod
 from logging import getLogger
 from os import environ
@@ -227,7 +226,12 @@ class Meter(ABC):
         """
 
         instrument_id = ",".join(
-            [name.strip().lower(), type_.__name__, unit, description]
+            [
+                name.strip().lower(),
+                type_.__name__,
+                unit,
+                description,
+            ]
         )
 
         result = False

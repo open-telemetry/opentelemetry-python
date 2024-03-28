@@ -80,7 +80,6 @@ class TestLoggingHandler(unittest.TestCase):
         handler_mock._translate.assert_not_called()
 
     def test_log_flush_noop(self):
-
         no_op_logger_provider = NoOpLoggerProvider()
         no_op_logger_provider.force_flush = Mock()
 

@@ -275,7 +275,10 @@ class TestResources(unittest.TestCase):
 
         resource_detector = Mock(spec=ResourceDetector)
         resource_detector.detect.return_value = Resource(
-            {"static_key": "try_to_overwrite_existing_value", "key": "value"}
+            {
+                "static_key": "try_to_overwrite_existing_value",
+                "key": "value",
+            }
         )
         self.assertEqual(
             get_aggregated_resources(
@@ -294,7 +297,10 @@ class TestResources(unittest.TestCase):
         resource_detector1.detect.return_value = Resource({"key1": "value1"})
         resource_detector2 = Mock(spec=ResourceDetector)
         resource_detector2.detect.return_value = Resource(
-            {"key2": "value2", "key3": "value3"}
+            {
+                "key2": "value2",
+                "key3": "value3",
+            }
         )
         resource_detector3 = Mock(spec=ResourceDetector)
         resource_detector3.detect.return_value = Resource(
@@ -307,7 +313,11 @@ class TestResources(unittest.TestCase):
 
         self.assertEqual(
             get_aggregated_resources(
-                [resource_detector1, resource_detector2, resource_detector3]
+                [
+                    resource_detector1,
+                    resource_detector2,
+                    resource_detector3,
+                ]
             ),
             _DEFAULT_RESOURCE.merge(
                 Resource({SERVICE_NAME: "unknown_service"}, "")
@@ -364,7 +374,10 @@ class TestResources(unittest.TestCase):
         with self.assertLogs(level=ERROR) as log_entry:
             self.assertEqual(
                 get_aggregated_resources(
-                    [resource_detector2, resource_detector3]
+                    [
+                        resource_detector2,
+                        resource_detector3,
+                    ]
                 ),
                 _DEFAULT_RESOURCE.merge(
                     Resource({SERVICE_NAME: "unknown_service"}, "")
@@ -448,7 +461,10 @@ class TestResources(unittest.TestCase):
         self.assertEqual(resource_env.attributes["key2"], "env_value2")
 
         resource_env_override = Resource.create(
-            {"key1": "value1", "key2": "value2"}
+            {
+                "key1": "value1",
+                "key2": "value2",
+            }
         )
         self.assertEqual(resource_env_override.attributes["key1"], "value1")
         self.assertEqual(resource_env_override.attributes["key2"], "value2")
@@ -511,9 +527,9 @@ class TestOTELResourceDetector(unittest.TestCase):
 
     def test_multiple_with_url_decode(self):
         detector = OTELResourceDetector()
-        environ[
-            OTEL_RESOURCE_ATTRIBUTES
-        ] = "key=value%20test%0A, key2=value+%202"
+        environ[OTEL_RESOURCE_ATTRIBUTES] = (
+            "key=value%20test%0A, key2=value+%202"
+        )
         self.assertEqual(
             detector.detect(),
             Resource({"key": "value test\n", "key2": "value+ 2"}),

@@ -18,3 +18,30 @@ exclude = '''
 [tool.pytest.ini_options]
 addopts = "-rs -v"
 log_cli = true
+
+[tool.ruff]
+# Minimum supported python version
+target-version = "py38"
+
+line-length = 79
+extend-exclude = [
+  # Ignore generated files
+  "exporter/opentelemetry-exporter-zipkin-proto-http/src/opentelemetry/exporter/zipkin/proto/http/v2/gen",
+  "*_pb2*.py*",
+]
+
+[tool.ruff.lint]
+select = [
+  # defaults
+  "E4",
+  "E7",
+  "E9",
+  "F",
+
+  # isort
+  "I",
+]
+
+[tool.ruff.lint.isort]
+known-third-party = ["psutil", "pytest", "redis", "redis_opentracing"]
+known-first-party = ["opentelemetry", "opentelemetry_example_app"]
