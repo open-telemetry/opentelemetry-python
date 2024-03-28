@@ -78,7 +78,7 @@ from opentelemetry.sdk.metrics.export import (  # noqa: F401
     Sum,
 )
 from opentelemetry.sdk.metrics.export import (
-    Histogram as HistogramType,
+    Histogram as HistogramType,  # noqa: F401
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.util.re import parse_env_headers

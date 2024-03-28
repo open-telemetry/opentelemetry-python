@@ -62,10 +62,10 @@ from opentelemetry.sdk.metrics.export import (  # noqa: F401
     Sum,
 )
 from opentelemetry.sdk.metrics.export import (
-    ExponentialHistogram as ExponentialHistogramType,
+    ExponentialHistogram as ExponentialHistogramType,  # noqa: F401
 )
 from opentelemetry.sdk.metrics.export import (
-    Histogram as HistogramType,
+    Histogram as HistogramType,  # noqa: F401
 )
 
 _logger = getLogger(__name__)

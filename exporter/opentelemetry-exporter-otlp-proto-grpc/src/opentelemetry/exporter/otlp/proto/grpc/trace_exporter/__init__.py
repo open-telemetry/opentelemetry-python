@@ -43,7 +43,7 @@ from opentelemetry.proto.trace.v1.trace_pb2 import (  # noqa: F401
     Status,  # noqa: F401
 )
 from opentelemetry.proto.trace.v1.trace_pb2 import (
-    Span as CollectorSpan,
+    Span as CollectorSpan,  # noqa: F401
 )
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
