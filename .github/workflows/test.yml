@@ -176,7 +176,7 @@ jobs:
           - "tornado"
           - "tortoiseorm"
           - "urllib"
-          - "urllib3v"
+          - "urllib3"
           - "wsgi"
           - "prometheus-remote-write"
           - "richconsole"
