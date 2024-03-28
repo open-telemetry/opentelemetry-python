@@ -19,6 +19,7 @@ import json
 import logging
 import threading
 import traceback
+from functools import lru_cache
 from os import environ
 from time import time_ns
 from typing import Any, Callable, Optional, Tuple, Union  # noqa
@@ -448,9 +449,6 @@ class LoggingHandler(logging.Handler):
     ) -> None:
         super().__init__(level=level)
         self._logger_provider = logger_provider or get_logger_provider()
-        self._logger = get_logger(
-            __name__, logger_provider=self._logger_provider
-        )
 
     @staticmethod
     def _get_attributes(record: logging.LogRecord) -> Attributes:
@@ -530,6 +528,7 @@ class LoggingHandler(logging.Handler):
             "WARN" if record.levelname == "WARNING" else record.levelname
         )
 
+        logger = get_logger(record.name, logger_provider=self._logger_provider)
         return LogRecord(
             timestamp=timestamp,
             observed_timestamp=observered_timestamp,
@@ -539,7 +538,7 @@ class LoggingHandler(logging.Handler):
             severity_text=level_name,
             severity_number=severity_number,
             body=body,
-            resource=self._logger.resource,
+            resource=logger.resource,
             attributes=attributes,
         )
 
@@ -549,15 +548,15 @@ class LoggingHandler(logging.Handler):
 
         The record is translated to OTel format, and then sent across the pipeline.
         """
-        if not isinstance(self._logger, NoOpLogger):
-            self._logger.emit(self._translate(record))
+        logger = get_logger(record.name, logger_provider=self._logger_provider)
+        if not isinstance(logger, NoOpLogger):
+            logger.emit(self._translate(record))
 
     def flush(self) -> None:
         """
         Flushes the logging output. Skip flushing if logger is NoOp.
         """
-        if not isinstance(self._logger, NoOpLogger):
-            self._logger_provider.force_flush()
+        self._logger_provider.force_flush()
 
 
 class Logger(APILogger):
@@ -618,6 +617,7 @@ class LoggerProvider(APILoggerProvider):
     def resource(self):
         return self._resource
 
+    @lru_cache(maxsize=None)
     def get_logger(
         self,
         name: str,
