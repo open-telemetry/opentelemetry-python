@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Make create_gauge non-abstract method
+  ([#3817](https://github.com/open-telemetry/opentelemetry-python/pull/3817))
 - Make `tracer.start_as_current_span()` decorator work with async functions
   ([#3633](https://github.com/open-telemetry/opentelemetry-python/pull/3633))
 - Fix python 3.12 deprecation warning
