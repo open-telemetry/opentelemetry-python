@@ -16,7 +16,6 @@ import asyncio
 
 from opentracing.ext import tags
 
-# pylint: disable=import-error
 from ..otel_ot_shim_tracer import MockTracer
 from ..testcase import OpenTelemetryTestCase
 from ..utils import get_one_by_tag
@@ -43,7 +42,7 @@ class Client:
 
 
 class TestAsyncio(OpenTelemetryTestCase):
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):  
         self.tracer = MockTracer()
         self.loop = asyncio.get_event_loop()
 

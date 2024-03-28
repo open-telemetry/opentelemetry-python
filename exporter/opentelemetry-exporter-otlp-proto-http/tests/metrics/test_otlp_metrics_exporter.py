@@ -77,7 +77,7 @@ OS_ENV_HEADERS = "envHeader1=val1,envHeader2=val2"
 OS_ENV_TIMEOUT = "30"
 
 
-# pylint: disable=protected-access
+
 class TestOTLPMetricExporter(TestCase):
     def setUp(self):
         self.metrics = {

@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# pylint: disable=broad-except
+
 
 from logging import ERROR
 from unittest import TestCase
@@ -31,16 +31,16 @@ class TestErrorHandler(TestCase):
             with GlobalErrorHandler():
                 raise Exception("some exception")
 
-    # pylint: disable=no-self-use
+    
     @patch("opentelemetry.sdk.error_handler.entry_points")
     def test_plugin_error_handler(self, mock_entry_points):
         class ZeroDivisionErrorHandler(ErrorHandler, ZeroDivisionError):
-            # pylint: disable=arguments-differ
+            
 
             _handle = Mock()
 
         class AssertionErrorHandler(ErrorHandler, AssertionError):
-            # pylint: disable=arguments-differ
+            
 
             _handle = Mock()
 
@@ -67,7 +67,7 @@ class TestErrorHandler(TestCase):
         with GlobalErrorHandler():
             raise error
 
-        # pylint: disable=protected-access
+        
         ZeroDivisionErrorHandler._handle.assert_called_with(error)
 
         error = AssertionError()
@@ -80,7 +80,7 @@ class TestErrorHandler(TestCase):
     @patch("opentelemetry.sdk.error_handler.entry_points")
     def test_error_in_handler(self, mock_entry_points):
         class ErrorErrorHandler(ErrorHandler, ZeroDivisionError):
-            # pylint: disable=arguments-differ
+            
 
             def _handle(self, error: Exception):
                 assert False
@@ -100,7 +100,7 @@ class TestErrorHandler(TestCase):
             with GlobalErrorHandler():
                 raise error
 
-    # pylint: disable=no-self-use
+    
     @patch("opentelemetry.sdk.error_handler.entry_points")
     def test_plugin_error_handler_context_manager(self, mock_entry_points):
         mock_error_handler_instance = Mock()
@@ -126,5 +126,5 @@ class TestErrorHandler(TestCase):
         with GlobalErrorHandler():
             pass
 
-        # pylint: disable=protected-access
+        
         mock_error_handler_instance._handle.assert_called_once_with(error)

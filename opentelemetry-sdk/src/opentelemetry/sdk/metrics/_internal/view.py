@@ -132,8 +132,8 @@ class View:
         self._attribute_keys = attribute_keys
         self._aggregation = aggregation or self._default_aggregation
 
-    # pylint: disable=too-many-return-statements
-    # pylint: disable=too-many-branches
+    
+    
     def _match(self, instrument: Instrument) -> bool:  # noqa: PLR0911
         if self._instrument_type is not None:
             if not isinstance(instrument, self._instrument_type):

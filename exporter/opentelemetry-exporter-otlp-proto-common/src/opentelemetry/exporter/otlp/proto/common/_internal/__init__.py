@@ -108,7 +108,7 @@ def _encode_attributes(
         for key, value in attributes.items():
             try:
                 pb2_attributes.append(_encode_key_value(key, value))
-            except Exception as error:  # pylint: disable=broad-except
+            except Exception as error:  
                 _logger.exception(error)
     else:
         pb2_attributes = None

@@ -20,7 +20,6 @@ from opentelemetry.exporter.zipkin.encoder import Encoder, JsonEncoder
 from opentelemetry.trace import Span
 
 
-# pylint: disable=W0223
 class V1Encoder(Encoder):
     def _extract_binary_annotations(
         self, span: Span, encoded_local_endpoint: Dict

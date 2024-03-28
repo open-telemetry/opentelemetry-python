@@ -139,7 +139,6 @@ from logging import getLogger
 from types import MappingProxyType
 from typing import Optional, Sequence
 
-# pylint: disable=unused-import
 from opentelemetry.context import Context
 from opentelemetry.sdk.environment_variables import (
     OTEL_TRACES_SAMPLER,

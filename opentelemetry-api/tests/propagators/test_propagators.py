@@ -44,7 +44,7 @@ class TestPropagators(TestCase):
             **{"side_effect": test_propagators}
         )
 
-        # pylint: disable=import-outside-toplevel
+        
         import opentelemetry.propagate
 
         reload(opentelemetry.propagate)
@@ -96,7 +96,7 @@ class TestPropagators(TestCase):
             **{"side_effect": test_propagators}
         )
 
-        # pylint: disable=import-outside-toplevel
+        
         import opentelemetry.propagate
 
         reload(opentelemetry.propagate)
@@ -106,7 +106,7 @@ class TestPropagators(TestCase):
     )
     def test_composite_propagators_error(self):
         with self.assertRaises(ValueError) as cm:
-            # pylint: disable=import-outside-toplevel
+            
             import opentelemetry.propagate
 
             reload(opentelemetry.propagate)

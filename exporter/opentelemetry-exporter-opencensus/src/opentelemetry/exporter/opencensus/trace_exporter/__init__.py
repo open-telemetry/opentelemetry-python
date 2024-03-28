@@ -35,7 +35,7 @@ DEFAULT_ENDPOINT = "localhost:55678"
 logger = logging.getLogger(__name__)
 
 
-# pylint: disable=no-member
+
 class OpenCensusSpanExporter(SpanExporter):
     """OpenCensus Collector span exporter.
 
@@ -105,7 +105,7 @@ class OpenCensusSpanExporter(SpanExporter):
         return True
 
 
-# pylint: disable=too-many-branches
+
 def translate_to_collector(spans: Sequence[ReadableSpan]):  # noqa: PLR0912
     collector_spans = []
     for span in spans:

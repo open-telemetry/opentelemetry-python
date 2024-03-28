@@ -14,18 +14,17 @@
 
 from concurrent.futures import ThreadPoolExecutor
 
-# pylint: disable=import-error
 from ..otel_ot_shim_tracer import MockTracer
 from ..testcase import OpenTelemetryTestCase
 from ..utils import await_until
 
 
 class TestThreads(OpenTelemetryTestCase):
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):  
         self.tracer = MockTracer()
         self.executor = ThreadPoolExecutor(max_workers=3)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):  
         self.executor.shutdown(False)
 
     def test_main(self):

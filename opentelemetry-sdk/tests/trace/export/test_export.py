@@ -118,7 +118,7 @@ class TestSimpleSpanProcessor(unittest.TestCase):
         self.assertListEqual(["xxx", "bar", "foo"], spans_names_list)
 
     def test_on_start_accepts_context(self):
-        # pylint: disable=no-self-use
+        
         tracer_provider = trace.TracerProvider()
         tracer = tracer_provider.get_tracer(__name__)
 
@@ -220,7 +220,7 @@ class TestBatchSpanProcessor(ConcurrencyTestBase):
         self.assertEqual(batch_span_processor.export_timeout_millis, 30000)
 
     def test_on_start_accepts_parent_context(self):
-        # pylint: disable=no-self-use
+        
         my_exporter = MySpanExporter(destination=[])
         span_processor = mock.Mock(
             wraps=export.BatchSpanProcessor(my_exporter)
@@ -415,7 +415,7 @@ class TestBatchSpanProcessor(ConcurrencyTestBase):
         "needs *nix",
     )
     def test_batch_span_processor_fork(self):
-        # pylint: disable=invalid-name
+        
         tracer_provider = trace.TracerProvider()
         tracer = tracer_provider.get_tracer(__name__)
 
@@ -583,7 +583,7 @@ class TestBatchSpanProcessor(ConcurrencyTestBase):
 
 
 class TestConsoleSpanExporter(unittest.TestCase):
-    def test_export(self):  # pylint: disable=no-self-use
+    def test_export(self):  
         """Check that the console exporter prints spans."""
 
         exporter = export.ConsoleSpanExporter()
@@ -597,11 +597,11 @@ class TestConsoleSpanExporter(unittest.TestCase):
         self.assertEqual(mock_stdout.write.call_count, 1)
         self.assertEqual(mock_stdout.flush.call_count, 1)
 
-    def test_export_custom(self):  # pylint: disable=no-self-use
+    def test_export_custom(self):  
         """Check that console exporter uses custom io, formatter."""
         mock_span_str = mock.Mock(str)
 
-        def formatter(span):  # pylint: disable=unused-argument
+        def formatter(span):  
             return mock_span_str
 
         mock_stdout = mock.Mock()

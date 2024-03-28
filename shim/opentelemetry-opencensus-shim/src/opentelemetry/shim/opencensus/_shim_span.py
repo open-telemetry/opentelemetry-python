@@ -59,7 +59,7 @@ def _opencensus_time_to_nanos(timestamp: str) -> int:
     return round(seconds_float * 1e9)
 
 
-# pylint: disable=abstract-method
+
 class ShimSpan(wrapt.ObjectProxy):
     def __init__(
         self,
@@ -112,7 +112,7 @@ class ShimSpan(wrapt.ObjectProxy):
             timestamp=timestamp,
         )
 
-    # pylint: disable=no-self-use
+    
     def add_link(self, link):
         """span links do not work with the shim because the OpenCensus Tracer does not accept
         links in start_span(). Same issue applies to SpanKind. Also see:
@@ -152,7 +152,7 @@ class ShimSpan(wrapt.ObjectProxy):
         self._self_otel_span.__enter__()
         return self
 
-    # pylint: disable=arguments-differ
+    
     def __exit__(self, exception_type, exception_value, traceback):
         self._self_otel_span.__exit__(
             exception_type, exception_value, traceback

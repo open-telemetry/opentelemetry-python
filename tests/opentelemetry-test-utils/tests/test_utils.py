@@ -21,35 +21,35 @@ class TestAssertNotRaises(TestCase):
             with self.assertNotRaises(Exception):
                 pass
 
-        except Exception as error:  # pylint: disable=broad-except
-            self.fail(  # pylint: disable=no-member
+        except Exception as error:  
+            self.fail(  
                 f"Unexpected exception {error} was raised"
             )
 
     def test_no_specified_exception_single(self):
         try:
             with self.assertNotRaises(KeyError):
-                1 / 0  # pylint: disable=pointless-statement
+                1 / 0  
 
-        except Exception as error:  # pylint: disable=broad-except
-            self.fail(  # pylint: disable=no-member
+        except Exception as error:  
+            self.fail(  
                 f"Unexpected exception {error} was raised"
             )
 
     def test_no_specified_exception_multiple(self):
         try:
             with self.assertNotRaises(KeyError, IndexError):
-                1 / 0  # pylint: disable=pointless-statement
+                1 / 0  
 
-        except Exception as error:  # pylint: disable=broad-except
-            self.fail(  # pylint: disable=no-member
+        except Exception as error:  
+            self.fail(  
                 f"Unexpected exception {error} was raised"
             )
 
     def test_exception(self):
         with self.assertRaises(AssertionError):
             with self.assertNotRaises(ZeroDivisionError):
-                1 / 0  # pylint: disable=pointless-statement
+                1 / 0  
 
     def test_missing_exception(self):
         with self.assertRaises(AssertionError) as error:

@@ -38,7 +38,7 @@ from opentelemetry.test.mock_textmap import (
 
 
 class TestShim(TestCase):
-    # pylint: disable=too-many-public-methods
+    
 
     def setUp(self):
         """Create an OpenTelemetry tracer and a shim before every test case."""

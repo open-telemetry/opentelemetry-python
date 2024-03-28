@@ -18,10 +18,10 @@ from opentelemetry.environment_variables import OTEL_PYTHON_CONTEXT
 
 
 def pytest_sessionstart(session):
-    # pylint: disable=unused-argument
+    
     environ[OTEL_PYTHON_CONTEXT] = "contextvars_context"
 
 
 def pytest_sessionfinish(session):
-    # pylint: disable=unused-argument
+    
     environ.pop(OTEL_PYTHON_CONTEXT)

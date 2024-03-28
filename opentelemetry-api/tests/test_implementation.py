@@ -29,7 +29,7 @@ class TestAPIOnlyImplementation(unittest.TestCase):
 
     def test_tracer(self):
         with self.assertRaises(TypeError):
-            # pylint: disable=abstract-class-instantiated
+            
             trace.TracerProvider()  # type:ignore
 
     def test_default_tracer(self):
@@ -50,7 +50,7 @@ class TestAPIOnlyImplementation(unittest.TestCase):
 
     def test_span(self):
         with self.assertRaises(TypeError):
-            # pylint: disable=abstract-class-instantiated
+            
             trace.Span()  # type:ignore
 
     def test_default_span(self):

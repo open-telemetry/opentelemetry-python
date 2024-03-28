@@ -209,7 +209,7 @@ class _CustomCollector:
                 for metric_family in metric_family_id_metric_family.values():
                     yield metric_family
 
-    # pylint: disable=too-many-locals,too-many-branches
+    
     def _translate_to_prometheus(  # noqa: PLR0912
         self,
         metrics_data: MetricsData,
@@ -373,7 +373,7 @@ class _CustomCollector:
         """
         return self._non_letters_digits_underscore_re.sub("_", key)
 
-    # pylint: disable=no-self-use
+    
     def _check_value(self, value: Union[int, float, str, Sequence]) -> str:
         """Check the label value and return is appropriate representation"""
         if not isinstance(value, str):

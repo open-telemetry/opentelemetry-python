@@ -16,7 +16,6 @@ import random
 import time
 from concurrent.futures import ThreadPoolExecutor
 
-# pylint: disable=import-error
 from ..otel_ot_shim_tracer import MockTracer
 from ..testcase import OpenTelemetryTestCase
 from ..utils import RefCount, get_logger
@@ -26,7 +25,7 @@ logger = get_logger(__name__)
 
 
 class TestThreads(OpenTelemetryTestCase):
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):  
         self.tracer = MockTracer()
         self.executor = ThreadPoolExecutor(max_workers=3)
 

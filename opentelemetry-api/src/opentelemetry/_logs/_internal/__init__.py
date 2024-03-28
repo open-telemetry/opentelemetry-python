@@ -113,7 +113,7 @@ class NoOpLogger(Logger):
 
 
 class ProxyLogger(Logger):
-    def __init__(  # pylint: disable=super-init-not-called
+    def __init__(  
         self,
         name: str,
         version: Optional[str] = None,
@@ -239,7 +239,7 @@ def get_logger_provider() -> LoggerProvider:
 
 def _set_logger_provider(logger_provider: LoggerProvider, log: bool) -> None:
     def set_lp() -> None:
-        global _LOGGER_PROVIDER  # pylint: disable=global-statement  # noqa: PLW0603
+        global _LOGGER_PROVIDER  
         _LOGGER_PROVIDER = logger_provider
 
     did_set = _LOGGER_PROVIDER_SET_ONCE.do_once(set_lp)

@@ -80,7 +80,7 @@ def set_oc_span_in_context(
     )
 
 
-# pylint: disable=abstract-method
+
 class ShimTracer(wrapt.ObjectProxy):
     def __init__(
         self,
@@ -122,7 +122,7 @@ class ShimTracer(wrapt.ObjectProxy):
 
         # OpenCensus's ContextTracer calls execution_context.set_current_span(span) which is
         # equivalent to the below. This can cause context to leak but is equivalent.
-        # pylint: disable=protected-access
+        
         shim_span._self_token = context.attach(ctx)
         # Also set it in OC's context, equivalent to
         # https://github.com/census-instrumentation/opencensus-python/blob/2e08df591b507612b3968be8c2538dedbf8fab37/opencensus/trace/tracers/context_tracer.py#L94
@@ -140,13 +140,13 @@ class ShimTracer(wrapt.ObjectProxy):
 
         span.finish()
 
-        # pylint: disable=protected-access
+        
         context.detach(span._self_token)
         # Also reset the OC execution_context, equivalent to
         # https://github.com/census-instrumentation/opencensus-python/blob/2e08df591b507612b3968be8c2538dedbf8fab37/opencensus/trace/tracers/context_tracer.py#L114-L117
         execution_context.set_current_span(self.current_span())
 
-    # pylint: disable=no-self-use
+    
     def current_span(self):
         return get_shim_span_in_context()
 

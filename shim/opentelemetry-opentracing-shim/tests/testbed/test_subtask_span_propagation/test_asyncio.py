@@ -14,13 +14,12 @@
 
 import asyncio
 
-# pylint: disable=import-error
 from ..otel_ot_shim_tracer import MockTracer
 from ..testcase import OpenTelemetryTestCase
 
 
 class TestAsyncio(OpenTelemetryTestCase):
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):  
         self.tracer = MockTracer()
         self.loop = asyncio.get_event_loop()
 

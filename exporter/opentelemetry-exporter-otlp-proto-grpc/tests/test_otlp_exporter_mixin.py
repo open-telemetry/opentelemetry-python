@@ -91,14 +91,14 @@ class TestOTLPExporterMixin(TestCase):
         otlp_mock_exporter = OTLPMockExporter()
 
         with self.assertLogs(level=WARNING) as warning:
-            # pylint: disable=protected-access
+            
             otlp_mock_exporter._export(Mock())
             self.assertEqual(
                 warning.records[0].message,
                 "Failed to export mock to localhost:4317, error code: None",
             )
 
-        def code(self):  # pylint: disable=function-redefined
+        def code(self):  
             return StatusCode.CANCELLED
 
         def trailing_metadata(self):
@@ -108,7 +108,7 @@ class TestOTLPExporterMixin(TestCase):
         rpc_error.trailing_metadata = MethodType(trailing_metadata, rpc_error)
 
         with self.assertLogs(level=WARNING) as warning:
-            # pylint: disable=protected-access
+            
             otlp_mock_exporter._export([])
             self.assertEqual(
                 warning.records[0].message,
@@ -137,12 +137,12 @@ class TestOTLPExporterMixin(TestCase):
         otlp_mock_exporter = OTLPMockExporter()
 
         with self.assertLogs(level=WARNING) as warning:
-            # pylint: disable=protected-access
+            
             self.assertEqual(
                 otlp_mock_exporter._export(data={}), result_mock.SUCCESS
             )
             otlp_mock_exporter.shutdown()
-            # pylint: disable=protected-access
+            
             self.assertEqual(
                 otlp_mock_exporter._export(data={}), result_mock.FAILURE
             )
@@ -185,22 +185,22 @@ class TestOTLPExporterMixin(TestCase):
 
         otlp_mock_exporter = OTLPMockExporter()
 
-        # pylint: disable=protected-access
+        
         export_thread = threading.Thread(
             target=otlp_mock_exporter._export, args=({},)
         )
         export_thread.start()
         try:
-            # pylint: disable=protected-access
+            
             self.assertTrue(otlp_mock_exporter._export_lock.locked())
             # delay is 1 second while the default shutdown timeout is 30_000 milliseconds
             start_time = time.time()
             otlp_mock_exporter.shutdown()
             now = time.time()
             self.assertGreaterEqual(now, (start_time + 30 / 1000))
-            # pylint: disable=protected-access
+            
             self.assertTrue(otlp_mock_exporter._shutdown)
-            # pylint: disable=protected-access
+            
             self.assertFalse(otlp_mock_exporter._export_lock.locked())
         finally:
             export_thread.join()

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=W0212,W0222,W0221
+
 import typing
 import unittest
 
@@ -40,7 +40,7 @@ class TestTracer(trace.NoOpTracer):
     def start_span(self, *args, **kwargs):
         return TestSpan(INVALID_SPAN_CONTEXT)
 
-    @_agnosticcontextmanager  # pylint: disable=protected-access
+    @_agnosticcontextmanager  
     def start_as_current_span(self, *args, **kwargs):  # type: ignore
         with trace.use_span(self.start_span(*args, **kwargs)) as span:  # type: ignore
             yield span

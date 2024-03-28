@@ -15,7 +15,6 @@
 import asyncio
 import random
 
-# pylint: disable=import-error
 from ..otel_ot_shim_tracer import MockTracer
 from ..testcase import OpenTelemetryTestCase
 from ..utils import get_logger, stop_loop_when
@@ -25,7 +24,7 @@ logger = get_logger(__name__)
 
 
 class TestAsyncio(OpenTelemetryTestCase):
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):  
         self.tracer = MockTracer()
         self.loop = asyncio.get_event_loop()
 

@@ -158,7 +158,7 @@ class MetricReaderStorage:
                         continue
 
                     if isinstance(
-                        # pylint: disable=protected-access
+                        
                         view_instrument_match._aggregation,
                         _SumAggregation,
                     ):
@@ -170,13 +170,13 @@ class MetricReaderStorage:
                             ),
                         )
                     elif isinstance(
-                        # pylint: disable=protected-access
+                        
                         view_instrument_match._aggregation,
                         _LastValueAggregation,
                     ):
                         data = Gauge(data_points=data_points)
                     elif isinstance(
-                        # pylint: disable=protected-access
+                        
                         view_instrument_match._aggregation,
                         _ExplicitBucketHistogramAggregation,
                     ):
@@ -185,14 +185,14 @@ class MetricReaderStorage:
                             aggregation_temporality=aggregation_temporality,
                         )
                     elif isinstance(
-                        # pylint: disable=protected-access
+                        
                         view_instrument_match._aggregation,
                         _DropAggregation,
                     ):
                         continue
 
                     elif isinstance(
-                        # pylint: disable=protected-access
+                        
                         view_instrument_match._aggregation,
                         _ExponentialBucketHistogramAggregation,
                     ):
@@ -203,7 +203,7 @@ class MetricReaderStorage:
 
                     metrics.append(
                         Metric(
-                            # pylint: disable=protected-access
+                            
                             name=view_instrument_match._name,
                             description=view_instrument_match._description,
                             unit=view_instrument_match._instrument.unit,
@@ -248,7 +248,7 @@ class MetricReaderStorage:
         view_instrument_matches: List["_ViewInstrumentMatch"],
     ) -> None:
         for view in self._sdk_config.views:
-            # pylint: disable=protected-access
+            
             if not view._match(instrument):
                 continue
 
@@ -294,7 +294,7 @@ class MetricReaderStorage:
 
         result = True
 
-        # pylint: disable=protected-access
+        
         if isinstance(instrument, Asynchronous) and isinstance(
             view._aggregation, ExplicitBucketHistogramAggregation
         ):

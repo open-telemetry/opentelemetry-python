@@ -117,7 +117,7 @@ class Span(abc.ABC):
         timestamp if the `timestamp` argument is omitted.
         """
 
-    def add_link(  # pylint: disable=no-self-use
+    def add_link(  
         self,
         context: "SpanContext",
         attributes: types.Attributes = None,
@@ -473,27 +473,27 @@ class SpanContext(
 
     @property
     def trace_id(self) -> int:
-        return self[0]  # pylint: disable=unsubscriptable-object
+        return self[0]  
 
     @property
     def span_id(self) -> int:
-        return self[1]  # pylint: disable=unsubscriptable-object
+        return self[1]  
 
     @property
     def is_remote(self) -> bool:
-        return self[2]  # pylint: disable=unsubscriptable-object
+        return self[2]  
 
     @property
     def trace_flags(self) -> "TraceFlags":
-        return self[3]  # pylint: disable=unsubscriptable-object
+        return self[3]  
 
     @property
     def trace_state(self) -> "TraceState":
-        return self[4]  # pylint: disable=unsubscriptable-object
+        return self[4]  
 
     @property
     def is_valid(self) -> bool:
-        return self[5]  # pylint: disable=unsubscriptable-object
+        return self[5]  
 
     def __setattr__(self, *args: str) -> None:
         _logger.debug(

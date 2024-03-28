@@ -28,13 +28,12 @@ from opentelemetry.test.spantestutil import (
 )
 from opentelemetry.trace import SpanKind
 
-from .common_tests import (  # pylint: disable=import-error
+from .common_tests import (
     TEST_SERVICE_NAME,
     CommonEncoderTestCases,
 )
 
 
-# pylint: disable=protected-access
 class TestProtobufEncoder(CommonEncoderTestCases.CommonEncoderTest):
     @staticmethod
     def get_encoder(*args, **kwargs) -> ProtobufEncoder:
@@ -251,7 +250,7 @@ class TestProtobufEncoder(CommonEncoderTestCases.CommonEncoderTest):
 
     def test_dropped_span_attributes(self):
         otel_span = get_span_with_dropped_attributes_events_links()
-        # pylint: disable=no-member
+        
         tags = (
             ProtobufEncoder()
             ._encode_span(otel_span, zipkin_pb2.Endpoint())

@@ -39,7 +39,7 @@ from opentelemetry.test.globals_test import (
 
 
 class TestBase(unittest.TestCase):
-    # pylint: disable=C0103
+    
 
     def setUp(self):
         super().setUp()
@@ -85,7 +85,7 @@ class TestBase(unittest.TestCase):
             self.assertIn(key, span.attributes)
             self.assertEqual(val, span.attributes[key])
 
-    def sorted_spans(self, spans):  # pylint: disable=R0201
+    def sorted_spans(self, spans):  
         """
         Sorts spans by span creation time.
 
@@ -94,7 +94,7 @@ class TestBase(unittest.TestCase):
         """
         return sorted(
             spans,
-            key=lambda s: s._start_time,  # pylint: disable=W0212
+            key=lambda s: s._start_time,  
             reverse=True,
         )
 
@@ -179,7 +179,7 @@ class TestBase(unittest.TestCase):
                 expected_data_point, metric.data.data_points, est_value_delta
             )
 
-    # pylint: disable=unidiomatic-typecheck
+    
     @staticmethod
     def is_data_points_equal(
         expected_data_point: DataPointT,

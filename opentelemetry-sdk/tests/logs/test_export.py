@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=protected-access
+
 import logging
 import multiprocessing
 import os
@@ -449,7 +449,7 @@ class TestBatchLogRecordProcessor(ConcurrencyTestBase):
         "needs *nix",
     )
     def test_batch_log_record_processor_fork(self):
-        # pylint: disable=invalid-name
+        
         exporter = InMemoryLogExporter()
         log_record_processor = BatchLogRecordProcessor(
             exporter,
@@ -494,7 +494,7 @@ class TestBatchLogRecordProcessor(ConcurrencyTestBase):
 
 
 class TestConsoleLogExporter(unittest.TestCase):
-    def test_export(self):  # pylint: disable=no-self-use
+    def test_export(self):  
         """Check that the console exporter prints log records."""
         log_data = LogData(
             log_record=LogRecord(
@@ -525,11 +525,11 @@ class TestConsoleLogExporter(unittest.TestCase):
         self.assertEqual(mock_stdout.write.call_count, 1)
         self.assertEqual(mock_stdout.flush.call_count, 1)
 
-    def test_export_custom(self):  # pylint: disable=no-self-use
+    def test_export_custom(self):  
         """Check that console exporter uses custom io, formatter."""
         mock_record_str = Mock(str)
 
-        def formatter(record):  # pylint: disable=unused-argument
+        def formatter(record):  
             return mock_record_str
 
         mock_stdout = Mock()

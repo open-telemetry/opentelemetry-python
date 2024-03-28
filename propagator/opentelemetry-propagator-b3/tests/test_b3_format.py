@@ -18,7 +18,7 @@ from unittest.mock import Mock
 
 import opentelemetry.trace as trace_api
 from opentelemetry.context import Context, get_current
-from opentelemetry.propagators.b3 import (  # pylint: disable=no-name-in-module,import-error
+from opentelemetry.propagators.b3 import (
     B3MultiFormat,
     B3SingleFormat,
 )
@@ -53,7 +53,7 @@ def get_child_parent_new_carrier(old_carrier, propagator):
 
 
 class AbstractB3FormatTestCase:
-    # pylint: disable=too-many-public-methods,no-member,invalid-name
+    
 
     @classmethod
     def setUpClass(cls):

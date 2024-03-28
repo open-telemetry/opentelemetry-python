@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=protected-access
+
 import unittest
 
 from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
@@ -811,6 +811,6 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                 )
             ]
         )
-        # pylint: disable=protected-access
+        
         actual = encode_metrics(metrics_data)
         self.assertEqual(expected, actual)

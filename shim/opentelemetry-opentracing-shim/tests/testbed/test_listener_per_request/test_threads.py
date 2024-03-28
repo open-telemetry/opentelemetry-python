@@ -16,7 +16,6 @@ from concurrent.futures import ThreadPoolExecutor
 
 from opentracing.ext import tags
 
-# pylint: disable=import-error
 from ..otel_ot_shim_tracer import MockTracer
 from ..testcase import OpenTelemetryTestCase
 from ..utils import get_one_by_tag
@@ -29,7 +28,7 @@ class Client:
         self.executor = ThreadPoolExecutor(max_workers=3)
 
     def _task(self, message, listener):
-        # pylint: disable=no-self-use
+        
         res = f"{message}::response"
         listener.on_response(res)
         return res
@@ -43,7 +42,7 @@ class Client:
 
 
 class TestThreads(OpenTelemetryTestCase):
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):  
         self.tracer = MockTracer()
 
     def test_main(self):

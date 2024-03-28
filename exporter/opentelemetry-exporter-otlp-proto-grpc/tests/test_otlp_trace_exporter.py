@@ -83,7 +83,7 @@ THIS_DIR = os.path.dirname(__file__)
 
 
 class TraceServiceServicerUNAVAILABLEDelay(TraceServiceServicer):
-    # pylint: disable=invalid-name,unused-argument,no-self-use
+    
     def Export(self, request, context):
         context.set_code(StatusCode.UNAVAILABLE)
 
@@ -105,7 +105,7 @@ class TraceServiceServicerUNAVAILABLEDelay(TraceServiceServicer):
 
 
 class TraceServiceServicerUNAVAILABLE(TraceServiceServicer):
-    # pylint: disable=invalid-name,unused-argument,no-self-use
+    
     def Export(self, request, context):
         context.set_code(StatusCode.UNAVAILABLE)
 
@@ -113,7 +113,7 @@ class TraceServiceServicerUNAVAILABLE(TraceServiceServicer):
 
 
 class TraceServiceServicerSUCCESS(TraceServiceServicer):
-    # pylint: disable=invalid-name,unused-argument,no-self-use
+    
     def Export(self, request, context):
         context.set_code(StatusCode.OK)
 
@@ -121,7 +121,7 @@ class TraceServiceServicerSUCCESS(TraceServiceServicer):
 
 
 class TraceServiceServicerALREADY_EXISTS(TraceServiceServicer):
-    # pylint: disable=invalid-name,unused-argument,no-self-use
+    
     def Export(self, request, context):
         context.set_code(StatusCode.ALREADY_EXISTS)
 
@@ -129,7 +129,7 @@ class TraceServiceServicerALREADY_EXISTS(TraceServiceServicer):
 
 
 class TestOTLPSpanExporter(TestCase):
-    # pylint: disable=too-many-public-methods
+    
 
     def setUp(self):
         tracer_provider = TracerProvider()
@@ -175,7 +175,7 @@ class TestOTLPSpanExporter(TestCase):
                         "attributes": BoundedAttributes(
                             attributes={"a": 1, "b": False}
                         ),
-                        "kind": OTLPSpan.SpanKind.SPAN_KIND_INTERNAL,  # pylint: disable=no-member
+                        "kind": OTLPSpan.SpanKind.SPAN_KIND_INTERNAL,  
                     }
                 )
             ],
@@ -227,7 +227,7 @@ class TestOTLPSpanExporter(TestCase):
         self.server.stop(None)
 
     def test_exporting(self):
-        # pylint: disable=protected-access
+        
         self.assertEqual(self.exporter._exporting, "traces")
 
     @patch.dict(
@@ -264,7 +264,7 @@ class TestOTLPSpanExporter(TestCase):
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc.trace_exporter.OTLPSpanExporter._stub"
     )
-    # pylint: disable=unused-argument
+    
     def test_no_credentials_error(
         self, mock_ssl_channel, mock_secure, mock_stub
     ):
@@ -279,10 +279,10 @@ class TestOTLPSpanExporter(TestCase):
         "opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"
     )
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel")
-    # pylint: disable=unused-argument
+    
     def test_otlp_headers_from_env(self, mock_ssl_channel, mock_secure):
         exporter = OTLPSpanExporter()
-        # pylint: disable=protected-access
+        
         self.assertEqual(
             exporter._headers,
             (
@@ -294,7 +294,7 @@ class TestOTLPSpanExporter(TestCase):
         exporter = OTLPSpanExporter(
             headers=(("key3", "value3"), ("key4", "value4"))
         )
-        # pylint: disable=protected-access
+        
         self.assertEqual(
             exporter._headers,
             (
@@ -306,7 +306,7 @@ class TestOTLPSpanExporter(TestCase):
         exporter = OTLPSpanExporter(
             headers={"key5": "value5", "key6": "value6"}
         )
-        # pylint: disable=protected-access
+        
         self.assertEqual(
             exporter._headers,
             (
@@ -321,10 +321,10 @@ class TestOTLPSpanExporter(TestCase):
         {OTEL_EXPORTER_OTLP_TRACES_INSECURE: "True"},
     )
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
-    # pylint: disable=unused-argument
+    
     def test_otlp_insecure_from_env(self, mock_insecure):
         OTLPSpanExporter()
-        # pylint: disable=protected-access
+        
         self.assertTrue(mock_insecure.called)
         self.assertEqual(
             1,
@@ -332,7 +332,7 @@ class TestOTLPSpanExporter(TestCase):
             f"expected {mock_insecure} to be called",
         )
 
-    # pylint: disable=no-self-use
+    
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel")
     def test_otlp_exporter_endpoint(self, mock_secure, mock_insecure):
@@ -399,7 +399,7 @@ class TestOTLPSpanExporter(TestCase):
             )
             mock_method.reset_mock()
 
-    # pylint: disable=no-self-use
+    
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
     @patch.dict("os.environ", {OTEL_EXPORTER_OTLP_COMPRESSION: "gzip"})
     def test_otlp_exporter_otlp_compression_envvar(
@@ -411,7 +411,7 @@ class TestOTLPSpanExporter(TestCase):
             "localhost:4317", compression=Compression.Gzip
         )
 
-    # pylint: disable=no-self-use
+    
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
     @patch.dict("os.environ", {OTEL_EXPORTER_OTLP_COMPRESSION: "gzip"})
     def test_otlp_exporter_otlp_compression_kwarg(self, mock_insecure_channel):
@@ -421,7 +421,7 @@ class TestOTLPSpanExporter(TestCase):
             "localhost:4317", compression=Compression.NoCompression
         )
 
-    # pylint: disable=no-self-use
+    
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
     @patch.dict("os.environ", {})
     def test_otlp_exporter_otlp_compression_unspecified(
@@ -433,7 +433,7 @@ class TestOTLPSpanExporter(TestCase):
             "localhost:4317", compression=Compression.NoCompression
         )
 
-    # pylint: disable=no-self-use
+    
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
     @patch.dict(
         "os.environ",
@@ -454,10 +454,10 @@ class TestOTLPSpanExporter(TestCase):
         "opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"
     )
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel")
-    # pylint: disable=unused-argument
+    
     def test_otlp_headers(self, mock_ssl_channel, mock_secure):
         exporter = OTLPSpanExporter()
-        # pylint: disable=protected-access
+        
         # This ensures that there is no other header than standard user-agent.
         self.assertEqual(
             exporter._headers,
@@ -528,7 +528,7 @@ class TestOTLPSpanExporter(TestCase):
                             ),
                             spans=[
                                 OTLPSpan(
-                                    # pylint: disable=no-member
+                                    
                                     name="a",
                                     start_time_unix_nano=self.span.start_time,
                                     end_time_unix_nano=self.span.end_time,
@@ -608,7 +608,7 @@ class TestOTLPSpanExporter(TestCase):
             ]
         )
 
-        # pylint: disable=protected-access
+        
         self.assertEqual(expected, self.exporter._translate_data([self.span]))
 
     def test_translate_spans_multi(self):
@@ -630,7 +630,7 @@ class TestOTLPSpanExporter(TestCase):
                             ),
                             spans=[
                                 OTLPSpan(
-                                    # pylint: disable=no-member
+                                    
                                     name="a",
                                     start_time_unix_nano=self.span.start_time,
                                     end_time_unix_nano=self.span.end_time,
@@ -711,7 +711,7 @@ class TestOTLPSpanExporter(TestCase):
                             ),
                             spans=[
                                 OTLPSpan(
-                                    # pylint: disable=no-member
+                                    
                                     name="c",
                                     start_time_unix_nano=self.span3.start_time,
                                     end_time_unix_nano=self.span3.end_time,
@@ -752,7 +752,7 @@ class TestOTLPSpanExporter(TestCase):
                             ),
                             spans=[
                                 OTLPSpan(
-                                    # pylint: disable=no-member
+                                    
                                     name="b",
                                     start_time_unix_nano=self.span2.start_time,
                                     end_time_unix_nano=self.span2.end_time,
@@ -780,7 +780,7 @@ class TestOTLPSpanExporter(TestCase):
             ]
         )
 
-        # pylint: disable=protected-access
+        
         self.assertEqual(
             expected,
             self.exporter._translate_data([self.span, self.span2, self.span3]),
@@ -799,7 +799,7 @@ class TestOTLPSpanExporter(TestCase):
         )
 
     def test_span_status_translate(self):
-        # pylint: disable=protected-access,no-member
+        
         unset = SDKStatus(status_code=SDKStatusCode.UNSET)
         ok = SDKStatus(status_code=SDKStatusCode.OK)
         error = SDKStatus(status_code=SDKStatusCode.ERROR)
@@ -946,16 +946,16 @@ class TestOTLPSpanExporter(TestCase):
         )
         export_thread.start()
         try:
-            # pylint: disable=protected-access
+            
             self.assertTrue(self.exporter._export_lock.locked())
             # delay is 4 seconds while the default shutdown timeout is 30_000 milliseconds
             start_time = time.time()
             self.exporter.shutdown()
             now = time.time()
             self.assertGreaterEqual(now, (start_time + 30 / 1000))
-            # pylint: disable=protected-access
+            
             self.assertTrue(self.exporter._shutdown)
-            # pylint: disable=protected-access
+            
             self.assertFalse(self.exporter._export_lock.locked())
         finally:
             export_thread.join()

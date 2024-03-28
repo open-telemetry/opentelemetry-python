@@ -400,7 +400,7 @@ class Tracer(ABC):
 
 
 class ProxyTracer(Tracer):
-    # pylint: disable=W0222,signature-differs
+    
     def __init__(
         self,
         instrumenting_module_name: str,
@@ -453,7 +453,7 @@ class NoOpTracer(Tracer):
         record_exception: bool = True,
         set_status_on_exception: bool = True,
     ) -> "Span":
-        # pylint: disable=unused-argument,no-self-use
+        
         return INVALID_SPAN
 
     @_agnosticcontextmanager
@@ -469,7 +469,7 @@ class NoOpTracer(Tracer):
         set_status_on_exception: bool = True,
         end_on_exit: bool = True,
     ) -> Iterator["Span"]:
-        # pylint: disable=unused-argument,no-self-use
+        
         yield INVALID_SPAN
 
 
@@ -508,7 +508,7 @@ def get_tracer(
 
 def _set_tracer_provider(tracer_provider: TracerProvider, log: bool) -> None:
     def set_tp() -> None:
-        global _TRACER_PROVIDER  # pylint: disable=global-statement  # noqa: PLW0603
+        global _TRACER_PROVIDER  
         _TRACER_PROVIDER = tracer_provider
 
     did_set = _TRACER_PROVIDER_SET_ONCE.do_once(set_tp)
@@ -570,7 +570,7 @@ def use_span(
         finally:
             context_api.detach(token)
 
-    except Exception as exc:  # pylint: disable=broad-except
+    except Exception as exc:  
         if isinstance(span, Span) and span.is_recording():
             # Record the exception as an event
             if record_exception:

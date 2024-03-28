@@ -21,7 +21,6 @@ from opentelemetry.metrics._internal import _ProxyMeterProvider
 from opentelemetry.util._once import Once
 
 
-# pylint: disable=protected-access
 def reset_trace_globals() -> None:
     """WARNING: only use this for tests."""
     trace_api._TRACER_PROVIDER_SET_ONCE = Once()
@@ -29,7 +28,7 @@ def reset_trace_globals() -> None:
     trace_api._PROXY_TRACER_PROVIDER = trace_api.ProxyTracerProvider()
 
 
-# pylint: disable=protected-access
+
 def reset_metrics_globals() -> None:
     """WARNING: only use this for tests."""
     metrics_api._METER_PROVIDER_SET_ONCE = Once()  # type: ignore[attr-defined]
@@ -37,7 +36,7 @@ def reset_metrics_globals() -> None:
     metrics_api._PROXY_METER_PROVIDER = _ProxyMeterProvider()  # type: ignore[attr-defined]
 
 
-# pylint: disable=protected-access
+
 def reset_logging_globals() -> None:
     """WARNING: only use this for tests."""
     logging_api._LOGGER_PROVIDER_SET_ONCE = Once()  # type: ignore[attr-defined]

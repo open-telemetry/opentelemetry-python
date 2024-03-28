@@ -59,7 +59,7 @@ class TestCounter(TestCase):
 
     def test_disallow_direct_counter_creation(self):
         with self.assertRaises(TypeError):
-            # pylint: disable=abstract-class-instantiated
+            
             Counter("name", Mock(), Mock())
 
 
@@ -78,7 +78,7 @@ class TestUpDownCounter(TestCase):
 
     def test_disallow_direct_up_down_counter_creation(self):
         with self.assertRaises(TypeError):
-            # pylint: disable=abstract-class-instantiated
+            
             UpDownCounter("name", Mock(), Mock())
 
 
@@ -232,7 +232,7 @@ class TestObservableGauge(TestCase):
 
     def test_disallow_direct_observable_gauge_creation(self):
         with self.assertRaises(TypeError):
-            # pylint: disable=abstract-class-instantiated
+            
             ObservableGauge("name", Mock(), Mock())
 
 
@@ -291,7 +291,7 @@ class TestObservableCounter(TestCase):
 
     def test_disallow_direct_observable_counter_creation(self):
         with self.assertRaises(TypeError):
-            # pylint: disable=abstract-class-instantiated
+            
             ObservableCounter("name", Mock(), Mock())
 
 
@@ -308,7 +308,7 @@ class TestGauge(TestCase):
 
     def test_disallow_direct_counter_creation(self):
         with self.assertRaises(TypeError):
-            # pylint: disable=abstract-class-instantiated
+            
             _SDKGauge("name", Mock(), Mock())
 
 
@@ -367,7 +367,7 @@ class TestObservableUpDownCounter(TestCase):
 
     def test_disallow_direct_observable_up_down_counter_creation(self):
         with self.assertRaises(TypeError):
-            # pylint: disable=abstract-class-instantiated
+            
             ObservableUpDownCounter("name", Mock(), Mock())
 
 
@@ -387,5 +387,5 @@ class TestHistogram(TestCase):
 
     def test_disallow_direct_histogram_creation(self):
         with self.assertRaises(TypeError):
-            # pylint: disable=abstract-class-instantiated
+            
             Histogram("name", Mock(), Mock())

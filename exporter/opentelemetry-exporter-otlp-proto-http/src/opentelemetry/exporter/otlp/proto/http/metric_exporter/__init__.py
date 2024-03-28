@@ -181,7 +181,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                 return MetricExportResult.FAILURE
 
             resp = self._export(serialized_data.SerializeToString())
-            # pylint: disable=no-else-return
+            
             if resp.ok:
                 return MetricExportResult.SUCCESS
             elif self._retryable(resp):

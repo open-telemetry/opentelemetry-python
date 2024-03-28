@@ -19,7 +19,6 @@ from functools import wraps
 from os import environ
 from uuid import uuid4
 
-# pylint: disable=wrong-import-position
 from opentelemetry.context.context import Context, _RuntimeContext  # noqa
 from opentelemetry.environment_variables import OTEL_PYTHON_CONTEXT
 from opentelemetry.util._importlib_metadata import entry_points
@@ -43,7 +42,7 @@ def _load_runtime_context(func: _F) -> _F:
         *args: typing.Tuple[typing.Any, typing.Any],
         **kwargs: typing.Dict[typing.Any, typing.Any],
     ) -> typing.Optional[typing.Any]:
-        global _RUNTIME_CONTEXT  # pylint: disable=global-statement  # noqa: PLW0603
+        global _RUNTIME_CONTEXT  
 
         with _RUNTIME_CONTEXT_LOCK:
             if _RUNTIME_CONTEXT is None:
@@ -65,7 +64,7 @@ def _load_runtime_context(func: _F) -> _F:
                         )
                     ).load()()
 
-                except Exception:  # pylint: disable=broad-except
+                except Exception:  
                     logger.exception(
                         "Failed to load context: %s", configured_context
                     )
@@ -160,7 +159,7 @@ def detach(token: object) -> None:
     """
     try:
         _RUNTIME_CONTEXT.detach(token)  # type: ignore
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  
         logger.exception("Failed to detach context")
 
 

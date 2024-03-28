@@ -16,7 +16,6 @@ from os import getpid
 from socket import gethostname
 from time import time
 
-# pylint: disable=wrong-import-position
 from google.protobuf.timestamp_pb2 import Timestamp
 
 from opencensus.proto.agent.common.v1 import common_pb2
@@ -41,12 +40,12 @@ def proto_timestamp_from_time_ns(time_ns):
     """
     ts = Timestamp()
     if time_ns is not None:
-        # pylint: disable=no-member
+        
         ts.FromNanoseconds(time_ns)
     return ts
 
 
-# pylint: disable=no-member
+
 def get_collector_span_kind(kind: SpanKind):
     if kind is SpanKind.SERVER:
         return trace_pb2.Span.SpanKind.SERVER
@@ -77,7 +76,7 @@ def add_proto_attribute_value(pb_attributes, key, value):
         pb_attributes.attribute_map[key].string_value.value = str(value)
 
 
-# pylint: disable=no-member
+
 def get_node(service_name, host_name):
     """Generates Node message from params and system information.
 

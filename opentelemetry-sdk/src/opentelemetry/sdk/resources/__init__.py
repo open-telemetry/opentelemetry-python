@@ -303,7 +303,7 @@ class ResourceDetector(abc.ABC):
 
 
 class OTELResourceDetector(ResourceDetector):
-    # pylint: disable=no-self-use
+    
     def detect(self) -> "Resource":
         env_resources_items = environ.get(OTEL_RESOURCE_ATTRIBUTES)
         env_resource_map = {}
@@ -329,7 +329,7 @@ class OTELResourceDetector(ResourceDetector):
 
 
 class ProcessResourceDetector(ResourceDetector):
-    # pylint: disable=no-self-use
+    
     def detect(self) -> "Resource":
         _runtime_version = ".".join(
             map(
@@ -397,7 +397,7 @@ def get_aggregated_resources(
                     detector,
                     timeout,
                 )
-            # pylint: disable=broad-except
+            
             except Exception as ex:
                 if detector.raise_on_error:
                     raise ex

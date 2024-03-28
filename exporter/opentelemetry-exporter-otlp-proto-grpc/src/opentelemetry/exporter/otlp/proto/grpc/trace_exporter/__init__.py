@@ -59,14 +59,14 @@ from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 logger = logging.getLogger(__name__)
 
 
-# pylint: disable=no-member
+
 class OTLPSpanExporter(
     SpanExporter,
     OTLPExporterMixin[
         ReadableSpan, ExportTraceServiceRequest, SpanExportResult
     ],
 ):
-    # pylint: disable=unsubscriptable-object
+    
     """OTLP span exporter
 
     Args:

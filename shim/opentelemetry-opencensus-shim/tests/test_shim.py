@@ -116,7 +116,7 @@ class TestShim(unittest.TestCase):
             with self.assertLogs(level=logging.WARNING):
                 span.span_kind = SpanKind.CLIENT
 
-    # pylint: disable=no-self-use,no-member,protected-access
+    
     def test_shim_span_contextmanager_calls_does_not_call_end(self):
         # This was a bug in first implementation where the underlying OTel span.end() was
         # called after span.__exit__ which caused double-ending the span.

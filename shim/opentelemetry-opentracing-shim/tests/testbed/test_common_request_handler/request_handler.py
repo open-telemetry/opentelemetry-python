@@ -14,7 +14,6 @@
 
 from opentracing.ext import tags
 
-# pylint: disable=import-error
 from ..utils import get_logger
 
 logger = get_logger(__name__)
@@ -43,7 +42,7 @@ class RequestHandler:
         request_context["span"] = span
 
     def after_request(self, request, request_context):
-        # pylint: disable=no-self-use
+        
         logger.info("After request %s", request)
 
         span = request_context.get("span")

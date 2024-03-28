@@ -32,7 +32,7 @@ if hasattr(typing, "ParamSpec"):
 class _AgnosticContextManager(
     contextlib._GeneratorContextManager,
     Generic[R],  # type: ignore  # FIXME use contextlib._GeneratorContextManager[R] when we drop the python 3.8 support
-):  # pylint: disable=protected-access
+):  
     """Context manager that can decorate both async and sync functions.
 
     This is an overridden version of the contextlib._GeneratorContextManager

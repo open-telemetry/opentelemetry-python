@@ -53,7 +53,7 @@ class TestPrometheusMetricReader(TestCase):
             side_effect=self._mock_registry_register,
         )
 
-    # pylint: disable=protected-access
+    
     def test_constructor(self):
         """Test the constructor."""
         with self._registry_register_patch:

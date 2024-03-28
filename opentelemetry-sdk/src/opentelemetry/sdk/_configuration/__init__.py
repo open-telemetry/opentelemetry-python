@@ -331,7 +331,7 @@ def _import_sampler(sampler_name: str) -> Optional[Sampler]:
             _logger.warning(message)
             raise ValueError(message)
         return sampler
-    except Exception as exc:  # pylint: disable=broad-except
+    except Exception as exc:  
         _logger.warning(
             "Using default sampler. Failed to initialize sampler, %s: %s",
             sampler_name,

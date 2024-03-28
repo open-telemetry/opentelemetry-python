@@ -38,7 +38,6 @@ from opentelemetry.sdk.trace import Event, ReadableSpan
 from opentelemetry.trace import Link, SpanKind
 from opentelemetry.trace.span import SpanContext, Status, TraceState
 
-# pylint: disable=E1101
 _SPAN_KIND_MAP = {
     SpanKind.INTERNAL: PB2SPan.SpanKind.SPAN_KIND_INTERNAL,
     SpanKind.SERVER: PB2SPan.SpanKind.SPAN_KIND_SERVER,

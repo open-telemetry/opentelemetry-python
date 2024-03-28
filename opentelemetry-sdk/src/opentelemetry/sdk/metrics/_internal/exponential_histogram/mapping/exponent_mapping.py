@@ -54,7 +54,7 @@ class ExponentMapping(Mapping):
         return 0
 
     def _init(self, scale: int):
-        # pylint: disable=attribute-defined-outside-init
+        
 
         super()._init(scale)
 

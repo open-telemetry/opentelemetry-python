@@ -28,13 +28,12 @@ from opentelemetry.test.spantestutil import (
 )
 from opentelemetry.trace import SpanKind, TraceFlags
 
-from .common_tests import (  # pylint: disable=import-error
+from .common_tests import (
     TEST_SERVICE_NAME,
     CommonEncoderTestCases,
 )
 
 
-# pylint: disable=protected-access
 class TestV2JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
     @staticmethod
     def get_encoder(*args, **kwargs) -> JsonV2Encoder:

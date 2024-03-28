@@ -16,7 +16,6 @@ import asyncio
 
 from opentracing.ext import tags
 
-# pylint: disable=import-error
 from ..otel_ot_shim_tracer import MockTracer
 from ..testcase import OpenTelemetryTestCase
 from ..utils import get_logger, get_one_by_operation_name, stop_loop_when
@@ -60,7 +59,7 @@ class TestAsyncio(OpenTelemetryTestCase):
     So one issue here is setting correct parent span.
     """
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):  
         self.tracer = MockTracer()
         self.loop = asyncio.get_event_loop()
         self.client = Client(RequestHandler(self.tracer), self.loop)

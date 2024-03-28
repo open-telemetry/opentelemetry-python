@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=unused-import
+
 
 from dataclasses import asdict, dataclass
 from json import dumps, loads
@@ -170,7 +170,7 @@ class Histogram:
         )
 
 
-# pylint: disable=invalid-name
+
 DataT = Union[Sum, Gauge, Histogram]
 DataPointT = Union[NumberDataPoint, HistogramDataPoint]
 

@@ -3,7 +3,6 @@ import unittest
 import opentelemetry.trace as trace_api
 
 
-# pylint: disable=C0103
 class OpenTelemetryTestCase(unittest.TestCase):
     def assertSameTrace(self, spanA, spanB):
         return self.assertEqual(spanA.context.trace_id, spanB.context.trace_id)

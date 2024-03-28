@@ -173,7 +173,7 @@ class ConsoleMetricExporter(MetricExporter):
 
 
 class MetricReader(ABC):
-    # pylint: disable=too-many-branches
+    
     """
     Base class for all metric readers
 
@@ -488,7 +488,7 @@ class PeriodicExportingMetricReader(MetricReader):
             )
             self._daemon_thread.start()
             if hasattr(os, "register_at_fork"):
-                os.register_at_fork(after_in_child=self._at_fork_reinit)  # pylint: disable=protected-access
+                os.register_at_fork(after_in_child=self._at_fork_reinit)  
         elif self._export_interval_millis <= 0:
             raise ValueError(
                 f"interval value {self._export_interval_millis} is invalid \
@@ -529,7 +529,7 @@ class PeriodicExportingMetricReader(MetricReader):
                 self._exporter.export(
                     metrics_data, timeout_millis=timeout_millis
                 )
-        except Exception as e:  # pylint: disable=broad-except,invalid-name
+        except Exception as e:  
             _logger.exception("Exception while exporting metrics %s", str(e))
         detach(token)
 

@@ -20,7 +20,7 @@ class Mapping(ABC):
     Parent class for `LogarithmMapping` and `ExponentialMapping`.
     """
 
-    # pylint: disable=no-member
+    
     def __new__(cls, scale: int):
         with cls._mappings_lock:
             # cls._mappings and cls._mappings_lock are implemented in each of
@@ -36,7 +36,7 @@ class Mapping(ABC):
 
     @abstractmethod
     def _init(self, scale: int) -> None:
-        # pylint: disable=attribute-defined-outside-init
+        
 
         if scale > self._get_max_scale():
             raise Exception(f"scale is larger than {self._max_scale}")

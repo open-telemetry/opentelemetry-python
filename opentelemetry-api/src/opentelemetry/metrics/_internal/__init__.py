@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=too-many-ancestors
+
 
 """
 The OpenTelemetry metrics API  describes the classes used to generate
@@ -77,7 +77,7 @@ from opentelemetry.util._providers import _load_provider
 _logger = getLogger(__name__)
 
 
-# pylint: disable=invalid-name
+
 _ProxyInstrumentT = Union[
     _ProxyCounter,
     _ProxyHistogram,
@@ -794,7 +794,7 @@ def get_meter(
 
 def _set_meter_provider(meter_provider: MeterProvider, log: bool) -> None:
     def set_mp() -> None:
-        global _METER_PROVIDER  # pylint: disable=global-statement  # noqa: PLW0603
+        global _METER_PROVIDER  
         _METER_PROVIDER = meter_provider
 
         # gives all proxies real instruments off the newly set meter provider

@@ -60,7 +60,7 @@ class _ViewInstrumentMatch:
             ]._create_aggregation(self._instrument, None, 0)
 
     def conflicts(self, other: "_ViewInstrumentMatch") -> bool:
-        # pylint: disable=protected-access
+        
 
         result = (
             self._name == other._name
@@ -80,7 +80,7 @@ class _ViewInstrumentMatch:
 
         return result
 
-    # pylint: disable=protected-access
+    
     def consume_measurement(self, measurement: Measurement) -> None:
         if self._view._attribute_keys is not None:
             attributes = {}

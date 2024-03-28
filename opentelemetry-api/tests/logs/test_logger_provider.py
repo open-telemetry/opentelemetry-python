@@ -33,14 +33,14 @@ class TestGlobals(unittest.TestCase):
 
     def test_set_logger_provider(self):
         lp_mock = Mock()
-        # pylint: disable=protected-access
+        
         assert logs_internal._LOGGER_PROVIDER is None
         set_logger_provider(lp_mock)
         assert logs_internal._LOGGER_PROVIDER is lp_mock
         assert get_logger_provider() is lp_mock
 
     def test_get_logger_provider(self):
-        # pylint: disable=protected-access
+        
         assert logs_internal._LOGGER_PROVIDER is None
 
         assert isinstance(

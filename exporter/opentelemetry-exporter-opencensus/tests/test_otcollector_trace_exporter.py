@@ -33,7 +33,6 @@ from opentelemetry.test.globals_test import TraceGlobalsTest
 from opentelemetry.trace import TraceFlags
 
 
-# pylint: disable=no-member
 class TestCollectorSpanExporter(TraceGlobalsTest, unittest.TestCase):
     def test_constructor(self):
         mock_get_node = mock.Mock()
@@ -78,8 +77,8 @@ class TestCollectorSpanExporter(TraceGlobalsTest, unittest.TestCase):
         self.assertIsInstance(result, Timestamp)
         self.assertEqual(result.nanos, 12345)
 
-    # pylint: disable=too-many-locals
-    # pylint: disable=too-many-statements
+    
+    
     def test_translate_to_collector(self):  # noqa: PLR0915
         trace_id = 0x6E0C63257DE34C926F9EFCD03927272E
         span_id = 0x34BF92DEEFC58C92
@@ -313,7 +312,7 @@ class TestCollectorSpanExporter(TraceGlobalsTest, unittest.TestCase):
         result_status = collector_exporter.export(otel_spans)
         self.assertEqual(SpanExportResult.SUCCESS, result_status)
 
-        # pylint: disable=unsubscriptable-object
+        
         export_arg = mock_export.call_args[0]
         service_request = next(export_arg[0])
         output_spans = getattr(service_request, "spans")

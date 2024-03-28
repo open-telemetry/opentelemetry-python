@@ -23,7 +23,7 @@ from . import BaseTestOTLPExporter, ExportStatusSpanProcessor
 
 
 class TestOTLPGRPCExporter(BaseTestOTLPExporter, TestBase):
-    # pylint: disable=no-self-use
+    
     def get_span_processor(self):
         return ExportStatusSpanProcessor(
             OTLPSpanExporter(insecure=True, timeout=1)

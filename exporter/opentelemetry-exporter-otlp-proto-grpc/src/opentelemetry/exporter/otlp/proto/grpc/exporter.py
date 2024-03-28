@@ -136,7 +136,7 @@ def _get_credentials(creds, environ_key):
     return ssl_channel_credentials()
 
 
-# pylint: disable=no-member
+
 class OTLPExporterMixin(
     ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResultT]
 ):

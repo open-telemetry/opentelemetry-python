@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=too-many-ancestors
+
 
 
 from abc import ABC, abstractmethod
@@ -31,7 +31,6 @@ from typing import (
     Union,
 )
 
-# pylint: disable=unused-import; needed for typing and sphinx
 from opentelemetry import metrics
 from opentelemetry.metrics._internal.observation import Observation
 from opentelemetry.util.types import Attributes
@@ -55,7 +54,7 @@ class CallbackOptions:
 
 
 InstrumentT = TypeVar("InstrumentT", bound="Instrument")
-# pylint: disable=invalid-name
+
 CallbackT = Union[
     Callable[[CallbackOptions], Iterable[Observation]],
     Generator[Iterable[Observation], CallbackOptions, None],

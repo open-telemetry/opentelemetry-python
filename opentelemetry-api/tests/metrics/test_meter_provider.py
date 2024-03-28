@@ -175,7 +175,7 @@ class TestProxy(MetricsGlobalsTest, TestCase):
         self.assertIsInstance(meter2, Mock)
         mock_real_mp.get_meter.assert_called_with(another_name, None, None)
 
-    # pylint: disable=too-many-locals
+    
     def test_proxy_meter(self):  # noqa: PLR0915
         meter_name = "foo"
         proxy_meter: _ProxyMeter = _ProxyMeterProvider().get_meter(meter_name)

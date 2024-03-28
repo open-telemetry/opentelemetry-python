@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=too-many-lines
+
 
 from abc import ABC, abstractmethod
 from bisect import bisect_left
@@ -515,7 +515,7 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             return None
 
 
-# pylint: disable=protected-access
+
 class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
     # _min_max_size and _max_max_size are the smallest and largest values
     # the max_size parameter may have, respectively.
@@ -602,7 +602,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         self._previous_negative = None
 
     def aggregate(self, measurement: Measurement) -> None:
-        # pylint: disable=too-many-branches,too-many-statements, too-many-locals
+        
 
         with self._lock:
             value = measurement.value
@@ -716,7 +716,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         """
         Atomically return a point for the current value of the metric.
         """
-        # pylint: disable=too-many-statements, too-many-locals
+        
 
         with self._lock:
             if self._count == 0:
@@ -1050,7 +1050,7 @@ class DefaultAggregation(Aggregation):
         attributes: Attributes,
         start_time_unix_nano: int,
     ) -> _Aggregation:
-        # pylint: disable=too-many-return-statements
+        
         if isinstance(instrument, Counter):
             return _SumAggregation(
                 attributes,

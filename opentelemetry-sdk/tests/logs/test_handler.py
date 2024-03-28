@@ -64,7 +64,7 @@ class TestLoggingHandler(unittest.TestCase):
             logger.critical("No Time For Caution")
         self.assertEqual(emitter_mock.emit.call_count, 2)
 
-    # pylint: disable=protected-access
+    
     def test_log_record_emit_noop(self):
         noop_logger_provder = NoOpLoggerProvider()
         logger_mock = APIGetLogger(

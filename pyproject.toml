@@ -46,6 +46,9 @@ select = [
 
   # Pylint
   "PL",
+
+  # flake8-slf (private-member-access)
+  # "SLF001",
 ]
 
 ignore = [

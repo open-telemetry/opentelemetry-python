@@ -16,7 +16,6 @@ from concurrent.futures import ThreadPoolExecutor
 
 from opentracing.ext import tags
 
-# pylint: disable=import-error
 from ..otel_ot_shim_tracer import MockTracer
 from ..testcase import OpenTelemetryTestCase
 from ..utils import get_logger, get_one_by_operation_name
@@ -60,7 +59,7 @@ class TestThreads(OpenTelemetryTestCase):
     activate span. So one issue here is setting correct parent span.
     """
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):  
         self.tracer = MockTracer()
         self.executor = ThreadPoolExecutor(max_workers=3)
         self.client = Client(RequestHandler(self.tracer), self.executor)

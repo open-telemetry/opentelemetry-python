@@ -47,6 +47,6 @@ def _load_provider(
                 )
             ).load()(),
         )
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  
         logger.exception("Failed to load configured provider %s", provider)
         raise
