@@ -518,6 +518,10 @@ class PeriodicExportingMetricReader(MetricReader):
                     interval_secs,
                     exc_info=True,
                 )
+            except Exception as e:  # pylint: disable=broad-except,invalid-name
+                _logger.exception(
+                    "Exception while collecting metrics %s", str(e)
+                )
         # one last collection below before shutting down completely
         self.collect(timeout_millis=self._export_interval_millis)
 
