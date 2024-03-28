@@ -28,7 +28,6 @@ class Client:
         self.executor = ThreadPoolExecutor(max_workers=3)
 
     def _task(self, message, listener):
-        
         res = f"{message}::response"
         listener.on_response(res)
         return res
@@ -42,7 +41,7 @@ class Client:
 
 
 class TestThreads(OpenTelemetryTestCase):
-    def setUp(self):  
+    def setUp(self):
         self.tracer = MockTracer()
 
     def test_main(self):

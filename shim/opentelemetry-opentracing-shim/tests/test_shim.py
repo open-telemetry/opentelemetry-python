@@ -38,8 +38,6 @@ from opentelemetry.test.mock_textmap import (
 
 
 class TestShim(TestCase):
-    
-
     def setUp(self):
         """Create an OpenTelemetry tracer and a shim before every test case."""
         trace.set_tracer_provider(TracerProvider())

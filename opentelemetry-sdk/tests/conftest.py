@@ -18,10 +18,8 @@ from opentelemetry.environment_variables import OTEL_PYTHON_CONTEXT
 
 
 def pytest_sessionstart(session):
-    
     environ[OTEL_PYTHON_CONTEXT] = "contextvars_context"
 
 
 def pytest_sessionfinish(session):
-    
     environ.pop(OTEL_PYTHON_CONTEXT)

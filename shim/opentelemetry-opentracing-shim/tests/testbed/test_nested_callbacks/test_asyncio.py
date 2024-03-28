@@ -20,7 +20,7 @@ from ..utils import stop_loop_when
 
 
 class TestAsyncio(OpenTelemetryTestCase):
-    def setUp(self):  
+    def setUp(self):
         self.tracer = MockTracer()
         self.loop = asyncio.get_event_loop()
 

@@ -29,7 +29,6 @@ class TestAPIOnlyImplementation(unittest.TestCase):
 
     def test_tracer(self):
         with self.assertRaises(TypeError):
-            
             trace.TracerProvider()  # type:ignore
 
     def test_default_tracer(self):
@@ -50,7 +49,6 @@ class TestAPIOnlyImplementation(unittest.TestCase):
 
     def test_span(self):
         with self.assertRaises(TypeError):
-            
             trace.Span()  # type:ignore
 
     def test_default_span(self):

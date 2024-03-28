@@ -25,7 +25,7 @@ class TestObservation(TestCase):
 
             # float
             Observation(321.321, {"hello": "world"})
-        except Exception:  
+        except Exception:
             self.fail(
                 "Unexpected exception raised when instantiating Observation"
             )

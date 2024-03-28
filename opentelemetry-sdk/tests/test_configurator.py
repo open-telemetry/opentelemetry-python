@@ -318,7 +318,6 @@ class TestTraceInit(TestCase):
         self.get_processor_patcher.stop()
         self.set_provider_patcher.stop()
 
-    
     @patch.dict(
         environ, {"OTEL_RESOURCE_ATTRIBUTES": "service.name=my-test-service"}
     )
@@ -567,7 +566,7 @@ class TestTraceInit(TestCase):
 
     def verify_default_sampler(self, tracer_provider):
         self.assertIsInstance(tracer_provider.sampler, ParentBased)
-        
+
         self.assertEqual(tracer_provider.sampler._root, ALWAYS_ON)
 
 

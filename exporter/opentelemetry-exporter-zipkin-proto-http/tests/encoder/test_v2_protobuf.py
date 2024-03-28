@@ -250,7 +250,7 @@ class TestProtobufEncoder(CommonEncoderTestCases.CommonEncoderTest):
 
     def test_dropped_span_attributes(self):
         otel_span = get_span_with_dropped_attributes_events_links()
-        
+
         tags = (
             ProtobufEncoder()
             ._encode_span(otel_span, zipkin_pb2.Endpoint())

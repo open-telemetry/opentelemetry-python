@@ -513,29 +513,15 @@ def parse_subargs(parentargs, args):
 
 
 def lint_args(args):
-    rootdir = str(find_projectroot())
-
     runsubprocess(
         args.dry_run,
-        ("black", "--config", "pyproject.toml", ".")
-        + (("--diff", "--check") if args.check_only else ()),
-        cwd=rootdir,
+        ("ruff", "check") + (() if args.check_only else ("--fix",)),
         check=True,
     )
     runsubprocess(
         args.dry_run,
-        ("isort", "--settings-path", ".isort.cfg", ".")
-        + (("--diff", "--check-only") if args.check_only else ()),
-        cwd=rootdir,
+        ("ruff", "format") + (("--diff",) if args.check_only else ()),
         check=True,
-    )
-    runsubprocess(
-        args.dry_run, ("flake8", "--config", ".flake8", rootdir), check=True
-    )
-    execute_args(
-        parse_subargs(
-            args, ("exec", "pylint {}", "--all", "--mode", "lintroots")
-        )
     )
     execute_args(
         parse_subargs(

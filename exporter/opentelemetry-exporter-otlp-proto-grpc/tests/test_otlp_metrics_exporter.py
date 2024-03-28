@@ -81,7 +81,6 @@ THIS_DIR = dirname(__file__)
 
 
 class MetricsServiceServicerUNAVAILABLEDelay(MetricsServiceServicer):
-    
     def Export(self, request, context):
         context.set_code(StatusCode.UNAVAILABLE)
 
@@ -103,7 +102,6 @@ class MetricsServiceServicerUNAVAILABLEDelay(MetricsServiceServicer):
 
 
 class MetricsServiceServicerUNAVAILABLE(MetricsServiceServicer):
-    
     def Export(self, request, context):
         context.set_code(StatusCode.UNAVAILABLE)
 
@@ -111,7 +109,6 @@ class MetricsServiceServicerUNAVAILABLE(MetricsServiceServicer):
 
 
 class MetricsServiceServicerUNKNOWN(MetricsServiceServicer):
-    
     def Export(self, request, context):
         context.set_code(StatusCode.UNKNOWN)
 
@@ -119,7 +116,6 @@ class MetricsServiceServicerUNKNOWN(MetricsServiceServicer):
 
 
 class MetricsServiceServicerSUCCESS(MetricsServiceServicer):
-    
     def Export(self, request, context):
         context.set_code(StatusCode.OK)
 
@@ -127,7 +123,6 @@ class MetricsServiceServicerSUCCESS(MetricsServiceServicer):
 
 
 class MetricsServiceServicerALREADY_EXISTS(MetricsServiceServicer):
-    
     def Export(self, request, context):
         context.set_code(StatusCode.ALREADY_EXISTS)
 
@@ -135,8 +130,6 @@ class MetricsServiceServicerALREADY_EXISTS(MetricsServiceServicer):
 
 
 class TestOTLPMetricExporter(TestCase):
-    
-
     def setUp(self):
         self.exporter = OTLPMetricExporter()
 
@@ -175,7 +168,6 @@ class TestOTLPMetricExporter(TestCase):
         self.server.stop(None)
 
     def test_exporting(self):
-        
         self.assertEqual(self.exporter._exporting, "metrics")
 
     @patch.dict(
@@ -183,7 +175,6 @@ class TestOTLPMetricExporter(TestCase):
         {OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "DELTA"},
     )
     def test_preferred_temporality(self):
-        
         exporter = OTLPMetricExporter(
             preferred_temporality={Counter: AggregationTemporality.CUMULATIVE}
         )
@@ -246,7 +237,6 @@ class TestOTLPMetricExporter(TestCase):
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc.metric_exporter.OTLPMetricExporter._stub"
     )
-    
     def test_no_credentials_error(
         self, mock_ssl_channel, mock_secure, mock_stub
     ):
@@ -261,10 +251,9 @@ class TestOTLPMetricExporter(TestCase):
         "opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"
     )
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel")
-    
     def test_otlp_headers_from_env(self, mock_ssl_channel, mock_secure):
         exporter = OTLPMetricExporter()
-        
+
         self.assertEqual(
             exporter._headers,
             (
@@ -276,7 +265,7 @@ class TestOTLPMetricExporter(TestCase):
         exporter = OTLPMetricExporter(
             headers=(("key3", "value3"), ("key4", "value4"))
         )
-        
+
         self.assertEqual(
             exporter._headers,
             (
@@ -291,10 +280,9 @@ class TestOTLPMetricExporter(TestCase):
         {OTEL_EXPORTER_OTLP_METRICS_INSECURE: "True"},
     )
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
-    
     def test_otlp_insecure_from_env(self, mock_insecure):
         OTLPMetricExporter()
-        
+
         self.assertTrue(mock_insecure.called)
         self.assertEqual(
             1,
@@ -302,7 +290,6 @@ class TestOTLPMetricExporter(TestCase):
             f"expected {mock_insecure} to be called",
         )
 
-    
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel")
     def test_otlp_exporter_endpoint(self, mock_secure, mock_insecure):
@@ -354,7 +341,7 @@ class TestOTLPMetricExporter(TestCase):
                 mock_secure,
             ),
         ]
-        
+
         for endpoint, insecure, mock_method in endpoints:
             OTLPMetricExporter(endpoint=endpoint, insecure=insecure)
             self.assertEqual(
@@ -373,7 +360,6 @@ class TestOTLPMetricExporter(TestCase):
             )
             mock_method.reset_mock()
 
-    
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc.exporter._create_exp_backoff_generator"
     )
@@ -388,7 +374,6 @@ class TestOTLPMetricExporter(TestCase):
             "localhost:4317", compression=Compression.Gzip
         )
 
-    
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
     @patch.dict("os.environ", {OTEL_EXPORTER_OTLP_COMPRESSION: "gzip"})
     def test_otlp_exporter_otlp_compression_kwarg(self, mock_insecure_channel):
@@ -400,7 +385,6 @@ class TestOTLPMetricExporter(TestCase):
             "localhost:4317", compression=Compression.NoCompression
         )
 
-    
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
     @patch.dict("os.environ", {})
     def test_otlp_exporter_otlp_compression_unspecified(
@@ -512,7 +496,6 @@ class TestOTLPMetricExporter(TestCase):
         )
         # WHEN
         split_metrics_data: List[MetricsData] = list(
-            
             OTLPMetricExporter(max_export_batch_size=2)._split_metrics_data(
                 metrics_data=metrics_data,
             )
@@ -591,7 +574,6 @@ class TestOTLPMetricExporter(TestCase):
         )
         # WHEN
         split_metrics_data: List[MetricsData] = list(
-            
             OTLPMetricExporter(max_export_batch_size=3)._split_metrics_data(
                 metrics_data=metrics_data,
             )
@@ -682,7 +664,6 @@ class TestOTLPMetricExporter(TestCase):
         )
         # WHEN
         split_metrics_data: List[MetricsData] = list(
-            
             OTLPMetricExporter(max_export_batch_size=2)._split_metrics_data(
                 metrics_data=metrics_data,
             )
@@ -791,23 +772,20 @@ class TestOTLPMetricExporter(TestCase):
         )
         export_thread.start()
         try:
-            
             self.assertTrue(self.exporter._export_lock.locked())
             # delay is 4 seconds while the default shutdown timeout is 30_000 milliseconds
             start_time = time.time()
             self.exporter.shutdown()
             now = time.time()
             self.assertGreaterEqual(now, (start_time + 30 / 1000))
-            
+
             self.assertTrue(self.exporter._shutdown)
-            
+
             self.assertFalse(self.exporter._export_lock.locked())
         finally:
             export_thread.join()
 
     def test_aggregation_temporality(self):
-        
-
         otlp_metric_exporter = OTLPMetricExporter()
 
         for (
@@ -909,7 +887,6 @@ class TestOTLPMetricExporter(TestCase):
 
     def test_exponential_explicit_bucket_histogram(self):
         self.assertIsInstance(
-            
             OTLPMetricExporter()._preferred_aggregation[Histogram],
             ExplicitBucketHistogramAggregation,
         )
@@ -921,7 +898,6 @@ class TestOTLPMetricExporter(TestCase):
             },
         ):
             self.assertIsInstance(
-                
                 OTLPMetricExporter()._preferred_aggregation[Histogram],
                 ExponentialBucketHistogramAggregation,
             )
@@ -932,7 +908,6 @@ class TestOTLPMetricExporter(TestCase):
         ):
             with self.assertLogs(level=WARNING) as log:
                 self.assertIsInstance(
-                    
                     OTLPMetricExporter()._preferred_aggregation[Histogram],
                     ExplicitBucketHistogramAggregation,
                 )
@@ -952,7 +927,6 @@ class TestOTLPMetricExporter(TestCase):
             },
         ):
             self.assertIsInstance(
-                
                 OTLPMetricExporter()._preferred_aggregation[Histogram],
                 ExplicitBucketHistogramAggregation,
             )
@@ -969,7 +943,6 @@ class TestOTLPMetricExporter(TestCase):
         )
 
         self.assertEqual(
-            
             exporter._preferred_aggregation[Histogram],
             histogram_aggregation,
         )

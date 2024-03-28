@@ -28,13 +28,11 @@ def reset_trace_globals() -> None:
     trace_api._PROXY_TRACER_PROVIDER = trace_api.ProxyTracerProvider()
 
 
-
 def reset_metrics_globals() -> None:
     """WARNING: only use this for tests."""
     metrics_api._METER_PROVIDER_SET_ONCE = Once()  # type: ignore[attr-defined]
     metrics_api._METER_PROVIDER = None  # type: ignore[attr-defined]
     metrics_api._PROXY_METER_PROVIDER = _ProxyMeterProvider()  # type: ignore[attr-defined]
-
 
 
 def reset_logging_globals() -> None:

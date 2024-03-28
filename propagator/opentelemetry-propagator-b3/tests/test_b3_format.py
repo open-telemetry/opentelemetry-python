@@ -53,8 +53,6 @@ def get_child_parent_new_carrier(old_carrier, propagator):
 
 
 class AbstractB3FormatTestCase:
-    
-
     @classmethod
     def setUpClass(cls):
         generator = id_generator.RandomIdGenerator()

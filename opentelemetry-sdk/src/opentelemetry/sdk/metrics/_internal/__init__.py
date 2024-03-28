@@ -429,7 +429,6 @@ class MeterProvider(APIMeterProvider):
                     timeout_millis=(deadline_ns - current_ts) / 10**6
                 )
 
-            
             except Exception as error:
                 metric_reader_error[metric_reader] = error
 
@@ -473,7 +472,6 @@ class MeterProvider(APIMeterProvider):
                     timeout_millis=(deadline_ns - current_ts) / 10**6
                 )
 
-            
             except Exception as error:
                 metric_reader_error[metric_reader] = error
 

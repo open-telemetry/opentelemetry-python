@@ -59,7 +59,7 @@ class TestAsyncio(OpenTelemetryTestCase):
     So one issue here is setting correct parent span.
     """
 
-    def setUp(self):  
+    def setUp(self):
         self.tracer = MockTracer()
         self.loop = asyncio.get_event_loop()
         self.client = Client(RequestHandler(self.tracer), self.loop)

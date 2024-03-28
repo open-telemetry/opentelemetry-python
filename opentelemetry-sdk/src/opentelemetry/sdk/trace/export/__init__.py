@@ -111,7 +111,7 @@ class SimpleSpanProcessor(SpanProcessor):
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
             self.span_exporter.export((span,))
-        
+
         except Exception:
             logger.exception("Exception while exporting Span.")
         detach(token)
@@ -120,7 +120,6 @@ class SimpleSpanProcessor(SpanProcessor):
         self.span_exporter.shutdown()
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
-        
         return True
 
 
@@ -200,7 +199,7 @@ class BatchSpanProcessor(SpanProcessor):
         self.spans_list = [None] * self.max_export_batch_size  # type: typing.List[typing.Optional[Span]]
         self.worker_thread.start()
         if hasattr(os, "register_at_fork"):
-            os.register_at_fork(after_in_child=self._at_fork_reinit)  
+            os.register_at_fork(after_in_child=self._at_fork_reinit)
         self._pid = os.getpid()
 
     def on_start(
@@ -358,7 +357,7 @@ class BatchSpanProcessor(SpanProcessor):
             # Ignore type b/c the Optional[None]+slicing is too "clever"
             # for mypy
             self.span_exporter.export(self.spans_list[:idx])  # type: ignore
-        except Exception:  
+        except Exception:
             logger.exception("Exception while exporting Span batch.")
         detach(token)
 

@@ -62,7 +62,6 @@ THIS_DIR = dirname(__file__)
 
 
 class LogsServiceServicerUNAVAILABLEDelay(LogsServiceServicer):
-    
     def Export(self, request, context):
         context.set_code(StatusCode.UNAVAILABLE)
 
@@ -84,7 +83,6 @@ class LogsServiceServicerUNAVAILABLEDelay(LogsServiceServicer):
 
 
 class LogsServiceServicerUNAVAILABLE(LogsServiceServicer):
-    
     def Export(self, request, context):
         context.set_code(StatusCode.UNAVAILABLE)
 
@@ -92,7 +90,6 @@ class LogsServiceServicerUNAVAILABLE(LogsServiceServicer):
 
 
 class LogsServiceServicerSUCCESS(LogsServiceServicer):
-    
     def Export(self, request, context):
         context.set_code(StatusCode.OK)
 
@@ -100,7 +97,6 @@ class LogsServiceServicerSUCCESS(LogsServiceServicer):
 
 
 class LogsServiceServicerALREADY_EXISTS(LogsServiceServicer):
-    
     def Export(self, request, context):
         context.set_code(StatusCode.ALREADY_EXISTS)
 
@@ -169,7 +165,6 @@ class TestOTLPLogExporter(TestCase):
         self.server.stop(None)
 
     def test_exporting(self):
-        
         self.assertEqual(self.exporter._exporting, "logs")
 
     @patch.dict(
@@ -205,14 +200,12 @@ class TestOTLPLogExporter(TestCase):
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc._log_exporter.OTLPLogExporter._stub"
     )
-    
     def test_no_credentials_error(
         self, mock_ssl_channel, mock_secure, mock_stub
     ):
         OTLPLogExporter(insecure=False)
         self.assertTrue(mock_ssl_channel.called)
 
-    
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel")
     def test_otlp_exporter_endpoint(self, mock_secure, mock_insecure):
@@ -265,7 +258,6 @@ class TestOTLPLogExporter(TestCase):
             ),
         ]
 
-        
         for endpoint, insecure, mock_method in endpoints:
             OTLPLogExporter(endpoint=endpoint, insecure=insecure)
             self.assertEqual(
@@ -285,7 +277,6 @@ class TestOTLPLogExporter(TestCase):
             mock_method.reset_mock()
 
     def test_otlp_headers_from_env(self):
-        
         self.assertEqual(
             self.exporter._headers,
             (("user-agent", "OTel-OTLP-Exporter-Python/" + __version__),),
@@ -355,7 +346,6 @@ class TestOTLPLogExporter(TestCase):
                             ),
                             log_records=[
                                 PB2LogRecord(
-                                    
                                     time_unix_nano=self.log_data_1.log_record.timestamp,
                                     severity_number=self.log_data_1.log_record.severity_number.value,
                                     severity_text="WARNING",
@@ -391,7 +381,6 @@ class TestOTLPLogExporter(TestCase):
             ]
         )
 
-        
         self.assertEqual(
             expected, self.exporter._translate_data([self.log_data_1])
         )
@@ -414,7 +403,6 @@ class TestOTLPLogExporter(TestCase):
                             ),
                             log_records=[
                                 PB2LogRecord(
-                                    
                                     time_unix_nano=self.log_data_1.log_record.timestamp,
                                     severity_number=self.log_data_1.log_record.severity_number.value,
                                     severity_text="WARNING",
@@ -451,7 +439,6 @@ class TestOTLPLogExporter(TestCase):
                             ),
                             log_records=[
                                 PB2LogRecord(
-                                    
                                     time_unix_nano=self.log_data_2.log_record.timestamp,
                                     severity_number=self.log_data_2.log_record.severity_number.value,
                                     severity_text="INFO",
@@ -496,7 +483,6 @@ class TestOTLPLogExporter(TestCase):
                             ),
                             log_records=[
                                 PB2LogRecord(
-                                    
                                     time_unix_nano=self.log_data_3.log_record.timestamp,
                                     severity_number=self.log_data_3.log_record.severity_number.value,
                                     severity_text="ERROR",
@@ -523,7 +509,6 @@ class TestOTLPLogExporter(TestCase):
             ]
         )
 
-        
         self.assertEqual(
             expected,
             self.exporter._translate_data(

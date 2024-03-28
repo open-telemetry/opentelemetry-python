@@ -59,7 +59,7 @@ class TestThreads(OpenTelemetryTestCase):
     activate span. So one issue here is setting correct parent span.
     """
 
-    def setUp(self):  
+    def setUp(self):
         self.tracer = MockTracer()
         self.executor = ThreadPoolExecutor(max_workers=3)
         self.client = Client(RequestHandler(self.tracer), self.executor)

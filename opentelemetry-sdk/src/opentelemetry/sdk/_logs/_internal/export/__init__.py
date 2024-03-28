@@ -127,7 +127,7 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
             self._exporter.export((log_data,))
-        except Exception:  
+        except Exception:
             _logger.exception("Exception while exporting logs.")
         detach(token)
 
@@ -135,7 +135,7 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
         self._shutdown = True
         self._exporter.shutdown()
 
-    def force_flush(self, timeout_millis: int = 30000) -> bool:  
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
         return True
 
 
@@ -215,7 +215,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
         self._log_records = [None] * self._max_export_batch_size
         self._worker_thread.start()
         if hasattr(os, "register_at_fork"):
-            os.register_at_fork(after_in_child=self._at_fork_reinit)  
+            os.register_at_fork(after_in_child=self._at_fork_reinit)
         self._pid = os.getpid()
 
     def _at_fork_reinit(self):
@@ -305,7 +305,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
             self._exporter.export(self._log_records[:idx])  # type: ignore
-        except Exception:  
+        except Exception:
             _logger.exception("Exception while exporting logs.")
         detach(token)
 

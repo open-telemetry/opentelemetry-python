@@ -42,7 +42,6 @@ class RequestHandler:
         request_context["span"] = span
 
     def after_request(self, request, request_context):
-        
         logger.info("After request %s", request)
 
         span = request_context.get("span")

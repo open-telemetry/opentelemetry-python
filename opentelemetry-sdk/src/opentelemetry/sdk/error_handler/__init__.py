@@ -82,7 +82,6 @@ class _DefaultErrorHandler(ErrorHandler):
     This error handler just logs the exception using standard logging.
     """
 
-    
     def _handle(self, error: Exception, *args, **kwargs):
         logger.exception("Error handled by default error handler: ")
 
@@ -107,7 +106,6 @@ class GlobalErrorHandler:
     def __enter__(self):
         pass
 
-    
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_value is None:
             return None
@@ -126,7 +124,6 @@ class GlobalErrorHandler:
                     error_handler_class()._handle(exc_value)
                     plugin_handled = True
 
-                
                 except Exception as error_handling_error:
                     logger.exception(
                         "%s error while handling error"

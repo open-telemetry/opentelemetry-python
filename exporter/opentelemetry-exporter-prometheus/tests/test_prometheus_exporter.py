@@ -53,7 +53,6 @@ class TestPrometheusMetricReader(TestCase):
             side_effect=self._mock_registry_register,
         )
 
-    
     def test_constructor(self):
         """Test the constructor."""
         with self._registry_register_patch:

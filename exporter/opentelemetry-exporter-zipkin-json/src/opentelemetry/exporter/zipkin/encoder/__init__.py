@@ -55,7 +55,6 @@ class Protocol(Enum):
     V2 = "v2"
 
 
-
 class Encoder(abc.ABC):
     """Base class for encoders that are used by the exporter.
 

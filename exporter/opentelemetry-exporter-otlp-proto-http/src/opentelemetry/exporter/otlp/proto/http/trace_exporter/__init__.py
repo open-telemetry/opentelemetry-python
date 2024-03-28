@@ -140,7 +140,7 @@ class OTLPSpanExporter(SpanExporter):
                 return SpanExportResult.FAILURE
 
             resp = self._export(serialized_data)
-            
+
             if resp.ok:
                 return SpanExportResult.SUCCESS
             elif self._retryable(resp):

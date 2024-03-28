@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-
 from dataclasses import asdict, dataclass
 from json import dumps, loads
 from typing import Optional, Sequence, Union
@@ -168,7 +167,6 @@ class Histogram:
             },
             indent=indent,
         )
-
 
 
 DataT = Union[Sum, Gauge, Histogram]

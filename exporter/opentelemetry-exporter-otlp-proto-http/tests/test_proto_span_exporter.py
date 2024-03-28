@@ -48,7 +48,6 @@ OS_ENV_HEADERS = "envHeader1=val1,envHeader2=val2"
 OS_ENV_TIMEOUT = "30"
 
 
-
 class TestOTLPSpanExporter(unittest.TestCase):
     def test_constructor_default(self):
         exporter = OTLPSpanExporter()
@@ -196,7 +195,6 @@ class TestOTLPSpanExporter(unittest.TestCase):
                 ),
             )
 
-    
     @responses.activate
     @patch("opentelemetry.exporter.otlp.proto.http.trace_exporter.sleep")
     def test_exponential_backoff(self, mock_sleep):

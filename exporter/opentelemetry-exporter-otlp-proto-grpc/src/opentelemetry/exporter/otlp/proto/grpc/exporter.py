@@ -136,7 +136,6 @@ def _get_credentials(creds, environ_key):
     return ssl_channel_credentials()
 
 
-
 class OTLPExporterMixin(
     ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResultT]
 ):

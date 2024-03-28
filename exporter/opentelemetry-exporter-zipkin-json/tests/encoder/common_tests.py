@@ -29,7 +29,6 @@ from opentelemetry.trace.status import Status, StatusCode
 TEST_SERVICE_NAME = "test_service"
 
 
-
 class CommonEncoderTestCases:
     class CommonEncoderTest(unittest.TestCase):
         @staticmethod
@@ -424,7 +423,6 @@ class CommonEncoderTestCases:
 
             return [span1, span2, span3, span4]
 
-    
     class CommonJsonEncoderTest(CommonEncoderTest, abc.ABC):
         def test_encode_trace_id(self):
             for trace_id in (1, 1024, 2**32, 2**64, 2**65):

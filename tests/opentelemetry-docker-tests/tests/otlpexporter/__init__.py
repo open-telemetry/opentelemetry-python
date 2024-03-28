@@ -34,7 +34,6 @@ class BaseTestOTLPExporter(ABC):
     def get_span_processor(self):
         pass
 
-    
     def test_export(self):
         with self.tracer.start_as_current_span("foo"):
             with self.tracer.start_as_current_span("bar"):

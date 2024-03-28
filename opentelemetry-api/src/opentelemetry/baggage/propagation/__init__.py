@@ -83,7 +83,7 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
                 continue
             try:
                 name, value = entry.split("=", 1)
-            except Exception:  
+            except Exception:
                 _logger.warning(
                     "Baggage list-member `%s` doesn't match the format", entry
                 )

@@ -31,17 +31,12 @@ class TestErrorHandler(TestCase):
             with GlobalErrorHandler():
                 raise Exception("some exception")
 
-    
     @patch("opentelemetry.sdk.error_handler.entry_points")
     def test_plugin_error_handler(self, mock_entry_points):
         class ZeroDivisionErrorHandler(ErrorHandler, ZeroDivisionError):
-            
-
             _handle = Mock()
 
         class AssertionErrorHandler(ErrorHandler, AssertionError):
-            
-
             _handle = Mock()
 
         mock_entry_point_zero_division_error_handler = Mock()
@@ -67,7 +62,6 @@ class TestErrorHandler(TestCase):
         with GlobalErrorHandler():
             raise error
 
-        
         ZeroDivisionErrorHandler._handle.assert_called_with(error)
 
         error = AssertionError()
@@ -80,8 +74,6 @@ class TestErrorHandler(TestCase):
     @patch("opentelemetry.sdk.error_handler.entry_points")
     def test_error_in_handler(self, mock_entry_points):
         class ErrorErrorHandler(ErrorHandler, ZeroDivisionError):
-            
-
             def _handle(self, error: Exception):
                 assert False
 
@@ -100,7 +92,6 @@ class TestErrorHandler(TestCase):
             with GlobalErrorHandler():
                 raise error
 
-    
     @patch("opentelemetry.sdk.error_handler.entry_points")
     def test_plugin_error_handler_context_manager(self, mock_entry_points):
         mock_error_handler_instance = Mock()
@@ -126,5 +117,4 @@ class TestErrorHandler(TestCase):
         with GlobalErrorHandler():
             pass
 
-        
         mock_error_handler_instance._handle.assert_called_once_with(error)

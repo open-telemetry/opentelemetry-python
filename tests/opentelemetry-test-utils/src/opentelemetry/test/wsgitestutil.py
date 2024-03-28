@@ -39,7 +39,7 @@ class WsgiTestBase(TestBase):
         self.exc_info = exc_info
         return self.write
 
-    def assertTraceResponseHeaderMatchesSpan(self, headers, span):  
+    def assertTraceResponseHeaderMatchesSpan(self, headers, span):
         self.assertIn("traceresponse", headers)
         self.assertEqual(
             headers["access-control-expose-headers"],

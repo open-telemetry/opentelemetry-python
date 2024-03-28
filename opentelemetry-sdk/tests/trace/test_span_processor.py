@@ -212,10 +212,8 @@ class MultiSpanProcessorTestBase(abc.ABC):
 
         flushed = multi_processor.force_flush(timeout_millis)
 
-        
         self.assertTrue(flushed)
         for mock_processor in mocks:
-            
             self.assertEqual(1, mock_processor.force_flush.call_count)
         multi_processor.shutdown()
 

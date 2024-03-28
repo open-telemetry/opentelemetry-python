@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-
 from abc import ABC, abstractmethod
 from threading import Lock
 from time import time_ns

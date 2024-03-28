@@ -26,7 +26,7 @@ class _AssertNotRaisesMixin:
         def __enter__(self):
             return self
 
-        def __exit__(self, type_, value, tb):  
+        def __exit__(self, type_, value, tb):
             if value is not None and type_ in self._exception_types:
                 self._test_case.fail(
                     "Unexpected exception was raised:\n{}".format(
@@ -37,15 +37,14 @@ class _AssertNotRaisesMixin:
             return True
 
         def __call__(self, exception, *exceptions):
-            
             self._exception_types = (exception, *exceptions)
             return self
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+
         self.assertNotRaises = self._AssertNotRaises(self)
 
 
-class TestCase(_AssertNotRaisesMixin, TestCase):  
+class TestCase(_AssertNotRaisesMixin, TestCase):
     pass

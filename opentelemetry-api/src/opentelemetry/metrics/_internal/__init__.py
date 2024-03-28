@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-
 """
 The OpenTelemetry metrics API  describes the classes used to generate
 metrics.
@@ -75,7 +74,6 @@ from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
 
 _logger = getLogger(__name__)
-
 
 
 _ProxyInstrumentT = Union[

@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-
 from logging import getLogger
 from typing import Dict, Generator, Iterable, List, Optional, Union
 
@@ -50,7 +49,6 @@ class _Synchronous:
         unit: str = "",
         description: str = "",
     ):
-        
         result = self._check_name_unit_description(name, unit, description)
 
         if result["name"] is None:
@@ -81,7 +79,6 @@ class _Asynchronous:
         unit: str = "",
         description: str = "",
     ):
-        
         result = self._check_name_unit_description(name, unit, description)
 
         if result["name"] is None:
@@ -133,7 +130,7 @@ class _Asynchronous:
                         instrument=self,
                         attributes=api_measurement.attributes,
                     )
-            except Exception:  
+            except Exception:
                 _logger.exception(
                     "Callback failed for instrument %s.", self.name
                 )

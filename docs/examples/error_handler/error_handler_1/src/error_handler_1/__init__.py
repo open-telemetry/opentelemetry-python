@@ -19,7 +19,6 @@ from opentelemetry.sdk.error_handler import ErrorHandler
 logger = getLogger(__name__)
 
 
-
 class ErrorHandler1(ErrorHandler, IndexError, KeyError):
     def _handle(self, error: Exception, *args, **kwargs):
         if isinstance(error, IndexError):

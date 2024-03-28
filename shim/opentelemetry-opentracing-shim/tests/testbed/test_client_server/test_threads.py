@@ -66,7 +66,7 @@ class Client:
 
 
 class TestThreads(OpenTelemetryTestCase):
-    def setUp(self):  
+    def setUp(self):
         self.tracer = MockTracer()
         self.queue = Queue()
         self.server = Server(tracer=self.tracer, queue=self.queue)

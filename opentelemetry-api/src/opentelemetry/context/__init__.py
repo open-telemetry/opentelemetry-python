@@ -64,7 +64,7 @@ def _load_runtime_context(func: _F) -> _F:
                         )
                     ).load()()
 
-                except Exception:  
+                except Exception:
                     logger.exception(
                         "Failed to load context: %s", configured_context
                     )
@@ -159,7 +159,7 @@ def detach(token: object) -> None:
     """
     try:
         _RUNTIME_CONTEXT.detach(token)  # type: ignore
-    except Exception:  
+    except Exception:
         logger.exception("Failed to detach context")
 
 

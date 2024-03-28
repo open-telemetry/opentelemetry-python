@@ -59,7 +59,6 @@ class TestCounter(TestCase):
 
     def test_disallow_direct_counter_creation(self):
         with self.assertRaises(TypeError):
-            
             Counter("name", Mock(), Mock())
 
 
@@ -78,7 +77,6 @@ class TestUpDownCounter(TestCase):
 
     def test_disallow_direct_up_down_counter_creation(self):
         with self.assertRaises(TypeError):
-            
             UpDownCounter("name", Mock(), Mock())
 
 
@@ -232,7 +230,6 @@ class TestObservableGauge(TestCase):
 
     def test_disallow_direct_observable_gauge_creation(self):
         with self.assertRaises(TypeError):
-            
             ObservableGauge("name", Mock(), Mock())
 
 
@@ -291,7 +288,6 @@ class TestObservableCounter(TestCase):
 
     def test_disallow_direct_observable_counter_creation(self):
         with self.assertRaises(TypeError):
-            
             ObservableCounter("name", Mock(), Mock())
 
 
@@ -308,7 +304,6 @@ class TestGauge(TestCase):
 
     def test_disallow_direct_counter_creation(self):
         with self.assertRaises(TypeError):
-            
             _SDKGauge("name", Mock(), Mock())
 
 
@@ -367,7 +362,6 @@ class TestObservableUpDownCounter(TestCase):
 
     def test_disallow_direct_observable_up_down_counter_creation(self):
         with self.assertRaises(TypeError):
-            
             ObservableUpDownCounter("name", Mock(), Mock())
 
 
@@ -387,5 +381,4 @@ class TestHistogram(TestCase):
 
     def test_disallow_direct_histogram_creation(self):
         with self.assertRaises(TypeError):
-            
             Histogram("name", Mock(), Mock())

@@ -13,8 +13,6 @@
 # limitations under the License.
 
 
-
-
 import shutil
 import subprocess
 import unittest
@@ -159,7 +157,6 @@ tracer_provider.add_span_processor(mock_processor)
             active_span_processor=span_processor
         )
 
-        
         self.assertEqual(
             span_processor, tracer_provider._active_span_processor
         )
@@ -224,7 +221,6 @@ class TestTracerSampling(unittest.TestCase):
 
     @mock.patch.dict("os.environ", {OTEL_TRACES_SAMPLER: "always_off"})
     def test_sampler_with_env(self):
-        
         reload(trace)
         tracer_provider = trace.TracerProvider()
         self.assertIsInstance(tracer_provider.sampler, StaticSampler)
@@ -244,7 +240,6 @@ class TestTracerSampling(unittest.TestCase):
         },
     )
     def test_ratio_sampler_with_env(self):
-        
         reload(trace)
         tracer_provider = trace.TracerProvider()
         self.assertIsInstance(tracer_provider.sampler, ParentBased)
@@ -252,7 +247,7 @@ class TestTracerSampling(unittest.TestCase):
 
     def verify_default_sampler(self, tracer_provider):
         self.assertIsInstance(tracer_provider.sampler, ParentBased)
-        
+
         self.assertEqual(tracer_provider.sampler._root, ALWAYS_ON)
 
 
@@ -560,7 +555,7 @@ class TestSpanCreation(unittest.TestCase):
         tracer_provider = trace.TracerProvider()
         tracer = tracer_provider.get_tracer(__name__)
         span = tracer.start_span("root")
-        
+
         self.assertIsInstance(span.resource, resources.Resource)
         self.assertEqual(
             span.resource.attributes.get(resources.SERVICE_NAME),
@@ -587,11 +582,9 @@ class TestSpanCreation(unittest.TestCase):
 
     def test_disallow_direct_span_creation(self):
         with self.assertRaises(TypeError):
-            
             trace.Span("name", mock.Mock(spec=trace_api.SpanContext))
 
     def test_surplus_span_links(self):
-        
         max_links = trace.SpanLimits().max_links
         links = [
             trace_api.Link(trace_api.SpanContext(0x1, idx, is_remote=False))
@@ -602,7 +595,6 @@ class TestSpanCreation(unittest.TestCase):
             self.assertEqual(len(root.links), max_links)
 
     def test_surplus_span_attributes(self):
-        
         max_attrs = trace.SpanLimits().max_span_attributes
         attributes = {str(idx): idx for idx in range(0, 16 + max_attrs)}
         tracer = new_tracer()
@@ -637,8 +629,6 @@ class TestReadableSpan(unittest.TestCase):
 
 
 class TestSpan(unittest.TestCase):
-    
-
     def setUp(self):
         self.tracer = new_tracer()
 
@@ -973,7 +963,6 @@ class TestSpan(unittest.TestCase):
         self.assertIs(span.status.description, "Test description")
 
     def test_start_accepts_context(self):
-        
         span_processor = mock.Mock(spec=trace.SpanProcessor)
         span = trace._Span(
             "name",
@@ -1489,8 +1478,6 @@ class TestSpanProcessor(unittest.TestCase):
 
 
 class TestSpanLimits(unittest.TestCase):
-    
-
     long_val = "v" * 1000
 
     def _assert_attr_length(self, attr_val, max_len):
@@ -1947,7 +1934,7 @@ class TestParentChildSpanException(unittest.TestCase):
                 ) as child_span:
                     raise exception
 
-        except Exception:  
+        except Exception:
             pass
 
         self.assertTrue(child_span.status.is_ok)
@@ -1992,7 +1979,7 @@ class TestParentChildSpanException(unittest.TestCase):
                     pass
                 raise exception
 
-        except Exception:  
+        except Exception:
             pass
 
         self.assertTrue(child_span.status.is_ok)
@@ -2002,7 +1989,6 @@ class TestParentChildSpanException(unittest.TestCase):
         self.assertTrue(parent_span.status.is_ok)
         self.assertIsNone(parent_span.status.description)
         self.assertTupleEqual(parent_span.events, ())
-
 
 
 class TestTracerProvider(unittest.TestCase):

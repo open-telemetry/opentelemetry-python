@@ -19,7 +19,7 @@ from ..testcase import OpenTelemetryTestCase
 
 
 class TestThreads(OpenTelemetryTestCase):
-    def setUp(self):  
+    def setUp(self):
         self.tracer = MockTracer()
         self.executor = ThreadPoolExecutor(max_workers=3)
 

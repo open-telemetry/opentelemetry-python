@@ -54,8 +54,6 @@ class LogarithmMapping(Mapping):
         return self._max_scale
 
     def _init(self, scale: int):
-        
-
         super()._init(scale)
 
         # self._scale_factor is defined as a multiplier because multiplication

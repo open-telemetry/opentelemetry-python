@@ -335,8 +335,8 @@ class Event(EventBase):
 def _check_span_ended(func):
     def wrapper(self, *args, **kwargs):
         already_ended = False
-        with self._lock:  
-            if self._end_time is None:  
+        with self._lock:
+            if self._end_time is None:
                 func(self, *args, **kwargs)
             else:
                 already_ended = True
@@ -523,9 +523,7 @@ class ReadableSpan:
             {
                 "name": event.name,
                 "timestamp": util.ns_to_iso_str(event.timestamp),
-                "attributes": Span._format_attributes(  
-                    event.attributes
-                ),
+                "attributes": Span._format_attributes(event.attributes),
             }
             for event in events
         ]
@@ -534,12 +532,8 @@ class ReadableSpan:
     def _format_links(links: Sequence[trace_api.Link]) -> List[Dict[str, Any]]:
         return [
             {
-                "context": Span._format_context(  
-                    link.context
-                ),
-                "attributes": Span._format_attributes(  
-                    link.attributes
-                ),
+                "context": Span._format_context(link.context),
+                "attributes": Span._format_attributes(link.attributes),
             }
             for link in links
         ]
@@ -701,7 +695,7 @@ _UnsetLimits = SpanLimits(
 )
 
 # not removed for backward compat. please use SpanLimits instead.
-SPAN_ATTRIBUTE_COUNT_LIMIT = SpanLimits._from_env_if_absent(  
+SPAN_ATTRIBUTE_COUNT_LIMIT = SpanLimits._from_env_if_absent(
     None,
     OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
     _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
@@ -735,7 +729,6 @@ class Span(trace_api.Span, ReadableSpan):
             raise TypeError("Span must be instantiated via a tracer.")
         return super().__new__(cls)
 
-    
     def __init__(
         self,
         name: str,
@@ -1036,7 +1029,7 @@ class Tracer(trace_api.Tracer):
         self._span_limits = span_limits
         self._instrumentation_scope = instrumentation_scope
 
-    @_agnosticcontextmanager  
+    @_agnosticcontextmanager
     def start_as_current_span(
         self,
         name: str,
@@ -1067,7 +1060,7 @@ class Tracer(trace_api.Tracer):
         ) as span:
             yield span
 
-    def start_span(  
+    def start_span(
         self,
         name: str,
         context: Optional[context_api.Context] = None,

@@ -41,7 +41,6 @@ class TestTracerImplementation(unittest.TestCase):
 
     def test_span(self):
         with self.assertRaises(Exception):
-            
             span = trace._Span()
 
         span = trace._Span("name", INVALID_SPAN_CONTEXT)

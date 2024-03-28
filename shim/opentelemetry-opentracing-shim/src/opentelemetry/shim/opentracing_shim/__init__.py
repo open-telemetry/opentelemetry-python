@@ -301,7 +301,7 @@ class SpanShim(Span):
             key: A tag key.
             value: A tag value.
         """
-        
+
         self._context._baggage = set_baggage(
             key, value, context=self._context._baggage
         )
@@ -314,7 +314,7 @@ class SpanShim(Span):
         Returns:
             Returns this :class:`SpanShim` instance to allow call chaining.
         """
-        
+
         return get_baggage(key, context=self._context._baggage)
 
 
@@ -389,7 +389,6 @@ class ScopeShim(Scope):
                 :meth:`opentelemetry.trace.use_span`.
         """
 
-        
         otel_span = span_cm.__enter__()
         span_context = SpanContextShim(otel_span.get_span_context())
         span = SpanShim(manager.tracer, span_context, otel_span)
@@ -455,7 +454,7 @@ class ScopeManagerShim(ScopeManager):
         # The only thing the ``__init__()``` method on the base class does is
         # initialize `self._noop_span` and `self._noop_scope` with no-op
         # objects. Therefore, it doesn't seem useful to call it.
-        
+
         self._tracer = tracer
 
     def activate(self, span: SpanShim, finish_on_close: bool) -> "ScopeShim":
@@ -697,7 +696,6 @@ class TracerShim(Tracer):
             carrier: the format-specific carrier object to inject into
         """
 
-        
         # This implementation does not perform the injecting by itself but
         # uses the configured propagators in opentelemetry.propagators.
         # TODO: Support Format.BINARY once it is supported in
@@ -732,7 +730,6 @@ class TracerShim(Tracer):
             ``None`` if no such ``SpanContext`` could be found.
         """
 
-        
         # This implementation does not perform the extracting by itself but
         # uses the configured propagators in opentelemetry.propagators.
         # TODO: Support Format.BINARY once it is supported in

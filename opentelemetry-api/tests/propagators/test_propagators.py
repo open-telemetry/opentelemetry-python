@@ -44,7 +44,6 @@ class TestPropagators(TestCase):
             **{"side_effect": test_propagators}
         )
 
-        
         import opentelemetry.propagate
 
         reload(opentelemetry.propagate)
@@ -96,7 +95,6 @@ class TestPropagators(TestCase):
             **{"side_effect": test_propagators}
         )
 
-        
         import opentelemetry.propagate
 
         reload(opentelemetry.propagate)
@@ -106,7 +104,6 @@ class TestPropagators(TestCase):
     )
     def test_composite_propagators_error(self):
         with self.assertRaises(ValueError) as cm:
-            
             import opentelemetry.propagate
 
             reload(opentelemetry.propagate)

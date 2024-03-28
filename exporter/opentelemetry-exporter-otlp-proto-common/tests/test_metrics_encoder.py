@@ -811,6 +811,6 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                 )
             ]
         )
-        
+
         actual = encode_metrics(metrics_data)
         self.assertEqual(expected, actual)

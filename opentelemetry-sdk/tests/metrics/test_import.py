@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-
 from opentelemetry.test import TestCase
 
 

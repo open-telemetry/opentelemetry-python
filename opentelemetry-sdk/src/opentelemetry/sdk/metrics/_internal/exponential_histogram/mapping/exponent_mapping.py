@@ -54,8 +54,6 @@ class ExponentMapping(Mapping):
         return 0
 
     def _init(self, scale: int):
-        
-
         super()._init(scale)
 
         # self._min_normal_lower_boundary_index is the largest index such that

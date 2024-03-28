@@ -39,8 +39,6 @@ from opentelemetry.test.globals_test import (
 
 
 class TestBase(unittest.TestCase):
-    
-
     def setUp(self):
         super().setUp()
         result = self.create_tracer_provider()
@@ -85,7 +83,7 @@ class TestBase(unittest.TestCase):
             self.assertIn(key, span.attributes)
             self.assertEqual(val, span.attributes[key])
 
-    def sorted_spans(self, spans):  
+    def sorted_spans(self, spans):
         """
         Sorts spans by span creation time.
 
@@ -94,7 +92,7 @@ class TestBase(unittest.TestCase):
         """
         return sorted(
             spans,
-            key=lambda s: s._start_time,  
+            key=lambda s: s._start_time,
             reverse=True,
         )
 
@@ -179,7 +177,6 @@ class TestBase(unittest.TestCase):
                 expected_data_point, metric.data.data_points, est_value_delta
             )
 
-    
     @staticmethod
     def is_data_points_equal(
         expected_data_point: DataPointT,

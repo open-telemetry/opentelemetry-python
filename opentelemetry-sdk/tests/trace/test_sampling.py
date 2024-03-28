@@ -51,7 +51,7 @@ class TestSamplingResult(unittest.TestCase):
     def test_ctr(self):
         attributes = {"asd": "test"}
         trace_state = {}
-        
+
         trace_state["test"] = "123"
         result = sampling.SamplingResult(
             sampling.Decision.RECORD_ONLY, attributes, trace_state

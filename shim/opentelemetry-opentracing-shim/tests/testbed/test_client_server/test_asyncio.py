@@ -64,7 +64,7 @@ class Client:
 
 
 class TestAsyncio(OpenTelemetryTestCase):
-    def setUp(self):  
+    def setUp(self):
         self.tracer = MockTracer()
         self.queue = asyncio.Queue()
         self.loop = asyncio.get_event_loop()

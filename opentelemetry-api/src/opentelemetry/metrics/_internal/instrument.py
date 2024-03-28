@@ -13,8 +13,6 @@
 # limitations under the License.
 
 
-
-
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from logging import getLogger

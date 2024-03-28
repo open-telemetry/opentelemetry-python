@@ -113,7 +113,7 @@ class NoOpLogger(Logger):
 
 
 class ProxyLogger(Logger):
-    def __init__(  
+    def __init__(
         self,
         name: str,
         version: Optional[str] = None,

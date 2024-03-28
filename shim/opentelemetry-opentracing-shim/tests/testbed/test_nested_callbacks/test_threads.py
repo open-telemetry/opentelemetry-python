@@ -20,11 +20,11 @@ from ..utils import await_until
 
 
 class TestThreads(OpenTelemetryTestCase):
-    def setUp(self):  
+    def setUp(self):
         self.tracer = MockTracer()
         self.executor = ThreadPoolExecutor(max_workers=3)
 
-    def tearDown(self):  
+    def tearDown(self):
         self.executor.shutdown(False)
 
     def test_main(self):

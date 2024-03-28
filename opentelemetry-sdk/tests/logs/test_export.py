@@ -449,7 +449,6 @@ class TestBatchLogRecordProcessor(ConcurrencyTestBase):
         "needs *nix",
     )
     def test_batch_log_record_processor_fork(self):
-        
         exporter = InMemoryLogExporter()
         log_record_processor = BatchLogRecordProcessor(
             exporter,
@@ -494,7 +493,7 @@ class TestBatchLogRecordProcessor(ConcurrencyTestBase):
 
 
 class TestConsoleLogExporter(unittest.TestCase):
-    def test_export(self):  
+    def test_export(self):
         """Check that the console exporter prints log records."""
         log_data = LogData(
             log_record=LogRecord(
@@ -525,11 +524,11 @@ class TestConsoleLogExporter(unittest.TestCase):
         self.assertEqual(mock_stdout.write.call_count, 1)
         self.assertEqual(mock_stdout.flush.call_count, 1)
 
-    def test_export_custom(self):  
+    def test_export_custom(self):
         """Check that console exporter uses custom io, formatter."""
         mock_record_str = Mock(str)
 
-        def formatter(record):  
+        def formatter(record):
             return mock_record_str
 
         mock_stdout = Mock()

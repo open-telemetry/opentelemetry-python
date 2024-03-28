@@ -400,7 +400,6 @@ class Tracer(ABC):
 
 
 class ProxyTracer(Tracer):
-    
     def __init__(
         self,
         instrumenting_module_name: str,
@@ -453,7 +452,6 @@ class NoOpTracer(Tracer):
         record_exception: bool = True,
         set_status_on_exception: bool = True,
     ) -> "Span":
-        
         return INVALID_SPAN
 
     @_agnosticcontextmanager
@@ -469,7 +467,6 @@ class NoOpTracer(Tracer):
         set_status_on_exception: bool = True,
         end_on_exit: bool = True,
     ) -> Iterator["Span"]:
-        
         yield INVALID_SPAN
 
 
@@ -570,7 +567,7 @@ def use_span(
         finally:
             context_api.detach(token)
 
-    except Exception as exc:  
+    except Exception as exc:
         if isinstance(span, Span) and span.is_recording():
             # Record the exception as an event
             if record_exception:

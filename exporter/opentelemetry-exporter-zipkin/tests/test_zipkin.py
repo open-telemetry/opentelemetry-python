@@ -23,5 +23,5 @@ class TestZipkinExporter(unittest.TestCase):
         try:
             json.ZipkinExporter()
             http.ZipkinExporter()
-        except Exception as exc:  
+        except Exception as exc:
             self.assertIsNone(exc)

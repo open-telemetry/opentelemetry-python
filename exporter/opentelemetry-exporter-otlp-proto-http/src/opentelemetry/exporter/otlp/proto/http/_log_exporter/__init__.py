@@ -142,7 +142,7 @@ class OTLPLogExporter(LogExporter):
                 return LogExportResult.FAILURE
 
             resp = self._export(serialized_data)
-            
+
             if resp.ok:
                 return LogExportResult.SUCCESS
             elif self._retryable(resp):

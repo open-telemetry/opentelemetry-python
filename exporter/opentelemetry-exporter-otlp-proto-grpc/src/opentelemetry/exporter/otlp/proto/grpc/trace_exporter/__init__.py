@@ -59,14 +59,12 @@ from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 logger = logging.getLogger(__name__)
 
 
-
 class OTLPSpanExporter(
     SpanExporter,
     OTLPExporterMixin[
         ReadableSpan, ExportTraceServiceRequest, SpanExportResult
     ],
 ):
-    
     """OTLP span exporter
 
     Args:

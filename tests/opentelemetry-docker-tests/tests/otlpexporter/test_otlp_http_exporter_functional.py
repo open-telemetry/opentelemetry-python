@@ -23,7 +23,6 @@ from . import BaseTestOTLPExporter, ExportStatusSpanProcessor
 
 
 class TestOTLPHTTPExporter(BaseTestOTLPExporter, TestBase):
-    
     def get_span_processor(self):
         return ExportStatusSpanProcessor(OTLPSpanExporter())
 

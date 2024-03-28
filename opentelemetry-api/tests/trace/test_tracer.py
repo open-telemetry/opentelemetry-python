@@ -46,7 +46,7 @@ class TestTracer(TestCase):
             def start_span(self, *args, **kwargs):
                 return INVALID_SPAN
 
-            @_agnosticcontextmanager  
+            @_agnosticcontextmanager
             def start_as_current_span(self, *args, **kwargs):  # type: ignore
                 calls.append(1)
                 yield INVALID_SPAN

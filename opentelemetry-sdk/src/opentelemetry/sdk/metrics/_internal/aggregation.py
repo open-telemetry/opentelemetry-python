@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-
 from abc import ABC, abstractmethod
 from bisect import bisect_left
 from enum import IntEnum
@@ -515,7 +514,6 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             return None
 
 
-
 class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
     # _min_max_size and _max_max_size are the smallest and largest values
     # the max_size parameter may have, respectively.
@@ -602,8 +600,6 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         self._previous_negative = None
 
     def aggregate(self, measurement: Measurement) -> None:
-        
-
         with self._lock:
             value = measurement.value
 
@@ -716,7 +712,6 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         """
         Atomically return a point for the current value of the metric.
         """
-        
 
         with self._lock:
             if self._count == 0:
@@ -1050,7 +1045,6 @@ class DefaultAggregation(Aggregation):
         attributes: Attributes,
         start_time_unix_nano: int,
     ) -> _Aggregation:
-        
         if isinstance(instrument, Counter):
             return _SumAggregation(
                 attributes,

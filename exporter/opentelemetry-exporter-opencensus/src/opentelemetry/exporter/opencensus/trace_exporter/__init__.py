@@ -35,7 +35,6 @@ DEFAULT_ENDPOINT = "localhost:55678"
 logger = logging.getLogger(__name__)
 
 
-
 class OpenCensusSpanExporter(SpanExporter):
     """OpenCensus Collector span exporter.
 
@@ -103,7 +102,6 @@ class OpenCensusSpanExporter(SpanExporter):
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         return True
-
 
 
 def translate_to_collector(spans: Sequence[ReadableSpan]):  # noqa: PLR0912

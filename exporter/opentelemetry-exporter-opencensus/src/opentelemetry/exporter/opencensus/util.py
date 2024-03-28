@@ -40,10 +40,8 @@ def proto_timestamp_from_time_ns(time_ns):
     """
     ts = Timestamp()
     if time_ns is not None:
-        
         ts.FromNanoseconds(time_ns)
     return ts
-
 
 
 def get_collector_span_kind(kind: SpanKind):
@@ -74,7 +72,6 @@ def add_proto_attribute_value(pb_attributes, key, value):
         pb_attributes.attribute_map[key].double_value = value
     else:
         pb_attributes.attribute_map[key].string_value.value = str(value)
-
 
 
 def get_node(service_name, host_name):
