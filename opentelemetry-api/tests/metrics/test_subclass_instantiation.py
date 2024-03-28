@@ -33,9 +33,6 @@ from opentelemetry.metrics import (
 )
 
 class MeterProviderImplTest(MeterProvider):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
     def get_meter(self, name: str, version: str | None = None, schema_url: str | None = None) -> Meter:
         return super().get_meter(name, version, schema_url)
 
