@@ -18,19 +18,20 @@
 # Either bump the major version of the API, or make the necessary changes to the API to remain semver compatible.
 
 from typing import Optional
+
 from opentelemetry.metrics import (
-    Meter,
-    MeterProvider,
-    Synchronous,
     Asynchronous,
     Counter,
-    _Gauge,
     Histogram,
     Instrument,
+    Meter,
+    MeterProvider,
     ObservableCounter,
     ObservableGauge,
     ObservableUpDownCounter,
+    Synchronous,
     UpDownCounter,
+    _Gauge,
 )
 
 

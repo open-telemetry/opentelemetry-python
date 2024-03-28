@@ -42,7 +42,6 @@ The following code shows how to obtain a meter using the global :class:`.MeterPr
 
 
 import warnings
-
 from abc import ABC, abstractmethod
 from logging import getLogger
 from os import environ
@@ -387,7 +386,7 @@ class Meter(ABC):
             description: A description for this instrument and what it measures.
         """
 
-    def create_gauge(  # type: ignore
+    def create_gauge(  # type: ignore # pylint: disable=no-self-use
         self,
         name: str,
         unit: str = "",
