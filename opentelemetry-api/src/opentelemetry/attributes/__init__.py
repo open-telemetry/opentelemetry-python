@@ -59,7 +59,7 @@ def _clean_attribute(
         cleaned_seq = []
 
         for element in value:
-            element = _clean_attribute_value(element, max_len)
+            element = _clean_attribute_value(element, max_len)  # noqa: PLW2901
             if element is None:
                 cleaned_seq.append(element)
                 continue

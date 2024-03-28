@@ -319,7 +319,7 @@ class TestSampler(unittest.TestCase):
         )
 
     # pylint:disable=too-many-statements
-    def exec_parent_based(self, parent_sampling_context):
+    def exec_parent_based(self, parent_sampling_context):  # noqa: PLR0915
         trace_state = trace.TraceState([("key", "value")])
         sampler = sampling.ParentBased(sampling.ALWAYS_ON)
         # Check that the sampling decision matches the parent context if given

@@ -206,7 +206,7 @@ class MetricReader(ABC):
     .. automethod:: _receive_metrics
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0912
         self,
         preferred_temporality: Dict[type, AggregationTemporality] = None,
         preferred_aggregation: Dict[

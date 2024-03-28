@@ -165,7 +165,7 @@ class OTLPMetricExporterMixin:
         return instrument_class_aggregation
 
 
-def encode_metrics(data: MetricsData) -> ExportMetricsServiceRequest:
+def encode_metrics(data: MetricsData) -> ExportMetricsServiceRequest:  # noqa: PLR0912
     resource_metrics_dict = {}
 
     for resource_metrics in data.resource_metrics:

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import opentelemetry.propagators.b3 as b3_format
-import opentelemetry.sdk.trace as trace
+from opentelemetry.sdk import trace
 
 FORMAT = b3_format.B3Format()
 

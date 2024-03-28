@@ -358,11 +358,10 @@ class ParentBased(Sampler):
                     sampler = self._remote_parent_sampled
                 else:
                     sampler = self._remote_parent_not_sampled
+            elif parent_span_context.trace_flags.sampled:
+                sampler = self._local_parent_sampled
             else:
-                if parent_span_context.trace_flags.sampled:
-                    sampler = self._local_parent_sampled
-                else:
-                    sampler = self._local_parent_not_sampled
+                sampler = self._local_parent_not_sampled
 
         return sampler.should_sample(
             parent_context=parent_context,

@@ -106,7 +106,7 @@ class OpenCensusSpanExporter(SpanExporter):
 
 
 # pylint: disable=too-many-branches
-def translate_to_collector(spans: Sequence[ReadableSpan]):
+def translate_to_collector(spans: Sequence[ReadableSpan]):  # noqa: PLR0912
     collector_spans = []
     for span in spans:
         status = None

@@ -794,7 +794,7 @@ def get_meter(
 
 def _set_meter_provider(meter_provider: MeterProvider, log: bool) -> None:
     def set_mp() -> None:
-        global _METER_PROVIDER  # pylint: disable=global-statement
+        global _METER_PROVIDER  # pylint: disable=global-statement  # noqa: PLW0603
         _METER_PROVIDER = meter_provider
 
         # gives all proxies real instruments off the newly set meter provider

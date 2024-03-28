@@ -28,7 +28,7 @@ class V1Encoder(Encoder):
         binary_annotations = []
         for tag_key, tag_value in self._extract_tags_from_span(span).items():
             if isinstance(tag_value, str) and self.max_tag_value_length > 0:
-                tag_value = tag_value[: self.max_tag_value_length]
+                tag_value = tag_value[: self.max_tag_value_length]  # noqa: PLW2901
             binary_annotations.append(
                 {
                     "key": tag_key,

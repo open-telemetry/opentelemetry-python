@@ -708,7 +708,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             # 7. Increment the bucket.
             buckets.increment_bucket(bucket_index)
 
-    def collect(
+    def collect(  # noqa: PLR0915
         self,
         collection_aggregation_temporality: AggregationTemporality,
         collection_start_nano: int,
@@ -1003,7 +1003,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 bucket_index += len(previous_buckets.counts)
 
             if aggregation_temporality is AggregationTemporality.DELTA:
-                current_bucket = -current_bucket
+                current_bucket = -current_bucket  # noqa: PLW2901
 
             previous_buckets.increment_bucket(
                 bucket_index, increment=current_bucket
@@ -1044,7 +1044,7 @@ class DefaultAggregation(Aggregation):
     ==================================================== ====================================
     """
 
-    def _create_aggregation(
+    def _create_aggregation(  # noqa: PLR0911
         self,
         instrument: Instrument,
         attributes: Attributes,

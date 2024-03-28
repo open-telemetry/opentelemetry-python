@@ -176,11 +176,10 @@ class OTLPExporterMixin(
             insecure = environ.get(OTEL_EXPORTER_OTLP_INSECURE)
             if insecure is not None:
                 insecure = insecure.lower() == "true"
+            elif parsed_url.scheme == "http":
+                insecure = True
             else:
-                if parsed_url.scheme == "http":
-                    insecure = True
-                else:
-                    insecure = False
+                insecure = False
 
         if parsed_url.netloc:
             self._endpoint = parsed_url.netloc
@@ -282,7 +281,7 @@ class OTLPExporterMixin(
                         if retry_info_bin is not None:
                             retry_info = RetryInfo()
                             retry_info.ParseFromString(retry_info_bin)
-                            delay = (
+                            delay = (  # noqa: PLW2901
                                 retry_info.retry_delay.seconds
                                 + retry_info.retry_delay.nanos / 1.0e9
                             )

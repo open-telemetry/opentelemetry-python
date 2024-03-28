@@ -224,7 +224,6 @@ _PROXY_LOGGER_PROVIDER = ProxyLoggerProvider()
 
 def get_logger_provider() -> LoggerProvider:
     """Gets the current global :class:`~.LoggerProvider` object."""
-    global _LOGGER_PROVIDER  # pylint: disable=global-variable-not-assigned
     if _LOGGER_PROVIDER is None:
         if _OTEL_PYTHON_LOGGER_PROVIDER not in environ:
             return _PROXY_LOGGER_PROVIDER
@@ -240,7 +239,7 @@ def get_logger_provider() -> LoggerProvider:
 
 def _set_logger_provider(logger_provider: LoggerProvider, log: bool) -> None:
     def set_lp() -> None:
-        global _LOGGER_PROVIDER  # pylint: disable=global-statement
+        global _LOGGER_PROVIDER  # pylint: disable=global-statement  # noqa: PLW0603
         _LOGGER_PROVIDER = logger_provider
 
     did_set = _LOGGER_PROVIDER_SET_ONCE.do_once(set_lp)

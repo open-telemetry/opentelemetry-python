@@ -242,7 +242,7 @@ class Encoder(abc.ABC):
                     and self.max_tag_value_length is not None
                     and self.max_tag_value_length > 0
                 ):
-                    value = value[: self.max_tag_value_length]
+                    value = value[: self.max_tag_value_length]  # noqa: PLW2901
                 attrs[key] = value
 
             annotations.append(

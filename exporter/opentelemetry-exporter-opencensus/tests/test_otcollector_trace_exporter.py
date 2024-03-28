@@ -80,7 +80,7 @@ class TestCollectorSpanExporter(TraceGlobalsTest, unittest.TestCase):
 
     # pylint: disable=too-many-locals
     # pylint: disable=too-many-statements
-    def test_translate_to_collector(self):
+    def test_translate_to_collector(self):  # noqa: PLR0915
         trace_id = 0x6E0C63257DE34C926F9EFCD03927272E
         span_id = 0x34BF92DEEFC58C92
         parent_id = 0x1111111111111111

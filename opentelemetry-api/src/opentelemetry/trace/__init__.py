@@ -508,7 +508,7 @@ def get_tracer(
 
 def _set_tracer_provider(tracer_provider: TracerProvider, log: bool) -> None:
     def set_tp() -> None:
-        global _TRACER_PROVIDER  # pylint: disable=global-statement
+        global _TRACER_PROVIDER  # pylint: disable=global-statement  # noqa: PLW0603
         _TRACER_PROVIDER = tracer_provider
 
     did_set = _TRACER_PROVIDER_SET_ONCE.do_once(set_tp)

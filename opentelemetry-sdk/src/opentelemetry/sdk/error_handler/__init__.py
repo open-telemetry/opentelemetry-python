@@ -85,7 +85,6 @@ class _DefaultErrorHandler(ErrorHandler):
     # pylint: disable=useless-return
     def _handle(self, error: Exception, *args, **kwargs):
         logger.exception("Error handled by default error handler: ")
-        return None
 
 
 class GlobalErrorHandler:

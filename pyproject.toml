@@ -38,8 +38,22 @@ select = [
   "E9",
   "F",
 
+  # pycodestyle
+  "E",
+
   # isort
   "I",
+
+  # Pylint
+  "PL",
+]
+
+ignore = [
+  "E501",
+  # pylint too-many-arguments
+  "PLR0913",
+  # pylint magic-value-comparison
+  "PLR2004",
 ]
 
 [tool.ruff.lint.isort]

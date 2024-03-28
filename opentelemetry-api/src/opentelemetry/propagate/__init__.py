@@ -130,7 +130,7 @@ environ_propagators = environ.get(
 
 
 for propagator in environ_propagators.split(","):
-    propagator = propagator.strip()
+    propagator = propagator.strip()  # noqa: PLW2901
 
     try:
         propagators.append(  # type: ignore
@@ -162,5 +162,5 @@ def get_global_textmap() -> textmap.TextMapPropagator:
 def set_global_textmap(
     http_text_format: textmap.TextMapPropagator,
 ) -> None:
-    global _HTTP_TEXT_FORMAT  # pylint:disable=global-statement
+    global _HTTP_TEXT_FORMAT  # pylint:disable=global-statement  # noqa: PLW0603
     _HTTP_TEXT_FORMAT = http_text_format  # type: ignore

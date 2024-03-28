@@ -210,7 +210,7 @@ class _CustomCollector:
                     yield metric_family
 
     # pylint: disable=too-many-locals,too-many-branches
-    def _translate_to_prometheus(
+    def _translate_to_prometheus(  # noqa: PLR0912
         self,
         metrics_data: MetricsData,
         metric_family_id_metric_family: Dict[str, PrometheusMetric],
