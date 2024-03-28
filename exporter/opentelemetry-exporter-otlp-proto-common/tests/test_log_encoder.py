@@ -69,6 +69,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
         log1 = LogData(
             log_record=SDKLogRecord(
                 timestamp=1644650195189786880,
+                observed_timestamp=1644650195189786881,
                 trace_id=89564621134313219400156819398935297684,
                 span_id=1312458408527513268,
                 trace_flags=TraceFlags(0x01),
@@ -89,6 +90,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
         log2 = LogData(
             log_record=SDKLogRecord(
                 timestamp=1644650249738562048,
+                observed_timestamp=1644650249738562049,
                 trace_id=0,
                 span_id=0,
                 trace_flags=TraceFlags.DEFAULT,
@@ -106,6 +108,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
         log3 = LogData(
             log_record=SDKLogRecord(
                 timestamp=1644650427658989056,
+                observed_timestamp=1644650427658989057,
                 trace_id=271615924622795969659406376515024083555,
                 span_id=4242561578944770265,
                 trace_flags=TraceFlags(0x01),
@@ -121,6 +124,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
         log4 = LogData(
             log_record=SDKLogRecord(
                 timestamp=1644650584292683008,
+                observed_timestamp=1644650584292683009,
                 trace_id=212592107417388365804938480559624925555,
                 span_id=6077757853989569223,
                 trace_flags=TraceFlags(0x01),
@@ -164,6 +168,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
                             log_records=[
                                 PB2LogRecord(
                                     time_unix_nano=1644650195189786880,
+                                    observed_time_unix_nano=1644650195189786881,
                                     trace_id=_encode_trace_id(
                                         89564621134313219400156819398935297684
                                     ),
@@ -190,6 +195,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
                             log_records=[
                                 PB2LogRecord(
                                     time_unix_nano=1644650584292683008,
+                                    observed_time_unix_nano=1644650584292683009,
                                     trace_id=_encode_trace_id(
                                         212592107417388365804938480559624925555
                                     ),
@@ -232,6 +238,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
                             log_records=[
                                 PB2LogRecord(
                                     time_unix_nano=1644650249738562048,
+                                    observed_time_unix_nano=1644650249738562049,
                                     trace_id=_encode_trace_id(0),
                                     span_id=_encode_span_id(0),
                                     flags=int(TraceFlags.DEFAULT),
@@ -249,6 +256,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
                             log_records=[
                                 PB2LogRecord(
                                     time_unix_nano=1644650427658989056,
+                                    observed_time_unix_nano=1644650427658989057,
                                     trace_id=_encode_trace_id(
                                         271615924622795969659406376515024083555
                                     ),
