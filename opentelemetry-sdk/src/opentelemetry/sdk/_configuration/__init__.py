@@ -91,7 +91,6 @@ _logger = logging.getLogger(__name__)
 def _import_config_components(
     selected_components: List[str], entry_point_name: str
 ) -> Sequence[Tuple[str, object]]:
-
     component_implementations = []
 
     for selected_component in selected_components:
@@ -109,13 +108,11 @@ def _import_config_components(
                 )
             )
         except KeyError:
-
             raise RuntimeError(
                 f"Requested entry point '{entry_point_name}' not found"
             )
 
         except StopIteration:
-
             raise RuntimeError(
                 f"Requested component '{selected_component}' not found in "
                 f"entry point '{entry_point_name}'"
@@ -177,7 +174,7 @@ def _get_exporter_entry_point(
 
 
 def _get_exporter_names(
-    signal_type: Literal["traces", "metrics", "logs"]
+    signal_type: Literal["traces", "metrics", "logs"],
 ) -> Sequence[str]:
     names = environ.get(_EXPORTER_ENV_BY_SIGNAL_TYPE.get(signal_type, ""))
 
@@ -265,7 +262,10 @@ def _import_exporters(
     metric_exporters = {}
     log_exporters = {}
 
-    for (exporter_name, exporter_impl,) in _import_config_components(
+    for (
+        exporter_name,
+        exporter_impl,
+    ) in _import_config_components(
         trace_exporter_names, "opentelemetry_traces_exporter"
     ):
         if issubclass(exporter_impl, SpanExporter):
@@ -273,7 +273,10 @@ def _import_exporters(
         else:
             raise RuntimeError(f"{exporter_name} is not a trace exporter")
 
-    for (exporter_name, exporter_impl,) in _import_config_components(
+    for (
+        exporter_name,
+        exporter_impl,
+    ) in _import_config_components(
         metric_exporter_names, "opentelemetry_metrics_exporter"
     ):
         # The metric exporter components may be push MetricExporter or pull exporters which
@@ -283,7 +286,10 @@ def _import_exporters(
         else:
             raise RuntimeError(f"{exporter_name} is not a metric exporter")
 
-    for (exporter_name, exporter_impl,) in _import_config_components(
+    for (
+        exporter_name,
+        exporter_impl,
+    ) in _import_config_components(
         log_exporter_names, "opentelemetry_logs_exporter"
     ):
         if issubclass(exporter_impl, LogExporter):
@@ -360,9 +366,9 @@ def _initialize_components(auto_instrumentation_version):
     auto_resource = {}
     # populate version if using auto-instrumentation
     if auto_instrumentation_version:
-        auto_resource[
-            ResourceAttributes.TELEMETRY_AUTO_VERSION
-        ] = auto_instrumentation_version
+        auto_resource[ResourceAttributes.TELEMETRY_AUTO_VERSION] = (
+            auto_instrumentation_version
+        )
     resource = Resource.create(auto_resource)
 
     _init_tracing(
@@ -391,7 +397,6 @@ class _BaseConfigurator(ABC):
     _is_instrumented = False
 
     def __new__(cls, *args, **kwargs):
-
         if cls._instance is None:
             cls._instance = object.__new__(cls, *args, **kwargs)
 

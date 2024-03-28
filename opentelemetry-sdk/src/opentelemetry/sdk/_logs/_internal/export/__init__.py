@@ -135,9 +135,7 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
         self._shutdown = True
         self._exporter.shutdown()
 
-    def force_flush(
-        self, timeout_millis: int = 30000
-    ) -> bool:  # pylint: disable=no-self-use
+    def force_flush(self, timeout_millis: int = 30000) -> bool:  # pylint: disable=no-self-use
         return True
 
 
@@ -217,9 +215,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
         self._log_records = [None] * self._max_export_batch_size
         self._worker_thread.start()
         if hasattr(os, "register_at_fork"):
-            os.register_at_fork(
-                after_in_child=self._at_fork_reinit
-            )  # pylint: disable=protected-access
+            os.register_at_fork(after_in_child=self._at_fork_reinit)  # pylint: disable=protected-access
         self._pid = os.getpid()
 
     def _at_fork_reinit(self):

@@ -12,25 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from collections import defaultdict
-from typing import Sequence, List
+from typing import List, Sequence
 
 from opentelemetry.exporter.otlp.proto.common._internal import (
+    _encode_attributes,
     _encode_instrumentation_scope,
     _encode_resource,
     _encode_span_id,
     _encode_trace_id,
     _encode_value,
-    _encode_attributes,
 )
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
     ExportLogsServiceRequest,
 )
-from opentelemetry.proto.logs.v1.logs_pb2 import (
-    ScopeLogs,
-    ResourceLogs,
-)
 from opentelemetry.proto.logs.v1.logs_pb2 import LogRecord as PB2LogRecord
-
+from opentelemetry.proto.logs.v1.logs_pb2 import (
+    ResourceLogs,
+    ScopeLogs,
+)
 from opentelemetry.sdk._logs import LogData
 
 

@@ -19,6 +19,5 @@ from unittest import TestCase
 
 class TestInstrumentor(TestCase):
     def test_proto(self):
-
         if find_spec("opentelemetry.proto") is None:
             self.fail("opentelemetry-proto not installed")

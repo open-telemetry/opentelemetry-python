@@ -73,7 +73,6 @@ either implicit or explicit context propagation consistently throughout.
     `set_tracer_provider`.
 """
 
-
 import os
 import typing
 from abc import ABC, abstractmethod

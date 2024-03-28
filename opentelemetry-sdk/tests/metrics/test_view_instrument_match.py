@@ -39,7 +39,6 @@ from opentelemetry.sdk.metrics.view import (
 class Test_ViewInstrumentMatch(TestCase):
     @classmethod
     def setUpClass(cls):
-
         cls.mock_aggregation_factory = Mock()
         cls.mock_created_aggregation = (
             cls.mock_aggregation_factory._create_aggregation()

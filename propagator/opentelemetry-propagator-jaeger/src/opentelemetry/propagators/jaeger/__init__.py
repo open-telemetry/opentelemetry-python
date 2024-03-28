@@ -44,7 +44,6 @@ class JaegerPropagator(TextMapPropagator):
         context: typing.Optional[Context] = None,
         getter: Getter = default_getter,
     ) -> Context:
-
         if context is None:
             context = Context()
         header = getter.get(carrier, self.TRACE_ID_KEY)

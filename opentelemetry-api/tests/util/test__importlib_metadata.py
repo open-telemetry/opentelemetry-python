@@ -23,7 +23,6 @@ from opentelemetry.util._importlib_metadata import (
 
 class TestEntryPoints(TestCase):
     def test_entry_points(self):
-
         self.assertIsInstance(
             next(
                 iter(

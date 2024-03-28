@@ -17,27 +17,26 @@ from collections import defaultdict
 from typing import List, Optional, Sequence
 
 from opentelemetry.exporter.otlp.proto.common._internal import (
-    _encode_trace_id,
-    _encode_span_id,
-    _encode_instrumentation_scope,
     _encode_attributes,
+    _encode_instrumentation_scope,
     _encode_resource,
+    _encode_span_id,
+    _encode_trace_id,
 )
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
     ExportTraceServiceRequest as PB2ExportTraceServiceRequest,
 )
 from opentelemetry.proto.trace.v1.trace_pb2 import (
-    ScopeSpans as PB2ScopeSpans,
+    ResourceSpans as PB2ResourceSpans,
 )
 from opentelemetry.proto.trace.v1.trace_pb2 import (
-    ResourceSpans as PB2ResourceSpans,
+    ScopeSpans as PB2ScopeSpans,
 )
 from opentelemetry.proto.trace.v1.trace_pb2 import Span as PB2SPan
 from opentelemetry.proto.trace.v1.trace_pb2 import Status as PB2Status
 from opentelemetry.sdk.trace import Event, ReadableSpan
-from opentelemetry.trace import Link
-from opentelemetry.trace import SpanKind
-from opentelemetry.trace.span import SpanContext, TraceState, Status
+from opentelemetry.trace import Link, SpanKind
+from opentelemetry.trace.span import SpanContext, Status, TraceState
 
 # pylint: disable=E1101
 _SPAN_KIND_MAP = {

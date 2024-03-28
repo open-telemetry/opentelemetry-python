@@ -45,7 +45,6 @@ _logger = logging.getLogger(__name__)
 
 
 def _is_valid_pair(key: str, value: str) -> bool:
-
     return (
         isinstance(key, str)
         and _KEY_PATTERN.fullmatch(key) is not None

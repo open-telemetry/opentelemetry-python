@@ -113,7 +113,6 @@ class View:
             and instrument_name is not None
             and ("*" in instrument_name or "?" in instrument_name)
         ):
-
             raise Exception(
                 f"View {name} declared with wildcard "
                 "characters in instrument_name"
@@ -136,7 +135,6 @@ class View:
     # pylint: disable=too-many-return-statements
     # pylint: disable=too-many-branches
     def _match(self, instrument: Instrument) -> bool:
-
         if self._instrument_type is not None:
             if not isinstance(instrument, self._instrument_type):
                 return False

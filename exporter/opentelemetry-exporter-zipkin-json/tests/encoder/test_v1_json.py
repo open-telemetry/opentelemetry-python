@@ -41,7 +41,6 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
         return JsonV1Encoder(*args, **kwargs)
 
     def test_encode(self):
-
         local_endpoint = {"serviceName": TEST_SERVICE_NAME}
 
         otel_spans = self.get_exhaustive_otel_span_list()
