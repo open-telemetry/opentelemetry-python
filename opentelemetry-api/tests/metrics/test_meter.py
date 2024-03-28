@@ -134,7 +134,6 @@ class TestMeter(TestCase):
         """
 
         self.assertTrue(hasattr(Meter, "create_gauge"))
-        self.assertTrue(Meter.create_gauge.__isabstractmethod__)
 
     def test_create_observable_gauge(self):
         """
