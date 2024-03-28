@@ -104,11 +104,8 @@ class _Asynchronous:
         self._callbacks: List[CallbackT] = []
 
         if callbacks is not None:
-
             for callback in callbacks:
-
                 if isinstance(callback, Generator):
-
                     # advance generator to it's first yield
                     next(callback)
 

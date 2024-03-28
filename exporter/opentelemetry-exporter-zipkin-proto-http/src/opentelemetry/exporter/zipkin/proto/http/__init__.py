@@ -77,8 +77,8 @@ from typing import Optional, Sequence
 
 import requests
 
-from opentelemetry.exporter.zipkin.proto.http.v2 import ProtobufEncoder
 from opentelemetry.exporter.zipkin.node_endpoint import IpInput, NodeEndpoint
+from opentelemetry.exporter.zipkin.proto.http.v2 import ProtobufEncoder
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_ZIPKIN_ENDPOINT,
     OTEL_EXPORTER_ZIPKIN_TIMEOUT,

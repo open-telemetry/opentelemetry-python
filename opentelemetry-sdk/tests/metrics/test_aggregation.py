@@ -481,7 +481,6 @@ class TestDefaultAggregation(TestCase):
         cls.default_aggregation = DefaultAggregation()
 
     def test_counter(self):
-
         aggregation = self.default_aggregation._create_aggregation(
             _Counter("name", Mock(), Mock()), Mock(), 0
         )
@@ -493,7 +492,6 @@ class TestDefaultAggregation(TestCase):
         )
 
     def test_up_down_counter(self):
-
         aggregation = self.default_aggregation._create_aggregation(
             _UpDownCounter("name", Mock(), Mock()), Mock(), 0
         )
@@ -505,7 +503,6 @@ class TestDefaultAggregation(TestCase):
         )
 
     def test_observable_counter(self):
-
         aggregation = self.default_aggregation._create_aggregation(
             _ObservableCounter("name", Mock(), Mock(), callbacks=[Mock()]),
             Mock(),
@@ -519,7 +516,6 @@ class TestDefaultAggregation(TestCase):
         )
 
     def test_observable_up_down_counter(self):
-
         aggregation = self.default_aggregation._create_aggregation(
             _ObservableUpDownCounter(
                 "name", Mock(), Mock(), callbacks=[Mock()]
@@ -535,7 +531,6 @@ class TestDefaultAggregation(TestCase):
         )
 
     def test_histogram(self):
-
         aggregation = self.default_aggregation._create_aggregation(
             _Histogram(
                 "name",
@@ -548,7 +543,6 @@ class TestDefaultAggregation(TestCase):
         self.assertIsInstance(aggregation, _ExplicitBucketHistogramAggregation)
 
     def test_gauge(self):
-
         aggregation = self.default_aggregation._create_aggregation(
             _Gauge(
                 "name",
@@ -561,7 +555,6 @@ class TestDefaultAggregation(TestCase):
         self.assertIsInstance(aggregation, _LastValueAggregation)
 
     def test_observable_gauge(self):
-
         aggregation = self.default_aggregation._create_aggregation(
             _ObservableGauge(
                 "name",

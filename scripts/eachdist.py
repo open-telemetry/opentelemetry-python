@@ -238,7 +238,7 @@ def parse_args(args=None):
 
     fmtparser = subparsers.add_parser(
         "format",
-        help="Formats all source code with black and isort.",
+        help="Formats all source code with ruff.",
     )
     fmtparser.set_defaults(func=format_args)
     fmtparser.add_argument(
@@ -517,18 +517,18 @@ def lint_args(args):
 
     runsubprocess(
         args.dry_run,
-        ("black", "--config", "pyproject.toml", ".") + (("--diff", "--check") if args.check_only else ()),
-        cwd=rootdir,
+        ("ruff", "check", "--select", "I")
+        + (() if args.check_only else ("--fix",)),
         check=True,
     )
     runsubprocess(
         args.dry_run,
-        ("isort", "--settings-path", ".isort.cfg", ".")
-        + (("--diff", "--check-only") if args.check_only else ()),
-        cwd=rootdir,
+        ("ruff", "format") + (("--diff",) if args.check_only else ()),
         check=True,
     )
-    runsubprocess(args.dry_run, ("flake8", "--config", ".flake8", rootdir), check=True)
+    runsubprocess(
+        args.dry_run, ("flake8", "--config", ".flake8", rootdir), check=True
+    )
     execute_args(
         parse_subargs(
             args, ("exec", "pylint {}", "--all", "--mode", "lintroots")
@@ -577,8 +577,8 @@ def update_version_files(targets, version, packages):
 def update_dependencies(targets, version, packages):
     print("updating dependencies")
     # PEP 508 allowed specifier operators
-    operators = ['==', '!=', '<=', '>=', '<', '>', '===', '~=', '=']
-    operators_pattern = '|'.join(re.escape(op) for op in operators)
+    operators = ["==", "!=", "<=", ">=", "<", ">", "===", "~=", "="]
+    operators_pattern = "|".join(re.escape(op) for op in operators)
 
     for pkg in packages:
         search = rf"({basename(pkg)}[^,]*)({operators_pattern})(.*\.dev)"
@@ -654,13 +654,13 @@ def format_args(args):
 
     runsubprocess(
         args.dry_run,
-        ("black", "--config", f"{root_dir}/pyproject.toml", "."),
+        ("ruff", "check", "--select", "I", "--fix"),
         cwd=format_dir,
         check=True,
     )
     runsubprocess(
         args.dry_run,
-        ("isort", "--settings-path", f"{root_dir}/.isort.cfg", "--profile", "black", "."),
+        ("ruff", "format"),
         cwd=format_dir,
         check=True,
     )

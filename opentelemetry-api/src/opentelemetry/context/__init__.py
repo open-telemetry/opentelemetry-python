@@ -56,7 +56,6 @@ def _load_runtime_context(func: _F) -> _F:
                     OTEL_PYTHON_CONTEXT, default_context
                 )  # type: str
                 try:
-
                     _RUNTIME_CONTEXT = next(  # type: ignore
                         iter(  # type: ignore
                             entry_points(  # type: ignore

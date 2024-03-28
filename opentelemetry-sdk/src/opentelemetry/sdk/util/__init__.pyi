@@ -30,7 +30,7 @@ _VT = TypeVar("_VT")
 
 def ns_to_iso_str(nanoseconds: int) -> str: ...
 def get_dict_as_key(
-    labels: Mapping[str, AttributeValue]
+    labels: Mapping[str, AttributeValue],
 ) -> AttributesAsKey: ...
 
 class BoundedList(Sequence[_T]):

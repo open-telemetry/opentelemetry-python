@@ -38,7 +38,6 @@ class TestSumAggregation(TestCase):
         ),
     )
     def test_asynchronous_delta_temporality(self):
-
         eight_multiple_generator = count(start=8, step=8)
 
         counter = 0
@@ -124,7 +123,6 @@ class TestSumAggregation(TestCase):
         )
 
         for metrics_data in results[1:]:
-
             metric_data = (
                 metrics_data.resource_metrics[0]
                 .scope_metrics[0]
@@ -163,7 +161,6 @@ class TestSumAggregation(TestCase):
         ),
     )
     def test_asynchronous_cumulative_temporality(self):
-
         eight_multiple_generator = count(start=8, step=8)
 
         counter = 0
@@ -225,7 +222,6 @@ class TestSumAggregation(TestCase):
         )
 
         for index, metrics_data in enumerate(results):
-
             metric_data = (
                 metrics_data.resource_metrics[0]
                 .scope_metrics[0]
@@ -260,7 +256,6 @@ class TestSumAggregation(TestCase):
         ),
     )
     def test_synchronous_delta_temporality(self):
-
         aggregation = SumAggregation()
 
         reader = InMemoryMetricReader(
@@ -276,7 +271,6 @@ class TestSumAggregation(TestCase):
         results = []
 
         for _ in range(10):
-
             results.append(reader.get_metrics_data())
 
         for metrics_data in results:
@@ -322,7 +316,6 @@ class TestSumAggregation(TestCase):
         )
 
         for metrics_data in results[1:]:
-
             metric_data = (
                 metrics_data.resource_metrics[0]
                 .scope_metrics[0]
@@ -342,7 +335,6 @@ class TestSumAggregation(TestCase):
         results = []
 
         for _ in range(10):
-
             results.append(reader.get_metrics_data())
 
         provider.shutdown()
@@ -359,7 +351,6 @@ class TestSumAggregation(TestCase):
         ),
     )
     def test_synchronous_cumulative_temporality(self):
-
         aggregation = SumAggregation()
 
         reader = InMemoryMetricReader(
@@ -375,7 +366,6 @@ class TestSumAggregation(TestCase):
         results = []
 
         for _ in range(10):
-
             results.append(reader.get_metrics_data())
 
         for metrics_data in results:
@@ -384,7 +374,6 @@ class TestSumAggregation(TestCase):
         results = []
 
         for _ in range(10):
-
             counter.add(8)
             results.append(reader.get_metrics_data())
 
@@ -398,7 +387,6 @@ class TestSumAggregation(TestCase):
         )
 
         for index, metrics_data in enumerate(results):
-
             metric_data = (
                 metrics_data.resource_metrics[0]
                 .scope_metrics[0]
@@ -414,7 +402,6 @@ class TestSumAggregation(TestCase):
         results = []
 
         for _ in range(10):
-
             results.append(reader.get_metrics_data())
 
         provider.shutdown()
@@ -429,7 +416,6 @@ class TestSumAggregation(TestCase):
         )
 
         for metrics_data in results:
-
             metric_data = (
                 metrics_data.resource_metrics[0]
                 .scope_metrics[0]

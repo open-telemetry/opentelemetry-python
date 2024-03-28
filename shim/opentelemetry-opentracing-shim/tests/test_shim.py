@@ -302,7 +302,7 @@ class TestShim(TestCase):
             # Verify parent span becomes the active span again.
             self.assertEqual(
                 self.shim.active_span.context.unwrap(),
-                parent.span.context.unwrap()
+                parent.span.context.unwrap(),
                 # TODO: Check equality of the spans themselves rather than
                 # their context once the SpanShim reconstruction problem has
                 # been addressed (see previous TODO).
@@ -608,7 +608,6 @@ class TestShim(TestCase):
             self.shim.extract(opentracing.Format.BINARY, bytearray())
 
     def test_baggage(self):
-
         span_context_shim = SpanContextShim(
             trace.SpanContext(1234, 5678, is_remote=False)
         )
@@ -650,13 +649,11 @@ class TestShim(TestCase):
         span_shim = self.shim.start_span("TestSpan16")
 
         with self.shim.scope_manager.activate(span_shim, finish_on_close=True):
-
             with (
                 TracerProvider()
                 .get_tracer(__name__)
                 .start_as_current_span("abc")
             ) as opentelemetry_span:
-
                 self.assertIs(
                     span_shim.unwrap().context,
                     opentelemetry_span.parent,
@@ -665,9 +662,7 @@ class TestShim(TestCase):
         with (
             TracerProvider().get_tracer(__name__).start_as_current_span("abc")
         ) as opentelemetry_span:
-
             with self.shim.start_active_span("TestSpan17") as scope:
-
                 self.assertIs(
                     scope.span.unwrap().parent,
                     opentelemetry_span.context,

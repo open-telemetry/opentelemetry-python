@@ -889,7 +889,6 @@ class TestSpan(unittest.TestCase):
             trace_api.Link(other_context2, {"name": "neighbor"}),
         )
         with self.tracer.start_as_current_span("root", links=links) as root:
-
             self.assertEqual(len(root.links), 2)
             self.assertEqual(
                 root.links[0].context.trace_id, other_context1.trace_id
@@ -995,7 +994,6 @@ class TestSpan(unittest.TestCase):
         self.assertEqual(end_time, span.end_time)
 
     def test_span_set_status(self):
-
         span1 = self.tracer.start_span("span1")
         span1.set_status(Status(status_code=StatusCode.ERROR))
         self.assertEqual(span1.status.status_code, StatusCode.ERROR)

@@ -97,13 +97,13 @@ class ShimSpan(wrapt.ObjectProxy):
             ],
         }
         if message_event.uncompressed_size_bytes is not None:
-            attrs[
-                _MESSAGE_EVENT_ATTRIBUTE_KEY_SIZE_UNCOMPRESSED
-            ] = message_event.uncompressed_size_bytes
+            attrs[_MESSAGE_EVENT_ATTRIBUTE_KEY_SIZE_UNCOMPRESSED] = (
+                message_event.uncompressed_size_bytes
+            )
         if message_event.compressed_size_bytes is not None:
-            attrs[
-                _MESSAGE_EVENT_ATTRIBUTE_KEY_SIZE_COMPRESSED
-            ] = message_event.compressed_size_bytes
+            attrs[_MESSAGE_EVENT_ATTRIBUTE_KEY_SIZE_COMPRESSED] = (
+                message_event.compressed_size_bytes
+            )
 
         timestamp = _opencensus_time_to_nanos(message_event.timestamp)
         self._self_otel_span.add_event(

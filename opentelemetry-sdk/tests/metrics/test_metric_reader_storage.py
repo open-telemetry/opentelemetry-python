@@ -294,7 +294,6 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         self.assertEqual(len(MockViewInstrumentMatch.call_args_list), 1)
 
     def test_drop_aggregation(self):
-
         counter = _Counter("name", Mock(), Mock())
         metric_reader_storage = MetricReaderStorage(
             SdkConfiguration(
@@ -318,7 +317,6 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         self.assertIsNone(metric_reader_storage.collect())
 
     def test_same_collection_start(self):
-
         counter = _Counter("name", Mock(), Mock())
         up_down_counter = _UpDownCounter("name", Mock(), Mock())
 
@@ -359,7 +357,6 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         )
 
     def test_conflicting_view_configuration(self):
-
         observable_counter = _ObservableCounter(
             "observable_counter",
             Mock(),
@@ -515,9 +512,7 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             log.records[0].message,
         )
 
-        for (
-            view_instrument_matches
-        ) in (
+        for view_instrument_matches in (
             metric_reader_storage._instrument_view_instrument_matches.values()
         ):
             for view_instrument_match in view_instrument_matches:

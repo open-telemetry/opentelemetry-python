@@ -29,7 +29,6 @@ class Test_Providers(TestCase):
     )
     @patch("opentelemetry.util._importlib_metadata.entry_points")
     def test__providers(self, mock_entry_points):
-
         reload(_providers)
 
         mock_entry_points.configure_mock(

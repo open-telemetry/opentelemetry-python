@@ -74,7 +74,6 @@ class DummyMetricReader(MetricReader):
 
 class TestMetricReader(TestCase):
     def test_configure_temporality(self):
-
         dummy_metric_reader = DummyMetricReader(
             preferred_temporality={
                 Histogram: AggregationTemporality.DELTA,
@@ -147,7 +146,6 @@ class TestMetricReader(TestCase):
         )
 
     def test_force_flush(self):
-
         with patch.object(DummyMetricReader, "collect") as mock_collect:
             DummyMetricReader().force_flush(timeout_millis=10)
             mock_collect.assert_called_with(timeout_millis=10)

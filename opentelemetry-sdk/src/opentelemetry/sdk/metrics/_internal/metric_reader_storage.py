@@ -107,9 +107,9 @@ class MetricReaderStorage:
                         ),
                     )
                 )
-            self._instrument_view_instrument_matches[
-                instrument
-            ] = view_instrument_matches
+            self._instrument_view_instrument_matches[instrument] = (
+                view_instrument_matches
+            )
 
             return view_instrument_matches
 
@@ -135,10 +135,9 @@ class MetricReaderStorage:
         collection_start_nanos = time_ns()
 
         with self._lock:
-
-            instrumentation_scope_scope_metrics: (
-                Dict[InstrumentationScope, ScopeMetrics]
-            ) = {}
+            instrumentation_scope_scope_metrics: Dict[
+                InstrumentationScope, ScopeMetrics
+            ] = {}
 
             for (
                 instrument,
@@ -151,7 +150,6 @@ class MetricReaderStorage:
                 metrics: List[Metric] = []
 
                 for view_instrument_match in view_instrument_matches:
-
                     data_points = view_instrument_match.collect(
                         aggregation_temporality, collection_start_nanos
                     )
@@ -214,7 +212,6 @@ class MetricReaderStorage:
                     )
 
                 if metrics:
-
                     if instrument.instrumentation_scope not in (
                         instrumentation_scope_scope_metrics
                     ):
@@ -231,7 +228,6 @@ class MetricReaderStorage:
                         ].metrics.extend(metrics)
 
             if instrumentation_scope_scope_metrics:
-
                 return MetricsData(
                     resource_metrics=[
                         ResourceMetrics(
@@ -276,7 +272,6 @@ class MetricReaderStorage:
                     if existing_view_instrument_match.conflicts(
                         new_view_instrument_match
                     ):
-
                         _logger.warning(
                             "Views %s and %s will cause conflicting "
                             "metrics identities",

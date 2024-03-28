@@ -28,19 +28,15 @@ from typing import (  # noqa: F401
     List,
     Optional,
     Tuple,
+    TypeVar,
     Union,
 )
 from typing import Sequence as TypingSequence
-from typing import TypeVar
 from urllib.parse import urlparse
 
 from deprecated import deprecated
-
-from opentelemetry.exporter.otlp.proto.common._internal import (
-    _get_resource_data,
-    _create_exp_backoff_generator,
-)
 from google.rpc.error_details_pb2 import RetryInfo
+
 from grpc import (
     ChannelCredentials,
     Compression,
@@ -50,7 +46,10 @@ from grpc import (
     secure_channel,
     ssl_channel_credentials,
 )
-
+from opentelemetry.exporter.otlp.proto.common._internal import (
+    _create_exp_backoff_generator,
+    _get_resource_data,
+)
 from opentelemetry.exporter.otlp.proto.grpc import (
     _OTLP_GRPC_HEADERS,
 )
@@ -268,7 +267,6 @@ class OTLPExporterMixin(
                     return self._result.SUCCESS
 
                 except RpcError as error:
-
                     if error.code() in [
                         StatusCode.CANCELLED,
                         StatusCode.DEADLINE_EXCEEDED,
@@ -278,7 +276,6 @@ class OTLPExporterMixin(
                         StatusCode.UNAVAILABLE,
                         StatusCode.DATA_LOSS,
                     ]:
-
                         retry_info_bin = dict(error.trailing_metadata()).get(
                             "google.rpc.retryinfo-bin"
                         )
