@@ -262,10 +262,7 @@ def _import_exporters(
     metric_exporters = {}
     log_exporters = {}
 
-    for (
-        exporter_name,
-        exporter_impl,
-    ) in _import_config_components(
+    for exporter_name, exporter_impl in _import_config_components(
         trace_exporter_names, "opentelemetry_traces_exporter"
     ):
         if issubclass(exporter_impl, SpanExporter):
@@ -273,10 +270,7 @@ def _import_exporters(
         else:
             raise RuntimeError(f"{exporter_name} is not a trace exporter")
 
-    for (
-        exporter_name,
-        exporter_impl,
-    ) in _import_config_components(
+    for exporter_name, exporter_impl in _import_config_components(
         metric_exporter_names, "opentelemetry_metrics_exporter"
     ):
         # The metric exporter components may be push MetricExporter or pull exporters which
@@ -286,10 +280,7 @@ def _import_exporters(
         else:
             raise RuntimeError(f"{exporter_name} is not a metric exporter")
 
-    for (
-        exporter_name,
-        exporter_impl,
-    ) in _import_config_components(
+    for exporter_name, exporter_impl in _import_config_components(
         log_exporter_names, "opentelemetry_logs_exporter"
     ):
         if issubclass(exporter_impl, LogExporter):

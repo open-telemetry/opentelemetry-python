@@ -648,7 +648,7 @@ def test_args(args):
 
 
 def format_args(args):
-    root_dir = format_dir = str(find_projectroot())
+    format_dir = str(find_projectroot())
     if args.path:
         format_dir = os.path.join(format_dir, args.path)
 
