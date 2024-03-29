@@ -122,6 +122,7 @@ def remove_common_symbols():
         if not removed_symbols[file_path]:
             del removed_symbols[file_path]
 
+
 # If a symbol is added and removed in the same commit, we consider it as not
 # added or removed.
 remove_common_symbols()
