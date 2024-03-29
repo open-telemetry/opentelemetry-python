@@ -122,12 +122,11 @@ def remove_common_symbols():
         if not removed_symbols[file_path]:
             del removed_symbols[file_path]
 
+# If a symbol is added and removed in the same commit, we consider it as not
+# added or removed.
+remove_common_symbols()
 
 if added_symbols or removed_symbols:
-
-    # If a symbol is added and removed in the same commit, we consider it
-    # as not added or removed.
-    remove_common_symbols()
     print("The code in this branch adds the following public symbols:")
     print()
     for file_path_, symbols_ in added_symbols.items():
