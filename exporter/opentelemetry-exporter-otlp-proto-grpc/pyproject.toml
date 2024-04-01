@@ -7,7 +7,7 @@ name = "opentelemetry-exporter-otlp-proto-grpc"
 dynamic = ["version"]
 description = "OpenTelemetry Collector Protobuf over gRPC Exporter"
 readme = "README.rst"
-license = "Apache-2.0"
+license = {text = "Apache-2.0"}
 requires-python = ">=3.8"
 authors = [
   { name = "OpenTelemetry Authors", email = "cncf-opentelemetry-contributors@lists.cncf.io" },
@@ -28,9 +28,9 @@ dependencies = [
   "googleapis-common-protos ~= 1.52",
   "grpcio >= 1.0.0, < 2.0.0",
   "opentelemetry-api ~= 1.15",
-  "opentelemetry-proto == 1.24.0.dev",
-  "opentelemetry-sdk ~= 1.24.0.dev",
-  "opentelemetry-exporter-otlp-proto-common == 1.24.0.dev",
+  "opentelemetry-proto == 1.25.0.dev",
+  "opentelemetry-sdk ~= 1.25.0.dev",
+  "opentelemetry-exporter-otlp-proto-common == 1.25.0.dev",
 ]
 
 [project.optional-dependencies]
