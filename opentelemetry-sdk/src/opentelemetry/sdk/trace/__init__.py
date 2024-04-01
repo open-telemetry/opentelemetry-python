@@ -30,6 +30,7 @@ from typing import (
     Dict,
     Iterator,
     List,
+    MutableMapping,
     Optional,
     Sequence,
     Tuple,
@@ -745,17 +746,17 @@ class Span(trace_api.Span, ReadableSpan):
         parent: Optional[trace_api.SpanContext] = None,
         sampler: Optional[sampling.Sampler] = None,
         trace_config: None = None,  # TODO
-        resource: Resource = None,
+        resource: Optional[Resource] = None,
         attributes: types.Attributes = None,
-        events: Sequence[Event] = None,
+        events: Optional[Sequence[Event]] = None,
         links: Sequence[trace_api.Link] = (),
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         span_processor: SpanProcessor = SpanProcessor(),
-        instrumentation_info: InstrumentationInfo = None,
+        instrumentation_info: Optional[InstrumentationInfo] = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
         limits=_UnsetLimits,
-        instrumentation_scope: InstrumentationScope = None,
+        instrumentation_scope: Optional[InstrumentationScope] = None,
     ) -> None:
         if resource is None:
             resource = Resource.create({})
@@ -982,7 +983,7 @@ class Span(trace_api.Span, ReadableSpan):
 
     def record_exception(
         self,
-        exception: Exception,
+        exception: BaseException,
         attributes: types.Attributes = None,
         timestamp: Optional[int] = None,
         escaped: bool = False,
@@ -994,7 +995,7 @@ class Span(trace_api.Span, ReadableSpan):
                 type(exception), value=exception, tb=exception.__traceback__
             )
         )
-        _attributes = {
+        _attributes: MutableMapping[str, types.AttributeValue] = {
             "exception.type": exception.__class__.__name__,
             "exception.message": str(exception),
             "exception.stacktrace": stacktrace,
@@ -1045,7 +1046,7 @@ class Tracer(trace_api.Tracer):
         context: Optional[context_api.Context] = None,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         attributes: types.Attributes = None,
-        links: Sequence[trace_api.Link] = (),
+        links: Optional[Sequence[trace_api.Link]] = (),
         start_time: Optional[int] = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
@@ -1075,7 +1076,7 @@ class Tracer(trace_api.Tracer):
         context: Optional[context_api.Context] = None,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         attributes: types.Attributes = None,
-        links: Sequence[trace_api.Link] = (),
+        links: Optional[Sequence[trace_api.Link]] = (),
         start_time: Optional[int] = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
@@ -1152,15 +1153,15 @@ class TracerProvider(trace_api.TracerProvider):
 
     def __init__(
         self,
-        sampler: sampling.Sampler = None,
-        resource: Resource = None,
+        sampler: Optional[sampling.Sampler] = None,
+        resource: Optional[Resource] = None,
         shutdown_on_exit: bool = True,
         active_span_processor: Union[
-            SynchronousMultiSpanProcessor, ConcurrentMultiSpanProcessor
+            SynchronousMultiSpanProcessor, ConcurrentMultiSpanProcessor, None
         ] = None,
-        id_generator: IdGenerator = None,
-        span_limits: SpanLimits = None,
-    ):
+        id_generator: Optional[IdGenerator] = None,
+        span_limits: Optional[SpanLimits] = None,
+    ) -> None:
         self._active_span_processor = (
             active_span_processor or SynchronousMultiSpanProcessor()
         )
