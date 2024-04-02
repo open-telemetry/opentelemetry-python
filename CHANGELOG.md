@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Use ruff instead of black/isort for autoformatting (internal change)
+  ([#3822](https://github.com/open-telemetry/opentelemetry-python/pull/3822))
+
 ## Version 1.24.0/0.45b0 (2024-03-28)
 
 - Make create_gauge non-abstract method
