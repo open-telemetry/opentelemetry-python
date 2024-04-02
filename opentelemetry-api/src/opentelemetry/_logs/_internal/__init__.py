@@ -193,7 +193,6 @@ class NoOpLoggerProvider(LoggerProvider):
         schema_url: Optional[str] = None,
     ) -> Logger:
         """Returns a NoOpLogger."""
-        super().get_logger(name, version=version, schema_url=schema_url)
         return NoOpLogger(name, version=version, schema_url=schema_url)
 
 
