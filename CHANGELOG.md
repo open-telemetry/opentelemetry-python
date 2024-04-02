@@ -29,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3778](https://github.com/open-telemetry/opentelemetry-python/pull/3778))
 - Fix license field in pyproject.toml files
   ([#3803](https://github.com/open-telemetry/opentelemetry-python/pull/3803))
+- Bump mypy to 1.9.0
+  ([#3795](https://github.com/open-telemetry/opentelemetry-python/pull/3795))
 
 ## Version 1.23.0/0.44b0 (2024-02-23)
 
