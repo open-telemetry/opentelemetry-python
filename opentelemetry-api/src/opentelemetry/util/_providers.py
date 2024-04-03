@@ -29,7 +29,7 @@ logger = getLogger(__name__)
 
 def _load_provider(
     provider_environment_variable: str, provider: str
-) -> Provider:
+) -> Provider:  # type: ignore[type-var]
 
     try:
 
