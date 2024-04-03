@@ -101,6 +101,18 @@ class ExponentialHistogram:
         "opentelemetry.sdk.metrics.export.AggregationTemporality"
     )
 
+    def to_json(self, indent=4) -> str:
+        return dumps(
+            {
+                "data_points": [
+                    loads(data_point.to_json(indent=indent))
+                    for data_point in self.data_points
+                ],
+                "aggregation_temporality": self.aggregation_temporality,
+            },
+            indent=indent,
+        )
+
 
 @dataclass(frozen=True)
 class Sum:

@@ -37,6 +37,7 @@ from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_COUNT_LIMIT,
     OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
+    OTEL_SDK_DISABLED,
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util import ns_to_iso_str
@@ -557,6 +558,8 @@ class LoggerProvider(APILoggerProvider):
         self._multi_log_record_processor = (
             multi_log_record_processor or SynchronousMultiLogRecordProcessor()
         )
+        disabled = environ.get(OTEL_SDK_DISABLED, "")
+        self._disabled = disabled.lower().strip() == "true"
         self._at_exit_handler = None
         if shutdown_on_exit:
             self._at_exit_handler = atexit.register(self.shutdown)
@@ -571,6 +574,9 @@ class LoggerProvider(APILoggerProvider):
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
     ) -> Logger:
+        if self._disabled:
+            _logger.warning("SDK is disabled.")
+            return NoOpLogger(name, version=version, schema_url=schema_url)
         return Logger(
             self._resource,
             self._multi_log_record_processor,
