@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import threading
-import time
 from concurrent.futures import ThreadPoolExecutor
 
 # pylint: disable=too-many-lines
@@ -28,6 +26,9 @@ from google.protobuf.duration_pb2 import Duration
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import ChannelCredentials, Compression, StatusCode, server
 
+from opentelemetry.exporter.otlp.proto.common.exporter import (
+    RetryableExportError,
+)
 from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import (
     OTLPMetricExporter,
 )
@@ -377,13 +378,10 @@ class TestOTLPMetricExporter(TestCase):
             mock_method.reset_mock()
 
     # pylint: disable=no-self-use
-    @patch(
-        "opentelemetry.exporter.otlp.proto.grpc.exporter._create_exp_backoff_generator"
-    )
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
     @patch.dict("os.environ", {OTEL_EXPORTER_OTLP_COMPRESSION: "gzip"})
     def test_otlp_exporter_otlp_compression_envvar(
-        self, mock_insecure_channel, mock_expo
+        self, mock_insecure_channel
     ):
         """Just OTEL_EXPORTER_OTLP_COMPRESSION should work"""
         OTLPMetricExporter(insecure=True)
@@ -413,65 +411,6 @@ class TestOTLPMetricExporter(TestCase):
         OTLPMetricExporter(insecure=True)
         mock_insecure_channel.assert_called_once_with(
             "localhost:4317", compression=Compression.NoCompression
-        )
-
-    @patch(
-        "opentelemetry.exporter.otlp.proto.grpc.exporter._create_exp_backoff_generator"
-    )
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
-    def test_unavailable(self, mock_sleep, mock_expo):
-
-        mock_expo.configure_mock(**{"return_value": [1]})
-
-        add_MetricsServiceServicer_to_server(
-            MetricsServiceServicerUNAVAILABLE(), self.server
-        )
-        self.assertEqual(
-            self.exporter.export(self.metrics["sum_int"]),
-            MetricExportResult.FAILURE,
-        )
-        mock_sleep.assert_called_with(1)
-
-    @patch(
-        "opentelemetry.exporter.otlp.proto.grpc.exporter._create_exp_backoff_generator"
-    )
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
-    def test_unavailable_delay(self, mock_sleep, mock_expo):
-
-        mock_expo.configure_mock(**{"return_value": [1]})
-
-        add_MetricsServiceServicer_to_server(
-            MetricsServiceServicerUNAVAILABLEDelay(), self.server
-        )
-        self.assertEqual(
-            self.exporter.export(self.metrics["sum_int"]),
-            MetricExportResult.FAILURE,
-        )
-        mock_sleep.assert_called_with(4)
-
-    @patch(
-        "opentelemetry.exporter.otlp.proto.grpc.exporter._create_exp_backoff_generator"
-    )
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.logger.error")
-    def test_unknown_logs(self, mock_logger_error, mock_sleep, mock_expo):
-
-        mock_expo.configure_mock(**{"return_value": [1]})
-
-        add_MetricsServiceServicer_to_server(
-            MetricsServiceServicerUNKNOWN(), self.server
-        )
-        self.assertEqual(
-            self.exporter.export(self.metrics["sum_int"]),
-            MetricExportResult.FAILURE,
-        )
-        mock_sleep.assert_not_called()
-        mock_logger_error.assert_called_with(
-            "Failed to export %s to %s, error code: %s",
-            "metrics",
-            "localhost:4317",
-            StatusCode.UNKNOWN,
-            exc_info=True,
         )
 
     def test_success(self):
@@ -762,54 +701,100 @@ class TestOTLPMetricExporter(TestCase):
             split_metrics_data,
         )
 
+    @patch(
+        "opentelemetry.exporter.otlp.proto.grpc.metric_exporter.OTLPMetricExporter._export",
+        side_effect=RetryableExportError,
+    )
+    def test_split_metrics_timeout(self, mock_export):
+        """
+        Test that given a batch that will be split, timeout is respected across
+        the batch as a whole.
+        """
+        metrics_data = MetricsData(
+            resource_metrics=[
+                _resource_metrics(
+                    index=1,
+                    scope_metrics=[
+                        _scope_metrics(
+                            index=1,
+                            metrics=[
+                                _gauge(
+                                    index=1,
+                                    data_points=[
+                                        _number_data_point(11),
+                                    ],
+                                ),
+                                _gauge(
+                                    index=2,
+                                    data_points=[
+                                        _number_data_point(12),
+                                    ],
+                                ),
+                            ],
+                        ),
+                        _scope_metrics(
+                            index=2,
+                            metrics=[
+                                _gauge(
+                                    index=3,
+                                    data_points=[
+                                        _number_data_point(13),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+                _resource_metrics(
+                    index=2,
+                    scope_metrics=[
+                        _scope_metrics(
+                            index=3,
+                            metrics=[
+                                _gauge(
+                                    index=4,
+                                    data_points=[
+                                        _number_data_point(14),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
+        split_metrics_data: List[MetricsData] = list(
+            # pylint: disable=protected-access
+            OTLPMetricExporter(max_export_batch_size=2)._split_metrics_data(
+                metrics_data=metrics_data,
+            )
+        )
+        self.assertEqual(len(split_metrics_data), 2)
+        exporter = OTLPMetricExporter(max_export_batch_size=2)
+
+        timeout_s = 0.5
+        # The first export should block the full timeout duration and succeed.
+        # The subsequent export should fail immediately as the timeout will
+        # have passed.
+        with self.assertLogs(level="WARNING") as warning:
+            self.assertIs(
+                exporter.export(metrics_data, timeout_s * 1e3),
+                MetricExportResult.FAILURE,
+            )
+        # There could be multiple calls to export because of the jitter in backoff
+        self.assertNotIn(
+            split_metrics_data[1],
+            [call_args[1] for call_args in mock_export.call_args_list],
+        )
+        self.assertEqual(
+            warning.records[-1].message,
+            "Export deadline passed, ignoring data",
+        )
+
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel")
     def test_insecure_https_endpoint(self, mock_secure_channel):
         OTLPMetricExporter(endpoint="https://ab.c:123", insecure=True)
         mock_secure_channel.assert_called()
-
-    def test_shutdown(self):
-        add_MetricsServiceServicer_to_server(
-            MetricsServiceServicerSUCCESS(), self.server
-        )
-        self.assertEqual(
-            self.exporter.export(self.metrics["sum_int"]),
-            MetricExportResult.SUCCESS,
-        )
-        self.exporter.shutdown()
-        with self.assertLogs(level=WARNING) as warning:
-            self.assertEqual(
-                self.exporter.export(self.metrics["sum_int"]),
-                MetricExportResult.FAILURE,
-            )
-            self.assertEqual(
-                warning.records[0].message,
-                "Exporter already shutdown, ignoring batch",
-            )
-        self.exporter = OTLPMetricExporter()
-
-    def test_shutdown_wait_last_export(self):
-        add_MetricsServiceServicer_to_server(
-            MetricsServiceServicerUNAVAILABLEDelay(), self.server
-        )
-
-        export_thread = threading.Thread(
-            target=self.exporter.export, args=(self.metrics["sum_int"],)
-        )
-        export_thread.start()
-        try:
-            # pylint: disable=protected-access
-            self.assertTrue(self.exporter._export_lock.locked())
-            # delay is 4 seconds while the default shutdown timeout is 30_000 milliseconds
-            start_time = time.time()
-            self.exporter.shutdown()
-            now = time.time()
-            self.assertGreaterEqual(now, (start_time + 30 / 1000))
-            # pylint: disable=protected-access
-            self.assertTrue(self.exporter._shutdown)
-            # pylint: disable=protected-access
-            self.assertFalse(self.exporter._export_lock.locked())
-        finally:
-            export_thread.join()
 
     def test_aggregation_temporality(self):
         # pylint: disable=protected-access

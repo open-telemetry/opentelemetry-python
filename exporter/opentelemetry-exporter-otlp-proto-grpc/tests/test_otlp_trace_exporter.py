@@ -13,8 +13,6 @@
 # limitations under the License.
 
 import os
-import threading
-import time
 from concurrent.futures import ThreadPoolExecutor
 from logging import WARNING
 from unittest import TestCase
@@ -457,37 +455,6 @@ class TestOTLPSpanExporter(TestCase):
             exporter._headers,
             (("user-agent", "OTel-OTLP-Exporter-Python/" + __version__),),
         )
-
-    @patch(
-        "opentelemetry.exporter.otlp.proto.grpc.exporter._create_exp_backoff_generator"
-    )
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
-    def test_unavailable(self, mock_sleep, mock_expo):
-
-        mock_expo.configure_mock(**{"return_value": [1]})
-
-        add_TraceServiceServicer_to_server(
-            TraceServiceServicerUNAVAILABLE(), self.server
-        )
-        result = self.exporter.export([self.span])
-        self.assertEqual(result, SpanExportResult.FAILURE)
-        mock_sleep.assert_called_with(1)
-
-    @patch(
-        "opentelemetry.exporter.otlp.proto.grpc.exporter._create_exp_backoff_generator"
-    )
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
-    def test_unavailable_delay(self, mock_sleep, mock_expo):
-
-        mock_expo.configure_mock(**{"return_value": [1]})
-
-        add_TraceServiceServicer_to_server(
-            TraceServiceServicerUNAVAILABLEDelay(), self.server
-        )
-        self.assertEqual(
-            self.exporter.export([self.span]), SpanExportResult.FAILURE
-        )
-        mock_sleep.assert_called_with(4)
 
     def test_success(self):
         add_TraceServiceServicer_to_server(
@@ -932,30 +899,6 @@ class TestOTLPSpanExporter(TestCase):
                 warning.records[0].message,
                 "Exporter already shutdown, ignoring batch",
             )
-
-    def test_shutdown_wait_last_export(self):
-        add_TraceServiceServicer_to_server(
-            TraceServiceServicerUNAVAILABLEDelay(), self.server
-        )
-
-        export_thread = threading.Thread(
-            target=self.exporter.export, args=([self.span],)
-        )
-        export_thread.start()
-        try:
-            # pylint: disable=protected-access
-            self.assertTrue(self.exporter._export_lock.locked())
-            # delay is 4 seconds while the default shutdown timeout is 30_000 milliseconds
-            start_time = time.time()
-            self.exporter.shutdown()
-            now = time.time()
-            self.assertGreaterEqual(now, (start_time + 30 / 1000))
-            # pylint: disable=protected-access
-            self.assertTrue(self.exporter._shutdown)
-            # pylint: disable=protected-access
-            self.assertFalse(self.exporter._export_lock.locked())
-        finally:
-            export_thread.join()
 
 
 def _create_span_with_status(status: SDKStatus):

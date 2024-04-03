@@ -15,11 +15,12 @@
 from logging import WARNING
 from os import environ
 from unittest import TestCase
-from unittest.mock import MagicMock, Mock, call, patch
+from unittest.mock import ANY, MagicMock, Mock, patch
 
 from requests import Session
 from requests.models import Response
 from responses import POST, activate, add
+from responses.registries import OrderedRegistry
 
 from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
     encode_metrics,
@@ -275,7 +276,7 @@ class TestOTLPMetricExporter(TestCase):
         )
 
     @patch.object(Session, "post")
-    def test_serialization(self, mock_post):
+    def test_serialization(self, mock_post: Mock):
 
         resp = Response()
         resp.status_code = 200
@@ -293,18 +294,35 @@ class TestOTLPMetricExporter(TestCase):
             url=exporter._endpoint,
             data=serialized_data.SerializeToString(),
             verify=exporter._certificate_file,
-            timeout=exporter._timeout,
+            timeout=ANY,
         )
 
-    @activate
-    @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.sleep")
-    def test_exponential_backoff(self, mock_sleep):
-        # return a retryable error
+    # pylint: disable=unexpected-keyword-arg,no-value-for-parameter
+    @activate(registry=OrderedRegistry)
+    def test_exponential_backoff(self):
+        # return 3 retryable errors and then success
         add(
             POST,
             "http://metrics.example.com/export",
             json={"error": "something exploded"},
             status=500,
+        )
+        add(
+            POST,
+            "http://metrics.example.com/export",
+            json={"error": "something exploded"},
+            status=500,
+        )
+        add(
+            POST,
+            "http://metrics.example.com/export",
+            json={"error": "something exploded"},
+            status=500,
+        )
+        add(
+            POST,
+            "http://metrics.example.com/export",
+            status=200,
         )
 
         exporter = OTLPMetricExporter(
@@ -312,10 +330,14 @@ class TestOTLPMetricExporter(TestCase):
         )
         metrics_data = self.metrics["sum_int"]
 
-        exporter.export(metrics_data)
-        mock_sleep.assert_has_calls(
-            [call(1), call(2), call(4), call(8), call(16), call(32)]
-        )
+        with patch.object(
+            exporter._exporter._shutdown_event, "wait"
+        ) as mock_wait:
+            with self.assertLogs(level="WARNING"):
+                self.assertIs(
+                    exporter.export(metrics_data), MetricExportResult.SUCCESS
+                )
+        self.assertEqual(mock_wait.call_count, 3)
 
     def test_aggregation_temporality(self):
 
@@ -469,15 +491,16 @@ class TestOTLPMetricExporter(TestCase):
                 ExplicitBucketHistogramAggregation,
             )
 
-    @patch.object(OTLPMetricExporter, "_export", return_value=Mock(ok=True))
-    def test_2xx_status_code(self, mock_otlp_metric_exporter):
+    def test_2xx_status_code(self):
         """
         Test that any HTTP 2XX code returns a successful result
         """
 
+        exporter = OTLPMetricExporter(
+            session=Mock(**{"post.return_value": Mock(ok=True)})
+        )
         self.assertEqual(
-            OTLPMetricExporter().export(MagicMock()),
-            MetricExportResult.SUCCESS,
+            exporter.export(MagicMock()), MetricExportResult.SUCCESS
         )
 
     def test_preferred_aggregation_override(self):

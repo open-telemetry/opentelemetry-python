@@ -13,10 +13,11 @@
 # limitations under the License.
 
 import unittest
-from unittest.mock import MagicMock, Mock, call, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import requests
 import responses
+from responses.registries import OrderedRegistry
 
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
@@ -201,21 +202,34 @@ class TestOTLPSpanExporter(unittest.TestCase):
                 ),
             )
 
-    # pylint: disable=no-self-use
-    @responses.activate
-    @patch("opentelemetry.exporter.otlp.proto.http.trace_exporter.sleep")
-    def test_exponential_backoff(self, mock_sleep):
-        # return a retryable error
-        responses.add(
-            responses.POST,
+    # pylint: disable=unexpected-keyword-arg,no-value-for-parameter
+    @responses.activate(registry=OrderedRegistry)
+    def test_retryable_error(self):
+        # return 3 retryable errors and then success
+        responses.post(
             "http://traces.example.com/export",
             json={"error": "something exploded"},
             status=500,
+        )
+        responses.post(
+            "http://traces.example.com/export",
+            json={"error": "something exploded"},
+            status=500,
+        )
+        responses.post(
+            "http://traces.example.com/export",
+            json={"error": "something exploded"},
+            status=500,
+        )
+        responses.post(
+            "http://traces.example.com/export",
+            status=200,
         )
 
         exporter = OTLPSpanExporter(
             endpoint="http://traces.example.com/export"
         )
+
         span = _Span(
             "abc",
             context=Mock(
@@ -227,17 +241,23 @@ class TestOTLPSpanExporter(unittest.TestCase):
             ),
         )
 
-        exporter.export([span])
-        mock_sleep.assert_has_calls(
-            [call(1), call(2), call(4), call(8), call(16), call(32)]
-        )
+        with patch.object(
+            exporter._exporter._shutdown_event, "wait"
+        ) as mock_wait:
+            with self.assertLogs(level="WARNING"):
+                self.assertIs(
+                    exporter.export([span]), SpanExportResult.SUCCESS
+                )
+        self.assertEqual(mock_wait.call_count, 3)
 
-    @patch.object(OTLPSpanExporter, "_export", return_value=Mock(ok=True))
-    def test_2xx_status_code(self, mock_otlp_metric_exporter):
+    def test_2xx_status_code(self):
         """
         Test that any HTTP 2XX code returns a successful result
         """
-
+        exporter = OTLPSpanExporter(
+            session=Mock(**{"post.return_value": Mock(ok=True)})
+        )
         self.assertEqual(
-            OTLPSpanExporter().export(MagicMock()), SpanExportResult.SUCCESS
+            exporter.export(MagicMock()),
+            SpanExportResult.SUCCESS,
         )

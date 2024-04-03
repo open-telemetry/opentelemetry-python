@@ -6,7 +6,8 @@ OpenTelemetry Protobuf Encoding
 .. |pypi| image:: https://badge.fury.io/py/opentelemetry-exporter-otlp-proto-common.svg
    :target: https://pypi.org/project/opentelemetry-exporter-otlp-proto-common/
 
-This library is provided as a convenience to encode to Protobuf. Currently used by:
+
+This library provides the shared exporter interface as well as convenience modules to encode to Protobuf. Currently used by:
 
 * opentelemetry-exporter-otlp-proto-grpc
 * opentelemetry-exporter-otlp-proto-http
