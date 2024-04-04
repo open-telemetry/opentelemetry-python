@@ -15,12 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3633](https://github.com/open-telemetry/opentelemetry-python/pull/3633))
 - Fix python 3.12 deprecation warning
   ([#3751](https://github.com/open-telemetry/opentelemetry-python/pull/3751))
-- Add to_json method to ExponentialHistogram
-  ([#3780](https://github.com/open-telemetry/opentelemetry-python/pull/3780))
 - Fix exponential histograms
   ([#3798](https://github.com/open-telemetry/opentelemetry-python/pull/3798))
 - bump mypy to 0.982
   ([#3776](https://github.com/open-telemetry/opentelemetry-python/pull/3776))
+- Fix otlp exporter to export log_record.observed_timestamp
+  ([#3785](https://github.com/open-telemetry/opentelemetry-python/pull/3785))
+- Add to_json method to ExponentialHistogram
+  ([#3780](https://github.com/open-telemetry/opentelemetry-python/pull/3780))
 - Add support for OTEL_SDK_DISABLED environment variable
   ([#3648](https://github.com/open-telemetry/opentelemetry-python/pull/3648))
 - Fix ValueError message for PeriodicExportingMetricsReader
