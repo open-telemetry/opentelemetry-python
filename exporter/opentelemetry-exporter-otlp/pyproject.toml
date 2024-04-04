@@ -7,7 +7,7 @@ name = "opentelemetry-exporter-otlp"
 dynamic = ["version"]
 description = "OpenTelemetry Collector Exporters"
 readme = "README.rst"
-license = "Apache-2.0"
+license = {text = "Apache-2.0"}
 requires-python = ">=3.8"
 authors = [
   { name = "OpenTelemetry Authors", email = "cncf-opentelemetry-contributors@lists.cncf.io" },
@@ -25,8 +25,8 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
-  "opentelemetry-exporter-otlp-proto-grpc == 1.24.0.dev",
-  "opentelemetry-exporter-otlp-proto-http == 1.24.0.dev",
+  "opentelemetry-exporter-otlp-proto-grpc == 1.25.0.dev",
+  "opentelemetry-exporter-otlp-proto-http == 1.25.0.dev",
 ]
 
 [project.entry-points.opentelemetry_logs_exporter]
