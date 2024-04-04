@@ -183,9 +183,7 @@ class BatchSpanProcessor(SpanProcessor):
         )
 
         self.span_exporter = span_exporter
-        self.queue = collections.deque(
-            [], max_queue_size
-        )  # type: typing.Deque[Span]
+        self.queue = collections.deque([], max_queue_size)  # type: typing.Deque[Span]
         self.worker_thread = threading.Thread(
             name="OtelBatchSpanProcessor", target=self.worker, daemon=True
         )
@@ -199,14 +197,10 @@ class BatchSpanProcessor(SpanProcessor):
         # flag that indicates that spans are being dropped
         self._spans_dropped = False
         # precallocated list to send spans to exporter
-        self.spans_list = [
-            None
-        ] * self.max_export_batch_size  # type: typing.List[typing.Optional[Span]]
+        self.spans_list = [None] * self.max_export_batch_size  # type: typing.List[typing.Optional[Span]]
         self.worker_thread.start()
         if hasattr(os, "register_at_fork"):
-            os.register_at_fork(
-                after_in_child=self._at_fork_reinit
-            )  # pylint: disable=protected-access
+            os.register_at_fork(after_in_child=self._at_fork_reinit)  # pylint: disable=protected-access
         self._pid = os.getpid()
 
     def on_start(
@@ -259,7 +253,6 @@ class BatchSpanProcessor(SpanProcessor):
                     len(self.queue) < self.max_export_batch_size
                     and flush_request is None
                 ):
-
                     self.condition.wait(timeout)
                     flush_request = self._get_and_unset_flush_request()
                     if not self.queue:
@@ -384,7 +377,6 @@ class BatchSpanProcessor(SpanProcessor):
             self._export_batch()
 
     def force_flush(self, timeout_millis: int = None) -> bool:
-
         if timeout_millis is None:
             timeout_millis = self.export_timeout_millis
 
@@ -509,8 +501,7 @@ class ConsoleSpanExporter(SpanExporter):
         out: typing.IO = sys.stdout,
         formatter: typing.Callable[
             [ReadableSpan], str
-        ] = lambda span: span.to_json()
-        + linesep,
+        ] = lambda span: span.to_json() + linesep,
     ):
         self.out = out
         self.formatter = formatter

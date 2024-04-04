@@ -40,17 +40,23 @@ from opentelemetry.proto.collector.trace.v1.trace_service_pb2_grpc import (
     TraceServiceServicer,
     add_TraceServiceServicer_to_server,
 )
-from opentelemetry.proto.common.v1.common_pb2 import AnyValue, ArrayValue
+from opentelemetry.proto.common.v1.common_pb2 import (
+    AnyValue,
+    ArrayValue,
+    KeyValue,
+)
 from opentelemetry.proto.common.v1.common_pb2 import (
     InstrumentationScope as PB2InstrumentationScope,
 )
-from opentelemetry.proto.common.v1.common_pb2 import KeyValue
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as OTLPResource,
 )
-from opentelemetry.proto.trace.v1.trace_pb2 import ResourceSpans, ScopeSpans
+from opentelemetry.proto.trace.v1.trace_pb2 import (
+    ResourceSpans,
+    ScopeSpans,
+    Status,
+)
 from opentelemetry.proto.trace.v1.trace_pb2 import Span as OTLPSpan
-from opentelemetry.proto.trace.v1.trace_pb2 import Status
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
@@ -463,7 +469,6 @@ class TestOTLPSpanExporter(TestCase):
     )
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
     def test_unavailable(self, mock_sleep, mock_expo):
-
         mock_expo.configure_mock(**{"return_value": [1]})
 
         add_TraceServiceServicer_to_server(
@@ -478,7 +483,6 @@ class TestOTLPSpanExporter(TestCase):
     )
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
     def test_unavailable_delay(self, mock_sleep, mock_expo):
-
         mock_expo.configure_mock(**{"return_value": [1]})
 
         add_TraceServiceServicer_to_server(
@@ -506,7 +510,6 @@ class TestOTLPSpanExporter(TestCase):
         )
 
     def test_translate_spans(self):
-
         expected = ExportTraceServiceRequest(
             resource_spans=[
                 ResourceSpans(

@@ -87,7 +87,7 @@ class ShimTracer(wrapt.ObjectProxy):
         wrapped: BaseTracer,
         *,
         oc_span_context: SpanContext,
-        otel_tracer: trace.Tracer
+        otel_tracer: trace.Tracer,
     ) -> None:
         super().__init__(wrapped)
         self._self_oc_span_context = oc_span_context

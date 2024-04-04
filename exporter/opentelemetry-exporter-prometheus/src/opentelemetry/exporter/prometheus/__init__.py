@@ -84,14 +84,14 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_PROMETHEUS_HOST,
     OTEL_EXPORTER_PROMETHEUS_PORT,
 )
-from opentelemetry.sdk.metrics import Counter
-from opentelemetry.sdk.metrics import Histogram as HistogramInstrument
 from opentelemetry.sdk.metrics import (
+    Counter,
     ObservableCounter,
     ObservableGauge,
     ObservableUpDownCounter,
     UpDownCounter,
 )
+from opentelemetry.sdk.metrics import Histogram as HistogramInstrument
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     Gauge,
@@ -196,9 +196,9 @@ class _CustomCollector:
                     self._target_info = self._create_info_metric(
                         _TARGET_INFO_NAME, _TARGET_INFO_DESCRIPTION, attributes
                     )
-                metric_family_id_metric_family[
-                    _TARGET_INFO_NAME
-                ] = self._target_info
+                metric_family_id_metric_family[_TARGET_INFO_NAME] = (
+                    self._target_info
+                )
 
         while self._metrics_datas:
             self._translate_to_prometheus(
@@ -288,19 +288,18 @@ class _CustomCollector:
                     isinstance(metric.data, Sum)
                     and not should_convert_sum_to_gauge
                 ):
-
                     metric_family_id = "|".join(
                         [pre_metric_family_id, CounterMetricFamily.__name__]
                     )
 
                     if metric_family_id not in metric_family_id_metric_family:
-                        metric_family_id_metric_family[
-                            metric_family_id
-                        ] = CounterMetricFamily(
-                            name=metric_name,
-                            documentation=metric_description,
-                            labels=label_keys,
-                            unit=metric.unit,
+                        metric_family_id_metric_family[metric_family_id] = (
+                            CounterMetricFamily(
+                                name=metric_name,
+                                documentation=metric_description,
+                                labels=label_keys,
+                                unit=metric.unit,
+                            )
                         )
                     metric_family_id_metric_family[
                         metric_family_id
@@ -309,7 +308,6 @@ class _CustomCollector:
                     isinstance(metric.data, Gauge)
                     or should_convert_sum_to_gauge
                 ):
-
                     metric_family_id = "|".join(
                         [pre_metric_family_id, GaugeMetricFamily.__name__]
                     )
@@ -318,19 +316,18 @@ class _CustomCollector:
                         metric_family_id
                         not in metric_family_id_metric_family.keys()
                     ):
-                        metric_family_id_metric_family[
-                            metric_family_id
-                        ] = GaugeMetricFamily(
-                            name=metric_name,
-                            documentation=metric_description,
-                            labels=label_keys,
-                            unit=metric.unit,
+                        metric_family_id_metric_family[metric_family_id] = (
+                            GaugeMetricFamily(
+                                name=metric_name,
+                                documentation=metric_description,
+                                labels=label_keys,
+                                unit=metric.unit,
+                            )
                         )
                     metric_family_id_metric_family[
                         metric_family_id
                     ].add_metric(labels=label_values, value=value)
                 elif isinstance(metric.data, Histogram):
-
                     metric_family_id = "|".join(
                         [pre_metric_family_id, HistogramMetricFamily.__name__]
                     )
@@ -339,13 +336,13 @@ class _CustomCollector:
                         metric_family_id
                         not in metric_family_id_metric_family.keys()
                     ):
-                        metric_family_id_metric_family[
-                            metric_family_id
-                        ] = HistogramMetricFamily(
-                            name=metric_name,
-                            documentation=metric_description,
-                            labels=label_keys,
-                            unit=metric.unit,
+                        metric_family_id_metric_family[metric_family_id] = (
+                            HistogramMetricFamily(
+                                name=metric_name,
+                                documentation=metric_description,
+                                labels=label_keys,
+                                unit=metric.unit,
+                            )
                         )
                     metric_family_id_metric_family[
                         metric_family_id

@@ -33,7 +33,6 @@ class TestConsoleExporter(TestCase):
         reset_metrics_globals()
 
     def test_console_exporter(self):
-
         output = StringIO()
         exporter = ConsoleMetricExporter(out=output)
         reader = PeriodicExportingMetricReader(
@@ -74,7 +73,6 @@ class TestConsoleExporter(TestCase):
         self.assertEqual(metrics["value"], 1)
 
     def test_console_exporter_no_export(self):
-
         output = StringIO()
         exporter = ConsoleMetricExporter(out=output)
         reader = PeriodicExportingMetricReader(

@@ -95,7 +95,6 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
         metric_reader: "opentelemetry.sdk.metrics.MetricReader",
         timeout_millis: float = 10_000,
     ) -> Optional[Iterable[Metric]]:
-
         with self._lock:
             metric_reader_storage = self._reader_storages[metric_reader]
             # for now, just use the defaults
@@ -105,11 +104,9 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
             default_timeout_millis = 10000 * 10**6
 
             for async_instrument in self._async_instruments:
-
                 remaining_time = deadline_ns - time_ns()
 
                 if remaining_time < default_timeout_millis:
-
                     callback_options = CallbackOptions(
                         timeout_millis=remaining_time
                     )

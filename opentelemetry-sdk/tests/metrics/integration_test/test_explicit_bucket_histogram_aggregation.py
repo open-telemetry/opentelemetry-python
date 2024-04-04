@@ -26,7 +26,6 @@ from opentelemetry.sdk.metrics.view import ExplicitBucketHistogramAggregation
 
 
 class TestExplicitBucketHistogramAggregation(TestCase):
-
     test_values = [1, 6, 11, 26, 51, 76, 101, 251, 501, 751]
 
     @mark.skipif(
@@ -38,7 +37,6 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         ),
     )
     def test_synchronous_delta_temporality(self):
-
         aggregation = ExplicitBucketHistogramAggregation()
 
         reader = InMemoryMetricReader(
@@ -54,7 +52,6 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         results = []
 
         for _ in range(10):
-
             results.append(reader.get_metrics_data())
 
         for metrics_data in results:
@@ -120,7 +117,6 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         results = []
 
         for _ in range(10):
-
             results.append(reader.get_metrics_data())
 
         provider.shutdown()
@@ -137,7 +133,6 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         ),
     )
     def test_synchronous_cumulative_temporality(self):
-
         aggregation = ExplicitBucketHistogramAggregation()
 
         reader = InMemoryMetricReader(
@@ -155,7 +150,6 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         results = []
 
         for _ in range(10):
-
             results.append(reader.get_metrics_data())
 
         for metrics_data in results:
@@ -164,7 +158,6 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         results = []
 
         for test_value in self.test_values:
-
             histogram.record(test_value)
             results.append(reader.get_metrics_data())
 
@@ -178,7 +171,6 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         )
 
         for index, metrics_data in enumerate(results):
-
             metric_data = (
                 metrics_data.resource_metrics[0]
                 .scope_metrics[0]
@@ -209,7 +201,6 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         results = []
 
         for _ in range(10):
-
             results.append(reader.get_metrics_data())
 
         provider.shutdown()
@@ -224,7 +215,6 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         )
 
         for metrics_data in results:
-
             metric_data = (
                 metrics_data.resource_metrics[0]
                 .scope_metrics[0]

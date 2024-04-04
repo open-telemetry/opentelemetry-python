@@ -30,7 +30,10 @@ class TestStatus(unittest.TestCase):
 
     def test_invalid_description(self):
         with self.assertLogs(level=WARNING) as warning:
-            status = Status(status_code=StatusCode.ERROR, description={"test": "val"})  # type: ignore
+            status = Status(
+                status_code=StatusCode.ERROR,
+                description={"test": "val"},  # type: ignore
+            )
             self.assertIs(status.status_code, StatusCode.ERROR)
             self.assertEqual(status.description, None)
             self.assertIn(

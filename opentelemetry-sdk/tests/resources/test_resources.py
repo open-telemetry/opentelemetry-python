@@ -511,9 +511,9 @@ class TestOTELResourceDetector(unittest.TestCase):
 
     def test_multiple_with_url_decode(self):
         detector = OTELResourceDetector()
-        environ[
-            OTEL_RESOURCE_ATTRIBUTES
-        ] = "key=value%20test%0A, key2=value+%202"
+        environ[OTEL_RESOURCE_ATTRIBUTES] = (
+            "key=value%20test%0A, key2=value+%202"
+        )
         self.assertEqual(
             detector.detect(),
             Resource({"key": "value test\n", "key2": "value+ 2"}),

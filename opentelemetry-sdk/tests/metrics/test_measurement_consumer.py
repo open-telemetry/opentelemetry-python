@@ -32,7 +32,6 @@ from opentelemetry.sdk.metrics._internal.sdk_configuration import (
 )
 class TestSynchronousMeasurementConsumer(TestCase):
     def test_parent(self, _):
-
         self.assertIsInstance(
             SynchronousMeasurementConsumer(MagicMock()), MeasurementConsumer
         )

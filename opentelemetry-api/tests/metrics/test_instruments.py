@@ -675,7 +675,6 @@ class TestObservableUpDownCounter(TestCase):
         )
 
     def test_unit_check(self):
-
         instrument = ChildInstrument("name")
 
         self.assertEqual(
@@ -709,7 +708,6 @@ class TestObservableUpDownCounter(TestCase):
         )
 
     def test_description_check(self):
-
         instrument = ChildInstrument("name")
 
         self.assertEqual(

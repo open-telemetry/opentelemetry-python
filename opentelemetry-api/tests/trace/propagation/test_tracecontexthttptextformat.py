@@ -245,7 +245,6 @@ class TestTraceContextFormat(unittest.TestCase):
     @patch("opentelemetry.trace.INVALID_SPAN_CONTEXT")
     @patch("opentelemetry.trace.get_current_span")
     def test_fields(self, mock_get_current_span, mock_invalid_span_context):
-
         mock_get_current_span.configure_mock(
             return_value=Mock(
                 **{

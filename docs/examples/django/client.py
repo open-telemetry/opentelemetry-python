@@ -33,7 +33,6 @@ trace.get_tracer_provider().add_span_processor(
 
 
 with tracer.start_as_current_span("client"):
-
     with tracer.start_as_current_span("client-server"):
         headers = {}
         inject(headers)

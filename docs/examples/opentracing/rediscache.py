@@ -30,7 +30,6 @@ class RedisCache:
         @wraps(func)
         def inner(*args, **kwargs):
             with self.tracer.start_active_span("Caching decorator") as scope1:
-
                 # Pickle the call args to get a canonical key. Don't do this in
                 # prod!
                 key = pickle.dumps((func.__qualname__, args, kwargs))

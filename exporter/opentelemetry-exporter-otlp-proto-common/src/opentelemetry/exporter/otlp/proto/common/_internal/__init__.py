@@ -18,31 +18,31 @@ from collections.abc import Sequence
 from itertools import count
 from typing import (
     Any,
-    Mapping,
-    Optional,
-    List,
     Callable,
-    TypeVar,
     Dict,
     Iterator,
+    List,
+    Mapping,
+    Optional,
+    TypeVar,
 )
 
-from opentelemetry.sdk.util.instrumentation import InstrumentationScope
+from opentelemetry.proto.common.v1.common_pb2 import AnyValue as PB2AnyValue
+from opentelemetry.proto.common.v1.common_pb2 import (
+    ArrayValue as PB2ArrayValue,
+)
 from opentelemetry.proto.common.v1.common_pb2 import (
     InstrumentationScope as PB2InstrumentationScope,
 )
-from opentelemetry.proto.resource.v1.resource_pb2 import (
-    Resource as PB2Resource,
-)
-from opentelemetry.proto.common.v1.common_pb2 import AnyValue as PB2AnyValue
 from opentelemetry.proto.common.v1.common_pb2 import KeyValue as PB2KeyValue
 from opentelemetry.proto.common.v1.common_pb2 import (
     KeyValueList as PB2KeyValueList,
 )
-from opentelemetry.proto.common.v1.common_pb2 import (
-    ArrayValue as PB2ArrayValue,
+from opentelemetry.proto.resource.v1.resource_pb2 import (
+    Resource as PB2Resource,
 )
 from opentelemetry.sdk.trace import Resource
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.util.types import Attributes
 
 _logger = logging.getLogger(__name__)

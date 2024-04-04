@@ -40,7 +40,6 @@ The following code shows how to obtain a meter using the global :class:`.MeterPr
 .. versionadded:: 1.10.0
 """
 
-
 import warnings
 from abc import ABC, abstractmethod
 from logging import getLogger
