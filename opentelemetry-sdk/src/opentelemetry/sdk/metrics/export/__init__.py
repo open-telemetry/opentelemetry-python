@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from opentelemetry.sdk.metrics._internal.export import (
+from opentelemetry.sdk.metrics._internal.export import (  # type: ignore[attr-defined] # <will add tracking issue num>
     AggregationTemporality,
     ConsoleMetricExporter,
     InMemoryMetricReader,

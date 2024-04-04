@@ -33,7 +33,9 @@ from opentelemetry._logs import (
     get_logger_provider,
     std_to_otel,
 )
-from opentelemetry.attributes import BoundedAttributes
+from opentelemetry.attributes import (
+    BoundedAttributes,  # type: ignore[attr-defined] # <will add tracking issue num>
+)
 from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_COUNT_LIMIT,
     OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
@@ -111,7 +113,7 @@ class LogLimits:
             OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
         )
 
-    def __repr__(self):
+    def __repr__(self):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         return f"{type(self).__name__}(max_attributes={self.max_attributes}, max_attribute_length={self.max_attribute_length})"
 
     @classmethod
@@ -172,7 +174,7 @@ class LogRecord(APILogRecord):
         limits: Optional[LogLimits] = _UnsetLogLimits,
     ):
         super().__init__(
-            **{
+            **{  # type: ignore[misc] # <will add tracking issue num>
                 "timestamp": timestamp,
                 "observed_timestamp": observed_timestamp,
                 "trace_id": trace_id,
@@ -180,33 +182,33 @@ class LogRecord(APILogRecord):
                 "trace_flags": trace_flags,
                 "severity_text": severity_text,
                 "severity_number": severity_number,
-                "body": body,
-                "attributes": BoundedAttributes(
-                    maxlen=limits.max_attributes,
+                "body": body,  # type: ignore[misc] # <will add tracking issue num>
+                "attributes": BoundedAttributes(  # type: ignore[misc] # <will add tracking issue num>
+                    maxlen=limits.max_attributes,  # type: ignore[misc, union-attr] # <will add tracking issue num>
                     attributes=attributes if bool(attributes) else None,
                     immutable=False,
-                    max_value_len=limits.max_attribute_length,
+                    max_value_len=limits.max_attribute_length,  # type: ignore[misc, union-attr] # <will add tracking issue num>
                 ),
             }
         )
         self.resource = resource
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, LogRecord):
+        if not isinstance(other, LogRecord):  # type: ignore[misc] # <will add tracking issue num>
             return NotImplemented
-        return self.__dict__ == other.__dict__
+        return self.__dict__ == other.__dict__  # type: ignore[misc, no-any-return] # <will add tracking issue num>
 
-    def to_json(self, indent=4) -> str:
+    def to_json(self, indent=4) -> str:  # type: ignore[no-untyped-def] # <will add tracking issue num>
         return json.dumps(
-            {
-                "body": self.body,
+            {  # type: ignore[misc] # <will add tracking issue num>
+                "body": self.body,  # type: ignore[misc] # <will add tracking issue num>
                 "severity_number": repr(self.severity_number),
                 "severity_text": self.severity_text,
-                "attributes": dict(self.attributes)
+                "attributes": dict(self.attributes)  # type: ignore[arg-type, misc] # <will add tracking issue num>
                 if bool(self.attributes)
                 else None,
                 "dropped_attributes": self.dropped_attributes,
-                "timestamp": ns_to_iso_str(self.timestamp),
+                "timestamp": ns_to_iso_str(self.timestamp),  # type: ignore[arg-type] # <will add tracking issue num>
                 "observed_timestamp": ns_to_iso_str(self.observed_timestamp),
                 "trace_id": f"0x{format_trace_id(self.trace_id)}"
                 if self.trace_id is not None
@@ -219,13 +221,13 @@ class LogRecord(APILogRecord):
                 if self.resource
                 else "",
             },
-            indent=indent,
+            indent=indent,  # type: ignore[misc] # <will add tracking issue num>
         )
 
     @property
     def dropped_attributes(self) -> int:
         if self.attributes:
-            return self.attributes.dropped
+            return self.attributes.dropped  # type: ignore[attr-defined, misc, no-any-return] # <will add tracking issue num>
         return 0
 
 
@@ -250,15 +252,15 @@ class LogRecordProcessor(abc.ABC):
     """
 
     @abc.abstractmethod
-    def emit(self, log_data: LogData):
+    def emit(self, log_data: LogData):  # type: ignore[misc, no-untyped-def] # <will add tracking issue num>
         """Emits the `LogData`"""
 
     @abc.abstractmethod
-    def shutdown(self):
+    def shutdown(self):  # type: ignore[misc, no-untyped-def] # <will add tracking issue num>
         """Called when a :class:`opentelemetry.sdk._logs.Logger` is shutdown"""
 
     @abc.abstractmethod
-    def force_flush(self, timeout_millis: int = 30000):
+    def force_flush(self, timeout_millis: int = 30000):  # type: ignore[misc, no-untyped-def] # <will add tracking issue num>
         """Export all the received logs to the configured Exporter that have not yet
         been exported.
 
@@ -281,7 +283,7 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
     added.
     """
 
-    def __init__(self):
+    def __init__(self):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         # use a tuple to avoid race conditions when adding a new log and
         # iterating through it on "emit".
         self._log_record_processors = ()  # type: Tuple[LogRecordProcessor, ...]
@@ -301,7 +303,7 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
     def shutdown(self) -> None:
         """Shutdown the log processors one by one"""
         for lp in self._log_record_processors:
-            lp.shutdown()
+            lp.shutdown()  # type: ignore[no-untyped-call] # <will add tracking issue num>
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         """Force flush the log processors one by one
@@ -321,7 +323,7 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
             if current_ts >= deadline_ns:
                 return False
 
-            if not lp.force_flush((deadline_ns - current_ts) // 1000000):
+            if not lp.force_flush((deadline_ns - current_ts) // 1000000):  # type: ignore[misc] # <will add tracking issue num>
                 return False
 
         return True
@@ -349,13 +351,13 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
             max_workers=max_workers
         )
 
-    def add_log_record_processor(
+    def add_log_record_processor(  # type: ignore[no-untyped-def] # <will add tracking issue num>
         self, log_record_processor: LogRecordProcessor
     ):
         with self._lock:
             self._log_record_processors += (log_record_processor,)
 
-    def _submit_and_wait(
+    def _submit_and_wait(  # type: ignore[no-untyped-def] # <will add tracking issue num>
         self,
         func: Callable[[LogRecordProcessor], Callable[..., None]],
         *args: Any,
@@ -363,16 +365,16 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
     ):
         futures = []
         for lp in self._log_record_processors:
-            future = self._executor.submit(func(lp), *args, **kwargs)
+            future = self._executor.submit(func(lp), *args, **kwargs)  # type: ignore[misc] # <will add tracking issue num>
             futures.append(future)
         for future in futures:
             future.result()
 
-    def emit(self, log_data: LogData):
-        self._submit_and_wait(lambda lp: lp.emit, log_data)
+    def emit(self, log_data: LogData):  # type: ignore[no-untyped-def] # <will add tracking issue num>
+        self._submit_and_wait(lambda lp: lp.emit, log_data)  # type: ignore[misc] # <will add tracking issue num>
 
-    def shutdown(self):
-        self._submit_and_wait(lambda lp: lp.shutdown)
+    def shutdown(self):  # type: ignore[no-untyped-def] # <will add tracking issue num>
+        self._submit_and_wait(lambda lp: lp.shutdown)  # type: ignore[misc] # <will add tracking issue num>
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         """Force flush the log processors in parallel.
@@ -387,18 +389,18 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
         """
         futures = []
         for lp in self._log_record_processors:
-            future = self._executor.submit(lp.force_flush, timeout_millis)
-            futures.append(future)
+            future = self._executor.submit(lp.force_flush, timeout_millis)  # type: ignore[misc] # <will add tracking issue num>
+            futures.append(future)  # type: ignore[misc] # <will add tracking issue num>
 
-        done_futures, not_done_futures = concurrent.futures.wait(
-            futures, timeout_millis / 1e3
+        done_futures, not_done_futures = concurrent.futures.wait(  # type: ignore[misc] # <will add tracking issue num>
+            futures, timeout_millis / 1e3  # type: ignore[misc] # <will add tracking issue num>
         )
 
-        if not_done_futures:
+        if not_done_futures:  # type: ignore[misc] # <will add tracking issue num>
             return False
 
-        for future in done_futures:
-            if not future.result():
+        for future in done_futures:  # type: ignore[misc] # <will add tracking issue num>
+            if not future.result():  # type: ignore[misc] # <will add tracking issue num>
                 return False
 
         return True
@@ -441,40 +443,40 @@ class LoggingHandler(logging.Handler):
     https://docs.python.org/3/library/logging.html
     """
 
-    def __init__(
+    def __init__(  # type: ignore[no-untyped-def] # <will add tracking issue num>
         self,
         level=logging.NOTSET,
         logger_provider=None,
     ) -> None:
-        super().__init__(level=level)
-        self._logger_provider = logger_provider or get_logger_provider()
+        super().__init__(level=level)  # type: ignore[misc] # <will add tracking issue num>
+        self._logger_provider = logger_provider or get_logger_provider()  # type: ignore[misc] # <will add tracking issue num>
         self._logger = get_logger(
-            __name__, logger_provider=self._logger_provider
+            __name__, logger_provider=self._logger_provider  # type: ignore[misc] # <will add tracking issue num>
         )
 
     @staticmethod
     def _get_attributes(record: logging.LogRecord) -> Attributes:
-        attributes = {
-            k: v for k, v in vars(record).items() if k not in _RESERVED_ATTRS
+        attributes = {  # type: ignore[misc] # <will add tracking issue num>
+            k: v for k, v in vars(record).items() if k not in _RESERVED_ATTRS  # type: ignore[misc] # <will add tracking issue num>
         }
 
         # Add standard code attributes for logs.
-        attributes[SpanAttributes.CODE_FILEPATH] = record.pathname
-        attributes[SpanAttributes.CODE_FUNCTION] = record.funcName
-        attributes[SpanAttributes.CODE_LINENO] = record.lineno
+        attributes[SpanAttributes.CODE_FILEPATH] = record.pathname  # type: ignore[misc] # <will add tracking issue num>
+        attributes[SpanAttributes.CODE_FUNCTION] = record.funcName  # type: ignore[misc] # <will add tracking issue num>
+        attributes[SpanAttributes.CODE_LINENO] = record.lineno  # type: ignore[misc] # <will add tracking issue num>
 
         if record.exc_info:
             exctype, value, tb = record.exc_info
             if exctype is not None:
-                attributes[SpanAttributes.EXCEPTION_TYPE] = exctype.__name__
-            if value is not None and value.args:
-                attributes[SpanAttributes.EXCEPTION_MESSAGE] = value.args[0]
+                attributes[SpanAttributes.EXCEPTION_TYPE] = exctype.__name__  # type: ignore[misc] # <will add tracking issue num>
+            if value is not None and value.args:  # type: ignore[misc] # <will add tracking issue num>
+                attributes[SpanAttributes.EXCEPTION_MESSAGE] = value.args[0]  # type: ignore[misc] # <will add tracking issue num>
             if tb is not None:
                 # https://github.com/open-telemetry/opentelemetry-specification/blob/9fa7c656b26647b27e485a6af7e38dc716eba98a/specification/trace/semantic_conventions/exceptions.md#stacktrace-representation
-                attributes[SpanAttributes.EXCEPTION_STACKTRACE] = "".join(
+                attributes[SpanAttributes.EXCEPTION_STACKTRACE] = "".join(  # type: ignore[misc] # <will add tracking issue num>
                     traceback.format_exception(*record.exc_info)
                 )
-        return attributes
+        return attributes  # type: ignore[misc] # <will add tracking issue num>
 
     def _translate(self, record: logging.LogRecord) -> LogRecord:
         timestamp = int(record.created * 1e9)
@@ -539,7 +541,7 @@ class LoggingHandler(logging.Handler):
             severity_text=level_name,
             severity_number=severity_number,
             body=body,
-            resource=self._logger.resource,
+            resource=self._logger.resource,  # type: ignore[attr-defined, misc] # <will add tracking issue num>
             attributes=attributes,
         )
 
@@ -557,7 +559,7 @@ class LoggingHandler(logging.Handler):
         Flushes the logging output. Skip flushing if logger is NoOp.
         """
         if not isinstance(self._logger, NoOpLogger):
-            self._logger_provider.force_flush()
+            self._logger_provider.force_flush()  # type: ignore[misc, union-attr] # <will add tracking issue num>
 
 
 class Logger(APILogger):
@@ -580,10 +582,10 @@ class Logger(APILogger):
         self._instrumentation_scope = instrumentation_scope
 
     @property
-    def resource(self):
+    def resource(self):  # type: ignore[misc, no-untyped-def] # <will add tracking issue num>
         return self._resource
 
-    def emit(self, record: LogRecord):
+    def emit(self, record: LogRecord):  # type: ignore[no-untyped-def, override] # <will add tracking issue num>
         """Emits the :class:`LogData` by associating :class:`LogRecord`
         and instrumentation info.
         """
@@ -594,29 +596,29 @@ class Logger(APILogger):
 class LoggerProvider(APILoggerProvider):
     def __init__(
         self,
-        resource: Resource = None,
+        resource: Resource = None,  # type: ignore[assignment] # <will add tracking issue num>
         shutdown_on_exit: bool = True,
         multi_log_record_processor: Union[
             SynchronousMultiLogRecordProcessor,
             ConcurrentMultiLogRecordProcessor,
-        ] = None,
+        ] = None,  # type: ignore[assignment] # <will add tracking issue num>
     ):
         if resource is None:
             self._resource = Resource.create({})
         else:
-            self._resource = resource
+            self._resource = resource  # type: ignore[has-type] # <will add tracking issue num>
         self._multi_log_record_processor = (
-            multi_log_record_processor or SynchronousMultiLogRecordProcessor()
+            multi_log_record_processor or SynchronousMultiLogRecordProcessor()  # type: ignore[no-untyped-call] # <will add tracking issue num>
         )
         disabled = environ.get(OTEL_SDK_DISABLED, "")
         self._disabled = disabled.lower().strip() == "true"
         self._at_exit_handler = None
         if shutdown_on_exit:
-            self._at_exit_handler = atexit.register(self.shutdown)
+            self._at_exit_handler = atexit.register(self.shutdown)  # type: ignore[misc] # <will add tracking issue num>
 
     @property
-    def resource(self):
-        return self._resource
+    def resource(self):  # type: ignore[misc, no-untyped-def] # <will add tracking issue num>
+        return self._resource  # type: ignore[has-type] # <will add tracking issue num>
 
     def get_logger(
         self,
@@ -626,9 +628,9 @@ class LoggerProvider(APILoggerProvider):
     ) -> Logger:
         if self._disabled:
             _logger.warning("SDK is disabled.")
-            return NoOpLogger(name, version=version, schema_url=schema_url)
+            return NoOpLogger(name, version=version, schema_url=schema_url)  # type: ignore[return-value] # <will add tracking issue num>
         return Logger(
-            self._resource,
+            self._resource,  # type: ignore[has-type] # <will add tracking issue num>
             self._multi_log_record_processor,
             InstrumentationScope(
                 name,
@@ -637,7 +639,7 @@ class LoggerProvider(APILoggerProvider):
             ),
         )
 
-    def add_log_record_processor(
+    def add_log_record_processor(  # type: ignore[no-untyped-def] # <will add tracking issue num>
         self, log_record_processor: LogRecordProcessor
     ):
         """Registers a new :class:`LogRecordProcessor` for this `LoggerProvider` instance.
@@ -648,11 +650,11 @@ class LoggerProvider(APILoggerProvider):
             log_record_processor
         )
 
-    def shutdown(self):
+    def shutdown(self):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         """Shuts down the log processors."""
         self._multi_log_record_processor.shutdown()
-        if self._at_exit_handler is not None:
-            atexit.unregister(self._at_exit_handler)
+        if self._at_exit_handler is not None:  # type: ignore[misc] # <will add tracking issue num>
+            atexit.unregister(self._at_exit_handler)  # type: ignore[misc] # <will add tracking issue num>
             self._at_exit_handler = None
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:

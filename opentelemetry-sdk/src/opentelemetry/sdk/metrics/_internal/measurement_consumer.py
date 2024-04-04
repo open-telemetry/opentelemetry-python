@@ -38,9 +38,9 @@ class MeasurementConsumer(ABC):
         pass
 
     @abstractmethod
-    def register_asynchronous_instrument(
+    def register_asynchronous_instrument(  # type: ignore[misc, no-untyped-def] # <will add tracking issue num>
         self,
-        instrument: (
+        instrument: (  # type: ignore[name-defined] # <will add tracking issue num>
             "opentelemetry.sdk.metrics._internal.instrument_Asynchronous"
         ),
     ):
@@ -49,7 +49,7 @@ class MeasurementConsumer(ABC):
     @abstractmethod
     def collect(
         self,
-        metric_reader: "opentelemetry.sdk.metrics.MetricReader",
+        metric_reader: "opentelemetry.sdk.metrics.MetricReader",  # type: ignore[name-defined] # <will add tracking issue num>
         timeout_millis: float = 10_000,
     ) -> Optional[Iterable[Metric]]:
         pass
@@ -58,20 +58,20 @@ class MeasurementConsumer(ABC):
 class SynchronousMeasurementConsumer(MeasurementConsumer):
     def __init__(
         self,
-        sdk_config: "opentelemetry.sdk.metrics._internal.SdkConfiguration",
+        sdk_config: "opentelemetry.sdk.metrics._internal.SdkConfiguration",  # type: ignore[name-defined] # <will add tracking issue num>
     ) -> None:
         self._lock = Lock()
         self._sdk_config = sdk_config
         # should never be mutated
-        self._reader_storages: Mapping[
+        self._reader_storages: Mapping[  # type: ignore[name-defined] # <will add tracking issue num>
             "opentelemetry.sdk.metrics.MetricReader", MetricReaderStorage
-        ] = {
-            reader: MetricReaderStorage(
+        ] = {  # type: ignore[misc] # <will add tracking issue num>
+            reader: MetricReaderStorage(  # type: ignore[misc] # <will add tracking issue num>
                 sdk_config,
-                reader._instrument_class_temporality,
-                reader._instrument_class_aggregation,
+                reader._instrument_class_temporality,  # type: ignore[misc] # <will add tracking issue num>
+                reader._instrument_class_aggregation,  # type: ignore[misc] # <will add tracking issue num>
             )
-            for reader in sdk_config.metric_readers
+            for reader in sdk_config.metric_readers  # type: ignore[misc] # <will add tracking issue num>
         }
         self._async_instruments: List[
             "opentelemetry.sdk.metrics._internal.instrument._Asynchronous"
@@ -92,7 +92,7 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
 
     def collect(
         self,
-        metric_reader: "opentelemetry.sdk.metrics.MetricReader",
+        metric_reader: "opentelemetry.sdk.metrics.MetricReader",  # type: ignore[name-defined] # <will add tracking issue num>
         timeout_millis: float = 10_000,
     ) -> Optional[Iterable[Metric]]:
 
@@ -125,4 +125,4 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
 
             result = self._reader_storages[metric_reader].collect()
 
-        return result
+        return result  # type: ignore[return-value] # <will add tracking issue num>

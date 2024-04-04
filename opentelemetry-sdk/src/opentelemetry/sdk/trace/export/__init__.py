@@ -106,7 +106,7 @@ class SimpleSpanProcessor(SpanProcessor):
         pass
 
     def on_end(self, span: ReadableSpan) -> None:
-        if not span.context.trace_flags.sampled:
+        if not span.context.trace_flags.sampled:  # type: ignore[misc] # <will add tracking issue num>
             return
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
@@ -129,7 +129,7 @@ class _FlushRequest:
 
     __slots__ = ["event", "num_spans"]
 
-    def __init__(self):
+    def __init__(self):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         self.event = threading.Event()
         self.num_spans = 0
 
@@ -155,10 +155,10 @@ class BatchSpanProcessor(SpanProcessor):
     def __init__(
         self,
         span_exporter: SpanExporter,
-        max_queue_size: int = None,
-        schedule_delay_millis: float = None,
-        max_export_batch_size: int = None,
-        export_timeout_millis: float = None,
+        max_queue_size: int = None,  # type: ignore[assignment] # <will add tracking issue num>
+        schedule_delay_millis: float = None,  # type: ignore[assignment] # <will add tracking issue num>
+        max_export_batch_size: int = None,  # type: ignore[assignment] # <will add tracking issue num>
+        export_timeout_millis: float = None,  # type: ignore[assignment] # <will add tracking issue num>
     ):
         if max_queue_size is None:
             max_queue_size = BatchSpanProcessor._default_max_queue_size()
@@ -178,7 +178,7 @@ class BatchSpanProcessor(SpanProcessor):
                 BatchSpanProcessor._default_export_timeout_millis()
             )
 
-        BatchSpanProcessor._validate_arguments(
+        BatchSpanProcessor._validate_arguments(  # type: ignore[no-untyped-call] # <will add tracking issue num>
             max_queue_size, schedule_delay_millis, max_export_batch_size
         )
 
@@ -187,7 +187,7 @@ class BatchSpanProcessor(SpanProcessor):
             [], max_queue_size
         )  # type: typing.Deque[Span]
         self.worker_thread = threading.Thread(
-            name="OtelBatchSpanProcessor", target=self.worker, daemon=True
+            name="OtelBatchSpanProcessor", target=self.worker, daemon=True  # type: ignore[misc] # <will add tracking issue num>
         )
         self.condition = threading.Condition(threading.Lock())
         self._flush_request = None  # type: typing.Optional[_FlushRequest]
@@ -205,7 +205,7 @@ class BatchSpanProcessor(SpanProcessor):
         self.worker_thread.start()
         if hasattr(os, "register_at_fork"):
             os.register_at_fork(
-                after_in_child=self._at_fork_reinit
+                after_in_child=self._at_fork_reinit  # type: ignore[misc] # <will add tracking issue num>
             )  # pylint: disable=protected-access
         self._pid = os.getpid()
 
@@ -218,35 +218,35 @@ class BatchSpanProcessor(SpanProcessor):
         if self.done:
             logger.warning("Already shutdown, dropping span.")
             return
-        if not span.context.trace_flags.sampled:
+        if not span.context.trace_flags.sampled:  # type: ignore[misc] # <will add tracking issue num>
             return
         if self._pid != os.getpid():
-            _BSP_RESET_ONCE.do_once(self._at_fork_reinit)
+            _BSP_RESET_ONCE.do_once(self._at_fork_reinit)  # type: ignore[misc] # <will add tracking issue num>
 
         if len(self.queue) == self.max_queue_size:
             if not self._spans_dropped:
                 logger.warning("Queue is full, likely spans will be dropped.")
                 self._spans_dropped = True
 
-        self.queue.appendleft(span)
+        self.queue.appendleft(span)  # type: ignore[arg-type] # <will add tracking issue num>
 
         if len(self.queue) >= self.max_export_batch_size:
             with self.condition:
                 self.condition.notify()
 
-    def _at_fork_reinit(self):
+    def _at_fork_reinit(self):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         self.condition = threading.Condition(threading.Lock())
         self.queue.clear()
 
         # worker_thread is local to a process, only the thread that issued fork continues
         # to exist. A new worker thread must be started in child process.
         self.worker_thread = threading.Thread(
-            name="OtelBatchSpanProcessor", target=self.worker, daemon=True
+            name="OtelBatchSpanProcessor", target=self.worker, daemon=True  # type: ignore[misc] # <will add tracking issue num>
         )
         self.worker_thread.start()
         self._pid = os.getpid()
 
-    def worker(self):
+    def worker(self):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         timeout = self.schedule_delay_millis / 1e3
         flush_request = None  # type: typing.Optional[_FlushRequest]
         while not self.done:
@@ -288,7 +288,7 @@ class BatchSpanProcessor(SpanProcessor):
             shutdown_flush_request = self._get_and_unset_flush_request()
 
         # be sure that all spans are sent
-        self._drain_queue()
+        self._drain_queue()  # type: ignore[no-untyped-call] # <will add tracking issue num>
         self._notify_flush_request_finished(flush_request)
         self._notify_flush_request_finished(shutdown_flush_request)
 
@@ -305,7 +305,7 @@ class BatchSpanProcessor(SpanProcessor):
         return flush_request
 
     @staticmethod
-    def _notify_flush_request_finished(
+    def _notify_flush_request_finished(  # type: ignore[misc, no-untyped-def] # <will add tracking issue num>
         flush_request: typing.Optional[_FlushRequest],
     ):
         """Notifies the flush initiator(s) waiting on the given request/event
@@ -326,10 +326,10 @@ class BatchSpanProcessor(SpanProcessor):
         synchronization/locking.
         """
         if self._flush_request is None:
-            self._flush_request = _FlushRequest()
+            self._flush_request = _FlushRequest()  # type: ignore[no-untyped-call] # <will add tracking issue num>
         return self._flush_request
 
-    def _export(self, flush_request: typing.Optional[_FlushRequest]):
+    def _export(self, flush_request: typing.Optional[_FlushRequest]):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         """Exports spans considering the given flush_request.
 
         In case of a given flush_requests spans are exported in batches until
@@ -374,7 +374,7 @@ class BatchSpanProcessor(SpanProcessor):
             self.spans_list[index] = None
         return idx
 
-    def _drain_queue(self):
+    def _drain_queue(self):  # type: ignore[no-untyped-def] # <will add tracking issue num>
         """Export all elements until queue is empty.
 
         Can only be called from the worker thread context because it invokes
@@ -383,7 +383,7 @@ class BatchSpanProcessor(SpanProcessor):
         while self.queue:
             self._export_batch()
 
-    def force_flush(self, timeout_millis: int = None) -> bool:
+    def force_flush(self, timeout_millis: int = None) -> bool:  # type: ignore[assignment] # <will add tracking issue num>
 
         if timeout_millis is None:
             timeout_millis = self.export_timeout_millis
@@ -412,7 +412,7 @@ class BatchSpanProcessor(SpanProcessor):
         self.span_exporter.shutdown()
 
     @staticmethod
-    def _default_max_queue_size():
+    def _default_max_queue_size():  # type: ignore[misc, no-untyped-def] # <will add tracking issue num>
         try:
             return int(
                 environ.get(OTEL_BSP_MAX_QUEUE_SIZE, _DEFAULT_MAX_QUEUE_SIZE)
@@ -426,7 +426,7 @@ class BatchSpanProcessor(SpanProcessor):
             return _DEFAULT_MAX_QUEUE_SIZE
 
     @staticmethod
-    def _default_schedule_delay_millis():
+    def _default_schedule_delay_millis():  # type: ignore[misc, no-untyped-def] # <will add tracking issue num>
         try:
             return int(
                 environ.get(
@@ -442,7 +442,7 @@ class BatchSpanProcessor(SpanProcessor):
             return _DEFAULT_SCHEDULE_DELAY_MILLIS
 
     @staticmethod
-    def _default_max_export_batch_size():
+    def _default_max_export_batch_size():  # type: ignore[misc, no-untyped-def] # <will add tracking issue num>
         try:
             return int(
                 environ.get(
@@ -459,7 +459,7 @@ class BatchSpanProcessor(SpanProcessor):
             return _DEFAULT_MAX_EXPORT_BATCH_SIZE
 
     @staticmethod
-    def _default_export_timeout_millis():
+    def _default_export_timeout_millis():  # type: ignore[misc, no-untyped-def] # <will add tracking issue num>
         try:
             return int(
                 environ.get(
@@ -475,21 +475,21 @@ class BatchSpanProcessor(SpanProcessor):
             return _DEFAULT_EXPORT_TIMEOUT_MILLIS
 
     @staticmethod
-    def _validate_arguments(
+    def _validate_arguments(  # type: ignore[misc, no-untyped-def] # <will add tracking issue num>
         max_queue_size, schedule_delay_millis, max_export_batch_size
     ):
-        if max_queue_size <= 0:
+        if max_queue_size <= 0:  # type: ignore[misc] # <will add tracking issue num>
             raise ValueError("max_queue_size must be a positive integer.")
 
-        if schedule_delay_millis <= 0:
+        if schedule_delay_millis <= 0:  # type: ignore[misc] # <will add tracking issue num>
             raise ValueError("schedule_delay_millis must be positive.")
 
-        if max_export_batch_size <= 0:
+        if max_export_batch_size <= 0:  # type: ignore[misc] # <will add tracking issue num>
             raise ValueError(
                 "max_export_batch_size must be a positive integer."
             )
 
-        if max_export_batch_size > max_queue_size:
+        if max_export_batch_size > max_queue_size:  # type: ignore[misc] # <will add tracking issue num>
             raise ValueError(
                 "max_export_batch_size must be less than or equal to max_queue_size."
             )
@@ -506,20 +506,20 @@ class ConsoleSpanExporter(SpanExporter):
     def __init__(
         self,
         service_name: Optional[str] = None,
-        out: typing.IO = sys.stdout,
+        out: typing.IO = sys.stdout,  # type: ignore[type-arg] # <will add tracking issue num>
         formatter: typing.Callable[
             [ReadableSpan], str
-        ] = lambda span: span.to_json()
+        ] = lambda span: span.to_json()  # type: ignore[misc, no-any-return] # <will add tracking issue num>
         + linesep,
     ):
-        self.out = out
+        self.out = out  # type: ignore[misc] # <will add tracking issue num>
         self.formatter = formatter
         self.service_name = service_name
 
     def export(self, spans: typing.Sequence[ReadableSpan]) -> SpanExportResult:
         for span in spans:
-            self.out.write(self.formatter(span))
-        self.out.flush()
+            self.out.write(self.formatter(span))  # type: ignore[misc] # <will add tracking issue num>
+        self.out.flush()  # type: ignore[misc] # <will add tracking issue num>
         return SpanExportResult.SUCCESS
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
