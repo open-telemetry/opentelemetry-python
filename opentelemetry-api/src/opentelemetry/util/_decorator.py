@@ -78,4 +78,5 @@ def _agnosticcontextmanager(
     def helper(*args: Pargs, **kwargs: Pkwargs) -> _AgnosticContextManager[R]:
         return _AgnosticContextManager(func, args, kwargs)
 
-    return helper
+    # Ignoring the type to keep the original signature of the function
+    return helper  # type: ignore[return-value]
