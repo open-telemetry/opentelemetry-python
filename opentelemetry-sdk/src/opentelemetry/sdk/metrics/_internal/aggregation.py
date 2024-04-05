@@ -544,6 +544,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
     def __init__(
         self,
         attributes: Attributes,
+        instrument_aggregation_temporality: AggregationTemporality,
         start_time_unix_nano: int,
         # This is the default maximum number of buckets per positive or
         # negative number range.  The value 160 is specified by OpenTelemetry.
@@ -551,10 +552,8 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/sdk.md#exponential-bucket-histogram-aggregation)
         max_size: int = 160,
         max_scale: int = 20,
+        record_min_max: bool = True,
     ):
-        super().__init__(attributes)
-        # max_size is the maximum capacity of the positive and negative
-        # buckets.
         if max_size < self._min_max_size:
             raise ValueError(
                 f"Buckets max size {max_size} is smaller than "
@@ -567,126 +566,94 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 "maximum max size {self._max_max_size}"
             )
 
-        self._max_size = max_size
-        self._max_scale = max_scale
-
-        # _sum is the sum of all the values aggregated by this aggregator.
-        self._sum = 0
-
-        # _count is the count of all calls to aggregate.
-        self._count = 0
-
-        # _zero_count is the count of all the calls to aggregate when the value
-        # to be aggregated is exactly 0.
-        self._zero_count = 0
-
-        # _min is the smallest value aggregated by this aggregator.
-        self._min = inf
-
-        # _max is the smallest value aggregated by this aggregator.
-        self._max = -inf
-
-        # _positive holds the positive values.
-        self._positive = Buckets()
-
-        # _negative holds the negative values by their absolute value.
-        self._negative = Buckets()
-
-        # _mapping corresponds to the current scale, is shared by both the
-        # positive and negative buckets.
-
         if self._max_scale > 20:
             _logger.warning(
                 "max_scale is set to %s which is "
                 "larger than the recommended value of 20",
                 self._max_scale,
             )
+
+        super().__init__(attributes)
+
+        self._max_size = max_size
+        self._max_scale = max_scale
         self._mapping = _new_exponential_mapping(self._max_scale)
+        self._record_min_max = record_min_max
+        self._min = inf
+        self._max = -inf
+        self._sum = 0
+        self._zero_count = 0
+        self._scale = self._mapping.scale
 
-        self._instrument_aggregation_temporality = AggregationTemporality.DELTA
         self._start_time_unix_nano = start_time_unix_nano
+        self._instrument_aggregation_temporality = (
+            instrument_aggregation_temporality
+        )
 
+        self._current_positive_value = None
+        self._current_negative_value = None
+
+        self._previous_collection_start_nano = self._start_time_unix_nano
+        self._previous_positive_cumulative_value = Buckets()
+        self._previous_negative_cumulative_value = Buckets()
+        self._previous_min = inf
+        self._previous_max = -inf
+        self._previous_sum = 0
+        self._previous_count = 0
+        self._previous_zero_count = 0
         self._previous_scale = None
-        self._previous_start_time_unix_nano = None
-        self._previous_zero_count = None
-        self._previous_count = None
-        self._previous_sum = None
-        self._previous_max = None
-        self._previous_min = None
-        self._previous_positive = None
-        self._previous_negative = None
 
     def aggregate(self, measurement: Measurement) -> None:
         # pylint: disable=too-many-branches,too-many-statements, too-many-locals
 
         with self._lock:
+            if self._current_value is None:
+                self._current_positive_value = Buckets()
+                self._current_positive_value = Buckets()
 
             value = measurement.value
 
-            # 0. Set the following attributes:
-            # _min
-            # _max
-            # _count
-            # _zero_count
-            # _sum
-            if value < self._min:
-                self._min = value
-
-            if value > self._max:
-                self._max = value
-
-            self._count += 1
-
+            self._sum += value
             if value == 0:
                 self._zero_count += 1
-                # No need to do anything else if value is zero, just increment the
-                # zero count.
-                return
 
-            self._sum += value
+            if self._record_min_max:
+                self._min = min(self._min, value)
+                self._max = max(self._max, value)
 
-            # 1. Use the positive buckets for positive values and the negative
-            # buckets for negative values.
             if value > 0:
-                buckets = self._positive
+                current_value = self._current_positive_value
 
             else:
-                # Both exponential and logarithm mappings use only positive values
-                # so the absolute value is used here.
                 value = -value
-                buckets = self._negative
+                current_value = self._current_negative_value
 
-            # 2. Compute the index for the value at the current scale.
             index = self._mapping.map_to_index(value)
 
-            # IncrementIndexBy starts here
-
-            # 3. Determine if a change of scale is needed.
             is_rescaling_needed = False
             low, high = 0, 0
 
-            if len(buckets) == 0:
-                buckets.index_start = index
-                buckets.index_end = index
-                buckets.index_base = index
+            if len(current_value) == 0:
+                current_value.index_start = index
+                current_value.index_end = index
+                current_value.index_base = index
 
             elif (
-                index < buckets.index_start
-                and (buckets.index_end - index) >= self._max_size
+                index < current_value.index_start
+                and (current_value.index_end - index) >= self._max_size
             ):
                 is_rescaling_needed = True
                 low = index
-                high = buckets.index_end
+                high = current_value.index_end
 
             elif (
-                index > buckets.index_end
-                and (index - buckets.index_start) >= self._max_size
+                index > current_value.index_end
+                and (index - current_value.index_start) >= self._max_size
             ):
                 is_rescaling_needed = True
-                low = buckets.index_start
+                low = current_value.index_start
                 high = index
 
-            # 4. Rescale the mapping if needed.
             if is_rescaling_needed:
 
                 scale_change = self._get_scale_change(low, high)
@@ -700,33 +667,28 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
                 index = self._mapping.map_to_index(value)
 
-            # 5. If the index is outside
-            # [buckets.index_start, buckets.index_end] readjust the buckets
-            # boundaries or add more buckets.
-            if index < buckets.index_start:
-                span = buckets.index_end - index
+            if index < current_value.index_start:
+                span = current_value.index_end - index
 
-                if span >= len(buckets.counts):
-                    buckets.grow(span + 1, self._max_size)
+                if span >= len(current_value.counts):
+                    current_value.grow(span + 1, self._max_size)
 
-                buckets.index_start = index
+                current_value.index_start = index
 
-            elif index > buckets.index_end:
-                span = index - buckets.index_start
+            elif index > current_value.index_end:
+                span = index - current_value.index_start
 
-                if span >= len(buckets.counts):
-                    buckets.grow(span + 1, self._max_size)
+                if span >= len(current_value.counts):
+                    current_value.grow(span + 1, self._max_size)
 
-                buckets.index_end = index
+                current_value.index_end = index
 
-            # 6. Compute the index of the bucket to be incremented.
-            bucket_index = index - buckets.index_base
+            current_value_index = index - current_value.index_base
 
-            if bucket_index < 0:
-                bucket_index += len(buckets.counts)
+            if current_value_index < 0:
+                current_value_index += len(current_value.counts)
 
-            # 7. Increment the bucket.
-            buckets.increment_bucket(bucket_index)
+            current_value.increment_bucket(current_value_index)
 
     def collect(
         self,
@@ -739,197 +701,121 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         # pylint: disable=too-many-statements, too-many-locals
 
         with self._lock:
-            if self._count == 0:
-                return None
+            current_positive_value = self._current_positive_value
+            current_negative_value = self._current_negative_value
+            sum_ = self._sum
+            min_ = self._min
+            max_ = self._max
+            zero_count = self._zero_count
+            scale = self._scale
 
-            current_negative = self._negative
-            current_positive = self._positive
-            current_zero_count = self._zero_count
-            current_count = self._count
-            current_start_time_unix_nano = self._start_time_unix_nano
-            current_sum = self._sum
-            current_max = self._max
-            if current_max == -inf:
-                current_max = None
-            current_min = self._min
-            if current_min == inf:
-                current_min = None
-
-            if self._count == self._zero_count:
-                current_scale = 0
-
-            else:
-                current_scale = self._mapping.scale
-
-            self._negative = Buckets()
-            self._positive = Buckets()
-            self._start_time_unix_nano = collection_start_nano
+            self._current_positive_value = None
+            self._current_negative_value = None
             self._sum = 0
-            self._count = 0
-            self._zero_count = 0
             self._min = inf
             self._max = -inf
+            self._zero_count = 0
+            self._scale = None
 
-            if self._previous_scale is None or (
+            if (
                 self._instrument_aggregation_temporality
-                is collection_aggregation_temporality
+                is AggregationTemporality.DELTA
             ):
-                self._previous_scale = current_scale
-                self._previous_start_time_unix_nano = (
-                    current_start_time_unix_nano
-                )
-                self._previous_max = current_max
-                self._previous_min = current_min
-                self._previous_sum = current_sum
-                self._previous_count = current_count
-                self._previous_zero_count = current_zero_count
-                self._previous_positive = current_positive
-                self._previous_negative = current_negative
+                # This happens when the corresponding instrument for this
+                # aggregation is synchronous.
+                if (
+                    collection_aggregation_temporality
+                    is AggregationTemporality.DELTA
+                ):
 
-                current_point = ExponentialHistogramDataPoint(
+                    if (
+                        current_positive_value and
+                        current_negative_value is None
+                    ):
+                        return None
+
+                    previous_collection_start_nano = (
+                        self._previous_collection_start_nano
+                    )
+                    self._previous_collection_start_nano = (
+                        collection_start_nano
+                    )
+
+                    return ExponentialHistogramDataPoint(
+                        attributes=self._attributes,
+                        start_time_unix_nano=previous_collection_start_nano,
+                        time_unix_nano=collection_start_nano,
+                        count=(
+                            sum(current_positive_value) +
+                            sum(current_negative_value)
+                        ),
+                        sum=sum_,
+                        scale=scale,
+                        zero_count=zero_count,
+                        positive=BucketsPoint(
+                            offset=current_positive_value.offset,
+                            bucket_counts=(
+                                current_positive_value.get_offset_counts()
+                            ),
+                        ),
+                        negative=BucketsPoint(
+                            offset=current_negative_value.offset,
+                            bucket_counts=(
+                                current_negative_value.get_offset_counts()
+                            ),
+                        ),
+                        # FIXME: Find the right value for flags
+                        flags=0,
+                        min=min_,
+                        max=max_,
+                    )
+
+                if (
+                    current_positive_value and
+                    current_negative_value is None
+                ):
+                    current_positive_value = Buckets()
+                    current_negative_value = Buckets()
+
+                self._previous_cumulative_value = self._merge()
+
+                self._previous_min = min(min_, self._previous_min)
+                self._previous_max = max(max_, self._previous_max)
+                self._previous_sum = sum(sum_, self._previous_sum)
+
+                return ExponentialHistogramDataPoint(
                     attributes=self._attributes,
-                    start_time_unix_nano=current_start_time_unix_nano,
+                    start_time_unix_nano=self._start_time_unix_nano,
                     time_unix_nano=collection_start_nano,
-                    count=current_count,
-                    sum=current_sum,
-                    scale=current_scale,
-                    zero_count=current_zero_count,
+                    count=(
+                        sum(current_positive_value) +
+                        sum(current_negative_value)
+                    ),
+                    sum=self._previous_sum,
+                    scale=self._previous_scale,
+                    zero_count=self._previous_zero_count,
                     positive=BucketsPoint(
-                        offset=current_positive.offset,
-                        bucket_counts=current_positive.get_offset_counts(),
+                        offset=self._previous_cumulative_positive_value.offset,
+                        bucket_counts=(
+                            self.
+                            _previous_cumulative_positive_value.
+                            get_offset_counts()
+                        ),
                     ),
                     negative=BucketsPoint(
-                        offset=current_negative.offset,
-                        bucket_counts=current_negative.get_offset_counts(),
+                        offset=self._previous_cumulative_negative_value.offset,
+                        bucket_counts=(
+                            self.
+                            _previous_cumulative_negative_value.
+                            get_offset_counts()
+                        ),
                     ),
                     # FIXME: Find the right value for flags
                     flags=0,
-                    min=current_min,
-                    max=current_max,
+                    min=self._previous_min,
+                    max=self._prevous_max,
                 )
-
-                return current_point
-
-            min_scale = min(self._previous_scale, current_scale)
-
-            low_positive, high_positive = self._get_low_high_previous_current(
-                self._previous_positive,
-                current_positive,
-                current_scale,
-                min_scale,
-            )
-            low_negative, high_negative = self._get_low_high_previous_current(
-                self._previous_negative,
-                current_negative,
-                current_scale,
-                min_scale,
-            )
-
-            min_scale = min(
-                min_scale
-                - self._get_scale_change(low_positive, high_positive),
-                min_scale
-                - self._get_scale_change(low_negative, high_negative),
-            )
-
-            # FIXME Go implementation checks if the histogram (not the mapping
-            # but the histogram) has a count larger than zero, if not, scale
-            # (the histogram scale) would be zero. See exponential.go 191
-            self._downscale(
-                self._previous_scale - min_scale,
-                self._previous_positive,
-                self._previous_negative,
-            )
-            self._previous_scale = min_scale
-
-            if (
-                collection_aggregation_temporality
-                is AggregationTemporality.CUMULATIVE
-            ):
-
-                start_time_unix_nano = self._previous_start_time_unix_nano
-                sum_ = current_sum + self._previous_sum
-                zero_count = current_zero_count + self._previous_zero_count
-                count = current_count + self._previous_count
-                # Only update min/max on delta -> cumulative
-                max_ = max(current_max, self._previous_max)
-                min_ = min(current_min, self._previous_min)
-
-                self._merge(
-                    self._previous_positive,
-                    current_positive,
-                    current_scale,
-                    min_scale,
-                    collection_aggregation_temporality,
-                )
-                self._merge(
-                    self._previous_negative,
-                    current_negative,
-                    current_scale,
-                    min_scale,
-                    collection_aggregation_temporality,
-                )
-                current_scale = min_scale
-
-                current_positive = self._previous_positive
-                current_negative = self._previous_negative
-
-            else:
-                start_time_unix_nano = self._previous_start_time_unix_nano
-                sum_ = current_sum - self._previous_sum
-                zero_count = current_zero_count
-                count = current_count
-                max_ = current_max
-                min_ = current_min
-
-                self._merge(
-                    self._previous_positive,
-                    current_positive,
-                    current_scale,
-                    min_scale,
-                    collection_aggregation_temporality,
-                )
-                self._merge(
-                    self._previous_negative,
-                    current_negative,
-                    current_scale,
-                    min_scale,
-                    collection_aggregation_temporality,
-                )
-
-            current_point = ExponentialHistogramDataPoint(
-                attributes=self._attributes,
-                start_time_unix_nano=start_time_unix_nano,
-                time_unix_nano=collection_start_nano,
-                count=count,
-                sum=sum_,
-                scale=current_scale,
-                zero_count=zero_count,
-                positive=BucketsPoint(
-                    offset=current_positive.offset,
-                    bucket_counts=current_positive.get_offset_counts(),
-                ),
-                negative=BucketsPoint(
-                    offset=current_negative.offset,
-                    bucket_counts=current_negative.get_offset_counts(),
-                ),
-                # FIXME: Find the right value for flags
-                flags=0,
-                min=min_,
-                max=max_,
-            )
-
-            self._previous_scale = current_scale
-            self._previous_positive = current_positive
-            self._previous_negative = current_negative
-            self._previous_start_time_unix_nano = current_start_time_unix_nano
-            self._previous_sum = sum_
-            self._previous_count = count
-            self._previous_max = max_
-            self._previous_min = min_
-            self._previous_zero_count = zero_count
-
-            return current_point
+            return None
 
     def _get_low_high_previous_current(
         self,

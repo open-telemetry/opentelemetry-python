@@ -177,3 +177,6 @@ class Buckets:
 
     def increment_bucket(self, bucket_index: int, increment: int = 1) -> None:
         self._counts[bucket_index] += increment
+
+    def __iter__(self):
+        return iter(self._counts)
