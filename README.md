@@ -114,6 +114,7 @@ Emeritus Approvers
 - [Héctor Hernández](https://github.com/hectorhdzg), Microsoft
 - [Mauricio Vásquez](https://github.com/mauriciovasquezbernal), Kinvolk
 - [Nathaniel Ruiz Nowell](https://github.com/NathanielRN), AWS
+- [Nikolay Sokolik](https://github.com/oxeye-nikolay), Oxeye
 - [Sanket Mehta](https://github.com/sanketmehta28), Cisco
 - [Tahir H. Butt](https://github.com/majorgreys), DataDog
 
