@@ -566,11 +566,11 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 "maximum max size {self._max_max_size}"
             )
 
-        if self._max_scale > 20:
+        if max_scale > 20:
             _logger.warning(
                 "max_scale is set to %s which is "
                 "larger than the recommended value of 20",
-                self._max_scale,
+                max_scale,
             )
 
         super().__init__(attributes)
