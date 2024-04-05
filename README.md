@@ -100,6 +100,7 @@ Approvers ([@open-telemetry/python-approvers](https://github.com/orgs/open-telem
 
 - [Aaron Abbott](https://github.com/aabmass), Google
 - [Jeremy Voss](https://github.com/jeremydvoss), Microsoft
+- [Owais Lone](https://github.com/owais), Splunk
 - [Pablo Collins](https://github.com/pmcollins), Splunk
 - [Riccardo Magliocchetti](https://github.com/xrmx), Elastic
 - [Shalev Roda](https://github.com/shalevr), Cisco
