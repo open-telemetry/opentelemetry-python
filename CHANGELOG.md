@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Add to_json method to ExponentialHistogram
+  ([#3780](https://github.com/open-telemetry/opentelemetry-python/pull/3780))
+- Bump mypy to 1.9.0
+  ([#3795](https://github.com/open-telemetry/opentelemetry-python/pull/3795))
+- Fix exponential histograms
+  ([#3798](https://github.com/open-telemetry/opentelemetry-python/pull/3798))
+- Fix otlp exporter to export log_record.observed_timestamp
+  ([#3785](https://github.com/open-telemetry/opentelemetry-python/pull/3785))
+
 ## Version 1.24.0/0.45b0 (2024-03-28)
 
 - Make create_gauge non-abstract method
@@ -15,14 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3633](https://github.com/open-telemetry/opentelemetry-python/pull/3633))
 - Fix python 3.12 deprecation warning
   ([#3751](https://github.com/open-telemetry/opentelemetry-python/pull/3751))
-- Fix exponential histograms
-  ([#3798](https://github.com/open-telemetry/opentelemetry-python/pull/3798))
 - bump mypy to 0.982
   ([#3776](https://github.com/open-telemetry/opentelemetry-python/pull/3776))
-- Fix otlp exporter to export log_record.observed_timestamp
-  ([#3785](https://github.com/open-telemetry/opentelemetry-python/pull/3785))
-- Add to_json method to ExponentialHistogram
-  ([#3780](https://github.com/open-telemetry/opentelemetry-python/pull/3780))
 - Add support for OTEL_SDK_DISABLED environment variable
   ([#3648](https://github.com/open-telemetry/opentelemetry-python/pull/3648))
 - Fix ValueError message for PeriodicExportingMetricsReader
@@ -33,8 +36,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3778](https://github.com/open-telemetry/opentelemetry-python/pull/3778))
 - Fix license field in pyproject.toml files
   ([#3803](https://github.com/open-telemetry/opentelemetry-python/pull/3803))
-- Bump mypy to 1.9.0
-  ([#3795](https://github.com/open-telemetry/opentelemetry-python/pull/3795))
 
 ## Version 1.23.0/0.44b0 (2024-02-23)
 
