@@ -1151,7 +1151,7 @@ class TestSpan(unittest.TestCase):
     def test_record_exception_fqn(self):
         span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))
         exception = DummyError("error")
-        exception_type = f"{exception.__module__}.{type(exception).__qualname__}"
+        exception_type = "tests.trace.test_trace.DummyError"
         span.record_exception(exception)
         exception_event = span.events[0]
         self.assertEqual("exception", exception_event.name)
