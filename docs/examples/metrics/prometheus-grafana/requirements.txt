@@ -1,0 +1,2 @@
+opentelemetry-exporter-prometheus==1.12.0rc1
+protobuf~=3.18.1

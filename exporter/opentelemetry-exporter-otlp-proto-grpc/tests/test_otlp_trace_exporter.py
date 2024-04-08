@@ -15,7 +15,6 @@
 import os
 import threading
 import time
-from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from logging import WARNING
 from unittest import TestCase
@@ -28,7 +27,6 @@ from grpc import ChannelCredentials, Compression, StatusCode, server
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _encode_key_value,
-    _is_backoff_v2,
 )
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
     OTLPSpanExporter,
@@ -156,12 +154,12 @@ class TestOTLPSpanExporter(TestCase):
             "a",
             context=Mock(
                 **{
-                    "trace_state": OrderedDict([("a", "b"), ("c", "d")]),
+                    "trace_state": {"a": "b", "c": "d"},
                     "span_id": 10217189687419569865,
                     "trace_id": 67545097771067222548457157018666467027,
                 }
             ),
-            resource=SDKResource(OrderedDict([("a", 1), ("b", False)])),
+            resource=SDKResource({"a": 1, "b": False}),
             parent=Mock(**{"span_id": 12345}),
             attributes=BoundedAttributes(attributes={"a": 1, "b": True}),
             events=[event_mock],
@@ -186,12 +184,12 @@ class TestOTLPSpanExporter(TestCase):
             "b",
             context=Mock(
                 **{
-                    "trace_state": OrderedDict([("a", "b"), ("c", "d")]),
+                    "trace_state": {"a": "b", "c": "d"},
                     "span_id": 10217189687419569865,
                     "trace_id": 67545097771067222548457157018666467027,
                 }
             ),
-            resource=SDKResource(OrderedDict([("a", 2), ("b", False)])),
+            resource=SDKResource({"a": 2, "b": False}),
             parent=Mock(**{"span_id": 12345}),
             instrumentation_scope=InstrumentationScope(
                 name="name", version="version"
@@ -202,12 +200,12 @@ class TestOTLPSpanExporter(TestCase):
             "c",
             context=Mock(
                 **{
-                    "trace_state": OrderedDict([("a", "b"), ("c", "d")]),
+                    "trace_state": {"a": "b", "c": "d"},
                     "span_id": 10217189687419569865,
                     "trace_id": 67545097771067222548457157018666467027,
                 }
             ),
-            resource=SDKResource(OrderedDict([("a", 1), ("b", False)])),
+            resource=SDKResource({"a": 1, "b": False}),
             parent=Mock(**{"span_id": 12345}),
             instrumentation_scope=InstrumentationScope(
                 name="name2", version="version2"
@@ -465,23 +463,6 @@ class TestOTLPSpanExporter(TestCase):
             exporter._headers,
             (("user-agent", "OTel-OTLP-Exporter-Python/" + __version__),),
         )
-
-    @patch("opentelemetry.exporter.otlp.proto.common._internal.backoff")
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
-    def test_handles_backoff_v2_api(self, mock_sleep, mock_backoff):
-        # In backoff ~= 2.0.0 the first value yielded from expo is None.
-        def generate_delays(*args, **kwargs):
-            if _is_backoff_v2:
-                yield None
-            yield 1
-
-        mock_backoff.expo.configure_mock(**{"side_effect": generate_delays})
-
-        add_TraceServiceServicer_to_server(
-            TraceServiceServicerUNAVAILABLE(), self.server
-        )
-        self.exporter.export([self.span])
-        mock_sleep.assert_called_once_with(1)
 
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc.exporter._create_exp_backoff_generator"
@@ -974,7 +955,7 @@ def _create_span_with_status(status: SDKStatus):
         "a",
         context=Mock(
             **{
-                "trace_state": OrderedDict([("a", "b"), ("c", "d")]),
+                "trace_state": {"a": "b", "c": "d"},
                 "span_id": 10217189687419569865,
                 "trace_id": 67545097771067222548457157018666467027,
             }

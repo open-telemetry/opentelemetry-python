@@ -367,6 +367,7 @@ class TestOTLPLogExporter(TestCase):
                                 PB2LogRecord(
                                     # pylint: disable=no-member
                                     time_unix_nano=self.log_data_1.log_record.timestamp,
+                                    observed_time_unix_nano=self.log_data_1.log_record.observed_timestamp,
                                     severity_number=self.log_data_1.log_record.severity_number.value,
                                     severity_text="WARNING",
                                     span_id=int.to_bytes(
@@ -426,6 +427,7 @@ class TestOTLPLogExporter(TestCase):
                                 PB2LogRecord(
                                     # pylint: disable=no-member
                                     time_unix_nano=self.log_data_1.log_record.timestamp,
+                                    observed_time_unix_nano=self.log_data_1.log_record.observed_timestamp,
                                     severity_number=self.log_data_1.log_record.severity_number.value,
                                     severity_text="WARNING",
                                     span_id=int.to_bytes(
@@ -463,6 +465,7 @@ class TestOTLPLogExporter(TestCase):
                                 PB2LogRecord(
                                     # pylint: disable=no-member
                                     time_unix_nano=self.log_data_2.log_record.timestamp,
+                                    observed_time_unix_nano=self.log_data_2.log_record.observed_timestamp,
                                     severity_number=self.log_data_2.log_record.severity_number.value,
                                     severity_text="INFO",
                                     span_id=int.to_bytes(
@@ -508,6 +511,7 @@ class TestOTLPLogExporter(TestCase):
                                 PB2LogRecord(
                                     # pylint: disable=no-member
                                     time_unix_nano=self.log_data_3.log_record.timestamp,
+                                    observed_time_unix_nano=self.log_data_3.log_record.observed_timestamp,
                                     severity_number=self.log_data_3.log_record.severity_number.value,
                                     severity_text="ERROR",
                                     span_id=int.to_bytes(

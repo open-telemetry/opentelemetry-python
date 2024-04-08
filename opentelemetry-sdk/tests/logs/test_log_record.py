@@ -29,6 +29,7 @@ class TestLogRecord(unittest.TestCase):
                 "attributes": None,
                 "dropped_attributes": 0,
                 "timestamp": "1970-01-01T00:00:00.000000Z",
+                "observed_timestamp": "1970-01-01T00:00:00.000000Z",
                 "trace_id": "",
                 "span_id": "",
                 "trace_flags": None,
@@ -38,6 +39,7 @@ class TestLogRecord(unittest.TestCase):
         )
         actual = LogRecord(
             timestamp=0,
+            observed_timestamp=0,
             body="a log line",
         ).to_json()
         self.assertEqual(expected, actual)

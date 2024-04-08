@@ -7,8 +7,8 @@ name = "opentelemetry-exporter-opencensus"
 dynamic = ["version"]
 description = "OpenCensus Exporter"
 readme = "README.rst"
-license = "Apache-2.0"
-requires-python = ">=3.7"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.8"
 authors = [
   { name = "OpenTelemetry Authors", email = "cncf-opentelemetry-contributors@lists.cncf.io" },
 ]
@@ -18,7 +18,6 @@ classifiers = [
   "License :: OSI Approved :: Apache Software License",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.7",
   "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
@@ -28,14 +27,11 @@ classifiers = [
 dependencies = [
   "grpcio >= 1.0.0, < 2.0.0",
   "opencensus-proto >= 0.1.0, < 1.0.0",
-  "opentelemetry-api >= 1.23.0.dev",
+  "opentelemetry-api >= 1.25.0.dev",
   "opentelemetry-sdk >= 1.15",
   "protobuf ~= 3.13",
   "setuptools >= 16.0",
 ]
-
-[project.optional-dependencies]
-test = []
 
 [project.entry-points.opentelemetry_traces_exporter]
 opencensus = "opentelemetry.exporter.opencensus.trace_exporter:OpenCensusSpanExporter"

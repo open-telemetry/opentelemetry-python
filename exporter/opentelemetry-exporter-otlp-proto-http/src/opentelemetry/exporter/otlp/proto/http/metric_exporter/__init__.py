@@ -155,9 +155,11 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                 {"Content-Encoding": self._compression.value}
             )
 
-        self._common_configuration(preferred_temporality)
+        self._common_configuration(
+            preferred_temporality, preferred_aggregation
+        )
 
-    def _export(self, serialized_data: str):
+    def _export(self, serialized_data: bytes):
         data = serialized_data
         if self._compression == Compression.Gzip:
             gzip_data = BytesIO()
@@ -165,7 +167,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                 gzip_stream.write(serialized_data)
             data = gzip_data.getvalue()
         elif self._compression == Compression.Deflate:
-            data = zlib.compress(bytes(serialized_data))
+            data = zlib.compress(serialized_data)
 
         return self._session.post(
             url=self._endpoint,
@@ -199,7 +201,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
 
             resp = self._export(serialized_data.SerializeToString())
             # pylint: disable=no-else-return
-            if resp.status_code in (200, 202):
+            if resp.ok:
                 return MetricExportResult.SUCCESS
             elif self._retryable(resp):
                 _logger.warning(

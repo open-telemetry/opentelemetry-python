@@ -73,6 +73,10 @@ class Buckets:
     def counts(self):
         return self._counts
 
+    def get_offset_counts(self):
+        bias = self.__index_base - self.__index_start
+        return self._counts[-bias:] + self._counts[:-bias]
+
     def grow(self, needed: int, max_size: int) -> None:
 
         size = len(self._counts)
@@ -129,7 +133,6 @@ class Buckets:
         bias = self.__index_base - self.__index_start
 
         if bias != 0:
-
             self.__index_base = self.__index_start
 
             # [0, 1, 2, 3, 4] Original backing array

@@ -32,9 +32,13 @@ from opentelemetry.metrics import (
     ObservableUpDownCounter,
     Synchronous,
     UpDownCounter,
+    _Gauge,
 )
 from opentelemetry.sdk.metrics._internal.exponential_histogram.buckets import (
     Buckets,
+)
+from opentelemetry.sdk.metrics._internal.exponential_histogram.mapping import (
+    Mapping,
 )
 from opentelemetry.sdk.metrics._internal.exponential_histogram.mapping.exponent_mapping import (
     ExponentMapping,
@@ -46,8 +50,8 @@ from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.point import Buckets as BucketsPoint
 from opentelemetry.sdk.metrics._internal.point import (
     ExponentialHistogramDataPoint,
-    Gauge,
 )
+from opentelemetry.sdk.metrics._internal.point import Gauge as GaugePoint
 from opentelemetry.sdk.metrics._internal.point import (
     Histogram as HistogramPoint,
 )
@@ -341,7 +345,7 @@ class _SumAggregation(_Aggregation[Sum]):
             )
 
 
-class _LastValueAggregation(_Aggregation[Gauge]):
+class _LastValueAggregation(_Aggregation[GaugePoint]):
     def __init__(self, attributes: Attributes):
         super().__init__(attributes)
         self._value = None
@@ -376,6 +380,7 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
     def __init__(
         self,
         attributes: Attributes,
+        instrument_aggregation_temporality: AggregationTemporality,
         start_time_unix_nano: int,
         boundaries: Sequence[float] = (
             0.0,
@@ -397,33 +402,43 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         record_min_max: bool = True,
     ):
         super().__init__(attributes)
+
         self._boundaries = tuple(boundaries)
-        self._bucket_counts = self._get_empty_bucket_counts()
+        self._record_min_max = record_min_max
         self._min = inf
         self._max = -inf
         self._sum = 0
-        self._record_min_max = record_min_max
+
         self._start_time_unix_nano = start_time_unix_nano
-        # It is assumed that the "natural" aggregation temporality for a
-        # Histogram instrument is DELTA, like the "natural" aggregation
-        # temporality for a Counter is DELTA and the "natural" aggregation
-        # temporality for an ObservableCounter is CUMULATIVE.
-        self._instrument_aggregation_temporality = AggregationTemporality.DELTA
+        self._instrument_aggregation_temporality = (
+            instrument_aggregation_temporality
+        )
+
+        self._current_value = None
+
+        self._previous_collection_start_nano = self._start_time_unix_nano
+        self._previous_cumulative_value = self._get_empty_bucket_counts()
+        self._previous_min = inf
+        self._previous_max = -inf
+        self._previous_sum = 0
 
     def _get_empty_bucket_counts(self) -> List[int]:
         return [0] * (len(self._boundaries) + 1)
 
     def aggregate(self, measurement: Measurement) -> None:
+        with self._lock:
+            if self._current_value is None:
+                self._current_value = self._get_empty_bucket_counts()
 
-        value = measurement.value
+            value = measurement.value
 
-        if self._record_min_max:
-            self._min = min(self._min, value)
-            self._max = max(self._max, value)
+            self._sum += value
 
-        self._sum += value
+            if self._record_min_max:
+                self._min = min(self._min, value)
+                self._max = max(self._max, value)
 
-        self._bucket_counts[bisect_left(self._boundaries, value)] += 1
+            self._current_value[bisect_left(self._boundaries, value)] += 1
 
     def collect(
         self,
@@ -433,84 +448,84 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         """
         Atomically return a point for the current value of the metric.
         """
+
         with self._lock:
-            if not any(self._bucket_counts):
-                return None
-
-            bucket_counts = self._bucket_counts
-            start_time_unix_nano = self._start_time_unix_nano
+            current_value = self._current_value
             sum_ = self._sum
-            max_ = self._max
             min_ = self._min
+            max_ = self._max
 
-            self._bucket_counts = self._get_empty_bucket_counts()
-            self._start_time_unix_nano = collection_start_nano
+            self._current_value = None
             self._sum = 0
             self._min = inf
             self._max = -inf
 
-        current_point = HistogramDataPoint(
-            attributes=self._attributes,
-            start_time_unix_nano=start_time_unix_nano,
-            time_unix_nano=collection_start_nano,
-            count=sum(bucket_counts),
-            sum=sum_,
-            bucket_counts=tuple(bucket_counts),
-            explicit_bounds=self._boundaries,
-            min=min_,
-            max=max_,
-        )
+            if (
+                self._instrument_aggregation_temporality
+                is AggregationTemporality.DELTA
+            ):
+                # This happens when the corresponding instrument for this
+                # aggregation is synchronous.
+                if (
+                    collection_aggregation_temporality
+                    is AggregationTemporality.DELTA
+                ):
 
-        if self._previous_point is None or (
-            self._instrument_aggregation_temporality
-            is collection_aggregation_temporality
-        ):
-            self._previous_point = current_point
-            return current_point
+                    if current_value is None:
+                        return None
 
-        max_ = current_point.max
-        min_ = current_point.min
+                    previous_collection_start_nano = (
+                        self._previous_collection_start_nano
+                    )
+                    self._previous_collection_start_nano = (
+                        collection_start_nano
+                    )
 
-        if (
-            collection_aggregation_temporality
-            is AggregationTemporality.CUMULATIVE
-        ):
-            start_time_unix_nano = self._previous_point.start_time_unix_nano
-            sum_ = current_point.sum + self._previous_point.sum
-            # Only update min/max on delta -> cumulative
-            max_ = max(current_point.max, self._previous_point.max)
-            min_ = min(current_point.min, self._previous_point.min)
-            bucket_counts = [
-                curr_count + prev_count
-                for curr_count, prev_count in zip(
-                    current_point.bucket_counts,
-                    self._previous_point.bucket_counts,
+                    return HistogramDataPoint(
+                        attributes=self._attributes,
+                        start_time_unix_nano=previous_collection_start_nano,
+                        time_unix_nano=collection_start_nano,
+                        count=sum(current_value),
+                        sum=sum_,
+                        bucket_counts=tuple(current_value),
+                        explicit_bounds=self._boundaries,
+                        min=min_,
+                        max=max_,
+                    )
+
+                if current_value is None:
+                    current_value = self._get_empty_bucket_counts()
+
+                self._previous_cumulative_value = [
+                    current_value_element + previous_cumulative_value_element
+                    for (
+                        current_value_element,
+                        previous_cumulative_value_element,
+                    ) in zip(current_value, self._previous_cumulative_value)
+                ]
+                self._previous_min = min(min_, self._previous_min)
+                self._previous_max = max(max_, self._previous_max)
+                self._previous_sum = sum_ + self._previous_sum
+
+                return HistogramDataPoint(
+                    attributes=self._attributes,
+                    start_time_unix_nano=self._start_time_unix_nano,
+                    time_unix_nano=collection_start_nano,
+                    count=sum(self._previous_cumulative_value),
+                    sum=self._previous_sum,
+                    bucket_counts=tuple(self._previous_cumulative_value),
+                    explicit_bounds=self._boundaries,
+                    min=self._previous_min,
+                    max=self._previous_max,
                 )
-            ]
-        else:
-            start_time_unix_nano = self._previous_point.time_unix_nano
-            sum_ = current_point.sum - self._previous_point.sum
-            bucket_counts = [
-                curr_count - prev_count
-                for curr_count, prev_count in zip(
-                    current_point.bucket_counts,
-                    self._previous_point.bucket_counts,
-                )
-            ]
 
-        current_point = HistogramDataPoint(
-            attributes=self._attributes,
-            start_time_unix_nano=start_time_unix_nano,
-            time_unix_nano=current_point.time_unix_nano,
-            count=sum(bucket_counts),
-            sum=sum_,
-            bucket_counts=tuple(bucket_counts),
-            explicit_bounds=current_point.explicit_bounds,
-            min=min_,
-            max=max_,
-        )
-        self._previous_point = current_point
-        return current_point
+            return None
+
+
+def _new_exponential_mapping(scale: int) -> Mapping:
+    if scale <= 0:
+        return ExponentMapping(scale)
+    return LogarithmMapping(scale)
 
 
 # pylint: disable=protected-access
@@ -586,13 +601,15 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 "larger than the recommended value of 20",
                 self._max_scale,
             )
-        self._mapping = LogarithmMapping(self._max_scale)
+        self._mapping = _new_exponential_mapping(self._max_scale)
 
         self._instrument_aggregation_temporality = AggregationTemporality.DELTA
         self._start_time_unix_nano = start_time_unix_nano
 
         self._previous_scale = None
         self._previous_start_time_unix_nano = None
+        self._previous_zero_count = None
+        self._previous_count = None
         self._previous_sum = None
         self._previous_max = None
         self._previous_min = None
@@ -672,11 +689,14 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             # 4. Rescale the mapping if needed.
             if is_rescaling_needed:
 
+                scale_change = self._get_scale_change(low, high)
                 self._downscale(
-                    self._get_scale_change(low, high),
+                    scale_change,
                     self._positive,
                     self._negative,
                 )
+                new_scale = self._mapping.scale - scale_change
+                self._mapping = _new_exponential_mapping(new_scale)
 
                 index = self._mapping.map_to_index(value)
 
@@ -750,28 +770,6 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             self._min = inf
             self._max = -inf
 
-            current_point = ExponentialHistogramDataPoint(
-                attributes=self._attributes,
-                start_time_unix_nano=current_start_time_unix_nano,
-                time_unix_nano=collection_start_nano,
-                count=current_count,
-                sum=current_sum,
-                scale=current_scale,
-                zero_count=current_zero_count,
-                positive=BucketsPoint(
-                    offset=current_positive.offset,
-                    bucket_counts=current_positive.counts,
-                ),
-                negative=BucketsPoint(
-                    offset=current_negative.offset,
-                    bucket_counts=current_negative.counts,
-                ),
-                # FIXME: Find the right value for flags
-                flags=0,
-                min=current_min,
-                max=current_max,
-            )
-
             if self._previous_scale is None or (
                 self._instrument_aggregation_temporality
                 is collection_aggregation_temporality
@@ -783,18 +781,48 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 self._previous_max = current_max
                 self._previous_min = current_min
                 self._previous_sum = current_sum
+                self._previous_count = current_count
+                self._previous_zero_count = current_zero_count
                 self._previous_positive = current_positive
                 self._previous_negative = current_negative
+
+                current_point = ExponentialHistogramDataPoint(
+                    attributes=self._attributes,
+                    start_time_unix_nano=current_start_time_unix_nano,
+                    time_unix_nano=collection_start_nano,
+                    count=current_count,
+                    sum=current_sum,
+                    scale=current_scale,
+                    zero_count=current_zero_count,
+                    positive=BucketsPoint(
+                        offset=current_positive.offset,
+                        bucket_counts=current_positive.get_offset_counts(),
+                    ),
+                    negative=BucketsPoint(
+                        offset=current_negative.offset,
+                        bucket_counts=current_negative.get_offset_counts(),
+                    ),
+                    # FIXME: Find the right value for flags
+                    flags=0,
+                    min=current_min,
+                    max=current_max,
+                )
 
                 return current_point
 
             min_scale = min(self._previous_scale, current_scale)
 
             low_positive, high_positive = self._get_low_high_previous_current(
-                self._previous_positive, current_positive, min_scale
+                self._previous_positive,
+                current_positive,
+                current_scale,
+                min_scale,
             )
             low_negative, high_negative = self._get_low_high_previous_current(
-                self._previous_negative, current_negative, min_scale
+                self._previous_negative,
+                current_negative,
+                current_scale,
+                min_scale,
             )
 
             min_scale = min(
@@ -808,10 +836,11 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             # but the histogram) has a count larger than zero, if not, scale
             # (the histogram scale) would be zero. See exponential.go 191
             self._downscale(
-                self._mapping.scale - min_scale,
+                self._previous_scale - min_scale,
                 self._previous_positive,
                 self._previous_negative,
             )
+            self._previous_scale = min_scale
 
             if (
                 collection_aggregation_temporality
@@ -820,6 +849,8 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
                 start_time_unix_nano = self._previous_start_time_unix_nano
                 sum_ = current_sum + self._previous_sum
+                zero_count = current_zero_count + self._previous_zero_count
+                count = current_count + self._previous_count
                 # Only update min/max on delta -> cumulative
                 max_ = max(current_max, self._previous_max)
                 min_ = min(current_min, self._previous_min)
@@ -838,10 +869,16 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     min_scale,
                     collection_aggregation_temporality,
                 )
+                current_scale = min_scale
+
+                current_positive = self._previous_positive
+                current_negative = self._previous_negative
 
             else:
                 start_time_unix_nano = self._previous_start_time_unix_nano
                 sum_ = current_sum - self._previous_sum
+                zero_count = current_zero_count
+                count = current_count
                 max_ = current_max
                 min_ = current_min
 
@@ -864,17 +901,17 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 attributes=self._attributes,
                 start_time_unix_nano=start_time_unix_nano,
                 time_unix_nano=collection_start_nano,
-                count=current_count,
+                count=count,
                 sum=sum_,
                 scale=current_scale,
-                zero_count=current_zero_count,
+                zero_count=zero_count,
                 positive=BucketsPoint(
                     offset=current_positive.offset,
-                    bucket_counts=current_positive.counts,
+                    bucket_counts=current_positive.get_offset_counts(),
                 ),
                 negative=BucketsPoint(
                     offset=current_negative.offset,
-                    bucket_counts=current_negative.counts,
+                    bucket_counts=current_negative.get_offset_counts(),
                 ),
                 # FIXME: Find the right value for flags
                 flags=0,
@@ -886,19 +923,27 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             self._previous_positive = current_positive
             self._previous_negative = current_negative
             self._previous_start_time_unix_nano = current_start_time_unix_nano
-            self._previous_sum = current_sum
+            self._previous_sum = sum_
+            self._previous_count = count
+            self._previous_max = max_
+            self._previous_min = min_
+            self._previous_zero_count = zero_count
 
             return current_point
 
     def _get_low_high_previous_current(
-        self, previous_point_buckets, current_point_buckets, min_scale
+        self,
+        previous_point_buckets,
+        current_point_buckets,
+        current_scale,
+        min_scale,
     ):
 
         (previous_point_low, previous_point_high) = self._get_low_high(
-            previous_point_buckets, min_scale
+            previous_point_buckets, self._previous_scale, min_scale
         )
         (current_point_low, current_point_high) = self._get_low_high(
-            current_point_buckets, min_scale
+            current_point_buckets, current_scale, min_scale
         )
 
         if current_point_low > current_point_high:
@@ -915,11 +960,12 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
         return low, high
 
-    def _get_low_high(self, buckets, min_scale):
+    @staticmethod
+    def _get_low_high(buckets, scale, min_scale):
         if buckets.counts == [0]:
             return 0, -1
 
-        shift = self._mapping._scale - min_scale
+        shift = scale - min_scale
 
         return buckets.index_start >> shift, buckets.index_end >> shift
 
@@ -935,7 +981,8 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
         return change
 
-    def _downscale(self, change: int, positive, negative):
+    @staticmethod
+    def _downscale(change: int, positive, negative):
 
         if change == 0:
             return
@@ -943,22 +990,13 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         if change < 0:
             raise Exception("Invalid change of scale")
 
-        new_scale = self._mapping.scale - change
-
         positive.downscale(change)
         negative.downscale(change)
 
-        if new_scale <= 0:
-            mapping = ExponentMapping(new_scale)
-        else:
-            mapping = LogarithmMapping(new_scale)
-
-        self._mapping = mapping
-
     def _merge(
         self,
-        previous_buckets,
-        current_buckets,
+        previous_buckets: Buckets,
+        current_buckets: Buckets,
         current_scale,
         min_scale,
         aggregation_temporality,
@@ -977,9 +1015,11 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             # would not happen because self._previous_point is only assigned to
             # an ExponentialHistogramDataPoint object if self._count != 0.
 
-            index = (
-                current_buckets.offset + current_bucket_index
-            ) >> current_change
+            current_index = current_buckets.index_base + current_bucket_index
+            if current_index > current_buckets.index_end:
+                current_index -= len(current_buckets.counts)
+
+            index = current_index >> current_change
 
             if index < previous_buckets.index_start:
                 span = previous_buckets.index_end - index
@@ -993,7 +1033,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 previous_buckets.index_start = index
 
             if index > previous_buckets.index_end:
-                span = index - previous_buckets.index_end
+                span = index - previous_buckets.index_start
 
                 if span >= self._max_size:
                     raise Exception("Incorrect merge scale")
@@ -1099,10 +1139,17 @@ class DefaultAggregation(Aggregation):
 
         if isinstance(instrument, Histogram):
             return _ExplicitBucketHistogramAggregation(
-                attributes, start_time_unix_nano
+                attributes,
+                instrument_aggregation_temporality=(
+                    AggregationTemporality.DELTA
+                ),
+                start_time_unix_nano=start_time_unix_nano,
             )
 
         if isinstance(instrument, ObservableGauge):
+            return _LastValueAggregation(attributes)
+
+        if isinstance(instrument, _Gauge):
             return _LastValueAggregation(attributes)
 
         raise Exception(f"Invalid instrument type {type(instrument)} found")
@@ -1175,8 +1222,18 @@ class ExplicitBucketHistogramAggregation(Aggregation):
         attributes: Attributes,
         start_time_unix_nano: int,
     ) -> _Aggregation:
+
+        instrument_aggregation_temporality = AggregationTemporality.UNSPECIFIED
+        if isinstance(instrument, Synchronous):
+            instrument_aggregation_temporality = AggregationTemporality.DELTA
+        elif isinstance(instrument, Asynchronous):
+            instrument_aggregation_temporality = (
+                AggregationTemporality.CUMULATIVE
+            )
+
         return _ExplicitBucketHistogramAggregation(
             attributes,
+            instrument_aggregation_temporality,
             start_time_unix_nano,
             self._boundaries,
             self._record_min_max,
@@ -1196,16 +1253,18 @@ class SumAggregation(Aggregation):
         start_time_unix_nano: int,
     ) -> _Aggregation:
 
-        temporality = AggregationTemporality.UNSPECIFIED
+        instrument_aggregation_temporality = AggregationTemporality.UNSPECIFIED
         if isinstance(instrument, Synchronous):
-            temporality = AggregationTemporality.DELTA
+            instrument_aggregation_temporality = AggregationTemporality.DELTA
         elif isinstance(instrument, Asynchronous):
-            temporality = AggregationTemporality.CUMULATIVE
+            instrument_aggregation_temporality = (
+                AggregationTemporality.CUMULATIVE
+            )
 
         return _SumAggregation(
             attributes,
             isinstance(instrument, (Counter, ObservableCounter)),
-            temporality,
+            instrument_aggregation_temporality,
             start_time_unix_nano,
         )
 

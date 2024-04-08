@@ -16,6 +16,7 @@ import logging
 from opentelemetry.sdk.metrics.export import (
     MetricExporter,
 )
+from opentelemetry.sdk.metrics.view import Aggregation
 from os import environ
 from opentelemetry.sdk.metrics import (
     Counter,
@@ -65,9 +66,18 @@ class OTLPMetricExporterMixin:
     def _common_configuration(
         self,
         preferred_temporality: Dict[type, AggregationTemporality] = None,
+        preferred_aggregation: Dict[type, Aggregation] = None,
     ) -> None:
 
-        instrument_class_temporality = {}
+        MetricExporter.__init__(
+            self,
+            preferred_temporality=self._get_temporality(preferred_temporality),
+            preferred_aggregation=self._get_aggregation(preferred_aggregation),
+        )
+
+    def _get_temporality(
+        self, preferred_temporality: Dict[type, AggregationTemporality]
+    ) -> Dict[type, AggregationTemporality]:
 
         otel_exporter_otlp_metrics_temporality_preference = (
             environ.get(
@@ -119,6 +129,13 @@ class OTLPMetricExporterMixin:
 
         instrument_class_temporality.update(preferred_temporality or {})
 
+        return instrument_class_temporality
+
+    def _get_aggregation(
+        self,
+        preferred_aggregation: Dict[type, Aggregation],
+    ) -> Dict[type, Aggregation]:
+
         otel_exporter_otlp_metrics_default_histogram_aggregation = environ.get(
             OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION,
             "explicit_bucket_histogram",
@@ -128,7 +145,9 @@ class OTLPMetricExporterMixin:
             "base2_exponential_bucket_histogram"
         ):
 
-            histogram_aggregation_type = ExponentialBucketHistogramAggregation
+            instrument_class_aggregation = {
+                Histogram: ExponentialBucketHistogramAggregation(),
+            }
 
         else:
 
@@ -145,13 +164,13 @@ class OTLPMetricExporterMixin:
                     otel_exporter_otlp_metrics_default_histogram_aggregation,
                 )
 
-            histogram_aggregation_type = ExplicitBucketHistogramAggregation
+            instrument_class_aggregation = {
+                Histogram: ExplicitBucketHistogramAggregation(),
+            }
 
-        MetricExporter.__init__(
-            self,
-            preferred_temporality=instrument_class_temporality,
-            preferred_aggregation={Histogram: histogram_aggregation_type()},
-        )
+        instrument_class_aggregation.update(preferred_aggregation or {})
+
+        return instrument_class_aggregation
 
 
 def encode_metrics(data: MetricsData) -> ExportMetricsServiceRequest:
@@ -312,6 +331,7 @@ def encode_metrics(data: MetricsData) -> ExportMetricsServiceRequest:
                     attributes=_encode_attributes(sdk_resource.attributes)
                 ),
                 scope_metrics=scope_data.values(),
+                schema_url=sdk_resource.schema_url,
             )
         )
     resource_metrics = resource_data

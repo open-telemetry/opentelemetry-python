@@ -65,16 +65,24 @@ class TestHistogramExport(TestCase):
 
         metric_data = in_memory_metric_reader.get_metrics_data()
 
-        # FIXME ExplicitBucketHistogramAggregation is resetting counts to zero
-        # even if aggregation temporality is cumulative.
         self.assertEqual(
-            len(metric_data.resource_metrics[0].scope_metrics[0].metrics), 1
+            len(metric_data.resource_metrics[0].scope_metrics[0].metrics), 2
         )
         self.assertEqual(
             (
                 metric_data.resource_metrics[0]
                 .scope_metrics[0]
                 .metrics[0]
+                .data.data_points[0]
+                .bucket_counts
+            ),
+            (0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+        )
+        self.assertEqual(
+            (
+                metric_data.resource_metrics[0]
+                .scope_metrics[0]
+                .metrics[1]
                 .data.data_points[0]
                 .value
             ),

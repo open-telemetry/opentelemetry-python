@@ -1,7 +1,7 @@
 # OpenTelemetry Python
 [![Slack](https://img.shields.io/badge/slack-@cncf/otel/python-brightgreen.svg?logo=slack)](https://cloud-native.slack.com/archives/C01PD4HUVBL)
 [![Build Status](https://github.com/open-telemetry/opentelemetry-python/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/open-telemetry/opentelemetry-python/actions)
-[![Minimum Python Version](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
+[![Minimum Python Version](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Release](https://img.shields.io/github/v/release/open-telemetry/opentelemetry-python?include_prereleases&style=)](https://github.com/open-telemetry/opentelemetry-python/releases/)
 [![Read the Docs](https://readthedocs.org/projects/opentelemetry-python/badge/?version=latest)](https://opentelemetry-python.readthedocs.io/en/latest/)
 
@@ -100,8 +100,12 @@ Approvers ([@open-telemetry/python-approvers](https://github.com/orgs/open-telem
 
 - [Aaron Abbott](https://github.com/aabmass), Google
 - [Jeremy Voss](https://github.com/jeremydvoss), Microsoft
-- [Sanket Mehta](https://github.com/sanketmehta28), Cisco
+- [Owais Lone](https://github.com/owais), Splunk
+- [Pablo Collins](https://github.com/pmcollins), Splunk
+- [Riccardo Magliocchetti](https://github.com/xrmx), Elastic
 - [Shalev Roda](https://github.com/shalevr), Cisco
+- [Srikanth Chekuri](https://github.com/srikanthccv), signoz.io
+- [Tammy Baylis](https://github.com/tammy-baylis-swi), SolarWinds
 
 Emeritus Approvers
 
@@ -111,6 +115,8 @@ Emeritus Approvers
 - [Héctor Hernández](https://github.com/hectorhdzg), Microsoft
 - [Mauricio Vásquez](https://github.com/mauriciovasquezbernal), Kinvolk
 - [Nathaniel Ruiz Nowell](https://github.com/NathanielRN), AWS
+- [Nikolay Sokolik](https://github.com/oxeye-nikolay), Oxeye
+- [Sanket Mehta](https://github.com/sanketmehta28), Cisco
 - [Tahir H. Butt](https://github.com/majorgreys), DataDog
 
 *For more information about the approver role, see the [community repository](https://github.com/open-telemetry/community/blob/main/community-membership.md#approver).*

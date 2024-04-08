@@ -178,3 +178,14 @@ extlinks = {
     "scm_raw_web": (scm_raw_web + "/%s", "scm_raw_web"),
     "scm_web": (scm_web + "/%s", "scm_web"),
 }
+
+
+def on_missing_reference(app, env, node, contnode):
+    # FIXME Remove when opentelemetry.metrics._Gauge is renamed to
+    # opentelemetry.metrics.Gauge
+    if node["reftarget"] == "opentelemetry.metrics.Gauge":
+        return contnode
+
+
+def setup(app):
+    app.connect("missing-reference", on_missing_reference)

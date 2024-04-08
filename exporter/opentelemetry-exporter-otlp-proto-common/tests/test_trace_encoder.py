@@ -111,7 +111,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
             links=(
                 SDKLink(context=other_context, attributes={"key_bool": True}),
             ),
-            resource=SDKResource({}),
+            resource=SDKResource({}, "resource_schema_url"),
         )
         span1.start(start_time=start_times[0])
         span1.set_attribute("key_bool", False)
@@ -143,7 +143,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
             name="test-span-4",
             context=other_context,
             parent=None,
-            resource=SDKResource({}),
+            resource=SDKResource({}, "resource_schema_url"),
             instrumentation_scope=SDKInstrumentationScope(
                 name="name", version="version"
             ),
@@ -163,6 +163,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
         pb2_service_request = PB2ExportTraceServiceRequest(
             resource_spans=[
                 PB2ResourceSpans(
+                    schema_url="resource_schema_url",
                     resource=PB2Resource(),
                     scope_spans=[
                         PB2ScopeSpans(

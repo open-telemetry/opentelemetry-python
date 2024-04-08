@@ -13,6 +13,7 @@
 # limitations under the License.
 
 # pylint: disable=too-many-lines
+# pylint: disable=no-member
 
 import shutil
 import subprocess
@@ -33,6 +34,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
     OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT,
     OTEL_LINK_ATTRIBUTE_COUNT_LIMIT,
+    OTEL_SDK_DISABLED,
     OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
     OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT,
     OTEL_SPAN_EVENT_COUNT_LIMIT,
@@ -160,6 +162,13 @@ tracer_provider.add_span_processor(mock_processor)
         # pylint: disable=protected-access
         self.assertEqual(
             span_processor, tracer_provider._active_span_processor
+        )
+
+    @mock.patch.dict("os.environ", {OTEL_SDK_DISABLED: "true"})
+    def test_get_tracer_with_sdk_disabled(self):
+        tracer_provider = trace.TracerProvider()
+        self.assertIsInstance(
+            tracer_provider.get_tracer(Mock()), trace_api.NoOpTracer
         )
 
 
@@ -900,6 +909,37 @@ class TestSpan(unittest.TestCase):
             with self.assertRaises(TypeError):
                 root.links[1].attributes["name"] = "new_neighbour"
 
+    def test_add_link(self):
+        id_generator = RandomIdGenerator()
+        other_context = trace_api.SpanContext(
+            trace_id=id_generator.generate_trace_id(),
+            span_id=id_generator.generate_span_id(),
+            is_remote=False,
+        )
+
+        with self.tracer.start_as_current_span("root") as root:
+            root.add_link(other_context, {"name": "neighbor"})
+
+            self.assertEqual(len(root.links), 1)
+            self.assertEqual(
+                root.links[0].context.trace_id, other_context.trace_id
+            )
+            self.assertEqual(
+                root.links[0].context.span_id, other_context.span_id
+            )
+            self.assertEqual(root.links[0].attributes, {"name": "neighbor"})
+
+            with self.assertRaises(TypeError):
+                root.links[0].attributes["name"] = "new_neighbour"
+
+    def test_add_link_with_invalid_span_context(self):
+        other_context = trace_api.INVALID_SPAN_CONTEXT
+
+        with self.tracer.start_as_current_span("root") as root:
+            root.add_link(other_context)
+
+            self.assertEqual(len(root.links), 0)
+
     def test_update_name(self):
         with self.tracer.start_as_current_span("root") as root:
             # name
@@ -1251,6 +1291,23 @@ RuntimeError: example error"""
             pass
         finally:
             self.assertEqual(len(span.events), 0)
+
+    def test_record_exception_out_of_scope(self):
+        span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))
+        out_of_scope_exception = ValueError("invalid")
+        span.record_exception(out_of_scope_exception)
+        exception_event = span.events[0]
+        self.assertEqual("exception", exception_event.name)
+        self.assertEqual(
+            "invalid", exception_event.attributes["exception.message"]
+        )
+        self.assertEqual(
+            "ValueError", exception_event.attributes["exception.type"]
+        )
+        self.assertIn(
+            "ValueError: invalid",
+            exception_event.attributes["exception.stacktrace"],
+        )
 
 
 def span_event_start_fmt(span_processor_name, span_name):

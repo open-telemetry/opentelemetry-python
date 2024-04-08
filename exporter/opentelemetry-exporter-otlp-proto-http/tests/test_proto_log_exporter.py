@@ -16,13 +16,12 @@
 
 import unittest
 from typing import List
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, call, patch
 
 import requests
 import responses
 
 from opentelemetry._logs import SeverityNumber
-from opentelemetry.exporter.otlp.proto.common._internal import _is_backoff_v2
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http._log_exporter import (
     DEFAULT_COMPRESSION,
@@ -34,6 +33,7 @@ from opentelemetry.exporter.otlp.proto.http._log_exporter import (
 from opentelemetry.exporter.otlp.proto.http.version import __version__
 from opentelemetry.sdk._logs import LogData
 from opentelemetry.sdk._logs import LogRecord as SDKLogRecord
+from opentelemetry.sdk._logs.export import LogExportResult
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
@@ -196,17 +196,8 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         self.assertIsInstance(exporter._session, requests.Session)
 
     @responses.activate
-    @patch("opentelemetry.exporter.otlp.proto.common._internal.backoff")
     @patch("opentelemetry.exporter.otlp.proto.http._log_exporter.sleep")
-    def test_handles_backoff_v2_api(self, mock_sleep, mock_backoff):
-        # In backoff ~= 2.0.0 the first value yielded from expo is None.
-        def generate_delays(*args, **kwargs):
-            if _is_backoff_v2:
-                yield None
-            yield 1
-
-        mock_backoff.expo.configure_mock(**{"side_effect": generate_delays})
-
+    def test_exponential_backoff(self, mock_sleep):
         # return a retryable error
         responses.add(
             responses.POST,
@@ -219,7 +210,9 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         logs = self._get_sdk_log_data()
 
         exporter.export(logs)
-        mock_sleep.assert_called_once_with(1)
+        mock_sleep.assert_has_calls(
+            [call(1), call(2), call(4), call(8), call(16), call(32)]
+        )
 
     @staticmethod
     def _get_sdk_log_data() -> List[LogData]:
@@ -290,3 +283,13 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         )
 
         return [log1, log2, log3, log4]
+
+    @patch.object(OTLPLogExporter, "_export", return_value=Mock(ok=True))
+    def test_2xx_status_code(self, mock_otlp_metric_exporter):
+        """
+        Test that any HTTP 2XX code returns a successful result
+        """
+
+        self.assertEqual(
+            OTLPLogExporter().export(MagicMock()), LogExportResult.SUCCESS
+        )

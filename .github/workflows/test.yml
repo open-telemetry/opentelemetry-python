@@ -10,7 +10,7 @@ env:
   # Otherwise, set variable to the commit of your branch on
   # opentelemetry-python-contrib which is compatible with these Core repo
   # changes.
-  CONTRIB_REPO_SHA: 2977f143df1d474735e8bdfecd91d92d534e80dc
+  CONTRIB_REPO_SHA: 3c2788469834aa4f5976e1644d757f43d60bc219
   # This is needed because we do not clone the core repo in contrib builds anymore.
   # When running contrib builds as part of core builds, we use actions/checkout@v2 which
   # does not set an environment variable (simply just runs tox), which is different when
@@ -23,19 +23,18 @@ jobs:
   build:
     env:
       # We use these variables to convert between tox and GHA version literals
-      py37: 3.7
       py38: 3.8
       py39: 3.9
       py310: "3.10"
       py311: "3.11"
-      pypy3: pypy-3.7
+      pypy3: pypy-3.8
       RUN_MATRIX_COMBINATION: ${{ matrix.python-version }}-${{ matrix.package }}-${{
         matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false  # ensures the entire test matrix is run, even if one permutation fails
       matrix:
-        python-version: [py37, py38, py39, py310, py311, pypy3]
+        python-version: [py38, py39, py310, py311, pypy3]
         package:
           - "api"
           - "sdk"
@@ -43,9 +42,6 @@ jobs:
           - "getting-started"
           - "opentracing-shim"
           - "opencensus-shim"
-          - "exporter-jaeger-combined"
-          - "exporter-jaeger-proto-grpc"
-          - "exporter-jaeger-thrift"
           - "exporter-opencensus"
           - "exporter-otlp-proto-common"
           - "exporter-otlp-combined"
@@ -59,6 +55,16 @@ jobs:
           - "propagator-b3"
           - "propagator-jaeger"
         os: [ubuntu-20.04, windows-2019]
+        exclude:
+          - python-version: pypy3
+            package: "opencensus-shim"
+          - python-version: pypy3
+            package: "exporter-opencensus"
+          - python-version: pypy3
+            package: "exporter-otlp-combined"
+          - python-version: pypy3
+            package: "exporter-otlp-proto-grpc"
+
     steps:
     - name: Checkout Core Repo @ SHA - ${{ github.sha }}
       uses: actions/checkout@v2
@@ -68,7 +74,7 @@ jobs:
         python-version: ${{ env[matrix.python-version] }}
         architecture: 'x64'
     - name: Install tox
-      run: pip install tox==3.27.1 -U tox-factor
+      run: pip install tox
     - name: Cache tox environment
         # Preserves .tox directory between runs for faster installs
       uses: actions/cache@v2
@@ -76,7 +82,7 @@ jobs:
         path: |
           .tox
           ~/.cache/pip
-        key: v3-tox-cache-${{ env.RUN_MATRIX_COMBINATION }}-${{ hashFiles('tox.ini',
+        key: v4-tox-cache-${{ env.RUN_MATRIX_COMBINATION }}-${{ hashFiles('tox.ini',
           'dev-requirements.txt') }}-core
     - name: Windows does not let git check out files with long names
       if: ${{ matrix.os == 'windows-2019'}}
@@ -101,7 +107,7 @@ jobs:
         python-version: '3.10'
         architecture: 'x64'
     - name: Install tox
-      run: pip install tox==3.27.1
+      run: pip install tox
     - name: Cache tox environment
         # Preserves .tox directory between runs for faster installs
       uses: actions/cache@v2
@@ -109,23 +115,23 @@ jobs:
         path: |
           .tox
           ~/.cache/pip
-        key: v3-tox-cache-${{ matrix.tox-environment }}-${{ hashFiles('tox.ini', 'dev-requirements.txt')
+        key: v4-tox-cache-${{ matrix.tox-environment }}-${{ hashFiles('tox.ini', 'dev-requirements.txt')
           }}-core
     - name: run tox
       run: tox -e ${{ matrix.tox-environment }}
 
   # Contrib unit test suite in order to ensure changes in core do not break anything in contrib.
-  # We only run contrib unit tests on the oldest supported Python version (3.7) as running the same tests
+  # We only run contrib unit tests on the oldest supported Python version (3.8) as running the same tests
   # on all versions is somewhat redundant.
   contrib-build:
     env:
       # We use these variables to convert between tox and GHA version literals
-      py37: 3.7
+      py38: 3.8
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false  # ensures the entire test matrix is run, even if one permutation fails
       matrix:
-        python-version: [py37]
+        python-version: [py38]
         package:
           - "aiohttp-client"
           - "aiohttp-server"
@@ -192,7 +198,7 @@ jobs:
         python-version: ${{ env[matrix.python-version] }}
         architecture: 'x64'
     - name: Install tox
-      run: pip install tox==3.27.1 -U tox-factor
+      run: pip install tox
     - name: Cache tox environment
         # Preserves .tox directory between runs for faster installs
       uses: actions/cache@v2

@@ -41,6 +41,7 @@ def encode_logs(batch: Sequence[LogData]) -> ExportLogsServiceRequest:
 def _encode_log(log_data: LogData) -> PB2LogRecord:
     return PB2LogRecord(
         time_unix_nano=log_data.log_record.timestamp,
+        observed_time_unix_nano=log_data.log_record.observed_timestamp,
         span_id=_encode_span_id(log_data.log_record.span_id),
         trace_id=_encode_trace_id(log_data.log_record.trace_id),
         flags=int(log_data.log_record.trace_flags),
@@ -77,6 +78,7 @@ def _encode_resource_logs(batch: Sequence[LogData]) -> List[ResourceLogs]:
             ResourceLogs(
                 resource=_encode_resource(sdk_resource),
                 scope_logs=scope_logs,
+                schema_url=sdk_resource.schema_url,
             )
         )
 

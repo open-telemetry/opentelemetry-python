@@ -14,7 +14,6 @@
 
 # type: ignore
 
-import collections
 import unittest
 from typing import MutableSequence
 
@@ -90,14 +89,12 @@ class TestAttributes(unittest.TestCase):
 
 
 class TestBoundedAttributes(unittest.TestCase):
-    base = collections.OrderedDict(
-        [
-            ("name", "Firulais"),
-            ("age", 7),
-            ("weight", 13),
-            ("vaccinated", True),
-        ]
-    )
+    base = {
+        "name": "Firulais",
+        "age": 7,
+        "weight": 13,
+        "vaccinated": True,
+    }
 
     def test_negative_maxlen(self):
         with self.assertRaises(ValueError):
@@ -105,7 +102,7 @@ class TestBoundedAttributes(unittest.TestCase):
 
     def test_from_map(self):
         dic_len = len(self.base)
-        base_copy = collections.OrderedDict(self.base)
+        base_copy = self.base.copy()
         bdict = BoundedAttributes(dic_len, base_copy)
 
         self.assertEqual(len(bdict), dic_len)
