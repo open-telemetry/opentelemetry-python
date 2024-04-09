@@ -16,6 +16,9 @@ from unittest import TestCase
 
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
+    Buckets,
+    ExponentialHistogram,
+    ExponentialHistogramDataPoint,
     Gauge,
     Histogram,
     HistogramDataPoint,
@@ -100,6 +103,22 @@ class TestToJson(TestCase):
         )
         cls.histogram_data_point_1_str = f'{{"attributes": {cls.attributes_1_str}, "start_time_unix_nano": 2, "time_unix_nano": 3, "count": 4, "sum": 4.4, "bucket_counts": [2, 1, 1], "explicit_bounds": [1.2, 2.3, 3.4, 4.5], "min": 0.3, "max": 4.4}}'
 
+        cls.exp_histogram_data_point_0 = ExponentialHistogramDataPoint(
+            attributes=cls.attributes_0,
+            start_time_unix_nano=1,
+            time_unix_nano=2,
+            count=1,
+            sum=10,
+            scale=1,
+            zero_count=0,
+            positive=Buckets(offset=0, bucket_counts=[1]),
+            negative=Buckets(offset=0, bucket_counts=[0]),
+            flags=0,
+            min=10,
+            max=10,
+        )
+        cls.exp_histogram_data_point_0_str = f'{{"attributes": {cls.attributes_0_str}, "start_time_unix_nano": 1, "time_unix_nano": 2, "count": 1, "sum": 10, "scale": 1, "zero_count": 0, "positive": {{"offset": 0, "bucket_counts": [1]}}, "negative": {{"offset": 0, "bucket_counts": [0]}}, "flags": 0, "min": 10, "max": 10}}'
+
         cls.sum_0 = Sum(
             data_points=[cls.number_data_point_0, cls.number_data_point_1],
             aggregation_temporality=AggregationTemporality.DELTA,
@@ -120,6 +139,14 @@ class TestToJson(TestCase):
             aggregation_temporality=AggregationTemporality.DELTA,
         )
         cls.histogram_0_str = f'{{"data_points": [{cls.histogram_data_point_0_str}, {cls.histogram_data_point_1_str}], "aggregation_temporality": 1}}'
+
+        cls.exp_histogram_0 = ExponentialHistogram(
+            data_points=[
+                cls.exp_histogram_data_point_0,
+            ],
+            aggregation_temporality=AggregationTemporality.CUMULATIVE,
+        )
+        cls.exp_histogram_0_str = f'{{"data_points": [{cls.exp_histogram_data_point_0_str}], "aggregation_temporality": 2}}'
 
         cls.metric_0 = Metric(
             name="metric_0",
@@ -209,6 +236,15 @@ class TestToJson(TestCase):
             self.histogram_data_point_1_str,
         )
 
+    def test_exp_histogram_data_point(self):
+
+        self.maxDiff = None
+
+        self.assertEqual(
+            self.exp_histogram_data_point_0.to_json(indent=None),
+            self.exp_histogram_data_point_0_str,
+        )
+
     def test_sum(self):
 
         self.assertEqual(self.sum_0.to_json(indent=None), self.sum_0_str)
@@ -223,6 +259,14 @@ class TestToJson(TestCase):
 
         self.assertEqual(
             self.histogram_0.to_json(indent=None), self.histogram_0_str
+        )
+
+    def test_exp_histogram(self):
+
+        self.maxDiff = None
+
+        self.assertEqual(
+            self.exp_histogram_0.to_json(indent=None), self.exp_histogram_0_str
         )
 
     def test_metric(self):
