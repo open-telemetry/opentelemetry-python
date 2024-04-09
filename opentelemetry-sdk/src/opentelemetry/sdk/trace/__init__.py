@@ -998,8 +998,8 @@ class Span(trace_api.Span, ReadableSpan):
         module = type(exception).__module__
         qualname = type(exception).__qualname__
         exception_type = (
-            f"{module}.{qualname}" 
-            if module and module != "builtins" 
+            f"{module}.{qualname}"
+            if module and module != "builtins"
             else qualname
         )
         _attributes: MutableMapping[str, types.AttributeValue] = {
