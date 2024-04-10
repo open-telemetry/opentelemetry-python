@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Update proto version to v1.2.0
+  ([#3844](https://github.com/open-telemetry/opentelemetry-python/pull/3844))
 - Add to_json method to ExponentialHistogram
   ([#3780](https://github.com/open-telemetry/opentelemetry-python/pull/3780))
 - Bump mypy to 1.9.0
