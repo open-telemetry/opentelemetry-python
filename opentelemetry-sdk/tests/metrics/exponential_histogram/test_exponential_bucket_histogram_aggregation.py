@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import random as insecure_random
 from itertools import permutations
 from logging import WARNING
 from math import ldexp
@@ -37,6 +38,9 @@ from opentelemetry.sdk.metrics._internal.exponential_histogram.mapping.logarithm
     LogarithmMapping,
 )
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
+from opentelemetry.sdk.metrics._internal.point import (
+    ExponentialHistogramDataPoint,
+)
 from opentelemetry.sdk.metrics.view import (
     ExponentialBucketHistogramAggregation,
 )
@@ -853,13 +857,14 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             AggregationTemporality.CUMULATIVE, 0
         )
 
-    def test_collect_results_cumulative(self):
+    def test_collect_results_cumulative(self) -> None:
         exponential_histogram_aggregation = (
             _ExponentialBucketHistogramAggregation(
                 Mock(),
                 Mock(),
             )
         )
+        self.maxDiff = None
 
         self.assertEqual(exponential_histogram_aggregation._mapping._scale, 20)
 
@@ -884,7 +889,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         self.assertEqual(collection_0.zero_count, 0)
         self.assertEqual(
             collection_0.positive.bucket_counts,
-            [1, *[0] * 63, 1, *[0] * 31, 1, *[0] * 63],
+            [1, *[0] * 63, 1, *[0] * 63, 1, *[0] * 31],
         )
         self.assertEqual(collection_0.flags, 0)
         self.assertEqual(collection_0.min, 1)
@@ -911,7 +916,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
                 previous_count = count
                 count_counts.append([previous_count, 1])
 
-        self.assertEqual(collection_1.count, 5)
+        self.assertEqual(collection_1.count, 8)
         self.assertEqual(collection_1.sum, 16.645)
         self.assertEqual(collection_1.scale, 4)
         self.assertEqual(collection_1.zero_count, 0)
@@ -920,20 +925,67 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             collection_1.positive.bucket_counts,
             [
                 1,
-                *[0] * 15,
-                1,
-                *[0] * 47,
-                1,
-                *[0] * 40,
-                1,
                 *[0] * 17,
                 1,
                 *[0] * 36,
+                1,
+                *[0] * 15,
+                2,
+                *[0] * 15,
+                1,
+                *[0] * 15,
+                1,
+                *[0] * 15,
+                1,
+                *[0] * 40,
             ],
         )
         self.assertEqual(collection_1.flags, 0)
         self.assertEqual(collection_1.min, 0.045)
         self.assertEqual(collection_1.max, 8)
+
+    def test_cumulative_aggregation_with_random_data(self) -> None:
+        histogram = _ExponentialBucketHistogramAggregation(Mock(), Mock())
+
+        def collect_and_validate() -> None:
+            result: ExponentialHistogramDataPoint = histogram.collect(
+                AggregationTemporality.CUMULATIVE, 0
+            )
+            buckets = result.positive.bucket_counts
+            scale = result.scale
+            index_start = result.positive.offset
+
+            for i in range(len(buckets)):
+                index = index_start + i
+                count = buckets[i]
+                lower_bound = 2 ** (index / (2**scale))
+                upper_bound = 2 ** ((index + 1) / (2**scale))
+                matches = 0
+                for value in values:
+                    if value > lower_bound and value <= upper_bound:
+                        matches += 1
+                assert (
+                    matches == count
+                ), f"index: {index}, count: {count}, scale: {scale}, lower_bound: {lower_bound}, upper_bound: {upper_bound}, matches: {matches}"
+
+            assert sum(buckets) + result.zero_count == len(values)
+            assert result.sum == sum(values)
+            assert result.count == len(values)
+            assert result.min == min(values)
+            assert result.max == max(values)
+            assert result.zero_count == len([v for v in values if v == 0])
+            assert scale >= 3
+
+        random = insecure_random.Random("opentelemetry2")
+        values = []
+        for i in range(2000):
+            value = random.randint(0, 1000)
+            values.append(value)
+            histogram.aggregate(Measurement(value, Mock()))
+            if i % 20 == 0:
+                collect_and_validate()
+
+        collect_and_validate()
 
     def test_merge_collect_cumulative(self):
         exponential_histogram_aggregation = (
@@ -974,7 +1026,8 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             0,
         )
 
-        self.assertEqual(result.scale, result_1.scale)
+        self.assertEqual(result.scale, 0)
+        self.assertEqual(result_1.scale, -1)
 
     def test_merge_collect_delta(self):
         exponential_histogram_aggregation = (
