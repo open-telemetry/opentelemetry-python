@@ -13,9 +13,12 @@
 # limitations under the License.
 
 import unittest
+from os import environ
 
 from opentelemetry import context
 from opentelemetry.context.context import Context
+from opentelemetry.context.contextvars_context import ContextVarsRuntimeContext
+from opentelemetry.environment_variables import OTEL_PYTHON_CONTEXT
 
 
 def _do_work() -> str:
@@ -75,16 +78,13 @@ class TestContext(unittest.TestCase):
         context.detach(token)
         self.assertEqual("yyy", context.get_value("a"))
 
+
 class TestInitContext(unittest.TestCase):
     def test_load_runtime_context(self):
-        from os import environ
-        from opentelemetry.environment_variables import OTEL_PYTHON_CONTEXT
-        from opentelemetry.context.contextvars_context import ContextVarsRuntimeContext
-
         environ[OTEL_PYTHON_CONTEXT] = "contextvars_context"
-        ctx = context._load_runtime_context()
+        ctx = context._load_runtime_context()  # pylint: disable=W0212
         self.assertIsInstance(ctx, ContextVarsRuntimeContext)
 
         environ.pop(OTEL_PYTHON_CONTEXT)
-        ctx = context._load_runtime_context()
+        ctx = context._load_runtime_context()  # pylint: disable=W0212
         self.assertIsInstance(ctx, ContextVarsRuntimeContext)

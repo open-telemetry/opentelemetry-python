@@ -13,9 +13,7 @@
 # limitations under the License.
 
 import logging
-import threading
 import typing
-from functools import wraps
 from os import environ
 from uuid import uuid4
 
@@ -25,6 +23,7 @@ from opentelemetry.environment_variables import OTEL_PYTHON_CONTEXT
 from opentelemetry.util._importlib_metadata import entry_points
 
 logger = logging.getLogger(__name__)
+
 
 def _load_runtime_context() -> typing.Optional[_RuntimeContext]:
     """Initialize the RuntimeContext
@@ -51,7 +50,9 @@ def _load_runtime_context() -> typing.Optional[_RuntimeContext]:
         )
     ).load()()
 
+
 _RUNTIME_CONTEXT = _load_runtime_context()
+
 
 def create_key(keyname: str) -> str:
     """To allow cross-cutting concern to control access to their local state,
