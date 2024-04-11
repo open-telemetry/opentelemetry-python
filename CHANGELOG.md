@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3798](https://github.com/open-telemetry/opentelemetry-python/pull/3798))
 - Fix otlp exporter to export log_record.observed_timestamp
   ([#3785](https://github.com/open-telemetry/opentelemetry-python/pull/3785))
+- Add capture the fully qualified type name for raised exceptions in spans
+  ([#3837](https://github.com/open-telemetry/opentelemetry-python/pull/3837))
 
 ## Version 1.24.0/0.45b0 (2024-03-28)
 
