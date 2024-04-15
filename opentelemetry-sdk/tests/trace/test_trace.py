@@ -50,6 +50,7 @@ from opentelemetry.sdk.trace.sampling import (
     Decision,
     ParentBased,
     StaticSampler,
+    Sampler,
 )
 from opentelemetry.sdk.util import BoundedDict, ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
@@ -83,7 +84,8 @@ class TestTracer(unittest.TestCase):
         self.assertIsInstance(tracer, trace_api.Tracer)
 
     def test_shutdown(self):
-        tracer_provider = trace.TracerProvider()
+        mock_sampler = Mock(spec=Sampler)
+        tracer_provider = trace.TracerProvider(sampler=mock_sampler)
 
         mock_processor1 = mock.Mock(spec=trace.SpanProcessor)
         tracer_provider.add_span_processor(mock_processor1)
@@ -95,6 +97,8 @@ class TestTracer(unittest.TestCase):
 
         self.assertEqual(mock_processor1.shutdown.call_count, 1)
         self.assertEqual(mock_processor2.shutdown.call_count, 1)
+
+        self.assertEqual(mock_sampler.close.call_count, 1)
 
         shutdown_python_code = """
 import atexit
