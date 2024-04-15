@@ -636,6 +636,10 @@ class TestReadableSpan(unittest.TestCase):
         self.assertEqual(span.events, tuple(events))
 
 
+class DummyError(Exception):
+    pass
+
+
 class TestSpan(unittest.TestCase):
     # pylint: disable=too-many-public-methods
 
@@ -1142,6 +1146,25 @@ class TestSpan(unittest.TestCase):
             trace.TracerProvider()
             .get_tracer(__name__)
             .start_as_current_span("root")
+        )
+
+    def test_record_exception_fqn(self):
+        span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))
+        exception = DummyError("error")
+        exception_type = "tests.trace.test_trace.DummyError"
+        span.record_exception(exception)
+        exception_event = span.events[0]
+        self.assertEqual("exception", exception_event.name)
+        self.assertEqual(
+            "error", exception_event.attributes["exception.message"]
+        )
+        self.assertEqual(
+            exception_type,
+            exception_event.attributes["exception.type"],
+        )
+        self.assertIn(
+            "DummyError: error",
+            exception_event.attributes["exception.stacktrace"],
         )
 
     def test_record_exception(self):

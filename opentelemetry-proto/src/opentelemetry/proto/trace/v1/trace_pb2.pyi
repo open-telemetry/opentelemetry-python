@@ -14,6 +14,61 @@ import typing_extensions
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor = ...
 
+class SpanFlags(_SpanFlags, metaclass=_SpanFlagsEnumTypeWrapper):
+    """SpanFlags represents constants used to interpret the
+    Span.flags field, which is protobuf 'fixed32' type and is to
+    be used as bit-fields. Each non-zero value defined in this enum is
+    a bit-mask.  To extract the bit-field, for example, use an
+    expression like:
+
+      (span.flags & SPAN_FLAGS_TRACE_FLAGS_MASK)
+
+    See https://www.w3.org/TR/trace-context-2/#trace-flags for the flag definitions.
+
+    Note that Span flags were introduced in version 1.1 of the
+    OpenTelemetry protocol.  Older Span producers do not set this
+    field, consequently consumers should not rely on the absence of a
+    particular flag bit to indicate the presence of a particular feature.
+    """
+    pass
+class _SpanFlags:
+    V = typing.NewType('V', builtins.int)
+class _SpanFlagsEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_SpanFlags.V], builtins.type):
+    DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor = ...
+    SPAN_FLAGS_DO_NOT_USE = SpanFlags.V(0)
+    """The zero value for the enum. Should not be used for comparisons.
+    Instead use bitwise "and" with the appropriate mask as shown above.
+    """
+
+    SPAN_FLAGS_TRACE_FLAGS_MASK = SpanFlags.V(255)
+    """Bits 0-7 are used for trace flags."""
+
+    SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK = SpanFlags.V(256)
+    """Bits 8 and 9 are used to indicate that the parent span or link span is remote.
+    Bit 8 (`HAS_IS_REMOTE`) indicates whether the value is known.
+    Bit 9 (`IS_REMOTE`) indicates whether the span or link is remote.
+    """
+
+    SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK = SpanFlags.V(512)
+
+SPAN_FLAGS_DO_NOT_USE = SpanFlags.V(0)
+"""The zero value for the enum. Should not be used for comparisons.
+Instead use bitwise "and" with the appropriate mask as shown above.
+"""
+
+SPAN_FLAGS_TRACE_FLAGS_MASK = SpanFlags.V(255)
+"""Bits 0-7 are used for trace flags."""
+
+SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK = SpanFlags.V(256)
+"""Bits 8 and 9 are used to indicate that the parent span or link span is remote.
+Bit 8 (`HAS_IS_REMOTE`) indicates whether the value is known.
+Bit 9 (`IS_REMOTE`) indicates whether the span or link is remote.
+"""
+
+SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK = SpanFlags.V(512)
+global___SpanFlags = SpanFlags
+
+
 class TracesData(google.protobuf.message.Message):
     """TracesData represents the traces data that can be stored in a persistent storage,
     OR can be embedded by other protocols that transfer OTLP traces data but do
@@ -61,7 +116,10 @@ class ResourceSpans(google.protobuf.message.Message):
         """A list of ScopeSpans that originate from a resource."""
         pass
     schema_url: typing.Text = ...
-    """This schema_url applies to the data in the "resource" field. It does not apply
+    """The Schema URL, if known. This is the identifier of the Schema that the resource data
+    is recorded in. To learn more about Schema URL see
+    https://opentelemetry.io/docs/specs/otel/schemas/#schema-url
+    This schema_url applies to the data in the "resource" field. It does not apply
     to the data in the "scope_spans" field which have their own schema_url field.
     """
 
@@ -93,7 +151,11 @@ class ScopeSpans(google.protobuf.message.Message):
         """A list of Spans that originate from an instrumentation scope."""
         pass
     schema_url: typing.Text = ...
-    """This schema_url applies to all spans and span events in the "spans" field."""
+    """The Schema URL, if known. This is the identifier of the Schema that the span data
+    is recorded in. To learn more about Schema URL see
+    https://opentelemetry.io/docs/specs/otel/schemas/#schema-url
+    This schema_url applies to all spans and span events in the "spans" field.
+    """
 
     def __init__(self,
         *,
@@ -234,6 +296,7 @@ class Span(google.protobuf.message.Message):
         TRACE_STATE_FIELD_NUMBER: builtins.int
         ATTRIBUTES_FIELD_NUMBER: builtins.int
         DROPPED_ATTRIBUTES_COUNT_FIELD_NUMBER: builtins.int
+        FLAGS_FIELD_NUMBER: builtins.int
         trace_id: builtins.bytes = ...
         """A unique identifier of a trace that this linked span is part of. The ID is a
         16-byte array.
@@ -257,6 +320,26 @@ class Span(google.protobuf.message.Message):
         then no attributes were dropped.
         """
 
+        flags: builtins.int = ...
+        """Flags, a bit field.
+
+        Bits 0-7 (8 least significant bits) are the trace flags as defined in W3C Trace
+        Context specification. To read the 8-bit W3C trace flag, use
+        `flags & SPAN_FLAGS_TRACE_FLAGS_MASK`.
+
+        See https://www.w3.org/TR/trace-context-2/#trace-flags for the flag definitions.
+
+        Bits 8 and 9 represent the 3 states of whether the link is remote.
+        The states are (unknown, is not remote, is remote).
+        To read whether the value is known, use `(flags & SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK) != 0`.
+        To read whether the link is remote, use `(flags & SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK) != 0`.
+
+        Readers MUST NOT assume that bits 10-31 (22 most significant bits) will be zero.
+        When creating new spans, bits 10-31 (most-significant 22-bits) MUST be zero.
+
+        [Optional].
+        """
+
         def __init__(self,
             *,
             trace_id : builtins.bytes = ...,
@@ -264,13 +347,15 @@ class Span(google.protobuf.message.Message):
             trace_state : typing.Text = ...,
             attributes : typing.Optional[typing.Iterable[opentelemetry.proto.common.v1.common_pb2.KeyValue]] = ...,
             dropped_attributes_count : builtins.int = ...,
+            flags : builtins.int = ...,
             ) -> None: ...
-        def ClearField(self, field_name: typing_extensions.Literal["attributes",b"attributes","dropped_attributes_count",b"dropped_attributes_count","span_id",b"span_id","trace_id",b"trace_id","trace_state",b"trace_state"]) -> None: ...
+        def ClearField(self, field_name: typing_extensions.Literal["attributes",b"attributes","dropped_attributes_count",b"dropped_attributes_count","flags",b"flags","span_id",b"span_id","trace_id",b"trace_id","trace_state",b"trace_state"]) -> None: ...
 
     TRACE_ID_FIELD_NUMBER: builtins.int
     SPAN_ID_FIELD_NUMBER: builtins.int
     TRACE_STATE_FIELD_NUMBER: builtins.int
     PARENT_SPAN_ID_FIELD_NUMBER: builtins.int
+    FLAGS_FIELD_NUMBER: builtins.int
     NAME_FIELD_NUMBER: builtins.int
     KIND_FIELD_NUMBER: builtins.int
     START_TIME_UNIX_NANO_FIELD_NUMBER: builtins.int
@@ -309,6 +394,30 @@ class Span(google.protobuf.message.Message):
     parent_span_id: builtins.bytes = ...
     """The `span_id` of this span's parent span. If this is a root span, then this
     field must be empty. The ID is an 8-byte array.
+    """
+
+    flags: builtins.int = ...
+    """Flags, a bit field.
+
+    Bits 0-7 (8 least significant bits) are the trace flags as defined in W3C Trace
+    Context specification. To read the 8-bit W3C trace flag, use
+    `flags & SPAN_FLAGS_TRACE_FLAGS_MASK`.
+
+    See https://www.w3.org/TR/trace-context-2/#trace-flags for the flag definitions.
+
+    Bits 8 and 9 represent the 3 states of whether a span's parent
+    is remote. The states are (unknown, is not remote, is remote).
+    To read whether the value is known, use `(flags & SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK) != 0`.
+    To read whether the span is remote, use `(flags & SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK) != 0`.
+
+    When creating span messages, if the message is logically forwarded from another source
+    with an equivalent flags fields (i.e., usually another OTLP span message), the field SHOULD
+    be copied as-is. If creating from a source that does not have an equivalent flags field
+    (such as a runtime representation of an OpenTelemetry span), the high 22 bits MUST
+    be set to zero.
+    Readers MUST NOT assume that bits 10-31 (22 most significant bits) will be zero.
+
+    [Optional].
     """
 
     name: typing.Text = ...
@@ -403,6 +512,7 @@ class Span(google.protobuf.message.Message):
         span_id : builtins.bytes = ...,
         trace_state : typing.Text = ...,
         parent_span_id : builtins.bytes = ...,
+        flags : builtins.int = ...,
         name : typing.Text = ...,
         kind : global___Span.SpanKind.V = ...,
         start_time_unix_nano : builtins.int = ...,
@@ -416,7 +526,7 @@ class Span(google.protobuf.message.Message):
         status : typing.Optional[global___Status] = ...,
         ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["status",b"status"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["attributes",b"attributes","dropped_attributes_count",b"dropped_attributes_count","dropped_events_count",b"dropped_events_count","dropped_links_count",b"dropped_links_count","end_time_unix_nano",b"end_time_unix_nano","events",b"events","kind",b"kind","links",b"links","name",b"name","parent_span_id",b"parent_span_id","span_id",b"span_id","start_time_unix_nano",b"start_time_unix_nano","status",b"status","trace_id",b"trace_id","trace_state",b"trace_state"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["attributes",b"attributes","dropped_attributes_count",b"dropped_attributes_count","dropped_events_count",b"dropped_events_count","dropped_links_count",b"dropped_links_count","end_time_unix_nano",b"end_time_unix_nano","events",b"events","flags",b"flags","kind",b"kind","links",b"links","name",b"name","parent_span_id",b"parent_span_id","span_id",b"span_id","start_time_unix_nano",b"start_time_unix_nano","status",b"status","trace_id",b"trace_id","trace_state",b"trace_state"]) -> None: ...
 global___Span = Span
 
 class Status(google.protobuf.message.Message):

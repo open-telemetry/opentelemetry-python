@@ -18,7 +18,6 @@ import unittest
 
 import opentelemetry._logs._internal as _logs_internal
 from opentelemetry import _logs
-from opentelemetry.sdk._logs import LogRecord  # type: ignore
 from opentelemetry.test.globals_test import LoggingGlobalsTest
 
 
@@ -33,8 +32,8 @@ class TestProvider(_logs.NoOpLoggerProvider):
 
 
 class TestLogger(_logs.NoOpLogger):
-    def emit(self, *args, **kwargs):
-        return LogRecord(timestamp=0)
+    def emit(self, record: _logs.LogRecord) -> None:
+        pass
 
 
 class TestProxy(LoggingGlobalsTest, unittest.TestCase):
