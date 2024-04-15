@@ -109,8 +109,9 @@ def inject(
     """Uses the configured propagator to inject a Context into the carrier.
 
     Args:
-        carrier: An object that contains a representation of HTTP
-            headers. Should be paired with setter, which
+        carrier: An object that can carry information including 
+            the traceparent id.
+            Should be paired with setter, which
             should know how to set header values on the carrier.
         context: An optional Context to use. Defaults to current
             context if not set.
