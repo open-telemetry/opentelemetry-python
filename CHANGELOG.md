@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3785](https://github.com/open-telemetry/opentelemetry-python/pull/3785))
 - Add capture the fully qualified type name for raised exceptions in spans
   ([#3837](https://github.com/open-telemetry/opentelemetry-python/pull/3837))
+- Prometheus exporter sort label keys to prevent duplicate metrics when user input changes order 
+  ([#3698](https://github.com/open-telemetry/opentelemetry-python/pull/3698))
 
 ## Version 1.24.0/0.45b0 (2024-03-28)
 
@@ -28,8 +30,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3633](https://github.com/open-telemetry/opentelemetry-python/pull/3633))
 - Fix python 3.12 deprecation warning
   ([#3751](https://github.com/open-telemetry/opentelemetry-python/pull/3751))
-- Prometheus exporter sort label keys to prevent duplicate metrics when user input changes order 
-  ([#3698](https://github.com/open-telemetry/opentelemetry-python/pull/3698))
 - bump mypy to 0.982
   ([#3776](https://github.com/open-telemetry/opentelemetry-python/pull/3776))
 - Add support for OTEL_SDK_DISABLED environment variable

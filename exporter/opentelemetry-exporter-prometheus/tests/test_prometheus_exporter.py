@@ -448,9 +448,6 @@ class TestPrometheusMetricReader(TestCase):
 
         prometheus_output = generate_latest().decode()
 
-        for line in prometheus_output.split('\n'):
-            print(line)
-
         # All labels are mapped correctly
         self.assertIn('cause="cause1"', prometheus_output)
         self.assertIn('cause="cause2"', prometheus_output)
