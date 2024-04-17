@@ -443,8 +443,8 @@ class TestPrometheusMetricReader(TestCase):
         meter = provider.get_meter("getting-started", "0.1.2")
         counter = meter.create_counter("counter")
 
-        counter.add(1, {'cause': 'cause1', 'reason': 'reason1'})
-        counter.add(1, {'reason': 'reason2', 'cause': 'cause2'})
+        counter.add(1, {"cause": "cause1", "reason": "reason1"})
+        counter.add(1, {"reason": "reason2", "cause": "cause2"})
 
         prometheus_output = generate_latest().decode()
 
@@ -455,5 +455,5 @@ class TestPrometheusMetricReader(TestCase):
         self.assertIn('reason="reason2"', prometheus_output)
 
         # Only one metric is generated
-        metric_count = prometheus_output.count('# HELP counter_total')
+        metric_count = prometheus_output.count("# HELP counter_total")
         self.assertEqual(metric_count, 1)
