@@ -19,7 +19,7 @@ Deprecated: {{ common.to_docstring(attribute.deprecated) }}.
     {%- elif attribute | is_stable and filter == "any" %}
 Deprecated in favor of stable :py:const:`{{stable_class_ref(attribute_name(attribute), '.')}}`.
     {%- else %}
-    {{ common.to_docstring(attribute.brief) }}.
+{{ common.to_docstring(attribute.brief) }}.
         {%- if attribute.note %}
 Note: {{ common.to_docstring(attribute.note | indent)}}.
         {%- endif -%}

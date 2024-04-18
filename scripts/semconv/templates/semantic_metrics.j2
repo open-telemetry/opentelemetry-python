@@ -36,12 +36,12 @@ Deprecated in favor of stable :py:const:`{{stable_class_ref(const_name, '.')}}`.
     {%- else -%}
     {%- set brief = common.to_docstring(metric.brief) -%}
     {%- if brief != "" %}
-    {{brief}}
+{{brief}}
     {%- endif %}
-    Instrument: {{ metric.instrument }}
-    Unit: {{ metric.unit }}
+Instrument: {{ metric.instrument }}
+Unit: {{ metric.unit }}
       {%- if metric.note %}
-    Note: {{ common.to_docstring(metric.note | indent) }}.
+Note: {{ common.to_docstring(metric.note | indent) }}.
       {%- endif -%}
     {%- endif %}
 """

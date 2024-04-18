@@ -17,7 +17,7 @@ from enum import Enum
 
 ERROR_TYPE = "error.type"
 """
-    Describes a class of error the operation ended with.
+Describes a class of error the operation ended with.
 Note: The `error.type` SHOULD be predictable and SHOULD have low cardinality.
     Instrumentations SHOULD document the list of errors they report.
 
