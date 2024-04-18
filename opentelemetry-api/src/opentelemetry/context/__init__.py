@@ -41,14 +41,18 @@ def _load_runtime_context() -> typing.Optional[_RuntimeContext]:
         OTEL_PYTHON_CONTEXT, default_context
     )  # type: str
 
-    return next(  # type: ignore
-        iter(  # type: ignore
-            entry_points(  # type: ignore
-                group="opentelemetry_context",
-                name=configured_context,
+    try:
+        return next(  # type: ignore
+            iter(  # type: ignore
+                entry_points(  # type: ignore
+                    group="opentelemetry_context",
+                    name=configured_context,
+                )
             )
-        )
-    ).load()()
+        ).load()()
+    except Exception:  # pylint: disable=broad-except
+        logger.exception("Failed to load context: %s", configured_context)
+        return None
 
 
 _RUNTIME_CONTEXT = _load_runtime_context()
