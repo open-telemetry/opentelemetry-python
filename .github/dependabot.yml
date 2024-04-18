@@ -11,3 +11,44 @@ updates:
           - "*"  # Group all Actions updates into a single larger pull request
     schedule:
       interval: weekly
+
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: daily
+    ignore:
+      - dependency-name: "*"
+        paths:
+          - "propagator/opentelemetry-propagator-jaeger/test-requirements.txt"
+          - "propagator/opentelemetry-propagator-b3/test-requirements.txt"
+          - "gen-requirements.txt"
+          - "opentelemetry-sdk/test-requirements.txt"
+          - "docs/getting_started/tests/requirements.txt"
+          - "docs/examples/fork-process-model/flask-uwsgi/requirements.txt"
+          - "docs/examples/fork-process-model/flask-gunicorn/requirements.txt"
+          - "docs/examples/opentracing/requirements.txt"
+          - "docs/examples/metrics/views/requirements.txt"
+          - "docs/examples/metrics/reader/requirements.txt"
+          - "docs/examples/metrics/prometheus-grafana/requirements.txt"
+          - "docs/examples/opencensus-shim/requirements.txt"
+          - "shim/opentelemetry-opencensus-shim/test-requirements.txt"
+          - "shim/opentelemetry-opentracing-shim/test-requirements.txt"
+          - "exporter/opentelemetry-exporter-zipkin/test-requirements.txt"
+          - "exporter/opentelemetry-exporter-otlp-proto-common/test-requirements-0.txt"
+          - "exporter/opentelemetry-exporter-otlp-proto-common/test-requirements-1.txt"
+          - "exporter/opentelemetry-exporter-zipkin-json/test-requirements.txt"
+          - "exporter/opentelemetry-exporter-otlp-proto-http/test-requirements-0.txt"
+          - "exporter/opentelemetry-exporter-otlp-proto-http/test-requirements-1.txt"
+          - "exporter/opentelemetry-exporter-otlp-proto-grpc/test-requirements-0.txt"
+          - "exporter/opentelemetry-exporter-otlp-proto-grpc/test-requirements-1.txt"
+          - "exporter/opentelemetry-exporter-prometheus/test-requirements.txt"
+          - "exporter/opentelemetry-exporter-zipkin-proto-http/test-requirements.txt"
+          - "exporter/opentelemetry-exporter-opencensus/test-requirements.txt"
+          - "exporter/opentelemetry-exporter-otlp/test-requirements.txt"
+          - "opentelemetry-proto/test-requirements-0.txt"
+          - "opentelemetry-proto/test-requirements-1.txt"
+          - "tests/opentelemetry-test-utils/test-requirements.txt"
+          - "dev-requirements.txt"
+          - "docs-requirements.txt"
+          - "opentelemetry-api/test-requirements.txt"
+          - "opentelemetry-semantic-conventions/test-requirements.txt"
