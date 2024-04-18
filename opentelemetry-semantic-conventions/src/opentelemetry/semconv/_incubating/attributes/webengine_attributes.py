@@ -18,12 +18,10 @@ WEBENGINE_DESCRIPTION = "webengine.description"
 Additional description of the web engine (e.g. detailed version and edition information).
 """
 
-
 WEBENGINE_NAME = "webengine.name"
 """
 The name of the web engine.
 """
-
 
 WEBENGINE_VERSION = "webengine.version"
 """

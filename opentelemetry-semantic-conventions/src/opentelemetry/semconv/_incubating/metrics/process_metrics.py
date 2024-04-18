@@ -17,21 +17,19 @@ from typing import Callable, Sequence
 
 from opentelemetry.metrics import (
     Counter,
-    Histogram,
     Meter,
     ObservableGauge,
     UpDownCounter,
 )
 
 PROCESS_CONTEXT_SWITCHES = "process.context_switches"
-"""
-Number of times the process has been context switched
-Instrument: counter
-Unit: {count}
+""""
+    Number of times the process has been context switched
+    Instrument: counter
+    Unit: {count}
 """
 
 
-@staticmethod
 def create_process_context_switches(meter: Meter) -> Counter:
     """Number of times the process has been context switched"""
     return meter.create_counter(
@@ -42,14 +40,13 @@ def create_process_context_switches(meter: Meter) -> Counter:
 
 
 PROCESS_CPU_TIME = "process.cpu.time"
-"""
-Total CPU seconds broken down by different states
-Instrument: counter
-Unit: s
+""""
+    Total CPU seconds broken down by different states
+    Instrument: counter
+    Unit: s
 """
 
 
-@staticmethod
 def create_process_cpu_time(meter: Meter) -> Counter:
     """Total CPU seconds broken down by different states"""
     return meter.create_counter(
@@ -60,14 +57,13 @@ def create_process_cpu_time(meter: Meter) -> Counter:
 
 
 PROCESS_CPU_UTILIZATION = "process.cpu.utilization"
-"""
-Difference in process.cpu.time since the last measurement, divided by the elapsed time and number of CPUs available to the process
-Instrument: gauge
-Unit: 1
+""""
+    Difference in process.cpu.time since the last measurement, divided by the elapsed time and number of CPUs available to the process
+    Instrument: gauge
+    Unit: 1
 """
 
 
-@staticmethod
 def create_process_cpu_utilization(
     meter: Meter, callback: Sequence[Callable]
 ) -> ObservableGauge:
@@ -81,14 +77,13 @@ def create_process_cpu_utilization(
 
 
 PROCESS_DISK_IO = "process.disk.io"
-"""
-Disk bytes transferred
-Instrument: counter
-Unit: By
+""""
+    Disk bytes transferred
+    Instrument: counter
+    Unit: By
 """
 
 
-@staticmethod
 def create_process_disk_io(meter: Meter) -> Counter:
     """Disk bytes transferred"""
     return meter.create_counter(
@@ -99,14 +94,13 @@ def create_process_disk_io(meter: Meter) -> Counter:
 
 
 PROCESS_MEMORY_USAGE = "process.memory.usage"
-"""
-The amount of physical memory in use
-Instrument: updowncounter
-Unit: By
+""""
+    The amount of physical memory in use
+    Instrument: updowncounter
+    Unit: By
 """
 
 
-@staticmethod
 def create_process_memory_usage(meter: Meter) -> UpDownCounter:
     """The amount of physical memory in use"""
     return meter.create_up_down_counter(
@@ -117,14 +111,13 @@ def create_process_memory_usage(meter: Meter) -> UpDownCounter:
 
 
 PROCESS_MEMORY_VIRTUAL = "process.memory.virtual"
-"""
-The amount of committed virtual memory
-Instrument: updowncounter
-Unit: By
+""""
+    The amount of committed virtual memory
+    Instrument: updowncounter
+    Unit: By
 """
 
 
-@staticmethod
 def create_process_memory_virtual(meter: Meter) -> UpDownCounter:
     """The amount of committed virtual memory"""
     return meter.create_up_down_counter(
@@ -135,14 +128,13 @@ def create_process_memory_virtual(meter: Meter) -> UpDownCounter:
 
 
 PROCESS_NETWORK_IO = "process.network.io"
-"""
-Network bytes transferred
-Instrument: counter
-Unit: By
+""""
+    Network bytes transferred
+    Instrument: counter
+    Unit: By
 """
 
 
-@staticmethod
 def create_process_network_io(meter: Meter) -> Counter:
     """Network bytes transferred"""
     return meter.create_counter(
@@ -153,14 +145,13 @@ def create_process_network_io(meter: Meter) -> Counter:
 
 
 PROCESS_OPEN_FILE_DESCRIPTOR_COUNT = "process.open_file_descriptor.count"
-"""
-Number of file descriptors in use by the process
-Instrument: updowncounter
-Unit: {count}
+""""
+    Number of file descriptors in use by the process
+    Instrument: updowncounter
+    Unit: {count}
 """
 
 
-@staticmethod
 def create_process_open_file_descriptor_count(meter: Meter) -> UpDownCounter:
     """Number of file descriptors in use by the process"""
     return meter.create_up_down_counter(
@@ -171,14 +162,13 @@ def create_process_open_file_descriptor_count(meter: Meter) -> UpDownCounter:
 
 
 PROCESS_PAGING_FAULTS = "process.paging.faults"
-"""
-Number of page faults the process has made
-Instrument: counter
-Unit: {fault}
+""""
+    Number of page faults the process has made
+    Instrument: counter
+    Unit: {fault}
 """
 
 
-@staticmethod
 def create_process_paging_faults(meter: Meter) -> Counter:
     """Number of page faults the process has made"""
     return meter.create_counter(
@@ -189,14 +179,13 @@ def create_process_paging_faults(meter: Meter) -> Counter:
 
 
 PROCESS_THREAD_COUNT = "process.thread.count"
-"""
-Process threads count
-Instrument: updowncounter
-Unit: {thread}
+""""
+    Process threads count
+    Instrument: updowncounter
+    Unit: {thread}
 """
 
 
-@staticmethod
 def create_process_thread_count(meter: Meter) -> UpDownCounter:
     """Process threads count"""
     return meter.create_up_down_counter(

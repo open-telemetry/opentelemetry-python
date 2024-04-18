@@ -12,9 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from enum import Enum
 
-from deprecated import deprecated
+from enum import Enum
 
 STATE = "state"
 """
@@ -25,6 +24,5 @@ The state of a connection in the pool.
 class StateValues(Enum):
     IDLE = "idle"
     """idle."""
-
     USED = "used"
     """used."""

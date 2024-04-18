@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 from enum import Enum
 
 from deprecated import deprecated
@@ -21,47 +20,41 @@ OTEL_LIBRARY_NAME = "otel.library.name"
 Deprecated: use the `otel.scope.name` attribute.
 """
 
-
 OTEL_LIBRARY_VERSION = "otel.library.version"
 """
 Deprecated: use the `otel.scope.version` attribute.
 """
 
-
 OTEL_SCOPE_NAME = "otel.scope.name"
 """
 
-Deprecated: The attribute is stable now, use :py:const:`opentelemetry.semconv.attributes.otel_attributes.OTEL_SCOPE_NAME` instead.
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.otel_attributes.OTEL_SCOPE_NAME`.
 """
-
 
 OTEL_SCOPE_VERSION = "otel.scope.version"
 """
 
-Deprecated: The attribute is stable now, use :py:const:`opentelemetry.semconv.attributes.otel_attributes.OTEL_SCOPE_VERSION` instead.
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.otel_attributes.OTEL_SCOPE_VERSION`.
 """
-
 
 OTEL_STATUS_CODE = "otel.status_code"
 """
 
-Deprecated: The attribute is stable now, use :py:const:`opentelemetry.semconv.attributes.otel_attributes.OTEL_STATUS_CODE` instead.
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.otel_attributes.OTEL_STATUS_CODE`.
 """
-
 
 OTEL_STATUS_DESCRIPTION = "otel.status_description"
 """
 
-Deprecated: The attribute is stable now, use :py:const:`opentelemetry.semconv.attributes.otel_attributes.OTEL_STATUS_DESCRIPTION` instead.
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.otel_attributes.OTEL_STATUS_DESCRIPTION`.
 """
 
 
 @deprecated(
-    reason="The attribute is stable now, use :py:const:`opentelemetry.semconv.attributes.otel_attributes.OtelStatusCodeValues` instead."
+    reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.otel_attributes.OtelStatusCodeValues`."
 )
 class OtelStatusCodeValues(Enum):
     OK = "OK"
     """The operation has been validated by an Application developer or Operator to have completed successfully."""
-
     ERROR = "ERROR"
     """The operation contains an error."""

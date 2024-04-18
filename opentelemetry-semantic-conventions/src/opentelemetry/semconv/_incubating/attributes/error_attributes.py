@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 from enum import Enum
 
 from deprecated import deprecated
@@ -19,12 +18,12 @@ from deprecated import deprecated
 ERROR_TYPE = "error.type"
 """
 
-Deprecated: The attribute is stable now, use :py:const:`opentelemetry.semconv.attributes.error_attributes.ERROR_TYPE` instead.
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.error_attributes.ERROR_TYPE`.
 """
 
 
 @deprecated(
-    reason="The attribute is stable now, use :py:const:`opentelemetry.semconv.attributes.error_attributes.ErrorTypeValues` instead."
+    reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.error_attributes.ErrorTypeValues`."
 )
 class ErrorTypeValues(Enum):
     OTHER = "_OTHER"

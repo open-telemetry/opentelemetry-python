@@ -1,3 +1,4 @@
+{%- macro file_header() -%}
 # Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,18 +12,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+{%- endmacro -%}
 
-
-from enum import Enum
-
-DISK_IO_DIRECTION = "disk.io.direction"
-"""
-The disk IO operation direction.
-"""
-
-
-class DiskIoDirectionValues(Enum):
-    READ = "read"
-    """read."""
-    WRITE = "write"
-    """write."""
+{%- macro to_docstring(str) -%}
+{{ str | to_doc_brief | replace("\\", "\\\\") }}
+{%- endmacro -%}

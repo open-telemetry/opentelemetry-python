@@ -13,25 +13,17 @@
 # limitations under the License.
 
 
-from typing import Callable, Sequence
-
-from opentelemetry.metrics import (
-    Counter,
-    Histogram,
-    Meter,
-    ObservableGauge,
-    UpDownCounter,
-)
+from opentelemetry.metrics import Counter, Meter
 
 CONTAINER_CPU_TIME = "container.cpu.time"
-"""
-Total CPU time consumed
-Instrument: counter
-Unit: s
+""""
+    Total CPU time consumed
+    Instrument: counter
+    Unit: s
+    Note: Total CPU time consumed by the specific container on all available CPU cores.
 """
 
 
-@staticmethod
 def create_container_cpu_time(meter: Meter) -> Counter:
     """Total CPU time consumed"""
     return meter.create_counter(
@@ -42,14 +34,14 @@ def create_container_cpu_time(meter: Meter) -> Counter:
 
 
 CONTAINER_DISK_IO = "container.disk.io"
-"""
-Disk bytes for the container
-Instrument: counter
-Unit: By
+""""
+    Disk bytes for the container
+    Instrument: counter
+    Unit: By
+    Note: The total number of bytes read/written successfully (aggregated from all disks).
 """
 
 
-@staticmethod
 def create_container_disk_io(meter: Meter) -> Counter:
     """Disk bytes for the container"""
     return meter.create_counter(
@@ -60,14 +52,14 @@ def create_container_disk_io(meter: Meter) -> Counter:
 
 
 CONTAINER_MEMORY_USAGE = "container.memory.usage"
-"""
-Memory usage of the container
-Instrument: counter
-Unit: By
+""""
+    Memory usage of the container
+    Instrument: counter
+    Unit: By
+    Note: Memory usage of the container.
 """
 
 
-@staticmethod
 def create_container_memory_usage(meter: Meter) -> Counter:
     """Memory usage of the container"""
     return meter.create_counter(
@@ -78,14 +70,14 @@ def create_container_memory_usage(meter: Meter) -> Counter:
 
 
 CONTAINER_NETWORK_IO = "container.network.io"
-"""
-Network bytes for the container
-Instrument: counter
-Unit: By
+""""
+    Network bytes for the container
+    Instrument: counter
+    Unit: By
+    Note: The number of bytes sent/received on all network interfaces by the container.
 """
 
 
-@staticmethod
 def create_container_network_io(meter: Meter) -> Counter:
     """Network bytes for the container"""
     return meter.create_counter(

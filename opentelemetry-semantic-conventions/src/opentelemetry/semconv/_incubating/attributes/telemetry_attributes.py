@@ -11,81 +11,66 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 from enum import Enum
 
 from deprecated import deprecated
 
 TELEMETRY_DISTRO_NAME = "telemetry.distro.name"
 """
-The name of the auto instrumentation agent or distribution, if used.Note: Official auto instrumentation agents and distributions SHOULD set the `telemetry.distro.name` attribute to
+The name of the auto instrumentation agent or distribution, if used.
+Note: Official auto instrumentation agents and distributions SHOULD set the `telemetry.distro.name` attribute to
     a string starting with `opentelemetry-`, e.g. `opentelemetry-java-instrumentation`.
 """
-
 
 TELEMETRY_DISTRO_VERSION = "telemetry.distro.version"
 """
 The version string of the auto instrumentation agent or distribution, if used.
 """
 
-
 TELEMETRY_SDK_LANGUAGE = "telemetry.sdk.language"
 """
 
-Deprecated: The attribute is stable now, use :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TELEMETRY_SDK_LANGUAGE` instead.
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TELEMETRY_SDK_LANGUAGE`.
 """
-
 
 TELEMETRY_SDK_NAME = "telemetry.sdk.name"
 """
 
-Deprecated: The attribute is stable now, use :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TELEMETRY_SDK_NAME` instead.
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TELEMETRY_SDK_NAME`.
 """
-
 
 TELEMETRY_SDK_VERSION = "telemetry.sdk.version"
 """
 
-Deprecated: The attribute is stable now, use :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TELEMETRY_SDK_VERSION` instead.
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TELEMETRY_SDK_VERSION`.
 """
 
 
 @deprecated(
-    reason="The attribute is stable now, use :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TelemetrySdkLanguageValues` instead."
+    reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TelemetrySdkLanguageValues`."
 )
 class TelemetrySdkLanguageValues(Enum):
     CPP = "cpp"
     """cpp."""
-
     DOTNET = "dotnet"
     """dotnet."""
-
     ERLANG = "erlang"
     """erlang."""
-
     GO = "go"
     """go."""
-
     JAVA = "java"
     """java."""
-
     NODEJS = "nodejs"
     """nodejs."""
-
     PHP = "php"
     """php."""
-
     PYTHON = "python"
     """python."""
-
     RUBY = "ruby"
     """ruby."""
-
     RUST = "rust"
     """rust."""
-
     SWIFT = "swift"
     """swift."""
-
     WEBJS = "webjs"
     """webjs."""

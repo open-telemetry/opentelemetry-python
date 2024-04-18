@@ -15,7 +15,8 @@
 
 EXCEPTION_ESCAPED = "exception.escaped"
 """
-SHOULD be set to true if the exception event is recorded at a point where it is known that the exception is escaping the scope of the span.Note: An exception is considered to have escaped (or left) the scope of a span,
+SHOULD be set to true if the exception event is recorded at a point where it is known that the exception is escaping the scope of the span.
+Note: An exception is considered to have escaped (or left) the scope of a span,
     if that span is ended while the exception is still logically "in flight".
     This may be actually "in flight" in some languages (e.g. if the exception
     is passed to a Context manager's `__exit__` method in Python) but will
@@ -33,18 +34,15 @@ SHOULD be set to true if the exception event is recorded at a point where it is 
     clear whether the exception will escape.
 """
 
-
 EXCEPTION_MESSAGE = "exception.message"
 """
 The exception message.
 """
 
-
 EXCEPTION_STACKTRACE = "exception.stacktrace"
 """
 A stacktrace as a string in the natural representation for the language runtime. The representation is to be determined and documented by each language SIG.
 """
-
 
 EXCEPTION_TYPE = "exception.type"
 """

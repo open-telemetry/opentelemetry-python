@@ -12,27 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from enum import Enum
 
-from deprecated import deprecated
+from enum import Enum
 
 MESSAGE_COMPRESSED_SIZE = "message.compressed_size"
 """
 Compressed size of the message in bytes.
 """
 
-
 MESSAGE_ID = "message.id"
 """
-MUST be calculated as two different counters starting from `1` one for sent messages and one for received message.Note: This way we guarantee that the values will be consistent between different implementations.
+MUST be calculated as two different counters starting from `1` one for sent messages and one for received message.
+Note: This way we guarantee that the values will be consistent between different implementations.
 """
-
 
 MESSAGE_TYPE = "message.type"
 """
 Whether this is a received or sent message.
 """
-
 
 MESSAGE_UNCOMPRESSED_SIZE = "message.uncompressed_size"
 """
@@ -43,6 +40,5 @@ Uncompressed size of the message in bytes.
 class MessageTypeValues(Enum):
     SENT = "SENT"
     """sent."""
-
     RECEIVED = "RECEIVED"
     """received."""

@@ -12,21 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from enum import Enum
 
-from deprecated import deprecated
+from enum import Enum
 
 GRAPHQL_DOCUMENT = "graphql.document"
 """
-The GraphQL document being executed.Note: The value may be sanitized to exclude sensitive information.
+The GraphQL document being executed.
+Note: The value may be sanitized to exclude sensitive information.
 """
-
 
 GRAPHQL_OPERATION_NAME = "graphql.operation.name"
 """
 The name of the operation being executed.
 """
-
 
 GRAPHQL_OPERATION_TYPE = "graphql.operation.type"
 """
@@ -37,9 +35,7 @@ The type of the operation being executed.
 class GraphqlOperationTypeValues(Enum):
     QUERY = "query"
     """GraphQL query."""
-
     MUTATION = "mutation"
     """GraphQL mutation."""
-
     SUBSCRIPTION = "subscription"
     """GraphQL subscription."""

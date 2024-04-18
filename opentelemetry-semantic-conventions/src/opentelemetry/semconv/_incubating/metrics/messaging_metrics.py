@@ -13,25 +13,16 @@
 # limitations under the License.
 
 
-from typing import Callable, Sequence
-
-from opentelemetry.metrics import (
-    Counter,
-    Histogram,
-    Meter,
-    ObservableGauge,
-    UpDownCounter,
-)
+from opentelemetry.metrics import Counter, Histogram, Meter
 
 MESSAGING_PROCESS_DURATION = "messaging.process.duration"
-"""
-Measures the duration of process operation
-Instrument: histogram
-Unit: s
+""""
+    Measures the duration of process operation
+    Instrument: histogram
+    Unit: s
 """
 
 
-@staticmethod
 def create_messaging_process_duration(meter: Meter) -> Histogram:
     """Measures the duration of process operation"""
     return meter.create_histogram(
@@ -42,14 +33,13 @@ def create_messaging_process_duration(meter: Meter) -> Histogram:
 
 
 MESSAGING_PROCESS_MESSAGES = "messaging.process.messages"
-"""
-Measures the number of processed messages
-Instrument: counter
-Unit: {message}
+""""
+    Measures the number of processed messages
+    Instrument: counter
+    Unit: {message}
 """
 
 
-@staticmethod
 def create_messaging_process_messages(meter: Meter) -> Counter:
     """Measures the number of processed messages"""
     return meter.create_counter(
@@ -60,14 +50,13 @@ def create_messaging_process_messages(meter: Meter) -> Counter:
 
 
 MESSAGING_PUBLISH_DURATION = "messaging.publish.duration"
-"""
-Measures the duration of publish operation
-Instrument: histogram
-Unit: s
+""""
+    Measures the duration of publish operation
+    Instrument: histogram
+    Unit: s
 """
 
 
-@staticmethod
 def create_messaging_publish_duration(meter: Meter) -> Histogram:
     """Measures the duration of publish operation"""
     return meter.create_histogram(
@@ -78,14 +67,13 @@ def create_messaging_publish_duration(meter: Meter) -> Histogram:
 
 
 MESSAGING_PUBLISH_MESSAGES = "messaging.publish.messages"
-"""
-Measures the number of published messages
-Instrument: counter
-Unit: {message}
+""""
+    Measures the number of published messages
+    Instrument: counter
+    Unit: {message}
 """
 
 
-@staticmethod
 def create_messaging_publish_messages(meter: Meter) -> Counter:
     """Measures the number of published messages"""
     return meter.create_counter(
@@ -96,14 +84,13 @@ def create_messaging_publish_messages(meter: Meter) -> Counter:
 
 
 MESSAGING_RECEIVE_DURATION = "messaging.receive.duration"
-"""
-Measures the duration of receive operation
-Instrument: histogram
-Unit: s
+""""
+    Measures the duration of receive operation
+    Instrument: histogram
+    Unit: s
 """
 
 
-@staticmethod
 def create_messaging_receive_duration(meter: Meter) -> Histogram:
     """Measures the duration of receive operation"""
     return meter.create_histogram(
@@ -114,14 +101,13 @@ def create_messaging_receive_duration(meter: Meter) -> Histogram:
 
 
 MESSAGING_RECEIVE_MESSAGES = "messaging.receive.messages"
-"""
-Measures the number of received messages
-Instrument: counter
-Unit: {message}
+""""
+    Measures the number of received messages
+    Instrument: counter
+    Unit: {message}
 """
 
 
-@staticmethod
 def create_messaging_receive_messages(meter: Meter) -> Counter:
     """Measures the number of received messages"""
     return meter.create_counter(

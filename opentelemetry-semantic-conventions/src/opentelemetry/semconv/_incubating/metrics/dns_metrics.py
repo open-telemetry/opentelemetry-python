@@ -13,25 +13,16 @@
 # limitations under the License.
 
 
-from typing import Callable, Sequence
-
-from opentelemetry.metrics import (
-    Counter,
-    Histogram,
-    Meter,
-    ObservableGauge,
-    UpDownCounter,
-)
+from opentelemetry.metrics import Histogram, Meter
 
 DNS_LOOKUP_DURATION = "dns.lookup.duration"
-"""
-Measures the time taken to perform a DNS lookup
-Instrument: histogram
-Unit: s
+""""
+    Measures the time taken to perform a DNS lookup
+    Instrument: histogram
+    Unit: s
 """
 
 
-@staticmethod
 def create_dns_lookup_duration(meter: Meter) -> Histogram:
     """Measures the time taken to perform a DNS lookup"""
     return meter.create_histogram(

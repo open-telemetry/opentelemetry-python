@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from enum import Enum
 
-from deprecated import deprecated
+from enum import Enum
 
 ERROR_TYPE = "error.type"
 """
-Describes a class of error the operation ended with.Note: The `error.type` SHOULD be predictable and SHOULD have low cardinality.
+Describes a class of error the operation ended with.
+Note: The `error.type` SHOULD be predictable and SHOULD have low cardinality.
     Instrumentations SHOULD document the list of errors they report.
 
     The cardinality of `error.type` within one instrumentation library SHOULD be low.

@@ -16,26 +16,23 @@
 EXCEPTION_ESCAPED = "exception.escaped"
 """
 
-Deprecated: The attribute is stable now, use :py:const:`opentelemetry.semconv.attributes.exception_attributes.EXCEPTION_ESCAPED` instead.
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.exception_attributes.EXCEPTION_ESCAPED`.
 """
-
 
 EXCEPTION_MESSAGE = "exception.message"
 """
 
-Deprecated: The attribute is stable now, use :py:const:`opentelemetry.semconv.attributes.exception_attributes.EXCEPTION_MESSAGE` instead.
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.exception_attributes.EXCEPTION_MESSAGE`.
 """
-
 
 EXCEPTION_STACKTRACE = "exception.stacktrace"
 """
 
-Deprecated: The attribute is stable now, use :py:const:`opentelemetry.semconv.attributes.exception_attributes.EXCEPTION_STACKTRACE` instead.
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.exception_attributes.EXCEPTION_STACKTRACE`.
 """
-
 
 EXCEPTION_TYPE = "exception.type"
 """
 
-Deprecated: The attribute is stable now, use :py:const:`opentelemetry.semconv.attributes.exception_attributes.EXCEPTION_TYPE` instead.
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.exception_attributes.EXCEPTION_TYPE`.
 """
