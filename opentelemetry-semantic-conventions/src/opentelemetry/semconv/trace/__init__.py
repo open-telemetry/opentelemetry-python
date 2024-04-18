@@ -20,7 +20,7 @@ from deprecated import deprecated
 
 
 @deprecated(
-    "1.24.0",
+    "1.25.0",
     reason="Use attributes defined in the :py:const:`opentelemetry.semconv.attributes` and :py:const:`opentelemetry.semconv._incubating.attributes` modules instead.",
 )
 class SpanAttributes:
@@ -1508,7 +1508,7 @@ class NetHostConnectionSubtypeValues(Enum):
 
 
 @deprecated(
-    "1.24.0",
+    "1.25.0",
     reason="Use :py:const:`opentelemetry.semconv.attributes.NetworkTransportValues` instead.",
 )
 class NetTransportValues(Enum):
@@ -1529,7 +1529,7 @@ class NetTransportValues(Enum):
 
 
 @deprecated(
-    "1.24.0",
+    "1.25.0",
     reason="Use :py:const:`opentelemetry.semconv.attributes.NetworkType` instead.",
 )
 class NetSockFamilyValues(Enum):
@@ -1544,7 +1544,7 @@ class NetSockFamilyValues(Enum):
 
 
 @deprecated(
-    "1.24.0",
+    "1.25.0",
     reason="Use :py:const:`opentelemetry.semconv.attributes.HttpRequestMethodValues` instead.",
 )
 class HttpRequestMethodValues(Enum):
@@ -1579,7 +1579,7 @@ class HttpRequestMethodValues(Enum):
     """Any HTTP method that the instrumentation has no prior knowledge of."""
 
 
-@deprecated("1.24.0", reason="Removed from the specification.")
+@deprecated("1.25.0", reason="Removed from the specification.")
 class EventDomainValues(Enum):
     BROWSER = "browser"
     """Events from browser apps."""
@@ -1592,7 +1592,7 @@ class EventDomainValues(Enum):
 
 
 @deprecated(
-    "1.24.0",
+    "1.25.0",
     reason="Use :py:const:`opentelemetry.semconv._incubating.attributes.LogIostreamValues` instead.",
 )
 class LogIostreamValues(Enum):
@@ -1603,7 +1603,7 @@ class LogIostreamValues(Enum):
     """Events from stderr stream."""
 
 
-@deprecated("1.24.0", reason="Removed from the specification.")
+@deprecated("1.25.0", reason="Removed from the specification.")
 class TypeValues(Enum):
     HEAP = "heap"
     """Heap memory."""
@@ -1613,7 +1613,7 @@ class TypeValues(Enum):
 
 
 @deprecated(
-    "1.24.0",
+    "1.25.0",
     reason="Use :py:const:`opentelemetry.semconv._incubating.attributes.OpentracingRefTypeValues` instead.",
 )
 class OpentracingRefTypeValues(Enum):

@@ -20,7 +20,7 @@ from deprecated import deprecated
 
 
 @deprecated(
-    "1.24.0",
+    "1.25.0",
     reason="Use attributes defined in the :py:const:`opentelemetry.semconv.attributes` and :py:const:`opentelemetry.semconv._incubating.attributes` modules instead.",
 )
 class ResourceAttributes:
@@ -657,7 +657,7 @@ class ResourceAttributes:
 
 
 @deprecated(
-    "1.24.0",
+    "1.25.0",
     reason="Use :py:const:`opentelemetry.semconv._incubating.attributes.CloudProviderValues` instead.",
 )
 class CloudProviderValues(Enum):
@@ -684,7 +684,7 @@ class CloudProviderValues(Enum):
 
 
 @deprecated(
-    "1.24.0",
+    "1.25.0",
     reason="Use :py:const:`opentelemetry.semconv._incubating.attributes.CloudPlatformValues` instead.",
 )
 class CloudPlatformValues(Enum):
@@ -771,7 +771,7 @@ class CloudPlatformValues(Enum):
 
 
 @deprecated(
-    "1.24.0",
+    "1.25.0",
     reason="Use :py:const:`opentelemetry.semconv._incubating.attributes.AwsEcsLaunchtypeValues` instead.",
 )
 class AwsEcsLaunchtypeValues(Enum):
@@ -783,7 +783,7 @@ class AwsEcsLaunchtypeValues(Enum):
 
 
 @deprecated(
-    "1.24.0",
+    "1.25.0",
     reason="Use :py:const:`opentelemetry.semconv._incubating.attributes.HostArchValues` instead.",
 )
 class HostArchValues(Enum):
@@ -813,7 +813,7 @@ class HostArchValues(Enum):
 
 
 @deprecated(
-    "1.24.0",
+    "1.25.0",
     reason="Use :py:const:`opentelemetry.semconv._incubating.attributes.OsTypeValues` instead.",
 )
 class OsTypeValues(Enum):
@@ -852,7 +852,7 @@ class OsTypeValues(Enum):
 
 
 @deprecated(
-    "1.24.0",
+    "1.25.0",
     reason="Use :py:const:`opentelemetry.semconv.attributes.TelemetrySdkLanguageValues` instead.",
 )
 class TelemetrySdkLanguageValues(Enum):

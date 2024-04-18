@@ -16,7 +16,7 @@ from deprecated import deprecated
 
 
 @deprecated(
-    "1.24.0",
+    "1.25.0",
     reason="Use metrics defined in the :py:const:`opentelemetry.semconv.metrics` and :py:const:`opentelemetry.semconv._incubating.metrics` modules instead.",
 )
 class MetricInstruments:
