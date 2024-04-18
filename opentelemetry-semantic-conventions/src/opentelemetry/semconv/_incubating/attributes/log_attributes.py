@@ -53,12 +53,9 @@ A unique identifier for the Log Record.Note: If an id is provided, other log rec
 """
 
 
-
 class LogIostreamValues(Enum):
     STDOUT = "stdout"
     """Logs from stdout stream."""
 
     STDERR = "stderr"
     """Events from stderr stream."""
-
-

@@ -68,7 +68,6 @@ NETWORK_TYPE = "network.type"
 """
 
 
-
 class NetworkTransportValues(Enum):
     TCP = "tcp"
     """TCP."""
@@ -83,12 +82,9 @@ class NetworkTransportValues(Enum):
     """Unix domain socket."""
 
 
-
 class NetworkTypeValues(Enum):
     IPV4 = "ipv4"
     """IPv4."""
 
     IPV6 = "ipv6"
     """IPv6."""
-
-

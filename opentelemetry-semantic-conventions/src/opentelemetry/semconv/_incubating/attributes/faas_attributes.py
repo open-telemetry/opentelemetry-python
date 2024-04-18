@@ -135,7 +135,6 @@ The immutable version of the function being executed.Note: Depending on the clou
 """
 
 
-
 class FaasDocumentOperationValues(Enum):
     INSERT = "insert"
     """When a new object is created."""
@@ -145,7 +144,6 @@ class FaasDocumentOperationValues(Enum):
 
     DELETE = "delete"
     """When an object is deleted."""
-
 
 
 class FaasInvokedProviderValues(Enum):
@@ -165,7 +163,6 @@ class FaasInvokedProviderValues(Enum):
     """Tencent Cloud."""
 
 
-
 class FaasTriggerValues(Enum):
     DATASOURCE = "datasource"
     """A response to some data source operation such as a database or filesystem read/write."""
@@ -181,5 +178,3 @@ class FaasTriggerValues(Enum):
 
     OTHER = "other"
     """If none of the others apply."""
-
-

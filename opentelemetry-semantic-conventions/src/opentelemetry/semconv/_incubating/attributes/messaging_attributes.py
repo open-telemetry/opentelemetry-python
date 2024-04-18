@@ -59,7 +59,9 @@ A boolean that is true if the message destination is temporary and might not exi
 """
 
 
-MESSAGING_DESTINATION_PUBLISH_ANONYMOUS = "messaging.destination_publish.anonymous"
+MESSAGING_DESTINATION_PUBLISH_ANONYMOUS = (
+    "messaging.destination_publish.anonymous"
+)
 """
 A boolean that is true if the publish message destination is anonymous (could be unnamed or have auto-generated name).
 """
@@ -78,13 +80,17 @@ The name of the consumer group the event consumer is associated with.
 """
 
 
-MESSAGING_EVENTHUBS_MESSAGE_ENQUEUED_TIME = "messaging.eventhubs.message.enqueued_time"
+MESSAGING_EVENTHUBS_MESSAGE_ENQUEUED_TIME = (
+    "messaging.eventhubs.message.enqueued_time"
+)
 """
 The UTC epoch seconds at which the message has been accepted and stored in the entity.
 """
 
 
-MESSAGING_GCP_PUBSUB_MESSAGE_ORDERING_KEY = "messaging.gcp_pubsub.message.ordering_key"
+MESSAGING_GCP_PUBSUB_MESSAGE_ORDERING_KEY = (
+    "messaging.gcp_pubsub.message.ordering_key"
+)
 """
 The ordering key for a given message. If the attribute is not present, the message does not have an ordering key.
 """
@@ -152,13 +158,17 @@ A string identifying the kind of messaging operation.Note: If a custom value is 
 """
 
 
-MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY = "messaging.rabbitmq.destination.routing_key"
+MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY = (
+    "messaging.rabbitmq.destination.routing_key"
+)
 """
 RabbitMQ message routing key.
 """
 
 
-MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG = "messaging.rabbitmq.message.delivery_tag"
+MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG = (
+    "messaging.rabbitmq.message.delivery_tag"
+)
 """
 RabbitMQ message delivery tag.
 """
@@ -176,13 +186,17 @@ Model of message consumption. This only applies to consumer spans.
 """
 
 
-MESSAGING_ROCKETMQ_MESSAGE_DELAY_TIME_LEVEL = "messaging.rocketmq.message.delay_time_level"
+MESSAGING_ROCKETMQ_MESSAGE_DELAY_TIME_LEVEL = (
+    "messaging.rocketmq.message.delay_time_level"
+)
 """
 The delay time level for delay message, which determines the message delay time.
 """
 
 
-MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP = "messaging.rocketmq.message.delivery_timestamp"
+MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP = (
+    "messaging.rocketmq.message.delivery_timestamp"
+)
 """
 The timestamp in milliseconds that the delay message is expected to be delivered to consumer.
 """
@@ -218,25 +232,33 @@ Namespace of RocketMQ resources, resources in different namespaces are individua
 """
 
 
-MESSAGING_SERVICEBUS_DESTINATION_SUBSCRIPTION_NAME = "messaging.servicebus.destination.subscription_name"
+MESSAGING_SERVICEBUS_DESTINATION_SUBSCRIPTION_NAME = (
+    "messaging.servicebus.destination.subscription_name"
+)
 """
 The name of the subscription in the topic messages are received from.
 """
 
 
-MESSAGING_SERVICEBUS_DISPOSITION_STATUS = "messaging.servicebus.disposition_status"
+MESSAGING_SERVICEBUS_DISPOSITION_STATUS = (
+    "messaging.servicebus.disposition_status"
+)
 """
 Describes the [settlement type](https://learn.microsoft.com/azure/service-bus-messaging/message-transfers-locks-settlement#peeklock).
 """
 
 
-MESSAGING_SERVICEBUS_MESSAGE_DELIVERY_COUNT = "messaging.servicebus.message.delivery_count"
+MESSAGING_SERVICEBUS_MESSAGE_DELIVERY_COUNT = (
+    "messaging.servicebus.message.delivery_count"
+)
 """
 Number of deliveries that have been attempted for this message.
 """
 
 
-MESSAGING_SERVICEBUS_MESSAGE_ENQUEUED_TIME = "messaging.servicebus.message.enqueued_time"
+MESSAGING_SERVICEBUS_MESSAGE_ENQUEUED_TIME = (
+    "messaging.servicebus.message.enqueued_time"
+)
 """
 The UTC epoch seconds at which the message has been accepted and stored in the entity.
 """
@@ -246,7 +268,6 @@ MESSAGING_SYSTEM = "messaging.system"
 """
 An identifier for the messaging system being used. See below for a list of well-known identifiers.
 """
-
 
 
 class MessagingOperationValues(Enum):
@@ -266,14 +287,12 @@ class MessagingOperationValues(Enum):
     """One or more messages are settled."""
 
 
-
 class MessagingRocketmqConsumptionModelValues(Enum):
     CLUSTERING = "clustering"
     """Clustering consumption model."""
 
     BROADCASTING = "broadcasting"
     """Broadcasting consumption model."""
-
 
 
 class MessagingRocketmqMessageTypeValues(Enum):
@@ -290,7 +309,6 @@ class MessagingRocketmqMessageTypeValues(Enum):
     """Transaction message."""
 
 
-
 class MessagingServicebusDispositionStatusValues(Enum):
     COMPLETE = "complete"
     """Message is completed."""
@@ -303,7 +321,6 @@ class MessagingServicebusDispositionStatusValues(Enum):
 
     DEFER = "defer"
     """Message is deferred."""
-
 
 
 class MessagingSystemValues(Enum):
@@ -336,5 +353,3 @@ class MessagingSystemValues(Enum):
 
     ROCKETMQ = "rocketmq"
     """Apache RocketMQ."""
-
-

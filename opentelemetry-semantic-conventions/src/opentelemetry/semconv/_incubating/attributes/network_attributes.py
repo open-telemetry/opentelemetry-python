@@ -114,7 +114,6 @@ Deprecated: The attribute is stable now, use :py:const:`opentelemetry.semconv.at
 """
 
 
-
 class NetworkConnectionSubtypeValues(Enum):
     GPRS = "gprs"
     """GPRS."""
@@ -180,7 +179,6 @@ class NetworkConnectionSubtypeValues(Enum):
     """LTE CA."""
 
 
-
 class NetworkConnectionTypeValues(Enum):
     WIFI = "wifi"
     """wifi."""
@@ -198,7 +196,6 @@ class NetworkConnectionTypeValues(Enum):
     """unknown."""
 
 
-
 class NetworkIoDirectionValues(Enum):
     TRANSMIT = "transmit"
     """transmit."""
@@ -207,8 +204,9 @@ class NetworkIoDirectionValues(Enum):
     """receive."""
 
 
-
-@deprecated(reason="The attribute is stable now, use :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTransportValues` instead.")
+@deprecated(
+    reason="The attribute is stable now, use :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTransportValues` instead."
+)
 class NetworkTransportValues(Enum):
     TCP = "tcp"
     """TCP."""
@@ -223,13 +221,12 @@ class NetworkTransportValues(Enum):
     """Unix domain socket."""
 
 
-
-@deprecated(reason="The attribute is stable now, use :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTypeValues` instead.")
+@deprecated(
+    reason="The attribute is stable now, use :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTypeValues` instead."
+)
 class NetworkTypeValues(Enum):
     IPV4 = "ipv4"
     """IPv4."""
 
     IPV6 = "ipv6"
     """IPv6."""
-
-

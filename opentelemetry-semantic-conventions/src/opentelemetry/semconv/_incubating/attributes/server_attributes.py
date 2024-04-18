@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-
 SERVER_ADDRESS = "server.address"
 """
 
@@ -26,5 +25,3 @@ SERVER_PORT = "server.port"
 
 Deprecated: The attribute is stable now, use :py:const:`opentelemetry.semconv.attributes.server_attributes.SERVER_PORT` instead.
 """
-
-

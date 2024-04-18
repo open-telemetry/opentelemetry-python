@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-
 HEROKU_APP_ID = "heroku.app.id"
 """
 Unique identifier for the application.
@@ -30,5 +29,3 @@ HEROKU_RELEASE_CREATION_TIMESTAMP = "heroku.release.creation_timestamp"
 """
 Time and date the release was created.
 """
-
-

@@ -52,7 +52,9 @@ The value of the `ExclusiveStartTableName` request parameter.
 """
 
 
-AWS_DYNAMODB_GLOBAL_SECONDARY_INDEX_UPDATES = "aws.dynamodb.global_secondary_index_updates"
+AWS_DYNAMODB_GLOBAL_SECONDARY_INDEX_UPDATES = (
+    "aws.dynamodb.global_secondary_index_updates"
+)
 """
 The JSON-serialized value of each item in the `GlobalSecondaryIndexUpdates` request field.
 """
@@ -94,13 +96,17 @@ The value of the `ProjectionExpression` request parameter.
 """
 
 
-AWS_DYNAMODB_PROVISIONED_READ_CAPACITY = "aws.dynamodb.provisioned_read_capacity"
+AWS_DYNAMODB_PROVISIONED_READ_CAPACITY = (
+    "aws.dynamodb.provisioned_read_capacity"
+)
 """
 The value of the `ProvisionedThroughput.ReadCapacityUnits` request parameter.
 """
 
 
-AWS_DYNAMODB_PROVISIONED_WRITE_CAPACITY = "aws.dynamodb.provisioned_write_capacity"
+AWS_DYNAMODB_PROVISIONED_WRITE_CAPACITY = (
+    "aws.dynamodb.provisioned_write_capacity"
+)
 """
 The value of the `ProvisionedThroughput.WriteCapacityUnits` request parameter.
 """
@@ -302,12 +308,9 @@ Upload ID that identifies the multipart upload.Note: The `upload_id` attribute a
 """
 
 
-
 class AwsEcsLaunchtypeValues(Enum):
     EC2 = "ec2"
     """ec2."""
 
     FARGATE = "fargate"
     """fargate."""
-
-

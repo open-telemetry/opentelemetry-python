@@ -100,7 +100,6 @@ Deprecated: Replaced by `system.process.status`.
 """
 
 
-
 class SystemCpuStateValues(Enum):
     USER = "user"
     """user."""
@@ -124,7 +123,6 @@ class SystemCpuStateValues(Enum):
     """steal."""
 
 
-
 class SystemFilesystemStateValues(Enum):
     USED = "used"
     """used."""
@@ -134,7 +132,6 @@ class SystemFilesystemStateValues(Enum):
 
     RESERVED = "reserved"
     """reserved."""
-
 
 
 class SystemFilesystemTypeValues(Enum):
@@ -157,7 +154,6 @@ class SystemFilesystemTypeValues(Enum):
     """ext4."""
 
 
-
 class SystemMemoryStateValues(Enum):
     USED = "used"
     """used."""
@@ -173,7 +169,6 @@ class SystemMemoryStateValues(Enum):
 
     CACHED = "cached"
     """cached."""
-
 
 
 class SystemNetworkStateValues(Enum):
@@ -214,14 +209,12 @@ class SystemNetworkStateValues(Enum):
     """time_wait."""
 
 
-
 class SystemPagingDirectionValues(Enum):
     IN = "in"
     """in."""
 
     OUT = "out"
     """out."""
-
 
 
 class SystemPagingStateValues(Enum):
@@ -232,14 +225,12 @@ class SystemPagingStateValues(Enum):
     """free."""
 
 
-
 class SystemPagingTypeValues(Enum):
     MAJOR = "major"
     """major."""
 
     MINOR = "minor"
     """minor."""
-
 
 
 class SystemProcessStatusValues(Enum):
@@ -256,7 +247,6 @@ class SystemProcessStatusValues(Enum):
     """defunct."""
 
 
-
 @deprecated(reason="Replaced by `system.process.status`")
 class SystemProcessesStatusValues(Enum):
     RUNNING = "running"
@@ -270,5 +260,3 @@ class SystemProcessesStatusValues(Enum):
 
     DEFUNCT = "defunct"
     """defunct."""
-
-

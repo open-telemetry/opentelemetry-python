@@ -68,7 +68,6 @@ Cloud provider-specific native identifier of the monitored cloud resource (e.g. 
 """
 
 
-
 class CloudPlatformValues(Enum):
     ALIBABA_CLOUD_ECS = "alibaba_cloud_ecs"
     """Alibaba Cloud Elastic Compute Service."""
@@ -155,7 +154,6 @@ class CloudPlatformValues(Enum):
     """Tencent Cloud Serverless Cloud Function (SCF)."""
 
 
-
 class CloudProviderValues(Enum):
     ALIBABA_CLOUD = "alibaba_cloud"
     """Alibaba Cloud."""
@@ -177,5 +175,3 @@ class CloudProviderValues(Enum):
 
     TENCENT_CLOUD = "tencent_cloud"
     """Tencent Cloud."""
-
-

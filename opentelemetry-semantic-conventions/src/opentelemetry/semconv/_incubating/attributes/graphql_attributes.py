@@ -34,7 +34,6 @@ The type of the operation being executed.
 """
 
 
-
 class GraphqlOperationTypeValues(Enum):
     QUERY = "query"
     """GraphQL query."""
@@ -44,5 +43,3 @@ class GraphqlOperationTypeValues(Enum):
 
     SUBSCRIPTION = "subscription"
     """GraphQL subscription."""
-
-

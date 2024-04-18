@@ -36,9 +36,6 @@ Describes a class of error the operation ended with.Note: The `error.type` SHOUL
 """
 
 
-
 class ErrorTypeValues(Enum):
     OTHER = "_OTHER"
     """A fallback error value to be used when the instrumentation doesn't define a custom value."""
-
-

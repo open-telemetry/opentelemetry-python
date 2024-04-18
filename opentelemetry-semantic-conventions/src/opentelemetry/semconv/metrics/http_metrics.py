@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-
 HTTP_CLIENT_REQUEST_DURATION = "http.client.request.duration"
 """
 Duration of HTTP client requests
@@ -22,11 +21,9 @@ Unit: s
 """
 
 
-
 HTTP_SERVER_REQUEST_DURATION = "http.server.request.duration"
 """
 Duration of HTTP server requests
 Instrument: histogram
 Unit: s
 """
-

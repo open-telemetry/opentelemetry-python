@@ -149,14 +149,12 @@ Deprecated: Replaced by `user_agent.original`.
 """
 
 
-
 class HttpConnectionStateValues(Enum):
     ACTIVE = "active"
     """active state."""
 
     IDLE = "idle"
     """idle state."""
-
 
 
 @deprecated(reason="Replaced by `network.protocol.name`")
@@ -180,8 +178,9 @@ class HttpFlavorValues(Enum):
     """QUIC protocol."""
 
 
-
-@deprecated(reason="The attribute is stable now, use :py:const:`opentelemetry.semconv.attributes.http_attributes.HttpRequestMethodValues` instead.")
+@deprecated(
+    reason="The attribute is stable now, use :py:const:`opentelemetry.semconv.attributes.http_attributes.HttpRequestMethodValues` instead."
+)
 class HttpRequestMethodValues(Enum):
     CONNECT = "CONNECT"
     """CONNECT method."""
@@ -212,5 +211,3 @@ class HttpRequestMethodValues(Enum):
 
     OTHER = "_OTHER"
     """Any HTTP method that the instrumentation has no prior knowledge of."""
-
-

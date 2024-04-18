@@ -76,7 +76,6 @@ The matched route, that is, the path template in the format used by the respecti
 """
 
 
-
 class HttpRequestMethodValues(Enum):
     CONNECT = "CONNECT"
     """CONNECT method."""
@@ -107,5 +106,3 @@ class HttpRequestMethodValues(Enum):
 
     OTHER = "_OTHER"
     """Any HTTP method that the instrumentation has no prior knowledge of."""
-
-

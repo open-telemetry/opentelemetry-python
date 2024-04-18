@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-
 CLOUDEVENTS_EVENT_ID = "cloudevents.event_id"
 """
 The [event_id](https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md#id) uniquely identifies the event.
@@ -42,5 +41,3 @@ CLOUDEVENTS_EVENT_TYPE = "cloudevents.event_type"
 """
 The [event_type](https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md#type) contains a value describing the type of event related to the originating occurrence.
 """
-
-

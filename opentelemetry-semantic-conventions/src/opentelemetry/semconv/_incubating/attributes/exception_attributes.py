@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-
 EXCEPTION_ESCAPED = "exception.escaped"
 """
 
@@ -40,5 +39,3 @@ EXCEPTION_TYPE = "exception.type"
 
 Deprecated: The attribute is stable now, use :py:const:`opentelemetry.semconv.attributes.exception_attributes.EXCEPTION_TYPE` instead.
 """
-
-

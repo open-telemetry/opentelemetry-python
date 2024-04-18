@@ -23,10 +23,9 @@ Deprecated: The attribute is stable now, use :py:const:`opentelemetry.semconv.at
 """
 
 
-
-@deprecated(reason="The attribute is stable now, use :py:const:`opentelemetry.semconv.attributes.error_attributes.ErrorTypeValues` instead.")
+@deprecated(
+    reason="The attribute is stable now, use :py:const:`opentelemetry.semconv.attributes.error_attributes.ErrorTypeValues` instead."
+)
 class ErrorTypeValues(Enum):
     OTHER = "_OTHER"
     """A fallback error value to be used when the instrumentation doesn't define a custom value."""
-
-

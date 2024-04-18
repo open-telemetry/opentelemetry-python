@@ -39,7 +39,6 @@ The version string of the telemetry SDK.
 """
 
 
-
 class TelemetrySdkLanguageValues(Enum):
     CPP = "cpp"
     """cpp."""
@@ -76,5 +75,3 @@ class TelemetrySdkLanguageValues(Enum):
 
     WEBJS = "webjs"
     """webjs."""
-
-

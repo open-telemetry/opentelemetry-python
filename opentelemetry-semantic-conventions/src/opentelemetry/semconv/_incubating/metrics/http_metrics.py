@@ -42,7 +42,6 @@ def create_http_client_active_requests(meter: Meter) -> UpDownCounter:
     )
 
 
-
 HTTP_CLIENT_CONNECTION_DURATION = "http.client.connection.duration"
 """
 The duration of the successfully established outbound HTTP connections
@@ -59,7 +58,6 @@ def create_http_client_connection_duration(meter: Meter) -> Histogram:
         description="The duration of the successfully established outbound HTTP connections.",
         unit="s",
     )
-
 
 
 HTTP_CLIENT_OPEN_CONNECTIONS = "http.client.open_connections"
@@ -80,7 +78,6 @@ def create_http_client_open_connections(meter: Meter) -> UpDownCounter:
     )
 
 
-
 HTTP_CLIENT_REQUEST_BODY_SIZE = "http.client.request.body.size"
 """
 Size of HTTP client request bodies
@@ -97,7 +94,6 @@ def create_http_client_request_body_size(meter: Meter) -> Histogram:
         description="Size of HTTP client request bodies.",
         unit="By",
     )
-
 
 
 HTTP_CLIENT_REQUEST_DURATION = "http.client.request.duration"
@@ -118,7 +114,6 @@ def create_http_client_request_duration(meter: Meter) -> Histogram:
     )
 
 
-
 HTTP_CLIENT_RESPONSE_BODY_SIZE = "http.client.response.body.size"
 """
 Size of HTTP client response bodies
@@ -135,7 +130,6 @@ def create_http_client_response_body_size(meter: Meter) -> Histogram:
         description="Size of HTTP client response bodies.",
         unit="By",
     )
-
 
 
 HTTP_SERVER_ACTIVE_REQUESTS = "http.server.active_requests"
@@ -156,7 +150,6 @@ def create_http_server_active_requests(meter: Meter) -> UpDownCounter:
     )
 
 
-
 HTTP_SERVER_REQUEST_BODY_SIZE = "http.server.request.body.size"
 """
 Size of HTTP server request bodies
@@ -173,7 +166,6 @@ def create_http_server_request_body_size(meter: Meter) -> Histogram:
         description="Size of HTTP server request bodies.",
         unit="By",
     )
-
 
 
 HTTP_SERVER_REQUEST_DURATION = "http.server.request.duration"
@@ -194,7 +186,6 @@ def create_http_server_request_duration(meter: Meter) -> Histogram:
     )
 
 
-
 HTTP_SERVER_RESPONSE_BODY_SIZE = "http.server.response.body.size"
 """
 Size of HTTP server response bodies
@@ -211,4 +202,3 @@ def create_http_server_response_body_size(meter: Meter) -> Histogram:
         description="Size of HTTP server response bodies.",
         unit="By",
     )
-

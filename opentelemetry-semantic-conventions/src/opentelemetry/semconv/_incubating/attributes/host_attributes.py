@@ -106,7 +106,6 @@ Type of host. For Cloud, this must be the machine type.
 """
 
 
-
 class HostArchValues(Enum):
     AMD64 = "amd64"
     """AMD64."""
@@ -131,5 +130,3 @@ class HostArchValues(Enum):
 
     X86 = "x86"
     """32-bit x86."""
-
-

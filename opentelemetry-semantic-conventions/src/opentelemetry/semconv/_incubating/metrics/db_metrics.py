@@ -42,7 +42,6 @@ def create_db_client_connections_create_time(meter: Meter) -> Histogram:
     )
 
 
-
 DB_CLIENT_CONNECTIONS_IDLE_MAX = "db.client.connections.idle.max"
 """
 The maximum number of idle open connections allowed
@@ -59,7 +58,6 @@ def create_db_client_connections_idle_max(meter: Meter) -> UpDownCounter:
         description="The maximum number of idle open connections allowed",
         unit="{connection}",
     )
-
 
 
 DB_CLIENT_CONNECTIONS_IDLE_MIN = "db.client.connections.idle.min"
@@ -80,7 +78,6 @@ def create_db_client_connections_idle_min(meter: Meter) -> UpDownCounter:
     )
 
 
-
 DB_CLIENT_CONNECTIONS_MAX = "db.client.connections.max"
 """
 The maximum number of open connections allowed
@@ -99,8 +96,9 @@ def create_db_client_connections_max(meter: Meter) -> UpDownCounter:
     )
 
 
-
-DB_CLIENT_CONNECTIONS_PENDING_REQUESTS = "db.client.connections.pending_requests"
+DB_CLIENT_CONNECTIONS_PENDING_REQUESTS = (
+    "db.client.connections.pending_requests"
+)
 """
 The number of pending requests for an open connection, cumulative for the entire pool
 Instrument: updowncounter
@@ -109,14 +107,15 @@ Unit: {request}
 
 
 @staticmethod
-def create_db_client_connections_pending_requests(meter: Meter) -> UpDownCounter:
+def create_db_client_connections_pending_requests(
+    meter: Meter,
+) -> UpDownCounter:
     """The number of pending requests for an open connection, cumulative for the entire pool"""
     return meter.create_up_down_counter(
         name="db.client.connections.pending_requests",
         description="The number of pending requests for an open connection, cumulative for the entire pool",
         unit="{request}",
     )
-
 
 
 DB_CLIENT_CONNECTIONS_TIMEOUTS = "db.client.connections.timeouts"
@@ -137,7 +136,6 @@ def create_db_client_connections_timeouts(meter: Meter) -> Counter:
     )
 
 
-
 DB_CLIENT_CONNECTIONS_USAGE = "db.client.connections.usage"
 """
 The number of connections that are currently in state described by the `state` attribute
@@ -154,7 +152,6 @@ def create_db_client_connections_usage(meter: Meter) -> UpDownCounter:
         description="The number of connections that are currently in state described by the `state` attribute",
         unit="{connection}",
     )
-
 
 
 DB_CLIENT_CONNECTIONS_USE_TIME = "db.client.connections.use_time"
@@ -175,7 +172,6 @@ def create_db_client_connections_use_time(meter: Meter) -> Histogram:
     )
 
 
-
 DB_CLIENT_CONNECTIONS_WAIT_TIME = "db.client.connections.wait_time"
 """
 The time it took to obtain an open connection from the pool
@@ -192,4 +188,3 @@ def create_db_client_connections_wait_time(meter: Meter) -> Histogram:
         description="The time it took to obtain an open connection from the pool",
         unit="ms",
     )
-

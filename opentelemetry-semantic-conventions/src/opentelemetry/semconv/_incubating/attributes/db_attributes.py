@@ -46,7 +46,9 @@ The fetch size used for paging, i.e. how many rows will be returned at once.
 """
 
 
-DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT = "db.cassandra.speculative_execution_count"
+DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT = (
+    "db.cassandra.speculative_execution_count"
+)
 """
 The number of times a query was speculatively executed. Not set or `0` if the query was not executed speculatively.
 """
@@ -196,7 +198,6 @@ Username for accessing the database.
 """
 
 
-
 class DbCassandraConsistencyLevelValues(Enum):
     ALL = "all"
     """all."""
@@ -232,14 +233,12 @@ class DbCassandraConsistencyLevelValues(Enum):
     """local_serial."""
 
 
-
 class DbCosmosdbConnectionModeValues(Enum):
     GATEWAY = "gateway"
     """Gateway (HTTP) connections mode."""
 
     DIRECT = "direct"
     """Direct connection."""
-
 
 
 class DbCosmosdbOperationTypeValues(Enum):
@@ -287,7 +286,6 @@ class DbCosmosdbOperationTypeValues(Enum):
 
     EXECUTE_JAVASCRIPT = "ExecuteJavaScript"
     """execute_javascript."""
-
 
 
 class DbSystemValues(Enum):
@@ -446,5 +444,3 @@ class DbSystemValues(Enum):
 
     TRINO = "trino"
     """Trino."""
-
-

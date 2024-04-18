@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-
 DEPLOYMENT_ENVIRONMENT = "deployment.environment"
 """
 Name of the [deployment environment](https://wikipedia.org/wiki/Deployment_environment) (aka deployment tier).Note: `deployment.environment` does not affect the uniqueness constraints defined through
@@ -24,5 +23,3 @@ Name of the [deployment environment](https://wikipedia.org/wiki/Deployment_envir
     * `service.name=frontend`, `deployment.environment=production`
     * `service.name=frontend`, `deployment.environment=staging`.
 """
-
-

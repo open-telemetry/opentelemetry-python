@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-
 CLIENT_ADDRESS = "client.address"
 """
 
@@ -26,5 +25,3 @@ CLIENT_PORT = "client.port"
 
 Deprecated: The attribute is stable now, use :py:const:`opentelemetry.semconv.attributes.client_attributes.CLIENT_PORT` instead.
 """
-
-

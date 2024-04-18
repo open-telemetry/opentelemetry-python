@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-
 K8S_CLUSTER_NAME = "k8s.cluster.name"
 """
 The name of the cluster.
@@ -177,5 +176,3 @@ K8S_STATEFULSET_UID = "k8s.statefulset.uid"
 """
 The UID of the StatefulSet.
 """
-
-

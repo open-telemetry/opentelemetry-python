@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-
 SERVICE_INSTANCE_ID = "service.instance.id"
 """
 The string ID of the service instance.Note: MUST be unique for each instance of the same `service.namespace,service.name` pair (in other words
@@ -63,5 +62,3 @@ SERVICE_VERSION = "service.version"
 
 Deprecated: The attribute is stable now, use :py:const:`opentelemetry.semconv.attributes.service_attributes.SERVICE_VERSION` instead.
 """
-
-

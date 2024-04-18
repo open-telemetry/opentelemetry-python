@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-
 URL_DOMAIN = "url.domain"
 """
 Domain extracted from the `url.full`, such as "opentelemetry.io".Note: In some cases a URL may refer to an IP and/or port directly, without a domain name. In this case, the IP address would go to the domain field. If the URL contains a [literal IPv6 address](https://www.rfc-editor.org/rfc/rfc2732#section-2) enclosed by `[` and `]`, the `[` and `]` characters should also be captured in the domain field.
@@ -90,5 +89,3 @@ URL_TOP_LEVEL_DOMAIN = "url.top_level_domain"
 """
 The effective top level domain (eTLD), also known as the domain suffix, is the last part of the domain name. For example, the top level domain for example.com is `com`.Note: This value can be determined precisely with the [public suffix list](http://publicsuffix.org).
 """
-
-

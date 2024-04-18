@@ -42,7 +42,6 @@ def create_faas_coldstarts(meter: Meter) -> Counter:
     )
 
 
-
 FAAS_CPU_USAGE = "faas.cpu_usage"
 """
 Distribution of CPU usage per invocation
@@ -59,7 +58,6 @@ def create_faas_cpu_usage(meter: Meter) -> Histogram:
         description="Distribution of CPU usage per invocation",
         unit="s",
     )
-
 
 
 FAAS_ERRORS = "faas.errors"
@@ -80,7 +78,6 @@ def create_faas_errors(meter: Meter) -> Counter:
     )
 
 
-
 FAAS_INIT_DURATION = "faas.init_duration"
 """
 Measures the duration of the function's initialization, such as a cold start
@@ -97,7 +94,6 @@ def create_faas_init_duration(meter: Meter) -> Histogram:
         description="Measures the duration of the function's initialization, such as a cold start",
         unit="s",
     )
-
 
 
 FAAS_INVOCATIONS = "faas.invocations"
@@ -118,7 +114,6 @@ def create_faas_invocations(meter: Meter) -> Counter:
     )
 
 
-
 FAAS_INVOKE_DURATION = "faas.invoke_duration"
 """
 Measures the duration of the function's logic execution
@@ -135,7 +130,6 @@ def create_faas_invoke_duration(meter: Meter) -> Histogram:
         description="Measures the duration of the function's logic execution",
         unit="s",
     )
-
 
 
 FAAS_MEM_USAGE = "faas.mem_usage"
@@ -156,7 +150,6 @@ def create_faas_mem_usage(meter: Meter) -> Histogram:
     )
 
 
-
 FAAS_NET_IO = "faas.net_io"
 """
 Distribution of net I/O usage per invocation
@@ -175,7 +168,6 @@ def create_faas_net_io(meter: Meter) -> Histogram:
     )
 
 
-
 FAAS_TIMEOUTS = "faas.timeouts"
 """
 Number of invocation timeouts
@@ -192,4 +184,3 @@ def create_faas_timeouts(meter: Meter) -> Counter:
         description="Number of invocation timeouts",
         unit="{timeout}",
     )
-

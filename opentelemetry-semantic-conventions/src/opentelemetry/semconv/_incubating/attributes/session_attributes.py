@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-
 SESSION_ID = "session.id"
 """
 A unique id to identify a session.
@@ -24,5 +23,3 @@ SESSION_PREVIOUS_ID = "session.previous_id"
 """
 The previous `session.id` for this user, when known.
 """
-
-

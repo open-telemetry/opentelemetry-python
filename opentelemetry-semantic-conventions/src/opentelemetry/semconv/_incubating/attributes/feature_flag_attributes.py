@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-
 FEATURE_FLAG_KEY = "feature_flag.key"
 """
 The unique identifier of the feature flag.
@@ -37,5 +36,3 @@ SHOULD be a semantic identifier for a value. If one is unavailable, a stringifie
     semantic identifier is unavailable. String representation of the value
     should be determined by the implementer.
 """
-
-

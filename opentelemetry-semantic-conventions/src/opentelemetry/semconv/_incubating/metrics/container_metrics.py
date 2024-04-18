@@ -42,7 +42,6 @@ def create_container_cpu_time(meter: Meter) -> Counter:
     )
 
 
-
 CONTAINER_DISK_IO = "container.disk.io"
 """
 Disk bytes for the container
@@ -59,7 +58,6 @@ def create_container_disk_io(meter: Meter) -> Counter:
         description="Disk bytes for the container.",
         unit="By",
     )
-
 
 
 CONTAINER_MEMORY_USAGE = "container.memory.usage"
@@ -80,7 +78,6 @@ def create_container_memory_usage(meter: Meter) -> Counter:
     )
 
 
-
 CONTAINER_NETWORK_IO = "container.network.io"
 """
 Network bytes for the container
@@ -97,4 +94,3 @@ def create_container_network_io(meter: Meter) -> Counter:
         description="Network bytes for the container.",
         unit="By",
     )
-

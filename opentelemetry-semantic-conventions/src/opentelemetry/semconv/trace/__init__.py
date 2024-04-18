@@ -18,7 +18,11 @@ from enum import Enum
 
 from deprecated import deprecated
 
-@deprecated("1.24.0", reason="Use attributes defined in the :py:const:`opentelemetry.semconv.attributes` and :py:const:`opentelemetry.semconv._incubating.attributes` modules instead.")
+
+@deprecated(
+    "1.24.0",
+    reason="Use attributes defined in the :py:const:`opentelemetry.semconv.attributes` and :py:const:`opentelemetry.semconv._incubating.attributes` modules instead.",
+)
 class SpanAttributes:
     SCHEMA_URL = "https://opentelemetry.io/schemas/v1.21.0"
     """
@@ -691,7 +695,9 @@ class SpanAttributes:
     The [conversation ID](#conversations) identifying the conversation to which the message belongs, represented as a string. Sometimes called "Correlation ID".
     """
 
-    MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES = "messaging.message.payload_size_bytes"
+    MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES = (
+        "messaging.message.payload_size_bytes"
+    )
     """
     The (uncompressed) size of the message payload in bytes. Also use this attribute if it is unknown whether the compressed or uncompressed payload size is reported.
     """
@@ -874,17 +880,23 @@ class SpanAttributes:
     The JSON-serialized value of each item in the `ConsumedCapacity` response field.
     """
 
-    AWS_DYNAMODB_ITEM_COLLECTION_METRICS = "aws.dynamodb.item_collection_metrics"
+    AWS_DYNAMODB_ITEM_COLLECTION_METRICS = (
+        "aws.dynamodb.item_collection_metrics"
+    )
     """
     The JSON-serialized value of the `ItemCollectionMetrics` response field.
     """
 
-    AWS_DYNAMODB_PROVISIONED_READ_CAPACITY = "aws.dynamodb.provisioned_read_capacity"
+    AWS_DYNAMODB_PROVISIONED_READ_CAPACITY = (
+        "aws.dynamodb.provisioned_read_capacity"
+    )
     """
     The value of the `ProvisionedThroughput.ReadCapacityUnits` request parameter.
     """
 
-    AWS_DYNAMODB_PROVISIONED_WRITE_CAPACITY = "aws.dynamodb.provisioned_write_capacity"
+    AWS_DYNAMODB_PROVISIONED_WRITE_CAPACITY = (
+        "aws.dynamodb.provisioned_write_capacity"
+    )
     """
     The value of the `ProvisionedThroughput.WriteCapacityUnits` request parameter.
     """
@@ -919,12 +931,16 @@ class SpanAttributes:
     The value of the `Select` request parameter.
     """
 
-    AWS_DYNAMODB_GLOBAL_SECONDARY_INDEXES = "aws.dynamodb.global_secondary_indexes"
+    AWS_DYNAMODB_GLOBAL_SECONDARY_INDEXES = (
+        "aws.dynamodb.global_secondary_indexes"
+    )
     """
     The JSON-serialized value of each item of the `GlobalSecondaryIndexes` request field.
     """
 
-    AWS_DYNAMODB_LOCAL_SECONDARY_INDEXES = "aws.dynamodb.local_secondary_indexes"
+    AWS_DYNAMODB_LOCAL_SECONDARY_INDEXES = (
+        "aws.dynamodb.local_secondary_indexes"
+    )
     """
     The JSON-serialized value of each item of the `LocalSecondaryIndexes` request field.
     """
@@ -1080,7 +1096,9 @@ class SpanAttributes:
     Name of the Kafka Consumer Group that is handling the message. Only applies to consumers, not producers.
     """
 
-    MESSAGING_KAFKA_DESTINATION_PARTITION = "messaging.kafka.destination.partition"
+    MESSAGING_KAFKA_DESTINATION_PARTITION = (
+        "messaging.kafka.destination.partition"
+    )
     """
     Partition the message is sent to.
     """
@@ -1139,7 +1157,9 @@ class SpanAttributes:
     Key(s) of message, another way to mark message besides message id.
     """
 
-    MESSAGING_ROCKETMQ_CONSUMPTION_MODEL = "messaging.rocketmq.consumption_model"
+    MESSAGING_ROCKETMQ_CONSUMPTION_MODEL = (
+        "messaging.rocketmq.consumption_model"
+    )
     """
     Model of message consumption. This only applies to consumer spans.
     """
@@ -1503,7 +1523,10 @@ class NetHostConnectionSubtypeValues(Enum):
     """LTE CA."""
 
 
-@deprecated("1.24.0", reason="Use :py:const:`opentelemetry.semconv.attributes.NetworkTransportValues` instead.")
+@deprecated(
+    "1.24.0",
+    reason="Use :py:const:`opentelemetry.semconv.attributes.NetworkTransportValues` instead.",
+)
 class NetTransportValues(Enum):
     IP_TCP = "ip_tcp"
     """ip_tcp."""
@@ -1521,7 +1544,10 @@ class NetTransportValues(Enum):
     """Something else (non IP-based)."""
 
 
-@deprecated("1.24.0", reason="Use :py:const:`opentelemetry.semconv.attributes.NetworkType` instead.")
+@deprecated(
+    "1.24.0",
+    reason="Use :py:const:`opentelemetry.semconv.attributes.NetworkType` instead.",
+)
 class NetSockFamilyValues(Enum):
     INET = "inet"
     """IPv4 address."""
@@ -1533,7 +1559,10 @@ class NetSockFamilyValues(Enum):
     """Unix domain socket path."""
 
 
-@deprecated("1.24.0", reason="Use :py:const:`opentelemetry.semconv.attributes.HttpRequestMethodValues` instead.")
+@deprecated(
+    "1.24.0",
+    reason="Use :py:const:`opentelemetry.semconv.attributes.HttpRequestMethodValues` instead.",
+)
 class HttpRequestMethodValues(Enum):
     CONNECT = "CONNECT"
     """CONNECT method."""
@@ -1578,7 +1607,10 @@ class EventDomainValues(Enum):
     """Events from Kubernetes."""
 
 
-@deprecated("1.24.0", reason="Use :py:const:`opentelemetry.semconv._incubating.attributes.LogIostreamValues` instead.")
+@deprecated(
+    "1.24.0",
+    reason="Use :py:const:`opentelemetry.semconv._incubating.attributes.LogIostreamValues` instead.",
+)
 class LogIostreamValues(Enum):
     STDOUT = "stdout"
     """Logs from stdout stream."""
@@ -1596,7 +1628,10 @@ class TypeValues(Enum):
     """Non-heap memory."""
 
 
-@deprecated("1.24.0", reason="Use :py:const:`opentelemetry.semconv._incubating.attributes.OpentracingRefTypeValues` instead.")
+@deprecated(
+    "1.24.0",
+    reason="Use :py:const:`opentelemetry.semconv._incubating.attributes.OpentracingRefTypeValues` instead.",
+)
 class OpentracingRefTypeValues(Enum):
     CHILD_OF = "child_of"
     """The parent Span depends on the child Span in some capacity."""

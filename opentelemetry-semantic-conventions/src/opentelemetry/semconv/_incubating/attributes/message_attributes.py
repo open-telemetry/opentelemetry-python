@@ -40,12 +40,9 @@ Uncompressed size of the message in bytes.
 """
 
 
-
 class MessageTypeValues(Enum):
     SENT = "SENT"
     """sent."""
 
     RECEIVED = "RECEIVED"
     """received."""
-
-

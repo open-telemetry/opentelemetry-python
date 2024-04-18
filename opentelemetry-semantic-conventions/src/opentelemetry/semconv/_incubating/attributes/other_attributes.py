@@ -22,12 +22,9 @@ The state of a connection in the pool.
 """
 
 
-
 class StateValues(Enum):
     IDLE = "idle"
     """idle."""
 
     USED = "used"
     """used."""
-
-

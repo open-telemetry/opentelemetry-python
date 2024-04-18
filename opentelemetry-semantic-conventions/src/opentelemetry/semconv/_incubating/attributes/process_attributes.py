@@ -100,14 +100,12 @@ The version of the runtime of this process, as returned by the runtime without m
 """
 
 
-
 class ProcessContextSwitchTypeValues(Enum):
     VOLUNTARY = "voluntary"
     """voluntary."""
 
     INVOLUNTARY = "involuntary"
     """involuntary."""
-
 
 
 class ProcessCpuStateValues(Enum):
@@ -121,12 +119,9 @@ class ProcessCpuStateValues(Enum):
     """wait."""
 
 
-
 class ProcessPagingFaultTypeValues(Enum):
     MAJOR = "major"
     """major."""
 
     MINOR = "minor"
     """minor."""
-
-

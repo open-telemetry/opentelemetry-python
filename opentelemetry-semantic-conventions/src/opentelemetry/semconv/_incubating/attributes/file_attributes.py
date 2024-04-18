@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-
 FILE_DIRECTORY = "file.directory"
 """
 Directory where the file is located. It should include the drive letter, when appropriate.
@@ -42,5 +41,3 @@ FILE_SIZE = "file.size"
 """
 File size in bytes.
 """
-
-

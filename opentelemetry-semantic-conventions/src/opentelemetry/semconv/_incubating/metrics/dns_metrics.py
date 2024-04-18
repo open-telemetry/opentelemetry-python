@@ -40,4 +40,3 @@ def create_dns_lookup_duration(meter: Meter) -> Histogram:
         description="Measures the time taken to perform a DNS lookup.",
         unit="s",
     )
-

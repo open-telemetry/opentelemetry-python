@@ -42,7 +42,6 @@ def create_messaging_process_duration(meter: Meter) -> Histogram:
     )
 
 
-
 MESSAGING_PROCESS_MESSAGES = "messaging.process.messages"
 """
 Measures the number of processed messages
@@ -59,7 +58,6 @@ def create_messaging_process_messages(meter: Meter) -> Counter:
         description="Measures the number of processed messages.",
         unit="{message}",
     )
-
 
 
 MESSAGING_PUBLISH_DURATION = "messaging.publish.duration"
@@ -80,7 +78,6 @@ def create_messaging_publish_duration(meter: Meter) -> Histogram:
     )
 
 
-
 MESSAGING_PUBLISH_MESSAGES = "messaging.publish.messages"
 """
 Measures the number of published messages
@@ -97,7 +94,6 @@ def create_messaging_publish_messages(meter: Meter) -> Counter:
         description="Measures the number of published messages.",
         unit="{message}",
     )
-
 
 
 MESSAGING_RECEIVE_DURATION = "messaging.receive.duration"
@@ -118,7 +114,6 @@ def create_messaging_receive_duration(meter: Meter) -> Histogram:
     )
 
 
-
 MESSAGING_RECEIVE_MESSAGES = "messaging.receive.messages"
 """
 Measures the number of received messages
@@ -135,4 +130,3 @@ def create_messaging_receive_messages(meter: Meter) -> Counter:
         description="Measures the number of received messages.",
         unit="{message}",
     )
-

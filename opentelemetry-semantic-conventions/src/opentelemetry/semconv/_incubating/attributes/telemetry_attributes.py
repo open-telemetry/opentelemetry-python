@@ -50,8 +50,9 @@ Deprecated: The attribute is stable now, use :py:const:`opentelemetry.semconv.at
 """
 
 
-
-@deprecated(reason="The attribute is stable now, use :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TelemetrySdkLanguageValues` instead.")
+@deprecated(
+    reason="The attribute is stable now, use :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TelemetrySdkLanguageValues` instead."
+)
 class TelemetrySdkLanguageValues(Enum):
     CPP = "cpp"
     """cpp."""
@@ -88,5 +89,3 @@ class TelemetrySdkLanguageValues(Enum):
 
     WEBJS = "webjs"
     """webjs."""
-
-

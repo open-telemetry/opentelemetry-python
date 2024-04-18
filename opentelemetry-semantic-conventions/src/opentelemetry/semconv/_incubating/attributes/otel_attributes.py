@@ -56,13 +56,12 @@ Deprecated: The attribute is stable now, use :py:const:`opentelemetry.semconv.at
 """
 
 
-
-@deprecated(reason="The attribute is stable now, use :py:const:`opentelemetry.semconv.attributes.otel_attributes.OtelStatusCodeValues` instead.")
+@deprecated(
+    reason="The attribute is stable now, use :py:const:`opentelemetry.semconv.attributes.otel_attributes.OtelStatusCodeValues` instead."
+)
 class OtelStatusCodeValues(Enum):
     OK = "OK"
     """The operation has been validated by an Application developer or Operator to have completed successfully."""
 
     ERROR = "ERROR"
     """The operation contains an error."""
-
-

@@ -53,7 +53,6 @@ from enum import Enum
 
 {% else %}
 {# Extra line #}
-{# Extra line #}
 {% endif %}
 {% for attribute in filtered_attributes -%}
 {{attribute_name(attribute)}} = "{{attribute.fqn}}"
@@ -69,13 +68,13 @@ from enum import Enum
 @deprecated(reason="{{attribute.deprecated | to_doc_brief}}")
     {%- elif attribute | is_stable and stable_package != "" %}
 @deprecated(reason="The attribute is stable now, use :py:const:`{{stable_class_ref(class_name, '.')}}` instead.")
-    {%- endif %}
+    {%- endif -%}
 class {{class_name}}(Enum):
     {%- for member in attribute.attr_type.members %}
     {{ member.member_id | to_const_name }} = {{ attribute | print_member_value(member) }}
     """{{member.brief | to_doc_brief}}."""
 {# Extra line #}
-    {%- endfor %}
+    {% endfor -%}
 {# Extra line #}
 {# Extra line #}
 {%- endfor -%}

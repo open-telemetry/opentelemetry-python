@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-
 CODE_COLUMN = "code.column"
 """
 The column number in `code.filepath` best representing the operation. It SHOULD point within the code unit named in `code.function`.
@@ -48,5 +47,3 @@ CODE_STACKTRACE = "code.stacktrace"
 """
 A stacktrace as a string in the natural representation for the language runtime. The representation is to be determined and documented by each language SIG.
 """
-
-

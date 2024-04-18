@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-
 WEBENGINE_DESCRIPTION = "webengine.description"
 """
 Additional description of the web engine (e.g. detailed version and edition information).
@@ -30,5 +29,3 @@ WEBENGINE_VERSION = "webengine.version"
 """
 The version of the web engine.
 """
-
-
