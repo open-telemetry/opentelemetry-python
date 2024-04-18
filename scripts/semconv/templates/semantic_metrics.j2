@@ -28,7 +28,7 @@
 {%- endmacro %}
 
 {%- macro metric_brief(metric, const_name) -%}
-""""
+"""
     {%- if metric | is_deprecated %}
 Deprecated: {{ common.to_docstring(metric.deprecated)}}.
     {%- elif metric | is_stable and filter == "any" %}

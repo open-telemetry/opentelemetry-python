@@ -16,85 +16,70 @@ from enum import Enum
 from deprecated import deprecated
 
 NETWORK_CARRIER_ICC = "network.carrier.icc"
-"""
-The ISO 3166-1 alpha-2 2-character country code associated with the mobile carrier network.
+"""The ISO 3166-1 alpha-2 2-character country code associated with the mobile carrier network.
 """
 
 NETWORK_CARRIER_MCC = "network.carrier.mcc"
-"""
-The mobile carrier country code.
+"""The mobile carrier country code.
 """
 
 NETWORK_CARRIER_MNC = "network.carrier.mnc"
-"""
-The mobile carrier network code.
+"""The mobile carrier network code.
 """
 
 NETWORK_CARRIER_NAME = "network.carrier.name"
-"""
-The name of the mobile carrier.
+"""The name of the mobile carrier.
 """
 
 NETWORK_CONNECTION_SUBTYPE = "network.connection.subtype"
-"""
-This describes more details regarding the connection.type. It may be the type of cell technology connection, but it could be used for describing details about a wifi connection.
+"""This describes more details regarding the connection.type. It may be the type of cell technology connection, but it could be used for describing details about a wifi connection.
 """
 
 NETWORK_CONNECTION_TYPE = "network.connection.type"
-"""
-The internet connection type.
+"""The internet connection type.
 """
 
 NETWORK_IO_DIRECTION = "network.io.direction"
-"""
-The network IO operation direction.
+"""The network IO operation direction.
 """
 
 NETWORK_LOCAL_ADDRESS = "network.local.address"
 """
-
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NETWORK_LOCAL_ADDRESS`.
 """
 
 NETWORK_LOCAL_PORT = "network.local.port"
 """
-
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NETWORK_LOCAL_PORT`.
 """
 
 NETWORK_PEER_ADDRESS = "network.peer.address"
 """
-
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NETWORK_PEER_ADDRESS`.
 """
 
 NETWORK_PEER_PORT = "network.peer.port"
 """
-
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NETWORK_PEER_PORT`.
 """
 
 NETWORK_PROTOCOL_NAME = "network.protocol.name"
 """
-
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NETWORK_PROTOCOL_NAME`.
 """
 
 NETWORK_PROTOCOL_VERSION = "network.protocol.version"
 """
-
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NETWORK_PROTOCOL_VERSION`.
 """
 
 NETWORK_TRANSPORT = "network.transport"
 """
-
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NETWORK_TRANSPORT`.
 """
 
 NETWORK_TYPE = "network.type"
 """
-
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NETWORK_TYPE`.
 """
 

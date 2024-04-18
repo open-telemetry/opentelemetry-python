@@ -14,7 +14,6 @@
 
 
 EVENT_NAME = "event.name"
-"""
-Identifies the class / type of event.
+"""Identifies the class / type of event.
 Note: Event names are subject to the same rules as [attribute names](https://github.com/open-telemetry/opentelemetry-specification/tree/v1.31.0/specification/common/attribute-naming.md). Notably, event names are namespaced to avoid collisions and provide a clean separation of semantics for events in separate domains like browser, mobile, and kubernetes.
 """

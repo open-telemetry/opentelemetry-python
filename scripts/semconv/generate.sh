@@ -22,7 +22,6 @@ cd ${SCRIPT_DIR}
 
 # Check new schema version was added to schemas.py manually
 SCHEMAS_PY_PATH=${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/schemas.py
-CURRENT_SCHEMAS=$(cat $SCHEMAS_PY_PATH)
 
 if ! grep -q $SEMCONV_VERSION "$SCHEMAS_PY_PATH"; then
   echo "Error: schema version $SEMCONV_VERSION is not found in $SCHEMAS_PY_PATH. Please add it manually."

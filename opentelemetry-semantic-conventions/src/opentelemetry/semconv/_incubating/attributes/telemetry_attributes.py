@@ -16,32 +16,27 @@ from enum import Enum
 from deprecated import deprecated
 
 TELEMETRY_DISTRO_NAME = "telemetry.distro.name"
-"""
-The name of the auto instrumentation agent or distribution, if used.
+"""The name of the auto instrumentation agent or distribution, if used.
 Note: Official auto instrumentation agents and distributions SHOULD set the `telemetry.distro.name` attribute to
     a string starting with `opentelemetry-`, e.g. `opentelemetry-java-instrumentation`.
 """
 
 TELEMETRY_DISTRO_VERSION = "telemetry.distro.version"
-"""
-The version string of the auto instrumentation agent or distribution, if used.
+"""The version string of the auto instrumentation agent or distribution, if used.
 """
 
 TELEMETRY_SDK_LANGUAGE = "telemetry.sdk.language"
 """
-
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TELEMETRY_SDK_LANGUAGE`.
 """
 
 TELEMETRY_SDK_NAME = "telemetry.sdk.name"
 """
-
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TELEMETRY_SDK_NAME`.
 """
 
 TELEMETRY_SDK_VERSION = "telemetry.sdk.version"
 """
-
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TELEMETRY_SDK_VERSION`.
 """
 

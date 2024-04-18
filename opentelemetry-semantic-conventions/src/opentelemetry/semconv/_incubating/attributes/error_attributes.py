@@ -17,7 +17,6 @@ from deprecated import deprecated
 
 ERROR_TYPE = "error.type"
 """
-
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.error_attributes.ERROR_TYPE`.
 """
 

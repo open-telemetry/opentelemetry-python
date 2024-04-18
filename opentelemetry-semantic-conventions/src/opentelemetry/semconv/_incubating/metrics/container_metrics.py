@@ -16,7 +16,7 @@
 from opentelemetry.metrics import Counter, Meter
 
 CONTAINER_CPU_TIME = "container.cpu.time"
-""""
+"""
     Total CPU time consumed
     Instrument: counter
     Unit: s
@@ -34,7 +34,7 @@ def create_container_cpu_time(meter: Meter) -> Counter:
 
 
 CONTAINER_DISK_IO = "container.disk.io"
-""""
+"""
     Disk bytes for the container
     Instrument: counter
     Unit: By
@@ -52,7 +52,7 @@ def create_container_disk_io(meter: Meter) -> Counter:
 
 
 CONTAINER_MEMORY_USAGE = "container.memory.usage"
-""""
+"""
     Memory usage of the container
     Instrument: counter
     Unit: By
@@ -70,7 +70,7 @@ def create_container_memory_usage(meter: Meter) -> Counter:
 
 
 CONTAINER_NETWORK_IO = "container.network.io"
-""""
+"""
     Network bytes for the container
     Instrument: counter
     Unit: By

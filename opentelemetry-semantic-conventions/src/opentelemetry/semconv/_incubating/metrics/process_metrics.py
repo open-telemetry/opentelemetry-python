@@ -23,7 +23,7 @@ from opentelemetry.metrics import (
 )
 
 PROCESS_CONTEXT_SWITCHES = "process.context_switches"
-""""
+"""
     Number of times the process has been context switched
     Instrument: counter
     Unit: {count}
@@ -40,7 +40,7 @@ def create_process_context_switches(meter: Meter) -> Counter:
 
 
 PROCESS_CPU_TIME = "process.cpu.time"
-""""
+"""
     Total CPU seconds broken down by different states
     Instrument: counter
     Unit: s
@@ -57,7 +57,7 @@ def create_process_cpu_time(meter: Meter) -> Counter:
 
 
 PROCESS_CPU_UTILIZATION = "process.cpu.utilization"
-""""
+"""
     Difference in process.cpu.time since the last measurement, divided by the elapsed time and number of CPUs available to the process
     Instrument: gauge
     Unit: 1
@@ -77,7 +77,7 @@ def create_process_cpu_utilization(
 
 
 PROCESS_DISK_IO = "process.disk.io"
-""""
+"""
     Disk bytes transferred
     Instrument: counter
     Unit: By
@@ -94,7 +94,7 @@ def create_process_disk_io(meter: Meter) -> Counter:
 
 
 PROCESS_MEMORY_USAGE = "process.memory.usage"
-""""
+"""
     The amount of physical memory in use
     Instrument: updowncounter
     Unit: By
@@ -111,7 +111,7 @@ def create_process_memory_usage(meter: Meter) -> UpDownCounter:
 
 
 PROCESS_MEMORY_VIRTUAL = "process.memory.virtual"
-""""
+"""
     The amount of committed virtual memory
     Instrument: updowncounter
     Unit: By
@@ -128,7 +128,7 @@ def create_process_memory_virtual(meter: Meter) -> UpDownCounter:
 
 
 PROCESS_NETWORK_IO = "process.network.io"
-""""
+"""
     Network bytes transferred
     Instrument: counter
     Unit: By
@@ -145,7 +145,7 @@ def create_process_network_io(meter: Meter) -> Counter:
 
 
 PROCESS_OPEN_FILE_DESCRIPTOR_COUNT = "process.open_file_descriptor.count"
-""""
+"""
     Number of file descriptors in use by the process
     Instrument: updowncounter
     Unit: {count}
@@ -162,7 +162,7 @@ def create_process_open_file_descriptor_count(meter: Meter) -> UpDownCounter:
 
 
 PROCESS_PAGING_FAULTS = "process.paging.faults"
-""""
+"""
     Number of page faults the process has made
     Instrument: counter
     Unit: {fault}
@@ -179,7 +179,7 @@ def create_process_paging_faults(meter: Meter) -> Counter:
 
 
 PROCESS_THREAD_COUNT = "process.thread.count"
-""""
+"""
     Process threads count
     Instrument: updowncounter
     Unit: {thread}

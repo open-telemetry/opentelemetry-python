@@ -16,7 +16,7 @@
 from opentelemetry.metrics import Histogram, Meter
 
 DNS_LOOKUP_DURATION = "dns.lookup.duration"
-""""
+"""
     Measures the time taken to perform a DNS lookup
     Instrument: histogram
     Unit: s

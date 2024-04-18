@@ -13,7 +13,8 @@
 {%- endmacro -%}
 
 {%- macro attribute_brief(attribute) -%}
-    {%- if attribute | is_deprecated -%}
+"""
+    {%- if attribute | is_deprecated %}
 Deprecated: {{ common.to_docstring(attribute.deprecated) }}.
     {%- elif attribute | is_stable and filter == "any" %}
 Deprecated in favor of stable :py:const:`{{stable_class_ref(attribute_name(attribute), '.')}}`.
@@ -22,7 +23,8 @@ Deprecated in favor of stable :py:const:`{{stable_class_ref(attribute_name(attri
         {%- if attribute.note %}
 Note: {{ common.to_docstring(attribute.note | indent)}}.
         {%- endif -%}
-    {%- endif -%}
+    {%- endif %}
+"""
 {%- endmacro -%}
 
 {%- macro import_deprecated(attrs) -%}
@@ -62,9 +64,7 @@ from enum import Enum
 {% endif %}
 {% for attribute in filtered_attributes -%}
 {{attribute_name(attribute)}} = "{{attribute.fqn}}"
-"""
 {{attribute_brief(attribute)}}
-"""
 
 {% endfor %}
 {%- for attribute in filtered_enum_attributes -%}

@@ -16,8 +16,7 @@
 from enum import Enum
 
 OPENTRACING_REF_TYPE = "opentracing.ref_type"
-"""
-Parent-child Reference type.
+"""Parent-child Reference type.
 Note: The causal relationship between a child Span and a parent Span.
 """
 
