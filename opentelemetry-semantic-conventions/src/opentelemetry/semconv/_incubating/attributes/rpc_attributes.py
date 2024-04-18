@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from deprecated import deprecated
 from enum import Enum
 
+from deprecated import deprecated
 
 RPC_CONNECT_RPC_ERROR_CODE = "rpc.connect_rpc.error_code"
 """
@@ -28,9 +28,7 @@ Connect request metadata, `<key>` being the normalized Connect Metadata key (low
 """
 
 
-RPC_CONNECT_RPC_RESPONSE_METADATA_TEMPLATE = (
-    "rpc.connect_rpc.response.metadata"
-)
+RPC_CONNECT_RPC_RESPONSE_METADATA_TEMPLATE = "rpc.connect_rpc.response.metadata"
 """
 Connect response metadata, `<key>` being the normalized Connect Metadata key (lowercase), the value being the metadata values.Note: Instrumentations SHOULD require an explicit configuration of which metadata values are to be captured. Including all response metadata values can be a security risk - explicit configuration helps avoid leaking sensitive information.
 """

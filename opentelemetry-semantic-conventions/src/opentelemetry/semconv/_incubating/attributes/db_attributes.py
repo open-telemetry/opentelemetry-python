@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from deprecated import deprecated
 from enum import Enum
 
+from deprecated import deprecated
 
 DB_CASSANDRA_CONSISTENCY_LEVEL = "db.cassandra.consistency_level"
 """
@@ -46,9 +46,7 @@ The fetch size used for paging, i.e. how many rows will be returned at once.
 """
 
 
-DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT = (
-    "db.cassandra.speculative_execution_count"
-)
+DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT = "db.cassandra.speculative_execution_count"
 """
 The number of times a query was speculatively executed. Not set or `0` if the query was not executed speculatively.
 """

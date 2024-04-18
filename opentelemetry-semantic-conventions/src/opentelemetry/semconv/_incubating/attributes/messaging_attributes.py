@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from deprecated import deprecated
 from enum import Enum
 
+from deprecated import deprecated
 
 MESSAGING_BATCH_MESSAGE_COUNT = "messaging.batch.message_count"
 """
@@ -59,9 +59,7 @@ A boolean that is true if the message destination is temporary and might not exi
 """
 
 
-MESSAGING_DESTINATION_PUBLISH_ANONYMOUS = (
-    "messaging.destination_publish.anonymous"
-)
+MESSAGING_DESTINATION_PUBLISH_ANONYMOUS = "messaging.destination_publish.anonymous"
 """
 A boolean that is true if the publish message destination is anonymous (could be unnamed or have auto-generated name).
 """
@@ -80,17 +78,13 @@ The name of the consumer group the event consumer is associated with.
 """
 
 
-MESSAGING_EVENTHUBS_MESSAGE_ENQUEUED_TIME = (
-    "messaging.eventhubs.message.enqueued_time"
-)
+MESSAGING_EVENTHUBS_MESSAGE_ENQUEUED_TIME = "messaging.eventhubs.message.enqueued_time"
 """
 The UTC epoch seconds at which the message has been accepted and stored in the entity.
 """
 
 
-MESSAGING_GCP_PUBSUB_MESSAGE_ORDERING_KEY = (
-    "messaging.gcp_pubsub.message.ordering_key"
-)
+MESSAGING_GCP_PUBSUB_MESSAGE_ORDERING_KEY = "messaging.gcp_pubsub.message.ordering_key"
 """
 The ordering key for a given message. If the attribute is not present, the message does not have an ordering key.
 """
@@ -166,9 +160,7 @@ RabbitMQ message routing key.
 """
 
 
-MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG = (
-    "messaging.rabbitmq.message.delivery_tag"
-)
+MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG = "messaging.rabbitmq.message.delivery_tag"
 """
 RabbitMQ message delivery tag.
 """
@@ -240,9 +232,7 @@ The name of the subscription in the topic messages are received from.
 """
 
 
-MESSAGING_SERVICEBUS_DISPOSITION_STATUS = (
-    "messaging.servicebus.disposition_status"
-)
+MESSAGING_SERVICEBUS_DISPOSITION_STATUS = "messaging.servicebus.disposition_status"
 """
 Describes the [settlement type](https://learn.microsoft.com/azure/service-bus-messaging/message-transfers-locks-settlement#peeklock).
 """

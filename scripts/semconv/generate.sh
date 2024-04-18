@@ -52,20 +52,20 @@ generate() {
     -Dexcluded_namespaces="$EXCLUDED_NAMESPACES"
 }
 
-# stable attributes
+# stable attributes and metrics
 mkdir -p ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/attributes
 generate "semantic_attributes.j2" "attributes/{{snake_prefix}}_attributes.py" "is_stable" ""
 
-# all attributes
-mkdir -p ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/$INCUBATING_DIR/attributes
-generate "semantic_attributes.j2" "$INCUBATING_DIR/attributes/{{snake_prefix}}_attributes.py" "any" "opentelemetry.semconv.attributes"
-
-# stable metrics
 mkdir -p ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/metrics
 generate "semantic_metrics.j2" "metrics/{{snake_prefix}}_metrics.py" "is_stable" ""
 
-# all metrics
+# all attributes and metrics
+mkdir -p ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/$INCUBATING_DIR/attributes
+generate "semantic_attributes.j2" "$INCUBATING_DIR/attributes/{{snake_prefix}}_attributes.py" "any" "opentelemetry.semconv.attributes"
+
 mkdir -p ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/$INCUBATING_DIR/metrics
 generate "semantic_metrics.j2" "$INCUBATING_DIR/metrics/{{snake_prefix}}_metrics.py" "any" "opentelemetry.semconv.metrics"
 
 cd "$ROOT_DIR"
+${ROOT_DIR}/.tox/lint/bin/black ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv
+${ROOT_DIR}/.tox/lint/bin/isort ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv

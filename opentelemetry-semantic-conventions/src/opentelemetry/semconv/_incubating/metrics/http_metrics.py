@@ -13,16 +13,15 @@
 # limitations under the License.
 
 
+from typing import Callable, Sequence
+
 from opentelemetry.metrics import (
     Counter,
     Histogram,
     Meter,
-    UpDownCounter,
     ObservableGauge,
+    UpDownCounter,
 )
-
-from typing import Callable, Sequence
-
 
 HTTP_CLIENT_ACTIVE_REQUESTS = "http.client.active_requests"
 """

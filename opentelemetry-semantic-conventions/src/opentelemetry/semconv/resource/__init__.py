@@ -15,6 +15,7 @@
 # pylint: disable=too-many-lines
 
 from enum import Enum
+
 from deprecated import deprecated
 
 

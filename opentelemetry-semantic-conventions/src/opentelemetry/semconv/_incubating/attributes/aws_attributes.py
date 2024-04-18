@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from deprecated import deprecated
 from enum import Enum
 
+from deprecated import deprecated
 
 AWS_DYNAMODB_ATTRIBUTE_DEFINITIONS = "aws.dynamodb.attribute_definitions"
 """
@@ -96,17 +96,13 @@ The value of the `ProjectionExpression` request parameter.
 """
 
 
-AWS_DYNAMODB_PROVISIONED_READ_CAPACITY = (
-    "aws.dynamodb.provisioned_read_capacity"
-)
+AWS_DYNAMODB_PROVISIONED_READ_CAPACITY = "aws.dynamodb.provisioned_read_capacity"
 """
 The value of the `ProvisionedThroughput.ReadCapacityUnits` request parameter.
 """
 
 
-AWS_DYNAMODB_PROVISIONED_WRITE_CAPACITY = (
-    "aws.dynamodb.provisioned_write_capacity"
-)
+AWS_DYNAMODB_PROVISIONED_WRITE_CAPACITY = "aws.dynamodb.provisioned_write_capacity"
 """
 The value of the `ProvisionedThroughput.WriteCapacityUnits` request parameter.
 """

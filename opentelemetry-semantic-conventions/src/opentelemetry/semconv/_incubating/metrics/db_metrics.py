@@ -13,16 +13,15 @@
 # limitations under the License.
 
 
+from typing import Callable, Sequence
+
 from opentelemetry.metrics import (
     Counter,
     Histogram,
     Meter,
-    UpDownCounter,
     ObservableGauge,
+    UpDownCounter,
 )
-
-from typing import Callable, Sequence
-
 
 DB_CLIENT_CONNECTIONS_CREATE_TIME = "db.client.connections.create_time"
 """
@@ -96,9 +95,7 @@ def create_db_client_connections_max(meter: Meter) -> UpDownCounter:
     )
 
 
-DB_CLIENT_CONNECTIONS_PENDING_REQUESTS = (
-    "db.client.connections.pending_requests"
-)
+DB_CLIENT_CONNECTIONS_PENDING_REQUESTS = "db.client.connections.pending_requests"
 """
 The number of pending requests for an open connection, cumulative for the entire pool
 Instrument: updowncounter
@@ -107,9 +104,7 @@ Unit: {request}
 
 
 @staticmethod
-def create_db_client_connections_pending_requests(
-    meter: Meter,
-) -> UpDownCounter:
+def create_db_client_connections_pending_requests(meter: Meter) -> UpDownCounter:
     """The number of pending requests for an open connection, cumulative for the entire pool"""
     return meter.create_up_down_counter(
         name="db.client.connections.pending_requests",

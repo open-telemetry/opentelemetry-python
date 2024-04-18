@@ -65,17 +65,16 @@ from enum import Enum
 {%- for attribute in filtered_enum_attributes -%}
 {%- set class_name = attribute.fqn | to_camelcase(True) ~ "Values" -%}
     {%- if attribute | is_deprecated %}
-@deprecated(reason="{{attribute.deprecated | to_doc_brief}}")
+@deprecated(reason="The attribute {{attribute.fqn}} is deprecated - {{attribute.deprecated | to_doc_brief}}")
     {%- elif attribute | is_stable and stable_package != "" %}
 @deprecated(reason="The attribute is stable now, use :py:const:`{{stable_class_ref(class_name, '.')}}` instead.")
-    {%- endif -%}
+    {%- endif %}
 class {{class_name}}(Enum):
     {%- for member in attribute.attr_type.members %}
     {{ member.member_id | to_const_name }} = {{ attribute | print_member_value(member) }}
     """{{member.brief | to_doc_brief}}."""
 {# Extra line #}
-    {% endfor -%}
-{# Extra line #}
+    {%- endfor %}
 {# Extra line #}
 {%- endfor -%}
 {%- endif -%}

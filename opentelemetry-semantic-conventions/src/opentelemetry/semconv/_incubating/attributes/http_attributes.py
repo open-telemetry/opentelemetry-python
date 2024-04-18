@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from deprecated import deprecated
 from enum import Enum
 
+from deprecated import deprecated
 
 HTTP_CONNECTION_STATE = "http.connection.state"
 """
@@ -157,7 +157,9 @@ class HttpConnectionStateValues(Enum):
     """idle state."""
 
 
-@deprecated(reason="Replaced by `network.protocol.name`")
+@deprecated(
+    reason="The attribute http.flavor is deprecated - Replaced by `network.protocol.name`"
+)
 class HttpFlavorValues(Enum):
     HTTP_1_0 = "1.0"
     """HTTP/1.0."""

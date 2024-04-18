@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from deprecated import deprecated
 from enum import Enum
 
+from deprecated import deprecated
 
 SYSTEM_CPU_LOGICAL_NUMBER = "system.cpu.logical_number"
 """
@@ -247,7 +247,9 @@ class SystemProcessStatusValues(Enum):
     """defunct."""
 
 
-@deprecated(reason="Replaced by `system.process.status`")
+@deprecated(
+    reason="The attribute system.processes.status is deprecated - Replaced by `system.process.status`"
+)
 class SystemProcessesStatusValues(Enum):
     RUNNING = "running"
     """running."""
