@@ -14,7 +14,8 @@
 
 
 SERVICE_INSTANCE_ID = "service.instance.id"
-"""The string ID of the service instance.
+"""
+    The string ID of the service instance.
 Note: MUST be unique for each instance of the same `service.namespace,service.name` pair (in other words
     `service.namespace,service.name,service.instance.id` triplet MUST be globally unique). The ID helps to
     distinguish instances of the same service that exist at the same time (e.g. instances of a horizontally scaled
@@ -49,7 +50,8 @@ Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.servic
 """
 
 SERVICE_NAMESPACE = "service.namespace"
-"""A namespace for `service.name`.
+"""
+    A namespace for `service.name`.
 Note: A string value having a meaning that helps to distinguish a group of services, for example the team name that owns a group of services. `service.name` is expected to be unique within the same namespace. If `service.namespace` is not specified in the Resource then `service.name` is expected to be unique for all services that have no explicit namespace defined (so the empty/unspecified namespace is simply one more valid namespace). Zero-length namespace string is assumed equal to unspecified namespace.
 """
 

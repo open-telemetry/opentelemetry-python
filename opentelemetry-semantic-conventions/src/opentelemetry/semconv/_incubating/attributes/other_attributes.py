@@ -16,7 +16,8 @@
 from enum import Enum
 
 STATE = "state"
-"""The state of a connection in the pool.
+"""
+    The state of a connection in the pool.
 """
 
 

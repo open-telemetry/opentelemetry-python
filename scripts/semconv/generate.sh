@@ -66,5 +66,5 @@ mkdir -p ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semcon
 generate "semantic_metrics.j2" "$INCUBATING_DIR/metrics/{{snake_prefix}}_metrics.py" "any" "opentelemetry.semconv.metrics"
 
 cd "$ROOT_DIR"
-${ROOT_DIR}/.tox/lint/bin/black ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv
+${ROOT_DIR}/.tox/lint/bin/black --config pyproject.toml ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv
 ${ROOT_DIR}/.tox/lint/bin/isort ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv

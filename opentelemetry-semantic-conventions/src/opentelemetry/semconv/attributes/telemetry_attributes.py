@@ -16,11 +16,13 @@
 from enum import Enum
 
 TELEMETRY_SDK_LANGUAGE = "telemetry.sdk.language"
-"""The language of the telemetry SDK.
+"""
+    The language of the telemetry SDK.
 """
 
 TELEMETRY_SDK_NAME = "telemetry.sdk.name"
-"""The name of the telemetry SDK as defined above.
+"""
+    The name of the telemetry SDK as defined above.
 Note: The OpenTelemetry SDK MUST set the `telemetry.sdk.name` attribute to `opentelemetry`.
     If another SDK, like a fork or a vendor-provided implementation, is used, this SDK MUST set the
     `telemetry.sdk.name` attribute to the fully-qualified class or module name of this SDK's main entry point
@@ -30,7 +32,8 @@ Note: The OpenTelemetry SDK MUST set the `telemetry.sdk.name` attribute to `open
 """
 
 TELEMETRY_SDK_VERSION = "telemetry.sdk.version"
-"""The version string of the telemetry SDK.
+"""
+    The version string of the telemetry SDK.
 """
 
 
