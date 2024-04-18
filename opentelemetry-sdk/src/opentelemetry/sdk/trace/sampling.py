@@ -136,7 +136,7 @@ import enum
 import os
 from logging import getLogger
 from types import MappingProxyType
-from typing import Optional, Sequence
+from typing import Any, Optional, Sequence
 
 # pylint: disable=unused-import
 from opentelemetry.context import Context
@@ -150,6 +150,13 @@ from opentelemetry.util.types import Attributes
 
 _logger = getLogger(__name__)
 
+# TODO(sconover): not sure what to do w/ these constants + associated attrs,
+# the don't seem like a "fit" in this codebase. However these are central to the workings
+# of the ported tests.
+SAMPLER_TYPE_TAG_KEY = 'sampler.type'
+SAMPLER_PARAM_TAG_KEY = 'sampler.param'
+
+SAMPLER_TYPE_TRACE_ID_RATIO = 'traceidratio'
 
 class Decision(enum.Enum):
     # IsRecording() == false, span will not be recorded and all events and attributes will be dropped.
@@ -212,6 +219,25 @@ class Sampler(abc.ABC):
     def get_description(self) -> str:
         pass
 
+    # TODO(sconover) added close to all samplers, because of cleanup needed
+    # for RemoteControlledSampler
+    def close(self) -> None:
+        pass
+
+    # TODO(sconover): the adaptive sampler in jaeger remote makes use of sampler equality
+    def __eq__(self, other: Any) -> bool:
+        return (
+            isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+        )
+
+    def __ne__(self, other: Any) -> bool:
+        return not self.__eq__(other)
+
+    # TODO(sconover): the jaeger tests assert against the string value of a sampler,
+    # in order to detect what sampler is "in effect", e.g. in AdaptiveSampler
+    def __str__(self) -> str:
+        return self.get_description()
+
 
 class StaticSampler(Sampler):
     """Sampler that always returns the same decision."""
@@ -231,6 +257,7 @@ class StaticSampler(Sampler):
     ) -> "SamplingResult":
         if self._decision is Decision.DROP:
             attributes = None
+
         return SamplingResult(
             self._decision,
             attributes,
@@ -263,6 +290,10 @@ class TraceIdRatioBased(Sampler):
             raise ValueError("Probability must be in range [0.0, 1.0].")
         self._rate = rate
         self._bound = self.get_bound_for_rate(self._rate)
+        self._attributes = {
+            SAMPLER_TYPE_TAG_KEY: SAMPLER_TYPE_TRACE_ID_RATIO,
+            SAMPLER_PARAM_TAG_KEY: rate
+        }
 
     # For compatibility with 64 bit trace IDs, the sampler checks the 64
     # low-order bits of the trace ID to decide whether to sample a given trace.
@@ -295,6 +326,15 @@ class TraceIdRatioBased(Sampler):
             decision = Decision.RECORD_AND_SAMPLE
         if decision is Decision.DROP:
             attributes = None
+
+        # TODO(sconover): the jaeger remote tests really really want this probabilistic sampler
+        # to indicate key elements of internal state via attributes
+        # I expect this might be a controversial issue in code review
+        # (perhaps unacceptable aspect of the "port")
+        if attributes == None:
+            attributes = {}
+        attributes = {**self._attributes, **attributes}
+
         return SamplingResult(
             decision,
             attributes,
@@ -413,7 +453,7 @@ class _ParentBasedAlwaysOn(ParentBased):
     def __init__(self, _):
         super().__init__(ALWAYS_ON)
 
-
+# TODO(sconover): Something must be done to allow samplers from the contrib repo to be specified
 _KNOWN_SAMPLERS = {
     "always_on": ALWAYS_ON,
     "always_off": ALWAYS_OFF,

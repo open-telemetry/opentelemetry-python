@@ -1253,6 +1253,8 @@ class TracerProvider(trace_api.TracerProvider):
     def shutdown(self):
         """Shut down the span processors added to the tracer provider."""
         self._active_span_processor.shutdown()
+        if self.sampler is not None:
+            self.sampler.close()
         if self._atexit_handler is not None:
             atexit.unregister(self._atexit_handler)
             self._atexit_handler = None

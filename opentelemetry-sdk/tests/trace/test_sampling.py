@@ -220,7 +220,7 @@ class TestSampler(unittest.TestCase):
             attributes={"sampled.expect": "true"},
         )
         self.assertTrue(sampled_result.decision.is_sampled())
-        self.assertEqual(sampled_result.attributes, {"sampled.expect": "true"})
+        self.assertEqual(sampled_result.attributes, {"sampler.type": "traceidratio", "sampler.param": 0.5, "sampled.expect": "true"})
         self.assertIsNone(sampled_result.trace_state)
 
         not_sampled_result = sampler.should_sample(
@@ -231,7 +231,7 @@ class TestSampler(unittest.TestCase):
             attributes={"sampled.expect": "false"},
         )
         self.assertFalse(not_sampled_result.decision.is_sampled())
-        self.assertEqual(not_sampled_result.attributes, {})
+        self.assertEqual(not_sampled_result.attributes, {"sampler.type": "traceidratio", "sampler.param": 0.5})
         self.assertIsNone(sampled_result.trace_state)
 
     def test_probability_sampler_zero(self):
@@ -537,3 +537,17 @@ class TestSampler(unittest.TestCase):
             context_api.detach(token)
 
         self.exec_parent_based(implicit_parent_context)
+
+    def test_sampler_equality(self):
+        const1 = sampling.StaticSampler(True)
+        const2 = sampling.StaticSampler(True)
+        const3 = sampling.StaticSampler(False)
+        self.assertEqual(const1, const2)
+        self.assertNotEqual(const1, const3)
+
+        prob1 = sampling.TraceIdRatioBased(rate=0.01)
+        prob2 = sampling.TraceIdRatioBased(rate=0.01)
+        prob3 = sampling.TraceIdRatioBased(rate=0.02)
+        self.assertEqual(prob1, prob2)
+        self.assertNotEqual(prob1, prob3)
+        self.assertNotEqual(const1, prob1)

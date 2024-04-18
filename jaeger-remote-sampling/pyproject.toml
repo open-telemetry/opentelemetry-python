@@ -1,0 +1,47 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "opentelemetry-jaeger-remote-sampling"
+dynamic = ["version"]
+description = "Jaeger Remote Sampling support for OpenTelemetry"
+readme = "README.rst"
+license = "Apache-2.0"
+requires-python = ">=3.8"
+authors = [
+  { name = "OpenTelemetry Authors", email = "cncf-opentelemetry-contributors@lists.cncf.io" },
+]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+]
+
+dependencies = [
+  "opentelemetry-api ~= 1.12",
+  "opentelemetry-sdk ~= 1.12",
+  "threadloop>=1.0.2",
+  "tornado>=6.4",
+]
+
+[project.urls]
+Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/jaeger-remote-sampling"
+
+[tool.hatch.version]
+path = "src/opentelemetry/jaeger_remote_sampling/version.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "/src",
+  "/tests",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/opentelemetry"]
