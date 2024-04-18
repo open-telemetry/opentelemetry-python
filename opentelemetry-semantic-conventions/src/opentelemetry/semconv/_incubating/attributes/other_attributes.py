@@ -12,21 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from deprecated import deprecated
+from enum import Enum
 
 
-HTTP_CLIENT_REQUEST_DURATION = "http.client.request.duration"
+STATE = "state"
 """
-Duration of HTTP client requests
-Instrument: histogram
-Unit: s
+The state of a connection in the pool.
 """
 
 
 
-HTTP_SERVER_REQUEST_DURATION = "http.server.request.duration"
-"""
-Duration of HTTP server requests
-Instrument: histogram
-Unit: s
-"""
+class StateValues(Enum):
+    IDLE = "idle"
+    """idle."""
+
+    USED = "used"
+    """used."""
+
 

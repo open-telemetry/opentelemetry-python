@@ -14,19 +14,15 @@
 
 
 
-HTTP_CLIENT_REQUEST_DURATION = "http.client.request.duration"
+DESTINATION_ADDRESS = "destination.address"
 """
-Duration of HTTP client requests
-Instrument: histogram
-Unit: s
+Destination address - domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name.Note: When observed from the source side, and when communicating through an intermediary, `destination.address` SHOULD represent the destination address behind any intermediaries, for example proxies, if it's available.
 """
 
 
+DESTINATION_PORT = "destination.port"
+"""
+Destination port number.
+"""
 
-HTTP_SERVER_REQUEST_DURATION = "http.server.request.duration"
-"""
-Duration of HTTP server requests
-Instrument: histogram
-Unit: s
-"""
 

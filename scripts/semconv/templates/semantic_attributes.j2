@@ -1,6 +1,12 @@
 {%- if root_namespace not in excluded_namespaces -%}
+{%- if filter != 'any' -%}
 {%- set filtered_attributes = attributes_and_templates | select(filter) | list -%}
-
+{%- else -%}
+{%- set filtered_attributes = attributes_and_templates | list %}
+{%- endif -%}
+{%- macro stable_class_ref(const_name, separator) -%}
+{{stable_package}}.{{root_namespace}}_attributes{{separator}}{{const_name}}
+{%- endmacro %}
 {%- macro attribute_name(attribute) -%}
     {%- if attribute | is_template -%}
     {{attribute.fqn | to_const_name}}_TEMPLATE
@@ -11,6 +17,8 @@
 {%- macro attribute_brief(attribute) -%}
     {%- if attribute | is_deprecated -%}
 Deprecated: {{attribute.deprecated | to_doc_brief}}.
+    {%- elif attribute | is_stable and stable_package != "" %}
+Deprecated: The attribute is stable now, use :py:const:`{{stable_class_ref(attribute_name(attribute), '.')}}` instead.
     {%- else -%}
     {{attribute.brief | to_doc_brief}}.
         {%- if attribute.note -%}
@@ -18,7 +26,6 @@ Note: {{attribute.note | to_doc_brief | indent}}.
         {%- endif -%}
     {%- endif -%}
 {%- endmacro -%}
-
 {%- if filtered_attributes | count > 0 -%}
 # Copyright The OpenTelemetry Authors
 #
@@ -34,25 +41,35 @@ Note: {{attribute.note | to_doc_brief | indent}}.
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+{%- if filter != 'any' -%}
 {%- set filtered_enum_attributes = enum_attributes | select(filter) | list %}
+{%- else -%}
+{%- set filtered_enum_attributes = enum_attributes | list %}
+{%- endif -%}
 {% if filtered_enum_attributes | count > 0 %}
 
+from deprecated import deprecated
 from enum import Enum
 
+{% else %}
+{# Extra line #}
+{# Extra line #}
 {% endif %}
 {% for attribute in filtered_attributes -%}
 {{attribute_name(attribute)}} = "{{attribute.fqn}}"
 """
 {{attribute_brief(attribute)}}
-{% if stable_package and attribute | is_stable -%}
-See Also: the attribute is stable now, use :py:const:`{{stable_package}}.{{file_name[:-3]}}.{{attribute_name(attribute)}}` instead.
-{% endif -%}
 """
 {# Extra line #}
 {# Extra line #}
 {% endfor %}
 {%- for attribute in filtered_enum_attributes -%}
 {%- set class_name = attribute.fqn | to_camelcase(True) ~ "Values" -%}
+    {%- if attribute | is_deprecated %}
+@deprecated(reason="{{attribute.deprecated | to_doc_brief}}")
+    {%- elif attribute | is_stable and stable_package != "" %}
+@deprecated(reason="The attribute is stable now, use :py:const:`{{stable_class_ref(class_name, '.')}}` instead.")
+    {%- endif %}
 class {{class_name}}(Enum):
     {%- for member in attribute.attr_type.members %}
     {{ member.member_id | to_const_name }} = {{ attribute | print_member_value(member) }}

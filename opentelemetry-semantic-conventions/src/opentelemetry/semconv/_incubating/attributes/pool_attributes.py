@@ -14,19 +14,9 @@
 
 
 
-HTTP_CLIENT_REQUEST_DURATION = "http.client.request.duration"
+POOL_NAME = "pool.name"
 """
-Duration of HTTP client requests
-Instrument: histogram
-Unit: s
+The name of the connection pool; unique within the instrumented application. In case the connection pool implementation doesn't provide a name, instrumentation should use a combination of `server.address` and `server.port` attributes formatted as `server.address:server.port`.
 """
 
-
-
-HTTP_SERVER_REQUEST_DURATION = "http.server.request.duration"
-"""
-Duration of HTTP server requests
-Instrument: histogram
-Unit: s
-"""
 

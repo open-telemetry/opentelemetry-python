@@ -14,19 +14,17 @@
 
 
 
-HTTP_CLIENT_REQUEST_DURATION = "http.client.request.duration"
+SERVER_ADDRESS = "server.address"
 """
-Duration of HTTP client requests
-Instrument: histogram
-Unit: s
+
+Deprecated: The attribute is stable now, use :py:const:`opentelemetry.semconv.attributes.server_attributes.SERVER_ADDRESS` instead.
 """
 
 
+SERVER_PORT = "server.port"
+"""
 
-HTTP_SERVER_REQUEST_DURATION = "http.server.request.duration"
+Deprecated: The attribute is stable now, use :py:const:`opentelemetry.semconv.attributes.server_attributes.SERVER_PORT` instead.
 """
-Duration of HTTP server requests
-Instrument: histogram
-Unit: s
-"""
+
 

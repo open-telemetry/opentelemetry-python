@@ -14,19 +14,21 @@
 
 
 
-HTTP_CLIENT_REQUEST_DURATION = "http.client.request.duration"
+WEBENGINE_DESCRIPTION = "webengine.description"
 """
-Duration of HTTP client requests
-Instrument: histogram
-Unit: s
+Additional description of the web engine (e.g. detailed version and edition information).
 """
 
 
+WEBENGINE_NAME = "webengine.name"
+"""
+The name of the web engine.
+"""
 
-HTTP_SERVER_REQUEST_DURATION = "http.server.request.duration"
+
+WEBENGINE_VERSION = "webengine.version"
 """
-Duration of HTTP server requests
-Instrument: histogram
-Unit: s
+The version of the web engine.
 """
+
 

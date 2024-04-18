@@ -14,19 +14,15 @@
 
 
 
-HTTP_CLIENT_REQUEST_DURATION = "http.client.request.duration"
+SESSION_ID = "session.id"
 """
-Duration of HTTP client requests
-Instrument: histogram
-Unit: s
+A unique id to identify a session.
 """
 
 
+SESSION_PREVIOUS_ID = "session.previous_id"
+"""
+The previous `session.id` for this user, when known.
+"""
 
-HTTP_SERVER_REQUEST_DURATION = "http.server.request.duration"
-"""
-Duration of HTTP server requests
-Instrument: histogram
-Unit: s
-"""
 

@@ -14,19 +14,21 @@
 
 
 
-HTTP_CLIENT_REQUEST_DURATION = "http.client.request.duration"
+HEROKU_APP_ID = "heroku.app.id"
 """
-Duration of HTTP client requests
-Instrument: histogram
-Unit: s
+Unique identifier for the application.
 """
 
 
+HEROKU_RELEASE_COMMIT = "heroku.release.commit"
+"""
+Commit hash for the current release.
+"""
 
-HTTP_SERVER_REQUEST_DURATION = "http.server.request.duration"
+
+HEROKU_RELEASE_CREATION_TIMESTAMP = "heroku.release.creation_timestamp"
 """
-Duration of HTTP server requests
-Instrument: histogram
-Unit: s
+Time and date the release was created.
 """
+
 

@@ -14,19 +14,10 @@
 
 
 
-HTTP_CLIENT_REQUEST_DURATION = "http.client.request.duration"
+OCI_MANIFEST_DIGEST = "oci.manifest.digest"
 """
-Duration of HTTP client requests
-Instrument: histogram
-Unit: s
+The digest of the OCI image manifest. For container images specifically is the digest by which the container image is known.Note: Follows [OCI Image Manifest Specification](https://github.com/opencontainers/image-spec/blob/main/manifest.md), and specifically the [Digest property](https://github.com/opencontainers/image-spec/blob/main/descriptor.md#digests).
+    An example can be found in [Example Image Manifest](https://docs.docker.com/registry/spec/manifest-v2-2/#example-image-manifest).
 """
 
-
-
-HTTP_SERVER_REQUEST_DURATION = "http.server.request.duration"
-"""
-Duration of HTTP server requests
-Instrument: histogram
-Unit: s
-"""
 

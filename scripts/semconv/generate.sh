@@ -5,9 +5,9 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ROOT_DIR="${SCRIPT_DIR}/../../"
 
 # freeze the spec version to make SemanticAttributes generation reproducible
-SEMCONV_VERSION=v1.24.0
-OTEL_SEMCONV_GEN_IMG_VERSION=0.0.7
-INCUBATING_DIR=incubating
+SEMCONV_VERSION=v1.25.0
+OTEL_SEMCONV_GEN_IMG_VERSION=0.24.0
+INCUBATING_DIR=_incubating
 cd ${SCRIPT_DIR}
 
 rm -rf semantic-conventions || true
@@ -31,68 +31,41 @@ fi
 
 EXCLUDED_NAMESPACES="jvm aspnetcore dotnet signalr ios android"
 
-# stable attributes
-docker run --rm \
-  -v ${SCRIPT_DIR}/semantic-conventions/model:/source \
-  -v ${SCRIPT_DIR}/templates:/templates \
-  -v ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/:/output \
-  semconvgen:$OTEL_SEMCONV_GEN_IMG_VERSION \
-  -f /source \
-  --strict-validation false \
-  code \
-  --template /templates/semantic_attributes.j2 \
-  --output /output/{{snake_prefix}}_attributes.py \
-  --file-per-group root_namespace \
-  -Dfilter=is_stable \
-  -Dexcluded_namespaces="$EXCLUDED_NAMESPACES" \
+generate() {
+  TEMPLATE=$1
+  OUTPUT_FILE=$2
+  FILTER=$3
+  STABLE_PACKAGE=$4
+  docker run --rm \
+    -v ${SCRIPT_DIR}/semantic-conventions/model:/source \
+    -v ${SCRIPT_DIR}/templates:/templates \
+    -v ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/:/output \
+    otel/semconvgen:$OTEL_SEMCONV_GEN_IMG_VERSION \
+    -f /source \
+    --continue-on-validation-errors \
+    code \
+    --template /templates/${TEMPLATE} \
+    --output /output/${OUTPUT_FILE} \
+    --file-per-group root_namespace \
+    -Dfilter=${FILTER} \
+    -Dstable_package=${STABLE_PACKAGE} \
+    -Dexcluded_namespaces="$EXCLUDED_NAMESPACES"
+}
 
-# stable metrics
-docker run --rm \
-  -v ${SCRIPT_DIR}/semantic-conventions/model:/source \
-  -v ${SCRIPT_DIR}/templates:/templates \
-  -v ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/:/output \
-  semconvgen:$OTEL_SEMCONV_GEN_IMG_VERSION \
-  -f /source \
-  --strict-validation false \
-  code \
-  --template /templates/semantic_metrics.j2 \
-  --output /output/metrics/{{snake_prefix}}_metrics.py \
-  --file-per-group root_namespace \
-  -Dfilter=is_stable \
-  -Dexcluded_namespaces="$EXCLUDED_NAMESPACES"
+# stable attributes
+mkdir -p ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/attributes
+generate "semantic_attributes.j2" "attributes/{{snake_prefix}}_attributes.py" "is_stable" ""
 
 # all attributes
-mkdir -p ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/$INCUBATING_DIR
-docker run --rm \
-  -v ${SCRIPT_DIR}/semantic-conventions/model:/source \
-  -v ${SCRIPT_DIR}/templates:/templates \
-  -v ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/:/output \
-  semconvgen:$OTEL_SEMCONV_GEN_IMG_VERSION \
-  -f /source \
-  --strict-validation false \
-  code \
-  --template /templates/semantic_attributes.j2 \
-  --output /output/$INCUBATING_DIR/{{snake_prefix}}_attributes.py \
-  --file-per-group root_namespace \
-  -Dfilter=any \
-  -Dstable_package=opentelemetry.semconv \
-  -Dexcluded_namespaces="$EXCLUDED_NAMESPACES"
+mkdir -p ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/$INCUBATING_DIR/attributes
+generate "semantic_attributes.j2" "$INCUBATING_DIR/attributes/{{snake_prefix}}_attributes.py" "any" "opentelemetry.semconv.attributes"
+
+# stable metrics
+mkdir -p ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/metrics
+generate "semantic_metrics.j2" "metrics/{{snake_prefix}}_metrics.py" "is_stable" ""
 
 # all metrics
-mkdir -p ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/metrics/$INCUBATING_DIR
-docker run --rm \
-  -v ${SCRIPT_DIR}/semantic-conventions/model:/source \
-  -v ${SCRIPT_DIR}/templates:/templates \
-  -v ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/:/output \
-  semconvgen:$OTEL_SEMCONV_GEN_IMG_VERSION \
-  -f /source \
-  --strict-validation false \
-  code \
-  --template /templates/semantic_metrics.j2 \
-  --output /output/metrics/$INCUBATING_DIR/{{snake_prefix}}_metrics.py \
-  --file-per-group root_namespace \
-  -Dfilter=any \
-  -Dstable_package=opentelemetry.semconv.metrics \
-  -Dexcluded_namespaces="$EXCLUDED_NAMESPACES"
+mkdir -p ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/$INCUBATING_DIR/metrics
+generate "semantic_metrics.j2" "$INCUBATING_DIR/metrics/{{snake_prefix}}_metrics.py" "any" "opentelemetry.semconv.metrics"
 
 cd "$ROOT_DIR"

@@ -12,21 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from deprecated import deprecated
+from enum import Enum
 
 
-HTTP_CLIENT_REQUEST_DURATION = "http.client.request.duration"
-"""
-Duration of HTTP client requests
-Instrument: histogram
-Unit: s
+ERROR_TYPE = "error.type"
 """
 
+Deprecated: The attribute is stable now, use :py:const:`opentelemetry.semconv.attributes.error_attributes.ERROR_TYPE` instead.
+"""
 
 
-HTTP_SERVER_REQUEST_DURATION = "http.server.request.duration"
-"""
-Duration of HTTP server requests
-Instrument: histogram
-Unit: s
-"""
+
+@deprecated(reason="The attribute is stable now, use :py:const:`opentelemetry.semconv.attributes.error_attributes.ErrorTypeValues` instead.")
+class ErrorTypeValues(Enum):
+    OTHER = "_OTHER"
+    """A fallback error value to be used when the instrumentation doesn't define a custom value."""
+
 

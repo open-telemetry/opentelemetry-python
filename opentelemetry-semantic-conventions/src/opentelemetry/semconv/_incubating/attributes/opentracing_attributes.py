@@ -12,21 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from deprecated import deprecated
+from enum import Enum
 
 
-HTTP_CLIENT_REQUEST_DURATION = "http.client.request.duration"
+OPENTRACING_REF_TYPE = "opentracing.ref_type"
 """
-Duration of HTTP client requests
-Instrument: histogram
-Unit: s
+Parent-child Reference type.Note: The causal relationship between a child Span and a parent Span.
 """
 
 
 
-HTTP_SERVER_REQUEST_DURATION = "http.server.request.duration"
-"""
-Duration of HTTP server requests
-Instrument: histogram
-Unit: s
-"""
+class OpentracingRefTypeValues(Enum):
+    CHILD_OF = "child_of"
+    """The parent Span depends on the child Span in some capacity."""
+
+    FOLLOWS_FROM = "follows_from"
+    """The parent Span doesn't depend in any way on the result of the child Span."""
+
 

@@ -14,19 +14,9 @@
 
 
 
-HTTP_CLIENT_REQUEST_DURATION = "http.client.request.duration"
+USER_AGENT_ORIGINAL = "user_agent.original"
 """
-Duration of HTTP client requests
-Instrument: histogram
-Unit: s
+Value of the [HTTP User-Agent](https://www.rfc-editor.org/rfc/rfc9110.html#field.user-agent) header sent by the client.
 """
 
-
-
-HTTP_SERVER_REQUEST_DURATION = "http.server.request.duration"
-"""
-Duration of HTTP server requests
-Instrument: histogram
-Unit: s
-"""
 

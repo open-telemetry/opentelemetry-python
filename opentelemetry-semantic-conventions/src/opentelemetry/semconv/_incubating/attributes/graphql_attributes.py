@@ -12,21 +12,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from deprecated import deprecated
+from enum import Enum
 
 
-HTTP_CLIENT_REQUEST_DURATION = "http.client.request.duration"
+GRAPHQL_DOCUMENT = "graphql.document"
 """
-Duration of HTTP client requests
-Instrument: histogram
-Unit: s
+The GraphQL document being executed.Note: The value may be sanitized to exclude sensitive information.
+"""
+
+
+GRAPHQL_OPERATION_NAME = "graphql.operation.name"
+"""
+The name of the operation being executed.
+"""
+
+
+GRAPHQL_OPERATION_TYPE = "graphql.operation.type"
+"""
+The type of the operation being executed.
 """
 
 
 
-HTTP_SERVER_REQUEST_DURATION = "http.server.request.duration"
-"""
-Duration of HTTP server requests
-Instrument: histogram
-Unit: s
-"""
+class GraphqlOperationTypeValues(Enum):
+    QUERY = "query"
+    """GraphQL query."""
+
+    MUTATION = "mutation"
+    """GraphQL mutation."""
+
+    SUBSCRIPTION = "subscription"
+    """GraphQL subscription."""
+
 

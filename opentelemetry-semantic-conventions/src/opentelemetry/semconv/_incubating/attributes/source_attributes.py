@@ -14,19 +14,15 @@
 
 
 
-HTTP_CLIENT_REQUEST_DURATION = "http.client.request.duration"
+SOURCE_ADDRESS = "source.address"
 """
-Duration of HTTP client requests
-Instrument: histogram
-Unit: s
+Source address - domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name.Note: When observed from the destination side, and when communicating through an intermediary, `source.address` SHOULD represent the source address behind any intermediaries, for example proxies, if it's available.
 """
 
 
+SOURCE_PORT = "source.port"
+"""
+Source port number.
+"""
 
-HTTP_SERVER_REQUEST_DURATION = "http.server.request.duration"
-"""
-Duration of HTTP server requests
-Instrument: histogram
-Unit: s
-"""
 

@@ -14,19 +14,15 @@
 
 
 
-HTTP_CLIENT_REQUEST_DURATION = "http.client.request.duration"
+SERVER_ADDRESS = "server.address"
 """
-Duration of HTTP client requests
-Instrument: histogram
-Unit: s
+Server domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name.Note: When observed from the client side, and when communicating through an intermediary, `server.address` SHOULD represent the server address behind any intermediaries, for example proxies, if it's available.
 """
 
 
+SERVER_PORT = "server.port"
+"""
+Server port number.Note: When observed from the client side, and when communicating through an intermediary, `server.port` SHOULD represent the server port behind any intermediaries, for example proxies, if it's available.
+"""
 
-HTTP_SERVER_REQUEST_DURATION = "http.server.request.duration"
-"""
-Duration of HTTP server requests
-Instrument: histogram
-Unit: s
-"""
 

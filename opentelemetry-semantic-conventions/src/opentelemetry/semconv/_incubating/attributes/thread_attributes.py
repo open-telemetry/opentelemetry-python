@@ -14,19 +14,15 @@
 
 
 
-HTTP_CLIENT_REQUEST_DURATION = "http.client.request.duration"
+THREAD_ID = "thread.id"
 """
-Duration of HTTP client requests
-Instrument: histogram
-Unit: s
+Current "managed" thread ID (as opposed to OS thread ID).
 """
 
 
+THREAD_NAME = "thread.name"
+"""
+Current thread name.
+"""
 
-HTTP_SERVER_REQUEST_DURATION = "http.server.request.duration"
-"""
-Duration of HTTP server requests
-Instrument: histogram
-Unit: s
-"""
 

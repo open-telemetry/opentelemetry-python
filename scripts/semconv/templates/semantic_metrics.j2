@@ -21,7 +21,11 @@
     ObservableGauge
   {%- endif -%}
 {%- endmacro %}
+{%- if filter != 'any' -%}
 {%- set filtered_metrics = metrics | select(filter) | list -%}
+{%- else -%}
+{%- set filtered_metrics = metrics -%}
+{%- endif -%}
 {%- if filtered_metrics | count > 0 -%}
 # Copyright The OpenTelemetry Authors
 #
@@ -36,7 +40,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+{# Extra line #}
+{% if filter == "any" %}
 from opentelemetry.metrics import (
     Counter,
     Histogram,
@@ -47,7 +52,18 @@ from opentelemetry.metrics import (
 {# Extra line #}
 from typing import Callable, Sequence
 {# Extra line #}
+{%- endif -%}
+
 {%- for metric in filtered_metrics %}
+
+{{metric.metric_name | to_const_name}} = "{{metric.metric_name}}"
+"""
+{{metric.brief | to_doc_brief}}
+Instrument: {{ metric.instrument }}
+Unit: {{ metric.unit }}
+"""
+{# Extra line #}
+{% if filter == "any" %}
 @staticmethod
 {%- if metric.instrument == "gauge" %}
 def create_{{ metric.metric_name | replace(".", "_") }}(meter: Meter, callback: Sequence[Callable]) -> {{to_python_instrument_type(metric.instrument)}}:
@@ -65,6 +81,7 @@ def create_{{ metric.metric_name | replace(".", "_") }}(meter: Meter) -> {{to_py
     )
 {# Extra line #}
 {# Extra line #}
+{%- endif -%}
 {%- endfor -%}
 {%- endif -%}
 {%- endif -%}
