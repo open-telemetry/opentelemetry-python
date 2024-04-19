@@ -12,7 +12,7 @@ env:
   # changes.
   CONTRIB_REPO_SHA: 9ce1c26d2732dfbdadbb492fc38c562dcd08ed2e
   # This is needed because we do not clone the core repo in contrib builds anymore.
-  # When running contrib builds as part of core builds, we use actions/checkout@v2 which
+  # When running contrib builds as part of core builds, we use actions/checkout@v4 which
   # does not set an environment variable (simply just runs tox), which is different when
   # contrib builds are run directly from contrib (since test.yml is executed, which sets CORE_REPO_SHA)
   # The solution is to include CORE_REPO_SHA as part of THIS environment so it can be accessed
@@ -67,9 +67,9 @@ jobs:
 
     steps:
     - name: Checkout Core Repo @ SHA - ${{ github.sha }}
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
     - name: Set up Python ${{ env[matrix.python-version] }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ env[matrix.python-version] }}
         architecture: 'x64'
@@ -77,7 +77,7 @@ jobs:
       run: pip install tox
     - name: Cache tox environment
         # Preserves .tox directory between runs for faster installs
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: |
           .tox
@@ -100,9 +100,9 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
     - name: Checkout Core Repo @ SHA - ${{ github.sha }}
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: '3.10'
         architecture: 'x64'
@@ -110,7 +110,7 @@ jobs:
       run: pip install tox
     - name: Cache tox environment
         # Preserves .tox directory between runs for faster installs
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: |
           .tox
@@ -183,17 +183,17 @@ jobs:
         os: [ubuntu-20.04]
     steps:
     - name: Checkout Contrib Repo @ SHA - ${{ env.CONTRIB_REPO_SHA }}
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         repository: open-telemetry/opentelemetry-python-contrib
         ref: ${{ env.CONTRIB_REPO_SHA }}
     - name: Checkout Core Repo @ SHA ${{ github.sha }}
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         repository: open-telemetry/opentelemetry-python
         path: opentelemetry-python-core
     - name: Set up Python ${{ env[matrix.python-version] }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ env[matrix.python-version] }}
         architecture: 'x64'
@@ -201,7 +201,7 @@ jobs:
       run: pip install tox
     - name: Cache tox environment
         # Preserves .tox directory between runs for faster installs
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: |
           .tox
