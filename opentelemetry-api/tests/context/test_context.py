@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import unittest
-from os import environ
+from unittest.mock import patch
 
 from opentelemetry import context
 from opentelemetry.context.context import Context
@@ -80,11 +80,11 @@ class TestContext(unittest.TestCase):
 
 
 class TestInitContext(unittest.TestCase):
-    def test_load_runtime_context(self):
-        environ[OTEL_PYTHON_CONTEXT] = "contextvars_context"
+    def test_load_runtime_context_default(self):
         ctx = context._load_runtime_context()  # pylint: disable=W0212
         self.assertIsInstance(ctx, ContextVarsRuntimeContext)
 
-        environ.pop(OTEL_PYTHON_CONTEXT)
+    @patch.dict("os.environ", {OTEL_PYTHON_CONTEXT: "contextvars_context"})
+    def test_load_runtime_context(self):
         ctx = context._load_runtime_context()  # pylint: disable=W0212
         self.assertIsInstance(ctx, ContextVarsRuntimeContext)
