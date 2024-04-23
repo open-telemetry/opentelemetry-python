@@ -237,7 +237,7 @@ class _CustomCollector:
                 label_keys = []
                 label_values = []
 
-                for key, value in number_data_point.attributes.items():
+                for key, value in sorted(number_data_point.attributes.items()):
                     label_keys.append(self._sanitize(key))
                     label_values.append(self._check_value(value))
 
