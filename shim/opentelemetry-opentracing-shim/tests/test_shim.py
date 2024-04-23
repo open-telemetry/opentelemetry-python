@@ -302,7 +302,7 @@ class TestShim(TestCase):
             # Verify parent span becomes the active span again.
             self.assertEqual(
                 self.shim.active_span.context.unwrap(),
-                parent.span.context.unwrap()
+                parent.span.context.unwrap(),
                 # TODO: Check equality of the spans themselves rather than
                 # their context once the SpanShim reconstruction problem has
                 # been addressed (see previous TODO).

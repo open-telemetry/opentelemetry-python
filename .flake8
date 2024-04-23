@@ -12,6 +12,10 @@ ignore =
   # allow whitespace before ':' (https://github.com/psf/black#slices)
   E203
 
+  # conflicts with black
+  E701
+  E704
+
 exclude =
   .bzr
   .git
