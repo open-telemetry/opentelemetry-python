@@ -193,9 +193,11 @@ class TestExplicitBucketHistogramAggregation(TestCase):
                 metric_data.bucket_counts,
                 tuple(
                     [
-                        0
-                        if internal_index < 1 or internal_index > index + 1
-                        else 1
+                        (
+                            0
+                            if internal_index < 1 or internal_index > index + 1
+                            else 1
+                        )
                         for internal_index in range(16)
                     ]
                 ),
