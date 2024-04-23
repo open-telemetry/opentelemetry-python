@@ -29,11 +29,11 @@ Start Jaeger
 Python Dependencies
 *******************
 
-Install the Python dependencies in :scm_raw_web:`requirements.txt <docs/examples/opencensus-shim/requirements.txt >`
+Install the Python dependencies in :scm_raw_web:`requirements <docs/examples/opencensus-shim/requirements >`
 
 .. code-block:: sh
 
-    pip install -r requirements.txt
+    pip install -r requirements
 
 
 Alternatively, you can install the Python dependencies separately:

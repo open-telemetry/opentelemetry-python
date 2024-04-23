@@ -4,7 +4,7 @@ set -e
 # this script generates the documentation required for
 # opentelemetry.io
 
-pip install -r docs-requirements.txt
+pip install -r docs-requirements
 
 TMP_DIR=/tmp/python_otel_docs
 rm -Rf ${TMP_DIR}

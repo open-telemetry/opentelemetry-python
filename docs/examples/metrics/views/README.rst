@@ -16,7 +16,7 @@ Installation
 
 .. code-block:: sh
 
-    pip install -r requirements.txt
+    pip install -r requirements
 
 Run the Example
 ---------------

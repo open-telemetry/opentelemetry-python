@@ -499,7 +499,7 @@ def install_args(args):
                 "install",
                 "--upgrade",
                 "-r",
-                str(rootpath / "dev-requirements.txt"),
+                str(rootpath / "dev-requirements"),
             ]
             + args.pipargs,
             check=True,

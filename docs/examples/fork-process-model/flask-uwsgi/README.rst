@@ -2,7 +2,7 @@ Installation
 ------------
 .. code-block:: sh
 
-    pip install -rrequirements.txt
+    pip install -rrequirements
 
 Run application
 ---------------

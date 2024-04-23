@@ -47,11 +47,11 @@ Make sure that the Redis server is running by executing this:
 Python Dependencies
 *******************
 
-Install the Python dependencies in :scm_raw_web:`requirements.txt <docs/examples/opentracing/requirements.txt >`
+Install the Python dependencies in :scm_raw_web:`requirements <docs/examples/opentracing/requirements >`
 
 .. code-block:: sh
 
-    pip install -r requirements.txt
+    pip install -r requirements
 
 
 Alternatively, you can install the Python dependencies separately:

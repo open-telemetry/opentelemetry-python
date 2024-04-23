@@ -34,7 +34,7 @@ jobs:
           .tox
           ~/.cache/pip
         key: v3-tox-cache-${{ env.RUN_MATRIX_COMBINATION }}-${{ hashFiles('tox.ini',
-          'dev-requirements.txt') }}-core
+          'dev-requirements') }}-core
     - name: Run tox
       run: tox -f ${{ matrix.python-version }}-sdk -- -k opentelemetry-sdk/tests/performance/benchmarks --benchmark-json=opentelemetry-sdk/tests/output.json
     - name: Report on SDK benchmark results
