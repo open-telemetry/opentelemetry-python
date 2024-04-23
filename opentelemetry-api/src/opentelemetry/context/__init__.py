@@ -60,7 +60,7 @@ def _load_runtime_context() -> typing.Optional[_RuntimeContext]:
             iter(  # type: ignore
                 entry_points(  # type: ignore
                     group="opentelemetry_context",
-                    name=OTEL_PYTHON_CONTEXT,
+                    name=default_context,
                 )
             )
         ).load()()

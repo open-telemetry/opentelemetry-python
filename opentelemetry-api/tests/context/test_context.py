@@ -88,3 +88,8 @@ class TestInitContext(unittest.TestCase):
     def test_load_runtime_context(self):
         ctx = context._load_runtime_context()  # pylint: disable=W0212
         self.assertIsInstance(ctx, ContextVarsRuntimeContext)
+
+    @patch.dict("os.environ", {OTEL_PYTHON_CONTEXT: "foo"})
+    def test_load_runtime_context_fallback(self):
+        ctx = context._load_runtime_context()  # pylint: disable=W0212
+        self.assertIsInstance(ctx, ContextVarsRuntimeContext)
