@@ -265,7 +265,10 @@ def _import_exporters(
     metric_exporters = {}
     log_exporters = {}
 
-    for (exporter_name, exporter_impl,) in _import_config_components(
+    for (
+        exporter_name,
+        exporter_impl,
+    ) in _import_config_components(
         trace_exporter_names, "opentelemetry_traces_exporter"
     ):
         if issubclass(exporter_impl, SpanExporter):
@@ -273,7 +276,10 @@ def _import_exporters(
         else:
             raise RuntimeError(f"{exporter_name} is not a trace exporter")
 
-    for (exporter_name, exporter_impl,) in _import_config_components(
+    for (
+        exporter_name,
+        exporter_impl,
+    ) in _import_config_components(
         metric_exporter_names, "opentelemetry_metrics_exporter"
     ):
         # The metric exporter components may be push MetricExporter or pull exporters which
@@ -283,7 +289,10 @@ def _import_exporters(
         else:
             raise RuntimeError(f"{exporter_name} is not a metric exporter")
 
-    for (exporter_name, exporter_impl,) in _import_config_components(
+    for (
+        exporter_name,
+        exporter_impl,
+    ) in _import_config_components(
         log_exporter_names, "opentelemetry_logs_exporter"
     ):
         if issubclass(exporter_impl, LogExporter):
@@ -360,9 +369,9 @@ def _initialize_components(auto_instrumentation_version):
     auto_resource = {}
     # populate version if using auto-instrumentation
     if auto_instrumentation_version:
-        auto_resource[
-            ResourceAttributes.TELEMETRY_AUTO_VERSION
-        ] = auto_instrumentation_version
+        auto_resource[ResourceAttributes.TELEMETRY_AUTO_VERSION] = (
+            auto_instrumentation_version
+        )
     resource = Resource.create(auto_resource)
 
     _init_tracing(
