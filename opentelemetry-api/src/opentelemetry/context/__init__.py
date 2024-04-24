@@ -54,7 +54,7 @@ def _load_runtime_context() -> typing.Optional[_RuntimeContext]:
         logger.exception(
             "Failed to load context: %s, fallback to %s",
             configured_context,
-            OTEL_PYTHON_CONTEXT,
+            default_context,
         )
         return next(  # type: ignore
             iter(  # type: ignore
