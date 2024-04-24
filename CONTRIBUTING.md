@@ -61,6 +61,18 @@ An easier way to do so is:
 1. Run `.tox/lint/bin/black .`
 2. Run `.tox/lint/bin/isort .`
 
+Or you can call formatting and linting in one command by [pre-commit](https://pre-commit.com/):
+
+```console
+$ pre-commit
+```
+
+You can also configure it to run lint tools automatically before committing with:
+
+```console
+$ pre-commit install
+```
+
 We try to keep the amount of _public symbols_ in our code minimal. A public symbol is any Python identifier that does not start with an underscore.
 Every public symbol is something that has to be kept in order to maintain backwards compatibility, so we try to have as few as possible.
 
