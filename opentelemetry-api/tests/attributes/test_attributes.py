@@ -180,3 +180,29 @@ class TestBoundedAttributes(unittest.TestCase):
         bdict = BoundedAttributes()
         with self.assertRaises(TypeError):
             bdict["should-not-work"] = "dict immutable"
+
+    # Supporting test case for a commit titled: Fix class BoundedAttributes to have RLock rather than Lock
+    # The change was introduced because __iter__ of the class BoundedAttributes holds lock, and we observed some deadlock symptoms
+    # in the codebase. This test case is to verify that the fix works as expected.
+    def test_locking(self):
+        bdict = BoundedAttributes(immutable=False)
+        for num in range(100):
+            bdict[str(num)] = num
+
+        def iter_and_set():
+            for key in bdict:
+                bdict[key] = 2 * bdict[key]
+
+        import threading
+
+        t1 = threading.Thread(target=iter_and_set)
+        t2 = threading.Thread(target=iter_and_set)
+
+        t1.start()
+        t2.start()
+
+        t1.join()
+        t2.join()
+
+        for num in range(100):
+            self.assertEqual(bdict[str(num)], 4 * num)
