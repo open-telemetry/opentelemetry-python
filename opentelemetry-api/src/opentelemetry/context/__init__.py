@@ -25,7 +25,7 @@ from opentelemetry.util._importlib_metadata import entry_points
 logger = logging.getLogger(__name__)
 
 
-def _load_runtime_context() -> typing.Optional[_RuntimeContext]:
+def _load_runtime_context() -> _RuntimeContext:
     """Initialize the RuntimeContext
 
     Returns:
@@ -127,7 +127,7 @@ def get_current() -> Context:
     Returns:
         The current `Context` object.
     """
-    return _RUNTIME_CONTEXT.get_current()  # type:ignore
+    return _RUNTIME_CONTEXT.get_current()
 
 
 def attach(context: Context) -> object:
@@ -140,7 +140,7 @@ def attach(context: Context) -> object:
     Returns:
         A token that can be used with `detach` to reset the context.
     """
-    return _RUNTIME_CONTEXT.attach(context)  # type:ignore
+    return _RUNTIME_CONTEXT.attach(context)
 
 
 def detach(token: object) -> None:
@@ -151,7 +151,7 @@ def detach(token: object) -> None:
         token: The Token that was returned by a previous call to attach a Context.
     """
     try:
-        _RUNTIME_CONTEXT.detach(token)  # type: ignore
+        _RUNTIME_CONTEXT.detach(token)
     except Exception:  # pylint: disable=broad-except
         logger.exception("Failed to detach context")
 
