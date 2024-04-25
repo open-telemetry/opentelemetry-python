@@ -1,6 +1,7 @@
 import glob
 import importlib
 import inspect
+import os
 import shutil
 import subprocess
 import sys
@@ -129,12 +130,12 @@ def exec_onstart_callback(oteltest_instance, script):
         timeout = oteltest_instance.on_start()
     except Exception as ex:  # pylint: disable=W0718
         print(
-            f"- Setting timeout to zero: failed to start python script: {script}: {ex}"
+            f"- Setting timeout to zero: on_start() threw an exception: {ex}"
         )
         timeout = 0
     if timeout is None:
         print(
-            f"- Will wait indefinitely for {script} to finish (on_start() returned None)"
+            f"- Will wait indefinitely for {script} to finish: on_start() returned `None`"
         )
     else:
         print(

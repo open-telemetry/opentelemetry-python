@@ -51,7 +51,7 @@ Running `oteltest` against a directory containing only `my_script.py`
 #### Script Eligibility
 
 For a Python script to be runnable by `oteltest`, it must both be executable and define an implementation of the
-[OtelTest]() abstract base class. The script below has an implementation called `MyOtelTest`:
+[OtelTest](src/oteltest/__init__.py) abstract base class. The script below has an implementation called `MyOtelTest`:
 
 ```python
 import time
