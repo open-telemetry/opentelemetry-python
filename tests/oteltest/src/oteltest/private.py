@@ -1,7 +1,6 @@
 import glob
 import importlib
 import inspect
-import os
 import shutil
 import subprocess
 import sys
@@ -108,23 +107,6 @@ def run_python_script(
     if wrapper_script is not None:
         python_script_cmd.insert(0, v.path_to_executable(wrapper_script))
 
-    try:
-        timeout = oteltest_instance.on_start()
-    except Exception as ex:  # pylint: disable=W0718
-        print(
-            f"- Setting timeout to zero: failed to start python script: {script}: {ex}"
-        )
-        timeout = 0
-
-    if timeout is None:
-        print(
-            f"- Will wait indefinitely for {script} to finish (on_start() returned None)"
-        )
-    else:
-        print(
-            f"- Will wait for up to {timeout} seconds for {script} to finish"
-        )
-
     # pylint: disable=R1732
     proc = subprocess.Popen(
         python_script_cmd,
@@ -133,12 +115,32 @@ def run_python_script(
         text=True,
         env=oteltest_instance.environment_variables(),
     )
+    timeout = exec_onstart_callback(oteltest_instance, script)
     try:
         stdout, stderr = proc.communicate(timeout=timeout)
         return stdout, stderr, proc.returncode
     except subprocess.TimeoutExpired as ex:
         print(f"- Script {script} was force quit")
         return decode(ex.stdout), decode(ex.stderr), proc.returncode
+
+
+def exec_onstart_callback(oteltest_instance, script):
+    try:
+        timeout = oteltest_instance.on_start()
+    except Exception as ex:  # pylint: disable=W0718
+        print(
+            f"- Setting timeout to zero: failed to start python script: {script}: {ex}"
+        )
+        timeout = 0
+    if timeout is None:
+        print(
+            f"- Will wait indefinitely for {script} to finish (on_start() returned None)"
+        )
+    else:
+        print(
+            f"- Will wait for up to {timeout} seconds for {script} to finish"
+        )
+    return timeout
 
 
 def decode(b: bytes):
