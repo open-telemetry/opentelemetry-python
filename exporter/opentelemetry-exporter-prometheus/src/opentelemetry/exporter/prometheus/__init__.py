@@ -196,9 +196,9 @@ class _CustomCollector:
                     self._target_info = self._create_info_metric(
                         _TARGET_INFO_NAME, _TARGET_INFO_DESCRIPTION, attributes
                     )
-                metric_family_id_metric_family[
-                    _TARGET_INFO_NAME
-                ] = self._target_info
+                metric_family_id_metric_family[_TARGET_INFO_NAME] = (
+                    self._target_info
+                )
 
         while self._metrics_datas:
             self._translate_to_prometheus(
@@ -294,13 +294,13 @@ class _CustomCollector:
                     )
 
                     if metric_family_id not in metric_family_id_metric_family:
-                        metric_family_id_metric_family[
-                            metric_family_id
-                        ] = CounterMetricFamily(
-                            name=metric_name,
-                            documentation=metric_description,
-                            labels=label_keys,
-                            unit=metric.unit,
+                        metric_family_id_metric_family[metric_family_id] = (
+                            CounterMetricFamily(
+                                name=metric_name,
+                                documentation=metric_description,
+                                labels=label_keys,
+                                unit=metric.unit,
+                            )
                         )
                     metric_family_id_metric_family[
                         metric_family_id
@@ -318,13 +318,13 @@ class _CustomCollector:
                         metric_family_id
                         not in metric_family_id_metric_family.keys()
                     ):
-                        metric_family_id_metric_family[
-                            metric_family_id
-                        ] = GaugeMetricFamily(
-                            name=metric_name,
-                            documentation=metric_description,
-                            labels=label_keys,
-                            unit=metric.unit,
+                        metric_family_id_metric_family[metric_family_id] = (
+                            GaugeMetricFamily(
+                                name=metric_name,
+                                documentation=metric_description,
+                                labels=label_keys,
+                                unit=metric.unit,
+                            )
                         )
                     metric_family_id_metric_family[
                         metric_family_id
@@ -339,13 +339,13 @@ class _CustomCollector:
                         metric_family_id
                         not in metric_family_id_metric_family.keys()
                     ):
-                        metric_family_id_metric_family[
-                            metric_family_id
-                        ] = HistogramMetricFamily(
-                            name=metric_name,
-                            documentation=metric_description,
-                            labels=label_keys,
-                            unit=metric.unit,
+                        metric_family_id_metric_family[metric_family_id] = (
+                            HistogramMetricFamily(
+                                name=metric_name,
+                                documentation=metric_description,
+                                labels=label_keys,
+                                unit=metric.unit,
+                            )
                         )
                     metric_family_id_metric_family[
                         metric_family_id
