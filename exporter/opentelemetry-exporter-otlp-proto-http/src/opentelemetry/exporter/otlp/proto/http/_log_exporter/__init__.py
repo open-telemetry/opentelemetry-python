@@ -83,7 +83,7 @@ class OTLPLogExporter(LogExporter):
             OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
             environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE, True),
         )
-        self._client_certificate_file = certificate_file
+        self._client_certificate_file = client_certificate_file
         headers_string = environ.get(
             OTEL_EXPORTER_OTLP_LOGS_HEADERS,
             environ.get(OTEL_EXPORTER_OTLP_HEADERS, ""),
