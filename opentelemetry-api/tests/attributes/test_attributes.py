@@ -182,7 +182,7 @@ class TestBoundedAttributes(unittest.TestCase):
             bdict["should-not-work"] = "dict immutable"
 
     def test_locking(self):
-        """Supporting test case for a commit titled: Fix class BoundedAttributes to have RLock rather than Lock
+        """Supporting test case for a commit titled: Fix class BoundedAttributes to have RLock rather than Lock. See #3858.
         The change was introduced because __iter__ of the class BoundedAttributes holds lock, and we observed some deadlock symptoms
         in the codebase. This test case is to verify that the fix works as expected.
         """
