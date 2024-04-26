@@ -67,6 +67,7 @@ class OTLPLogExporter(LogExporter):
         self,
         endpoint: Optional[str] = None,
         certificate_file: Optional[str] = None,
+        client_certificate_file: Optional[str] = None,
         headers: Optional[Dict[str, str]] = None,
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
@@ -82,6 +83,7 @@ class OTLPLogExporter(LogExporter):
             OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
             environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE, True),
         )
+        self._client_certificate_file = certificate_file
         headers_string = environ.get(
             OTEL_EXPORTER_OTLP_LOGS_HEADERS,
             environ.get(OTEL_EXPORTER_OTLP_HEADERS, ""),
@@ -118,6 +120,7 @@ class OTLPLogExporter(LogExporter):
             data=data,
             verify=self._certificate_file,
             timeout=self._timeout,
+            cert=self._client_certificate_file,
         )
 
     @staticmethod
