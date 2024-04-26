@@ -34,6 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3586](https://github.com/open-telemetry/opentelemetry-python/pull/3586))
 - Rename test objects to avoid pytest warnings
   ([#3823] (https://github.com/open-telemetry/opentelemetry-python/pull/3823))
+- Add span flags to OLTP spans and links
+  ([#3881](https://github.com/open-telemetry/opentelemetry-python/pull/3881))
 
 ## Version 1.24.0/0.45b0 (2024-03-28)
 

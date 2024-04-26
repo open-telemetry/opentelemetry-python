@@ -81,7 +81,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
         )
 
         parent_span_context = SDKSpanContext(
-            trace_id, 0x1111111111111111, is_remote=False
+            trace_id, 0x1111111111111111, is_remote=True
         )
 
         other_context = SDKSpanContext(
@@ -252,12 +252,14 @@ class TestOTLPTraceEncoder(unittest.TestCase):
                                                     ),
                                                 ),
                                             ],
+                                            flags=0x100,
                                         )
                                     ],
                                     status=PB2Status(
                                         code=SDKStatusCode.ERROR.value,
                                         message="Example description",
                                     ),
+                                    flags=0x300,
                                 )
                             ],
                         ),
@@ -284,6 +286,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
                                     events=None,
                                     links=None,
                                     status={},
+                                    flags=0x100,
                                 )
                             ],
                         ),
@@ -321,6 +324,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
                                     events=None,
                                     links=None,
                                     status={},
+                                    flags=0x100,
                                 ),
                                 PB2SPan(
                                     trace_id=trace_id,
@@ -346,6 +350,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
                                     events=None,
                                     links=None,
                                     status={},
+                                    flags=0x100,
                                 ),
                             ],
                         )
