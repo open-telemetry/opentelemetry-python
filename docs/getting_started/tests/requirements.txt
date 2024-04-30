@@ -25,3 +25,6 @@ urllib3==1.26.18
 Werkzeug==3.0.1
 wrapt==1.15.0
 zipp==3.17.0
+-e opentelemetry-semantic-conventions
+-e opentelemetry-api
+-e opentelemetry-sdk
