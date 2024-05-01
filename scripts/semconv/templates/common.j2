@@ -12,8 +12,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-{%- endmacro -%}
+
+{% endmacro -%}
 
 {%- macro to_docstring(str) -%}
 {{ str | to_doc_brief | replace("\\", "\\\\") }}
 {%- endmacro -%}
+
+{%- macro import_deprecated(semconv) -%}
+    {%- if (semconv | select("is_deprecated") | list | count > 0) or (filter == "any" and semconv | select("is_stable") | list | count > 0) %}
+from deprecated import deprecated
+    {%- endif %}
+{%- endmacro-%}
