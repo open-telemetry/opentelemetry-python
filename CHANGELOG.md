@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Update proto version to v1.2.0
+  ([#3844](https://github.com/open-telemetry/opentelemetry-python/pull/3844))
+- Add to_json method to ExponentialHistogram
+  ([#3780](https://github.com/open-telemetry/opentelemetry-python/pull/3780))
+- Bump mypy to 1.9.0
+  ([#3795](https://github.com/open-telemetry/opentelemetry-python/pull/3795))
+- Fix exponential histograms
+  ([#3798](https://github.com/open-telemetry/opentelemetry-python/pull/3798))
+- Fix otlp exporter to export log_record.observed_timestamp
+  ([#3785](https://github.com/open-telemetry/opentelemetry-python/pull/3785))
+- Add capture the fully qualified type name for raised exceptions in spans
+  ([#3837](https://github.com/open-telemetry/opentelemetry-python/pull/3837))
+- Prometheus exporter sort label keys to prevent duplicate metrics when user input changes order 
+  ([#3698](https://github.com/open-telemetry/opentelemetry-python/pull/3698))
+
+## Version 1.24.0/0.45b0 (2024-03-28)
+
+- Make create_gauge non-abstract method
+  ([#3817](https://github.com/open-telemetry/opentelemetry-python/pull/3817))
 - Make `tracer.start_as_current_span()` decorator work with async functions
   ([#3633](https://github.com/open-telemetry/opentelemetry-python/pull/3633))
 - Fix python 3.12 deprecation warning
@@ -17,6 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3648](https://github.com/open-telemetry/opentelemetry-python/pull/3648))
 - Fix ValueError message for PeriodicExportingMetricsReader
   ([#3769](https://github.com/open-telemetry/opentelemetry-python/pull/3769))
+- Use `BaseException` instead of `Exception` in `record_exception`
+  ([#3354](https://github.com/open-telemetry/opentelemetry-python/pull/3354))
 - Make span.record_exception more robust
   ([#3778](https://github.com/open-telemetry/opentelemetry-python/pull/3778))
 - Fix license field in pyproject.toml files
@@ -1497,4 +1518,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3575](https://github.com/open-telemetry/opentelemetry-python/pull/3575))
 - Remove dependency on 'backoff' library
   ([#3679](https://github.com/open-telemetry/opentelemetry-python/pull/3679))
+
+
+- Make create_gauge non-abstract method
+  ([#3817](https://github.com/open-telemetry/opentelemetry-python/pull/3817))
+- Make `tracer.start_as_current_span()` decorator work with async functions
+  ([#3633](https://github.com/open-telemetry/opentelemetry-python/pull/3633))
+- Fix python 3.12 deprecation warning
+  ([#3751](https://github.com/open-telemetry/opentelemetry-python/pull/3751))
+- bump mypy to 0.982
+  ([#3776](https://github.com/open-telemetry/opentelemetry-python/pull/3776))
+- Add support for OTEL_SDK_DISABLED environment variable
+  ([#3648](https://github.com/open-telemetry/opentelemetry-python/pull/3648))
+- Fix ValueError message for PeriodicExportingMetricsReader
+  ([#3769](https://github.com/open-telemetry/opentelemetry-python/pull/3769))
+- Use `BaseException` instead of `Exception` in `record_exception`
+  ([#3354](https://github.com/open-telemetry/opentelemetry-python/pull/3354))
+- Make span.record_exception more robust
+  ([#3778](https://github.com/open-telemetry/opentelemetry-python/pull/3778))
+- Fix license field in pyproject.toml files
+  ([#3803](https://github.com/open-telemetry/opentelemetry-python/pull/3803))
 

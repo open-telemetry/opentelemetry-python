@@ -436,3 +436,24 @@ class TestPrometheusMetricReader(TestCase):
             prometheus_metric.samples[0].labels["ratio"],
             "0.1",
         )
+
+    def test_label_order_does_not_matter(self):
+        metric_reader = PrometheusMetricReader()
+        provider = MeterProvider(metric_readers=[metric_reader])
+        meter = provider.get_meter("getting-started", "0.1.2")
+        counter = meter.create_counter("counter")
+
+        counter.add(1, {"cause": "cause1", "reason": "reason1"})
+        counter.add(1, {"reason": "reason2", "cause": "cause2"})
+
+        prometheus_output = generate_latest().decode()
+
+        # All labels are mapped correctly
+        self.assertIn('cause="cause1"', prometheus_output)
+        self.assertIn('cause="cause2"', prometheus_output)
+        self.assertIn('reason="reason1"', prometheus_output)
+        self.assertIn('reason="reason2"', prometheus_output)
+
+        # Only one metric is generated
+        metric_count = prometheus_output.count("# HELP counter_total")
+        self.assertEqual(metric_count, 1)

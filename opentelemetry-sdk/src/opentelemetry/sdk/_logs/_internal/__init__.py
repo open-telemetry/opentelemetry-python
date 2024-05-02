@@ -203,22 +203,26 @@ class LogRecord(APILogRecord):
                 "body": self.body,
                 "severity_number": repr(self.severity_number),
                 "severity_text": self.severity_text,
-                "attributes": dict(self.attributes)
-                if bool(self.attributes)
-                else None,
+                "attributes": (
+                    dict(self.attributes) if bool(self.attributes) else None
+                ),
                 "dropped_attributes": self.dropped_attributes,
                 "timestamp": ns_to_iso_str(self.timestamp),
                 "observed_timestamp": ns_to_iso_str(self.observed_timestamp),
-                "trace_id": f"0x{format_trace_id(self.trace_id)}"
-                if self.trace_id is not None
-                else "",
-                "span_id": f"0x{format_span_id(self.span_id)}"
-                if self.span_id is not None
-                else "",
+                "trace_id": (
+                    f"0x{format_trace_id(self.trace_id)}"
+                    if self.trace_id is not None
+                    else ""
+                ),
+                "span_id": (
+                    f"0x{format_span_id(self.span_id)}"
+                    if self.span_id is not None
+                    else ""
+                ),
                 "trace_flags": self.trace_flags,
-                "resource": repr(self.resource.attributes)
-                if self.resource
-                else "",
+                "resource": (
+                    repr(self.resource.attributes) if self.resource else ""
+                ),
             },
             indent=indent,
         )

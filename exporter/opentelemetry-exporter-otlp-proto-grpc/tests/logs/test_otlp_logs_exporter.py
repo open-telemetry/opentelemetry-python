@@ -18,7 +18,9 @@ from os.path import dirname
 from unittest import TestCase
 from unittest.mock import patch
 
-from google.protobuf.duration_pb2 import Duration
+from google.protobuf.duration_pb2 import (  # pylint: disable=no-name-in-module
+    Duration,
+)
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import ChannelCredentials, Compression, StatusCode, server
 
@@ -361,6 +363,7 @@ class TestOTLPLogExporter(TestCase):
                                 PB2LogRecord(
                                     # pylint: disable=no-member
                                     time_unix_nano=self.log_data_1.log_record.timestamp,
+                                    observed_time_unix_nano=self.log_data_1.log_record.observed_timestamp,
                                     severity_number=self.log_data_1.log_record.severity_number.value,
                                     severity_text="WARNING",
                                     span_id=int.to_bytes(
@@ -420,6 +423,7 @@ class TestOTLPLogExporter(TestCase):
                                 PB2LogRecord(
                                     # pylint: disable=no-member
                                     time_unix_nano=self.log_data_1.log_record.timestamp,
+                                    observed_time_unix_nano=self.log_data_1.log_record.observed_timestamp,
                                     severity_number=self.log_data_1.log_record.severity_number.value,
                                     severity_text="WARNING",
                                     span_id=int.to_bytes(
@@ -457,6 +461,7 @@ class TestOTLPLogExporter(TestCase):
                                 PB2LogRecord(
                                     # pylint: disable=no-member
                                     time_unix_nano=self.log_data_2.log_record.timestamp,
+                                    observed_time_unix_nano=self.log_data_2.log_record.observed_timestamp,
                                     severity_number=self.log_data_2.log_record.severity_number.value,
                                     severity_text="INFO",
                                     span_id=int.to_bytes(
@@ -502,6 +507,7 @@ class TestOTLPLogExporter(TestCase):
                                 PB2LogRecord(
                                     # pylint: disable=no-member
                                     time_unix_nano=self.log_data_3.log_record.timestamp,
+                                    observed_time_unix_nano=self.log_data_3.log_record.observed_timestamp,
                                     severity_number=self.log_data_3.log_record.severity_number.value,
                                     severity_text="ERROR",
                                     span_id=int.to_bytes(
