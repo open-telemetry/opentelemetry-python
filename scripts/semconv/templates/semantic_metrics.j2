@@ -1,5 +1,5 @@
+{#
 # Copyright The OpenTelemetry Authors
-#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,30 +11,118 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#}
 
-class {{class}}:
-    SCHEMA_URL = "{{schemaUrl}}"
-    """
-    The URL of the OpenTelemetry schema for these keys and values.
-    """
-    {% for id in semconvs %}{%- if semconvs[id].GROUP_TYPE_NAME == 'metric' %}{% set metric = semconvs[id] %}
-    {{metric.metric_name | to_const_name}} = "{{metric.metric_name}}"
-    """
-    {{metric.brief | to_doc_brief}}
-    Instrument: {{ metric.instrument }}
-    Unit: {{ metric.unit }}
-    """
-{# Extra line #}
-    {%- endif %}{% endfor %}
+{%- import 'common.j2' as common -%}
 
-    # Manually defined metrics
-    {#
-       Metrics defined here manually were not yaml-ified in 1.21.0 release
-       and therefore are not auto-generated.
-    #}
-    DB_CLIENT_CONNECTIONS_USAGE = "db.client.connections.usage"
-    """
-    The number of connections that are currently in state described by the `state` attribute
-    Instrument: UpDownCounter
-    Unit: {connection}
-    """
+{%- macro to_python_instrument_factory(instrument) -%}
+  {%- if instrument == "counter" -%}
+    counter
+  {%- elif instrument == "histogram" -%}
+    histogram
+  {%- elif instrument == "updowncounter" -%}
+    up_down_counter
+  {%- elif instrument == "gauge" -%}
+    observable_gauge
+  {%- endif -%}
+{%- endmacro %}
+{%- macro to_python_instrument_type(instrument) -%}
+  {%- if instrument == "counter" -%}
+    Counter
+  {%- elif instrument == "histogram" -%}
+    Histogram
+  {%- elif instrument == "updowncounter" -%}
+    UpDownCounter
+  {%- elif instrument == "gauge" -%}
+    ObservableGauge
+  {%- endif -%}
+{%- endmacro %}
+
+{%- macro stable_class_ref(const_name, separator) -%}
+{{stable_package}}.{{root_namespace}}_metrics{{separator}}{{const_name}}
+{%- endmacro %}
+
+{%- macro metric_brief(metric, const_name) -%}
+"""
+    {%- if metric | is_deprecated %}
+Deprecated: {{ common.to_docstring(metric.deprecated)}}.
+    {%- elif metric | is_stable and filter == "any" %}
+Deprecated in favor of stable :py:const:`{{stable_class_ref(const_name, '.')}}`.
+    {%- else -%}
+    {%- set brief = common.to_docstring(metric.brief) -%}
+    {%- if brief != "" %}
+{{brief}}
+    {%- endif %}
+Instrument: {{ metric.instrument }}
+Unit: {{ metric.unit }}
+      {%- if metric.note %}
+Note: {{ common.to_docstring(metric.note | indent) }}.
+      {%- endif -%}
+    {%- endif %}
+"""
+{%- endmacro -%}
+
+{%- macro import_instrument_classes(metrics) -%}
+  {% if filter == "any" %}
+from opentelemetry.metrics import Meter
+
+    {%- if metrics | selectattr("instrument", "equalto", "gauge") | list | count > 0 %}
+from typing import Callable, Sequence
+from opentelemetry.metrics import ObservableGauge
+    {%- endif %}
+
+    {%- if metrics | selectattr("instrument", "equalto", "histogram") | list | count > 0 %}
+from opentelemetry.metrics import Histogram
+    {%- endif %}
+
+    {%- if metrics | selectattr("instrument", "equalto", "updowncounter") | list | count > 0 %}
+from opentelemetry.metrics import UpDownCounter
+    {%- endif %}
+
+    {%- if metrics | selectattr("instrument", "equalto", "counter") | list | count > 0 %}
+from opentelemetry.metrics import Counter
+    {%- endif %}
+  {%- endif -%}
+{%- endmacro-%}
+
+{%- if root_namespace not in excluded_namespaces -%}
+  {%- if filter != 'any' -%}
+{%- set filtered_metrics = metrics | select(filter) | list -%}
+  {%- else -%}
+{%- set filtered_metrics = metrics -%}
+  {%- endif -%}
+
+  {%- if filtered_metrics | count > 0 -%}
+
+{{ common.file_header()}}
+
+{{ import_instrument_classes(filtered_metrics) }}
+
+  {%- for metric in filtered_metrics %}
+
+{{metric.metric_name | to_const_name}} = "{{metric.metric_name}}"
+{{metric_brief(metric, metric.metric_name | to_const_name) }}
+
+    {% if filter == "any" %}
+      {% set metric_name = metric.metric_name | replace(".", "_") %}
+      {%- if metric.instrument == "gauge" %}
+def create_{{ metric_name }}(meter: Meter, callback: Sequence[Callable]) -> {{to_python_instrument_type(metric.instrument)}}:
+      {%- else %}
+def create_{{ metric_name }}(meter: Meter) -> {{to_python_instrument_type(metric.instrument)}}:
+      {%- endif %}
+        {%- set brief = common.to_docstring(metric.brief) -%}
+        {%- if brief != "" %}
+    """{{brief}}"""
+        {%- endif %}
+    return meter.create_{{to_python_instrument_factory(metric.instrument)}}(
+        name="{{ metric.metric_name }}",
+      {%- if metric.instrument == "gauge" %}
+        callback=callback,
+      {%- endif %}
+        description="{{ metric.brief }}",
+        unit="{{ metric.unit }}",
+    )
+      {%- endif -%}
+    {%- endfor -%}
+  {%- endif -%}
+{%- endif -%}
