@@ -18,9 +18,9 @@ jobs:
         os: [ubuntu-20.04, windows-2019]
     steps:
     - name: Checkout Core Repo @ SHA - ${{ github.sha }}
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
     - name: Set up Python ${{ env[matrix.python-version] }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ env[matrix.python-version] }}
         architecture: 'x64'
@@ -28,7 +28,7 @@ jobs:
       run: pip install tox
     - name: Cache tox environment
       # Preserves .tox directory between runs for faster installs
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: |
           .tox
@@ -36,7 +36,7 @@ jobs:
         key: v3-tox-cache-${{ env.RUN_MATRIX_COMBINATION }}-${{ hashFiles('tox.ini',
           'dev-requirements.txt') }}-core
     - name: Run tox
-      run: tox -f ${{ matrix.python-version }}-sdk -- -k opentelemetry-sdk/tests/performance/benchmarks --benchmark-json=output.json
+      run: tox -f ${{ matrix.python-version }}-sdk -- -k opentelemetry-sdk/tests/performance/benchmarks --benchmark-json=opentelemetry-sdk/tests/output.json
     - name: Report on SDK benchmark results
       uses: benchmark-action/github-action-benchmark@v1
       with:

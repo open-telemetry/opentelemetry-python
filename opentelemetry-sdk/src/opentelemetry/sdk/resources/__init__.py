@@ -335,10 +335,12 @@ class ProcessResourceDetector(ResourceDetector):
         _runtime_version = ".".join(
             map(
                 str,
-                sys.version_info[:3]
-                if sys.version_info.releaselevel == "final"
-                and not sys.version_info.serial
-                else sys.version_info,
+                (
+                    sys.version_info[:3]
+                    if sys.version_info.releaselevel == "final"
+                    and not sys.version_info.serial
+                    else sys.version_info
+                ),
             )
         )
         _process_pid = os.getpid()

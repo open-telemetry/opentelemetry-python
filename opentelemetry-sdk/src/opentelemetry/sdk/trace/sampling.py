@@ -184,7 +184,7 @@ class SamplingResult:
         self,
         decision: Decision,
         attributes: "Attributes" = None,
-        trace_state: "TraceState" = None,
+        trace_state: Optional["TraceState"] = None,
     ) -> None:
         self.decision = decision
         if attributes is None:
@@ -201,10 +201,10 @@ class Sampler(abc.ABC):
         parent_context: Optional["Context"],
         trace_id: int,
         name: str,
-        kind: SpanKind = None,
+        kind: Optional[SpanKind] = None,
         attributes: Attributes = None,
-        links: Sequence["Link"] = None,
-        trace_state: "TraceState" = None,
+        links: Optional[Sequence["Link"]] = None,
+        trace_state: Optional["TraceState"] = None,
     ) -> "SamplingResult":
         pass
 
@@ -216,7 +216,7 @@ class Sampler(abc.ABC):
 class StaticSampler(Sampler):
     """Sampler that always returns the same decision."""
 
-    def __init__(self, decision: "Decision"):
+    def __init__(self, decision: "Decision") -> None:
         self._decision = decision
 
     def should_sample(
@@ -224,10 +224,10 @@ class StaticSampler(Sampler):
         parent_context: Optional["Context"],
         trace_id: int,
         name: str,
-        kind: SpanKind = None,
+        kind: Optional[SpanKind] = None,
         attributes: Attributes = None,
-        links: Sequence["Link"] = None,
-        trace_state: "TraceState" = None,
+        links: Optional[Sequence["Link"]] = None,
+        trace_state: Optional["TraceState"] = None,
     ) -> "SamplingResult":
         if self._decision is Decision.DROP:
             attributes = None
@@ -285,10 +285,10 @@ class TraceIdRatioBased(Sampler):
         parent_context: Optional["Context"],
         trace_id: int,
         name: str,
-        kind: SpanKind = None,
+        kind: Optional[SpanKind] = None,
         attributes: Attributes = None,
-        links: Sequence["Link"] = None,
-        trace_state: "TraceState" = None,
+        links: Optional[Sequence["Link"]] = None,
+        trace_state: Optional["TraceState"] = None,
     ) -> "SamplingResult":
         decision = Decision.DROP
         if trace_id & self.TRACE_ID_LIMIT < self.bound:
@@ -340,10 +340,10 @@ class ParentBased(Sampler):
         parent_context: Optional["Context"],
         trace_id: int,
         name: str,
-        kind: SpanKind = None,
+        kind: Optional[SpanKind] = None,
         attributes: Attributes = None,
-        links: Sequence["Link"] = None,
-        trace_state: "TraceState" = None,
+        links: Optional[Sequence["Link"]] = None,
+        trace_state: Optional["TraceState"] = None,
     ) -> "SamplingResult":
         parent_span_context = get_current_span(
             parent_context
@@ -443,7 +443,9 @@ def _get_from_env_or_default() -> Sampler:
     return _KNOWN_SAMPLERS[trace_sampler]
 
 
-def _get_parent_trace_state(parent_context) -> Optional["TraceState"]:
+def _get_parent_trace_state(
+    parent_context: Optional[Context],
+) -> Optional["TraceState"]:
     parent_span_context = get_current_span(parent_context).get_span_context()
     if parent_span_context is None or not parent_span_context.is_valid:
         return None

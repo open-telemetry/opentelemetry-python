@@ -7,7 +7,7 @@ name = "opentelemetry-proto"
 dynamic = ["version"]
 description = "OpenTelemetry Python Proto"
 readme = "README.rst"
-license = "Apache-2.0"
+license = {text = "Apache-2.0"}
 requires-python = ">=3.8"
 authors = [
   { name = "OpenTelemetry Authors", email = "cncf-opentelemetry-contributors@lists.cncf.io" },
@@ -26,9 +26,6 @@ classifiers = [
 dependencies = [
   "protobuf>=3.19, < 5.0",
 ]
-
-[project.optional-dependencies]
-test = []
 
 [project.urls]
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/opentelemetry-proto"

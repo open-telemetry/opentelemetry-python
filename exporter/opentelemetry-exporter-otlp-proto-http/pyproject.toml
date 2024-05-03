@@ -7,7 +7,7 @@ name = "opentelemetry-exporter-otlp-proto-http"
 dynamic = ["version"]
 description = "OpenTelemetry Collector Protobuf over HTTP Exporter"
 readme = "README.rst"
-license = "Apache-2.0"
+license = {text = "Apache-2.0"}
 requires-python = ">=3.8"
 authors = [
   { name = "OpenTelemetry Authors", email = "cncf-opentelemetry-contributors@lists.cncf.io" },
@@ -27,15 +27,10 @@ dependencies = [
   "Deprecated >= 1.2.6",
   "googleapis-common-protos ~= 1.52",
   "opentelemetry-api ~= 1.15",
-  "opentelemetry-proto == 1.24.0.dev",
-  "opentelemetry-sdk ~= 1.24.0.dev",
-  "opentelemetry-exporter-otlp-proto-common == 1.24.0.dev",
+  "opentelemetry-proto == 1.25.0.dev",
+  "opentelemetry-sdk ~= 1.25.0.dev",
+  "opentelemetry-exporter-otlp-proto-common == 1.25.0.dev",
   "requests ~= 2.7",
-]
-
-[project.optional-dependencies]
-test = [
-  "responses >= 0.22.0, < 0.25",
 ]
 
 [project.entry-points.opentelemetry_traces_exporter]

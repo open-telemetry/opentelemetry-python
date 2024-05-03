@@ -13,6 +13,7 @@
 # limitations under the License.
 
 # pylint: disable=too-many-lines
+# pylint: disable=no-member
 
 import shutil
 import subprocess
@@ -33,6 +34,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
     OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT,
     OTEL_LINK_ATTRIBUTE_COUNT_LIMIT,
+    OTEL_SDK_DISABLED,
     OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
     OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT,
     OTEL_SPAN_EVENT_COUNT_LIMIT,
@@ -160,6 +162,13 @@ tracer_provider.add_span_processor(mock_processor)
         # pylint: disable=protected-access
         self.assertEqual(
             span_processor, tracer_provider._active_span_processor
+        )
+
+    @mock.patch.dict("os.environ", {OTEL_SDK_DISABLED: "true"})
+    def test_get_tracer_with_sdk_disabled(self):
+        tracer_provider = trace.TracerProvider()
+        self.assertIsInstance(
+            tracer_provider.get_tracer(Mock()), trace_api.NoOpTracer
         )
 
 
@@ -625,6 +634,10 @@ class TestReadableSpan(unittest.TestCase):
         ]
         span = trace.ReadableSpan("test", events=events)
         self.assertEqual(span.events, tuple(events))
+
+
+class DummyError(Exception):
+    pass
 
 
 class TestSpan(unittest.TestCase):
@@ -1135,6 +1148,25 @@ class TestSpan(unittest.TestCase):
             .start_as_current_span("root")
         )
 
+    def test_record_exception_fqn(self):
+        span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))
+        exception = DummyError("error")
+        exception_type = "tests.trace.test_trace.DummyError"
+        span.record_exception(exception)
+        exception_event = span.events[0]
+        self.assertEqual("exception", exception_event.name)
+        self.assertEqual(
+            "error", exception_event.attributes["exception.message"]
+        )
+        self.assertEqual(
+            exception_type,
+            exception_event.attributes["exception.type"],
+        )
+        self.assertIn(
+            "DummyError: error",
+            exception_event.attributes["exception.stacktrace"],
+        )
+
     def test_record_exception(self):
         span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))
         try:
@@ -1282,6 +1314,23 @@ RuntimeError: example error"""
             pass
         finally:
             self.assertEqual(len(span.events), 0)
+
+    def test_record_exception_out_of_scope(self):
+        span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))
+        out_of_scope_exception = ValueError("invalid")
+        span.record_exception(out_of_scope_exception)
+        exception_event = span.events[0]
+        self.assertEqual("exception", exception_event.name)
+        self.assertEqual(
+            "invalid", exception_event.attributes["exception.message"]
+        )
+        self.assertEqual(
+            "ValueError", exception_event.attributes["exception.type"]
+        )
+        self.assertIn(
+            "ValueError: invalid",
+            exception_event.attributes["exception.stacktrace"],
+        )
 
 
 def span_event_start_fmt(span_processor_name, span_name):

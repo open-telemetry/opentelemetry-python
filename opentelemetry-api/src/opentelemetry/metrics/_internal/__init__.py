@@ -41,6 +41,7 @@ The following code shows how to obtain a meter using the global :class:`.MeterPr
 """
 
 
+import warnings
 from abc import ABC, abstractmethod
 from logging import getLogger
 from os import environ
@@ -140,7 +141,6 @@ class NoOpMeterProvider(MeterProvider):
         schema_url: Optional[str] = None,
     ) -> "Meter":
         """Returns a NoOpMeter."""
-        super().get_meter(name, version=version, schema_url=schema_url)
         return NoOpMeter(name, version=version, schema_url=schema_url)
 
 
@@ -385,8 +385,7 @@ class Meter(ABC):
             description: A description for this instrument and what it measures.
         """
 
-    @abstractmethod
-    def create_gauge(
+    def create_gauge(  # type: ignore # pylint: disable=no-self-use
         self,
         name: str,
         unit: str = "",
@@ -400,6 +399,7 @@ class Meter(ABC):
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
         """
+        warnings.warn("create_gauge() is not implemented and will be a no-op")
 
     @abstractmethod
     def create_observable_gauge(
@@ -598,7 +598,6 @@ class NoOpMeter(Meter):
         description: str = "",
     ) -> Counter:
         """Returns a no-op Counter."""
-        super().create_counter(name, unit=unit, description=description)
         if self._is_instrument_registered(
             name, NoOpCounter, unit, description
         )[0]:
@@ -619,7 +618,6 @@ class NoOpMeter(Meter):
         description: str = "",
     ) -> Gauge:
         """Returns a no-op Gauge."""
-        super().create_gauge(name, unit=unit, description=description)
         if self._is_instrument_registered(name, NoOpGauge, unit, description)[
             0
         ]:
@@ -640,9 +638,6 @@ class NoOpMeter(Meter):
         description: str = "",
     ) -> UpDownCounter:
         """Returns a no-op UpDownCounter."""
-        super().create_up_down_counter(
-            name, unit=unit, description=description
-        )
         if self._is_instrument_registered(
             name, NoOpUpDownCounter, unit, description
         )[0]:
@@ -664,9 +659,6 @@ class NoOpMeter(Meter):
         description: str = "",
     ) -> ObservableCounter:
         """Returns a no-op ObservableCounter."""
-        super().create_observable_counter(
-            name, callbacks, unit=unit, description=description
-        )
         if self._is_instrument_registered(
             name, NoOpObservableCounter, unit, description
         )[0]:
@@ -692,7 +684,6 @@ class NoOpMeter(Meter):
         description: str = "",
     ) -> Histogram:
         """Returns a no-op Histogram."""
-        super().create_histogram(name, unit=unit, description=description)
         if self._is_instrument_registered(
             name, NoOpHistogram, unit, description
         )[0]:
@@ -714,9 +705,6 @@ class NoOpMeter(Meter):
         description: str = "",
     ) -> ObservableGauge:
         """Returns a no-op ObservableGauge."""
-        super().create_observable_gauge(
-            name, callbacks, unit=unit, description=description
-        )
         if self._is_instrument_registered(
             name, NoOpObservableGauge, unit, description
         )[0]:
@@ -743,9 +731,6 @@ class NoOpMeter(Meter):
         description: str = "",
     ) -> ObservableUpDownCounter:
         """Returns a no-op ObservableUpDownCounter."""
-        super().create_observable_up_down_counter(
-            name, callbacks, unit=unit, description=description
-        )
         if self._is_instrument_registered(
             name, NoOpObservableUpDownCounter, unit, description
         )[0]:

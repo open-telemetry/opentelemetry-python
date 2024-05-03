@@ -107,9 +107,9 @@ class MetricReaderStorage:
                         ),
                     )
                 )
-            self._instrument_view_instrument_matches[
-                instrument
-            ] = view_instrument_matches
+            self._instrument_view_instrument_matches[instrument] = (
+                view_instrument_matches
+            )
 
             return view_instrument_matches
 
@@ -136,9 +136,9 @@ class MetricReaderStorage:
 
         with self._lock:
 
-            instrumentation_scope_scope_metrics: (
-                Dict[InstrumentationScope, ScopeMetrics]
-            ) = {}
+            instrumentation_scope_scope_metrics: Dict[
+                InstrumentationScope, ScopeMetrics
+            ] = {}
 
             for (
                 instrument,

@@ -77,7 +77,6 @@ either implicit or explicit context propagation consistently throughout.
 import os
 import typing
 from abc import ABC, abstractmethod
-from contextlib import contextmanager
 from enum import Enum
 from logging import getLogger
 from typing import Iterator, Optional, Sequence, cast
@@ -109,6 +108,7 @@ from opentelemetry.trace.span import (
 )
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
+from opentelemetry.util._decorator import _agnosticcontextmanager
 from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
 
@@ -324,7 +324,7 @@ class Tracer(ABC):
             The newly-created span.
         """
 
-    @contextmanager
+    @_agnosticcontextmanager
     @abstractmethod
     def start_as_current_span(
         self,
@@ -431,8 +431,8 @@ class ProxyTracer(Tracer):
     def start_span(self, *args, **kwargs) -> Span:  # type: ignore
         return self._tracer.start_span(*args, **kwargs)  # type: ignore
 
-    @contextmanager  # type: ignore
-    def start_as_current_span(self, *args, **kwargs) -> Iterator[Span]:  # type: ignore
+    @_agnosticcontextmanager  # type: ignore
+    def start_as_current_span(self, *args, **kwargs) -> Iterator[Span]:
         with self._tracer.start_as_current_span(*args, **kwargs) as span:  # type: ignore
             yield span
 
@@ -457,7 +457,7 @@ class NoOpTracer(Tracer):
         # pylint: disable=unused-argument,no-self-use
         return INVALID_SPAN
 
-    @contextmanager
+    @_agnosticcontextmanager
     def start_as_current_span(
         self,
         name: str,
@@ -543,7 +543,7 @@ def get_tracer_provider() -> TracerProvider:
     return cast("TracerProvider", _TRACER_PROVIDER)
 
 
-@contextmanager
+@_agnosticcontextmanager
 def use_span(
     span: Span,
     end_on_exit: bool = False,
