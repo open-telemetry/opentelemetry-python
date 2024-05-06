@@ -38,7 +38,7 @@ class TestProvider(trace.NoOpTracerProvider):
 
 class TestTracer(trace.NoOpTracer):
     def start_span(self, *args, **kwargs):
-        return TestSpan(INVALID_SPAN_CONTEXT)
+        return SpanTest(INVALID_SPAN_CONTEXT)
 
     @_agnosticcontextmanager  # pylint: disable=protected-access
     def start_as_current_span(self, *args, **kwargs):  # type: ignore
@@ -46,7 +46,7 @@ class TestTracer(trace.NoOpTracer):
             yield span
 
 
-class TestSpan(NonRecordingSpan):
+class SpanTest(NonRecordingSpan):
     pass
 
 
@@ -82,7 +82,7 @@ class TestProxy(TraceGlobalsTest, unittest.TestCase):
         # reference to old proxy tracer now delegates to a real tracer and
         # creates real spans
         with tracer.start_span("") as span:
-            self.assertIsInstance(span, TestSpan)
+            self.assertIsInstance(span, SpanTest)
 
     def test_late_config(self):
         # get a tracer and instrument a function as we would at the
@@ -100,4 +100,4 @@ class TestProxy(TraceGlobalsTest, unittest.TestCase):
         # configure tracing provider
         trace.set_tracer_provider(TestProvider())
         # call function again, we should now be getting a TestSpan
-        self.assertIsInstance(my_function(), TestSpan)
+        self.assertIsInstance(my_function(), SpanTest)
