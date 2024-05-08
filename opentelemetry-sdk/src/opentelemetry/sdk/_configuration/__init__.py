@@ -365,8 +365,8 @@ def _initialize_components(
         metric_exporter_names: Optional[list[str]] = None,
         log_exporter_names: Optional[list[str]] = None,
         # Could be sampler obj
-        sampler_name: Optional[str] = None,
-        # sampler: Optional[Sampler] = None,
+        # sampler_name: Optional[str] = None,
+        sampler: Optional[Sampler] = None,
         # Could be attribute dict or Resource object
         # resource_attributes: Optional[Attributes] = None,
         resource: Optional[Resource] = None,
@@ -378,13 +378,14 @@ def _initialize_components(
         metric_exporter_names + _get_exporter_names("metrics"),
         log_exporter_names + _get_exporter_names("logs"),
     )
-    if sampler_name is None:
-        sampler_name = _get_sampler()
-    sampler = _import_sampler(sampler_name)
-    # If using sampler obj instead of name
-    # if sampler is None:
+    # If using sampler name instead of sampler obj
+    # if sampler_name is None:
     #     sampler_name = _get_sampler()
-    #     sampler = _import_sampler(sampler_name)
+    # sampler = _import_sampler(sampler_name)
+    # If using sampler obj instead of name. This means user would have to specify the rate on their own
+    if sampler is None:
+        sampler_name = _get_sampler()
+        sampler = _import_sampler(sampler_name)
     if id_generator_name is None:
         id_generator_name = _get_id_generator()
     id_generator = _import_id_generator(id_generator_name)
