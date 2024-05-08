@@ -354,16 +354,20 @@ def _import_id_generator(id_generator_name: str) -> IdGenerator:
     raise RuntimeError(f"{id_generator_name} is not an IdGenerator")
 
 
-def _initialize_components(**kwargs):
-    auto_instrumentation_version = kwargs.get("auto_instrumentation_version")
-    # Could be trace_exporters or span_exporters
-    span_exporter_names = kwargs.get("span_exporter_names")
-    metric_exporter_names = kwargs.get("metric_exporter_names")
-    log_exporter_names = kwargs.get("log_exporter_names")
-    sampler_name = kwargs.get("sampler_name")
-    # Could be attribute dict or Resource object
-    resource_attributes = kwargs.get("resource_attributes")
-    logging_enabled = kwargs.get("logging_enabled")
+def _initialize_components(
+        auto_instrumentation_version: str = None,
+        # Could be trace_exporters or span_exporters
+        # Could be full span processors
+        span_exporter_names: str = None,
+        metric_exporter_names: str = None,
+        log_exporter_names: str = None,
+        # Could be sampler obj
+        sampler_name: str = None,
+        # Could be attribute dict or Resource object
+        resource_attributes: dict = None,
+        # resource: Resource = None,
+        logging_enabled: bool = None,
+    ):
     # Could come before or after
     span_exporters, metric_exporters, log_exporters = _import_exporters(
         span_exporter_names + _get_exporter_names("traces"),
@@ -373,20 +377,33 @@ def _initialize_components(**kwargs):
     if sampler_name is None:
         sampler_name = _get_sampler()
     sampler = _import_sampler(sampler_name)
+    # If using sampler obj instead of name
+    # if sampler is None:
+    #     sampler_name = _get_sampler()
+    #     sampler = _import_sampler(sampler_name)
     if id_generator_name is None:
         id_generator_name = _get_id_generator()
     id_generator = _import_id_generator(id_generator_name)
     # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
     # from the env variable else defaults to "unknown_service"
-    auto_resource_attributes = {}
-    if resource_attributes is not None:
-        auto_resource_attributes = resource_attributes
+    # If using attributes dict instead of resource object
+    if resource_attributes is None:
+        resource_attributes = {}
     # populate version if using auto-instrumentation
     if auto_instrumentation_version:
-        auto_resource_attributes[
+        resource_attributes[
             ResourceAttributes.TELEMETRY_AUTO_VERSION
         ] = auto_instrumentation_version
-    resource = Resource.create(auto_resource_attributes)
+    resource = Resource.create(resource_attributes)
+    # If using resource object instead of attributes dict
+    # if resource is None:
+    #     resource = Resource.create()
+    # populate version if using auto-instrumentation
+    # if auto_instrumentation_version:
+    #     resource.attributes()[
+    #         ResourceAttributes.TELEMETRY_AUTO_VERSION
+    #     ] = auto_instrumentation_version
+    # resource = Resource.create(resource)
 
     _init_tracing(
         exporters=span_exporters,
