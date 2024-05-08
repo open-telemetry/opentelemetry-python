@@ -368,8 +368,8 @@ def _initialize_components(
         sampler_name: Optional[str] = None,
         # sampler: Optional[Sampler] = None,
         # Could be attribute dict or Resource object
-        resource_attributes: Optional[Attributes] = None,
-        # resource: Optional[Resource] = None,
+        # resource_attributes: Optional[Attributes] = None,
+        resource: Optional[Resource] = None,
         logging_enabled: Optional[bool] = None,
     ):
     # Could come before or after
@@ -391,23 +391,23 @@ def _initialize_components(
     # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
     # from the env variable else defaults to "unknown_service"
     # If using attributes dict instead of resource object
-    if resource_attributes is None:
-        resource_attributes = {}
-    # populate version if using auto-instrumentation
-    if auto_instrumentation_version:
-        resource_attributes[
-            ResourceAttributes.TELEMETRY_AUTO_VERSION
-        ] = auto_instrumentation_version
-    resource = Resource.create(resource_attributes)
-    # If using resource object instead of attributes dict
-    # if resource is None:
-    #     resource = Resource.create()
+    # if resource_attributes is None:
+    #     resource_attributes = {}
     # # populate version if using auto-instrumentation
     # if auto_instrumentation_version:
-    #     resource.attributes()[
+    #     resource_attributes[
     #         ResourceAttributes.TELEMETRY_AUTO_VERSION
     #     ] = auto_instrumentation_version
-    # resource = Resource.create(resource)
+    # resource = Resource.create(resource_attributes)
+    # If using resource object instead of attributes dict
+    if resource is None:
+        resource = Resource.create()
+    # populate version if using auto-instrumentation
+    if auto_instrumentation_version:
+        resource.attributes()[
+            ResourceAttributes.TELEMETRY_AUTO_VERSION
+        ] = auto_instrumentation_version
+    resource = Resource.create(resource)
 
     _init_tracing(
         exporters=span_exporters,
