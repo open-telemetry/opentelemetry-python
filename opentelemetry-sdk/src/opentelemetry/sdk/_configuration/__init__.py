@@ -50,7 +50,10 @@ from opentelemetry.sdk.metrics.export import (
     MetricReader,
     PeriodicExportingMetricReader,
 )
-from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.resources import (
+    Attributes,
+    Resource
+)
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExporter
 from opentelemetry.sdk.trace.id_generator import IdGenerator
@@ -355,18 +358,19 @@ def _import_id_generator(id_generator_name: str) -> IdGenerator:
 
 
 def _initialize_components(
-        auto_instrumentation_version: str = None,
+        auto_instrumentation_version: Optional[str] = None,
         # Could be trace_exporters or span_exporters
         # Could be full span processors
-        span_exporter_names: str = None,
-        metric_exporter_names: str = None,
-        log_exporter_names: str = None,
+        span_exporter_names: Optional[list[str]] = None,
+        metric_exporter_names: Optional[list[str]] = None,
+        log_exporter_names: Optional[list[str]] = None,
         # Could be sampler obj
-        sampler_name: str = None,
+        sampler_name: Optional[str] = None,
+        # sampler: Optional[Sampler] = None,
         # Could be attribute dict or Resource object
-        resource_attributes: dict = None,
-        # resource: Resource = None,
-        logging_enabled: bool = None,
+        resource_attributes: Optional[Attributes] = None,
+        # resource: Optional[Resource] = None,
+        logging_enabled: Optional[bool] = None,
     ):
     # Could come before or after
     span_exporters, metric_exporters, log_exporters = _import_exporters(
@@ -398,7 +402,7 @@ def _initialize_components(
     # If using resource object instead of attributes dict
     # if resource is None:
     #     resource = Resource.create()
-    # populate version if using auto-instrumentation
+    # # populate version if using auto-instrumentation
     # if auto_instrumentation_version:
     #     resource.attributes()[
     #         ResourceAttributes.TELEMETRY_AUTO_VERSION
