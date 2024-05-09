@@ -22,6 +22,6 @@ requests==2.31.0
 tomli==2.0.1
 typing_extensions==4.8.0
 urllib3==1.26.18
-Werkzeug==3.0.1
+Werkzeug==3.0.3
 wrapt==1.15.0
 zipp==3.17.0
