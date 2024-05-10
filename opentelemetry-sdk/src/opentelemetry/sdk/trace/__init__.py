@@ -867,7 +867,12 @@ class Span(trace_api.Span, ReadableSpan):
         context: SpanContext,
         attributes: types.Attributes = None,
     ) -> None:
-        if context is None or not context.is_valid:
+
+        if (
+            context is None
+            or not context.is_valid
+            and not (attributes or context.trace_state)
+        ):
             return
 
         attributes = BoundedAttributes(
