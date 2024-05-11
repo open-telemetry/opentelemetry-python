@@ -127,7 +127,8 @@ class Span(abc.ABC):
 
         Adds a single `Link` with the `SpanContext` of the span to link to and,
         optionally, attributes passed as arguments. Implementations may ignore
-        calls with an invalid span context.
+        calls with an invalid span context if both attributes and TraceState
+        are empty.
 
         Note: It is preferred to add links at span creation, instead of calling
         this method later since samplers can only consider information already
