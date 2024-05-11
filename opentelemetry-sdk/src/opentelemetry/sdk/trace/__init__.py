@@ -347,6 +347,14 @@ def _check_span_ended(func):
     return wrapper
 
 
+def _is_valid_link(context: SpanContext, attributes: types.Attributes) -> bool:
+    return (
+        context.is_valid or (attributes or context.trace_state)
+        if context
+        else False
+    )
+
+
 class ReadableSpan:
     """Provides read-only access to span attributes.
 
@@ -868,11 +876,7 @@ class Span(trace_api.Span, ReadableSpan):
         attributes: types.Attributes = None,
     ) -> None:
 
-        if (
-            context is None
-            or not context.is_valid
-            and not (attributes or context.trace_state)
-        ):
+        if not _is_valid_link(context, attributes):
             return
 
         attributes = BoundedAttributes(
