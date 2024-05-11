@@ -36,7 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3823] (https://github.com/open-telemetry/opentelemetry-python/pull/3823))
 - Add span flags to OTLP spans and links
   ([#3881](https://github.com/open-telemetry/opentelemetry-python/pull/3881))
-- Record links with invalid SpanContext
+- Record links with invalid SpanContext if either attributes or TraceState are not empty
   ([#3917](https://github.com/open-telemetry/opentelemetry-python/pull/3917/))
 
 ## Version 1.24.0/0.45b0 (2024-03-28)
