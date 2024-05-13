@@ -348,10 +348,8 @@ def _check_span_ended(func):
 
 
 def _is_valid_link(context: SpanContext, attributes: types.Attributes) -> bool:
-    return (
-        context.is_valid or (attributes or context.trace_state)
-        if context
-        else False
+    return bool(
+        context and (context.is_valid or (attributes or context.trace_state))
     )
 
 
