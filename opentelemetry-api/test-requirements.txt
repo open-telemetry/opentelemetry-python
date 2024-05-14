@@ -14,4 +14,7 @@ tomli==2.0.1
 typing_extensions==4.10.0
 wrapt==1.16.0
 zipp==3.17.0
+-e opentelemetry-sdk
+-e opentelemetry-semantic-conventions
+-e tests/opentelemetry-test-utils
 -e opentelemetry-api
