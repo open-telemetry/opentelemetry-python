@@ -7,7 +7,7 @@ from opentelemetry.test.globals_test import TraceGlobalsTest
 from opentelemetry.trace.status import Status, StatusCode
 
 
-class TestSpan(trace.NonRecordingSpan):
+class SpanTest(trace.NonRecordingSpan):
     has_ended = False
     recorded_exception = None
     recorded_status = Status(status_code=StatusCode.UNSET)
@@ -110,7 +110,7 @@ class TestUseTracer(unittest.TestCase):
 
     def test_use_span_end_on_exit(self):
 
-        test_span = TestSpan(trace.INVALID_SPAN_CONTEXT)
+        test_span = SpanTest(trace.INVALID_SPAN_CONTEXT)
 
         with trace.use_span(test_span):
             pass
@@ -124,7 +124,7 @@ class TestUseTracer(unittest.TestCase):
         class TestUseSpanException(Exception):
             pass
 
-        test_span = TestSpan(trace.INVALID_SPAN_CONTEXT)
+        test_span = SpanTest(trace.INVALID_SPAN_CONTEXT)
         exception = TestUseSpanException("test exception")
         with self.assertRaises(TestUseSpanException):
             with trace.use_span(test_span):
@@ -136,7 +136,7 @@ class TestUseTracer(unittest.TestCase):
         class TestUseSpanException(Exception):
             pass
 
-        test_span = TestSpan(trace.INVALID_SPAN_CONTEXT)
+        test_span = SpanTest(trace.INVALID_SPAN_CONTEXT)
         with self.assertRaises(TestUseSpanException):
             with trace.use_span(test_span):
                 raise TestUseSpanException("test error")

@@ -24,6 +24,10 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
 ]
 
+dependencies = [
+  "opentelemetry-api == 1.25.0.dev",
+]
+
 [project.urls]
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/opentelemetry-semantic-conventions"
 

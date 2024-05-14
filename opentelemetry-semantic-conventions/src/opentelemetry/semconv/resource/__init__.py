@@ -16,7 +16,13 @@
 
 from enum import Enum
 
+from deprecated import deprecated
 
+
+@deprecated(
+    "1.25.0",
+    reason="Use attributes defined in the :py:const:`opentelemetry.semconv.attributes` and :py:const:`opentelemetry.semconv._incubating.attributes` modules instead.",
+)
 class ResourceAttributes:
     SCHEMA_URL = "https://opentelemetry.io/schemas/v1.21.0"
     """
@@ -650,6 +656,10 @@ class ResourceAttributes:
     """
 
 
+@deprecated(
+    "1.25.0",
+    reason="Use :py:const:`opentelemetry.semconv._incubating.attributes.CloudProviderValues` instead.",
+)
 class CloudProviderValues(Enum):
     ALIBABA_CLOUD = "alibaba_cloud"
     """Alibaba Cloud."""
@@ -673,6 +683,10 @@ class CloudProviderValues(Enum):
     """Tencent Cloud."""
 
 
+@deprecated(
+    "1.25.0",
+    reason="Use :py:const:`opentelemetry.semconv._incubating.attributes.CloudPlatformValues` instead.",
+)
 class CloudPlatformValues(Enum):
     ALIBABA_CLOUD_ECS = "alibaba_cloud_ecs"
     """Alibaba Cloud Elastic Compute Service."""
@@ -756,6 +770,10 @@ class CloudPlatformValues(Enum):
     """Tencent Cloud Serverless Cloud Function (SCF)."""
 
 
+@deprecated(
+    "1.25.0",
+    reason="Use :py:const:`opentelemetry.semconv._incubating.attributes.AwsEcsLaunchtypeValues` instead.",
+)
 class AwsEcsLaunchtypeValues(Enum):
     EC2 = "ec2"
     """ec2."""
@@ -764,6 +782,10 @@ class AwsEcsLaunchtypeValues(Enum):
     """fargate."""
 
 
+@deprecated(
+    "1.25.0",
+    reason="Use :py:const:`opentelemetry.semconv._incubating.attributes.HostArchValues` instead.",
+)
 class HostArchValues(Enum):
     AMD64 = "amd64"
     """AMD64."""
@@ -790,6 +812,10 @@ class HostArchValues(Enum):
     """32-bit x86."""
 
 
+@deprecated(
+    "1.25.0",
+    reason="Use :py:const:`opentelemetry.semconv._incubating.attributes.OsTypeValues` instead.",
+)
 class OsTypeValues(Enum):
     WINDOWS = "windows"
     """Microsoft Windows."""
@@ -825,6 +851,10 @@ class OsTypeValues(Enum):
     """IBM z/OS."""
 
 
+@deprecated(
+    "1.25.0",
+    reason="Use :py:const:`opentelemetry.semconv.attributes.TelemetrySdkLanguageValues` instead.",
+)
 class TelemetrySdkLanguageValues(Enum):
     CPP = "cpp"
     """cpp."""
