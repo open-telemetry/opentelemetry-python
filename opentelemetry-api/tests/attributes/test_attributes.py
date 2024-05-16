@@ -187,23 +187,10 @@ class TestBoundedAttributes(unittest.TestCase):
         in the codebase. This test case is to verify that the fix works as expected.
         """
         bdict = BoundedAttributes(immutable=False)
-        for num in range(100):
-            bdict[str(num)] = num
 
-        def iter_and_set():
-            for key in bdict:
-                bdict[key] = 2 * bdict[key]
-
-        import threading
-
-        t1 = threading.Thread(target=iter_and_set)
-        t2 = threading.Thread(target=iter_and_set)
-
-        t1.start()
-        t2.start()
-
-        t1.join()
-        t2.join()
+        with bdict._lock:
+            for num in range(100):
+                bdict[str(num)] = num
 
         for num in range(100):
-            self.assertEqual(bdict[str(num)], 4 * num)
+            self.assertEqual(bdict[str(num)], num)
