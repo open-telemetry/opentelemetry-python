@@ -23,5 +23,6 @@ zipp==3.17.0
 -e opentelemetry-api
 -e exporter/opentelemetry-exporter-zipkin-json
 -e opentelemetry-sdk
+-e tests/opentelemetry-test-utils
 -e opentelemetry-semantic-conventions
 -e exporter/opentelemetry-exporter-zipkin-proto-http
