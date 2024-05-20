@@ -67,8 +67,7 @@ from itertools import chain
 from json import dumps
 from logging import getLogger
 from os import environ
-from re import IGNORECASE, UNICODE, compile
-from typing import Dict, Sequence, Tuple, Union
+from typing import Deque, Dict, Iterable, Sequence, Tuple, Union
 
 from prometheus_client import start_http_server
 from prometheus_client.core import (
@@ -80,6 +79,11 @@ from prometheus_client.core import (
 )
 from prometheus_client.core import Metric as PrometheusMetric
 
+from opentelemetry.exporter.prometheus._mapping import (
+    map_unit,
+    sanitize_attribute,
+    sanitize_full_name,
+)
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_PROMETHEUS_HOST,
     OTEL_EXPORTER_PROMETHEUS_PORT,
@@ -101,6 +105,7 @@ from opentelemetry.sdk.metrics.export import (
     MetricsData,
     Sum,
 )
+from opentelemetry.util.types import Attributes
 
 _logger = getLogger(__name__)
 
@@ -164,10 +169,7 @@ class _CustomCollector:
 
     def __init__(self, disable_target_info: bool = False):
         self._callback = None
-        self._metrics_datas = deque()
-        self._non_letters_digits_underscore_re = compile(
-            r"[^\w]", UNICODE | IGNORECASE
-        )
+        self._metrics_datas: Deque[MetricsData] = deque()
         self._disable_target_info = disable_target_info
         self._target_info = None
 
@@ -175,7 +177,7 @@ class _CustomCollector:
         """Add metrics to Prometheus data"""
         self._metrics_datas.append(metrics_data)
 
-    def collect(self) -> None:
+    def collect(self) -> Iterable[PrometheusMetric]:
         """Collect fetches the metrics from OpenTelemetry
         and delivers them as Prometheus Metrics.
         Collect is invoked every time a ``prometheus.Gatherer`` is run
@@ -189,7 +191,7 @@ class _CustomCollector:
         if len(self._metrics_datas):
             if not self._disable_target_info:
                 if self._target_info is None:
-                    attributes = {}
+                    attributes: Attributes = {}
                     for res in self._metrics_datas[0].resource_metrics:
                         attributes = {**attributes, **res.resource.attributes}
 
@@ -228,17 +230,17 @@ class _CustomCollector:
 
             pre_metric_family_ids = []
 
-            metric_name = ""
-            metric_name += self._sanitize(metric.name)
+            metric_name = sanitize_full_name(metric.name)
 
             metric_description = metric.description or ""
+            metric_unit = map_unit(metric.unit)
 
             for number_data_point in metric.data.data_points:
                 label_keys = []
                 label_values = []
 
                 for key, value in sorted(number_data_point.attributes.items()):
-                    label_keys.append(self._sanitize(key))
+                    label_keys.append(sanitize_attribute(key))
                     label_values.append(self._check_value(value))
 
                 pre_metric_family_ids.append(
@@ -247,7 +249,7 @@ class _CustomCollector:
                             metric_name,
                             metric_description,
                             "%".join(label_keys),
-                            metric.unit,
+                            metric_unit,
                         ]
                     )
                 )
@@ -299,7 +301,7 @@ class _CustomCollector:
                                 name=metric_name,
                                 documentation=metric_description,
                                 labels=label_keys,
-                                unit=metric.unit,
+                                unit=metric_unit,
                             )
                         )
                     metric_family_id_metric_family[
@@ -323,7 +325,7 @@ class _CustomCollector:
                                 name=metric_name,
                                 documentation=metric_description,
                                 labels=label_keys,
-                                unit=metric.unit,
+                                unit=metric_unit,
                             )
                         )
                     metric_family_id_metric_family[
@@ -344,7 +346,7 @@ class _CustomCollector:
                                 name=metric_name,
                                 documentation=metric_description,
                                 labels=label_keys,
-                                unit=metric.unit,
+                                unit=metric_unit,
                             )
                         )
                     metric_family_id_metric_family[
@@ -361,12 +363,6 @@ class _CustomCollector:
                         "Unsupported metric data. %s", type(metric.data)
                     )
 
-    def _sanitize(self, key: str) -> str:
-        """sanitize the given metric name or label according to Prometheus rule.
-        Replace all characters other than [A-Za-z0-9_] with '_'.
-        """
-        return self._non_letters_digits_underscore_re.sub("_", key)
-
     # pylint: disable=no-self-use
     def _check_value(self, value: Union[int, float, str, Sequence]) -> str:
         """Check the label value and return is appropriate representation"""
@@ -380,7 +376,7 @@ class _CustomCollector:
         """Create an Info Metric Family with list of attributes"""
         # sanitize the attribute names according to Prometheus rule
         attributes = {
-            self._sanitize(key): self._check_value(value)
+            sanitize_attribute(key): self._check_value(value)
             for key, value in attributes.items()
         }
         info = InfoMetricFamily(name, description, labels=attributes)

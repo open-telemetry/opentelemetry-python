@@ -40,6 +40,7 @@ from opentelemetry.sdk.metrics.export import (
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.test.metrictestutil import (
     _generate_gauge,
+    _generate_histogram,
     _generate_sum,
     _generate_unsupported_metric,
 )
@@ -52,6 +53,31 @@ class TestPrometheusMetricReader(TestCase):
             "prometheus_client.core.REGISTRY.register",
             side_effect=self._mock_registry_register,
         )
+
+    def verify_text_format(
+        self, metric: Metric, expect_prometheus_text: str
+    ) -> None:
+        metrics_data = MetricsData(
+            resource_metrics=[
+                ResourceMetrics(
+                    resource=Mock(),
+                    scope_metrics=[
+                        ScopeMetrics(
+                            scope=Mock(),
+                            metrics=[metric],
+                            schema_url="schema_url",
+                        )
+                    ],
+                    schema_url="schema_url",
+                )
+            ]
+        )
+
+        collector = _CustomCollector(disable_target_info=True)
+        collector.add_metrics_data(metrics_data)
+        result_bytes = generate_latest(collector)
+        result = result_bytes.decode("utf-8")
+        self.assertEqual(result, expect_prometheus_text)
 
     # pylint: disable=protected-access
     def test_constructor(self):
@@ -90,37 +116,17 @@ class TestPrometheusMetricReader(TestCase):
                 aggregation_temporality=AggregationTemporality.DELTA,
             ),
         )
-        metrics_data = MetricsData(
-            resource_metrics=[
-                ResourceMetrics(
-                    resource=Mock(),
-                    scope_metrics=[
-                        ScopeMetrics(
-                            scope=Mock(),
-                            metrics=[metric],
-                            schema_url="schema_url",
-                        )
-                    ],
-                    schema_url="schema_url",
-                )
-            ]
-        )
-
-        collector = _CustomCollector(disable_target_info=True)
-        collector.add_metrics_data(metrics_data)
-        result_bytes = generate_latest(collector)
-        result = result_bytes.decode("utf-8")
-        self.assertEqual(
-            result,
+        self.verify_text_format(
+            metric,
             dedent(
                 """\
-                # HELP test_name_s foo
-                # TYPE test_name_s histogram
-                test_name_s_bucket{histo="1",le="123.0"} 1.0
-                test_name_s_bucket{histo="1",le="456.0"} 4.0
-                test_name_s_bucket{histo="1",le="+Inf"} 6.0
-                test_name_s_count{histo="1"} 6.0
-                test_name_s_sum{histo="1"} 579.0
+                # HELP test_name_seconds foo
+                # TYPE test_name_seconds histogram
+                test_name_seconds_bucket{histo="1",le="123.0"} 1.0
+                test_name_seconds_bucket{histo="1",le="456.0"} 4.0
+                test_name_seconds_bucket{histo="1",le="+Inf"} 6.0
+                test_name_seconds_count{histo="1"} 6.0
+                test_name_seconds_sum{histo="1"} 579.0
                 """
             ),
         )
@@ -269,16 +275,6 @@ class TestPrometheusMetricReader(TestCase):
         collector.add_metrics_data([record])
         collector.collect()
         self.assertLogs("opentelemetry.exporter.prometheus", level="WARNING")
-
-    def test_sanitize(self):
-        collector = _CustomCollector()
-        self.assertEqual(
-            collector._sanitize("1!2@3#4$5%6^7&8*9(0)_-"),
-            "1_2_3_4_5_6_7_8_9_0___",
-        )
-        self.assertEqual(collector._sanitize(",./?;:[]{}"), "__________")
-        self.assertEqual(collector._sanitize("TestString"), "TestString")
-        self.assertEqual(collector._sanitize("aAbBcC_12_oi"), "aAbBcC_12_oi")
 
     def test_list_labels(self):
         labels = {"environment@": ["1", "2", "3"], "os": "Unix"}
@@ -457,3 +453,161 @@ class TestPrometheusMetricReader(TestCase):
         # Only one metric is generated
         metric_count = prometheus_output.count("# HELP counter_total")
         self.assertEqual(metric_count, 1)
+
+    def test_metric_name(self):
+        self.verify_text_format(
+            _generate_sum(name="test_counter", value=1, unit=""),
+            dedent(
+                """\
+                # HELP test_counter_total foo
+                # TYPE test_counter_total counter
+                test_counter_total{a="1",b="true"} 1.0
+                """
+            ),
+        )
+        self.verify_text_format(
+            _generate_sum(name="1leading_digit", value=1, unit=""),
+            dedent(
+                """\
+                # HELP _leading_digit_total foo
+                # TYPE _leading_digit_total counter
+                _leading_digit_total{a="1",b="true"} 1.0
+                """
+            ),
+        )
+        self.verify_text_format(
+            _generate_sum(name="!@#counter_invalid_chars", value=1, unit=""),
+            dedent(
+                """\
+                # HELP _counter_invalid_chars_total foo
+                # TYPE _counter_invalid_chars_total counter
+                _counter_invalid_chars_total{a="1",b="true"} 1.0
+                """
+            ),
+        )
+
+    def test_metric_name_with_unit(self):
+        self.verify_text_format(
+            _generate_gauge(name="test.metric.no_unit", value=1, unit=""),
+            dedent(
+                """\
+                # HELP test_metric_no_unit foo
+                # TYPE test_metric_no_unit gauge
+                test_metric_no_unit{a="1",b="true"} 1.0
+                """
+            ),
+        )
+        self.verify_text_format(
+            _generate_gauge(
+                name="test.metric.spaces", value=1, unit="   \t  "
+            ),
+            dedent(
+                """\
+                # HELP test_metric_spaces foo
+                # TYPE test_metric_spaces gauge
+                test_metric_spaces{a="1",b="true"} 1.0
+                """
+            ),
+        )
+
+        # UCUM annotations should be stripped
+        self.verify_text_format(
+            _generate_sum(name="test_counter", value=1, unit="{requests}"),
+            dedent(
+                """\
+                # HELP test_counter_total foo
+                # TYPE test_counter_total counter
+                test_counter_total{a="1",b="true"} 1.0
+                """
+            ),
+        )
+
+        # slash converts to "per"
+        self.verify_text_format(
+            _generate_gauge(name="test_gauge", value=1, unit="m/s"),
+            dedent(
+                """\
+                # HELP test_gauge_meters_per_second foo
+                # TYPE test_gauge_meters_per_second gauge
+                test_gauge_meters_per_second{a="1",b="true"} 1.0
+                """
+            ),
+        )
+
+        # invalid characters in name are sanitized before being passed to prom client, which
+        # would throw errors
+        self.verify_text_format(
+            _generate_sum(name="test_counter", value=1, unit="%{foo}@?"),
+            dedent(
+                """\
+                # HELP test_counter_total foo
+                # TYPE test_counter_total counter
+                test_counter_total{a="1",b="true"} 1.0
+                """
+            ),
+        )
+
+    def test_semconv(self):
+        """Tests that a few select semconv metrics get converted to the expected prometheus
+        text format"""
+        self.verify_text_format(
+            _generate_sum(
+                name="system.filesystem.usage",
+                value=1,
+                is_monotonic=False,
+                unit="By",
+            ),
+            dedent(
+                """\
+                # HELP system_filesystem_usage_bytes foo
+                # TYPE system_filesystem_usage_bytes gauge
+                system_filesystem_usage_bytes{a="1",b="true"} 1.0
+                """
+            ),
+        )
+        self.verify_text_format(
+            _generate_sum(
+                name="system.network.dropped",
+                value=1,
+                unit="{packets}",
+            ),
+            dedent(
+                """\
+                # HELP system_network_dropped_total foo
+                # TYPE system_network_dropped_total counter
+                system_network_dropped_total{a="1",b="true"} 1.0
+                """
+            ),
+        )
+        self.verify_text_format(
+            _generate_histogram(
+                name="http.server.request.duration",
+                unit="s",
+            ),
+            dedent(
+                """\
+                # HELP http_server_request_duration_seconds foo
+                # TYPE http_server_request_duration_seconds histogram
+                http_server_request_duration_seconds_bucket{a="1",b="true",le="123.0"} 1.0
+                http_server_request_duration_seconds_bucket{a="1",b="true",le="456.0"} 4.0
+                http_server_request_duration_seconds_bucket{a="1",b="true",le="+Inf"} 6.0
+                http_server_request_duration_seconds_count{a="1",b="true"} 6.0
+                http_server_request_duration_seconds_sum{a="1",b="true"} 579.0
+                """
+            ),
+        )
+        self.verify_text_format(
+            _generate_sum(
+                name="http.server.active_requests",
+                value=1,
+                unit="{request}",
+                is_monotonic=False,
+            ),
+            dedent(
+                """\
+                # HELP http_server_active_requests foo
+                # TYPE http_server_active_requests gauge
+                http_server_active_requests{a="1",b="true"} 1.0
+                """
+            ),
+        )
