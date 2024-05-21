@@ -957,13 +957,13 @@ class TestSpan(unittest.TestCase):
             trace_api.INVALID_TRACE_ID,
             trace_api.INVALID_SPAN_ID,
             is_remote=False,
-            trace_state="a=b",
+            trace_state="foo=bar",
         )
 
         with self.tracer.start_as_current_span("root") as root:
             root.add_link(invalid_context)
             self.assertEqual(len(root.links), 1)
-            self.assertEqual(root.links[0].context.trace_state, "a=b")
+            self.assertEqual(root.links[0].context.trace_state, "foo=bar")
 
     def test_update_name(self):
         with self.tracer.start_as_current_span("root") as root:
