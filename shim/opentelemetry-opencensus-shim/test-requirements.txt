@@ -33,4 +33,7 @@ urllib3==2.2.1
 wrapt==1.16.0
 zipp==3.17.0
 -e opentelemetry-api
+-e opentelemetry-sdk
+-e tests/opentelemetry-test-utils
+-e opentelemetry-semantic-conventions
 -e shim/opentelemetry-opencensus-shim
