@@ -54,9 +54,11 @@ class _Synchronous:
         result = self._check_name_unit_description(name, unit, description)
 
         if result["name"] is None:
+            # pylint: disable=broad-exception-raised
             raise Exception(_ERROR_MESSAGE.format(name))
 
         if result["unit"] is None:
+            # pylint: disable=broad-exception-raised
             raise Exception(_ERROR_MESSAGE.format(unit))
 
         name = result["name"]
@@ -85,9 +87,11 @@ class _Asynchronous:
         result = self._check_name_unit_description(name, unit, description)
 
         if result["name"] is None:
+            # pylint: disable=broad-exception-raised
             raise Exception(_ERROR_MESSAGE.format(name))
 
         if result["unit"] is None:
+            # pylint: disable=broad-exception-raised
             raise Exception(_ERROR_MESSAGE.format(unit))
 
         name = result["name"]
@@ -136,7 +140,7 @@ class _Asynchronous:
                         instrument=self,
                         attributes=api_measurement.attributes,
                     )
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # pylint: disable=broad-exception-caught
                 _logger.exception(
                     "Callback failed for instrument %s.", self.name
                 )

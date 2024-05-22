@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# pylint: disable=broad-except
 
 from logging import ERROR
 from unittest import TestCase
@@ -30,6 +29,7 @@ class TestErrorHandler(TestCase):
 
         with self.assertLogs(logger, ERROR):
             with GlobalErrorHandler():
+                # pylint: disable=broad-exception-raised
                 raise Exception("some exception")
 
     # pylint: disable=no-self-use

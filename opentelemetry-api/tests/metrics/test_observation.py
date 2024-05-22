@@ -25,7 +25,7 @@ class TestObservation(TestCase):
 
             # float
             Observation(321.321, {"hello": "world"})
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-exception-caught
             self.fail(
                 "Unexpected exception raised when instantiating Observation"
             )

@@ -1969,7 +1969,7 @@ class TestParentChildSpanException(unittest.TestCase):
                 ) as child_span:
                     raise exception
 
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-exception-caught
             pass
 
         self.assertTrue(child_span.status.is_ok)
@@ -2014,7 +2014,7 @@ class TestParentChildSpanException(unittest.TestCase):
                     pass
                 raise exception
 
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-exception-caught
             pass
 
         self.assertTrue(child_span.status.is_ok)

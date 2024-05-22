@@ -83,7 +83,7 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
                 continue
             try:
                 name, value = entry.split("=", 1)
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # pylint: disable=broad-exception-caught
                 _logger.warning(
                     "Baggage list-member `%s` doesn't match the format", entry
                 )
