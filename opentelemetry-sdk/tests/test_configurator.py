@@ -18,7 +18,7 @@ from logging import WARNING, getLogger
 from os import environ
 from typing import Dict, Iterable, Optional, Sequence
 from unittest import TestCase
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, ANY
 
 from pytest import raises
 
@@ -708,13 +708,14 @@ class TestLoggingInit(TestCase):
             "OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED": "False",
         },
     )
+    @patch("opentelemetry.sdk._configuration.Resource")
     @patch("opentelemetry.sdk._configuration._import_exporters")
     @patch("opentelemetry.sdk._configuration._get_exporter_names")
     @patch("opentelemetry.sdk._configuration._init_tracing")
     @patch("opentelemetry.sdk._configuration._init_logging")
     @patch("opentelemetry.sdk._configuration._init_metrics")
     def test_initialize_components_kwargs(
-        self, metrics_mock, logging_mock, tracing_mock, exporter_names_mock, import_exporters_mock
+        self, metrics_mock, logging_mock, tracing_mock, exporter_names_mock, import_exporters_mock, resource_mock
     ):
         exporter_names_mock.return_value = ["env_var_exporter_1", "env_var_exporter_2"]
         import_exporters_mock.return_value = (
@@ -722,8 +723,7 @@ class TestLoggingInit(TestCase):
             "TEST_METRICS_EXPORTERS_DICT",
             "TEST_LOG_EXPORTERS_DICT",
         )
-        # custom_id_generator = CustomIdGenerator()
-        # sampler = Sampler()
+        resource_mock.create.return_value = "TEST_RESOURCE"
         kwargs = {
             "auto_instrumentation_version": "auto-version",
             "span_exporter_names": ["custom_span_exporter"],
@@ -744,37 +744,28 @@ class TestLoggingInit(TestCase):
             ["custom_metric_exporter", "env_var_exporter_1", "env_var_exporter_2"],
             ["custom_log_exporter", "env_var_exporter_1", "env_var_exporter_2"]
         )
-        # tracing_mock.assert_called_once_with(
-        #     exporters="TEST_SPAN_EXPORTERS_DICT",
-        #     id_generator="TEST_GENERATOR",
-        #     sampler="TEST_SAMPLER,"
-        #     resource=resource,
-        # )
-        # metrics_mock.assert_called_once_with(
-        #     "TEST_METRICS_EXPORTERS_DICT",
-        #     resource,
-        # )
-        # logging_mock.assert_called_once_with(
-        #     "TEST_LOG_EXPORTERS_DICT",
-        #     resource,
-        # )
-
-        self.assertEqual(logging_mock.call_count, 1)
-        self.assertEqual(tracing_mock.call_count, 1)
-        self.assertEqual(metrics_mock.call_count, 1)
-
-        _, args, _ = logging_mock.mock_calls[0]
-        logging_resource = args[1]
-        print(logging_resource.attributes)
-        _, _, kwargs = tracing_mock.mock_calls[0]
-        tracing_resource = kwargs["resource"]
-        _, args, _ = metrics_mock.mock_calls[0]
-        metrics_resource = args[1]
-        self.assertEqual(logging_resource, tracing_resource)
-        self.assertEqual(logging_resource, metrics_resource)
-        self.assertEqual(tracing_resource, metrics_resource) 
-        self.assertEqual(tracing_resource.attributes["custom.key.1"], "pass-in-value-1") 
-        self.assertEqual(tracing_resource.attributes["custom.key.2"], "pass-in-value-2") 
+        resource_mock.create.assert_called_once_with(
+            {
+                "telemetry.auto.version": "auto-version",
+                "custom.key.1": "pass-in-value-1",
+                "custom.key.2": "pass-in-value-2",
+            }
+        )
+        # Resource is checked separates
+        tracing_mock.assert_called_once_with(
+            exporters="TEST_SPAN_EXPORTERS_DICT",
+            id_generator="TEST_GENERATOR",
+            sampler="TEST_SAMPLER",
+            resource="TEST_RESOURCE",
+        )
+        metrics_mock.assert_called_once_with(
+            "TEST_METRICS_EXPORTERS_DICT",
+            "TEST_RESOURCE",
+        )
+        logging_mock.assert_called_once_with(
+            "TEST_LOG_EXPORTERS_DICT",
+            "TEST_RESOURCE",
+        )
 
 
 class TestMetricsInit(TestCase):
@@ -995,6 +986,7 @@ class TestImportConfigComponents(TestCase):
             "Requested component 'a' not found in entry point 'name'",
         )
 
+
 class TestConfigurator(TestCase):
     class CustomConfigurator(_OTelSDKConfigurator):
         def _configure(self, **kwargs):
@@ -1004,11 +996,11 @@ class TestConfigurator(TestCase):
     @patch("opentelemetry.sdk._configuration._initialize_components")
     def test_custom_configurator(self, mock_init_comp):
         custom_configurator = TestConfigurator.CustomConfigurator()
-        custom_configurator._configure(auto_instrumentation_version="TEST_VERSION2")
+        custom_configurator._configure(
+            auto_instrumentation_version="TEST_VERSION2"
+        )
         kwargs = {
             "auto_instrumentation_version": "TEST_VERSION2",
             "sampler": "TEST_SAMPLER",
         }
         mock_init_comp.assert_called_once_with(**kwargs)
-
-
