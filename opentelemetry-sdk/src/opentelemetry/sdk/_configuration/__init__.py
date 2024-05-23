@@ -50,10 +50,7 @@ from opentelemetry.sdk.metrics.export import (
     MetricReader,
     PeriodicExportingMetricReader,
 )
-from opentelemetry.sdk.resources import (
-    Attributes,
-    Resource
-)
+from opentelemetry.sdk.resources import Attributes, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExporter
 from opentelemetry.sdk.trace.id_generator import IdGenerator
@@ -358,15 +355,15 @@ def _import_id_generator(id_generator_name: str) -> IdGenerator:
 
 
 def _initialize_components(
-        auto_instrumentation_version: Optional[str] = None,
-        span_exporter_names: Optional[List[str]] = None,
-        metric_exporter_names: Optional[List[str]] = None,
-        log_exporter_names: Optional[List[str]] = None,
-        sampler: Optional[Sampler] = None,
-        resource_attributes: Optional[Attributes] = None,
-        id_generator: IdGenerator = None,
-        logging_enabled: Optional[bool] = None,
-    ):
+    auto_instrumentation_version: Optional[str] = None,
+    span_exporter_names: Optional[List[str]] = None,
+    metric_exporter_names: Optional[List[str]] = None,
+    log_exporter_names: Optional[List[str]] = None,
+    sampler: Optional[Sampler] = None,
+    resource_attributes: Optional[Attributes] = None,
+    id_generator: IdGenerator = None,
+    logging_enabled: Optional[bool] = None,
+):
     if span_exporter_names is None:
         span_exporter_names = list()
     if metric_exporter_names is None:
@@ -388,9 +385,9 @@ def _initialize_components(
         resource_attributes = {}
     # populate version if using auto-instrumentation
     if auto_instrumentation_version:
-        resource_attributes[
-            ResourceAttributes.TELEMETRY_AUTO_VERSION
-        ] = auto_instrumentation_version
+        resource_attributes[ResourceAttributes.TELEMETRY_AUTO_VERSION] = (
+            auto_instrumentation_version
+        )
     # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
     # from the env variable else defaults to "unknown_service"
     resource = Resource.create(resource_attributes)
@@ -404,9 +401,14 @@ def _initialize_components(
     _init_metrics(metric_exporters, resource)
     # This could also be paramaterized
     if logging_enabled is None:
-        logging_enabled = os.getenv(
-            _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED, "false"
-        ).strip().lower() == "true"
+        logging_enabled = (
+            os.getenv(
+                _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED, "false"
+            )
+            .strip()
+            .lower()
+            == "true"
+        )
     # Could be string or bool
     if logging_enabled:
         _init_logging(log_exporters, resource)
