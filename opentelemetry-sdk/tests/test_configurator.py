@@ -912,26 +912,20 @@ class TestImportConfigComponents(TestCase):
             "Requested component 'a' not found in entry point 'name'",
         )
 
-class CustomConfigurator(_OTelSDKConfigurator):
-    def _configure(self, **kwargs):
-        kwargs["sampler"] = "TEST_SAMPLER"
-        super.configure(**kwargs)
-
-class TestOTelSDKConfigurator(TestCase):
-    @patch("opentelemetry.sdk._configuration._initialize_components")
-    def test_configure(self, mock_init_comp):
-        configurator = _OTelSDKConfigurator()
-        configurator.configure(auto_instrumentation_version="TEST_VERSION")
-        mock_init_comp.assert_called_with(auto_instrumentation_version="TEST_VERSION")
+class TestConfigurator(TestCase):
+    class CustomConfigurator(_OTelSDKConfigurator):
+        def _configure(self, **kwargs):
+            kwargs["sampler"] = "TEST_SAMPLER"
+            super()._configure(**kwargs)
 
     @patch("opentelemetry.sdk._configuration._initialize_components")
     def test_custom_configurator(self, mock_init_comp):
-        configurator = CustomConfigurator()
-        configurator.configure(auto_instrumentation_version="TEST_VERSION")
+        custom_configurator = TestConfigurator.CustomConfigurator()
+        custom_configurator._configure(auto_instrumentation_version="TEST_VERSION2")
         kwargs = {
-            "auto_instrumentation_version": "TEST_VERSION",
+            "auto_instrumentation_version": "TEST_VERSION2",
             "sampler": "TEST_SAMPLER",
         }
-        mock_init_comp.assert_called_with(**kwargs)
+        mock_init_comp.assert_called_once_with(**kwargs)
 
 
