@@ -46,10 +46,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3924](https://github.com/open-telemetry/opentelemetry-python/pull/3924))
   - this is a breaking change to prometheus metric names so they comply with the
   [specification](https://github.com/open-telemetry/opentelemetry-specification/blob/v1.33.0/specification/compatibility/prometheus_and_openmetrics.md#otlp-metric-points-to-prometheus).
+  - you can temporarily opt-out of the unit normalization by setting the environment variable
+  `OTEL_PYTHON_EXPERIMENTAL_DISABLE_PROMETHEUS_UNIT_NORMALIZATION=true`
   - common unit abbreviations are converted to Prometheus conventions (`s` -> `seconds`),
   following the [collector's implementation](https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/c0b51136575aa7ba89326d18edb4549e7e1bbdb9/pkg/translator/prometheus/normalize_name.go#L108)
   - repeated `_` are replaced with a single `_`
-  - UCUM annotations (enclosed in curly braces like `{requests}`) are stripped away
+  - unit annotations (enclosed in curly braces like `{requests}`) are stripped away
   - units with slash are converted e.g. `m/s` -> `meters_per_second`.
   - The exporter's API is not changed
 

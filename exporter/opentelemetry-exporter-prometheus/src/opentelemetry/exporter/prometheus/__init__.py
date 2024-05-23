@@ -87,6 +87,7 @@ from opentelemetry.exporter.prometheus._mapping import (
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_PROMETHEUS_HOST,
     OTEL_EXPORTER_PROMETHEUS_PORT,
+    OTEL_PYTHON_EXPERIMENTAL_DISABLE_PROMETHEUS_UNIT_NORMALIZATION,
 )
 from opentelemetry.sdk.metrics import Counter
 from opentelemetry.sdk.metrics import Histogram as HistogramInstrument
@@ -233,7 +234,19 @@ class _CustomCollector:
             metric_name = sanitize_full_name(metric.name)
 
             metric_description = metric.description or ""
-            metric_unit = map_unit(metric.unit)
+
+            # TODO(#3929): remove this opt-out option
+            disable_unit_normalization = (
+                environ.get(
+                    OTEL_PYTHON_EXPERIMENTAL_DISABLE_PROMETHEUS_UNIT_NORMALIZATION,
+                    "false",
+                ).lower()
+                == "true"
+            )
+            if disable_unit_normalization:
+                metric_unit = metric.unit
+            else:
+                metric_unit = map_unit(metric.unit)
 
             for number_data_point in metric.data.data_points:
                 label_keys = []
