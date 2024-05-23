@@ -693,6 +693,89 @@ class TestLoggingInit(TestCase):
         self.assertEqual(logging_resource, metrics_resource)
         self.assertEqual(tracing_resource, metrics_resource)
 
+    @patch.dict(
+        environ,
+        {
+            "OTEL_TRACES_EXPORTER": _EXPORTER_OTLP,
+            "OTEL_METRICS_EXPORTER": _EXPORTER_OTLP_PROTO_GRPC,
+            "OTEL_LOGS_EXPORTER": _EXPORTER_OTLP_PROTO_HTTP,
+        },
+    )
+    @patch.dict(
+        environ,
+        {
+            "OTEL_RESOURCE_ATTRIBUTES": "service.name=otlp-service, custom.key.1=env-value",
+            "OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED": "False",
+        },
+    )
+    @patch("opentelemetry.sdk._configuration._import_exporters")
+    @patch("opentelemetry.sdk._configuration._get_exporter_names")
+    @patch("opentelemetry.sdk._configuration._init_tracing")
+    @patch("opentelemetry.sdk._configuration._init_logging")
+    @patch("opentelemetry.sdk._configuration._init_metrics")
+    def test_initialize_components_kwargs(
+        self, metrics_mock, logging_mock, tracing_mock, exporter_names_mock, import_exporters_mock
+    ):
+        exporter_names_mock.return_value = ["env_var_exporter_1", "env_var_exporter_2"]
+        import_exporters_mock.return_value = (
+            "TEST_SPAN_EXPORTERS_DICT",
+            "TEST_METRICS_EXPORTERS_DICT",
+            "TEST_LOG_EXPORTERS_DICT",
+        )
+        # custom_id_generator = CustomIdGenerator()
+        # sampler = Sampler()
+        kwargs = {
+            "auto_instrumentation_version": "auto-version",
+            "span_exporter_names": ["custom_span_exporter"],
+            "metric_exporter_names": ["custom_metric_exporter"],
+            "log_exporter_names": ["custom_log_exporter"],
+            "sampler": "TEST_SAMPLER",
+            "resource_attributes": {
+                "custom.key.1": "pass-in-value-1",
+                "custom.key.2": "pass-in-value-2",
+            },
+            "id_generator": "TEST_GENERATOR",
+            "logging_enabled": True,
+        }
+        _initialize_components(**kwargs)
+
+        import_exporters_mock.assert_called_once_with(
+            ["custom_span_exporter", "env_var_exporter_1", "env_var_exporter_2"],
+            ["custom_metric_exporter", "env_var_exporter_1", "env_var_exporter_2"],
+            ["custom_log_exporter", "env_var_exporter_1", "env_var_exporter_2"]
+        )
+        # tracing_mock.assert_called_once_with(
+        #     exporters="TEST_SPAN_EXPORTERS_DICT",
+        #     id_generator="TEST_GENERATOR",
+        #     sampler="TEST_SAMPLER,"
+        #     resource=resource,
+        # )
+        # metrics_mock.assert_called_once_with(
+        #     "TEST_METRICS_EXPORTERS_DICT",
+        #     resource,
+        # )
+        # logging_mock.assert_called_once_with(
+        #     "TEST_LOG_EXPORTERS_DICT",
+        #     resource,
+        # )
+
+        self.assertEqual(logging_mock.call_count, 1)
+        self.assertEqual(tracing_mock.call_count, 1)
+        self.assertEqual(metrics_mock.call_count, 1)
+
+        _, args, _ = logging_mock.mock_calls[0]
+        logging_resource = args[1]
+        print(logging_resource.attributes)
+        _, _, kwargs = tracing_mock.mock_calls[0]
+        tracing_resource = kwargs["resource"]
+        _, args, _ = metrics_mock.mock_calls[0]
+        metrics_resource = args[1]
+        self.assertEqual(logging_resource, tracing_resource)
+        self.assertEqual(logging_resource, metrics_resource)
+        self.assertEqual(tracing_resource, metrics_resource) 
+        self.assertEqual(tracing_resource.attributes["custom.key.1"], "pass-in-value-1") 
+        self.assertEqual(tracing_resource.attributes["custom.key.2"], "pass-in-value-2") 
+
 
 class TestMetricsInit(TestCase):
     def setUp(self):

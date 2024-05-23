@@ -359,7 +359,6 @@ def _import_id_generator(id_generator_name: str) -> IdGenerator:
 
 def _initialize_components(
         auto_instrumentation_version: Optional[str] = None,
-        # Could be trace_exporters or span_exporters
         span_exporter_names: Optional[List[str]] = None,
         metric_exporter_names: Optional[List[str]] = None,
         log_exporter_names: Optional[List[str]] = None,
