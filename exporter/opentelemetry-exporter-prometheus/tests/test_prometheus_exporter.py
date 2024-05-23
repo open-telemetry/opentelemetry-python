@@ -611,3 +611,32 @@ class TestPrometheusMetricReader(TestCase):
                 """
             ),
         )
+        # if the metric name already contains the unit, it shouldn't be added again
+        self.verify_text_format(
+            _generate_sum(
+                name="metric_name_with_myunit",
+                value=1,
+                unit="myunit",
+            ),
+            dedent(
+                """\
+                # HELP metric_name_with_myunit_total foo
+                # TYPE metric_name_with_myunit_total counter
+                metric_name_with_myunit_total{a="1",b="true"} 1.0
+                """
+            ),
+        )
+        self.verify_text_format(
+            _generate_gauge(
+                name="metric_name_percent",
+                value=1,
+                unit="%",
+            ),
+            dedent(
+                """\
+                # HELP metric_name_percent foo
+                # TYPE metric_name_percent gauge
+                metric_name_percent{a="1",b="true"} 1.0
+                """
+            ),
+        )
