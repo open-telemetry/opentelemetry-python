@@ -22,7 +22,7 @@ from opentelemetry.exporter.prometheus._mapping import (
 
 
 class TestMapping(TestCase):
-    def testsanitize_full_name(self):
+    def test_sanitize_full_name(self):
         self.assertEqual(
             sanitize_full_name("valid_metric_name"), "valid_metric_name"
         )
@@ -53,7 +53,7 @@ class TestMapping(TestCase):
         self.assertEqual(sanitize_full_name("TestString"), "TestString")
         self.assertEqual(sanitize_full_name("aAbBcC_12_oi"), "aAbBcC_12_oi")
 
-    def testsanitize_attribute(self):
+    def test_sanitize_attribute(self):
         self.assertEqual(
             sanitize_attribute("valid_attr_key"), "valid_attr_key"
         )
