@@ -365,11 +365,11 @@ def _initialize_components(
     logging_enabled: Optional[bool] = None,
 ):
     if span_exporter_names is None:
-        span_exporter_names = list()
+        span_exporter_names = []
     if metric_exporter_names is None:
-        metric_exporter_names = list()
+        metric_exporter_names = []
     if log_exporter_names is None:
-        log_exporter_names = list()
+        log_exporter_names = []
     span_exporters, metric_exporters, log_exporters = _import_exporters(
         span_exporter_names + _get_exporter_names("traces"),
         metric_exporter_names + _get_exporter_names("metrics"),
