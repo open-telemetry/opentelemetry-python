@@ -408,7 +408,6 @@ def _initialize_components(
             .lower()
             == "true"
         )
-    # Could be string or bool
     if logging_enabled:
         _init_logging(log_exporters, resource)
 
