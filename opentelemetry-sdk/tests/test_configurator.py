@@ -18,7 +18,7 @@ from logging import WARNING, getLogger
 from os import environ
 from typing import Dict, Iterable, Optional, Sequence
 from unittest import TestCase
-from unittest.mock import Mock, patch, ANY
+from unittest.mock import Mock, patch
 
 from pytest import raises
 
