@@ -40,6 +40,7 @@ from opentelemetry.sdk._configuration import (
     _init_metrics,
     _init_tracing,
     _initialize_components,
+    _OTelSDKConfigurator,
 )
 from opentelemetry.sdk._logs import LoggingHandler
 from opentelemetry.sdk._logs.export import ConsoleLogExporter
@@ -645,7 +646,7 @@ class TestLoggingInit(TestCase):
     @patch("opentelemetry.sdk._configuration._init_tracing")
     @patch("opentelemetry.sdk._configuration._init_logging")
     def test_logging_init_disable_default(self, logging_mock, tracing_mock):
-        _initialize_components("auto-version")
+        _initialize_components(auto_instrumentation_version="auto-version")
         self.assertEqual(logging_mock.call_count, 0)
         self.assertEqual(tracing_mock.call_count, 1)
 
@@ -660,7 +661,7 @@ class TestLoggingInit(TestCase):
     @patch("opentelemetry.sdk._configuration._init_logging")
     def test_logging_init_enable_env(self, logging_mock, tracing_mock):
         with self.assertLogs(level=WARNING):
-            _initialize_components("auto-version")
+            _initialize_components(auto_instrumentation_version="auto-version")
         self.assertEqual(logging_mock.call_count, 1)
         self.assertEqual(tracing_mock.call_count, 1)
 
@@ -677,7 +678,7 @@ class TestLoggingInit(TestCase):
     def test_initialize_components_resource(
         self, metrics_mock, logging_mock, tracing_mock
     ):
-        _initialize_components("auto-version")
+        _initialize_components(auto_instrumentation_version="auto-version")
         self.assertEqual(logging_mock.call_count, 1)
         self.assertEqual(tracing_mock.call_count, 1)
         self.assertEqual(metrics_mock.call_count, 1)
@@ -910,3 +911,27 @@ class TestImportConfigComponents(TestCase):
             str(error.value),
             "Requested component 'a' not found in entry point 'name'",
         )
+
+class CustomConfigurator(_OTelSDKConfigurator):
+    def _configure(self, **kwargs):
+        kwargs["sampler"] = "TEST_SAMPLER"
+        super.configure(**kwargs)
+
+class TestOTelSDKConfigurator(TestCase):
+    @patch("opentelemetry.sdk._configuration._initialize_components")
+    def test_configure(self, mock_init_comp):
+        configurator = _OTelSDKConfigurator()
+        configurator.configure(auto_instrumentation_version="TEST_VERSION")
+        mock_init_comp.assert_called_with(auto_instrumentation_version="TEST_VERSION")
+
+    @patch("opentelemetry.sdk._configuration._initialize_components")
+    def test_custom_configurator(self, mock_init_comp):
+        configurator = CustomConfigurator()
+        configurator.configure(auto_instrumentation_version="TEST_VERSION")
+        kwargs = {
+            "auto_instrumentation_version": "TEST_VERSION",
+            "sampler": "TEST_SAMPLER",
+        }
+        mock_init_comp.assert_called_with(**kwargs)
+
+

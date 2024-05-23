@@ -360,55 +360,41 @@ def _import_id_generator(id_generator_name: str) -> IdGenerator:
 def _initialize_components(
         auto_instrumentation_version: Optional[str] = None,
         # Could be trace_exporters or span_exporters
-        # Could be full span processors
-        span_exporter_names: Optional[list[str]] = None,
-        metric_exporter_names: Optional[list[str]] = None,
-        log_exporter_names: Optional[list[str]] = None,
-        # Could be sampler obj
-        # sampler_name: Optional[str] = None,
+        span_exporter_names: Optional[List[str]] = None,
+        metric_exporter_names: Optional[List[str]] = None,
+        log_exporter_names: Optional[List[str]] = None,
         sampler: Optional[Sampler] = None,
-        # Could be attribute dict or Resource object
-        # resource_attributes: Optional[Attributes] = None,
-        resource: Optional[Resource] = None,
+        resource_attributes: Optional[Attributes] = None,
+        id_generator: IdGenerator = None,
         logging_enabled: Optional[bool] = None,
     ):
-    # Could come before or after
+    if span_exporter_names is None:
+        span_exporter_names = list()
+    if metric_exporter_names is None:
+        metric_exporter_names = list()
+    if log_exporter_names is None:
+        log_exporter_names = list()
     span_exporters, metric_exporters, log_exporters = _import_exporters(
         span_exporter_names + _get_exporter_names("traces"),
         metric_exporter_names + _get_exporter_names("metrics"),
         log_exporter_names + _get_exporter_names("logs"),
     )
-    # If using sampler name instead of sampler obj
-    # if sampler_name is None:
-    #     sampler_name = _get_sampler()
-    # sampler = _import_sampler(sampler_name)
-    # If using sampler obj instead of name. This means user would have to specify the rate on their own
     if sampler is None:
         sampler_name = _get_sampler()
         sampler = _import_sampler(sampler_name)
-    if id_generator_name is None:
+    if id_generator is None:
         id_generator_name = _get_id_generator()
-    id_generator = _import_id_generator(id_generator_name)
-    # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
-    # from the env variable else defaults to "unknown_service"
-    # If using attributes dict instead of resource object
-    # if resource_attributes is None:
-    #     resource_attributes = {}
-    # # populate version if using auto-instrumentation
-    # if auto_instrumentation_version:
-    #     resource_attributes[
-    #         ResourceAttributes.TELEMETRY_AUTO_VERSION
-    #     ] = auto_instrumentation_version
-    # resource = Resource.create(resource_attributes)
-    # If using resource object instead of attributes dict
-    if resource is None:
-        resource = Resource.create()
+        id_generator = _import_id_generator(id_generator_name)
+    if resource_attributes is None:
+        resource_attributes = {}
     # populate version if using auto-instrumentation
     if auto_instrumentation_version:
-        resource.attributes()[
+        resource_attributes[
             ResourceAttributes.TELEMETRY_AUTO_VERSION
         ] = auto_instrumentation_version
-    resource = Resource.create(resource)
+    # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
+    # from the env variable else defaults to "unknown_service"
+    resource = Resource.create(resource_attributes)
 
     _init_tracing(
         exporters=span_exporters,
@@ -467,5 +453,4 @@ class _OTelSDKConfigurator(_BaseConfigurator):
     """
 
     def _configure(self, **kwargs):
-        # _initialize_components(kwargs.get("auto_instrumentation_version"))
         _initialize_components(**kwargs)
