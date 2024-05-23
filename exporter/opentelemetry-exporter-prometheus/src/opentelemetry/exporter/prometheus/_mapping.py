@@ -14,9 +14,9 @@
 
 from re import UNICODE, compile
 
-_SANITIZE_NAME_RE = compile(r"([^a-zA-Z0-9:]+)|_{2,}", UNICODE)
+_SANITIZE_NAME_RE = compile(r"[^a-zA-Z0-9:]+", UNICODE)
 # Same as name, but doesn't allow ":"
-_SANITIZE_ATTRIBUTE_KEY_RE = compile(r"([^a-zA-Z0-9]+)|_{2,}", UNICODE)
+_SANITIZE_ATTRIBUTE_KEY_RE = compile(r"[^a-zA-Z0-9]+", UNICODE)
 
 # UCUM style annotations which are text enclosed in curly braces https://ucum.org/ucum#para-6.
 # This regex is more permissive than UCUM allows and matches any character within curly braces.
@@ -55,7 +55,9 @@ _UNIT_MAPPINGS = {
     # Misc
     "Cel": "celsius",
     "Hz": "hertz",
-    # TODO: this conflicts with the spec but I think it is correct. Need to open a spec issue
+    # TODO(https://github.com/open-telemetry/opentelemetry-specification/issues/4058): the
+    # specification says to normalize "1" to ratio but that may change. Update this mapping or
+    # remove TODO once a decision is made.
     "1": "",
     "%": "percent",
 }
