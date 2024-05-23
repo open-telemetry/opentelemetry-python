@@ -42,6 +42,10 @@ class TestMapping(TestCase):
             sanitize_full_name("1leading_digit"), "_leading_digit"
         )
         self.assertEqual(
+            sanitize_full_name("consective_____underscores"),
+            "consective_underscores",
+        )
+        self.assertEqual(
             sanitize_full_name("1_~#consective_underscores"),
             "_consective_underscores",
         )
@@ -84,7 +88,7 @@ class TestMapping(TestCase):
         self.assertEqual(sanitize_attribute("TestString"), "TestString")
         self.assertEqual(sanitize_attribute("aAbBcC_12_oi"), "aAbBcC_12_oi")
 
-    def testmap_unit(self):
+    def test_map_unit(self):
         # select hardcoded mappings
         self.assertEqual(map_unit("s"), "seconds")
         self.assertEqual(map_unit("By"), "bytes")
@@ -94,8 +98,10 @@ class TestMapping(TestCase):
 
         # UCUM "default unit" aka unity and equivalent UCUM annotations should be stripped
         self.assertEqual(map_unit("1"), "")
+        self.assertEqual(map_unit("{}"), "")
         self.assertEqual(map_unit("{request}"), "")
         self.assertEqual(map_unit("{{{;@#$}}}"), "")
+        self.assertEqual(map_unit("{unit with space}"), "")
 
         # conversion of per units
         self.assertEqual(map_unit("km/h"), "km_per_hour")

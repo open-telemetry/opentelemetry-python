@@ -18,9 +18,9 @@ _SANITIZE_NAME_RE = compile(r"([^a-zA-Z0-9:]+)|_{2,}", UNICODE)
 # Same as name, but doesn't allow ":"
 _SANITIZE_ATTRIBUTE_KEY_RE = compile(r"([^a-zA-Z0-9]+)|_{2,}", UNICODE)
 
-# UCUM annotations are ASCII chars 33-126 enclosed in curly braces
-# https://ucum.org/ucum#para-6
-_UCUM_ANNOTATION_CURLY = compile(r"{[!-~]*}")
+# UCUM style annotations which are text enclosed in curly braces https://ucum.org/ucum#para-6.
+# This regex is more permissive than UCUM allows and matches any character within curly braces.
+_UNIT_ANNOTATION = compile(r"{.*}")
 
 # Remaps common UCUM and SI units to prometheus conventions. Copied from
 # https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/v0.101.0/pkg/translator/prometheus/normalize_name.go#L19
@@ -110,8 +110,8 @@ def map_unit(unit: str) -> str:
     - https://github.com/open-telemetry/opentelemetry-specification/blob/v1.33.0/specification/compatibility/prometheus_and_openmetrics.md#metric-metadata-1
     - https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/v0.101.0/pkg/translator/prometheus/normalize_name.go#L108
     """
-    # remove curly brace UCUM annotations
-    unit = _UCUM_ANNOTATION_CURLY.sub("", unit)
+    # remove curly brace unit annotations
+    unit = _UNIT_ANNOTATION.sub("", unit)
 
     if unit in _UNIT_MAPPINGS:
         return _UNIT_MAPPINGS[unit]
