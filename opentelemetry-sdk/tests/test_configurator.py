@@ -715,9 +715,18 @@ class TestLoggingInit(TestCase):
     @patch("opentelemetry.sdk._configuration._init_logging")
     @patch("opentelemetry.sdk._configuration._init_metrics")
     def test_initialize_components_kwargs(
-        self, metrics_mock, logging_mock, tracing_mock, exporter_names_mock, import_exporters_mock, resource_mock
+        self,
+        metrics_mock,
+        logging_mock,
+        tracing_mock,
+        exporter_names_mock,
+        import_exporters_mock,
+        resource_mock,
     ):
-        exporter_names_mock.return_value = ["env_var_exporter_1", "env_var_exporter_2"]
+        exporter_names_mock.return_value = [
+            "env_var_exporter_1",
+            "env_var_exporter_2",
+        ]
         import_exporters_mock.return_value = (
             "TEST_SPAN_EXPORTERS_DICT",
             "TEST_METRICS_EXPORTERS_DICT",
@@ -740,9 +749,21 @@ class TestLoggingInit(TestCase):
         _initialize_components(**kwargs)
 
         import_exporters_mock.assert_called_once_with(
-            ["custom_span_exporter", "env_var_exporter_1", "env_var_exporter_2"],
-            ["custom_metric_exporter", "env_var_exporter_1", "env_var_exporter_2"],
-            ["custom_log_exporter", "env_var_exporter_1", "env_var_exporter_2"]
+            [
+                "custom_span_exporter",
+                "env_var_exporter_1",
+                "env_var_exporter_2",
+            ],
+            [
+                "custom_metric_exporter",
+                "env_var_exporter_1",
+                "env_var_exporter_2",
+            ],
+            [
+                "custom_log_exporter",
+                "env_var_exporter_1",
+                "env_var_exporter_2",
+            ],
         )
         resource_mock.create.assert_called_once_with(
             {
