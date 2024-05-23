@@ -399,7 +399,6 @@ def _initialize_components(
         resource=resource,
     )
     _init_metrics(metric_exporters, resource)
-    # This could also be paramaterized
     if logging_enabled is None:
         logging_enabled = (
             os.getenv(
