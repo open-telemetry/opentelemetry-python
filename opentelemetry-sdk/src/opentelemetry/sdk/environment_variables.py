@@ -720,7 +720,7 @@ OTEL_PYTHON_EXPERIMENTAL_DISABLE_PROMETHEUS_UNIT_NORMALIZATION = (
 .. envvar:: OTEL_PYTHON_EXPERIMENTAL_DISABLE_PROMETHEUS_UNIT_NORMALIZATION
 
 The :envvar:`OTEL_PYTHON_EXPERIMENTAL_DISABLE_PROMETHEUS_UNIT_NORMALIZATION` environment
-variable allows you to opt-out of the unit normalization described` in the specification
+variable allows you to opt-out of the unit normalization described `in the specification
 <https://github.com/open-telemetry/opentelemetry-specification/blob/v1.33.0/specification/compatibility/prometheus_and_openmetrics.md#metric-metadata-1>`_.
 
 Default: False
