@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Fix class BoundedAttributes to have RLock rather than Lock
+  ([#3859](https://github.com/open-telemetry/opentelemetry-python/pull/3859))
 - Remove thread lock by loading RuntimeContext explicitly.
   ([#3763](https://github.com/open-telemetry/opentelemetry-python/pull/3763))
 - Update proto version to v1.2.0
