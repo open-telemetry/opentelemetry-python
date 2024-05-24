@@ -38,6 +38,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3823] (https://github.com/open-telemetry/opentelemetry-python/pull/3823))
 - Add span flags to OTLP spans and links
   ([#3881](https://github.com/open-telemetry/opentelemetry-python/pull/3881))
+- Add OpenTelemetry trove classifiers to PyPI packages
+  ([#3913] (https://github.com/open-telemetry/opentelemetry-python/pull/3913))
 
 ## Version 1.24.0/0.45b0 (2024-03-28)
 
