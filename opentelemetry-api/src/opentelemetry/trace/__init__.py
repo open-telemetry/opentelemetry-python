@@ -571,7 +571,7 @@ def use_span(
         finally:
             context_api.detach(token)
 
-    except Exception as exc:  # pylint: disable=broad-except
+    except Exception as exc:  # pylint: disable=broad-exception-caught
         if isinstance(span, Span) and span.is_recording():
             # Record the exception as an event
             if record_exception:

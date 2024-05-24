@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Fix class BoundedAttributes to have RLock rather than Lock
+  ([#3859](https://github.com/open-telemetry/opentelemetry-python/pull/3859))
 - Remove thread lock by loading RuntimeContext explicitly.
   ([#3763](https://github.com/open-telemetry/opentelemetry-python/pull/3763))
 - Update proto version to v1.2.0
@@ -38,6 +40,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3881](https://github.com/open-telemetry/opentelemetry-python/pull/3881))
 - Record links with invalid SpanContext if either attributes or TraceState are not empty
   ([#3917](https://github.com/open-telemetry/opentelemetry-python/pull/3917/))
+- Add OpenTelemetry trove classifiers to PyPI packages
+  ([#3913] (https://github.com/open-telemetry/opentelemetry-python/pull/3913))
 
 ## Version 1.24.0/0.45b0 (2024-03-28)
 

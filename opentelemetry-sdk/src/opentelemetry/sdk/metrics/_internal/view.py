@@ -103,6 +103,7 @@ class View:
             is meter_schema_url
             is None
         ):
+            # pylint: disable=broad-exception-raised
             raise Exception(
                 "Some instrument selection "
                 f"criteria must be provided for View {name}"
@@ -113,7 +114,7 @@ class View:
             and instrument_name is not None
             and ("*" in instrument_name or "?" in instrument_name)
         ):
-
+            # pylint: disable=broad-exception-raised
             raise Exception(
                 f"View {name} declared with wildcard "
                 "characters in instrument_name"

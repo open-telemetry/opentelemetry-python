@@ -400,7 +400,7 @@ def get_aggregated_resources(
                     detector,
                     timeout,
                 )
-            # pylint: disable=broad-except
+            # pylint: disable=broad-exception-caught
             except Exception as ex:
                 if detector.raise_on_error:
                     raise ex

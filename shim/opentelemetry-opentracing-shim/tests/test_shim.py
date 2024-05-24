@@ -496,6 +496,7 @@ class TestShim(TestCase):
         # Raise an exception while a span is active.
         with self.assertRaises(Exception) as exc_ctx:
             with self.shim.start_active_span("TestName") as scope:
+                # pylint: disable=broad-exception-raised
                 raise Exception("bad thing")
 
         ex = exc_ctx.exception

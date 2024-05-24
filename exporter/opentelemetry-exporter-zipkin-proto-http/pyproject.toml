@@ -14,6 +14,8 @@ authors = [
 ]
 classifiers = [
   "Development Status :: 5 - Production/Stable",
+  "Framework :: OpenTelemetry",
+  "Framework :: OpenTelemetry :: Exporters",
   "Intended Audience :: Developers",
   "License :: OSI Approved :: Apache Software License",
   "Programming Language :: Python",
