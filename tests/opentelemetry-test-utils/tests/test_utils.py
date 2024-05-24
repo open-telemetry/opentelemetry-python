@@ -23,7 +23,7 @@ class TestAssertNotRaises(TestCase):
             with self.assertNotRaises(Exception):
                 pass
 
-        except Exception as error:  # pylint: disable=broad-except
+        except Exception as error:  # pylint: disable=broad-exception-caught
 
             self.fail(  # pylint: disable=no-member
                 f"Unexpected exception {error} was raised"
@@ -36,7 +36,7 @@ class TestAssertNotRaises(TestCase):
             with self.assertNotRaises(KeyError):
                 1 / 0  # pylint: disable=pointless-statement
 
-        except Exception as error:  # pylint: disable=broad-except
+        except Exception as error:  # pylint: disable=broad-exception-caught
 
             self.fail(  # pylint: disable=no-member
                 f"Unexpected exception {error} was raised"
@@ -49,7 +49,7 @@ class TestAssertNotRaises(TestCase):
             with self.assertNotRaises(KeyError, IndexError):
                 1 / 0  # pylint: disable=pointless-statement
 
-        except Exception as error:  # pylint: disable=broad-except
+        except Exception as error:  # pylint: disable=broad-exception-caught
 
             self.fail(  # pylint: disable=no-member
                 f"Unexpected exception {error} was raised"

@@ -50,7 +50,7 @@ def _load_runtime_context() -> _RuntimeContext:
                 )
             )
         ).load()()
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # pylint: disable=broad-exception-caught
         logger.exception(
             "Failed to load context: %s, fallback to %s",
             configured_context,
@@ -152,7 +152,7 @@ def detach(token: object) -> None:
     """
     try:
         _RUNTIME_CONTEXT.detach(token)
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # pylint: disable=broad-exception-caught
         logger.exception("Failed to detach context")
 
 

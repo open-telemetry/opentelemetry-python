@@ -174,7 +174,7 @@ class ConsoleMetricExporter(MetricExporter):
 
 
 class MetricReader(ABC):
-    # pylint: disable=too-many-branches
+    # pylint: disable=too-many-branches,broad-exception-raised
     """
     Base class for all metric readers
 
@@ -529,12 +529,13 @@ class PeriodicExportingMetricReader(MetricReader):
     ) -> None:
 
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
+        # pylint: disable=broad-exception-caught,invalid-name
         try:
             with self._export_lock:
                 self._exporter.export(
                     metrics_data, timeout_millis=timeout_millis
                 )
-        except Exception as e:  # pylint: disable=broad-except,invalid-name
+        except Exception as e:
             _logger.exception("Exception while exporting metrics %s", str(e))
         detach(token)
 
