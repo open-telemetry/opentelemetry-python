@@ -133,7 +133,7 @@ class GlobalErrorHandler:
                     error_handler_class()._handle(exc_value)
                     plugin_handled = True
 
-                # pylint: disable=broad-except
+                # pylint: disable=broad-exception-caught
                 except Exception as error_handling_error:
 
                     logger.exception(
