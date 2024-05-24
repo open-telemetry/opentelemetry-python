@@ -941,8 +941,29 @@ class TestSpan(unittest.TestCase):
 
         with self.tracer.start_as_current_span("root") as root:
             root.add_link(other_context)
-
+            root.add_link(None)
             self.assertEqual(len(root.links), 0)
+
+    def test_add_link_with_invalid_span_context_with_attributes(self):
+        invalid_context = trace_api.INVALID_SPAN_CONTEXT
+
+        with self.tracer.start_as_current_span("root") as root:
+            root.add_link(invalid_context, {"name": "neighbor"})
+            self.assertEqual(len(root.links), 1)
+            self.assertEqual(root.links[0].attributes, {"name": "neighbor"})
+
+    def test_add_link_with_invalid_span_context_with_tracestate(self):
+        invalid_context = trace.SpanContext(
+            trace_api.INVALID_TRACE_ID,
+            trace_api.INVALID_SPAN_ID,
+            is_remote=False,
+            trace_state="foo=bar",
+        )
+
+        with self.tracer.start_as_current_span("root") as root:
+            root.add_link(invalid_context)
+            self.assertEqual(len(root.links), 1)
+            self.assertEqual(root.links[0].context.trace_state, "foo=bar")
 
     def test_update_name(self):
         with self.tracer.start_as_current_span("root") as root:
