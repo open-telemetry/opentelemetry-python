@@ -988,6 +988,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             return
 
         if change < 0:
+            # pylint: disable=broad-exception-raised
             raise Exception("Invalid change of scale")
 
         positive.downscale(change)
@@ -1025,6 +1026,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 span = previous_buckets.index_end - index
 
                 if span >= self._max_size:
+                    # pylint: disable=broad-exception-raised
                     raise Exception("Incorrect merge scale")
 
                 if span >= len(previous_buckets.counts):
@@ -1036,6 +1038,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 span = index - previous_buckets.index_start
 
                 if span >= self._max_size:
+                    # pylint: disable=broad-exception-raised
                     raise Exception("Incorrect merge scale")
 
                 if span >= len(previous_buckets.counts):
@@ -1152,6 +1155,7 @@ class DefaultAggregation(Aggregation):
         if isinstance(instrument, _Gauge):
             return _LastValueAggregation(attributes)
 
+        # pylint: disable=broad-exception-raised
         raise Exception(f"Invalid instrument type {type(instrument)} found")
 
 

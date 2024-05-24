@@ -76,7 +76,6 @@ disable=missing-docstring,
       unused-argument, # temp-pylint-upgrade
       redefined-builtin,
       cyclic-import,
-      broad-exception-raised,
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
@@ -481,3 +480,8 @@ max-statements=50
 
 # Minimum number of public methods for a class (see R0903).
 min-public-methods=2
+
+[EXCEPTIONS]
+
+# Exceptions that will emit a warning when being caught.
+overgeneral-exceptions=builtins.Exception
