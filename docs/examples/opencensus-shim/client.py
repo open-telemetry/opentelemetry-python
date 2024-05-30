@@ -50,7 +50,7 @@ config_integration.trace_integrations(['requests'])
 def endpoint():
     with tracer.start_as_current_span("Parent"):
         response = requests.get("http://example.com")  # Example external request
-    return f"Hello, World! External request status: {response.status_code}"
+    return f"Hello, World!"
 
 if __name__ == "__main__":
     app.run(port=8080)
