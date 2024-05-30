@@ -356,7 +356,7 @@ def _import_id_generator(id_generator_name: str) -> IdGenerator:
 
 def _initialize_components(
     auto_instrumentation_version: Optional[str] = None,
-    span_exporter_names: Optional[List[str]] = None,
+    trace_exporter_names: Optional[List[str]] = None,
     metric_exporter_names: Optional[List[str]] = None,
     log_exporter_names: Optional[List[str]] = None,
     sampler: Optional[Sampler] = None,
@@ -364,14 +364,14 @@ def _initialize_components(
     id_generator: IdGenerator = None,
     logging_enabled: Optional[bool] = None,
 ):
-    if span_exporter_names is None:
-        span_exporter_names = []
+    if trace_exporter_names is None:
+        trace_exporter_names = []
     if metric_exporter_names is None:
         metric_exporter_names = []
     if log_exporter_names is None:
         log_exporter_names = []
     span_exporters, metric_exporters, log_exporters = _import_exporters(
-        span_exporter_names + _get_exporter_names("traces"),
+        trace_exporter_names + _get_exporter_names("traces"),
         metric_exporter_names + _get_exporter_names("metrics"),
         log_exporter_names + _get_exporter_names("logs"),
     )

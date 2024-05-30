@@ -735,7 +735,7 @@ class TestLoggingInit(TestCase):
         resource_mock.create.return_value = "TEST_RESOURCE"
         kwargs = {
             "auto_instrumentation_version": "auto-version",
-            "span_exporter_names": ["custom_span_exporter"],
+            "trace_exporter_names": ["custom_span_exporter"],
             "metric_exporter_names": ["custom_metric_exporter"],
             "log_exporter_names": ["custom_log_exporter"],
             "sampler": "TEST_SAMPLER",
