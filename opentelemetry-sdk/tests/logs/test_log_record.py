@@ -14,9 +14,14 @@
 
 import json
 import unittest
+import warnings
 
 from opentelemetry.attributes import BoundedAttributes
-from opentelemetry.sdk._logs import LogLimits, LogRecord
+from opentelemetry.sdk._logs import (
+    LogDroppedAttributesWarning,
+    LogLimits,
+    LogRecord,
+)
 
 
 class TestLogRecord(unittest.TestCase):
@@ -97,6 +102,28 @@ class TestLogRecord(unittest.TestCase):
         )
         self.assertTrue(result.dropped_attributes == 1)
         self.assertEqual(expected, result.attributes)
+
+    def test_log_record_dropped_attributes_set_limits_warning_once(self):
+        attr = {"key1": "value1", "key2": "value2"}
+        limits = LogLimits(
+            max_attributes=1,
+            max_attribute_length=1,
+        )
+
+        with warnings.catch_warnings(record=True) as w:
+            for i in range(10):
+                LogRecord(
+                    timestamp=i,
+                    body="a log line",
+                    attributes=attr,
+                    limits=limits,
+                )
+        self.assertEqual(len(w), 1)
+        self.assertIsInstance(w[-1].message, LogDroppedAttributesWarning)
+        self.assertIn(
+            "Log record attributes were dropped due to limits",
+            str(w[-1].message),
+        )
 
     def test_log_record_dropped_attributes_unset_limits(self):
         attr = {"key": "value", "key2": "value2"}

@@ -19,6 +19,7 @@ import json
 import logging
 import threading
 import traceback
+import warnings
 from os import environ
 from time import time_ns
 from typing import Any, Callable, Optional, Tuple, Union  # noqa
@@ -55,6 +56,13 @@ _logger = logging.getLogger(__name__)
 
 _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
 _ENV_VALUE_UNSET = ""
+
+
+class LogDroppedAttributesWarning(UserWarning):
+    pass
+
+
+warnings.simplefilter("once", LogDroppedAttributesWarning)
 
 
 class LogLimits:
@@ -190,6 +198,12 @@ class LogRecord(APILogRecord):
             }
         )
         self.resource = resource
+        if self.dropped_attributes > 0:
+            warnings.warn(
+                "Log record attributes were dropped due to limits",
+                LogDroppedAttributesWarning,
+                stacklevel=2,
+            )
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, LogRecord):
