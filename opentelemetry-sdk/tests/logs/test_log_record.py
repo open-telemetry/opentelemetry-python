@@ -110,19 +110,19 @@ class TestLogRecord(unittest.TestCase):
             max_attribute_length=1,
         )
 
-        with warnings.catch_warnings(record=True) as w:
-            for i in range(10):
+        with warnings.catch_warnings(record=True) as cw:
+            for _ in range(10):
                 LogRecord(
-                    timestamp=i,
+                    timestamp=0,
                     body="a log line",
                     attributes=attr,
                     limits=limits,
                 )
-        self.assertEqual(len(w), 1)
-        self.assertIsInstance(w[-1].message, LogDroppedAttributesWarning)
+        self.assertEqual(len(cw), 1)
+        self.assertIsInstance(cw[-1].message, LogDroppedAttributesWarning)
         self.assertIn(
             "Log record attributes were dropped due to limits",
-            str(w[-1].message),
+            str(cw[-1].message),
         )
 
     def test_log_record_dropped_attributes_unset_limits(self):
