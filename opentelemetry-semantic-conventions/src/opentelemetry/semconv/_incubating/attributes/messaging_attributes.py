@@ -26,9 +26,10 @@ MESSAGING_CLIENT_ID: Final = "messaging.client.id"
 A unique identifier for the client that consumes or produces a message.
 """
 
-# MESSAGING_CLIENT_ID: Final = "messaging.client_id"
-
-# Deprecated: Replaced by `messaging.client.id`.
+# MESSAGING_CLIENT_ID : Final = "messaging.client_id"
+"""
+Deprecated: Replaced by `messaging.client.id`.
+"""
 
 MESSAGING_DESTINATION_ANONYMOUS: Final = "messaging.destination.anonymous"
 """
@@ -39,7 +40,7 @@ MESSAGING_DESTINATION_NAME: Final = "messaging.destination.name"
 """
 The message destination name.
 Note: Destination name SHOULD uniquely identify a specific queue, topic or other entity within the broker. If
-    the broker doesn't have such notion, the destination name SHOULD uniquely identify the broker.
+the broker doesn't have such notion, the destination name SHOULD uniquely identify the broker.
 """
 
 MESSAGING_DESTINATION_PARTITION_ID: Final = (
@@ -73,7 +74,7 @@ MESSAGING_DESTINATION_PUBLISH_NAME: Final = (
 """
 The name of the original destination the message was published to.
 Note: The name SHOULD uniquely identify a specific queue, topic, or other entity within the broker. If
-    the broker doesn't have such notion, the original destination name SHOULD uniquely identify the broker.
+the broker doesn't have such notion, the original destination name SHOULD uniquely identify the broker.
 """
 
 MESSAGING_EVENTHUBS_CONSUMER_GROUP: Final = (
@@ -150,7 +151,7 @@ MESSAGING_MESSAGE_BODY_SIZE: Final = "messaging.message.body.size"
 """
 The size of the message body in bytes.
 Note: This can refer to both the compressed or uncompressed body size. If both sizes are known, the uncompressed
-    body size should be used.
+body size should be used.
 """
 
 MESSAGING_MESSAGE_CONVERSATION_ID: Final = "messaging.message.conversation_id"
@@ -162,7 +163,7 @@ MESSAGING_MESSAGE_ENVELOPE_SIZE: Final = "messaging.message.envelope.size"
 """
 The size of the message body and metadata in bytes.
 Note: This can refer to both the compressed or uncompressed size. If both sizes are known, the uncompressed
-    size should be used.
+size should be used.
 """
 
 MESSAGING_MESSAGE_ID: Final = "messaging.message.id"

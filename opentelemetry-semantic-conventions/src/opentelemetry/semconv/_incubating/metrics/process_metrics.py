@@ -38,7 +38,6 @@ CallbackT = Union[
     Generator[Iterable[Observation], CallbackOptions, None],
 ]
 
-
 PROCESS_CONTEXT_SWITCHES: Final = "process.context_switches"
 """
 Number of times the process has been context switched

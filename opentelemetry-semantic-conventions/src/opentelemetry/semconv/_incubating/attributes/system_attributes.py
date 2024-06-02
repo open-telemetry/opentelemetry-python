@@ -135,7 +135,7 @@ class SystemMemoryStateValues(Enum):
     FREE = "free"
     """free."""
     SHARED = "shared"
-    """shared."""
+    """Deprecated: Removed, report shared memory usage with `metric.system.memory.shared` metric."""
     BUFFERS = "buffers"
     """buffers."""
     CACHED = "cached"
