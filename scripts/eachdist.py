@@ -208,7 +208,6 @@ def parse_args(args=None):
         editable=True,
         with_dev_deps=True,
         eager_upgrades=True,
-        with_test_deps=True,
     )
 
     lintparser = subparsers.add_parser(
@@ -466,28 +465,6 @@ def install_args(args):
             check=True,
         )
 
-    allfmt = "-e 'file://{}" if args.editable else "'file://{}"
-    # packages should provide an extra_requires that is named
-    # 'test', to denote test dependencies.
-    extras = []
-    if args.with_test_deps:
-        extras.append("test")
-    if extras:
-        allfmt += f"[{','.join(extras)}]"
-    # note the trailing single quote, to close the quote opened above.
-    allfmt += "'"
-
-    execute_args(
-        parse_subargs(
-            args,
-            (
-                "exec",
-                "python -m pip install {} " + join_args(args.pipargs),
-                "--all",
-                allfmt,
-            ),
-        )
-    )
     if args.with_dev_deps:
         rootpath = find_projectroot()
         runsubprocess(
