@@ -66,8 +66,6 @@ class LogDroppedAttributesWarning(UserWarning):
     interfering with default user warnings.
     """
 
-    pass
-
 
 warnings.simplefilter("once", LogDroppedAttributesWarning)
 
