@@ -59,6 +59,13 @@ _ENV_VALUE_UNSET = ""
 
 
 class LogDroppedAttributesWarning(UserWarning):
+    """Custom warning to indicate dropped log attributes due to limits.
+
+    This class is used to filter and handle these specific warnings separately
+    from other warnings, ensuring that they are only shown once without
+    interfering with default user warnings.
+    """
+
     pass
 
 
