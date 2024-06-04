@@ -195,7 +195,6 @@ def parse_args(args=None):
 
     setup_instparser(instparser)
     instparser.add_argument("--editable", "-e", action="store_true")
-    instparser.add_argument("--with-test-deps", action="store_true")
     instparser.add_argument("--with-dev-deps", action="store_true")
     instparser.add_argument("--eager-upgrades", action="store_true")
 
