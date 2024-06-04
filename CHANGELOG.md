@@ -8,7 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ## Version 1.25.0/0.46b0 (2024-05-30)
-
+- Remove references to [test] packages from eachdist.py script
+  ([#3947](https://github.com/open-telemetry/opentelemetry-python/pull/3947))
 - Fix class BoundedAttributes to have RLock rather than Lock
   ([#3859](https://github.com/open-telemetry/opentelemetry-python/pull/3859))
 - Remove thread lock by loading RuntimeContext explicitly.
