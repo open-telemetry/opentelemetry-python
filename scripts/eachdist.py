@@ -481,10 +481,7 @@ def install_args(args):
             check=True,
         )
 
-    allfmt = "-e 'file://{}" if args.editable else "'file://{}"
-    
-    # note the trailing single quote, to close the quote opened above.
-    allfmt += "'"
+    allfmt = "-e 'file://{}'" if args.editable else "'file://{}'"
 
     execute_args(
         parse_subargs(
