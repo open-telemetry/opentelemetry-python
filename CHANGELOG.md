@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 - Fix RandomIdGenerator can generate invalid Span/Trace Ids
-  ([#3921](https://github.com/open-telemetry/opentelemetry-python/issues/3921))
+  ([#3949](https://github.com/open-telemetry/opentelemetry-python/pull/3949))
 
 ## Version 1.25.0/0.46b0 (2024-05-30)
 
