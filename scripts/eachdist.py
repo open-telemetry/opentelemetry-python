@@ -481,6 +481,22 @@ def install_args(args):
             check=True,
         )
 
+    allfmt = "-e 'file://{}" if args.editable else "'file://{}"
+    
+    # note the trailing single quote, to close the quote opened above.
+    allfmt += "'"
+
+    execute_args(
+        parse_subargs(
+            args,
+            (
+                "exec",
+                "python -m pip install {} " + join_args(args.pipargs),
+                "--all",
+                allfmt,
+            ),
+        )
+    )
 
 def parse_subargs(parentargs, args):
     subargs = parse_args(args)
