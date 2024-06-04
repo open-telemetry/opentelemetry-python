@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Fix RandomIdGenerator can generate invalid Span/Trace Ids
+  ([#3921](https://github.com/open-telemetry/opentelemetry-python/issues/3921))
+
 ## Version 1.25.0/0.46b0 (2024-05-30)
 
 - Fix class BoundedAttributes to have RLock rather than Lock
