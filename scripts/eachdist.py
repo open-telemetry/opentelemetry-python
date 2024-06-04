@@ -464,6 +464,21 @@ def install_args(args):
             check=True,
         )
 
+
+    allfmt = "-e 'file://{}'" if args.editable else "'file://{}'"
+
+    execute_args(
+        parse_subargs(
+            args,
+            (
+                "exec",
+                "python -m pip install {} " + join_args(args.pipargs),
+                "--all",
+                allfmt,
+            ),
+        )
+    )
+    
     if args.with_dev_deps:
         rootpath = find_projectroot()
         runsubprocess(
@@ -480,20 +495,6 @@ def install_args(args):
             + args.pipargs,
             check=True,
         )
-
-    allfmt = "-e 'file://{}'" if args.editable else "'file://{}'"
-
-    execute_args(
-        parse_subargs(
-            args,
-            (
-                "exec",
-                "python -m pip install {} " + join_args(args.pipargs),
-                "--all",
-                allfmt,
-            ),
-        )
-    )
 
 def parse_subargs(parentargs, args):
     subargs = parse_args(args)
