@@ -50,7 +50,7 @@ from opentelemetry.sdk.metrics.export import (
     MetricReader,
     PeriodicExportingMetricReader,
 )
-from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.resources import Attributes, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExporter
 from opentelemetry.sdk.trace.id_generator import IdGenerator
@@ -354,37 +354,61 @@ def _import_id_generator(id_generator_name: str) -> IdGenerator:
     raise RuntimeError(f"{id_generator_name} is not an IdGenerator")
 
 
-def _initialize_components(auto_instrumentation_version):
-    trace_exporters, metric_exporters, log_exporters = _import_exporters(
-        _get_exporter_names("traces"),
-        _get_exporter_names("metrics"),
-        _get_exporter_names("logs"),
+def _initialize_components(
+    auto_instrumentation_version: Optional[str] = None,
+    trace_exporter_names: Optional[List[str]] = None,
+    metric_exporter_names: Optional[List[str]] = None,
+    log_exporter_names: Optional[List[str]] = None,
+    sampler: Optional[Sampler] = None,
+    resource_attributes: Optional[Attributes] = None,
+    id_generator: IdGenerator = None,
+    logging_enabled: Optional[bool] = None,
+):
+    if trace_exporter_names is None:
+        trace_exporter_names = []
+    if metric_exporter_names is None:
+        metric_exporter_names = []
+    if log_exporter_names is None:
+        log_exporter_names = []
+    span_exporters, metric_exporters, log_exporters = _import_exporters(
+        trace_exporter_names + _get_exporter_names("traces"),
+        metric_exporter_names + _get_exporter_names("metrics"),
+        log_exporter_names + _get_exporter_names("logs"),
     )
-    sampler_name = _get_sampler()
-    sampler = _import_sampler(sampler_name)
-    id_generator_name = _get_id_generator()
-    id_generator = _import_id_generator(id_generator_name)
-    # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
-    # from the env variable else defaults to "unknown_service"
-    auto_resource = {}
+    if sampler is None:
+        sampler_name = _get_sampler()
+        sampler = _import_sampler(sampler_name)
+    if id_generator is None:
+        id_generator_name = _get_id_generator()
+        id_generator = _import_id_generator(id_generator_name)
+    if resource_attributes is None:
+        resource_attributes = {}
     # populate version if using auto-instrumentation
     if auto_instrumentation_version:
-        auto_resource[ResourceAttributes.TELEMETRY_AUTO_VERSION] = (
+        resource_attributes[ResourceAttributes.TELEMETRY_AUTO_VERSION] = (
             auto_instrumentation_version
         )
-    resource = Resource.create(auto_resource)
+    # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
+    # from the env variable else defaults to "unknown_service"
+    resource = Resource.create(resource_attributes)
 
     _init_tracing(
-        exporters=trace_exporters,
+        exporters=span_exporters,
         id_generator=id_generator,
         sampler=sampler,
         resource=resource,
     )
     _init_metrics(metric_exporters, resource)
-    logging_enabled = os.getenv(
-        _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED, "false"
-    )
-    if logging_enabled.strip().lower() == "true":
+    if logging_enabled is None:
+        logging_enabled = (
+            os.getenv(
+                _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED, "false"
+            )
+            .strip()
+            .lower()
+            == "true"
+        )
+    if logging_enabled:
         _init_logging(log_exporters, resource)
 
 
@@ -428,4 +452,4 @@ class _OTelSDKConfigurator(_BaseConfigurator):
     """
 
     def _configure(self, **kwargs):
-        _initialize_components(kwargs.get("auto_instrumentation_version"))
+        _initialize_components(**kwargs)
