@@ -195,7 +195,6 @@ def parse_args(args=None):
 
     setup_instparser(instparser)
     instparser.add_argument("--editable", "-e", action="store_true")
-    instparser.add_argument("--with-test-deps", action="store_true")
     instparser.add_argument("--with-dev-deps", action="store_true")
     instparser.add_argument("--eager-upgrades", action="store_true")
 
@@ -208,7 +207,6 @@ def parse_args(args=None):
         editable=True,
         with_dev_deps=True,
         eager_upgrades=True,
-        with_test_deps=True,
     )
 
     lintparser = subparsers.add_parser(
@@ -466,16 +464,7 @@ def install_args(args):
             check=True,
         )
 
-    allfmt = "-e 'file://{}" if args.editable else "'file://{}"
-    # packages should provide an extra_requires that is named
-    # 'test', to denote test dependencies.
-    extras = []
-    if args.with_test_deps:
-        extras.append("test")
-    if extras:
-        allfmt += f"[{','.join(extras)}]"
-    # note the trailing single quote, to close the quote opened above.
-    allfmt += "'"
+    allfmt = "-e 'file://{}'" if args.editable else "'file://{}'"
 
     execute_args(
         parse_subargs(
@@ -488,6 +477,7 @@ def install_args(args):
             ),
         )
     )
+
     if args.with_dev_deps:
         rootpath = find_projectroot()
         runsubprocess(
