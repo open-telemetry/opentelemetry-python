@@ -377,6 +377,10 @@ class ReadableSpan:
         end_time: Optional[int] = None,
         instrumentation_scope: Optional[InstrumentationScope] = None,
     ) -> None:
+        if not isinstance(name, str):
+            stack_trace = ''.join(traceback.format_stack())
+            logger.warning(f"span name must be a string.\n Stack trace: {stack_trace}")
+            name = str(name)
         self._name = name
         self._context = context
         self._kind = kind
