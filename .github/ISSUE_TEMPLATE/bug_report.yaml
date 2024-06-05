@@ -52,12 +52,6 @@ body:
       required: true
 
   - type: textarea
-    attributes:
-      label: Log output
-      description: Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
-      render: shell
-
-  - type: textarea
     id: additional-context
     attributes:
       label: Additional context
@@ -72,5 +66,4 @@ body:
       options:
         - "No"
         - "Yes"
-    validations:
-      required: false
+

@@ -48,5 +48,3 @@ body:
       options:
         - "No"
         - "Yes"
-    validations:
-      required: false
