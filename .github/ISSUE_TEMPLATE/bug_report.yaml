@@ -5,17 +5,11 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to fill out this bug report!
-        Please make sure to fill out the entire form below,
-        providing as much context as you can in order to help us
-        triage and track down your bug as quickly as possible.
+        Thanks for taking the time to fill out this bug report! Please make sure to fill out the entire form below, providing as much context as you can in order to help us triage and track down your bug as quickly as possible.
 
-        Before filing a bug, please be sure you have searched through
-        [existing bugs](https://github.com/open-telemetry/opentelemetry-python/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc+label%3Abug)
-        to see if your bug is already addressed.
-
-        If your bug is related to an instrumentation or plugin in [opentelemetry-python-contrib](https://github.com/open-telemetry/opentelemetry-python-contrib)
-        please be sure to file it there.
+        Before filing a bug, please be sure you have searched through [existing bugs](https://github.com/open-telemetry/opentelemetry-python/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc+label%3Abug) to see if your bug is already addressed.
+        If your bug is related to an instrumentation or plugin in [opentelemetry-python-contrib](https://github.com/open-telemetry/opentelemetry-python-contrib) please be sure to file it there.
+  
   - type: textarea
     id: environment
     attributes:
@@ -23,35 +17,51 @@ body:
       description: |
         Please describe any aspect of your environment relevant to the problem, including your Python version, [platform](https://docs.python.org/3/library/platform.html), version numbers of installed dependencies, information about your cloud hosting provider, etc. If you're reporting a problem with a specific version of a library in this repo, please check whether the problem has been fixed on main.
       value: |
-        OS: (e.g., Ubuntu 20.04)
-        Python verison: (e.g., Python 3.8.10)
-        SDK Version: (e.g., )
-        API Version: (e.g., )
+        Python version: (e.g., Python 3.8.10)
+        SDK version: (e.g., )
+        API version: (e.g., )
+  
   - type: textarea
     attributes:
       label: What happened?
-      description: Please provide as much detail as you reasonably can. Describe exactly how to reproduce the error. Include a code sample if applicable.
-      value: |
-        ## Description
-
-        ## Steps to reproduce
-
-        ## Expected behavior
-
-        ## Actual behavior
+      description: Please provide as much detail as you reasonably can.
     validations:
       required: true
+
+  - type: textarea
+    attributes:
+      label: Steps to Reproduce
+      description: Provide a [minimal reproducible example](https://stackoverflow.com/help/minimal-reproducible-example). We will close the issue if the repro project you share with us is complex or we cannot reproduce the behavior you are reporting. We cannot investigate custom projects, so don't point us to such, please.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Expected Result
+      description: What did you expect to see?
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Actual Result
+      description: What did you see instead?
+    validations:
+      required: true
+
   - type: textarea
     attributes:
       label: Log output
       description: Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
       render: shell
+
   - type: textarea
     id: additional-context
     attributes:
       label: Additional context
       description: Add any other context about the problem here.
       placeholder: Any additional information...
+      
   - type: dropdown
     id: contribute
     attributes:

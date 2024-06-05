@@ -6,12 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for using our library and trying to make it better!
-
-        Before opening a feature request against this repo, consider whether the feature
-        should/could be implemented in the [other OpenTelemetry client
-        libraries](https://github.com/open-telemetry/). If so, please [open an issue on
-        opentelemetry-specification](https://github.com/open-telemetry/opentelemetry-specification/issues/new) first.
+        Before opening a feature request against this repo, consider whether the feature should/could be implemented in the [other OpenTelemetry client libraries](https://github.com/open-telemetry/). If so, please [open an issue on opentelemetry-specification](https://github.com/open-telemetry/opentelemetry-specification/issues/new) first.
   - type: textarea
     id: related-problem
     attributes:
