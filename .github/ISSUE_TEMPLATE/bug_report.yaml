@@ -20,8 +20,8 @@ body:
       value: |
         OS: (e.g, Ubuntu)
         Python version: (e.g., Python 3.8.10)
-        SDK version: (e.g., )
-        API version: (e.g., )
+        SDK version: (e.g., 1.25.0)
+        API version: (e.g., 1.25.0)
   
   - type: textarea
     attributes:
@@ -66,4 +66,3 @@ body:
       options:
         - "No"
         - "Yes"
-
