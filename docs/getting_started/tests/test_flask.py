@@ -46,4 +46,4 @@ class TestFlask(unittest.TestCase):
         output = str(server.stdout.read())
         self.assertIn('"name": "GET"', output)
         self.assertIn('"name": "example-request"', output)
-        self.assertIn('"name": "/"', output)
+        self.assertIn('"name": "GET /"', output)

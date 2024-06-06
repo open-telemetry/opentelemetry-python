@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## Version 1.25.0/0.46b0 (2024-05-30)
+
 - Fix class BoundedAttributes to have RLock rather than Lock
   ([#3859](https://github.com/open-telemetry/opentelemetry-python/pull/3859))
 - Remove thread lock by loading RuntimeContext explicitly.
@@ -42,6 +44,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3917](https://github.com/open-telemetry/opentelemetry-python/pull/3917/))
 - Add OpenTelemetry trove classifiers to PyPI packages
   ([#3913] (https://github.com/open-telemetry/opentelemetry-python/pull/3913))
+- Fix prometheus metric name and unit conversion
+  ([#3924](https://github.com/open-telemetry/opentelemetry-python/pull/3924))
+  - this is a breaking change to prometheus metric names so they comply with the
+  [specification](https://github.com/open-telemetry/opentelemetry-specification/blob/v1.33.0/specification/compatibility/prometheus_and_openmetrics.md#otlp-metric-points-to-prometheus).
+  - you can temporarily opt-out of the unit normalization by setting the environment variable
+  `OTEL_PYTHON_EXPERIMENTAL_DISABLE_PROMETHEUS_UNIT_NORMALIZATION=true`
+  - common unit abbreviations are converted to Prometheus conventions (`s` -> `seconds`),
+  following the [collector's implementation](https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/c0b51136575aa7ba89326d18edb4549e7e1bbdb9/pkg/translator/prometheus/normalize_name.go#L108)
+  - repeated `_` are replaced with a single `_`
+  - unit annotations (enclosed in curly braces like `{requests}`) are stripped away
+  - units with slash are converted e.g. `m/s` -> `meters_per_second`.
+  - The exporter's API is not changed
+- Add parameters for Distros and configurators to configure autoinstrumentation in addition to existing environment variables.
+  ([#3864] (https://github.com/open-telemetry/opentelemetry-python/pull/3864))
 
 ## Version 1.24.0/0.45b0 (2024-03-28)
 
