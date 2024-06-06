@@ -39,7 +39,7 @@ generate() {
     -v ${SCRIPT_DIR}/semantic-conventions/model:/source \
     -v ${SCRIPT_DIR}/templates:/templates \
     -v ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/:/output \
-    otel/semconvgen:$OTEL_SEMCONV_GEN_IMG_VERSION \
+    library/semconvgen1 \
     -f /source \
     --continue-on-validation-errors \
     code \

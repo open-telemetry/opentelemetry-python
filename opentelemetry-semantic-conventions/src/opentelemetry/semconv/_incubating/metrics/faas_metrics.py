@@ -32,7 +32,7 @@ def create_faas_coldstarts(meter: Meter) -> Counter:
     )
 
 
-FAAS_CPU_USAGE = "faas.cpu_usage"
+FAAS_CPUUSAGE = "faas.cpu_usage"
 """
 Distribution of CPU usage per invocation
 Instrument: histogram
@@ -66,7 +66,7 @@ def create_faas_errors(meter: Meter) -> Counter:
     )
 
 
-FAAS_INIT_DURATION = "faas.init_duration"
+FAAS_INITDURATION = "faas.init_duration"
 """
 Measures the duration of the function's initialization, such as a cold start
 Instrument: histogram
@@ -100,7 +100,7 @@ def create_faas_invocations(meter: Meter) -> Counter:
     )
 
 
-FAAS_INVOKE_DURATION = "faas.invoke_duration"
+FAAS_INVOKEDURATION = "faas.invoke_duration"
 """
 Measures the duration of the function's logic execution
 Instrument: histogram
@@ -117,7 +117,7 @@ def create_faas_invoke_duration(meter: Meter) -> Histogram:
     )
 
 
-FAAS_MEM_USAGE = "faas.mem_usage"
+FAAS_MEMUSAGE = "faas.mem_usage"
 """
 Distribution of max memory usage per invocation
 Instrument: histogram
@@ -134,7 +134,7 @@ def create_faas_mem_usage(meter: Meter) -> Histogram:
     )
 
 
-FAAS_NET_IO = "faas.net_io"
+FAAS_NETIO = "faas.net_io"
 """
 Distribution of net I/O usage per invocation
 Instrument: histogram

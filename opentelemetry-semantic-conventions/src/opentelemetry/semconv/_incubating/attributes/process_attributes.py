@@ -20,17 +20,17 @@ PROCESS_COMMAND = "process.command"
 The command used to launch the process (i.e. the command name). On Linux based systems, can be set to the zeroth string in `proc/[pid]/cmdline`. On Windows, can be set to the first parameter extracted from `GetCommandLineW`.
 """
 
-PROCESS_COMMAND_ARGS = "process.command_args"
+PROCESS_COMMANDARGS = "process.command_args"
 """
 All the command arguments (including the command/executable itself) as received by the process. On Linux-based systems (and some other Unixoid systems supporting procfs), can be set according to the list of null-delimited strings extracted from `proc/[pid]/cmdline`. For libc-based executables, this would be the full argv vector passed to `main`.
 """
 
-PROCESS_COMMAND_LINE = "process.command_line"
+PROCESS_COMMANDLINE = "process.command_line"
 """
 The full command used to launch the process as a single string representing the full command. On Windows, can be set to the result of `GetCommandLineW`. Do not set this if you have to assemble it just for monitoring; use `process.command_args` instead.
 """
 
-PROCESS_CONTEXT_SWITCH_TYPE = "process.context_switch_type"
+PROCESS_CONTEXTSWITCHTYPE = "process.context_switch_type"
 """
 Specifies whether the context switches for this data point were voluntary or involuntary.
 """
@@ -55,12 +55,12 @@ PROCESS_OWNER = "process.owner"
 The username of the user that owns the process.
 """
 
-PROCESS_PAGING_FAULT_TYPE = "process.paging.fault_type"
+PROCESS_PAGING_FAULTTYPE = "process.paging.fault_type"
 """
 The type of page fault for this data point. Type `major` is for major/hard page faults, and `minor` is for minor/soft page faults.
 """
 
-PROCESS_PARENT_PID = "process.parent_pid"
+PROCESS_PARENTPID = "process.parent_pid"
 """
 Parent Process identifier (PPID).
 """
@@ -86,7 +86,7 @@ The version of the runtime of this process, as returned by the runtime without m
 """
 
 
-class ProcessContextSwitchTypeValues(Enum):
+class ProcessContextswitchtypeValues(Enum):
     VOLUNTARY = "voluntary"
     """voluntary."""
     INVOLUNTARY = "involuntary"
@@ -102,7 +102,7 @@ class ProcessCpuStateValues(Enum):
     """wait."""
 
 
-class ProcessPagingFaultTypeValues(Enum):
+class ProcessPagingFaulttypeValues(Enum):
     MAJOR = "major"
     """major."""
     MINOR = "minor"

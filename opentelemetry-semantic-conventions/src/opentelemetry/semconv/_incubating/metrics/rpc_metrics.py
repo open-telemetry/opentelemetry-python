@@ -54,7 +54,7 @@ def create_rpc_client_request_size(meter: Meter) -> Histogram:
     )
 
 
-RPC_CLIENT_REQUESTS_PER_RPC = "rpc.client.requests_per_rpc"
+RPC_CLIENT_REQUESTSPERRPC = "rpc.client.requests_per_rpc"
 """
 Measures the number of messages received per RPC
 Instrument: histogram
@@ -92,7 +92,7 @@ def create_rpc_client_response_size(meter: Meter) -> Histogram:
     )
 
 
-RPC_CLIENT_RESPONSES_PER_RPC = "rpc.client.responses_per_rpc"
+RPC_CLIENT_RESPONSESPERRPC = "rpc.client.responses_per_rpc"
 """
 Measures the number of messages sent per RPC
 Instrument: histogram
@@ -151,7 +151,7 @@ def create_rpc_server_request_size(meter: Meter) -> Histogram:
     )
 
 
-RPC_SERVER_REQUESTS_PER_RPC = "rpc.server.requests_per_rpc"
+RPC_SERVER_REQUESTSPERRPC = "rpc.server.requests_per_rpc"
 """
 Measures the number of messages received per RPC
 Instrument: histogram
@@ -189,7 +189,7 @@ def create_rpc_server_response_size(meter: Meter) -> Histogram:
     )
 
 
-RPC_SERVER_RESPONSES_PER_RPC = "rpc.server.responses_per_rpc"
+RPC_SERVER_RESPONSESPERRPC = "rpc.server.responses_per_rpc"
 """
 Measures the number of messages sent per RPC
 Instrument: histogram

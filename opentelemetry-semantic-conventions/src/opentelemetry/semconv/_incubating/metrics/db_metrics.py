@@ -15,7 +15,7 @@
 
 from opentelemetry.metrics import Counter, Histogram, Meter, UpDownCounter
 
-DB_CLIENT_CONNECTIONS_CREATE_TIME = "db.client.connections.create_time"
+DB_CLIENT_CONNECTIONS_CREATETIME = "db.client.connections.create_time"
 """
 The time it took to create a new connection
 Instrument: histogram
@@ -83,7 +83,7 @@ def create_db_client_connections_max(meter: Meter) -> UpDownCounter:
     )
 
 
-DB_CLIENT_CONNECTIONS_PENDING_REQUESTS = (
+DB_CLIENT_CONNECTIONS_PENDINGREQUESTS = (
     "db.client.connections.pending_requests"
 )
 """
@@ -138,7 +138,7 @@ def create_db_client_connections_usage(meter: Meter) -> UpDownCounter:
     )
 
 
-DB_CLIENT_CONNECTIONS_USE_TIME = "db.client.connections.use_time"
+DB_CLIENT_CONNECTIONS_USETIME = "db.client.connections.use_time"
 """
 The time between borrowing a connection and returning it to the pool
 Instrument: histogram
@@ -155,7 +155,7 @@ def create_db_client_connections_use_time(meter: Meter) -> Histogram:
     )
 
 
-DB_CLIENT_CONNECTIONS_WAIT_TIME = "db.client.connections.wait_time"
+DB_CLIENT_CONNECTIONS_WAITTIME = "db.client.connections.wait_time"
 """
 The time it took to obtain an open connection from the pool
 Instrument: histogram

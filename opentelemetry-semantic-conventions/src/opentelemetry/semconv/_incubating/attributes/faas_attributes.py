@@ -51,30 +51,30 @@ The execution environment ID as a string, that will be potentially reused for ot
 Note: * **AWS Lambda:** Use the (full) log stream name.
 """
 
-FAAS_INVOCATION_ID = "faas.invocation_id"
+FAAS_INVOCATIONID = "faas.invocation_id"
 """
 The invocation ID of the current function invocation.
 """
 
-FAAS_INVOKED_NAME = "faas.invoked_name"
+FAAS_INVOKEDNAME = "faas.invoked_name"
 """
 The name of the invoked function.
 Note: SHOULD be equal to the `faas.name` resource attribute of the invoked function.
 """
 
-FAAS_INVOKED_PROVIDER = "faas.invoked_provider"
+FAAS_INVOKEDPROVIDER = "faas.invoked_provider"
 """
 The cloud provider of the invoked function.
 Note: SHOULD be equal to the `cloud.provider` resource attribute of the invoked function.
 """
 
-FAAS_INVOKED_REGION = "faas.invoked_region"
+FAAS_INVOKEDREGION = "faas.invoked_region"
 """
 The cloud region of the invoked function.
 Note: SHOULD be equal to the `cloud.region` resource attribute of the invoked function.
 """
 
-FAAS_MAX_MEMORY = "faas.max_memory"
+FAAS_MAXMEMORY = "faas.max_memory"
 """
 The amount of memory available to the serverless function converted to Bytes.
 Note: It's recommended to set this attribute since e.g. too little memory can easily stop a Java AWS Lambda function from working correctly. On AWS Lambda, the environment variable `AWS_LAMBDA_FUNCTION_MEMORY_SIZE` provides this information (which must be multiplied by 1,048,576).
@@ -135,8 +135,8 @@ class FaasDocumentOperationValues(Enum):
     """When an object is deleted."""
 
 
-class FaasInvokedProviderValues(Enum):
-    ALIBABA_CLOUD = "alibaba_cloud"
+class FaasInvokedproviderValues(Enum):
+    ALIBABACLOUD = "alibaba_cloud"
     """Alibaba Cloud."""
     AWS = "aws"
     """Amazon Web Services."""
@@ -144,7 +144,7 @@ class FaasInvokedProviderValues(Enum):
     """Microsoft Azure."""
     GCP = "gcp"
     """Google Cloud Platform."""
-    TENCENT_CLOUD = "tencent_cloud"
+    TENCENTCLOUD = "tencent_cloud"
     """Tencent Cloud."""
 
 

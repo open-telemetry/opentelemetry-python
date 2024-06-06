@@ -21,12 +21,12 @@ The command used to run the container (i.e. the command name).
 Note: If using embedded credentials or sensitive data, it is recommended to remove them to prevent potential leakage.
 """
 
-CONTAINER_COMMAND_ARGS = "container.command_args"
+CONTAINER_COMMANDARGS = "container.command_args"
 """
 All the command arguments (including the command/executable itself) run by the container. [2].
 """
 
-CONTAINER_COMMAND_LINE = "container.command_line"
+CONTAINER_COMMANDLINE = "container.command_line"
 """
 The full command run by the container as a single string representing the full command. [2].
 """
@@ -54,7 +54,7 @@ CONTAINER_IMAGE_NAME = "container.image.name"
 Name of the image the container was built on.
 """
 
-CONTAINER_IMAGE_REPO_DIGESTS = "container.image.repo_digests"
+CONTAINER_IMAGE_REPODIGESTS = "container.image.repo_digests"
 """
 Repo digests of the container image as provided by the container runtime.
 Note: [Docker](https://docs.docker.com/engine/api/v1.43/#tag/Image/operation/ImageInspect) and [CRI](https://github.com/kubernetes/cri-api/blob/c75ef5b473bbe2d0a4fc92f82235efd665ea8e9f/pkg/apis/runtime/v1/api.proto#L1237-L1238) report those under the `RepoDigests` field.

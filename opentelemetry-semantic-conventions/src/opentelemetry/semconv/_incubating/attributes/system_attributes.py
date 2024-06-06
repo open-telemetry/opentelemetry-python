@@ -17,7 +17,7 @@ from enum import Enum
 
 from deprecated import deprecated
 
-SYSTEM_CPU_LOGICAL_NUMBER = "system.cpu.logical_number"
+SYSTEM_CPU_LOGICALNUMBER = "system.cpu.logical_number"
 """
 The logical CPU number [0..n-1].
 """
@@ -145,7 +145,7 @@ class SystemMemoryStateValues(Enum):
 class SystemNetworkStateValues(Enum):
     CLOSE = "close"
     """close."""
-    CLOSE_WAIT = "close_wait"
+    CLOSEWAIT = "close_wait"
     """close_wait."""
     CLOSING = "closing"
     """closing."""
@@ -153,19 +153,19 @@ class SystemNetworkStateValues(Enum):
     """delete."""
     ESTABLISHED = "established"
     """established."""
-    FIN_WAIT_1 = "fin_wait_1"
+    FINWAIT1 = "fin_wait_1"
     """fin_wait_1."""
-    FIN_WAIT_2 = "fin_wait_2"
+    FINWAIT2 = "fin_wait_2"
     """fin_wait_2."""
-    LAST_ACK = "last_ack"
+    LASTACK = "last_ack"
     """last_ack."""
     LISTEN = "listen"
     """listen."""
-    SYN_RECV = "syn_recv"
+    SYNRECV = "syn_recv"
     """syn_recv."""
-    SYN_SENT = "syn_sent"
+    SYNSENT = "syn_sent"
     """syn_sent."""
-    TIME_WAIT = "time_wait"
+    TIMEWAIT = "time_wait"
     """time_wait."""
 
 

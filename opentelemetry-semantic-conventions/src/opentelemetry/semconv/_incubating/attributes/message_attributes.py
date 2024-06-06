@@ -15,7 +15,7 @@
 
 from enum import Enum
 
-MESSAGE_COMPRESSED_SIZE = "message.compressed_size"
+MESSAGE_COMPRESSEDSIZE = "message.compressed_size"
 """
 Compressed size of the message in bytes.
 """
@@ -31,7 +31,7 @@ MESSAGE_TYPE = "message.type"
 Whether this is a received or sent message.
 """
 
-MESSAGE_UNCOMPRESSED_SIZE = "message.uncompressed_size"
+MESSAGE_UNCOMPRESSEDSIZE = "message.uncompressed_size"
 """
 Uncompressed size of the message in bytes.
 """

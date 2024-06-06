@@ -37,21 +37,21 @@ OTEL_SCOPE_VERSION = "otel.scope.version"
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.otel_attributes.OTEL_SCOPE_VERSION`.
 """
 
-OTEL_STATUS_CODE = "otel.status_code"
+OTEL_STATUSCODE = "otel.status_code"
 """
-Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.otel_attributes.OTEL_STATUS_CODE`.
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.otel_attributes.OTEL_STATUSCODE`.
 """
 
-OTEL_STATUS_DESCRIPTION = "otel.status_description"
+OTEL_STATUSDESCRIPTION = "otel.status_description"
 """
-Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.otel_attributes.OTEL_STATUS_DESCRIPTION`.
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.otel_attributes.OTEL_STATUSDESCRIPTION`.
 """
 
 
 @deprecated(
-    reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.otel_attributes.OtelStatusCodeValues`."
+    reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.otel_attributes.OtelStatuscodeValues`."
 )
-class OtelStatusCodeValues(Enum):
+class OtelStatuscodeValues(Enum):
     OK = "OK"
     """The operation has been validated by an Application developer or Operator to have completed successfully."""
     ERROR = "ERROR"

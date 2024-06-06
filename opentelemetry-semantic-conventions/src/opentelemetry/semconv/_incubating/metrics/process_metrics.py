@@ -22,7 +22,7 @@ from opentelemetry.metrics import (
     UpDownCounter,
 )
 
-PROCESS_CONTEXT_SWITCHES = "process.context_switches"
+PROCESS_CONTEXTSWITCHES = "process.context_switches"
 """
 Number of times the process has been context switched
 Instrument: counter
@@ -144,7 +144,7 @@ def create_process_network_io(meter: Meter) -> Counter:
     )
 
 
-PROCESS_OPEN_FILE_DESCRIPTOR_COUNT = "process.open_file_descriptor.count"
+PROCESS_OPENFILEDESCRIPTOR_COUNT = "process.open_file_descriptor.count"
 """
 Number of file descriptors in use by the process
 Instrument: updowncounter

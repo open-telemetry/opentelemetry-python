@@ -20,7 +20,7 @@ LOG_FILE_NAME = "log.file.name"
 The basename of the file.
 """
 
-LOG_FILE_NAME_RESOLVED = "log.file.name_resolved"
+LOG_FILE_NAMERESOLVED = "log.file.name_resolved"
 """
 The basename of the file, with symlinks resolved.
 """
@@ -30,7 +30,7 @@ LOG_FILE_PATH = "log.file.path"
 The full path to the file.
 """
 
-LOG_FILE_PATH_RESOLVED = "log.file.path_resolved"
+LOG_FILE_PATHRESOLVED = "log.file.path_resolved"
 """
 The full path to the file, with symlinks resolved.
 """

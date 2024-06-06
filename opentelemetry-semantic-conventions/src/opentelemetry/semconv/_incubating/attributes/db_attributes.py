@@ -15,7 +15,7 @@
 
 from enum import Enum
 
-DB_CASSANDRA_CONSISTENCY_LEVEL = "db.cassandra.consistency_level"
+DB_CASSANDRA_CONSISTENCYLEVEL = "db.cassandra.consistency_level"
 """
 The consistency level of the query. Based on consistency values from [CQL](https://docs.datastax.com/en/cassandra-oss/3.0/cassandra/dml/dmlConfigConsistency.html).
 """
@@ -35,12 +35,12 @@ DB_CASSANDRA_IDEMPOTENCE = "db.cassandra.idempotence"
 Whether or not the query is idempotent.
 """
 
-DB_CASSANDRA_PAGE_SIZE = "db.cassandra.page_size"
+DB_CASSANDRA_PAGESIZE = "db.cassandra.page_size"
 """
 The fetch size used for paging, i.e. how many rows will be returned at once.
 """
 
-DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT = (
+DB_CASSANDRA_SPECULATIVEEXECUTIONCOUNT = (
     "db.cassandra.speculative_execution_count"
 )
 """
@@ -53,17 +53,17 @@ The name of the primary Cassandra table that the operation is acting upon, inclu
 Note: This mirrors the db.sql.table attribute but references cassandra rather than sql. It is not recommended to attempt any client-side parsing of `db.statement` just to get this property, but it should be set if it is provided by the library being instrumented. If the operation is acting upon an anonymous table, or more than one table, this value MUST NOT be set.
 """
 
-DB_CONNECTION_STRING = "db.connection_string"
+DB_CONNECTIONSTRING = "db.connection_string"
 """
 Deprecated: "Replaced by `server.address` and `server.port`.".
 """
 
-DB_COSMOSDB_CLIENT_ID = "db.cosmosdb.client_id"
+DB_COSMOSDB_CLIENTID = "db.cosmosdb.client_id"
 """
 Unique Cosmos client instance id.
 """
 
-DB_COSMOSDB_CONNECTION_MODE = "db.cosmosdb.connection_mode"
+DB_COSMOSDB_CONNECTIONMODE = "db.cosmosdb.connection_mode"
 """
 Cosmos client connection mode.
 """
@@ -73,27 +73,27 @@ DB_COSMOSDB_CONTAINER = "db.cosmosdb.container"
 Cosmos DB container name.
 """
 
-DB_COSMOSDB_OPERATION_TYPE = "db.cosmosdb.operation_type"
+DB_COSMOSDB_OPERATIONTYPE = "db.cosmosdb.operation_type"
 """
 CosmosDB Operation Type.
 """
 
-DB_COSMOSDB_REQUEST_CHARGE = "db.cosmosdb.request_charge"
+DB_COSMOSDB_REQUESTCHARGE = "db.cosmosdb.request_charge"
 """
 RU consumed for that operation.
 """
 
-DB_COSMOSDB_REQUEST_CONTENT_LENGTH = "db.cosmosdb.request_content_length"
+DB_COSMOSDB_REQUESTCONTENTLENGTH = "db.cosmosdb.request_content_length"
 """
 Request payload size in bytes.
 """
 
-DB_COSMOSDB_STATUS_CODE = "db.cosmosdb.status_code"
+DB_COSMOSDB_STATUSCODE = "db.cosmosdb.status_code"
 """
 Cosmos DB status code.
 """
 
-DB_COSMOSDB_SUB_STATUS_CODE = "db.cosmosdb.sub_status_code"
+DB_COSMOSDB_SUBSTATUSCODE = "db.cosmosdb.sub_status_code"
 """
 Cosmos DB sub status code.
 """
@@ -108,7 +108,7 @@ DB_ELASTICSEARCH_NODE_NAME = "db.elasticsearch.node.name"
 Deprecated: Replaced by `db.instance.id`.
 """
 
-DB_ELASTICSEARCH_PATH_PARTS_TEMPLATE = "db.elasticsearch.path_parts"
+DB_ELASTICSEARCH_PATHPARTS_TEMPLATE = "db.elasticsearch.path_parts"
 """
 A dynamic value in the url path.
 Note: Many Elasticsearch url paths allow dynamic values. These SHOULD be recorded in span attributes in the format `db.elasticsearch.path_parts.<key>`, where `<key>` is the url path part name. The implementation SHOULD reference the [elasticsearch schema](https://raw.githubusercontent.com/elastic/elasticsearch-specification/main/output/schema/schema.json) in order to map the path part values to their names.
@@ -119,7 +119,7 @@ DB_INSTANCE_ID = "db.instance.id"
 An identifier (address, unique name, or any other identifier) of the database instance that is executing queries or mutations on the current connection. This is useful in cases where the database is running in a clustered environment and the instrumentation is able to record the node executing the query. The client may obtain this value in databases like MySQL using queries like `select @@hostname`.
 """
 
-DB_JDBC_DRIVER_CLASSNAME = "db.jdbc.driver_classname"
+DB_JDBC_DRIVERCLASSNAME = "db.jdbc.driver_classname"
 """
 Deprecated: Removed as not used.
 """
@@ -129,7 +129,7 @@ DB_MONGODB_COLLECTION = "db.mongodb.collection"
 The MongoDB collection being accessed within the database stated in `db.name`.
 """
 
-DB_MSSQL_INSTANCE_NAME = "db.mssql.instance_name"
+DB_MSSQL_INSTANCENAME = "db.mssql.instance_name"
 """
 The Microsoft SQL Server [instance name](https://docs.microsoft.com/sql/connect/jdbc/building-the-connection-url?view=sql-server-ver15) connecting to. This name is used to determine the port of a named instance.
 Note: If setting a `db.mssql.instance_name`, `server.port` is no longer required (but still recommended if non-standard).
@@ -147,7 +147,7 @@ The name of the operation being executed, e.g. the [MongoDB command name](https:
 Note: When setting this to an SQL keyword, it is not recommended to attempt any client-side parsing of `db.statement` just to get this property, but it should be set if the operation name is provided by the library being instrumented. If the SQL statement has an ambiguous operation, or performs more than one operation, this value may be omitted.
 """
 
-DB_REDIS_DATABASE_INDEX = "db.redis.database_index"
+DB_REDIS_DATABASEINDEX = "db.redis.database_index"
 """
 The index of the database being accessed as used in the [`SELECT` command](https://redis.io/commands/select), provided as an integer. To be used instead of the generic `db.name` attribute.
 """
@@ -174,14 +174,14 @@ Username for accessing the database.
 """
 
 
-class DbCassandraConsistencyLevelValues(Enum):
+class DbCassandraConsistencylevelValues(Enum):
     ALL = "all"
     """all."""
-    EACH_QUORUM = "each_quorum"
+    EACHQUORUM = "each_quorum"
     """each_quorum."""
     QUORUM = "quorum"
     """quorum."""
-    LOCAL_QUORUM = "local_quorum"
+    LOCALQUORUM = "local_quorum"
     """local_quorum."""
     ONE = "one"
     """one."""
@@ -189,24 +189,24 @@ class DbCassandraConsistencyLevelValues(Enum):
     """two."""
     THREE = "three"
     """three."""
-    LOCAL_ONE = "local_one"
+    LOCALONE = "local_one"
     """local_one."""
     ANY = "any"
     """any."""
     SERIAL = "serial"
     """serial."""
-    LOCAL_SERIAL = "local_serial"
+    LOCALSERIAL = "local_serial"
     """local_serial."""
 
 
-class DbCosmosdbConnectionModeValues(Enum):
+class DbCosmosdbConnectionmodeValues(Enum):
     GATEWAY = "gateway"
     """Gateway (HTTP) connections mode."""
     DIRECT = "direct"
     """Direct connection."""
 
 
-class DbCosmosdbOperationTypeValues(Enum):
+class DbCosmosdbOperationtypeValues(Enum):
     INVALID = "Invalid"
     """invalid."""
     CREATE = "Create"
@@ -215,7 +215,7 @@ class DbCosmosdbOperationTypeValues(Enum):
     """patch."""
     READ = "Read"
     """read."""
-    READ_FEED = "ReadFeed"
+    READFEED = "ReadFeed"
     """read_feed."""
     DELETE = "Delete"
     """delete."""
@@ -227,20 +227,20 @@ class DbCosmosdbOperationTypeValues(Enum):
     """query."""
     HEAD = "Head"
     """head."""
-    HEAD_FEED = "HeadFeed"
+    HEADFEED = "HeadFeed"
     """head_feed."""
     UPSERT = "Upsert"
     """upsert."""
     BATCH = "Batch"
     """batch."""
-    QUERY_PLAN = "QueryPlan"
+    QUERYPLAN = "QueryPlan"
     """query_plan."""
-    EXECUTE_JAVASCRIPT = "ExecuteJavaScript"
+    EXECUTEJAVASCRIPT = "ExecuteJavaScript"
     """execute_javascript."""
 
 
 class DbSystemValues(Enum):
-    OTHER_SQL = "other_sql"
+    OTHERSQL = "other_sql"
     """Some other SQL database. Fallback only. See notes."""
     MSSQL = "mssql"
     """Microsoft SQL Server."""

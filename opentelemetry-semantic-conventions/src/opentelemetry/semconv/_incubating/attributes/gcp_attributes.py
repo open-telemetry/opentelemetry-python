@@ -13,12 +13,12 @@
 # limitations under the License.
 
 
-GCP_CLOUD_RUN_JOB_EXECUTION = "gcp.cloud_run.job.execution"
+GCP_CLOUDRUN_JOB_EXECUTION = "gcp.cloud_run.job.execution"
 """
 The name of the Cloud Run [execution](https://cloud.google.com/run/docs/managing/job-executions) being run for the Job, as set by the [`CLOUD_RUN_EXECUTION`](https://cloud.google.com/run/docs/container-contract#jobs-env-vars) environment variable.
 """
 
-GCP_CLOUD_RUN_JOB_TASK_INDEX = "gcp.cloud_run.job.task_index"
+GCP_CLOUDRUN_JOB_TASKINDEX = "gcp.cloud_run.job.task_index"
 """
 The index for a task within an execution as provided by the [`CLOUD_RUN_TASK_INDEX`](https://cloud.google.com/run/docs/container-contract#jobs-env-vars) environment variable.
 """

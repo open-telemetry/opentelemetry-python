@@ -15,13 +15,13 @@
 
 from enum import Enum
 
-MESSAGING_BATCH_MESSAGE_COUNT = "messaging.batch.message_count"
+MESSAGING_BATCH_MESSAGECOUNT = "messaging.batch.message_count"
 """
 The number of messages sent, received, or processed in the scope of the batching operation.
 Note: Instrumentations SHOULD NOT set `messaging.batch.message_count` on spans that operate with a single message. When a messaging client library supports both batch and single-message API for the same operation, instrumentations SHOULD use `messaging.batch.message_count` for batching APIs and SHOULD NOT use it for single-message APIs.
 """
 
-MESSAGING_CLIENT_ID = "messaging.client_id"
+MESSAGING_CLIENTID = "messaging.client_id"
 """
 A unique identifier for the client that consumes or produces a message.
 """
@@ -54,14 +54,14 @@ MESSAGING_DESTINATION_TEMPORARY = "messaging.destination.temporary"
 A boolean that is true if the message destination is temporary and might not exist anymore after messages are processed.
 """
 
-MESSAGING_DESTINATION_PUBLISH_ANONYMOUS = (
+MESSAGING_DESTINATIONPUBLISH_ANONYMOUS = (
     "messaging.destination_publish.anonymous"
 )
 """
 A boolean that is true if the publish message destination is anonymous (could be unnamed or have auto-generated name).
 """
 
-MESSAGING_DESTINATION_PUBLISH_NAME = "messaging.destination_publish.name"
+MESSAGING_DESTINATIONPUBLISH_NAME = "messaging.destination_publish.name"
 """
 The name of the original destination the message was published to.
 Note: The name SHOULD uniquely identify a specific queue, topic, or other entity within the broker. If
@@ -73,14 +73,14 @@ MESSAGING_EVENTHUBS_CONSUMER_GROUP = "messaging.eventhubs.consumer.group"
 The name of the consumer group the event consumer is associated with.
 """
 
-MESSAGING_EVENTHUBS_MESSAGE_ENQUEUED_TIME = (
+MESSAGING_EVENTHUBS_MESSAGE_ENQUEUEDTIME = (
     "messaging.eventhubs.message.enqueued_time"
 )
 """
 The UTC epoch seconds at which the message has been accepted and stored in the entity.
 """
 
-MESSAGING_GCP_PUBSUB_MESSAGE_ORDERING_KEY = (
+MESSAGING_GCPPUBSUB_MESSAGE_ORDERINGKEY = (
     "messaging.gcp_pubsub.message.ordering_key"
 )
 """
@@ -120,7 +120,7 @@ Note: This can refer to both the compressed or uncompressed body size. If both s
     body size should be used.
 """
 
-MESSAGING_MESSAGE_CONVERSATION_ID = "messaging.message.conversation_id"
+MESSAGING_MESSAGE_CONVERSATIONID = "messaging.message.conversation_id"
 """
 The conversation ID identifying the conversation to which the message belongs, represented as a string. Sometimes called "Correlation ID".
 """
@@ -143,38 +143,38 @@ A string identifying the kind of messaging operation.
 Note: If a custom value is used, it MUST be of low cardinality.
 """
 
-MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY = (
+MESSAGING_RABBITMQ_DESTINATION_ROUTINGKEY = (
     "messaging.rabbitmq.destination.routing_key"
 )
 """
 RabbitMQ message routing key.
 """
 
-MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG = (
+MESSAGING_RABBITMQ_MESSAGE_DELIVERYTAG = (
     "messaging.rabbitmq.message.delivery_tag"
 )
 """
 RabbitMQ message delivery tag.
 """
 
-MESSAGING_ROCKETMQ_CLIENT_GROUP = "messaging.rocketmq.client_group"
+MESSAGING_ROCKETMQ_CLIENTGROUP = "messaging.rocketmq.client_group"
 """
 Name of the RocketMQ producer/consumer group that is handling the message. The client type is identified by the SpanKind.
 """
 
-MESSAGING_ROCKETMQ_CONSUMPTION_MODEL = "messaging.rocketmq.consumption_model"
+MESSAGING_ROCKETMQ_CONSUMPTIONMODEL = "messaging.rocketmq.consumption_model"
 """
 Model of message consumption. This only applies to consumer spans.
 """
 
-MESSAGING_ROCKETMQ_MESSAGE_DELAY_TIME_LEVEL = (
+MESSAGING_ROCKETMQ_MESSAGE_DELAYTIMELEVEL = (
     "messaging.rocketmq.message.delay_time_level"
 )
 """
 The delay time level for delay message, which determines the message delay time.
 """
 
-MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP = (
+MESSAGING_ROCKETMQ_MESSAGE_DELIVERYTIMESTAMP = (
     "messaging.rocketmq.message.delivery_timestamp"
 )
 """
@@ -206,28 +206,28 @@ MESSAGING_ROCKETMQ_NAMESPACE = "messaging.rocketmq.namespace"
 Namespace of RocketMQ resources, resources in different namespaces are individual.
 """
 
-MESSAGING_SERVICEBUS_DESTINATION_SUBSCRIPTION_NAME = (
+MESSAGING_SERVICEBUS_DESTINATION_SUBSCRIPTIONNAME = (
     "messaging.servicebus.destination.subscription_name"
 )
 """
 The name of the subscription in the topic messages are received from.
 """
 
-MESSAGING_SERVICEBUS_DISPOSITION_STATUS = (
+MESSAGING_SERVICEBUS_DISPOSITIONSTATUS = (
     "messaging.servicebus.disposition_status"
 )
 """
 Describes the [settlement type](https://learn.microsoft.com/azure/service-bus-messaging/message-transfers-locks-settlement#peeklock).
 """
 
-MESSAGING_SERVICEBUS_MESSAGE_DELIVERY_COUNT = (
+MESSAGING_SERVICEBUS_MESSAGE_DELIVERYCOUNT = (
     "messaging.servicebus.message.delivery_count"
 )
 """
 Number of deliveries that have been attempted for this message.
 """
 
-MESSAGING_SERVICEBUS_MESSAGE_ENQUEUED_TIME = (
+MESSAGING_SERVICEBUS_MESSAGE_ENQUEUEDTIME = (
     "messaging.servicebus.message.enqueued_time"
 )
 """
@@ -253,7 +253,7 @@ class MessagingOperationValues(Enum):
     """One or more messages are settled."""
 
 
-class MessagingRocketmqConsumptionModelValues(Enum):
+class MessagingRocketmqConsumptionmodelValues(Enum):
     CLUSTERING = "clustering"
     """Clustering consumption model."""
     BROADCASTING = "broadcasting"
@@ -271,12 +271,12 @@ class MessagingRocketmqMessageTypeValues(Enum):
     """Transaction message."""
 
 
-class MessagingServicebusDispositionStatusValues(Enum):
+class MessagingServicebusDispositionstatusValues(Enum):
     COMPLETE = "complete"
     """Message is completed."""
     ABANDON = "abandon"
     """Message is abandoned."""
-    DEAD_LETTER = "dead_letter"
+    DEADLETTER = "dead_letter"
     """Message is sent to dead letter queue."""
     DEFER = "defer"
     """Message is deferred."""
@@ -285,7 +285,7 @@ class MessagingServicebusDispositionStatusValues(Enum):
 class MessagingSystemValues(Enum):
     ACTIVEMQ = "activemq"
     """Apache ActiveMQ."""
-    AWS_SQS = "aws_sqs"
+    AWSSQS = "aws_sqs"
     """Amazon Simple Queue Service (SQS)."""
     EVENTGRID = "eventgrid"
     """Azure Event Grid."""
@@ -293,7 +293,7 @@ class MessagingSystemValues(Enum):
     """Azure Event Hubs."""
     SERVICEBUS = "servicebus"
     """Azure Service Bus."""
-    GCP_PUBSUB = "gcp_pubsub"
+    GCPPUBSUB = "gcp_pubsub"
     """Google Cloud Pub/Sub."""
     JMS = "jms"
     """Java Message Service."""

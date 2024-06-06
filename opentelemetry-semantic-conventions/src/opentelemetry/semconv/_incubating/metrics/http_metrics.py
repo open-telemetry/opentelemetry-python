@@ -15,7 +15,7 @@
 
 from opentelemetry.metrics import Histogram, Meter, UpDownCounter
 
-HTTP_CLIENT_ACTIVE_REQUESTS = "http.client.active_requests"
+HTTP_CLIENT_ACTIVEREQUESTS = "http.client.active_requests"
 """
 Number of active HTTP requests
 Instrument: updowncounter
@@ -49,7 +49,7 @@ def create_http_client_connection_duration(meter: Meter) -> Histogram:
     )
 
 
-HTTP_CLIENT_OPEN_CONNECTIONS = "http.client.open_connections"
+HTTP_CLIENT_OPENCONNECTIONS = "http.client.open_connections"
 """
 Number of outbound HTTP connections that are currently active or idle on the client
 Instrument: updowncounter
@@ -117,7 +117,7 @@ def create_http_client_response_body_size(meter: Meter) -> Histogram:
     )
 
 
-HTTP_SERVER_ACTIVE_REQUESTS = "http.server.active_requests"
+HTTP_SERVER_ACTIVEREQUESTS = "http.server.active_requests"
 """
 Number of active HTTP server requests
 Instrument: updowncounter

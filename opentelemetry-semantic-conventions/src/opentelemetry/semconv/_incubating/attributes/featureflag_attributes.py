@@ -13,17 +13,17 @@
 # limitations under the License.
 
 
-FEATURE_FLAG_KEY = "feature_flag.key"
+FEATUREFLAG_KEY = "feature_flag.key"
 """
 The unique identifier of the feature flag.
 """
 
-FEATURE_FLAG_PROVIDER_NAME = "feature_flag.provider_name"
+FEATUREFLAG_PROVIDERNAME = "feature_flag.provider_name"
 """
 The name of the service provider that performs the flag evaluation.
 """
 
-FEATURE_FLAG_VARIANT = "feature_flag.variant"
+FEATUREFLAG_VARIANT = "feature_flag.variant"
 """
 SHOULD be a semantic identifier for a value. If one is unavailable, a stringified version of the value can be used.
 Note: A semantic identifier, commonly referred to as a variant, provides a means

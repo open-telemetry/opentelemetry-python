@@ -128,7 +128,7 @@ def create_system_disk_io(meter: Meter) -> Counter:
     )
 
 
-SYSTEM_DISK_IO_TIME = "system.disk.io_time"
+SYSTEM_DISK_IOTIME = "system.disk.io_time"
 """
 Time disk spent activated
 Instrument: counter
@@ -166,7 +166,7 @@ def create_system_disk_merged(meter: Meter) -> Counter:
     )
 
 
-SYSTEM_DISK_OPERATION_TIME = "system.disk.operation_time"
+SYSTEM_DISK_OPERATIONTIME = "system.disk.operation_time"
 """
 Sum of the time each operation took to complete
 Instrument: counter

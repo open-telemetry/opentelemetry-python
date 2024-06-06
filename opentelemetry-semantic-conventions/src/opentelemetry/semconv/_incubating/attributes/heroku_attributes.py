@@ -23,7 +23,7 @@ HEROKU_RELEASE_COMMIT = "heroku.release.commit"
 Commit hash for the current release.
 """
 
-HEROKU_RELEASE_CREATION_TIMESTAMP = "heroku.release.creation_timestamp"
+HEROKU_RELEASE_CREATIONTIMESTAMP = "heroku.release.creation_timestamp"
 """
 Time and date the release was created.
 """
