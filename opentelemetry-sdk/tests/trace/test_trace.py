@@ -2065,10 +2065,13 @@ class TestTracerProvider(unittest.TestCase):
 
 
 class TestRandomIdGenerator(unittest.TestCase):
-    _TRACE_ID_MAX_VALUE = 2 ** 128 - 1
-    _SPAN_ID_MAX_VALUE = 2 ** 64 - 1
+    _TRACE_ID_MAX_VALUE = 2**128 - 1
+    _SPAN_ID_MAX_VALUE = 2**64 - 1
 
-    @patch('random.getrandbits', side_effect=[span.INVALID_SPAN_ID, 0x00000000DEADBEF0])
+    @patch(
+        "random.getrandbits",
+        side_effect=[span.INVALID_SPAN_ID, 0x00000000DEADBEF0],
+    )
     def test_generate_span_id_avoids_invalid(self, mock_getrandbits):
         generator = RandomIdGenerator()
         span_id = generator.generate_span_id()
@@ -2076,9 +2079,17 @@ class TestRandomIdGenerator(unittest.TestCase):
         self.assertNotEqual(span_id, span.INVALID_SPAN_ID)
         self.assertGreater(span_id, span.INVALID_SPAN_ID)
         self.assertLessEqual(span_id, self._SPAN_ID_MAX_VALUE)
-        self.assertEqual(mock_getrandbits.call_count, 2)  # Ensure exactly two calls
+        self.assertEqual(
+            mock_getrandbits.call_count, 2
+        )  # Ensure exactly two calls
 
-    @patch('random.getrandbits', side_effect=[span.INVALID_TRACE_ID, 0x000000000000000000000000DEADBEEF])
+    @patch(
+        "random.getrandbits",
+        side_effect=[
+            span.INVALID_TRACE_ID,
+            0x000000000000000000000000DEADBEEF,
+        ],
+    )
     def test_generate_trace_id_avoids_invalid(self, mock_getrandbits):
         generator = RandomIdGenerator()
         trace_id = generator.generate_trace_id()
@@ -2086,4 +2097,6 @@ class TestRandomIdGenerator(unittest.TestCase):
         self.assertNotEqual(trace_id, span.INVALID_TRACE_ID)
         self.assertGreater(trace_id, span.INVALID_TRACE_ID)
         self.assertLessEqual(trace_id, self._TRACE_ID_MAX_VALUE)
-        self.assertEqual(mock_getrandbits.call_count, 2)  # Ensure exactly two calls
+        self.assertEqual(
+            mock_getrandbits.call_count, 2
+        )  # Ensure exactly two calls
