@@ -47,3 +47,29 @@ class TestTracerImplementation(unittest.TestCase):
         span = trace._Span("name", INVALID_SPAN_CONTEXT)
         self.assertEqual(span.get_span_context(), INVALID_SPAN_CONTEXT)
         self.assertIs(span.is_recording(), True)
+
+    def test_span_with_string_name(self):
+        tracer = trace.TracerProvider().get_tracer(__name__)
+        span = tracer.start_span("test")
+        self.assertEqual("test", span.name)
+
+    def test_span_with_non_string_name(self):
+        tracer = trace.TracerProvider().get_tracer(__name__)
+
+        class CustomClass:
+            def __init__(self, param1, param2):
+                self.param1 = param1
+                self.param2 = param2
+
+        name_obj = CustomClass("test", 123)
+        try:
+            span = tracer.start_span(name_obj)
+            self.assertEqual(str(name_obj), span.name)
+        except TypeError:
+            self.fail("TypeError was not expected.")
+
+        try:
+            span2 = tracer.start_span(234)
+            self.assertEqual("234", span2.name)
+        except TypeError:
+            self.fail("TypeError was not expected.")
