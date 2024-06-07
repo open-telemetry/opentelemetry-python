@@ -18,8 +18,7 @@ from opencensus.ext.flask.flask_middleware import FlaskMiddleware
 from opentelemetry import trace
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.sdk.trace.export import ConsoleSpanExporter
+from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
 from opentelemetry.shim.opencensus import install_shim
 from opencensus.trace import config_integration
 
@@ -31,18 +30,21 @@ resource = Resource(attributes={
 tracer_provider = TracerProvider(resource=resource)
 trace.set_tracer_provider(tracer_provider)
 
+# Setup Flask with OpenCensus instrumentation
+app = Flask(__name__)
+FlaskMiddleware(app)
+
+# Install the shim to start bridging spans from OpenCensus to OpenTelemetry
+install_shim()
+
+
 # Configure OTel to export traces to the console
 span_processor = BatchSpanProcessor(ConsoleSpanExporter())
 tracer_provider.add_span_processor(span_processor)
 tracer = tracer_provider.get_tracer(__name__)
 
-# Install the shim to start bridging spans from OpenCensus to OpenTelemetry
-install_shim()
 
-# Setup Flask with OpenCensus instrumentation
-app = Flask(__name__)
-FlaskMiddleware(app)
-
+# Configure OpenCensus to trace HTTP requests
 config_integration.trace_integrations(['requests'])
 
 
