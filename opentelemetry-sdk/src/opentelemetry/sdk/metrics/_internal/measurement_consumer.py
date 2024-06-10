@@ -102,16 +102,16 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
             callback_options = CallbackOptions()
             deadline_ns = time_ns() + timeout_millis * 10**6
 
-            default_timeout_millis = 10000 * 10**6
+            default_timeout_ns = 10_000 * 10**6
 
             for async_instrument in self._async_instruments:
 
-                remaining_time = deadline_ns - time_ns()
+                remaining_time_ns = deadline_ns - time_ns()
 
-                if remaining_time < default_timeout_millis:
+                if remaining_time_ns < default_timeout_ns:
 
                     callback_options = CallbackOptions(
-                        timeout_millis=remaining_time
+                        timeout_millis=remaining_time_ns / 10**6
                     )
 
                 measurements = async_instrument.callback(callback_options)
