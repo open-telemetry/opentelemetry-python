@@ -1210,8 +1210,12 @@ class TracerProvider(trace_api.TracerProvider):
             self._resource = Resource.create({})
         else:
             self._resource = resource
+
+        1 / 0
+
         if not sampler:
-            sampler = sampling._get_from_env_or_default()
+            # sampler = sampling._get_from_env_or_default()
+            self.sampler = 1
         self._shutdown_on_exit = self._shutdown_on_exit
         self.sampler = sampler
         self._span_limits = span_limits or SpanLimits()
