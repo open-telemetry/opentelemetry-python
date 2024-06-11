@@ -336,7 +336,7 @@ class Event(EventBase):
         if isinstance(self._attributes, BoundedAttributes):
             return self._attributes.dropped
         return 0
-
+ 
 
 def _check_span_ended(func):
     def wrapper(self, *args, **kwargs):
