@@ -331,6 +331,12 @@ class Event(EventBase):
     def attributes(self) -> types.Attributes:
         return self._attributes
 
+    @property
+    def dropped_attributes(self) -> int:
+        if isinstance(self._attributes, BoundedAttributes):
+            return self._attributes.dropped
+        return 0
+
 
 def _check_span_ended(func):
     def wrapper(self, *args, **kwargs):
