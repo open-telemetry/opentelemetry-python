@@ -62,7 +62,6 @@ from opentelemetry.trace import (
     StatusCode,
     get_tracer,
     set_tracer_provider,
-    span,
 )
 
 
@@ -2070,14 +2069,13 @@ class TestRandomIdGenerator(unittest.TestCase):
 
     @patch(
         "random.getrandbits",
-        side_effect=[span.INVALID_SPAN_ID, 0x00000000DEADBEF0],
+        side_effect=[trace_api.INVALID_SPAN_ID, 0x00000000DEADBEF0],
     )
     def test_generate_span_id_avoids_invalid(self, mock_getrandbits):
         generator = RandomIdGenerator()
         span_id = generator.generate_span_id()
 
-        self.assertNotEqual(span_id, span.INVALID_SPAN_ID)
-        self.assertGreater(span_id, span.INVALID_SPAN_ID)
+        self.assertGreater(span_id, trace_api.INVALID_SPAN_ID)
         self.assertLessEqual(span_id, self._SPAN_ID_MAX_VALUE)
         self.assertEqual(
             mock_getrandbits.call_count, 2
@@ -2086,7 +2084,7 @@ class TestRandomIdGenerator(unittest.TestCase):
     @patch(
         "random.getrandbits",
         side_effect=[
-            span.INVALID_TRACE_ID,
+            trace_api.INVALID_TRACE_ID,
             0x000000000000000000000000DEADBEEF,
         ],
     )
@@ -2094,8 +2092,7 @@ class TestRandomIdGenerator(unittest.TestCase):
         generator = RandomIdGenerator()
         trace_id = generator.generate_trace_id()
 
-        self.assertNotEqual(trace_id, span.INVALID_TRACE_ID)
-        self.assertGreater(trace_id, span.INVALID_TRACE_ID)
+        self.assertGreater(trace_id, trace_api.INVALID_TRACE_ID)
         self.assertLessEqual(trace_id, self._TRACE_ID_MAX_VALUE)
         self.assertEqual(
             mock_getrandbits.call_count, 2
