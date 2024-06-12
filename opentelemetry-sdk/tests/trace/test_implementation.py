@@ -50,8 +50,11 @@ class TestTracerImplementation(unittest.TestCase):
 
     def test_span_with_string_name(self):
         tracer = trace.TracerProvider().get_tracer(__name__)
-        span = tracer.start_span("test")
-        self.assertEqual("test", span.name)
+        try:
+            span = tracer.start_span("test")
+            self.assertEqual("test", span.name)
+        except TypeError:
+            self.fail("TypeError was not expected.")
 
     def test_span_with_non_string_name(self):
         tracer = trace.TracerProvider().get_tracer(__name__)
@@ -62,14 +65,8 @@ class TestTracerImplementation(unittest.TestCase):
                 self.param2 = param2
 
         name_obj = CustomClass("test", 123)
-        try:
-            span = tracer.start_span(name_obj)
-            self.assertEqual(str(name_obj), span.name)
-        except TypeError:
-            self.fail("TypeError was not expected.")
+        with self.assertRaises(TypeError):
+            tracer.start_span(name_obj)
 
-        try:
-            span2 = tracer.start_span(234)
-            self.assertEqual("234", span2.name)
-        except TypeError:
-            self.fail("TypeError was not expected.")
+        with self.assertRaises(TypeError):
+            tracer.start_span(234)
