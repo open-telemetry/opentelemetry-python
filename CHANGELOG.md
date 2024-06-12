@@ -6,9 +6,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
-- Do not Flask Tests in debug mode
-  ([#3956](https://github.com/open-telemetry/opentelemetry-python/pull/3956))
-
 - Add Python 3.12 to tox
   ([#3616](https://github.com/open-telemetry/opentelemetry-python/pull/3616))
 
