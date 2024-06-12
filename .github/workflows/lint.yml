@@ -5,11 +5,9 @@ on:
     branches-ignore:
     - 'release/*'
   pull_request:
-env:
-  CORE_REPO_SHA: 955c92e91b5cd4bcfb43c39efcef086b040471d2
 
 jobs:
-  lint-3_11:
+  lint-3_12:
     strategy:
       fail-fast: false  # ensures the entire test matrix is run, even if one permutation fails
       matrix:
@@ -36,12 +34,12 @@ jobs:
         os: [ubuntu-20.04]
     runs-on: ubuntu-20.04
     steps:
-      - name: Checkout Contrib Repo @ SHA - ${{ github.sha }}
+      - name: Checkout Core Repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
-      - name: Set up Python 3.11
+      - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
-          python-version: 3.11
+          python-version: 3.12
       - name: Install tox
         run: pip install tox
       - name: Cache tox environment
