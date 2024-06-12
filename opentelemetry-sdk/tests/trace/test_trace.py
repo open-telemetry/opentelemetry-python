@@ -2075,11 +2075,9 @@ class TestRandomIdGenerator(unittest.TestCase):
         generator = RandomIdGenerator()
         span_id = generator.generate_span_id()
 
-        self.assertGreater(span_id, trace_api.INVALID_SPAN_ID)
-        self.assertLessEqual(span_id, self._SPAN_ID_MAX_VALUE)
-        self.assertEqual(
-            mock_getrandbits.call_count, 2
-        )  # Ensure exactly two calls
+        self.assertNotEqual(span_id, trace_api.INVALID_SPAN_ID)
+        mock_getrandbits.assert_any_call(64)
+        self.assertEqual(mock_getrandbits.call_count, 2)
 
     @patch(
         "random.getrandbits",
@@ -2092,8 +2090,6 @@ class TestRandomIdGenerator(unittest.TestCase):
         generator = RandomIdGenerator()
         trace_id = generator.generate_trace_id()
 
-        self.assertGreater(trace_id, trace_api.INVALID_TRACE_ID)
-        self.assertLessEqual(trace_id, self._TRACE_ID_MAX_VALUE)
-        self.assertEqual(
-            mock_getrandbits.call_count, 2
-        )  # Ensure exactly two calls
+        self.assertNotEqual(trace_id, trace_api.INVALID_TRACE_ID)
+        mock_getrandbits.assert_any_call(128)
+        self.assertEqual(mock_getrandbits.call_count, 2)
