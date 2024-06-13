@@ -106,6 +106,7 @@ from typing import Final
 
 {%- set constant_names = [] -%}
   {%- for metric in filtered_metrics %}
+
 {{metric.metric_name | to_const_name}}: Final = "{{metric.metric_name}}"
 {{metric_brief(metric, metric.metric_name | to_const_name) }}
 

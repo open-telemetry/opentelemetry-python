@@ -36,6 +36,7 @@ CallbackT = Union[
     Callable[[CallbackOptions], Iterable[Observation]],
     Generator[Iterable[Observation], CallbackOptions, None],
 ]
+
 SYSTEM_CPU_FREQUENCY: Final = "system.cpu.frequency"
 """
 Reports the current frequency of the CPU in Hz

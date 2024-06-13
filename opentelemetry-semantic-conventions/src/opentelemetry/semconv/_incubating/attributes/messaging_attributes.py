@@ -10,8 +10,9 @@
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
-# limitations under t
-from typing from enum import Enum
+# limitations under the License.
+
+from enum import Enum
 from typing import Final
 
 MESSAGING_BATCH_MESSAGE_COUNT: Final = "messaging.batch.message_count"
@@ -312,14 +313,3 @@ class MessagingSystemValues(Enum):
     """RabbitMQ."""
     ROCKETMQ: Final = "rocketmq"
     """Apache RocketMQ."""
-e Bus."""
-    GCP_PUBSUB: Final = "gcp_pubsub"
-    """Google Cloud Pub/Sub."""
-    JMS: Final = "jms"
-    """Java Message Service."""
-    KAFKA: Final = "kafka"
-    """Apache Kafka."""
-    RABBITMQ: Final = "rabbitmq"
-    """RabbitMQ."""
-    ROCKETMQ: Final = "rocketmq"
-""Apache RocketMQ."""
