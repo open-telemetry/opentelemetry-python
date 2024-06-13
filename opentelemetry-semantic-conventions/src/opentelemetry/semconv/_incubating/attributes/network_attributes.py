@@ -12,67 +12,85 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from enum import Enum
 from typing import Final
 
+
 from deprecated import deprecated
+
+
+
+from enum import Enum
 
 NETWORK_CARRIER_ICC: Final = "network.carrier.icc"
 """
 The ISO 3166-1 alpha-2 2-character country code associated with the mobile carrier network.
 """
+
 NETWORK_CARRIER_MCC: Final = "network.carrier.mcc"
 """
 The mobile carrier country code.
 """
+
 NETWORK_CARRIER_MNC: Final = "network.carrier.mnc"
 """
 The mobile carrier network code.
 """
+
 NETWORK_CARRIER_NAME: Final = "network.carrier.name"
 """
 The name of the mobile carrier.
 """
+
 NETWORK_CONNECTION_SUBTYPE: Final = "network.connection.subtype"
 """
 This describes more details regarding the connection.type. It may be the type of cell technology connection, but it could be used for describing details about a wifi connection.
 """
+
 NETWORK_CONNECTION_TYPE: Final = "network.connection.type"
 """
 The internet connection type.
 """
+
 NETWORK_IO_DIRECTION: Final = "network.io.direction"
 """
 The network IO operation direction.
 """
+
 NETWORK_LOCAL_ADDRESS: Final = "network.local.address"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NETWORK_LOCAL_ADDRESS`.
 """
+
 NETWORK_LOCAL_PORT: Final = "network.local.port"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NETWORK_LOCAL_PORT`.
 """
+
 NETWORK_PEER_ADDRESS: Final = "network.peer.address"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NETWORK_PEER_ADDRESS`.
 """
+
 NETWORK_PEER_PORT: Final = "network.peer.port"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NETWORK_PEER_PORT`.
 """
+
 NETWORK_PROTOCOL_NAME: Final = "network.protocol.name"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NETWORK_PROTOCOL_NAME`.
 """
+
 NETWORK_PROTOCOL_VERSION: Final = "network.protocol.version"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NETWORK_PROTOCOL_VERSION`.
 """
+
 NETWORK_TRANSPORT: Final = "network.transport"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NETWORK_TRANSPORT`.
 """
+
 NETWORK_TYPE: Final = "network.type"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NETWORK_TYPE`.
@@ -122,8 +140,6 @@ class NetworkConnectionSubtypeValues(Enum):
     """5G NRNSA (New Radio Non-Standalone)."""
     LTE_CA: Final = "lte_ca"
     """LTE CA."""
-
-
 class NetworkConnectionTypeValues(Enum):
     WIFI: Final = "wifi"
     """wifi."""
@@ -135,18 +151,12 @@ class NetworkConnectionTypeValues(Enum):
     """unavailable."""
     UNKNOWN: Final = "unknown"
     """unknown."""
-
-
 class NetworkIoDirectionValues(Enum):
     TRANSMIT: Final = "transmit"
     """transmit."""
     RECEIVE: Final = "receive"
     """receive."""
-
-
-@deprecated(
-    reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTransportValues`."
-)
+@deprecated(reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTransportValues`.")
 class NetworkTransportValues(Enum):
     TCP: Final = "tcp"
     """TCP."""
@@ -156,11 +166,7 @@ class NetworkTransportValues(Enum):
     """Named or anonymous pipe."""
     UNIX: Final = "unix"
     """Unix domain socket."""
-
-
-@deprecated(
-    reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTypeValues`."
-)
+@deprecated(reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTypeValues`.")
 class NetworkTypeValues(Enum):
     IPV4: Final = "ipv4"
     """IPv4."""

@@ -14,10 +14,15 @@
 
 from typing import Final
 
+
+
+
+
 K8S_CLUSTER_NAME: Final = "k8s.cluster.name"
 """
 The name of the cluster.
 """
+
 K8S_CLUSTER_UID: Final = "k8s.cluster.uid"
 """
 A pseudo-ID for the cluster, set to the UID of the `kube-system` namespace.
@@ -44,91 +49,114 @@ Note: K8s doesn't have support for obtaining a cluster ID. If this is ever
     Therefore, UIDs between clusters should be extremely unlikely to
     conflict.
 """
+
 K8S_CONTAINER_NAME: Final = "k8s.container.name"
 """
 The name of the Container from Pod specification, must be unique within a Pod. Container runtime usually uses different globally unique name (`container.name`).
 """
+
 K8S_CONTAINER_RESTART_COUNT: Final = "k8s.container.restart_count"
 """
 Number of times the container was restarted. This attribute can be used to identify a particular container (running or stopped) within a container spec.
 """
+
 K8S_CRONJOB_NAME: Final = "k8s.cronjob.name"
 """
 The name of the CronJob.
 """
+
 K8S_CRONJOB_UID: Final = "k8s.cronjob.uid"
 """
 The UID of the CronJob.
 """
+
 K8S_DAEMONSET_NAME: Final = "k8s.daemonset.name"
 """
 The name of the DaemonSet.
 """
+
 K8S_DAEMONSET_UID: Final = "k8s.daemonset.uid"
 """
 The UID of the DaemonSet.
 """
+
 K8S_DEPLOYMENT_NAME: Final = "k8s.deployment.name"
 """
 The name of the Deployment.
 """
+
 K8S_DEPLOYMENT_UID: Final = "k8s.deployment.uid"
 """
 The UID of the Deployment.
 """
+
 K8S_JOB_NAME: Final = "k8s.job.name"
 """
 The name of the Job.
 """
+
 K8S_JOB_UID: Final = "k8s.job.uid"
 """
 The UID of the Job.
 """
+
 K8S_NAMESPACE_NAME: Final = "k8s.namespace.name"
 """
 The name of the namespace that the pod is running in.
 """
+
 K8S_NODE_NAME: Final = "k8s.node.name"
 """
 The name of the Node.
 """
+
 K8S_NODE_UID: Final = "k8s.node.uid"
 """
 The UID of the Node.
 """
+
 K8S_POD_ANNOTATION_TEMPLATE: Final = "k8s.pod.annotation"
 """
 The annotation key-value pairs placed on the Pod, the `<key>` being the annotation name, the value being the annotation value.
 """
+
 K8S_POD_LABEL_TEMPLATE: Final = "k8s.pod.label"
 """
 The label key-value pairs placed on the Pod, the `<key>` being the label name, the value being the label value.
 """
+
 K8S_POD_LABELS_TEMPLATE: Final = "k8s.pod.labels"
 """
 Deprecated: Replaced by `k8s.pod.label`.
 """
+
 K8S_POD_NAME: Final = "k8s.pod.name"
 """
 The name of the Pod.
 """
+
 K8S_POD_UID: Final = "k8s.pod.uid"
 """
 The UID of the Pod.
 """
+
 K8S_REPLICASET_NAME: Final = "k8s.replicaset.name"
 """
 The name of the ReplicaSet.
 """
+
 K8S_REPLICASET_UID: Final = "k8s.replicaset.uid"
 """
 The UID of the ReplicaSet.
 """
+
 K8S_STATEFULSET_NAME: Final = "k8s.statefulset.name"
 """
 The name of the StatefulSet.
 """
+
 K8S_STATEFULSET_UID: Final = "k8s.statefulset.uid"
 """
 The UID of the StatefulSet.
 """
+

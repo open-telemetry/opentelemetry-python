@@ -12,91 +12,115 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from enum import Enum
 from typing import Final
 
+
 from deprecated import deprecated
+
+
+
+from enum import Enum
 
 HTTP_CONNECTION_STATE: Final = "http.connection.state"
 """
 State of the HTTP connection in the HTTP connection pool.
 """
+
 HTTP_FLAVOR: Final = "http.flavor"
 """
 Deprecated: Replaced by `network.protocol.name`.
 """
+
 HTTP_METHOD: Final = "http.method"
 """
 Deprecated: Replaced by `http.request.method`.
 """
+
 HTTP_REQUEST_BODY_SIZE: Final = "http.request.body.size"
 """
 The size of the request payload body in bytes. This is the number of bytes transferred excluding headers and is often, but not always, present as the [Content-Length](https://www.rfc-editor.org/rfc/rfc9110.html#field.content-length) header. For requests using transport encoding, this should be the compressed size.
 """
+
 HTTP_REQUEST_HEADER_TEMPLATE: Final = "http.request.header"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.http_attributes.HTTP_REQUEST_HEADER_TEMPLATE`.
 """
+
 HTTP_REQUEST_METHOD: Final = "http.request.method"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.http_attributes.HTTP_REQUEST_METHOD`.
 """
+
 HTTP_REQUEST_METHOD_ORIGINAL: Final = "http.request.method_original"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.http_attributes.HTTP_REQUEST_METHOD_ORIGINAL`.
 """
+
 HTTP_REQUEST_RESEND_COUNT: Final = "http.request.resend_count"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.http_attributes.HTTP_REQUEST_RESEND_COUNT`.
 """
+
 HTTP_REQUEST_SIZE: Final = "http.request.size"
 """
 The total size of the request in bytes. This should be the total number of bytes sent over the wire, including the request line (HTTP/1.1), framing (HTTP/2 and HTTP/3), headers, and request body if any.
 """
+
 HTTP_REQUEST_CONTENT_LENGTH: Final = "http.request_content_length"
 """
 Deprecated: Replaced by `http.request.header.content-length`.
 """
+
 HTTP_RESPONSE_BODY_SIZE: Final = "http.response.body.size"
 """
 The size of the response payload body in bytes. This is the number of bytes transferred excluding headers and is often, but not always, present as the [Content-Length](https://www.rfc-editor.org/rfc/rfc9110.html#field.content-length) header. For requests using transport encoding, this should be the compressed size.
 """
+
 HTTP_RESPONSE_HEADER_TEMPLATE: Final = "http.response.header"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.http_attributes.HTTP_RESPONSE_HEADER_TEMPLATE`.
 """
+
 HTTP_RESPONSE_SIZE: Final = "http.response.size"
 """
 The total size of the response in bytes. This should be the total number of bytes sent over the wire, including the status line (HTTP/1.1), framing (HTTP/2 and HTTP/3), headers, and response body and trailers if any.
 """
+
 HTTP_RESPONSE_STATUS_CODE: Final = "http.response.status_code"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.http_attributes.HTTP_RESPONSE_STATUS_CODE`.
 """
+
 HTTP_RESPONSE_CONTENT_LENGTH: Final = "http.response_content_length"
 """
 Deprecated: Replaced by `http.response.header.content-length`.
 """
+
 HTTP_ROUTE: Final = "http.route"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.http_attributes.HTTP_ROUTE`.
 """
+
 HTTP_SCHEME: Final = "http.scheme"
 """
 Deprecated: Replaced by `url.scheme` instead.
 """
+
 HTTP_STATUS_CODE: Final = "http.status_code"
 """
 Deprecated: Replaced by `http.response.status_code`.
 """
+
 HTTP_TARGET: Final = "http.target"
 """
 Deprecated: Split to `url.path` and `url.query.
 """
+
 HTTP_URL: Final = "http.url"
 """
 Deprecated: Replaced by `url.full`.
 """
+
 HTTP_USER_AGENT: Final = "http.user_agent"
 """
 Deprecated: Replaced by `user_agent.original`.
@@ -108,11 +132,7 @@ class HttpConnectionStateValues(Enum):
     """active state."""
     IDLE: Final = "idle"
     """idle state."""
-
-
-@deprecated(
-    reason="The attribute http.flavor is deprecated - Replaced by `network.protocol.name`"
-)
+@deprecated(reason="The attribute http.flavor is deprecated - Replaced by `network.protocol.name`")
 class HttpFlavorValues(Enum):
     HTTP_1_0: Final = "1.0"
     """HTTP/1.0."""
@@ -126,11 +146,7 @@ class HttpFlavorValues(Enum):
     """SPDY protocol."""
     QUIC: Final = "QUIC"
     """QUIC protocol."""
-
-
-@deprecated(
-    reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.http_attributes.HttpRequestMethodValues`."
-)
+@deprecated(reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.http_attributes.HttpRequestMethodValues`.")
 class HttpRequestMethodValues(Enum):
     CONNECT: Final = "CONNECT"
     """CONNECT method."""

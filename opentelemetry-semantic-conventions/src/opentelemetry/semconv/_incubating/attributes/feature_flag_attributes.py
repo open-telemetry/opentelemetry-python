@@ -14,14 +14,20 @@
 
 from typing import Final
 
+
+
+
+
 FEATURE_FLAG_KEY: Final = "feature_flag.key"
 """
 The unique identifier of the feature flag.
 """
+
 FEATURE_FLAG_PROVIDER_NAME: Final = "feature_flag.provider_name"
 """
 The name of the service provider that performs the flag evaluation.
 """
+
 FEATURE_FLAG_VARIANT: Final = "feature_flag.variant"
 """
 SHOULD be a semantic identifier for a value. If one is unavailable, a stringified version of the value can be used.
@@ -34,3 +40,4 @@ Note: A semantic identifier, commonly referred to as a variant, provides a means
     semantic identifier is unavailable. String representation of the value
     should be determined by the implementer.
 """
+

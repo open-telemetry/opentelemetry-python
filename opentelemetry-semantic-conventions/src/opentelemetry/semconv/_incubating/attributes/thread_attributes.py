@@ -14,11 +14,17 @@
 
 from typing import Final
 
+
+
+
+
 THREAD_ID: Final = "thread.id"
 """
 Current "managed" thread ID (as opposed to OS thread ID).
 """
+
 THREAD_NAME: Final = "thread.name"
 """
 Current thread name.
 """
+

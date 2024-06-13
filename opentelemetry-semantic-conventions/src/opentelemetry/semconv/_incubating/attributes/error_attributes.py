@@ -12,10 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from enum import Enum
 from typing import Final
 
+
 from deprecated import deprecated
+
+
+
+from enum import Enum
 
 ERROR_TYPE: Final = "error.type"
 """
@@ -23,9 +27,7 @@ Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.error_
 """
 
 
-@deprecated(
-    reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.error_attributes.ErrorTypeValues`."
-)
+@deprecated(reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.error_attributes.ErrorTypeValues`.")
 class ErrorTypeValues(Enum):
     OTHER: Final = "_OTHER"
     """A fallback error value to be used when the instrumentation doesn't define a custom value."""

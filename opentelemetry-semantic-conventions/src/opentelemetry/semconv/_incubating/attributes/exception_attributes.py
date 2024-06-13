@@ -14,19 +14,27 @@
 
 from typing import Final
 
+
+
+
+
 EXCEPTION_ESCAPED: Final = "exception.escaped"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.exception_attributes.EXCEPTION_ESCAPED`.
 """
+
 EXCEPTION_MESSAGE: Final = "exception.message"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.exception_attributes.EXCEPTION_MESSAGE`.
 """
+
 EXCEPTION_STACKTRACE: Final = "exception.stacktrace"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.exception_attributes.EXCEPTION_STACKTRACE`.
 """
+
 EXCEPTION_TYPE: Final = "exception.type"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.exception_attributes.EXCEPTION_TYPE`.
 """
+

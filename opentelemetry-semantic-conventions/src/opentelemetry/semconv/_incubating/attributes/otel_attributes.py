@@ -12,40 +12,47 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from enum import Enum
 from typing import Final
 
+
 from deprecated import deprecated
+
+
+
+from enum import Enum
 
 OTEL_LIBRARY_NAME: Final = "otel.library.name"
 """
 Deprecated: use the `otel.scope.name` attribute.
 """
+
 OTEL_LIBRARY_VERSION: Final = "otel.library.version"
 """
 Deprecated: use the `otel.scope.version` attribute.
 """
+
 OTEL_SCOPE_NAME: Final = "otel.scope.name"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.otel_attributes.OTEL_SCOPE_NAME`.
 """
+
 OTEL_SCOPE_VERSION: Final = "otel.scope.version"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.otel_attributes.OTEL_SCOPE_VERSION`.
 """
+
 OTEL_STATUS_CODE: Final = "otel.status_code"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.otel_attributes.OTEL_STATUS_CODE`.
 """
+
 OTEL_STATUS_DESCRIPTION: Final = "otel.status_description"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.otel_attributes.OTEL_STATUS_DESCRIPTION`.
 """
 
 
-@deprecated(
-    reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.otel_attributes.OtelStatusCodeValues`."
-)
+@deprecated(reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.otel_attributes.OtelStatusCodeValues`.")
 class OtelStatusCodeValues(Enum):
     OK: Final = "OK"
     """The operation has been validated by an Application developer or Operator to have completed successfully."""

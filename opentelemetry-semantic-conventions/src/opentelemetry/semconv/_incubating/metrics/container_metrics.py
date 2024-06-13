@@ -13,10 +13,11 @@
 # limitations under the License.
 
 
+
 from typing import Final
 
-from opentelemetry.metrics import Counter, Meter
-
+from opentelemetry.metrics import Meter
+from opentelemetry.metrics import Counter
 CONTAINER_CPU_TIME: Final = "container.cpu.time"
 """
 Total CPU time consumed
@@ -25,7 +26,8 @@ Unit: s
 Note: Total CPU time consumed by the specific container on all available CPU cores.
 """
 
-
+    
+      
 def create_container_cpu_time(meter: Meter) -> Counter:
     """Total CPU time consumed"""
     return meter.create_counter(
@@ -33,8 +35,6 @@ def create_container_cpu_time(meter: Meter) -> Counter:
         description="Total CPU time consumed",
         unit="s",
     )
-
-
 CONTAINER_DISK_IO: Final = "container.disk.io"
 """
 Disk bytes for the container
@@ -43,7 +43,8 @@ Unit: By
 Note: The total number of bytes read/written successfully (aggregated from all disks).
 """
 
-
+    
+      
 def create_container_disk_io(meter: Meter) -> Counter:
     """Disk bytes for the container"""
     return meter.create_counter(
@@ -51,8 +52,6 @@ def create_container_disk_io(meter: Meter) -> Counter:
         description="Disk bytes for the container.",
         unit="By",
     )
-
-
 CONTAINER_MEMORY_USAGE: Final = "container.memory.usage"
 """
 Memory usage of the container
@@ -61,7 +60,8 @@ Unit: By
 Note: Memory usage of the container.
 """
 
-
+    
+      
 def create_container_memory_usage(meter: Meter) -> Counter:
     """Memory usage of the container"""
     return meter.create_counter(
@@ -69,8 +69,6 @@ def create_container_memory_usage(meter: Meter) -> Counter:
         description="Memory usage of the container.",
         unit="By",
     )
-
-
 CONTAINER_NETWORK_IO: Final = "container.network.io"
 """
 Network bytes for the container
@@ -79,7 +77,8 @@ Unit: By
 Note: The number of bytes sent/received on all network interfaces by the container.
 """
 
-
+    
+      
 def create_container_network_io(meter: Meter) -> Counter:
     """Network bytes for the container"""
     return meter.create_counter(

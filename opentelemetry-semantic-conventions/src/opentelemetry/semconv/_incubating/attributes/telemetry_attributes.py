@@ -12,10 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from enum import Enum
 from typing import Final
 
+
 from deprecated import deprecated
+
+
+
+from enum import Enum
 
 TELEMETRY_DISTRO_NAME: Final = "telemetry.distro.name"
 """
@@ -23,27 +27,29 @@ The name of the auto instrumentation agent or distribution, if used.
 Note: Official auto instrumentation agents and distributions SHOULD set the `telemetry.distro.name` attribute to
     a string starting with `opentelemetry-`, e.g. `opentelemetry-java-instrumentation`.
 """
+
 TELEMETRY_DISTRO_VERSION: Final = "telemetry.distro.version"
 """
 The version string of the auto instrumentation agent or distribution, if used.
 """
+
 TELEMETRY_SDK_LANGUAGE: Final = "telemetry.sdk.language"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TELEMETRY_SDK_LANGUAGE`.
 """
+
 TELEMETRY_SDK_NAME: Final = "telemetry.sdk.name"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TELEMETRY_SDK_NAME`.
 """
+
 TELEMETRY_SDK_VERSION: Final = "telemetry.sdk.version"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TELEMETRY_SDK_VERSION`.
 """
 
 
-@deprecated(
-    reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TelemetrySdkLanguageValues`."
-)
+@deprecated(reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TelemetrySdkLanguageValues`.")
 class TelemetrySdkLanguageValues(Enum):
     CPP: Final = "cpp"
     """cpp."""

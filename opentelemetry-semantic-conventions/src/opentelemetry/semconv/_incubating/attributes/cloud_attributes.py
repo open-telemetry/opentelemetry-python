@@ -12,32 +12,42 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from enum import Enum
 from typing import Final
+
+
+
+
+
+from enum import Enum
 
 CLOUD_ACCOUNT_ID: Final = "cloud.account.id"
 """
 The cloud account ID the resource is assigned to.
 """
+
 CLOUD_AVAILABILITY_ZONE: Final = "cloud.availability_zone"
 """
 Cloud regions often have multiple, isolated locations known as zones to increase availability. Availability zone represents the zone where the resource is running.
 Note: Availability zones are called "zones" on Alibaba Cloud and Google Cloud.
 """
+
 CLOUD_PLATFORM: Final = "cloud.platform"
 """
 The cloud platform in use.
 Note: The prefix of the service SHOULD match the one specified in `cloud.provider`.
 """
+
 CLOUD_PROVIDER: Final = "cloud.provider"
 """
 Name of the cloud provider.
 """
+
 CLOUD_REGION: Final = "cloud.region"
 """
 The geographical region the resource is running.
 Note: Refer to your provider's docs to see the available regions, for example [Alibaba Cloud regions](https://www.alibabacloud.com/help/doc-detail/40654.htm), [AWS regions](https://aws.amazon.com/about-aws/global-infrastructure/regions_az/), [Azure regions](https://azure.microsoft.com/global-infrastructure/geographies/), [Google Cloud regions](https://cloud.google.com/about/locations), or [Tencent Cloud regions](https://www.tencentcloud.com/document/product/213/6091).
 """
+
 CLOUD_RESOURCE_ID: Final = "cloud.resource_id"
 """
 Cloud provider-specific native identifier of the monitored cloud resource (e.g. an [ARN](https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html) on AWS, a [fully qualified resource ID](https://learn.microsoft.com/rest/api/resources/resources/get-by-id) on Azure, a [full resource name](https://cloud.google.com/apis/design/resource_names#full_resource_name) on GCP).
@@ -118,8 +128,6 @@ class CloudPlatformValues(Enum):
     """Tencent Cloud Elastic Kubernetes Service (EKS)."""
     TENCENT_CLOUD_SCF: Final = "tencent_cloud_scf"
     """Tencent Cloud Serverless Cloud Function (SCF)."""
-
-
 class CloudProviderValues(Enum):
     ALIBABA_CLOUD: Final = "alibaba_cloud"
     """Alibaba Cloud."""
