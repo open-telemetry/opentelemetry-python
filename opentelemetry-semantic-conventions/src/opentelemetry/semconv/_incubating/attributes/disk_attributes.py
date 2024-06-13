@@ -15,6 +15,7 @@
 
 from enum import Enum
 
+
 DISK_IO_DIRECTION = "disk.io.direction"
 """
 The disk IO operation direction.

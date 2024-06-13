@@ -13,7 +13,9 @@
 # limitations under the License.
 
 
-from opentelemetry.metrics import Counter, Meter
+from opentelemetry.metrics import Meter
+from opentelemetry.metrics import Counter
+
 
 CONTAINER_CPU_TIME = "container.cpu.time"
 """

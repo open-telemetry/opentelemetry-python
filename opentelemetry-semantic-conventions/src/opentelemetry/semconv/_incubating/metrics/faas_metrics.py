@@ -13,7 +13,10 @@
 # limitations under the License.
 
 
-from opentelemetry.metrics import Counter, Histogram, Meter
+from opentelemetry.metrics import Meter
+from opentelemetry.metrics import Histogram
+from opentelemetry.metrics import Counter
+
 
 FAAS_COLDSTARTS = "faas.coldstarts"
 """

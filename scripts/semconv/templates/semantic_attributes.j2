@@ -70,12 +70,11 @@ from enum import Enum
 {% endif %}
 
 {%- set constant_names = [] -%}
-{% for attribute in filtered_attributes -%}
+{% for attribute in filtered_attributes %}
 {%- set name = attribute_name(attribute) -%}
 {{common.add_and_check_constant(attribute.fqn, name, constant_names)}}
 {{name}} = "{{attribute.fqn}}"
 {{attribute_brief(attribute)}}
-
 {% endfor %}
 {%- for attribute in filtered_enum_attributes -%}
 {%- set class_name = attribute.fqn | to_camelcase(True) ~ "Values" -%}

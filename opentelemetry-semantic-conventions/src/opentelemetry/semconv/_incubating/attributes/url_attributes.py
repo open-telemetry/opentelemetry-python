@@ -19,25 +19,21 @@ Domain extracted from the `url.full`, such as "opentelemetry.io".
 Note: In some cases a URL may refer to an IP and/or port directly, without a domain name. In this case, the IP address would go to the domain field. If the URL contains a [literal IPv6 address](https://www.rfc-editor.org/rfc/rfc2732#section-2) enclosed by `[` and `]`, the `[` and `]` characters should also be captured in the domain field.
 """
 
-
 URL_EXTENSION = "url.extension"
 """
 The file extension extracted from the `url.full`, excluding the leading dot.
 Note: The file extension is only set if it exists, as not every url has a file extension. When the file name has multiple extensions `example.tar.gz`, only the last one should be captured `gz`, not `tar.gz`.
 """
 
-
 URL_FRAGMENT = "url.fragment"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.url_attributes.URL_FRAGMENT`.
 """
 
-
 URL_FULL = "url.full"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.url_attributes.URL_FULL`.
 """
-
 
 URL_ORIGINAL = "url.original"
 """
@@ -46,24 +42,20 @@ Note: In network monitoring, the observed URL may be a full URL, whereas in acce
     `url.original` might contain credentials passed via URL in form of `https://username:password@www.example.com/`. In such case password and username SHOULD NOT be redacted and attribute's value SHOULD remain the same.
 """
 
-
 URL_PATH = "url.path"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.url_attributes.URL_PATH`.
 """
-
 
 URL_PORT = "url.port"
 """
 Port extracted from the `url.full`.
 """
 
-
 URL_QUERY = "url.query"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.url_attributes.URL_QUERY`.
 """
-
 
 URL_REGISTERED_DOMAIN = "url.registered_domain"
 """
@@ -71,19 +63,16 @@ The highest registered url domain, stripped of the subdomain.
 Note: This value can be determined precisely with the [public suffix list](http://publicsuffix.org). For example, the registered domain for `foo.example.com` is `example.com`. Trying to approximate this by simply taking the last two labels will not work well for TLDs such as `co.uk`.
 """
 
-
 URL_SCHEME = "url.scheme"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.url_attributes.URL_SCHEME`.
 """
-
 
 URL_SUBDOMAIN = "url.subdomain"
 """
 The subdomain portion of a fully qualified domain name includes all of the names except the host name under the registered_domain. In a partially qualified domain, or if the qualification level of the full name cannot be determined, subdomain contains all of the names below the registered domain.
 Note: The subdomain portion of `www.east.mydomain.co.uk` is `east`. If the domain has multiple levels of subdomain, such as `sub2.sub1.example.com`, the subdomain field should contain `sub2.sub1`, with no trailing period.
 """
-
 
 URL_TOP_LEVEL_DOMAIN = "url.top_level_domain"
 """

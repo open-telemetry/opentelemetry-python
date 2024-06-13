@@ -15,29 +15,26 @@
 
 from enum import Enum
 
+
 NETWORK_LOCAL_ADDRESS = "network.local.address"
 """
 Local address of the network connection - IP address or Unix domain socket name.
 """
-
 
 NETWORK_LOCAL_PORT = "network.local.port"
 """
 Local port number of the network connection.
 """
 
-
 NETWORK_PEER_ADDRESS = "network.peer.address"
 """
 Peer address of the network connection - IP address or Unix domain socket name.
 """
 
-
 NETWORK_PEER_PORT = "network.peer.port"
 """
 Peer port number of the network connection.
 """
-
 
 NETWORK_PROTOCOL_NAME = "network.protocol.name"
 """
@@ -45,13 +42,11 @@ NETWORK_PROTOCOL_NAME = "network.protocol.name"
 Note: The value SHOULD be normalized to lowercase.
 """
 
-
 NETWORK_PROTOCOL_VERSION = "network.protocol.version"
 """
 The actual version of the protocol used for network communication.
 Note: If protocol version is subject to negotiation (for example using [ALPN](https://www.rfc-editor.org/rfc/rfc7301.html)), this attribute SHOULD be set to the negotiated version. If the actual protocol version is not known, this attribute SHOULD NOT be set.
 """
-
 
 NETWORK_TRANSPORT = "network.transport"
 """
@@ -62,7 +57,6 @@ Note: The value SHOULD be normalized to lowercase.
     a port number is ambiguous without knowing the transport. For example
     different processes could be listening on TCP port 12345 and UDP port 12345.
 """
-
 
 NETWORK_TYPE = "network.type"
 """

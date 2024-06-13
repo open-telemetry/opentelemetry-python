@@ -19,20 +19,17 @@ Array of brand name and version separated by a space.
 Note: This value is intended to be taken from the [UA client hints API](https://wicg.github.io/ua-client-hints/#interface) (`navigator.userAgentData.brands`).
 """
 
-
 BROWSER_LANGUAGE = "browser.language"
 """
 Preferred language of the user using the browser.
 Note: This value is intended to be taken from the Navigator API `navigator.language`.
 """
 
-
 BROWSER_MOBILE = "browser.mobile"
 """
 A boolean that is true if the browser is running on a mobile device.
 Note: This value is intended to be taken from the [UA client hints API](https://wicg.github.io/ua-client-hints/#interface) (`navigator.userAgentData.mobile`). If unavailable, this attribute SHOULD be left unset.
 """
-
 
 BROWSER_PLATFORM = "browser.platform"
 """

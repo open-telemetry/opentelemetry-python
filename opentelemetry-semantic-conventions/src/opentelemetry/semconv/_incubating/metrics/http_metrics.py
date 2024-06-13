@@ -13,7 +13,10 @@
 # limitations under the License.
 
 
-from opentelemetry.metrics import Histogram, Meter, UpDownCounter
+from opentelemetry.metrics import Meter
+from opentelemetry.metrics import Histogram
+from opentelemetry.metrics import UpDownCounter
+
 
 HTTP_CLIENT_ACTIVE_REQUESTS = "http.client.active_requests"
 """

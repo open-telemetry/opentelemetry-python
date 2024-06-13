@@ -15,18 +15,17 @@
 
 from enum import Enum
 
+
 RPC_CONNECT_RPC_ERROR_CODE = "rpc.connect_rpc.error_code"
 """
 The [error codes](https://connect.build/docs/protocol/#error-codes) of the Connect request. Error codes are always string values.
 """
-
 
 RPC_CONNECT_RPC_REQUEST_METADATA_TEMPLATE = "rpc.connect_rpc.request.metadata"
 """
 Connect request metadata, `<key>` being the normalized Connect Metadata key (lowercase), the value being the metadata values.
 Note: Instrumentations SHOULD require an explicit configuration of which metadata values are to be captured. Including all request metadata values can be a security risk - explicit configuration helps avoid leaking sensitive information.
 """
-
 
 RPC_CONNECT_RPC_RESPONSE_METADATA_TEMPLATE = (
     "rpc.connect_rpc.response.metadata"
@@ -36,13 +35,11 @@ Connect response metadata, `<key>` being the normalized Connect Metadata key (lo
 Note: Instrumentations SHOULD require an explicit configuration of which metadata values are to be captured. Including all response metadata values can be a security risk - explicit configuration helps avoid leaking sensitive information.
 """
 
-
 RPC_GRPC_REQUEST_METADATA_TEMPLATE = "rpc.grpc.request.metadata"
 """
 gRPC request metadata, `<key>` being the normalized gRPC Metadata key (lowercase), the value being the metadata values.
 Note: Instrumentations SHOULD require an explicit configuration of which metadata values are to be captured. Including all request metadata values can be a security risk - explicit configuration helps avoid leaking sensitive information.
 """
-
 
 RPC_GRPC_RESPONSE_METADATA_TEMPLATE = "rpc.grpc.response.metadata"
 """
@@ -50,36 +47,30 @@ gRPC response metadata, `<key>` being the normalized gRPC Metadata key (lowercas
 Note: Instrumentations SHOULD require an explicit configuration of which metadata values are to be captured. Including all response metadata values can be a security risk - explicit configuration helps avoid leaking sensitive information.
 """
 
-
 RPC_GRPC_STATUS_CODE = "rpc.grpc.status_code"
 """
 The [numeric status code](https://github.com/grpc/grpc/blob/v1.33.2/doc/statuscodes.md) of the gRPC request.
 """
-
 
 RPC_JSONRPC_ERROR_CODE = "rpc.jsonrpc.error_code"
 """
 `error.code` property of response if it is an error response.
 """
 
-
 RPC_JSONRPC_ERROR_MESSAGE = "rpc.jsonrpc.error_message"
 """
 `error.message` property of response if it is an error response.
 """
-
 
 RPC_JSONRPC_REQUEST_ID = "rpc.jsonrpc.request_id"
 """
 `id` property of request or response. Since protocol allows id to be int, string, `null` or missing (for notifications), value is expected to be cast to string for simplicity. Use empty string in case of `null` value. Omit entirely if this is a notification.
 """
 
-
 RPC_JSONRPC_VERSION = "rpc.jsonrpc.version"
 """
 Protocol version as in `jsonrpc` property of request/response. Since JSON-RPC 1.0 doesn't specify this, the value can be omitted.
 """
-
 
 RPC_METHOD = "rpc.method"
 """
@@ -87,13 +78,11 @@ The name of the (logical) method being called, must be equal to the $method part
 Note: This is the logical name of the method from the RPC interface perspective, which can be different from the name of any implementing method/function. The `code.function` attribute may be used to store the latter (e.g., method actually executing the call on the server side, RPC client stub method on the client side).
 """
 
-
 RPC_SERVICE = "rpc.service"
 """
 The full (logical) name of the service being called, including its package name, if applicable.
 Note: This is the logical name of the service from the RPC interface perspective, which can be different from the name of any implementing class. The `code.namespace` attribute may be used to store the latter (despite the attribute name, it may include a class name; e.g., class with method actually executing the call on the server side, RPC client stub class on the client side).
 """
-
 
 RPC_SYSTEM = "rpc.system"
 """

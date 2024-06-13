@@ -13,7 +13,11 @@
 # limitations under the License.
 
 
-from opentelemetry.metrics import Counter, Histogram, Meter, UpDownCounter
+from opentelemetry.metrics import Meter
+from opentelemetry.metrics import Histogram
+from opentelemetry.metrics import UpDownCounter
+from opentelemetry.metrics import Counter
+
 
 DB_CLIENT_CONNECTIONS_CREATE_TIME = "db.client.connections.create_time"
 """

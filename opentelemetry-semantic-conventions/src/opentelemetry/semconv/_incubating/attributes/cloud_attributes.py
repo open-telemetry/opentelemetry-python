@@ -15,11 +15,11 @@
 
 from enum import Enum
 
+
 CLOUD_ACCOUNT_ID = "cloud.account.id"
 """
 The cloud account ID the resource is assigned to.
 """
-
 
 CLOUD_AVAILABILITY_ZONE = "cloud.availability_zone"
 """
@@ -27,26 +27,22 @@ Cloud regions often have multiple, isolated locations known as zones to increase
 Note: Availability zones are called "zones" on Alibaba Cloud and Google Cloud.
 """
 
-
 CLOUD_PLATFORM = "cloud.platform"
 """
 The cloud platform in use.
 Note: The prefix of the service SHOULD match the one specified in `cloud.provider`.
 """
 
-
 CLOUD_PROVIDER = "cloud.provider"
 """
 Name of the cloud provider.
 """
-
 
 CLOUD_REGION = "cloud.region"
 """
 The geographical region the resource is running.
 Note: Refer to your provider's docs to see the available regions, for example [Alibaba Cloud regions](https://www.alibabacloud.com/help/doc-detail/40654.htm), [AWS regions](https://aws.amazon.com/about-aws/global-infrastructure/regions_az/), [Azure regions](https://azure.microsoft.com/global-infrastructure/geographies/), [Google Cloud regions](https://cloud.google.com/about/locations), or [Tencent Cloud regions](https://www.tencentcloud.com/document/product/213/6091).
 """
-
 
 CLOUD_RESOURCE_ID = "cloud.resource_id"
 """

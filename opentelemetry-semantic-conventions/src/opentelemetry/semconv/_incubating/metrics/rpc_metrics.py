@@ -13,7 +13,9 @@
 # limitations under the License.
 
 
-from opentelemetry.metrics import Histogram, Meter
+from opentelemetry.metrics import Meter
+from opentelemetry.metrics import Histogram
+
 
 RPC_CLIENT_DURATION = "rpc.client.duration"
 """

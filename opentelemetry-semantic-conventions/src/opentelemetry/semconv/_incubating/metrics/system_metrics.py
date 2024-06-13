@@ -13,14 +13,12 @@
 # limitations under the License.
 
 
+from opentelemetry.metrics import Meter
 from typing import Callable, Sequence
+from opentelemetry.metrics import ObservableGauge
+from opentelemetry.metrics import UpDownCounter
+from opentelemetry.metrics import Counter
 
-from opentelemetry.metrics import (
-    Counter,
-    Meter,
-    ObservableGauge,
-    UpDownCounter,
-)
 
 SYSTEM_CPU_FREQUENCY = "system.cpu.frequency"
 """

@@ -13,9 +13,11 @@
 # limitations under the License.
 
 
+from deprecated import deprecated
+
+
 from enum import Enum
 
-from deprecated import deprecated
 
 ERROR_TYPE = "error.type"
 """

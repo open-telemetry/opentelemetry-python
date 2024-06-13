@@ -15,11 +15,11 @@
 
 from enum import Enum
 
+
 MESSAGE_COMPRESSED_SIZE = "message.compressed_size"
 """
 Compressed size of the message in bytes.
 """
-
 
 MESSAGE_ID = "message.id"
 """
@@ -27,12 +27,10 @@ MUST be calculated as two different counters starting from `1` one for sent mess
 Note: This way we guarantee that the values will be consistent between different implementations.
 """
 
-
 MESSAGE_TYPE = "message.type"
 """
 Whether this is a received or sent message.
 """
-
 
 MESSAGE_UNCOMPRESSED_SIZE = "message.uncompressed_size"
 """
