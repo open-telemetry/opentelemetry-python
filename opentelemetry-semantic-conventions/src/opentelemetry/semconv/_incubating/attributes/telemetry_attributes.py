@@ -45,9 +45,7 @@ Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.teleme
 """
 
 
-@deprecated(
-    reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TelemetrySdkLanguageValues`."
-)
+@deprecated(reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TelemetrySdkLanguageValues`.")  # type: ignore
 class TelemetrySdkLanguageValues(Enum):
     CPP: Final = "cpp"
     """cpp."""

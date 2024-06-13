@@ -13,15 +13,29 @@
 # limitations under the License.
 
 
-from typing import Callable, Final, Sequence
+from typing import (
+    Callable,
+    Final,
+    Generator,
+    Iterable,
+    Optional,
+    Sequence,
+    Union,
+)
 
 from opentelemetry.metrics import (
+    CallbackOptions,
     Counter,
     Meter,
     ObservableGauge,
+    Observation,
     UpDownCounter,
 )
 
+CallbackT = Union[
+    Callable[[CallbackOptions], Iterable[Observation]],
+    Generator[Iterable[Observation], CallbackOptions, None],
+]
 SYSTEM_CPU_FREQUENCY: Final = "system.cpu.frequency"
 """
 Reports the current frequency of the CPU in Hz
@@ -31,12 +45,12 @@ Unit: {Hz}
 
 
 def create_system_cpu_frequency(
-    meter: Meter, callback: Sequence[Callable]
+    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
 ) -> ObservableGauge:
     """Reports the current frequency of the CPU in Hz"""
     return meter.create_observable_gauge(
         name="system.cpu.frequency",
-        callback=callback,
+        callbacks=callbacks,
         description="Reports the current frequency of the CPU in Hz",
         unit="{Hz}",
     )
@@ -102,12 +116,12 @@ Unit: 1
 
 
 def create_system_cpu_utilization(
-    meter: Meter, callback: Sequence[Callable]
+    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
 ) -> ObservableGauge:
     """Difference in system.cpu.time since the last measurement, divided by the elapsed time and number of logical CPUs"""
     return meter.create_observable_gauge(
         name="system.cpu.utilization",
-        callback=callback,
+        callbacks=callbacks,
         description="Difference in system.cpu.time since the last measurement, divided by the elapsed time and number of logical CPUs",
         unit="1",
     )
@@ -225,11 +239,11 @@ Unit: 1
 
 
 def create_system_filesystem_utilization(
-    meter: Meter, callback: Sequence[Callable]
+    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
 ) -> ObservableGauge:
     return meter.create_observable_gauge(
         name="system.filesystem.utilization",
-        callback=callback,
+        callbacks=callbacks,
         description="",
         unit="1",
     )
@@ -302,11 +316,11 @@ Unit: 1
 
 
 def create_system_memory_utilization(
-    meter: Meter, callback: Sequence[Callable]
+    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
 ) -> ObservableGauge:
     return meter.create_observable_gauge(
         name="system.memory.utilization",
-        callback=callback,
+        callbacks=callbacks,
         description="",
         unit="1",
     )
@@ -456,11 +470,11 @@ Unit: 1
 
 
 def create_system_paging_utilization(
-    meter: Meter, callback: Sequence[Callable]
+    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
 ) -> ObservableGauge:
     return meter.create_observable_gauge(
         name="system.paging.utilization",
-        callback=callback,
+        callbacks=callbacks,
         description="",
         unit="1",
     )

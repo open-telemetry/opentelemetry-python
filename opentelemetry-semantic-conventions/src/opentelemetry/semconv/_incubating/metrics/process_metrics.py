@@ -13,15 +13,29 @@
 # limitations under the License.
 
 
-from typing import Callable, Final, Sequence
+from typing import (
+    Callable,
+    Final,
+    Generator,
+    Iterable,
+    Optional,
+    Sequence,
+    Union,
+)
 
 from opentelemetry.metrics import (
+    CallbackOptions,
     Counter,
     Meter,
     ObservableGauge,
+    Observation,
     UpDownCounter,
 )
 
+CallbackT = Union[
+    Callable[[CallbackOptions], Iterable[Observation]],
+    Generator[Iterable[Observation], CallbackOptions, None],
+]
 PROCESS_CONTEXT_SWITCHES: Final = "process.context_switches"
 """
 Number of times the process has been context switched
@@ -65,12 +79,12 @@ Unit: 1
 
 
 def create_process_cpu_utilization(
-    meter: Meter, callback: Sequence[Callable]
+    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
 ) -> ObservableGauge:
     """Difference in process.cpu.time since the last measurement, divided by the elapsed time and number of CPUs available to the process"""
     return meter.create_observable_gauge(
         name="process.cpu.utilization",
-        callback=callback,
+        callbacks=callbacks,
         description="Difference in process.cpu.time since the last measurement, divided by the elapsed time and number of CPUs available to the process.",
         unit="1",
     )

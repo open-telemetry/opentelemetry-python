@@ -201,9 +201,7 @@ class SystemProcessStatusValues(Enum):
     """defunct."""
 
 
-@deprecated(
-    reason="The attribute system.processes.status is deprecated - Replaced by `system.process.status`"
-)
+@deprecated(reason="The attribute system.processes.status is deprecated - Replaced by `system.process.status`")  # type: ignore
 class SystemProcessesStatusValues(Enum):
     RUNNING: Final = "running"
     """running."""

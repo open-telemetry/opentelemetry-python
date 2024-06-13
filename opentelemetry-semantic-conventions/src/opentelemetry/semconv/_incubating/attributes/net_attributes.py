@@ -83,9 +83,7 @@ Deprecated: Replaced by `network.transport`.
 """
 
 
-@deprecated(
-    reason="The attribute net.sock.family is deprecated - Split to `network.transport` and `network.type`"
-)
+@deprecated(reason="The attribute net.sock.family is deprecated - Split to `network.transport` and `network.type`")  # type: ignore
 class NetSockFamilyValues(Enum):
     INET: Final = "inet"
     """IPv4 address."""
@@ -95,9 +93,7 @@ class NetSockFamilyValues(Enum):
     """Unix domain socket path."""
 
 
-@deprecated(
-    reason="The attribute net.transport is deprecated - Replaced by `network.transport`"
-)
+@deprecated(reason="The attribute net.transport is deprecated - Replaced by `network.transport`")  # type: ignore
 class NetTransportValues(Enum):
     IP_TCP: Final = "ip_tcp"
     """ip_tcp."""

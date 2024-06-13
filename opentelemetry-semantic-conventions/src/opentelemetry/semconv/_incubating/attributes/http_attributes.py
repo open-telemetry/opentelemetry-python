@@ -130,9 +130,7 @@ class HttpConnectionStateValues(Enum):
     """idle state."""
 
 
-@deprecated(
-    reason="The attribute http.flavor is deprecated - Replaced by `network.protocol.name`"
-)
+@deprecated(reason="The attribute http.flavor is deprecated - Replaced by `network.protocol.name`")  # type: ignore
 class HttpFlavorValues(Enum):
     HTTP_1_0: Final = "1.0"
     """HTTP/1.0."""
@@ -148,9 +146,7 @@ class HttpFlavorValues(Enum):
     """QUIC protocol."""
 
 
-@deprecated(
-    reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.http_attributes.HttpRequestMethodValues`."
-)
+@deprecated(reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.http_attributes.HttpRequestMethodValues`.")  # type: ignore
 class HttpRequestMethodValues(Enum):
     CONNECT: Final = "CONNECT"
     """CONNECT method."""
