@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Add missing directory change step in PR instructions
+  ([#3968](https://github.com/open-telemetry/opentelemetry-python/pull/3968))
 - Fix RandomIdGenerator can generate invalid Span/Trace Ids
   ([#3949](https://github.com/open-telemetry/opentelemetry-python/pull/3949))
 - Add Python 3.12 to tox
