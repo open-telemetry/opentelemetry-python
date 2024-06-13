@@ -104,7 +104,6 @@ CallbackT = Union[
 from typing import Final
 {{ import_instrument_classes(filtered_metrics) }}
 
-{%- set constant_names = [] -%}
   {%- for metric in filtered_metrics %}
 
 {{metric.metric_name | to_const_name}}: Final = "{{metric.metric_name}}"

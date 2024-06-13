@@ -71,7 +71,6 @@ from enum import Enum
 
 {% endif %}
 
-{%- set constant_names = [] -%}
 {% for attribute in filtered_attributes -%}
 {%- set prefix = "# " if attribute.fqn in excluded_attributes else "" -%}
 {{prefix}}{{attribute_name(attribute)}}: Final = "{{attribute.fqn}}"
