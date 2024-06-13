@@ -81,9 +81,9 @@ from enum import Enum
 {%- for attribute in filtered_enum_attributes | rejectattr("fqn", "in", excluded_attributes) -%}
 {%- set class_name = attribute.fqn | to_camelcase(True) ~ "Values" -%}
     {%- if attribute | is_deprecated %}
-@deprecated(reason="The attribute {{attribute.fqn}} is deprecated - {{ common.to_docstring(attribute.deprecated) }}")
+@deprecated(reason="The attribute {{attribute.fqn}} is deprecated - {{ common.to_docstring(attribute.deprecated) }}")  # type: ignore
     {%- elif attribute | is_stable and filter == "any" %}
-@deprecated(reason="Deprecated in favor of stable :py:const:`{{stable_class_ref(class_name, '.')}}`.")
+@deprecated(reason="Deprecated in favor of stable :py:const:`{{stable_class_ref(class_name, '.')}}`.")  # type: ignore
     {%- endif %}
 class {{class_name}}(Enum):
     {%- for member in attribute.attr_type.members %}
