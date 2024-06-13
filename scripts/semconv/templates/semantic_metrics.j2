@@ -82,6 +82,7 @@ from opentelemetry.metrics import Counter
 from typing import Callable, Generator, Iterable, Optional, Sequence, Union
 from opentelemetry.metrics import CallbackOptions, ObservableGauge, Observation
 
+# pylint: disable=invalid-name
 CallbackT = Union[
     Callable[[CallbackOptions], Iterable[Observation]],
     Generator[Iterable[Observation], CallbackOptions, None],

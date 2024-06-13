@@ -32,6 +32,7 @@ from opentelemetry.metrics import (
     UpDownCounter,
 )
 
+# pylint: disable=invalid-name
 CallbackT = Union[
     Callable[[CallbackOptions], Iterable[Observation]],
     Generator[Iterable[Observation], CallbackOptions, None],
