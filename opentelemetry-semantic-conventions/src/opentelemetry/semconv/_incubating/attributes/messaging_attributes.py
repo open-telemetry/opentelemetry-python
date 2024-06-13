@@ -26,6 +26,12 @@ MESSAGING_CLIENT_ID: Final = "messaging.client_id"
 A unique identifier for the client that consumes or produces a message.
 """
 
+MESSAGING_CLIENT_ID: Final = "messaging.client.id"
+"""
+TEST ME
+"""
+
+
 MESSAGING_DESTINATION_ANONYMOUS: Final = "messaging.destination.anonymous"
 """
 A boolean that is true if the message destination is anonymous (could be unnamed or have auto-generated name).
