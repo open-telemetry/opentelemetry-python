@@ -69,6 +69,8 @@ jobs:
             package: "exporter-otlp-combined"
           - python-version: pypy3
             package: "exporter-otlp-proto-grpc"
+          - python-version: pypy3
+            package: "getting-started"
 
     steps:
     - name: Checkout Core Repo @ SHA - ${{ github.sha }}
