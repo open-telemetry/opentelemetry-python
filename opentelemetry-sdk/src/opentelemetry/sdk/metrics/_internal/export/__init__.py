@@ -519,7 +519,13 @@ class PeriodicExportingMetricReader(MetricReader):
                     exc_info=True,
                 )
         # one last collection below before shutting down completely
-        self.collect(timeout_millis=self._export_interval_millis)
+        try:
+            self.collect(timeout_millis=self._export_interval_millis)
+        except MetricsTimeoutError:
+            _logger.warning(
+                "Metric collection timed out.",
+                exc_info=True,
+            )
 
     def _receive_metrics(
         self,
