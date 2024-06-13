@@ -12,18 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from enum import Enum
+from typing import Final
 
-HTTP_REQUEST_HEADER_TEMPLATE = "http.request.header"
+HTTP_REQUEST_HEADER_TEMPLATE: Final = "http.request.header"
 """
 HTTP request headers, `<key>` being the normalized HTTP Header name (lowercase), the value being the header values.
 Note: Instrumentations SHOULD require an explicit configuration of which headers are to be captured. Including all request headers can be a security risk - explicit configuration helps avoid leaking sensitive information.
     The `User-Agent` header is already captured in the `user_agent.original` attribute. Users MAY explicitly configure instrumentations to capture them even though it is not recommended.
     The attribute value MUST consist of either multiple header values as an array of strings or a single-item array containing a possibly comma-concatenated string, depending on the way the HTTP library provides access to headers.
 """
-
-HTTP_REQUEST_METHOD = "http.request.method"
+HTTP_REQUEST_METHOD: Final = "http.request.method"
 """
 HTTP request method.
 Note: HTTP request method value SHOULD be "known" to the instrumentation.
@@ -41,32 +40,27 @@ Note: HTTP request method value SHOULD be "known" to the instrumentation.
     Instrumentations for specific web frameworks that consider HTTP methods to be case insensitive, SHOULD populate a canonical equivalent.
     Tracing instrumentations that do so, MUST also set `http.request.method_original` to the original value.
 """
-
-HTTP_REQUEST_METHOD_ORIGINAL = "http.request.method_original"
+HTTP_REQUEST_METHOD_ORIGINAL: Final = "http.request.method_original"
 """
 Original HTTP method sent by the client in the request line.
 """
-
-HTTP_REQUEST_RESEND_COUNT = "http.request.resend_count"
+HTTP_REQUEST_RESEND_COUNT: Final = "http.request.resend_count"
 """
 The ordinal number of request resending attempt (for any reason, including redirects).
 Note: The resend count SHOULD be updated each time an HTTP request gets resent by the client, regardless of what was the cause of the resending (e.g. redirection, authorization failure, 503 Server Unavailable, network issues, or any other).
 """
-
-HTTP_RESPONSE_HEADER_TEMPLATE = "http.response.header"
+HTTP_RESPONSE_HEADER_TEMPLATE: Final = "http.response.header"
 """
 HTTP response headers, `<key>` being the normalized HTTP Header name (lowercase), the value being the header values.
 Note: Instrumentations SHOULD require an explicit configuration of which headers are to be captured. Including all response headers can be a security risk - explicit configuration helps avoid leaking sensitive information.
     Users MAY explicitly configure instrumentations to capture them even though it is not recommended.
     The attribute value MUST consist of either multiple header values as an array of strings or a single-item array containing a possibly comma-concatenated string, depending on the way the HTTP library provides access to headers.
 """
-
-HTTP_RESPONSE_STATUS_CODE = "http.response.status_code"
+HTTP_RESPONSE_STATUS_CODE: Final = "http.response.status_code"
 """
 [HTTP response status code](https://tools.ietf.org/html/rfc7231#section-6).
 """
-
-HTTP_ROUTE = "http.route"
+HTTP_ROUTE: Final = "http.route"
 """
 The matched route, that is, the path template in the format used by the respective server framework.
 Note: MUST NOT be populated when this is not supported by the HTTP server framework as the route attribute should have low-cardinality and the URI path can NOT substitute it.
@@ -75,23 +69,23 @@ Note: MUST NOT be populated when this is not supported by the HTTP server framew
 
 
 class HttpRequestMethodValues(Enum):
-    CONNECT = "CONNECT"
+    CONNECT: Final = "CONNECT"
     """CONNECT method."""
-    DELETE = "DELETE"
+    DELETE: Final = "DELETE"
     """DELETE method."""
-    GET = "GET"
+    GET: Final = "GET"
     """GET method."""
-    HEAD = "HEAD"
+    HEAD: Final = "HEAD"
     """HEAD method."""
-    OPTIONS = "OPTIONS"
+    OPTIONS: Final = "OPTIONS"
     """OPTIONS method."""
-    PATCH = "PATCH"
+    PATCH: Final = "PATCH"
     """PATCH method."""
-    POST = "POST"
+    POST: Final = "POST"
     """POST method."""
-    PUT = "PUT"
+    PUT: Final = "PUT"
     """PUT method."""
-    TRACE = "TRACE"
+    TRACE: Final = "TRACE"
     """TRACE method."""
-    OTHER = "_OTHER"
+    OTHER: Final = "_OTHER"
     """Any HTTP method that the instrumentation has no prior knowledge of."""

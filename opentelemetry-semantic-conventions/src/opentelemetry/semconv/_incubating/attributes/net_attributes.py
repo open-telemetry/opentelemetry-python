@@ -12,72 +12,60 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from enum import Enum
+from typing import Final
 
 from deprecated import deprecated
 
-NET_HOST_NAME = "net.host.name"
+NET_HOST_NAME: Final = "net.host.name"
 """
 Deprecated: Replaced by `server.address`.
 """
-
-NET_HOST_PORT = "net.host.port"
+NET_HOST_PORT: Final = "net.host.port"
 """
 Deprecated: Replaced by `server.port`.
 """
-
-NET_PEER_NAME = "net.peer.name"
+NET_PEER_NAME: Final = "net.peer.name"
 """
 Deprecated: Replaced by `server.address` on client spans and `client.address` on server spans.
 """
-
-NET_PEER_PORT = "net.peer.port"
+NET_PEER_PORT: Final = "net.peer.port"
 """
 Deprecated: Replaced by `server.port` on client spans and `client.port` on server spans.
 """
-
-NET_PROTOCOL_NAME = "net.protocol.name"
+NET_PROTOCOL_NAME: Final = "net.protocol.name"
 """
 Deprecated: Replaced by `network.protocol.name`.
 """
-
-NET_PROTOCOL_VERSION = "net.protocol.version"
+NET_PROTOCOL_VERSION: Final = "net.protocol.version"
 """
 Deprecated: Replaced by `network.protocol.version`.
 """
-
-NET_SOCK_FAMILY = "net.sock.family"
+NET_SOCK_FAMILY: Final = "net.sock.family"
 """
 Deprecated: Split to `network.transport` and `network.type`.
 """
-
-NET_SOCK_HOST_ADDR = "net.sock.host.addr"
+NET_SOCK_HOST_ADDR: Final = "net.sock.host.addr"
 """
 Deprecated: Replaced by `network.local.address`.
 """
-
-NET_SOCK_HOST_PORT = "net.sock.host.port"
+NET_SOCK_HOST_PORT: Final = "net.sock.host.port"
 """
 Deprecated: Replaced by `network.local.port`.
 """
-
-NET_SOCK_PEER_ADDR = "net.sock.peer.addr"
+NET_SOCK_PEER_ADDR: Final = "net.sock.peer.addr"
 """
 Deprecated: Replaced by `network.peer.address`.
 """
-
-NET_SOCK_PEER_NAME = "net.sock.peer.name"
+NET_SOCK_PEER_NAME: Final = "net.sock.peer.name"
 """
 Deprecated: Removed.
 """
-
-NET_SOCK_PEER_PORT = "net.sock.peer.port"
+NET_SOCK_PEER_PORT: Final = "net.sock.peer.port"
 """
 Deprecated: Replaced by `network.peer.port`.
 """
-
-NET_TRANSPORT = "net.transport"
+NET_TRANSPORT: Final = "net.transport"
 """
 Deprecated: Replaced by `network.transport`.
 """
@@ -87,11 +75,11 @@ Deprecated: Replaced by `network.transport`.
     reason="The attribute net.sock.family is deprecated - Split to `network.transport` and `network.type`"
 )
 class NetSockFamilyValues(Enum):
-    INET = "inet"
+    INET: Final = "inet"
     """IPv4 address."""
-    INET6 = "inet6"
+    INET6: Final = "inet6"
     """IPv6 address."""
-    UNIX = "unix"
+    UNIX: Final = "unix"
     """Unix domain socket path."""
 
 
@@ -99,13 +87,13 @@ class NetSockFamilyValues(Enum):
     reason="The attribute net.transport is deprecated - Replaced by `network.transport`"
 )
 class NetTransportValues(Enum):
-    IP_TCP = "ip_tcp"
+    IP_TCP: Final = "ip_tcp"
     """ip_tcp."""
-    IP_UDP = "ip_udp"
+    IP_UDP: Final = "ip_udp"
     """ip_udp."""
-    PIPE = "pipe"
+    PIPE: Final = "pipe"
     """Named or anonymous pipe."""
-    INPROC = "inproc"
+    INPROC: Final = "inproc"
     """In-process communication."""
-    OTHER = "other"
+    OTHER: Final = "other"
     """Something else (non IP-based)."""

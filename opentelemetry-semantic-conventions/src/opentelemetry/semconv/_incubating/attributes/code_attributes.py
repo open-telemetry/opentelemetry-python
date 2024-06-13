@@ -12,33 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Final
 
-CODE_COLUMN = "code.column"
+CODE_COLUMN: Final = "code.column"
 """
 The column number in `code.filepath` best representing the operation. It SHOULD point within the code unit named in `code.function`.
 """
-
-CODE_FILEPATH = "code.filepath"
+CODE_FILEPATH: Final = "code.filepath"
 """
 The source code file name that identifies the code unit as uniquely as possible (preferably an absolute file path).
 """
-
-CODE_FUNCTION = "code.function"
+CODE_FUNCTION: Final = "code.function"
 """
 The method or function name, or equivalent (usually rightmost part of the code unit's name).
 """
-
-CODE_LINENO = "code.lineno"
+CODE_LINENO: Final = "code.lineno"
 """
 The line number in `code.filepath` best representing the operation. It SHOULD point within the code unit named in `code.function`.
 """
-
-CODE_NAMESPACE = "code.namespace"
+CODE_NAMESPACE: Final = "code.namespace"
 """
 The "namespace" within which `code.function` is defined. Usually the qualified class or module name, such that `code.namespace` + some separator + `code.function` form a unique identifier for the code unit.
 """
-
-CODE_STACKTRACE = "code.stacktrace"
+CODE_STACKTRACE: Final = "code.stacktrace"
 """
 A stacktrace as a string in the natural representation for the language runtime. The representation is to be determined and documented by each language SIG.
 """

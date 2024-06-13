@@ -12,163 +12,153 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from enum import Enum
+from typing import Final
 
-RPC_CONNECT_RPC_ERROR_CODE = "rpc.connect_rpc.error_code"
+RPC_CONNECT_RPC_ERROR_CODE: Final = "rpc.connect_rpc.error_code"
 """
 The [error codes](https://connect.build/docs/protocol/#error-codes) of the Connect request. Error codes are always string values.
 """
-
-RPC_CONNECT_RPC_REQUEST_METADATA_TEMPLATE = "rpc.connect_rpc.request.metadata"
+RPC_CONNECT_RPC_REQUEST_METADATA_TEMPLATE: Final = (
+    "rpc.connect_rpc.request.metadata"
+)
 """
 Connect request metadata, `<key>` being the normalized Connect Metadata key (lowercase), the value being the metadata values.
 Note: Instrumentations SHOULD require an explicit configuration of which metadata values are to be captured. Including all request metadata values can be a security risk - explicit configuration helps avoid leaking sensitive information.
 """
-
-RPC_CONNECT_RPC_RESPONSE_METADATA_TEMPLATE = (
+RPC_CONNECT_RPC_RESPONSE_METADATA_TEMPLATE: Final = (
     "rpc.connect_rpc.response.metadata"
 )
 """
 Connect response metadata, `<key>` being the normalized Connect Metadata key (lowercase), the value being the metadata values.
 Note: Instrumentations SHOULD require an explicit configuration of which metadata values are to be captured. Including all response metadata values can be a security risk - explicit configuration helps avoid leaking sensitive information.
 """
-
-RPC_GRPC_REQUEST_METADATA_TEMPLATE = "rpc.grpc.request.metadata"
+RPC_GRPC_REQUEST_METADATA_TEMPLATE: Final = "rpc.grpc.request.metadata"
 """
 gRPC request metadata, `<key>` being the normalized gRPC Metadata key (lowercase), the value being the metadata values.
 Note: Instrumentations SHOULD require an explicit configuration of which metadata values are to be captured. Including all request metadata values can be a security risk - explicit configuration helps avoid leaking sensitive information.
 """
-
-RPC_GRPC_RESPONSE_METADATA_TEMPLATE = "rpc.grpc.response.metadata"
+RPC_GRPC_RESPONSE_METADATA_TEMPLATE: Final = "rpc.grpc.response.metadata"
 """
 gRPC response metadata, `<key>` being the normalized gRPC Metadata key (lowercase), the value being the metadata values.
 Note: Instrumentations SHOULD require an explicit configuration of which metadata values are to be captured. Including all response metadata values can be a security risk - explicit configuration helps avoid leaking sensitive information.
 """
-
-RPC_GRPC_STATUS_CODE = "rpc.grpc.status_code"
+RPC_GRPC_STATUS_CODE: Final = "rpc.grpc.status_code"
 """
 The [numeric status code](https://github.com/grpc/grpc/blob/v1.33.2/doc/statuscodes.md) of the gRPC request.
 """
-
-RPC_JSONRPC_ERROR_CODE = "rpc.jsonrpc.error_code"
+RPC_JSONRPC_ERROR_CODE: Final = "rpc.jsonrpc.error_code"
 """
 `error.code` property of response if it is an error response.
 """
-
-RPC_JSONRPC_ERROR_MESSAGE = "rpc.jsonrpc.error_message"
+RPC_JSONRPC_ERROR_MESSAGE: Final = "rpc.jsonrpc.error_message"
 """
 `error.message` property of response if it is an error response.
 """
-
-RPC_JSONRPC_REQUEST_ID = "rpc.jsonrpc.request_id"
+RPC_JSONRPC_REQUEST_ID: Final = "rpc.jsonrpc.request_id"
 """
 `id` property of request or response. Since protocol allows id to be int, string, `null` or missing (for notifications), value is expected to be cast to string for simplicity. Use empty string in case of `null` value. Omit entirely if this is a notification.
 """
-
-RPC_JSONRPC_VERSION = "rpc.jsonrpc.version"
+RPC_JSONRPC_VERSION: Final = "rpc.jsonrpc.version"
 """
 Protocol version as in `jsonrpc` property of request/response. Since JSON-RPC 1.0 doesn't specify this, the value can be omitted.
 """
-
-RPC_METHOD = "rpc.method"
+RPC_METHOD: Final = "rpc.method"
 """
 The name of the (logical) method being called, must be equal to the $method part in the span name.
 Note: This is the logical name of the method from the RPC interface perspective, which can be different from the name of any implementing method/function. The `code.function` attribute may be used to store the latter (e.g., method actually executing the call on the server side, RPC client stub method on the client side).
 """
-
-RPC_SERVICE = "rpc.service"
+RPC_SERVICE: Final = "rpc.service"
 """
 The full (logical) name of the service being called, including its package name, if applicable.
 Note: This is the logical name of the service from the RPC interface perspective, which can be different from the name of any implementing class. The `code.namespace` attribute may be used to store the latter (despite the attribute name, it may include a class name; e.g., class with method actually executing the call on the server side, RPC client stub class on the client side).
 """
-
-RPC_SYSTEM = "rpc.system"
+RPC_SYSTEM: Final = "rpc.system"
 """
 A string identifying the remoting system. See below for a list of well-known identifiers.
 """
 
 
 class RpcConnectRpcErrorCodeValues(Enum):
-    CANCELLED = "cancelled"
+    CANCELLED: Final = "cancelled"
     """cancelled."""
-    UNKNOWN = "unknown"
+    UNKNOWN: Final = "unknown"
     """unknown."""
-    INVALID_ARGUMENT = "invalid_argument"
+    INVALID_ARGUMENT: Final = "invalid_argument"
     """invalid_argument."""
-    DEADLINE_EXCEEDED = "deadline_exceeded"
+    DEADLINE_EXCEEDED: Final = "deadline_exceeded"
     """deadline_exceeded."""
-    NOT_FOUND = "not_found"
+    NOT_FOUND: Final = "not_found"
     """not_found."""
-    ALREADY_EXISTS = "already_exists"
+    ALREADY_EXISTS: Final = "already_exists"
     """already_exists."""
-    PERMISSION_DENIED = "permission_denied"
+    PERMISSION_DENIED: Final = "permission_denied"
     """permission_denied."""
-    RESOURCE_EXHAUSTED = "resource_exhausted"
+    RESOURCE_EXHAUSTED: Final = "resource_exhausted"
     """resource_exhausted."""
-    FAILED_PRECONDITION = "failed_precondition"
+    FAILED_PRECONDITION: Final = "failed_precondition"
     """failed_precondition."""
-    ABORTED = "aborted"
+    ABORTED: Final = "aborted"
     """aborted."""
-    OUT_OF_RANGE = "out_of_range"
+    OUT_OF_RANGE: Final = "out_of_range"
     """out_of_range."""
-    UNIMPLEMENTED = "unimplemented"
+    UNIMPLEMENTED: Final = "unimplemented"
     """unimplemented."""
-    INTERNAL = "internal"
+    INTERNAL: Final = "internal"
     """internal."""
-    UNAVAILABLE = "unavailable"
+    UNAVAILABLE: Final = "unavailable"
     """unavailable."""
-    DATA_LOSS = "data_loss"
+    DATA_LOSS: Final = "data_loss"
     """data_loss."""
-    UNAUTHENTICATED = "unauthenticated"
+    UNAUTHENTICATED: Final = "unauthenticated"
     """unauthenticated."""
 
 
 class RpcGrpcStatusCodeValues(Enum):
-    OK = 0
+    OK: Final = 0
     """OK."""
-    CANCELLED = 1
+    CANCELLED: Final = 1
     """CANCELLED."""
-    UNKNOWN = 2
+    UNKNOWN: Final = 2
     """UNKNOWN."""
-    INVALID_ARGUMENT = 3
+    INVALID_ARGUMENT: Final = 3
     """INVALID_ARGUMENT."""
-    DEADLINE_EXCEEDED = 4
+    DEADLINE_EXCEEDED: Final = 4
     """DEADLINE_EXCEEDED."""
-    NOT_FOUND = 5
+    NOT_FOUND: Final = 5
     """NOT_FOUND."""
-    ALREADY_EXISTS = 6
+    ALREADY_EXISTS: Final = 6
     """ALREADY_EXISTS."""
-    PERMISSION_DENIED = 7
+    PERMISSION_DENIED: Final = 7
     """PERMISSION_DENIED."""
-    RESOURCE_EXHAUSTED = 8
+    RESOURCE_EXHAUSTED: Final = 8
     """RESOURCE_EXHAUSTED."""
-    FAILED_PRECONDITION = 9
+    FAILED_PRECONDITION: Final = 9
     """FAILED_PRECONDITION."""
-    ABORTED = 10
+    ABORTED: Final = 10
     """ABORTED."""
-    OUT_OF_RANGE = 11
+    OUT_OF_RANGE: Final = 11
     """OUT_OF_RANGE."""
-    UNIMPLEMENTED = 12
+    UNIMPLEMENTED: Final = 12
     """UNIMPLEMENTED."""
-    INTERNAL = 13
+    INTERNAL: Final = 13
     """INTERNAL."""
-    UNAVAILABLE = 14
+    UNAVAILABLE: Final = 14
     """UNAVAILABLE."""
-    DATA_LOSS = 15
+    DATA_LOSS: Final = 15
     """DATA_LOSS."""
-    UNAUTHENTICATED = 16
+    UNAUTHENTICATED: Final = 16
     """UNAUTHENTICATED."""
 
 
 class RpcSystemValues(Enum):
-    GRPC = "grpc"
+    GRPC: Final = "grpc"
     """gRPC."""
-    JAVA_RMI = "java_rmi"
+    JAVA_RMI: Final = "java_rmi"
     """Java RMI."""
-    DOTNET_WCF = "dotnet_wcf"
+    DOTNET_WCF: Final = "dotnet_wcf"
     """.NET WCF."""
-    APACHE_DUBBO = "apache_dubbo"
+    APACHE_DUBBO: Final = "apache_dubbo"
     """Apache Dubbo."""
-    CONNECT_RPC = "connect_rpc"
+    CONNECT_RPC: Final = "connect_rpc"
     """Connect RPC."""

@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Final
 
-SESSION_ID = "session.id"
+SESSION_ID: Final = "session.id"
 """
 A unique id to identify a session.
 """
-
-SESSION_PREVIOUS_ID = "session.previous_id"
+SESSION_PREVIOUS_ID: Final = "session.previous_id"
 """
 The previous `session.id` for this user, when known.
 """

@@ -12,55 +12,51 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from enum import Enum
+from typing import Final
 
-OS_BUILD_ID = "os.build_id"
+OS_BUILD_ID: Final = "os.build_id"
 """
 Unique identifier for a particular build or compilation of the operating system.
 """
-
-OS_DESCRIPTION = "os.description"
+OS_DESCRIPTION: Final = "os.description"
 """
 Human readable (not intended to be parsed) OS version information, like e.g. reported by `ver` or `lsb_release -a` commands.
 """
-
-OS_NAME = "os.name"
+OS_NAME: Final = "os.name"
 """
 Human readable operating system name.
 """
-
-OS_TYPE = "os.type"
+OS_TYPE: Final = "os.type"
 """
 The operating system type.
 """
-
-OS_VERSION = "os.version"
+OS_VERSION: Final = "os.version"
 """
 The version string of the operating system as defined in [Version Attributes](/docs/resource/README.md#version-attributes).
 """
 
 
 class OsTypeValues(Enum):
-    WINDOWS = "windows"
+    WINDOWS: Final = "windows"
     """Microsoft Windows."""
-    LINUX = "linux"
+    LINUX: Final = "linux"
     """Linux."""
-    DARWIN = "darwin"
+    DARWIN: Final = "darwin"
     """Apple Darwin."""
-    FREEBSD = "freebsd"
+    FREEBSD: Final = "freebsd"
     """FreeBSD."""
-    NETBSD = "netbsd"
+    NETBSD: Final = "netbsd"
     """NetBSD."""
-    OPENBSD = "openbsd"
+    OPENBSD: Final = "openbsd"
     """OpenBSD."""
-    DRAGONFLYBSD = "dragonflybsd"
+    DRAGONFLYBSD: Final = "dragonflybsd"
     """DragonFly BSD."""
-    HPUX = "hpux"
+    HPUX: Final = "hpux"
     """HP-UX (Hewlett Packard Unix)."""
-    AIX = "aix"
+    AIX: Final = "aix"
     """AIX (Advanced Interactive eXecutive)."""
-    SOLARIS = "solaris"
+    SOLARIS: Final = "solaris"
     """SunOS, Oracle Solaris."""
-    Z_OS = "z_os"
+    Z_OS: Final = "z_os"
     """IBM z/OS."""

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from typing import Callable, Sequence
+from typing import Callable, Final, Sequence
 
 from opentelemetry.metrics import (
     Counter,
@@ -22,7 +22,7 @@ from opentelemetry.metrics import (
     UpDownCounter,
 )
 
-PROCESS_CONTEXT_SWITCHES = "process.context_switches"
+PROCESS_CONTEXT_SWITCHES: Final = "process.context_switches"
 """
 Number of times the process has been context switched
 Instrument: counter
@@ -39,7 +39,7 @@ def create_process_context_switches(meter: Meter) -> Counter:
     )
 
 
-PROCESS_CPU_TIME = "process.cpu.time"
+PROCESS_CPU_TIME: Final = "process.cpu.time"
 """
 Total CPU seconds broken down by different states
 Instrument: counter
@@ -56,7 +56,7 @@ def create_process_cpu_time(meter: Meter) -> Counter:
     )
 
 
-PROCESS_CPU_UTILIZATION = "process.cpu.utilization"
+PROCESS_CPU_UTILIZATION: Final = "process.cpu.utilization"
 """
 Difference in process.cpu.time since the last measurement, divided by the elapsed time and number of CPUs available to the process
 Instrument: gauge
@@ -76,7 +76,7 @@ def create_process_cpu_utilization(
     )
 
 
-PROCESS_DISK_IO = "process.disk.io"
+PROCESS_DISK_IO: Final = "process.disk.io"
 """
 Disk bytes transferred
 Instrument: counter
@@ -93,7 +93,7 @@ def create_process_disk_io(meter: Meter) -> Counter:
     )
 
 
-PROCESS_MEMORY_USAGE = "process.memory.usage"
+PROCESS_MEMORY_USAGE: Final = "process.memory.usage"
 """
 The amount of physical memory in use
 Instrument: updowncounter
@@ -110,7 +110,7 @@ def create_process_memory_usage(meter: Meter) -> UpDownCounter:
     )
 
 
-PROCESS_MEMORY_VIRTUAL = "process.memory.virtual"
+PROCESS_MEMORY_VIRTUAL: Final = "process.memory.virtual"
 """
 The amount of committed virtual memory
 Instrument: updowncounter
@@ -127,7 +127,7 @@ def create_process_memory_virtual(meter: Meter) -> UpDownCounter:
     )
 
 
-PROCESS_NETWORK_IO = "process.network.io"
+PROCESS_NETWORK_IO: Final = "process.network.io"
 """
 Network bytes transferred
 Instrument: counter
@@ -144,7 +144,9 @@ def create_process_network_io(meter: Meter) -> Counter:
     )
 
 
-PROCESS_OPEN_FILE_DESCRIPTOR_COUNT = "process.open_file_descriptor.count"
+PROCESS_OPEN_FILE_DESCRIPTOR_COUNT: Final = (
+    "process.open_file_descriptor.count"
+)
 """
 Number of file descriptors in use by the process
 Instrument: updowncounter
@@ -161,7 +163,7 @@ def create_process_open_file_descriptor_count(meter: Meter) -> UpDownCounter:
     )
 
 
-PROCESS_PAGING_FAULTS = "process.paging.faults"
+PROCESS_PAGING_FAULTS: Final = "process.paging.faults"
 """
 Number of page faults the process has made
 Instrument: counter
@@ -178,7 +180,7 @@ def create_process_paging_faults(meter: Meter) -> Counter:
     )
 
 
-PROCESS_THREAD_COUNT = "process.thread.count"
+PROCESS_THREAD_COUNT: Final = "process.thread.count"
 """
 Process threads count
 Instrument: updowncounter

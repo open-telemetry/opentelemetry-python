@@ -13,9 +13,11 @@
 # limitations under the License.
 
 
+from typing import Final
+
 from opentelemetry.metrics import Counter, Histogram, Meter
 
-MESSAGING_PROCESS_DURATION = "messaging.process.duration"
+MESSAGING_PROCESS_DURATION: Final = "messaging.process.duration"
 """
 Measures the duration of process operation
 Instrument: histogram
@@ -32,7 +34,7 @@ def create_messaging_process_duration(meter: Meter) -> Histogram:
     )
 
 
-MESSAGING_PROCESS_MESSAGES = "messaging.process.messages"
+MESSAGING_PROCESS_MESSAGES: Final = "messaging.process.messages"
 """
 Measures the number of processed messages
 Instrument: counter
@@ -49,7 +51,7 @@ def create_messaging_process_messages(meter: Meter) -> Counter:
     )
 
 
-MESSAGING_PUBLISH_DURATION = "messaging.publish.duration"
+MESSAGING_PUBLISH_DURATION: Final = "messaging.publish.duration"
 """
 Measures the duration of publish operation
 Instrument: histogram
@@ -66,7 +68,7 @@ def create_messaging_publish_duration(meter: Meter) -> Histogram:
     )
 
 
-MESSAGING_PUBLISH_MESSAGES = "messaging.publish.messages"
+MESSAGING_PUBLISH_MESSAGES: Final = "messaging.publish.messages"
 """
 Measures the number of published messages
 Instrument: counter
@@ -83,7 +85,7 @@ def create_messaging_publish_messages(meter: Meter) -> Counter:
     )
 
 
-MESSAGING_RECEIVE_DURATION = "messaging.receive.duration"
+MESSAGING_RECEIVE_DURATION: Final = "messaging.receive.duration"
 """
 Measures the duration of receive operation
 Instrument: histogram
@@ -100,7 +102,7 @@ def create_messaging_receive_duration(meter: Meter) -> Histogram:
     )
 
 
-MESSAGING_RECEIVE_MESSAGES = "messaging.receive.messages"
+MESSAGING_RECEIVE_MESSAGES: Final = "messaging.receive.messages"
 """
 Measures the number of received messages
 Instrument: counter

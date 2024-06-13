@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Final
 
-THREAD_ID = "thread.id"
+THREAD_ID: Final = "thread.id"
 """
 Current "managed" thread ID (as opposed to OS thread ID).
 """
-
-THREAD_NAME = "thread.name"
+THREAD_NAME: Final = "thread.name"
 """
 Current thread name.
 """

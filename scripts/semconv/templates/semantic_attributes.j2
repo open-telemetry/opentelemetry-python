@@ -59,6 +59,8 @@ Note: {{ common.to_docstring(attribute.note | indent)}}.
 {%- set filtered_enum_attributes = enum_attributes | rejectattr("fqn", "in", excluded_attributes)| list %}
 {%- endif -%}
 
+from typing import Final
+
 {{common.import_deprecated(filtered_enum_attributes)}}
 
 {% if filtered_enum_attributes | count > 0 %}
@@ -71,9 +73,7 @@ from enum import Enum
 
 {%- set constant_names = [] -%}
 {% for attribute in filtered_attributes -%}
-{%- set name = attribute_name(attribute) -%}
-{{common.add_and_check_constant(attribute.fqn, name, constant_names)}}
-{{name}} = "{{attribute.fqn}}"
+{{attribute_name(attribute)}} : Final = "{{attribute.fqn}}"
 {{attribute_brief(attribute)}}
 {% endfor %}
 {%- for attribute in filtered_enum_attributes -%}
@@ -85,7 +85,7 @@ from enum import Enum
     {%- endif %}
 class {{class_name}}(Enum):
     {%- for member in attribute.attr_type.members %}
-    {{ member.member_id | to_const_name }} = {{ attribute | print_member_value(member) }}
+    {{ member.member_id | to_const_name }} : Final = {{ attribute | print_member_value(member) }}
     """{{ common.to_docstring(member.brief) }}."""
     {%- endfor %}
 {%- endfor -%}
