@@ -14,10 +14,6 @@
 
 from typing import Final
 
-
-
-
-
 SERVICE_NAME: Final = "service.name"
 """
 Logical name of the service.
@@ -28,4 +24,3 @@ SERVICE_VERSION: Final = "service.version"
 """
 The version string of the service API or implementation. The format is not defined by these conventions.
 """
-

@@ -14,10 +14,6 @@
 
 from typing import Final
 
-
-
-
-
 WEBENGINE_DESCRIPTION: Final = "webengine.description"
 """
 Additional description of the web engine (e.g. detailed version and edition information).
@@ -32,4 +28,3 @@ WEBENGINE_VERSION: Final = "webengine.version"
 """
 The version of the web engine.
 """
-

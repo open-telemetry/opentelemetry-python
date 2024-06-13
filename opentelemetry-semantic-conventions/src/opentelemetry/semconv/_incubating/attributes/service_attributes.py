@@ -14,10 +14,6 @@
 
 from typing import Final
 
-
-
-
-
 SERVICE_INSTANCE_ID: Final = "service.instance.id"
 """
 The string ID of the service instance.
@@ -64,4 +60,3 @@ SERVICE_VERSION: Final = "service.version"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.service_attributes.SERVICE_VERSION`.
 """
-

@@ -12,14 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from enum import Enum
 from typing import Final
 
-
 from deprecated import deprecated
-
-
-
-from enum import Enum
 
 NETWORK_CARRIER_ICC: Final = "network.carrier.icc"
 """
@@ -140,6 +136,8 @@ class NetworkConnectionSubtypeValues(Enum):
     """5G NRNSA (New Radio Non-Standalone)."""
     LTE_CA: Final = "lte_ca"
     """LTE CA."""
+
+
 class NetworkConnectionTypeValues(Enum):
     WIFI: Final = "wifi"
     """wifi."""
@@ -151,12 +149,18 @@ class NetworkConnectionTypeValues(Enum):
     """unavailable."""
     UNKNOWN: Final = "unknown"
     """unknown."""
+
+
 class NetworkIoDirectionValues(Enum):
     TRANSMIT: Final = "transmit"
     """transmit."""
     RECEIVE: Final = "receive"
     """receive."""
-@deprecated(reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTransportValues`.")
+
+
+@deprecated(
+    reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTransportValues`."
+)
 class NetworkTransportValues(Enum):
     TCP: Final = "tcp"
     """TCP."""
@@ -166,7 +170,11 @@ class NetworkTransportValues(Enum):
     """Named or anonymous pipe."""
     UNIX: Final = "unix"
     """Unix domain socket."""
-@deprecated(reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTypeValues`.")
+
+
+@deprecated(
+    reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTypeValues`."
+)
 class NetworkTypeValues(Enum):
     IPV4: Final = "ipv4"
     """IPv4."""

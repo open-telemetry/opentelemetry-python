@@ -12,14 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from enum import Enum
 from typing import Final
 
-
 from deprecated import deprecated
-
-
-
-from enum import Enum
 
 NET_HOST_NAME: Final = "net.host.name"
 """
@@ -87,7 +83,9 @@ Deprecated: Replaced by `network.transport`.
 """
 
 
-@deprecated(reason="The attribute net.sock.family is deprecated - Split to `network.transport` and `network.type`")
+@deprecated(
+    reason="The attribute net.sock.family is deprecated - Split to `network.transport` and `network.type`"
+)
 class NetSockFamilyValues(Enum):
     INET: Final = "inet"
     """IPv4 address."""
@@ -95,7 +93,11 @@ class NetSockFamilyValues(Enum):
     """IPv6 address."""
     UNIX: Final = "unix"
     """Unix domain socket path."""
-@deprecated(reason="The attribute net.transport is deprecated - Replaced by `network.transport`")
+
+
+@deprecated(
+    reason="The attribute net.transport is deprecated - Replaced by `network.transport`"
+)
 class NetTransportValues(Enum):
     IP_TCP: Final = "ip_tcp"
     """ip_tcp."""

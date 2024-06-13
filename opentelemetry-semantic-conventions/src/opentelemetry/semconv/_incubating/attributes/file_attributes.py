@@ -14,10 +14,6 @@
 
 from typing import Final
 
-
-
-
-
 FILE_DIRECTORY: Final = "file.directory"
 """
 Directory where the file is located. It should include the drive letter, when appropriate.
@@ -43,4 +39,3 @@ FILE_SIZE: Final = "file.size"
 """
 File size in bytes.
 """
-

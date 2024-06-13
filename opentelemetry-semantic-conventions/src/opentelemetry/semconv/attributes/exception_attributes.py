@@ -14,10 +14,6 @@
 
 from typing import Final
 
-
-
-
-
 EXCEPTION_ESCAPED: Final = "exception.escaped"
 """
 SHOULD be set to true if the exception event is recorded at a point where it is known that the exception is escaping the scope of the span.
@@ -53,4 +49,3 @@ EXCEPTION_TYPE: Final = "exception.type"
 """
 The type of the exception (its fully-qualified class name, if applicable). The dynamic type of the exception should be preferred over the static type in languages that support it.
 """
-

@@ -12,13 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Final
-
-
-
-
-
 from enum import Enum
+from typing import Final
 
 DB_CASSANDRA_CONSISTENCY_LEVEL: Final = "db.cassandra.consistency_level"
 """
@@ -45,7 +40,9 @@ DB_CASSANDRA_PAGE_SIZE: Final = "db.cassandra.page_size"
 The fetch size used for paging, i.e. how many rows will be returned at once.
 """
 
-DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT: Final = "db.cassandra.speculative_execution_count"
+DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT: Final = (
+    "db.cassandra.speculative_execution_count"
+)
 """
 The number of times a query was speculatively executed. Not set or `0` if the query was not executed speculatively.
 """
@@ -86,7 +83,9 @@ DB_COSMOSDB_REQUEST_CHARGE: Final = "db.cosmosdb.request_charge"
 RU consumed for that operation.
 """
 
-DB_COSMOSDB_REQUEST_CONTENT_LENGTH: Final = "db.cosmosdb.request_content_length"
+DB_COSMOSDB_REQUEST_CONTENT_LENGTH: Final = (
+    "db.cosmosdb.request_content_length"
+)
 """
 Request payload size in bytes.
 """
@@ -200,11 +199,15 @@ class DbCassandraConsistencyLevelValues(Enum):
     """serial."""
     LOCAL_SERIAL: Final = "local_serial"
     """local_serial."""
+
+
 class DbCosmosdbConnectionModeValues(Enum):
     GATEWAY: Final = "gateway"
     """Gateway (HTTP) connections mode."""
     DIRECT: Final = "direct"
     """Direct connection."""
+
+
 class DbCosmosdbOperationTypeValues(Enum):
     INVALID: Final = "Invalid"
     """invalid."""
@@ -236,6 +239,8 @@ class DbCosmosdbOperationTypeValues(Enum):
     """query_plan."""
     EXECUTE_JAVASCRIPT: Final = "ExecuteJavaScript"
     """execute_javascript."""
+
+
 class DbSystemValues(Enum):
     OTHER_SQL: Final = "other_sql"
     """Some other SQL database. Fallback only. See notes."""

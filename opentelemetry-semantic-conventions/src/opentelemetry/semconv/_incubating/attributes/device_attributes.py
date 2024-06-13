@@ -14,10 +14,6 @@
 
 from typing import Final
 
-
-
-
-
 DEVICE_ID: Final = "device.id"
 """
 A unique identifier representing the device.
@@ -41,4 +37,3 @@ DEVICE_MODEL_NAME: Final = "device.model.name"
 The marketing name for the device model.
 Note: It's recommended this value represents a human-readable version of the device model rather than a machine-readable alternative.
 """
-

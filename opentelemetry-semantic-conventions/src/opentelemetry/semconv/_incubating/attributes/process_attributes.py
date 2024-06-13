@@ -12,13 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Final
-
-
-
-
-
 from enum import Enum
+from typing import Final
 
 PROCESS_COMMAND: Final = "process.command"
 """
@@ -96,6 +91,8 @@ class ProcessContextSwitchTypeValues(Enum):
     """voluntary."""
     INVOLUNTARY: Final = "involuntary"
     """involuntary."""
+
+
 class ProcessCpuStateValues(Enum):
     SYSTEM: Final = "system"
     """system."""
@@ -103,6 +100,8 @@ class ProcessCpuStateValues(Enum):
     """user."""
     WAIT: Final = "wait"
     """wait."""
+
+
 class ProcessPagingFaultTypeValues(Enum):
     MAJOR: Final = "major"
     """major."""

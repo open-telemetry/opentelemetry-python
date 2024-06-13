@@ -12,13 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Final
-
-
-
-
-
 from enum import Enum
+from typing import Final
 
 HOST_ARCH: Final = "host.arch"
 """

@@ -14,10 +14,6 @@
 
 from typing import Final
 
-
-
-
-
 EXCEPTION_ESCAPED: Final = "exception.escaped"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.exception_attributes.EXCEPTION_ESCAPED`.
@@ -37,4 +33,3 @@ EXCEPTION_TYPE: Final = "exception.type"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.exception_attributes.EXCEPTION_TYPE`.
 """
-

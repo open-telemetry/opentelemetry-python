@@ -12,14 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from enum import Enum
 from typing import Final
 
-
 from deprecated import deprecated
-
-
-
-from enum import Enum
 
 OTEL_LIBRARY_NAME: Final = "otel.library.name"
 """
@@ -52,7 +48,9 @@ Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.otel_a
 """
 
 
-@deprecated(reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.otel_attributes.OtelStatusCodeValues`.")
+@deprecated(
+    reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.otel_attributes.OtelStatusCodeValues`."
+)
 class OtelStatusCodeValues(Enum):
     OK: Final = "OK"
     """The operation has been validated by an Application developer or Operator to have completed successfully."""

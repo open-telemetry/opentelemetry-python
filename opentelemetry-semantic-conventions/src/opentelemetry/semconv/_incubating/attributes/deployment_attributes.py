@@ -14,10 +14,6 @@
 
 from typing import Final
 
-
-
-
-
 DEPLOYMENT_ENVIRONMENT: Final = "deployment.environment"
 """
 Name of the [deployment environment](https://wikipedia.org/wiki/Deployment_environment) (aka deployment tier).
@@ -29,4 +25,3 @@ Note: `deployment.environment` does not affect the uniqueness constraints define
     * `service.name=frontend`, `deployment.environment=production`
     * `service.name=frontend`, `deployment.environment=staging`.
 """
-

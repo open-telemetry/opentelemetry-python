@@ -12,15 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from enum import Enum
 from typing import Final
 
-
-
-
-
-from enum import Enum
-
-AWS_DYNAMODB_ATTRIBUTE_DEFINITIONS: Final = "aws.dynamodb.attribute_definitions"
+AWS_DYNAMODB_ATTRIBUTE_DEFINITIONS: Final = (
+    "aws.dynamodb.attribute_definitions"
+)
 """
 The JSON-serialized value of each item in the `AttributeDefinitions` request field.
 """
@@ -45,17 +42,23 @@ AWS_DYNAMODB_COUNT: Final = "aws.dynamodb.count"
 The value of the `Count` response parameter.
 """
 
-AWS_DYNAMODB_EXCLUSIVE_START_TABLE: Final = "aws.dynamodb.exclusive_start_table"
+AWS_DYNAMODB_EXCLUSIVE_START_TABLE: Final = (
+    "aws.dynamodb.exclusive_start_table"
+)
 """
 The value of the `ExclusiveStartTableName` request parameter.
 """
 
-AWS_DYNAMODB_GLOBAL_SECONDARY_INDEX_UPDATES: Final = "aws.dynamodb.global_secondary_index_updates"
+AWS_DYNAMODB_GLOBAL_SECONDARY_INDEX_UPDATES: Final = (
+    "aws.dynamodb.global_secondary_index_updates"
+)
 """
 The JSON-serialized value of each item in the `GlobalSecondaryIndexUpdates` request field.
 """
 
-AWS_DYNAMODB_GLOBAL_SECONDARY_INDEXES: Final = "aws.dynamodb.global_secondary_indexes"
+AWS_DYNAMODB_GLOBAL_SECONDARY_INDEXES: Final = (
+    "aws.dynamodb.global_secondary_indexes"
+)
 """
 The JSON-serialized value of each item of the `GlobalSecondaryIndexes` request field.
 """
@@ -65,7 +68,9 @@ AWS_DYNAMODB_INDEX_NAME: Final = "aws.dynamodb.index_name"
 The value of the `IndexName` request parameter.
 """
 
-AWS_DYNAMODB_ITEM_COLLECTION_METRICS: Final = "aws.dynamodb.item_collection_metrics"
+AWS_DYNAMODB_ITEM_COLLECTION_METRICS: Final = (
+    "aws.dynamodb.item_collection_metrics"
+)
 """
 The JSON-serialized value of the `ItemCollectionMetrics` response field.
 """
@@ -75,7 +80,9 @@ AWS_DYNAMODB_LIMIT: Final = "aws.dynamodb.limit"
 The value of the `Limit` request parameter.
 """
 
-AWS_DYNAMODB_LOCAL_SECONDARY_INDEXES: Final = "aws.dynamodb.local_secondary_indexes"
+AWS_DYNAMODB_LOCAL_SECONDARY_INDEXES: Final = (
+    "aws.dynamodb.local_secondary_indexes"
+)
 """
 The JSON-serialized value of each item of the `LocalSecondaryIndexes` request field.
 """
@@ -85,12 +92,16 @@ AWS_DYNAMODB_PROJECTION: Final = "aws.dynamodb.projection"
 The value of the `ProjectionExpression` request parameter.
 """
 
-AWS_DYNAMODB_PROVISIONED_READ_CAPACITY: Final = "aws.dynamodb.provisioned_read_capacity"
+AWS_DYNAMODB_PROVISIONED_READ_CAPACITY: Final = (
+    "aws.dynamodb.provisioned_read_capacity"
+)
 """
 The value of the `ProvisionedThroughput.ReadCapacityUnits` request parameter.
 """
 
-AWS_DYNAMODB_PROVISIONED_WRITE_CAPACITY: Final = "aws.dynamodb.provisioned_write_capacity"
+AWS_DYNAMODB_PROVISIONED_WRITE_CAPACITY: Final = (
+    "aws.dynamodb.provisioned_write_capacity"
+)
 """
 The value of the `ProvisionedThroughput.WriteCapacityUnits` request parameter.
 """

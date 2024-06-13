@@ -12,13 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Final
-
-
-
-
-
 from enum import Enum
+from typing import Final
 
 FAAS_COLDSTART: Final = "faas.coldstart"
 """
@@ -138,6 +133,8 @@ class FaasDocumentOperationValues(Enum):
     """When an object is modified."""
     DELETE: Final = "delete"
     """When an object is deleted."""
+
+
 class FaasInvokedProviderValues(Enum):
     ALIBABA_CLOUD: Final = "alibaba_cloud"
     """Alibaba Cloud."""
@@ -149,6 +146,8 @@ class FaasInvokedProviderValues(Enum):
     """Google Cloud Platform."""
     TENCENT_CLOUD: Final = "tencent_cloud"
     """Tencent Cloud."""
+
+
 class FaasTriggerValues(Enum):
     DATASOURCE: Final = "datasource"
     """A response to some data source operation such as a database or filesystem read/write."""

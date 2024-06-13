@@ -14,10 +14,6 @@
 
 from typing import Final
 
-
-
-
-
 SOURCE_ADDRESS: Final = "source.address"
 """
 Source address - domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name.
@@ -28,4 +24,3 @@ SOURCE_PORT: Final = "source.port"
 """
 Source port number.
 """
-

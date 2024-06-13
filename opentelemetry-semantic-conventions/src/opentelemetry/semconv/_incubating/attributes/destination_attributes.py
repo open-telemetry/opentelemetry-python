@@ -14,10 +14,6 @@
 
 from typing import Final
 
-
-
-
-
 DESTINATION_ADDRESS: Final = "destination.address"
 """
 Destination address - domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name.
@@ -28,4 +24,3 @@ DESTINATION_PORT: Final = "destination.port"
 """
 Destination port number.
 """
-

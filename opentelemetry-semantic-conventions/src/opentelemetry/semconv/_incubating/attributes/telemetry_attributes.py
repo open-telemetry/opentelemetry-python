@@ -12,14 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from enum import Enum
 from typing import Final
 
-
 from deprecated import deprecated
-
-
-
-from enum import Enum
 
 TELEMETRY_DISTRO_NAME: Final = "telemetry.distro.name"
 """
@@ -49,7 +45,9 @@ Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.teleme
 """
 
 
-@deprecated(reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TelemetrySdkLanguageValues`.")
+@deprecated(
+    reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TelemetrySdkLanguageValues`."
+)
 class TelemetrySdkLanguageValues(Enum):
     CPP: Final = "cpp"
     """cpp."""

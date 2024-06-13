@@ -14,10 +14,6 @@
 
 from typing import Final
 
-
-
-
-
 URL_DOMAIN: Final = "url.domain"
 """
 Domain extracted from the `url.full`, such as "opentelemetry.io".
@@ -84,4 +80,3 @@ URL_TOP_LEVEL_DOMAIN: Final = "url.top_level_domain"
 The effective top level domain (eTLD), also known as the domain suffix, is the last part of the domain name. For example, the top level domain for example.com is `com`.
 Note: This value can be determined precisely with the [public suffix list](http://publicsuffix.org).
 """
-

@@ -12,13 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Final
-
-
-
-
-
 from enum import Enum
+from typing import Final
 
 NETWORK_LOCAL_ADDRESS: Final = "network.local.address"
 """
@@ -78,6 +73,8 @@ class NetworkTransportValues(Enum):
     """Named or anonymous pipe."""
     UNIX: Final = "unix"
     """Unix domain socket."""
+
+
 class NetworkTypeValues(Enum):
     IPV4: Final = "ipv4"
     """IPv4."""

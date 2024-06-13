@@ -12,13 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Final
-
-
-
-
-
 from enum import Enum
+from typing import Final
 
 CLOUD_ACCOUNT_ID: Final = "cloud.account.id"
 """
@@ -128,6 +123,8 @@ class CloudPlatformValues(Enum):
     """Tencent Cloud Elastic Kubernetes Service (EKS)."""
     TENCENT_CLOUD_SCF: Final = "tencent_cloud_scf"
     """Tencent Cloud Serverless Cloud Function (SCF)."""
+
+
 class CloudProviderValues(Enum):
     ALIBABA_CLOUD: Final = "alibaba_cloud"
     """Alibaba Cloud."""

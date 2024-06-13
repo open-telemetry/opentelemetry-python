@@ -14,10 +14,6 @@
 
 from typing import Final
 
-
-
-
-
 CODE_COLUMN: Final = "code.column"
 """
 The column number in `code.filepath` best representing the operation. It SHOULD point within the code unit named in `code.function`.
@@ -47,4 +43,3 @@ CODE_STACKTRACE: Final = "code.stacktrace"
 """
 A stacktrace as a string in the natural representation for the language runtime. The representation is to be determined and documented by each language SIG.
 """
-

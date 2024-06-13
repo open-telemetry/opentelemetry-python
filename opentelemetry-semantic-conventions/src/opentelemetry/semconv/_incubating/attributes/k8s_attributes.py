@@ -14,10 +14,6 @@
 
 from typing import Final
 
-
-
-
-
 K8S_CLUSTER_NAME: Final = "k8s.cluster.name"
 """
 The name of the cluster.
@@ -159,4 +155,3 @@ K8S_STATEFULSET_UID: Final = "k8s.statefulset.uid"
 """
 The UID of the StatefulSet.
 """
-

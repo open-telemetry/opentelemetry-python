@@ -14,10 +14,6 @@
 
 from typing import Final
 
-
-
-
-
 FEATURE_FLAG_KEY: Final = "feature_flag.key"
 """
 The unique identifier of the feature flag.
@@ -40,4 +36,3 @@ Note: A semantic identifier, commonly referred to as a variant, provides a means
     semantic identifier is unavailable. String representation of the value
     should be determined by the implementer.
 """
-

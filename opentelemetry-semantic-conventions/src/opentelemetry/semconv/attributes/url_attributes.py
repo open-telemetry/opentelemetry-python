@@ -14,10 +14,6 @@
 
 from typing import Final
 
-
-
-
-
 URL_FRAGMENT: Final = "url.fragment"
 """
 The [URI fragment](https://www.rfc-editor.org/rfc/rfc3986#section-3.5) component.
@@ -47,4 +43,3 @@ URL_SCHEME: Final = "url.scheme"
 """
 The [URI scheme](https://www.rfc-editor.org/rfc/rfc3986#section-3.1) component identifying the used protocol.
 """
-

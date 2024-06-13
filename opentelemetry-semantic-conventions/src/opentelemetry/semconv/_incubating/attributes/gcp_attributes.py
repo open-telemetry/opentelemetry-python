@@ -14,10 +14,6 @@
 
 from typing import Final
 
-
-
-
-
 GCP_CLOUD_RUN_JOB_EXECUTION: Final = "gcp.cloud_run.job.execution"
 """
 The name of the Cloud Run [execution](https://cloud.google.com/run/docs/managing/job-executions) being run for the Job, as set by the [`CLOUD_RUN_EXECUTION`](https://cloud.google.com/run/docs/container-contract#jobs-env-vars) environment variable.
@@ -37,4 +33,3 @@ GCP_GCE_INSTANCE_NAME: Final = "gcp.gce.instance.name"
 """
 The instance name of a GCE instance. This is the value provided by `host.name`, the visible name of the instance in the Cloud Console UI, and the prefix for the default hostname of the instance as defined by the [default internal DNS name](https://cloud.google.com/compute/docs/internal-dns#instance-fully-qualified-domain-names).
 """
-
