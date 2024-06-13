@@ -24,3 +24,12 @@
 from deprecated import deprecated
     {%- endif %}
 {%- endmacro-%}
+
+
+{%- macro error_duplicate_constant(fqn, const_name) -%}
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+------------------ ERROR ------------------------
+{{ "Failed to generate attribute `" ~ fqn ~ "`, constant `" ~ const_name ~ "` is already defined." }}
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+{%- endmacro -%}

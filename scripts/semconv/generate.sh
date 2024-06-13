@@ -29,6 +29,7 @@ if ! grep -q $SEMCONV_VERSION "$SCHEMAS_PY_PATH"; then
 fi
 
 EXCLUDED_NAMESPACES="jvm aspnetcore dotnet signalr ios android"
+EXCLUDED_ATTRIBUTES=""
 
 generate() {
   TEMPLATE=$1
@@ -48,7 +49,8 @@ generate() {
     --file-per-group root_namespace \
     -Dfilter=${FILTER} \
     -Dstable_package=${STABLE_PACKAGE} \
-    -Dexcluded_namespaces="$EXCLUDED_NAMESPACES"
+    -Dexcluded_namespaces="$EXCLUDED_NAMESPACES" \
+    -Dexcluded_attributes="$EXCLUDED_ATTRIBUTES"
 }
 
 # stable attributes and metrics

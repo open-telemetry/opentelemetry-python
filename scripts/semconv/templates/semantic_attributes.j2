@@ -42,20 +42,21 @@ Note: {{ common.to_docstring(attribute.note | indent)}}.
 """
 {%- endmacro -%}
 
-{%- if root_namespace not in excluded_namespaces -%}
+{%- if root_namespace not in excluded_namespaces.split(' ') -%}
+{%- set excluded_attributes_list = excluded_attributes.split(' ') -%}
 {%- if filter != 'any' -%}
-{%- set filtered_attributes = attributes_and_templates | select(filter) | list -%}
+{%- set filtered_attributes = attributes_and_templates | rejectattr("fqn", "in", excluded_attributes) | select(filter) | list -%}
 {%- else -%}
-{%- set filtered_attributes = attributes_and_templates | list %}
+{%- set filtered_attributes = attributes_and_templates | rejectattr("fqn", "in", excluded_attributes) | list %}
 {%- endif -%}
 {%- if filtered_attributes | count > 0 -%}
 
 {{ common.file_header()}}
 
 {%- if filter != 'any' -%}
-{%- set filtered_enum_attributes = enum_attributes | select(filter) | list %}
+{%- set filtered_enum_attributes = enum_attributes | rejectattr("fqn", "in", excluded_attributes) | select(filter) | list %}
 {%- else -%}
-{%- set filtered_enum_attributes = enum_attributes | list %}
+{%- set filtered_enum_attributes = enum_attributes | rejectattr("fqn", "in", excluded_attributes)| list %}
 {%- endif -%}
 
 {{common.import_deprecated(filtered_enum_attributes)}}
@@ -67,8 +68,12 @@ from enum import Enum
 {% else %}
 
 {% endif %}
+
+{%- set constant_names = [] -%}
 {% for attribute in filtered_attributes -%}
-{{attribute_name(attribute)}} = "{{attribute.fqn}}"
+{%- set name = attribute_name(attribute) -%}
+{%- if name in constant_names -%}{{common.error_duplicate_constant(attribute.fqn, name)}}{%- else -%}{%- set _ = constant_names.append(name) -%}{%- endif -%}
+{{name}} = "{{attribute.fqn}}"
 {{attribute_brief(attribute)}}
 
 {% endfor %}
