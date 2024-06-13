@@ -18,10 +18,12 @@ ENDUSER_ID = "enduser.id"
 Username or client_id extracted from the access token or [Authorization](https://tools.ietf.org/html/rfc7235#section-4.2) header in the inbound request from outside the system.
 """
 
+
 ENDUSER_ROLE = "enduser.role"
 """
 Actual/assumed role the client is making the request under extracted from token or application security context.
 """
+
 
 ENDUSER_SCOPE = "enduser.scope"
 """

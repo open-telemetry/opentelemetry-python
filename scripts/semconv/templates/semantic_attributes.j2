@@ -72,7 +72,7 @@ from enum import Enum
 {%- set constant_names = [] -%}
 {% for attribute in filtered_attributes -%}
 {%- set name = attribute_name(attribute) -%}
-{%- if name in constant_names -%}{{common.error_duplicate_constant(attribute.fqn, name)}}{%- else -%}{%- set _ = constant_names.append(name) -%}{%- endif -%}
+{{common.add_and_check_constant(attribute.fqn, name, constant_names)}}
 {{name}} = "{{attribute.fqn}}"
 {{attribute_brief(attribute)}}
 

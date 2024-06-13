@@ -20,25 +20,30 @@ LOG_FILE_NAME = "log.file.name"
 The basename of the file.
 """
 
+
 LOG_FILE_NAME_RESOLVED = "log.file.name_resolved"
 """
 The basename of the file, with symlinks resolved.
 """
+
 
 LOG_FILE_PATH = "log.file.path"
 """
 The full path to the file.
 """
 
+
 LOG_FILE_PATH_RESOLVED = "log.file.path_resolved"
 """
 The full path to the file, with symlinks resolved.
 """
 
+
 LOG_IOSTREAM = "log.iostream"
 """
 The stream associated with the log. See below for a list of well-known values.
 """
+
 
 LOG_RECORD_UID = "log.record.uid"
 """

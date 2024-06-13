@@ -25,11 +25,15 @@ from deprecated import deprecated
     {%- endif %}
 {%- endmacro-%}
 
+{%- macro add_and_check_constant(fqn, const_name, all_names) -%}
+{%- if const_name in all_names %}
 
-{%- macro error_duplicate_constant(fqn, const_name) -%}
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ------------------ ERROR ------------------------
 {{ "Failed to generate `" ~ fqn ~ "`, constant `" ~ const_name ~ "` is already defined." }}
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+{% else -%}
+{%- set _ = all_names.append(const_name) -%}
+{%- endif -%}
 {%- endmacro -%}

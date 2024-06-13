@@ -34,15 +34,18 @@ Note: An exception is considered to have escaped (or left) the scope of a span,
     clear whether the exception will escape.
 """
 
+
 EXCEPTION_MESSAGE = "exception.message"
 """
 The exception message.
 """
 
+
 EXCEPTION_STACKTRACE = "exception.stacktrace"
 """
 A stacktrace as a string in the natural representation for the language runtime. The representation is to be determined and documented by each language SIG.
 """
+
 
 EXCEPTION_TYPE = "exception.type"
 """

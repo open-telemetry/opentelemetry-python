@@ -18,10 +18,12 @@ HEROKU_APP_ID = "heroku.app.id"
 Unique identifier for the application.
 """
 
+
 HEROKU_RELEASE_COMMIT = "heroku.release.commit"
 """
 Commit hash for the current release.
 """
+
 
 HEROKU_RELEASE_CREATION_TIMESTAMP = "heroku.release.creation_timestamp"
 """

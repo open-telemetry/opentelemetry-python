@@ -18,6 +18,7 @@ URL_FRAGMENT = "url.fragment"
 The [URI fragment](https://www.rfc-editor.org/rfc/rfc3986#section-3.5) component.
 """
 
+
 URL_FULL = "url.full"
 """
 Absolute URL describing a network resource according to [RFC3986](https://www.rfc-editor.org/rfc/rfc3986).
@@ -26,17 +27,20 @@ Note: For network calls, URL usually has `scheme://host[:port][path][?query][#fr
     `url.full` SHOULD capture the absolute URL when it is available (or can be reconstructed). Sensitive content provided in `url.full` SHOULD be scrubbed when instrumentations can identify it.
 """
 
+
 URL_PATH = "url.path"
 """
 The [URI path](https://www.rfc-editor.org/rfc/rfc3986#section-3.3) component.
 Note: Sensitive content provided in `url.path` SHOULD be scrubbed when instrumentations can identify it.
 """
 
+
 URL_QUERY = "url.query"
 """
 The [URI query](https://www.rfc-editor.org/rfc/rfc3986#section-3.4) component.
 Note: Sensitive content provided in `url.query` SHOULD be scrubbed when instrumentations can identify it.
 """
+
 
 URL_SCHEME = "url.scheme"
 """

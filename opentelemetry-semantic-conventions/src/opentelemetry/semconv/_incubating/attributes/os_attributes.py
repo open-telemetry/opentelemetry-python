@@ -20,20 +20,24 @@ OS_BUILD_ID = "os.build_id"
 Unique identifier for a particular build or compilation of the operating system.
 """
 
+
 OS_DESCRIPTION = "os.description"
 """
 Human readable (not intended to be parsed) OS version information, like e.g. reported by `ver` or `lsb_release -a` commands.
 """
+
 
 OS_NAME = "os.name"
 """
 Human readable operating system name.
 """
 
+
 OS_TYPE = "os.type"
 """
 The operating system type.
 """
+
 
 OS_VERSION = "os.version"
 """

@@ -101,7 +101,7 @@ from opentelemetry.metrics import Counter
 {%- set constant_names = [] -%}
   {%- for metric in filtered_metrics %}
 {% set name = metric.metric_name | to_const_name %}
-{%- if name in constant_names -%}{{common.error_duplicate_constant(metric.metric_name, name)}}{%- else -%}{%- set _ = constant_names.append(name) -%}{%- endif -%}
+{{common.add_and_check_constant(metric.metric_name, name, constant_names)}}
 
 {{name}} = "{{metric.metric_name}}"
 {{metric_brief(metric, metric.metric_name | to_const_name) }}

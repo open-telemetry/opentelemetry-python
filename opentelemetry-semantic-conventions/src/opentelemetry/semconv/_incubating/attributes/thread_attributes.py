@@ -18,6 +18,7 @@ THREAD_ID = "thread.id"
 Current "managed" thread ID (as opposed to OS thread ID).
 """
 
+
 THREAD_NAME = "thread.name"
 """
 Current thread name.

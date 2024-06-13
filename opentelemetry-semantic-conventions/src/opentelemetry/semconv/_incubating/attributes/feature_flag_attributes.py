@@ -18,10 +18,12 @@ FEATURE_FLAG_KEY = "feature_flag.key"
 The unique identifier of the feature flag.
 """
 
+
 FEATURE_FLAG_PROVIDER_NAME = "feature_flag.provider_name"
 """
 The name of the service provider that performs the flag evaluation.
 """
+
 
 FEATURE_FLAG_VARIANT = "feature_flag.variant"
 """
