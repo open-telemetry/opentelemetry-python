@@ -15,7 +15,6 @@
 
 from enum import Enum
 
-
 HOST_ARCH = "host.arch"
 """
 The CPU architecture the host system is running on.

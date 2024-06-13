@@ -13,22 +13,14 @@
 # limitations under the License.
 
 
-
-
-
 from enum import Enum
-
 
 MESSAGING_BATCH_MESSAGE_COUNT = "messaging.batch.message_count"
 """
 The number of messages sent, received, or processed in the scope of the batching operation.
 Note: Instrumentations SHOULD NOT set `messaging.batch.message_count` on spans that operate with a single message. When a messaging client library supports both batch and single-message API for the same operation, instrumentations SHOULD use `messaging.batch.message_count` for batching APIs and SHOULD NOT use it for single-message APIs.
 """
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
------------------- ERROR ------------------------
-Failed to generate `messaging.client_id`, constant `MESSAGING_CLIENT_ID` is already defined.
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 MESSAGING_CLIENT_ID = "messaging.client_id"
 """
 A unique identifier for the client that consumes or produces a message.
@@ -62,7 +54,9 @@ MESSAGING_DESTINATION_TEMPORARY = "messaging.destination.temporary"
 A boolean that is true if the message destination is temporary and might not exist anymore after messages are processed.
 """
 
-MESSAGING_DESTINATION_PUBLISH_ANONYMOUS = "messaging.destination_publish.anonymous"
+MESSAGING_DESTINATION_PUBLISH_ANONYMOUS = (
+    "messaging.destination_publish.anonymous"
+)
 """
 A boolean that is true if the publish message destination is anonymous (could be unnamed or have auto-generated name).
 """
@@ -79,12 +73,16 @@ MESSAGING_EVENTHUBS_CONSUMER_GROUP = "messaging.eventhubs.consumer.group"
 The name of the consumer group the event consumer is associated with.
 """
 
-MESSAGING_EVENTHUBS_MESSAGE_ENQUEUED_TIME = "messaging.eventhubs.message.enqueued_time"
+MESSAGING_EVENTHUBS_MESSAGE_ENQUEUED_TIME = (
+    "messaging.eventhubs.message.enqueued_time"
+)
 """
 The UTC epoch seconds at which the message has been accepted and stored in the entity.
 """
 
-MESSAGING_GCP_PUBSUB_MESSAGE_ORDERING_KEY = "messaging.gcp_pubsub.message.ordering_key"
+MESSAGING_GCP_PUBSUB_MESSAGE_ORDERING_KEY = (
+    "messaging.gcp_pubsub.message.ordering_key"
+)
 """
 The ordering key for a given message. If the attribute is not present, the message does not have an ordering key.
 """
@@ -145,12 +143,16 @@ A string identifying the kind of messaging operation.
 Note: If a custom value is used, it MUST be of low cardinality.
 """
 
-MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY = "messaging.rabbitmq.destination.routing_key"
+MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY = (
+    "messaging.rabbitmq.destination.routing_key"
+)
 """
 RabbitMQ message routing key.
 """
 
-MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG = "messaging.rabbitmq.message.delivery_tag"
+MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG = (
+    "messaging.rabbitmq.message.delivery_tag"
+)
 """
 RabbitMQ message delivery tag.
 """
@@ -165,12 +167,16 @@ MESSAGING_ROCKETMQ_CONSUMPTION_MODEL = "messaging.rocketmq.consumption_model"
 Model of message consumption. This only applies to consumer spans.
 """
 
-MESSAGING_ROCKETMQ_MESSAGE_DELAY_TIME_LEVEL = "messaging.rocketmq.message.delay_time_level"
+MESSAGING_ROCKETMQ_MESSAGE_DELAY_TIME_LEVEL = (
+    "messaging.rocketmq.message.delay_time_level"
+)
 """
 The delay time level for delay message, which determines the message delay time.
 """
 
-MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP = "messaging.rocketmq.message.delivery_timestamp"
+MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP = (
+    "messaging.rocketmq.message.delivery_timestamp"
+)
 """
 The timestamp in milliseconds that the delay message is expected to be delivered to consumer.
 """
@@ -200,22 +206,30 @@ MESSAGING_ROCKETMQ_NAMESPACE = "messaging.rocketmq.namespace"
 Namespace of RocketMQ resources, resources in different namespaces are individual.
 """
 
-MESSAGING_SERVICEBUS_DESTINATION_SUBSCRIPTION_NAME = "messaging.servicebus.destination.subscription_name"
+MESSAGING_SERVICEBUS_DESTINATION_SUBSCRIPTION_NAME = (
+    "messaging.servicebus.destination.subscription_name"
+)
 """
 The name of the subscription in the topic messages are received from.
 """
 
-MESSAGING_SERVICEBUS_DISPOSITION_STATUS = "messaging.servicebus.disposition_status"
+MESSAGING_SERVICEBUS_DISPOSITION_STATUS = (
+    "messaging.servicebus.disposition_status"
+)
 """
 Describes the [settlement type](https://learn.microsoft.com/azure/service-bus-messaging/message-transfers-locks-settlement#peeklock).
 """
 
-MESSAGING_SERVICEBUS_MESSAGE_DELIVERY_COUNT = "messaging.servicebus.message.delivery_count"
+MESSAGING_SERVICEBUS_MESSAGE_DELIVERY_COUNT = (
+    "messaging.servicebus.message.delivery_count"
+)
 """
 Number of deliveries that have been attempted for this message.
 """
 
-MESSAGING_SERVICEBUS_MESSAGE_ENQUEUED_TIME = "messaging.servicebus.message.enqueued_time"
+MESSAGING_SERVICEBUS_MESSAGE_ENQUEUED_TIME = (
+    "messaging.servicebus.message.enqueued_time"
+)
 """
 The UTC epoch seconds at which the message has been accepted and stored in the entity.
 """
@@ -224,6 +238,7 @@ MESSAGING_SYSTEM = "messaging.system"
 """
 An identifier for the messaging system being used. See below for a list of well-known identifiers.
 """
+
 
 class MessagingOperationValues(Enum):
     PUBLISH = "publish"
@@ -236,11 +251,15 @@ class MessagingOperationValues(Enum):
     """One or more messages are delivered to or processed by a consumer."""
     SETTLE = "settle"
     """One or more messages are settled."""
+
+
 class MessagingRocketmqConsumptionModelValues(Enum):
     CLUSTERING = "clustering"
     """Clustering consumption model."""
     BROADCASTING = "broadcasting"
     """Broadcasting consumption model."""
+
+
 class MessagingRocketmqMessageTypeValues(Enum):
     NORMAL = "normal"
     """Normal message."""
@@ -250,6 +269,8 @@ class MessagingRocketmqMessageTypeValues(Enum):
     """Delay message."""
     TRANSACTION = "transaction"
     """Transaction message."""
+
+
 class MessagingServicebusDispositionStatusValues(Enum):
     COMPLETE = "complete"
     """Message is completed."""
@@ -259,6 +280,8 @@ class MessagingServicebusDispositionStatusValues(Enum):
     """Message is sent to dead letter queue."""
     DEFER = "defer"
     """Message is deferred."""
+
+
 class MessagingSystemValues(Enum):
     ACTIVEMQ = "activemq"
     """Apache ActiveMQ."""

@@ -15,7 +15,6 @@
 
 from enum import Enum
 
-
 HTTP_REQUEST_HEADER_TEMPLATE = "http.request.header"
 """
 HTTP request headers, `<key>` being the normalized HTTP Header name (lowercase), the value being the header values.

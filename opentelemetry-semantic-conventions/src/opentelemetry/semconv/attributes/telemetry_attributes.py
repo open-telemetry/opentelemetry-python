@@ -15,7 +15,6 @@
 
 from enum import Enum
 
-
 TELEMETRY_SDK_LANGUAGE = "telemetry.sdk.language"
 """
 The language of the telemetry SDK.

@@ -13,10 +13,7 @@
 # limitations under the License.
 
 
-from opentelemetry.metrics import Meter
-from opentelemetry.metrics import Histogram
-from opentelemetry.metrics import Counter
-
+from opentelemetry.metrics import Counter, Histogram, Meter
 
 MESSAGING_PROCESS_DURATION = "messaging.process.duration"
 """

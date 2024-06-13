@@ -13,11 +13,9 @@
 # limitations under the License.
 
 
-from deprecated import deprecated
-
-
 from enum import Enum
 
+from deprecated import deprecated
 
 NET_HOST_NAME = "net.host.name"
 """

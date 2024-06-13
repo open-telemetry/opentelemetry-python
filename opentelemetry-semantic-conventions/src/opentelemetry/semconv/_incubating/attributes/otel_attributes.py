@@ -13,11 +13,9 @@
 # limitations under the License.
 
 
-from deprecated import deprecated
-
-
 from enum import Enum
 
+from deprecated import deprecated
 
 OTEL_LIBRARY_NAME = "otel.library.name"
 """

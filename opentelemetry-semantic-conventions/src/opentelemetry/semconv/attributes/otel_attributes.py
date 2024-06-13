@@ -15,7 +15,6 @@
 
 from enum import Enum
 
-
 OTEL_SCOPE_NAME = "otel.scope.name"
 """
 The name of the instrumentation scope - (`InstrumentationScope.Name` in OTLP).

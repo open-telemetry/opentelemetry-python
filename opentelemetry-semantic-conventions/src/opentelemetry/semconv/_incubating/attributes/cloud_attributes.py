@@ -15,7 +15,6 @@
 
 from enum import Enum
 
-
 CLOUD_ACCOUNT_ID = "cloud.account.id"
 """
 The cloud account ID the resource is assigned to.

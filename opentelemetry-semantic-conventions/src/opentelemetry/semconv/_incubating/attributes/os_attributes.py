@@ -15,7 +15,6 @@
 
 from enum import Enum
 
-
 OS_BUILD_ID = "os.build_id"
 """
 Unique identifier for a particular build or compilation of the operating system.

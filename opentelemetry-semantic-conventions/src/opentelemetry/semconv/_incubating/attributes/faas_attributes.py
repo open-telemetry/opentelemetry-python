@@ -15,7 +15,6 @@
 
 from enum import Enum
 
-
 FAAS_COLDSTART = "faas.coldstart"
 """
 A boolean that is true if the serverless function is executed for the first time (aka cold-start).

@@ -15,7 +15,6 @@
 
 from enum import Enum
 
-
 RPC_CONNECT_RPC_ERROR_CODE = "rpc.connect_rpc.error_code"
 """
 The [error codes](https://connect.build/docs/protocol/#error-codes) of the Connect request. Error codes are always string values.

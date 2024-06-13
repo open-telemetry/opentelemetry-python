@@ -15,7 +15,6 @@
 
 from enum import Enum
 
-
 TLS_CIPHER = "tls.cipher"
 """
 String indicating the [cipher](https://datatracker.ietf.org/doc/html/rfc5246#appendix-A.5) used during the current connection.

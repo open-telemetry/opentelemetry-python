@@ -15,7 +15,6 @@
 
 from enum import Enum
 
-
 GRAPHQL_DOCUMENT = "graphql.document"
 """
 The GraphQL document being executed.

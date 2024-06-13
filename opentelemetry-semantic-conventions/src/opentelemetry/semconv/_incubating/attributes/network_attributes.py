@@ -13,11 +13,9 @@
 # limitations under the License.
 
 
-from deprecated import deprecated
-
-
 from enum import Enum
 
+from deprecated import deprecated
 
 NETWORK_CARRIER_ICC = "network.carrier.icc"
 """

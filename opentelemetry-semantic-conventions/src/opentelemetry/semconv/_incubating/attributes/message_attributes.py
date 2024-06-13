@@ -15,7 +15,6 @@
 
 from enum import Enum
 
-
 MESSAGE_COMPRESSED_SIZE = "message.compressed_size"
 """
 Compressed size of the message in bytes.

@@ -15,7 +15,6 @@
 
 from enum import Enum
 
-
 LOG_FILE_NAME = "log.file.name"
 """
 The basename of the file.

@@ -15,7 +15,6 @@
 
 from enum import Enum
 
-
 AWS_DYNAMODB_ATTRIBUTE_DEFINITIONS = "aws.dynamodb.attribute_definitions"
 """
 The JSON-serialized value of each item in the `AttributeDefinitions` request field.

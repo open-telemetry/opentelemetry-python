@@ -15,7 +15,6 @@
 
 from enum import Enum
 
-
 OPENTRACING_REF_TYPE = "opentracing.ref_type"
 """
 Parent-child Reference type.

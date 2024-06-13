@@ -15,7 +15,6 @@
 
 from enum import Enum
 
-
 DB_CASSANDRA_CONSISTENCY_LEVEL = "db.cassandra.consistency_level"
 """
 The consistency level of the query. Based on consistency values from [CQL](https://docs.datastax.com/en/cassandra-oss/3.0/cassandra/dml/dmlConfigConsistency.html).

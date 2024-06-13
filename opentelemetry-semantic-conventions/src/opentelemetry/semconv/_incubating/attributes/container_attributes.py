@@ -15,7 +15,6 @@
 
 from enum import Enum
 
-
 CONTAINER_COMMAND = "container.command"
 """
 The command used to run the container (i.e. the command name).

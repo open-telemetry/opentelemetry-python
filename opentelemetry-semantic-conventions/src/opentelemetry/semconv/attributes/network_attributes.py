@@ -15,7 +15,6 @@
 
 from enum import Enum
 
-
 NETWORK_LOCAL_ADDRESS = "network.local.address"
 """
 Local address of the network connection - IP address or Unix domain socket name.

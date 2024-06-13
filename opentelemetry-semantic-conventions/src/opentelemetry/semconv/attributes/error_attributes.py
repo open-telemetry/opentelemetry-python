@@ -15,7 +15,6 @@
 
 from enum import Enum
 
-
 ERROR_TYPE = "error.type"
 """
 Describes a class of error the operation ended with.

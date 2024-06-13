@@ -15,7 +15,6 @@
 
 from enum import Enum
 
-
 PROCESS_COMMAND = "process.command"
 """
 The command used to launch the process (i.e. the command name). On Linux based systems, can be set to the zeroth string in `proc/[pid]/cmdline`. On Windows, can be set to the first parameter extracted from `GetCommandLineW`.

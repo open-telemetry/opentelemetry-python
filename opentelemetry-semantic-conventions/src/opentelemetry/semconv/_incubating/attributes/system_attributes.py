@@ -13,11 +13,9 @@
 # limitations under the License.
 
 
-from deprecated import deprecated
-
-
 from enum import Enum
 
+from deprecated import deprecated
 
 SYSTEM_CPU_LOGICAL_NUMBER = "system.cpu.logical_number"
 """

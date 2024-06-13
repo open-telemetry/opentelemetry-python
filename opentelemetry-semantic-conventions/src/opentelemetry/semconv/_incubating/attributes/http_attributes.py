@@ -13,11 +13,9 @@
 # limitations under the License.
 
 
-from deprecated import deprecated
-
-
 from enum import Enum
 
+from deprecated import deprecated
 
 HTTP_CONNECTION_STATE = "http.connection.state"
 """
