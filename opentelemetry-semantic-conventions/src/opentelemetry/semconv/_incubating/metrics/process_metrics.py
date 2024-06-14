@@ -38,6 +38,7 @@ CallbackT = Union[
     Generator[Iterable[Observation], CallbackOptions, None],
 ]
 
+
 PROCESS_CONTEXT_SWITCHES: Final = "process.context_switches"
 """
 Number of times the process has been context switched
@@ -49,7 +50,7 @@ Unit: {count}
 def create_process_context_switches(meter: Meter) -> Counter:
     """Number of times the process has been context switched"""
     return meter.create_counter(
-        name="process.context_switches",
+        name=PROCESS_CONTEXT_SWITCHES,
         description="Number of times the process has been context switched.",
         unit="{count}",
     )
@@ -66,7 +67,7 @@ Unit: s
 def create_process_cpu_time(meter: Meter) -> Counter:
     """Total CPU seconds broken down by different states"""
     return meter.create_counter(
-        name="process.cpu.time",
+        name=PROCESS_CPU_TIME,
         description="Total CPU seconds broken down by different states.",
         unit="s",
     )
@@ -85,7 +86,7 @@ def create_process_cpu_utilization(
 ) -> ObservableGauge:
     """Difference in process.cpu.time since the last measurement, divided by the elapsed time and number of CPUs available to the process"""
     return meter.create_observable_gauge(
-        name="process.cpu.utilization",
+        name=PROCESS_CPU_UTILIZATION,
         callbacks=callbacks,
         description="Difference in process.cpu.time since the last measurement, divided by the elapsed time and number of CPUs available to the process.",
         unit="1",
@@ -103,7 +104,7 @@ Unit: By
 def create_process_disk_io(meter: Meter) -> Counter:
     """Disk bytes transferred"""
     return meter.create_counter(
-        name="process.disk.io",
+        name=PROCESS_DISK_IO,
         description="Disk bytes transferred.",
         unit="By",
     )
@@ -120,7 +121,7 @@ Unit: By
 def create_process_memory_usage(meter: Meter) -> UpDownCounter:
     """The amount of physical memory in use"""
     return meter.create_up_down_counter(
-        name="process.memory.usage",
+        name=PROCESS_MEMORY_USAGE,
         description="The amount of physical memory in use.",
         unit="By",
     )
@@ -137,7 +138,7 @@ Unit: By
 def create_process_memory_virtual(meter: Meter) -> UpDownCounter:
     """The amount of committed virtual memory"""
     return meter.create_up_down_counter(
-        name="process.memory.virtual",
+        name=PROCESS_MEMORY_VIRTUAL,
         description="The amount of committed virtual memory.",
         unit="By",
     )
@@ -154,7 +155,7 @@ Unit: By
 def create_process_network_io(meter: Meter) -> Counter:
     """Network bytes transferred"""
     return meter.create_counter(
-        name="process.network.io",
+        name=PROCESS_NETWORK_IO,
         description="Network bytes transferred.",
         unit="By",
     )
@@ -173,7 +174,7 @@ Unit: {count}
 def create_process_open_file_descriptor_count(meter: Meter) -> UpDownCounter:
     """Number of file descriptors in use by the process"""
     return meter.create_up_down_counter(
-        name="process.open_file_descriptor.count",
+        name=PROCESS_OPEN_FILE_DESCRIPTOR_COUNT,
         description="Number of file descriptors in use by the process.",
         unit="{count}",
     )
@@ -190,7 +191,7 @@ Unit: {fault}
 def create_process_paging_faults(meter: Meter) -> Counter:
     """Number of page faults the process has made"""
     return meter.create_counter(
-        name="process.paging.faults",
+        name=PROCESS_PAGING_FAULTS,
         description="Number of page faults the process has made.",
         unit="{fault}",
     )
@@ -207,7 +208,7 @@ Unit: {thread}
 def create_process_thread_count(meter: Meter) -> UpDownCounter:
     """Process threads count"""
     return meter.create_up_down_counter(
-        name="process.thread.count",
+        name=PROCESS_THREAD_COUNT,
         description="Process threads count.",
         unit="{thread}",
     )

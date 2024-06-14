@@ -28,7 +28,7 @@ Unit: {request}
 def create_http_client_active_requests(meter: Meter) -> UpDownCounter:
     """Number of active HTTP requests"""
     return meter.create_up_down_counter(
-        name="http.client.active_requests",
+        name=HTTP_CLIENT_ACTIVE_REQUESTS,
         description="Number of active HTTP requests.",
         unit="{request}",
     )
@@ -45,7 +45,7 @@ Unit: s
 def create_http_client_connection_duration(meter: Meter) -> Histogram:
     """The duration of the successfully established outbound HTTP connections"""
     return meter.create_histogram(
-        name="http.client.connection.duration",
+        name=HTTP_CLIENT_CONNECTION_DURATION,
         description="The duration of the successfully established outbound HTTP connections.",
         unit="s",
     )
@@ -62,7 +62,7 @@ Unit: {connection}
 def create_http_client_open_connections(meter: Meter) -> UpDownCounter:
     """Number of outbound HTTP connections that are currently active or idle on the client"""
     return meter.create_up_down_counter(
-        name="http.client.open_connections",
+        name=HTTP_CLIENT_OPEN_CONNECTIONS,
         description="Number of outbound HTTP connections that are currently active or idle on the client.",
         unit="{connection}",
     )
@@ -80,7 +80,7 @@ Note: The size of the request payload body in bytes. This is the number of bytes
 def create_http_client_request_body_size(meter: Meter) -> Histogram:
     """Size of HTTP client request bodies"""
     return meter.create_histogram(
-        name="http.client.request.body.size",
+        name=HTTP_CLIENT_REQUEST_BODY_SIZE,
         description="Size of HTTP client request bodies.",
         unit="By",
     )
@@ -95,7 +95,7 @@ Deprecated in favor of stable :py:const:`opentelemetry.semconv.metrics.http_metr
 def create_http_client_request_duration(meter: Meter) -> Histogram:
     """Duration of HTTP client requests"""
     return meter.create_histogram(
-        name="http.client.request.duration",
+        name=HTTP_CLIENT_REQUEST_DURATION,
         description="Duration of HTTP client requests.",
         unit="s",
     )
@@ -113,7 +113,7 @@ Note: The size of the response payload body in bytes. This is the number of byte
 def create_http_client_response_body_size(meter: Meter) -> Histogram:
     """Size of HTTP client response bodies"""
     return meter.create_histogram(
-        name="http.client.response.body.size",
+        name=HTTP_CLIENT_RESPONSE_BODY_SIZE,
         description="Size of HTTP client response bodies.",
         unit="By",
     )
@@ -130,7 +130,7 @@ Unit: {request}
 def create_http_server_active_requests(meter: Meter) -> UpDownCounter:
     """Number of active HTTP server requests"""
     return meter.create_up_down_counter(
-        name="http.server.active_requests",
+        name=HTTP_SERVER_ACTIVE_REQUESTS,
         description="Number of active HTTP server requests.",
         unit="{request}",
     )
@@ -148,7 +148,7 @@ Note: The size of the request payload body in bytes. This is the number of bytes
 def create_http_server_request_body_size(meter: Meter) -> Histogram:
     """Size of HTTP server request bodies"""
     return meter.create_histogram(
-        name="http.server.request.body.size",
+        name=HTTP_SERVER_REQUEST_BODY_SIZE,
         description="Size of HTTP server request bodies.",
         unit="By",
     )
@@ -163,7 +163,7 @@ Deprecated in favor of stable :py:const:`opentelemetry.semconv.metrics.http_metr
 def create_http_server_request_duration(meter: Meter) -> Histogram:
     """Duration of HTTP server requests"""
     return meter.create_histogram(
-        name="http.server.request.duration",
+        name=HTTP_SERVER_REQUEST_DURATION,
         description="Duration of HTTP server requests.",
         unit="s",
     )
@@ -181,7 +181,7 @@ Note: The size of the response payload body in bytes. This is the number of byte
 def create_http_server_response_body_size(meter: Meter) -> Histogram:
     """Size of HTTP server response bodies"""
     return meter.create_histogram(
-        name="http.server.response.body.size",
+        name=HTTP_SERVER_RESPONSE_BODY_SIZE,
         description="Size of HTTP server response bodies.",
         unit="By",
     )

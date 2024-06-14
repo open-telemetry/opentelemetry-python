@@ -107,7 +107,8 @@ from typing import Final
 
   {%- for metric in filtered_metrics %}
 
-{{metric.metric_name | to_const_name}}: Final = "{{metric.metric_name}}"
+{% set const_name = metric.metric_name | to_const_name %}
+{{const_name}}: Final = "{{metric.metric_name}}"
 {{metric_brief(metric, metric.metric_name | to_const_name) }}
 
     {% if filter == "any" %}
@@ -122,7 +123,7 @@ def create_{{ metric_name }}(meter: Meter) -> {{to_python_instrument_type(metric
     """{{brief}}"""
         {%- endif %}
     return meter.create_{{to_python_instrument_factory(metric.instrument)}}(
-        name="{{ metric.metric_name }}",
+        name={{ const_name }},
       {%- if metric.instrument == "gauge" %}
         callbacks=callbacks,
       {%- endif %}
