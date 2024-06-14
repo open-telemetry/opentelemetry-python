@@ -13,9 +13,11 @@
 # limitations under the License.
 
 
+from typing import Final
+
 from opentelemetry.metrics import Counter, Meter
 
-CONTAINER_CPU_TIME = "container.cpu.time"
+CONTAINER_CPU_TIME: Final = "container.cpu.time"
 """
 Total CPU time consumed
 Instrument: counter
@@ -33,7 +35,7 @@ def create_container_cpu_time(meter: Meter) -> Counter:
     )
 
 
-CONTAINER_DISK_IO = "container.disk.io"
+CONTAINER_DISK_IO: Final = "container.disk.io"
 """
 Disk bytes for the container
 Instrument: counter
@@ -51,7 +53,7 @@ def create_container_disk_io(meter: Meter) -> Counter:
     )
 
 
-CONTAINER_MEMORY_USAGE = "container.memory.usage"
+CONTAINER_MEMORY_USAGE: Final = "container.memory.usage"
 """
 Memory usage of the container
 Instrument: counter
@@ -69,7 +71,7 @@ def create_container_memory_usage(meter: Meter) -> Counter:
     )
 
 
-CONTAINER_NETWORK_IO = "container.network.io"
+CONTAINER_NETWORK_IO: Final = "container.network.io"
 """
 Network bytes for the container
 Instrument: counter

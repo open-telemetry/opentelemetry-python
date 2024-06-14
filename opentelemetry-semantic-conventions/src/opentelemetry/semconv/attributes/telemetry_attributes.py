@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from enum import Enum
+from typing import Final
 
-TELEMETRY_SDK_LANGUAGE = "telemetry.sdk.language"
+TELEMETRY_SDK_LANGUAGE: Final = "telemetry.sdk.language"
 """
 The language of the telemetry SDK.
 """
 
-TELEMETRY_SDK_NAME = "telemetry.sdk.name"
+TELEMETRY_SDK_NAME: Final = "telemetry.sdk.name"
 """
 The name of the telemetry SDK as defined above.
 Note: The OpenTelemetry SDK MUST set the `telemetry.sdk.name` attribute to `opentelemetry`.
@@ -31,34 +31,34 @@ Note: The OpenTelemetry SDK MUST set the `telemetry.sdk.name` attribute to `open
     All custom identifiers SHOULD be stable across different versions of an implementation.
 """
 
-TELEMETRY_SDK_VERSION = "telemetry.sdk.version"
+TELEMETRY_SDK_VERSION: Final = "telemetry.sdk.version"
 """
 The version string of the telemetry SDK.
 """
 
 
 class TelemetrySdkLanguageValues(Enum):
-    CPP = "cpp"
+    CPP: Final = "cpp"
     """cpp."""
-    DOTNET = "dotnet"
+    DOTNET: Final = "dotnet"
     """dotnet."""
-    ERLANG = "erlang"
+    ERLANG: Final = "erlang"
     """erlang."""
-    GO = "go"
+    GO: Final = "go"
     """go."""
-    JAVA = "java"
+    JAVA: Final = "java"
     """java."""
-    NODEJS = "nodejs"
+    NODEJS: Final = "nodejs"
     """nodejs."""
-    PHP = "php"
+    PHP: Final = "php"
     """php."""
-    PYTHON = "python"
+    PYTHON: Final = "python"
     """python."""
-    RUBY = "ruby"
+    RUBY: Final = "ruby"
     """ruby."""
-    RUST = "rust"
+    RUST: Final = "rust"
     """rust."""
-    SWIFT = "swift"
+    SWIFT: Final = "swift"
     """swift."""
-    WEBJS = "webjs"
+    WEBJS: Final = "webjs"
     """webjs."""
