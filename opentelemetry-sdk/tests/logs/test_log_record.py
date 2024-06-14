@@ -17,12 +17,12 @@ import unittest
 import warnings
 
 from opentelemetry.attributes import BoundedAttributes
-from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk._logs import (
     LogDroppedAttributesWarning,
     LogLimits,
     LogRecord,
 )
+from opentelemetry.sdk.resources import Resource
 
 
 class TestLogRecord(unittest.TestCase):
