@@ -12,18 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Final
 
-WEBENGINE_DESCRIPTION = "webengine.description"
+WEBENGINE_DESCRIPTION: Final = "webengine.description"
 """
 Additional description of the web engine (e.g. detailed version and edition information).
 """
 
-WEBENGINE_NAME = "webengine.name"
+WEBENGINE_NAME: Final = "webengine.name"
 """
 The name of the web engine.
 """
 
-WEBENGINE_VERSION = "webengine.version"
+WEBENGINE_VERSION: Final = "webengine.version"
 """
 The version of the web engine.
 """

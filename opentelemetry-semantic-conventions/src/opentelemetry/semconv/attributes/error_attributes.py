@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from enum import Enum
+from typing import Final
 
-ERROR_TYPE = "error.type"
+ERROR_TYPE: Final = "error.type"
 """
 Describes a class of error the operation ended with.
 Note: The `error.type` SHOULD be predictable and SHOULD have low cardinality.
@@ -37,5 +37,5 @@ Note: The `error.type` SHOULD be predictable and SHOULD have low cardinality.
 
 
 class ErrorTypeValues(Enum):
-    OTHER = "_OTHER"
+    OTHER: Final = "_OTHER"
     """A fallback error value to be used when the instrumentation doesn't define a custom value."""

@@ -28,7 +28,13 @@ if ! grep -q $SEMCONV_VERSION "$SCHEMAS_PY_PATH"; then
   exit 1
 fi
 
-EXCLUDED_NAMESPACES="jvm aspnetcore dotnet signalr ios android"
+# excluded namespaces will not be generated
+# this behavior is fully controlled by jinja templates
+EXCLUDED_NAMESPACES="jvm aspnetcore dotnet signalr ios android kestrel"
+
+# excluded attributes will be commented out in the generated code
+# this behavior is fully controlled by jinja templates
+EXCLUDED_ATTRIBUTES=""
 
 generate() {
   TEMPLATE=$1
@@ -48,7 +54,8 @@ generate() {
     --file-per-group root_namespace \
     -Dfilter=${FILTER} \
     -Dstable_package=${STABLE_PACKAGE} \
-    -Dexcluded_namespaces="$EXCLUDED_NAMESPACES"
+    -Dexcluded_namespaces="$EXCLUDED_NAMESPACES" \
+    -Dexcluded_attributes="$EXCLUDED_ATTRIBUTES"
 }
 
 # stable attributes and metrics

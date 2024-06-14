@@ -13,16 +13,32 @@
 # limitations under the License.
 
 
-from typing import Callable, Sequence
+from typing import (
+    Callable,
+    Final,
+    Generator,
+    Iterable,
+    Optional,
+    Sequence,
+    Union,
+)
 
 from opentelemetry.metrics import (
+    CallbackOptions,
     Counter,
     Meter,
     ObservableGauge,
+    Observation,
     UpDownCounter,
 )
 
-SYSTEM_CPU_FREQUENCY = "system.cpu.frequency"
+# pylint: disable=invalid-name
+CallbackT = Union[
+    Callable[[CallbackOptions], Iterable[Observation]],
+    Generator[Iterable[Observation], CallbackOptions, None],
+]
+
+SYSTEM_CPU_FREQUENCY: Final = "system.cpu.frequency"
 """
 Reports the current frequency of the CPU in Hz
 Instrument: gauge
@@ -31,18 +47,18 @@ Unit: {Hz}
 
 
 def create_system_cpu_frequency(
-    meter: Meter, callback: Sequence[Callable]
+    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
 ) -> ObservableGauge:
     """Reports the current frequency of the CPU in Hz"""
     return meter.create_observable_gauge(
         name="system.cpu.frequency",
-        callback=callback,
+        callbacks=callbacks,
         description="Reports the current frequency of the CPU in Hz",
         unit="{Hz}",
     )
 
 
-SYSTEM_CPU_LOGICAL_COUNT = "system.cpu.logical.count"
+SYSTEM_CPU_LOGICAL_COUNT: Final = "system.cpu.logical.count"
 """
 Reports the number of logical (virtual) processor cores created by the operating system to manage multitasking
 Instrument: updowncounter
@@ -59,7 +75,7 @@ def create_system_cpu_logical_count(meter: Meter) -> UpDownCounter:
     )
 
 
-SYSTEM_CPU_PHYSICAL_COUNT = "system.cpu.physical.count"
+SYSTEM_CPU_PHYSICAL_COUNT: Final = "system.cpu.physical.count"
 """
 Reports the number of actual physical processor cores on the hardware
 Instrument: updowncounter
@@ -76,7 +92,7 @@ def create_system_cpu_physical_count(meter: Meter) -> UpDownCounter:
     )
 
 
-SYSTEM_CPU_TIME = "system.cpu.time"
+SYSTEM_CPU_TIME: Final = "system.cpu.time"
 """
 Seconds each logical CPU spent on each mode
 Instrument: counter
@@ -93,7 +109,7 @@ def create_system_cpu_time(meter: Meter) -> Counter:
     )
 
 
-SYSTEM_CPU_UTILIZATION = "system.cpu.utilization"
+SYSTEM_CPU_UTILIZATION: Final = "system.cpu.utilization"
 """
 Difference in system.cpu.time since the last measurement, divided by the elapsed time and number of logical CPUs
 Instrument: gauge
@@ -102,18 +118,18 @@ Unit: 1
 
 
 def create_system_cpu_utilization(
-    meter: Meter, callback: Sequence[Callable]
+    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
 ) -> ObservableGauge:
     """Difference in system.cpu.time since the last measurement, divided by the elapsed time and number of logical CPUs"""
     return meter.create_observable_gauge(
         name="system.cpu.utilization",
-        callback=callback,
+        callbacks=callbacks,
         description="Difference in system.cpu.time since the last measurement, divided by the elapsed time and number of logical CPUs",
         unit="1",
     )
 
 
-SYSTEM_DISK_IO = "system.disk.io"
+SYSTEM_DISK_IO: Final = "system.disk.io"
 """
 Instrument: counter
 Unit: By
@@ -128,7 +144,7 @@ def create_system_disk_io(meter: Meter) -> Counter:
     )
 
 
-SYSTEM_DISK_IO_TIME = "system.disk.io_time"
+SYSTEM_DISK_IO_TIME: Final = "system.disk.io_time"
 """
 Time disk spent activated
 Instrument: counter
@@ -151,7 +167,7 @@ def create_system_disk_io_time(meter: Meter) -> Counter:
     )
 
 
-SYSTEM_DISK_MERGED = "system.disk.merged"
+SYSTEM_DISK_MERGED: Final = "system.disk.merged"
 """
 Instrument: counter
 Unit: {operation}
@@ -166,7 +182,7 @@ def create_system_disk_merged(meter: Meter) -> Counter:
     )
 
 
-SYSTEM_DISK_OPERATION_TIME = "system.disk.operation_time"
+SYSTEM_DISK_OPERATION_TIME: Final = "system.disk.operation_time"
 """
 Sum of the time each operation took to complete
 Instrument: counter
@@ -187,7 +203,7 @@ def create_system_disk_operation_time(meter: Meter) -> Counter:
     )
 
 
-SYSTEM_DISK_OPERATIONS = "system.disk.operations"
+SYSTEM_DISK_OPERATIONS: Final = "system.disk.operations"
 """
 Instrument: counter
 Unit: {operation}
@@ -202,7 +218,7 @@ def create_system_disk_operations(meter: Meter) -> Counter:
     )
 
 
-SYSTEM_FILESYSTEM_USAGE = "system.filesystem.usage"
+SYSTEM_FILESYSTEM_USAGE: Final = "system.filesystem.usage"
 """
 Instrument: updowncounter
 Unit: By
@@ -217,7 +233,7 @@ def create_system_filesystem_usage(meter: Meter) -> UpDownCounter:
     )
 
 
-SYSTEM_FILESYSTEM_UTILIZATION = "system.filesystem.utilization"
+SYSTEM_FILESYSTEM_UTILIZATION: Final = "system.filesystem.utilization"
 """
 Instrument: gauge
 Unit: 1
@@ -225,17 +241,17 @@ Unit: 1
 
 
 def create_system_filesystem_utilization(
-    meter: Meter, callback: Sequence[Callable]
+    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
 ) -> ObservableGauge:
     return meter.create_observable_gauge(
         name="system.filesystem.utilization",
-        callback=callback,
+        callbacks=callbacks,
         description="",
         unit="1",
     )
 
 
-SYSTEM_LINUX_MEMORY_AVAILABLE = "system.linux.memory.available"
+SYSTEM_LINUX_MEMORY_AVAILABLE: Final = "system.linux.memory.available"
 """
 An estimate of how much memory is available for starting new applications, without causing swapping
 Instrument: updowncounter
@@ -257,7 +273,7 @@ def create_system_linux_memory_available(meter: Meter) -> UpDownCounter:
     )
 
 
-SYSTEM_MEMORY_LIMIT = "system.memory.limit"
+SYSTEM_MEMORY_LIMIT: Final = "system.memory.limit"
 """
 Total memory available in the system
 Instrument: updowncounter
@@ -275,7 +291,7 @@ def create_system_memory_limit(meter: Meter) -> UpDownCounter:
     )
 
 
-SYSTEM_MEMORY_USAGE = "system.memory.usage"
+SYSTEM_MEMORY_USAGE: Final = "system.memory.usage"
 """
 Reports memory in use by state
 Instrument: updowncounter
@@ -294,7 +310,7 @@ def create_system_memory_usage(meter: Meter) -> UpDownCounter:
     )
 
 
-SYSTEM_MEMORY_UTILIZATION = "system.memory.utilization"
+SYSTEM_MEMORY_UTILIZATION: Final = "system.memory.utilization"
 """
 Instrument: gauge
 Unit: 1
@@ -302,17 +318,17 @@ Unit: 1
 
 
 def create_system_memory_utilization(
-    meter: Meter, callback: Sequence[Callable]
+    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
 ) -> ObservableGauge:
     return meter.create_observable_gauge(
         name="system.memory.utilization",
-        callback=callback,
+        callbacks=callbacks,
         description="",
         unit="1",
     )
 
 
-SYSTEM_NETWORK_CONNECTIONS = "system.network.connections"
+SYSTEM_NETWORK_CONNECTIONS: Final = "system.network.connections"
 """
 Instrument: updowncounter
 Unit: {connection}
@@ -327,7 +343,7 @@ def create_system_network_connections(meter: Meter) -> UpDownCounter:
     )
 
 
-SYSTEM_NETWORK_DROPPED = "system.network.dropped"
+SYSTEM_NETWORK_DROPPED: Final = "system.network.dropped"
 """
 Count of packets that are dropped or discarded even though there was no error
 Instrument: counter
@@ -349,7 +365,7 @@ def create_system_network_dropped(meter: Meter) -> Counter:
     )
 
 
-SYSTEM_NETWORK_ERRORS = "system.network.errors"
+SYSTEM_NETWORK_ERRORS: Final = "system.network.errors"
 """
 Count of network errors detected
 Instrument: counter
@@ -371,7 +387,7 @@ def create_system_network_errors(meter: Meter) -> Counter:
     )
 
 
-SYSTEM_NETWORK_IO = "system.network.io"
+SYSTEM_NETWORK_IO: Final = "system.network.io"
 """
 Instrument: counter
 Unit: By
@@ -386,7 +402,7 @@ def create_system_network_io(meter: Meter) -> Counter:
     )
 
 
-SYSTEM_NETWORK_PACKETS = "system.network.packets"
+SYSTEM_NETWORK_PACKETS: Final = "system.network.packets"
 """
 Instrument: counter
 Unit: {packet}
@@ -401,7 +417,7 @@ def create_system_network_packets(meter: Meter) -> Counter:
     )
 
 
-SYSTEM_PAGING_FAULTS = "system.paging.faults"
+SYSTEM_PAGING_FAULTS: Final = "system.paging.faults"
 """
 Instrument: counter
 Unit: {fault}
@@ -416,7 +432,7 @@ def create_system_paging_faults(meter: Meter) -> Counter:
     )
 
 
-SYSTEM_PAGING_OPERATIONS = "system.paging.operations"
+SYSTEM_PAGING_OPERATIONS: Final = "system.paging.operations"
 """
 Instrument: counter
 Unit: {operation}
@@ -431,7 +447,7 @@ def create_system_paging_operations(meter: Meter) -> Counter:
     )
 
 
-SYSTEM_PAGING_USAGE = "system.paging.usage"
+SYSTEM_PAGING_USAGE: Final = "system.paging.usage"
 """
 Unix swap or windows pagefile usage
 Instrument: updowncounter
@@ -448,7 +464,7 @@ def create_system_paging_usage(meter: Meter) -> UpDownCounter:
     )
 
 
-SYSTEM_PAGING_UTILIZATION = "system.paging.utilization"
+SYSTEM_PAGING_UTILIZATION: Final = "system.paging.utilization"
 """
 Instrument: gauge
 Unit: 1
@@ -456,17 +472,17 @@ Unit: 1
 
 
 def create_system_paging_utilization(
-    meter: Meter, callback: Sequence[Callable]
+    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
 ) -> ObservableGauge:
     return meter.create_observable_gauge(
         name="system.paging.utilization",
-        callback=callback,
+        callbacks=callbacks,
         description="",
         unit="1",
     )
 
 
-SYSTEM_PROCESS_COUNT = "system.process.count"
+SYSTEM_PROCESS_COUNT: Final = "system.process.count"
 """
 Total number of processes in each state
 Instrument: updowncounter
@@ -483,7 +499,7 @@ def create_system_process_count(meter: Meter) -> UpDownCounter:
     )
 
 
-SYSTEM_PROCESS_CREATED = "system.process.created"
+SYSTEM_PROCESS_CREATED: Final = "system.process.created"
 """
 Total number of processes created over uptime of the host
 Instrument: counter

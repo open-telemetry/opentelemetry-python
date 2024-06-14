@@ -12,30 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from enum import Enum
+from typing import Final
 
-GRAPHQL_DOCUMENT = "graphql.document"
+GRAPHQL_DOCUMENT: Final = "graphql.document"
 """
 The GraphQL document being executed.
 Note: The value may be sanitized to exclude sensitive information.
 """
 
-GRAPHQL_OPERATION_NAME = "graphql.operation.name"
+GRAPHQL_OPERATION_NAME: Final = "graphql.operation.name"
 """
 The name of the operation being executed.
 """
 
-GRAPHQL_OPERATION_TYPE = "graphql.operation.type"
+GRAPHQL_OPERATION_TYPE: Final = "graphql.operation.type"
 """
 The type of the operation being executed.
 """
 
 
 class GraphqlOperationTypeValues(Enum):
-    QUERY = "query"
+    QUERY: Final = "query"
     """GraphQL query."""
-    MUTATION = "mutation"
+    MUTATION: Final = "mutation"
     """GraphQL mutation."""
-    SUBSCRIPTION = "subscription"
+    SUBSCRIPTION: Final = "subscription"
     """GraphQL subscription."""

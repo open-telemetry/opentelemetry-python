@@ -13,9 +13,11 @@
 # limitations under the License.
 
 
+from typing import Final
+
 from opentelemetry.metrics import Counter, Histogram, Meter, UpDownCounter
 
-DB_CLIENT_CONNECTIONS_CREATE_TIME = "db.client.connections.create_time"
+DB_CLIENT_CONNECTIONS_CREATE_TIME: Final = "db.client.connections.create_time"
 """
 The time it took to create a new connection
 Instrument: histogram
@@ -32,7 +34,7 @@ def create_db_client_connections_create_time(meter: Meter) -> Histogram:
     )
 
 
-DB_CLIENT_CONNECTIONS_IDLE_MAX = "db.client.connections.idle.max"
+DB_CLIENT_CONNECTIONS_IDLE_MAX: Final = "db.client.connections.idle.max"
 """
 The maximum number of idle open connections allowed
 Instrument: updowncounter
@@ -49,7 +51,7 @@ def create_db_client_connections_idle_max(meter: Meter) -> UpDownCounter:
     )
 
 
-DB_CLIENT_CONNECTIONS_IDLE_MIN = "db.client.connections.idle.min"
+DB_CLIENT_CONNECTIONS_IDLE_MIN: Final = "db.client.connections.idle.min"
 """
 The minimum number of idle open connections allowed
 Instrument: updowncounter
@@ -66,7 +68,7 @@ def create_db_client_connections_idle_min(meter: Meter) -> UpDownCounter:
     )
 
 
-DB_CLIENT_CONNECTIONS_MAX = "db.client.connections.max"
+DB_CLIENT_CONNECTIONS_MAX: Final = "db.client.connections.max"
 """
 The maximum number of open connections allowed
 Instrument: updowncounter
@@ -83,7 +85,7 @@ def create_db_client_connections_max(meter: Meter) -> UpDownCounter:
     )
 
 
-DB_CLIENT_CONNECTIONS_PENDING_REQUESTS = (
+DB_CLIENT_CONNECTIONS_PENDING_REQUESTS: Final = (
     "db.client.connections.pending_requests"
 )
 """
@@ -104,7 +106,7 @@ def create_db_client_connections_pending_requests(
     )
 
 
-DB_CLIENT_CONNECTIONS_TIMEOUTS = "db.client.connections.timeouts"
+DB_CLIENT_CONNECTIONS_TIMEOUTS: Final = "db.client.connections.timeouts"
 """
 The number of connection timeouts that have occurred trying to obtain a connection from the pool
 Instrument: counter
@@ -121,7 +123,7 @@ def create_db_client_connections_timeouts(meter: Meter) -> Counter:
     )
 
 
-DB_CLIENT_CONNECTIONS_USAGE = "db.client.connections.usage"
+DB_CLIENT_CONNECTIONS_USAGE: Final = "db.client.connections.usage"
 """
 The number of connections that are currently in state described by the `state` attribute
 Instrument: updowncounter
@@ -138,7 +140,7 @@ def create_db_client_connections_usage(meter: Meter) -> UpDownCounter:
     )
 
 
-DB_CLIENT_CONNECTIONS_USE_TIME = "db.client.connections.use_time"
+DB_CLIENT_CONNECTIONS_USE_TIME: Final = "db.client.connections.use_time"
 """
 The time between borrowing a connection and returning it to the pool
 Instrument: histogram
@@ -155,7 +157,7 @@ def create_db_client_connections_use_time(meter: Meter) -> Histogram:
     )
 
 
-DB_CLIENT_CONNECTIONS_WAIT_TIME = "db.client.connections.wait_time"
+DB_CLIENT_CONNECTIONS_WAIT_TIME: Final = "db.client.connections.wait_time"
 """
 The time it took to obtain an open connection from the pool
 Instrument: histogram
