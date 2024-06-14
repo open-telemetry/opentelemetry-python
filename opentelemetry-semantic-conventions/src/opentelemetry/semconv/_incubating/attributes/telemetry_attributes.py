@@ -12,64 +12,62 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from enum import Enum
+from typing import Final
 
 from deprecated import deprecated
 
-TELEMETRY_DISTRO_NAME = "telemetry.distro.name"
+TELEMETRY_DISTRO_NAME: Final = "telemetry.distro.name"
 """
 The name of the auto instrumentation agent or distribution, if used.
 Note: Official auto instrumentation agents and distributions SHOULD set the `telemetry.distro.name` attribute to
     a string starting with `opentelemetry-`, e.g. `opentelemetry-java-instrumentation`.
 """
 
-TELEMETRY_DISTRO_VERSION = "telemetry.distro.version"
+TELEMETRY_DISTRO_VERSION: Final = "telemetry.distro.version"
 """
 The version string of the auto instrumentation agent or distribution, if used.
 """
 
-TELEMETRY_SDK_LANGUAGE = "telemetry.sdk.language"
+TELEMETRY_SDK_LANGUAGE: Final = "telemetry.sdk.language"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TELEMETRY_SDK_LANGUAGE`.
 """
 
-TELEMETRY_SDK_NAME = "telemetry.sdk.name"
+TELEMETRY_SDK_NAME: Final = "telemetry.sdk.name"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TELEMETRY_SDK_NAME`.
 """
 
-TELEMETRY_SDK_VERSION = "telemetry.sdk.version"
+TELEMETRY_SDK_VERSION: Final = "telemetry.sdk.version"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TELEMETRY_SDK_VERSION`.
 """
 
 
-@deprecated(
-    reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TelemetrySdkLanguageValues`."
-)
+@deprecated(reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TelemetrySdkLanguageValues`.")  # type: ignore
 class TelemetrySdkLanguageValues(Enum):
-    CPP = "cpp"
+    CPP: Final = "cpp"
     """cpp."""
-    DOTNET = "dotnet"
+    DOTNET: Final = "dotnet"
     """dotnet."""
-    ERLANG = "erlang"
+    ERLANG: Final = "erlang"
     """erlang."""
-    GO = "go"
+    GO: Final = "go"
     """go."""
-    JAVA = "java"
+    JAVA: Final = "java"
     """java."""
-    NODEJS = "nodejs"
+    NODEJS: Final = "nodejs"
     """nodejs."""
-    PHP = "php"
+    PHP: Final = "php"
     """php."""
-    PYTHON = "python"
+    PYTHON: Final = "python"
     """python."""
-    RUBY = "ruby"
+    RUBY: Final = "ruby"
     """ruby."""
-    RUST = "rust"
+    RUST: Final = "rust"
     """rust."""
-    SWIFT = "swift"
+    SWIFT: Final = "swift"
     """swift."""
-    WEBJS = "webjs"
+    WEBJS: Final = "webjs"
     """webjs."""

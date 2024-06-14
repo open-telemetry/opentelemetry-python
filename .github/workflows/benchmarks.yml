@@ -7,14 +7,14 @@ on:
 jobs:
   sdk-benchmarks:
     env:
-      py311: "3.11"
+      py312: "3.12"
       RUN_MATRIX_COMBINATION: ${{ matrix.python-version }}-sdk-${{ matrix.os }}
     runs-on: self-hosted
     strategy:
       # Ensures the entire test matrix is run, even if one permutation fails
       fail-fast: false
       matrix:
-        python-version: [py311]
+        python-version: [py312]
         os: [ubuntu-20.04, windows-2019]
     steps:
     - name: Checkout Core Repo @ SHA - ${{ github.sha }}

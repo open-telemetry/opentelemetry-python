@@ -12,29 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Final
 
-FILE_DIRECTORY = "file.directory"
+FILE_DIRECTORY: Final = "file.directory"
 """
 Directory where the file is located. It should include the drive letter, when appropriate.
 """
 
-FILE_EXTENSION = "file.extension"
+FILE_EXTENSION: Final = "file.extension"
 """
 File extension, excluding the leading dot.
 Note: When the file name has multiple extensions (example.tar.gz), only the last one should be captured ("gz", not "tar.gz").
 """
 
-FILE_NAME = "file.name"
+FILE_NAME: Final = "file.name"
 """
 Name of the file including the extension, without the directory.
 """
 
-FILE_PATH = "file.path"
+FILE_PATH: Final = "file.path"
 """
 Full path to the file, including the file name. It should include the drive letter, when appropriate.
 """
 
-FILE_SIZE = "file.size"
+FILE_SIZE: Final = "file.size"
 """
 File size in bytes.
 """

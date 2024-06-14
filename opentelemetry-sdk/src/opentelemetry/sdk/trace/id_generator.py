@@ -15,6 +15,8 @@
 import abc
 import random
 
+from opentelemetry import trace
+
 
 class IdGenerator(abc.ABC):
     @abc.abstractmethod
@@ -46,7 +48,13 @@ class RandomIdGenerator(IdGenerator):
     """
 
     def generate_span_id(self) -> int:
-        return random.getrandbits(64)
+        span_id = random.getrandbits(64)
+        while span_id == trace.INVALID_SPAN_ID:
+            span_id = random.getrandbits(64)
+        return span_id
 
     def generate_trace_id(self) -> int:
-        return random.getrandbits(128)
+        trace_id = random.getrandbits(128)
+        while trace_id == trace.INVALID_TRACE_ID:
+            trace_id = random.getrandbits(128)
+        return trace_id

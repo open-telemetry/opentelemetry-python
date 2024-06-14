@@ -12,26 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Final
 
-BROWSER_BRANDS = "browser.brands"
+BROWSER_BRANDS: Final = "browser.brands"
 """
 Array of brand name and version separated by a space.
 Note: This value is intended to be taken from the [UA client hints API](https://wicg.github.io/ua-client-hints/#interface) (`navigator.userAgentData.brands`).
 """
 
-BROWSER_LANGUAGE = "browser.language"
+BROWSER_LANGUAGE: Final = "browser.language"
 """
 Preferred language of the user using the browser.
 Note: This value is intended to be taken from the Navigator API `navigator.language`.
 """
 
-BROWSER_MOBILE = "browser.mobile"
+BROWSER_MOBILE: Final = "browser.mobile"
 """
 A boolean that is true if the browser is running on a mobile device.
 Note: This value is intended to be taken from the [UA client hints API](https://wicg.github.io/ua-client-hints/#interface) (`navigator.userAgentData.mobile`). If unavailable, this attribute SHOULD be left unset.
 """
 
-BROWSER_PLATFORM = "browser.platform"
+BROWSER_PLATFORM: Final = "browser.platform"
 """
 The platform on which the browser is running.
 Note: This value is intended to be taken from the [UA client hints API](https://wicg.github.io/ua-client-hints/#interface) (`navigator.userAgentData.platform`). If unavailable, the legacy `navigator.platform` API SHOULD NOT be used instead and this attribute SHOULD be left unset in order for the values to be consistent.

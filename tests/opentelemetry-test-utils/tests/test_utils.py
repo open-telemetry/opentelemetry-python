@@ -74,9 +74,8 @@ class TestAssertNotRaises(TestCase):
                 raise_zero_division_error()
 
         error_lines = error.exception.args[0].split("\n")
+        stripped_error_lines = [line.strip() for line in error_lines]
 
-        self.assertEqual(
-            error_lines[0].strip(), "Unexpected exception was raised:"
-        )
-        self.assertEqual(error_lines[2].strip(), "raise_zero_division_error()")
-        self.assertEqual(error_lines[5].strip(), "raise ZeroDivisionError()")
+        self.assertIn("Unexpected exception was raised:", stripped_error_lines)
+        self.assertIn("raise_zero_division_error()", stripped_error_lines)
+        self.assertIn("raise ZeroDivisionError()", stripped_error_lines)
