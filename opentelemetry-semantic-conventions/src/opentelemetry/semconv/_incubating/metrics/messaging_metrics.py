@@ -28,7 +28,7 @@ Unit: s
 def create_messaging_process_duration(meter: Meter) -> Histogram:
     """Measures the duration of process operation"""
     return meter.create_histogram(
-        name="messaging.process.duration",
+        name=MESSAGING_PROCESS_DURATION,
         description="Measures the duration of process operation.",
         unit="s",
     )
@@ -45,7 +45,7 @@ Unit: {message}
 def create_messaging_process_messages(meter: Meter) -> Counter:
     """Measures the number of processed messages"""
     return meter.create_counter(
-        name="messaging.process.messages",
+        name=MESSAGING_PROCESS_MESSAGES,
         description="Measures the number of processed messages.",
         unit="{message}",
     )
@@ -62,7 +62,7 @@ Unit: s
 def create_messaging_publish_duration(meter: Meter) -> Histogram:
     """Measures the duration of publish operation"""
     return meter.create_histogram(
-        name="messaging.publish.duration",
+        name=MESSAGING_PUBLISH_DURATION,
         description="Measures the duration of publish operation.",
         unit="s",
     )
@@ -79,7 +79,7 @@ Unit: {message}
 def create_messaging_publish_messages(meter: Meter) -> Counter:
     """Measures the number of published messages"""
     return meter.create_counter(
-        name="messaging.publish.messages",
+        name=MESSAGING_PUBLISH_MESSAGES,
         description="Measures the number of published messages.",
         unit="{message}",
     )
@@ -96,7 +96,7 @@ Unit: s
 def create_messaging_receive_duration(meter: Meter) -> Histogram:
     """Measures the duration of receive operation"""
     return meter.create_histogram(
-        name="messaging.receive.duration",
+        name=MESSAGING_RECEIVE_DURATION,
         description="Measures the duration of receive operation.",
         unit="s",
     )
@@ -113,7 +113,7 @@ Unit: {message}
 def create_messaging_receive_messages(meter: Meter) -> Counter:
     """Measures the number of received messages"""
     return meter.create_counter(
-        name="messaging.receive.messages",
+        name=MESSAGING_RECEIVE_MESSAGES,
         description="Measures the number of received messages.",
         unit="{message}",
     )
