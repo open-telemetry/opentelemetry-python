@@ -158,6 +158,7 @@ To create a new PR, fork the project in GitHub and clone the upstream repo:
 
 ```console
 $ git clone https://github.com/open-telemetry/opentelemetry-python.git
+$ cd opentelemetry-python
 ```
 
 Add your fork as an origin:
