@@ -12,23 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Final
 
-EXCEPTION_ESCAPED = "exception.escaped"
+EXCEPTION_ESCAPED: Final = "exception.escaped"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.exception_attributes.EXCEPTION_ESCAPED`.
 """
 
-EXCEPTION_MESSAGE = "exception.message"
+EXCEPTION_MESSAGE: Final = "exception.message"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.exception_attributes.EXCEPTION_MESSAGE`.
 """
 
-EXCEPTION_STACKTRACE = "exception.stacktrace"
+EXCEPTION_STACKTRACE: Final = "exception.stacktrace"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.exception_attributes.EXCEPTION_STACKTRACE`.
 """
 
-EXCEPTION_TYPE = "exception.type"
+EXCEPTION_TYPE: Final = "exception.type"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.exception_attributes.EXCEPTION_TYPE`.
 """

@@ -16,9 +16,9 @@ from deprecated import deprecated
 
 
 @deprecated(
-    "1.25.0",
+    version="1.25.0",
     reason="Use metrics defined in the :py:const:`opentelemetry.semconv.metrics` and :py:const:`opentelemetry.semconv._incubating.metrics` modules instead.",
-)
+)  # type: ignore
 class MetricInstruments:
     SCHEMA_URL = "https://opentelemetry.io/schemas/v1.21.0"
     """

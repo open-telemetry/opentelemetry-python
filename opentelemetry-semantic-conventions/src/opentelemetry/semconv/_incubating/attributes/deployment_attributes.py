@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Final
 
-DEPLOYMENT_ENVIRONMENT = "deployment.environment"
+DEPLOYMENT_ENVIRONMENT: Final = "deployment.environment"
 """
 Name of the [deployment environment](https://wikipedia.org/wiki/Deployment_environment) (aka deployment tier).
 Note: `deployment.environment` does not affect the uniqueness constraints defined through

@@ -12,17 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from enum import Enum
+from typing import Final
 
-DISK_IO_DIRECTION = "disk.io.direction"
+DISK_IO_DIRECTION: Final = "disk.io.direction"
 """
 The disk IO operation direction.
 """
 
 
 class DiskIoDirectionValues(Enum):
-    READ = "read"
+    READ: Final = "read"
     """read."""
-    WRITE = "write"
+    WRITE: Final = "write"
     """write."""
