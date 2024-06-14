@@ -21,8 +21,6 @@ from typing import Optional, Sequence, Union
 
 from opentelemetry.util import types
 
-# bytes are accepted as a user supplied value for attributes but
-# decoded to strings internally.
 _VALID_ATTR_VALUE_TYPES = (bool, str, bytes, int, float)
 
 
@@ -44,7 +42,6 @@ def _clean_attribute(
 
     An attribute needs cleansing if:
         - Its length is greater than the maximum allowed length.
-        - It needs to be encoded/decoded e.g, bytes to strings.
     """
 
     if not (key and isinstance(key, str)):
@@ -113,13 +110,6 @@ def _clean_attribute_value(
 ) -> Union[types.AttributeValue, None]:
     if value is None:
         return None
-
-    if isinstance(value, bytes):
-        try:
-            value = value.decode()
-        except UnicodeDecodeError:
-            _logger.warning("Byte attribute could not be decoded.")
-            return None
 
     if limit is not None and isinstance(value, str):
         value = value[:limit]

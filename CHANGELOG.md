@@ -96,6 +96,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version 1.23.0/0.44b0 (2024-02-23)
 
+- Allow bytes as attributes
+  ([#3605](https://github.com/open-telemetry/opentelemetry-python/pull/3605))
 - Use Attribute rather than boundattribute in logrecord
   ([#3567](https://github.com/open-telemetry/opentelemetry-python/pull/3567))
 - Fix flush error when no LoggerProvider configured for LoggingHandler
