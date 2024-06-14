@@ -6,14 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+
 - Log a warning when a `LogRecord` in `sdk/log` has dropped attributes
   due to reaching limits
   ([#3946](https://github.com/open-telemetry/opentelemetry-python/pull/3946))
-
 - Fix RandomIdGenerator can generate invalid Span/Trace Ids
   ([#3949](https://github.com/open-telemetry/opentelemetry-python/pull/3949))
 - Add Python 3.12 to tox
   ([#3616](https://github.com/open-telemetry/opentelemetry-python/pull/3616))
+- Fix json output for LogRecord
+  ([#3972](https://github.com/open-telemetry/opentelemetry-python/pull/3972))
 
 ## Version 1.25.0/0.46b0 (2024-05-30)
 
