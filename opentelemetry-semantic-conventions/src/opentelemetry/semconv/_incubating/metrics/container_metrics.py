@@ -29,7 +29,7 @@ Note: Total CPU time consumed by the specific container on all available CPU cor
 def create_container_cpu_time(meter: Meter) -> Counter:
     """Total CPU time consumed"""
     return meter.create_counter(
-        name="container.cpu.time",
+        name=CONTAINER_CPU_TIME,
         description="Total CPU time consumed",
         unit="s",
     )
@@ -47,7 +47,7 @@ Note: The total number of bytes read/written successfully (aggregated from all d
 def create_container_disk_io(meter: Meter) -> Counter:
     """Disk bytes for the container"""
     return meter.create_counter(
-        name="container.disk.io",
+        name=CONTAINER_DISK_IO,
         description="Disk bytes for the container.",
         unit="By",
     )
@@ -65,7 +65,7 @@ Note: Memory usage of the container.
 def create_container_memory_usage(meter: Meter) -> Counter:
     """Memory usage of the container"""
     return meter.create_counter(
-        name="container.memory.usage",
+        name=CONTAINER_MEMORY_USAGE,
         description="Memory usage of the container.",
         unit="By",
     )
@@ -83,7 +83,7 @@ Note: The number of bytes sent/received on all network interfaces by the contain
 def create_container_network_io(meter: Meter) -> Counter:
     """Network bytes for the container"""
     return meter.create_counter(
-        name="container.network.io",
+        name=CONTAINER_NETWORK_IO,
         description="Network bytes for the container.",
         unit="By",
     )
