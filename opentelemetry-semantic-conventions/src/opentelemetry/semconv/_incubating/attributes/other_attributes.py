@@ -12,17 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from enum import Enum
+from typing import Final
 
-STATE = "state"
+STATE: Final = "state"
 """
 The state of a connection in the pool.
 """
 
 
 class StateValues(Enum):
-    IDLE = "idle"
+    IDLE: Final = "idle"
     """idle."""
-    USED = "used"
+    USED: Final = "used"
     """used."""
