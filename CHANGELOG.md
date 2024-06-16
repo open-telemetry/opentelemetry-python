@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3949](https://github.com/open-telemetry/opentelemetry-python/pull/3949))
 - Add Python 3.12 to tox
   ([#3616](https://github.com/open-telemetry/opentelemetry-python/pull/3616))
-- Fix json output for LogRecord
+- Improve resource field structure for LogRecords
   ([#3972](https://github.com/open-telemetry/opentelemetry-python/pull/3972))
 - Update Semantic Conventions code generation scripts:
   - fix namespace exclusion that resulted in dropping  `os` and `net` namespaces.
