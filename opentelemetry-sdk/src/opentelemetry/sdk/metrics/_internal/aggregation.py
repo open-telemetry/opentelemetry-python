@@ -622,70 +622,57 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
             value = measurement.value
 
-            # 0. Set the following attributes:
-            # _min
-            # _max
-            # _count
-            # _zero_count
-            # _sum
+            if value > 0:
+                if self._current_value_positive is None:
+                    self._current_value_positive = Buckets()
+                current_value = self._current_value_positive
+
+            else:
+                if self._current_value_negative is None:
+                    self._current_value_negative = Buckets()
+                value = -value
+                current_value = self._current_value_negative
+
+            self._sum += value
+
             if value < self._min:
                 self._min = value
 
-            if value > self._max:
+            elif value > self._max:
                 self._max = value
 
             self._count += 1
 
             if value == 0:
                 self._zero_count += 1
-                # No need to do anything else if value is zero, just increment the
-                # zero count.
                 return
 
-            self._sum += value
-
-            # 1. Use the positive buckets for positive values and the negative
-            # buckets for negative values.
-            if value > 0:
-                buckets = self._positive
-
-            else:
-                # Both exponential and logarithm mappings use only positive values
-                # so the absolute value is used here.
-                value = -value
-                buckets = self._negative
-
-            # 2. Compute the index for the value at the current scale.
             index = self._mapping.map_to_index(value)
 
-            # IncrementIndexBy starts here
-
-            # 3. Determine if a change of scale is needed.
             is_rescaling_needed = False
             low, high = 0, 0
 
-            if len(buckets) == 0:
-                buckets.index_start = index
-                buckets.index_end = index
-                buckets.index_base = index
+            if len(current_value) == 0:
+                current_value.index_start = index
+                current_value.index_end = index
+                current_value.index_base = index
 
             elif (
-                index < buckets.index_start
-                and (buckets.index_end - index) >= self._max_size
+                index < current_value.index_start
+                and (current_value.index_end - index) >= self._max_size
             ):
                 is_rescaling_needed = True
                 low = index
-                high = buckets.index_end
+                high = current_value.index_end
 
             elif (
-                index > buckets.index_end
-                and (index - buckets.index_start) >= self._max_size
+                index > current_value.index_end
+                and (index - current_value.index_start) >= self._max_size
             ):
                 is_rescaling_needed = True
-                low = buckets.index_start
+                low = current_value.index_start
                 high = index
 
-            # 4. Rescale the mapping if needed.
             if is_rescaling_needed:
 
                 scale_change = self._get_scale_change(low, high)
@@ -699,33 +686,29 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
                 index = self._mapping.map_to_index(value)
 
-            # 5. If the index is outside
-            # [buckets.index_start, buckets.index_end] readjust the buckets
-            # boundaries or add more buckets.
-            if index < buckets.index_start:
-                span = buckets.index_end - index
+            if index < current_value.index_start:
+                span = current_value.index_end - index
 
-                if span >= len(buckets.counts):
-                    buckets.grow(span + 1, self._max_size)
+                if span >= len(current_value.counts):
+                    current_value.grow(span + 1, self._max_size)
 
-                buckets.index_start = index
+                current_value.index_start = index
 
-            elif index > buckets.index_end:
-                span = index - buckets.index_start
+            elif index > current_value.index_end:
+                span = index - current_value.index_start
 
-                if span >= len(buckets.counts):
-                    buckets.grow(span + 1, self._max_size)
+                if span >= len(current_value.counts):
+                    current_value.grow(span + 1, self._max_size)
 
-                buckets.index_end = index
+                current_value.index_end = index
 
-            # 6. Compute the index of the bucket to be incremented.
-            bucket_index = index - buckets.index_base
+            bucket_index = index - current_value.index_base
 
             if bucket_index < 0:
-                bucket_index += len(buckets.counts)
+                bucket_index += len(current_value.counts)
 
             # 7. Increment the bucket.
-            buckets.increment_bucket(bucket_index)
+            current_value.increment_bucket(bucket_index)
 
     def collect(
         self,
