@@ -202,7 +202,9 @@ class LogRecord(APILogRecord):
                 ),
             }
         )
-        self.resource = resource
+        self.resource = (
+            resource if isinstance(resource, Resource) else Resource.create({})
+        )
         if self.dropped_attributes > 0:
             warnings.warn(
                 "Log record attributes were dropped due to limits",
@@ -238,9 +240,7 @@ class LogRecord(APILogRecord):
                     else ""
                 ),
                 "trace_flags": self.trace_flags,
-                "resource": (
-                    repr(self.resource.attributes) if self.resource else ""
-                ),
+                "resource": json.loads(self.resource.to_json()),
             },
             indent=indent,
         )
