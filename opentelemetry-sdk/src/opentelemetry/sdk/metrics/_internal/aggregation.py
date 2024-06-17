@@ -544,6 +544,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
     def __init__(
         self,
         attributes: Attributes,
+        instrument_aggregation_temporality: AggregationTemporality,
         start_time_unix_nano: int,
         # This is the default maximum number of buckets per positive or
         # negative number range.  The value 160 is specified by OpenTelemetry.
@@ -552,9 +553,16 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         max_size: int = 160,
         max_scale: int = 20,
     ):
-        super().__init__(attributes)
         # max_size is the maximum capacity of the positive and negative
         # buckets.
+        # _sum is the sum of all the values aggregated by this aggregator.
+        # _count is the count of all calls to aggregate.
+        # _zero_count is the count of all the calls to aggregate when the value
+        # to be aggregated is exactly 0.
+        # _min is the smallest value aggregated by this aggregator.
+        # _max is the smallest value aggregated by this aggregator.
+        # _positive holds the positive values.
+        # _negative holds the negative values by their absolute value.
         if max_size < self._min_max_size:
             raise ValueError(
                 f"Buckets max size {max_size} is smaller than "
@@ -566,53 +574,44 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 f"Buckets max size {max_size} is larger than "
                 "maximum max size {self._max_max_size}"
             )
-
-        self._max_size = max_size
-        self._max_scale = max_scale
-
-        # _sum is the sum of all the values aggregated by this aggregator.
-        self._sum = 0
-
-        # _count is the count of all calls to aggregate.
-        self._count = 0
-
-        # _zero_count is the count of all the calls to aggregate when the value
-        # to be aggregated is exactly 0.
-        self._zero_count = 0
-
-        # _min is the smallest value aggregated by this aggregator.
-        self._min = inf
-
-        # _max is the smallest value aggregated by this aggregator.
-        self._max = -inf
-
-        # _positive holds the positive values.
-        self._positive = Buckets()
-
-        # _negative holds the negative values by their absolute value.
-        self._negative = Buckets()
-
-        # _mapping corresponds to the current scale, is shared by both the
-        # positive and negative buckets.
-
-        if self._max_scale > 20:
+        if max_scale > 20:
             _logger.warning(
                 "max_scale is set to %s which is "
                 "larger than the recommended value of 20",
                 self._max_scale,
             )
-        self._mapping = _new_exponential_mapping(self._max_scale)
 
-        self._instrument_aggregation_temporality = AggregationTemporality.DELTA
+        super().__init__(attributes)
+
+        self._max_size = max_size
+        self._max_scale = max_scale
+        self._min = inf
+        self._max = -inf
+        self._sum = 0
+        self._count = 0
+        self._zero_count = 0
+
         self._start_time_unix_nano = start_time_unix_nano
+        self._instrument_aggregation_temporality = (
+            instrument_aggregation_temporality
+        )
+
+        self._current_value_positive = None
+        self._current_value_negative = None
+
+        self._previous_collection_start_nano = self._start_time_unix_nano
+        self._previous_cumulative_value_positive = Buckets()
+        self._previous_cumulative_value_negative = Buckets()
+        self._previous_min = inf
+        self._previous_max = -inf
+        self._previous_sum = 0
+        self._previous_count = 0
+        self._previous_zero_count = 0
+
+        self._mapping = _new_exponential_mapping(self._max_scale)
 
         self._previous_scale = None
         self._previous_start_time_unix_nano = None
-        self._previous_zero_count = None
-        self._previous_count = None
-        self._previous_sum = None
-        self._previous_max = None
-        self._previous_min = None
         self._previous_positive = None
         self._previous_negative = None
 
