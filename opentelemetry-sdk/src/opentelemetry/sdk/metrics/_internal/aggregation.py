@@ -719,6 +719,76 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         Atomically return a point for the current value of the metric.
         """
         # pylint: disable=too-many-statements, too-many-locals
+        with self._lock:
+            current_value_positive = self._current_value_positive
+            current_value_negative = self._current_value_negative
+            sum_ = self._sum
+            min_ = self._min
+            max_ = self._max
+            count = self._count
+            zero_count = self._zero_count
+            if self._count == self._zero_count:
+                scale = 0
+            else:
+                scale = self._mapping.scale
+
+            self._current_value_positive = None
+            self._current_value_negative = None
+            self._sum = 0
+            self._min = inf
+            self._max = -inf
+            self._count = 0
+            self._zero_count = 0
+
+            if (
+                self._instrument_aggregation_temporality
+                is AggregationTemporality.DELTA
+            ):
+                # This happens when the corresponding instrument for this
+                # aggregation is synchronous.
+                if (
+                    collection_aggregation_temporality
+                    is AggregationTemporality.DELTA
+                ):
+
+                    if (
+                        current_value_positive is None and
+                        current_value_negative is None
+                    ):
+                        return None
+
+                    previous_collection_start_nano = (
+                        self._previous_collection_start_nano
+                    )
+                    self._previous_collection_start_nano = (
+                        collection_start_nano
+                    )
+
+                    return ExponentialHistogramDataPoint(
+                        attributes=self._attributes,
+                        start_time_unix_nano=previous_collection_start_nano,
+                        time_unix_nano=collection_start_nano,
+                        count=count,
+                        sum=sum_,
+                        scale=scale,
+                        zero_count=zero_count,
+                        positive=BucketsPoint(
+                            offset=current_value_positive.offset,
+                            bucket_counts=(
+                                current_value_positive.get_offset_counts()
+                            ),
+                        ),
+                        negative=BucketsPoint(
+                            offset=current_value_negative.offset,
+                            bucket_counts=(
+                                current_value_negative.get_offset_counts()
+                            ),
+                        ),
+                        # FIXME: Find the right value for flags
+                        flags=0,
+                        min=min_,
+                        max=max_,
+                    )
 
         with self._lock:
             if self._count == 0:
