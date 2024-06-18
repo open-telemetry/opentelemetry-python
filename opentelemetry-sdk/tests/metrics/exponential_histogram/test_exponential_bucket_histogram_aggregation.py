@@ -453,6 +453,10 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             self.assertEqual(0, exponential_histogram_aggregation._sum)
             expect = 0
 
+            exponential_histogram_aggregation._current_value_positive = (
+                Buckets()
+            )
+
             for value in range(2, 257):
                 expect += value * increment
                 with patch.object(
@@ -806,6 +810,8 @@ class TestExponentialBucketHistogramAggregation(TestCase):
 
             self._counts[bucket_index] += increment
 
+        exponential_histogram_aggregation_1._current_value_positive = Buckets()
+
         with patch.object(
             exponential_histogram_aggregation_1._current_value_positive,
             "increment_bucket",
@@ -846,15 +852,14 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             )
         )
 
-        # positive_mock = Mock(
-        # wraps=exponential_histogram_aggregation_1._current_value_positive
-        # )
         def mock_increment(self, bucket_index: int) -> None:
             """
             Increments a bucket
             """
 
             self._counts[bucket_index] += increment
+
+        exponential_histogram_aggregation_1._current_value_positive = Buckets()
 
         with patch.object(
             exponential_histogram_aggregation_1._current_value_positive,

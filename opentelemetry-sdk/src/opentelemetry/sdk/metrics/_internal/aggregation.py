@@ -578,7 +578,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             _logger.warning(
                 "max_scale is set to %s which is "
                 "larger than the recommended value of 20",
-                self._max_scale,
+                max_scale,
             )
 
         super().__init__(attributes)
@@ -1140,8 +1140,18 @@ class ExponentialBucketHistogramAggregation(Aggregation):
         attributes: Attributes,
         start_time_unix_nano: int,
     ) -> _Aggregation:
+
+        instrument_aggregation_temporality = AggregationTemporality.UNSPECIFIED
+        if isinstance(instrument, Synchronous):
+            instrument_aggregation_temporality = AggregationTemporality.DELTA
+        elif isinstance(instrument, Asynchronous):
+            instrument_aggregation_temporality = (
+                AggregationTemporality.CUMULATIVE
+            )
+
         return _ExponentialBucketHistogramAggregation(
             attributes,
+            instrument_aggregation_temporality,
             start_time_unix_nano,
             max_size=self._max_size,
             max_scale=self._max_scale,
