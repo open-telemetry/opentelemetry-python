@@ -522,12 +522,6 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             return None
 
 
-def _new_exponential_mapping(scale: int) -> Mapping:
-    if scale <= 0:
-        return ExponentMapping(scale)
-    return LogarithmMapping(scale)
-
-
 # pylint: disable=protected-access
 class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
     # _min_max_size and _max_max_size are the smallest and largest values
@@ -608,7 +602,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         self._previous_count = 0
         self._previous_zero_count = 0
 
-        self._mapping = _new_exponential_mapping(self._max_scale)
+        self._mapping = self._new_exponential_mapping(self._max_scale)
 
         self._previous_scale = None
 
@@ -680,7 +674,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     self._current_value_negative,
                 )
                 new_scale = self._mapping.scale - scale_change
-                self._mapping = _new_exponential_mapping(new_scale)
+                self._mapping = self._new_exponential_mapping(new_scale)
 
                 index = self._mapping.map_to_index(value)
 
@@ -934,6 +928,12 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         shift = scale - min_scale
 
         return buckets.index_start >> shift, buckets.index_end >> shift
+
+    @staticmethod
+    def _new_exponential_mapping(scale: int) -> Mapping:
+        if scale <= 0:
+            return ExponentMapping(scale)
+        return LogarithmMapping(scale)
 
     def _get_scale_change(self, low, high):
 
