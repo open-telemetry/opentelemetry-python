@@ -804,6 +804,9 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
                 min_scale = min(self._previous_scale, scale)
 
+                from ipdb import set_trace
+                set_trace()
+
                 low_positive, high_positive = (
                     self._get_low_high_previous_current(
                         self._previous_cumulative_value_positive,
@@ -812,6 +815,9 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                         min_scale,
                     )
                 )
+                # running test_aggregate_collect in 3.11
+                # low_positive == 1048575
+                # high_positive == 1048575
                 low_negative, high_negative = (
                     self._get_low_high_previous_current(
                         self._previous_cumulative_value_negative,
@@ -820,6 +826,8 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                         min_scale,
                     )
                 )
+                # low_negative == 0
+                # high_negative == -1
 
                 min_scale = min(
                     min_scale
