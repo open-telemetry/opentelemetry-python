@@ -618,7 +618,17 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             if self._current_value_negative is None:
                 self._current_value_negative = Buckets()
 
-            if value > 0:
+            if value < self._min:
+                self._min = value
+
+            if value > self._max:
+                self._max = value
+
+            if value == 0:
+                self._zero_count += 1
+                return
+
+            elif value > 0:
                 current_value = self._current_value_positive
 
             else:
@@ -627,17 +637,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
             self._sum += value
 
-            if value < self._min:
-                self._min = value
-
-            elif value > self._max:
-                self._max = value
-
             self._count += 1
-
-            if value == 0:
-                self._zero_count += 1
-                return
 
             index = self._mapping.map_to_index(value)
 
@@ -812,9 +812,6 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     )
 
                 min_scale = min(self._previous_scale, scale)
-
-                from ipdb import set_trace
-                set_trace()
 
                 low_positive, high_positive = (
                     self._get_low_high_previous_current(
