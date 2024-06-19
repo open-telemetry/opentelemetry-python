@@ -629,10 +629,16 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             if value > self._max:
                 self._max = value
 
+            self._sum += value
+
             self._count += 1
 
             if value == 0:
                 self._zero_count += 1
+
+                if self._count == self._zero_count:
+                    self._scale = 0
+
                 return
 
             elif value > 0:
@@ -641,8 +647,6 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             else:
                 value = -value
                 current_value = self._current_value_negative
-
-            self._sum += value
 
             index = self._mapping.map_to_index(value)
 
@@ -687,10 +691,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
                 index = self._mapping.map_to_index(value)
 
-            if self._count == self._zero_count:
-                self._scale = 0
-            else:
-                self._scale = self._mapping.scale
+            self._scale = self._mapping.scale
 
             if index < current_value.index_start:
                 span = current_value.index_end - index
