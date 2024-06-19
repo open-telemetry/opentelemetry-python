@@ -594,8 +594,8 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         self._current_value_negative = None
 
         self._previous_collection_start_nano = self._start_time_unix_nano
-        self._previous_cumulative_value_positive = Buckets()
-        self._previous_cumulative_value_negative = Buckets()
+        self._previous_cumulative_value_positive = None
+        self._previous_cumulative_value_negative = None
         self._previous_min = inf
         self._previous_max = -inf
         self._previous_sum = 0
@@ -801,6 +801,15 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     current_value_negative = Buckets()
                 if self._previous_scale is None:
                     self._previous_scale = scale
+
+                if self._previous_cumulative_value_positive is None:
+                    self._previous_cumulative_value_positive = (
+                        current_value_positive.copy_empty()
+                    )
+                if self._previous_cumulative_value_negative is None:
+                    self._previous_cumulative_value_negative = (
+                        current_value_negative.copy_empty()
+                    )
 
                 min_scale = min(self._previous_scale, scale)
 

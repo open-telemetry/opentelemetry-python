@@ -177,3 +177,13 @@ class Buckets:
 
     def increment_bucket(self, bucket_index: int, increment: int = 1) -> None:
         self._counts[bucket_index] += increment
+
+    def copy_empty(self) -> "Buckets":
+        copy = Buckets()
+
+        copy._Buckets__index_base = self._Buckets__index_base
+        copy._Buckets__index_start = self._Buckets__index_start
+        copy._Buckets__index_end = self._Buckets__index_end
+        copy._counts = [0 for _ in self._counts]
+
+        return copy
