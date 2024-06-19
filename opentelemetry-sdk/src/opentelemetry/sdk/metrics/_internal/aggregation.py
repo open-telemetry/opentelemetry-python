@@ -403,24 +403,24 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
     ):
         super().__init__(attributes)
 
+        self._instrument_aggregation_temporality = (
+            instrument_aggregation_temporality
+        )
+        self._start_time_unix_nano = start_time_unix_nano
         self._boundaries = tuple(boundaries)
         self._record_min_max = record_min_max
+
+        self._current_value = None
         self._min = inf
         self._max = -inf
         self._sum = 0
 
-        self._start_time_unix_nano = start_time_unix_nano
-        self._instrument_aggregation_temporality = (
-            instrument_aggregation_temporality
-        )
-
-        self._current_value = None
-
-        self._previous_collection_start_nano = self._start_time_unix_nano
         self._previous_cumulative_value = None
         self._previous_min = inf
         self._previous_max = -inf
         self._previous_sum = 0
+
+        self._previous_collection_start_nano = self._start_time_unix_nano
 
     def _get_empty_bucket_counts(self) -> List[int]:
         return [0] * (len(self._boundaries) + 1)
@@ -582,23 +582,22 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
         super().__init__(attributes)
 
+        self._instrument_aggregation_temporality = (
+            instrument_aggregation_temporality
+        )
+        self._start_time_unix_nano = start_time_unix_nano
         self._max_size = max_size
         self._max_scale = max_scale
+
+        self._current_value_positive = None
+        self._current_value_negative = None
         self._min = inf
         self._max = -inf
         self._sum = 0
         self._count = 0
         self._zero_count = 0
+        self._scale = 0
 
-        self._start_time_unix_nano = start_time_unix_nano
-        self._instrument_aggregation_temporality = (
-            instrument_aggregation_temporality
-        )
-
-        self._current_value_positive = None
-        self._current_value_negative = None
-
-        self._previous_collection_start_nano = self._start_time_unix_nano
         self._previous_cumulative_value_positive = None
         self._previous_cumulative_value_negative = None
         self._previous_min = inf
@@ -606,10 +605,11 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         self._previous_sum = 0
         self._previous_count = 0
         self._previous_zero_count = 0
+        self._previous_scale = 0
 
-        self._mapping = self._new_exponential_mapping(self._max_scale)
+        self._previous_collection_start_nano = self._start_time_unix_nano
 
-        self._previous_scale = None
+        self._mapping = self._new_mapping(self._max_scale)
 
     def aggregate(self, measurement: Measurement) -> None:
         # pylint: disable=too-many-branches,too-many-statements, too-many-locals
@@ -629,6 +629,8 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             if value > self._max:
                 self._max = value
 
+            self._count += 1
+
             if value == 0:
                 self._zero_count += 1
                 return
@@ -641,8 +643,6 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 current_value = self._current_value_negative
 
             self._sum += value
-
-            self._count += 1
 
             index = self._mapping.map_to_index(value)
 
@@ -681,10 +681,16 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     self._current_value_positive,
                     self._current_value_negative,
                 )
-                new_scale = self._mapping.scale - scale_change
-                self._mapping = self._new_exponential_mapping(new_scale)
+                self._mapping = self._new_mapping(
+                    self._mapping.scale - scale_change
+                )
 
                 index = self._mapping.map_to_index(value)
+
+            if self._count == self._zero_count:
+                self._scale = 0
+            else:
+                self._scale = self._mapping.scale
 
             if index < current_value.index_start:
                 span = current_value.index_end - index
@@ -727,10 +733,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             max_ = self._max
             count = self._count
             zero_count = self._zero_count
-            if self._count == self._zero_count:
-                scale = 0
-            else:
-                scale = self._mapping.scale
+            scale = self._scale
 
             self._current_value_positive = None
             self._current_value_negative = None
@@ -739,6 +742,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             self._max = -inf
             self._count = 0
             self._zero_count = 0
+            self._scale = 0
 
             if (
                 self._instrument_aggregation_temporality
@@ -969,7 +973,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         return buckets.index_start >> shift, buckets.index_end >> shift
 
     @staticmethod
-    def _new_exponential_mapping(scale: int) -> Mapping:
+    def _new_mapping(scale: int) -> Mapping:
         if scale <= 0:
             return ExponentMapping(scale)
         return LogarithmMapping(scale)
