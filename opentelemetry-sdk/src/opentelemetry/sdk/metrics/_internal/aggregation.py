@@ -596,7 +596,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         self._sum = 0
         self._count = 0
         self._zero_count = 0
-        self._scale = 0
+        self._scale = None
 
         self._previous_cumulative_value_positive = None
         self._previous_cumulative_value_negative = None
@@ -743,7 +743,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             self._max = -inf
             self._count = 0
             self._zero_count = 0
-            self._scale = 0
+            self._scale = None
 
             if (
                 self._instrument_aggregation_temporality
