@@ -15,11 +15,12 @@
 # pylint: disable=protected-access,too-many-lines,invalid-name
 # pylint: disable=consider-using-enumerate,no-self-use,too-many-public-methods
 
-import random as insecure_random
+from random import Random, randrange
+from inspect import currentframe
 from itertools import permutations
 from logging import WARNING
 from math import ldexp
-from sys import float_info
+from sys import float_info, maxsize
 from types import MethodType
 from unittest.mock import Mock, patch
 
@@ -1097,10 +1098,17 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             assert result.zero_count == len([v for v in values if v == 0])
             assert scale >= 3
 
-        random = insecure_random.Random("opentelemetry2")
+        seed = randrange(maxsize)
+        # This test case is executed with random values every time. In order to
+        # run this test case with the same values used in a previous execution,
+        # check the value printed by that previous execution of this test case
+        # and use the same value for the seed variable in the line below.
+        # seed = 4539544373807492135
+        print(f"seed for {currentframe().f_code.co_name} is {seed}")
+
         values = []
         for i in range(2000):
-            value = random.randint(0, 1000)
+            value = Random(seed).randint(0, 1000)
             values.append(value)
             histogram.aggregate(Measurement(value, Mock()))
             if i % 20 == 0:
