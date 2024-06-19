@@ -1125,10 +1125,12 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             [1, 1, 1, 1]
         )
 
-        result = exponential_histogram_aggregation.collect(
+        result_0 = exponential_histogram_aggregation.collect(
             AggregationTemporality.CUMULATIVE,
             0,
         )
+
+        self.assertEqual(result_0.scale, 0)
 
         for value in [1, 2, 4, 8]:
             exponential_histogram_aggregation.aggregate(
@@ -1150,7 +1152,6 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             0,
         )
 
-        self.assertEqual(result.scale, 0)
         self.assertEqual(result_1.scale, -1)
 
     def test_merge_collect_delta(self):
