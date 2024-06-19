@@ -843,8 +843,6 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     self._previous_cumulative_value_negative = (
                         current_value_negative.copy_empty()
                     )
-                if self._previous_scale is None:
-                    self._previous_scale = scale
 
                 min_scale = min(self._previous_scale, scale)
 
@@ -895,8 +893,6 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     collection_aggregation_temporality,
                 )
 
-                self._previous_scale = min_scale
-
                 self._previous_cumulative_value_positive = (
                     current_value_positive
                 )
@@ -910,6 +906,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 self._previous_zero_count = (
                     zero_count + self._previous_zero_count
                 )
+                self._previous_scale = min_scale
 
                 return ExponentialHistogramDataPoint(
                     attributes=self._attributes,
@@ -917,20 +914,28 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     time_unix_nano=collection_start_nano,
                     count=self._previous_count,
                     sum=self._previous_sum,
-                    scale=scale,
+                    scale=self._previous_scale,
                     zero_count=self._previous_zero_count,
                     positive=BucketsPoint(
-                        offset=current_value_positive.offset,
-                        bucket_counts=current_value_positive.get_offset_counts(),
+                        offset=self._previous_cumulative_value_positive.offset,
+                        bucket_counts=(
+                            self.
+                            _previous_cumulative_value_positive.
+                            get_offset_counts()
+                        ),
                     ),
                     negative=BucketsPoint(
-                        offset=current_value_negative.offset,
-                        bucket_counts=current_value_negative.get_offset_counts(),
+                        offset=self._previous_cumulative_value_negative.offset,
+                        bucket_counts=(
+                            self.
+                            _previous_cumulative_value_negative.
+                            get_offset_counts()
+                        ),
                     ),
                     # FIXME: Find the right value for flags
                     flags=0,
-                    min=min_,
-                    max=max_,
+                    min=self._previous_min,
+                    max=self._previous_max,
                 )
 
             return None
