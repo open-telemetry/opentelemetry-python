@@ -417,7 +417,7 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         self._current_value = None
 
         self._previous_collection_start_nano = self._start_time_unix_nano
-        self._previous_cumulative_value = self._get_empty_bucket_counts()
+        self._previous_cumulative_value = None
         self._previous_min = inf
         self._previous_max = -inf
         self._previous_sum = 0
@@ -495,6 +495,11 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
                 if current_value is None:
                     current_value = self._get_empty_bucket_counts()
+
+                if self._previous_cumulative_value is None:
+                    self._previous_cumulative_value = (
+                        self._get_empty_bucket_counts()
+                    )
 
                 self._previous_cumulative_value = [
                     current_value_element + previous_cumulative_value_element
@@ -668,6 +673,9 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             if is_rescaling_needed:
 
                 scale_change = self._get_scale_change(low, high)
+                # _downscale changes the buckets. This is the main difference
+                # with the _ExplicitBucketHistogramAggregation, as values are
+                # added to the histogram, the buckets can change in size.
                 self._downscale(
                     scale_change,
                     self._current_value_positive,
@@ -709,6 +717,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         """
         Atomically return a point for the current value of the metric.
         """
+
         # pylint: disable=too-many-statements, too-many-locals
         with self._lock:
             current_value_positive = self._current_value_positive
@@ -796,13 +805,32 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 # TODO, implement this case
 
                 if current_value_positive is None:
+                    # This happens if collect is called before aggregate is
+                    # called or if collect is called twice with no calls to
+                    # aggregate in between.
                     current_value_positive = Buckets()
                 if current_value_negative is None:
                     current_value_negative = Buckets()
-                if self._previous_scale is None:
-                    self._previous_scale = scale
 
                 if self._previous_cumulative_value_positive is None:
+                    # This happens when collect is called the very first time.
+
+                    # We need previous buckets to add them to the current ones.
+                    # When collect is called for the first time, there are no
+                    # previous buckets, so we need to create empty buckets to
+                    # add them to the current ones. The addition of empty
+                    # buckets to the current ones will result in the current
+                    # ones unchanged.
+
+                    # The way the previous buckets are generated here is
+                    # different from the explicit bucket histogram where
+                    # the size and amount of the buckets does not change once
+                    # they are instantiated. Here, the size and amount of the
+                    # buckets can change with every call to aggregate. In order
+                    # to get empty buckets that can be added to the current
+                    # ones resulting in the current ones unchanged we need to
+                    # generate empty buckets that have the same size and amount
+                    # as the current ones, this is what copy_empty does.
                     self._previous_cumulative_value_positive = (
                         current_value_positive.copy_empty()
                     )
@@ -810,6 +838,8 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     self._previous_cumulative_value_negative = (
                         current_value_negative.copy_empty()
                     )
+                if self._previous_scale is None:
+                    self._previous_scale = scale
 
                 min_scale = min(self._previous_scale, scale)
 
@@ -821,9 +851,6 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                         min_scale,
                     )
                 )
-                # running test_aggregate_collect in 3.11
-                # low_positive == 1048575
-                # high_positive == 1048575
                 low_negative, high_negative = (
                     self._get_low_high_previous_current(
                         self._previous_cumulative_value_negative,
@@ -832,8 +859,6 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                         min_scale,
                     )
                 )
-                # low_negative == 0
-                # high_negative == -1
 
                 min_scale = min(
                     min_scale
