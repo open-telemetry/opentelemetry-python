@@ -56,6 +56,13 @@ K8S_CONTAINER_RESTART_COUNT: Final = "k8s.container.restart_count"
 Number of times the container was restarted. This attribute can be used to identify a particular container (running or stopped) within a container spec.
 """
 
+K8S_CONTAINER_STATUS_LAST_TERMINATED_REASON: Final = (
+    "k8s.container.status.last_terminated_reason"
+)
+"""
+Last terminated reason of the Container.
+"""
+
 K8S_CRONJOB_NAME: Final = "k8s.cronjob.name"
 """
 The name of the CronJob.

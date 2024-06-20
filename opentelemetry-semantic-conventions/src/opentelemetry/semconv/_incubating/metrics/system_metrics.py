@@ -292,6 +292,25 @@ def create_system_memory_limit(meter: Meter) -> UpDownCounter:
     )
 
 
+SYSTEM_MEMORY_SHARED: Final = "system.memory.shared"
+"""
+Shared memory used (mostly by tmpfs)
+Instrument: updowncounter
+Unit: By
+Note: Equivalent of `shared` from [`free` command](https://man7.org/linux/man-pages/man1/free.1.html) or
+    `Shmem` from [`/proc/meminfo`](https://man7.org/linux/man-pages/man5/proc.5.html)".
+"""
+
+
+def create_system_memory_shared(meter: Meter) -> UpDownCounter:
+    """Shared memory used (mostly by tmpfs)"""
+    return meter.create_up_down_counter(
+        name=SYSTEM_MEMORY_SHARED,
+        description="Shared memory used (mostly by tmpfs).",
+        unit="By",
+    )
+
+
 SYSTEM_MEMORY_USAGE: Final = "system.memory.usage"
 """
 Reports memory in use by state
