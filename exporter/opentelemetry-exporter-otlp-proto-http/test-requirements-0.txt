@@ -18,7 +18,7 @@ requests==2.32.3
 responses==0.24.1
 tomli==2.0.1
 typing_extensions==4.10.0
-urllib3==2.2.1
+urllib3==2.2.2
 wrapt==1.16.0
 zipp==3.17.0
 -e opentelemetry-api

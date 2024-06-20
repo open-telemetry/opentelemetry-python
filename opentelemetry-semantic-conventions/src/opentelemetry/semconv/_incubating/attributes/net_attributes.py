@@ -17,6 +17,11 @@ from typing import Final
 
 from deprecated import deprecated
 
+NET_HOST_IP: Final = "net.host.ip"
+"""
+Deprecated: Replaced by `network.local.address`.
+"""
+
 NET_HOST_NAME: Final = "net.host.name"
 """
 Deprecated: Replaced by `server.address`.
@@ -25,6 +30,11 @@ Deprecated: Replaced by `server.address`.
 NET_HOST_PORT: Final = "net.host.port"
 """
 Deprecated: Replaced by `server.port`.
+"""
+
+NET_PEER_IP: Final = "net.peer.ip"
+"""
+Deprecated: Replaced by `network.peer.address`.
 """
 
 NET_PEER_NAME: Final = "net.peer.name"
