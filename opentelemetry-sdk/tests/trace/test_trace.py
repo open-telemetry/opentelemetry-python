@@ -27,6 +27,7 @@ from unittest import mock
 from unittest.mock import Mock, patch
 
 from opentelemetry import trace as trace_api
+from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.context import Context
 from opentelemetry.sdk import resources, trace
 from opentelemetry.sdk.environment_variables import (
@@ -634,6 +635,15 @@ class TestReadableSpan(unittest.TestCase):
         ]
         span = trace.ReadableSpan("test", events=events)
         self.assertEqual(span.events, tuple(events))
+
+    def test_event_dropped_attributes(self):
+        event1 = trace.Event(
+            "foo1", BoundedAttributes(0, attributes={"bar1": "baz1"})
+        )
+        self.assertEqual(event1.dropped_attributes, 1)
+
+        event2 = trace.Event("foo2", {"bar2": "baz2"})
+        self.assertEqual(event2.dropped_attributes, 0)
 
 
 class DummyError(Exception):
@@ -1837,7 +1847,7 @@ class TestSpanLimits(unittest.TestCase):
         self.assertEqual(1, span.dropped_links)
         self.assertEqual(2, span.dropped_attributes)
         self.assertEqual(3, span.dropped_events)
-        self.assertEqual(2, span.events[0].attributes.dropped)
+        self.assertEqual(2, span.events[0].dropped_attributes)
         self.assertEqual(2, span.links[0].attributes.dropped)
 
     def _test_span_limits(
