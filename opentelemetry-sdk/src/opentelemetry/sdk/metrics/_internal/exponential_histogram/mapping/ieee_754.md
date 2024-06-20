@@ -54,7 +54,7 @@ $mantissa$ is a positive fractional number whose integer part is $1$, for exampl
 $1.2345 \dots$. The `mantissa` bits represent only the fractional part and the
 $mantissa$ value can be calculated as:
 
-$$mantissa = 1 + \sum_{i=1}^{52} b_{i} \times 2^{-i} = 1 + \frac{b_{1}}{2^{1}} + \frac{b_{2}}{2^{2}} + \dots + \frac{b_{63}}{2^{63}} + \frac{b_{52}}{2^{52}}$$
+$$mantissa = 1 + \sum_{i=1}^{52} b_{i} \times 2^{-i} = 1 + \frac{b_{1}}{2^{1}} + \frac{b_{2}}{2^{2}} + \dots + \frac{b_{51}}{2^{51}} + \frac{b_{52}}{2^{52}}$$
 
 Where $b_{i}$ is:
 
@@ -67,7 +67,7 @@ $mantissa$ is a positive fractional number whose integer part is $0$, for exampl
 $0.12345 \dots$. The `mantissa` bits represent only the fractional part and the
 $mantissa$ value can be calculated as:
 
-$$mantissa = \sum_{i=1}^{52} b_{i} \times 2^{-i} = \frac{b_{1}}{2^{1}} + \frac{b_{2}}{2^{2}} + \dots + \frac{b_{63}}{2^{63}} + \frac{b_{52}}{2^{52}}$$
+$$mantissa = \sum_{i=1}^{52} b_{i} \times 2^{-i} = \frac{b_{1}}{2^{1}} + \frac{b_{2}}{2^{2}} + \dots + \frac{b_{51}}{2^{51}} + \frac{b_{52}}{2^{52}}$$
 
 Where $b_{i}$ is:
 
