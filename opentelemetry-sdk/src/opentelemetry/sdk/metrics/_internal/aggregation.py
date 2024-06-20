@@ -809,16 +809,34 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
                 # TODO, implement this case
 
-                if current_value_positive is None:
-                    # This happens if collect is called before aggregate is
-                    # called or if collect is called twice with no calls to
-                    # aggregate in between.
+                if (
+                    current_value_positive is None and
+                    self._previous_cumulative_value_positive is None
+                ):
+                    # This happens if collect is called for the first time
+                    # and aggregate has not yet been called.
                     current_value_positive = Buckets()
-                if current_value_negative is None:
+                    self._previous_cumulative_value_positive = (
+                        current_value_positive.copy_empty()
+                    )
+                if (
+                    current_value_negative is None and
+                    self._previous_cumulative_value_negative is None
+                ):
                     current_value_negative = Buckets()
+                    self._previous_cumulative_value_negative = (
+                        current_value_negative.copy_empty()
+                    )
+                if scale is None and self._previous_scale is None:
+                    scale = self._mapping.scale
+                    self._previous_scale = scale
 
-                if self._previous_cumulative_value_positive is None:
-                    # This happens when collect is called the very first time.
+                if (
+                    current_value_positive is not None and
+                    self._previous_cumulative_value_positive is None
+                ):
+                    # This happens when collect is called the very first time
+                    # and aggregate has been called before.
 
                     # We need previous buckets to add them to the current ones.
                     # When collect is called for the first time, there are no
@@ -839,12 +857,32 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     self._previous_cumulative_value_positive = (
                         current_value_positive.copy_empty()
                     )
-                if self._previous_cumulative_value_negative is None:
+                if (
+                    current_value_negative is not None and
+                    self._previous_cumulative_value_negative is None
+                ):
                     self._previous_cumulative_value_negative = (
                         current_value_negative.copy_empty()
                     )
-                if self._previous_scale is None:
+                if scale is not None and self._previous_scale is None:
                     self._previous_scale = scale
+
+                if (
+                    current_value_positive is None and
+                    self._previous_cumulative_value_positive is not None
+                ):
+                    current_value_positive = (
+                        self._previous_cumulative_value_positive.copy_empty()
+                    )
+                if (
+                    current_value_negative is None and
+                    self._previous_cumulative_value_negative is not None
+                ):
+                    current_value_negative = (
+                        self._previous_cumulative_value_negative.copy_empty()
+                    )
+                if scale is None and self._previous_scale is not None:
+                    scale = self._previous_scale
 
                 min_scale = min(self._previous_scale, scale)
 
