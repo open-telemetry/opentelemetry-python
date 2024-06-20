@@ -180,5 +180,5 @@ class TestSynchronousMeasurementConsumer(TestCase):
 
         self.assertLess(
             callback_options_time_call,
-            10000 * 10**6,
+            10000,
         )
