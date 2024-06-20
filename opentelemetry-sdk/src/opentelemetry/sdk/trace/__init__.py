@@ -64,6 +64,12 @@ from opentelemetry.sdk.util.instrumentation import (
     InstrumentationInfo,
     InstrumentationScope,
 )
+from opentelemetry.semconv.attributes.exception_attributes import (
+    EXCEPTION_ESCAPED,
+    EXCEPTION_MESSAGE,
+    EXCEPTION_STACKTRACE,
+    EXCEPTION_TYPE,
+)
 from opentelemetry.trace import NoOpTracer, SpanContext
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
@@ -1022,10 +1028,10 @@ class Span(trace_api.Span, ReadableSpan):
             else qualname
         )
         _attributes: MutableMapping[str, types.AttributeValue] = {
-            "exception.type": exception_type,
-            "exception.message": str(exception),
-            "exception.stacktrace": stacktrace,
-            "exception.escaped": str(escaped),
+            EXCEPTION_TYPE: exception_type,
+            EXCEPTION_MESSAGE: str(exception),
+            EXCEPTION_STACKTRACE: stacktrace,
+            EXCEPTION_ESCAPED: str(escaped),
         }
         if attributes:
             _attributes.update(attributes)

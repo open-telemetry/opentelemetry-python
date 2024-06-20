@@ -21,7 +21,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - add `Final` decorator to constants to prevent collisions
   - enable mypy and fix detected issues
   - allow to drop specific attributes in preparation for Semantic Conventions v1.26.0
+  ([#3973](https://github.com/open-telemetry/opentelemetry-python/pull/3966))
+- Update semantic conventions to version 1.26.0.
   ([#3964](https://github.com/open-telemetry/opentelemetry-python/pull/3964))
+  - Use semconv exception attributes for record exceptions in spans
+  ([#3979](https://github.com/open-telemetry/opentelemetry-python/pull/3979))
 
 ## Version 1.25.0/0.46b0 (2024-05-30)
 
