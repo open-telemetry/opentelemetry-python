@@ -27,19 +27,21 @@
     {%- endif -%}
 {%- endmacro -%}
 
-{%- macro attribute_brief(attribute) -%}
-"""
+{%- macro attribute_brief(attribute, prefix) -%}
+{%- if not prefix %}"""
+{%- endif %}
     {%- if attribute | is_deprecated %}
-Deprecated: {{ common.to_docstring(attribute.deprecated) }}.
+{{ prefix }}Deprecated: {{ common.to_docstring(attribute.deprecated) }}.
     {%- elif attribute | is_stable and filter == "any" %}
-Deprecated in favor of stable :py:const:`{{stable_class_ref(attribute_name(attribute), '.')}}`.
+{{ prefix }}Deprecated in favor of stable :py:const:`{{stable_class_ref(attribute_name(attribute), '.')}}`.
     {%- else %}
-{{ common.to_docstring(attribute.brief) }}.
+{{ prefix }}{{ common.to_docstring(attribute.brief) }}.
         {%- if attribute.note %}
-Note: {{ common.to_docstring(attribute.note | indent)}}.
+{{ prefix }}Note: {{ common.to_docstring(attribute.note | indent)}}.
         {%- endif -%}
     {%- endif %}
-"""
+{%- if not prefix %}
+"""{%- endif %}
 {%- endmacro -%}
 
 {%- if root_namespace not in excluded_namespaces.split(' ') -%}
@@ -74,7 +76,7 @@ from enum import Enum
 {% for attribute in filtered_attributes -%}
 {%- set prefix = "# " if attribute.fqn in excluded_attributes else "" -%}
 {{prefix}}{{attribute_name(attribute)}}: Final = "{{attribute.fqn}}"
-{{attribute_brief(attribute)}}
+{{attribute_brief(attribute, prefix)}}
 
 {% endfor %}
 {%- for attribute in filtered_enum_attributes | rejectattr("fqn", "in", excluded_attributes) -%}

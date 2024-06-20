@@ -24,7 +24,7 @@ The logical CPU number [0..n-1].
 
 SYSTEM_CPU_STATE: Final = "system.cpu.state"
 """
-The CPU state for this data point. A system's CPU SHOULD be characterized *either* by data points with no `state` labels, *or only* data points with `state` labels.
+The state of the CPU.
 """
 
 SYSTEM_DEVICE: Final = "system.device"
