@@ -18,7 +18,11 @@ from typing import Final
 ERROR_TYPE: Final = "error.type"
 """
 Describes a class of error the operation ended with.
-Note: The `error.type` SHOULD be predictable and SHOULD have low cardinality.
+Note: The `error.type` SHOULD be predictable, and SHOULD have low cardinality.
+
+    When `error.type` is set to a type (e.g., an exception type), its
+    canonical class name identifying the type within the artifact SHOULD be used.
+
     Instrumentations SHOULD document the list of errors they report.
 
     The cardinality of `error.type` within one instrumentation library SHOULD be low.

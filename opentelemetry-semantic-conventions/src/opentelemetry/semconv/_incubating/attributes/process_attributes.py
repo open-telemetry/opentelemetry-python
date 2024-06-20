@@ -37,7 +37,12 @@ Specifies whether the context switches for this data point were voluntary or inv
 
 PROCESS_CPU_STATE: Final = "process.cpu.state"
 """
-The CPU state for this data point. A process SHOULD be characterized _either_ by data points with no `state` labels, _or only_ data points with `state` labels.
+The CPU state of the process.
+"""
+
+PROCESS_CREATION_TIME: Final = "process.creation.time"
+"""
+The date and time the process was created, in ISO 8601 format.
 """
 
 PROCESS_EXECUTABLE_NAME: Final = "process.executable.name"
@@ -48,6 +53,26 @@ The name of the process executable. On Linux based systems, can be set to the `N
 PROCESS_EXECUTABLE_PATH: Final = "process.executable.path"
 """
 The full path to the process executable. On Linux based systems, can be set to the target of `proc/[pid]/exe`. On Windows, can be set to the result of `GetProcessImageFileNameW`.
+"""
+
+PROCESS_EXIT_CODE: Final = "process.exit.code"
+"""
+The exit code of the process.
+"""
+
+PROCESS_EXIT_TIME: Final = "process.exit.time"
+"""
+The date and time the process exited, in ISO 8601 format.
+"""
+
+PROCESS_GROUP_LEADER_PID: Final = "process.group_leader.pid"
+"""
+The PID of the process's group leader. This is also the process group ID (PGID) of the process.
+"""
+
+PROCESS_INTERACTIVE: Final = "process.interactive"
+"""
+Whether the process is connected to an interactive shell.
 """
 
 PROCESS_OWNER: Final = "process.owner"
@@ -70,6 +95,16 @@ PROCESS_PID: Final = "process.pid"
 Process identifier (PID).
 """
 
+PROCESS_REAL_USER_ID: Final = "process.real_user.id"
+"""
+The real user ID (RUID) of the process.
+"""
+
+PROCESS_REAL_USER_NAME: Final = "process.real_user.name"
+"""
+The username of the real user of the process.
+"""
+
 PROCESS_RUNTIME_DESCRIPTION: Final = "process.runtime.description"
 """
 An additional description about the runtime of the process, for example a specific vendor customization of the runtime environment.
@@ -83,6 +118,37 @@ The name of the runtime of this process. For compiled native binaries, this SHOU
 PROCESS_RUNTIME_VERSION: Final = "process.runtime.version"
 """
 The version of the runtime of this process, as returned by the runtime without modification.
+"""
+
+PROCESS_SAVED_USER_ID: Final = "process.saved_user.id"
+"""
+The saved user ID (SUID) of the process.
+"""
+
+PROCESS_SAVED_USER_NAME: Final = "process.saved_user.name"
+"""
+The username of the saved user.
+"""
+
+PROCESS_SESSION_LEADER_PID: Final = "process.session_leader.pid"
+"""
+The PID of the process's session leader. This is also the session ID (SID) of the process.
+"""
+
+PROCESS_USER_ID: Final = "process.user.id"
+"""
+The effective user ID (EUID) of the process.
+"""
+
+PROCESS_USER_NAME: Final = "process.user.name"
+"""
+The username of the effective user of the process.
+"""
+
+PROCESS_VPID: Final = "process.vpid"
+"""
+Virtual process identifier.
+Note: The process ID within a PID namespace. This is not necessarily unique across all processes on the host but it is unique within the process namespace that the process exists within.
 """
 
 

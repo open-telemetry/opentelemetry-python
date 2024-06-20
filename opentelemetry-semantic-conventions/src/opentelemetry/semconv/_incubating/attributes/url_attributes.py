@@ -75,6 +75,11 @@ The subdomain portion of a fully qualified domain name includes all of the names
 Note: The subdomain portion of `www.east.mydomain.co.uk` is `east`. If the domain has multiple levels of subdomain, such as `sub2.sub1.example.com`, the subdomain field should contain `sub2.sub1`, with no trailing period.
 """
 
+URL_TEMPLATE: Final = "url.template"
+"""
+The low-cardinality template of an [absolute path reference](https://www.rfc-editor.org/rfc/rfc3986#section-4.2).
+"""
+
 URL_TOP_LEVEL_DOMAIN: Final = "url.top_level_domain"
 """
 The effective top level domain (eTLD), also known as the domain suffix, is the last part of the domain name. For example, the top level domain for example.com is `com`.
