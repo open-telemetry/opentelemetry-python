@@ -142,7 +142,7 @@ def _encode_events(
                 name=event.name,
                 time_unix_nano=event.timestamp,
                 attributes=_encode_attributes(event.attributes),
-                dropped_attributes_count=event.attributes.dropped,
+                dropped_attributes_count=event.dropped_attributes,
             )
             pb2_events.append(encoded_event)
     return pb2_events
