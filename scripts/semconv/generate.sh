@@ -5,7 +5,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ROOT_DIR="${SCRIPT_DIR}/../../"
 
 # freeze the spec version to make SemanticAttributes generation reproducible
-SEMCONV_VERSION=v1.25.0
+SEMCONV_VERSION=v1.26.0
 OTEL_SEMCONV_GEN_IMG_VERSION=0.24.0
 INCUBATING_DIR=_incubating
 cd ${SCRIPT_DIR}
@@ -28,7 +28,13 @@ if ! grep -q $SEMCONV_VERSION "$SCHEMAS_PY_PATH"; then
   exit 1
 fi
 
-EXCLUDED_NAMESPACES="jvm aspnetcore dotnet signalr ios android"
+# excluded namespaces will not be generated
+# this behavior is fully controlled by jinja templates
+EXCLUDED_NAMESPACES="jvm aspnetcore dotnet signalr ios android kestrel"
+
+# excluded attributes will be commented out in the generated code
+# this behavior is fully controlled by jinja templates
+EXCLUDED_ATTRIBUTES="messaging.client_id"
 
 generate() {
   TEMPLATE=$1
@@ -48,7 +54,8 @@ generate() {
     --file-per-group root_namespace \
     -Dfilter=${FILTER} \
     -Dstable_package=${STABLE_PACKAGE} \
-    -Dexcluded_namespaces="$EXCLUDED_NAMESPACES"
+    -Dexcluded_namespaces="$EXCLUDED_NAMESPACES" \
+    -Dexcluded_attributes="$EXCLUDED_ATTRIBUTES"
 }
 
 # stable attributes and metrics

@@ -27,6 +27,7 @@ from unittest import mock
 from unittest.mock import Mock, patch
 
 from opentelemetry import trace as trace_api
+from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.context import Context
 from opentelemetry.sdk import resources, trace
 from opentelemetry.sdk.environment_variables import (
@@ -634,6 +635,15 @@ class TestReadableSpan(unittest.TestCase):
         ]
         span = trace.ReadableSpan("test", events=events)
         self.assertEqual(span.events, tuple(events))
+
+    def test_event_dropped_attributes(self):
+        event1 = trace.Event(
+            "foo1", BoundedAttributes(0, attributes={"bar1": "baz1"})
+        )
+        self.assertEqual(event1.dropped_attributes, 1)
+
+        event2 = trace.Event("foo2", {"bar2": "baz2"})
+        self.assertEqual(event2.dropped_attributes, 0)
 
 
 class DummyError(Exception):
@@ -1837,7 +1847,7 @@ class TestSpanLimits(unittest.TestCase):
         self.assertEqual(1, span.dropped_links)
         self.assertEqual(2, span.dropped_attributes)
         self.assertEqual(3, span.dropped_events)
-        self.assertEqual(2, span.events[0].attributes.dropped)
+        self.assertEqual(2, span.events[0].dropped_attributes)
         self.assertEqual(2, span.links[0].attributes.dropped)
 
     def _test_span_limits(
@@ -2061,3 +2071,35 @@ class TestTracerProvider(unittest.TestCase):
         sample_patch.assert_called_once()
         self.assertIsNotNone(tracer_provider._span_limits)
         self.assertIsNotNone(tracer_provider._atexit_handler)
+
+
+class TestRandomIdGenerator(unittest.TestCase):
+    _TRACE_ID_MAX_VALUE = 2**128 - 1
+    _SPAN_ID_MAX_VALUE = 2**64 - 1
+
+    @patch(
+        "random.getrandbits",
+        side_effect=[trace_api.INVALID_SPAN_ID, 0x00000000DEADBEF0],
+    )
+    def test_generate_span_id_avoids_invalid(self, mock_getrandbits):
+        generator = RandomIdGenerator()
+        span_id = generator.generate_span_id()
+
+        self.assertNotEqual(span_id, trace_api.INVALID_SPAN_ID)
+        mock_getrandbits.assert_any_call(64)
+        self.assertEqual(mock_getrandbits.call_count, 2)
+
+    @patch(
+        "random.getrandbits",
+        side_effect=[
+            trace_api.INVALID_TRACE_ID,
+            0x000000000000000000000000DEADBEEF,
+        ],
+    )
+    def test_generate_trace_id_avoids_invalid(self, mock_getrandbits):
+        generator = RandomIdGenerator()
+        trace_id = generator.generate_trace_id()
+
+        self.assertNotEqual(trace_id, trace_api.INVALID_TRACE_ID)
+        mock_getrandbits.assert_any_call(128)
+        self.assertEqual(mock_getrandbits.call_count, 2)

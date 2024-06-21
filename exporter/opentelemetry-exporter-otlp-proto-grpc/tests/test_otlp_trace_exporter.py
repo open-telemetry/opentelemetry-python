@@ -149,7 +149,7 @@ class TestOTLPSpanExporter(TestCase):
         )
 
         type(event_mock).name = PropertyMock(return_value="a")
-
+        type(event_mock).dropped_attributes = PropertyMock(return_value=0)
         self.span = _Span(
             "a",
             context=Mock(
