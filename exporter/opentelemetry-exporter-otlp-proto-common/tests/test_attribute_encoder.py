@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import patch
+from logging import ERROR
 
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _encode_attributes,
@@ -69,24 +69,14 @@ class TestOTLPAttributeEncoder(unittest.TestCase):
             ],
         )
 
-    @patch(
-        "opentelemetry.exporter.otlp.proto.common._internal._logger.exception"
-    )
-    def test_encode_attributes_error_logs_key(self, mock_logger_exception):
-        result = _encode_attributes({"a": 1, "bad_key": None, "b": 2})
-        mock_logger_exception.assert_called_once()
-        self.assertEqual(
-            mock_logger_exception.call_args_list[0].args[0],
-            "Failed to encode key %s: %s",
-        )
-        self.assertEqual(
-            mock_logger_exception.call_args_list[0].args[1], "bad_key"
-        )
-        self.assertTrue(
-            isinstance(
-                mock_logger_exception.call_args_list[0].args[2], Exception
-            )
-        )
+    def test_encode_attributes_error_logs_key(self):
+        with self.assertLogs(level=ERROR) as error:
+            result = _encode_attributes({"a": 1, "bad_key": None, "b": 2})
+
+        self.assertEqual(len(error.records), 1)
+        self.assertEqual(error.records[0].msg, f"Failed to encode key %s: %s")
+        self.assertEqual(error.records[0].args[0], "bad_key")
+        self.assertIsInstance(error.records[0].args[1], Exception)
         self.assertEqual(
             result,
             [
