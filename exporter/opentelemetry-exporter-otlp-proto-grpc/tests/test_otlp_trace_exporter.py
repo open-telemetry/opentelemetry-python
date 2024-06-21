@@ -20,7 +20,9 @@ from logging import WARNING
 from unittest import TestCase
 from unittest.mock import Mock, PropertyMock, patch
 
-from google.protobuf.duration_pb2 import Duration
+from google.protobuf.duration_pb2 import (  # pylint: disable=no-name-in-module
+    Duration,
+)
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import ChannelCredentials, Compression, StatusCode, server
 
@@ -147,7 +149,7 @@ class TestOTLPSpanExporter(TestCase):
         )
 
         type(event_mock).name = PropertyMock(return_value="a")
-
+        type(event_mock).dropped_attributes = PropertyMock(return_value=0)
         self.span = _Span(
             "a",
             context=Mock(
@@ -595,8 +597,10 @@ class TestOTLPSpanExporter(TestCase):
                                                     ),
                                                 ),
                                             ],
+                                            flags=0x300,
                                         )
                                     ],
+                                    flags=0x300,
                                 )
                             ],
                         )
@@ -697,8 +701,10 @@ class TestOTLPSpanExporter(TestCase):
                                                     ),
                                                 ),
                                             ],
+                                            flags=0x300,
                                         )
                                     ],
+                                    flags=0x300,
                                 )
                             ],
                         ),
@@ -728,6 +734,7 @@ class TestOTLPSpanExporter(TestCase):
                                         OTLPSpan.SpanKind.SPAN_KIND_INTERNAL
                                     ),
                                     status=Status(code=0, message=""),
+                                    flags=0x300,
                                 )
                             ],
                         ),
@@ -769,6 +776,7 @@ class TestOTLPSpanExporter(TestCase):
                                         OTLPSpan.SpanKind.SPAN_KIND_INTERNAL
                                     ),
                                     status=Status(code=0, message=""),
+                                    flags=0x300,
                                 )
                             ],
                         )

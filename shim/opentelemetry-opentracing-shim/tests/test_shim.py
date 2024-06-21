@@ -302,7 +302,7 @@ class TestShim(TestCase):
             # Verify parent span becomes the active span again.
             self.assertEqual(
                 self.shim.active_span.context.unwrap(),
-                parent.span.context.unwrap()
+                parent.span.context.unwrap(),
                 # TODO: Check equality of the spans themselves rather than
                 # their context once the SpanShim reconstruction problem has
                 # been addressed (see previous TODO).
@@ -496,6 +496,7 @@ class TestShim(TestCase):
         # Raise an exception while a span is active.
         with self.assertRaises(Exception) as exc_ctx:
             with self.shim.start_active_span("TestName") as scope:
+                # pylint: disable=broad-exception-raised
                 raise Exception("bad thing")
 
         ex = exc_ctx.exception

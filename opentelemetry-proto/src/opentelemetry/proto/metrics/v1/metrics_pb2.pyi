@@ -250,7 +250,10 @@ class ResourceMetrics(google.protobuf.message.Message):
         """A list of metrics that originate from a resource."""
         pass
     schema_url: typing.Text = ...
-    """This schema_url applies to the data in the "resource" field. It does not apply
+    """The Schema URL, if known. This is the identifier of the Schema that the resource data
+    is recorded in. To learn more about Schema URL see
+    https://opentelemetry.io/docs/specs/otel/schemas/#schema-url
+    This schema_url applies to the data in the "resource" field. It does not apply
     to the data in the "scope_metrics" field which have their own schema_url field.
     """
 
@@ -282,7 +285,11 @@ class ScopeMetrics(google.protobuf.message.Message):
         """A list of metrics that originate from an instrumentation library."""
         pass
     schema_url: typing.Text = ...
-    """This schema_url applies to all metrics in the "metrics" field."""
+    """The Schema URL, if known. This is the identifier of the Schema that the metric data
+    is recorded in. To learn more about Schema URL see
+    https://opentelemetry.io/docs/specs/otel/schemas/#schema-url
+    This schema_url applies to all metrics in the "metrics" field.
+    """
 
     def __init__(self,
         *,
@@ -390,8 +397,9 @@ class Metric(google.protobuf.message.Message):
     HISTOGRAM_FIELD_NUMBER: builtins.int
     EXPONENTIAL_HISTOGRAM_FIELD_NUMBER: builtins.int
     SUMMARY_FIELD_NUMBER: builtins.int
+    METADATA_FIELD_NUMBER: builtins.int
     name: typing.Text = ...
-    """name of the metric, including its DNS name prefix. It must be unique."""
+    """name of the metric."""
 
     description: typing.Text = ...
     """description of the metric, which can be used in documentation."""
@@ -411,6 +419,17 @@ class Metric(google.protobuf.message.Message):
     def exponential_histogram(self) -> global___ExponentialHistogram: ...
     @property
     def summary(self) -> global___Summary: ...
+    @property
+    def metadata(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.KeyValue]:
+        """Additional metadata attributes that describe the metric. [Optional].
+        Attributes are non-identifying.
+        Consumers SHOULD NOT need to be aware of these attributes.
+        These attributes MAY be used to encode information allowing
+        for lossless roundtrip translation to / from another data model.
+        Attribute keys MUST be unique (it is not allowed to have more than one
+        attribute with the same key).
+        """
+        pass
     def __init__(self,
         *,
         name : typing.Text = ...,
@@ -421,9 +440,10 @@ class Metric(google.protobuf.message.Message):
         histogram : typing.Optional[global___Histogram] = ...,
         exponential_histogram : typing.Optional[global___ExponentialHistogram] = ...,
         summary : typing.Optional[global___Summary] = ...,
+        metadata : typing.Optional[typing.Iterable[opentelemetry.proto.common.v1.common_pb2.KeyValue]] = ...,
         ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["data",b"data","exponential_histogram",b"exponential_histogram","gauge",b"gauge","histogram",b"histogram","sum",b"sum","summary",b"summary"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["data",b"data","description",b"description","exponential_histogram",b"exponential_histogram","gauge",b"gauge","histogram",b"histogram","name",b"name","sum",b"sum","summary",b"summary","unit",b"unit"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["data",b"data","description",b"description","exponential_histogram",b"exponential_histogram","gauge",b"gauge","histogram",b"histogram","metadata",b"metadata","name",b"name","sum",b"sum","summary",b"summary","unit",b"unit"]) -> None: ...
     def WhichOneof(self, oneof_group: typing_extensions.Literal["data",b"data"]) -> typing.Optional[typing_extensions.Literal["gauge","sum","histogram","exponential_histogram","summary"]]: ...
 global___Metric = Metric
 

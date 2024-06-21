@@ -19,6 +19,7 @@ import json
 import logging
 import threading
 import traceback
+import warnings
 from os import environ
 from time import time_ns
 from typing import Any, Callable, Optional, Tuple, Union  # noqa
@@ -55,6 +56,18 @@ _logger = logging.getLogger(__name__)
 
 _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
 _ENV_VALUE_UNSET = ""
+
+
+class LogDroppedAttributesWarning(UserWarning):
+    """Custom warning to indicate dropped log attributes due to limits.
+
+    This class is used to filter and handle these specific warnings separately
+    from other warnings, ensuring that they are only shown once without
+    interfering with default user warnings.
+    """
+
+
+warnings.simplefilter("once", LogDroppedAttributesWarning)
 
 
 class LogLimits:
@@ -189,7 +202,15 @@ class LogRecord(APILogRecord):
                 ),
             }
         )
-        self.resource = resource
+        self.resource = (
+            resource if isinstance(resource, Resource) else Resource.create({})
+        )
+        if self.dropped_attributes > 0:
+            warnings.warn(
+                "Log record attributes were dropped due to limits",
+                LogDroppedAttributesWarning,
+                stacklevel=2,
+            )
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, LogRecord):
@@ -202,22 +223,24 @@ class LogRecord(APILogRecord):
                 "body": self.body,
                 "severity_number": repr(self.severity_number),
                 "severity_text": self.severity_text,
-                "attributes": dict(self.attributes)
-                if bool(self.attributes)
-                else None,
+                "attributes": (
+                    dict(self.attributes) if bool(self.attributes) else None
+                ),
                 "dropped_attributes": self.dropped_attributes,
                 "timestamp": ns_to_iso_str(self.timestamp),
                 "observed_timestamp": ns_to_iso_str(self.observed_timestamp),
-                "trace_id": f"0x{format_trace_id(self.trace_id)}"
-                if self.trace_id is not None
-                else "",
-                "span_id": f"0x{format_span_id(self.span_id)}"
-                if self.span_id is not None
-                else "",
+                "trace_id": (
+                    f"0x{format_trace_id(self.trace_id)}"
+                    if self.trace_id is not None
+                    else ""
+                ),
+                "span_id": (
+                    f"0x{format_span_id(self.span_id)}"
+                    if self.span_id is not None
+                    else ""
+                ),
                 "trace_flags": self.trace_flags,
-                "resource": repr(self.resource.attributes)
-                if self.resource
-                else "",
+                "resource": json.loads(self.resource.to_json()),
             },
             indent=indent,
         )

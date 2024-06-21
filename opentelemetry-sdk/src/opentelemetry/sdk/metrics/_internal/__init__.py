@@ -410,6 +410,7 @@ class MeterProvider(APIMeterProvider):
 
             with self._all_metric_readers_lock:
                 if metric_reader in self._all_metric_readers:
+                    # pylint: disable=broad-exception-raised
                     raise Exception(
                         f"MetricReader {metric_reader} has been registered "
                         "already in other MeterProvider instance"
@@ -437,7 +438,7 @@ class MeterProvider(APIMeterProvider):
                     timeout_millis=(deadline_ns - current_ts) / 10**6
                 )
 
-            # pylint: disable=broad-except
+            # pylint: disable=broad-exception-caught
             except Exception as error:
 
                 metric_reader_error[metric_reader] = error
@@ -451,6 +452,7 @@ class MeterProvider(APIMeterProvider):
                 ]
             )
 
+            # pylint: disable=broad-exception-raised
             raise Exception(
                 "MeterProvider.force_flush failed because the following "
                 "metric readers failed during collect:\n"
@@ -476,6 +478,7 @@ class MeterProvider(APIMeterProvider):
             current_ts = time_ns()
             try:
                 if current_ts >= deadline_ns:
+                    # pylint: disable=broad-exception-raised
                     raise Exception(
                         "Didn't get to execute, deadline already exceeded"
                     )
@@ -483,7 +486,7 @@ class MeterProvider(APIMeterProvider):
                     timeout_millis=(deadline_ns - current_ts) / 10**6
                 )
 
-            # pylint: disable=broad-except
+            # pylint: disable=broad-exception-caught
             except Exception as error:
 
                 metric_reader_error[metric_reader] = error
@@ -501,6 +504,7 @@ class MeterProvider(APIMeterProvider):
                 ]
             )
 
+            # pylint: disable=broad-exception-raised
             raise Exception(
                 (
                     "MeterProvider.shutdown failed because the following "

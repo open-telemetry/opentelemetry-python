@@ -7,20 +7,20 @@ on:
 jobs:
   sdk-benchmarks:
     env:
-      py311: "3.11"
+      py312: "3.12"
       RUN_MATRIX_COMBINATION: ${{ matrix.python-version }}-sdk-${{ matrix.os }}
     runs-on: self-hosted
     strategy:
       # Ensures the entire test matrix is run, even if one permutation fails
       fail-fast: false
       matrix:
-        python-version: [py311]
+        python-version: [py312]
         os: [ubuntu-20.04, windows-2019]
     steps:
     - name: Checkout Core Repo @ SHA - ${{ github.sha }}
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
     - name: Set up Python ${{ env[matrix.python-version] }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ env[matrix.python-version] }}
         architecture: 'x64'
@@ -28,7 +28,7 @@ jobs:
       run: pip install tox
     - name: Cache tox environment
       # Preserves .tox directory between runs for faster installs
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: |
           .tox

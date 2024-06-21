@@ -1,0 +1,4 @@
+contact_links:
+  - name: Slack
+    url: https://cloud-native.slack.com/archives/C01PD4HUVBL
+    about: Or the `#otel-python` channel in the CNCF Slack instance.
