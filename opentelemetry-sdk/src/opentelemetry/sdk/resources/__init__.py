@@ -81,7 +81,7 @@ except ImportError:
     psutil = None
 
 LabelValue = AttributeValue
-Attributes = typing.Dict[str, LabelValue]
+Attributes = typing.Mapping[str, LabelValue]
 logger = logging.getLogger(__name__)
 
 CLOUD_PROVIDER = ResourceAttributes.CLOUD_PROVIDER
