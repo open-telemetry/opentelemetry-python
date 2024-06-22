@@ -819,13 +819,18 @@ class Span(trace_api.Span, ReadableSpan):
         if links is None:
             self._links = self._new_links()
         else:
+            valid_links = []
             for link in links:
-                link._attributes = BoundedAttributes(
-                    self._limits.max_link_attributes,
-                    link.attributes,
-                    max_value_len=self._limits.max_attribute_length,
-                )
-            self._links = BoundedList.from_seq(self._limits.max_links, links)
+                if _is_valid_link(link.context, link.attributes):
+                    link._attributes = BoundedAttributes(
+                        self._limits.max_link_attributes,
+                        link.attributes,
+                        max_value_len=self._limits.max_attribute_length,
+                    )
+                    valid_links.append(link)
+            self._links = BoundedList.from_seq(
+                self._limits.max_links, valid_links
+            )
 
     def __repr__(self):
         return f'{type(self).__name__}(name="{self._name}", context={self._context})'
