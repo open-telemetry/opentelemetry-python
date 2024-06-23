@@ -830,9 +830,7 @@ class Span(trace_api.Span, ReadableSpan):
 
         valid_links = []
         for link in links:
-            if isinstance(link, trace_api.Link) and _is_valid_link(
-                link.context, link.attributes
-            ):
+            if link and _is_valid_link(link.context, link.attributes):
                 # pylint: disable=protected-access
                 link._attributes = BoundedAttributes(
                     self._limits.max_link_attributes,
