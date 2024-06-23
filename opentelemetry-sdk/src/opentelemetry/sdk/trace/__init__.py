@@ -828,18 +828,23 @@ class Span(trace_api.Span, ReadableSpan):
         if not links:
             return BoundedList(self._limits.max_links)
 
-        valid_links = []
-        for link in links:
-            if _is_valid_link(link.context, link.attributes):
-                # pylint: disable=protected-access
-                link._attributes = BoundedAttributes(
-                    self._limits.max_link_attributes,
-                    link.attributes,
-                    max_value_len=self._limits.max_attribute_length,
-                )
-                valid_links.append(link)
+        links = list(
+            filter(
+                lambda link: link
+                and _is_valid_link(link.context, link.attributes),
+                links,
+            )
+        )
 
-        return BoundedList.from_seq(self._limits.max_links, valid_links)
+        for link in links:
+            # pylint: disable=protected-access
+            link._attributes = BoundedAttributes(
+                self._limits.max_link_attributes,
+                link.attributes,
+                max_value_len=self._limits.max_attribute_length,
+            )
+
+        return BoundedList.from_seq(self._limits.max_links, links)
 
     def get_span_context(self):
         return self._context

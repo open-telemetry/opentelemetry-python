@@ -955,7 +955,7 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(len(root.links), 0)
 
         with self.tracer.start_as_current_span(
-            "root", links=[trace_api.Link(other_context)]
+            "root", links=[trace_api.Link(other_context), None]
         ) as root:
             self.assertEqual(len(root.links), 0)
 
@@ -963,13 +963,17 @@ class TestSpan(unittest.TestCase):
         invalid_context = trace_api.INVALID_SPAN_CONTEXT
 
         with self.tracer.start_as_current_span("root") as root:
+            root.add_link(invalid_context)
             root.add_link(invalid_context, {"name": "neighbor"})
             self.assertEqual(len(root.links), 1)
             self.assertEqual(root.links[0].attributes, {"name": "neighbor"})
 
         with self.tracer.start_as_current_span(
             "root",
-            links=[trace_api.Link(invalid_context, {"name": "neighbor"})],
+            links=[
+                trace_api.Link(invalid_context, {"name": "neighbor"}),
+                trace_api.Link(invalid_context),
+            ],
         ) as root:
             self.assertEqual(len(root.links), 1)
 
@@ -983,11 +987,16 @@ class TestSpan(unittest.TestCase):
 
         with self.tracer.start_as_current_span("root") as root:
             root.add_link(invalid_context)
+            root.add_link(trace_api.INVALID_SPAN_CONTEXT)
             self.assertEqual(len(root.links), 1)
             self.assertEqual(root.links[0].context.trace_state, "foo=bar")
 
         with self.tracer.start_as_current_span(
-            "root", links=[trace_api.Link(invalid_context)]
+            "root",
+            links=[
+                trace_api.Link(invalid_context),
+                trace_api.Link(trace_api.INVALID_SPAN_CONTEXT),
+            ],
         ) as root:
             self.assertEqual(len(root.links), 1)
 
