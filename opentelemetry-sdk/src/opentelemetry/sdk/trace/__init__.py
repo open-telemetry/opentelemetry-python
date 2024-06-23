@@ -824,7 +824,7 @@ class Span(trace_api.Span, ReadableSpan):
     def _new_events(self):
         return BoundedList(self._limits.max_events)
 
-    def _new_links(self, links: Optional[Sequence[trace_api.Link]]):
+    def _new_links(self, links: Sequence[trace_api.Link]):
         if not links:
             return BoundedList(self._limits.max_links)
 
