@@ -28,6 +28,8 @@ from opentelemetry.sdk.resources import (
     _DEFAULT_RESOURCE,
     _EMPTY_RESOURCE,
     _OPENTELEMETRY_SDK_VERSION,
+    OS_TYPE,
+    OS_VERSION,
     OTEL_RESOURCE_ATTRIBUTES,
     OTEL_SERVICE_NAME,
     PROCESS_COMMAND,
@@ -45,6 +47,7 @@ from opentelemetry.sdk.resources import (
     TELEMETRY_SDK_LANGUAGE,
     TELEMETRY_SDK_NAME,
     TELEMETRY_SDK_VERSION,
+    OsResourceDetector,
     OTELResourceDetector,
     ProcessResourceDetector,
     Resource,
@@ -723,3 +726,34 @@ class TestOTELResourceDetector(unittest.TestCase):
             )
             self.assertIn(PROCESS_RUNTIME_VERSION, resource.attributes.keys())
             self.assertEqual(resource.schema_url, "")
+
+    @patch("platform.system", lambda: "Linux")
+    @patch("platform.release", lambda: "666.5.0-35-generic")
+    def test_os_detector_linux(self):
+        resource = get_aggregated_resources(
+            [OsResourceDetector()],
+            Resource({}),
+        )
+
+        self.assertEqual(resource.attributes[OS_TYPE], "linux")
+        self.assertEqual(resource.attributes[OS_VERSION], "666.5.0-35-generic")
+
+    @patch("platform.system", lambda: "Windows")
+    @patch("platform.version", lambda: "10.0.666")
+    def test_os_detector_windows(self):
+        resource = get_aggregated_resources(
+            [OsResourceDetector()],
+            Resource({}),
+        )
+
+        self.assertEqual(resource.attributes[OS_TYPE], "windows")
+        self.assertEqual(resource.attributes[OS_VERSION], "10.0.666")
+
+    @patch("platform.system", lambda: "SunOS")
+    def test_os_detector_solaris(self):
+        resource = get_aggregated_resources(
+            [OsResourceDetector()],
+            Resource({}),
+        )
+
+        self.assertEqual(resource.attributes[OS_TYPE], "solaris")

@@ -59,6 +59,7 @@ import abc
 import concurrent.futures
 import logging
 import os
+import platform
 import sys
 import typing
 from json import dumps
@@ -119,8 +120,9 @@ KUBERNETES_JOB_UID = ResourceAttributes.K8S_JOB_UID
 KUBERNETES_JOB_NAME = ResourceAttributes.K8S_JOB_NAME
 KUBERNETES_CRON_JOB_UID = ResourceAttributes.K8S_CRONJOB_UID
 KUBERNETES_CRON_JOB_NAME = ResourceAttributes.K8S_CRONJOB_NAME
-OS_TYPE = ResourceAttributes.OS_TYPE
 OS_DESCRIPTION = ResourceAttributes.OS_DESCRIPTION
+OS_TYPE = ResourceAttributes.OS_TYPE
+OS_VERSION = ResourceAttributes.OS_VERSION
 PROCESS_PID = ResourceAttributes.PROCESS_PID
 PROCESS_PARENT_PID = ResourceAttributes.PROCESS_PARENT_PID
 PROCESS_EXECUTABLE_NAME = ResourceAttributes.PROCESS_EXECUTABLE_NAME
@@ -369,6 +371,72 @@ class ProcessResourceDetector(ResourceDetector):
             resource_info[PROCESS_OWNER] = process.username()
 
         return Resource(resource_info)
+
+
+class OsResourceDetector(ResourceDetector):
+    """Detect os resources based on `Operating System conventions <https://opentelemetry.io/docs/specs/semconv/resource/os/`_."""
+
+    def detect(self) -> "Resource":
+        """Returns a resource with with `os.type` and `os.version`. Example of
+        return values for `platform` calls in different systems:
+
+        Linux:
+        >>> platform.system()
+        'Linux'
+        >>> platform.release()
+        '6.5.0-35-generic'
+        >>> platform.version()
+        '#35~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Tue May  7 09:00:52 UTC 2'
+
+        MacOS:
+        >>> platform.system()
+        'Darwin'
+        >>> platform.release()
+        '23.0.0'
+        >>> platform.version()
+        'Darwin Kernel Version 23.0.0: Fri Sep 15 14:42:57 PDT 2023; root:xnu-10002.1.13~1/RELEASE_ARM64_T8112'
+
+        Windows:
+        >>> platform.system()
+        'Windows'
+        >>> platform.release()
+        '2022Server'
+        >>> platform.version()
+        '10.0.20348'
+
+        FreeBSD:
+        >>> platform.system()
+        'FreeBSD'
+        >>> platform.release()
+        '14.1-RELEASE'
+        >>> platform.version()
+        'FreeBSD 14.1-RELEASE releng/14.1-n267679-10e31f0946d8 GENERIC'
+
+        Solaris:
+        >>> platform.system()
+        'SunOS'
+        >>> platform.release()
+        '5.11'
+        >>> platform.version()
+        '11.4.0.15.0'
+        """
+
+        os_type = platform.system().lower()
+        os_version = platform.release()
+
+        # See docstring
+        if os_type == "windows":
+            os_version = platform.version()
+        # Align SunOS with conventions
+        if os_type == "sunos":
+            os_type = "solaris"
+
+        return Resource(
+            {
+                OS_TYPE: os_type,
+                OS_VERSION: os_version,
+            }
+        )
 
 
 def get_aggregated_resources(
