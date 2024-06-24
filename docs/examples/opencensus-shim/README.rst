@@ -14,6 +14,9 @@ OpenTelemetry OpenCensus Shim HTTP Example
 
 This example demonstrates how to use the OpenTelemetry OpenCensus Shim to bridge spans from OpenCensus to OpenTelemetry in a Flask application. 
 The application is a simple Flask web server that integrates OpenCensus tracing and exports traces to the console using OpenTelemetry. The server includes an endpoint that makes an external HTTP request, which is traced using OpenCensus flask integration.
+This is a link to the http.py file: docs/examples/opencensus-shim/http.py 
+
+
 
 To install Python Dependencies:
  .. code-block:: bash
@@ -26,8 +29,7 @@ To install Python Dependencies:
     opentelemetry-exporter-console \
     opencensus-ext-flask \
     opencensus-ext-requests \
-    opentelemetry-shim-opencensus \
-
+    opentelemetry-shim-opencensus 
 
 Running the Application
 -----------------------

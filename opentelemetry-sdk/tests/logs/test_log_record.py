@@ -14,9 +14,15 @@
 
 import json
 import unittest
+import warnings
 
 from opentelemetry.attributes import BoundedAttributes
-from opentelemetry.sdk._logs import LogLimits, LogRecord
+from opentelemetry.sdk._logs import (
+    LogDroppedAttributesWarning,
+    LogLimits,
+    LogRecord,
+)
+from opentelemetry.sdk.resources import Resource
 
 
 class TestLogRecord(unittest.TestCase):
@@ -33,7 +39,10 @@ class TestLogRecord(unittest.TestCase):
                 "trace_id": "",
                 "span_id": "",
                 "trace_flags": None,
-                "resource": "",
+                "resource": {
+                    "attributes": {"service.name": "foo"},
+                    "schema_url": "",
+                },
             },
             indent=4,
         )
@@ -41,8 +50,14 @@ class TestLogRecord(unittest.TestCase):
             timestamp=0,
             observed_timestamp=0,
             body="a log line",
-        ).to_json()
-        self.assertEqual(expected, actual)
+            resource=Resource({"service.name": "foo"}),
+        )
+
+        self.assertEqual(expected, actual.to_json(indent=4))
+        self.assertEqual(
+            actual.to_json(indent=None),
+            '{"body": "a log line", "severity_number": "None", "severity_text": null, "attributes": null, "dropped_attributes": 0, "timestamp": "1970-01-01T00:00:00.000000Z", "observed_timestamp": "1970-01-01T00:00:00.000000Z", "trace_id": "", "span_id": "", "trace_flags": null, "resource": {"attributes": {"service.name": "foo"}, "schema_url": ""}}',
+        )
 
     def test_log_record_bounded_attributes(self):
         attr = {"key": "value"}
@@ -97,6 +112,28 @@ class TestLogRecord(unittest.TestCase):
         )
         self.assertTrue(result.dropped_attributes == 1)
         self.assertEqual(expected, result.attributes)
+
+    def test_log_record_dropped_attributes_set_limits_warning_once(self):
+        attr = {"key1": "value1", "key2": "value2"}
+        limits = LogLimits(
+            max_attributes=1,
+            max_attribute_length=1,
+        )
+
+        with warnings.catch_warnings(record=True) as cw:
+            for _ in range(10):
+                LogRecord(
+                    timestamp=0,
+                    body="a log line",
+                    attributes=attr,
+                    limits=limits,
+                )
+        self.assertEqual(len(cw), 1)
+        self.assertIsInstance(cw[-1].message, LogDroppedAttributesWarning)
+        self.assertIn(
+            "Log record attributes were dropped due to limits",
+            str(cw[-1].message),
+        )
 
     def test_log_record_dropped_attributes_unset_limits(self):
         attr = {"key": "value", "key2": "value2"}

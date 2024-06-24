@@ -23,11 +23,12 @@ already instrumented using OpenCensus to start using OpenTelemetry with minimal 
 having to rewrite large portions of the codebase.
 """
 
-from opentelemetry.shim.opencensus._patch import install_shim, uninstall_shim
-
+from opentelemetry.shim.opencensus.trace._patch import install_shim, uninstall_shim
+from opentelemetry.shim.opencensus.metrics._producer import MetricProducer
 __all__ = [
     "install_shim",
     "uninstall_shim",
+    "MetricProducer"
 ]
 
 # TODO: Decide when this should be called.

@@ -15,18 +15,16 @@
 import logging
 from datetime import datetime
 from typing import TYPE_CHECKING
-
 import wrapt
 from opencensus.trace import execution_context
 from opencensus.trace.blank_span import BlankSpan
 from opencensus.trace.span import SpanKind
 from opencensus.trace.status import Status
 from opencensus.trace.time_event import MessageEvent
-
 from opentelemetry import context, trace
 
 if TYPE_CHECKING:
-    from opentelemetry.shim.opencensus._shim_tracer import ShimTracer
+   from opentelemetry.shim.opencensus.trace._shim_tracer import ShimTracer
 
 _logger = logging.getLogger(__name__)
 

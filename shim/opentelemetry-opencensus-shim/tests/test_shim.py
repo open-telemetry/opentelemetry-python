@@ -15,7 +15,6 @@
 import logging
 import unittest
 from unittest.mock import patch
-
 from opencensus.trace import trace_options, tracestate
 from opencensus.trace.blank_span import BlankSpan as OcBlankSpan
 from opencensus.trace.link import Link as OcLink
@@ -23,11 +22,10 @@ from opencensus.trace.span import SpanKind
 from opencensus.trace.span_context import SpanContext
 from opencensus.trace.tracer import Tracer as OcTracer
 from opencensus.trace.tracers.noop_tracer import NoopTracer as OcNoopTracer
-
 from opentelemetry import context, trace
 from opentelemetry.shim.opencensus import install_shim, uninstall_shim
-from opentelemetry.shim.opencensus._shim_span import ShimSpan
-from opentelemetry.shim.opencensus._shim_tracer import (
+from opentelemetry.shim.opencensus.trace._shim_span import ShimSpan
+from opentelemetry.shim.opencensus.trace._shim_tracer import (
     ShimTracer,
     set_oc_span_in_context,
 )

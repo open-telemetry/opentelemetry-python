@@ -13,12 +13,10 @@
 # limitations under the License.
 
 import unittest
-
 from opencensus.trace.tracer import Tracer
 from opencensus.trace.tracers.noop_tracer import NoopTracer
-
 from opentelemetry.shim.opencensus import install_shim, uninstall_shim
-from opentelemetry.shim.opencensus._shim_tracer import ShimTracer
+from opentelemetry.shim.opencensus.trace._shim_tracer import ShimTracer
 
 
 class TestPatch(unittest.TestCase):

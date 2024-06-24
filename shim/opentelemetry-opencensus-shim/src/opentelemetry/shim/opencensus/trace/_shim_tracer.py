@@ -20,9 +20,8 @@ from opencensus.trace.blank_span import BlankSpan
 from opencensus.trace.span_context import SpanContext
 from opencensus.trace.tracers.base import Tracer as BaseTracer
 from opencensus.trace.tracestate import Tracestate
-
 from opentelemetry import context, trace
-from opentelemetry.shim.opencensus._shim_span import ShimSpan
+from opentelemetry.shim.opencensus.trace._shim_span import ShimSpan
 
 _logger = logging.getLogger(__name__)
 
