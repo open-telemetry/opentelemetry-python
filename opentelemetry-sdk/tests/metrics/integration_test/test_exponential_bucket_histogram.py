@@ -29,6 +29,8 @@ from opentelemetry.sdk.metrics.view import (
 
 class TestExponentialBucketHistogramAggregation(TestCase):
 
+    test_values = [2, 4, 1, 1, 8, 0.5, 0.1, 0.045]
+
     @mark.skipif(
         system() == "Windows",
         reason=(
@@ -38,8 +40,6 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         ),
     )
     def test_synchronous_delta_temporality(self):
-
-        test_values = [1, 6, 11, 26, 51, 76, 101, 251, 501, 751]
 
         aggregation = ExponentialBucketHistogramAggregation()
 
@@ -64,7 +64,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
 
         results = []
 
-        for test_value in test_values:
+        for test_value in self.test_values:
             histogram.record(test_value)
             results.append(reader.get_metrics_data())
 
@@ -91,9 +91,9 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             metric_data.start_time_unix_nano,
             previous_time_unix_nano,
         )
-        self.assertEqual(metric_data.min, test_values[0])
-        self.assertEqual(metric_data.max, test_values[0])
-        self.assertEqual(metric_data.sum, test_values[0])
+        self.assertEqual(metric_data.min, self.test_values[0])
+        self.assertEqual(metric_data.max, self.test_values[0])
+        self.assertEqual(metric_data.sum, self.test_values[0])
 
         for index, metrics_data in enumerate(results[1:]):
             metric_data = (
@@ -118,9 +118,9 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             self.assertLess(
                 metric_data.start_time_unix_nano, metric_data.time_unix_nano
             )
-            self.assertEqual(metric_data.min, test_values[index + 1])
-            self.assertEqual(metric_data.max, test_values[index + 1])
-            self.assertEqual(metric_data.sum, test_values[index + 1])
+            self.assertEqual(metric_data.min, self.test_values[index + 1])
+            self.assertEqual(metric_data.max, self.test_values[index + 1])
+            self.assertEqual(metric_data.sum, self.test_values[index + 1])
 
         results = []
 
@@ -143,7 +143,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
     )
     def test_synchronous_cumulative_temporality(self):
 
-        test_values = [2, 4, 1, 1, 8, 0.5, 0.1, 0.045]
+        self.test_values = [2, 4, 1, 1, 8, 0.5, 0.1, 0.045]
 
         aggregation = ExponentialBucketHistogramAggregation()
 
@@ -170,7 +170,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
 
         results = []
 
-        for test_value in test_values:
+        for test_value in self.test_values:
 
             histogram.record(test_value)
             results.append(reader.get_metrics_data())
@@ -196,9 +196,9 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             self.assertEqual(
                 start_time_unix_nano, metric_data.start_time_unix_nano
             )
-            self.assertEqual(metric_data.min, min(test_values[:index + 1]))
-            self.assertEqual(metric_data.max, max(test_values[:index + 1]))
-            self.assertEqual(metric_data.sum, sum(test_values[:index + 1]))
+            self.assertEqual(metric_data.min, min(self.test_values[:index + 1]))
+            self.assertEqual(metric_data.max, max(self.test_values[:index + 1]))
+            self.assertEqual(metric_data.sum, sum(self.test_values[:index + 1]))
 
         self.assertEqual(
             metric_data.positive.bucket_counts,
@@ -253,9 +253,9 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             self.assertEqual(
                 start_time_unix_nano, metric_data.start_time_unix_nano
             )
-            self.assertEqual(metric_data.min, min(test_values[:index + 1]))
-            self.assertEqual(metric_data.max, max(test_values[:index + 1]))
-            self.assertEqual(metric_data.sum, sum(test_values[:index + 1]))
+            self.assertEqual(metric_data.min, min(self.test_values[:index + 1]))
+            self.assertEqual(metric_data.max, max(self.test_values[:index + 1]))
+            self.assertEqual(metric_data.sum, sum(self.test_values[:index + 1]))
 
         self.assertEqual(
             metric_data.positive.bucket_counts,
