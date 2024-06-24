@@ -933,12 +933,6 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     collection_aggregation_temporality,
                 )
 
-                self._previous_cumulative_value_positive = (
-                    current_value_positive
-                )
-                self._previous_cumulative_value_negative = (
-                    current_value_negative
-                )
                 self._previous_min = min(min_, self._previous_min)
                 self._previous_max = max(max_, self._previous_max)
                 self._previous_sum = sum_ + self._previous_sum
