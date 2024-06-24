@@ -1068,7 +1068,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             Mock(),
         )
 
-        def collect_and_validate() -> None:
+        def collect_and_validate(values, histogram) -> None:
             result: ExponentialHistogramDataPoint = histogram.collect(
                 AggregationTemporality.CUMULATIVE, 0
             )
@@ -1103,18 +1103,20 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         # run this test case with the same values used in a previous execution,
         # check the value printed by that previous execution of this test case
         # and use the same value for the seed variable in the line below.
-        # seed = 4539544373807492135
+        seed = 4539544373807492135
+
+        random_generator = Random(seed)
         print(f"seed for {currentframe().f_code.co_name} is {seed}")
 
         values = []
         for i in range(2000):
-            value = Random(seed).randint(0, 1000)
+            value = random_generator.randint(0, 1000)
             values.append(value)
             histogram.aggregate(Measurement(value, Mock()))
             if i % 20 == 0:
-                collect_and_validate()
+                collect_and_validate(values, histogram)
 
-        collect_and_validate()
+        collect_and_validate(values, histogram)
 
     def test_merge_collect_cumulative(self):
         exponential_histogram_aggregation = (
