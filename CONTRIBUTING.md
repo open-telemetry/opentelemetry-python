@@ -266,7 +266,7 @@ automatically load as options for the `opentelemetry-instrument` command.
 
 ## Updating supported Python version
 
-### Bumping the python baseline
+### Bumping the Python baseline
 
 When updating the minimum supported Python version remember to:
 
