@@ -264,7 +264,7 @@ automatically load as options for the `opentelemetry-instrument` command.
   extension](http://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html#google-vs-numpy)
   extension in [Sphinx](http://www.sphinx-doc.org/en/master/index.html).
 
-## Updating supported Python version
+## Updating supported Python versions
 
 ### Bumping the Python baseline
 
