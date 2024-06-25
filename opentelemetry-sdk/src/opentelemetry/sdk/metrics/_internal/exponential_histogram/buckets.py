@@ -181,6 +181,10 @@ class Buckets:
     def copy_empty(self) -> "Buckets":
         copy = Buckets()
 
+        # pylint: disable=no-member
+        # pylint: disable=protected-access
+        # pylint: disable=attribute-defined-outside-init
+        # pylint: disable=invalid-name
         copy._Buckets__index_base = self._Buckets__index_base
         copy._Buckets__index_start = self._Buckets__index_start
         copy._Buckets__index_end = self._Buckets__index_end
