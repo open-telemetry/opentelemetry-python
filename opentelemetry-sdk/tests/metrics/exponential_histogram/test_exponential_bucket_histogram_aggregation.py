@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from random import Random, randrange
 from inspect import currentframe
 from itertools import permutations
 from logging import WARNING
 from math import ldexp
+from random import Random, randrange
 from sys import float_info, maxsize
 from types import MethodType
 from unittest.mock import Mock, patch
@@ -135,23 +135,17 @@ class TestExponentialBucketHistogramAggregation(TestCase):
 
         self.assertEqual(a._mapping.scale, b._mapping.scale)
 
-        self.assertEqual(
-            len(a._value_positive), len(b._value_positive)
-        )
-        self.assertEqual(
-            len(a._value_negative), len(b._value_negative)
-        )
+        self.assertEqual(len(a._value_positive), len(b._value_positive))
+        self.assertEqual(len(a._value_negative), len(b._value_negative))
 
         for index in range(len(a._value_positive)):
             self.assertEqual(
-                a._value_positive[index],
-                b._value_positive[index]
+                a._value_positive[index], b._value_positive[index]
             )
 
         for index in range(len(a._value_negative)):
             self.assertEqual(
-                a._value_negative[index],
-                b._value_negative[index]
+                a._value_negative[index], b._value_negative[index]
             )
 
     def test_alternating_growth_0(self):
@@ -179,15 +173,12 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         exponential_histogram_aggregation.aggregate(Measurement(1, Mock()))
 
         self.assertEqual(
-            exponential_histogram_aggregation._value_positive.offset,
-            -1
+            exponential_histogram_aggregation._value_positive.offset, -1
         )
         self.assertEqual(exponential_histogram_aggregation._mapping.scale, 0)
         self.assertEqual(
-            get_counts(
-                exponential_histogram_aggregation._value_positive
-            ),
-            [1, 1, 1]
+            get_counts(exponential_histogram_aggregation._value_positive),
+            [1, 1, 1],
         )
 
     def test_alternating_growth_1(self):
@@ -212,15 +203,12 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         exponential_histogram_aggregation.aggregate(Measurement(0.5, Mock()))
 
         self.assertEqual(
-            exponential_histogram_aggregation._value_positive.offset,
-            -1
+            exponential_histogram_aggregation._value_positive.offset, -1
         )
         self.assertEqual(exponential_histogram_aggregation._mapping.scale, -1)
         self.assertEqual(
-            get_counts(
-                exponential_histogram_aggregation._value_positive
-            ),
-            [2, 3, 1]
+            get_counts(exponential_histogram_aggregation._value_positive),
+            [2, 3, 1],
         )
 
     def test_permutations(self):
@@ -269,7 +257,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
                         Mock(),
                         AggregationTemporality.DELTA,
                         Mock(),
-                        max_size=2
+                        max_size=2,
                     )
                 )
 
@@ -284,26 +272,19 @@ class TestExponentialBucketHistogramAggregation(TestCase):
                     expected["scale"],
                 )
                 self.assertEqual(
-                    exponential_histogram_aggregation.
-                    _value_positive.
-                    offset,
+                    exponential_histogram_aggregation._value_positive.offset,
                     expected["offset"],
                 )
                 self.assertEqual(
-                    len(
-                        exponential_histogram_aggregation.
-                        _value_positive
-                    ),
+                    len(exponential_histogram_aggregation._value_positive),
                     expected["len"],
                 )
                 self.assertEqual(
-                    exponential_histogram_aggregation.
-                    _value_positive[0],
+                    exponential_histogram_aggregation._value_positive[0],
                     expected["at_0"],
                 )
                 self.assertEqual(
-                    exponential_histogram_aggregation.
-                    _value_positive[1],
+                    exponential_histogram_aggregation._value_positive[1],
                     expected["at_1"],
                 )
 
@@ -325,7 +306,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
                     Mock(),
                     AggregationTemporality.DELTA,
                     Mock(),
-                    max_size=max_size
+                    max_size=max_size,
                 )
             )
 
@@ -351,9 +332,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             )
             self.assertEqual(
                 offset,
-                exponential_histogram_aggregation.
-                _value_positive.
-                offset
+                exponential_histogram_aggregation._value_positive.offset,
             )
 
             exponential_histogram_aggregation.aggregate(
@@ -376,12 +355,11 @@ class TestExponentialBucketHistogramAggregation(TestCase):
                 len(exponential_histogram_aggregation._value_positive)
             ):
                 total_count += (
-                    exponential_histogram_aggregation.
-                    _value_positive[index]
+                    exponential_histogram_aggregation._value_positive[index]
                 )
                 if (
-                    exponential_histogram_aggregation.
-                    _value_positive[index] != 0
+                    exponential_histogram_aggregation._value_positive[index]
+                    != 0
                 ):
                     max_fill = index
 
@@ -409,21 +387,15 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             index = mapping.map_to_index(min_val)
 
             self.assertEqual(
-                index,
-                exponential_histogram_aggregation.
-                _value_positive.
-                offset
+                index, exponential_histogram_aggregation._value_positive.offset
             )
 
             index = mapping.map_to_index(max_val)
 
             self.assertEqual(
                 index,
-                exponential_histogram_aggregation.
-                _value_positive.offset
-                + len(
-                    exponential_histogram_aggregation._value_positive
-                )
+                exponential_histogram_aggregation._value_positive.offset
+                + len(exponential_histogram_aggregation._value_positive)
                 - 1,
             )
 
@@ -440,10 +412,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
 
             exponential_histogram_aggregation = (
                 _ExponentialBucketHistogramAggregation(
-                    Mock(),
-                    AggregationTemporality.DELTA,
-                    Mock(),
-                    max_size=256
+                    Mock(), AggregationTemporality.DELTA, Mock(), max_size=256
                 )
             )
 
@@ -454,20 +423,16 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             self.assertEqual(0, exponential_histogram_aggregation._sum)
             expect = 0
 
-            exponential_histogram_aggregation._value_positive = (
-                Buckets()
-            )
+            exponential_histogram_aggregation._value_positive = Buckets()
 
             for value in range(2, 257):
                 expect += value * increment
                 with patch.object(
-                    exponential_histogram_aggregation.
-                    _value_positive,
+                    exponential_histogram_aggregation._value_positive,
                     "increment_bucket",
                     MethodType(
                         mock_increment,
-                        exponential_histogram_aggregation.
-                        _value_positive,
+                        exponential_histogram_aggregation._value_positive,
                     ),
                 ):
                     exponential_histogram_aggregation.aggregate(
@@ -488,22 +453,16 @@ class TestExponentialBucketHistogramAggregation(TestCase):
 
             self.assertEqual(
                 256 - ((1 << scale) - 1),
-                len(
-                    exponential_histogram_aggregation.
-                    _value_positive
-                ),
+                len(exponential_histogram_aggregation._value_positive),
             )
             self.assertEqual(
                 (1 << scale) - 1,
-                exponential_histogram_aggregation.
-                _value_positive.
-                offset,
+                exponential_histogram_aggregation._value_positive.offset,
             )
 
             for index in range(0, 256):
                 self.assertLessEqual(
-                    exponential_histogram_aggregation.
-                    _value_positive[index],
+                    exponential_histogram_aggregation._value_positive[index],
                     6 * increment,
                 )
 
@@ -558,9 +517,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
 
         for index in range(0, 256):
             self.assertLessEqual(
-                exponential_histogram_aggregation_1.
-                _value_positive[index],
-                6
+                exponential_histogram_aggregation_1._value_positive[index], 6
             )
 
     def test_very_large_numbers(self):
@@ -573,22 +530,16 @@ class TestExponentialBucketHistogramAggregation(TestCase):
 
         def expect_balanced(count: int):
             self.assertEqual(
-                2,
-                len(exponential_histogram_aggregation._value_positive)
+                2, len(exponential_histogram_aggregation._value_positive)
             )
             self.assertEqual(
-                -1,
-                exponential_histogram_aggregation.
-                _value_positive.
-                offset
+                -1, exponential_histogram_aggregation._value_positive.offset
             )
             self.assertEqual(
-                count,
-                exponential_histogram_aggregation._value_positive[0]
+                count, exponential_histogram_aggregation._value_positive[0]
             )
             self.assertEqual(
-                count,
-                exponential_histogram_aggregation._value_positive[1]
+                count, exponential_histogram_aggregation._value_positive[1]
             )
 
         exponential_histogram_aggregation.aggregate(
@@ -677,8 +628,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             len(exponential_histogram_aggregation._value_positive),
         )
         self.assertEqual(
-            -1,
-            exponential_histogram_aggregation._value_positive.offset
+            -1, exponential_histogram_aggregation._value_positive.offset
         )
         self.assertLessEqual(
             exponential_histogram_aggregation._value_positive[0], 2
@@ -814,7 +764,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             "increment_bucket",
             MethodType(
                 mock_increment,
-                exponential_histogram_aggregation_1._value_positive
+                exponential_histogram_aggregation_1._value_positive,
             ),
         ):
             exponential_histogram_aggregation_1.aggregate(
@@ -862,7 +812,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             "increment_bucket",
             MethodType(
                 mock_increment,
-                exponential_histogram_aggregation_1._value_positive
+                exponential_histogram_aggregation_1._value_positive,
             ),
         ):
             exponential_histogram_aggregation_1.aggregate(
@@ -930,11 +880,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         # This means the smallest max_scale is enough for the full range of the
         # normal floating point values.
         self.assertEqual(
-            len(
-                exponential_histogram_aggregation.
-                _value_positive.
-                _counts
-            ),
+            len(exponential_histogram_aggregation._value_positive._counts),
             exponential_histogram_aggregation._min_max_size,
         )
 
@@ -1121,12 +1067,11 @@ class TestExponentialBucketHistogramAggregation(TestCase):
 
         self.assertEqual(exponential_histogram_aggregation._mapping.scale, 0)
         self.assertEqual(
-            exponential_histogram_aggregation._value_positive.offset,
-            0
+            exponential_histogram_aggregation._value_positive.offset, 0
         )
         self.assertEqual(
             exponential_histogram_aggregation._value_positive.counts,
-            [1, 1, 1, 1]
+            [1, 1, 1, 1],
         )
 
         result_0 = exponential_histogram_aggregation.collect(
@@ -1143,12 +1088,11 @@ class TestExponentialBucketHistogramAggregation(TestCase):
 
         self.assertEqual(exponential_histogram_aggregation._mapping.scale, 0)
         self.assertEqual(
-            exponential_histogram_aggregation._value_positive.offset,
-            -4
+            exponential_histogram_aggregation._value_positive.offset, -4
         )
         self.assertEqual(
             exponential_histogram_aggregation._value_positive.counts,
-            [1, 1, 1, 1]
+            [1, 1, 1, 1],
         )
 
         result_1 = exponential_histogram_aggregation.collect(
@@ -1172,12 +1116,11 @@ class TestExponentialBucketHistogramAggregation(TestCase):
 
         self.assertEqual(exponential_histogram_aggregation._mapping.scale, 0)
         self.assertEqual(
-            exponential_histogram_aggregation._value_positive.offset,
-            0
+            exponential_histogram_aggregation._value_positive.offset, 0
         )
         self.assertEqual(
             exponential_histogram_aggregation._value_positive.counts,
-            [1, 1, 1, 1]
+            [1, 1, 1, 1],
         )
 
         result = exponential_histogram_aggregation.collect(
@@ -1192,12 +1135,11 @@ class TestExponentialBucketHistogramAggregation(TestCase):
 
         self.assertEqual(exponential_histogram_aggregation._mapping.scale, 0)
         self.assertEqual(
-            exponential_histogram_aggregation._value_positive.offset,
-            -4
+            exponential_histogram_aggregation._value_positive.offset, -4
         )
         self.assertEqual(
             exponential_histogram_aggregation._value_positive.counts,
-            [1, 1, 1, 1]
+            [1, 1, 1, 1],
         )
 
         result_1 = exponential_histogram_aggregation.collect(

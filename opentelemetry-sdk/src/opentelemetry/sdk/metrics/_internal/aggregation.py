@@ -298,9 +298,7 @@ class _SumAggregation(_Aggregation[Sum]):
                 if value is None:
                     value = 0
 
-                self._previous_value = (
-                    value + self._previous_value
-                )
+                self._previous_value = value + self._previous_value
 
                 return NumberDataPoint(
                     attributes=self._attributes,
@@ -498,9 +496,7 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     value = self._get_empty_bucket_counts()
 
                 if self._previous_value is None:
-                    self._previous_value = (
-                        self._get_empty_bucket_counts()
-                    )
+                    self._previous_value = self._get_empty_bucket_counts()
 
                 self._previous_value = [
                     value_element + previous_value_element
@@ -644,7 +640,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
                 return
 
-            elif measurement_value > 0:
+            if measurement_value > 0:
                 value = self._value_positive
 
             else:
@@ -768,10 +764,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     is AggregationTemporality.DELTA
                 ):
 
-                    if (
-                        value_positive is None and
-                        value_negative is None
-                    ):
+                    if value_positive is None and value_negative is None:
                         return None
 
                     previous_collection_start_nano = (
@@ -791,15 +784,11 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                         zero_count=zero_count,
                         positive=BucketsPoint(
                             offset=value_positive.offset,
-                            bucket_counts=(
-                                value_positive.get_offset_counts()
-                            ),
+                            bucket_counts=(value_positive.get_offset_counts()),
                         ),
                         negative=BucketsPoint(
                             offset=value_negative.offset,
-                            bucket_counts=(
-                                value_negative.get_offset_counts()
-                            ),
+                            bucket_counts=(value_negative.get_offset_counts()),
                         ),
                         # FIXME: Find the right value for flags
                         flags=0,
@@ -820,30 +809,26 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 # to the current buckets).
 
                 if (
-                    value_positive is None and
-                    self._previous_value_positive is None
+                    value_positive is None
+                    and self._previous_value_positive is None
                 ):
                     # This happens if collect is called for the first time
                     # and aggregate has not yet been called.
                     value_positive = Buckets()
-                    self._previous_value_positive = (
-                        value_positive.copy_empty()
-                    )
+                    self._previous_value_positive = value_positive.copy_empty()
                 if (
-                    value_negative is None and
-                    self._previous_value_negative is None
+                    value_negative is None
+                    and self._previous_value_negative is None
                 ):
                     value_negative = Buckets()
-                    self._previous_value_negative = (
-                        value_negative.copy_empty()
-                    )
+                    self._previous_value_negative = value_negative.copy_empty()
                 if scale is None and self._previous_scale is None:
                     scale = self._mapping.scale
                     self._previous_scale = scale
 
                 if (
-                    value_positive is not None and
-                    self._previous_value_positive is None
+                    value_positive is not None
+                    and self._previous_value_positive is None
                 ):
                     # This happens when collect is called the very first time
                     # and aggregate has been called before.
@@ -864,33 +849,25 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     # ones resulting in the current ones unchanged we need to
                     # generate empty buckets that have the same size and amount
                     # as the current ones, this is what copy_empty does.
-                    self._previous_value_positive = (
-                        value_positive.copy_empty()
-                    )
+                    self._previous_value_positive = value_positive.copy_empty()
                 if (
-                    value_negative is not None and
-                    self._previous_value_negative is None
+                    value_negative is not None
+                    and self._previous_value_negative is None
                 ):
-                    self._previous_value_negative = (
-                        value_negative.copy_empty()
-                    )
+                    self._previous_value_negative = value_negative.copy_empty()
                 if scale is not None and self._previous_scale is None:
                     self._previous_scale = scale
 
                 if (
-                    value_positive is None and
-                    self._previous_value_positive is not None
+                    value_positive is None
+                    and self._previous_value_positive is not None
                 ):
-                    value_positive = (
-                        self._previous_value_positive.copy_empty()
-                    )
+                    value_positive = self._previous_value_positive.copy_empty()
                 if (
-                    value_negative is None and
-                    self._previous_value_negative is not None
+                    value_negative is None
+                    and self._previous_value_negative is not None
                 ):
-                    value_negative = (
-                        self._previous_value_negative.copy_empty()
-                    )
+                    value_negative = self._previous_value_negative.copy_empty()
                 if scale is None and self._previous_scale is not None:
                     scale = self._previous_scale
 
@@ -971,17 +948,13 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     positive=BucketsPoint(
                         offset=self._previous_value_positive.offset,
                         bucket_counts=(
-                            self.
-                            _previous_value_positive.
-                            get_offset_counts()
+                            self._previous_value_positive.get_offset_counts()
                         ),
                     ),
                     negative=BucketsPoint(
                         offset=self._previous_value_negative.offset,
                         bucket_counts=(
-                            self.
-                            _previous_value_negative.
-                            get_offset_counts()
+                            self._previous_value_negative.get_offset_counts()
                         ),
                     ),
                     # FIXME: Find the right value for flags

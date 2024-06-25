@@ -286,24 +286,16 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         explicit_bucket_histogram_aggregation.aggregate(measurement(5))
 
         # The first bucket keeps count of values between (-inf, 0] (-1 and 0)
-        self.assertEqual(
-            explicit_bucket_histogram_aggregation._value[0], 2
-        )
+        self.assertEqual(explicit_bucket_histogram_aggregation._value[0], 2)
 
         # The second bucket keeps count of values between (0, 2] (1 and 2)
-        self.assertEqual(
-            explicit_bucket_histogram_aggregation._value[1], 2
-        )
+        self.assertEqual(explicit_bucket_histogram_aggregation._value[1], 2)
 
         # The third bucket keeps count of values between (2, 4] (3 and 4)
-        self.assertEqual(
-            explicit_bucket_histogram_aggregation._value[2], 2
-        )
+        self.assertEqual(explicit_bucket_histogram_aggregation._value[2], 2)
 
         # The fourth bucket keeps count of values between (4, inf) (3 and 4)
-        self.assertEqual(
-            explicit_bucket_histogram_aggregation._value[3], 1
-        )
+        self.assertEqual(explicit_bucket_histogram_aggregation._value[3], 1)
 
         histo = explicit_bucket_histogram_aggregation.collect(
             AggregationTemporality.CUMULATIVE, 1
