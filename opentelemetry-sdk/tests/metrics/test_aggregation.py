@@ -66,7 +66,7 @@ class TestSynchronousSumAggregation(TestCase):
         synchronous_sum_aggregation.aggregate(measurement(2))
         synchronous_sum_aggregation.aggregate(measurement(3))
 
-        self.assertEqual(synchronous_sum_aggregation._current_value, 6)
+        self.assertEqual(synchronous_sum_aggregation._value, 6)
 
         synchronous_sum_aggregation = _SumAggregation(
             Mock(), True, AggregationTemporality.DELTA, 0
@@ -76,7 +76,7 @@ class TestSynchronousSumAggregation(TestCase):
         synchronous_sum_aggregation.aggregate(measurement(-2))
         synchronous_sum_aggregation.aggregate(measurement(3))
 
-        self.assertEqual(synchronous_sum_aggregation._current_value, 2)
+        self.assertEqual(synchronous_sum_aggregation._value, 2)
 
     def test_aggregate_cumulative(self):
         """
@@ -91,7 +91,7 @@ class TestSynchronousSumAggregation(TestCase):
         synchronous_sum_aggregation.aggregate(measurement(2))
         synchronous_sum_aggregation.aggregate(measurement(3))
 
-        self.assertEqual(synchronous_sum_aggregation._current_value, 6)
+        self.assertEqual(synchronous_sum_aggregation._value, 6)
 
         synchronous_sum_aggregation = _SumAggregation(
             Mock(), True, AggregationTemporality.CUMULATIVE, 0
@@ -101,7 +101,7 @@ class TestSynchronousSumAggregation(TestCase):
         synchronous_sum_aggregation.aggregate(measurement(-2))
         synchronous_sum_aggregation.aggregate(measurement(3))
 
-        self.assertEqual(synchronous_sum_aggregation._current_value, 2)
+        self.assertEqual(synchronous_sum_aggregation._value, 2)
 
     def test_collect_delta(self):
         """
@@ -287,22 +287,22 @@ class TestExplicitBucketHistogramAggregation(TestCase):
 
         # The first bucket keeps count of values between (-inf, 0] (-1 and 0)
         self.assertEqual(
-            explicit_bucket_histogram_aggregation._current_value[0], 2
+            explicit_bucket_histogram_aggregation._value[0], 2
         )
 
         # The second bucket keeps count of values between (0, 2] (1 and 2)
         self.assertEqual(
-            explicit_bucket_histogram_aggregation._current_value[1], 2
+            explicit_bucket_histogram_aggregation._value[1], 2
         )
 
         # The third bucket keeps count of values between (2, 4] (3 and 4)
         self.assertEqual(
-            explicit_bucket_histogram_aggregation._current_value[2], 2
+            explicit_bucket_histogram_aggregation._value[2], 2
         )
 
         # The fourth bucket keeps count of values between (4, inf) (3 and 4)
         self.assertEqual(
-            explicit_bucket_histogram_aggregation._current_value[3], 1
+            explicit_bucket_histogram_aggregation._value[3], 1
         )
 
         histo = explicit_bucket_histogram_aggregation.collect(
