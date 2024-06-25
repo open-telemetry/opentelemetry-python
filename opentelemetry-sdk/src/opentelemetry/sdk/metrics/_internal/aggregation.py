@@ -651,6 +651,11 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 measurement_value = -measurement_value
                 value = self._value_negative
 
+            # The following code finds out if it is necessary to change the
+            # buckets to hold the incoming measurement_value, changes them if
+            # necessary. This process does not exist in
+            # _ExplicitBucketHistogram aggregation because the buckets there
+            # are constant in size and amount.
             index = self._mapping.map_to_index(measurement_value)
 
             is_rescaling_needed = False
@@ -680,9 +685,6 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             if is_rescaling_needed:
 
                 scale_change = self._get_scale_change(low, high)
-                # _downscale changes the buckets. This is the main difference
-                # with the _ExplicitBucketHistogramAggregation, as values are
-                # added to the histogram, the buckets can change in size.
                 self._downscale(
                     scale_change,
                     self._value_positive,
@@ -717,6 +719,13 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             if bucket_index < 0:
                 bucket_index += len(value.counts)
 
+            # Now the buckets have been changed if needed and bucket_index will
+            # be used to increment the counter of the bucket that needs to be
+            # incremented.
+
+            # This is analogous to
+            # self._value[bisect_left(self._boundaries, measurement_value)] += 1
+            # in _ExplicitBucketHistogramAggregation.aggregate
             value.increment_bucket(bucket_index)
 
     def collect(
@@ -809,8 +818,6 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 # empty buckets that are the same scale of the current buckets
                 # need to be made so that they can be cumulatively aggregated
                 # to the current buckets).
-
-                # TODO, implement this case
 
                 if (
                     value_positive is None and
@@ -913,14 +920,22 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     - self._get_scale_change(low_negative, high_negative),
                 )
 
-                # FIXME Go implementation checks if the histogram (not the mapping
-                # but the histogram) has a count larger than zero, if not, scale
-                # (the histogram scale) would be zero. See exponential.go 191
                 self._downscale(
                     self._previous_scale - min_scale,
                     self._previous_value_positive,
                     self._previous_value_negative,
                 )
+
+                # self._merge adds the values from value to
+                # self._previous_value, this is analogous to
+                # self._previous_value = [
+                #     value_element + previous_value_element
+                #     for (
+                #         value_element,
+                #         previous_value_element,
+                #     ) in zip(value, self._previous_value)
+                # ]
+                # in _ExplicitBucketHistogramAggregation.collect.
                 self._merge(
                     self._previous_value_positive,
                     value_positive,
