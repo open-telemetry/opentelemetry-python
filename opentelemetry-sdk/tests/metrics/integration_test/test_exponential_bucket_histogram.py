@@ -143,8 +143,6 @@ class TestExponentialBucketHistogramAggregation(TestCase):
     )
     def test_synchronous_cumulative_temporality(self):
 
-        self.test_values = [2, 4, 1, 1, 8, 0.5, 0.1, 0.045]
-
         aggregation = ExponentialBucketHistogramAggregation()
 
         reader = InMemoryMetricReader(
@@ -162,7 +160,6 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         results = []
 
         for _ in range(10):
-
             results.append(reader.get_metrics_data())
 
         for metrics_data in results:
@@ -171,21 +168,30 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         results = []
 
         for test_value in self.test_values:
-
             histogram.record(test_value)
             results.append(reader.get_metrics_data())
 
-        start_time_unix_nano = (
+        metric_data = (
             results[0]
             .resource_metrics[0]
             .scope_metrics[0]
             .metrics[0]
             .data.data_points[0]
-            .start_time_unix_nano
         )
 
-        for index, metrics_data in enumerate(results):
+        start_time_unix_nano = metric_data.start_time_unix_nano
 
+        self.assertLess(
+            metric_data.start_time_unix_nano,
+            metric_data.time_unix_nano,
+        )
+        self.assertEqual(metric_data.min, self.test_values[0])
+        self.assertEqual(metric_data.max, self.test_values[0])
+        self.assertEqual(metric_data.sum, self.test_values[0])
+
+        previous_time_unix_nano = metric_data.time_unix_nano
+
+        for index, metrics_data in enumerate(results[1:]):
             metric_data = (
                 metrics_data.resource_metrics[0]
                 .scope_metrics[0]
@@ -196,9 +202,26 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             self.assertEqual(
                 start_time_unix_nano, metric_data.start_time_unix_nano
             )
-            self.assertEqual(metric_data.min, min(self.test_values[:index + 1]))
-            self.assertEqual(metric_data.max, max(self.test_values[:index + 1]))
-            self.assertEqual(metric_data.sum, sum(self.test_values[:index + 1]))
+            self.assertLess(
+                metric_data.start_time_unix_nano,
+                metric_data.time_unix_nano,
+            )
+            self.assertEqual(
+                metric_data.min, min(self.test_values[:index + 2])
+            )
+            self.assertEqual(
+                metric_data.max, max(self.test_values[:index + 2])
+            )
+            self.assertEqual(
+                metric_data.sum, sum(self.test_values[:index + 2])
+            )
+
+            self.assertGreater(
+                metric_data.time_unix_nano,
+                previous_time_unix_nano
+            )
+
+            previous_time_unix_nano = metric_data.time_unix_nano
 
         self.assertEqual(
             metric_data.positive.bucket_counts,
@@ -227,22 +250,31 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         results = []
 
         for i in range(10):
-
             results.append(reader.get_metrics_data())
 
         provider.shutdown()
 
-        start_time_unix_nano = (
+        metric_data = (
             results[0]
             .resource_metrics[0]
             .scope_metrics[0]
             .metrics[0]
             .data.data_points[0]
-            .start_time_unix_nano
         )
 
-        for metrics_data in results:
+        start_time_unix_nano = metric_data.start_time_unix_nano
 
+        self.assertLess(
+            metric_data.start_time_unix_nano,
+            metric_data.time_unix_nano,
+        )
+        self.assertEqual(metric_data.min, min(self.test_values))
+        self.assertEqual(metric_data.max, max(self.test_values))
+        self.assertEqual(metric_data.sum, sum(self.test_values))
+
+        previous_metric_data = metric_data
+
+        for index, metrics_data in enumerate(results[1:]):
             metric_data = (
                 metrics_data.resource_metrics[0]
                 .scope_metrics[0]
@@ -251,32 +283,47 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             )
 
             self.assertEqual(
-                start_time_unix_nano, metric_data.start_time_unix_nano
+                previous_metric_data.start_time_unix_nano,
+                metric_data.start_time_unix_nano
             )
-            self.assertEqual(metric_data.min, min(self.test_values[:index + 1]))
-            self.assertEqual(metric_data.max, max(self.test_values[:index + 1]))
-            self.assertEqual(metric_data.sum, sum(self.test_values[:index + 1]))
+            self.assertEqual(
+                previous_metric_data.min,
+                metric_data.min
+            )
+            self.assertEqual(
+                previous_metric_data.max,
+                metric_data.max
+            )
+            self.assertEqual(
+                previous_metric_data.sum,
+                metric_data.sum
+            )
 
-        self.assertEqual(
-            metric_data.positive.bucket_counts,
-            [
-                1,
-                *[0] * 17,
-                1,
-                *[0] * 36,
-                1,
-                *[0] * 15,
-                2,
-                *[0] * 15,
-                1,
-                *[0] * 15,
-                1,
-                *[0] * 15,
-                1,
-                *[0] * 40,
-            ],
-        )
-        self.assertEqual(
-            metric_data.negative.bucket_counts,
-            [0]
-        )
+            self.assertEqual(
+                metric_data.positive.bucket_counts,
+                [
+                    1,
+                    *[0] * 17,
+                    1,
+                    *[0] * 36,
+                    1,
+                    *[0] * 15,
+                    2,
+                    *[0] * 15,
+                    1,
+                    *[0] * 15,
+                    1,
+                    *[0] * 15,
+                    1,
+                    *[0] * 40,
+                ],
+            )
+            self.assertEqual(
+                metric_data.negative.bucket_counts,
+                [0]
+            )
+
+            self.assertLess(
+                previous_metric_data.time_unix_nano,
+                metric_data.time_unix_nano,
+            )
