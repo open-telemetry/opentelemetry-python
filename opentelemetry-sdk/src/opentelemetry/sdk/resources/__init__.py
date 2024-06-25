@@ -177,8 +177,6 @@ class Resource:
 
         resource_detectors = []
 
-        resource = _DEFAULT_RESOURCE
-
         otel_experimental_resource_detectors = environ.get(
             OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, "otel,os"
         ).split(",")
