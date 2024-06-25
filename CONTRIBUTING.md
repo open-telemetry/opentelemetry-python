@@ -273,11 +273,11 @@ When updating the minimum supported Python version remember to:
 - Remove the version in `pyproject.toml` trove classifiers
 - Remove the version from `tox.ini`
 - Search for `sys.version_info` usage and remove code for unsupported versions
-- Bump `py-version` in `.pylintrc` for Python version dependant checks
+- Bump `py-version` in `.pylintrc` for Python version dependent checks
 
 ### Adding support for a new Python release
 
-When adding support for a new Python relase remember to:
+When adding support for a new Python release remember to:
 
 - Add the version in `tox.ini`
 - Add the version in `pyproject.toml` trove classifiers
