@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- When encountering an error encoding metric attributes in the OTLP exporter, log the key that had an error.
+  ([#3838](https://github.com/open-telemetry/opentelemetry-python/pull/3838))
 - Log a warning when a `LogRecord` in `sdk/log` has dropped attributes
   due to reaching limits
   ([#3946](https://github.com/open-telemetry/opentelemetry-python/pull/3946))
