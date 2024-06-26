@@ -17,6 +17,7 @@ import unittest
 
 from opentelemetry.exporter.otlp.proto.common._internal.metrics_encoder import (
     truncate_trailing_zeros,
+    create_exponential_histogram_buckets,
 )
 from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
     encode_metrics,
@@ -703,6 +704,10 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
         self.assertEqual([0, 1], truncate_trailing_zeros([0, 1]))
         self.assertEqual([0, 1], truncate_trailing_zeros([0, 1, 0]))
         self.assertEqual([1, -1], truncate_trailing_zeros([1, -1, 0, 0]))
+
+    def test_create_histogram_buckets(self):
+        self.assertIsNone([], create_exponential_histogram_buckets(0, [0, 0, 0, 0]))
+        self.assertIsNotNone([], create_exponential_histogram_buckets(0, [1]))
 
     def test_encode_exponential_histogram(self):
         exponential_histogram = Metric(
