@@ -263,3 +263,24 @@ automatically load as options for the `opentelemetry-instrument` command.
   as specified with the [napoleon
   extension](http://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html#google-vs-numpy)
   extension in [Sphinx](http://www.sphinx-doc.org/en/master/index.html).
+
+## Updating supported Python versions
+
+### Bumping the Python baseline
+
+When updating the minimum supported Python version remember to:
+
+- Remove the version in `pyproject.toml` trove classifiers
+- Remove the version from `tox.ini`
+- Search for `sys.version_info` usage and remove code for unsupported versions
+- Bump `py-version` in `.pylintrc` for Python version dependent checks
+
+### Adding support for a new Python release
+
+When adding support for a new Python release remember to:
+
+- Add the version in `tox.ini`
+- Add the version in `pyproject.toml` trove classifiers
+- Update github workflows accordingly; lint and benchmarks use the latest supported version
+- Update `.pre-commit-config.yaml`
+- Update tox examples in the documentation
