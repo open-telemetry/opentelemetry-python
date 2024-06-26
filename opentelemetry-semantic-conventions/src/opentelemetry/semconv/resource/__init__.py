@@ -16,7 +16,13 @@
 
 from enum import Enum
 
+from deprecated import deprecated
 
+
+@deprecated(
+    version="1.25.0",
+    reason="Use attributes defined in the :py:const:`opentelemetry.semconv.attributes` and :py:const:`opentelemetry.semconv._incubating.attributes` modules instead.",
+)  # type: ignore
 class ResourceAttributes:
     SCHEMA_URL = "https://opentelemetry.io/schemas/v1.21.0"
     """
@@ -650,6 +656,10 @@ class ResourceAttributes:
     """
 
 
+@deprecated(
+    version="1.25.0",
+    reason="Use :py:const:`opentelemetry.semconv._incubating.attributes.CloudProviderValues` instead.",
+)  # type: ignore
 class CloudProviderValues(Enum):
     ALIBABA_CLOUD = "alibaba_cloud"
     """Alibaba Cloud."""
@@ -673,6 +683,10 @@ class CloudProviderValues(Enum):
     """Tencent Cloud."""
 
 
+@deprecated(
+    version="1.25.0",
+    reason="Use :py:const:`opentelemetry.semconv._incubating.attributes.CloudPlatformValues` instead.",
+)  # type: ignore
 class CloudPlatformValues(Enum):
     ALIBABA_CLOUD_ECS = "alibaba_cloud_ecs"
     """Alibaba Cloud Elastic Compute Service."""
@@ -756,6 +770,10 @@ class CloudPlatformValues(Enum):
     """Tencent Cloud Serverless Cloud Function (SCF)."""
 
 
+@deprecated(
+    version="1.25.0",
+    reason="Use :py:const:`opentelemetry.semconv._incubating.attributes.AwsEcsLaunchtypeValues` instead.",
+)  # type: ignore
 class AwsEcsLaunchtypeValues(Enum):
     EC2 = "ec2"
     """ec2."""
@@ -764,6 +782,10 @@ class AwsEcsLaunchtypeValues(Enum):
     """fargate."""
 
 
+@deprecated(
+    version="1.25.0",
+    reason="Use :py:const:`opentelemetry.semconv._incubating.attributes.HostArchValues` instead.",
+)  # type: ignore
 class HostArchValues(Enum):
     AMD64 = "amd64"
     """AMD64."""
@@ -790,6 +812,10 @@ class HostArchValues(Enum):
     """32-bit x86."""
 
 
+@deprecated(
+    version="1.25.0",
+    reason="Use :py:const:`opentelemetry.semconv._incubating.attributes.OsTypeValues` instead.",
+)  # type: ignore
 class OsTypeValues(Enum):
     WINDOWS = "windows"
     """Microsoft Windows."""
@@ -825,6 +851,10 @@ class OsTypeValues(Enum):
     """IBM z/OS."""
 
 
+@deprecated(
+    version="1.25.0",
+    reason="Use :py:const:`opentelemetry.semconv.attributes.TelemetrySdkLanguageValues` instead.",
+)  # type: ignore
 class TelemetrySdkLanguageValues(Enum):
     CPP = "cpp"
     """cpp."""

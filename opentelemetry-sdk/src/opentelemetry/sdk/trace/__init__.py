@@ -64,6 +64,12 @@ from opentelemetry.sdk.util.instrumentation import (
     InstrumentationInfo,
     InstrumentationScope,
 )
+from opentelemetry.semconv.attributes.exception_attributes import (
+    EXCEPTION_ESCAPED,
+    EXCEPTION_MESSAGE,
+    EXCEPTION_STACKTRACE,
+    EXCEPTION_TYPE,
+)
 from opentelemetry.trace import NoOpTracer, SpanContext
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
@@ -331,6 +337,12 @@ class Event(EventBase):
     def attributes(self) -> types.Attributes:
         return self._attributes
 
+    @property
+    def dropped_attributes(self) -> int:
+        if isinstance(self._attributes, BoundedAttributes):
+            return self._attributes.dropped
+        return 0
+
 
 def _check_span_ended(func):
     def wrapper(self, *args, **kwargs):
@@ -345,6 +357,12 @@ def _check_span_ended(func):
             logger.warning("Tried calling %s on an ended span.", func.__name__)
 
     return wrapper
+
+
+def _is_valid_link(context: SpanContext, attributes: types.Attributes) -> bool:
+    return bool(
+        context and (context.is_valid or (attributes or context.trace_state))
+    )
 
 
 class ReadableSpan:
@@ -798,16 +816,7 @@ class Span(trace_api.Span, ReadableSpan):
                 )
                 self._events.append(event)
 
-        if links is None:
-            self._links = self._new_links()
-        else:
-            for link in links:
-                link._attributes = BoundedAttributes(
-                    self._limits.max_link_attributes,
-                    link.attributes,
-                    max_value_len=self._limits.max_attribute_length,
-                )
-            self._links = BoundedList.from_seq(self._limits.max_links, links)
+        self._links = self._new_links(links)
 
     def __repr__(self):
         return f'{type(self).__name__}(name="{self._name}", context={self._context})'
@@ -815,8 +824,22 @@ class Span(trace_api.Span, ReadableSpan):
     def _new_events(self):
         return BoundedList(self._limits.max_events)
 
-    def _new_links(self):
-        return BoundedList(self._limits.max_links)
+    def _new_links(self, links: Sequence[trace_api.Link]):
+        if not links:
+            return BoundedList(self._limits.max_links)
+
+        valid_links = []
+        for link in links:
+            if link and _is_valid_link(link.context, link.attributes):
+                # pylint: disable=protected-access
+                link._attributes = BoundedAttributes(
+                    self._limits.max_link_attributes,
+                    link.attributes,
+                    max_value_len=self._limits.max_attribute_length,
+                )
+                valid_links.append(link)
+
+        return BoundedList.from_seq(self._limits.max_links, valid_links)
 
     def get_span_context(self):
         return self._context
@@ -867,7 +890,8 @@ class Span(trace_api.Span, ReadableSpan):
         context: SpanContext,
         attributes: types.Attributes = None,
     ) -> None:
-        if context is None or not context.is_valid:
+
+        if not _is_valid_link(context, attributes):
             return
 
         attributes = BoundedAttributes(
@@ -1009,10 +1033,10 @@ class Span(trace_api.Span, ReadableSpan):
             else qualname
         )
         _attributes: MutableMapping[str, types.AttributeValue] = {
-            "exception.type": exception_type,
-            "exception.message": str(exception),
-            "exception.stacktrace": stacktrace,
-            "exception.escaped": str(escaped),
+            EXCEPTION_TYPE: exception_type,
+            EXCEPTION_MESSAGE: str(exception),
+            EXCEPTION_STACKTRACE: stacktrace,
+            EXCEPTION_ESCAPED: str(escaped),
         }
         if attributes:
             _attributes.update(attributes)

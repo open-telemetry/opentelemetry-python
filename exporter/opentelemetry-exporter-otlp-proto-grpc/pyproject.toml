@@ -14,6 +14,8 @@ authors = [
 ]
 classifiers = [
   "Development Status :: 5 - Production/Stable",
+  "Framework :: OpenTelemetry",
+  "Framework :: OpenTelemetry :: Exporters",
   "Intended Audience :: Developers",
   "License :: OSI Approved :: Apache Software License",
   "Programming Language :: Python",
@@ -22,15 +24,16 @@ classifiers = [
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
   "Deprecated >= 1.2.6",
   "googleapis-common-protos ~= 1.52",
   "grpcio >= 1.0.0, < 2.0.0",
   "opentelemetry-api ~= 1.15",
-  "opentelemetry-proto == 1.25.0.dev",
-  "opentelemetry-sdk ~= 1.25.0.dev",
-  "opentelemetry-exporter-otlp-proto-common == 1.25.0.dev",
+  "opentelemetry-proto == 1.26.0.dev",
+  "opentelemetry-sdk ~= 1.26.0.dev",
+  "opentelemetry-exporter-otlp-proto-common == 1.26.0.dev",
 ]
 
 [project.entry-points.opentelemetry_logs_exporter]

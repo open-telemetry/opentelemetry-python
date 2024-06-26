@@ -12,7 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from deprecated import deprecated
 
+
+@deprecated(
+    version="1.25.0",
+    reason="Use metrics defined in the :py:const:`opentelemetry.semconv.metrics` and :py:const:`opentelemetry.semconv._incubating.metrics` modules instead.",
+)  # type: ignore
 class MetricInstruments:
     SCHEMA_URL = "https://opentelemetry.io/schemas/v1.21.0"
     """

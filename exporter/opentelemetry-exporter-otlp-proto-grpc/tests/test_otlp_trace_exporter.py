@@ -149,7 +149,7 @@ class TestOTLPSpanExporter(TestCase):
         )
 
         type(event_mock).name = PropertyMock(return_value="a")
-
+        type(event_mock).dropped_attributes = PropertyMock(return_value=0)
         self.span = _Span(
             "a",
             context=Mock(
@@ -597,8 +597,10 @@ class TestOTLPSpanExporter(TestCase):
                                                     ),
                                                 ),
                                             ],
+                                            flags=0x300,
                                         )
                                     ],
+                                    flags=0x300,
                                 )
                             ],
                         )
@@ -699,8 +701,10 @@ class TestOTLPSpanExporter(TestCase):
                                                     ),
                                                 ),
                                             ],
+                                            flags=0x300,
                                         )
                                     ],
+                                    flags=0x300,
                                 )
                             ],
                         ),
@@ -730,6 +734,7 @@ class TestOTLPSpanExporter(TestCase):
                                         OTLPSpan.SpanKind.SPAN_KIND_INTERNAL
                                     ),
                                     status=Status(code=0, message=""),
+                                    flags=0x300,
                                 )
                             ],
                         ),
@@ -771,6 +776,7 @@ class TestOTLPSpanExporter(TestCase):
                                         OTLPSpan.SpanKind.SPAN_KIND_INTERNAL
                                     ),
                                     status=Status(code=0, message=""),
+                                    flags=0x300,
                                 )
                             ],
                         )

@@ -10,6 +10,10 @@ on how to become a [**Member**](https://github.com/open-telemetry/community/blob
 [**Approver**](https://github.com/open-telemetry/community/blob/main/community-membership.md#approver)
 and [**Maintainer**](https://github.com/open-telemetry/community/blob/main/community-membership.md#maintainer).
 
+Before you can contribute, you will need to sign the [Contributor License Agreement](https://docs.linuxfoundation.org/lfx/easycla/contributors).
+
+Please also read the [OpenTelemetry Contributor Guide](https://github.com/open-telemetry/community/blob/main/CONTRIBUTING.md).
+
 # Find your right repo
 
 This is the main repo for OpenTelemetry Python. Nevertheless, there are other repos that are related to this project.
@@ -50,7 +54,7 @@ You can run `tox` with the following arguments:
   under multiple Python versions
 - `tox -e docs` to regenerate the API docs
 - `tox -e opentelemetry-api` and `tox -e opentelemetry-sdk` to run the API and SDK unit tests
-- `tox -e py311-opentelemetry-api` to e.g. run the API unit tests under a specific
+- `tox -e py312-opentelemetry-api` to e.g. run the API unit tests under a specific
   Python version
 - `tox -e spellcheck` to run a spellcheck on all the code
 - `tox -e lint` to run lint checks on all code
@@ -154,6 +158,7 @@ To create a new PR, fork the project in GitHub and clone the upstream repo:
 
 ```console
 $ git clone https://github.com/open-telemetry/opentelemetry-python.git
+$ cd opentelemetry-python
 ```
 
 Add your fork as an origin:

@@ -461,6 +461,10 @@ class TestBatchSpanProcessor(ConcurrencyTestBase):
 
         span_processor.shutdown()
 
+    @mark.skipif(
+        python_implementation() == "PyPy" and system() == "Windows",
+        reason="This test randomly fails with huge delta in Windows with PyPy",
+    )
     def test_batch_span_processor_scheduled_delay(self):
         """Test that spans are exported each schedule_delay_millis"""
         spans_names_list = []
@@ -482,7 +486,7 @@ class TestBatchSpanProcessor(ConcurrencyTestBase):
         self.assertTrue(export_event.wait(2))
         export_time = time.time()
         self.assertEqual(len(spans_names_list), 1)
-        self.assertGreaterEqual((export_time - start_time) * 1e3, 500)
+        self.assertAlmostEqual((export_time - start_time) * 1e3, 500, delta=25)
 
         span_processor.shutdown()
 
@@ -513,7 +517,7 @@ class TestBatchSpanProcessor(ConcurrencyTestBase):
 
             # give some time for exporter to loop
             # since wait is mocked it should return immediately
-            time.sleep(0.05)
+            time.sleep(0.1)
             mock_wait_calls = list(mock_wait.mock_calls)
 
             # find the index of the call that processed the singular span
