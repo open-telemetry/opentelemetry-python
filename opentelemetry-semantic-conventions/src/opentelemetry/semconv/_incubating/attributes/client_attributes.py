@@ -12,13 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Final
 
-CLIENT_ADDRESS = "client.address"
+CLIENT_ADDRESS: Final = "client.address"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.client_attributes.CLIENT_ADDRESS`.
 """
 
-CLIENT_PORT = "client.port"
+CLIENT_PORT: Final = "client.port"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.client_attributes.CLIENT_PORT`.
 """
