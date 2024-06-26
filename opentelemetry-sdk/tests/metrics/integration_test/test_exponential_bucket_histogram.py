@@ -108,7 +108,11 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             )
             self.assertEqual(metric_data.min, self.test_values[index + 1])
             self.assertEqual(metric_data.max, self.test_values[index + 1])
-            self.assertEqual(metric_data.sum, self.test_values[index + 1])
+            # Using assertAlmostEqual here because in 3.12 resolution can cause
+            # these checks to fail.
+            self.assertAlmostEqual(
+                metric_data.sum, self.test_values[index + 1]
+            )
 
         results = []
 
@@ -200,7 +204,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             self.assertEqual(
                 metric_data.max, max(self.test_values[: index + 2])
             )
-            self.assertEqual(
+            self.assertAlmostEqual(
                 metric_data.sum, sum(self.test_values[: index + 2])
             )
 
@@ -254,7 +258,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         )
         self.assertEqual(metric_data.min, min(self.test_values))
         self.assertEqual(metric_data.max, max(self.test_values))
-        self.assertEqual(metric_data.sum, sum(self.test_values))
+        self.assertAlmostEqual(metric_data.sum, sum(self.test_values))
 
         previous_metric_data = metric_data
 
@@ -272,7 +276,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             )
             self.assertEqual(previous_metric_data.min, metric_data.min)
             self.assertEqual(previous_metric_data.max, metric_data.max)
-            self.assertEqual(previous_metric_data.sum, metric_data.sum)
+            self.assertAlmostEqual(previous_metric_data.sum, metric_data.sum)
 
             self.assertEqual(
                 metric_data.positive.bucket_counts,
