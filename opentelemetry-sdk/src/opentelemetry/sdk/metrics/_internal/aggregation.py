@@ -764,15 +764,15 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     is AggregationTemporality.DELTA
                 ):
 
-                    if value_positive is None and value_negative is None:
-                        return None
-
                     previous_collection_start_nano = (
                         self._previous_collection_start_nano
                     )
                     self._previous_collection_start_nano = (
                         collection_start_nano
                     )
+
+                    if value_positive is None and value_negative is None:
+                        return None
 
                     return ExponentialHistogramDataPoint(
                         attributes=self._attributes,
