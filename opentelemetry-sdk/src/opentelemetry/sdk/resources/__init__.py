@@ -61,11 +61,14 @@ import logging
 import os
 import sys
 import typing
+from typing import Dict, Any, Union, Optional, Union, cast, List
 from json import dumps
 from os import environ
 from urllib import parse
-
+from types import ModuleType
 from opentelemetry.attributes import BoundedAttributes
+
+
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPERIMENTAL_RESOURCE_DETECTORS,
     OTEL_RESOURCE_ATTRIBUTES,
@@ -75,10 +78,13 @@ from opentelemetry.semconv.resource import ResourceAttributes
 from opentelemetry.util._importlib_metadata import entry_points, version
 from opentelemetry.util.types import AttributeValue
 
+psutil: Optional[ModuleType] = None
+
 try:
-    import psutil
+  import psutil as pustil_module
+  pustil = pustil_module
 except ImportError:
-    psutil = None
+    pass
 
 LabelValue = AttributeValue
 Attributes = typing.Mapping[str, LabelValue]
@@ -146,6 +152,8 @@ _OPENTELEMETRY_SDK_VERSION = version("opentelemetry-sdk")
 
 class Resource:
     """A Resource is an immutable representation of the entity producing telemetry as Attributes."""
+    _attributes: Dict[str, Union[str, int, float, bool]]  # Example: Adjust according to actual expected types
+    _schema_url: str
 
     def __init__(
         self, attributes: Attributes, schema_url: typing.Optional[str] = None
@@ -173,7 +181,7 @@ class Resource:
         if not attributes:
             attributes = {}
 
-        resource_detectors = []
+        resource_detectors: List[ResourceDetector]
 
         resource = _DEFAULT_RESOURCE
 
@@ -182,20 +190,20 @@ class Resource:
         ).split(",")
 
         if "otel" not in otel_experimental_resource_detectors:
+
             otel_experimental_resource_detectors.append("otel")
 
         for resource_detector in otel_experimental_resource_detectors:
-            resource_detectors.append(
+            resource_detectors.append( 
                 next(
-                    iter(
-                        entry_points(
-                            group="opentelemetry_resource_detector",
-                            name=resource_detector.strip(),
-                        )
-                    )
-                ).load()()
+                iter(
+                 entry_points(
+                    group="opentelemetry_resource_detector",
+                     name=resource_detector.strip(),
+                )
             )
-
+          )
+     )
         resource = get_aggregated_resources(
             resource_detectors, _DEFAULT_RESOURCE
         ).merge(Resource(attributes, schema_url))
@@ -206,7 +214,7 @@ class Resource:
                 PROCESS_EXECUTABLE_NAME, None
             )
             if process_executable_name:
-                default_service_name += ":" + process_executable_name
+                default_service_name += ":" + str(process_executable_name)
             resource = resource.merge(
                 Resource({SERVICE_NAME: default_service_name}, schema_url)
             )
@@ -218,13 +226,14 @@ class Resource:
 
     @property
     def attributes(self) -> Attributes:
-        return self._attributes
+     if self._attributes is None:
+        raise ValueError("Attributes are not set.")
+     return self._attributes
 
     @property
     def schema_url(self) -> str:
         return self._schema_url
-
-    def merge(self, other: "Resource") -> "Resource":
+    def merge(self, other: 'Resource') -> 'Resource':
         """Merges this resource and an updating resource into a new `Resource`.
 
         If a key exists on both the old and updating resource, the value of the
@@ -241,9 +250,9 @@ class Resource:
         Returns:
             The newly-created Resource.
         """
-        merged_attributes = self.attributes.copy()
+        merged_attributes = dict(self.attributes)
         merged_attributes.update(other.attributes)
-
+        
         if self.schema_url == "":
             schema_url = other.schema_url
         elif other.schema_url == "":
@@ -257,8 +266,8 @@ class Resource:
                 other.schema_url,
             )
             return self
-
         return Resource(merged_attributes, schema_url)
+       
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Resource):
@@ -268,21 +277,17 @@ class Resource:
             and self._schema_url == other._schema_url
         )
 
-    def __hash__(self):
-        return hash(
-            f"{dumps(self._attributes.copy(), sort_keys=True)}|{self._schema_url}"
-        )
+    def __hash__(self) -> int:
+     attributes_json = dumps(self._attributes.copy(), sort_keys=True)
+     return hash(f"{attributes_json}|{self._schema_url}")
 
-    def to_json(self, indent=4) -> str:
-        return dumps(
-            {
-                "attributes": dict(self._attributes),
+    def to_json(self, indent: int = 4) -> str:
+        attributes = dict(self._attributes)
+        return dumps({
+                "attributes": attributes,
                 "schema_url": self._schema_url,
-            },
-            indent=indent,
-        )
-
-
+            }, indent=indent)
+        
 _EMPTY_RESOURCE = Resource({})
 _DEFAULT_RESOURCE = Resource(
     {
@@ -294,7 +299,7 @@ _DEFAULT_RESOURCE = Resource(
 
 
 class ResourceDetector(abc.ABC):
-    def __init__(self, raise_on_error=False):
+    def __init__(self, raise_on_error: bool =False) -> None:
         self.raise_on_error = raise_on_error
 
     @abc.abstractmethod
@@ -343,7 +348,7 @@ class ProcessResourceDetector(ResourceDetector):
                 ),
             )
         )
-        _process_pid = os.getpid()
+        _process_pid = str(os.getpid())
         _process_executable_name = sys.executable
         _process_executable_path = os.path.dirname(_process_executable_name)
         _process_command = sys.argv[0]
@@ -358,15 +363,16 @@ class ProcessResourceDetector(ResourceDetector):
             PROCESS_EXECUTABLE_PATH: _process_executable_path,
             PROCESS_COMMAND: _process_command,
             PROCESS_COMMAND_LINE: _process_command_line,
-            PROCESS_COMMAND_ARGS: _process_command_args,
+            PROCESS_COMMAND_ARGS:"".join(_process_command_args),
         }
         if hasattr(os, "getppid"):
             # pypy3 does not have getppid()
-            resource_info[PROCESS_PARENT_PID] = os.getppid()
+            resource_info[PROCESS_PARENT_PID] = str(os.getppid())
 
         if psutil is not None:
             process = psutil.Process()
-            resource_info[PROCESS_OWNER] = process.username()
+            username = cast(str, process.username())
+            resource_info[PROCESS_OWNER] = username
 
         return Resource(resource_info)
 
@@ -374,7 +380,7 @@ class ProcessResourceDetector(ResourceDetector):
 def get_aggregated_resources(
     detectors: typing.List["ResourceDetector"],
     initial_resource: typing.Optional[Resource] = None,
-    timeout=5,
+    timeout: int = 5,
 ) -> "Resource":
     """Retrieves resources from detectors in the order that they were passed
 
