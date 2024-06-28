@@ -70,6 +70,6 @@ def verify_tracecontext():
 
 if __name__ == "__main__":
     try:
-        app.run(debug=True)
+        app.run(debug=False)
     finally:
         span_processor.shutdown()
