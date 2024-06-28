@@ -39,9 +39,16 @@ def encode_logs(batch: Sequence[LogData]) -> ExportLogsServiceRequest:
 
 
 def _encode_log(log_data: LogData) -> PB2LogRecord:
-    span_id = None if log_data.log_record.span_id == 0 else _encode_span_id(log_data.log_record.span_id)
-    trace_id = None if log_data.log_record.trace_id == 0 else _encode_trace_id(log_data.log_record.trace_id)
-
+    span_id = (
+        None
+        if log_data.log_record.span_id == 0
+        else _encode_span_id(log_data.log_record.span_id)
+    )
+    trace_id = (
+        None
+        if log_data.log_record.trace_id == 0
+        else _encode_trace_id(log_data.log_record.trace_id)
+    )
     return PB2LogRecord(
         time_unix_nano=log_data.log_record.timestamp,
         observed_time_unix_nano=log_data.log_record.observed_timestamp,
