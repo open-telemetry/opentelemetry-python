@@ -700,6 +700,15 @@ class TestOTELResourceDetector(unittest.TestCase):
         self.assertEqual(resource.attributes["a"], "b")
         self.assertEqual(resource.schema_url, "")
 
+    @patch.dict(
+        environ, {OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: ""}, clear=True
+    )
+    def test_resource_detector_entry_points_empty(self):
+        resource = Resource({}).create()
+        self.assertEqual(
+            resource.attributes["telemetry.sdk.language"], "python"
+        )
+
     def test_resource_detector_entry_points_otel(self):
         """
         Test that OTELResourceDetector-resource-generated attributes are

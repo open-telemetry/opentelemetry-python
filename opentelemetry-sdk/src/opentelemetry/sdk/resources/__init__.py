@@ -175,17 +175,19 @@ class Resource:
         if not attributes:
             attributes = {}
 
+        otel_experimental_resource_detectors = {"otel", "os"}.union(
+            set(
+                [
+                    otel_experimental_resource_detector.strip()
+                    for otel_experimental_resource_detector in environ.get(
+                        "OTEL_EXPERIMENTAL_RESOURCE_DETECTORS", ""
+                    ).split(",")
+                    if otel_experimental_resource_detector
+                ]
+            )
+        )
+
         resource_detectors = []
-
-        otel_experimental_resource_detectors = environ.get(
-            OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, "otel,os"
-        ).split(",")
-
-        if "otel" not in otel_experimental_resource_detectors:
-            otel_experimental_resource_detectors.append("otel")
-        if "os" not in otel_experimental_resource_detectors:
-            otel_experimental_resource_detectors.append("os")
-
         for resource_detector in otel_experimental_resource_detectors:
             resource_detectors.append(
                 next(
