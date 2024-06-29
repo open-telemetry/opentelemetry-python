@@ -774,6 +774,7 @@ class TestOTELResourceDetector(unittest.TestCase):
         self.assertEqual(resource.attributes[OS_VERSION], "10.0.666")
 
     @patch("platform.system", lambda: "SunOS")
+    @patch("platform.version", lambda: "666.4.0.15.0")
     def test_os_detector_solaris(self):
         resource = get_aggregated_resources(
             [OsResourceDetector()],
@@ -781,3 +782,4 @@ class TestOTELResourceDetector(unittest.TestCase):
         )
 
         self.assertEqual(resource.attributes[OS_TYPE], "solaris")
+        self.assertEqual(resource.attributes[OS_VERSION], "666.4.0.15.0")

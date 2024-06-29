@@ -428,8 +428,9 @@ class OsResourceDetector(ResourceDetector):
         if os_type == "windows":
             os_version = platform.version()
         # Align SunOS with conventions
-        if os_type == "sunos":
+        elif os_type == "sunos":
             os_type = "solaris"
+            os_version = platform.version()
 
         return Resource(
             {
