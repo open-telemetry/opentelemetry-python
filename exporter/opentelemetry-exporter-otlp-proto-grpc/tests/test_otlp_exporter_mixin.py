@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import threading
-import time
 from logging import WARNING
+from time import time_ns
 from types import MethodType
 from typing import Sequence
 from unittest import TestCase
@@ -163,7 +163,7 @@ class TestOTLPExporterMixin(TestCase):
         def trailing_metadata(self):
             return {
                 "google.rpc.retryinfo-bin": RetryInfo(
-                    retry_delay=Duration(seconds=1)
+                    retry_delay=Duration(nanos=int(1e7))
                 ).SerializeToString()
             }
 
@@ -196,9 +196,9 @@ class TestOTLPExporterMixin(TestCase):
             # pylint: disable=protected-access
             self.assertTrue(otlp_mock_exporter._export_lock.locked())
             # delay is 1 second while the default shutdown timeout is 30_000 milliseconds
-            start_time = time.time()
+            start_time = time_ns()
             otlp_mock_exporter.shutdown()
-            now = time.time()
+            now = time_ns()
             self.assertGreaterEqual(now, (start_time + 30 / 1000))
             # pylint: disable=protected-access
             self.assertTrue(otlp_mock_exporter._shutdown)
