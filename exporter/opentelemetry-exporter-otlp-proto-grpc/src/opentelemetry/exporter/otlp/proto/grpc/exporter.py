@@ -169,22 +169,19 @@ class OTLPExporterMixin(
             OTEL_EXPORTER_OTLP_ENDPOINT, "http://localhost:4317"
         )
 
-        parsed_url = urlparse(self._endpoint)
+        scheme = urlparse(self._endpoint).scheme
 
-        if parsed_url.scheme == "https":
+        if scheme == "https":
             insecure = False
         if insecure is None:
             insecure = environ.get(OTEL_EXPORTER_OTLP_INSECURE)
             if insecure is not None:
                 insecure = insecure.lower() == "true"
             else:
-                if parsed_url.scheme == "http":
+                if scheme == "http":
                     insecure = True
                 else:
                     insecure = False
-
-        if parsed_url.netloc:
-            self._endpoint = parsed_url.netloc
 
         self._headers = headers or environ.get(OTEL_EXPORTER_OTLP_HEADERS)
         if isinstance(self._headers, str):
