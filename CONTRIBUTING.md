@@ -54,7 +54,7 @@ You can run `tox` with the following arguments:
   under multiple Python versions
 - `tox -e docs` to regenerate the API docs
 - `tox -e opentelemetry-api` and `tox -e opentelemetry-sdk` to run the API and SDK unit tests
-- `tox -e py311-opentelemetry-api` to e.g. run the API unit tests under a specific
+- `tox -e py312-opentelemetry-api` to e.g. run the API unit tests under a specific
   Python version
 - `tox -e spellcheck` to run a spellcheck on all the code
 - `tox -e lint` to run lint checks on all code
@@ -158,6 +158,7 @@ To create a new PR, fork the project in GitHub and clone the upstream repo:
 
 ```console
 $ git clone https://github.com/open-telemetry/opentelemetry-python.git
+$ cd opentelemetry-python
 ```
 
 Add your fork as an origin:
@@ -262,3 +263,24 @@ automatically load as options for the `opentelemetry-instrument` command.
   as specified with the [napoleon
   extension](http://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html#google-vs-numpy)
   extension in [Sphinx](http://www.sphinx-doc.org/en/master/index.html).
+
+## Updating supported Python versions
+
+### Bumping the Python baseline
+
+When updating the minimum supported Python version remember to:
+
+- Remove the version in `pyproject.toml` trove classifiers
+- Remove the version from `tox.ini`
+- Search for `sys.version_info` usage and remove code for unsupported versions
+- Bump `py-version` in `.pylintrc` for Python version dependent checks
+
+### Adding support for a new Python release
+
+When adding support for a new Python release remember to:
+
+- Add the version in `tox.ini`
+- Add the version in `pyproject.toml` trove classifiers
+- Update github workflows accordingly; lint and benchmarks use the latest supported version
+- Update `.pre-commit-config.yaml`
+- Update tox examples in the documentation

@@ -12,33 +12,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from enum import Enum
+from typing import Final
 
-MESSAGE_COMPRESSED_SIZE = "message.compressed_size"
-"""
-Compressed size of the message in bytes.
-"""
+from deprecated import deprecated
 
-MESSAGE_ID = "message.id"
+MESSAGE_COMPRESSED_SIZE: Final = "message.compressed_size"
 """
-MUST be calculated as two different counters starting from `1` one for sent messages and one for received message.
-Note: This way we guarantee that the values will be consistent between different implementations.
+Deprecated: Replaced by `rpc.message.compressed_size`.
 """
 
-MESSAGE_TYPE = "message.type"
+MESSAGE_ID: Final = "message.id"
 """
-Whether this is a received or sent message.
-"""
-
-MESSAGE_UNCOMPRESSED_SIZE = "message.uncompressed_size"
-"""
-Uncompressed size of the message in bytes.
+Deprecated: Replaced by `rpc.message.id`.
 """
 
+MESSAGE_TYPE: Final = "message.type"
+"""
+Deprecated: Replaced by `rpc.message.type`.
+"""
 
+MESSAGE_UNCOMPRESSED_SIZE: Final = "message.uncompressed_size"
+"""
+Deprecated: Replaced by `rpc.message.uncompressed_size`.
+"""
+
+
+@deprecated(reason="The attribute message.type is deprecated - Replaced by `rpc.message.type`")  # type: ignore
 class MessageTypeValues(Enum):
-    SENT = "SENT"
+    SENT: Final = "SENT"
     """sent."""
-    RECEIVED = "RECEIVED"
+    RECEIVED: Final = "RECEIVED"
     """received."""

@@ -22,13 +22,14 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Typing :: Typed",
 ]
 dependencies = [
     "Deprecated >= 1.2.6",
     # FIXME This should be able to be removed after 3.12 is released if there is a reliable API
     # in importlib.metadata.
-    "importlib-metadata >= 6.0, <= 7.1",
+    "importlib-metadata >= 6.0, <= 7.2.1",
 ]
 dynamic = [
     "version",

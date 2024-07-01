@@ -66,12 +66,7 @@ Note: {{ common.to_docstring(metric.note | indent) }}.
   {% if filter == "any" %}
 from opentelemetry.metrics import Meter
 
-    {%- if metrics | selectattr("instrument", "equalto", "gauge") | list | count > 0 %}
-from typing import Callable, Sequence
-from opentelemetry.metrics import ObservableGauge
-    {%- endif %}
-
-    {%- if metrics | selectattr("instrument", "equalto", "histogram") | list | count > 0 %}
+{%- if metrics | selectattr("instrument", "equalto", "histogram") | list | count > 0 %}
 from opentelemetry.metrics import Histogram
     {%- endif %}
 
@@ -81,6 +76,17 @@ from opentelemetry.metrics import UpDownCounter
 
     {%- if metrics | selectattr("instrument", "equalto", "counter") | list | count > 0 %}
 from opentelemetry.metrics import Counter
+    {%- endif %}
+
+    {%- if metrics | selectattr("instrument", "equalto", "gauge") | list | count > 0 %}
+from typing import Callable, Generator, Iterable, Optional, Sequence, Union
+from opentelemetry.metrics import CallbackOptions, ObservableGauge, Observation
+
+# pylint: disable=invalid-name
+CallbackT = Union[
+    Callable[[CallbackOptions], Iterable[Observation]],
+    Generator[Iterable[Observation], CallbackOptions, None],
+]
     {%- endif %}
   {%- endif -%}
 {%- endmacro-%}
@@ -96,17 +102,19 @@ from opentelemetry.metrics import Counter
 
 {{ common.file_header()}}
 
+from typing import Final
 {{ import_instrument_classes(filtered_metrics) }}
 
   {%- for metric in filtered_metrics %}
 
-{{metric.metric_name | to_const_name}} = "{{metric.metric_name}}"
+{% set const_name = metric.metric_name | to_const_name %}
+{{const_name}}: Final = "{{metric.metric_name}}"
 {{metric_brief(metric, metric.metric_name | to_const_name) }}
 
     {% if filter == "any" %}
       {% set metric_name = metric.metric_name | replace(".", "_") %}
       {%- if metric.instrument == "gauge" %}
-def create_{{ metric_name }}(meter: Meter, callback: Sequence[Callable]) -> {{to_python_instrument_type(metric.instrument)}}:
+def create_{{ metric_name }}(meter: Meter, callbacks: Optional[Sequence[CallbackT]]) -> {{to_python_instrument_type(metric.instrument)}}:
       {%- else %}
 def create_{{ metric_name }}(meter: Meter) -> {{to_python_instrument_type(metric.instrument)}}:
       {%- endif %}
@@ -115,9 +123,9 @@ def create_{{ metric_name }}(meter: Meter) -> {{to_python_instrument_type(metric
     """{{brief}}"""
         {%- endif %}
     return meter.create_{{to_python_instrument_factory(metric.instrument)}}(
-        name="{{ metric.metric_name }}",
+        name={{ const_name }},
       {%- if metric.instrument == "gauge" %}
-        callback=callback,
+        callbacks=callbacks,
       {%- endif %}
         description="{{ metric.brief }}",
         unit="{{ metric.unit }}",
