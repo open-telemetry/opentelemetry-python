@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- OTLP exporter is encoding invalid span/trace IDs in the logs fix
+  ([#4006](https://github.com/open-telemetry/opentelemetry-python/pull/4006))
 - Do not execute Flask Tests in debug mode
   ([#3956](https://github.com/open-telemetry/opentelemetry-python/pull/3956))
 - When encountering an error encoding metric attributes in the OTLP exporter, log the key that had an error.
@@ -36,8 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3991](https://github.com/open-telemetry/opentelemetry-python/pull/3991))
 
 ## Version 1.25.0/0.46b0 (2024-05-30)
-- OTLP exporter is encoding invalid span/trace IDs in the logs fix
-  ([#4006](https://github.com/open-telemetry/opentelemetry-python/pull/4006))
+
 - Fix class BoundedAttributes to have RLock rather than Lock
   ([#3859](https://github.com/open-telemetry/opentelemetry-python/pull/3859))
 - Remove thread lock by loading RuntimeContext explicitly.
