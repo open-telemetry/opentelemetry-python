@@ -205,6 +205,41 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         self.assertIs(meter1, meter2)
         self.assertIsNot(meter1, meter3)
 
+    def test_get_meter_attributes_duplicate(self):
+        """
+        Subsequent calls to `MeterProvider.get_meter` with the same arguments
+        should return the same `Meter` instance.
+        """
+        mp = MeterProvider()
+        meter1 = mp.get_meter(
+            "name",
+            version="version",
+            schema_url="schema_url",
+            attributes={"key": "value", "key2": 5, "key3": "value3"},
+        )
+        meter2 = mp.get_meter(
+            "name",
+            version="version",
+            schema_url="schema_url",
+            attributes={"key": "value", "key2": 5, "key3": "value3"},
+        )
+        meter3 = mp.get_meter(
+            "name2",
+            version="version",
+            schema_url="schema_url",
+        )
+        meter4 = mp.get_meter(
+            "name",
+            version="version",
+            schema_url="schema_url",
+            attributes={"key": "value", "key2": 5, "key3": "value4"},
+        )
+        self.assertIs(meter1, meter2)
+        self.assertIsNot(meter1, meter3)
+        self.assertTrue(
+            meter3._instrumentation_scope > meter4._instrumentation_scope
+        )
+
     def test_shutdown(self):
 
         mock_metric_reader_0 = MagicMock(
