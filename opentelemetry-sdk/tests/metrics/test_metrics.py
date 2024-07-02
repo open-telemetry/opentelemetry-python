@@ -205,7 +205,7 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         self.assertIs(meter1, meter2)
         self.assertIsNot(meter1, meter3)
 
-    def test_get_meter_attributes_duplicate(self):
+    def test_get_meter_comparison_with_attributes(self):
         """
         Subsequent calls to `MeterProvider.get_meter` with the same arguments
         should return the same `Meter` instance.
