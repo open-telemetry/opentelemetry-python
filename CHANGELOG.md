@@ -9,8 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - OTLP exporter is encoding invalid span/trace IDs in the logs fix
   ([#4006](https://github.com/open-telemetry/opentelemetry-python/pull/4006))
-- Fix `start_time_unix_nano` for delta collection for sum aggregation
+- Fix `start_time_unix_nano` for delta collection for explicit bucket histogram aggregation
   ([#4009](https://github.com/open-telemetry/opentelemetry-python/pull/4009))
+- Fix `start_time_unix_nano` for delta collection for sum aggregation
+  ([#4011](https://github.com/open-telemetry/opentelemetry-python/pull/4011))
 - Do not execute Flask Tests in debug mode
   ([#3956](https://github.com/open-telemetry/opentelemetry-python/pull/3956))
 - When encountering an error encoding metric attributes in the OTLP exporter, log the key that had an error.
