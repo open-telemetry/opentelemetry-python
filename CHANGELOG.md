@@ -1601,4 +1601,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3778](https://github.com/open-telemetry/opentelemetry-python/pull/3778))
 - Fix license field in pyproject.toml files
   ([#3803](https://github.com/open-telemetry/opentelemetry-python/pull/3803))
+- Fix to add attributes field in get_meter and instrumentationScope
+  ([#3695](https://github.com/open-telemetry/opentelemetry-python/issues/3695))
 
