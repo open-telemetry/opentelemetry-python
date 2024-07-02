@@ -13,13 +13,13 @@
 # limitations under the License.
 
 import threading
-import time
 from concurrent.futures import ThreadPoolExecutor
 
 # pylint: disable=too-many-lines
 from logging import WARNING
 from os import environ
 from os.path import dirname
+from time import time_ns
 from typing import List
 from unittest import TestCase
 from unittest.mock import patch
@@ -99,7 +99,7 @@ class MetricsServiceServicerUNAVAILABLEDelay(MetricsServiceServicer):
                 (
                     "google.rpc.retryinfo-bin",
                     RetryInfo(
-                        retry_delay=Duration(seconds=4)
+                        retry_delay=Duration(nanos=int(1e7))
                     ).SerializeToString(),
                 ),
             )
@@ -429,7 +429,7 @@ class TestOTLPMetricExporter(TestCase):
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
     def test_unavailable(self, mock_sleep, mock_expo):
 
-        mock_expo.configure_mock(**{"return_value": [1]})
+        mock_expo.configure_mock(**{"return_value": [0.01]})
 
         add_MetricsServiceServicer_to_server(
             MetricsServiceServicerUNAVAILABLE(), self.server
@@ -438,7 +438,7 @@ class TestOTLPMetricExporter(TestCase):
             self.exporter.export(self.metrics["sum_int"]),
             MetricExportResult.FAILURE,
         )
-        mock_sleep.assert_called_with(1)
+        mock_sleep.assert_called_with(0.01)
 
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc.exporter._create_exp_backoff_generator"
@@ -455,7 +455,7 @@ class TestOTLPMetricExporter(TestCase):
             self.exporter.export(self.metrics["sum_int"]),
             MetricExportResult.FAILURE,
         )
-        mock_sleep.assert_called_with(4)
+        mock_sleep.assert_called_with(0.01)
 
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc.exporter._create_exp_backoff_generator"
@@ -808,9 +808,9 @@ class TestOTLPMetricExporter(TestCase):
             # pylint: disable=protected-access
             self.assertTrue(self.exporter._export_lock.locked())
             # delay is 4 seconds while the default shutdown timeout is 30_000 milliseconds
-            start_time = time.time()
+            start_time = time_ns()
             self.exporter.shutdown()
-            now = time.time()
+            now = time_ns()
             self.assertGreaterEqual(now, (start_time + 30 / 1000))
             # pylint: disable=protected-access
             self.assertTrue(self.exporter._shutdown)
