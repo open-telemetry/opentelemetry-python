@@ -126,11 +126,36 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
             "name",
             version="version",
             schema_url="schema_url",
+            attributes={"key": "value"},
         )
 
         self.assertEqual(meter._instrumentation_scope.name, "name")
         self.assertEqual(meter._instrumentation_scope.version, "version")
         self.assertEqual(meter._instrumentation_scope.schema_url, "schema_url")
+        self.assertEqual(
+            meter._instrumentation_scope.attributes, {"key": "value"}
+        )
+
+    def test_get_meter_attributes(self):
+        """
+        `MeterProvider.get_meter` arguments are used to create an
+        `InstrumentationScope` object on the created `Meter`.
+        """
+
+        meter = MeterProvider().get_meter(
+            "name",
+            version="version",
+            schema_url="schema_url",
+            attributes={"key": "value", "key2": 5, "key3": "value3"},
+        )
+
+        self.assertEqual(meter._instrumentation_scope.name, "name")
+        self.assertEqual(meter._instrumentation_scope.version, "version")
+        self.assertEqual(meter._instrumentation_scope.schema_url, "schema_url")
+        self.assertEqual(
+            meter._instrumentation_scope.attributes,
+            {"key": "value", "key2": 5, "key3": "value3"},
+        )
 
     def test_get_meter_empty(self):
         """
