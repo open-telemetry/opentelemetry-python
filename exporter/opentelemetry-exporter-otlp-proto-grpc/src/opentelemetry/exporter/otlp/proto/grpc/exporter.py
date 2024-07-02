@@ -298,6 +298,7 @@ class OTLPExporterMixin(
                             delay,
                         )
                         sleep(delay)
+                        raise
                         continue
                     else:
                         logger.error(
