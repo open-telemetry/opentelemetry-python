@@ -278,15 +278,15 @@ class _SumAggregation(_Aggregation[Sum]):
                     is AggregationTemporality.DELTA
                 ):
 
-                    if current_value is None:
-                        return None
-
                     previous_collection_start_nano = (
                         self._previous_collection_start_nano
                     )
                     self._previous_collection_start_nano = (
                         collection_start_nano
                     )
+
+                    if current_value is None:
+                        return None
 
                     return NumberDataPoint(
                         attributes=self._attributes,

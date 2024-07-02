@@ -15,6 +15,7 @@
 from itertools import count
 from logging import ERROR
 from platform import system
+from time import sleep
 from unittest import TestCase
 
 from pytest import mark
@@ -345,10 +346,42 @@ class TestSumAggregation(TestCase):
 
             results.append(reader.get_metrics_data())
 
-        provider.shutdown()
-
         for metrics_data in results:
             self.assertIsNone(metrics_data)
+
+        results = []
+
+        counter.add(1)
+        results.append(reader.get_metrics_data())
+
+        sleep(0.1)
+        results.append(reader.get_metrics_data())
+
+        counter.add(2)
+        results.append(reader.get_metrics_data())
+
+        metric_data_0 = (
+            results[0]
+            .resource_metrics[0]
+            .scope_metrics[0]
+            .metrics[0]
+            .data.data_points[0]
+        )
+        metric_data_2 = (
+            results[2]
+            .resource_metrics[0]
+            .scope_metrics[0]
+            .metrics[0]
+            .data.data_points[0]
+        )
+
+        self.assertIsNone(results[1])
+
+        self.assertGreater(
+            metric_data_2.start_time_unix_nano, metric_data_0.time_unix_nano
+        )
+
+        provider.shutdown()
 
     @mark.skipif(
         system() != "Linux",
