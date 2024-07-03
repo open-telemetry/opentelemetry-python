@@ -92,9 +92,10 @@ jobs:
     - name: Windows does not let git check out files with long names
       if: ${{ matrix.os == 'windows-2019'}}
       run: git config --system core.longpaths true
-    - name: run tox
+    - name: run pytest with --benchmark-skip
       if: ${{ matrix.package == 'sdk' || matrix.package == 'exporter-otlp-proto-grpc' }}
       run: tox -f ${{ matrix.python-version }}-${{ matrix.package }} -- -ra --benchmark-skip
+    - name: run pytest without --benchmark-skip
       if: ${{ !(matrix.package == 'sdk' || matrix.package == 'exporter-otlp-proto-grpc') }}
       run: tox -f ${{ matrix.python-version }}-${{ matrix.package }} -- -ra
   misc:
