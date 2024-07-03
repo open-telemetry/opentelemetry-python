@@ -17,10 +17,9 @@
 import unittest
 from typing import List
 from unittest.mock import MagicMock, Mock, call, patch
-
 import requests
 import responses
-
+from google.protobuf.json_format import MessageToDict
 from opentelemetry._logs import SeverityNumber
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http._log_exporter import (
@@ -29,6 +28,9 @@ from opentelemetry.exporter.otlp.proto.http._log_exporter import (
     DEFAULT_LOGS_EXPORT_PATH,
     DEFAULT_TIMEOUT,
     OTLPLogExporter,
+)
+from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
+    ExportLogsServiceRequest,
 )
 from opentelemetry.exporter.otlp.proto.http.version import __version__
 from opentelemetry.sdk._logs import LogData
@@ -166,6 +168,82 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             exporter._headers, {"envheader1": "val1", "envheader2": "val2"}
         )
         self.assertIsInstance(exporter._session, requests.Session)
+
+    @patch("requests.Session.post")
+    def test_exported_log_without_trace_id(self, mock_post):
+        exporter = OTLPLogExporter()
+        log = LogData(
+            log_record=SDKLogRecord(
+                timestamp=1644650195189786182,
+                trace_id=0,
+                span_id=1312458408527513292,
+                trace_flags=TraceFlags(0x01),
+                severity_text="WARN",
+                severity_number=SeverityNumber.WARN,
+                body="Invalid trace id check",
+                resource=SDKResource({"first_resource": "value"}),
+                attributes={"a": 1, "b": "c"},
+            ),
+            instrumentation_scope=InstrumentationScope("name", "version"),
+        )
+        exporter.export([log])
+        request_body = mock_post.call_args[1]["data"]
+        request = ExportLogsServiceRequest()
+        request.ParseFromString(request_body)
+        request_dict = MessageToDict(request)
+        log_records = (
+            request_dict.get("resourceLogs")[0]
+            .get("scopeLogs")[0]
+            .get("logRecords")
+        )
+        if log_records:
+            log_record = log_records[0]
+            self.assertIn("spanId", log_record)
+            self.assertNotIn(
+                "traceId",
+                log_record,
+                "trace_id should not be present in the log record",
+            )
+        else:
+            self.fail("No log records found")
+
+    @patch("requests.Session.post")
+    def test_exported_log_without_span_id(self, mock_post):
+        exporter = OTLPLogExporter()
+        log = LogData(
+            log_record=SDKLogRecord(
+                timestamp=1644650195189786360,
+                trace_id=89564621134313219400156819398935297696,
+                span_id=0,
+                trace_flags=TraceFlags(0x01),
+                severity_text="WARN",
+                severity_number=SeverityNumber.WARN,
+                body="Invalid span id check",
+                resource=SDKResource({"first_resource": "value"}),
+                attributes={"a": 1, "b": "c"},
+            ),
+            instrumentation_scope=InstrumentationScope("name", "version"),
+        )
+        exporter.export([log])
+        request_body = mock_post.call_args[1]["data"]
+        request = ExportLogsServiceRequest()
+        request.ParseFromString(request_body)
+        request_dict = MessageToDict(request)
+        log_records = (
+            request_dict.get("resourceLogs")[0]
+            .get("scopeLogs")[0]
+            .get("logRecords")
+        )
+        if log_records:
+            log_record = log_records[0]
+            self.assertIn("traceId", log_record)
+            self.assertNotIn(
+                "spanId",
+                log_record,
+                "spanId should not be present in the log record",
+            )
+        else:
+            self.fail("No log records found")
 
     @responses.activate
     @patch("opentelemetry.exporter.otlp.proto.http._log_exporter.sleep")

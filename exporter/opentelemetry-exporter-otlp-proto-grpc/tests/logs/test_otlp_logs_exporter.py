@@ -180,7 +180,7 @@ class TestOTLPLogExporter(TestCase):
             ),
             instrumentation_scope=InstrumentationScope(
                 "fourth_name", "fourth_version"
-            ), 
+            ),
         )
         self.log_data_5 = LogData(
             log_record=LogRecord(
@@ -195,7 +195,7 @@ class TestOTLPLogExporter(TestCase):
             ),
             instrumentation_scope=InstrumentationScope(
                 "fifth_name", "fifth_version"
-            ), 
+            ),
         )
 
     def tearDown(self):
@@ -374,13 +374,19 @@ class TestOTLPLogExporter(TestCase):
 
     def test_exported_log_without_trace_id(self):
         translated_data = self.exporter._translate_data([self.log_data_4])
-        log_record = translated_data.resource_logs[0].scope_logs[0].log_records[0]
-        self.assertFalse(log_record.HasField("trace_id"))
+        log_record = (
+            translated_data.resource_logs[0].scope_logs[0].log_records[0]
+        )
+        self.assertFalse(log_record.trace_id)
+        self.assertTrue(log_record.span_id)
 
     def test_exported_log_without_span_id(self):
         translated_data = self.exporter._translate_data([self.log_data_5])
-        log_record = translated_data.resource_logs[0].scope_logs[0].log_records[0]
-        self.assertFalse(log_record.HasField("trace_id"))
+        log_record = (
+            translated_data.resource_logs[0].scope_logs[0].log_records[0]
+        )
+        self.assertFalse(log_record.span_id)
+        self.assertTrue(log_record.trace_id)
 
     def test_translate_log_data(self):
 
