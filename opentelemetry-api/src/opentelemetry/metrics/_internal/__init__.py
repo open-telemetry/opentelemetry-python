@@ -102,6 +102,7 @@ class MeterProvider(ABC):
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
+        attributes: Optional[dict] = None,
     ) -> "Meter":
         """Returns a `Meter` for use by the given instrumentation library.
 

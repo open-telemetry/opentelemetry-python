@@ -43,6 +43,7 @@ from opentelemetry.sdk.metrics.view import SumAggregation, View
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.test import TestCase
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase, MockFunc
+from opentelemetry.attributes import BoundedAttributes
 
 
 class DummyMetricReader(MetricReader):
@@ -238,6 +239,11 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         self.assertIsNot(meter1, meter3)
         self.assertTrue(
             meter3._instrumentation_scope > meter4._instrumentation_scope
+        )
+        self.assertTrue(
+            isinstance(
+                meter4._instrumentation_scope.attributes, BoundedAttributes
+            ),
         )
 
     def test_shutdown(self):

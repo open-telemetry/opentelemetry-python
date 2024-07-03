@@ -16,6 +16,8 @@ from typing import Optional
 
 from deprecated import deprecated
 
+from opentelemetry.attributes import BoundedAttributes
+
 
 class InstrumentationInfo:
     """Immutable information about an instrumentation library module.
@@ -96,7 +98,7 @@ class InstrumentationScope:
         if schema_url is None:
             schema_url = ""
         self._schema_url = schema_url
-        self._attributes = attributes
+        self._attributes = BoundedAttributes(attributes=attributes)
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self._name}, {self._version}, {self._schema_url}, {self._attributes})"
@@ -156,7 +158,9 @@ class InstrumentationScope:
                 "name": self._name,
                 "version": self._version,
                 "schema_url": self._schema_url,
-                "attributes": self._attributes,
+                "attributes": (
+                    dict(self._attributes) if bool(self._attributes) else None
+                ),
             },
             indent=indent,
         )
