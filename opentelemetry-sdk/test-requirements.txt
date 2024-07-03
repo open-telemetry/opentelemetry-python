@@ -12,7 +12,7 @@ typing_extensions==4.10.0
 wrapt==1.16.0
 zipp==3.19.2
 zipp==3.17.0
-flaky==3.8.1
+pytest-retry==1.6.3
 -e tests/opentelemetry-test-utils
 -e opentelemetry-api
 -e opentelemetry-semantic-conventions

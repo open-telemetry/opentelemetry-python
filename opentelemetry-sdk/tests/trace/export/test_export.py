@@ -23,7 +23,6 @@ from platform import python_implementation, system
 from unittest import mock
 
 from pytest import mark
-from flaky import flaky
 
 from opentelemetry import trace as trace_api
 from opentelemetry.context import Context
@@ -462,7 +461,11 @@ class TestBatchSpanProcessor(ConcurrencyTestBase):
 
         span_processor.shutdown()
 
-    @flaky(max_runs=3, min_passes=1)
+    @mark.flaky(
+        retries=3,
+        only_on=[AssertionError],
+        condition=(python_implementation == "PyPy" or system() == "Windows"),
+    )
     def test_batch_span_processor_scheduled_delay(self):
         """Test that spans are exported each schedule_delay_millis"""
         spans_names_list = []
