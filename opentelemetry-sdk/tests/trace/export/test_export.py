@@ -21,10 +21,8 @@ from concurrent.futures import ThreadPoolExecutor
 from logging import WARNING
 from platform import python_implementation, system
 from unittest import mock
-from time import sleep
 
 from pytest import mark
-from flaky import flaky
 
 from opentelemetry import trace as trace_api
 from opentelemetry.context import Context
@@ -463,10 +461,12 @@ class TestBatchSpanProcessor(ConcurrencyTestBase):
 
         span_processor.shutdown()
 
-    @flaky(max_runs=3)
+    @mark.skipif(
+        python_implementation() == "PyPy" or system() == "Windows",
+        reason="This test randomly fails with huge delta in Windows with PyPy",
+    )
     def test_batch_span_processor_scheduled_delay(self):
         """Test that spans are exported each schedule_delay_millis"""
-        sleep(1)
         spans_names_list = []
 
         export_event = threading.Event()
