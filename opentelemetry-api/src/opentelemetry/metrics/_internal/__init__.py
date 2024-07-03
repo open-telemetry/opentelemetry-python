@@ -75,6 +75,7 @@ from opentelemetry.metrics._internal.instrument import (
 )
 from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
+from opentelemetry.util.types import Attributes
 
 _logger = getLogger(__name__)
 
@@ -102,7 +103,7 @@ class MeterProvider(ABC):
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
-        attributes: Optional[dict] = None,
+        attributes: Attributes = None,
     ) -> "Meter":
         """Returns a `Meter` for use by the given instrumentation library.
 
