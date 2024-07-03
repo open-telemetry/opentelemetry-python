@@ -93,8 +93,7 @@ jobs:
       if: ${{ matrix.os == 'windows-2019'}}
       run: git config --system core.longpaths true
     - name: run tox
-      run: tox -f ${{ matrix.python-version }}-${{ matrix.package }} -- -ra --benchmark-json=${{
-        env.RUN_MATRIX_COMBINATION }}-benchmark.json
+      run: tox -f ${{ matrix.python-version }}-${{ matrix.package }} -- -ra
   misc:
     strategy:
       fail-fast: false
