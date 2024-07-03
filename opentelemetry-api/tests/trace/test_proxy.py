@@ -32,6 +32,7 @@ class TestProvider(trace.NoOpTracerProvider):
         instrumenting_module_name: str,
         instrumenting_library_version: typing.Optional[str] = None,
         schema_url: typing.Optional[str] = None,
+        attributes: typing.Optional[dict] = None,
     ) -> trace.Tracer:
         return TestTracer()
 

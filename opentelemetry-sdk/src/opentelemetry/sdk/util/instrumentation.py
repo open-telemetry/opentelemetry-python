@@ -82,22 +82,24 @@ class InstrumentationScope:
     properties.
     """
 
-    __slots__ = ("_name", "_version", "_schema_url")
+    __slots__ = ("_name", "_version", "_schema_url", "_attributes")
 
     def __init__(
         self,
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
+        attributes: Optional[dict] = None,
     ) -> None:
         self._name = name
         self._version = version
         if schema_url is None:
             schema_url = ""
         self._schema_url = schema_url
+        self._attributes = attributes
 
     def __repr__(self) -> str:
-        return f"{type(self).__name__}({self._name}, {self._version}, {self._schema_url})"
+        return f"{type(self).__name__}({self._name}, {self._version}, {self._schema_url}, {self._attributes})"
 
     def __hash__(self) -> int:
         return hash((self._name, self._version, self._schema_url))
@@ -105,19 +107,31 @@ class InstrumentationScope:
     def __eq__(self, value: object) -> bool:
         if not isinstance(value, InstrumentationScope):
             return NotImplemented
-        return (self._name, self._version, self._schema_url) == (
+        return (
+            self._name,
+            self._version,
+            self._schema_url,
+            self._attributes,
+        ) == (
             value._name,
             value._version,
             value._schema_url,
+            value._attributes,
         )
 
     def __lt__(self, value: object) -> bool:
         if not isinstance(value, InstrumentationScope):
             return NotImplemented
-        return (self._name, self._version, self._schema_url) < (
+        return (
+            self._name,
+            self._version,
+            self._schema_url,
+            self._attributes,
+        ) < (
             value._name,
             value._version,
             value._schema_url,
+            value._attributes,
         )
 
     @property
@@ -132,12 +146,17 @@ class InstrumentationScope:
     def name(self) -> str:
         return self._name
 
+    @property
+    def attributes(self) -> Optional[dict]:
+        return self._attributes
+
     def to_json(self, indent=4) -> str:
         return dumps(
             {
                 "name": self._name,
                 "version": self._version,
                 "schema_url": self._schema_url,
+                "attributes": self._attributes,
             },
             indent=indent,
         )

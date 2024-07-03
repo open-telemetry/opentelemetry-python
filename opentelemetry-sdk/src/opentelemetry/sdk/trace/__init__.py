@@ -1217,6 +1217,7 @@ class TracerProvider(trace_api.TracerProvider):
         instrumenting_module_name: str,
         instrumenting_library_version: typing.Optional[str] = None,
         schema_url: typing.Optional[str] = None,
+        attributes: typing.Optional[dict] = None,
     ) -> "trace_api.Tracer":
         if self._disabled:
             logger.warning("SDK is disabled.")
@@ -1254,6 +1255,7 @@ class TracerProvider(trace_api.TracerProvider):
                 instrumenting_module_name,
                 instrumenting_library_version,
                 schema_url,
+                attributes,
             ),
         )
 
