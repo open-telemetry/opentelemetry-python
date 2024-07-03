@@ -373,8 +373,14 @@ class TestOTLPLogExporter(TestCase):
         )
 
     def test_exported_log_without_trace_id(self):
-        export_result = self.exporter.export([self.log_data_4])
-        self.assertEqual(export_result, LogExportResult.SUCCESS)
+        translated_data = self.exporter._translate_data([self.log_data_4])
+        log_record = translated_data.resource_logs[0].scope_logs[0].log_records[0]
+        self.assertFalse(log_record.HasField("trace_id"))
+
+    def test_exported_log_without_span_id(self):
+        translated_data = self.exporter._translate_data([self.log_data_5])
+        log_record = translated_data.resource_logs[0].scope_logs[0].log_records[0]
+        self.assertFalse(log_record.HasField("trace_id"))
 
     def test_translate_log_data(self):
 
