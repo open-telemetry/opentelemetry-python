@@ -17,9 +17,11 @@
 import unittest
 from typing import List
 from unittest.mock import MagicMock, Mock, call, patch
+
 import requests
 import responses
 from google.protobuf.json_format import MessageToDict
+
 from opentelemetry._logs import SeverityNumber
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http._log_exporter import (
@@ -29,10 +31,10 @@ from opentelemetry.exporter.otlp.proto.http._log_exporter import (
     DEFAULT_TIMEOUT,
     OTLPLogExporter,
 )
+from opentelemetry.exporter.otlp.proto.http.version import __version__
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
     ExportLogsServiceRequest,
 )
-from opentelemetry.exporter.otlp.proto.http.version import __version__
 from opentelemetry.sdk._logs import LogData
 from opentelemetry.sdk._logs import LogRecord as SDKLogRecord
 from opentelemetry.sdk._logs.export import LogExportResult
