@@ -21,7 +21,6 @@ py-cpuinfo==9.0.0
 pyasn1==0.5.1
 pyasn1-modules==0.3.0
 pytest==7.4.4
-pytest-benchmark==4.0.0
 requests==2.32.3
 rsa==4.9
 six==1.16.0
