@@ -54,6 +54,7 @@ from opentelemetry.sdk.metrics._internal.sdk_configuration import (
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.util._once import Once
+from opentelemetry.util.types import Attributes
 
 _logger = getLogger(__name__)
 
@@ -518,7 +519,7 @@ class MeterProvider(APIMeterProvider):
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
-        attributes: Optional[dict] = None,
+        attributes: Attributes = None,
     ) -> Meter:
 
         if self._disabled:
