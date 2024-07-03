@@ -21,6 +21,7 @@ from unittest.mock import patch
 from google.protobuf.duration_pb2 import (  # pylint: disable=no-name-in-module
     Duration,
 )
+from google.protobuf.json_format import MessageToDict
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import ChannelCredentials, Compression, StatusCode, server
 
@@ -373,20 +374,44 @@ class TestOTLPLogExporter(TestCase):
         )
 
     def test_exported_log_without_trace_id(self):
+        # pylint: disable=protected-access
         translated_data = self.exporter._translate_data([self.log_data_4])
-        log_record = (
-            translated_data.resource_logs[0].scope_logs[0].log_records[0]
+        request_dict = MessageToDict(translated_data)
+        log_records = (
+            request_dict.get("resourceLogs")[0]
+            .get("scopeLogs")[0]
+            .get("logRecords")
         )
-        self.assertFalse(log_record.trace_id)
-        self.assertTrue(log_record.span_id)
+        if log_records:
+            log_record = log_records[0]
+            self.assertIn("spanId", log_record)
+            self.assertNotIn(
+                "traceId",
+                log_record,
+                "traceId should not be present in the log record",
+            )
+        else:
+            self.fail("No log records found")
 
     def test_exported_log_without_span_id(self):
+        # pylint: disable=protected-access
         translated_data = self.exporter._translate_data([self.log_data_5])
-        log_record = (
-            translated_data.resource_logs[0].scope_logs[0].log_records[0]
+        request_dict = MessageToDict(translated_data)
+        log_records = (
+            request_dict.get("resourceLogs")[0]
+            .get("scopeLogs")[0]
+            .get("logRecords")
         )
-        self.assertFalse(log_record.span_id)
-        self.assertTrue(log_record.trace_id)
+        if log_records:
+            log_record = log_records[0]
+            self.assertIn("traceId", log_record)
+            self.assertNotIn(
+                "spanId",
+                log_record,
+                "spanId should not be present in the log record",
+            )
+        else:
+            self.fail("No log records found")
 
     def test_translate_log_data(self):
 
