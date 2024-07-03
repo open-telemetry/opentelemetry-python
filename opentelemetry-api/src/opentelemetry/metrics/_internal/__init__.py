@@ -129,6 +129,7 @@ class MeterProvider(ABC):
                 ``importlib.metadata.version(instrumenting_library_name)``.
 
             schema_url: Optional. Specifies the Schema URL of the emitted telemetry.
+            attributes: Optional. Attributes that are associated with the emitted telemetry.
         """
 
 
