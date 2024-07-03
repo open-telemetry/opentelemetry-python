@@ -18,7 +18,7 @@ from time import sleep, time_ns
 from typing import Optional, Sequence
 from unittest.mock import Mock
 
-from pytest import mark
+from flaky import flaky
 
 from opentelemetry.sdk.metrics import Counter, MetricsTimeoutError
 from opentelemetry.sdk.metrics._internal import _Counter
@@ -190,7 +190,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
             export_interval_millis=-100,
         )
 
-    @mark.flaky(retries=3)
+    @flaky(max_runs=3, min_passes=1)
     def test_ticker_collects_metrics(self):
         exporter = FakeMetricsExporter()
 
