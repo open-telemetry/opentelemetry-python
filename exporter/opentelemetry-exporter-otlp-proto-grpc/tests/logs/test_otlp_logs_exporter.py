@@ -167,6 +167,36 @@ class TestOTLPLogExporter(TestCase):
                 "third_name", "third_version"
             ),
         )
+        self.log_data_4 = LogData(
+            log_record=LogRecord(
+                timestamp=int(time.time() * 1e9),
+                trace_id=0,
+                span_id=5213367945872657629,
+                trace_flags=TraceFlags(0x01),
+                severity_text="ERROR",
+                severity_number=SeverityNumber.WARN,
+                body="Invalid trace id check",
+                resource=SDKResource({"service": "myapp"}),
+            ),
+            instrumentation_scope=InstrumentationScope(
+                "fourth_name", "fourth_version"
+            ), 
+        )
+        self.log_data_5 = LogData(
+            log_record=LogRecord(
+                timestamp=int(time.time() * 1e9),
+                trace_id=2604504634922341076776623263868986801,
+                span_id=0,
+                trace_flags=TraceFlags(0x01),
+                severity_text="ERROR",
+                severity_number=SeverityNumber.WARN,
+                body="Invalid span id check",
+                resource=SDKResource({"service": "myapp"}),
+            ),
+            instrumentation_scope=InstrumentationScope(
+                "fifth_name", "fifth_version"
+            ), 
+        )
 
     def tearDown(self):
         self.server.stop(None)
@@ -341,6 +371,10 @@ class TestOTLPLogExporter(TestCase):
         self.assertEqual(
             self.exporter.export([self.log_data_1]), LogExportResult.FAILURE
         )
+
+    def test_exported_log_without_trace_id(self):
+        export_result = self.exporter.export([self.log_data_4])
+        self.assertEqual(export_result, LogExportResult.SUCCESS)
 
     def test_translate_log_data(self):
 
