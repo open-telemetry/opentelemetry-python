@@ -519,7 +519,7 @@ class MeterProvider(APIMeterProvider):
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
-        attributes: Attributes = None,
+        attributes: Optional[Attributes] = None,
     ) -> Meter:
 
         if self._disabled:

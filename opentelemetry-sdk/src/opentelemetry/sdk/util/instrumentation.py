@@ -150,7 +150,7 @@ class InstrumentationScope:
         return self._name
 
     @property
-    def attributes(self) -> Optional[Attributes]:
+    def attributes(self) -> Attributes:
         return self._attributes
 
     def to_json(self, indent=4) -> str:
