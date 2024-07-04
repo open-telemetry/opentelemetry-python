@@ -41,7 +41,7 @@ trace.set_tracer_provider(tracer_provider)
 tracer_provider.add_span_processor(
     BatchSpanProcessor(
         OTLPSpanExporter(
-		    endpoint="localhost:4317",
+            endpoint="localhost:4317",
         )
     )
 )
