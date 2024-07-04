@@ -81,7 +81,7 @@ except ImportError:
     psutil = None
 
 LabelValue = AttributeValue
-Attributes = typing.Dict[str, LabelValue]
+Attributes = typing.Mapping[str, LabelValue]
 logger = logging.getLogger(__name__)
 
 CLOUD_PROVIDER = ResourceAttributes.CLOUD_PROVIDER
@@ -335,10 +335,12 @@ class ProcessResourceDetector(ResourceDetector):
         _runtime_version = ".".join(
             map(
                 str,
-                sys.version_info[:3]
-                if sys.version_info.releaselevel == "final"
-                and not sys.version_info.serial
-                else sys.version_info,
+                (
+                    sys.version_info[:3]
+                    if sys.version_info.releaselevel == "final"
+                    and not sys.version_info.serial
+                    else sys.version_info
+                ),
             )
         )
         _process_pid = os.getpid()
@@ -398,7 +400,7 @@ def get_aggregated_resources(
                     detector,
                     timeout,
                 )
-            # pylint: disable=broad-except
+            # pylint: disable=broad-exception-caught
             except Exception as ex:
                 if detector.raise_on_error:
                     raise ex

@@ -7,13 +7,14 @@ name = "opentelemetry-semantic-conventions"
 dynamic = ["version"]
 description = "OpenTelemetry Semantic Conventions"
 readme = "README.rst"
-license = "Apache-2.0"
+license = {text = "Apache-2.0"}
 requires-python = ">=3.8"
 authors = [
   { name = "OpenTelemetry Authors", email = "cncf-opentelemetry-contributors@lists.cncf.io" },
 ]
 classifiers = [
   "Development Status :: 5 - Production/Stable",
+  "Framework :: OpenTelemetry",
   "Intended Audience :: Developers",
   "License :: OSI Approved :: Apache Software License",
   "Programming Language :: Python",
@@ -22,10 +23,12 @@ classifiers = [
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
 ]
 
-[project.optional-dependencies]
-test = []
+dependencies = [
+  "opentelemetry-api == 1.26.0.dev",
+]
 
 [project.urls]
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/opentelemetry-semantic-conventions"

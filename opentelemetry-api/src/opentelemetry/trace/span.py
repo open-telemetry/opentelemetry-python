@@ -3,6 +3,7 @@ import logging
 import re
 import types as python_types
 import typing
+import warnings
 
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
@@ -117,6 +118,27 @@ class Span(abc.ABC):
         timestamp if the `timestamp` argument is omitted.
         """
 
+    def add_link(  # pylint: disable=no-self-use
+        self,
+        context: "SpanContext",
+        attributes: types.Attributes = None,
+    ) -> None:
+        """Adds a `Link`.
+
+        Adds a single `Link` with the `SpanContext` of the span to link to and,
+        optionally, attributes passed as arguments. Implementations may ignore
+        calls with an invalid span context if both attributes and TraceState
+        are empty.
+
+        Note: It is preferred to add links at span creation, instead of calling
+        this method later since samplers can only consider information already
+        present during span creation.
+        """
+        warnings.warn(
+            "Span.add_link() not implemented and will be a no-op. "
+            "Use opentelemetry-sdk >= 1.23 to add links after span creation"
+        )
+
     @abc.abstractmethod
     def update_name(self, name: str) -> None:
         """Updates the `Span` name.
@@ -148,7 +170,7 @@ class Span(abc.ABC):
     @abc.abstractmethod
     def record_exception(
         self,
-        exception: Exception,
+        exception: BaseException,
         attributes: types.Attributes = None,
         timestamp: typing.Optional[int] = None,
         escaped: bool = False,
@@ -523,6 +545,13 @@ class NonRecordingSpan(Span):
     ) -> None:
         pass
 
+    def add_link(
+        self,
+        context: "SpanContext",
+        attributes: types.Attributes = None,
+    ) -> None:
+        pass
+
     def update_name(self, name: str) -> None:
         pass
 
@@ -535,7 +564,7 @@ class NonRecordingSpan(Span):
 
     def record_exception(
         self,
-        exception: Exception,
+        exception: BaseException,
         attributes: types.Attributes = None,
         timestamp: typing.Optional[int] = None,
         escaped: bool = False,

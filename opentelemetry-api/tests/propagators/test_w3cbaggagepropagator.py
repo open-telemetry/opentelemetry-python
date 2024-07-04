@@ -134,11 +134,13 @@ class TestW3CBaggagePropagator(TestCase):
                 self._extract(
                     ",".join(
                         [
-                            f"key{index}=value{index}"
-                            if index != 2
-                            else (
-                                f"key{index}="
-                                f"value{'s' * (W3CBaggagePropagator._MAX_PAIR_LENGTH + 1)}"
+                            (
+                                f"key{index}=value{index}"
+                                if index != 2
+                                else (
+                                    f"key{index}="
+                                    f"value{'s' * (W3CBaggagePropagator._MAX_PAIR_LENGTH + 1)}"
+                                )
                             )
                             for index in range(
                                 W3CBaggagePropagator._MAX_PAIRS + 1
@@ -162,9 +164,11 @@ class TestW3CBaggagePropagator(TestCase):
                 self._extract(
                     ",".join(
                         [
-                            f"key{index}=value{index}"
-                            if index != 2
-                            else f"key{index}xvalue{index}"
+                            (
+                                f"key{index}=value{index}"
+                                if index != 2
+                                else f"key{index}xvalue{index}"
+                            )
                             for index in range(
                                 W3CBaggagePropagator._MAX_PAIRS + 1
                             )

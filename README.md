@@ -99,8 +99,12 @@ Approvers ([@open-telemetry/python-approvers](https://github.com/orgs/open-telem
 
 - [Aaron Abbott](https://github.com/aabmass), Google
 - [Jeremy Voss](https://github.com/jeremydvoss), Microsoft
-- [Sanket Mehta](https://github.com/sanketmehta28), Cisco
+- [Owais Lone](https://github.com/owais), Splunk
+- [Pablo Collins](https://github.com/pmcollins), Splunk
+- [Riccardo Magliocchetti](https://github.com/xrmx), Elastic
 - [Shalev Roda](https://github.com/shalevr), Cisco
+- [Srikanth Chekuri](https://github.com/srikanthccv), signoz.io
+- [Tammy Baylis](https://github.com/tammy-baylis-swi), SolarWinds
 
 Emeritus Approvers
 
@@ -110,6 +114,8 @@ Emeritus Approvers
 - [Héctor Hernández](https://github.com/hectorhdzg), Microsoft
 - [Mauricio Vásquez](https://github.com/mauriciovasquezbernal), Kinvolk
 - [Nathaniel Ruiz Nowell](https://github.com/NathanielRN), AWS
+- [Nikolay Sokolik](https://github.com/oxeye-nikolay), Oxeye
+- [Sanket Mehta](https://github.com/sanketmehta28), Cisco
 - [Tahir H. Butt](https://github.com/majorgreys), DataDog
 
 *For more information about the approver role, see the [community repository](https://github.com/open-telemetry/community/blob/main/community-membership.md#approver).*

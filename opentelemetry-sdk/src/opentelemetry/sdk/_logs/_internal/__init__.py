@@ -19,6 +19,7 @@ import json
 import logging
 import threading
 import traceback
+import warnings
 from os import environ
 from time import time_ns
 from typing import Any, Callable, Optional, Tuple, Union  # noqa
@@ -37,6 +38,7 @@ from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_COUNT_LIMIT,
     OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
+    OTEL_SDK_DISABLED,
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util import ns_to_iso_str
@@ -70,6 +72,18 @@ _EXCLUDED_ATTRIBUTES = {
     "thread",
     "threadName",
 }
+
+
+class LogDroppedAttributesWarning(UserWarning):
+    """Custom warning to indicate dropped log attributes due to limits.
+
+    This class is used to filter and handle these specific warnings separately
+    from other warnings, ensuring that they are only shown once without
+    interfering with default user warnings.
+    """
+
+
+warnings.simplefilter("once", LogDroppedAttributesWarning)
 
 
 class LogLimits:
@@ -204,7 +218,15 @@ class LogRecord(APILogRecord):
                 ),
             }
         )
-        self.resource = resource
+        self.resource = (
+            resource if isinstance(resource, Resource) else Resource.create({})
+        )
+        if self.dropped_attributes > 0:
+            warnings.warn(
+                "Log record attributes were dropped due to limits",
+                LogDroppedAttributesWarning,
+                stacklevel=2,
+            )
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, LogRecord):
@@ -217,22 +239,24 @@ class LogRecord(APILogRecord):
                 "body": self.body,
                 "severity_number": repr(self.severity_number),
                 "severity_text": self.severity_text,
-                "attributes": dict(self.attributes)
-                if bool(self.attributes)
-                else None,
+                "attributes": (
+                    dict(self.attributes) if bool(self.attributes) else None
+                ),
                 "dropped_attributes": self.dropped_attributes,
                 "timestamp": ns_to_iso_str(self.timestamp),
                 "observed_timestamp": ns_to_iso_str(self.observed_timestamp),
-                "trace_id": f"0x{format_trace_id(self.trace_id)}"
-                if self.trace_id is not None
-                else "",
-                "span_id": f"0x{format_span_id(self.span_id)}"
-                if self.span_id is not None
-                else "",
+                "trace_id": (
+                    f"0x{format_trace_id(self.trace_id)}"
+                    if self.trace_id is not None
+                    else ""
+                ),
+                "span_id": (
+                    f"0x{format_span_id(self.span_id)}"
+                    if self.span_id is not None
+                    else ""
+                ),
                 "trace_flags": self.trace_flags,
-                "resource": repr(self.resource.attributes)
-                if self.resource
-                else "",
+                "resource": json.loads(self.resource.to_json()),
             },
             indent=indent,
         )
@@ -556,6 +580,8 @@ class LoggerProvider(APILoggerProvider):
         self._multi_log_record_processor = (
             multi_log_record_processor or SynchronousMultiLogRecordProcessor()
         )
+        disabled = environ.get(OTEL_SDK_DISABLED, "")
+        self._disabled = disabled.lower().strip() == "true"
         self._at_exit_handler = None
         if shutdown_on_exit:
             self._at_exit_handler = atexit.register(self.shutdown)
@@ -570,6 +596,9 @@ class LoggerProvider(APILoggerProvider):
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
     ) -> Logger:
+        if self._disabled:
+            _logger.warning("SDK is disabled.")
+            return NoOpLogger(name, version=version, schema_url=schema_url)
         return Logger(
             self._resource,
             self._multi_log_record_processor,

@@ -101,7 +101,7 @@ class OTLPSpanExporter(SpanExporter):
             )
         self._shutdown = False
 
-    def _export(self, serialized_data: str):
+    def _export(self, serialized_data: bytes):
         data = serialized_data
         if self._compression == Compression.Gzip:
             gzip_data = BytesIO()
@@ -109,7 +109,7 @@ class OTLPSpanExporter(SpanExporter):
                 gzip_stream.write(serialized_data)
             data = gzip_data.getvalue()
         elif self._compression == Compression.Deflate:
-            data = zlib.compress(bytes(serialized_data))
+            data = zlib.compress(serialized_data)
 
         return self._session.post(
             url=self._endpoint,
@@ -126,19 +126,13 @@ class OTLPSpanExporter(SpanExporter):
             return True
         return False
 
-    def export(self, spans) -> SpanExportResult:
-        # After the call to Shutdown subsequent calls to Export are
-        # not allowed and should return a Failure result.
-        if self._shutdown:
-            _logger.warning("Exporter already shutdown, ignoring batch")
-            return SpanExportResult.FAILURE
+    def _serialize_spans(self, spans):
+        return encode_spans(spans).SerializePartialToString()
 
-        serialized_data = encode_spans(spans).SerializeToString()
-
+    def _export_serialized_spans(self, serialized_data):
         for delay in _create_exp_backoff_generator(
             max_value=self._MAX_RETRY_TIMEOUT
         ):
-
             if delay == self._MAX_RETRY_TIMEOUT:
                 return SpanExportResult.FAILURE
 
@@ -162,6 +156,17 @@ class OTLPSpanExporter(SpanExporter):
                 )
                 return SpanExportResult.FAILURE
         return SpanExportResult.FAILURE
+
+    def export(self, spans) -> SpanExportResult:
+        # After the call to Shutdown subsequent calls to Export are
+        # not allowed and should return a Failure result.
+        if self._shutdown:
+            _logger.warning("Exporter already shutdown, ignoring batch")
+            return SpanExportResult.FAILURE
+
+        serialized_data = self._serialize_spans(spans)
+
+        return self._export_serialized_spans(serialized_data)
 
     def shutdown(self):
         if self._shutdown:

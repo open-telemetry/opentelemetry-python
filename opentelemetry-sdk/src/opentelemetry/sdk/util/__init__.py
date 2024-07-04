@@ -23,7 +23,9 @@ from deprecated import deprecated
 
 def ns_to_iso_str(nanoseconds):
     """Get an ISO 8601 string from time_ns value."""
-    ts = datetime.datetime.utcfromtimestamp(nanoseconds / 1e9)
+    ts = datetime.datetime.fromtimestamp(
+        nanoseconds / 1e9, tz=datetime.timezone.utc
+    )
     return ts.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
 
@@ -32,9 +34,9 @@ def get_dict_as_key(labels):
     return tuple(
         sorted(
             map(
-                lambda kv: (kv[0], tuple(kv[1]))
-                if isinstance(kv[1], list)
-                else kv,
+                lambda kv: (
+                    (kv[0], tuple(kv[1])) if isinstance(kv[1], list) else kv
+                ),
                 labels.items(),
             )
         )

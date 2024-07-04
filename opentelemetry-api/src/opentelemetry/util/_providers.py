@@ -29,7 +29,7 @@ logger = getLogger(__name__)
 
 def _load_provider(
     provider_environment_variable: str, provider: str
-) -> Provider:
+) -> Provider:  # type: ignore[type-var]
 
     try:
 
@@ -49,6 +49,6 @@ def _load_provider(
                 )
             ).load()(),
         )
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # pylint: disable=broad-exception-caught
         logger.exception("Failed to load configured provider %s", provider)
         raise

@@ -14,13 +14,15 @@
 
 import os
 import threading
-import time
 from concurrent.futures import ThreadPoolExecutor
 from logging import WARNING
+from time import time_ns
 from unittest import TestCase
 from unittest.mock import Mock, PropertyMock, patch
 
-from google.protobuf.duration_pb2 import Duration
+from google.protobuf.duration_pb2 import (  # pylint: disable=no-name-in-module
+    Duration,
+)
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import ChannelCredentials, Compression, StatusCode, server
 
@@ -89,7 +91,7 @@ class TraceServiceServicerUNAVAILABLEDelay(TraceServiceServicer):
                 (
                     "google.rpc.retryinfo-bin",
                     RetryInfo(
-                        retry_delay=Duration(seconds=4)
+                        retry_delay=Duration(nanos=int(1e7))
                     ).SerializeToString(),
                 ),
             )
@@ -147,7 +149,7 @@ class TestOTLPSpanExporter(TestCase):
         )
 
         type(event_mock).name = PropertyMock(return_value="a")
-
+        type(event_mock).dropped_attributes = PropertyMock(return_value=0)
         self.span = _Span(
             "a",
             context=Mock(
@@ -464,14 +466,14 @@ class TestOTLPSpanExporter(TestCase):
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
     def test_unavailable(self, mock_sleep, mock_expo):
 
-        mock_expo.configure_mock(**{"return_value": [1]})
+        mock_expo.configure_mock(**{"return_value": [0.01]})
 
         add_TraceServiceServicer_to_server(
             TraceServiceServicerUNAVAILABLE(), self.server
         )
         result = self.exporter.export([self.span])
         self.assertEqual(result, SpanExportResult.FAILURE)
-        mock_sleep.assert_called_with(1)
+        mock_sleep.assert_called_with(0.01)
 
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc.exporter._create_exp_backoff_generator"
@@ -487,7 +489,7 @@ class TestOTLPSpanExporter(TestCase):
         self.assertEqual(
             self.exporter.export([self.span]), SpanExportResult.FAILURE
         )
-        mock_sleep.assert_called_with(4)
+        mock_sleep.assert_called_with(0.01)
 
     def test_success(self):
         add_TraceServiceServicer_to_server(
@@ -595,8 +597,10 @@ class TestOTLPSpanExporter(TestCase):
                                                     ),
                                                 ),
                                             ],
+                                            flags=0x300,
                                         )
                                     ],
+                                    flags=0x300,
                                 )
                             ],
                         )
@@ -697,8 +701,10 @@ class TestOTLPSpanExporter(TestCase):
                                                     ),
                                                 ),
                                             ],
+                                            flags=0x300,
                                         )
                                     ],
+                                    flags=0x300,
                                 )
                             ],
                         ),
@@ -728,6 +734,7 @@ class TestOTLPSpanExporter(TestCase):
                                         OTLPSpan.SpanKind.SPAN_KIND_INTERNAL
                                     ),
                                     status=Status(code=0, message=""),
+                                    flags=0x300,
                                 )
                             ],
                         ),
@@ -769,6 +776,7 @@ class TestOTLPSpanExporter(TestCase):
                                         OTLPSpan.SpanKind.SPAN_KIND_INTERNAL
                                     ),
                                     status=Status(code=0, message=""),
+                                    flags=0x300,
                                 )
                             ],
                         )
@@ -946,9 +954,9 @@ class TestOTLPSpanExporter(TestCase):
             # pylint: disable=protected-access
             self.assertTrue(self.exporter._export_lock.locked())
             # delay is 4 seconds while the default shutdown timeout is 30_000 milliseconds
-            start_time = time.time()
+            start_time = time_ns()
             self.exporter.shutdown()
-            now = time.time()
+            now = time_ns()
             self.assertGreaterEqual(now, (start_time + 30 / 1000))
             # pylint: disable=protected-access
             self.assertTrue(self.exporter._shutdown)

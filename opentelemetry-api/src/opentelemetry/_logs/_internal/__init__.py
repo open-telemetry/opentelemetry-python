@@ -14,8 +14,7 @@
 """
 The OpenTelemetry logging API describes the classes used to generate logs and events.
 
-The :class:`.LoggerProvider` provides users access to the :class:`.Logger` which in
-turn is used to create :class:`.Event` and :class:`.Log` objects.
+The :class:`.LoggerProvider` provides users access to the :class:`.Logger`.
 
 This module provides abstract (i.e. unimplemented) classes required for
 logging, and a concrete no-op implementation :class:`.NoOpLogger` that allows applications
@@ -193,7 +192,6 @@ class NoOpLoggerProvider(LoggerProvider):
         schema_url: Optional[str] = None,
     ) -> Logger:
         """Returns a NoOpLogger."""
-        super().get_logger(name, version=version, schema_url=schema_url)
         return NoOpLogger(name, version=version, schema_url=schema_url)
 
 

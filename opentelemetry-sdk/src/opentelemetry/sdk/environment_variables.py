@@ -12,6 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+OTEL_SDK_DISABLED = "OTEL_SDK_DISABLED"
+"""
+.. envvar:: OTEL_SDK_DISABLED
+
+The :envvar:`OTEL_SDK_DISABLED` environment variable disables the SDK for all signals
+Default: "false"
+"""
+
 OTEL_RESOURCE_ATTRIBUTES = "OTEL_RESOURCE_ATTRIBUTES"
 """
 .. envvar:: OTEL_RESOURCE_ATTRIBUTES
@@ -701,4 +709,22 @@ Default: 9464
 
 This is an experimental environment variable and the name of this variable and its behavior can
 change in a non-backwards compatible way.
+"""
+
+
+# TODO(#3929): remove this opt-out option
+OTEL_PYTHON_EXPERIMENTAL_DISABLE_PROMETHEUS_UNIT_NORMALIZATION = (
+    "OTEL_PYTHON_EXPERIMENTAL_DISABLE_PROMETHEUS_UNIT_NORMALIZATION"
+)
+"""
+.. envvar:: OTEL_PYTHON_EXPERIMENTAL_DISABLE_PROMETHEUS_UNIT_NORMALIZATION
+
+The :envvar:`OTEL_PYTHON_EXPERIMENTAL_DISABLE_PROMETHEUS_UNIT_NORMALIZATION` environment
+variable allows you to opt-out of the unit normalization described `in the specification
+<https://github.com/open-telemetry/opentelemetry-specification/blob/v1.33.0/specification/compatibility/prometheus_and_openmetrics.md#metric-metadata-1>`_.
+
+Default: False
+
+This is an temporary environment variable that provides backward compatibility but will be
+removed in the future https://github.com/open-telemetry/opentelemetry-python/issues/3929.
 """

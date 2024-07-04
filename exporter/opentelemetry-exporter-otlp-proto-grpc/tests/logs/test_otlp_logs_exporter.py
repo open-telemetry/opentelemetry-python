@@ -18,7 +18,9 @@ from os.path import dirname
 from unittest import TestCase
 from unittest.mock import patch
 
-from google.protobuf.duration_pb2 import Duration
+from google.protobuf.duration_pb2 import (  # pylint: disable=no-name-in-module
+    Duration,
+)
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import ChannelCredentials, Compression, StatusCode, server
 
@@ -75,7 +77,7 @@ class LogsServiceServicerUNAVAILABLEDelay(LogsServiceServicer):
                 (
                     "google.rpc.retryinfo-bin",
                     RetryInfo(
-                        retry_delay=Duration(seconds=4)
+                        retry_delay=Duration(nanos=int(1e7))
                     ).SerializeToString(),
                 ),
             )
@@ -298,7 +300,7 @@ class TestOTLPLogExporter(TestCase):
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
     def test_unavailable(self, mock_sleep, mock_expo):
 
-        mock_expo.configure_mock(**{"return_value": [1]})
+        mock_expo.configure_mock(**{"return_value": [0.01]})
 
         add_LogsServiceServicer_to_server(
             LogsServiceServicerUNAVAILABLE(), self.server
@@ -306,7 +308,7 @@ class TestOTLPLogExporter(TestCase):
         self.assertEqual(
             self.exporter.export([self.log_data_1]), LogExportResult.FAILURE
         )
-        mock_sleep.assert_called_with(1)
+        mock_sleep.assert_called_with(0.01)
 
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc.exporter._create_exp_backoff_generator"
@@ -322,7 +324,7 @@ class TestOTLPLogExporter(TestCase):
         self.assertEqual(
             self.exporter.export([self.log_data_1]), LogExportResult.FAILURE
         )
-        mock_sleep.assert_called_with(4)
+        mock_sleep.assert_called_with(0.01)
 
     def test_success(self):
         add_LogsServiceServicer_to_server(
@@ -361,6 +363,7 @@ class TestOTLPLogExporter(TestCase):
                                 PB2LogRecord(
                                     # pylint: disable=no-member
                                     time_unix_nano=self.log_data_1.log_record.timestamp,
+                                    observed_time_unix_nano=self.log_data_1.log_record.observed_timestamp,
                                     severity_number=self.log_data_1.log_record.severity_number.value,
                                     severity_text="WARNING",
                                     span_id=int.to_bytes(
@@ -420,6 +423,7 @@ class TestOTLPLogExporter(TestCase):
                                 PB2LogRecord(
                                     # pylint: disable=no-member
                                     time_unix_nano=self.log_data_1.log_record.timestamp,
+                                    observed_time_unix_nano=self.log_data_1.log_record.observed_timestamp,
                                     severity_number=self.log_data_1.log_record.severity_number.value,
                                     severity_text="WARNING",
                                     span_id=int.to_bytes(
@@ -457,6 +461,7 @@ class TestOTLPLogExporter(TestCase):
                                 PB2LogRecord(
                                     # pylint: disable=no-member
                                     time_unix_nano=self.log_data_2.log_record.timestamp,
+                                    observed_time_unix_nano=self.log_data_2.log_record.observed_timestamp,
                                     severity_number=self.log_data_2.log_record.severity_number.value,
                                     severity_text="INFO",
                                     span_id=int.to_bytes(
@@ -502,6 +507,7 @@ class TestOTLPLogExporter(TestCase):
                                 PB2LogRecord(
                                     # pylint: disable=no-member
                                     time_unix_nano=self.log_data_3.log_record.timestamp,
+                                    observed_time_unix_nano=self.log_data_3.log_record.observed_timestamp,
                                     severity_number=self.log_data_3.log_record.severity_number.value,
                                     severity_text="ERROR",
                                     span_id=int.to_bytes(

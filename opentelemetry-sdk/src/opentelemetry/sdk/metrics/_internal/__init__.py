@@ -14,6 +14,7 @@
 
 from atexit import register, unregister
 from logging import getLogger
+from os import environ
 from threading import Lock
 from time import time_ns
 from typing import Optional, Sequence
@@ -32,6 +33,7 @@ from opentelemetry.metrics import (
 )
 from opentelemetry.metrics import UpDownCounter as APIUpDownCounter
 from opentelemetry.metrics import _Gauge as APIGauge
+from opentelemetry.sdk.environment_variables import OTEL_SDK_DISABLED
 from opentelemetry.sdk.metrics._internal.exceptions import MetricsTimeoutError
 from opentelemetry.sdk.metrics._internal.instrument import (
     _Counter,
@@ -394,6 +396,8 @@ class MeterProvider(APIMeterProvider):
         self._measurement_consumer = SynchronousMeasurementConsumer(
             sdk_config=self._sdk_config
         )
+        disabled = environ.get(OTEL_SDK_DISABLED, "")
+        self._disabled = disabled.lower().strip() == "true"
 
         if shutdown_on_exit:
             self._atexit_handler = register(self.shutdown)
@@ -406,6 +410,7 @@ class MeterProvider(APIMeterProvider):
 
             with self._all_metric_readers_lock:
                 if metric_reader in self._all_metric_readers:
+                    # pylint: disable=broad-exception-raised
                     raise Exception(
                         f"MetricReader {metric_reader} has been registered "
                         "already in other MeterProvider instance"
@@ -433,7 +438,7 @@ class MeterProvider(APIMeterProvider):
                     timeout_millis=(deadline_ns - current_ts) / 10**6
                 )
 
-            # pylint: disable=broad-except
+            # pylint: disable=broad-exception-caught
             except Exception as error:
 
                 metric_reader_error[metric_reader] = error
@@ -447,6 +452,7 @@ class MeterProvider(APIMeterProvider):
                 ]
             )
 
+            # pylint: disable=broad-exception-raised
             raise Exception(
                 "MeterProvider.force_flush failed because the following "
                 "metric readers failed during collect:\n"
@@ -472,6 +478,7 @@ class MeterProvider(APIMeterProvider):
             current_ts = time_ns()
             try:
                 if current_ts >= deadline_ns:
+                    # pylint: disable=broad-exception-raised
                     raise Exception(
                         "Didn't get to execute, deadline already exceeded"
                     )
@@ -479,7 +486,7 @@ class MeterProvider(APIMeterProvider):
                     timeout_millis=(deadline_ns - current_ts) / 10**6
                 )
 
-            # pylint: disable=broad-except
+            # pylint: disable=broad-exception-caught
             except Exception as error:
 
                 metric_reader_error[metric_reader] = error
@@ -497,6 +504,7 @@ class MeterProvider(APIMeterProvider):
                 ]
             )
 
+            # pylint: disable=broad-exception-raised
             raise Exception(
                 (
                     "MeterProvider.shutdown failed because the following "
@@ -511,6 +519,10 @@ class MeterProvider(APIMeterProvider):
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
     ) -> Meter:
+
+        if self._disabled:
+            _logger.warning("SDK is disabled.")
+            return NoOpMeter(name, version=version, schema_url=schema_url)
 
         if self._shutdown:
             _logger.warning(

@@ -150,7 +150,7 @@ class BoundedAttributes(MutableMapping):
         self.max_value_len = max_value_len
         # OrderedDict is not used until the maxlen is reached for efficiency.
         self._dict = {}  # type: dict | OrderedDict
-        self._lock = threading.Lock()  # type: threading.Lock
+        self._lock = threading.RLock()  # type: threading.RLock
         if attributes:
             for key, value in attributes.items():
                 self[key] = value
