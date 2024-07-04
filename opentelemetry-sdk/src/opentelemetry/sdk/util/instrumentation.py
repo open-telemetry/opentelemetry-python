@@ -17,6 +17,7 @@ from typing import Optional
 from deprecated import deprecated
 
 from opentelemetry.attributes import BoundedAttributes
+from opentelemetry.util.types import Attributes
 
 
 class InstrumentationInfo:
@@ -91,7 +92,7 @@ class InstrumentationScope:
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
-        attributes: Optional[dict] = None,
+        attributes: Optional[Attributes] = None,
     ) -> None:
         self._name = name
         self._version = version
@@ -149,7 +150,7 @@ class InstrumentationScope:
         return self._name
 
     @property
-    def attributes(self) -> Optional[dict]:
+    def attributes(self) -> Optional[Attributes]:
         return self._attributes
 
     def to_json(self, indent=4) -> str:
