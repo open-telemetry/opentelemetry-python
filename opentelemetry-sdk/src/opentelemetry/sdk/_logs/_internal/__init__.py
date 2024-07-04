@@ -460,7 +460,8 @@ class LoggingHandler(logging.Handler):
             __name__, logger_provider=self._logger_provider
         )
 
-    def _get_attributes(self, record: logging.LogRecord) -> Attributes:
+    @staticmethod
+    def _get_attributes(record: logging.LogRecord) -> Attributes:
         attributes = {
             k: v
             for k, v in vars(record).items()
