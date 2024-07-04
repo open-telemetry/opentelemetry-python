@@ -57,7 +57,7 @@ _logger = logging.getLogger(__name__)
 _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
 _ENV_VALUE_UNSET = ""
 _EXCLUDED_ATTRIBUTES = {
-    # pseudo-private log-record attributes, they just get dropped
+    # pseudo-private log-record attributes, they should always be dropped
     "args",
     "msg",
     "message",
@@ -71,6 +71,19 @@ _EXCLUDED_ATTRIBUTES = {
     "lineno",
     "thread",
     "threadName",
+    # attributes that are omitted because no semantic convention exists for them yet
+    "asctime",
+    "created",
+    "filename",
+    "levelname",
+    "levelno",
+    "module",
+    "msecs",
+    "name",
+    "process",
+    "processName",
+    "relativeCreated",
+    "taskName",
 }
 
 

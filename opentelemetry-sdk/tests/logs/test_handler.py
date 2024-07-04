@@ -255,20 +255,10 @@ class TestLoggingHandler(unittest.TestCase):
         self.assertEqual(
             set(log_record.attributes),
             {
-                "code.filepath",
-                "code.function",
-                "code.lineno",
-                "created",
-                "filename",
-                "levelname",
-                "levelno",
-                "module",
-                "msecs",
-                "name",
-                "process",
-                "processName",
-                "relativeCreated",
                 "thread.id",
+                "code.filepath",
+                "code.lineno",
+                "code.function",
                 "thread.name",
             },
         )
