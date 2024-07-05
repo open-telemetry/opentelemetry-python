@@ -23,8 +23,8 @@ from opentelemetry.trace.span import (
     NonRecordingSpan,
     Span,
 )
-from opentelemetry.util.types import Attributes
 from opentelemetry.util._decorator import _agnosticcontextmanager
+from opentelemetry.util.types import Attributes
 
 
 class TestProvider(trace.NoOpTracerProvider):
