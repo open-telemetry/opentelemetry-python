@@ -189,7 +189,7 @@ class TracerProvider(ABC):
         instrumenting_module_name: str,
         instrumenting_library_version: typing.Optional[str] = None,
         schema_url: typing.Optional[str] = None,
-        attributes: typing.Optional[dict] = None,
+        attributes: typing.Optional[types.Attributes] = None,
     ) -> "Tracer":
         """Returns a `Tracer` for use by the given instrumentation library.
 
@@ -232,7 +232,7 @@ class NoOpTracerProvider(TracerProvider):
         instrumenting_module_name: str,
         instrumenting_library_version: typing.Optional[str] = None,
         schema_url: typing.Optional[str] = None,
-        attributes: typing.Optional[dict] = None,
+        attributes: typing.Optional[types.Attributes] = None,
     ) -> "Tracer":
         # pylint:disable=no-self-use,unused-argument
         return NoOpTracer()
@@ -252,7 +252,7 @@ class ProxyTracerProvider(TracerProvider):
         instrumenting_module_name: str,
         instrumenting_library_version: typing.Optional[str] = None,
         schema_url: typing.Optional[str] = None,
-        attributes: typing.Optional[dict] = None,
+        attributes: typing.Optional[types.Attributes] = None,
     ) -> "Tracer":
         if _TRACER_PROVIDER:
             return _TRACER_PROVIDER.get_tracer(
@@ -413,7 +413,7 @@ class ProxyTracer(Tracer):
         instrumenting_module_name: str,
         instrumenting_library_version: typing.Optional[str] = None,
         schema_url: typing.Optional[str] = None,
-        attributes: typing.Optional[dict] = None,
+        attributes: typing.Optional[types.Attributes] = None,
     ):
         self._instrumenting_module_name = instrumenting_module_name
         self._instrumenting_library_version = instrumenting_library_version
@@ -501,7 +501,7 @@ def get_tracer(
     instrumenting_library_version: typing.Optional[str] = None,
     tracer_provider: Optional[TracerProvider] = None,
     schema_url: typing.Optional[str] = None,
-    attributes: typing.Optional[dict] = None,
+    attributes: typing.Optional[types.Attributes] = None,
 ) -> "Tracer":
     """Returns a `Tracer` for use by the given instrumentation library.
 
@@ -513,7 +513,10 @@ def get_tracer(
     if tracer_provider is None:
         tracer_provider = get_tracer_provider()
     return tracer_provider.get_tracer(
-        instrumenting_module_name, instrumenting_library_version, schema_url, attributes
+        instrumenting_module_name,
+        instrumenting_library_version,
+        schema_url,
+        attributes,
     )
 
 

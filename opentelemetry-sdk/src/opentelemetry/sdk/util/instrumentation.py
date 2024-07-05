@@ -16,6 +16,9 @@ from typing import Optional
 
 from deprecated import deprecated
 
+from opentelemetry.attributes import BoundedAttributes
+from opentelemetry.util.types import Attributes
+
 
 class InstrumentationInfo:
     """Immutable information about an instrumentation library module.
@@ -89,14 +92,14 @@ class InstrumentationScope:
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
-        attributes: Optional[dict] = None,
+        attributes: Optional[Attributes] = None,
     ) -> None:
         self._name = name
         self._version = version
         if schema_url is None:
             schema_url = ""
         self._schema_url = schema_url
-        self._attributes = attributes
+        self._attributes = BoundedAttributes(attributes=attributes)
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self._name}, {self._version}, {self._schema_url}, {self._attributes})"
@@ -147,7 +150,7 @@ class InstrumentationScope:
         return self._name
 
     @property
-    def attributes(self) -> Optional[dict]:
+    def attributes(self) -> Attributes:
         return self._attributes
 
     def to_json(self, indent=4) -> str:
@@ -156,7 +159,9 @@ class InstrumentationScope:
                 "name": self._name,
                 "version": self._version,
                 "schema_url": self._schema_url,
-                "attributes": self._attributes,
+                "attributes": (
+                    dict(self._attributes) if bool(self._attributes) else None
+                ),
             },
             indent=indent,
         )
