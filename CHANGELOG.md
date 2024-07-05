@@ -39,7 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Validate links at span creation
   ([#3991](https://github.com/open-telemetry/opentelemetry-python/pull/3991))
 - Add attributes field in  `MeterProvider.get_meter` and `InstrumentationScope`
-  ([#3695](https://github.com/open-telemetry/opentelemetry-python/issues/3695))
+  ([#4015](https://github.com/open-telemetry/opentelemetry-python/pull/4015))
 
 ## Version 1.25.0/0.46b0 (2024-05-30)
 
