@@ -240,10 +240,8 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         self.assertTrue(
             meter3._instrumentation_scope > meter4._instrumentation_scope
         )
-        self.assertTrue(
-            isinstance(
-                meter4._instrumentation_scope.attributes, BoundedAttributes
-            ),
+        self.assertIsInstance(
+            meter4._instrumentation_scope.attributes, BoundedAttributes
         )
 
     def test_shutdown(self):
