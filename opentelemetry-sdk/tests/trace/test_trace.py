@@ -173,14 +173,17 @@ tracer_provider.add_span_processor(mock_processor)
             "schema_url",
             {"key1": "value1", "key2": 6},
         )
-
+        # pylint: disable=protected-access
         self.assertEqual(tracer._instrumentation_scope._name, "module_name")
+        # pylint: disable=protected-access
         self.assertEqual(
             tracer._instrumentation_scope._version, "library_version"
         )
+        # pylint: disable=protected-access
         self.assertEqual(
             tracer._instrumentation_scope._schema_url, "schema_url"
         )
+        # pylint: disable=protected-access
         self.assertEqual(
             tracer._instrumentation_scope._attributes,
             {"key1": "value1", "key2": 6},
