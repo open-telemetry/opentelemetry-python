@@ -16,7 +16,7 @@ tracer_provider = trace.get_tracer_provider()
 otlp_exporter = OTLPSpanExporter(
     endpoint="http://localhost:4317",
     # For insecure connection, useful for testing
-    insecure=True
+    insecure=True,
 )
 # Add the exporter to the tracer provider
 trace.get_tracer_provider().add_span_processor(
