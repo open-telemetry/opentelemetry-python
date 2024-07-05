@@ -14,7 +14,7 @@ tracer_provider = trace.get_tracer_provider()
 
 # Create an OTLP gRPC span exporter
 otlp_exporter = OTLPSpanExporter(
-    endpoint="localhost:4317",
+    endpoint="http://localhost:4317",
     # For insecure connection, useful for testing
     insecure=True
 )
