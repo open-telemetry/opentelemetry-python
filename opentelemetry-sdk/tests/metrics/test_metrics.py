@@ -18,6 +18,7 @@ from time import sleep
 from typing import Iterable, Sequence
 from unittest.mock import MagicMock, Mock, patch
 
+from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.metrics import NoOpMeter
 from opentelemetry.sdk.environment_variables import OTEL_SDK_DISABLED
 from opentelemetry.sdk.metrics import (
@@ -43,7 +44,6 @@ from opentelemetry.sdk.metrics.view import SumAggregation, View
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.test import TestCase
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase, MockFunc
-from opentelemetry.attributes import BoundedAttributes
 
 
 class DummyMetricReader(MetricReader):
