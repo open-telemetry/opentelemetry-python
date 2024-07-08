@@ -171,20 +171,21 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         )
         self.assertIsInstance(exporter._session, requests.Session)
 
-    @patch("requests.Session.post")
-    def export_log_and_deserialize(self, log, mock_post):
-        exporter = OTLPLogExporter()
-        exporter.export([log])
-        request_body = mock_post.call_args[1]["data"]
-        request = ExportLogsServiceRequest()
-        request.ParseFromString(request_body)
-        request_dict = MessageToDict(request)
-        log_records = (
-            request_dict.get("resourceLogs")[0]
-            .get("scopeLogs")[0]
-            .get("logRecords")
-        )
-        return log_records
+    @staticmethod
+    def export_log_and_deserialize(log):
+        with patch("requests.Session.post") as mock_post:
+            exporter = OTLPLogExporter()
+            exporter.export([log])
+            request_body = mock_post.call_args[1]["data"]
+            request = ExportLogsServiceRequest()
+            request.ParseFromString(request_body)
+            request_dict = MessageToDict(request)
+            log_records = (
+                request_dict.get("resourceLogs")[0]
+                .get("scopeLogs")[0]
+                .get("logRecords")
+            )
+            return log_records
 
     def test_exported_log_without_trace_id(self):
         log = LogData(
@@ -201,7 +202,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             ),
             instrumentation_scope=InstrumentationScope("name", "version"),
         )
-        log_records = self.export_log_and_deserialize(log)
+        log_records = TestOTLPHTTPLogExporter.export_log_and_deserialize(log)
         if log_records:
             log_record = log_records[0]
             self.assertIn("spanId", log_record)
@@ -228,7 +229,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             ),
             instrumentation_scope=InstrumentationScope("name", "version"),
         )
-        log_records = self.export_log_and_deserialize(log)
+        log_records = TestOTLPHTTPLogExporter.export_log_and_deserialize(log)
         if log_records:
             log_record = log_records[0]
             self.assertIn("traceId", log_record)
