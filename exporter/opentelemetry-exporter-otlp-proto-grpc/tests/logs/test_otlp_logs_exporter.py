@@ -373,15 +373,19 @@ class TestOTLPLogExporter(TestCase):
             self.exporter.export([self.log_data_1]), LogExportResult.FAILURE
         )
 
-    def test_exported_log_without_trace_id(self):
+    def export_log_and_deserialize(self, log_data):
         # pylint: disable=protected-access
-        translated_data = self.exporter._translate_data([self.log_data_4])
+        translated_data = self.exporter._translate_data([log_data])
         request_dict = MessageToDict(translated_data)
         log_records = (
             request_dict.get("resourceLogs")[0]
             .get("scopeLogs")[0]
             .get("logRecords")
         )
+        return log_records
+
+    def test_exported_log_without_trace_id(self):
+        log_records = self.export_log_and_deserialize(self.log_data_4)
         if log_records:
             log_record = log_records[0]
             self.assertIn("spanId", log_record)
@@ -394,14 +398,7 @@ class TestOTLPLogExporter(TestCase):
             self.fail("No log records found")
 
     def test_exported_log_without_span_id(self):
-        # pylint: disable=protected-access
-        translated_data = self.exporter._translate_data([self.log_data_5])
-        request_dict = MessageToDict(translated_data)
-        log_records = (
-            request_dict.get("resourceLogs")[0]
-            .get("scopeLogs")[0]
-            .get("logRecords")
-        )
+        log_records = self.export_log_and_deserialize(self.log_data_5)
         if log_records:
             log_record = log_records[0]
             self.assertIn("traceId", log_record)

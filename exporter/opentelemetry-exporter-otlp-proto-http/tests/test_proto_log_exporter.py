@@ -172,8 +172,21 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         self.assertIsInstance(exporter._session, requests.Session)
 
     @patch("requests.Session.post")
-    def test_exported_log_without_trace_id(self, mock_post):
+    def export_log_and_deserialize(self, log, mock_post):
         exporter = OTLPLogExporter()
+        exporter.export([log])
+        request_body = mock_post.call_args[1]["data"]
+        request = ExportLogsServiceRequest()
+        request.ParseFromString(request_body)
+        request_dict = MessageToDict(request)
+        log_records = (
+            request_dict.get("resourceLogs")[0]
+            .get("scopeLogs")[0]
+            .get("logRecords")
+        )
+        return log_records
+
+    def test_exported_log_without_trace_id(self):
         log = LogData(
             log_record=SDKLogRecord(
                 timestamp=1644650195189786182,
@@ -188,16 +201,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             ),
             instrumentation_scope=InstrumentationScope("name", "version"),
         )
-        exporter.export([log])
-        request_body = mock_post.call_args[1]["data"]
-        request = ExportLogsServiceRequest()
-        request.ParseFromString(request_body)
-        request_dict = MessageToDict(request)
-        log_records = (
-            request_dict.get("resourceLogs")[0]
-            .get("scopeLogs")[0]
-            .get("logRecords")
-        )
+        log_records = self.export_log_and_deserialize(log)
         if log_records:
             log_record = log_records[0]
             self.assertIn("spanId", log_record)
@@ -209,9 +213,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         else:
             self.fail("No log records found")
 
-    @patch("requests.Session.post")
-    def test_exported_log_without_span_id(self, mock_post):
-        exporter = OTLPLogExporter()
+    def test_exported_log_without_span_id(self):
         log = LogData(
             log_record=SDKLogRecord(
                 timestamp=1644650195189786360,
@@ -226,16 +228,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             ),
             instrumentation_scope=InstrumentationScope("name", "version"),
         )
-        exporter.export([log])
-        request_body = mock_post.call_args[1]["data"]
-        request = ExportLogsServiceRequest()
-        request.ParseFromString(request_body)
-        request_dict = MessageToDict(request)
-        log_records = (
-            request_dict.get("resourceLogs")[0]
-            .get("scopeLogs")[0]
-            .get("logRecords")
-        )
+        log_records = self.export_log_and_deserialize(log)
         if log_records:
             log_record = log_records[0]
             self.assertIn("traceId", log_record)
