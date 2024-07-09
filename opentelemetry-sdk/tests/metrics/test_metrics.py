@@ -18,6 +18,7 @@ from time import sleep
 from typing import Iterable, Sequence
 from unittest.mock import MagicMock, Mock, patch
 
+from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.metrics import NoOpMeter
 from opentelemetry.sdk.environment_variables import OTEL_SDK_DISABLED
 from opentelemetry.sdk.metrics import (
@@ -126,11 +127,36 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
             "name",
             version="version",
             schema_url="schema_url",
+            attributes={"key": "value"},
         )
 
         self.assertEqual(meter._instrumentation_scope.name, "name")
         self.assertEqual(meter._instrumentation_scope.version, "version")
         self.assertEqual(meter._instrumentation_scope.schema_url, "schema_url")
+        self.assertEqual(
+            meter._instrumentation_scope.attributes, {"key": "value"}
+        )
+
+    def test_get_meter_attributes(self):
+        """
+        `MeterProvider.get_meter` arguments are used to create an
+        `InstrumentationScope` object on the created `Meter`.
+        """
+
+        meter = MeterProvider().get_meter(
+            "name",
+            version="version",
+            schema_url="schema_url",
+            attributes={"key": "value", "key2": 5, "key3": "value3"},
+        )
+
+        self.assertEqual(meter._instrumentation_scope.name, "name")
+        self.assertEqual(meter._instrumentation_scope.version, "version")
+        self.assertEqual(meter._instrumentation_scope.schema_url, "schema_url")
+        self.assertEqual(
+            meter._instrumentation_scope.attributes,
+            {"key": "value", "key2": 5, "key3": "value3"},
+        )
 
     def test_get_meter_empty(self):
         """
@@ -179,6 +205,44 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         )
         self.assertIs(meter1, meter2)
         self.assertIsNot(meter1, meter3)
+
+    def test_get_meter_comparison_with_attributes(self):
+        """
+        Subsequent calls to `MeterProvider.get_meter` with the same arguments
+        should return the same `Meter` instance.
+        """
+        mp = MeterProvider()
+        meter1 = mp.get_meter(
+            "name",
+            version="version",
+            schema_url="schema_url",
+            attributes={"key": "value", "key2": 5, "key3": "value3"},
+        )
+        meter2 = mp.get_meter(
+            "name",
+            version="version",
+            schema_url="schema_url",
+            attributes={"key": "value", "key2": 5, "key3": "value3"},
+        )
+        meter3 = mp.get_meter(
+            "name2",
+            version="version",
+            schema_url="schema_url",
+        )
+        meter4 = mp.get_meter(
+            "name",
+            version="version",
+            schema_url="schema_url",
+            attributes={"key": "value", "key2": 5, "key3": "value4"},
+        )
+        self.assertIs(meter1, meter2)
+        self.assertIsNot(meter1, meter3)
+        self.assertTrue(
+            meter3._instrumentation_scope > meter4._instrumentation_scope
+        )
+        self.assertIsInstance(
+            meter4._instrumentation_scope.attributes, BoundedAttributes
+        )
 
     def test_shutdown(self):
 
