@@ -18,7 +18,9 @@ from flask import Flask
 from opencensus.ext.flask.flask_middleware import FlaskMiddleware
 
 from opentelemetry import trace
-from opentelemetry.exporter.jaeger.thrift import JaegerExporter
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
+    OTLPSpanExporter,
+)
 from opentelemetry.instrumentation.sqlite3 import SQLite3Instrumentor
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
@@ -40,9 +42,8 @@ trace.set_tracer_provider(tracer_provider)
 # Configure OTel to export traces to Jaeger
 tracer_provider.add_span_processor(
     BatchSpanProcessor(
-        JaegerExporter(
-            agent_host_name="localhost",
-            agent_port=6831,
+        OTLPSpanExporter(
+            endpoint="localhost:4317",
         )
     )
 )
