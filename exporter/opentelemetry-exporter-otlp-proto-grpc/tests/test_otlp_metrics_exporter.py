@@ -45,6 +45,8 @@ from opentelemetry.proto.common.v1.common_pb2 import InstrumentationScope
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY,
     OTEL_EXPORTER_OTLP_METRICS_COMPRESSION,
     OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION,
     OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
@@ -223,6 +225,10 @@ class TestOTLPMetricExporter(TestCase):
             OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: "collector:4317",
             OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE: THIS_DIR
             + "/fixtures/test.cert",
+            OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE: THIS_DIR
+            + "/fixtures/test-client-cert.pem",
+            OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY: THIS_DIR
+            + "/fixtures/test-client-key.pem",
             OTEL_EXPORTER_OTLP_METRICS_HEADERS: " key1=value1,KEY2 = value=2",
             OTEL_EXPORTER_OTLP_METRICS_TIMEOUT: "10",
             OTEL_EXPORTER_OTLP_METRICS_COMPRESSION: "gzip",
