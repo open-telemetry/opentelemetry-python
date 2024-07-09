@@ -90,11 +90,13 @@ class Logger(ABC):
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
+        attributes: Optional[Attributes] = None,
     ) -> None:
         super().__init__()
         self._name = name
         self._version = version
         self._schema_url = schema_url
+        self._attributes = attributes
 
     @abstractmethod
     def emit(self, record: "LogRecord") -> None:
@@ -117,10 +119,12 @@ class ProxyLogger(Logger):
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
+        attributes: Optional[Attributes] = None,
     ):
         self._name = name
         self._version = version
         self._schema_url = schema_url
+        self._attributes = attributes
         self._real_logger: Optional[Logger] = None
         self._noop_logger = NoOpLogger(name)
 
@@ -134,6 +138,7 @@ class ProxyLogger(Logger):
                 self._name,
                 self._version,
                 self._schema_url,
+                self._attributes,
             )
             return self._real_logger
         return self._noop_logger
@@ -153,6 +158,7 @@ class LoggerProvider(ABC):
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
+        attributes: Optional[Attributes] = None,
     ) -> Logger:
         """Returns a `Logger` for use by the given instrumentation library.
 
@@ -190,9 +196,10 @@ class NoOpLoggerProvider(LoggerProvider):
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
+        attributes: Optional[Attributes] = None,
     ) -> Logger:
         """Returns a NoOpLogger."""
-        return NoOpLogger(name, version=version, schema_url=schema_url)
+        return NoOpLogger(name, version=version, schema_url=schema_url, attributes=attributes)
 
 
 class ProxyLoggerProvider(LoggerProvider):
@@ -201,17 +208,20 @@ class ProxyLoggerProvider(LoggerProvider):
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
+        attributes: Optional[Attributes] = None,
     ) -> Logger:
         if _LOGGER_PROVIDER:
             return _LOGGER_PROVIDER.get_logger(
                 name,
                 version=version,
                 schema_url=schema_url,
+                attributes=attributes,
             )
         return ProxyLogger(
             name,
             version=version,
             schema_url=schema_url,
+            attributes=attributes,
         )
 
 
@@ -261,6 +271,7 @@ def get_logger(
     instrumenting_library_version: str = "",
     logger_provider: Optional[LoggerProvider] = None,
     schema_url: Optional[str] = None,
+    attributes: Optional[Attributes] = None,
 ) -> "Logger":
     """Returns a `Logger` for use within a python process.
 
@@ -272,5 +283,5 @@ def get_logger(
     if logger_provider is None:
         logger_provider = get_logger_provider()
     return logger_provider.get_logger(
-        instrumenting_module_name, instrumenting_library_version, schema_url
+        instrumenting_module_name, instrumenting_library_version, schema_url, attributes
     )
