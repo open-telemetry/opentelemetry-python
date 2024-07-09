@@ -142,3 +142,4 @@ Emeritus Maintainers:
 <a href="https://github.com/open-telemetry/opentelemetry-python/graphs/contributors">
   <img src="https://contributors-img.web.app/image?repo=open-telemetry/opentelemetry-python" />
 </a>
+
