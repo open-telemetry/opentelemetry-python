@@ -142,6 +142,7 @@ class NoOpMeterProvider(MeterProvider):
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
+        attributes: Optional[Attributes] = None,
     ) -> "Meter":
         """Returns a NoOpMeter."""
         return NoOpMeter(name, version=version, schema_url=schema_url)
@@ -158,6 +159,7 @@ class _ProxyMeterProvider(MeterProvider):
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
+        attributes: Optional[Attributes] = None,
     ) -> "Meter":
         with self._lock:
             if self._real_meter_provider is not None:
