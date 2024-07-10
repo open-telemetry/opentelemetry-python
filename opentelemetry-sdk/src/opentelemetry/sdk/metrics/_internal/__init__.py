@@ -54,6 +54,7 @@ from opentelemetry.sdk.metrics._internal.sdk_configuration import (
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.util._once import Once
+from opentelemetry.util.types import Attributes
 
 _logger = getLogger(__name__)
 
@@ -518,6 +519,7 @@ class MeterProvider(APIMeterProvider):
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
+        attributes: Optional[Attributes] = None,
     ) -> Meter:
 
         if self._disabled:
@@ -534,7 +536,7 @@ class MeterProvider(APIMeterProvider):
             _logger.warning("Meter name cannot be None or empty.")
             return NoOpMeter(name, version=version, schema_url=schema_url)
 
-        info = InstrumentationScope(name, version, schema_url)
+        info = InstrumentationScope(name, version, schema_url, attributes)
         with self._meter_lock:
             if not self._meters.get(info):
                 # FIXME #2558 pass SDKConfig object to meter so that the meter
