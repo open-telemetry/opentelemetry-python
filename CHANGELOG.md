@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-- Update sdk process resource detector 'process.command_args' to be aligned with the spec.
+- Update sdk process resource detector `PROCESS_COMMAND_ARGS` attribute to also include the executable itself
   ([#4032](https://github.com/open-telemetry/opentelemetry-python/pull/4032))
 - Fix `start_time_unix_nano` for delta collection for explicit bucket histogram aggregation
   ([#4009](https://github.com/open-telemetry/opentelemetry-python/pull/4009))
