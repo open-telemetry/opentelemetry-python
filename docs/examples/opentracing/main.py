@@ -3,7 +3,9 @@
 from rediscache import RedisCache
 
 from opentelemetry import trace
-from opentelemetry.exporter.jaeger.thrift import JaegerExporter
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
+    OTLPSpanExporter,
+)
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.shim import opentracing_shim
@@ -12,13 +14,16 @@ from opentelemetry.shim import opentracing_shim
 trace.set_tracer_provider(TracerProvider())
 tracer_provider = trace.get_tracer_provider()
 
-# Configure the tracer to export traces to Jaeger
-jaeger_exporter = JaegerExporter(
-    agent_host_name="localhost",
-    agent_port=6831,
+# Create an OTLP gRPC span exporter
+otlp_exporter = OTLPSpanExporter(
+    endpoint="http://localhost:4317",
+    # For insecure connection, useful for testing
+    insecure=True,
 )
-span_processor = BatchSpanProcessor(jaeger_exporter)
-tracer_provider.add_span_processor(span_processor)
+# Add the exporter to the tracer provider
+trace.get_tracer_provider().add_span_processor(
+    BatchSpanProcessor(otlp_exporter)
+)
 
 # Create an OpenTracing shim. This implements the OpenTracing tracer API, but
 # forwards calls to the underlying OpenTelemetry tracer.
