@@ -15,6 +15,7 @@
 # pylint: disable=too-many-lines
 
 import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
 
 # pylint: disable=too-many-lines
@@ -852,7 +853,9 @@ class TestOTLPMetricExporter(TestCase):
             )
         self.exporter = OTLPMetricExporter()
 
-    def test_shutdown_wait_last_export(self):
+    def test_shutdown_wait_for_last_export_finishing_within_shutdown_timeout(
+        self,
+    ):
         add_MetricsServiceServicer_to_server(
             MetricsServiceServicerUNAVAILABLEDelay(), self.server
         )
@@ -863,15 +866,24 @@ class TestOTLPMetricExporter(TestCase):
         export_thread.start()
         try:
             # pylint: disable=protected-access
+
+            # Wait for the export thread to hold the lock. Since the main thread is not synchronized
+            # with the export thread, the thread may not be ready yet.
+            for _ in range(5):
+                if self.exporter._exporter._export_lock.locked():
+                    break
+                time.sleep(0.01)
             self.assertTrue(self.exporter._exporter._export_lock.locked())
-            # delay is 4 seconds while the default shutdown timeout is 30_000 milliseconds
+
+            # 6 retries with a fixed retry delay of 10ms (see TraceServiceServicerUNAVAILABLEDelay)
+            # The default shutdown timeout is 30 seconds
+            # This means the retries will finish long before the shutdown flag will be set
             start_time = time_ns()
             self.exporter.shutdown()
             now = time_ns()
-            self.assertGreaterEqual(now, (start_time + 30 / 1000))
-            # pylint: disable=protected-access
+            # Verify that the shutdown method finished within the shutdown timeout
+            self.assertLessEqual(now, (start_time + 3e10))
             self.assertTrue(self.exporter._shutdown)
-            # pylint: disable=protected-access
             self.assertFalse(self.exporter._exporter._export_lock.locked())
         finally:
             export_thread.join()
