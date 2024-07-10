@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import threading
+import time
 from logging import WARNING
 from time import time_ns
 from types import MethodType
@@ -153,7 +154,9 @@ class TestOTLPExporterMixin(TestCase):
                 "Exporter already shutdown, ignoring batch",
             )
 
-    def test_shutdown_wait_last_export(self):
+    def test_shutdown_wait_for_last_export_finishing_within_shutdown_timeout(
+        self,
+    ):
         result_mock = Mock()
         rpc_error = RpcError()
 
@@ -194,15 +197,24 @@ class TestOTLPExporterMixin(TestCase):
         export_thread.start()
         try:
             # pylint: disable=protected-access
+
+            # Wait for the export thread to hold the lock. Since the main thread is not synchronized
+            # with the export thread, the thread may not be ready yet.
+            for _ in range(5):
+                if otlp_mock_exporter._export_lock.locked():
+                    break
+                time.sleep(0.01)
             self.assertTrue(otlp_mock_exporter._export_lock.locked())
-            # delay is 1 second while the default shutdown timeout is 30_000 milliseconds
+
+            # 6 retries with a fixed retry delay of 10ms (see TraceServiceServicerUNAVAILABLEDelay)
+            # The default shutdown timeout is 30 seconds
+            # This means the retries will finish long before the shutdown flag will be set
             start_time = time_ns()
             otlp_mock_exporter.shutdown()
             now = time_ns()
-            self.assertGreaterEqual(now, (start_time + 30 / 1000))
-            # pylint: disable=protected-access
+            # Verify that the shutdown method finished within the shutdown timeout
+            self.assertLessEqual(now, (start_time + 3e10))
             self.assertTrue(otlp_mock_exporter._shutdown)
-            # pylint: disable=protected-access
             self.assertFalse(otlp_mock_exporter._export_lock.locked())
         finally:
             export_thread.join()
