@@ -1,5 +1,5 @@
 asgiref==3.7.2
-certifi==2024.2.2
+certifi==2024.7.4
 charset-normalizer==3.3.2
 Deprecated==1.2.14
 idna==3.7
