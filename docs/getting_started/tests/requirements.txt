@@ -21,7 +21,7 @@ typing_extensions==4.8.0
 urllib3==1.26.19
 Werkzeug==3.0.3
 wrapt==1.15.0
-zipp==3.17.0
+zipp==3.19.2
 -e opentelemetry-semantic-conventions
 -e opentelemetry-api
 -e opentelemetry-sdk
