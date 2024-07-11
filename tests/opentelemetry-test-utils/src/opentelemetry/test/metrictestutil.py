@@ -83,7 +83,7 @@ def _generate_gauge(
             data_points=[
                 NumberDataPoint(
                     attributes=attributes,
-                    start_time_unix_nano=1641946015139533244,
+                    start_time_unix_nano=None,
                     time_unix_nano=1641946016139533244,
                     value=value,
                 )
