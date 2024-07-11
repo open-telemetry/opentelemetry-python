@@ -10,7 +10,7 @@ pytest-benchmark==4.0.0
 tomli==2.0.1
 typing_extensions==4.10.0
 wrapt==1.16.0
-zipp==3.17.0
+zipp==3.19.2
 -e opentelemetry-api
 -e opentelemetry-sdk
 -e opentelemetry-semantic-conventions
