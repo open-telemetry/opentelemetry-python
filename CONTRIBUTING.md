@@ -126,7 +126,7 @@ The continuation integration overrides that environment variable with as per the
 
 ### Benchmarks
 
-Running the `tox` tests also runs the performance tests if any are available. Benchmarking tests are done with `pytest-benchmark` and they output a table with results to the console.
+Some packages have benchmark tests. To run them, run `tox -f benchmark`. Benchmark tests use `pytest-benchmark` and they output a table with results to the console.
 
 To write benchmarks, simply use the [pytest benchmark fixture](https://pytest-benchmark.readthedocs.io/en/latest/usage.html#usage) like the following:
 
@@ -142,10 +142,10 @@ def test_simple_start_span(benchmark):
     benchmark(benchmark_start_as_current_span, "benchmarkedSpan", 42)
 ```
 
-Make sure the test file is under the `tests/performance/benchmarks/` folder of
+Make sure the test file is under the `benchmarks/` folder of
 the package it is benchmarking and further has a path that corresponds to the
 file in the package it is testing. Make sure that the file name begins with
-`test_benchmark_`. (e.g. `opentelemetry-sdk/tests/performance/benchmarks/trace/propagation/test_benchmark_b3_format.py`)
+`test_benchmark_`. (e.g. `opentelemetry-sdk/benchmarks/trace/propagation/test_benchmark_b3_format.py`)
 
 ## Pull Requests
 
