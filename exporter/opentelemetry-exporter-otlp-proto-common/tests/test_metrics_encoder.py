@@ -296,6 +296,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                     ),
                                                 ],
                                                 time_unix_nano=1641946016139533244,
+                                                start_time_unix_nano=0,
                                                 as_int=9000,
                                             )
                                         ],
