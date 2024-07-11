@@ -17,6 +17,8 @@
 # Any tests that fail here indicate that the public API has changed in a way that is not backwards compatible.
 # Either bump the major version of the API, or make the necessary changes to the API to remain semver compatible.
 
+# pylint: disable=useless-parent-delegation,arguments-differ
+
 from typing import Optional
 
 from opentelemetry.metrics import (
