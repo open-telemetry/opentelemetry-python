@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=protected-access,no-self-use
+
 
 from logging import WARNING
 from time import sleep
@@ -316,7 +318,7 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         self.assertEqual(mock_logger.warning.call_count, num_threads - 1)
 
     @patch(
-        "opentelemetry.sdk.metrics._internal." "SynchronousMeasurementConsumer"
+        "opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer"
     )
     def test_measurement_collect_callback(
         self, mock_sync_measurement_consumer
@@ -339,7 +341,7 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         )
 
     @patch(
-        "opentelemetry.sdk.metrics." "_internal.SynchronousMeasurementConsumer"
+        "opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer"
     )
     def test_creates_sync_measurement_consumer(
         self, mock_sync_measurement_consumer
@@ -348,7 +350,7 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         mock_sync_measurement_consumer.assert_called()
 
     @patch(
-        "opentelemetry.sdk.metrics." "_internal.SynchronousMeasurementConsumer"
+        "opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer"
     )
     def test_register_asynchronous_instrument(
         self, mock_sync_measurement_consumer
@@ -373,7 +375,7 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         )
 
     @patch(
-        "opentelemetry.sdk.metrics._internal." "SynchronousMeasurementConsumer"
+        "opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer"
     )
     def test_consume_measurement_counter(self, mock_sync_measurement_consumer):
         sync_consumer_instance = mock_sync_measurement_consumer()
@@ -385,7 +387,7 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         sync_consumer_instance.consume_measurement.assert_called()
 
     @patch(
-        "opentelemetry.sdk.metrics." "_internal.SynchronousMeasurementConsumer"
+        "opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer"
     )
     def test_consume_measurement_up_down_counter(
         self, mock_sync_measurement_consumer
@@ -401,7 +403,7 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         sync_consumer_instance.consume_measurement.assert_called()
 
     @patch(
-        "opentelemetry.sdk.metrics._internal." "SynchronousMeasurementConsumer"
+        "opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer"
     )
     def test_consume_measurement_histogram(
         self, mock_sync_measurement_consumer
@@ -415,7 +417,7 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         sync_consumer_instance.consume_measurement.assert_called()
 
     @patch(
-        "opentelemetry.sdk.metrics._internal." "SynchronousMeasurementConsumer"
+        "opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer"
     )
     def test_consume_measurement_gauge(self, mock_sync_measurement_consumer):
         sync_consumer_instance = mock_sync_measurement_consumer()
