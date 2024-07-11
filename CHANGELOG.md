@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - OTLP exporter is encoding invalid span/trace IDs in the logs fix
   ([#4006](https://github.com/open-telemetry/opentelemetry-python/pull/4006))
+- Update sdk process resource detector `process.command_args` attribute to also include the executable itself
+  ([#4032](https://github.com/open-telemetry/opentelemetry-python/pull/4032))
 - Fix `start_time_unix_nano` for delta collection for explicit bucket histogram aggregation
   ([#4009](https://github.com/open-telemetry/opentelemetry-python/pull/4009))
 - Fix `start_time_unix_nano` for delta collection for sum aggregation
