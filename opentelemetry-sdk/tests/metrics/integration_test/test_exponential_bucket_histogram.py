@@ -54,6 +54,8 @@ class TestExponentialBucketHistogramAggregation(TestCase):
 
         histogram = meter.create_histogram("histogram")
 
+        # The test scenario here is calling collect without calling aggregate
+        # ever before.
         results = []
 
         for _ in range(10):
@@ -63,6 +65,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         for metrics_data in results:
             self.assertIsNone(metrics_data)
 
+        # The test scenario here is calling aggregate then collect repeatedly.
         results = []
 
         for test_value in self.test_values:
@@ -115,6 +118,9 @@ class TestExponentialBucketHistogramAggregation(TestCase):
                 metric_data.sum, self.test_values[index + 1]
             )
 
+        # The test scenario here is calling collect without calling aggregate
+        # immediately before, but having aggregate being called before at some
+        # moment.
         results = []
 
         for _ in range(10):
@@ -126,6 +132,9 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         for metrics_data in results:
             self.assertIsNone(metrics_data)
 
+        # The test scenario here is calling aggregate and collect, waiting for
+        # a certain amount of time, calling collect, then calling aggregate and
+        # collect again.
         results = []
 
         histogram.record(1)
