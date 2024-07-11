@@ -63,7 +63,9 @@ class TestLoggerProvider(unittest.TestCase):
         self.assertEqual(
             logger._instrumentation_scope.schema_url, "schema_url"
         )
-        self.assertEqual(logger._instrumentation_scope.attributes, {"key": "value"})
+        self.assertEqual(
+            logger._instrumentation_scope.attributes, {"key": "value"}
+        )
 
     @patch.dict("os.environ", {OTEL_SDK_DISABLED: "true"})
     def test_get_logger_with_sdk_disabled(self):

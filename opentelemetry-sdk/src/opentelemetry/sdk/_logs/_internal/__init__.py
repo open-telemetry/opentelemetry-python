@@ -651,7 +651,12 @@ class LoggerProvider(APILoggerProvider):
     ) -> Logger:
         if self._disabled:
             _logger.warning("SDK is disabled.")
-            return NoOpLogger(name, version=version, schema_url=schema_url, attributes=attributes)
+            return NoOpLogger(
+                name,
+                version=version,
+                schema_url=schema_url,
+                attributes=attributes,
+            )
         return Logger(
             self._resource,
             self._multi_log_record_processor,

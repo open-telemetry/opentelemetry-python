@@ -199,7 +199,9 @@ class NoOpLoggerProvider(LoggerProvider):
         attributes: Optional[Attributes] = None,
     ) -> Logger:
         """Returns a NoOpLogger."""
-        return NoOpLogger(name, version=version, schema_url=schema_url, attributes=attributes)
+        return NoOpLogger(
+            name, version=version, schema_url=schema_url, attributes=attributes
+        )
 
 
 class ProxyLoggerProvider(LoggerProvider):
@@ -283,5 +285,8 @@ def get_logger(
     if logger_provider is None:
         logger_provider = get_logger_provider()
     return logger_provider.get_logger(
-        instrumenting_module_name, instrumenting_library_version, schema_url, attributes
+        instrumenting_module_name,
+        instrumenting_library_version,
+        schema_url,
+        attributes,
     )
