@@ -7,42 +7,25 @@ on:
 jobs:
   sdk-benchmarks:
     env:
-      py312: "3.12"
-      RUN_MATRIX_COMBINATION: ${{ matrix.python-version }}-sdk-${{ matrix.os }}
     runs-on: self-hosted
-    strategy:
-      # Ensures the entire test matrix is run, even if one permutation fails
-      fail-fast: false
-      matrix:
-        python-version: [py312]
-        os: [ubuntu-20.04, windows-2019]
     steps:
     - name: Checkout Core Repo @ SHA - ${{ github.sha }}
       uses: actions/checkout@v4
-    - name: Set up Python ${{ env[matrix.python-version] }}
+    - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: ${{ env[matrix.python-version] }}
+        python-version: "3.12"
         architecture: 'x64'
     - name: Install tox
       run: pip install tox
-    - name: Cache tox environment
-      # Preserves .tox directory between runs for faster installs
-      uses: actions/cache@v4
-      with:
-        path: |
-          .tox
-          ~/.cache/pip
-        key: v3-tox-cache-${{ env.RUN_MATRIX_COMBINATION }}-${{ hashFiles('tox.ini',
-          'dev-requirements.txt') }}-core
     - name: Run tox
-      run: tox -f ${{ matrix.python-version }}-sdk -- -k opentelemetry-sdk/tests/performance/benchmarks --benchmark-json=opentelemetry-sdk/tests/output.json
+      run: tox -e benchmark-opentelemetry-sdk -- -k opentelemetry-sdk/benchmarks --benchmark-json=opentelemetry-sdk/output.json
     - name: Report on SDK benchmark results
       uses: benchmark-action/github-action-benchmark@v1
       with:
-        name: OpenTelemetry Python SDK Benchmarks - Python ${{ env[matrix.python-version ]}} - SDK
+        name: OpenTelemetry Python SDK Benchmarks
         tool: pytest
-        output-file-path: opentelemetry-sdk/tests/output.json
+        output-file-path: opentelemetry-sdk/output.json
         gh-pages-branch: gh-pages
         github-token: ${{ secrets.GITHUB_TOKEN }}
         # Make a commit on `gh-pages` with benchmarks from previous step
