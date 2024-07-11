@@ -40,7 +40,7 @@ tracer = trace.get_tracer(__name__)
 @app.route("/")
 def hello():
     with tracer.start_as_current_span("example-request"):
-        requests.get("http://www.example.com")
+        requests.get("http://www.example.com", timeout=10)
     return "hello"
 
 
