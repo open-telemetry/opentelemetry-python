@@ -55,7 +55,7 @@ default_tracer_provider = "opentelemetry.trace:NoOpTracerProvider"
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/opentelemetry-api"
 
 [tool.hatch.version]
-path = "src/opentelemetry/version.py"
+path = "src/opentelemetry/version/__init__.py"
 
 [tool.hatch.build.targets.sdist]
 include = [
