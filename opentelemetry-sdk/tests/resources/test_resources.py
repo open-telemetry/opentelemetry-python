@@ -608,7 +608,7 @@ class TestOTELResourceDetector(unittest.TestCase):
         )
         self.assertEqual(
             aggregated_resource.attributes[PROCESS_COMMAND_ARGS],
-            tuple(sys.argv[1:]),
+            tuple(sys.argv),
         )
 
     def test_resource_detector_entry_points_default(self):
