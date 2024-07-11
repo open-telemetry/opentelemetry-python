@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- optional scope attributes for logger creation
+  ([#4035](https://github.com/open-telemetry/opentelemetry-python/pull/4035))
 - OTLP exporter is encoding invalid span/trace IDs in the logs fix
   ([#4006](https://github.com/open-telemetry/opentelemetry-python/pull/4006))
 - Update sdk process resource detector `process.command_args` attribute to also include the executable itself
