@@ -1,5 +1,5 @@
 asgiref==3.7.2
-certifi==2024.2.2
+certifi==2024.7.4
 charset-normalizer==3.3.2
 Deprecated==1.2.14
 googleapis-common-protos==1.62.0
@@ -18,7 +18,7 @@ tomli==2.0.1
 typing_extensions==4.10.0
 urllib3==2.2.2
 wrapt==1.16.0
-zipp==3.17.0
+zipp==3.19.2
 -e opentelemetry-api
 -e tests/opentelemetry-test-utils
 -e exporter/opentelemetry-exporter-otlp-proto-common
