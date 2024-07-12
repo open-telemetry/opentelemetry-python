@@ -104,6 +104,7 @@ class TestExplicitBucketHistogramAggregation(TestCase):
             previous_time_unix_nano = metric_data.time_unix_nano
             self.assertEqual(
                 metric_data.bucket_counts,
+                # pylint: disable=consider-using-generator
                 tuple(
                     [
                         1 if internal_index == index + 2 else 0
@@ -224,6 +225,7 @@ class TestExplicitBucketHistogramAggregation(TestCase):
             )
             self.assertEqual(
                 metric_data.bucket_counts,
+                # pylint: disable=consider-using-generator
                 tuple(
                     [
                         (

@@ -38,7 +38,7 @@ from opentelemetry.sdk.metrics.view import (
 )
 
 
-class Test_ViewInstrumentMatch(TestCase):
+class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
     @classmethod
     def setUpClass(cls):
 

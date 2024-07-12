@@ -200,7 +200,6 @@ class TestObservableGauge(TestCase):
         )
 
     def test_generator_multiple_generator_callback(self):
-        self.maxDiff = None
         observable_gauge = _ObservableGauge(
             "name",
             Mock(),

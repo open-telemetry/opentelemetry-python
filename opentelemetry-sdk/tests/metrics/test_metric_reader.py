@@ -64,7 +64,7 @@ class DummyMetricReader(MetricReader):
 
     def _receive_metrics(
         self,
-        metrics: Iterable[Metric],
+        metrics_data: Iterable[Metric],
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> None:
@@ -148,6 +148,7 @@ class TestMetricReader(TestCase):
             LastValueAggregation,
         )
 
+    # pylint: disable=no-self-use
     def test_force_flush(self):
 
         with patch.object(DummyMetricReader, "collect") as mock_collect:

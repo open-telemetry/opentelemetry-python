@@ -173,6 +173,7 @@ class TestExponentMapping(TestCase):
         self.assertEqual(exponent_mapping.map_to_index(0.06), -3)
 
     def test_exponent_mapping_neg_four(self):
+        # pylint: disable=too-many-statements
         exponent_mapping = ExponentMapping(-4)
         self.assertEqual(exponent_mapping.map_to_index(float(0x1)), -1)
         self.assertEqual(exponent_mapping.map_to_index(float(0x10)), 0)

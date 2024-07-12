@@ -55,6 +55,7 @@ def left_boundary(scale: int, index: int) -> float:
 
 
 class TestLogarithmMapping(TestCase):
+    # pylint: disable=invalid-name
     def assertInEpsilon(self, first, second, epsilon):
         self.assertLessEqual(first, (second * (1 + epsilon)))
         self.assertGreaterEqual(first, (second * (1 - epsilon)))

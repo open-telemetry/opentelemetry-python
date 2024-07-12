@@ -54,7 +54,7 @@ class DummyMetricReader(MetricReader):
 
     def _receive_metrics(
         self,
-        metrics: Iterable[Metric],
+        metrics_data: Iterable[Metric],
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> None:
@@ -358,6 +358,7 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
 
         meter_provider = MeterProvider()
 
+        # pylint: disable=no-member
         meter_provider._measurement_consumer.register_asynchronous_instrument.assert_called_with(
             meter_provider.get_meter("name").create_observable_counter(
                 "name0", callbacks=[Mock()]
@@ -546,11 +547,11 @@ class InMemoryMetricExporter(MetricExporter):
 
     def export(
         self,
-        metrics: Sequence[Metric],
+        metrics_data: Sequence[Metric],
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> MetricExportResult:
-        self.metrics[self._counter] = metrics
+        self.metrics[self._counter] = metrics_data
         self._counter += 1
         return MetricExportResult.SUCCESS
 

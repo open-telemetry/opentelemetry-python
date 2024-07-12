@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=protected-access
+# pylint: disable=protected-access,invalid-name,no-self-use
 
 import math
 from logging import WARNING
@@ -55,12 +55,12 @@ class FakeMetricsExporter(MetricExporter):
 
     def export(
         self,
-        metrics: Sequence[Metric],
+        metrics_data: Sequence[Metric],
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> MetricExportResult:
         sleep(self.wait)
-        self.metrics.extend(metrics)
+        self.metrics.extend(metrics_data)
         return True
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
@@ -85,6 +85,7 @@ class ExceptionAtCollectionPeriodicExportingMetricReader(
         )
         self._collect_exception = exception
 
+    # pylint: disable=overridden-final-method
     def collect(self, timeout_millis: float = 10_000) -> None:
         raise self._collect_exception
 
@@ -216,7 +217,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         pmr = self._create_periodic_reader([], FakeMetricsExporter())
         with self.assertLogs(level="WARNING") as w:
             self.run_with_many_threads(pmr.shutdown)
-        self.assertTrue("Can't shutdown multiple times", w.output[0])
+        self.assertTrue("Can't shutdown multiple times" in w.output[0])
         with self.assertLogs(level="WARNING") as w:
             pmr.shutdown()
 
