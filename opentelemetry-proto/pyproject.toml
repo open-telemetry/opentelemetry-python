@@ -23,6 +23,7 @@ classifiers = [
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
   "protobuf>=3.19, < 5.0",
@@ -32,7 +33,7 @@ dependencies = [
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/opentelemetry-proto"
 
 [tool.hatch.version]
-path = "src/opentelemetry/proto/version.py"
+path = "src/opentelemetry/proto/version/__init__.py"
 
 [tool.hatch.build.targets.sdist]
 include = [

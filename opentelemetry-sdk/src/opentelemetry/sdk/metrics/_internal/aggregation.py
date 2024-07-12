@@ -278,15 +278,15 @@ class _SumAggregation(_Aggregation[Sum]):
                     is AggregationTemporality.DELTA
                 ):
 
-                    if current_value is None:
-                        return None
-
                     previous_collection_start_nano = (
                         self._previous_collection_start_nano
                     )
                     self._previous_collection_start_nano = (
                         collection_start_nano
                     )
+
+                    if current_value is None:
+                        return None
 
                     return NumberDataPoint(
                         attributes=self._attributes,
@@ -370,7 +370,7 @@ class _LastValueAggregation(_Aggregation[GaugePoint]):
 
         return NumberDataPoint(
             attributes=self._attributes,
-            start_time_unix_nano=0,
+            start_time_unix_nano=None,
             time_unix_nano=collection_start_nano,
             value=value,
         )
@@ -471,15 +471,15 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     is AggregationTemporality.DELTA
                 ):
 
-                    if current_value is None:
-                        return None
-
                     previous_collection_start_nano = (
                         self._previous_collection_start_nano
                     )
                     self._previous_collection_start_nano = (
                         collection_start_nano
                     )
+
+                    if current_value is None:
+                        return None
 
                     return HistogramDataPoint(
                         attributes=self._attributes,

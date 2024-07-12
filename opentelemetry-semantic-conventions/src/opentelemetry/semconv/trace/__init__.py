@@ -20,9 +20,9 @@ from deprecated import deprecated
 
 
 @deprecated(
-    "1.25.0",
+    version="1.25.0",
     reason="Use attributes defined in the :py:const:`opentelemetry.semconv.attributes` and :py:const:`opentelemetry.semconv._incubating.attributes` modules instead.",
-)
+)  # type: ignore
 class SpanAttributes:
     SCHEMA_URL = "https://opentelemetry.io/schemas/v1.21.0"
     """
@@ -1406,7 +1406,7 @@ class SpanAttributes:
 @deprecated(
     version="1.18.0",
     reason="Removed from the specification in favor of `network.protocol.name` and `network.protocol.version` attributes",
-)
+)  # type: ignore
 class HttpFlavorValues(Enum):
     HTTP_1_0 = "1.0"
 
@@ -1424,7 +1424,7 @@ class HttpFlavorValues(Enum):
 @deprecated(
     version="1.18.0",
     reason="Removed from the specification",
-)
+)  # type: ignore
 class MessagingDestinationKindValues(Enum):
     QUEUE = "queue"
     """A message sent to a queue."""
@@ -1436,7 +1436,7 @@ class MessagingDestinationKindValues(Enum):
 @deprecated(
     version="1.21.0",
     reason="Renamed to NetworkConnectionTypeValues",
-)
+)  # type: ignore
 class NetHostConnectionTypeValues(Enum):
     WIFI = "wifi"
     """wifi."""
@@ -1457,7 +1457,7 @@ class NetHostConnectionTypeValues(Enum):
 @deprecated(
     version="1.21.0",
     reason="Renamed to NetworkConnectionSubtypeValues",
-)
+)  # type: ignore
 class NetHostConnectionSubtypeValues(Enum):
     GPRS = "gprs"
     """GPRS."""
@@ -1524,9 +1524,9 @@ class NetHostConnectionSubtypeValues(Enum):
 
 
 @deprecated(
-    "1.25.0",
+    version="1.25.0",
     reason="Use :py:const:`opentelemetry.semconv.attributes.NetworkTransportValues` instead.",
-)
+)  # type: ignore
 class NetTransportValues(Enum):
     IP_TCP = "ip_tcp"
     """ip_tcp."""
@@ -1545,9 +1545,9 @@ class NetTransportValues(Enum):
 
 
 @deprecated(
-    "1.25.0",
+    version="1.25.0",
     reason="Use :py:const:`opentelemetry.semconv.attributes.NetworkType` instead.",
-)
+)  # type: ignore
 class NetSockFamilyValues(Enum):
     INET = "inet"
     """IPv4 address."""
@@ -1560,9 +1560,9 @@ class NetSockFamilyValues(Enum):
 
 
 @deprecated(
-    "1.25.0",
+    version="1.25.0",
     reason="Use :py:const:`opentelemetry.semconv.attributes.HttpRequestMethodValues` instead.",
-)
+)  # type: ignore
 class HttpRequestMethodValues(Enum):
     CONNECT = "CONNECT"
     """CONNECT method."""
@@ -1595,7 +1595,7 @@ class HttpRequestMethodValues(Enum):
     """Any HTTP method that the instrumentation has no prior knowledge of."""
 
 
-@deprecated("1.25.0", reason="Removed from the specification.")
+@deprecated(version="1.25.0", reason="Removed from the specification.")  # type: ignore
 class EventDomainValues(Enum):
     BROWSER = "browser"
     """Events from browser apps."""
@@ -1608,9 +1608,9 @@ class EventDomainValues(Enum):
 
 
 @deprecated(
-    "1.25.0",
+    version="1.25.0",
     reason="Use :py:const:`opentelemetry.semconv._incubating.attributes.LogIostreamValues` instead.",
-)
+)  # type: ignore
 class LogIostreamValues(Enum):
     STDOUT = "stdout"
     """Logs from stdout stream."""
@@ -1619,7 +1619,7 @@ class LogIostreamValues(Enum):
     """Events from stderr stream."""
 
 
-@deprecated("1.25.0", reason="Removed from the specification.")
+@deprecated(version="1.25.0", reason="Removed from the specification.")  # type: ignore
 class TypeValues(Enum):
     HEAP = "heap"
     """Heap memory."""
@@ -1629,9 +1629,9 @@ class TypeValues(Enum):
 
 
 @deprecated(
-    "1.25.0",
+    version="1.25.0",
     reason="Use :py:const:`opentelemetry.semconv._incubating.attributes.OpentracingRefTypeValues` instead.",
-)
+)  # type: ignore
 class OpentracingRefTypeValues(Enum):
     CHILD_OF = "child_of"
     """The parent Span depends on the child Span in some capacity."""

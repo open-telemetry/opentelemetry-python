@@ -81,7 +81,7 @@ except ImportError:
     psutil = None
 
 LabelValue = AttributeValue
-Attributes = typing.Dict[str, LabelValue]
+Attributes = typing.Mapping[str, LabelValue]
 logger = logging.getLogger(__name__)
 
 CLOUD_PROVIDER = ResourceAttributes.CLOUD_PROVIDER
@@ -348,7 +348,7 @@ class ProcessResourceDetector(ResourceDetector):
         _process_executable_path = os.path.dirname(_process_executable_name)
         _process_command = sys.argv[0]
         _process_command_line = " ".join(sys.argv)
-        _process_command_args = sys.argv[1:]
+        _process_command_args = sys.argv
         resource_info = {
             PROCESS_RUNTIME_DESCRIPTION: sys.version,
             PROCESS_RUNTIME_NAME: sys.implementation.name,

@@ -12,17 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from enum import Enum
+from typing import Final
 
-STATE = "state"
+from deprecated import deprecated
+
+STATE: Final = "state"
 """
-The state of a connection in the pool.
+Deprecated: Replaced by `db.client.connections.state`.
 """
 
 
+@deprecated(reason="The attribute state is deprecated - Replaced by `db.client.connections.state`")  # type: ignore
 class StateValues(Enum):
-    IDLE = "idle"
+    IDLE: Final = "idle"
     """idle."""
-    USED = "used"
+    USED: Final = "used"
     """used."""

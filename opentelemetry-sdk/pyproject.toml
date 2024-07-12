@@ -23,6 +23,7 @@ classifiers = [
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
   "Typing :: Typed",
 ]
 dependencies = [
@@ -71,7 +72,7 @@ process = "opentelemetry.sdk.resources:ProcessResourceDetector"
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/opentelemetry-sdk"
 
 [tool.hatch.version]
-path = "src/opentelemetry/sdk/version.py"
+path = "src/opentelemetry/sdk/version/__init__.py"
 
 [tool.hatch.build.targets.sdist]
 include = [

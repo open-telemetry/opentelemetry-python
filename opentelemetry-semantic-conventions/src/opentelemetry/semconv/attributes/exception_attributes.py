@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Final
 
-EXCEPTION_ESCAPED = "exception.escaped"
+EXCEPTION_ESCAPED: Final = "exception.escaped"
 """
 SHOULD be set to true if the exception event is recorded at a point where it is known that the exception is escaping the scope of the span.
 Note: An exception is considered to have escaped (or left) the scope of a span,
@@ -26,7 +27,7 @@ Note: An exception is considered to have escaped (or left) the scope of a span,
     whether it will escape the scope of a span.
     However, it is trivial to know that an exception
     will escape, if one checks for an active exception just before ending the span,
-    as done in the [example for recording span exceptions](#recording-an-exception).
+    as done in the [example for recording span exceptions](https://opentelemetry.io/docs/specs/semconv/exceptions/exceptions-spans/#recording-an-exception).
 
     It follows that an exception may still escape the scope of the span
     even if the `exception.escaped` attribute was not set or set to false,
@@ -34,17 +35,17 @@ Note: An exception is considered to have escaped (or left) the scope of a span,
     clear whether the exception will escape.
 """
 
-EXCEPTION_MESSAGE = "exception.message"
+EXCEPTION_MESSAGE: Final = "exception.message"
 """
 The exception message.
 """
 
-EXCEPTION_STACKTRACE = "exception.stacktrace"
+EXCEPTION_STACKTRACE: Final = "exception.stacktrace"
 """
 A stacktrace as a string in the natural representation for the language runtime. The representation is to be determined and documented by each language SIG.
 """
 
-EXCEPTION_TYPE = "exception.type"
+EXCEPTION_TYPE: Final = "exception.type"
 """
 The type of the exception (its fully-qualified class name, if applicable). The dynamic type of the exception should be preferred over the static type in languages that support it.
 """
