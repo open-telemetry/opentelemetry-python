@@ -1,0 +1,54 @@
+name: Lint tests
+
+on:
+  push:
+    branches-ignore:
+    - 'release/*'
+  pull_request:
+
+jobs:
+  lint-3_12:
+    strategy:
+      fail-fast: false  # ensures the entire test matrix is run, even if one permutation fails
+      matrix:
+        package:
+          - "opentelemetry-api"
+          - "opentelemetry-proto"
+          - "opentelemetry-sdk"
+          - "opentelemetry-semantic-conventions"
+          - "opentelemetry-getting-started"
+          - "opentelemetry-opentracing-shim"
+          - "opentelemetry-opencensus-shim"
+          - "opentelemetry-exporter-opencensus"
+          - "opentelemetry-exporter-otlp-proto-common"
+          - "opentelemetry-exporter-otlp-combined"
+          - "opentelemetry-exporter-otlp-proto-grpc"
+          - "opentelemetry-exporter-otlp-proto-http"
+          - "opentelemetry-exporter-otlp-proto-prometheus"
+          - "opentelemetry-exporter-otlp-proto-zipkin-combined"
+          - "opentelemetry-exporter-otlp-proto-zipkin-proto-http"
+          - "opentelemetry-exporter-otlp-proto-zipkin-json"
+          - "opentelemetry-propagator-b3"
+          - "opentelemetry-propagator-jaeger"
+          - "opentelemetry-test-utils"
+        os: [ubuntu-20.04]
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout Core Repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+      - name: Install tox
+        run: pip install tox
+      - name: Cache tox environment
+        # Preserves .tox directory between runs for faster installs
+        uses: actions/cache@v4
+        with:
+          path: |
+            .tox
+            ~/.cache/pip
+          key: v7-build-tox-cache-${{ matrix.package }}-${{ hashFiles('tox.ini', 'gen-requirements.txt', 'dev-requirements.txt') }}
+      - name: run tox
+        run: tox -e lint-${{ matrix.package }}
