@@ -79,6 +79,7 @@ def get_mock_uname():
 
     return platform.uname_result(**kwargs)
 
+
 @patch(
     "platform.uname",
     get_mock_uname,

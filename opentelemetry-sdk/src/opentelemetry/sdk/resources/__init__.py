@@ -176,15 +176,13 @@ class Resource:
             attributes = {}
 
         otel_experimental_resource_detectors = {"otel", "os"}.union(
-            set(
-                [
-                    otel_experimental_resource_detector.strip()
-                    for otel_experimental_resource_detector in environ.get(
-                        "OTEL_EXPERIMENTAL_RESOURCE_DETECTORS", ""
-                    ).split(",")
-                    if otel_experimental_resource_detector
-                ]
-            )
+            {
+                otel_experimental_resource_detector.strip()
+                for otel_experimental_resource_detector in environ.get(
+                    OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, ""
+                ).split(",")
+                if otel_experimental_resource_detector
+            }
         )
 
         resource_detectors = []
@@ -376,7 +374,7 @@ class ProcessResourceDetector(ResourceDetector):
 
 
 class OsResourceDetector(ResourceDetector):
-    """Detect os resources based on `Operating System conventions <https://opentelemetry.io/docs/specs/semconv/resource/os/`_."""
+    """Detect os resources based on `Operating System conventions <https://opentelemetry.io/docs/specs/semconv/resource/os/>`_."""
 
     def detect(self) -> "Resource":
         """Returns a resource with with `os.type` and `os.version`. Example of
