@@ -270,7 +270,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             self.fail("No log records found")
 
     @responses.activate
-    @patch("opentelemetry.exporter.otlp.proto.http._log_exporter.sleep")
+    @patch("opentelemetry.exporter.otlp.proto.common.exporter.sleep")
     def test_exponential_backoff(self, mock_sleep):
         # return a retryable error
         responses.add(
@@ -358,12 +358,14 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
 
         return [log1, log2, log3, log4]
 
-    @patch.object(OTLPLogExporter, "_export", return_value=Mock(ok=True))
-    def test_2xx_status_code(self, mock_otlp_metric_exporter):
+    def test_2xx_status_code(self):
         """
         Test that any HTTP 2XX code returns a successful result
         """
 
         self.assertEqual(
-            OTLPLogExporter().export(MagicMock()), LogExportResult.SUCCESS
+            OTLPLogExporter(
+                session=Mock(**{"post.return_value": Mock(ok=True)})
+            ).export(MagicMock()),
+            LogExportResult.SUCCESS,
         )

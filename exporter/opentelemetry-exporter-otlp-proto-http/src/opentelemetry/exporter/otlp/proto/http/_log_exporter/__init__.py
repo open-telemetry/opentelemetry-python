@@ -18,12 +18,12 @@ import zlib
 from io import BytesIO
 from os import environ
 from typing import Dict, Optional, Sequence
-from time import sleep
 
 import requests
 
-from opentelemetry.exporter.otlp.proto.common._internal import (
-    _create_exp_backoff_generator,
+from opentelemetry.exporter.otlp.proto.common.exporter import (
+    RetryableExportError,
+    RetryingExporter,
 )
 from opentelemetry.exporter.otlp.proto.common._log_encoder import encode_logs
 from opentelemetry.sdk.environment_variables import (
@@ -124,6 +124,7 @@ class OTLPLogExporter(LogExporter):
                 {"Content-Encoding": self._compression.value}
             )
         self._shutdown = False
+        self._exporter = RetryingExporter(self._export, LogExportResult)
 
     def _export(self, serialized_data: bytes):
         data = serialized_data
@@ -135,13 +136,30 @@ class OTLPLogExporter(LogExporter):
         elif self._compression == Compression.Deflate:
             data = zlib.compress(serialized_data)
 
-        return self._session.post(
+        resp = self._session.post(
             url=self._endpoint,
             data=data,
             verify=self._certificate_file,
             timeout=self._timeout,
             cert=self._client_cert,
         )
+
+        if resp.ok:
+            return LogExportResult.SUCCESS
+
+        if self._retryable(resp):
+            _logger.warning(
+                "Transient error %s encountered while exporting logs batch.",
+                resp.reason,
+            )
+            raise RetryableExportError(None)
+
+        _logger.error(
+            "Failed to export logs batch code: %s, reason: %s",
+            resp.status_code,
+            resp.text,
+        )
+        return LogExportResult.FAILURE
 
     @staticmethod
     def _retryable(resp: requests.Response) -> bool:
@@ -159,34 +177,7 @@ class OTLPLogExporter(LogExporter):
             return LogExportResult.FAILURE
 
         serialized_data = encode_logs(batch).SerializeToString()
-
-        for delay in _create_exp_backoff_generator(
-            max_value=self._MAX_RETRY_TIMEOUT
-        ):
-
-            if delay == self._MAX_RETRY_TIMEOUT:
-                return LogExportResult.FAILURE
-
-            resp = self._export(serialized_data)
-            # pylint: disable=no-else-return
-            if resp.ok:
-                return LogExportResult.SUCCESS
-            elif self._retryable(resp):
-                _logger.warning(
-                    "Transient error %s encountered while exporting logs batch, retrying in %ss.",
-                    resp.reason,
-                    delay,
-                )
-                sleep(delay)
-                continue
-            else:
-                _logger.error(
-                    "Failed to export logs batch code: %s, reason: %s",
-                    resp.status_code,
-                    resp.text,
-                )
-                return LogExportResult.FAILURE
-        return LogExportResult.FAILURE
+        return self._exporter.export_with_retry(serialized_data)
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
         """Nothing is buffered in this exporter, so this method does nothing."""
