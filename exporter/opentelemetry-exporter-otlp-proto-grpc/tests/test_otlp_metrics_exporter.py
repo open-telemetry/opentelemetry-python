@@ -443,7 +443,7 @@ class TestOTLPMetricExporter(TestCase):
 
     # pylint: disable=no-self-use
     @patch(
-        "opentelemetry.exporter.otlp.proto.grpc.exporter._create_exp_backoff_generator"
+        "opentelemetry.exporter.otlp.proto.common.exporter._create_exp_backoff_generator"
     )
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
     @patch.dict("os.environ", {OTEL_EXPORTER_OTLP_COMPRESSION: "gzip"})
@@ -481,9 +481,9 @@ class TestOTLPMetricExporter(TestCase):
         )
 
     @patch(
-        "opentelemetry.exporter.otlp.proto.grpc.exporter._create_exp_backoff_generator"
+        "opentelemetry.exporter.otlp.proto.common.exporter._create_exp_backoff_generator"
     )
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
+    @patch("opentelemetry.exporter.otlp.proto.common.exporter.sleep")
     def test_unavailable(self, mock_sleep, mock_expo):
 
         mock_expo.configure_mock(**{"return_value": [0.01]})
@@ -498,9 +498,9 @@ class TestOTLPMetricExporter(TestCase):
         mock_sleep.assert_called_with(0.01)
 
     @patch(
-        "opentelemetry.exporter.otlp.proto.grpc.exporter._create_exp_backoff_generator"
+        "opentelemetry.exporter.otlp.proto.common.exporter._create_exp_backoff_generator"
     )
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
+    @patch("opentelemetry.exporter.otlp.proto.common.exporter.sleep")
     def test_unavailable_delay(self, mock_sleep, mock_expo):
 
         mock_expo.configure_mock(**{"return_value": [1]})
@@ -515,9 +515,9 @@ class TestOTLPMetricExporter(TestCase):
         mock_sleep.assert_called_with(0.01)
 
     @patch(
-        "opentelemetry.exporter.otlp.proto.grpc.exporter._create_exp_backoff_generator"
+        "opentelemetry.exporter.otlp.proto.common.exporter._create_exp_backoff_generator"
     )
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
+    @patch("opentelemetry.exporter.otlp.proto.common.exporter.sleep")
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.logger.error")
     def test_unknown_logs(self, mock_logger_error, mock_sleep, mock_expo):
 
@@ -863,7 +863,7 @@ class TestOTLPMetricExporter(TestCase):
         export_thread.start()
         try:
             # pylint: disable=protected-access
-            self.assertTrue(self.exporter._export_lock.locked())
+            self.assertTrue(self.exporter._exporter._export_lock.locked())
             # delay is 4 seconds while the default shutdown timeout is 30_000 milliseconds
             start_time = time_ns()
             self.exporter.shutdown()
@@ -872,7 +872,7 @@ class TestOTLPMetricExporter(TestCase):
             # pylint: disable=protected-access
             self.assertTrue(self.exporter._shutdown)
             # pylint: disable=protected-access
-            self.assertFalse(self.exporter._export_lock.locked())
+            self.assertFalse(self.exporter._exporter._export_lock.locked())
         finally:
             export_thread.join()
 

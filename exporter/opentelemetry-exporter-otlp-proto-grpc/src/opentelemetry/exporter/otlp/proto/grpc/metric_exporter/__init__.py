@@ -162,12 +162,14 @@ class OTLPMetricExporter(
     ) -> MetricExportResult:
         # TODO(#2663): OTLPExporterMixin should pass timeout to gRPC
         if self._max_export_batch_size is None:
-            return self._export(data=metrics_data)
+            return self._exporter.export_with_retry(metrics_data)
 
         export_result = MetricExportResult.SUCCESS
 
         for split_metrics_data in self._split_metrics_data(metrics_data):
-            split_export_result = self._export(data=split_metrics_data)
+            split_export_result = self._exporter.export_with_retry(
+                split_metrics_data
+            )
 
             if split_export_result is MetricExportResult.FAILURE:
                 export_result = MetricExportResult.FAILURE
