@@ -16,7 +16,7 @@ class Event(LogRecord):
         attributes: Optional[Attributes] = None,
     ):
         super().__init__(
-            body=payload,
+            body=payload,  # type: ignore
             attributes=attributes,
         )
         self.name = name
@@ -34,7 +34,7 @@ class EventLogger(ABC):
         attributes: Optional[Attributes] = None,
     ):
         self._name = name
-        self._body = body
+        self._body = body  # type: ignore
         self._timestamp = timestamp
         self._context = context
         self._severity_number = severity_number
@@ -55,7 +55,7 @@ class EventLoggerProvider(ABC):
         schema_url: Optional[str] = None,
         attributes: Optional[Attributes] = None,
     ) -> EventLogger:
-        """Retuns an EventLoggerProvider for use."""
+        """Returns an EventLoggerProvider for use."""
 
 
 _LOGGER_PROVIDER: Optional[EventLoggerProvider] = None
