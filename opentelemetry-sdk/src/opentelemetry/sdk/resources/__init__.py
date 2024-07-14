@@ -227,8 +227,6 @@ class Resource:
 
     @property
     def attributes(self) -> Attributes:
-        if self._attributes is None:
-            raise ValueError("Attributes are not set.")
         return self._attributes
 
     @property
