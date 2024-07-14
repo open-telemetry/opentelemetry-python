@@ -354,7 +354,7 @@ class ProcessResourceDetector(ResourceDetector):
                 ),
             )
         )
-        _process_pid = str(os.getpid())
+        _process_pid = os.getpid()
         _process_executable_name = sys.executable
         _process_executable_path = os.path.dirname(_process_executable_name)
         _process_command = sys.argv[0]
@@ -369,18 +369,18 @@ class ProcessResourceDetector(ResourceDetector):
             PROCESS_EXECUTABLE_PATH: _process_executable_path,
             PROCESS_COMMAND: _process_command,
             PROCESS_COMMAND_LINE: _process_command_line,
-            PROCESS_COMMAND_ARGS: "".join(_process_command_args),
+            PROCESS_COMMAND_ARGS: _process_command_args,
         }
         if hasattr(os, "getppid"):
             # pypy3 does not have getppid()
-            resource_info[PROCESS_PARENT_PID] = str(os.getppid())
+            resource_info[PROCESS_PARENT_PID] = os.getppid()
 
         if psutil is not None:
             process: pustil_module.Process = psutil.Process()
             username = process.username()
             resource_info[PROCESS_OWNER] = username
 
-        return Resource(resource_info)
+        return Resource(resource_info)  # type: ignore
 
 
 def get_aggregated_resources(
