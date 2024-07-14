@@ -80,9 +80,9 @@ from opentelemetry.util.types import AttributeValue
 psutil: Optional[ModuleType] = None
 
 try:
-    import psutil as pustil_module
+    import psutil as psutil_module
 
-    pustil = pustil_module
+    pustil = psutil_module
 except ImportError:
     pass
 
@@ -373,7 +373,7 @@ class ProcessResourceDetector(ResourceDetector):
             resource_info[PROCESS_PARENT_PID] = os.getppid()
 
         if psutil is not None:
-            process: pustil_module.Process = psutil.Process()
+            process: psutil_module.Process = psutil.Process()
             username = process.username()
             resource_info[PROCESS_OWNER] = username
 

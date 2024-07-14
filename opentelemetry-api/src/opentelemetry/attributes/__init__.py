@@ -148,9 +148,8 @@ class BoundedAttributes(MutableMapping):  # type: ignore
         self.dropped = 0
         self.max_value_len = max_value_len
         # OrderedDict is not used until the maxlen is reached for efficiency.
-        # self._dict type: dict | OrderedDict
 
-        self._dict = {}  # type: ignore
+        self._dict: dict | OrderedDict = {}
         self._lock = threading.RLock()
         if attributes:
             for key, value in attributes.items():
@@ -185,7 +184,7 @@ class BoundedAttributes(MutableMapping):  # type: ignore
 
                 self._dict[key] = value  # type: ignore
 
-    def __delitem__(self, key):  # type: ignore
+    def __delitem__(self, key) -> None:
         if getattr(self, "_immutable", False):  # type: ignore
             raise TypeError
         with self._lock:
@@ -195,8 +194,8 @@ class BoundedAttributes(MutableMapping):  # type: ignore
         with self._lock:
             return iter(self._dict.copy())  # type: ignore
 
-    def __len__(self):  # type: ignore
-        return len(self._dict)  # type: ignore
+    def __len__(self) -> int:
+        return len(self._dict)
 
     def copy(self):  # type: ignore
         return self._dict.copy()  # type: ignore
