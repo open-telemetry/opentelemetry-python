@@ -250,7 +250,7 @@ class Resource:
         Returns:
             The newly-created Resource.
         """
-        merged_attributes = dict(self.attributes)
+        merged_attributes = self.attributes.copy()
         merged_attributes.update(other.attributes)
 
         if self.schema_url == "":
