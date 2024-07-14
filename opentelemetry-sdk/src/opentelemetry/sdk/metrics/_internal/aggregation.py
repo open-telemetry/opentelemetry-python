@@ -370,7 +370,7 @@ class _LastValueAggregation(_Aggregation[GaugePoint]):
 
         return NumberDataPoint(
             attributes=self._attributes,
-            start_time_unix_nano=0,
+            start_time_unix_nano=None,
             time_unix_nano=collection_start_nano,
             value=value,
         )

@@ -236,6 +236,8 @@ class TestLastValueAggregation(TestCase):
 
         self.assertEqual(first_number_data_point.value, 1)
 
+        self.assertIsNone(first_number_data_point.start_time_unix_nano)
+
         last_value_aggregation.aggregate(measurement(1))
 
         # CI fails the last assertion without this
@@ -248,6 +250,8 @@ class TestLastValueAggregation(TestCase):
         )
 
         self.assertEqual(second_number_data_point.value, 1)
+
+        self.assertIsNone(second_number_data_point.start_time_unix_nano)
 
         self.assertGreater(
             second_number_data_point.time_unix_nano,

@@ -352,7 +352,7 @@ class ProcessResourceDetector(ResourceDetector):
         _process_executable_path = os.path.dirname(_process_executable_name)
         _process_command = sys.argv[0]
         _process_command_line = " ".join(sys.argv)
-        _process_command_args = sys.argv[1:]
+        _process_command_args = sys.argv
         resource_info = {
             PROCESS_RUNTIME_DESCRIPTION: sys.version,
             PROCESS_RUNTIME_NAME: sys.implementation.name,
