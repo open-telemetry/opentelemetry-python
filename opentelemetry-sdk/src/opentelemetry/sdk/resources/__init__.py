@@ -191,7 +191,6 @@ class Resource:
         ).split(",")
 
         if "otel" not in otel_experimental_resource_detectors:
-
             otel_experimental_resource_detectors.append("otel")
 
         resource_detector: str
