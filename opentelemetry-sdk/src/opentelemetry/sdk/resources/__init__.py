@@ -377,48 +377,65 @@ class OsResourceDetector(ResourceDetector):
     """Detect os resources based on `Operating System conventions <https://opentelemetry.io/docs/specs/semconv/resource/os/>`_."""
 
     def detect(self) -> "Resource":
-        """Returns a resource with with `os.type` and `os.version`. Example of
-        return values for `platform` calls in different systems:
+        """Returns a resource with with ``os.type`` and ``os.version``.
 
-        Linux:
-        >>> platform.system()
-        'Linux'
-        >>> platform.release()
-        '6.5.0-35-generic'
-        >>> platform.version()
-        '#35~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Tue May  7 09:00:52 UTC 2'
+        Python's platform library
+        ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-        MacOS:
-        >>> platform.system()
-        'Darwin'
-        >>> platform.release()
-        '23.0.0'
-        >>> platform.version()
-        'Darwin Kernel Version 23.0.0: Fri Sep 15 14:42:57 PDT 2023; root:xnu-10002.1.13~1/RELEASE_ARM64_T8112'
+        To grab this information, Python's ``platform`` does not return what a
+        user might expect it to. Below is a breakdown of its return values in
+        different operating systems.
 
-        Windows:
-        >>> platform.system()
-        'Windows'
-        >>> platform.release()
-        '2022Server'
-        >>> platform.version()
-        '10.0.20348'
+        .. code-block:: python
+            :caption: Linux
 
-        FreeBSD:
-        >>> platform.system()
-        'FreeBSD'
-        >>> platform.release()
-        '14.1-RELEASE'
-        >>> platform.version()
-        'FreeBSD 14.1-RELEASE releng/14.1-n267679-10e31f0946d8 GENERIC'
+            >>> platform.system()
+            'Linux'
+            >>> platform.release()
+            '6.5.0-35-generic'
+            >>> platform.version()
+            '#35~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Tue May  7 09:00:52 UTC 2'
 
-        Solaris:
-        >>> platform.system()
-        'SunOS'
-        >>> platform.release()
-        '5.11'
-        >>> platform.version()
-        '11.4.0.15.0'
+        .. code-block:: python
+            :caption: MacOS
+
+            >>> platform.system()
+            'Darwin'
+            >>> platform.release()
+            '23.0.0'
+            >>> platform.version()
+            'Darwin Kernel Version 23.0.0: Fri Sep 15 14:42:57 PDT 2023; root:xnu-10002.1.13~1/RELEASE_ARM64_T8112'
+
+        .. code-block:: python
+            :caption: Windows
+
+            >>> platform.system()
+            'Windows'
+            >>> platform.release()
+            '2022Server'
+            >>> platform.version()
+            '10.0.20348'
+
+        .. code-block:: python
+            :caption: FreeBSD
+
+            >>> platform.system()
+            'FreeBSD'
+            >>> platform.release()
+            '14.1-RELEASE'
+            >>> platform.version()
+            'FreeBSD 14.1-RELEASE releng/14.1-n267679-10e31f0946d8 GENERIC'
+
+        .. code-block:: python
+            :caption: Solaris
+
+            >>> platform.system()
+            'SunOS'
+            >>> platform.release()
+            '5.11'
+            >>> platform.version()
+            '11.4.0.15.0'
+
         """
 
         os_type = platform.system().lower()
