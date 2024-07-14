@@ -95,7 +95,7 @@ def _clean_attribute(
             cleaned_seq.append(element)
 
         # Freeze mutable sequences defensively
-        return tuple(cleaned_seq)  # type: ignore
+        return tuple(cleaned_seq)
 
     _logger.warning(
         "Invalid type %s for attribute '%s' value. Expected one of %s or a "

@@ -211,11 +211,11 @@ class Resource:
 
         if not resource.attributes.get(SERVICE_NAME, None):
             default_service_name = "unknown_service"
-            process_executable_name = resource.attributes.get(
+            process_executable_name: Optional[str] = resource.attributes.get(
                 PROCESS_EXECUTABLE_NAME, None
             )
             if process_executable_name:
-                default_service_name += ":" + str(process_executable_name)
+                default_service_name += ":" + process_executable_name
             resource = resource.merge(
                 Resource({SERVICE_NAME: default_service_name}, schema_url)
             )
