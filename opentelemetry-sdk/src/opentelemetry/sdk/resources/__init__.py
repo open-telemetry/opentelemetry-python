@@ -204,7 +204,7 @@ class Resource:
                             name=resource_detector.strip(),
                         )  # type: ignore
                     )
-                )
+                ).load()()
             )
         resource = get_aggregated_resources(
             resource_detectors, _DEFAULT_RESOURCE
