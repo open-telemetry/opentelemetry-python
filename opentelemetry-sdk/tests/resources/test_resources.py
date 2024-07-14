@@ -62,15 +62,26 @@ except ImportError:
     psutil = None
 
 
+def get_mock_uname():
+    """Generate a mock uname. There are different signatures in different python
+    versions."""
+
+    kwargs = {
+        "system": "Linux",
+        "node": "node",
+        "release": "1.2.3",
+        "version": "4.5.6",
+        "machine": "x86_64",
+    }
+
+    if sys.version_info < (3, 9):
+        kwargs["processor"] = "x86_64"
+
+    return platform.uname_result(**kwargs)
+
 @patch(
     "platform.uname",
-    lambda: platform.uname_result(
-        system="Linux",
-        node="node",
-        release="1.2.3",
-        version="4.5.6",
-        machine="x86_64",
-    ),
+    get_mock_uname,
 )
 class TestResources(unittest.TestCase):
     def setUp(self) -> None:
