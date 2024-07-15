@@ -329,7 +329,7 @@ class TestOTLPMetricExporter(TestCase):
         )
 
     @activate
-    @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.sleep")
+    @patch("opentelemetry.exporter.otlp.proto.common.exporter.sleep")
     def test_exponential_backoff(self, mock_sleep):
         # return a retryable error
         add(
@@ -501,14 +501,15 @@ class TestOTLPMetricExporter(TestCase):
                 ExplicitBucketHistogramAggregation,
             )
 
-    @patch.object(OTLPMetricExporter, "_export", return_value=Mock(ok=True))
-    def test_2xx_status_code(self, mock_otlp_metric_exporter):
+    def test_2xx_status_code(self):
         """
         Test that any HTTP 2XX code returns a successful result
         """
 
         self.assertEqual(
-            OTLPMetricExporter().export(MagicMock()),
+            OTLPMetricExporter(
+                session=Mock(**{"post.return_value": Mock(ok=True)})
+            ).export(MagicMock()),
             MetricExportResult.SUCCESS,
         )
 
