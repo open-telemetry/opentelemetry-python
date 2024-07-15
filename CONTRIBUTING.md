@@ -57,7 +57,7 @@ You can run `tox` with the following arguments:
 - `tox -e py312-opentelemetry-api` to e.g. run the API unit tests under a specific
   Python version
 - `tox -e spellcheck` to run a spellcheck on all the code
-- `tox -e lint` to run lint checks on all code
+- `tox -e lint-some-package` to run lint checks on `some-package`
 
 `black` and `isort` are executed when `tox -e lint` is run. The reported errors can be tedious to fix manually.
 An easier way to do so is:
@@ -126,7 +126,7 @@ The continuation integration overrides that environment variable with as per the
 
 ### Benchmarks
 
-Running the `tox` tests also runs the performance tests if any are available. Benchmarking tests are done with `pytest-benchmark` and they output a table with results to the console.
+Some packages have benchmark tests. To run them, run `tox -f benchmark`. Benchmark tests use `pytest-benchmark` and they output a table with results to the console.
 
 To write benchmarks, simply use the [pytest benchmark fixture](https://pytest-benchmark.readthedocs.io/en/latest/usage.html#usage) like the following:
 
@@ -142,10 +142,10 @@ def test_simple_start_span(benchmark):
     benchmark(benchmark_start_as_current_span, "benchmarkedSpan", 42)
 ```
 
-Make sure the test file is under the `tests/performance/benchmarks/` folder of
+Make sure the test file is under the `benchmarks/` folder of
 the package it is benchmarking and further has a path that corresponds to the
 file in the package it is testing. Make sure that the file name begins with
-`test_benchmark_`. (e.g. `opentelemetry-sdk/tests/performance/benchmarks/trace/propagation/test_benchmark_b3_format.py`)
+`test_benchmark_`. (e.g. `opentelemetry-sdk/benchmarks/trace/propagation/test_benchmark_b3_format.py`)
 
 ## Pull Requests
 

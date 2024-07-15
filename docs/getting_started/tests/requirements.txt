@@ -1,6 +1,6 @@
 asgiref==3.7.2
 attrs==23.1.0
-certifi==2023.7.22
+certifi==2024.7.4
 charset-normalizer==2.0.12
 click==8.1.7
 Deprecated==1.2.14
@@ -21,7 +21,10 @@ typing_extensions==4.8.0
 urllib3==1.26.19
 Werkzeug==3.0.3
 wrapt==1.15.0
-zipp==3.17.0
+zipp==3.19.2
 -e opentelemetry-semantic-conventions
+-e opentelemetry-proto
+-e exporter/opentelemetry-exporter-otlp-proto-common
+-e exporter/opentelemetry-exporter-otlp-proto-grpc
 -e opentelemetry-api
 -e opentelemetry-sdk

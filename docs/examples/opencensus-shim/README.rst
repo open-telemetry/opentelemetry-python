@@ -20,10 +20,10 @@ Start Jaeger
 .. code-block:: sh
 
     docker run --rm \
-        -p 6831:6831/udp \
-        -p 6832:6832/udp \
+        -p 4317:4317 \
+        -p 4318:4318 \
         -p 16686:16686 \
-        jaegertracing/all-in-one:1.13 \
+        jaegertracing/all-in-one:latest \
         --log-level=debug
 
 Python Dependencies
@@ -43,7 +43,7 @@ Alternatively, you can install the Python dependencies separately:
     pip install \
         opentelemetry-api \
         opentelemetry-sdk \
-        opentelemetry-exporter-jaeger \
+        opentelemetry-exporter-otlp \
         opentelemetry-opencensus-shim \
         opentelemetry-instrumentation-sqlite3 \
         opencensus \

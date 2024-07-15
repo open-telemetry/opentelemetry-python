@@ -36,6 +36,7 @@ from opentelemetry.metrics import (
 
 
 class ChildInstrument(Instrument):
+    # pylint: disable=useless-parent-delegation
     def __init__(self, name, *args, unit="", description="", **kwargs):
         super().__init__(
             name, *args, unit=unit, description=description, **kwargs
@@ -500,6 +501,7 @@ class TestUpDownCounter(TestCase):
 
 
 class TestObservableUpDownCounter(TestCase):
+    # pylint: disable=protected-access
     def test_create_observable_up_down_counter(self):
         """
         Test that the ObservableUpDownCounter can be created with create_observable_up_down_counter.

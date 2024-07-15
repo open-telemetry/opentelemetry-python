@@ -28,13 +28,14 @@ classifiers = [
 
 dependencies = [
   "opentelemetry-api == 1.26.0.dev",
+  "Deprecated >= 1.2.6",
 ]
 
 [project.urls]
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/opentelemetry-semantic-conventions"
 
 [tool.hatch.version]
-path = "src/opentelemetry/semconv/version.py"
+path = "src/opentelemetry/semconv/version/__init__.py"
 
 [tool.hatch.build.targets.sdist]
 include = [

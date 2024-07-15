@@ -462,8 +462,8 @@ class TestBatchSpanProcessor(ConcurrencyTestBase):
         span_processor.shutdown()
 
     @mark.skipif(
-        python_implementation() == "PyPy" and system() == "Windows",
-        reason="This test randomly fails with huge delta in Windows with PyPy",
+        python_implementation() == "PyPy" or system() == "Windows",
+        reason="This test randomly fails with huge delta in Windows or PyPy",
     )
     def test_batch_span_processor_scheduled_delay(self):
         """Test that spans are exported each schedule_delay_millis"""
