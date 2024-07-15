@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=protected-access,too-many-lines,invalid-name
+# pylint: disable=consider-using-enumerate,no-self-use,too-many-public-methods
+
 import random as insecure_random
 from itertools import permutations
 from logging import WARNING
@@ -386,7 +389,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
                 """
                 Increments a bucket
                 """
-
+                # pylint: disable=cell-var-from-loop
                 self._counts[bucket_index] += increment
 
             exponential_histogram_aggregation = (
@@ -658,6 +661,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             exponential_histogram_aggregation_1,
         )
 
+        # pylint: disable=unnecessary-dunder-call
         exponential_histogram_aggregation_2._positive.__init__()
         exponential_histogram_aggregation_2._negative.__init__()
         exponential_histogram_aggregation_2._sum = 0
@@ -962,6 +966,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
                 upper_bound = 2 ** ((index + 1) / (2**scale))
                 matches = 0
                 for value in values:
+                    # pylint: disable=chained-comparison
                     if value > lower_bound and value <= upper_bound:
                         matches += 1
                 assert (

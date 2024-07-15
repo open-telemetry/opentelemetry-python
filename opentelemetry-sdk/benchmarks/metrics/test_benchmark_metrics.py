@@ -53,6 +53,7 @@ udcounter = meter_cumulative.create_up_down_counter("test_udcounter")
 )
 def test_counter_add(benchmark, num_labels, temporality):
     labels = {}
+    # pylint: disable=invalid-name
     for i in range(num_labels):
         labels = {f"Key{i}": f"Value{i}" for i in range(num_labels)}
 
@@ -68,6 +69,7 @@ def test_counter_add(benchmark, num_labels, temporality):
 @pytest.mark.parametrize("num_labels", [0, 1, 3, 5, 10])
 def test_up_down_counter_add(benchmark, num_labels):
     labels = {}
+    # pylint: disable=invalid-name
     for i in range(num_labels):
         labels = {f"Key{i}": f"Value{i}" for i in range(num_labels)}
 
