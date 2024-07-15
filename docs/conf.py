@@ -115,6 +115,23 @@ nitpick_ignore = [
         "py:class",
         "opentelemetry.trace._LinkBase",
     ),
+    (
+        "py:class",
+        "opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin",
+    ),
+    (
+        "py:class",
+        "opentelemetry.proto.collector.trace.v1.trace_service_pb2.ExportTraceServiceRequest",
+    ),
+    (
+        "py:class",
+        "opentelemetry.exporter.otlp.proto.common._internal.metrics_encoder.OTLPMetricExporterMixin",
+    ),
+    ("py:class", "opentelemetry.proto.resource.v1.resource_pb2.Resource"),
+    (
+        "py:class",
+        "opentelemetry.proto.collector.metrics.v1.metrics_service_pb2.ExportMetricsServiceRequest",
+    ),
 ]
 
 # Add any paths that contain templates here, relative to this directory.
