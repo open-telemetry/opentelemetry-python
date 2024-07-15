@@ -41,6 +41,14 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         ),
     )
     def test_synchronous_delta_temporality(self):
+        """
+        This test case instantiates an exponential histogram aggregation and
+        then uses it to record measurements and get metrics. The order in which
+        these actions are taken are relevant to the testing that happens here.
+        For this reason, the aggregation is only instantiated once, since the
+        reinstantiation of the aggregation would defeat the purpose of this
+        test case.
+        """
 
         aggregation = ExponentialBucketHistogramAggregation()
 
