@@ -162,6 +162,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             preferred_temporality, preferred_aggregation
         )
 
+        self._shutdown = False
         self._exporter = RetryingExporter(self._export, MetricExportResult)
 
     def _export(self, serialized_data: bytes):
@@ -214,13 +215,22 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> MetricExportResult:
+        if self._shutdown:
+            _logger.warning("Exporter already shutdown, ignoring batch")
+            return MetricExportResult.FAILURE
+
         serialized_data = encode_metrics(metrics_data)
         return self._exporter.export_with_retry(
             serialized_data.SerializeToString()
         )
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
-        pass
+        if self._shutdown:
+            _logger.warning("Exporter already shutdown, ignoring call")
+            return
+        self._exporter.shutdown(timeout_millis=timeout_millis)
+        self._session.close()
+        self._shutdown = True
 
     @property
     def _exporting(self) -> str:
