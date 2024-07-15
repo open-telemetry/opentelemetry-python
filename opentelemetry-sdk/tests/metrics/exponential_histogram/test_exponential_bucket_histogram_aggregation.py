@@ -15,11 +15,11 @@
 # pylint: disable=protected-access,too-many-lines,invalid-name
 # pylint: disable=consider-using-enumerate,no-self-use,too-many-public-methods
 
-from random import Random, randrange
 from inspect import currentframe
 from itertools import permutations
 from logging import WARNING
 from math import ldexp
+from random import Random, randrange
 from sys import float_info, maxsize
 from types import MethodType
 from unittest.mock import Mock, patch

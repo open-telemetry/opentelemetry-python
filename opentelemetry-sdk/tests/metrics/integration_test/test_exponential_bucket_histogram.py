@@ -281,7 +281,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
 
         results = []
 
-        for i in range(10):
+        for _ in range(10):
             results.append(reader.get_metrics_data())
 
         provider.shutdown()
