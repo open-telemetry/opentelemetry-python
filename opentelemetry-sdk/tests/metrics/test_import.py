@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=unused-import
+# pylint: disable=unused-import,import-outside-toplevel,too-many-locals
 
 from opentelemetry.test import TestCase
 

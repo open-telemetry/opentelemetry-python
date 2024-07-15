@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import opentelemetry.propagators.b3 as b3_format
-import opentelemetry.sdk.trace as trace
+from opentelemetry.sdk.trace import TracerProvider
 
 FORMAT = b3_format.B3Format()
 
@@ -28,7 +28,7 @@ def test_extract_single_header(benchmark):
 
 
 def test_inject_empty_context(benchmark):
-    tracer = trace.TracerProvider().get_tracer("sdk_tracer_provider")
+    tracer = TracerProvider().get_tracer("sdk_tracer_provider")
     with tracer.start_as_current_span("Root Span"):
         with tracer.start_as_current_span("Child Span"):
             benchmark(
