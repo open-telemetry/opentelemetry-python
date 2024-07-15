@@ -238,8 +238,6 @@ class TestToJson(TestCase):
 
     def test_exp_histogram_data_point(self):
 
-        self.maxDiff = None
-
         self.assertEqual(
             self.exp_histogram_data_point_0.to_json(indent=None),
             self.exp_histogram_data_point_0_str,
@@ -251,8 +249,6 @@ class TestToJson(TestCase):
 
     def test_gauge(self):
 
-        self.maxDiff = None
-
         self.assertEqual(self.gauge_0.to_json(indent=None), self.gauge_0_str)
 
     def test_histogram(self):
@@ -262,8 +258,6 @@ class TestToJson(TestCase):
         )
 
     def test_exp_histogram(self):
-
-        self.maxDiff = None
 
         self.assertEqual(
             self.exp_histogram_0.to_json(indent=None), self.exp_histogram_0_str

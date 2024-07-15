@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=protected-access
+
 from unittest import TestCase
 from unittest.mock import MagicMock, Mock
 
@@ -36,7 +38,7 @@ from opentelemetry.sdk.metrics.view import (
 )
 
 
-class Test_ViewInstrumentMatch(TestCase):
+class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
     @classmethod
     def setUpClass(cls):
 
