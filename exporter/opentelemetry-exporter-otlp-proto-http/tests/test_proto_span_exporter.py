@@ -234,7 +234,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
 
     # pylint: disable=no-self-use
     @responses.activate
-    @patch("opentelemetry.exporter.otlp.proto.http.trace_exporter.sleep")
+    @patch("opentelemetry.exporter.otlp.proto.common.exporter.sleep")
     def test_exponential_backoff(self, mock_sleep):
         # return a retryable error
         responses.add(
@@ -263,12 +263,14 @@ class TestOTLPSpanExporter(unittest.TestCase):
             [call(1), call(2), call(4), call(8), call(16), call(32)]
         )
 
-    @patch.object(OTLPSpanExporter, "_export", return_value=Mock(ok=True))
-    def test_2xx_status_code(self, mock_otlp_metric_exporter):
+    def test_2xx_status_code(self):
         """
         Test that any HTTP 2XX code returns a successful result
         """
 
         self.assertEqual(
-            OTLPSpanExporter().export(MagicMock()), SpanExportResult.SUCCESS
+            OTLPSpanExporter(
+                session=Mock(**{"post.return_value": Mock(ok=True)})
+            ).export(MagicMock()),
+            SpanExportResult.SUCCESS,
         )
