@@ -6,7 +6,6 @@ on:
 
 jobs:
   sdk-benchmarks:
-    env:
     runs-on: self-hosted
     steps:
     - name: Checkout Core Repo @ SHA - ${{ github.sha }}
