@@ -33,6 +33,9 @@ from google.protobuf.duration_pb2 import (  # pylint: disable=no-name-in-module
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import ChannelCredentials, Compression, StatusCode, server
 
+from opentelemetry.exporter.otlp.proto.common.exporter import (
+    RetryableExportError,
+)
 from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import (
     OTLPMetricExporter,
 )
@@ -836,6 +839,96 @@ class TestOTLPMetricExporter(TestCase):
                 ),
             ],
             split_metrics_data,
+        )
+
+    @patch(
+        "opentelemetry.exporter.otlp.proto.grpc.metric_exporter.OTLPMetricExporter._export",
+        side_effect=RetryableExportError(None),
+    )
+    def test_split_metrics_timeout(self, mock_export):
+        """
+        Test that given a batch that will be split, timeout is respected across
+        the batch as a whole.
+        """
+        metrics_data = MetricsData(
+            resource_metrics=[
+                _resource_metrics(
+                    index=1,
+                    scope_metrics=[
+                        _scope_metrics(
+                            index=1,
+                            metrics=[
+                                _gauge(
+                                    index=1,
+                                    data_points=[
+                                        _number_data_point(11),
+                                    ],
+                                ),
+                                _gauge(
+                                    index=2,
+                                    data_points=[
+                                        _number_data_point(12),
+                                    ],
+                                ),
+                            ],
+                        ),
+                        _scope_metrics(
+                            index=2,
+                            metrics=[
+                                _gauge(
+                                    index=3,
+                                    data_points=[
+                                        _number_data_point(13),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+                _resource_metrics(
+                    index=2,
+                    scope_metrics=[
+                        _scope_metrics(
+                            index=3,
+                            metrics=[
+                                _gauge(
+                                    index=4,
+                                    data_points=[
+                                        _number_data_point(14),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
+        split_metrics_data: List[MetricsData] = list(
+            # pylint: disable=protected-access
+            OTLPMetricExporter(max_export_batch_size=2)._split_metrics_data(
+                metrics_data=metrics_data,
+            )
+        )
+        self.assertEqual(len(split_metrics_data), 2)
+        exporter = OTLPMetricExporter(max_export_batch_size=2)
+
+        timeout_s = 0.5
+        # The first export should block the full timeout duration and succeed.
+        # The subsequent export should fail immediately as the timeout will
+        # have passed.
+        with self.assertLogs(level="WARNING") as warning:
+            self.assertIs(
+                exporter.export(metrics_data, timeout_s * 1e3),
+                MetricExportResult.FAILURE,
+            )
+        # There could be multiple calls to export because of the jitter in backoff
+        self.assertNotIn(
+            split_metrics_data[1],
+            [call_args[1] for call_args in mock_export.call_args_list],
+        )
+        self.assertEqual(
+            warning.records[-1].message,
+            "Export deadline passed, ignoring data",
         )
 
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel")
