@@ -67,6 +67,7 @@ console = "opentelemetry.sdk.trace.export:ConsoleSpanExporter"
 [project.entry-points.opentelemetry_resource_detector]
 otel = "opentelemetry.sdk.resources:OTELResourceDetector"
 process = "opentelemetry.sdk.resources:ProcessResourceDetector"
+serviceinstanceid = "opentelemetry.sdk.resources:ServiceInstanceIdResourceDetector"
 
 [project.urls]
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/opentelemetry-sdk"

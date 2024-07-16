@@ -64,6 +64,7 @@ import typing
 from json import dumps
 from os import environ
 from urllib import parse
+import uuid
 
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk.environment_variables import (
@@ -369,6 +370,12 @@ class ProcessResourceDetector(ResourceDetector):
             resource_info[PROCESS_OWNER] = process.username()
 
         return Resource(resource_info)
+
+
+class ServiceInstanceIdResourceDetector(ResourceDetector):
+    # pylint: disable=no-self-use
+    def detect(self) -> "Resource":
+        return Resource({SERVICE_INSTANCE_ID: str(uuid.uuid4())})
 
 
 def get_aggregated_resources(
