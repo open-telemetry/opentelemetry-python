@@ -14,14 +14,10 @@ opentelemetry.exporter.otlp.proto.http
     :show-inheritance:
 
 .. automodule:: opentelemetry.exporter.otlp.proto.http.trace_exporter
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 .. automodule:: opentelemetry.exporter.otlp.proto.http.metric_exporter
-    :members:
-    :undoc-members:
-    :show-inheritance:
+
+.. automodule:: opentelemetry.exporter.otlp.proto.http._log_exporter
 
 opentelemetry.exporter.otlp.proto.grpc
 ---------------------------------------
@@ -32,11 +28,7 @@ opentelemetry.exporter.otlp.proto.grpc
     :show-inheritance:
 
 .. automodule:: opentelemetry.exporter.otlp.proto.grpc.trace_exporter
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 .. automodule:: opentelemetry.exporter.otlp.proto.grpc.metric_exporter
-    :members:
-    :undoc-members:
-    :show-inheritance:
+
+.. automodule:: opentelemetry.exporter.otlp.proto.grpc._log_exporter
