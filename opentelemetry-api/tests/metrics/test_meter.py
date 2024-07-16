@@ -23,6 +23,7 @@ from opentelemetry.metrics import Meter, NoOpMeter
 
 
 class ChildMeter(Meter):
+    # pylint: disable=signature-differs
     def create_counter(self, name, unit="", description=""):
         super().create_counter(name, unit=unit, description=description)
 
@@ -32,10 +33,10 @@ class ChildMeter(Meter):
         )
 
     def create_observable_counter(
-        self, name, callback, unit="", description=""
+        self, name, callbacks, unit="", description=""
     ):
         super().create_observable_counter(
-            name, callback, unit=unit, description=description
+            name, callbacks, unit=unit, description=description
         )
 
     def create_histogram(self, name, unit="", description=""):
@@ -44,20 +45,23 @@ class ChildMeter(Meter):
     def create_gauge(self, name, unit="", description=""):
         super().create_gauge(name, unit=unit, description=description)
 
-    def create_observable_gauge(self, name, callback, unit="", description=""):
+    def create_observable_gauge(
+        self, name, callbacks, unit="", description=""
+    ):
         super().create_observable_gauge(
-            name, callback, unit=unit, description=description
+            name, callbacks, unit=unit, description=description
         )
 
     def create_observable_up_down_counter(
-        self, name, callback, unit="", description=""
+        self, name, callbacks, unit="", description=""
     ):
         super().create_observable_up_down_counter(
-            name, callback, unit=unit, description=description
+            name, callbacks, unit=unit, description=description
         )
 
 
 class TestMeter(TestCase):
+    # pylint: disable=no-member
     def test_repeated_instrument_names(self):
 
         try:
@@ -72,7 +76,7 @@ class TestMeter(TestCase):
             test_meter.create_observable_up_down_counter(
                 "observable_up_down_counter", Mock()
             )
-        except Exception as error:
+        except Exception as error:  # pylint: disable=broad-exception-caught
             self.fail(f"Unexpected exception raised {error}")
 
         for instrument_name in [

@@ -9,8 +9,12 @@ sphinx-jekyll-builder==0.3.0
 ./opentelemetry-api
 ./opentelemetry-semantic-conventions
 ./opentelemetry-sdk
+./opentelemetry-proto
 ./shim/opentelemetry-opencensus-shim
 ./shim/opentelemetry-opentracing-shim
+./exporter/opentelemetry-exporter-otlp-proto-common
+./exporter/opentelemetry-exporter-otlp-proto-http
+./exporter/opentelemetry-exporter-otlp-proto-grpc
 
 # Required by instrumentation and exporter packages
 grpcio~=1.27
