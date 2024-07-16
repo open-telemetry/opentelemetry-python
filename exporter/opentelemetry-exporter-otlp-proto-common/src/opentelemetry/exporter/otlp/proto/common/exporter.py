@@ -77,7 +77,9 @@ class RetryingExporter(Generic[ExportResultT]):
             self._shutdown.set()
 
     def export_with_retry(  # pylint: disable=too-many-return-statements
-        self, payload: ExportPayloadT
+        self,
+        payload: ExportPayloadT,
+        timeout_sec: Optional[float] = None,
     ) -> ExportResultT:
         """Exports payload with handling of retryable errors
 
@@ -90,6 +92,9 @@ class RetryingExporter(Generic[ExportResultT]):
         Retries will be attempted using exponential backoff. If retry_delay_sec is specified in the
         raised error, a retry attempt will not occur before that delay. If a retry after that delay
         is not possible, will immediately abort without retrying.
+
+        In case no timeout_sec is not given, the timeout defaults to the timeout given during
+        initialization.
 
         Will reattempt the export until timeout has passed, at which point the export will be
         abandoned and a failure will be returned. A pending shutdown timing out will also cause
@@ -107,8 +112,16 @@ class RetryingExporter(Generic[ExportResultT]):
             _logger.warning("Exporter already shutdown, ignoring batch")
             return self._result.FAILURE
 
-        timeout_sec = self._timeout_sec
+        timeout_sec = (
+            timeout_sec if timeout_sec is not None else self._timeout_sec
+        )
         deadline_sec = time() + timeout_sec
+
+        # If negative timeout passed (from e.g. external batch deadline - see GRPC metric exporter)
+        # fail immediately
+        if timeout_sec <= 0:
+            _logger.warning("Export deadline passed, ignoring data")
+            return self._result.FAILURE
 
         with acquire_timeout(self._export_lock, timeout_sec) as is_locked:
             if not is_locked:

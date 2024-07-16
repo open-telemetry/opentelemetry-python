@@ -98,6 +98,15 @@ class TestRetryableExporter(unittest.TestCase):
             self.assertEqual(export_func.call_count, len(side_effect))
             self.assertIs(result, result_type.FAILURE)
 
+    def test_export_uses_arg_timout_when_given(self) -> None:
+        export_func = Mock(side_effect=RetryableExportError(None))
+        exporter = RetryingExporter(export_func, result_type, timeout_sec=2)
+        with self.assertLogs(level=WARNING):
+            start = time.time()
+            exporter.export_with_retry("payload", 0.1)
+            duration = time.time() - start
+        self.assertAlmostEqual(duration, 0.1, places=1)
+
     @patch(
         "opentelemetry.exporter.otlp.proto.common.exporter._create_exp_backoff_generator",
         return_value=repeat(0.25),
