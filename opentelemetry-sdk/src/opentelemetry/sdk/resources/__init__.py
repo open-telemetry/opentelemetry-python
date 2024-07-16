@@ -61,10 +61,10 @@ import logging
 import os
 import sys
 import typing
+import uuid
 from json import dumps
 from os import environ
 from urllib import parse
-import uuid
 
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk.environment_variables import (
