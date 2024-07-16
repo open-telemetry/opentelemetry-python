@@ -620,8 +620,7 @@ class TestOTELResourceDetector(unittest.TestCase):
         )
 
         self.assertIn(
-            SERVICE_INSTANCE_ID,
-            aggregated_resource.attributes.keys())
+            SERVICE_INSTANCE_ID, aggregated_resource.attributes.keys())
 
         # This throws if service instance id is not a valid UUID.
         uuid.UUID(aggregated_resource.attributes[SERVICE_INSTANCE_ID])
