@@ -139,8 +139,17 @@ class OTLPSpanExporter(
     ) -> ExportTraceServiceRequest:
         return encode_spans(data)
 
-    def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
-        return self._exporter.export_with_retry(spans)
+    def export(
+        self,
+        spans: Sequence[ReadableSpan],
+        timeout_millis: Optional[float] = None,
+    ) -> SpanExportResult:
+        return self._exporter.export_with_retry(
+            spans,
+            timeout_sec=(
+                timeout_millis / 1000 if timeout_millis is not None else None
+            ),
+        )
 
     def shutdown(self) -> None:
         OTLPExporterMixin.shutdown(self)

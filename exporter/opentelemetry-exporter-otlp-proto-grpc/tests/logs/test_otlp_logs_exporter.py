@@ -29,6 +29,9 @@ from grpc import ChannelCredentials, Compression, StatusCode, server
 
 from opentelemetry._logs import SeverityNumber
 from opentelemetry.exporter.otlp.proto.common._internal import _encode_value
+from opentelemetry.exporter.otlp.proto.common.exporter import (
+    RetryableExportError,
+)
 from opentelemetry.exporter.otlp.proto.grpc._log_exporter import (
     OTLPLogExporter,
 )
@@ -387,6 +390,19 @@ class TestOTLPLogExporter(TestCase):
             self.exporter._headers,
             (("user-agent", "OTel-OTLP-Exporter-Python/" + __version__),),
         )
+
+    @patch(
+        "opentelemetry.exporter.otlp.proto.grpc._log_exporter.OTLPLogExporter._export",
+        side_effect=RetryableExportError(None),
+    )
+    def test_export_uses_arg_timeout_when_given(self, export_mock) -> None:
+        exporter = OTLPLogExporter(timeout=20)
+
+        with self.assertLogs(level="WARNING"):
+            start = time.time()
+            exporter.export([self.log_data_1], timeout_millis=100.0)
+            duration = time.time() - start
+        self.assertAlmostEqual(duration, 0.1, places=1)
 
     @patch(
         "opentelemetry.exporter.otlp.proto.common.exporter._create_exp_backoff_generator"

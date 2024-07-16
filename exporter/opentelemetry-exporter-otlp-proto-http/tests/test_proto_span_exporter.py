@@ -13,12 +13,16 @@
 # limitations under the License.
 
 import unittest
+from time import time
 from unittest.mock import MagicMock, Mock, call, patch
 
 import requests
 import responses
 from responses.registries import OrderedRegistry
 
+from opentelemetry.exporter.otlp.proto.common.exporter import (
+    RetryableExportError,
+)
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     DEFAULT_COMPRESSION,
@@ -232,6 +236,30 @@ class TestOTLPSpanExporter(unittest.TestCase):
                     "list of name=value occurrences: missingValue"
                 ),
             )
+
+    @patch(
+        "opentelemetry.exporter.otlp.proto.http.trace_exporter.OTLPSpanExporter._export",
+        side_effect=RetryableExportError(None),
+    )
+    def test_export_uses_arg_timeout_when_given(self, export_mock) -> None:
+        exporter = OTLPSpanExporter(
+            endpoint="http://traces.example.com/export", timeout=20
+        )
+
+        span = _Span(
+            "abc",
+            context=Mock(
+                trace_state={"a": "b", "c": "d"},
+                span_id=10217189687419569865,
+                trace_id=67545097771067222548457157018666467027,
+            ),
+        )
+
+        with self.assertLogs(level="WARNING"):
+            start = time()
+            exporter.export([span], timeout_millis=100.0)
+            duration = time() - start
+        self.assertAlmostEqual(duration, 0.1, places=1)
 
     # pylint: disable=no-self-use
     # Pylint is wrong about this

@@ -15,6 +15,7 @@
 # pylint: disable=protected-access
 
 import unittest
+from time import time
 from typing import List
 from unittest.mock import MagicMock, Mock, call, patch
 
@@ -24,6 +25,9 @@ from google.protobuf.json_format import MessageToDict
 from responses.registries import OrderedRegistry
 
 from opentelemetry._logs import SeverityNumber
+from opentelemetry.exporter.otlp.proto.common.exporter import (
+    RetryableExportError,
+)
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http._log_exporter import (
     DEFAULT_COMPRESSION,
@@ -199,6 +203,21 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             exporter._headers, {"envheader1": "val1", "envheader2": "val2"}
         )
         self.assertIsInstance(exporter._session, requests.Session)
+
+    @patch(
+        "opentelemetry.exporter.otlp.proto.http._log_exporter.OTLPLogExporter._export",
+        side_effect=RetryableExportError(None),
+    )
+    def test_export_uses_arg_timeout_when_given(self, export_mock) -> None:
+        exporter = OTLPLogExporter(
+            endpoint="http://traces.example.com/export", timeout=20
+        )
+
+        with self.assertLogs(level="WARNING"):
+            start = time()
+            exporter.export(self._get_sdk_log_data(), timeout_millis=100.0)
+            duration = time() - start
+        self.assertAlmostEqual(duration, 0.1, places=1)
 
     @staticmethod
     def export_log_and_deserialize(log):

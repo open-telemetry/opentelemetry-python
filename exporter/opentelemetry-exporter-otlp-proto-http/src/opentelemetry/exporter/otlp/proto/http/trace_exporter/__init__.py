@@ -17,7 +17,7 @@ import logging
 import zlib
 from io import BytesIO
 from os import environ
-from typing import Dict, Optional
+from typing import Dict, Optional, Sequence
 
 import requests
 
@@ -44,6 +44,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_HEADERS,
     OTEL_EXPORTER_OTLP_TIMEOUT,
 )
+from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.exporter.otlp.proto.http import (
     _OTLP_HTTP_HEADERS,
@@ -170,10 +171,14 @@ class OTLPSpanExporter(SpanExporter):
             return True
         return False
 
-    def _serialize_spans(self, spans):
+    def _serialize_spans(self, spans: Sequence[ReadableSpan]) -> str:
         return encode_spans(spans).SerializePartialToString()
 
-    def export(self, spans) -> SpanExportResult:
+    def export(
+        self,
+        spans: Sequence[ReadableSpan],
+        timeout_millis: Optional[float] = None,
+    ) -> SpanExportResult:
         # After the call to Shutdown subsequent calls to Export are
         # not allowed and should return a Failure result.
         if self._shutdown:
@@ -181,7 +186,12 @@ class OTLPSpanExporter(SpanExporter):
             return SpanExportResult.FAILURE
 
         serialized_data = self._serialize_spans(spans)
-        return self._exporter.export_with_retry(serialized_data)
+        return self._exporter.export_with_retry(
+            serialized_data,
+            timeout_sec=(
+                timeout_millis / 1000.0 if timeout_millis is not None else None
+            ),
+        )
 
     def shutdown(self):
         if self._shutdown:

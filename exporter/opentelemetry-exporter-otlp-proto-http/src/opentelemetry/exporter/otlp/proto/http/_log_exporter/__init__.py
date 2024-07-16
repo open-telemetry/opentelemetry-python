@@ -173,7 +173,11 @@ class OTLPLogExporter(LogExporter):
             return True
         return False
 
-    def export(self, batch: Sequence[LogData]) -> LogExportResult:
+    def export(
+        self,
+        batch: Sequence[LogData],
+        timeout_millis: Optional[float] = None,
+    ) -> LogExportResult:
         # After the call to Shutdown subsequent calls to Export are
         # not allowed and should return a Failure result.
         if self._shutdown:
@@ -181,7 +185,12 @@ class OTLPLogExporter(LogExporter):
             return LogExportResult.FAILURE
 
         serialized_data = encode_logs(batch).SerializeToString()
-        return self._exporter.export_with_retry(serialized_data)
+        return self._exporter.export_with_retry(
+            serialized_data,
+            timeout_sec=(
+                timeout_millis / 1000.0 if timeout_millis is not None else None
+            ),
+        )
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
         """Nothing is buffered in this exporter, so this method does nothing."""

@@ -109,8 +109,17 @@ class OTLPLogExporter(
     ) -> ExportLogsServiceRequest:
         return encode_logs(data)
 
-    def export(self, batch: Sequence[LogData]) -> LogExportResult:
-        return self._exporter.export_with_retry(batch)
+    def export(
+        self,
+        batch: Sequence[LogData],
+        timeout_millis: Optional[float] = None,
+    ) -> LogExportResult:
+        return self._exporter.export_with_retry(
+            batch,
+            timeout_sec=(
+                timeout_millis / 1000 if timeout_millis is not None else None
+            ),
+        )
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         OTLPExporterMixin.shutdown(self, timeout_millis=timeout_millis)
