@@ -216,7 +216,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
     def export(
         self,
         metrics_data: MetricsData,
-        timeout_millis: float = 10_000,
+        timeout_millis: Optional[float] = None,
         **kwargs,
     ) -> MetricExportResult:
         if self._shutdown:
@@ -225,7 +225,10 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
 
         serialized_data = encode_metrics(metrics_data)
         return self._exporter.export_with_retry(
-            serialized_data.SerializeToString()
+            serialized_data.SerializeToString(),
+            timeout_sec=(
+                timeout_millis / 1000 if timeout_millis is not None else None
+            ),
         )
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
