@@ -614,17 +614,25 @@ class TestOTELResourceDetector(unittest.TestCase):
         )
 
     def test_service_instance_id_detector(self):
-        initial_resource = Resource({})
-        aggregated_resource = get_aggregated_resources(
-            [ServiceInstanceIdResourceDetector()], initial_resource
+        resource = get_aggregated_resources(
+            [ServiceInstanceIdResourceDetector()], Resource({})
         )
 
-        self.assertIn(
-            SERVICE_INSTANCE_ID, aggregated_resource.attributes.keys()
-        )
+        self.assertIn(SERVICE_INSTANCE_ID, resource.attributes.keys())
 
         # This throws if service instance id is not a valid UUID.
-        uuid.UUID(aggregated_resource.attributes[SERVICE_INSTANCE_ID])
+        uuid.UUID(resource.attributes[SERVICE_INSTANCE_ID])
+
+        other_resource = get_aggregated_resources(
+            [ServiceInstanceIdResourceDetector()], Resource({})
+        )
+
+        # The instance id should be stable across invocations of the detector
+        # in the same process.
+        self.assertEqual(
+            resource.attributes[SERVICE_INSTANCE_ID],
+            other_resource.attributes[SERVICE_INSTANCE_ID],
+        )
 
     def test_resource_detector_entry_points_default(self):
         resource = Resource({}).create()
