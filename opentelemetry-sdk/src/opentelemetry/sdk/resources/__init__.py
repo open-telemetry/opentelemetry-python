@@ -374,10 +374,13 @@ class ProcessResourceDetector(ResourceDetector):
 
 class ServiceInstanceIdResourceDetector(ResourceDetector):
     # pylint: disable=no-self-use
-    _instance_id = str(uuid.uuid4())
+    _instance_id_cache = {}
 
     def detect(self) -> "Resource":
-        return Resource({SERVICE_INSTANCE_ID: self._instance_id})
+        instance_id = self._instance_id_cache.setdefault(
+            os.getpid(), str(uuid.uuid4())
+        )
+        return Resource({SERVICE_INSTANCE_ID: instance_id})
 
 
 def get_aggregated_resources(
