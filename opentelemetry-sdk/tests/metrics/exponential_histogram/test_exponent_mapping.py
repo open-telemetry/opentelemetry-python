@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=protected-access
+
 from math import inf
 from sys import float_info, version_info
 from unittest.mock import patch
@@ -60,7 +62,7 @@ class TestExponentMapping(TestCase):
         "opentelemetry.sdk.metrics._internal.exponential_histogram.mapping."
         "exponent_mapping.ExponentMapping._init"
     )
-    def test_init_called_once(self, mock_init):
+    def test_init_called_once(self, mock_init):  # pylint: disable=no-self-use
 
         ExponentMapping(-3)
         ExponentMapping(-3)
@@ -171,6 +173,7 @@ class TestExponentMapping(TestCase):
         self.assertEqual(exponent_mapping.map_to_index(0.06), -3)
 
     def test_exponent_mapping_neg_four(self):
+        # pylint: disable=too-many-statements
         exponent_mapping = ExponentMapping(-4)
         self.assertEqual(exponent_mapping.map_to_index(float(0x1)), -1)
         self.assertEqual(exponent_mapping.map_to_index(float(0x10)), 0)
