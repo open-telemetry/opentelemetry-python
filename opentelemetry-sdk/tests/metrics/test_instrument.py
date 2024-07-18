@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=no-self-use
+
 from logging import WARNING
 from unittest import TestCase
 from unittest.mock import Mock
@@ -198,7 +200,6 @@ class TestObservableGauge(TestCase):
         )
 
     def test_generator_multiple_generator_callback(self):
-        self.maxDiff = None
         observable_gauge = _ObservableGauge(
             "name",
             Mock(),

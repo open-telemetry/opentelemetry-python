@@ -23,12 +23,14 @@ from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     InMemoryMetricReader,
 )
-from opentelemetry.sdk.metrics.view import ExplicitBucketHistogramAggregation
+from opentelemetry.sdk.metrics.view import (
+    ExponentialBucketHistogramAggregation,
+)
 
 
-class TestExplicitBucketHistogramAggregation(TestCase):
+class TestExponentialBucketHistogramAggregation(TestCase):
 
-    test_values = [1, 6, 11, 26, 51, 76, 101, 251, 501, 751]
+    test_values = [2, 4, 1, 1, 8, 0.5, 0.1, 0.045]
 
     @mark.skipif(
         system() == "Windows",
@@ -39,8 +41,16 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         ),
     )
     def test_synchronous_delta_temporality(self):
+        """
+        This test case instantiates an exponential histogram aggregation and
+        then uses it to record measurements and get metrics. The order in which
+        these actions are taken are relevant to the testing that happens here.
+        For this reason, the aggregation is only instantiated once, since the
+        reinstantiation of the aggregation would defeat the purpose of this
+        test case.
+        """
 
-        aggregation = ExplicitBucketHistogramAggregation()
+        aggregation = ExponentialBucketHistogramAggregation()
 
         reader = InMemoryMetricReader(
             preferred_aggregation={Histogram: aggregation},
@@ -52,6 +62,8 @@ class TestExplicitBucketHistogramAggregation(TestCase):
 
         histogram = meter.create_histogram("histogram")
 
+        # The test scenario here is calling collect without calling aggregate
+        # ever before.
         results = []
 
         for _ in range(10):
@@ -61,6 +73,7 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         for metrics_data in results:
             self.assertIsNone(metrics_data)
 
+        # The test scenario here is calling aggregate then collect repeatedly.
         results = []
 
         for test_value in self.test_values:
@@ -77,10 +90,8 @@ class TestExplicitBucketHistogramAggregation(TestCase):
 
         previous_time_unix_nano = metric_data.time_unix_nano
 
-        self.assertEqual(
-            metric_data.bucket_counts,
-            (0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-        )
+        self.assertEqual(metric_data.positive.bucket_counts, [1])
+        self.assertEqual(metric_data.negative.bucket_counts, [0])
 
         self.assertLess(
             metric_data.start_time_unix_nano,
@@ -102,32 +113,36 @@ class TestExplicitBucketHistogramAggregation(TestCase):
                 previous_time_unix_nano, metric_data.start_time_unix_nano
             )
             previous_time_unix_nano = metric_data.time_unix_nano
-            self.assertEqual(
-                metric_data.bucket_counts,
-                # pylint: disable=consider-using-generator
-                tuple(
-                    [
-                        1 if internal_index == index + 2 else 0
-                        for internal_index in range(16)
-                    ]
-                ),
-            )
+            self.assertEqual(metric_data.positive.bucket_counts, [1])
+            self.assertEqual(metric_data.negative.bucket_counts, [0])
             self.assertLess(
                 metric_data.start_time_unix_nano, metric_data.time_unix_nano
             )
             self.assertEqual(metric_data.min, self.test_values[index + 1])
             self.assertEqual(metric_data.max, self.test_values[index + 1])
-            self.assertEqual(metric_data.sum, self.test_values[index + 1])
+            # Using assertAlmostEqual here because in 3.12 resolution can cause
+            # these checks to fail.
+            self.assertAlmostEqual(
+                metric_data.sum, self.test_values[index + 1]
+            )
 
+        # The test scenario here is calling collect without calling aggregate
+        # immediately before, but having aggregate being called before at some
+        # moment.
         results = []
 
         for _ in range(10):
 
             results.append(reader.get_metrics_data())
 
+        provider.shutdown()
+
         for metrics_data in results:
             self.assertIsNone(metrics_data)
 
+        # The test scenario here is calling aggregate and collect, waiting for
+        # a certain amount of time, calling collect, then calling aggregate and
+        # collect again.
         results = []
 
         histogram.record(1)
@@ -163,7 +178,7 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         provider.shutdown()
 
     @mark.skipif(
-        system() != "Linux",
+        system() == "Windows",
         reason=(
             "Tests fail because Windows time_ns resolution is too low so "
             "two different time measurements may end up having the exact same"
@@ -172,7 +187,7 @@ class TestExplicitBucketHistogramAggregation(TestCase):
     )
     def test_synchronous_cumulative_temporality(self):
 
-        aggregation = ExplicitBucketHistogramAggregation()
+        aggregation = ExponentialBucketHistogramAggregation()
 
         reader = InMemoryMetricReader(
             preferred_aggregation={Histogram: aggregation},
@@ -189,7 +204,6 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         results = []
 
         for _ in range(10):
-
             results.append(reader.get_metrics_data())
 
         for metrics_data in results:
@@ -198,21 +212,30 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         results = []
 
         for test_value in self.test_values:
-
             histogram.record(test_value)
             results.append(reader.get_metrics_data())
 
-        start_time_unix_nano = (
+        metric_data = (
             results[0]
             .resource_metrics[0]
             .scope_metrics[0]
             .metrics[0]
             .data.data_points[0]
-            .start_time_unix_nano
         )
 
-        for index, metrics_data in enumerate(results):
+        start_time_unix_nano = metric_data.start_time_unix_nano
 
+        self.assertLess(
+            metric_data.start_time_unix_nano,
+            metric_data.time_unix_nano,
+        )
+        self.assertEqual(metric_data.min, self.test_values[0])
+        self.assertEqual(metric_data.max, self.test_values[0])
+        self.assertEqual(metric_data.sum, self.test_values[0])
+
+        previous_time_unix_nano = metric_data.time_unix_nano
+
+        for index, metrics_data in enumerate(results[1:]):
             metric_data = (
                 metrics_data.resource_metrics[0]
                 .scope_metrics[0]
@@ -223,45 +246,75 @@ class TestExplicitBucketHistogramAggregation(TestCase):
             self.assertEqual(
                 start_time_unix_nano, metric_data.start_time_unix_nano
             )
-            self.assertEqual(
-                metric_data.bucket_counts,
-                # pylint: disable=consider-using-generator
-                tuple(
-                    [
-                        (
-                            0
-                            if internal_index < 1 or internal_index > index + 1
-                            else 1
-                        )
-                        for internal_index in range(16)
-                    ]
-                ),
+            self.assertLess(
+                metric_data.start_time_unix_nano,
+                metric_data.time_unix_nano,
             )
-            self.assertEqual(metric_data.min, self.test_values[0])
-            self.assertEqual(metric_data.max, self.test_values[index])
             self.assertEqual(
-                metric_data.sum, sum(self.test_values[: index + 1])
+                metric_data.min, min(self.test_values[: index + 2])
             )
+            self.assertEqual(
+                metric_data.max, max(self.test_values[: index + 2])
+            )
+            self.assertAlmostEqual(
+                metric_data.sum, sum(self.test_values[: index + 2])
+            )
+
+            self.assertGreater(
+                metric_data.time_unix_nano, previous_time_unix_nano
+            )
+
+            previous_time_unix_nano = metric_data.time_unix_nano
+
+        self.assertEqual(
+            metric_data.positive.bucket_counts,
+            [
+                1,
+                *[0] * 17,
+                1,
+                *[0] * 36,
+                1,
+                *[0] * 15,
+                2,
+                *[0] * 15,
+                1,
+                *[0] * 15,
+                1,
+                *[0] * 15,
+                1,
+                *[0] * 40,
+            ],
+        )
+        self.assertEqual(metric_data.negative.bucket_counts, [0])
 
         results = []
 
         for _ in range(10):
-
             results.append(reader.get_metrics_data())
 
         provider.shutdown()
 
-        start_time_unix_nano = (
+        metric_data = (
             results[0]
             .resource_metrics[0]
             .scope_metrics[0]
             .metrics[0]
             .data.data_points[0]
-            .start_time_unix_nano
         )
 
-        for metrics_data in results:
+        start_time_unix_nano = metric_data.start_time_unix_nano
 
+        self.assertLess(
+            metric_data.start_time_unix_nano,
+            metric_data.time_unix_nano,
+        )
+        self.assertEqual(metric_data.min, min(self.test_values))
+        self.assertEqual(metric_data.max, max(self.test_values))
+        self.assertAlmostEqual(metric_data.sum, sum(self.test_values))
+
+        previous_metric_data = metric_data
+
+        for index, metrics_data in enumerate(results[1:]):
             metric_data = (
                 metrics_data.resource_metrics[0]
                 .scope_metrics[0]
@@ -270,12 +323,35 @@ class TestExplicitBucketHistogramAggregation(TestCase):
             )
 
             self.assertEqual(
-                start_time_unix_nano, metric_data.start_time_unix_nano
+                previous_metric_data.start_time_unix_nano,
+                metric_data.start_time_unix_nano,
             )
+            self.assertEqual(previous_metric_data.min, metric_data.min)
+            self.assertEqual(previous_metric_data.max, metric_data.max)
+            self.assertAlmostEqual(previous_metric_data.sum, metric_data.sum)
+
             self.assertEqual(
-                metric_data.bucket_counts,
-                (0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0),
+                metric_data.positive.bucket_counts,
+                [
+                    1,
+                    *[0] * 17,
+                    1,
+                    *[0] * 36,
+                    1,
+                    *[0] * 15,
+                    2,
+                    *[0] * 15,
+                    1,
+                    *[0] * 15,
+                    1,
+                    *[0] * 15,
+                    1,
+                    *[0] * 40,
+                ],
             )
-            self.assertEqual(metric_data.min, self.test_values[0])
-            self.assertEqual(metric_data.max, self.test_values[-1])
-            self.assertEqual(metric_data.sum, sum(self.test_values))
+            self.assertEqual(metric_data.negative.bucket_counts, [0])
+
+            self.assertLess(
+                previous_metric_data.time_unix_nano,
+                metric_data.time_unix_nano,
+            )

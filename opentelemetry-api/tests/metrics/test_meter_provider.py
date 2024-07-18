@@ -13,6 +13,8 @@
 # limitations under the License.
 # type: ignore
 
+# pylint: disable=protected-access
+
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
@@ -54,6 +56,7 @@ def reset_meter_provider():
     reset_metrics_globals()
 
 
+# pylint: disable=redefined-outer-name
 def test_set_meter_provider(reset_meter_provider):
     """
     Test that the API provides a way to set a global default MeterProvider
@@ -113,7 +116,7 @@ class TestGetMeter(TestCase):
             NoOpMeterProvider().get_meter(
                 "name", version="version", schema_url="schema_url"
             )
-        except Exception as error:
+        except Exception as error:  # pylint: disable=broad-exception-caught
             self.fail(f"Unexpected exception raised: {error}")
 
     def test_invalid_name(self):
@@ -176,7 +179,7 @@ class TestProxy(MetricsGlobalsTest, TestCase):
         self.assertIsInstance(meter2, Mock)
         mock_real_mp.get_meter.assert_called_with(another_name, None, None)
 
-    # pylint: disable=too-many-locals
+    # pylint: disable=too-many-locals,too-many-statements
     def test_proxy_meter(self):
         meter_name = "foo"
         proxy_meter: _ProxyMeter = _ProxyMeterProvider().get_meter(meter_name)

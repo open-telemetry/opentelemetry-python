@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=invalid-name
+
 from unittest.mock import patch
 
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
