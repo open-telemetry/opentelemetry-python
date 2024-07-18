@@ -24,6 +24,7 @@ from opentelemetry.trace.span import (
     Span,
 )
 from opentelemetry.util._decorator import _agnosticcontextmanager
+from opentelemetry.util.types import Attributes
 
 
 class TestProvider(trace.NoOpTracerProvider):
@@ -32,6 +33,7 @@ class TestProvider(trace.NoOpTracerProvider):
         instrumenting_module_name: str,
         instrumenting_library_version: typing.Optional[str] = None,
         schema_url: typing.Optional[str] = None,
+        attributes: typing.Optional[Attributes] = None,
     ) -> trace.Tracer:
         return TestTracer()
 
