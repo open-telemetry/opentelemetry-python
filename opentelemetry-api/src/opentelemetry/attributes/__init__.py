@@ -30,7 +30,7 @@ _logger = logging.getLogger(__name__)
 
 def _clean_attribute(
     key: str, value: types.AttributeValue, max_len: Optional[int]
-) -> Optional[Union[types.AttributeValue, tuple[str | int | float, ...]]]:
+) -> Optional[Union[types.AttributeValue, tuple[Union[str, int, float], ...]]]:
     """Checks if attribute value is valid and cleans it if required.
 
     The function returns the cleaned value or None if the value is not valid.
@@ -149,10 +149,10 @@ class BoundedAttributes(MutableMapping):  # type: ignore
         self.max_value_len = max_value_len
         # OrderedDict is not used until the maxlen is reached for efficiency.
 
-        self._dict: (
-            MutableMapping[str, types.AttributeValue]
-            | OrderedDict[str, types.AttributeValue]
-        ) = {}
+        self._dict: Union[
+            MutableMapping[str, types.AttributeValue],
+            OrderedDict[str, types.AttributeValue],
+        ] = {}
         self._lock = threading.RLock()
         if attributes:
             for key, value in attributes.items():
