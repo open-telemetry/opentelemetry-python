@@ -266,7 +266,6 @@ class Resource:
                 other.schema_url,
             )
             return self
-            
         return Resource(merged_attributes, schema_url)
 
     def __eq__(self, other: object) -> bool:
