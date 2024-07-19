@@ -61,6 +61,7 @@ import logging
 import os
 import sys
 import typing
+import uuid
 from json import dumps
 from os import environ
 from urllib import parse
@@ -369,6 +370,17 @@ class ProcessResourceDetector(ResourceDetector):
             resource_info[PROCESS_OWNER] = process.username()
 
         return Resource(resource_info)
+
+
+class ServiceInstanceIdResourceDetector(ResourceDetector):
+    # pylint: disable=no-self-use
+    _instance_id_cache = {}
+
+    def detect(self) -> "Resource":
+        instance_id = self._instance_id_cache.setdefault(
+            os.getpid(), str(uuid.uuid4())
+        )
+        return Resource({SERVICE_INSTANCE_ID: instance_id})
 
 
 def get_aggregated_resources(

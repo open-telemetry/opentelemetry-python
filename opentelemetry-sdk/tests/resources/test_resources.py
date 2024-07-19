@@ -41,6 +41,7 @@ from opentelemetry.sdk.resources import (
     PROCESS_RUNTIME_DESCRIPTION,
     PROCESS_RUNTIME_NAME,
     PROCESS_RUNTIME_VERSION,
+    SERVICE_INSTANCE_ID,
     SERVICE_NAME,
     TELEMETRY_SDK_LANGUAGE,
     TELEMETRY_SDK_NAME,
@@ -49,6 +50,7 @@ from opentelemetry.sdk.resources import (
     ProcessResourceDetector,
     Resource,
     ResourceDetector,
+    ServiceInstanceIdResourceDetector,
     get_aggregated_resources,
 )
 
@@ -611,6 +613,27 @@ class TestOTELResourceDetector(unittest.TestCase):
             tuple(sys.argv),
         )
 
+    def test_service_instance_id_detector(self):
+        resource = get_aggregated_resources(
+            [ServiceInstanceIdResourceDetector()], Resource({})
+        )
+
+        self.assertIn(SERVICE_INSTANCE_ID, resource.attributes.keys())
+
+        # This throws if service instance id is not a valid UUID.
+        uuid.UUID(resource.attributes[SERVICE_INSTANCE_ID])
+
+        other_resource = get_aggregated_resources(
+            [ServiceInstanceIdResourceDetector()], Resource({})
+        )
+
+        # The instance id should be stable across invocations of the detector
+        # in the same process.
+        self.assertEqual(
+            resource.attributes[SERVICE_INSTANCE_ID],
+            other_resource.attributes[SERVICE_INSTANCE_ID],
+        )
+
     def test_resource_detector_entry_points_default(self):
         resource = Resource({}).create()
 
@@ -723,3 +746,15 @@ class TestOTELResourceDetector(unittest.TestCase):
             )
             self.assertIn(PROCESS_RUNTIME_VERSION, resource.attributes.keys())
             self.assertEqual(resource.schema_url, "")
+        with patch.dict(
+            environ,
+            {
+                OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: "serviceinstanceid",
+            },
+            clear=True,
+        ):
+            resource = Resource({}).create()
+            self.assertIn(SERVICE_INSTANCE_ID, resource.attributes.keys())
+
+            # This throws if service instance id is not a valid UUID.
+            uuid.UUID(resource.attributes[SERVICE_INSTANCE_ID])
