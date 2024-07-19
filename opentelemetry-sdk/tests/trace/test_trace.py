@@ -165,6 +165,30 @@ tracer_provider.add_span_processor(mock_processor)
             span_processor, tracer_provider._active_span_processor
         )
 
+    def test_get_tracer_sdk(self):
+        tracer_provider = trace.TracerProvider()
+        tracer = tracer_provider.get_tracer(
+            "module_name",
+            "library_version",
+            "schema_url",
+            {"key1": "value1", "key2": 6},
+        )
+        # pylint: disable=protected-access
+        self.assertEqual(tracer._instrumentation_scope._name, "module_name")
+        # pylint: disable=protected-access
+        self.assertEqual(
+            tracer._instrumentation_scope._version, "library_version"
+        )
+        # pylint: disable=protected-access
+        self.assertEqual(
+            tracer._instrumentation_scope._schema_url, "schema_url"
+        )
+        # pylint: disable=protected-access
+        self.assertEqual(
+            tracer._instrumentation_scope._attributes,
+            {"key1": "value1", "key2": 6},
+        )
+
     @mock.patch.dict("os.environ", {OTEL_SDK_DISABLED: "true"})
     def test_get_tracer_with_sdk_disabled(self):
         tracer_provider = trace.TracerProvider()
