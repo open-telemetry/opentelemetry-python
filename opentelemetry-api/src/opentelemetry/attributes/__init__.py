@@ -109,7 +109,7 @@ def _clean_attribute(
 
 def _clean_attribute_value(
     value: types.AttributeValue, limit: Optional[int]
-) -> Union[types.AttributeValue, None]:
+) -> Optional[types.AttributeValue]:
     if value is None:
         return None
 
@@ -149,7 +149,7 @@ class BoundedAttributes(MutableMapping):  # type: ignore
         self.max_value_len = max_value_len
         # OrderedDict is not used until the maxlen is reached for efficiency.
 
-        self._dict: dict | OrderedDict = {}
+        self._dict: MutableMapping[str, types.AttributeValue] | OrderedDict[str, types.AttributeValue] = {}
         self._lock = threading.RLock()
         if attributes:
             for key, value in attributes.items():
@@ -157,12 +157,12 @@ class BoundedAttributes(MutableMapping):  # type: ignore
         self._immutable = immutable
 
     def __repr__(self) -> str:
-        return f"{dict(self._dict)}"  # type: ignore
+        return f"{dict(self._dict)}"
 
-    def __getitem__(self, key):  # type: ignore
-        return self._dict[key]  # type: ignore
+    def __getitem__(self, key: str)-> types.AttributeValue:
+        return self._dict[key]
 
-    def __setitem__(self, key, value):  # type: ignore
+    def __setitem__(self, key: str, value: types.AttributeValue) -> None:
         if getattr(self, "_immutable", False):  # type: ignore
             raise TypeError
         with self._lock:
@@ -171,24 +171,24 @@ class BoundedAttributes(MutableMapping):  # type: ignore
                 return
 
             value = _clean_attribute(key, value, self.max_value_len)  # type: ignore
-            if value is not None:  # type: ignore
-                if key in self._dict:  # type: ignore
-                    del self._dict[key]  # type: ignore
+            if value is not None:
+                if key in self._dict:
+                    del self._dict[key]
                 elif (
-                    self.maxlen is not None and len(self._dict) == self.maxlen  # type: ignore
+                    self.maxlen is not None and len(self._dict) == self.maxlen
                 ):
-                    if not isinstance(self._dict, OrderedDict):  # type: ignore
-                        self._dict = OrderedDict(self._dict)  # type: ignore
-                    self._dict.popitem(last=False)
+                    if not isinstance(self._dict, OrderedDict):
+                        self._dict = OrderedDict(self._dict)
+                    self._dict.popitem(last=False) # type: ignore
                     self.dropped += 1
 
-                self._dict[key] = value  # type: ignore
+                self._dict[key] = value # type: ignore
 
-    def __delitem__(self, key) -> None:
+    def __delitem__(self, key: str) -> None:
         if getattr(self, "_immutable", False):  # type: ignore
             raise TypeError
         with self._lock:
-            del self._dict[key]  # type: ignore
+            del self._dict[key]
 
     def __iter__(self):  # type: ignore
         with self._lock:
