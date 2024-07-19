@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=protected-access
+
 from math import sqrt
 from unittest import TestCase
 from unittest.mock import patch
@@ -53,6 +55,7 @@ def left_boundary(scale: int, index: int) -> float:
 
 
 class TestLogarithmMapping(TestCase):
+    # pylint: disable=invalid-name
     def assertInEpsilon(self, first, second, epsilon):
         self.assertLessEqual(first, (second * (1 + epsilon)))
         self.assertGreaterEqual(first, (second * (1 - epsilon)))
@@ -66,7 +69,7 @@ class TestLogarithmMapping(TestCase):
         "opentelemetry.sdk.metrics._internal.exponential_histogram.mapping."
         "logarithm_mapping.LogarithmMapping._init"
     )
-    def test_init_called_once(self, mock_init):
+    def test_init_called_once(self, mock_init):  # pylint: disable=no-self-use
 
         LogarithmMapping(3)
         LogarithmMapping(3)

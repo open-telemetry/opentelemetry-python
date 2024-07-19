@@ -44,7 +44,7 @@ from opentelemetry.test import TestCase
 class OrigMetricExporter(MetricExporter):
     def export(
         self,
-        metrics: Sequence[Metric],
+        metrics_data: Sequence[Metric],
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> MetricExportResult:
@@ -60,7 +60,7 @@ class OrigMetricExporter(MetricExporter):
 class OrigMetricReader(MetricReader):
     def _receive_metrics(
         self,
-        metrics: Iterable[Metric],
+        metrics_data: Iterable[Metric],
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> None:

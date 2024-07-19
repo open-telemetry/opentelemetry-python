@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+# pylint: disable=invalid-name
 import random
 
 import pytest
@@ -70,7 +72,7 @@ hist1000 = meter.create_histogram("test_histogram_1000_bound")
 def test_histogram_record(benchmark, num_labels):
     labels = {}
     for i in range(num_labels):
-        labels["Key{}".format(i)] = "Value{}".format(i)
+        labels[f"Key{i}"] = "Value{i}"
 
     def benchmark_histogram_record():
         hist.record(random.random() * MAX_BOUND_VALUE)
@@ -82,7 +84,7 @@ def test_histogram_record(benchmark, num_labels):
 def test_histogram_record_10(benchmark, num_labels):
     labels = {}
     for i in range(num_labels):
-        labels["Key{}".format(i)] = "Value{}".format(i)
+        labels[f"Key{i}"] = "Value{i}"
 
     def benchmark_histogram_record_10():
         hist10.record(random.random() * MAX_BOUND_VALUE)
@@ -94,7 +96,7 @@ def test_histogram_record_10(benchmark, num_labels):
 def test_histogram_record_49(benchmark, num_labels):
     labels = {}
     for i in range(num_labels):
-        labels["Key{}".format(i)] = "Value{}".format(i)
+        labels[f"Key{i}"] = "Value{i}"
 
     def benchmark_histogram_record_49():
         hist49.record(random.random() * MAX_BOUND_VALUE)
@@ -106,7 +108,7 @@ def test_histogram_record_49(benchmark, num_labels):
 def test_histogram_record_50(benchmark, num_labels):
     labels = {}
     for i in range(num_labels):
-        labels["Key{}".format(i)] = "Value{}".format(i)
+        labels[f"Key{i}"] = "Value{i}"
 
     def benchmark_histogram_record_50():
         hist50.record(random.random() * MAX_BOUND_VALUE)
@@ -118,7 +120,7 @@ def test_histogram_record_50(benchmark, num_labels):
 def test_histogram_record_1000(benchmark, num_labels):
     labels = {}
     for i in range(num_labels):
-        labels["Key{}".format(i)] = "Value{}".format(i)
+        labels[f"Key{i}"] = "Value{i}"
 
     def benchmark_histogram_record_1000():
         hist1000.record(random.random() * MAX_BOUND_VALUE)
