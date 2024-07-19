@@ -56,6 +56,3 @@ class EventLoggerProvider(ABC):
         attributes: Optional[Attributes] = None,
     ) -> EventLogger:
         """Returns an EventLoggerProvider for use."""
-
-
-_LOGGER_PROVIDER: Optional[EventLoggerProvider] = None
