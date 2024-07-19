@@ -16,7 +16,7 @@ import logging
 import threading
 from collections import OrderedDict
 from collections.abc import MutableMapping
-from typing import Optional, Sequence, Union
+from typing import Optional, Sequence
 
 from opentelemetry.util import types
 
