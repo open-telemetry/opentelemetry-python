@@ -64,7 +64,7 @@ import typing
 from json import dumps
 from os import environ
 from types import ModuleType
-from typing import List, Optional
+from typing import List, Optional, Sequence, Union
 from urllib import parse
 
 from opentelemetry.attributes import BoundedAttributes
@@ -211,11 +211,11 @@ class Resource:
 
         if not resource.attributes.get(SERVICE_NAME, None):
             default_service_name = "unknown_service"
-            process_executable_name: Optional[str] = resource.attributes.get(
+            process_executable_name: Optional[Union[int, float, Sequence[str], Sequence[int], Sequence[float] ]] = resource.attributes.get(
                 PROCESS_EXECUTABLE_NAME, None
             )
             if process_executable_name:
-                default_service_name += ":" + process_executable_name
+                default_service_name += ":" + str(process_executable_name)
             resource = resource.merge(
                 Resource({SERVICE_NAME: default_service_name}, schema_url)
             )
@@ -250,8 +250,8 @@ class Resource:
         Returns:
             The newly-created Resource.
         """
-        merged_attributes = self.attributes.copy()
-        merged_attributes.update(other.attributes)
+        merged_attributes = self.attributes.copy()  # type: ignore
+        merged_attributes.update(other.attributes)  # type: ignore
 
         if self.schema_url == "":
             schema_url = other.schema_url
@@ -266,7 +266,7 @@ class Resource:
                 other.schema_url,
             )
             return self
-        return Resource(merged_attributes, schema_url)
+        return Resource(merged_attributes, schema_url) # type: ignore
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Resource):
