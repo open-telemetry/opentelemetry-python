@@ -12,11 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import opentelemetry.sdk.trace as trace
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.trace import sampling
+from opentelemetry.sdk.trace import TracerProvider, sampling
 
-tracer = trace.TracerProvider(
+tracer = TracerProvider(
     sampler=sampling.DEFAULT_ON,
     resource=Resource(
         {

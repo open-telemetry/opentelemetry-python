@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=protected-access,invalid-name
+
 from logging import WARNING
 from unittest.mock import MagicMock, Mock, patch
 
