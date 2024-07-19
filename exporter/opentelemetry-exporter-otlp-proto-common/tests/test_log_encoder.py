@@ -239,8 +239,8 @@ class TestOTLPLogEncoder(unittest.TestCase):
                                 PB2LogRecord(
                                     time_unix_nano=1644650249738562048,
                                     observed_time_unix_nano=1644650249738562049,
-                                    trace_id=_encode_trace_id(0),
-                                    span_id=_encode_span_id(0),
+                                    trace_id=None,
+                                    span_id=None,
                                     flags=int(TraceFlags.DEFAULT),
                                     severity_text="WARN",
                                     severity_number=SeverityNumber.WARN.value,

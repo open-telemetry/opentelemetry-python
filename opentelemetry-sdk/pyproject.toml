@@ -72,7 +72,7 @@ process = "opentelemetry.sdk.resources:ProcessResourceDetector"
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/opentelemetry-sdk"
 
 [tool.hatch.version]
-path = "src/opentelemetry/sdk/version.py"
+path = "src/opentelemetry/sdk/version/__init__.py"
 
 [tool.hatch.build.targets.sdist]
 include = [

@@ -33,10 +33,12 @@ class TestGlobals(TraceGlobalsTest, unittest.TestCase):
     def test_get_tracer(mock_tracer_provider):  # type: ignore
         """trace.get_tracer should proxy to the global tracer provider."""
         trace.get_tracer("foo", "var")
-        mock_tracer_provider.get_tracer.assert_called_with("foo", "var", None)
+        mock_tracer_provider.get_tracer.assert_called_with(
+            "foo", "var", None, None
+        )
         mock_provider = Mock()
         trace.get_tracer("foo", "var", mock_provider)
-        mock_provider.get_tracer.assert_called_with("foo", "var", None)
+        mock_provider.get_tracer.assert_called_with("foo", "var", None, None)
 
 
 class TestGlobalsConcurrency(TraceGlobalsTest, ConcurrencyTestBase):

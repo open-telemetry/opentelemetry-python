@@ -99,6 +99,7 @@ Meeting notes are available as a public [Google doc](https://docs.google.com/doc
 Approvers ([@open-telemetry/python-approvers](https://github.com/orgs/open-telemetry/teams/python-approvers)):
 
 - [Aaron Abbott](https://github.com/aabmass), Google
+- [Emídio Neto](https://github.com/emdneto), Zenvia
 - [Jeremy Voss](https://github.com/jeremydvoss), Microsoft
 - [Owais Lone](https://github.com/owais), Splunk
 - [Pablo Collins](https://github.com/pmcollins), Splunk

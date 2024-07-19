@@ -9,14 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Retain meaningful logrecord attributes and apply log-message formatting 
   ([#3673](https://github.com/open-telemetry/opentelemetry-python/pull/3673))
+- optional scope attribute for tracer creation
+  ([#4028](https://github.com/open-telemetry/opentelemetry-python/pull/4028))
+- OTLP exporter is encoding invalid span/trace IDs in the logs fix
+  ([#4006](https://github.com/open-telemetry/opentelemetry-python/pull/4006))
+- Update sdk process resource detector `process.command_args` attribute to also include the executable itself
+  ([#4032](https://github.com/open-telemetry/opentelemetry-python/pull/4032))
 - Fix `start_time_unix_nano` for delta collection for explicit bucket histogram aggregation
   ([#4009](https://github.com/open-telemetry/opentelemetry-python/pull/4009))
 - Fix `start_time_unix_nano` for delta collection for sum aggregation
   ([#4011](https://github.com/open-telemetry/opentelemetry-python/pull/4011))
+- Update opentracing and opencesus docs examples to not use JaegerExporter
+  ([#4023](https://github.com/open-telemetry/opentelemetry-python/pull/4023))
 - Do not execute Flask Tests in debug mode
   ([#3956](https://github.com/open-telemetry/opentelemetry-python/pull/3956))
 - When encountering an error encoding metric attributes in the OTLP exporter, log the key that had an error.
   ([#3838](https://github.com/open-telemetry/opentelemetry-python/pull/3838))
+- Fix `ExponentialHistogramAggregation`
+  ([#3978](https://github.com/open-telemetry/opentelemetry-python/pull/3978))
 - Log a warning when a `LogRecord` in `sdk/log` has dropped attributes
   due to reaching limits
   ([#3946](https://github.com/open-telemetry/opentelemetry-python/pull/3946))
@@ -40,6 +50,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3965](https://github.com/open-telemetry/opentelemetry-python/pull/3965))
 - Validate links at span creation
   ([#3991](https://github.com/open-telemetry/opentelemetry-python/pull/3991))
+- Add attributes field in  `MeterProvider.get_meter` and `InstrumentationScope`
+  ([#4015](https://github.com/open-telemetry/opentelemetry-python/pull/4015))
 
 ## Version 1.25.0/0.46b0 (2024-05-30)
 

@@ -10,7 +10,7 @@ env:
   # Otherwise, set variable to the commit of your branch on
   # opentelemetry-python-contrib which is compatible with these Core repo
   # changes.
-  CONTRIB_REPO_SHA: 7d4573da89c7aef748614e6f1511be3eddf5b230
+  CONTRIB_REPO_SHA: main
 
   # This is needed because we do not clone the core repo in contrib builds anymore.
   # When running contrib builds as part of core builds, we use actions/checkout@v4 which
@@ -56,7 +56,7 @@ jobs:
           - "exporter-zipkin-combined"
           - "exporter-zipkin-proto-http"
           - "exporter-zipkin-json"
-          - "protobuf"
+          - "proto"
           - "propagator-b3"
           - "propagator-jaeger"
         os: [ubuntu-20.04, windows-2019]
@@ -69,6 +69,8 @@ jobs:
             package: "exporter-otlp-combined"
           - python-version: pypy3
             package: "exporter-otlp-proto-grpc"
+          - python-version: pypy3
+            package: "getting-started"
 
     steps:
     - name: Checkout Core Repo @ SHA - ${{ github.sha }}
@@ -93,12 +95,12 @@ jobs:
       if: ${{ matrix.os == 'windows-2019'}}
       run: git config --system core.longpaths true
     - name: run tox
-      run: tox -f ${{ matrix.python-version }}-${{ matrix.package }} -- -ra --benchmark-skip
+      run: tox -f ${{ matrix.python-version }}-${{ matrix.package }} -- -ra
   misc:
     strategy:
       fail-fast: false
       matrix:
-        tox-environment: ["docker-tests-proto3", "docker-tests-proto4", "lint", "spellcheck",
+        tox-environment: ["docker-tests-proto3", "docker-tests-proto4", "spellcheck",
           "docs", "mypy", "mypyinstalled", "tracecontext"]
     name: ${{ matrix.tox-environment }}
     runs-on: ubuntu-20.04
@@ -172,7 +174,6 @@ jobs:
           - "redis"
           - "remoulade"
           - "requests"
-          - "sklearn"
           - "sqlalchemy"
           - "sqlite3"
           - "starlette"
@@ -213,4 +214,4 @@ jobs:
         key: v3-tox-cache-${{ matrix.python-version }}-${{ matrix.package }}-${{ matrix.os
           }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-contrib
     - name: run tox
-      run: tox -f ${{ matrix.python-version }}-${{ matrix.package }} -- -ra --benchmark-skip
+      run: tox -f ${{ matrix.python-version }}-${{ matrix.package }} -- -ra
