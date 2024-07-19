@@ -149,7 +149,10 @@ class BoundedAttributes(MutableMapping):  # type: ignore
         self.max_value_len = max_value_len
         # OrderedDict is not used until the maxlen is reached for efficiency.
 
-        self._dict: MutableMapping[str, types.AttributeValue] | OrderedDict[str, types.AttributeValue] = {}
+        self._dict: (
+            MutableMapping[str, types.AttributeValue]
+            | OrderedDict[str, types.AttributeValue]
+        ) = {}
         self._lock = threading.RLock()
         if attributes:
             for key, value in attributes.items():
@@ -159,7 +162,7 @@ class BoundedAttributes(MutableMapping):  # type: ignore
     def __repr__(self) -> str:
         return f"{dict(self._dict)}"
 
-    def __getitem__(self, key: str)-> types.AttributeValue:
+    def __getitem__(self, key: str) -> types.AttributeValue:
         return self._dict[key]
 
     def __setitem__(self, key: str, value: types.AttributeValue) -> None:
@@ -179,10 +182,10 @@ class BoundedAttributes(MutableMapping):  # type: ignore
                 ):
                     if not isinstance(self._dict, OrderedDict):
                         self._dict = OrderedDict(self._dict)
-                    self._dict.popitem(last=False) # type: ignore
+                    self._dict.popitem(last=False)  # type: ignore
                     self.dropped += 1
 
-                self._dict[key] = value # type: ignore
+                self._dict[key] = value  # type: ignore
 
     def __delitem__(self, key: str) -> None:
         if getattr(self, "_immutable", False):  # type: ignore
