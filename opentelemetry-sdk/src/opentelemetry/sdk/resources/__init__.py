@@ -175,7 +175,7 @@ class Resource:
         if not attributes:
             attributes = {}
 
-        otel_experimental_resource_detectors = {"otel", "os"}.union(
+        otel_experimental_resource_detectors = {"otel"}.union(
             {
                 otel_experimental_resource_detector.strip()
                 for otel_experimental_resource_detector in environ.get(
