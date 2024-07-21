@@ -55,12 +55,16 @@ class TestLoggerProvider(unittest.TestCase):
             "name",
             version="version",
             schema_url="schema_url",
+            attributes={"key": "value"},
         )
 
         self.assertEqual(logger._instrumentation_scope.name, "name")
         self.assertEqual(logger._instrumentation_scope.version, "version")
         self.assertEqual(
             logger._instrumentation_scope.schema_url, "schema_url"
+        )
+        self.assertEqual(
+            logger._instrumentation_scope.attributes, {"key": "value"}
         )
 
     @patch.dict("os.environ", {OTEL_SDK_DISABLED: "true"})

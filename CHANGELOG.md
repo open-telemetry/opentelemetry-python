@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- optional scope attributes for logger creation
+  ([#4035](https://github.com/open-telemetry/opentelemetry-python/pull/4035))
+- optional scope attribute for tracer creation
+  ([#4028](https://github.com/open-telemetry/opentelemetry-python/pull/4028))
 - OTLP exporter is encoding invalid span/trace IDs in the logs fix
   ([#4006](https://github.com/open-telemetry/opentelemetry-python/pull/4006))
 - Update sdk process resource detector `process.command_args` attribute to also include the executable itself
@@ -21,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3956](https://github.com/open-telemetry/opentelemetry-python/pull/3956))
 - When encountering an error encoding metric attributes in the OTLP exporter, log the key that had an error.
   ([#3838](https://github.com/open-telemetry/opentelemetry-python/pull/3838))
+- Fix `ExponentialHistogramAggregation`
+  ([#3978](https://github.com/open-telemetry/opentelemetry-python/pull/3978))
 - Log a warning when a `LogRecord` in `sdk/log` has dropped attributes
   due to reaching limits
   ([#3946](https://github.com/open-telemetry/opentelemetry-python/pull/3946))
