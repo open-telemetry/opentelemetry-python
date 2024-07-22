@@ -52,6 +52,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3991](https://github.com/open-telemetry/opentelemetry-python/pull/3991))
 - Add attributes field in  `MeterProvider.get_meter` and `InstrumentationScope`
   ([#4015](https://github.com/open-telemetry/opentelemetry-python/pull/4015))
+- Fix inaccessible `SCHEMA_URL` constants in `opentelemetry-semantic-conventions`
+  ([#4069](https://github.com/open-telemetry/opentelemetry-python/pull/4069))
 
 ## Version 1.25.0/0.46b0 (2024-05-30)
 
