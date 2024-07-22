@@ -597,6 +597,7 @@ class Logger(APILogger):
             instrumentation_scope.name,
             instrumentation_scope.version,
             instrumentation_scope.schema_url,
+            instrumentation_scope.attributes,
         )
         self._resource = resource
         self._multi_log_record_processor = multi_log_record_processor
@@ -646,10 +647,16 @@ class LoggerProvider(APILoggerProvider):
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
+        attributes: Optional[Attributes] = None,
     ) -> Logger:
         if self._disabled:
             _logger.warning("SDK is disabled.")
-            return NoOpLogger(name, version=version, schema_url=schema_url)
+            return NoOpLogger(
+                name,
+                version=version,
+                schema_url=schema_url,
+                attributes=attributes,
+            )
         return Logger(
             self._resource,
             self._multi_log_record_processor,
@@ -657,6 +664,7 @@ class LoggerProvider(APILoggerProvider):
                 name,
                 version,
                 schema_url,
+                attributes,
             ),
         )
 
