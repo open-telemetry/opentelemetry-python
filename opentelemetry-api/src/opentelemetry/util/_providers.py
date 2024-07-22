@@ -42,7 +42,7 @@ def _load_provider(
             Provider,
             next(  # type: ignore
                 iter(  # type: ignore
-                    entry_points(  # type: ignore
+                    entry_points(
                         group=f"opentelemetry_{provider}",
                         name=provider_name,
                     )
