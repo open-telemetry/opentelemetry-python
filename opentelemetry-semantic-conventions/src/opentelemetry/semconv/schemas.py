@@ -23,7 +23,7 @@ class Schemas(Enum):
 
     V1_25_0 = "https://opentelemetry.io/schemas/1.25.0"
     """
-    The URL of the OpenTelemetry schema version v1.25.0.
+    The URL of the OpenTelemetry schema version 1.25.0.
     """
 
     V1_26_0 = "https://opentelemetry.io/schemas/1.26.0"
