@@ -5,6 +5,23 @@ on:
     branches-ignore:
     - 'release/*'
   pull_request:
+env:
+  # Set variable to 'main' if your change will not affect Contrib.
+  # Otherwise, set variable to the commit of your branch on
+  # opentelemetry-python-contrib which is compatible with these Core repo
+  # changes.
+  CONTRIB_REPO_SHA: 17dc91646823627929a1f1f6a8ffd32ca038a8e4
+
+  # This is needed because we do not clone the core repo in contrib builds anymore.
+  # When running contrib builds as part of core builds, we use actions/checkout@v4 which
+  # does not set an environment variable (simply just runs tox), which is different when
+  # contrib builds are run directly from contrib (since test.yml is executed, which sets CORE_REPO_SHA)
+  # The solution is to include CORE_REPO_SHA as part of THIS environment so it can be accessed
+  # from within the contrib build.
+  CORE_REPO_SHA: ${{ github.sha }}
+
+  # See #3879 and https://pip.pypa.io/en/stable/cli/pip/#exists-action-option
+  PIP_EXISTS_ACTION: w
 
 jobs:
   lint-3_12:
