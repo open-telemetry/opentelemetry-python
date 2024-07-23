@@ -21,14 +21,14 @@ class Schemas(Enum):
     The URL of the OpenTelemetry schema version 1.23.1.
     """
 
-    V1_25_0 = "https://opentelemetry.io/schemas/v1.25.0"
+    V1_25_0 = "https://opentelemetry.io/schemas/1.25.0"
     """
-    The URL of the OpenTelemetry schema version v1.25.0.
+    The URL of the OpenTelemetry schema version 1.25.0.
     """
 
-    V1_26_0 = "https://opentelemetry.io/schemas/v1.26.0"
+    V1_26_0 = "https://opentelemetry.io/schemas/1.26.0"
     """
-    The URL of the OpenTelemetry schema version v1.26.0.
+    The URL of the OpenTelemetry schema version 1.26.0.
     """
 
     # when generating new semantic conventions,
