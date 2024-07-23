@@ -685,6 +685,15 @@ class TestOTELResourceDetector(unittest.TestCase):
             resource.attributes["telemetry.sdk.language"], "python"
         )
 
+    @patch.dict(
+        environ, {OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: "os"}, clear=True
+    )
+    def test_resource_detector_entry_points_os(self):
+        resource = Resource({}).create()
+
+        self.assertIn(OS_TYPE, resource.attributes)
+        self.assertIn(OS_VERSION, resource.attributes)
+
     def test_resource_detector_entry_points_otel(self):
         """
         Test that OTELResourceDetector-resource-generated attributes are
