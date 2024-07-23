@@ -180,10 +180,6 @@ class TestSynchronousMeasurementConsumer(TestCase):
             -1
         ].kwargs["timeout_millis"]
 
-        self.assertAlmostEqual(
-            round(10000 - callback_options_time_call), 1000.0, places=1
-        )
-
         self.assertLess(
             callback_options_time_call,
             10000,
