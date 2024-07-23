@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Standardizing timeout calculation in measurement consumer collect to nanoseconds
+  ([#4074](https://github.com/open-telemetry/opentelemetry-python/pull/4074))
 - optional scope attributes for logger creation
   ([#4035](https://github.com/open-telemetry/opentelemetry-python/pull/4035))
 - optional scope attribute for tracer creation
