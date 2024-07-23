@@ -64,7 +64,7 @@ import typing
 from json import dumps
 from os import environ
 from types import ModuleType
-from typing import List, MutableMapping, Optional, Sequence, Union, cast
+from typing import List, MutableMapping, Optional, cast
 from urllib import parse
 
 from opentelemetry.attributes import BoundedAttributes
@@ -211,9 +211,10 @@ class Resource:
 
         if not resource.attributes.get(SERVICE_NAME, None):
             default_service_name = "unknown_service"
-            process_executable_name = cast(Optional[str], resource.attributes.get(
-                PROCESS_EXECUTABLE_NAME, None
-            ))
+            process_executable_name = cast(
+                Optional[str],
+                resource.attributes.get(PROCESS_EXECUTABLE_NAME, None),
+            )
             if process_executable_name:
                 default_service_name += ":" + process_executable_name
             resource = resource.merge(
@@ -266,7 +267,7 @@ class Resource:
                 other.schema_url,
             )
             return self
-        return Resource(merged_attributes, schema_url) # type: ignore
+        return Resource(merged_attributes, schema_url)  # type: ignore
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Resource):
@@ -278,11 +279,13 @@ class Resource:
 
     def __hash__(self) -> int:
         return hash(
-            f"{dumps(self._attributes.copy(), sort_keys=True)}|{self._schema_url}" # type: ignore
+            f"{dumps(self._attributes.copy(), sort_keys=True)}|{self._schema_url}"  # type: ignore
         )
 
     def to_json(self, indent: int = 4) -> str:
-        attributes: MutableMapping[str, AttributeValue] = dict(self._attributes)
+        attributes: MutableMapping[str, AttributeValue] = dict(
+            self._attributes
+        )
         return dumps(
             {
                 "attributes": attributes,  # type: ignore
