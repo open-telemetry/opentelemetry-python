@@ -64,7 +64,7 @@ import typing
 from json import dumps
 from os import environ
 from types import ModuleType
-from typing import List, Optional, Sequence, Union, cast
+from typing import List, MutableMapping, Optional, Sequence, Union, cast
 from urllib import parse
 
 from opentelemetry.attributes import BoundedAttributes
@@ -282,7 +282,7 @@ class Resource:
         )
 
     def to_json(self, indent: int = 4) -> str:
-        attributes: MutableMapping[str, types.AttributeValue] = dict(self._attributes)
+        attributes: MutableMapping[str, AttributeValue] = dict(self._attributes)
         return dumps(
             {
                 "attributes": attributes,  # type: ignore
