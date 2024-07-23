@@ -282,7 +282,7 @@ class Resource:
         )
 
     def to_json(self, indent: int = 4) -> str:
-        attributes = dict(self._attributes)  # type: ignore
+        attributes: MutableMapping[str, types.AttributeValue] = dict(self._attributes)
         return dumps(
             {
                 "attributes": attributes,  # type: ignore
