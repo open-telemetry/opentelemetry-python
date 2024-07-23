@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-- Events API implementation
+- Initial implementation of Events API
   ([#4054](https://github.com/open-telemetry/opentelemetry-python/pull/4054))
 - OTLP exporter is encoding invalid span/trace IDs in the logs fix
   ([#4006](https://github.com/open-telemetry/opentelemetry-python/pull/4006))
