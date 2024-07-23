@@ -278,8 +278,8 @@ class Resource:
 
     def __hash__(self) -> int:
         return hash(
-            f"{dumps(self._attributes.copy(), sort_keys=True)}|{self._schema_url}"
-        )  # type: ignore
+            f"{dumps(self._attributes.copy(), sort_keys=True)}|{self._schema_url}" # type: ignore
+        )
 
     def to_json(self, indent: int = 4) -> str:
         attributes = dict(self._attributes)  # type: ignore
