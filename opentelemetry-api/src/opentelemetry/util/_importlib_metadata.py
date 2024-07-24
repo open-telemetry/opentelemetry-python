@@ -14,7 +14,12 @@
 
 # FIXME: Use importlib.metadata when support for 3.11 is dropped if the rest of
 # the supported versions at that time have the same API.
-from importlib_metadata import EntryPoint, EntryPoints, entry_points, version
+from importlib_metadata import (  # type: ignore
+    EntryPoint,
+    EntryPoints,
+    entry_points,
+    version,
+)
 
 # The importlib-metadata library has introduced breaking changes before to its
 # API, this module is kept just to act as a layer between the
