@@ -16,7 +16,7 @@ import logging
 import threading
 from collections import OrderedDict
 from collections.abc import MutableMapping
-from typing import Optional, Sequence, Union
+from typing import Optional, Sequence, Tuple, Union
 
 from opentelemetry.util import types
 
@@ -30,7 +30,7 @@ _logger = logging.getLogger(__name__)
 
 def _clean_attribute(
     key: str, value: types.AttributeValue, max_len: Optional[int]
-) -> Optional[Union[types.AttributeValue, tuple[Union[str, int, float], ...]]]:
+) -> Optional[Union[types.AttributeValue, Tuple[Union[str, int, float], ...]]]:
     """Checks if attribute value is valid and cleans it if required.
 
     The function returns the cleaned value or None if the value is not valid.
