@@ -81,12 +81,14 @@ jobs:
       # rejected by pypi (e.g "3 - Beta"). This would cause a failure during the
       # middle of the package upload causing the action to fail, and certain packages
       # might have already been updated, this would be bad.
-      - name: Publish to TestPyPI
-        env:
-          TWINE_USERNAME: '__token__'
-          TWINE_PASSWORD: ${{ secrets.test_pypi_token }}
-        run: |
-          twine upload --repository testpypi --skip-existing --verbose dist/*
+      # EDIT: 2024/07/24 - TestPypi now requires a verified email. Commenting out as a temporary measure
+      # until we found TestPypi credentials.
+      # - name: Publish to TestPyPI
+      #   env:
+      #     TWINE_USERNAME: '__token__'
+      #     TWINE_PASSWORD: ${{ secrets.test_pypi_token }}
+      #   run: |
+      #     twine upload --repository testpypi --skip-existing --verbose dist/*
 
       - name: Publish to PyPI
         env:
