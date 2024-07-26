@@ -128,7 +128,7 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
             self._exporter.export((log_data,))
-        except Exception as exc:  # pylint: disable=broad-exception-caught
+        except Exception:  # pylint: disable=broad-exception-caught
             traceback_str = traceback.format_exc()
             print(f"Exception while exporting logs: {traceback_str}")
         detach(token)
