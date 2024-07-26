@@ -24,7 +24,7 @@ from deprecated import deprecated
     reason="Use attributes defined in the :py:const:`opentelemetry.semconv.attributes` and :py:const:`opentelemetry.semconv._incubating.attributes` modules instead.",
 )  # type: ignore
 class ResourceAttributes:
-    SCHEMA_URL = "https://opentelemetry.io/schemas/v1.21.0"
+    SCHEMA_URL = "https://opentelemetry.io/schemas/1.21.0"
     """
     The URL of the OpenTelemetry schema for these keys and values.
     """

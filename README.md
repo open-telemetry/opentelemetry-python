@@ -80,9 +80,7 @@ this repository and perform an [editable
 install](https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs):
 
 ```sh
-pip install -e ./opentelemetry-api
-pip install -e ./opentelemetry-sdk
-pip install -e ./instrumentation/opentelemetry-instrumentation-{instrumentation}
+pip install -e ./opentelemetry-api -e ./opentelemetry-sdk -e ./opentelemetry-semantic-conventions
 ```
 
 For additional exporter and instrumentation packages, see the 
