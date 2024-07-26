@@ -7,10 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-- Running mypy on SDK resources#
+- Running mypy on SDK resources
   ([#4053](https://github.com/open-telemetry/opentelemetry-python/pull/4053))
 
-## Version 1.26.0/0.47b0 (2024-07-23)
+## Version 1.26.0/0.47b0 (2024-07-25)
 
 - Standardizing timeout calculation in measurement consumer collect to nanoseconds
   ([#4074](https://github.com/open-telemetry/opentelemetry-python/pull/4074))
