@@ -19,10 +19,10 @@ import logging
 import os
 import sys
 import threading
+import traceback
 from os import environ, linesep
 from time import time_ns
 from typing import IO, Callable, Deque, List, Optional, Sequence
-import traceback
 
 from opentelemetry.context import (
     _SUPPRESS_INSTRUMENTATION_KEY,
