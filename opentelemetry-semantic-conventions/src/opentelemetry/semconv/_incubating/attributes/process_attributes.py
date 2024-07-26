@@ -153,23 +153,23 @@ Note: The process ID within a PID namespace. This is not necessarily unique acro
 
 
 class ProcessContextSwitchTypeValues(Enum):
-    VOLUNTARY: Final = "voluntary"
+    VOLUNTARY = "voluntary"
     """voluntary."""
-    INVOLUNTARY: Final = "involuntary"
+    INVOLUNTARY = "involuntary"
     """involuntary."""
 
 
 class ProcessCpuStateValues(Enum):
-    SYSTEM: Final = "system"
+    SYSTEM = "system"
     """system."""
-    USER: Final = "user"
+    USER = "user"
     """user."""
-    WAIT: Final = "wait"
+    WAIT = "wait"
     """wait."""
 
 
 class ProcessPagingFaultTypeValues(Enum):
-    MAJOR: Final = "major"
+    MAJOR = "major"
     """major."""
-    MINOR: Final = "minor"
+    MINOR = "minor"
     """minor."""

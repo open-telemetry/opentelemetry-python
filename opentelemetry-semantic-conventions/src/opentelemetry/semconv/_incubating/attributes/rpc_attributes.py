@@ -113,92 +113,92 @@ A string identifying the remoting system. See below for a list of well-known ide
 
 
 class RpcConnectRpcErrorCodeValues(Enum):
-    CANCELLED: Final = "cancelled"
+    CANCELLED = "cancelled"
     """cancelled."""
-    UNKNOWN: Final = "unknown"
+    UNKNOWN = "unknown"
     """unknown."""
-    INVALID_ARGUMENT: Final = "invalid_argument"
+    INVALID_ARGUMENT = "invalid_argument"
     """invalid_argument."""
-    DEADLINE_EXCEEDED: Final = "deadline_exceeded"
+    DEADLINE_EXCEEDED = "deadline_exceeded"
     """deadline_exceeded."""
-    NOT_FOUND: Final = "not_found"
+    NOT_FOUND = "not_found"
     """not_found."""
-    ALREADY_EXISTS: Final = "already_exists"
+    ALREADY_EXISTS = "already_exists"
     """already_exists."""
-    PERMISSION_DENIED: Final = "permission_denied"
+    PERMISSION_DENIED = "permission_denied"
     """permission_denied."""
-    RESOURCE_EXHAUSTED: Final = "resource_exhausted"
+    RESOURCE_EXHAUSTED = "resource_exhausted"
     """resource_exhausted."""
-    FAILED_PRECONDITION: Final = "failed_precondition"
+    FAILED_PRECONDITION = "failed_precondition"
     """failed_precondition."""
-    ABORTED: Final = "aborted"
+    ABORTED = "aborted"
     """aborted."""
-    OUT_OF_RANGE: Final = "out_of_range"
+    OUT_OF_RANGE = "out_of_range"
     """out_of_range."""
-    UNIMPLEMENTED: Final = "unimplemented"
+    UNIMPLEMENTED = "unimplemented"
     """unimplemented."""
-    INTERNAL: Final = "internal"
+    INTERNAL = "internal"
     """internal."""
-    UNAVAILABLE: Final = "unavailable"
+    UNAVAILABLE = "unavailable"
     """unavailable."""
-    DATA_LOSS: Final = "data_loss"
+    DATA_LOSS = "data_loss"
     """data_loss."""
-    UNAUTHENTICATED: Final = "unauthenticated"
+    UNAUTHENTICATED = "unauthenticated"
     """unauthenticated."""
 
 
 class RpcGrpcStatusCodeValues(Enum):
-    OK: Final = 0
+    OK = 0
     """OK."""
-    CANCELLED: Final = 1
+    CANCELLED = 1
     """CANCELLED."""
-    UNKNOWN: Final = 2
+    UNKNOWN = 2
     """UNKNOWN."""
-    INVALID_ARGUMENT: Final = 3
+    INVALID_ARGUMENT = 3
     """INVALID_ARGUMENT."""
-    DEADLINE_EXCEEDED: Final = 4
+    DEADLINE_EXCEEDED = 4
     """DEADLINE_EXCEEDED."""
-    NOT_FOUND: Final = 5
+    NOT_FOUND = 5
     """NOT_FOUND."""
-    ALREADY_EXISTS: Final = 6
+    ALREADY_EXISTS = 6
     """ALREADY_EXISTS."""
-    PERMISSION_DENIED: Final = 7
+    PERMISSION_DENIED = 7
     """PERMISSION_DENIED."""
-    RESOURCE_EXHAUSTED: Final = 8
+    RESOURCE_EXHAUSTED = 8
     """RESOURCE_EXHAUSTED."""
-    FAILED_PRECONDITION: Final = 9
+    FAILED_PRECONDITION = 9
     """FAILED_PRECONDITION."""
-    ABORTED: Final = 10
+    ABORTED = 10
     """ABORTED."""
-    OUT_OF_RANGE: Final = 11
+    OUT_OF_RANGE = 11
     """OUT_OF_RANGE."""
-    UNIMPLEMENTED: Final = 12
+    UNIMPLEMENTED = 12
     """UNIMPLEMENTED."""
-    INTERNAL: Final = 13
+    INTERNAL = 13
     """INTERNAL."""
-    UNAVAILABLE: Final = 14
+    UNAVAILABLE = 14
     """UNAVAILABLE."""
-    DATA_LOSS: Final = 15
+    DATA_LOSS = 15
     """DATA_LOSS."""
-    UNAUTHENTICATED: Final = 16
+    UNAUTHENTICATED = 16
     """UNAUTHENTICATED."""
 
 
 class RpcMessageTypeValues(Enum):
-    SENT: Final = "SENT"
+    SENT = "SENT"
     """sent."""
-    RECEIVED: Final = "RECEIVED"
+    RECEIVED = "RECEIVED"
     """received."""
 
 
 class RpcSystemValues(Enum):
-    GRPC: Final = "grpc"
+    GRPC = "grpc"
     """gRPC."""
-    JAVA_RMI: Final = "java_rmi"
+    JAVA_RMI = "java_rmi"
     """Java RMI."""
-    DOTNET_WCF: Final = "dotnet_wcf"
+    DOTNET_WCF = "dotnet_wcf"
     """.NET WCF."""
-    APACHE_DUBBO: Final = "apache_dubbo"
+    APACHE_DUBBO = "apache_dubbo"
     """Apache Dubbo."""
-    CONNECT_RPC: Final = "connect_rpc"
+    CONNECT_RPC = "connect_rpc"
     """Connect RPC."""
