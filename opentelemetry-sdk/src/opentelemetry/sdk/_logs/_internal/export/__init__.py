@@ -22,6 +22,7 @@ import threading
 from os import environ, linesep
 from time import time_ns
 from typing import IO, Callable, Deque, List, Optional, Sequence
+import traceback
 
 from opentelemetry.context import (
     _SUPPRESS_INSTRUMENTATION_KEY,
@@ -127,8 +128,9 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
             self._exporter.export((log_data,))
-        except Exception:  # pylint: disable=broad-exception-caught
-            _logger.exception("Exception while exporting logs.")
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            traceback_str = traceback.format_exc()
+            print(f"Exception while exporting logs: {traceback_str}")
         detach(token)
 
     def shutdown(self):
