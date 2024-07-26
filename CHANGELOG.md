@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Added py.typed file to top-level module ([#4084](https://github.com/open-telemetry/opentelemetry-python/pull/4084))
+
 ## Version 1.26.0/0.47b0 (2024-07-25)
 
 - Standardizing timeout calculation in measurement consumer collect to nanoseconds
