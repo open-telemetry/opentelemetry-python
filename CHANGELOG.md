@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Retain meaningful logrecord attributes and apply log-message formatting 
+  ([#3673](https://github.com/open-telemetry/opentelemetry-python/pull/3673))
+
 ## Version 1.26.0/0.47b0 (2024-07-25)
 
 - Standardizing timeout calculation in measurement consumer collect to nanoseconds
