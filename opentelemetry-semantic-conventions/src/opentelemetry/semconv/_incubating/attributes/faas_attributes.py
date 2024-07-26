@@ -127,35 +127,35 @@ Note: Depending on the cloud provider and platform, use:
 
 
 class FaasDocumentOperationValues(Enum):
-    INSERT: Final = "insert"
+    INSERT = "insert"
     """When a new object is created."""
-    EDIT: Final = "edit"
+    EDIT = "edit"
     """When an object is modified."""
-    DELETE: Final = "delete"
+    DELETE = "delete"
     """When an object is deleted."""
 
 
 class FaasInvokedProviderValues(Enum):
-    ALIBABA_CLOUD: Final = "alibaba_cloud"
+    ALIBABA_CLOUD = "alibaba_cloud"
     """Alibaba Cloud."""
-    AWS: Final = "aws"
+    AWS = "aws"
     """Amazon Web Services."""
-    AZURE: Final = "azure"
+    AZURE = "azure"
     """Microsoft Azure."""
-    GCP: Final = "gcp"
+    GCP = "gcp"
     """Google Cloud Platform."""
-    TENCENT_CLOUD: Final = "tencent_cloud"
+    TENCENT_CLOUD = "tencent_cloud"
     """Tencent Cloud."""
 
 
 class FaasTriggerValues(Enum):
-    DATASOURCE: Final = "datasource"
+    DATASOURCE = "datasource"
     """A response to some data source operation such as a database or filesystem read/write."""
-    HTTP: Final = "http"
+    HTTP = "http"
     """To provide an answer to an inbound HTTP request."""
-    PUBSUB: Final = "pubsub"
+    PUBSUB = "pubsub"
     """A function is set to be executed when messages are sent to a messaging system."""
-    TIMER: Final = "timer"
+    TIMER = "timer"
     """A function is scheduled to be executed regularly."""
-    OTHER: Final = "other"
+    OTHER = "other"
     """If none of the others apply."""
