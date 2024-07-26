@@ -49,7 +49,7 @@ Note: If an id is provided, other log records with the same id will be considere
 
 
 class LogIostreamValues(Enum):
-    STDOUT: Final = "stdout"
+    STDOUT = "stdout"
     """Logs from stdout stream."""
-    STDERR: Final = "stderr"
+    STDERR = "stderr"
     """Events from stderr stream."""
