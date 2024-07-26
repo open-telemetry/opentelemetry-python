@@ -22,7 +22,7 @@ The disk IO operation direction.
 
 
 class DiskIoDirectionValues(Enum):
-    READ: Final = "read"
+    READ = "read"
     """read."""
-    WRITE: Final = "write"
+    WRITE = "write"
     """write."""
