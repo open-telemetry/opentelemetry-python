@@ -159,7 +159,7 @@ _PROXY_EVENT_LOGGER_PROVIDER = ProxyEventLoggerProvider()
 
 def get_event_logger_provider() -> EventLoggerProvider:
 
-    global _EVENT_LOGGER_PROVIDER  # pylint disable=global-variable-not-assigned
+    global _EVENT_LOGGER_PROVIDER  # pylint: disable=global-variable-not-assigned
     if _EVENT_LOGGER_PROVIDER is None:
         if _OTEL_PYTHON_EVENT_LOGGER_PROVIDER not in environ:
             return _PROXY_EVENT_LOGGER_PROVIDER
