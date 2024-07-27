@@ -91,6 +91,7 @@ class ProxyEventLogger(EventLogger):
         if _EVENT_LOGGER_PROVIDER:
             self._real_event_logger = _EVENT_LOGGER_PROVIDER.get_event_logger(
                 self._name,
+                self._version,
                 self._schema_url,
                 self._attributes,
             )
