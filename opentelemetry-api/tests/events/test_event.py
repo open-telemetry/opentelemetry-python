@@ -1,5 +1,4 @@
 import unittest
-from unittest.mock import patch
 
 from opentelemetry._events import Event
 
