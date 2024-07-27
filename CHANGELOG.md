@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-- Initial implementation of Events API
+- Implementation of Events API
   ([#4054](https://github.com/open-telemetry/opentelemetry-python/pull/4054))
 - optional scope attributes for logger creation
   ([#4035](https://github.com/open-telemetry/opentelemetry-python/pull/4035))
