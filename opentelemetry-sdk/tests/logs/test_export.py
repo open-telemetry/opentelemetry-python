@@ -207,6 +207,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         ]
         self.assertEqual(expected, emitted)
 
+    # pylint: disable=no-self-use
     @patch("builtins.print")
     @patch("traceback.format_exc", return_value="foo trace")
     def test_simple_log_record_processor_emit_export_exception(
