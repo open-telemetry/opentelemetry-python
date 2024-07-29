@@ -175,7 +175,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
 
     def test_simple_log_record_processor_different_msg_types(self):
         exporter = InMemoryLogExporter()
-        log_record_processor = BatchLogRecordProcessor(exporter)
+        log_record_processor = SimpleLogRecordProcessor(exporter)
 
         provider = LoggerProvider()
         provider.add_log_record_processor(log_record_processor)
