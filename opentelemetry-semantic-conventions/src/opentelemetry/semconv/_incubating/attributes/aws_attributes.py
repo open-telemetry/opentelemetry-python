@@ -287,7 +287,7 @@ Note: The `upload_id` attribute applies to S3 multipart-upload operations and co
 
 
 class AwsEcsLaunchtypeValues(Enum):
-    EC2: Final = "ec2"
+    EC2 = "ec2"
     """ec2."""
-    FARGATE: Final = "fargate"
+    FARGATE = "fargate"
     """fargate."""
