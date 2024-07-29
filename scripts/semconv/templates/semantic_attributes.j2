@@ -88,7 +88,7 @@ from enum import Enum
     {%- endif %}
 class {{class_name}}(Enum):
     {%- for member in attribute.attr_type.members %}
-    {{ member.member_id | to_const_name }}: Final = {{ attribute | print_member_value(member) }}
+    {{ member.member_id | to_const_name }} = {{ attribute | print_member_value(member) }}
     """{{ common.to_docstring(member.brief) }}."""
     {%- endfor %}
 {%- endfor -%}

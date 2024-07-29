@@ -95,23 +95,23 @@ Deprecated: Replaced by `network.transport`.
 
 @deprecated(reason="The attribute net.sock.family is deprecated - Split to `network.transport` and `network.type`")  # type: ignore
 class NetSockFamilyValues(Enum):
-    INET: Final = "inet"
+    INET = "inet"
     """IPv4 address."""
-    INET6: Final = "inet6"
+    INET6 = "inet6"
     """IPv6 address."""
-    UNIX: Final = "unix"
+    UNIX = "unix"
     """Unix domain socket path."""
 
 
 @deprecated(reason="The attribute net.transport is deprecated - Replaced by `network.transport`")  # type: ignore
 class NetTransportValues(Enum):
-    IP_TCP: Final = "ip_tcp"
+    IP_TCP = "ip_tcp"
     """ip_tcp."""
-    IP_UDP: Final = "ip_udp"
+    IP_UDP = "ip_udp"
     """ip_udp."""
-    PIPE: Final = "pipe"
+    PIPE = "pipe"
     """Named or anonymous pipe."""
-    INPROC: Final = "inproc"
+    INPROC = "inproc"
     """In-process communication."""
-    OTHER: Final = "other"
+    OTHER = "other"
     """Something else (non IP-based)."""

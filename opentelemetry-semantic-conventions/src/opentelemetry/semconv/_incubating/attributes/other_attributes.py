@@ -25,7 +25,7 @@ Deprecated: Replaced by `db.client.connections.state`.
 
 @deprecated(reason="The attribute state is deprecated - Replaced by `db.client.connections.state`")  # type: ignore
 class StateValues(Enum):
-    IDLE: Final = "idle"
+    IDLE = "idle"
     """idle."""
-    USED: Final = "used"
+    USED = "used"
     """used."""
