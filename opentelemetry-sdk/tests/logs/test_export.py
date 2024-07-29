@@ -19,7 +19,7 @@ import os
 import time
 import unittest
 from concurrent.futures import ThreadPoolExecutor
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, call, patch
 
 from opentelemetry._logs import SeverityNumber
 from opentelemetry.sdk import trace
@@ -206,6 +206,33 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
             for item in finished_logs
         ]
         self.assertEqual(expected, emitted)
+
+    @patch("builtins.print")
+    @patch("traceback.format_exc", return_value="foo trace")
+    def test_simple_log_record_processor_emit_export_exception(
+        self,
+        mocked_traceback,
+        mocked_print,
+    ):
+        # mock InMemoryLogExporter to raise Exception at export
+        export_exception = Exception("foo")
+        with patch.object(
+            InMemoryLogExporter, "export", side_effect=export_exception
+        ):
+            exporter = InMemoryLogExporter()
+            log_record_processor = SimpleLogRecordProcessor(exporter)
+
+            provider = LoggerProvider()
+            provider.add_log_record_processor(log_record_processor)
+
+            logger = logging.getLogger("foo")
+            logger.addHandler(LoggingHandler(logger_provider=provider))
+
+            logger.warning("foo")
+
+            assert mocked_print.mock_calls == [
+                call("Exception while exporting logs: foo trace"),
+            ]
 
 
 class TestBatchLogRecordProcessor(ConcurrencyTestBase):
