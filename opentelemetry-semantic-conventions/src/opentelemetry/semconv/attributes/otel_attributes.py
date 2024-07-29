@@ -37,7 +37,7 @@ Description of the Status if it has a value, otherwise not set.
 
 
 class OtelStatusCodeValues(Enum):
-    OK: Final = "OK"
+    OK = "OK"
     """The operation has been validated by an Application developer or Operator to have completed successfully."""
-    ERROR: Final = "ERROR"
+    ERROR = "ERROR"
     """The operation contains an error."""

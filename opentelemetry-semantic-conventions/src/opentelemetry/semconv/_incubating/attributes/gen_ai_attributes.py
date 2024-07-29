@@ -80,5 +80,5 @@ The number of tokens used in the LLM prompt.
 
 
 class GenAiSystemValues(Enum):
-    OPENAI: Final = "openai"
+    OPENAI = "openai"
     """OpenAI."""
