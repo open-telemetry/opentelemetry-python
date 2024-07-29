@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Added py.typed file to top-level module ([#4084](https://github.com/open-telemetry/opentelemetry-python/pull/4084))
 - Drop Final annotation from Enum in semantic conventions
   ([#4085](https://github.com/open-telemetry/opentelemetry-python/pull/4085))
 - Change `logger.exception` to `print` at failed log export triggered by SimpleLogRecordProcessor ([#4088](https://github.com/open-telemetry/opentelemetry-python/pull/4088))
