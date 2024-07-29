@@ -40,7 +40,7 @@ Deprecated: Replaced by `rpc.message.uncompressed_size`.
 
 @deprecated(reason="The attribute message.type is deprecated - Replaced by `rpc.message.type`")  # type: ignore
 class MessageTypeValues(Enum):
-    SENT: Final = "SENT"
+    SENT = "SENT"
     """sent."""
-    RECEIVED: Final = "RECEIVED"
+    RECEIVED = "RECEIVED"
     """received."""
