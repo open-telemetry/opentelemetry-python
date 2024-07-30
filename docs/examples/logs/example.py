@@ -34,7 +34,10 @@ logger_provider.add_log_record_processor(BatchLogRecordProcessor(exporter))
 handler = LoggingHandler(level=logging.NOTSET, logger_provider=logger_provider)
 
 # Attach OTLP handler to root logger
+#logging.getLogger().setlevel(logging.DEBUG)
+logging.getLogger().setLevel(logging.NOTSET)
 logging.getLogger().addHandler(handler)
+
 
 # Log directly
 logging.info("Jackdaws love my big sphinx of quartz.")
