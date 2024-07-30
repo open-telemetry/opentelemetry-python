@@ -88,6 +88,10 @@
     https://readthedocs.org/projects/opentelemetry-python/builds/.
     If the build has not run automatically, it can be manually trigger via the readthedocs interface.
 
+## Releasing dev version of new packages to claim namespace
+
+When a contribution introduces a new package, in order to mitigate name-squatting incidents, release the current development version of the new package under the `opentelemetry` user to simply claim the namespace. This should be done shortly after the PR that introduced this package has been merged into `main`.
+
 ## Troubleshooting
 
 ### Publish failed
