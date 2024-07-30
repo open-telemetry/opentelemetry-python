@@ -63,6 +63,8 @@ import sys
 import typing
 from json import dumps
 from os import environ
+from types import ModuleType
+from typing import List, MutableMapping, Optional, cast
 from urllib import parse
 
 from opentelemetry.attributes import BoundedAttributes
@@ -75,10 +77,14 @@ from opentelemetry.semconv.resource import ResourceAttributes
 from opentelemetry.util._importlib_metadata import entry_points, version
 from opentelemetry.util.types import AttributeValue
 
+psutil: Optional[ModuleType] = None
+
 try:
-    import psutil
+    import psutil as psutil_module
+
+    pustil = psutil_module
 except ImportError:
-    psutil = None
+    pass
 
 LabelValue = AttributeValue
 Attributes = typing.Mapping[str, LabelValue]
@@ -141,11 +147,14 @@ TELEMETRY_SDK_VERSION = ResourceAttributes.TELEMETRY_SDK_VERSION
 TELEMETRY_AUTO_VERSION = ResourceAttributes.TELEMETRY_AUTO_VERSION
 TELEMETRY_SDK_LANGUAGE = ResourceAttributes.TELEMETRY_SDK_LANGUAGE
 
-_OPENTELEMETRY_SDK_VERSION = version("opentelemetry-sdk")
+_OPENTELEMETRY_SDK_VERSION: str = version("opentelemetry-sdk")
 
 
 class Resource:
     """A Resource is an immutable representation of the entity producing telemetry as Attributes."""
+
+    _attributes: BoundedAttributes
+    _schema_url: str
 
     def __init__(
         self, attributes: Attributes, schema_url: typing.Optional[str] = None
@@ -173,7 +182,7 @@ class Resource:
         if not attributes:
             attributes = {}
 
-        resource_detectors = []
+        resource_detectors: List[ResourceDetector] = []
 
         resource = _DEFAULT_RESOURCE
 
@@ -184,6 +193,7 @@ class Resource:
         if "otel" not in otel_experimental_resource_detectors:
             otel_experimental_resource_detectors.append("otel")
 
+        resource_detector: str
         for resource_detector in otel_experimental_resource_detectors:
             resource_detectors.append(
                 next(
@@ -191,19 +201,19 @@ class Resource:
                         entry_points(
                             group="opentelemetry_resource_detector",
                             name=resource_detector.strip(),
-                        )
+                        )  # type: ignore
                     )
                 ).load()()
             )
-
         resource = get_aggregated_resources(
             resource_detectors, _DEFAULT_RESOURCE
         ).merge(Resource(attributes, schema_url))
 
         if not resource.attributes.get(SERVICE_NAME, None):
             default_service_name = "unknown_service"
-            process_executable_name = resource.attributes.get(
-                PROCESS_EXECUTABLE_NAME, None
+            process_executable_name = cast(
+                Optional[str],
+                resource.attributes.get(PROCESS_EXECUTABLE_NAME, None),
             )
             if process_executable_name:
                 default_service_name += ":" + process_executable_name
@@ -241,8 +251,8 @@ class Resource:
         Returns:
             The newly-created Resource.
         """
-        merged_attributes = self.attributes.copy()
-        merged_attributes.update(other.attributes)
+        merged_attributes = self.attributes.copy()  # type: ignore
+        merged_attributes.update(other.attributes)  # type: ignore
 
         if self.schema_url == "":
             schema_url = other.schema_url
@@ -257,8 +267,7 @@ class Resource:
                 other.schema_url,
             )
             return self
-
-        return Resource(merged_attributes, schema_url)
+        return Resource(merged_attributes, schema_url)  # type: ignore
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Resource):
@@ -268,15 +277,18 @@ class Resource:
             and self._schema_url == other._schema_url
         )
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(
-            f"{dumps(self._attributes.copy(), sort_keys=True)}|{self._schema_url}"
+            f"{dumps(self._attributes.copy(), sort_keys=True)}|{self._schema_url}"  # type: ignore
         )
 
-    def to_json(self, indent=4) -> str:
+    def to_json(self, indent: int = 4) -> str:
+        attributes: MutableMapping[str, AttributeValue] = dict(
+            self._attributes
+        )
         return dumps(
             {
-                "attributes": dict(self._attributes),
+                "attributes": attributes,  # type: ignore
                 "schema_url": self._schema_url,
             },
             indent=indent,
@@ -294,7 +306,7 @@ _DEFAULT_RESOURCE = Resource(
 
 
 class ResourceDetector(abc.ABC):
-    def __init__(self, raise_on_error=False):
+    def __init__(self, raise_on_error: bool = False) -> None:
         self.raise_on_error = raise_on_error
 
     @abc.abstractmethod
@@ -365,16 +377,17 @@ class ProcessResourceDetector(ResourceDetector):
             resource_info[PROCESS_PARENT_PID] = os.getppid()
 
         if psutil is not None:
-            process = psutil.Process()
-            resource_info[PROCESS_OWNER] = process.username()
+            process: psutil_module.Process = psutil.Process()
+            username = process.username()
+            resource_info[PROCESS_OWNER] = username
 
-        return Resource(resource_info)
+        return Resource(resource_info)  # type: ignore
 
 
 def get_aggregated_resources(
     detectors: typing.List["ResourceDetector"],
     initial_resource: typing.Optional[Resource] = None,
-    timeout=5,
+    timeout: int = 5,
 ) -> "Resource":
     """Retrieves resources from detectors in the order that they were passed
 

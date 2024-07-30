@@ -36,10 +36,9 @@ handler = LoggingHandler(level=logging.NOTSET, logger_provider=logger_provider)
 # Attach OTLP handler to root logger
 logging.getLogger().addHandler(handler)
 
-# Log directly
-logging.info("Jackdaws love my big sphinx of quartz.")
-
 # Create different namespaced loggers
+# It is recommended to not use the root logger with OTLP handler
+# so telemetry is collected only for the application
 logger1 = logging.getLogger("myapp.area1")
 logger2 = logging.getLogger("myapp.area2")
 
