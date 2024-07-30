@@ -24,36 +24,37 @@ from typing import Final
 {{c.import_deprecated(enum_attributes)}}
 
 {%- macro attribute_name(attribute) -%}
-{{c.to_const_name(attribute.name)}}{%- if "template" in attribute.type -%}_TEMPLATE{%- endif -%}
+{{c.to_const_name(attribute.name)}}{%- if attribute.type is template_type -%}_TEMPLATE{%- endif -%}
 {%- endmacro -%}
 
 {%- macro stable_class_ref(const_name, separator) -%}
 {{ctx.stable_package_name}}.{{ctx.root_namespace}}_attributes{{separator}}{{const_name}}
 {%- endmacro %}
 
-{%- macro write_docstring(name, brief, note, deprecated, stability, prefix) -%}
+{%- macro write_docstring(name, brief, note, deprecated, stability, multiline) -%}
+{%- if multiline %}"""
+{% endif %}
     {%- if c.str_or_empty(deprecated)|length -%}
-{{prefix}}Deprecated: {{c.comment_with_prefix(deprecated, prefix)}}.
+{{prefix}}Deprecated: {{c.comment_with_prefix(deprecated, "")}}.
     {%- elif ctx.filter == "any" and stability == "stable" -%}
 {{prefix}}Deprecated in favor of stable :py:const:`{{stable_class_ref(name, '.')}}`.
     {%- elif c.str_or_empty(brief)|length -%}
-{{prefix}}{{c.comment_with_prefix(brief, prefix)}}.
+{{prefix}}{{c.comment_with_prefix(brief, "")}}.
         {%- if c.str_or_empty(note)|length  %}
-{{prefix}}Note: {{c.comment_with_prefix(note, prefix)}}.
+{{prefix}}Note: {{c.comment_with_prefix(note, "")}}.
         {%- endif -%}
     {%- endif -%}
+{%- if multiline %}
+"""{%- endif %}
 {%- endmacro -%}
 
 {% for attribute in attributes %}
 {% set attr_name = attribute_name(attribute) %}
-{%- set prefix = "# " if attribute.name in ctx.excluded_attributes else "" -%}
-{%- set doc_string=write_docstring(attr_name, attribute.brief, attribute.note, attribute.deprecated, attribute.stability, "")-%}
+{%- set multiline = attribute.name not in ctx.excluded_attributes -%}
+{%- set doc_string = write_docstring(attr_name, attribute.brief, attribute.note, attribute.deprecated, attribute.stability, multiline)-%}
+{%- set prefix = "" if multiline else "# " -%}
 {{prefix}}{{attr_name}} : Final = "{{attribute.name}}"
-{%- if doc_string %}
-"""
-{{doc_string}}
-"""
-{%- endif %}
+{{prefix}}{{doc_string}}
 {% endfor %}
 
 {% for attribute in enum_attributes %}{%- set class_name = attribute.name | pascal_case ~ "Values" -%}
@@ -65,7 +66,7 @@ from typing import Final
 class {{class_name}}(Enum):
     {%- for member in attribute.type.members %}
     {% set member_name = c.to_const_name(member.id) -%}
-    {%- set doc_string=write_docstring(class_name + '.' + member_name, member.brief or member.id, "", member.deprecated, member.stability, "")-%}
+    {%- set doc_string=write_docstring(class_name + '.' + member_name, member.brief or member.id, "", member.deprecated, member.stability, false)-%}
     {{member_name}} = {{c.print_value(attribute.type | instantiated_type, member.value) }}
     {% if doc_string %}"""{{doc_string}}"""{% endif %}
     {%- endfor %}

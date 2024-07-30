@@ -153,8 +153,8 @@ Note: The real elapsed time ("wall clock") used in the I/O path (time from opera
 
 - Linux: Field 13 from [procfs-diskstats](https://www.kernel.org/doc/Documentation/ABI/testing/procfs-diskstats)
 - Windows: The complement of
-  ["Disk\% Idle Time"](https://learn.microsoft.com/archive/blogs/askcore/windows-performance-monitor-disk-counters-explained#windows-performance-monitor-disk-counters-explained)
-  performance counter: `uptime * (100 - "Disk\% Idle Time") / 100`.
+  ["Disk\\% Idle Time"](https://learn.microsoft.com/archive/blogs/askcore/windows-performance-monitor-disk-counters-explained#windows-performance-monitor-disk-counters-explained)
+  performance counter: `uptime * (100 - "Disk\\% Idle Time") / 100`.
 """
 
 

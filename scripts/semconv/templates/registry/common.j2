@@ -28,7 +28,7 @@
 {%- endmacro -%}
 
 {%- macro comment_with_prefix(str, prefix) -%}
-{{remove_trailing_dots(str | trim(' \n')) | comment_with_prefix(prefix)}}
+{{remove_trailing_dots(str | trim(' \n')) | comment_with_prefix(prefix) | replace("\\", "\\\\")}}
 {%- endmacro %}
 
 {%- macro import_deprecated(semconv) -%}
