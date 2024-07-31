@@ -11,13 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# type: ignore
 
 import logging
 import threading
 from collections import OrderedDict
 from collections.abc import MutableMapping
-from typing import Optional, Sequence, Union
+from typing import Optional, Sequence, Tuple, Union
 
 from opentelemetry.util import types
 
@@ -31,7 +30,7 @@ _logger = logging.getLogger(__name__)
 
 def _clean_attribute(
     key: str, value: types.AttributeValue, max_len: Optional[int]
-) -> Optional[types.AttributeValue]:
+) -> Optional[Union[types.AttributeValue, Tuple[Union[str, int, float], ...]]]:
     """Checks if attribute value is valid and cleans it if required.
 
     The function returns the cleaned value or None if the value is not valid.
@@ -59,7 +58,7 @@ def _clean_attribute(
         cleaned_seq = []
 
         for element in value:
-            element = _clean_attribute_value(element, max_len)
+            element = _clean_attribute_value(element, max_len)  # type: ignore
             if element is None:
                 cleaned_seq.append(element)
                 continue
@@ -110,7 +109,7 @@ def _clean_attribute(
 
 def _clean_attribute_value(
     value: types.AttributeValue, limit: Optional[int]
-) -> Union[types.AttributeValue, None]:
+) -> Optional[types.AttributeValue]:
     if value is None:
         return None
 
@@ -126,7 +125,7 @@ def _clean_attribute_value(
     return value
 
 
-class BoundedAttributes(MutableMapping):
+class BoundedAttributes(MutableMapping):  # type: ignore
     """An ordered dict with a fixed max capacity.
 
     Oldest elements are dropped when the dict is full and a new element is
@@ -149,28 +148,32 @@ class BoundedAttributes(MutableMapping):
         self.dropped = 0
         self.max_value_len = max_value_len
         # OrderedDict is not used until the maxlen is reached for efficiency.
-        self._dict = {}  # type: dict | OrderedDict
-        self._lock = threading.RLock()  # type: threading.RLock
+
+        self._dict: Union[
+            MutableMapping[str, types.AttributeValue],
+            OrderedDict[str, types.AttributeValue],
+        ] = {}
+        self._lock = threading.RLock()
         if attributes:
             for key, value in attributes.items():
                 self[key] = value
         self._immutable = immutable
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{dict(self._dict)}"
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> types.AttributeValue:
         return self._dict[key]
 
-    def __setitem__(self, key, value):
-        if getattr(self, "_immutable", False):
+    def __setitem__(self, key: str, value: types.AttributeValue) -> None:
+        if getattr(self, "_immutable", False):  # type: ignore
             raise TypeError
         with self._lock:
             if self.maxlen is not None and self.maxlen == 0:
                 self.dropped += 1
                 return
 
-            value = _clean_attribute(key, value, self.max_value_len)
+            value = _clean_attribute(key, value, self.max_value_len)  # type: ignore
             if value is not None:
                 if key in self._dict:
                     del self._dict[key]
@@ -179,23 +182,23 @@ class BoundedAttributes(MutableMapping):
                 ):
                     if not isinstance(self._dict, OrderedDict):
                         self._dict = OrderedDict(self._dict)
-                    self._dict.popitem(last=False)
+                    self._dict.popitem(last=False)  # type: ignore
                     self.dropped += 1
 
-                self._dict[key] = value
+                self._dict[key] = value  # type: ignore
 
-    def __delitem__(self, key):
-        if getattr(self, "_immutable", False):
+    def __delitem__(self, key: str) -> None:
+        if getattr(self, "_immutable", False):  # type: ignore
             raise TypeError
         with self._lock:
             del self._dict[key]
 
-    def __iter__(self):
+    def __iter__(self):  # type: ignore
         with self._lock:
-            return iter(self._dict.copy())
+            return iter(self._dict.copy())  # type: ignore
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._dict)
 
-    def copy(self):
-        return self._dict.copy()
+    def copy(self):  # type: ignore
+        return self._dict.copy()  # type: ignore
