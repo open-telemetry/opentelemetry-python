@@ -27,9 +27,32 @@ from opentelemetry.sdk.metrics.export import (
     NumberDataPoint,
     Sum,
 )
+from opentelemetry.sdk.metrics.view import SumAggregation
 
 
 class TestInMemoryMetricReader(TestCase):
+
+    def test_get_metrics_data_returns_none(self):
+
+        aggregation = SumAggregation()
+
+        reader = InMemoryMetricReader(
+            preferred_aggregation={Counter: aggregation},
+            preferred_temporality={Counter: AggregationTemporality.DELTA},
+        )
+
+        provider = MeterProvider(metric_readers=[reader])
+        meter = provider.get_meter("name", "version")
+
+        counter = meter.create_counter("counter")
+
+        self.assertIsNone(reader.get_metrics_data())
+
+        counter.add(1)
+
+        self.assertIsNotNone(reader.get_metrics_data())
+        self.assertIsNone(reader.get_metrics_data())
+
     def test_no_metrics(self):
         mock_collect_callback = Mock(return_value=[])
         reader = InMemoryMetricReader()
