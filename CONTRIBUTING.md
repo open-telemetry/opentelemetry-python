@@ -59,6 +59,11 @@ You can run `tox` with the following arguments:
 - `tox -e spellcheck` to run a spellcheck on all the code
 - `tox -e lint-some-package` to run lint checks on `some-package`
 
+There is a helper script `./scripts/runtox.sh` for running multiple tox environments in one command:
+
+- `./scripts/runtox.sh opentelemetry-api` will run all `tox` environments containing the string `"opentelemetry-api"` (useful to run one environment in all Python versions)
+- `./scripts/runtox.sh py312` will run all `tox` environments containing the string `"py312"` (useful to run all environments in one Python version)
+
 `black` and `isort` are executed when `tox -e lint` is run. The reported errors can be tedious to fix manually.
 An easier way to do so is:
 
