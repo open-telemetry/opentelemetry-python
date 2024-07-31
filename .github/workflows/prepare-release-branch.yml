@@ -41,6 +41,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install toml
+        run: pip install toml
+
       - name: Create release branch
         env:
           PRERELEASE_VERSION: ${{ github.event.inputs.prerelease_version }}
@@ -104,6 +107,9 @@ jobs:
     needs: prereqs
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install toml
+        run: pip install toml
 
       - name: Set environment variables
         env:
