@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Drop Final annotation from Enum in semantic conventions
   ([#4085](https://github.com/open-telemetry/opentelemetry-python/pull/4085))
 - Update log export example to not use root logger ([#4090](https://github.com/open-telemetry/opentelemetry-python/pull/4090))
+- sdk: Add OS resource detector
+  ([#3992](https://github.com/open-telemetry/opentelemetry-python/pull/3992))
 
 ## Version 1.26.0/0.47b0 (2024-07-25)
 
@@ -1633,4 +1635,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3778](https://github.com/open-telemetry/opentelemetry-python/pull/3778))
 - Fix license field in pyproject.toml files
   ([#3803](https://github.com/open-telemetry/opentelemetry-python/pull/3803))
-
