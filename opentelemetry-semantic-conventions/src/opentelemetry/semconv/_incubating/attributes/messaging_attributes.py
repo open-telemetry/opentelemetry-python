@@ -26,8 +26,7 @@ MESSAGING_CLIENT_ID: Final = "messaging.client.id"
 A unique identifier for the client that consumes or produces a message.
 """
 
-# MESSAGING_CLIENT_ID: Final = "messaging.client_id"
-
+# MESSAGING_CLIENT_ID : Final = "messaging.client_id"
 # Deprecated: Replaced by `messaging.client.id`.
 
 MESSAGING_DESTINATION_ANONYMOUS: Final = "messaging.destination.anonymous"
@@ -39,7 +38,7 @@ MESSAGING_DESTINATION_NAME: Final = "messaging.destination.name"
 """
 The message destination name.
 Note: Destination name SHOULD uniquely identify a specific queue, topic or other entity within the broker. If
-    the broker doesn't have such notion, the destination name SHOULD uniquely identify the broker.
+the broker doesn't have such notion, the destination name SHOULD uniquely identify the broker.
 """
 
 MESSAGING_DESTINATION_PARTITION_ID: Final = (
@@ -73,7 +72,7 @@ MESSAGING_DESTINATION_PUBLISH_NAME: Final = (
 """
 The name of the original destination the message was published to.
 Note: The name SHOULD uniquely identify a specific queue, topic, or other entity within the broker. If
-    the broker doesn't have such notion, the original destination name SHOULD uniquely identify the broker.
+the broker doesn't have such notion, the original destination name SHOULD uniquely identify the broker.
 """
 
 MESSAGING_EVENTHUBS_CONSUMER_GROUP: Final = (
@@ -150,7 +149,7 @@ MESSAGING_MESSAGE_BODY_SIZE: Final = "messaging.message.body.size"
 """
 The size of the message body in bytes.
 Note: This can refer to both the compressed or uncompressed body size. If both sizes are known, the uncompressed
-    body size should be used.
+body size should be used.
 """
 
 MESSAGING_MESSAGE_CONVERSATION_ID: Final = "messaging.message.conversation_id"
@@ -162,7 +161,7 @@ MESSAGING_MESSAGE_ENVELOPE_SIZE: Final = "messaging.message.envelope.size"
 """
 The size of the message body and metadata in bytes.
 Note: This can refer to both the compressed or uncompressed size. If both sizes are known, the uncompressed
-    size should be used.
+size should be used.
 """
 
 MESSAGING_MESSAGE_ID: Final = "messaging.message.id"
@@ -287,65 +286,65 @@ Note: The actual messaging system may differ from the one known by the client. F
 
 
 class MessagingOperationTypeValues(Enum):
-    PUBLISH: Final = "publish"
+    PUBLISH = "publish"
     """One or more messages are provided for publishing to an intermediary. If a single message is published, the context of the "Publish" span can be used as the creation context and no "Create" span needs to be created."""
-    CREATE: Final = "create"
+    CREATE = "create"
     """A message is created. "Create" spans always refer to a single message and are used to provide a unique creation context for messages in batch publishing scenarios."""
-    RECEIVE: Final = "receive"
+    RECEIVE = "receive"
     """One or more messages are requested by a consumer. This operation refers to pull-based scenarios, where consumers explicitly call methods of messaging SDKs to receive messages."""
-    DELIVER: Final = "process"
+    DELIVER = "process"
     """One or more messages are delivered to or processed by a consumer."""
-    SETTLE: Final = "settle"
+    SETTLE = "settle"
     """One or more messages are settled."""
 
 
 class MessagingRocketmqConsumptionModelValues(Enum):
-    CLUSTERING: Final = "clustering"
+    CLUSTERING = "clustering"
     """Clustering consumption model."""
-    BROADCASTING: Final = "broadcasting"
+    BROADCASTING = "broadcasting"
     """Broadcasting consumption model."""
 
 
 class MessagingRocketmqMessageTypeValues(Enum):
-    NORMAL: Final = "normal"
+    NORMAL = "normal"
     """Normal message."""
-    FIFO: Final = "fifo"
+    FIFO = "fifo"
     """FIFO message."""
-    DELAY: Final = "delay"
+    DELAY = "delay"
     """Delay message."""
-    TRANSACTION: Final = "transaction"
+    TRANSACTION = "transaction"
     """Transaction message."""
 
 
 class MessagingServicebusDispositionStatusValues(Enum):
-    COMPLETE: Final = "complete"
+    COMPLETE = "complete"
     """Message is completed."""
-    ABANDON: Final = "abandon"
+    ABANDON = "abandon"
     """Message is abandoned."""
-    DEAD_LETTER: Final = "dead_letter"
+    DEAD_LETTER = "dead_letter"
     """Message is sent to dead letter queue."""
-    DEFER: Final = "defer"
+    DEFER = "defer"
     """Message is deferred."""
 
 
 class MessagingSystemValues(Enum):
-    ACTIVEMQ: Final = "activemq"
+    ACTIVEMQ = "activemq"
     """Apache ActiveMQ."""
-    AWS_SQS: Final = "aws_sqs"
+    AWS_SQS = "aws_sqs"
     """Amazon Simple Queue Service (SQS)."""
-    EVENTGRID: Final = "eventgrid"
+    EVENTGRID = "eventgrid"
     """Azure Event Grid."""
-    EVENTHUBS: Final = "eventhubs"
+    EVENTHUBS = "eventhubs"
     """Azure Event Hubs."""
-    SERVICEBUS: Final = "servicebus"
+    SERVICEBUS = "servicebus"
     """Azure Service Bus."""
-    GCP_PUBSUB: Final = "gcp_pubsub"
+    GCP_PUBSUB = "gcp_pubsub"
     """Google Cloud Pub/Sub."""
-    JMS: Final = "jms"
+    JMS = "jms"
     """Java Message Service."""
-    KAFKA: Final = "kafka"
+    KAFKA = "kafka"
     """Apache Kafka."""
-    RABBITMQ: Final = "rabbitmq"
+    RABBITMQ = "rabbitmq"
     """RabbitMQ."""
-    ROCKETMQ: Final = "rocketmq"
+    ROCKETMQ = "rocketmq"
     """Apache RocketMQ."""

@@ -219,75 +219,75 @@ AWS_S3_BUCKET: Final = "aws.s3.bucket"
 """
 The S3 bucket name the request refers to. Corresponds to the `--bucket` parameter of the [S3 API](https://docs.aws.amazon.com/cli/latest/reference/s3api/index.html) operations.
 Note: The `bucket` attribute is applicable to all S3 operations that reference a bucket, i.e. that require the bucket name as a mandatory parameter.
-    This applies to almost all S3 operations except `list-buckets`.
+This applies to almost all S3 operations except `list-buckets`.
 """
 
 AWS_S3_COPY_SOURCE: Final = "aws.s3.copy_source"
 """
 The source object (in the form `bucket`/`key`) for the copy operation.
 Note: The `copy_source` attribute applies to S3 copy operations and corresponds to the `--copy-source` parameter
-    of the [copy-object operation within the S3 API](https://docs.aws.amazon.com/cli/latest/reference/s3api/copy-object.html).
-    This applies in particular to the following operations:
+of the [copy-object operation within the S3 API](https://docs.aws.amazon.com/cli/latest/reference/s3api/copy-object.html).
+This applies in particular to the following operations:
 
-    - [copy-object](https://docs.aws.amazon.com/cli/latest/reference/s3api/copy-object.html)
-    - [upload-part-copy](https://docs.aws.amazon.com/cli/latest/reference/s3api/upload-part-copy.html).
+- [copy-object](https://docs.aws.amazon.com/cli/latest/reference/s3api/copy-object.html)
+- [upload-part-copy](https://docs.aws.amazon.com/cli/latest/reference/s3api/upload-part-copy.html).
 """
 
 AWS_S3_DELETE: Final = "aws.s3.delete"
 """
 The delete request container that specifies the objects to be deleted.
 Note: The `delete` attribute is only applicable to the [delete-object](https://docs.aws.amazon.com/cli/latest/reference/s3api/delete-object.html) operation.
-    The `delete` attribute corresponds to the `--delete` parameter of the
-    [delete-objects operation within the S3 API](https://docs.aws.amazon.com/cli/latest/reference/s3api/delete-objects.html).
+The `delete` attribute corresponds to the `--delete` parameter of the
+[delete-objects operation within the S3 API](https://docs.aws.amazon.com/cli/latest/reference/s3api/delete-objects.html).
 """
 
 AWS_S3_KEY: Final = "aws.s3.key"
 """
 The S3 object key the request refers to. Corresponds to the `--key` parameter of the [S3 API](https://docs.aws.amazon.com/cli/latest/reference/s3api/index.html) operations.
 Note: The `key` attribute is applicable to all object-related S3 operations, i.e. that require the object key as a mandatory parameter.
-    This applies in particular to the following operations:
+This applies in particular to the following operations:
 
-    - [copy-object](https://docs.aws.amazon.com/cli/latest/reference/s3api/copy-object.html)
-    - [delete-object](https://docs.aws.amazon.com/cli/latest/reference/s3api/delete-object.html)
-    - [get-object](https://docs.aws.amazon.com/cli/latest/reference/s3api/get-object.html)
-    - [head-object](https://docs.aws.amazon.com/cli/latest/reference/s3api/head-object.html)
-    - [put-object](https://docs.aws.amazon.com/cli/latest/reference/s3api/put-object.html)
-    - [restore-object](https://docs.aws.amazon.com/cli/latest/reference/s3api/restore-object.html)
-    - [select-object-content](https://docs.aws.amazon.com/cli/latest/reference/s3api/select-object-content.html)
-    - [abort-multipart-upload](https://docs.aws.amazon.com/cli/latest/reference/s3api/abort-multipart-upload.html)
-    - [complete-multipart-upload](https://docs.aws.amazon.com/cli/latest/reference/s3api/complete-multipart-upload.html)
-    - [create-multipart-upload](https://docs.aws.amazon.com/cli/latest/reference/s3api/create-multipart-upload.html)
-    - [list-parts](https://docs.aws.amazon.com/cli/latest/reference/s3api/list-parts.html)
-    - [upload-part](https://docs.aws.amazon.com/cli/latest/reference/s3api/upload-part.html)
-    - [upload-part-copy](https://docs.aws.amazon.com/cli/latest/reference/s3api/upload-part-copy.html).
+- [copy-object](https://docs.aws.amazon.com/cli/latest/reference/s3api/copy-object.html)
+- [delete-object](https://docs.aws.amazon.com/cli/latest/reference/s3api/delete-object.html)
+- [get-object](https://docs.aws.amazon.com/cli/latest/reference/s3api/get-object.html)
+- [head-object](https://docs.aws.amazon.com/cli/latest/reference/s3api/head-object.html)
+- [put-object](https://docs.aws.amazon.com/cli/latest/reference/s3api/put-object.html)
+- [restore-object](https://docs.aws.amazon.com/cli/latest/reference/s3api/restore-object.html)
+- [select-object-content](https://docs.aws.amazon.com/cli/latest/reference/s3api/select-object-content.html)
+- [abort-multipart-upload](https://docs.aws.amazon.com/cli/latest/reference/s3api/abort-multipart-upload.html)
+- [complete-multipart-upload](https://docs.aws.amazon.com/cli/latest/reference/s3api/complete-multipart-upload.html)
+- [create-multipart-upload](https://docs.aws.amazon.com/cli/latest/reference/s3api/create-multipart-upload.html)
+- [list-parts](https://docs.aws.amazon.com/cli/latest/reference/s3api/list-parts.html)
+- [upload-part](https://docs.aws.amazon.com/cli/latest/reference/s3api/upload-part.html)
+- [upload-part-copy](https://docs.aws.amazon.com/cli/latest/reference/s3api/upload-part-copy.html).
 """
 
 AWS_S3_PART_NUMBER: Final = "aws.s3.part_number"
 """
 The part number of the part being uploaded in a multipart-upload operation. This is a positive integer between 1 and 10,000.
 Note: The `part_number` attribute is only applicable to the [upload-part](https://docs.aws.amazon.com/cli/latest/reference/s3api/upload-part.html)
-    and [upload-part-copy](https://docs.aws.amazon.com/cli/latest/reference/s3api/upload-part-copy.html) operations.
-    The `part_number` attribute corresponds to the `--part-number` parameter of the
-    [upload-part operation within the S3 API](https://docs.aws.amazon.com/cli/latest/reference/s3api/upload-part.html).
+and [upload-part-copy](https://docs.aws.amazon.com/cli/latest/reference/s3api/upload-part-copy.html) operations.
+The `part_number` attribute corresponds to the `--part-number` parameter of the
+[upload-part operation within the S3 API](https://docs.aws.amazon.com/cli/latest/reference/s3api/upload-part.html).
 """
 
 AWS_S3_UPLOAD_ID: Final = "aws.s3.upload_id"
 """
 Upload ID that identifies the multipart upload.
 Note: The `upload_id` attribute applies to S3 multipart-upload operations and corresponds to the `--upload-id` parameter
-    of the [S3 API](https://docs.aws.amazon.com/cli/latest/reference/s3api/index.html) multipart operations.
-    This applies in particular to the following operations:
+of the [S3 API](https://docs.aws.amazon.com/cli/latest/reference/s3api/index.html) multipart operations.
+This applies in particular to the following operations:
 
-    - [abort-multipart-upload](https://docs.aws.amazon.com/cli/latest/reference/s3api/abort-multipart-upload.html)
-    - [complete-multipart-upload](https://docs.aws.amazon.com/cli/latest/reference/s3api/complete-multipart-upload.html)
-    - [list-parts](https://docs.aws.amazon.com/cli/latest/reference/s3api/list-parts.html)
-    - [upload-part](https://docs.aws.amazon.com/cli/latest/reference/s3api/upload-part.html)
-    - [upload-part-copy](https://docs.aws.amazon.com/cli/latest/reference/s3api/upload-part-copy.html).
+- [abort-multipart-upload](https://docs.aws.amazon.com/cli/latest/reference/s3api/abort-multipart-upload.html)
+- [complete-multipart-upload](https://docs.aws.amazon.com/cli/latest/reference/s3api/complete-multipart-upload.html)
+- [list-parts](https://docs.aws.amazon.com/cli/latest/reference/s3api/list-parts.html)
+- [upload-part](https://docs.aws.amazon.com/cli/latest/reference/s3api/upload-part.html)
+- [upload-part-copy](https://docs.aws.amazon.com/cli/latest/reference/s3api/upload-part-copy.html).
 """
 
 
 class AwsEcsLaunchtypeValues(Enum):
-    EC2: Final = "ec2"
+    EC2 = "ec2"
     """ec2."""
-    FARGATE: Final = "fargate"
+    FARGATE = "fargate"
     """fargate."""

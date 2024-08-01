@@ -44,12 +44,12 @@ LOG_RECORD_UID: Final = "log.record.uid"
 """
 A unique identifier for the Log Record.
 Note: If an id is provided, other log records with the same id will be considered duplicates and can be removed safely. This means, that two distinguishable log records MUST have different values.
-    The id MAY be an [Universally Unique Lexicographically Sortable Identifier (ULID)](https://github.com/ulid/spec), but other identifiers (e.g. UUID) may be used as needed.
+The id MAY be an [Universally Unique Lexicographically Sortable Identifier (ULID)](https://github.com/ulid/spec), but other identifiers (e.g. UUID) may be used as needed.
 """
 
 
 class LogIostreamValues(Enum):
-    STDOUT: Final = "stdout"
+    STDOUT = "stdout"
     """Logs from stdout stream."""
-    STDERR: Final = "stderr"
+    STDERR = "stderr"
     """Events from stderr stream."""

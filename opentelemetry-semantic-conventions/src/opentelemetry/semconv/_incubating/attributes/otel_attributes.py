@@ -50,7 +50,7 @@ Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.otel_a
 
 @deprecated(reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.otel_attributes.OtelStatusCodeValues`.")  # type: ignore
 class OtelStatusCodeValues(Enum):
-    OK: Final = "OK"
-    """The operation has been validated by an Application developer or Operator to have completed successfully."""
-    ERROR: Final = "ERROR"
-    """The operation contains an error."""
+    OK = "OK"
+    """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.otel_attributes.OtelStatusCodeValues.OK`."""
+    ERROR = "ERROR"
+    """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.otel_attributes.OtelStatusCodeValues.ERROR`."""
