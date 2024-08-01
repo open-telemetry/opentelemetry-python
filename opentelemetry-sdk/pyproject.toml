@@ -27,8 +27,8 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
-  "opentelemetry-api == 1.26.0.dev",
-  "opentelemetry-semantic-conventions == 0.47b0.dev",
+  "opentelemetry-api == 1.27.0.dev",
+  "opentelemetry-semantic-conventions == 0.48b0.dev",
   "typing-extensions >= 3.7.4",
 ]
 
@@ -67,12 +67,13 @@ console = "opentelemetry.sdk.trace.export:ConsoleSpanExporter"
 [project.entry-points.opentelemetry_resource_detector]
 otel = "opentelemetry.sdk.resources:OTELResourceDetector"
 process = "opentelemetry.sdk.resources:ProcessResourceDetector"
+os = "opentelemetry.sdk.resources:OsResourceDetector"
 
 [project.urls]
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/opentelemetry-sdk"
 
 [tool.hatch.version]
-path = "src/opentelemetry/sdk/version.py"
+path = "src/opentelemetry/sdk/version/__init__.py"
 
 [tool.hatch.build.targets.sdist]
 include = [

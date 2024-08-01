@@ -1,0 +1,53 @@
+params:
+  # excluded namespaces will not be generated
+  # this behavior is fully controlled by jinja templates
+  excluded_namespaces: [ios, aspnetcore, signalr, android, dotnet, jvm, kestrel]
+
+  # excluded attributes will be commented out in the generated code
+  # this behavior is fully controlled by jinja templates
+  excluded_attributes: ["messaging.client_id"]
+
+  stable_package_name: opentelemetry.semconv
+
+templates:
+  - pattern: semantic_attributes.j2
+    filter: >
+      semconv_grouped_attributes({
+        "exclude_root_namespace": $excluded_namespaces,
+        "exclude_stability": if $filter == "any" then [] else ["experimental"] end,
+      })
+      | map({
+          root_namespace: .root_namespace,
+          attributes: .attributes,
+          output: $output + "attributes/",
+          stable_package_name: $stable_package_name + ".attributes",
+          filter: $filter,
+          excluded_attributes: $excluded_attributes[]
+      })
+    application_mode: each
+  - pattern: semantic_metrics.j2
+    filter: >
+      semconv_grouped_metrics({
+        "exclude_root_namespace": $excluded_namespaces,
+        "exclude_stability": if $filter == "any" then [] else ["experimental"] end,
+      })
+      | map({
+        root_namespace: .root_namespace,
+        metrics: .metrics,
+        output: $output + "metrics/",
+        stable_package_name: $stable_package_name + ".metrics",
+        filter: $filter
+      })
+    application_mode: each
+text_maps:
+  py_instrument_to_factory:
+    counter: counter
+    histogram: histogram
+    updowncounter: up_down_counter
+    gauge: observable_gauge
+  py_instrument_to_type:
+    counter: Counter
+    histogram: Histogram
+    updowncounter: UpDownCounter
+    gauge: ObservableGauge
+

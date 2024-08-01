@@ -27,6 +27,8 @@ from opentelemetry.context import get_current
 
 
 class TestW3CBaggagePropagator(TestCase):
+    # pylint: disable=protected-access
+    # pylint: disable=too-many-public-methods
     def setUp(self):
         self.propagator = W3CBaggagePropagator()
 
@@ -38,7 +40,7 @@ class TestW3CBaggagePropagator(TestCase):
     def _inject(self, values):
         """Test helper"""
         ctx = get_current()
-        for k, v in values.items():
+        for k, v in values.items():  # pylint: disable=invalid-name
             ctx = set_baggage(k, v, context=ctx)
         output = {}
         self.propagator.inject(output, context=ctx)

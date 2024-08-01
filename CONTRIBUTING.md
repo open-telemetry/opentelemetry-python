@@ -57,7 +57,7 @@ You can run `tox` with the following arguments:
 - `tox -e py312-opentelemetry-api` to e.g. run the API unit tests under a specific
   Python version
 - `tox -e spellcheck` to run a spellcheck on all the code
-- `tox -e lint` to run lint checks on all code
+- `tox -e lint-some-package` to run lint checks on `some-package`
 
 `black` and `isort` are executed when `tox -e lint` is run. The reported errors can be tedious to fix manually.
 An easier way to do so is:
@@ -126,7 +126,7 @@ The continuation integration overrides that environment variable with as per the
 
 ### Benchmarks
 
-Running the `tox` tests also runs the performance tests if any are available. Benchmarking tests are done with `pytest-benchmark` and they output a table with results to the console.
+Some packages have benchmark tests. To run them, run `tox -f benchmark`. Benchmark tests use `pytest-benchmark` and they output a table with results to the console.
 
 To write benchmarks, simply use the [pytest benchmark fixture](https://pytest-benchmark.readthedocs.io/en/latest/usage.html#usage) like the following:
 
@@ -142,10 +142,10 @@ def test_simple_start_span(benchmark):
     benchmark(benchmark_start_as_current_span, "benchmarkedSpan", 42)
 ```
 
-Make sure the test file is under the `tests/performance/benchmarks/` folder of
+Make sure the test file is under the `benchmarks/` folder of
 the package it is benchmarking and further has a path that corresponds to the
 file in the package it is testing. Make sure that the file name begins with
-`test_benchmark_`. (e.g. `opentelemetry-sdk/tests/performance/benchmarks/trace/propagation/test_benchmark_b3_format.py`)
+`test_benchmark_`. (e.g. `opentelemetry-sdk/benchmarks/trace/propagation/test_benchmark_b3_format.py`)
 
 ## Pull Requests
 
@@ -263,3 +263,28 @@ automatically load as options for the `opentelemetry-instrument` command.
   as specified with the [napoleon
   extension](http://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html#google-vs-numpy)
   extension in [Sphinx](http://www.sphinx-doc.org/en/master/index.html).
+
+## Updating supported Python versions
+
+### Bumping the Python baseline
+
+When updating the minimum supported Python version remember to:
+
+- Remove the version in `pyproject.toml` trove classifiers
+- Remove the version from `tox.ini`
+- Search for `sys.version_info` usage and remove code for unsupported versions
+- Bump `py-version` in `.pylintrc` for Python version dependent checks
+
+### Adding support for a new Python release
+
+When adding support for a new Python release remember to:
+
+- Add the version in `tox.ini`
+- Add the version in `pyproject.toml` trove classifiers
+- Update github workflows accordingly; lint and benchmarks use the latest supported version
+- Update `.pre-commit-config.yaml`
+- Update tox examples in the documentation
+
+## Contributions that involve new packages
+
+As part of an effort to mitigate namespace squatting on Pypi, please ensure to check whether a package name has been taken already on Pypi before contributing a new package. Contact a maintainer, bring the issue up in the weekly Python SIG or create a ticket in Pypi if a desired name has already been taken.

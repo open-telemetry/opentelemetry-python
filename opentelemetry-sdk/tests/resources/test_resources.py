@@ -28,6 +28,8 @@ from opentelemetry.sdk.resources import (
     _DEFAULT_RESOURCE,
     _EMPTY_RESOURCE,
     _OPENTELEMETRY_SDK_VERSION,
+    OS_TYPE,
+    OS_VERSION,
     OTEL_RESOURCE_ATTRIBUTES,
     OTEL_SERVICE_NAME,
     PROCESS_COMMAND,
@@ -45,6 +47,7 @@ from opentelemetry.sdk.resources import (
     TELEMETRY_SDK_LANGUAGE,
     TELEMETRY_SDK_NAME,
     TELEMETRY_SDK_VERSION,
+    OsResourceDetector,
     OTELResourceDetector,
     ProcessResourceDetector,
     Resource,
@@ -608,7 +611,7 @@ class TestOTELResourceDetector(unittest.TestCase):
         )
         self.assertEqual(
             aggregated_resource.attributes[PROCESS_COMMAND_ARGS],
-            tuple(sys.argv[1:]),
+            tuple(sys.argv),
         )
 
     def test_resource_detector_entry_points_default(self):
@@ -673,6 +676,24 @@ class TestOTELResourceDetector(unittest.TestCase):
         self.assertEqual(resource.attributes["a"], "b")
         self.assertEqual(resource.schema_url, "")
 
+    @patch.dict(
+        environ, {OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: ""}, clear=True
+    )
+    def test_resource_detector_entry_points_empty(self):
+        resource = Resource({}).create()
+        self.assertEqual(
+            resource.attributes["telemetry.sdk.language"], "python"
+        )
+
+    @patch.dict(
+        environ, {OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: "os"}, clear=True
+    )
+    def test_resource_detector_entry_points_os(self):
+        resource = Resource({}).create()
+
+        self.assertIn(OS_TYPE, resource.attributes)
+        self.assertIn(OS_VERSION, resource.attributes)
+
     def test_resource_detector_entry_points_otel(self):
         """
         Test that OTELResourceDetector-resource-generated attributes are
@@ -723,3 +744,36 @@ class TestOTELResourceDetector(unittest.TestCase):
             )
             self.assertIn(PROCESS_RUNTIME_VERSION, resource.attributes.keys())
             self.assertEqual(resource.schema_url, "")
+
+    @patch("platform.system", lambda: "Linux")
+    @patch("platform.release", lambda: "666.5.0-35-generic")
+    def test_os_detector_linux(self):
+        resource = get_aggregated_resources(
+            [OsResourceDetector()],
+            Resource({}),
+        )
+
+        self.assertEqual(resource.attributes[OS_TYPE], "linux")
+        self.assertEqual(resource.attributes[OS_VERSION], "666.5.0-35-generic")
+
+    @patch("platform.system", lambda: "Windows")
+    @patch("platform.version", lambda: "10.0.666")
+    def test_os_detector_windows(self):
+        resource = get_aggregated_resources(
+            [OsResourceDetector()],
+            Resource({}),
+        )
+
+        self.assertEqual(resource.attributes[OS_TYPE], "windows")
+        self.assertEqual(resource.attributes[OS_VERSION], "10.0.666")
+
+    @patch("platform.system", lambda: "SunOS")
+    @patch("platform.version", lambda: "666.4.0.15.0")
+    def test_os_detector_solaris(self):
+        resource = get_aggregated_resources(
+            [OsResourceDetector()],
+            Resource({}),
+        )
+
+        self.assertEqual(resource.attributes[OS_TYPE], "solaris")
+        self.assertEqual(resource.attributes[OS_VERSION], "666.4.0.15.0")
