@@ -52,9 +52,9 @@ NETWORK_TRANSPORT: Final = "network.transport"
 [OSI transport layer](https://osi-model.com/transport-layer/) or [inter-process communication method](https://wikipedia.org/wiki/Inter-process_communication).
 Note: The value SHOULD be normalized to lowercase.
 
-    Consider always setting the transport when setting a port number, since
-    a port number is ambiguous without knowing the transport. For example
-    different processes could be listening on TCP port 12345 and UDP port 12345.
+Consider always setting the transport when setting a port number, since
+a port number is ambiguous without knowing the transport. For example
+different processes could be listening on TCP port 12345 and UDP port 12345.
 """
 
 NETWORK_TYPE: Final = "network.type"

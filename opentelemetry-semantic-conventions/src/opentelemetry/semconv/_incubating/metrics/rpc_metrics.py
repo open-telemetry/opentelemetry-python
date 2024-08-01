@@ -23,9 +23,9 @@ Measures the duration of outbound RPC
 Instrument: histogram
 Unit: ms
 Note: While streaming RPCs may record this metric as start-of-batch
-    to end-of-batch, it's hard to interpret in practice.
+to end-of-batch, it's hard to interpret in practice.
 
-    **Streaming**: N/A.
+**Streaming**: N/A.
 """
 
 
@@ -63,7 +63,7 @@ Instrument: histogram
 Unit: {count}
 Note: Should be 1 for all non-streaming RPCs.
 
-    **Streaming**: This metric is required for server and client streaming RPCs.
+**Streaming**: This metric is required for server and client streaming RPCs.
 """
 
 
@@ -101,7 +101,7 @@ Instrument: histogram
 Unit: {count}
 Note: Should be 1 for all non-streaming RPCs.
 
-    **Streaming**: This metric is required for server and client streaming RPCs.
+**Streaming**: This metric is required for server and client streaming RPCs.
 """
 
 
@@ -120,9 +120,9 @@ Measures the duration of inbound RPC
 Instrument: histogram
 Unit: ms
 Note: While streaming RPCs may record this metric as start-of-batch
-    to end-of-batch, it's hard to interpret in practice.
+to end-of-batch, it's hard to interpret in practice.
 
-    **Streaming**: N/A.
+**Streaming**: N/A.
 """
 
 
@@ -160,7 +160,7 @@ Instrument: histogram
 Unit: {count}
 Note: Should be 1 for all non-streaming RPCs.
 
-    **Streaming** : This metric is required for server and client streaming RPCs.
+**Streaming** : This metric is required for server and client streaming RPCs.
 """
 
 
@@ -198,7 +198,7 @@ Instrument: histogram
 Unit: {count}
 Note: Should be 1 for all non-streaming RPCs.
 
-    **Streaming**: This metric is required for server and client streaming RPCs.
+**Streaming**: This metric is required for server and client streaming RPCs.
 """
 
 
