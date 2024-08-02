@@ -273,6 +273,26 @@ def create_system_linux_memory_available(meter: Meter) -> UpDownCounter:
     )
 
 
+SYSTEM_LINUX_MEMORY_SLAB_USAGE: Final = "system.linux.memory.slab.usage"
+"""
+Reports the memory used by the Linux kernel for managing caches of frequently used objects
+Instrument: updowncounter
+Unit: By
+Note: The sum over the `reclaimable` and `unreclaimable` state values in `linux.memory.slab.usage` SHOULD be equal to the total slab memory available on the system.
+Note that the total slab memory is not constant and may vary over time.
+See also the [Slab allocator](https://blogs.oracle.com/linux/post/understanding-linux-kernel-memory-statistics) and `Slab` in [/proc/meminfo](https://man7.org/linux/man-pages/man5/proc.5.html).
+"""
+
+
+def create_system_linux_memory_slab_usage(meter: Meter) -> UpDownCounter:
+    """Reports the memory used by the Linux kernel for managing caches of frequently used objects"""
+    return meter.create_up_down_counter(
+        name=SYSTEM_LINUX_MEMORY_SLAB_USAGE,
+        description="Reports the memory used by the Linux kernel for managing caches of frequently used objects.",
+        unit="By",
+    )
+
+
 SYSTEM_MEMORY_LIMIT: Final = "system.memory.limit"
 """
 Total memory available in the system

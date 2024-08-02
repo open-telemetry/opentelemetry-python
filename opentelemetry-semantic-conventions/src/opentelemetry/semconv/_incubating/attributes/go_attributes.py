@@ -12,19 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from enum import Enum
 from typing import Final
 
-ENDUSER_ID: Final = "enduser.id"
+GO_MEMORY_TYPE: Final = "go.memory.type"
 """
-Deprecated: Replaced by `user.id` attribute.
-"""
-
-ENDUSER_ROLE: Final = "enduser.role"
-"""
-Deprecated: Replaced by `user.roles` attribute.
+The type of memory.
 """
 
-ENDUSER_SCOPE: Final = "enduser.scope"
-"""
-Deprecated: Removed.
-"""
+
+class GoMemoryTypeValues(Enum):
+    STACK = "stack"
+    """Memory allocated from the heap that is reserved for stack space, whether or not it is currently in-use."""
+    OTHER = "other"
+    """Memory used by the Go runtime, excluding other categories of memory usage described in this enumeration."""
