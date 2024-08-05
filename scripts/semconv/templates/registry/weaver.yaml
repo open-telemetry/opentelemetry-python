@@ -1,7 +1,6 @@
 params:
   # excluded namespaces will not be generated
-  # this behavior is fully controlled by jinja templates
-  excluded_namespaces: [ios, aspnetcore, signalr, android, dotnet, jvm, kestrel]
+  excluded_namespaces: [ios, aspnetcore, signalr, android, dotnet, jvm, kestrel, v8js, veightjs, go, nodejs]
 
   # excluded attributes will be commented out in the generated code
   # this behavior is fully controlled by jinja templates

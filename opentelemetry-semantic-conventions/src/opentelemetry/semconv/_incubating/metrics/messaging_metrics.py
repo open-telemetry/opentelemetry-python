@@ -17,103 +17,155 @@ from typing import Final
 
 from opentelemetry.metrics import Counter, Histogram, Meter
 
-MESSAGING_PROCESS_DURATION: Final = "messaging.process.duration"
+MESSAGING_CLIENT_CONSUMED_MESSAGES: Final = (
+    "messaging.client.consumed.messages"
+)
 """
-Measures the duration of process operation
+Number of messages that were delivered to the application
+Instrument: counter
+Unit: {message}
+Note: Records the number of messages pulled from the broker or number of messages dispatched to the application in push-based scenarios.
+The metric SHOULD be reported once per message delivery. For example, if receiving and processing operations are both instrumented for a single message delivery, this counter is incremented when the message is received and not reported when it is processed.
+"""
+
+
+def create_messaging_client_consumed_messages(meter: Meter) -> Counter:
+    """Number of messages that were delivered to the application"""
+    return meter.create_counter(
+        name=MESSAGING_CLIENT_CONSUMED_MESSAGES,
+        description="Number of messages that were delivered to the application.",
+        unit="{message}",
+    )
+
+
+MESSAGING_CLIENT_OPERATION_DURATION: Final = (
+    "messaging.client.operation.duration"
+)
+"""
+Duration of messaging operation initiated by a producer or consumer client
 Instrument: histogram
 Unit: s
+Note: This metric SHOULD NOT be used to report processing duration - processing duration is reported in `messaging.process.duration` metric.
+"""
+
+
+def create_messaging_client_operation_duration(meter: Meter) -> Histogram:
+    """Duration of messaging operation initiated by a producer or consumer client"""
+    return meter.create_histogram(
+        name=MESSAGING_CLIENT_OPERATION_DURATION,
+        description="Duration of messaging operation initiated by a producer or consumer client.",
+        unit="s",
+    )
+
+
+MESSAGING_CLIENT_PUBLISHED_MESSAGES: Final = (
+    "messaging.client.published.messages"
+)
+"""
+Number of messages producer attempted to publish to the broker
+Instrument: counter
+Unit: {message}
+Note: This metric MUST NOT count messages that were created haven't yet been attempted to be published.
+"""
+
+
+def create_messaging_client_published_messages(meter: Meter) -> Counter:
+    """Number of messages producer attempted to publish to the broker"""
+    return meter.create_counter(
+        name=MESSAGING_CLIENT_PUBLISHED_MESSAGES,
+        description="Number of messages producer attempted to publish to the broker.",
+        unit="{message}",
+    )
+
+
+MESSAGING_PROCESS_DURATION: Final = "messaging.process.duration"
+"""
+Duration of processing operation
+Instrument: histogram
+Unit: s
+Note: This metric MUST be reported for operations with `messaging.operation.type` that matches `process`.
 """
 
 
 def create_messaging_process_duration(meter: Meter) -> Histogram:
-    """Measures the duration of process operation"""
+    """Duration of processing operation"""
     return meter.create_histogram(
         name=MESSAGING_PROCESS_DURATION,
-        description="Measures the duration of process operation.",
+        description="Duration of processing operation.",
         unit="s",
     )
 
 
 MESSAGING_PROCESS_MESSAGES: Final = "messaging.process.messages"
 """
-Measures the number of processed messages
-Instrument: counter
-Unit: {message}
+Deprecated: Replaced by `messaging.client.consumed.messages`.
 """
 
 
 def create_messaging_process_messages(meter: Meter) -> Counter:
-    """Measures the number of processed messages"""
+    """Deprecated. Use `messaging.client.consumed.messages` instead"""
     return meter.create_counter(
         name=MESSAGING_PROCESS_MESSAGES,
-        description="Measures the number of processed messages.",
+        description="Deprecated. Use `messaging.client.consumed.messages` instead.",
         unit="{message}",
     )
 
 
 MESSAGING_PUBLISH_DURATION: Final = "messaging.publish.duration"
 """
-Measures the duration of publish operation
-Instrument: histogram
-Unit: s
+Deprecated: Replaced by `messaging.client.operation.duration`.
 """
 
 
 def create_messaging_publish_duration(meter: Meter) -> Histogram:
-    """Measures the duration of publish operation"""
+    """Deprecated. Use `messaging.client.operation.duration` instead"""
     return meter.create_histogram(
         name=MESSAGING_PUBLISH_DURATION,
-        description="Measures the duration of publish operation.",
+        description="Deprecated. Use `messaging.client.operation.duration` instead.",
         unit="s",
     )
 
 
 MESSAGING_PUBLISH_MESSAGES: Final = "messaging.publish.messages"
 """
-Measures the number of published messages
-Instrument: counter
-Unit: {message}
+Deprecated: Replaced by `messaging.client.produced.messages`.
 """
 
 
 def create_messaging_publish_messages(meter: Meter) -> Counter:
-    """Measures the number of published messages"""
+    """Deprecated. Use `messaging.client.produced.messages` instead"""
     return meter.create_counter(
         name=MESSAGING_PUBLISH_MESSAGES,
-        description="Measures the number of published messages.",
+        description="Deprecated. Use `messaging.client.produced.messages` instead.",
         unit="{message}",
     )
 
 
 MESSAGING_RECEIVE_DURATION: Final = "messaging.receive.duration"
 """
-Measures the duration of receive operation
-Instrument: histogram
-Unit: s
+Deprecated: Replaced by `messaging.client.operation.duration`.
 """
 
 
 def create_messaging_receive_duration(meter: Meter) -> Histogram:
-    """Measures the duration of receive operation"""
+    """Deprecated. Use `messaging.client.operation.duration` instead"""
     return meter.create_histogram(
         name=MESSAGING_RECEIVE_DURATION,
-        description="Measures the duration of receive operation.",
+        description="Deprecated. Use `messaging.client.operation.duration` instead.",
         unit="s",
     )
 
 
 MESSAGING_RECEIVE_MESSAGES: Final = "messaging.receive.messages"
 """
-Measures the number of received messages
-Instrument: counter
-Unit: {message}
+Deprecated: Replaced by `messaging.client.consumed.messages`.
 """
 
 
 def create_messaging_receive_messages(meter: Meter) -> Counter:
-    """Measures the number of received messages"""
+    """Deprecated. Use `messaging.client.consumed.messages` instead"""
     return meter.create_counter(
         name=MESSAGING_RECEIVE_MESSAGES,
-        description="Measures the number of received messages.",
+        description="Deprecated. Use `messaging.client.consumed.messages` instead.",
         unit="{message}",
     )

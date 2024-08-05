@@ -55,7 +55,7 @@ The following well-known definitions MUST be used if you set this attribute and 
 * **AWS Lambda:** The function [ARN](https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html).
   Take care not to use the "invoked ARN" directly but replace any
   [alias suffix](https://docs.aws.amazon.com/lambda/latest/dg/configuration-aliases.html)
-  with the resolved function version, as the same runtime instance may be invokable with
+  with the resolved function version, as the same runtime instance may be invocable with
   multiple different aliases.
 * **GCP:** The [URI of the resource](https://cloud.google.com/iam/docs/full-resource-names)
 * **Azure:** The [Fully Qualified Resource ID](https://docs.microsoft.com/rest/api/resources/resources/get-by-id) of the invoked function,

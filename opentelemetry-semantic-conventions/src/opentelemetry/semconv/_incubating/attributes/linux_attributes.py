@@ -12,19 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from enum import Enum
 from typing import Final
 
-ENDUSER_ID: Final = "enduser.id"
+LINUX_MEMORY_SLAB_STATE: Final = "linux.memory.slab.state"
 """
-Deprecated: Replaced by `user.id` attribute.
-"""
-
-ENDUSER_ROLE: Final = "enduser.role"
-"""
-Deprecated: Replaced by `user.roles` attribute.
+The Linux Slab memory state.
 """
 
-ENDUSER_SCOPE: Final = "enduser.scope"
-"""
-Deprecated: Removed.
-"""
+
+class LinuxMemorySlabStateValues(Enum):
+    RECLAIMABLE = "reclaimable"
+    """reclaimable."""
+    UNRECLAIMABLE = "unreclaimable"
+    """unreclaimable."""

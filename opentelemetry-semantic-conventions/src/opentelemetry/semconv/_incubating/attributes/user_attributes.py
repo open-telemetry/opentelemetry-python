@@ -14,17 +14,33 @@
 
 from typing import Final
 
-ENDUSER_ID: Final = "enduser.id"
+USER_EMAIL: Final = "user.email"
 """
-Deprecated: Replaced by `user.id` attribute.
-"""
-
-ENDUSER_ROLE: Final = "enduser.role"
-"""
-Deprecated: Replaced by `user.roles` attribute.
+User email address.
 """
 
-ENDUSER_SCOPE: Final = "enduser.scope"
+USER_FULL_NAME: Final = "user.full_name"
 """
-Deprecated: Removed.
+User's full name.
+"""
+
+USER_HASH: Final = "user.hash"
+"""
+Unique user hash to correlate information for a user in anonymized form.
+Note: Useful if `user.id` or `user.name` contain confidential information and cannot be used.
+"""
+
+USER_ID: Final = "user.id"
+"""
+Unique identifier of the user.
+"""
+
+USER_NAME: Final = "user.name"
+"""
+Short name or login/username of the user.
+"""
+
+USER_ROLES: Final = "user.roles"
+"""
+Array of user roles at the time of the event.
 """

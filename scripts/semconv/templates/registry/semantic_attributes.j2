@@ -14,7 +14,7 @@
 
 from typing import Final
 
-{% set file_name = ctx.output + (ctx.root_namespace | kebab_case | replace('-', '_')) ~ "_attributes.py" -%}
+{% set file_name = ctx.output + (ctx.root_namespace | snake_case) ~ "_attributes.py" -%}
 {{- template.set_file_name(file_name) -}}
 {%- import 'common.j2' as c %}
 
@@ -24,7 +24,7 @@ from typing import Final
 {{c.import_deprecated(enum_attributes)}}
 
 {%- macro attribute_name(attribute) -%}
-{{c.to_const_name(attribute.name)}}{%- if attribute.type is template_type -%}_TEMPLATE{%- endif -%}
+{{ attribute.name | screaming_snake_case }}{%- if attribute.type is template_type -%}_TEMPLATE{%- endif -%}
 {%- endmacro -%}
 
 {%- macro stable_class_ref(const_name, separator) -%}
@@ -65,9 +65,9 @@ from typing import Final
     {%- endif %}
 class {{class_name}}(Enum):
     {%- for member in attribute.type.members %}
-    {% set member_name = c.to_const_name(member.id) -%}
+    {% set member_name = member.id | screaming_snake_case -%}
     {%- set doc_string=write_docstring(class_name + '.' + member_name, member.brief or member.id, "", member.deprecated, member.stability, false)-%}
-    {{member_name}} = {{c.print_value(attribute.type | instantiated_type, member.value) }}
+    {{member_name}} = {{ member.value | print_member_value }}
     {% if doc_string %}"""{{doc_string}}"""{% endif %}
     {%- endfor %}
 {% endfor %}
