@@ -66,7 +66,7 @@ DB_COLLECTION_NAME: Final = "db.collection.name"
 """
 The name of a collection (table, container) within the database.
 Note: If the collection name is parsed from the query, it SHOULD match the value provided in the query and may be qualified with the schema and database name.
-    It is RECOMMENDED to capture the value as provided by the application without attempting to do any case normalization.
+It is RECOMMENDED to capture the value as provided by the application without attempting to do any case normalization.
 """
 
 DB_CONNECTION_STRING: Final = "db.connection_string"
@@ -161,8 +161,8 @@ DB_NAMESPACE: Final = "db.namespace"
 """
 The name of the database, fully qualified within the server address and port.
 Note: If a database system has multiple namespace components, they SHOULD be concatenated (potentially using database system specific conventions) from most general to most specific namespace component, and more specific namespaces SHOULD NOT be captured without the more general namespaces, to ensure that "startswith" queries for the more general namespaces will be valid.
-    Semantic conventions for individual database systems SHOULD document what `db.namespace` means in the context of that system.
-    It is RECOMMENDED to capture the value as provided by the application without attempting to do any case normalization.
+Semantic conventions for individual database systems SHOULD document what `db.namespace` means in the context of that system.
+It is RECOMMENDED to capture the value as provided by the application without attempting to do any case normalization.
 """
 
 DB_OPERATION: Final = "db.operation"
@@ -180,7 +180,7 @@ DB_QUERY_PARAMETER_TEMPLATE: Final = "db.query.parameter"
 """
 The query parameters used in `db.query.text`, with `<key>` being the parameter name, and the attribute value being the parameter value.
 Note: Query parameters should only be captured when `db.query.text` is parameterized with placeholders.
-    If a parameter has no name and instead is referenced only by index, then `<key>` SHOULD be the 0-based index.
+If a parameter has no name and instead is referenced only by index, then `<key>` SHOULD be the 0-based index.
 """
 
 DB_QUERY_TEXT: Final = "db.query.text"
