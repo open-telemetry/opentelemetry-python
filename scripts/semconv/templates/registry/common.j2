@@ -15,10 +15,6 @@
 
 {% endmacro -%}
 
-{%- macro to_const_name(attr_name) -%}
-{{attr_name | upper | replace('.', '_')}}
-{%- endmacro %}
-
 {%- macro str_or_empty(str) -%}
 {% if str is none %}{{""}}{% else %}{{str}}{% endif %}
 {%- endmacro %}
@@ -36,7 +32,3 @@
 from deprecated import deprecated
     {%- endif -%}
 {%- endmacro-%}
-
-{%- macro print_value(type, value) -%}
-{%- if type == "string" -%}"{{value}}"{%-else-%}{{value}}{%-endif-%}
-{%- endmacro -%}

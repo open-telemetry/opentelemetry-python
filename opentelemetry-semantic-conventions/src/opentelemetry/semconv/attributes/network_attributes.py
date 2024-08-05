@@ -73,6 +73,8 @@ class NetworkTransportValues(Enum):
     """Named or anonymous pipe."""
     UNIX = "unix"
     """Unix domain socket."""
+    QUIC = "quic"
+    """QUIC."""
 
 
 class NetworkTypeValues(Enum):
