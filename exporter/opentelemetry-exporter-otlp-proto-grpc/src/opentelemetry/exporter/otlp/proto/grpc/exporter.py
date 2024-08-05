@@ -215,7 +215,7 @@ class OTLPExporterMixin(
 
         self._headers = headers or environ.get(OTEL_EXPORTER_OTLP_HEADERS)
         if isinstance(self._headers, str):
-            temp_headers = parse_env_headers(self._headers)
+            temp_headers = parse_env_headers(self._headers, liberal=True)
             self._headers = tuple(temp_headers.items())
         elif isinstance(self._headers, dict):
             self._headers = tuple(self._headers.items())

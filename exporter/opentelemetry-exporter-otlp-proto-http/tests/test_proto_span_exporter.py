@@ -227,7 +227,8 @@ class TestOTLPSpanExporter(unittest.TestCase):
                 (
                     "Header format invalid! Header values in environment "
                     "variables must be URL encoded per the OpenTelemetry "
-                    "Protocol Exporter specification: missingValue"
+                    "Protocol Exporter specification or a comma separated "
+                    "list of name=value occurrences: missingValue"
                 ),
             )
 
