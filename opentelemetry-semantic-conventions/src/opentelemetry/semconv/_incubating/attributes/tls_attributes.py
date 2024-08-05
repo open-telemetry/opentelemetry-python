@@ -68,7 +68,7 @@ Date/Time indicating when client certificate is first considered valid.
 
 TLS_CLIENT_SERVER_NAME: Final = "tls.client.server_name"
 """
-Also called an SNI, this tells the server which hostname to which the client is attempting to connect to.
+Deprecated: Replaced by `server.address.
 """
 
 TLS_CLIENT_SUBJECT: Final = "tls.client.subject"

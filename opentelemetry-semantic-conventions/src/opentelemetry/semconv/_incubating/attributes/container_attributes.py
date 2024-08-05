@@ -15,6 +15,8 @@
 from enum import Enum
 from typing import Final
 
+from deprecated import deprecated
+
 CONTAINER_COMMAND: Final = "container.command"
 """
 The command used to run the container (i.e. the command name).
@@ -33,7 +35,7 @@ The full command run by the container as a single string representing the full c
 
 CONTAINER_CPU_STATE: Final = "container.cpu.state"
 """
-The CPU state for this data point.
+Deprecated: Replaced by `cpu.mode`.
 """
 
 CONTAINER_ID: Final = "container.id"
@@ -86,6 +88,7 @@ The container runtime managing this container.
 """
 
 
+@deprecated(reason="The attribute container.cpu.state is deprecated - Replaced by `cpu.mode`")  # type: ignore
 class ContainerCpuStateValues(Enum):
     USER = "user"
     """When tasks of the cgroup are in user mode (Linux). When all container processes are in user mode (Windows)."""
