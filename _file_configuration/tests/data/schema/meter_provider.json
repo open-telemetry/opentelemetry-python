@@ -1,0 +1,264 @@
+{
+    "$id": "https://opentelemetry.io/otelconfig/meter_provider.json",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "MeterProvider",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "readers": {
+            "type": "array",
+            "items": {
+                "$ref": "#/$defs/MetricReader"
+            }
+        },
+        "views": {
+            "type": "array",
+            "items": {
+                "$ref": "#/$defs/View"
+            }
+        }
+    },
+    "$defs": {
+        "PeriodicMetricReader": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "interval": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "timeout": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "exporter": {
+                    "$ref": "#/$defs/MetricExporter"
+                }
+            },
+            "required": [
+                "exporter"
+            ],
+            "title": "PeriodicMetricReader"
+        },
+        "PullMetricReader": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "exporter": {
+                    "$ref": "#/$defs/MetricExporter"
+                }
+            },
+            "required": [
+                "exporter"
+            ],
+            "title": "PullMetricReader"
+        },
+        "MetricExporter": {
+            "type": "object",
+            "additionalProperties": true,
+            "minProperties": 1,
+            "maxProperties": 1,
+            "properties": {
+                "otlp": {
+                    "$ref": "#/$defs/OtlpMetric"
+                },
+                "console": {
+                    "$ref": "common.json#/$defs/Console"
+                },
+                "prometheus": {
+                    "$ref": "#/$defs/Prometheus"
+                }
+            },
+            "patternProperties": {
+                ".*": {
+                    "type": "object"
+                }
+            }
+        },
+        "Prometheus": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "host": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": "integer"
+                }
+            }
+        },
+        "MetricReader": {
+            "type": "object",
+            "additionalProperties": false,
+            "minProperties": 1,
+            "maxProperties": 1,
+            "properties": {
+                "periodic": {
+                    "$ref": "#/$defs/PeriodicMetricReader"
+                },
+                "pull": {
+                    "$ref": "#/$defs/PullMetricReader"
+                }
+            }
+        },
+        "OtlpMetric": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "protocol": {
+                    "type": "string",
+                    "pattern": "^(http|grpc)\\/(protobuf|json)"
+                },
+                "endpoint": {
+                    "type": "string"
+                },
+                "certificate": {
+                    "type": "string"
+                },
+                "client_key": {
+                    "type": "string"
+                },
+                "client_certificate": {
+                    "type": "string"
+                },
+                "headers": {
+                    "$ref": "common.json#/$defs/Headers"
+                },
+                "compression": {
+                    "type": "string"
+                },
+                "timeout": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "temporality_preference": {
+                    "type": "string"
+                },
+                "default_histogram_aggregation": {
+                    "type": "string",
+                    "enum": [
+                        "explicit_bucket_histogram",
+                        "base2_exponential_bucket_histogram"
+                    ]
+                }
+            },
+            "required": [
+                "endpoint",
+                "protocol"
+            ],
+            "title": "OtlpMetric"
+        },
+        "View": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "selector": {
+                    "title": "Selector",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "instrument_name": {
+                            "type": "string"
+                        },
+                        "instrument_type": {
+                            "type": "string",
+                            "enum": [
+                                "counter",
+                                "histogram",
+                                "observable_counter",
+                                "observable_gauge",
+                                "observable_up_down_counter",
+                                "up_down_counter"
+                            ]
+                        },
+                        "unit": {
+                            "type": "string"
+                        },
+                        "meter_name": {
+                            "type": "string"
+                        },
+                        "meter_version": {
+                            "type": "string"
+                        },
+                        "meter_schema_url": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "stream": {
+                    "title": "Stream",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        },
+                        "description": {
+                            "type": "string"
+                        },
+                        "aggregation": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "minProperties": 1,
+                            "maxProperties": 1,
+                            "properties": {
+                                "default": {
+                                    "type": "object",
+                                    "additionalProperties": false
+                                },
+                                "drop": {
+                                    "type": "object",
+                                    "additionalProperties": false
+                                },
+                                "explicit_bucket_histogram": {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "properties": {
+                                        "boundaries": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "number"
+                                            }
+                                        },
+                                        "record_min_max": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                },
+                                "base2_exponential_bucket_histogram": {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "properties": {
+                                        "max_scale": {
+                                            "type": "integer"
+                                        },
+                                        "max_size": {
+                                            "type": "integer"
+                                        },
+                                        "record_min_max": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                },
+                                "last_value": {
+                                    "type": "object",
+                                    "additionalProperties": false
+                                },
+                                "sum": {
+                                    "type": "object",
+                                    "additionalProperties": false
+                                }
+                            }
+                        },
+                        "attribute_keys": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

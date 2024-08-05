@@ -1,0 +1,163 @@
+# kitchen-sink.yaml demonstrates all configurable surface area, including explanatory comments.
+#
+# It DOES NOT represent expected real world file configuration, as it makes strange file configuration
+# choices in an effort to exercise the full surface area.
+#
+# Configuration values are set to their defaults when default values are defined.
+
+# The file format version
+file_format: "0.1"
+
+# Configure if the SDK is disabled or not. This is not required to be provided
+# to ensure the SDK isn't disabled, the default value when this is not provided
+# is for the SDK to be enabled.
+#
+# Environment variable: OTEL_SDK_DISABLED
+disabled: false
+
+# Configure general attribute limits. See also tracer_provider.limits, logger_provider.limits.
+attribute_limits:
+  # Configure max attribute value size.
+  #
+  # Environment variable: OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT
+  attribute_value_length_limit: 4096
+  # Configure max attribute count.
+  #
+  # Environment variable: OTEL_ATTRIBUTE_COUNT_LIMIT
+  attribute_count_limit: 128
+
+# Configure text map context propagators.
+#
+# Environment variable: OTEL_PROPAGATORS
+propagator:
+  composite: [tracecontext, baggage, b3, b3multi, jaeger, xray, ottrace]
+
+# Configure tracer provider.
+tracer_provider:
+  # Configure span processors.
+  processors:
+    # Configure a batch span processor.
+    - batch:
+        # Configure delay interval (in milliseconds) between two consecutive exports.
+        #
+        # Environment variable: OTEL_BSP_SCHEDULE_DELAY
+        schedule_delay: 5000
+        # Configure maximum allowed time (in milliseconds) to export data.
+        #
+        # Environment variable: OTEL_BSP_EXPORT_TIMEOUT
+        export_timeout: 30000
+        # Configure maximum queue size.
+        #
+        # Environment variable: OTEL_BSP_MAX_QUEUE_SIZE
+        max_queue_size: 2048
+        # Configure maximum batch size.
+        #
+        # Environment variable: OTEL_BSP_MAX_EXPORT_BATCH_SIZE
+        max_export_batch_size: 512
+        # Configure exporter.
+        #
+        # Environment variable: OTEL_TRACES_EXPORTER
+        exporter:
+          # Configure exporter to be OTLP.
+          otlp:
+            # Configure protocol.
+            #
+            # Environment variable: OTEL_EXPORTER_OTLP_PROTOCOL, OTEL_EXPORTER_OTLP_TRACES_PROTOCOL
+            protocol: http/protobuf
+            # Configure endpoint.
+            #
+            # Environment variable: OTEL_EXPORTER_OTLP_ENDPOINT, OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+            endpoint: http://localhost:4318
+            # Configure certificate.
+            #
+            # Environment variable: OTEL_EXPORTER_OTLP_CERTIFICATE, OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE
+            certificate: /app/cert.pem
+            # Configure mTLS private client key.
+            #
+            # Environment variable: OTEL_EXPORTER_OTLP_CLIENT_KEY, OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY
+            client_key: /app/cert.pem
+            # Configure mTLS client certificate.
+            #
+            # Environment variable: OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE, OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE
+            client_certificate: /app/cert.pem
+            # Configure headers.
+            #
+            # Environment variable: OTEL_EXPORTER_OTLP_HEADERS, OTEL_EXPORTER_OTLP_TRACES_HEADERS
+            headers:
+              api-key: !!str 1234
+            # Configure compression.
+            #
+            # Environment variable: OTEL_EXPORTER_OTLP_COMPRESSION, OTEL_EXPORTER_OTLP_TRACES_COMPRESSION
+            compression: gzip
+            # Configure max time (in milliseconds) to wait for each export.
+            #
+            # Environment variable: OTEL_EXPORTER_OTLP_TIMEOUT, OTEL_EXPORTER_OTLP_TRACES_TIMEOUT
+            timeout: 10000
+    # Configure a batch span processor.
+    - batch:
+        # Configure exporter.
+        #
+        # Environment variable: OTEL_TRACES_EXPORTER
+        exporter:
+          # Configure exporter to be zipkin.
+          zipkin:
+            # Configure endpoint.
+            #
+            # Environment variable: OTEL_EXPORTER_ZIPKIN_ENDPOINT
+            endpoint: http://localhost:9411/api/v2/spans
+            # Configure max time (in milliseconds) to wait for each export.
+            #
+            # Environment variable: OTEL_EXPORTER_ZIPKIN_TIMEOUT
+            timeout: 10000
+    # Configure a simple span processor.
+    - simple:
+        # Configure exporter.
+        exporter:
+          # Configure exporter to be console.
+          console: {}
+  # Configure span limits. See also attribute_limits.
+  limits:
+    # Configure max span attribute value size. Overrides attribute_limits.attribute_value_length_limit.
+    #
+    # Environment variable: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT
+    attribute_value_length_limit: 4096
+    # Configure max span attribute count. Overrides attribute_limits.attribute_count_limit.
+    #
+    # Environment variable: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT
+    attribute_count_limit: 128
+    # Configure max span event count.
+    #
+    # Environment variable: OTEL_SPAN_EVENT_COUNT_LIMIT
+    event_count_limit: 128
+    # Configure max span link count.
+    #
+    # Environment variable: OTEL_SPAN_LINK_COUNT_LIMIT
+    link_count_limit: 128
+    # Configure max attributes per span event.
+    #
+    # Environment variable: OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT
+    event_attribute_count_limit: 128
+    # Configure max attributes per span link.
+    #
+    # Environment variable: OTEL_LINK_ATTRIBUTE_COUNT_LIMIT
+    link_attribute_count_limit: 128
+  # Configure the sampler.
+  sampler:
+    # Configure sampler to be parent_based. Known values include: always_off, always_on, jaeger_remote, parent_based, trace_id_ratio_based.
+    #
+    # Environment variable: OTEL_TRACES_SAMPLER=parentbased_*
+    sometimes_mondays_on:
+      probability: 0.8
+
+# Configure resource for all signals.
+resource:
+  # Configure resource attributes.
+  #
+  # Environment variable: OTEL_RESOURCE_ATTRIBUTES
+  attributes:
+    # Configure `service.name` resource attribute
+    #
+    # Environment variable: OTEL_SERVICE_NAME
+    service.name: !!str "unknown_service"
+  # Configure the resource schema URL.
+  schema_url: https://opentelemetry.io/schemas/1.16.0

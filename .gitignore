@@ -33,6 +33,7 @@ coverage.xml
 .coverage
 .nox
 .tox
+.nox
 .cache
 htmlcov
 

@@ -1,0 +1,109 @@
+{
+    "$id": "https://opentelemetry.io/otelconfig/logger_provider.json",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "LoggerProvider",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "processors": {
+            "type": "array",
+            "items": {
+                "$ref": "#/$defs/LogRecordProcessor"
+            }
+        },
+        "limits": {
+            "$ref": "#/$defs/LogRecordLimits"
+        }
+    },
+    "$defs": {
+        "SimpleLogRecordProcessor": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "exporter": {
+                    "$ref": "#/$defs/LogRecordExporter"
+                }
+            },
+            "required": [
+                "exporter"
+            ]
+        },
+        "BatchLogRecordProcessor": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "schedule_delay": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "export_timeout": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "max_queue_size": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "max_export_batch_size": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "exporter": {
+                    "$ref": "#/$defs/LogRecordExporter"
+                }
+            },
+            "required": [
+                "exporter"
+            ]
+        },
+        "LogRecordExporter": {
+            "type": "object",
+            "additionalProperties": true,
+            "minProperties": 1,
+            "maxProperties": 1,
+            "properties": {
+                "otlp": {
+                    "$ref": "common.json#/$defs/Otlp"
+                }
+            },
+            "patternProperties": {
+                ".*": {
+                    "type": "object"
+                }
+            }
+        },
+        "LogRecordLimits": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "attribute_value_length_limit": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "attribute_count_limit": {
+                    "type": "integer",
+                    "minimum": 0
+                }
+            }
+        },
+        "LogRecordProcessor": {
+            "type": "object",
+            "additionalProperties": true,
+            "minProperties": 1,
+            "maxProperties": 1,
+            "properties": {
+                "batch": {
+                    "$ref": "#/$defs/BatchLogRecordProcessor"
+                },
+                "simple": {
+                    "$ref": "#/$defs/SimpleLogRecordProcessor"
+                }
+            },
+            "patternProperties": {
+                ".*": {
+                    "type": "object"
+                }
+            }
+        }
+    }
+}
