@@ -49,7 +49,7 @@ otlp_proto_http = "opentelemetry.exporter.otlp.proto.http._log_exporter:OTLPLogE
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/exporter/opentelemetry-exporter-otlp-proto-http"
 
 [tool.hatch.version]
-path = "src/opentelemetry/exporter/otlp/proto/http/version.py"
+path = "src/opentelemetry/exporter/otlp/proto/http/version/__init__.py"
 
 [tool.hatch.build.targets.sdist]
 include = [

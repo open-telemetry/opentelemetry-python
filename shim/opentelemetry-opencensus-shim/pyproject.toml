@@ -39,7 +39,7 @@ dependencies = [
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/shim/opentelemetry-opencensus-shim"
 
 [tool.hatch.version]
-path = "src/opentelemetry/shim/opencensus/version.py"
+path = "src/opentelemetry/shim/opencensus/version/__init__.py"
 
 [tool.hatch.build.targets.sdist]
 include = ["/src", "/tests"]

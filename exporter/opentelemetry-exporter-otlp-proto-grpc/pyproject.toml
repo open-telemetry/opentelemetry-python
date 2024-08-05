@@ -49,7 +49,7 @@ otlp_proto_grpc = "opentelemetry.exporter.otlp.proto.grpc.trace_exporter:OTLPSpa
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/exporter/opentelemetry-exporter-otlp-proto-grpc"
 
 [tool.hatch.version]
-path = "src/opentelemetry/exporter/otlp/proto/grpc/version.py"
+path = "src/opentelemetry/exporter/otlp/proto/grpc/version/__init__.py"
 
 [tool.hatch.build.targets.sdist]
 include = [

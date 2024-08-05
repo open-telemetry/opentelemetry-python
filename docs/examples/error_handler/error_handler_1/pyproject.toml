@@ -32,7 +32,7 @@ dependencies = [
 error_handler_1 = "error_handler_1:ErrorHandler1"
 
 [tool.hatch.version]
-path = "src/error_handler_1/version.py"
+path = "src/error_handler_1/version/__init__.py"
 
 [tool.hatch.build.targets.sdist]
 include = [

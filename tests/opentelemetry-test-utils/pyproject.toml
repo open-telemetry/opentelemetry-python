@@ -35,7 +35,7 @@ dependencies = [
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tests/opentelemetry-test-utils"
 
 [tool.hatch.version]
-path = "src/opentelemetry/test/version.py"
+path = "src/opentelemetry/test/version/__init__.py"
 
 [tool.hatch.build.targets.sdist]
 include = [

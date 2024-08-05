@@ -45,7 +45,7 @@ otlp = "opentelemetry.exporter.otlp.proto.grpc.trace_exporter:OTLPSpanExporter"
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/exporter/opentelemetry-exporter-otlp"
 
 [tool.hatch.version]
-path = "src/opentelemetry/exporter/otlp/version.py"
+path = "src/opentelemetry/exporter/otlp/version/__init__.py"
 
 [tool.hatch.build.targets.sdist]
 include = [
