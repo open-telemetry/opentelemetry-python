@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update log export example to not use root logger ([#4090](https://github.com/open-telemetry/opentelemetry-python/pull/4090))
 - sdk: Add OS resource detector
   ([#3992](https://github.com/open-telemetry/opentelemetry-python/pull/3992))
+- sdk: Accept non URL-encoded headers in `OTEL_EXPORTER_OTLP_*HEADERS` to match other languages SDKs
+  ([#4103](https://github.com/open-telemetry/opentelemetry-python/pull/4103))
 
 ## Version 1.26.0/0.47b0 (2024-07-25)
 
