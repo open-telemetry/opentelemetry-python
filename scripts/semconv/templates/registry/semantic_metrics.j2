@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-{% set file_name = ctx.output + ctx.root_namespace | kebab_case | replace('-', '_') ~ "_metrics.py" -%}
+{% set file_name = ctx.output + ctx.root_namespace | snake_case ~ "_metrics.py" -%}
 {{- template.set_file_name(file_name) -}}
 
 {% import 'common.j2' as c -%}
@@ -66,8 +66,8 @@ CallbackT = Union[
 from typing import Final
 {{ import_instrument_classes(filtered_metrics) }}
 
-{%- for metric in ctx.metrics | sort(attribute="metric_name") %}
-{% set const_name = c.to_const_name(metric.metric_name) %}
+{%- for metric in ctx.metrics %}
+{% set const_name = metric.metric_name | screaming_snake_case %}
 {{const_name}}: Final = "{{metric.metric_name}}"
 {%- set doc_string=write_docstring(metric, const_name, "")-%}{%- if doc_string %}
 """{{doc_string}}
