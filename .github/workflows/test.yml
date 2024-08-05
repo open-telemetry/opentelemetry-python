@@ -32,6 +32,7 @@ jobs:
       py310: "3.10"
       py311: "3.11"
       py312: "3.12"
+      py313: "3.13"
       pypy3: pypy-3.8
       RUN_MATRIX_COMBINATION: ${{ matrix.python-version }}-${{ matrix.package }}-${{
         matrix.os }}
@@ -39,7 +40,7 @@ jobs:
     strategy:
       fail-fast: false  # ensures the entire test matrix is run, even if one permutation fails
       matrix:
-        python-version: [py38, py39, py310, py311, py312, pypy3]
+        python-version: [py38, py39, py310, py311, py312, py313, pypy3]
         package:
           - "api"
           - "sdk"
@@ -79,6 +80,7 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ env[matrix.python-version] }}
+        allow-prereleases: true
         architecture: 'x64'
     - name: Install tox
       run: pip install tox
@@ -103,14 +105,14 @@ jobs:
         tox-environment: ["docker-tests-proto3", "docker-tests-proto4", "spellcheck",
           "docs", "mypy", "mypyinstalled", "tracecontext"]
     name: ${{ matrix.tox-environment }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
     - name: Checkout Core Repo @ SHA - ${{ github.sha }}
       uses: actions/checkout@v4
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.10'
+        python-version: '3.13'
         architecture: 'x64'
     - name: Install tox
       run: pip install tox
@@ -201,6 +203,7 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ env[matrix.python-version] }}
+        allow-prereleases: true
         architecture: 'x64'
     - name: Install tox
       run: pip install tox
