@@ -105,7 +105,7 @@ jobs:
         tox-environment: ["docker-tests-proto3", "docker-tests-proto4", "spellcheck",
           "docs", "mypy", "mypyinstalled", "tracecontext"]
     name: ${{ matrix.tox-environment }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
     - name: Checkout Core Repo @ SHA - ${{ github.sha }}
       uses: actions/checkout@v4
