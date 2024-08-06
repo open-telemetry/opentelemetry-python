@@ -195,11 +195,21 @@ class TestOTLPExporterMixin(TestCase):
         try:
             # pylint: disable=protected-access
             self.assertTrue(otlp_mock_exporter._export_lock.locked())
-            # delay is 1 second while the default shutdown timeout is 30_000 milliseconds
+            # delay is 1 second while the default shutdown timeout is 30_000
+            # milliseconds
             start_time = time_ns()
             otlp_mock_exporter.shutdown()
             now = time_ns()
-            self.assertGreaterEqual(now, (start_time + 30 / 1000))
+
+            actual_delta = now - start_time
+            minumum_expected_delta = int(30e9)
+
+            self.assertGreaterEqual(
+                actual_delta,
+                minumum_expected_delta,
+                "Default shutdown timeout was less than the expected 30000ms, "
+                f"it was {actual_delta * 1e-6}ms"
+            )
             # pylint: disable=protected-access
             self.assertTrue(otlp_mock_exporter._shutdown)
             # pylint: disable=protected-access
