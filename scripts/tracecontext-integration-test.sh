@@ -1,13 +1,13 @@
 #!/bin/sh
-set -e 
+set -e
 # hard-coding the git tag to ensure stable builds.
-TRACECONTEXT_GIT_TAG="98f210efd89c63593dce90e2bae0a1bdcb986f51"
+TRACECONTEXT_GIT_TAG="e99a85d12df8c25c51ec1d5d234f20e918265b75"
 # clone w3c tracecontext tests
 mkdir -p target
 rm -rf ./target/trace-context
 git clone https://github.com/w3c/trace-context ./target/trace-context
 cd ./target/trace-context && git checkout $TRACECONTEXT_GIT_TAG && cd -
-# start example opentelemetry service, which propagates trace-context by 
+# start example opentelemetry service, which propagates trace-context by
 # default.
 python ./tests/w3c_tracecontext_validation_server.py 1>&2 &
 EXAMPLE_SERVER_PID=$!
@@ -15,7 +15,7 @@ EXAMPLE_SERVER_PID=$!
 # of delay would cause many of the tracecontext tests to fail being
 # unable to connect.
 sleep 1
-onshutdown() 
+onshutdown()
 {
     # send a sigint, to ensure
     # it is caught as a KeyboardInterrupt in the
