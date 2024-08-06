@@ -41,6 +41,7 @@ from typing import Any, Optional, cast
 
 from opentelemetry._logs.severity import SeverityNumber
 from opentelemetry.environment_variables import _OTEL_PYTHON_LOGGER_PROVIDER
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace.span import TraceFlags
 from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
@@ -159,6 +160,7 @@ class LoggerProvider(ABC):
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
         attributes: Optional[Attributes] = None,
+        instrumentation_scope: Optional[InstrumentationScope] = None,
     ) -> Logger:
         """Returns a `Logger` for use by the given instrumentation library.
 
@@ -274,6 +276,7 @@ def get_logger(
     logger_provider: Optional[LoggerProvider] = None,
     schema_url: Optional[str] = None,
     attributes: Optional[Attributes] = None,
+    instrumentation_scope: Optional[InstrumentationScope] = None,
 ) -> "Logger":
     """Returns a `Logger` for use within a python process.
 
@@ -284,9 +287,17 @@ def get_logger(
     """
     if logger_provider is None:
         logger_provider = get_logger_provider()
+    if isinstance(logger_provider, NoOpLoggerProvider):
+        return NoOpLogger(
+            instrumenting_module_name,
+            version=instrumenting_library_version,
+            schema_url=schema_url,
+            attributes=attributes,
+        )
     return logger_provider.get_logger(
         instrumenting_module_name,
         instrumenting_library_version,
         schema_url,
         attributes,
+        instrumentation_scope,
     )

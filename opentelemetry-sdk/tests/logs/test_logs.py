@@ -24,6 +24,7 @@ from opentelemetry.sdk._logs._internal import (
 )
 from opentelemetry.sdk.environment_variables import OTEL_SDK_DISABLED
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
 
 class TestLoggerProvider(unittest.TestCase):
@@ -65,6 +66,37 @@ class TestLoggerProvider(unittest.TestCase):
         )
         self.assertEqual(
             logger._instrumentation_scope.attributes, {"key": "value"}
+        )
+
+    def test_get_logger_instrumentation(self):
+        """
+        `LoggerProvider.get_logger` arguments are used to create an
+        `InstrumentationScope` object on the created `Logger`.
+        """
+        instruments = {
+            "name": "instrument_name",
+            "version": "instrument_version",
+            "schema_url": "instrument_schema_url",
+            "attributes": {"instrument_key": "instrument_value"},
+        }
+        logger = LoggerProvider().get_logger(
+            "name",
+            version="version",
+            schema_url="schema_url",
+            attributes={"key": "value"},
+            instrumentation_scope=InstrumentationScope(**instruments),
+        )
+
+        self.assertEqual(logger._instrumentation_scope.name, "instrument_name")
+        self.assertEqual(
+            logger._instrumentation_scope.version, "instrument_version"
+        )
+        self.assertEqual(
+            logger._instrumentation_scope.schema_url, "instrument_schema_url"
+        )
+        self.assertEqual(
+            logger._instrumentation_scope.attributes,
+            {"instrument_key": "instrument_value"},
         )
 
     @patch.dict("os.environ", {OTEL_SDK_DISABLED: "true"})
