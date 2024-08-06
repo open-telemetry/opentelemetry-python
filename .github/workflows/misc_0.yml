@@ -8,6 +8,7 @@ on:
     branches-ignore:
     - 'release/*'
   pull_request:
+
 env:
   CORE_REPO_SHA: main
   CONTRIB_REPO_SHA: main
@@ -186,6 +187,9 @@ jobs:
   generate-workflows:
     name: generate-workflows
     runs-on: ubuntu-latest
+    if: |
+      !contains(github.event.pull_request.labels.*.name, 'Skip generate-workflows')
+      && github.actor != 'opentelemetrybot'
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4

@@ -8,6 +8,7 @@ on:
     branches-ignore:
     - 'release/*'
   pull_request:
+
 env:
   CORE_REPO_SHA: ${{ github.sha }}
   CONTRIB_REPO_SHA: main
@@ -631,8 +632,8 @@ jobs:
       - name: Run tests
         run: tox -e py38-test-instrumentation-falcon-2 -- -ra
 
-  py38-test-instrumentation-fastapi:
-    name: instrumentation-fastapi 
+  py38-test-instrumentation-fastapi-main:
+    name: instrumentation-fastapi-main 
     runs-on: ubuntu-latest
     steps:
       - name: Checkout contrib repo @ SHA - ${{ env.CONTRIB_REPO_SHA }}
@@ -657,7 +658,7 @@ jobs:
         run: pip install tox
 
       - name: Run tests
-        run: tox -e py38-test-instrumentation-fastapi -- -ra
+        run: tox -e py38-test-instrumentation-fastapi-main -- -ra
 
   py38-test-instrumentation-fastapi-slim:
     name: instrumentation-fastapi-slim 
@@ -1023,8 +1024,8 @@ jobs:
       - name: Run tests
         run: tox -e py38-test-exporter-prometheus-remote-write -- -ra
 
-  py38-test-instrumentation-mysql:
-    name: instrumentation-mysql 
+  py38-test-instrumentation-mysql-0:
+    name: instrumentation-mysql-0 
     runs-on: ubuntu-latest
     steps:
       - name: Checkout contrib repo @ SHA - ${{ env.CONTRIB_REPO_SHA }}
@@ -1049,7 +1050,35 @@ jobs:
         run: pip install tox
 
       - name: Run tests
-        run: tox -e py38-test-instrumentation-mysql -- -ra
+        run: tox -e py38-test-instrumentation-mysql-0 -- -ra
+
+  py38-test-instrumentation-mysql-1:
+    name: instrumentation-mysql-1 
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout contrib repo @ SHA - ${{ env.CONTRIB_REPO_SHA }}
+        uses: actions/checkout@v4
+        with:
+          repository: open-telemetry/opentelemetry-python-contrib
+          ref: ${{ env.CONTRIB_REPO_SHA }}
+
+      - name: Checkout core repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+        with:
+          repository: open-telemetry/opentelemetry-python
+          path: opentelemetry-python-core
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.8"
+          architecture: "x64"
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Run tests
+        run: tox -e py38-test-instrumentation-mysql-1 -- -ra
 
   py38-test-instrumentation-mysqlclient:
     name: instrumentation-mysqlclient 
@@ -2086,6 +2115,34 @@ jobs:
 
       - name: Run tests
         run: tox -e py38-test-instrumentation-kafka-python -- -ra
+
+  py38-test-instrumentation-kafka-pythonng:
+    name: instrumentation-kafka-pythonng 
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout contrib repo @ SHA - ${{ env.CONTRIB_REPO_SHA }}
+        uses: actions/checkout@v4
+        with:
+          repository: open-telemetry/opentelemetry-python-contrib
+          ref: ${{ env.CONTRIB_REPO_SHA }}
+
+      - name: Checkout core repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+        with:
+          repository: open-telemetry/opentelemetry-python
+          path: opentelemetry-python-core
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.8"
+          architecture: "x64"
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Run tests
+        run: tox -e py38-test-instrumentation-kafka-pythonng -- -ra
 
   py38-test-instrumentation-confluent-kafka:
     name: instrumentation-confluent-kafka 

@@ -8,6 +8,7 @@ on:
     branches-ignore:
     - 'release/*'
   pull_request:
+
 env:
   CORE_REPO_SHA: main
   CONTRIB_REPO_SHA: main
