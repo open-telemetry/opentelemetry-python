@@ -178,7 +178,7 @@ class TestToJson(TestCase):
             metrics=[cls.metric_0, cls.metric_1, cls.metric_2],
             schema_url="schema_url_0",
         )
-        cls.scope_metrics_0_str = f'{{"scope": {{"name": "name_0", "version": "version_0", "schema_url": "schema_url_0"}}, "metrics": [{cls.metric_0_str}, {cls.metric_1_str}, {cls.metric_2_str}], "schema_url": "schema_url_0"}}'
+        cls.scope_metrics_0_str = f'{{"scope": {{"name": "name_0", "version": "version_0", "schema_url": "schema_url_0", "attributes": null}}, "metrics": [{cls.metric_0_str}, {cls.metric_1_str}, {cls.metric_2_str}], "schema_url": "schema_url_0"}}'
 
         cls.scope_metrics_1 = ScopeMetrics(
             scope=InstrumentationScope(
@@ -189,7 +189,7 @@ class TestToJson(TestCase):
             metrics=[cls.metric_0, cls.metric_1, cls.metric_2],
             schema_url="schema_url_1",
         )
-        cls.scope_metrics_1_str = f'{{"scope": {{"name": "name_1", "version": "version_1", "schema_url": "schema_url_1"}}, "metrics": [{cls.metric_0_str}, {cls.metric_1_str}, {cls.metric_2_str}], "schema_url": "schema_url_1"}}'
+        cls.scope_metrics_1_str = f'{{"scope": {{"name": "name_1", "version": "version_1", "schema_url": "schema_url_1", "attributes": null}}, "metrics": [{cls.metric_0_str}, {cls.metric_1_str}, {cls.metric_2_str}], "schema_url": "schema_url_1"}}'
 
         cls.resource_metrics_0 = ResourceMetrics(
             resource=Resource(
@@ -238,8 +238,6 @@ class TestToJson(TestCase):
 
     def test_exp_histogram_data_point(self):
 
-        self.maxDiff = None
-
         self.assertEqual(
             self.exp_histogram_data_point_0.to_json(indent=None),
             self.exp_histogram_data_point_0_str,
@@ -251,8 +249,6 @@ class TestToJson(TestCase):
 
     def test_gauge(self):
 
-        self.maxDiff = None
-
         self.assertEqual(self.gauge_0.to_json(indent=None), self.gauge_0_str)
 
     def test_histogram(self):
@@ -262,8 +258,6 @@ class TestToJson(TestCase):
         )
 
     def test_exp_histogram(self):
-
-        self.maxDiff = None
 
         self.assertEqual(
             self.exp_histogram_0.to_json(indent=None), self.exp_histogram_0_str

@@ -10,6 +10,7 @@ Start the Collector locally to see data being exported. Write the following file
         otlp:
             protocols:
                 grpc:
+                    endpoint: 0.0.0.0:4317
 
     exporters:
         logging:

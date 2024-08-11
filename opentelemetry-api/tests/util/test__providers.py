@@ -20,7 +20,7 @@ from unittest.mock import Mock, patch
 from opentelemetry.util import _providers
 
 
-class Test_Providers(TestCase):
+class Test_Providers(TestCase):  # pylint: disable=invalid-name
     @patch.dict(
         environ,
         {  # type: ignore
@@ -49,7 +49,7 @@ class Test_Providers(TestCase):
         )
 
         self.assertEqual(
-            _providers._load_provider(
+            _providers._load_provider(  # pylint: disable=protected-access
                 "provider_environment_variable", "provider"
             ),
             "a",

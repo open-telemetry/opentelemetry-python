@@ -1,0 +1,96 @@
+# Copyright The OpenTelemetry Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+{% set file_name = ctx.output + ctx.root_namespace | snake_case ~ "_metrics.py" -%}
+{{- template.set_file_name(file_name) -}}
+
+{% import 'common.j2' as c -%}
+
+{%- macro stable_class_ref(const_name, separator) -%}
+{{ctx.stable_package_name}}.{{ctx.root_namespace}}_metrics{{separator}}{{const_name}}
+{%- endmacro %}
+
+{%- macro write_docstring(metric, const_name, prefix) -%}
+    {%- if metric is deprecated %}
+{{prefix}}Deprecated: {{c.comment_with_prefix(metric.deprecated, prefix)}}.
+    {%- elif ctx.filter == "any" and metric.stability == "stable" %}
+{{prefix}}Deprecated in favor of stable :py:const:`{{stable_class_ref(const_name, '.')}}`.
+    {%- else -%}
+        {%- if c.str_or_empty(metric.brief)|length %}
+{{prefix}}{{c.comment_with_prefix(metric.brief, prefix)}}
+        {%- endif %}
+{{prefix}}Instrument: {{ metric.instrument }}
+{{prefix}}Unit: {{ metric.unit }}
+        {%- if c.str_or_empty(metric.note)|length  %}
+{{prefix}}Note: {{c.comment_with_prefix(metric.note, prefix)}}.
+        {%- endif -%}
+    {%- endif -%}
+{%- endmacro -%}
+
+{%- macro import_instrument_classes(metrics) -%}
+  {% if ctx.filter == "any" %}
+from opentelemetry.metrics import Meter
+
+    {%- set instruments = ["counter", "histogram", "updowncounter"]-%}
+    {%- for i in instruments -%}
+        {%- if ctx.metrics | selectattr("instrument", "equalto", i) | list | count > 0 %}
+from opentelemetry.metrics import {{i | map_text("py_instrument_to_type")}}
+        {%- endif -%}
+    {%- endfor-%}
+
+    {%- if ctx.metrics | selectattr("instrument", "equalto", "gauge") | list | count > 0 %}
+from typing import Callable, Generator, Iterable, Optional, Sequence, Union
+from opentelemetry.metrics import CallbackOptions, ObservableGauge, Observation
+
+# pylint: disable=invalid-name
+CallbackT = Union[
+    Callable[[CallbackOptions], Iterable[Observation]],
+    Generator[Iterable[Observation], CallbackOptions, None],
+]
+    {%- endif %}
+
+  {%- endif -%}
+{%- endmacro %}
+
+from typing import Final
+{{ import_instrument_classes(filtered_metrics) }}
+
+{%- for metric in ctx.metrics %}
+{% set const_name = metric.metric_name | screaming_snake_case %}
+{{const_name}}: Final = "{{metric.metric_name}}"
+{%- set doc_string=write_docstring(metric, const_name, "")-%}{%- if doc_string %}
+"""{{doc_string}}
+"""{% endif %}
+
+{% if ctx.filter == "any" %}
+{% set metric_name = metric.metric_name | replace(".", "_") %}
+{%- if metric.instrument == "gauge" %}
+def create_{{ metric_name }}(meter: Meter, callbacks: Optional[Sequence[CallbackT]]) -> {{metric.instrument | map_text("py_instrument_to_type")}}:
+{%- else %}
+def create_{{ metric_name }}(meter: Meter) -> {{metric.instrument | map_text("py_instrument_to_type")}}:
+{%- endif %}
+    {%- if c.str_or_empty(metric.brief) |length %}
+    """{{ c.comment_with_prefix(metric.brief, "") }}"""
+    {% endif -%}
+    return meter.create_{{ metric.instrument | map_text("py_instrument_to_factory")}}(
+        name={{ const_name }},
+        {%- if metric.instrument == "gauge" %}
+        callbacks=callbacks,
+        {%- endif %}
+        description="{{ c.str_or_empty(metric.brief) }}",
+        unit="{{ metric.unit }}",
+    )
+    {%- endif -%}
+
+{% endfor %}

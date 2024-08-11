@@ -10,6 +10,10 @@ on how to become a [**Member**](https://github.com/open-telemetry/community/blob
 [**Approver**](https://github.com/open-telemetry/community/blob/main/community-membership.md#approver)
 and [**Maintainer**](https://github.com/open-telemetry/community/blob/main/community-membership.md#maintainer).
 
+Before you can contribute, you will need to sign the [Contributor License Agreement](https://docs.linuxfoundation.org/lfx/easycla/contributors).
+
+Please also read the [OpenTelemetry Contributor Guide](https://github.com/open-telemetry/community/blob/main/CONTRIBUTING.md).
+
 # Find your right repo
 
 This is the main repo for OpenTelemetry Python. Nevertheless, there are other repos that are related to this project.
@@ -50,16 +54,28 @@ You can run `tox` with the following arguments:
   under multiple Python versions
 - `tox -e docs` to regenerate the API docs
 - `tox -e opentelemetry-api` and `tox -e opentelemetry-sdk` to run the API and SDK unit tests
-- `tox -e py311-opentelemetry-api` to e.g. run the API unit tests under a specific
+- `tox -e py312-opentelemetry-api` to e.g. run the API unit tests under a specific
   Python version
 - `tox -e spellcheck` to run a spellcheck on all the code
-- `tox -e lint` to run lint checks on all code
+- `tox -e lint-some-package` to run lint checks on `some-package`
 
 `black` and `isort` are executed when `tox -e lint` is run. The reported errors can be tedious to fix manually.
 An easier way to do so is:
 
 1. Run `.tox/lint/bin/black .`
 2. Run `.tox/lint/bin/isort .`
+
+Or you can call formatting and linting in one command by [pre-commit](https://pre-commit.com/):
+
+```console
+$ pre-commit
+```
+
+You can also configure it to run lint tools automatically before committing with:
+
+```console
+$ pre-commit install
+```
 
 We try to keep the amount of _public symbols_ in our code minimal. A public symbol is any Python identifier that does not start with an underscore.
 Every public symbol is something that has to be kept in order to maintain backwards compatibility, so we try to have as few as possible.
@@ -110,7 +126,7 @@ The continuation integration overrides that environment variable with as per the
 
 ### Benchmarks
 
-Running the `tox` tests also runs the performance tests if any are available. Benchmarking tests are done with `pytest-benchmark` and they output a table with results to the console.
+Some packages have benchmark tests. To run them, run `tox -f benchmark`. Benchmark tests use `pytest-benchmark` and they output a table with results to the console.
 
 To write benchmarks, simply use the [pytest benchmark fixture](https://pytest-benchmark.readthedocs.io/en/latest/usage.html#usage) like the following:
 
@@ -126,10 +142,10 @@ def test_simple_start_span(benchmark):
     benchmark(benchmark_start_as_current_span, "benchmarkedSpan", 42)
 ```
 
-Make sure the test file is under the `tests/performance/benchmarks/` folder of
+Make sure the test file is under the `benchmarks/` folder of
 the package it is benchmarking and further has a path that corresponds to the
 file in the package it is testing. Make sure that the file name begins with
-`test_benchmark_`. (e.g. `opentelemetry-sdk/tests/performance/benchmarks/trace/propagation/test_benchmark_b3_format.py`)
+`test_benchmark_`. (e.g. `opentelemetry-sdk/benchmarks/trace/propagation/test_benchmark_b3_format.py`)
 
 ## Pull Requests
 
@@ -142,6 +158,7 @@ To create a new PR, fork the project in GitHub and clone the upstream repo:
 
 ```console
 $ git clone https://github.com/open-telemetry/opentelemetry-python.git
+$ cd opentelemetry-python
 ```
 
 Add your fork as an origin:
@@ -246,3 +263,28 @@ automatically load as options for the `opentelemetry-instrument` command.
   as specified with the [napoleon
   extension](http://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html#google-vs-numpy)
   extension in [Sphinx](http://www.sphinx-doc.org/en/master/index.html).
+
+## Updating supported Python versions
+
+### Bumping the Python baseline
+
+When updating the minimum supported Python version remember to:
+
+- Remove the version in `pyproject.toml` trove classifiers
+- Remove the version from `tox.ini`
+- Search for `sys.version_info` usage and remove code for unsupported versions
+- Bump `py-version` in `.pylintrc` for Python version dependent checks
+
+### Adding support for a new Python release
+
+When adding support for a new Python release remember to:
+
+- Add the version in `tox.ini`
+- Add the version in `pyproject.toml` trove classifiers
+- Update github workflows accordingly; lint and benchmarks use the latest supported version
+- Update `.pre-commit-config.yaml`
+- Update tox examples in the documentation
+
+## Contributions that involve new packages
+
+As part of an effort to mitigate namespace squatting on Pypi, please ensure to check whether a package name has been taken already on Pypi before contributing a new package. Contact a maintainer, bring the issue up in the weekly Python SIG or create a ticket in Pypi if a desired name has already been taken.

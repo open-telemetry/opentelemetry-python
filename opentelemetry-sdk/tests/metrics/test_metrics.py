@@ -12,12 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=protected-access,no-self-use
+
 
 from logging import WARNING
 from time import sleep
 from typing import Iterable, Sequence
 from unittest.mock import MagicMock, Mock, patch
 
+from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.metrics import NoOpMeter
 from opentelemetry.sdk.environment_variables import OTEL_SDK_DISABLED
 from opentelemetry.sdk.metrics import (
@@ -51,7 +54,7 @@ class DummyMetricReader(MetricReader):
 
     def _receive_metrics(
         self,
-        metrics: Iterable[Metric],
+        metrics_data: Iterable[Metric],
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> None:
@@ -126,11 +129,36 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
             "name",
             version="version",
             schema_url="schema_url",
+            attributes={"key": "value"},
         )
 
         self.assertEqual(meter._instrumentation_scope.name, "name")
         self.assertEqual(meter._instrumentation_scope.version, "version")
         self.assertEqual(meter._instrumentation_scope.schema_url, "schema_url")
+        self.assertEqual(
+            meter._instrumentation_scope.attributes, {"key": "value"}
+        )
+
+    def test_get_meter_attributes(self):
+        """
+        `MeterProvider.get_meter` arguments are used to create an
+        `InstrumentationScope` object on the created `Meter`.
+        """
+
+        meter = MeterProvider().get_meter(
+            "name",
+            version="version",
+            schema_url="schema_url",
+            attributes={"key": "value", "key2": 5, "key3": "value3"},
+        )
+
+        self.assertEqual(meter._instrumentation_scope.name, "name")
+        self.assertEqual(meter._instrumentation_scope.version, "version")
+        self.assertEqual(meter._instrumentation_scope.schema_url, "schema_url")
+        self.assertEqual(
+            meter._instrumentation_scope.attributes,
+            {"key": "value", "key2": 5, "key3": "value3"},
+        )
 
     def test_get_meter_empty(self):
         """
@@ -179,6 +207,44 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         )
         self.assertIs(meter1, meter2)
         self.assertIsNot(meter1, meter3)
+
+    def test_get_meter_comparison_with_attributes(self):
+        """
+        Subsequent calls to `MeterProvider.get_meter` with the same arguments
+        should return the same `Meter` instance.
+        """
+        mp = MeterProvider()
+        meter1 = mp.get_meter(
+            "name",
+            version="version",
+            schema_url="schema_url",
+            attributes={"key": "value", "key2": 5, "key3": "value3"},
+        )
+        meter2 = mp.get_meter(
+            "name",
+            version="version",
+            schema_url="schema_url",
+            attributes={"key": "value", "key2": 5, "key3": "value3"},
+        )
+        meter3 = mp.get_meter(
+            "name2",
+            version="version",
+            schema_url="schema_url",
+        )
+        meter4 = mp.get_meter(
+            "name",
+            version="version",
+            schema_url="schema_url",
+            attributes={"key": "value", "key2": 5, "key3": "value4"},
+        )
+        self.assertIs(meter1, meter2)
+        self.assertIsNot(meter1, meter3)
+        self.assertTrue(
+            meter3._instrumentation_scope > meter4._instrumentation_scope
+        )
+        self.assertIsInstance(
+            meter4._instrumentation_scope.attributes, BoundedAttributes
+        )
 
     def test_shutdown(self):
 
@@ -252,7 +318,7 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         self.assertEqual(mock_logger.warning.call_count, num_threads - 1)
 
     @patch(
-        "opentelemetry.sdk.metrics._internal." "SynchronousMeasurementConsumer"
+        "opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer"
     )
     def test_measurement_collect_callback(
         self, mock_sync_measurement_consumer
@@ -275,7 +341,7 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         )
 
     @patch(
-        "opentelemetry.sdk.metrics." "_internal.SynchronousMeasurementConsumer"
+        "opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer"
     )
     def test_creates_sync_measurement_consumer(
         self, mock_sync_measurement_consumer
@@ -284,7 +350,7 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         mock_sync_measurement_consumer.assert_called()
 
     @patch(
-        "opentelemetry.sdk.metrics." "_internal.SynchronousMeasurementConsumer"
+        "opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer"
     )
     def test_register_asynchronous_instrument(
         self, mock_sync_measurement_consumer
@@ -292,6 +358,7 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
 
         meter_provider = MeterProvider()
 
+        # pylint: disable=no-member
         meter_provider._measurement_consumer.register_asynchronous_instrument.assert_called_with(
             meter_provider.get_meter("name").create_observable_counter(
                 "name0", callbacks=[Mock()]
@@ -309,7 +376,7 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         )
 
     @patch(
-        "opentelemetry.sdk.metrics._internal." "SynchronousMeasurementConsumer"
+        "opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer"
     )
     def test_consume_measurement_counter(self, mock_sync_measurement_consumer):
         sync_consumer_instance = mock_sync_measurement_consumer()
@@ -321,7 +388,7 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         sync_consumer_instance.consume_measurement.assert_called()
 
     @patch(
-        "opentelemetry.sdk.metrics." "_internal.SynchronousMeasurementConsumer"
+        "opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer"
     )
     def test_consume_measurement_up_down_counter(
         self, mock_sync_measurement_consumer
@@ -337,7 +404,7 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         sync_consumer_instance.consume_measurement.assert_called()
 
     @patch(
-        "opentelemetry.sdk.metrics._internal." "SynchronousMeasurementConsumer"
+        "opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer"
     )
     def test_consume_measurement_histogram(
         self, mock_sync_measurement_consumer
@@ -351,7 +418,7 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         sync_consumer_instance.consume_measurement.assert_called()
 
     @patch(
-        "opentelemetry.sdk.metrics._internal." "SynchronousMeasurementConsumer"
+        "opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer"
     )
     def test_consume_measurement_gauge(self, mock_sync_measurement_consumer):
         sync_consumer_instance = mock_sync_measurement_consumer()
@@ -480,11 +547,11 @@ class InMemoryMetricExporter(MetricExporter):
 
     def export(
         self,
-        metrics: Sequence[Metric],
+        metrics_data: Sequence[Metric],
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> MetricExportResult:
-        self.metrics[self._counter] = metrics
+        self.metrics[self._counter] = metrics_data
         self._counter += 1
         return MetricExportResult.SUCCESS
 

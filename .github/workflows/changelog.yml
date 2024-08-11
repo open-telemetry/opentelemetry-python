@@ -18,7 +18,7 @@ jobs:
       && github.actor != 'opentelemetrybot'
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Check for CHANGELOG changes
         run: |

@@ -18,7 +18,10 @@ from os.path import dirname
 from unittest import TestCase
 from unittest.mock import patch
 
-from google.protobuf.duration_pb2 import Duration
+from google.protobuf.duration_pb2 import (  # pylint: disable=no-name-in-module
+    Duration,
+)
+from google.protobuf.json_format import MessageToDict
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import ChannelCredentials, Compression, StatusCode, server
 
@@ -77,7 +80,7 @@ class LogsServiceServicerUNAVAILABLEDelay(LogsServiceServicer):
                 (
                     "google.rpc.retryinfo-bin",
                     RetryInfo(
-                        retry_delay=Duration(seconds=4)
+                        retry_delay=Duration(nanos=int(1e7))
                     ).SerializeToString(),
                 ),
             )
@@ -165,6 +168,36 @@ class TestOTLPLogExporter(TestCase):
             ),
             instrumentation_scope=InstrumentationScope(
                 "third_name", "third_version"
+            ),
+        )
+        self.log_data_4 = LogData(
+            log_record=LogRecord(
+                timestamp=int(time.time() * 1e9),
+                trace_id=0,
+                span_id=5213367945872657629,
+                trace_flags=TraceFlags(0x01),
+                severity_text="ERROR",
+                severity_number=SeverityNumber.WARN,
+                body="Invalid trace id check",
+                resource=SDKResource({"service": "myapp"}),
+            ),
+            instrumentation_scope=InstrumentationScope(
+                "fourth_name", "fourth_version"
+            ),
+        )
+        self.log_data_5 = LogData(
+            log_record=LogRecord(
+                timestamp=int(time.time() * 1e9),
+                trace_id=2604504634922341076776623263868986801,
+                span_id=0,
+                trace_flags=TraceFlags(0x01),
+                severity_text="ERROR",
+                severity_number=SeverityNumber.WARN,
+                body="Invalid span id check",
+                resource=SDKResource({"service": "myapp"}),
+            ),
+            instrumentation_scope=InstrumentationScope(
+                "fifth_name", "fifth_version"
             ),
         )
 
@@ -304,7 +337,7 @@ class TestOTLPLogExporter(TestCase):
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
     def test_unavailable(self, mock_sleep, mock_expo):
 
-        mock_expo.configure_mock(**{"return_value": [1]})
+        mock_expo.configure_mock(**{"return_value": [0.01]})
 
         add_LogsServiceServicer_to_server(
             LogsServiceServicerUNAVAILABLE(), self.server
@@ -312,7 +345,7 @@ class TestOTLPLogExporter(TestCase):
         self.assertEqual(
             self.exporter.export([self.log_data_1]), LogExportResult.FAILURE
         )
-        mock_sleep.assert_called_with(1)
+        mock_sleep.assert_called_with(0.01)
 
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc.exporter._create_exp_backoff_generator"
@@ -328,7 +361,7 @@ class TestOTLPLogExporter(TestCase):
         self.assertEqual(
             self.exporter.export([self.log_data_1]), LogExportResult.FAILURE
         )
-        mock_sleep.assert_called_with(4)
+        mock_sleep.assert_called_with(0.01)
 
     def test_success(self):
         add_LogsServiceServicer_to_server(
@@ -345,6 +378,43 @@ class TestOTLPLogExporter(TestCase):
         self.assertEqual(
             self.exporter.export([self.log_data_1]), LogExportResult.FAILURE
         )
+
+    def export_log_and_deserialize(self, log_data):
+        # pylint: disable=protected-access
+        translated_data = self.exporter._translate_data([log_data])
+        request_dict = MessageToDict(translated_data)
+        log_records = (
+            request_dict.get("resourceLogs")[0]
+            .get("scopeLogs")[0]
+            .get("logRecords")
+        )
+        return log_records
+
+    def test_exported_log_without_trace_id(self):
+        log_records = self.export_log_and_deserialize(self.log_data_4)
+        if log_records:
+            log_record = log_records[0]
+            self.assertIn("spanId", log_record)
+            self.assertNotIn(
+                "traceId",
+                log_record,
+                "traceId should not be present in the log record",
+            )
+        else:
+            self.fail("No log records found")
+
+    def test_exported_log_without_span_id(self):
+        log_records = self.export_log_and_deserialize(self.log_data_5)
+        if log_records:
+            log_record = log_records[0]
+            self.assertIn("traceId", log_record)
+            self.assertNotIn(
+                "spanId",
+                log_record,
+                "spanId should not be present in the log record",
+            )
+        else:
+            self.fail("No log records found")
 
     def test_translate_log_data(self):
 

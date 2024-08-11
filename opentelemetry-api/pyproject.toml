@@ -13,6 +13,7 @@ authors = [
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
+    "Framework :: OpenTelemetry",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python",
@@ -21,13 +22,14 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Typing :: Typed",
 ]
 dependencies = [
     "Deprecated >= 1.2.6",
     # FIXME This should be able to be removed after 3.12 is released if there is a reliable API
     # in importlib.metadata.
-    "importlib-metadata >= 6.0, <= 7.0",
+    "importlib-metadata >= 6.0, <= 8.2.0",
 ]
 dynamic = [
     "version",
@@ -53,7 +55,7 @@ default_tracer_provider = "opentelemetry.trace:NoOpTracerProvider"
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/opentelemetry-api"
 
 [tool.hatch.version]
-path = "src/opentelemetry/version.py"
+path = "src/opentelemetry/version/__init__.py"
 
 [tool.hatch.build.targets.sdist]
 include = [

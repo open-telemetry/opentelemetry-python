@@ -189,6 +189,7 @@ class TracerProvider(ABC):
         instrumenting_module_name: str,
         instrumenting_library_version: typing.Optional[str] = None,
         schema_url: typing.Optional[str] = None,
+        attributes: typing.Optional[types.Attributes] = None,
     ) -> "Tracer":
         """Returns a `Tracer` for use by the given instrumentation library.
 
@@ -216,6 +217,7 @@ class TracerProvider(ABC):
                 ``importlib.metadata.version(instrumenting_library_name)``.
 
             schema_url: Optional. Specifies the Schema URL of the emitted telemetry.
+            attributes: Optional. Specifies the attributes of the emitted telemetry.
         """
 
 
@@ -230,6 +232,7 @@ class NoOpTracerProvider(TracerProvider):
         instrumenting_module_name: str,
         instrumenting_library_version: typing.Optional[str] = None,
         schema_url: typing.Optional[str] = None,
+        attributes: typing.Optional[types.Attributes] = None,
     ) -> "Tracer":
         # pylint:disable=no-self-use,unused-argument
         return NoOpTracer()
@@ -249,17 +252,20 @@ class ProxyTracerProvider(TracerProvider):
         instrumenting_module_name: str,
         instrumenting_library_version: typing.Optional[str] = None,
         schema_url: typing.Optional[str] = None,
+        attributes: typing.Optional[types.Attributes] = None,
     ) -> "Tracer":
         if _TRACER_PROVIDER:
             return _TRACER_PROVIDER.get_tracer(
                 instrumenting_module_name,
                 instrumenting_library_version,
                 schema_url,
+                attributes,
             )
         return ProxyTracer(
             instrumenting_module_name,
             instrumenting_library_version,
             schema_url,
+            attributes,
         )
 
 
@@ -407,10 +413,12 @@ class ProxyTracer(Tracer):
         instrumenting_module_name: str,
         instrumenting_library_version: typing.Optional[str] = None,
         schema_url: typing.Optional[str] = None,
+        attributes: typing.Optional[types.Attributes] = None,
     ):
         self._instrumenting_module_name = instrumenting_module_name
         self._instrumenting_library_version = instrumenting_library_version
         self._schema_url = schema_url
+        self._attributes = attributes
         self._real_tracer: Optional[Tracer] = None
         self._noop_tracer = NoOpTracer()
 
@@ -424,6 +432,7 @@ class ProxyTracer(Tracer):
                 self._instrumenting_module_name,
                 self._instrumenting_library_version,
                 self._schema_url,
+                self._attributes,
             )
             return self._real_tracer
         return self._noop_tracer
@@ -492,6 +501,7 @@ def get_tracer(
     instrumenting_library_version: typing.Optional[str] = None,
     tracer_provider: Optional[TracerProvider] = None,
     schema_url: typing.Optional[str] = None,
+    attributes: typing.Optional[types.Attributes] = None,
 ) -> "Tracer":
     """Returns a `Tracer` for use by the given instrumentation library.
 
@@ -503,7 +513,10 @@ def get_tracer(
     if tracer_provider is None:
         tracer_provider = get_tracer_provider()
     return tracer_provider.get_tracer(
-        instrumenting_module_name, instrumenting_library_version, schema_url
+        instrumenting_module_name,
+        instrumenting_library_version,
+        schema_url,
+        attributes,
     )
 
 
@@ -571,7 +584,7 @@ def use_span(
         finally:
             context_api.detach(token)
 
-    except Exception as exc:  # pylint: disable=broad-except
+    except Exception as exc:  # pylint: disable=broad-exception-caught
         if isinstance(span, Span) and span.is_recording():
             # Record the exception as an event
             if record_exception:

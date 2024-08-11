@@ -21,6 +21,7 @@ from opentelemetry.attributes import BoundedAttributes, _clean_attribute
 
 
 class TestAttributes(unittest.TestCase):
+    # pylint: disable=invalid-name
     def assertValid(self, value, key="k"):
         expected = value
         if isinstance(value, MutableSequence):
@@ -89,6 +90,7 @@ class TestAttributes(unittest.TestCase):
 
 
 class TestBoundedAttributes(unittest.TestCase):
+    # pylint: disable=consider-using-dict-items
     base = {
         "name": "Firulais",
         "age": 7,
@@ -180,3 +182,17 @@ class TestBoundedAttributes(unittest.TestCase):
         bdict = BoundedAttributes()
         with self.assertRaises(TypeError):
             bdict["should-not-work"] = "dict immutable"
+
+    def test_locking(self):
+        """Supporting test case for a commit titled: Fix class BoundedAttributes to have RLock rather than Lock. See #3858.
+        The change was introduced because __iter__ of the class BoundedAttributes holds lock, and we observed some deadlock symptoms
+        in the codebase. This test case is to verify that the fix works as expected.
+        """
+        bdict = BoundedAttributes(immutable=False)
+
+        with bdict._lock:  # pylint: disable=protected-access
+            for num in range(100):
+                bdict[str(num)] = num
+
+        for num in range(100):
+            self.assertEqual(bdict[str(num)], num)

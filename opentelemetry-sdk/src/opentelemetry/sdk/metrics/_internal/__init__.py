@@ -54,6 +54,7 @@ from opentelemetry.sdk.metrics._internal.sdk_configuration import (
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.util._once import Once
+from opentelemetry.util.types import Attributes
 
 _logger = getLogger(__name__)
 
@@ -410,6 +411,7 @@ class MeterProvider(APIMeterProvider):
 
             with self._all_metric_readers_lock:
                 if metric_reader in self._all_metric_readers:
+                    # pylint: disable=broad-exception-raised
                     raise Exception(
                         f"MetricReader {metric_reader} has been registered "
                         "already in other MeterProvider instance"
@@ -437,7 +439,7 @@ class MeterProvider(APIMeterProvider):
                     timeout_millis=(deadline_ns - current_ts) / 10**6
                 )
 
-            # pylint: disable=broad-except
+            # pylint: disable=broad-exception-caught
             except Exception as error:
 
                 metric_reader_error[metric_reader] = error
@@ -451,6 +453,7 @@ class MeterProvider(APIMeterProvider):
                 ]
             )
 
+            # pylint: disable=broad-exception-raised
             raise Exception(
                 "MeterProvider.force_flush failed because the following "
                 "metric readers failed during collect:\n"
@@ -476,6 +479,7 @@ class MeterProvider(APIMeterProvider):
             current_ts = time_ns()
             try:
                 if current_ts >= deadline_ns:
+                    # pylint: disable=broad-exception-raised
                     raise Exception(
                         "Didn't get to execute, deadline already exceeded"
                     )
@@ -483,7 +487,7 @@ class MeterProvider(APIMeterProvider):
                     timeout_millis=(deadline_ns - current_ts) / 10**6
                 )
 
-            # pylint: disable=broad-except
+            # pylint: disable=broad-exception-caught
             except Exception as error:
 
                 metric_reader_error[metric_reader] = error
@@ -501,6 +505,7 @@ class MeterProvider(APIMeterProvider):
                 ]
             )
 
+            # pylint: disable=broad-exception-raised
             raise Exception(
                 (
                     "MeterProvider.shutdown failed because the following "
@@ -514,6 +519,7 @@ class MeterProvider(APIMeterProvider):
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
+        attributes: Optional[Attributes] = None,
     ) -> Meter:
 
         if self._disabled:
@@ -530,7 +536,7 @@ class MeterProvider(APIMeterProvider):
             _logger.warning("Meter name cannot be None or empty.")
             return NoOpMeter(name, version=version, schema_url=schema_url)
 
-        info = InstrumentationScope(name, version, schema_url)
+        info = InstrumentationScope(name, version, schema_url, attributes)
         with self._meter_lock:
             if not self._meters.get(info):
                 # FIXME #2558 pass SDKConfig object to meter so that the meter
