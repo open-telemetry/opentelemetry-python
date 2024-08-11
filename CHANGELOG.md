@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4103](https://github.com/open-telemetry/opentelemetry-python/pull/4103))
 - Update semantic conventions to version 1.27.0
   ([#4104](https://github.com/open-telemetry/opentelemetry-python/pull/4104))
+- Implement Client Key and Certificate File Support for All OTLP Exporters
+  ([#4115](https://github.com/open-telemetry/opentelemetry-python/pull/4115))
 
 ## Version 1.26.0/0.47b0 (2024-07-25)
 
@@ -199,8 +201,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3524](https://github.com/open-telemetry/opentelemetry-python/pull/3524))
 - Handle `taskName` `logrecord` attribute
   ([#3557](https://github.com/open-telemetry/opentelemetry-python/pull/3557))
-- Implement client key file and client certificate file for all OTLP exporters
-  ([#3590](https://github.com/open-telemetry/opentelemetry-python/pull/3590))
 
 ## Version 1.21.0/0.42b0 (2023-11-01)
 
