@@ -141,8 +141,10 @@ def _load_credentials(
             private_key=private_key,
             certificate_chain=certificate_chain,
         )
-    except FileNotFoundError:
-        logger.exception("Failed to read credential file")
+    except FileNotFoundError as e:
+        logger.exception(
+            f"Failed to read credential file: {e.filename}. Please check if the file exists and is accessible."
+        )
         return None
 
 
