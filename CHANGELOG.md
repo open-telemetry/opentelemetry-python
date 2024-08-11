@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4103](https://github.com/open-telemetry/opentelemetry-python/pull/4103))
 - Update semantic conventions to version 1.27.0
   ([#4104](https://github.com/open-telemetry/opentelemetry-python/pull/4104))
+- Implement Client Key and Certificate File Support for All OTLP Exporters
+  ([#4115](https://github.com/open-telemetry/opentelemetry-python/pull/4115))
 
 ## Version 1.26.0/0.47b0 (2024-07-25)
 

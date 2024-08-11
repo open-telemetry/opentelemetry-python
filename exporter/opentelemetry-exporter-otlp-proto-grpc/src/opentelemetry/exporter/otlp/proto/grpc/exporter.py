@@ -61,6 +61,8 @@ from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401
 )
 from opentelemetry.proto.resource.v1.resource_pb2 import Resource  # noqa: F401
 from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_CLIENT_KEY,
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_ENDPOINT,
@@ -118,22 +120,49 @@ def get_resource_data(
     return _get_resource_data(sdk_resource_scope_data, resource_class, name)
 
 
-def _load_credential_from_file(filepath) -> ChannelCredentials:
+def _get_file_content(file_path: str) -> bytes:
+    file = open(file_path, "rb")
+    content = file.read()
+    file.close()
+    return content
+
+
+def _load_credentials(
+    certificate_file: str,
+    client_key_file: str,
+    client_certificate_file: str,
+) -> ChannelCredentials:
     try:
-        with open(filepath, "rb") as creds_file:
-            credential = creds_file.read()
-            return ssl_channel_credentials(credential)
-    except FileNotFoundError:
-        logger.exception("Failed to read credential file")
+        root_certificates = _get_file_content(certificate_file)
+        private_key = _get_file_content(client_key_file)
+        certificate_chain = _get_file_content(client_certificate_file)
+        return ssl_channel_credentials(
+            root_certificates=root_certificates,
+            private_key=private_key,
+            certificate_chain=certificate_chain,
+        )
+    except FileNotFoundError as e:
+        logger.exception(
+            f"Failed to read credential file: {e.filename}. Please check if the file exists and is accessible."
+        )
         return None
 
 
-def _get_credentials(creds, environ_key):
+def _get_credentials(
+    creds: Optional[ChannelCredentials],
+    certificate_file_env_key: str,
+    client_key_file_env_key: str,
+    client_certificate_file_env_key: str,
+) -> ChannelCredentials:
     if creds is not None:
         return creds
-    creds_env = environ.get(environ_key)
-    if creds_env:
-        return _load_credential_from_file(creds_env)
+    certificate_file = environ.get(certificate_file_env_key)
+    client_key_file = environ.get(client_key_file_env_key)
+    client_certificate_file = environ.get(client_certificate_file_env_key)
+    if certificate_file:
+        return _load_credentials(
+            certificate_file, client_key_file, client_certificate_file
+        )
     return ssl_channel_credentials()
 
 
@@ -214,7 +243,10 @@ class OTLPExporterMixin(
             )
         else:
             credentials = _get_credentials(
-                credentials, OTEL_EXPORTER_OTLP_CERTIFICATE
+                credentials,
+                OTEL_EXPORTER_OTLP_CERTIFICATE,
+                OTEL_EXPORTER_OTLP_CLIENT_KEY,
+                OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
             )
             self._client = self._stub(
                 secure_channel(
