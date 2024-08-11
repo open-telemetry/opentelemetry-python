@@ -48,6 +48,8 @@ from opentelemetry.proto.trace.v1.trace_pb2 import (  # noqa: F401
 )
 from opentelemetry.proto.trace.v1.trace_pb2 import Status  # noqa: F401
 from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
     OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
     OTEL_EXPORTER_OTLP_TRACES_COMPRESSION,
     OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
@@ -105,7 +107,10 @@ class OTLPSpanExporter(
             and environ.get(OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE) is not None
         ):
             credentials = _get_credentials(
-                credentials, OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE
+                credentials,
+                OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
+                OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
+                OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
             )
 
         environ_timeout = environ.get(OTEL_EXPORTER_OTLP_TRACES_TIMEOUT)

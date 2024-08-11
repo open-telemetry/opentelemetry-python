@@ -53,6 +53,8 @@ from opentelemetry.sdk._logs import LogData, LogRecord
 from opentelemetry.sdk._logs.export import LogExportResult
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY,
     OTEL_EXPORTER_OTLP_LOGS_COMPRESSION,
     OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
     OTEL_EXPORTER_OTLP_LOGS_HEADERS,
@@ -212,6 +214,10 @@ class TestOTLPLogExporter(TestCase):
             OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "logs:4317",
             OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE: THIS_DIR
             + "/../fixtures/test.cert",
+            OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE: THIS_DIR
+            + "/../fixtures/test-client-cert.pem",
+            OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY: THIS_DIR
+            + "/../fixtures/test-client-key.pem",
             OTEL_EXPORTER_OTLP_LOGS_HEADERS: " key1=value1,KEY2 = VALUE=2",
             OTEL_EXPORTER_OTLP_LOGS_TIMEOUT: "10",
             OTEL_EXPORTER_OTLP_LOGS_COMPRESSION: "gzip",
