@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Union
+from typing import Optional, Union
 
+from opentelemetry.context import Context
 from opentelemetry.util.types import Attributes
 
 
@@ -25,13 +26,15 @@ class Observation:
     Args:
         value: The float or int measured value
         attributes: The measurement's attributes
+        context: The measurement's context
     """
 
     def __init__(
-        self, value: Union[int, float], attributes: Attributes = None
+        self, value: Union[int, float], attributes: Attributes = None, context: Optional[Context] = None
     ) -> None:
         self._value = value
         self._attributes = attributes
+        self._context = context
 
     @property
     def value(self) -> Union[float, int]:
@@ -40,12 +43,17 @@ class Observation:
     @property
     def attributes(self) -> Attributes:
         return self._attributes
+    
+    @property
+    def context(self) -> Optional[Context]:
+        return self._context
 
     def __eq__(self, other: object) -> bool:
         return (
             isinstance(other, Observation)
             and self.value == other.value
             and self.attributes == other.attributes
+            and self.context == other.context
         )
 
     def __repr__(self) -> str:
