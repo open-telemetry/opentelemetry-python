@@ -81,7 +81,7 @@ class _ViewInstrumentMatch:
         return result
 
     # pylint: disable=protected-access
-    def consume_measurement(self, measurement: Measurement) -> None:
+    def consume_measurement(self, measurement: Measurement, should_sample_exemplar: bool = True) -> None:
 
         if self._view._attribute_keys is not None:
 
@@ -107,6 +107,7 @@ class _ViewInstrumentMatch:
                             self._view._aggregation._create_aggregation(
                                 self._instrument,
                                 attributes,
+                                self._view._exemplar_reservoir_factory,
                                 self._start_time_unix_nano,
                             )
                         )
@@ -116,11 +117,12 @@ class _ViewInstrumentMatch:
                         ]._create_aggregation(
                             self._instrument,
                             attributes,
+                            self._view._exemplar_reservoir_factory,
                             self._start_time_unix_nano,
                         )
                     self._attributes_aggregation[aggr_key] = aggregation
 
-        self._attributes_aggregation[aggr_key].aggregate(measurement)
+        self._attributes_aggregation[aggr_key].aggregate(measurement, should_sample_exemplar)
 
     def collect(
         self,

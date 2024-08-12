@@ -35,6 +35,7 @@ from opentelemetry.metrics import UpDownCounter as APIUpDownCounter
 from opentelemetry.metrics import _Gauge as APIGauge
 from opentelemetry.sdk.environment_variables import OTEL_SDK_DISABLED
 from opentelemetry.sdk.metrics._internal.exceptions import MetricsTimeoutError
+from opentelemetry.sdk.metrics._internal.exemplar import ExemplarFilter, TraceBasedExemplarFilter
 from opentelemetry.sdk.metrics._internal.instrument import (
     _Counter,
     _Gauge,
@@ -381,6 +382,7 @@ class MeterProvider(APIMeterProvider):
             "opentelemetry.sdk.metrics.export.MetricReader"
         ] = (),
         resource: Resource = None,
+        exemplar_filter: Optional[ExemplarFilter] = None,
         shutdown_on_exit: bool = True,
         views: Sequence["opentelemetry.sdk.metrics.view.View"] = (),
     ):
@@ -390,6 +392,7 @@ class MeterProvider(APIMeterProvider):
         if resource is None:
             resource = Resource.create({})
         self._sdk_config = SdkConfiguration(
+            exemplar_filter = TraceBasedExemplarFilter() if exemplar_filter is None else exemplar_filter,
             resource=resource,
             metric_readers=metric_readers,
             views=views,

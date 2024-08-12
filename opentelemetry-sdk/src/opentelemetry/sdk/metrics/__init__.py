@@ -15,6 +15,7 @@
 
 from opentelemetry.sdk.metrics._internal import Meter, MeterProvider
 from opentelemetry.sdk.metrics._internal.exceptions import MetricsTimeoutError
+from opentelemetry.sdk.metrics._internal.exemplar import ExemplarFilter, ExemplarReservoir
 from opentelemetry.sdk.metrics._internal.instrument import Counter
 from opentelemetry.sdk.metrics._internal.instrument import Gauge as _Gauge
 from opentelemetry.sdk.metrics._internal.instrument import (
@@ -26,6 +27,8 @@ from opentelemetry.sdk.metrics._internal.instrument import (
 )
 
 __all__ = [
+    "ExemplarFilter",
+    "ExemplarReservoir",
     "Meter",
     "MeterProvider",
     "MetricsTimeoutError",

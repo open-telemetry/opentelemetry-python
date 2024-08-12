@@ -14,7 +14,7 @@
 
 from abc import ABC, abstractmethod
 from random import randrange
-from typing import Optional, Sequence, Union
+from typing import Any, Callable, Optional, Sequence, TypeAlias, Union
 
 from opentelemetry import trace
 from opentelemetry.context import Context
@@ -27,6 +27,10 @@ from .exemplar import Exemplar
 class ExemplarReservoir(ABC):
     """ExemplarReservoir provide a method to offer measurements to the reservoir
     and another to collect accumulated Exemplars.
+
+    Note: 
+        The constructor MUST accept ``**kwargs`` that may be set from aggregation
+        parameters.
 
     Reference:
         https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/sdk.md#exemplarreservoir
@@ -118,8 +122,8 @@ class ExemplarBucket:
 class FixedSizeExemplarReservoirABC(ExemplarReservoir):
     """Abstract class for a reservoir with fixed size."""
 
-    def __init__(self, size: int) -> None:
-        super().__init__()
+    def __init__(self, size: int, **kwargs) -> None:
+        super().__init__(**kwargs)
         self._size: int = size
         self._reservoir_storage: list[ExemplarBucket] = [
             ExemplarBucket() for _ in range(self._size)
@@ -165,8 +169,8 @@ class SimpleFixedSizeExemplarReservoir(FixedSizeExemplarReservoirABC):
         https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/sdk.md#simplefixedsizeexemplarreservoir
     """
 
-    def __init__(self, size: int = 1) -> None:
-        super().__init__(size)
+    def __init__(self, size: int = 1, **kwargs) -> None:
+        super().__init__(size, **kwargs)
         self._measurements_seen: int = 0
 
     def _reset(self) -> None:
@@ -209,8 +213,8 @@ class AlignedHistogramBucketExemplarReservoir(FixedSizeExemplarReservoirABC):
         https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/sdk.md#alignedhistogrambucketexemplarreservoir
     """
 
-    def __init__(self, boundaries: Sequence[float]) -> None:
-        super().__init__(len(boundaries) + 1)
+    def __init__(self, boundaries: Sequence[float], **kwargs) -> None:
+        super().__init__(len(boundaries) + 1, **kwargs)
         self._boundaries: Sequence[float] = boundaries
 
     def offer(
@@ -235,3 +239,11 @@ class AlignedHistogramBucketExemplarReservoir(FixedSizeExemplarReservoirABC):
             if value <= boundary:
                 return i
         return len(self._boundaries)
+
+
+ExemplarReservoirFactory: TypeAlias = Callable[[dict[str, Any]], ExemplarReservoir]
+ExemplarReservoirFactory.__doc__ = """ExemplarReservoir factory.
+
+It may receive the Aggregation parameters it is bounded to; e.g.
+the _ExplicitBucketHistogramAggregation will provide the boundaries.
+"""
