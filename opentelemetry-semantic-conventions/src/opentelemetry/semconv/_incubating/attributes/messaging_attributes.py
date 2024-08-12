@@ -29,6 +29,12 @@ A unique identifier for the client that consumes or produces a message.
 # MESSAGING_CLIENT_ID : Final = "messaging.client_id"
 # Deprecated: Replaced by `messaging.client.id`.
 
+MESSAGING_CONSUMER_GROUP_NAME: Final = "messaging.consumer.group.name"
+"""
+The name of the consumer group with which a consumer is associated.
+Note: Semantic conventions for individual messaging systems SHOULD document whether `messaging.consumer.group.name` is applicable and what it means in the context of that system.
+"""
+
 MESSAGING_DESTINATION_ANONYMOUS: Final = "messaging.destination.anonymous"
 """
 A boolean that is true if the message destination is anonymous (could be unnamed or have auto-generated name).
@@ -48,6 +54,14 @@ MESSAGING_DESTINATION_PARTITION_ID: Final = (
 The identifier of the partition messages are sent to or received from, unique within the `messaging.destination.name`.
 """
 
+MESSAGING_DESTINATION_SUBSCRIPTION_NAME: Final = (
+    "messaging.destination.subscription.name"
+)
+"""
+The name of the destination subscription from which a message is consumed.
+Note: Semantic conventions for individual messaging systems SHOULD document whether `messaging.destination.subscription.name` is applicable and what it means in the context of that system.
+"""
+
 MESSAGING_DESTINATION_TEMPLATE: Final = "messaging.destination.template"
 """
 Low cardinality representation of the messaging destination name.
@@ -63,23 +77,21 @@ MESSAGING_DESTINATION_PUBLISH_ANONYMOUS: Final = (
     "messaging.destination_publish.anonymous"
 )
 """
-A boolean that is true if the publish message destination is anonymous (could be unnamed or have auto-generated name).
+Deprecated: No replacement at this time.
 """
 
 MESSAGING_DESTINATION_PUBLISH_NAME: Final = (
     "messaging.destination_publish.name"
 )
 """
-The name of the original destination the message was published to.
-Note: The name SHOULD uniquely identify a specific queue, topic, or other entity within the broker. If
-the broker doesn't have such notion, the original destination name SHOULD uniquely identify the broker.
+Deprecated: No replacement at this time.
 """
 
 MESSAGING_EVENTHUBS_CONSUMER_GROUP: Final = (
     "messaging.eventhubs.consumer.group"
 )
 """
-The name of the consumer group the event consumer is associated with.
+Deprecated: Replaced by `messaging.consumer.group.name`.
 """
 
 MESSAGING_EVENTHUBS_MESSAGE_ENQUEUED_TIME: Final = (
@@ -119,7 +131,7 @@ The ordering key for a given message. If the attribute is not present, the messa
 
 MESSAGING_KAFKA_CONSUMER_GROUP: Final = "messaging.kafka.consumer.group"
 """
-Name of the Kafka Consumer Group that is handling the message. Only applies to consumers, not producers.
+Deprecated: Replaced by `messaging.consumer.group.name`.
 """
 
 MESSAGING_KAFKA_DESTINATION_PARTITION: Final = (
@@ -137,12 +149,17 @@ Note: If the key type is not string, it's string representation has to be suppli
 
 MESSAGING_KAFKA_MESSAGE_OFFSET: Final = "messaging.kafka.message.offset"
 """
-The offset of a record in the corresponding Kafka partition.
+Deprecated: Replaced by `messaging.kafka.offset`.
 """
 
 MESSAGING_KAFKA_MESSAGE_TOMBSTONE: Final = "messaging.kafka.message.tombstone"
 """
 A boolean that is true if the message is a tombstone.
+"""
+
+MESSAGING_KAFKA_OFFSET: Final = "messaging.kafka.offset"
+"""
+The offset of a record in the corresponding Kafka partition.
 """
 
 MESSAGING_MESSAGE_BODY_SIZE: Final = "messaging.message.body.size"
@@ -201,7 +218,7 @@ RabbitMQ message delivery tag.
 
 MESSAGING_ROCKETMQ_CLIENT_GROUP: Final = "messaging.rocketmq.client_group"
 """
-Name of the RocketMQ producer/consumer group that is handling the message. The client type is identified by the SpanKind.
+Deprecated: Replaced by `messaging.consumer.group.name` on the consumer spans. No replacement for producer spans.
 """
 
 MESSAGING_ROCKETMQ_CONSUMPTION_MODEL: Final = (
@@ -254,7 +271,7 @@ MESSAGING_SERVICEBUS_DESTINATION_SUBSCRIPTION_NAME: Final = (
     "messaging.servicebus.destination.subscription_name"
 )
 """
-The name of the subscription in the topic messages are received from.
+Deprecated: Replaced by `messaging.servicebus.destination.subscription_name`.
 """
 
 MESSAGING_SERVICEBUS_DISPOSITION_STATUS: Final = (
@@ -292,10 +309,12 @@ class MessagingOperationTypeValues(Enum):
     """A message is created. "Create" spans always refer to a single message and are used to provide a unique creation context for messages in batch publishing scenarios."""
     RECEIVE = "receive"
     """One or more messages are requested by a consumer. This operation refers to pull-based scenarios, where consumers explicitly call methods of messaging SDKs to receive messages."""
-    DELIVER = "process"
-    """One or more messages are delivered to or processed by a consumer."""
+    PROCESS = "process"
+    """One or more messages are processed by a consumer."""
     SETTLE = "settle"
     """One or more messages are settled."""
+    DELIVER = "deliver"
+    """Deprecated: Replaced by `process`."""
 
 
 class MessagingRocketmqConsumptionModelValues(Enum):
@@ -348,3 +367,5 @@ class MessagingSystemValues(Enum):
     """RabbitMQ."""
     ROCKETMQ = "rocketmq"
     """Apache RocketMQ."""
+    PULSAR = "pulsar"
+    """Apache Pulsar."""
