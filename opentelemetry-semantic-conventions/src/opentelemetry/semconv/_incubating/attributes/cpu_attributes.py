@@ -1,4 +1,3 @@
-{%- macro file_header() -%}
 # Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,14 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-{% endmacro -%}
+from enum import Enum
+from typing import Final
 
-{%- macro to_docstring(str) -%}
-{{ str | to_doc_brief | replace("\\", "\\\\") }}
-{%- endmacro -%}
+CPU_MODE: Final = "cpu.mode"
+"""
+The mode of the CPU.
+"""
 
-{%- macro import_deprecated(semconv) -%}
-    {%- if (semconv | select("is_deprecated") | list | count > 0) or (filter == "any" and semconv | select("is_stable") | list | count > 0) %}
-from deprecated import deprecated
-    {%- endif %}
-{%- endmacro-%}
+
+class CpuModeValues(Enum):
+    USER = "user"
+    """user."""
+    SYSTEM = "system"
+    """system."""
+    NICE = "nice"
+    """nice."""
+    IDLE = "idle"
+    """idle."""
+    IOWAIT = "iowait"
+    """iowait."""
+    INTERRUPT = "interrupt"
+    """interrupt."""
+    STEAL = "steal"
+    """steal."""
+    KERNEL = "kernel"
+    """kernel."""

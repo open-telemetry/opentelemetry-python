@@ -117,7 +117,9 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             OTEL_EXPORTER_OTLP_METRICS_HEADERS,
             environ.get(OTEL_EXPORTER_OTLP_HEADERS, ""),
         )
-        self._headers = headers or parse_env_headers(headers_string)
+        self._headers = headers or parse_env_headers(
+            headers_string, liberal=True
+        )
         self._timeout = timeout or int(
             environ.get(
                 OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
