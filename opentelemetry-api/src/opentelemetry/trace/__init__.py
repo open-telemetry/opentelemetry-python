@@ -84,6 +84,7 @@ from typing import Iterator, Optional, Sequence, cast
 from deprecated import deprecated
 
 from opentelemetry import context as context_api
+from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import OTEL_PYTHON_TRACER_PROVIDER
 from opentelemetry.trace.propagation import (
@@ -148,6 +149,12 @@ class Link(_LinkBase):
     @property
     def attributes(self) -> types.Attributes:
         return self._attributes
+
+    @property
+    def dropped_attributes(self) -> int:
+        if isinstance(self._attributes, BoundedAttributes):
+            return self._attributes.dropped
+        return 0
 
 
 _Links = Optional[Sequence[Link]]
