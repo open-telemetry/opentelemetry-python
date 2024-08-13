@@ -216,7 +216,7 @@ def get_event_logger(
     schema_url: Optional[str] = None,
     attributes: Optional[Attributes] = None,
     event_logger_provider: Optional[EventLoggerProvider] = None,
-):
+) -> "EventLogger":
     if event_logger_provider is None:
         event_logger_provider = get_event_logger_provider()
     return event_logger_provider.get_event_logger(
