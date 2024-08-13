@@ -1,3 +1,17 @@
+# Copyright The OpenTelemetry Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from abc import ABC, abstractmethod
 from logging import getLogger
 from os import environ
@@ -25,7 +39,7 @@ class Event(LogRecord):
         trace_id: Optional[int] = None,
         span_id: Optional[int] = None,
         trace_flags: Optional["TraceFlags"] = None,
-        payload: Optional[Any] = None,
+        body: Optional[Any] = None,
         severity_number: Optional[SeverityNumber] = None,
         attributes: Optional[Attributes] = None,
     ):
@@ -34,7 +48,7 @@ class Event(LogRecord):
             trace_id=trace_id,
             span_id=span_id,
             trace_flags=trace_flags,
-            body=payload,  # type: ignore
+            body=body,  # type: ignore
             severity_number=severity_number,
             attributes=attributes,
         )
@@ -194,3 +208,20 @@ def set_event_logger_provider(
 ) -> None:
 
     _set_event_logger_provider(event_logger_provider, log=True)
+
+
+def get_event_logger(
+    name: str,
+    version: Optional[str] = None,
+    schema_url: Optional[str] = None,
+    attributes: Optional[Attributes] = None,
+    event_logger_provider: Optional[EventLoggerProvider] = None,
+):
+    if event_logger_provider is None:
+        event_logger_provider = get_event_logger_provider()
+    return event_logger_provider.get_event_logger(
+        name,
+        version,
+        schema_url,
+        attributes,
+    )
