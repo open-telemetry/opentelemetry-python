@@ -14,9 +14,9 @@
 
 from .exemplar import Exemplar
 from .exemplar_filter import (
-    ExemplarFilter,
     AlwaysOffExemplarFilter,
     AlwaysOnExemplarFilter,
+    ExemplarFilter,
     TraceBasedExemplarFilter,
 )
 from .exemplar_reservoir import (

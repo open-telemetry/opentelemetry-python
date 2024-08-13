@@ -19,9 +19,9 @@ from typing import Callable, Optional, Set, Type
 
 from opentelemetry.metrics import Instrument
 from opentelemetry.sdk.metrics._internal.aggregation import (
-    _Aggregation,
     Aggregation,
     DefaultAggregation,
+    _Aggregation,
     _ExplicitBucketHistogramAggregation,
     _ExponentialBucketHistogramAggregation,
 )
@@ -34,7 +34,9 @@ from opentelemetry.sdk.metrics._internal.exemplar import (
 _logger = getLogger(__name__)
 
 
-def default_reservoir_factory(aggregationType: Type[_Aggregation]) -> ExemplarReservoirFactory:
+def default_reservoir_factory(
+    aggregationType: Type[_Aggregation],
+) -> ExemplarReservoirFactory:
     """Default reservoir factory per aggregation."""
     if issubclass(aggregationType, _ExplicitBucketHistogramAggregation):
         return AlignedHistogramBucketExemplarReservoir
@@ -112,7 +114,9 @@ class View:
         description: Optional[str] = None,
         attribute_keys: Optional[Set[str]] = None,
         aggregation: Optional[Aggregation] = None,
-        exemplar_reservoir_factory: Optional[Callable[[Type[_Aggregation]], ExemplarReservoirFactory]] = None,
+        exemplar_reservoir_factory: Optional[
+            Callable[[Type[_Aggregation]], ExemplarReservoirFactory]
+        ] = None,
         instrument_unit: Optional[str] = None,
     ):
         if (
@@ -154,7 +158,9 @@ class View:
         self._description = description
         self._attribute_keys = attribute_keys
         self._aggregation = aggregation or self._default_aggregation
-        self._exemplar_reservoir_factory = exemplar_reservoir_factory or default_reservoir_factory
+        self._exemplar_reservoir_factory = (
+            exemplar_reservoir_factory or default_reservoir_factory
+        )
 
     # pylint: disable=too-many-return-statements
     # pylint: disable=too-many-branches

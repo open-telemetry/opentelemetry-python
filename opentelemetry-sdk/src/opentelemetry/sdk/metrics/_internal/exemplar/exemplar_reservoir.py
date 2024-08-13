@@ -28,7 +28,7 @@ class ExemplarReservoir(ABC):
     """ExemplarReservoir provide a method to offer measurements to the reservoir
     and another to collect accumulated Exemplars.
 
-    Note: 
+    Note:
         The constructor MUST accept ``**kwargs`` that may be set from aggregation
         parameters.
 
@@ -60,7 +60,9 @@ class ExemplarReservoir(ABC):
             exemplars contain the attributes that were filtered out by the aggregator,
             but recorded alongside the original measurement.
         """
-        raise NotImplementedError("ExemplarReservoir.collect is not implemented")
+        raise NotImplementedError(
+            "ExemplarReservoir.collect is not implemented"
+        )
 
 
 class ExemplarBucket:
@@ -97,7 +99,9 @@ class ExemplarBucket:
             return None
 
         current_attributes = {
-            k: v for k, v in self.__attributes.items() if k not in point_attributes
+            k: v
+            for k, v in self.__attributes.items()
+            if k not in point_attributes
         }
 
         exemplar = Exemplar(
@@ -187,7 +191,9 @@ class SimpleFixedSizeExemplarReservoir(FixedSizeExemplarReservoirABC):
         """Offers a measurement to be sampled."""
         index = self._find_bucket_index(value, time_unix_nano, attributes, ctx)
         if index != -1:
-            self._reservoir_storage[index].offer(value, time_unix_nano, attributes, ctx)
+            self._reservoir_storage[index].offer(
+                value, time_unix_nano, attributes, ctx
+            )
 
     def _find_bucket_index(
         self,
@@ -226,7 +232,9 @@ class AlignedHistogramBucketExemplarReservoir(FixedSizeExemplarReservoirABC):
     ) -> None:
         """Offers a measurement to be sampled."""
         index = self._find_bucket_index(value, time_unix_nano, attributes, ctx)
-        self._reservoir_storage[index].offer(value, time_unix_nano, attributes, ctx)
+        self._reservoir_storage[index].offer(
+            value, time_unix_nano, attributes, ctx
+        )
 
     def _find_bucket_index(
         self,
@@ -241,7 +249,9 @@ class AlignedHistogramBucketExemplarReservoir(FixedSizeExemplarReservoirABC):
         return len(self._boundaries)
 
 
-ExemplarReservoirFactory: TypeAlias = Callable[[dict[str, Any]], ExemplarReservoir]
+ExemplarReservoirFactory: TypeAlias = Callable[
+    [dict[str, Any]], ExemplarReservoir
+]
 ExemplarReservoirFactory.__doc__ = """ExemplarReservoir factory.
 
 It may receive the Aggregation parameters it is bounded to; e.g.

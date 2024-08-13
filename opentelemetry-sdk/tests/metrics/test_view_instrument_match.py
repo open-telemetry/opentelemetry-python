@@ -152,11 +152,11 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         )
         view_instrument_match.consume_measurement(
             Measurement(
-                value=0, 
+                value=0,
                 time_unix_nano=time_ns(),
                 instrument=instrument1,
                 context=Context(),
-                attributes=None
+                attributes=None,
             )
         )
         self.assertEqual(
@@ -181,10 +181,13 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             ),
         )
         view_instrument_match.consume_measurement(
-            Measurement(value=0, 
+            Measurement(
+                value=0,
                 time_unix_nano=time_ns(),
                 instrument=instrument1,
-                context=Context(), attributes=None)
+                context=Context(),
+                attributes=None,
+            )
         )
         self.assertIsInstance(
             view_instrument_match._attributes_aggregation[frozenset({})],

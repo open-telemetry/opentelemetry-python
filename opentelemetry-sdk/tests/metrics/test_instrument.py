@@ -15,6 +15,7 @@
 # pylint: disable=no-self-use
 
 from logging import WARNING
+
 # from time import time_ns
 from unittest import TestCase
 from unittest.mock import Mock, patch
@@ -41,7 +42,6 @@ from opentelemetry.sdk.metrics._internal.instrument import (
     _UpDownCounter,
 )
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
-from opentelemetry.sdk.metrics._internal.view import default_reservoir_factory
 
 
 class TestCounter(TestCase):
@@ -130,7 +130,10 @@ def generator_callback_1():
     assert isinstance(options, CallbackOptions)
 
 
-@patch("opentelemetry.sdk.metrics._internal.instrument.time_ns", Mock(return_value=TEST_TIMESTAMP))
+@patch(
+    "opentelemetry.sdk.metrics._internal.instrument.time_ns",
+    Mock(return_value=TEST_TIMESTAMP),
+)
 class TestObservableGauge(TestCase):
     def testname(self):
         self.assertEqual(_ObservableGauge("name", Mock(), Mock()).name, "name")
@@ -314,7 +317,10 @@ class TestObservableGauge(TestCase):
             ObservableGauge("name", Mock(), Mock())
 
 
-@patch("opentelemetry.sdk.metrics._internal.instrument.time_ns", Mock(return_value=TEST_TIMESTAMP))
+@patch(
+    "opentelemetry.sdk.metrics._internal.instrument.time_ns",
+    Mock(return_value=TEST_TIMESTAMP),
+)
 class TestObservableCounter(TestCase):
     def test_callable_callback_0(self):
         observable_counter = _ObservableCounter(
@@ -403,7 +409,10 @@ class TestGauge(TestCase):
             _SDKGauge("name", Mock(), Mock())
 
 
-@patch("opentelemetry.sdk.metrics._internal.instrument.time_ns", Mock(return_value=TEST_TIMESTAMP))
+@patch(
+    "opentelemetry.sdk.metrics._internal.instrument.time_ns",
+    Mock(return_value=TEST_TIMESTAMP),
+)
 class TestObservableUpDownCounter(TestCase):
     def test_callable_callback_0(self):
         observable_up_down_counter = _ObservableUpDownCounter(

@@ -38,7 +38,9 @@ from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 _logger = getLogger(__name__)
 
 
-_ERROR_MESSAGE = "Expected ASCII string of maximum length 63 characters but got {}"
+_ERROR_MESSAGE = (
+    "Expected ASCII string of maximum length 63 characters but got {}"
+)
 
 
 class _Synchronous:
@@ -140,7 +142,7 @@ class _Asynchronous:
                         time_unix_nano=time_ns(),
                         instrument=self,
                         attributes=api_measurement.attributes,
-                        context=api_measurement.context or get_current()
+                        context=api_measurement.context or get_current(),
                     )
             except Exception:  # pylint: disable=broad-exception-caught
                 _logger.exception(
@@ -155,7 +157,10 @@ class Counter(_Synchronous, APICounter):
         return super().__new__(cls)
 
     def add(
-            self, amount: Union[int, float], attributes: Dict[str, str] = None, context: Optional[Context] = None
+        self,
+        amount: Union[int, float],
+        attributes: Dict[str, str] = None,
+        context: Optional[Context] = None,
     ):
         if amount < 0:
             _logger.warning(
@@ -164,7 +169,13 @@ class Counter(_Synchronous, APICounter):
             return
         time_unix_nano = time_ns()
         self._measurement_consumer.consume_measurement(
-            Measurement(amount, time_unix_nano, self, attributes, context or get_current())
+            Measurement(
+                amount,
+                time_unix_nano,
+                self,
+                attributes,
+                context or get_current(),
+            )
         )
 
 
@@ -175,11 +186,20 @@ class UpDownCounter(_Synchronous, APIUpDownCounter):
         return super().__new__(cls)
 
     def add(
-        self, amount: Union[int, float], attributes: Dict[str, str] = None, context: Optional[Context] = None
+        self,
+        amount: Union[int, float],
+        attributes: Dict[str, str] = None,
+        context: Optional[Context] = None,
     ):
         time_unix_nano = time_ns()
         self._measurement_consumer.consume_measurement(
-            Measurement(amount, time_unix_nano, self, attributes, context or get_current())
+            Measurement(
+                amount,
+                time_unix_nano,
+                self,
+                attributes,
+                context or get_current(),
+            )
         )
 
 
@@ -208,8 +228,11 @@ class Histogram(_Synchronous, APIHistogram):
         return super().__new__(cls)
 
     def record(
-            self, amount: Union[int, float], attributes: Dict[str, str] = None, context: Optional[Context] = None
-        ):
+        self,
+        amount: Union[int, float],
+        attributes: Dict[str, str] = None,
+        context: Optional[Context] = None,
+    ):
         if amount < 0:
             _logger.warning(
                 "Record amount must be non-negative on Histogram %s.",
@@ -218,7 +241,13 @@ class Histogram(_Synchronous, APIHistogram):
             return
         time_unix_nano = time_ns()
         self._measurement_consumer.consume_measurement(
-            Measurement(amount, time_unix_nano, self, attributes, context or get_current())
+            Measurement(
+                amount,
+                time_unix_nano,
+                self,
+                attributes,
+                context or get_current(),
+            )
         )
 
 
@@ -229,11 +258,20 @@ class Gauge(_Synchronous, APIGauge):
         return super().__new__(cls)
 
     def set(
-        self, amount: Union[int, float], attributes: Dict[str, str] = None, context: Optional[Context] = None
+        self,
+        amount: Union[int, float],
+        attributes: Dict[str, str] = None,
+        context: Optional[Context] = None,
     ):
         time_unix_nano = time_ns()
         self._measurement_consumer.consume_measurement(
-            Measurement(amount, time_unix_nano, self, attributes, context or get_current())
+            Measurement(
+                amount,
+                time_unix_nano,
+                self,
+                attributes,
+                context or get_current(),
+            )
         )
 
 

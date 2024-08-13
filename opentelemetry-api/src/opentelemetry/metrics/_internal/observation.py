@@ -30,7 +30,10 @@ class Observation:
     """
 
     def __init__(
-        self, value: Union[int, float], attributes: Attributes = None, context: Optional[Context] = None
+        self,
+        value: Union[int, float],
+        attributes: Attributes = None,
+        context: Optional[Context] = None,
     ) -> None:
         self._value = value
         self._attributes = attributes
@@ -43,7 +46,7 @@ class Observation:
     @property
     def attributes(self) -> Attributes:
         return self._attributes
-    
+
     @property
     def context(self) -> Optional[Context]:
         return self._context
