@@ -7,9 +7,6 @@ from opentelemetry._events import (
     get_event_logger_provider,
     set_event_logger_provider,
 )
-from opentelemetry.environment_variables import (
-    _OTEL_PYTHON_EVENT_LOGGER_PROVIDER,
-)
 from opentelemetry.test.globals_test import EventsGlobalsTest
 
 
