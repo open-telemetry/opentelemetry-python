@@ -27,7 +27,6 @@ from opentelemetry.sdk.metrics._internal.aggregation import (
 )
 from opentelemetry.sdk.metrics._internal.exemplar import (
     AlignedHistogramBucketExemplarReservoir,
-    ExemplarReservoir,
     ExemplarReservoirFactory,
     SimpleFixedSizeExemplarReservoir,
 )

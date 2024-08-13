@@ -108,8 +108,11 @@ class _Asynchronous:
         self._callbacks: List[CallbackT] = []
 
         if callbacks is not None:
+
             for callback in callbacks:
+
                 if isinstance(callback, Generator):
+
                     # advance generator to it's first yield
                     next(callback)
 
@@ -126,7 +129,9 @@ class _Asynchronous:
                 else:
                     self._callbacks.append(callback)
 
-    def callback(self, callback_options: CallbackOptions) -> Iterable[Measurement]:
+    def callback(
+        self, callback_options: CallbackOptions
+    ) -> Iterable[Measurement]:
         for callback in self._callbacks:
             try:
                 for api_measurement in callback(callback_options):
@@ -138,7 +143,9 @@ class _Asynchronous:
                         context=api_measurement.context or get_current()
                     )
             except Exception:  # pylint: disable=broad-exception-caught
-                _logger.exception("Callback failed for instrument %s.", self.name)
+                _logger.exception(
+                    "Callback failed for instrument %s.", self.name
+                )
 
 
 class Counter(_Synchronous, APICounter):
@@ -147,9 +154,13 @@ class Counter(_Synchronous, APICounter):
             raise TypeError("Counter must be instantiated via a meter.")
         return super().__new__(cls)
 
-    def add(self, amount: Union[int, float], attributes: Dict[str, str] = None, context: Optional[Context] = None):
+    def add(
+            self, amount: Union[int, float], attributes: Dict[str, str] = None, context: Optional[Context] = None
+    ):
         if amount < 0:
-            _logger.warning("Add amount must be non-negative on Counter %s.", self.name)
+            _logger.warning(
+                "Add amount must be non-negative on Counter %s.", self.name
+            )
             return
         time_unix_nano = time_ns()
         self._measurement_consumer.consume_measurement(
@@ -175,14 +186,18 @@ class UpDownCounter(_Synchronous, APIUpDownCounter):
 class ObservableCounter(_Asynchronous, APIObservableCounter):
     def __new__(cls, *args, **kwargs):
         if cls is ObservableCounter:
-            raise TypeError("ObservableCounter must be instantiated via a meter.")
+            raise TypeError(
+                "ObservableCounter must be instantiated via a meter."
+            )
         return super().__new__(cls)
 
 
 class ObservableUpDownCounter(_Asynchronous, APIObservableUpDownCounter):
     def __new__(cls, *args, **kwargs):
         if cls is ObservableUpDownCounter:
-            raise TypeError("ObservableUpDownCounter must be instantiated via a meter.")
+            raise TypeError(
+                "ObservableUpDownCounter must be instantiated via a meter."
+            )
         return super().__new__(cls)
 
 
@@ -192,7 +207,9 @@ class Histogram(_Synchronous, APIHistogram):
             raise TypeError("Histogram must be instantiated via a meter.")
         return super().__new__(cls)
 
-    def record(self, amount: Union[int, float], attributes: Dict[str, str] = None, context: Optional[Context] = None):
+    def record(
+            self, amount: Union[int, float], attributes: Dict[str, str] = None, context: Optional[Context] = None
+        ):
         if amount < 0:
             _logger.warning(
                 "Record amount must be non-negative on Histogram %s.",
