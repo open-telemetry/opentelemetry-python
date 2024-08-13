@@ -10,18 +10,10 @@ from opentelemetry._events import (
 from opentelemetry.environment_variables import (
     _OTEL_PYTHON_EVENT_LOGGER_PROVIDER,
 )
-from opentelemetry.test.globals_test import reset_event_globals
+from opentelemetry.test.globals_test import EventsGlobalsTest
 
 
-class TestGlobals(unittest.TestCase):
-    def setUp(self):
-        super().tearDown()
-        reset_event_globals()
-
-    def tearDown(self):
-        super().tearDown()
-        reset_event_globals()
-
+class TestGlobals(EventsGlobalsTest, unittest.TestCase):
     def test_set_event_logger_provider(self):
         elp_mock = Mock()
         # pylint: disable=protected-access
