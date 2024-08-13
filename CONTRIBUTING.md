@@ -284,3 +284,7 @@ When adding support for a new Python release remember to:
 - Update github workflows accordingly; lint and benchmarks use the latest supported version
 - Update `.pre-commit-config.yaml`
 - Update tox examples in the documentation
+
+## Contributions that involve new packages
+
+As part of an effort to mitigate namespace squatting on Pypi, please ensure to check whether a package name has been taken already on Pypi before contributing a new package. Contact a maintainer, bring the issue up in the weekly Python SIG or create a ticket in Pypi if a desired name has already been taken.
