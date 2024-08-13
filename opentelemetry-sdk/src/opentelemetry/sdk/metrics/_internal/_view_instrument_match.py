@@ -52,12 +52,14 @@ class _ViewInstrumentMatch:
         )
         if not isinstance(self._view._aggregation, DefaultAggregation):
             self._aggregation = self._view._aggregation._create_aggregation(
-                self._instrument, None, 0
+                self._instrument, None, self._view._exemplar_reservoir_factory, 0
             )
         else:
             self._aggregation = self._instrument_class_aggregation[
                 self._instrument.__class__
-            ]._create_aggregation(self._instrument, None, 0)
+            ]._create_aggregation(
+                self._instrument, None, self._view._exemplar_reservoir_factory, 0
+            )
 
     def conflicts(self, other: "_ViewInstrumentMatch") -> bool:
         # pylint: disable=protected-access

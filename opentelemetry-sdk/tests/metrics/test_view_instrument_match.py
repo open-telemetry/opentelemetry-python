@@ -14,9 +14,11 @@
 
 # pylint: disable=protected-access
 
+from time import time_ns
 from unittest import TestCase
 from unittest.mock import MagicMock, Mock
 
+from opentelemetry.context import Context
 from opentelemetry.sdk.metrics._internal._view_instrument_match import (
     _ViewInstrumentMatch,
 )
@@ -49,6 +51,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         cls.mock_resource = Mock()
         cls.mock_instrumentation_scope = Mock()
         cls.sdk_configuration = SdkConfiguration(
+            exemplar_filter=Mock(),
             resource=cls.mock_resource,
             metric_readers=[],
             views=[],
@@ -73,7 +76,9 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         view_instrument_match.consume_measurement(
             Measurement(
                 value=0,
+                time_unix_nano=time_ns(),
                 instrument=instrument1,
+                context=Context(),
                 attributes={"c": "d", "f": "g"},
             )
         )
@@ -85,7 +90,9 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         view_instrument_match.consume_measurement(
             Measurement(
                 value=0,
+                time_unix_nano=time_ns(),
                 instrument=instrument1,
+                context=Context(),
                 attributes={"w": "x", "y": "z"},
             )
         )
@@ -114,7 +121,9 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         view_instrument_match.consume_measurement(
             Measurement(
                 value=0,
+                time_unix_nano=time_ns(),
                 instrument=instrument1,
+                context=Context(),
                 attributes={"c": "d", "f": "g"},
             )
         )
@@ -142,7 +151,13 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             ),
         )
         view_instrument_match.consume_measurement(
-            Measurement(value=0, instrument=instrument1, attributes=None)
+            Measurement(
+                value=0, 
+                time_unix_nano=time_ns(),
+                instrument=instrument1,
+                context=Context(),
+                attributes=None
+            )
         )
         self.assertEqual(
             view_instrument_match._attributes_aggregation,
@@ -166,7 +181,10 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             ),
         )
         view_instrument_match.consume_measurement(
-            Measurement(value=0, instrument=instrument1, attributes=None)
+            Measurement(value=0, 
+                time_unix_nano=time_ns(),
+                instrument=instrument1,
+                context=Context(), attributes=None)
         )
         self.assertIsInstance(
             view_instrument_match._attributes_aggregation[frozenset({})],
@@ -198,7 +216,9 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         view_instrument_match.consume_measurement(
             Measurement(
                 value=0,
+                time_unix_nano=time_ns(),
                 instrument=Mock(name="instrument1"),
+                context=Context(),
                 attributes={"c": "d", "f": "g"},
             )
         )
@@ -254,28 +274,36 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         view_instrument_match.consume_measurement(
             Measurement(
                 value=0,
+                time_unix_nano=time_ns(),
                 instrument=Mock(name="instrument1"),
+                context=Context(),
                 attributes={"c": "d", "f": "g"},
             )
         )
         view_instrument_match.consume_measurement(
             Measurement(
                 value=0,
+                time_unix_nano=time_ns(),
                 instrument=Mock(name="instrument1"),
+                context=Context(),
                 attributes={"h": "i", "j": "k"},
             )
         )
         view_instrument_match.consume_measurement(
             Measurement(
                 value=0,
+                time_unix_nano=time_ns(),
                 instrument=Mock(name="instrument1"),
+                context=Context(),
                 attributes={"l": "m", "n": "o"},
             )
         )
         view_instrument_match.consume_measurement(
             Measurement(
                 value=0,
+                time_unix_nano=time_ns(),
                 instrument=Mock(name="instrument1"),
+                context=Context(),
                 attributes={"p": "q", "r": "s"},
             )
         )
@@ -309,7 +337,9 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         view_instrument_match.consume_measurement(
             Measurement(
                 value=0,
+                time_unix_nano=time_ns(),
                 instrument=Mock(name="instrument1"),
+                context=Context(),
                 attributes={"c": "d", "f": "g"},
             )
         )

@@ -15,11 +15,12 @@
 # pylint: disable=protected-access
 
 from math import inf
-from time import sleep
+from time import sleep, time_ns
 from typing import Union
 from unittest import TestCase
 from unittest.mock import Mock
 
+from opentelemetry.context import Context
 from opentelemetry.sdk.metrics._internal.aggregation import (
     _ExplicitBucketHistogramAggregation,
     _LastValueAggregation,
@@ -35,6 +36,7 @@ from opentelemetry.sdk.metrics._internal.instrument import (
     _UpDownCounter,
 )
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
+from opentelemetry.sdk.metrics._internal.view import default_reservoir_factory
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     NumberDataPoint,
@@ -48,10 +50,10 @@ from opentelemetry.sdk.metrics.view import (
 from opentelemetry.util.types import Attributes
 
 
-def measurement(
-    value: Union[int, float], attributes: Attributes = None
-) -> Measurement:
-    return Measurement(value, instrument=Mock(), attributes=attributes)
+def measurement(value: Union[int, float], attributes: Attributes = None) -> Measurement:
+    return Measurement(
+        value, time_ns(), instrument=Mock(), context=Context(), attributes=attributes
+    )
 
 
 class TestSynchronousSumAggregation(TestCase):
@@ -61,7 +63,11 @@ class TestSynchronousSumAggregation(TestCase):
         """
 
         synchronous_sum_aggregation = _SumAggregation(
-            Mock(), True, AggregationTemporality.DELTA, 0
+            Mock(),
+            True,
+            AggregationTemporality.DELTA,
+            0,
+            default_reservoir_factory(_SumAggregation),
         )
 
         synchronous_sum_aggregation.aggregate(measurement(1))
@@ -71,7 +77,11 @@ class TestSynchronousSumAggregation(TestCase):
         self.assertEqual(synchronous_sum_aggregation._value, 6)
 
         synchronous_sum_aggregation = _SumAggregation(
-            Mock(), True, AggregationTemporality.DELTA, 0
+            Mock(),
+            True,
+            AggregationTemporality.DELTA,
+            0,
+            default_reservoir_factory(_SumAggregation),
         )
 
         synchronous_sum_aggregation.aggregate(measurement(1))
@@ -86,7 +96,11 @@ class TestSynchronousSumAggregation(TestCase):
         """
 
         synchronous_sum_aggregation = _SumAggregation(
-            Mock(), True, AggregationTemporality.CUMULATIVE, 0
+            Mock(),
+            True,
+            AggregationTemporality.CUMULATIVE,
+            0,
+            default_reservoir_factory(_SumAggregation),
         )
 
         synchronous_sum_aggregation.aggregate(measurement(1))
@@ -96,7 +110,11 @@ class TestSynchronousSumAggregation(TestCase):
         self.assertEqual(synchronous_sum_aggregation._value, 6)
 
         synchronous_sum_aggregation = _SumAggregation(
-            Mock(), True, AggregationTemporality.CUMULATIVE, 0
+            Mock(),
+            True,
+            AggregationTemporality.CUMULATIVE,
+            0,
+            default_reservoir_factory(_SumAggregation),
         )
 
         synchronous_sum_aggregation.aggregate(measurement(1))
@@ -111,7 +129,11 @@ class TestSynchronousSumAggregation(TestCase):
         """
 
         synchronous_sum_aggregation = _SumAggregation(
-            Mock(), True, AggregationTemporality.DELTA, 0
+            Mock(),
+            True,
+            AggregationTemporality.DELTA,
+            0,
+            default_reservoir_factory(_SumAggregation),
         )
 
         synchronous_sum_aggregation.aggregate(measurement(1))
@@ -137,15 +159,17 @@ class TestSynchronousSumAggregation(TestCase):
         )
 
         synchronous_sum_aggregation = _SumAggregation(
-            Mock(), True, AggregationTemporality.DELTA, 0
+            Mock(),
+            True,
+            AggregationTemporality.DELTA,
+            0,
+            default_reservoir_factory(_SumAggregation),
         )
 
         synchronous_sum_aggregation.aggregate(measurement(1))
         # 1 is used here directly to simulate the instant the first
         # collection process starts.
-        first_sum = synchronous_sum_aggregation.collect(
-            AggregationTemporality.DELTA, 1
-        )
+        first_sum = synchronous_sum_aggregation.collect(AggregationTemporality.DELTA, 1)
 
         self.assertEqual(first_sum.value, 1)
 
@@ -168,21 +192,21 @@ class TestSynchronousSumAggregation(TestCase):
         """
 
         sum_aggregation = _SumAggregation(
-            Mock(), True, AggregationTemporality.CUMULATIVE, 0
+            Mock(),
+            True,
+            AggregationTemporality.CUMULATIVE,
+            0,
+            default_reservoir_factory(_SumAggregation),
         )
 
         sum_aggregation.aggregate(measurement(1))
-        first_sum = sum_aggregation.collect(
-            AggregationTemporality.CUMULATIVE, 1
-        )
+        first_sum = sum_aggregation.collect(AggregationTemporality.CUMULATIVE, 1)
 
         self.assertEqual(first_sum.value, 1)
 
         # should have been reset after first collect
         sum_aggregation.aggregate(measurement(1))
-        second_sum = sum_aggregation.collect(
-            AggregationTemporality.CUMULATIVE, 1
-        )
+        second_sum = sum_aggregation.collect(AggregationTemporality.CUMULATIVE, 1)
 
         self.assertEqual(second_sum.value, 1)
 
@@ -191,9 +215,7 @@ class TestSynchronousSumAggregation(TestCase):
         )
 
         # if no point seen for a whole interval, should return None
-        third_sum = sum_aggregation.collect(
-            AggregationTemporality.CUMULATIVE, 1
-        )
+        third_sum = sum_aggregation.collect(AggregationTemporality.CUMULATIVE, 1)
         self.assertIsNone(third_sum)
 
 
@@ -204,7 +226,9 @@ class TestLastValueAggregation(TestCase):
         temporality
         """
 
-        last_value_aggregation = _LastValueAggregation(Mock())
+        last_value_aggregation = _LastValueAggregation(
+            Mock(), default_reservoir_factory(_LastValueAggregation)
+        )
 
         last_value_aggregation.aggregate(measurement(1))
         self.assertEqual(last_value_aggregation._value, 1)
@@ -220,12 +244,12 @@ class TestLastValueAggregation(TestCase):
         `LastValueAggregation` collects number data points
         """
 
-        last_value_aggregation = _LastValueAggregation(Mock())
+        last_value_aggregation = _LastValueAggregation(
+            Mock(), default_reservoir_factory(_LastValueAggregation)
+        )
 
         self.assertIsNone(
-            last_value_aggregation.collect(
-                AggregationTemporality.CUMULATIVE, 1
-            )
+            last_value_aggregation.collect(AggregationTemporality.CUMULATIVE, 1)
         )
 
         last_value_aggregation.aggregate(measurement(1))
@@ -274,13 +298,12 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         Test `ExplicitBucketHistogramAggregation with custom boundaries
         """
 
-        explicit_bucket_histogram_aggregation = (
-            _ExplicitBucketHistogramAggregation(
-                Mock(),
-                AggregationTemporality.DELTA,
-                0,
-                boundaries=[0, 2, 4],
-            )
+        explicit_bucket_histogram_aggregation = _ExplicitBucketHistogramAggregation(
+            Mock(),
+            AggregationTemporality.DELTA,
+            0,
+            default_reservoir_factory(_ExplicitBucketHistogramAggregation),
+            boundaries=[0, 2, 4],
         )
 
         explicit_bucket_histogram_aggregation.aggregate(measurement(-1))
@@ -314,10 +337,11 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         maximum value in the population
         """
 
-        explicit_bucket_histogram_aggregation = (
-            _ExplicitBucketHistogramAggregation(
-                Mock(), AggregationTemporality.CUMULATIVE, 0
-            )
+        explicit_bucket_histogram_aggregation = _ExplicitBucketHistogramAggregation(
+            Mock(),
+            AggregationTemporality.CUMULATIVE,
+            0,
+            default_reservoir_factory(_ExplicitBucketHistogramAggregation),
         )
 
         explicit_bucket_histogram_aggregation.aggregate(measurement(-1))
@@ -329,13 +353,12 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         self.assertEqual(explicit_bucket_histogram_aggregation._min, -1)
         self.assertEqual(explicit_bucket_histogram_aggregation._max, 9999)
 
-        explicit_bucket_histogram_aggregation = (
-            _ExplicitBucketHistogramAggregation(
-                Mock(),
-                AggregationTemporality.CUMULATIVE,
-                0,
-                record_min_max=False,
-            )
+        explicit_bucket_histogram_aggregation = _ExplicitBucketHistogramAggregation(
+            Mock(),
+            AggregationTemporality.CUMULATIVE,
+            0,
+            default_reservoir_factory(_ExplicitBucketHistogramAggregation),
+            record_min_max=False,
         )
 
         explicit_bucket_histogram_aggregation.aggregate(measurement(-1))
@@ -352,13 +375,12 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         `_ExplicitBucketHistogramAggregation` collects sum metric points
         """
 
-        explicit_bucket_histogram_aggregation = (
-            _ExplicitBucketHistogramAggregation(
-                Mock(),
-                AggregationTemporality.DELTA,
-                0,
-                boundaries=[0, 1, 2],
-            )
+        explicit_bucket_histogram_aggregation = _ExplicitBucketHistogramAggregation(
+            Mock(),
+            AggregationTemporality.DELTA,
+            0,
+            default_reservoir_factory(_ExplicitBucketHistogramAggregation),
+            boundaries=[0, 1, 2],
         )
 
         explicit_bucket_histogram_aggregation.aggregate(measurement(1))
@@ -392,7 +414,10 @@ class TestExplicitBucketHistogramAggregation(TestCase):
     def test_boundaries(self):
         self.assertEqual(
             _ExplicitBucketHistogramAggregation(
-                Mock(), AggregationTemporality.CUMULATIVE, 0
+                Mock(),
+                AggregationTemporality.CUMULATIVE,
+                0,
+                default_reservoir_factory(_ExplicitBucketHistogramAggregation),
             )._boundaries,
             (
                 0.0,
@@ -418,19 +443,25 @@ class TestAggregationFactory(TestCase):
     def test_sum_factory(self):
         counter = _Counter("name", Mock(), Mock())
         factory = SumAggregation()
-        aggregation = factory._create_aggregation(counter, Mock(), 0)
+        aggregation = factory._create_aggregation(
+            counter, Mock(), default_reservoir_factory, 0
+        )
         self.assertIsInstance(aggregation, _SumAggregation)
         self.assertTrue(aggregation._instrument_is_monotonic)
         self.assertEqual(
             aggregation._instrument_aggregation_temporality,
             AggregationTemporality.DELTA,
         )
-        aggregation2 = factory._create_aggregation(counter, Mock(), 0)
+        aggregation2 = factory._create_aggregation(
+            counter, Mock(), default_reservoir_factory, 0
+        )
         self.assertNotEqual(aggregation, aggregation2)
 
         counter = _UpDownCounter("name", Mock(), Mock())
         factory = SumAggregation()
-        aggregation = factory._create_aggregation(counter, Mock(), 0)
+        aggregation = factory._create_aggregation(
+            counter, Mock(), default_reservoir_factory, 0
+        )
         self.assertIsInstance(aggregation, _SumAggregation)
         self.assertFalse(aggregation._instrument_is_monotonic)
         self.assertEqual(
@@ -440,7 +471,9 @@ class TestAggregationFactory(TestCase):
 
         counter = _ObservableCounter("name", Mock(), Mock(), None)
         factory = SumAggregation()
-        aggregation = factory._create_aggregation(counter, Mock(), 0)
+        aggregation = factory._create_aggregation(
+            counter, Mock(), default_reservoir_factory, 0
+        )
         self.assertIsInstance(aggregation, _SumAggregation)
         self.assertTrue(aggregation._instrument_is_monotonic)
         self.assertEqual(
@@ -457,19 +490,27 @@ class TestAggregationFactory(TestCase):
             ),
             record_min_max=False,
         )
-        aggregation = factory._create_aggregation(histo, Mock(), 0)
+        aggregation = factory._create_aggregation(
+            histo, Mock(), default_reservoir_factory, 0
+        )
         self.assertIsInstance(aggregation, _ExplicitBucketHistogramAggregation)
         self.assertFalse(aggregation._record_min_max)
         self.assertEqual(aggregation._boundaries, (0.0, 5.0))
-        aggregation2 = factory._create_aggregation(histo, Mock(), 0)
+        aggregation2 = factory._create_aggregation(
+            histo, Mock(), default_reservoir_factory, 0
+        )
         self.assertNotEqual(aggregation, aggregation2)
 
     def test_last_value_factory(self):
         counter = _Counter("name", Mock(), Mock())
         factory = LastValueAggregation()
-        aggregation = factory._create_aggregation(counter, Mock(), 0)
+        aggregation = factory._create_aggregation(
+            counter, Mock(), default_reservoir_factory, 0
+        )
         self.assertIsInstance(aggregation, _LastValueAggregation)
-        aggregation2 = factory._create_aggregation(counter, Mock(), 0)
+        aggregation2 = factory._create_aggregation(
+            counter, Mock(), default_reservoir_factory, 0
+        )
         self.assertNotEqual(aggregation, aggregation2)
 
 
@@ -479,9 +520,8 @@ class TestDefaultAggregation(TestCase):
         cls.default_aggregation = DefaultAggregation()
 
     def test_counter(self):
-
         aggregation = self.default_aggregation._create_aggregation(
-            _Counter("name", Mock(), Mock()), Mock(), 0
+            _Counter("name", Mock(), Mock()), Mock(), default_reservoir_factory, 0
         )
         self.assertIsInstance(aggregation, _SumAggregation)
         self.assertTrue(aggregation._instrument_is_monotonic)
@@ -491,9 +531,8 @@ class TestDefaultAggregation(TestCase):
         )
 
     def test_up_down_counter(self):
-
         aggregation = self.default_aggregation._create_aggregation(
-            _UpDownCounter("name", Mock(), Mock()), Mock(), 0
+            _UpDownCounter("name", Mock(), Mock()), Mock(), default_reservoir_factory, 0
         )
         self.assertIsInstance(aggregation, _SumAggregation)
         self.assertFalse(aggregation._instrument_is_monotonic)
@@ -503,10 +542,10 @@ class TestDefaultAggregation(TestCase):
         )
 
     def test_observable_counter(self):
-
         aggregation = self.default_aggregation._create_aggregation(
             _ObservableCounter("name", Mock(), Mock(), callbacks=[Mock()]),
             Mock(),
+            default_reservoir_factory,
             0,
         )
         self.assertIsInstance(aggregation, _SumAggregation)
@@ -517,12 +556,10 @@ class TestDefaultAggregation(TestCase):
         )
 
     def test_observable_up_down_counter(self):
-
         aggregation = self.default_aggregation._create_aggregation(
-            _ObservableUpDownCounter(
-                "name", Mock(), Mock(), callbacks=[Mock()]
-            ),
+            _ObservableUpDownCounter("name", Mock(), Mock(), callbacks=[Mock()]),
             Mock(),
+            default_reservoir_factory,
             0,
         )
         self.assertIsInstance(aggregation, _SumAggregation)
@@ -533,7 +570,6 @@ class TestDefaultAggregation(TestCase):
         )
 
     def test_histogram(self):
-
         aggregation = self.default_aggregation._create_aggregation(
             _Histogram(
                 "name",
@@ -541,12 +577,12 @@ class TestDefaultAggregation(TestCase):
                 Mock(),
             ),
             Mock(),
+            default_reservoir_factory,
             0,
         )
         self.assertIsInstance(aggregation, _ExplicitBucketHistogramAggregation)
 
     def test_gauge(self):
-
         aggregation = self.default_aggregation._create_aggregation(
             _Gauge(
                 "name",
@@ -554,12 +590,12 @@ class TestDefaultAggregation(TestCase):
                 Mock(),
             ),
             Mock(),
+            default_reservoir_factory,
             0,
         )
         self.assertIsInstance(aggregation, _LastValueAggregation)
 
     def test_observable_gauge(self):
-
         aggregation = self.default_aggregation._create_aggregation(
             _ObservableGauge(
                 "name",
@@ -568,6 +604,7 @@ class TestDefaultAggregation(TestCase):
                 callbacks=[Mock()],
             ),
             Mock(),
+            default_reservoir_factory,
             0,
         )
         self.assertIsInstance(aggregation, _LastValueAggregation)

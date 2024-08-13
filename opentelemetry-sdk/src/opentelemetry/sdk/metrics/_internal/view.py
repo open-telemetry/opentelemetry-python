@@ -34,7 +34,7 @@ from opentelemetry.sdk.metrics._internal.exemplar import (
 _logger = getLogger(__name__)
 
 
-def _default_reservoir_factory(aggregationType: Type[_Aggregation]) -> ExemplarReservoirFactory:
+def default_reservoir_factory(aggregationType: Type[_Aggregation]) -> ExemplarReservoirFactory:
     """Default reservoir factory per aggregation."""
     if issubclass(aggregationType, _ExplicitBucketHistogramAggregation):
         return AlignedHistogramBucketExemplarReservoir
@@ -154,7 +154,7 @@ class View:
         self._description = description
         self._attribute_keys = attribute_keys
         self._aggregation = aggregation or self._default_aggregation
-        self._exemplar_reservoir_factory = exemplar_reservoir_factory or _default_reservoir_factory
+        self._exemplar_reservoir_factory = exemplar_reservoir_factory or default_reservoir_factory
 
     # pylint: disable=too-many-return-statements
     # pylint: disable=too-many-branches
