@@ -42,7 +42,9 @@ class TestGlobals(unittest.TestCase):
 
         with patch.dict(
             "os.environ",
-            {"OTEL_PYTHON_EVENT_LOGGER_PROVIDER": "test_event_logger_provider"},
+            {
+                "OTEL_PYTHON_EVENT_LOGGER_PROVIDER": "test_event_logger_provider"
+            },
         ):
 
             with patch("opentelemetry._events._load_provider", Mock()):
