@@ -141,8 +141,8 @@ class _Asynchronous:
                         api_measurement.value,
                         time_unix_nano=time_ns(),
                         instrument=self,
-                        attributes=api_measurement.attributes,
                         context=api_measurement.context or get_current(),
+                        attributes=api_measurement.attributes,
                     )
             except Exception:  # pylint: disable=broad-exception-caught
                 _logger.exception(
@@ -173,8 +173,8 @@ class Counter(_Synchronous, APICounter):
                 amount,
                 time_unix_nano,
                 self,
-                attributes,
                 context or get_current(),
+                attributes,
             )
         )
 
@@ -197,8 +197,8 @@ class UpDownCounter(_Synchronous, APIUpDownCounter):
                 amount,
                 time_unix_nano,
                 self,
-                attributes,
                 context or get_current(),
+                attributes,
             )
         )
 
@@ -245,8 +245,8 @@ class Histogram(_Synchronous, APIHistogram):
                 amount,
                 time_unix_nano,
                 self,
-                attributes,
                 context or get_current(),
+                attributes,
             )
         )
 
@@ -269,8 +269,8 @@ class Gauge(_Synchronous, APIGauge):
                 amount,
                 time_unix_nano,
                 self,
-                attributes,
                 context or get_current(),
+                attributes,
             )
         )
 

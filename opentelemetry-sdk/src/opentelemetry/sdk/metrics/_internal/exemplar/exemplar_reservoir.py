@@ -68,7 +68,7 @@ class ExemplarReservoir(ABC):
 class ExemplarBucket:
     def __init__(self) -> None:
         self.__value: Union[int, float] = 0
-        self.__attributes: Attributes = {}
+        self.__attributes: Attributes = None
         self.__time_unix_nano: int = 0
         self.__span_id: Optional[str] = None
         self.__trace_id: Optional[str] = None
@@ -98,11 +98,15 @@ class ExemplarBucket:
         if not self.__offered:
             return None
 
-        current_attributes = {
-            k: v
-            for k, v in self.__attributes.items()
-            if k not in point_attributes
-        }
+        current_attributes = (
+            {
+                k: v
+                for k, v in self.__attributes.items()
+                if k not in point_attributes
+            }
+            if self.__attributes
+            else None
+        )
 
         exemplar = Exemplar(
             current_attributes,
@@ -157,7 +161,7 @@ class FixedSizeExemplarReservoirABC(ExemplarReservoir):
             ),
         )
         self._reset()
-        return [exemplars]
+        return [*exemplars]
 
     def _reset(self) -> None:
         """Reset the reservoir."""
