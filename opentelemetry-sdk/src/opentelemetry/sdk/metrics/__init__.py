@@ -16,8 +16,13 @@
 from opentelemetry.sdk.metrics._internal import Meter, MeterProvider
 from opentelemetry.sdk.metrics._internal.exceptions import MetricsTimeoutError
 from opentelemetry.sdk.metrics._internal.exemplar import (
+    AlignedHistogramBucketExemplarReservoir,
+    AlwaysOnExemplarFilter,
+    AlwaysOffExemplarFilter,
     ExemplarFilter,
     ExemplarReservoir,
+    SimpleFixedSizeExemplarReservoir,
+    TraceBasedExemplarFilter,
 )
 from opentelemetry.sdk.metrics._internal.instrument import Counter
 from opentelemetry.sdk.metrics._internal.instrument import Gauge as _Gauge
@@ -30,6 +35,9 @@ from opentelemetry.sdk.metrics._internal.instrument import (
 )
 
 __all__ = [
+    "AlignedHistogramBucketExemplarReservoir",
+    "AlwaysOnExemplarFilter",
+    "AlwaysOffExemplarFilter",
     "ExemplarFilter",
     "ExemplarReservoir",
     "Meter",
@@ -41,5 +49,7 @@ __all__ = [
     "ObservableCounter",
     "ObservableGauge",
     "ObservableUpDownCounter",
+    "SimpleFixedSizeExemplarReservoir",
     "UpDownCounter",
+    "TraceBasedExemplarFilter",
 ]

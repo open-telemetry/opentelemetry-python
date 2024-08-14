@@ -384,7 +384,7 @@ class MeterProvider(APIMeterProvider):
         metric_readers: Sequence[
             "opentelemetry.sdk.metrics.export.MetricReader"
         ] = (),
-        resource: Resource = None,
+        resource: Optional[Resource] = None,
         exemplar_filter: Optional[ExemplarFilter] = None,
         shutdown_on_exit: bool = True,
         views: Sequence["opentelemetry.sdk.metrics.view.View"] = (),
