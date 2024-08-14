@@ -137,7 +137,7 @@ class TestLoggingHandler(unittest.TestCase):
         # so only check that the attribute is present.
         self.assertTrue(SpanAttributes.CODE_LINENO in log_record.attributes)
         self.assertTrue(isinstance(log_record.attributes, BoundedAttributes))
-
+    
     def test_log_record_exception(self):
         """Exception information will be included in attributes"""
         processor, logger = set_up_test_logging(logging.ERROR)
@@ -170,7 +170,7 @@ class TestLoggingHandler(unittest.TestCase):
         self.assertTrue(__file__ in stack_trace)
 
     def test_log_exc_info_false(self):
-        """Exception information will be included in attributes"""
+        """Exception information will not be included in attributes"""
         processor, logger = set_up_test_logging(logging.NOTSET)
 
         try:
