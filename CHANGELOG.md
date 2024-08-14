@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Fix use of `link.attributes.dropped`, which may not exist
+  ([#4119](https://github.com/open-telemetry/opentelemetry-python/pull/4119))
 - Running mypy on SDK resources
   ([#4053](https://github.com/open-telemetry/opentelemetry-python/pull/4053))
 - Added py.typed file to top-level module
