@@ -137,13 +137,44 @@ class TestLoggingHandler(unittest.TestCase):
         # so only check that the attribute is present.
         self.assertTrue(SpanAttributes.CODE_LINENO in log_record.attributes)
         self.assertTrue(isinstance(log_record.attributes, BoundedAttributes))
-    
+
     def test_log_record_exception(self):
         """Exception information will be included in attributes"""
         processor, logger = set_up_test_logging(logging.ERROR)
 
         try:
             raise ZeroDivisionError("division by zero")
+        except ZeroDivisionError:
+            with self.assertLogs(level=logging.ERROR):
+                logger.exception("Zero Division Error")
+
+        log_record = processor.get_log_record(0)
+
+        self.assertIsNotNone(log_record)
+        self.assertEqual(log_record.body, "Zero Division Error")
+        self.assertEqual(
+            log_record.attributes[SpanAttributes.EXCEPTION_TYPE],
+            ZeroDivisionError.__name__,
+        )
+        self.assertEqual(
+            log_record.attributes[SpanAttributes.EXCEPTION_MESSAGE],
+            "division by zero",
+        )
+        stack_trace = log_record.attributes[
+            SpanAttributes.EXCEPTION_STACKTRACE
+        ]
+        self.assertIsInstance(stack_trace, str)
+        self.assertTrue("Traceback" in stack_trace)
+        self.assertTrue("ZeroDivisionError" in stack_trace)
+        self.assertTrue("division by zero" in stack_trace)
+        self.assertTrue(__file__ in stack_trace)
+
+    def test_log_record_recursive_exception(self):
+        """Exception information will be included in attributes even though it is recursive"""
+        processor, logger = set_up_test_logging(logging.ERROR)
+
+        try:
+            raise ZeroDivisionError(ZeroDivisionError("division by zero"))
         except ZeroDivisionError:
             with self.assertLogs(level=logging.ERROR):
                 logger.exception("Zero Division Error")
