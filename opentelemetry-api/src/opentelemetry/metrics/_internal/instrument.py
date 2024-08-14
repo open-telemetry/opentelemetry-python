@@ -33,6 +33,7 @@ from typing import (
 
 # pylint: disable=unused-import; needed for typing and sphinx
 from opentelemetry import metrics
+from opentelemetry.context import Context
 from opentelemetry.metrics._internal.observation import Observation
 from opentelemetry.util.types import Attributes
 
@@ -173,6 +174,7 @@ class Counter(Synchronous):
         self,
         amount: Union[int, float],
         attributes: Optional[Attributes] = None,
+        context: Optional[Context] = None,
     ) -> None:
         pass
 
@@ -192,8 +194,9 @@ class NoOpCounter(Counter):
         self,
         amount: Union[int, float],
         attributes: Optional[Attributes] = None,
+        context: Optional[Context] = None,
     ) -> None:
-        return super().add(amount, attributes=attributes)
+        return super().add(amount, attributes=attributes, context=context)
 
 
 class _ProxyCounter(_ProxyInstrument[Counter], Counter):
@@ -201,9 +204,10 @@ class _ProxyCounter(_ProxyInstrument[Counter], Counter):
         self,
         amount: Union[int, float],
         attributes: Optional[Attributes] = None,
+        context: Optional[Context] = None,
     ) -> None:
         if self._real_instrument:
-            self._real_instrument.add(amount, attributes)
+            self._real_instrument.add(amount, attributes, context)
 
     def _create_real_instrument(self, meter: "metrics.Meter") -> Counter:
         return meter.create_counter(self._name, self._unit, self._description)
@@ -217,6 +221,7 @@ class UpDownCounter(Synchronous):
         self,
         amount: Union[int, float],
         attributes: Optional[Attributes] = None,
+        context: Optional[Context] = None,
     ) -> None:
         pass
 
@@ -236,8 +241,9 @@ class NoOpUpDownCounter(UpDownCounter):
         self,
         amount: Union[int, float],
         attributes: Optional[Attributes] = None,
+        context: Optional[Context] = None,
     ) -> None:
-        return super().add(amount, attributes=attributes)
+        return super().add(amount, attributes=attributes, context=context)
 
 
 class _ProxyUpDownCounter(_ProxyInstrument[UpDownCounter], UpDownCounter):
@@ -245,9 +251,10 @@ class _ProxyUpDownCounter(_ProxyInstrument[UpDownCounter], UpDownCounter):
         self,
         amount: Union[int, float],
         attributes: Optional[Attributes] = None,
+        context: Optional[Context] = None,
     ) -> None:
         if self._real_instrument:
-            self._real_instrument.add(amount, attributes)
+            self._real_instrument.add(amount, attributes, context)
 
     def _create_real_instrument(self, meter: "metrics.Meter") -> UpDownCounter:
         return meter.create_up_down_counter(
@@ -328,6 +335,7 @@ class Histogram(Synchronous):
         self,
         amount: Union[int, float],
         attributes: Optional[Attributes] = None,
+        context: Optional[Context] = None,
     ) -> None:
         pass
 
@@ -347,8 +355,9 @@ class NoOpHistogram(Histogram):
         self,
         amount: Union[int, float],
         attributes: Optional[Attributes] = None,
+        context: Optional[Context] = None,
     ) -> None:
-        return super().record(amount, attributes=attributes)
+        return super().record(amount, attributes=attributes, context=context)
 
 
 class _ProxyHistogram(_ProxyInstrument[Histogram], Histogram):
@@ -356,9 +365,10 @@ class _ProxyHistogram(_ProxyInstrument[Histogram], Histogram):
         self,
         amount: Union[int, float],
         attributes: Optional[Attributes] = None,
+        context: Optional[Context] = None,
     ) -> None:
         if self._real_instrument:
-            self._real_instrument.record(amount, attributes)
+            self._real_instrument.record(amount, attributes, context)
 
     def _create_real_instrument(self, meter: "metrics.Meter") -> Histogram:
         return meter.create_histogram(
@@ -406,6 +416,7 @@ class Gauge(Synchronous):
         self,
         amount: Union[int, float],
         attributes: Optional[Attributes] = None,
+        context: Optional[Context] = None,
     ) -> None:
         pass
 
@@ -425,8 +436,9 @@ class NoOpGauge(Gauge):
         self,
         amount: Union[int, float],
         attributes: Optional[Attributes] = None,
+        context: Optional[Context] = None,
     ) -> None:
-        return super().set(amount, attributes=attributes)
+        return super().set(amount, attributes=attributes, context=context)
 
 
 class _ProxyGauge(
@@ -437,9 +449,10 @@ class _ProxyGauge(
         self,
         amount: Union[int, float],
         attributes: Optional[Attributes] = None,
+        context: Optional[Context] = None,
     ) -> None:
         if self._real_instrument:
-            self._real_instrument.set(amount, attributes)
+            self._real_instrument.set(amount, attributes, context)
 
     def _create_real_instrument(self, meter: "metrics.Meter") -> Gauge:
         return meter.create_gauge(self._name, self._unit, self._description)
