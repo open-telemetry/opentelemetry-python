@@ -121,17 +121,14 @@ def get_resource_data(
 
 
 def _get_file_content(file_path: str) -> bytes:
-    file = open(file_path, "rb")
-    content = file.read()
-    file.close()
-    return content
-
+    with open(file_path, "rb") as file:
+        return file.read()
 
 def _load_credentials(
-    certificate_file: str,
-    client_key_file: str,
-    client_certificate_file: str,
-) -> ChannelCredentials:
+    certificate_file: Optional[str],
+    client_key_file: Optional[str],
+    client_certificate_file: Optional[str],
+) -> Optional[ChannelCredentials]:
     try:
         root_certificates = _get_file_content(certificate_file)
         private_key = _get_file_content(client_key_file)
@@ -156,10 +153,11 @@ def _get_credentials(
 ) -> ChannelCredentials:
     if creds is not None:
         return creds
+
     certificate_file = environ.get(certificate_file_env_key)
-    client_key_file = environ.get(client_key_file_env_key)
-    client_certificate_file = environ.get(client_certificate_file_env_key)
     if certificate_file:
+        client_key_file = environ.get(client_key_file_env_key)
+        client_certificate_file = environ.get(client_certificate_file_env_key)
         return _load_credentials(
             certificate_file, client_key_file, client_certificate_file
         )

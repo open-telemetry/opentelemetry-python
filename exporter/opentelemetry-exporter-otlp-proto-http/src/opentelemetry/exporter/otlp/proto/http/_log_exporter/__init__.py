@@ -84,6 +84,7 @@ class OTLPLogExporter(LogExporter):
                 environ.get(OTEL_EXPORTER_OTLP_ENDPOINT, DEFAULT_ENDPOINT)
             ),
         )
+        # Keeping these as instance variables because they are used in tests
         self._certificate_file = certificate_file or environ.get(
             OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
             environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE, True),
