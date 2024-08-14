@@ -17,8 +17,8 @@ from opentelemetry.sdk.metrics._internal import Meter, MeterProvider
 from opentelemetry.sdk.metrics._internal.exceptions import MetricsTimeoutError
 from opentelemetry.sdk.metrics._internal.exemplar import (
     AlignedHistogramBucketExemplarReservoir,
-    AlwaysOnExemplarFilter,
     AlwaysOffExemplarFilter,
+    AlwaysOnExemplarFilter,
     ExemplarFilter,
     ExemplarReservoir,
     SimpleFixedSizeExemplarReservoir,

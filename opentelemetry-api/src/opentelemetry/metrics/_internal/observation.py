@@ -60,4 +60,4 @@ class Observation:
         )
 
     def __repr__(self) -> str:
-        return f"Observation(value={self.value}, attributes={self.attributes})"
+        return f"Observation(value={self.value}, attributes={self.attributes}, context={self.context})"

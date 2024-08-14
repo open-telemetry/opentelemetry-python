@@ -26,7 +26,6 @@ from opentelemetry.sdk.metrics.export import (
 )
 from opentelemetry.test.globals_test import reset_metrics_globals
 
-
 TEST_TIMESTAMP = 1_234_567_890
 
 
@@ -106,7 +105,9 @@ class TestConsoleExporter(TestCase):
         reader = PeriodicExportingMetricReader(
             exporter, export_interval_millis=100
         )
-        provider = MeterProvider(metric_readers=[reader], exemplar_filter=AlwaysOnExemplarFilter())
+        provider = MeterProvider(
+            metric_readers=[reader], exemplar_filter=AlwaysOnExemplarFilter()
+        )
         set_meter_provider(provider)
         meter = get_meter(__name__)
         counter = meter.create_counter(
@@ -128,4 +129,15 @@ class TestConsoleExporter(TestCase):
 
         self.assertEqual(point["attributes"], {"a": "b"})
         self.assertEqual(point["value"], 1)
-        self.assertEqual(point["exemplars"], [{"filtered_attributes": {}, "value": 1, "time_unix_nano": TEST_TIMESTAMP, "span_id": None, "trace_id": None}])
+        self.assertEqual(
+            point["exemplars"],
+            [
+                {
+                    "filtered_attributes": {},
+                    "value": 1,
+                    "time_unix_nano": TEST_TIMESTAMP,
+                    "span_id": None,
+                    "trace_id": None,
+                }
+            ],
+        )
