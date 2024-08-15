@@ -120,7 +120,7 @@ def get_resource_data(
     return _get_resource_data(sdk_resource_scope_data, resource_class, name)
 
 
-def _get_file_content(file_path: str) -> bytes:
+def _read_file(file_path: str) -> bytes:
     with open(file_path, "rb") as file:
         return file.read()
 
@@ -131,9 +131,9 @@ def _load_credentials(
     client_certificate_file: str,
 ) -> Optional[ChannelCredentials]:
     try:
-        root_certificates = _get_file_content(certificate_file)
-        private_key = _get_file_content(client_key_file)
-        certificate_chain = _get_file_content(client_certificate_file)
+        root_certificates = _read_file(certificate_file)
+        private_key = _read_file(client_key_file)
+        certificate_chain = _read_file(client_certificate_file)
         return ssl_channel_credentials(
             root_certificates=root_certificates,
             private_key=private_key,
