@@ -246,7 +246,7 @@ class TestOTLPSpanExporter(TestCase):
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__"
     )
-    def test_env_variables(self, mock_exporter_mixin):
+    def test_env_variables_with_client_certificates(self, mock_exporter_mixin):
         OTLPSpanExporter()
 
         self.assertTrue(len(mock_exporter_mixin.call_args_list) == 1)
@@ -258,6 +258,30 @@ class TestOTLPSpanExporter(TestCase):
         self.assertEqual(kwargs["compression"], Compression.Gzip)
         self.assertIsNotNone(kwargs["credentials"])
         self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
+
+    @patch.dict(
+        "os.environ",
+        {
+            OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "collector:4317",
+            OTEL_EXPORTER_OTLP_TRACES_HEADERS: " key1=value1,KEY2 = value=2",
+            OTEL_EXPORTER_OTLP_TRACES_TIMEOUT: "10",
+            OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: "gzip",
+        },
+    )
+    @patch(
+        "opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__"
+    )
+    def test_env_variables_without_client_certificates(self, mock_exporter_mixin):
+        OTLPSpanExporter()
+
+        self.assertTrue(len(mock_exporter_mixin.call_args_list) == 1)
+        _, kwargs = mock_exporter_mixin.call_args_list[0]
+
+        self.assertEqual(kwargs["endpoint"], "collector:4317")
+        self.assertEqual(kwargs["headers"], " key1=value1,KEY2 = value=2")
+        self.assertEqual(kwargs["timeout"], 10)
+        self.assertEqual(kwargs["compression"], Compression.Gzip)
+        self.assertIsNone(kwargs["credentials"])
 
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"
