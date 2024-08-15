@@ -272,7 +272,9 @@ class TestOTLPSpanExporter(TestCase):
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__"
     )
-    def test_env_variables_without_client_certificates(self, mock_exporter_mixin):
+    def test_env_variables_without_client_certificates(
+        self, mock_exporter_mixin
+    ):
         OTLPSpanExporter()
 
         self.assertTrue(len(mock_exporter_mixin.call_args_list) == 1)
