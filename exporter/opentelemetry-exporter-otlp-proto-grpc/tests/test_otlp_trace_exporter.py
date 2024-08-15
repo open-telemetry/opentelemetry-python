@@ -249,10 +249,8 @@ class TestOTLPSpanExporter(TestCase):
     )
     def test_env_variables_with_client_certificates(self, mock_exporter_mixin):
         OTLPSpanExporter()
-
         self.assertTrue(len(mock_exporter_mixin.call_args_list) == 1)
         _, kwargs = mock_exporter_mixin.call_args_list[0]
-
         self.assertEqual(kwargs["endpoint"], "collector:4317")
         self.assertEqual(kwargs["headers"], " key1=value1,KEY2 = value=2")
         self.assertEqual(kwargs["timeout"], 10)
@@ -276,10 +274,8 @@ class TestOTLPSpanExporter(TestCase):
         self, mock_exporter_mixin
     ):
         OTLPSpanExporter()
-
         self.assertTrue(len(mock_exporter_mixin.call_args_list) == 1)
         _, kwargs = mock_exporter_mixin.call_args_list[0]
-
         self.assertEqual(kwargs["endpoint"], "collector:4317")
         self.assertEqual(kwargs["headers"], " key1=value1,KEY2 = value=2")
         self.assertEqual(kwargs["timeout"], 10)
