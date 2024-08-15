@@ -173,6 +173,7 @@ class TestOTLPSpanExporter(TestCase):
                         "attributes": BoundedAttributes(
                             attributes={"a": 1, "b": False}
                         ),
+                        "dropped_attributes": 0,
                         "kind": OTLPSpan.SpanKind.SPAN_KIND_INTERNAL,  # pylint: disable=no-member
                     }
                 )

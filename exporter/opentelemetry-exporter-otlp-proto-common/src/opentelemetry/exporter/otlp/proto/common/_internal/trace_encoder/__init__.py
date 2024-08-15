@@ -157,7 +157,7 @@ def _encode_links(links: Sequence[Link]) -> Sequence[PB2SPan.Link]:
                 trace_id=_encode_trace_id(link.context.trace_id),
                 span_id=_encode_span_id(link.context.span_id),
                 attributes=_encode_attributes(link.attributes),
-                dropped_attributes_count=link.attributes.dropped,
+                dropped_attributes_count=link.dropped_attributes,
                 flags=_span_flags(link.context),
             )
             pb2_links.append(encoded_link)
