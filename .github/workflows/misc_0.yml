@@ -145,6 +145,9 @@ jobs:
   public-symbols-check:
     name: public-symbols-check
     runs-on: ubuntu-latest
+    if: |
+      !contains(github.event.pull_request.labels.*.name, 'Approve Public API check')
+      && github.actor != 'opentelemetrybot'
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
