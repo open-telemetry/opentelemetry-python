@@ -286,7 +286,8 @@ class TestOTLPSpanExporter(TestCase):
         "os.environ",
         {
             OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "collector:4317",
-            OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE: THIS_DIR + "/fixtures/test.cert",
+            OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE: THIS_DIR
+            + "/fixtures/test.cert",
             OTEL_EXPORTER_OTLP_TRACES_HEADERS: " key1=value1,KEY2 = value=2",
             OTEL_EXPORTER_OTLP_TRACES_TIMEOUT: "10",
             OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: "gzip",

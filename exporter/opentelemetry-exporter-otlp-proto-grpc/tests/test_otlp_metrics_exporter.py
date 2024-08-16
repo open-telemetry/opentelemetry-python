@@ -280,7 +280,8 @@ class TestOTLPMetricExporter(TestCase):
         "os.environ",
         {
             OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: "collector:4317",
-            OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE: THIS_DIR + "/fixtures/test.cert",
+            OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE: THIS_DIR
+            + "/fixtures/test.cert",
             OTEL_EXPORTER_OTLP_METRICS_HEADERS: " key1=value1,KEY2 = value=2",
             OTEL_EXPORTER_OTLP_METRICS_TIMEOUT: "10",
             OTEL_EXPORTER_OTLP_METRICS_COMPRESSION: "gzip",

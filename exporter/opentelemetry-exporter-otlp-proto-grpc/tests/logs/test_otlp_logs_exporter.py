@@ -268,7 +268,8 @@ class TestOTLPLogExporter(TestCase):
         "os.environ",
         {
             OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "logs:4317",
-            OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE: THIS_DIR + "/../fixtures/test.cert",
+            OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE: THIS_DIR
+            + "/../fixtures/test.cert",
             OTEL_EXPORTER_OTLP_LOGS_HEADERS: " key1=value1,KEY2 = VALUE=2",
             OTEL_EXPORTER_OTLP_LOGS_TIMEOUT: "10",
             OTEL_EXPORTER_OTLP_LOGS_COMPRESSION: "gzip",
