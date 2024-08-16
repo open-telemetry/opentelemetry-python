@@ -120,7 +120,11 @@ def get_resource_data(
     return _get_resource_data(sdk_resource_scope_data, resource_class, name)
 
 
-def _read_file(file_path: str) -> Optional[bytes]:
+def _read_file(file_path: Optional[str]) -> Optional[bytes]:
+    if file_path is None:
+        logger.error("No file path provided for reading. Please check the environment variables.")
+        return None
+
     try:
         with open(file_path, "rb") as file:
             return file.read()
