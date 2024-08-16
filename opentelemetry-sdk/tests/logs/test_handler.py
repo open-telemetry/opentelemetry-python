@@ -174,7 +174,9 @@ class TestLoggingHandler(unittest.TestCase):
         processor, logger = set_up_test_logging(logging.ERROR)
 
         try:
-            raise ZeroDivisionError(ZeroDivisionError("division by zero"))
+            raise ZeroDivisionError(
+                ZeroDivisionError(ZeroDivisionError("division by zero"))
+            )
         except ZeroDivisionError:
             with self.assertLogs(level=logging.ERROR):
                 logger.exception("Zero Division Error")
@@ -189,7 +191,7 @@ class TestLoggingHandler(unittest.TestCase):
         )
         self.assertEqual(
             log_record.attributes[SpanAttributes.EXCEPTION_MESSAGE],
-            "division by zero",
+            """ZeroDivisionError(ZeroDivisionError("division by zero"))""",
         )
         stack_trace = log_record.attributes[
             SpanAttributes.EXCEPTION_STACKTRACE
