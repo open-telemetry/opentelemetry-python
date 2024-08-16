@@ -120,30 +120,33 @@ def get_resource_data(
     return _get_resource_data(sdk_resource_scope_data, resource_class, name)
 
 
-def _read_file(file_path: str) -> bytes:
-    with open(file_path, "rb") as file:
-        return file.read()
-
+def _read_file(file_path: str) -> Optional[bytes]:
+    try:
+        with open(file_path, "rb") as file:
+            return file.read()
+    except FileNotFoundError as e:
+        logger.exception(
+            f"Failed to read file: {e.filename}. Please check if the file exists and is accessible."
+        )
+        return None
 
 def _load_credentials(
     certificate_file: str,
     client_key_file: str,
     client_certificate_file: str,
 ) -> Optional[ChannelCredentials]:
-    try:
-        root_certificates = _read_file(certificate_file)
-        private_key = _read_file(client_key_file)
-        certificate_chain = _read_file(client_certificate_file)
-        return ssl_channel_credentials(
-            root_certificates=root_certificates,
-            private_key=private_key,
-            certificate_chain=certificate_chain,
-        )
-    except FileNotFoundError as e:
-        logger.exception(
-            f"Failed to read credential file: {e.filename}. Please check if the file exists and is accessible."
-        )
+    root_certificates = _read_file(certificate_file)
+    private_key = _read_file(client_key_file)
+    certificate_chain = _read_file(client_certificate_file)
+
+    if root_certificates is None or private_key is None or certificate_chain is None:
         return None
+
+    return ssl_channel_credentials(
+        root_certificates=root_certificates,
+        private_key=private_key,
+        certificate_chain=certificate_chain,
+    )
 
 
 def _get_credentials(
