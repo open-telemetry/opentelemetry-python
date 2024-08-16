@@ -143,9 +143,6 @@ def _load_credentials(
     private_key = _read_file(client_key_file)
     certificate_chain = _read_file(client_certificate_file)
 
-    if root_certificates is None or private_key is None or certificate_chain is None:
-        return None
-
     return ssl_channel_credentials(
         root_certificates=root_certificates,
         private_key=private_key,
