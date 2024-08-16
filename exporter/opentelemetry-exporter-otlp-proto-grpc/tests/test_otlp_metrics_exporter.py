@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=too-many-lines
+
 import threading
 from concurrent.futures import ThreadPoolExecutor
 
@@ -267,6 +269,31 @@ class TestOTLPMetricExporter(TestCase):
         self.assertTrue(len(mock_exporter_mixin.call_args_list) == 1)
         _, kwargs = mock_exporter_mixin.call_args_list[0]
 
+        self.assertEqual(kwargs["endpoint"], "collector:4317")
+        self.assertEqual(kwargs["headers"], " key1=value1,KEY2 = value=2")
+        self.assertEqual(kwargs["timeout"], 10)
+        self.assertEqual(kwargs["compression"], Compression.Gzip)
+        self.assertIsNotNone(kwargs["credentials"])
+        self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
+
+    @patch.dict(
+        "os.environ",
+        {
+            OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: "collector:4317",
+            OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE: THIS_DIR + "/fixtures/test.cert",
+            OTEL_EXPORTER_OTLP_METRICS_HEADERS: " key1=value1,KEY2 = value=2",
+            OTEL_EXPORTER_OTLP_METRICS_TIMEOUT: "10",
+            OTEL_EXPORTER_OTLP_METRICS_COMPRESSION: "gzip",
+        },
+    )
+    @patch(
+        "opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__"
+    )
+    def test_env_variables_with_only_certificate(self, mock_exporter_mixin):
+        OTLPMetricExporter()
+
+        self.assertTrue(len(mock_exporter_mixin.call_args_list) == 1)
+        _, kwargs = mock_exporter_mixin.call_args_list[0]
         self.assertEqual(kwargs["endpoint"], "collector:4317")
         self.assertEqual(kwargs["headers"], " key1=value1,KEY2 = value=2")
         self.assertEqual(kwargs["timeout"], 10)
