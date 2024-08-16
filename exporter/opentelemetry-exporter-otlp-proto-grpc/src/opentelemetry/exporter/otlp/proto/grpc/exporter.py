@@ -122,7 +122,9 @@ def get_resource_data(
 
 def _read_file(file_path: Optional[str]) -> Optional[bytes]:
     if file_path is None:
-        logger.error("No file path provided for reading. Please check the environment variables.")
+        logger.error(
+            "No file path provided for reading. Please check the environment variables."
+        )
         return None
 
     try:
@@ -133,6 +135,7 @@ def _read_file(file_path: Optional[str]) -> Optional[bytes]:
             f"Failed to read file: {e.filename}. Please check if the file exists and is accessible."
         )
         return None
+
 
 def _load_credentials(
     certificate_file: str,
