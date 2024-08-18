@@ -290,7 +290,10 @@ class TestOTLPMetricExporter(TestCase):
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__"
     )
-    def test_env_variables_with_only_certificate(self, mock_exporter_mixin):
+    @patch("logging.Logger.error")
+    def test_env_variables_with_only_certificate(
+        self, mock_logger_error, mock_exporter_mixin
+    ):
         OTLPMetricExporter()
 
         self.assertTrue(len(mock_exporter_mixin.call_args_list) == 1)
@@ -301,6 +304,8 @@ class TestOTLPMetricExporter(TestCase):
         self.assertEqual(kwargs["compression"], Compression.Gzip)
         self.assertIsNotNone(kwargs["credentials"])
         self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
+
+        mock_logger_error.assert_not_called()
 
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"

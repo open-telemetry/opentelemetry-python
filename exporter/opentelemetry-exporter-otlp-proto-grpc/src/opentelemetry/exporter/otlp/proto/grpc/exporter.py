@@ -121,12 +121,6 @@ def get_resource_data(
 
 
 def _read_file(file_path: Optional[str]) -> Optional[bytes]:
-    if file_path is None:
-        logger.error(
-            "No file path provided for reading. Please check the environment variables."
-        )
-        return None
-
     try:
         with open(file_path, "rb") as file:
             return file.read()
@@ -138,13 +132,19 @@ def _read_file(file_path: Optional[str]) -> Optional[bytes]:
 
 
 def _load_credentials(
-    certificate_file: str,
-    client_key_file: str,
-    client_certificate_file: str,
+    certificate_file: Optional[str],
+    client_key_file: Optional[str],
+    client_certificate_file: Optional[str],
 ) -> Optional[ChannelCredentials]:
-    root_certificates = _read_file(certificate_file)
-    private_key = _read_file(client_key_file)
-    certificate_chain = _read_file(client_certificate_file)
+    root_certificates = (
+        _read_file(certificate_file) if certificate_file else None
+    )
+    private_key = _read_file(client_key_file) if client_key_file else None
+    certificate_chain = (
+        _read_file(client_certificate_file)
+        if client_certificate_file
+        else None
+    )
 
     return ssl_channel_credentials(
         root_certificates=root_certificates,

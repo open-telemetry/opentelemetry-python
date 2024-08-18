@@ -273,6 +273,7 @@ class TestOTLPSpanExporter(TestCase):
     )
     def test_env_variables_with_client_certificates(self, mock_exporter_mixin):
         OTLPSpanExporter()
+
         self.assertTrue(len(mock_exporter_mixin.call_args_list) == 1)
         _, kwargs = mock_exporter_mixin.call_args_list[0]
         self.assertEqual(kwargs["endpoint"], "collector:4317")
@@ -296,8 +297,12 @@ class TestOTLPSpanExporter(TestCase):
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__"
     )
-    def test_env_variables_with_only_certificate(self, mock_exporter_mixin):
+    @patch("logging.Logger.error")
+    def test_env_variables_with_only_certificate(
+        self, mock_logger_error, mock_exporter_mixin
+    ):
         OTLPSpanExporter()
+
         self.assertTrue(len(mock_exporter_mixin.call_args_list) == 1)
         _, kwargs = mock_exporter_mixin.call_args_list[0]
         self.assertEqual(kwargs["endpoint"], "collector:4317")
@@ -306,6 +311,8 @@ class TestOTLPSpanExporter(TestCase):
         self.assertEqual(kwargs["compression"], Compression.Gzip)
         self.assertIsNotNone(kwargs["credentials"])
         self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
+
+        mock_logger_error.assert_not_called()
 
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"
