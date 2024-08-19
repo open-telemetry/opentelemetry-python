@@ -669,6 +669,19 @@ class TestReadableSpan(unittest.TestCase):
         event2 = trace.Event("foo2", {"bar2": "baz2"})
         self.assertEqual(event2.dropped_attributes, 0)
 
+    def test_link_dropped_attributes(self):
+        link1 = trace_api.Link(
+            mock.Mock(spec=trace_api.SpanContext),
+            BoundedAttributes(0, attributes={"bar1": "baz1"}),
+        )
+        self.assertEqual(link1.dropped_attributes, 1)
+
+        link2 = trace_api.Link(
+            mock.Mock(spec=trace_api.SpanContext),
+            {"bar2": "baz2"},
+        )
+        self.assertEqual(link2.dropped_attributes, 0)
+
 
 class DummyError(Exception):
     pass
@@ -1897,7 +1910,7 @@ class TestSpanLimits(unittest.TestCase):
         self.assertEqual(2, span.dropped_attributes)
         self.assertEqual(3, span.dropped_events)
         self.assertEqual(2, span.events[0].dropped_attributes)
-        self.assertEqual(2, span.links[0].attributes.dropped)
+        self.assertEqual(2, span.links[0].dropped_attributes)
 
     def _test_span_limits(
         self,
