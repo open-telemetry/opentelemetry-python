@@ -491,7 +491,9 @@ class LoggingHandler(logging.Handler):
             if exctype is not None:
                 attributes[SpanAttributes.EXCEPTION_TYPE] = exctype.__name__
             if value is not None and value.args:
-                attributes[SpanAttributes.EXCEPTION_MESSAGE] = value.args[0]
+                attributes[SpanAttributes.EXCEPTION_MESSAGE] = str(
+                    value.args[0]
+                )
             if tb is not None:
                 # https://github.com/open-telemetry/opentelemetry-specification/blob/9fa7c656b26647b27e485a6af7e38dc716eba98a/specification/trace/semantic_conventions/exceptions.md#stacktrace-representation
                 attributes[SpanAttributes.EXCEPTION_STACKTRACE] = "".join(
