@@ -32,12 +32,14 @@ _KEY_FORMAT = (
 # A value contains a URL-encoded UTF-8 string. The encoded form can contain any
 # printable US-ASCII characters (0x20-0x7f) other than SP, DEL, and ",;/
 _VALUE_FORMAT = r"[\x21\x23-\x2b\x2d-\x3a\x3c-\x5b\x5d-\x7e]*"
+# Like above with SP included
+_LIBERAL_VALUE_FORMAT = r"[\x20\x21\x23-\x2b\x2d-\x3a\x3c-\x5b\x5d-\x7e]*"
 # A key-value is key=value, with optional whitespace surrounding key and value
 _KEY_VALUE_FORMAT = rf"{_OWS}{_KEY_FORMAT}{_OWS}={_OWS}{_VALUE_FORMAT}{_OWS}"
 
 _HEADER_PATTERN = compile(_KEY_VALUE_FORMAT)
 _LIBERAL_HEADER_PATTERN = compile(
-    rf"{_OWS}{_KEY_FORMAT}{_OWS}={_OWS}[\w ]*{_OWS}"
+    rf"{_OWS}{_KEY_FORMAT}{_OWS}={_OWS}{_LIBERAL_VALUE_FORMAT}{_OWS}"
 )
 _DELIMITER_PATTERN = compile(r"[ \t]*,[ \t]*")
 

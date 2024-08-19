@@ -89,6 +89,11 @@ class TestParseHeaders(unittest.TestCase):
         inp = self._common_test_cases() + [
             # valid header value
             ("key=value othervalue", [("key", "value othervalue")], False),
+            (
+                "key=value Other_Value==",
+                [("key", "value Other_Value==")],
+                False,
+            ),
         ]
         for case_ in inp:
             headers, expected, warn = case_
