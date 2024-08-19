@@ -161,6 +161,9 @@ class SometimesMondaysOnSamplerPlugin(FileConfigurationPlugin):
 
 def resolve_schema(json_file_path) -> dict:
 
+    from ipdb import set_trace
+    set_trace()
+
     root_path = json_file_path.absolute()
 
     with open(json_file_path, "r") as json_file:
