@@ -97,12 +97,11 @@ class OTLPLogExporter(LogExporter):
             OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE,
             environ.get(OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE, None),
         )
-        self._client_cert = self._client_certificate_file
-        if self._client_certificate_file and self._client_key_file:
-            self._client_cert = (
-                self._client_certificate_file,
-                self._client_key_file,
-            )
+        self._client_cert = (
+            (self._client_certificate_file, self._client_key_file)
+            if self._client_certificate_file and self._client_key_file
+            else self._client_certificate_file
+        )
         headers_string = environ.get(
             OTEL_EXPORTER_OTLP_LOGS_HEADERS,
             environ.get(OTEL_EXPORTER_OTLP_HEADERS, ""),
