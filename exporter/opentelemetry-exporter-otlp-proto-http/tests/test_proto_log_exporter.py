@@ -40,10 +40,14 @@ from opentelemetry.sdk._logs import LogRecord as SDKLogRecord
 from opentelemetry.sdk._logs.export import LogExportResult
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_CLIENT_KEY,
     OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_EXPORTER_OTLP_HEADERS,
     OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY,
     OTEL_EXPORTER_OTLP_LOGS_COMPRESSION,
     OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
     OTEL_EXPORTER_OTLP_LOGS_HEADERS,
@@ -56,6 +60,8 @@ from opentelemetry.trace import TraceFlags
 
 ENV_ENDPOINT = "http://localhost.env:8080/"
 ENV_CERTIFICATE = "/etc/base.crt"
+ENV_CLIENT_CERTIFICATE = "/etc/client-cert.pem"
+ENV_CLIENT_KEY = "/etc/client-key.pem"
 ENV_HEADERS = "envHeader1=val1,envHeader2=val2"
 ENV_TIMEOUT = "30"
 
@@ -69,6 +75,8 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             exporter._endpoint, DEFAULT_ENDPOINT + DEFAULT_LOGS_EXPORT_PATH
         )
         self.assertEqual(exporter._certificate_file, True)
+        self.assertEqual(exporter._client_certificate_file, None)
+        self.assertEqual(exporter._client_key_file, None)
         self.assertEqual(exporter._timeout, DEFAULT_TIMEOUT)
         self.assertIs(exporter._compression, DEFAULT_COMPRESSION)
         self.assertEqual(exporter._headers, {})
@@ -87,11 +95,15 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         "os.environ",
         {
             OTEL_EXPORTER_OTLP_CERTIFICATE: ENV_CERTIFICATE,
+            OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE: ENV_CLIENT_CERTIFICATE,
+            OTEL_EXPORTER_OTLP_CLIENT_KEY: ENV_CLIENT_KEY,
             OTEL_EXPORTER_OTLP_COMPRESSION: Compression.Gzip.value,
             OTEL_EXPORTER_OTLP_ENDPOINT: ENV_ENDPOINT,
             OTEL_EXPORTER_OTLP_HEADERS: ENV_HEADERS,
             OTEL_EXPORTER_OTLP_TIMEOUT: ENV_TIMEOUT,
             OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE: "logs/certificate.env",
+            OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE: "logs/client-cert.pem",
+            OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY: "logs/client-key.pem",
             OTEL_EXPORTER_OTLP_LOGS_COMPRESSION: Compression.Deflate.value,
             OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "https://logs.endpoint.env",
             OTEL_EXPORTER_OTLP_LOGS_HEADERS: "logsEnv1=val1,logsEnv2=val2,logsEnv3===val3==",
@@ -103,6 +115,10 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
 
         self.assertEqual(exporter._endpoint, "https://logs.endpoint.env")
         self.assertEqual(exporter._certificate_file, "logs/certificate.env")
+        self.assertEqual(
+            exporter._client_certificate_file, "logs/client-cert.pem"
+        )
+        self.assertEqual(exporter._client_key_file, "logs/client-key.pem")
         self.assertEqual(exporter._timeout, 40)
         self.assertIs(exporter._compression, Compression.Deflate)
         self.assertEqual(
@@ -119,6 +135,8 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         "os.environ",
         {
             OTEL_EXPORTER_OTLP_CERTIFICATE: ENV_CERTIFICATE,
+            OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE: ENV_CLIENT_CERTIFICATE,
+            OTEL_EXPORTER_OTLP_CLIENT_KEY: ENV_CLIENT_KEY,
             OTEL_EXPORTER_OTLP_COMPRESSION: Compression.Gzip.value,
             OTEL_EXPORTER_OTLP_ENDPOINT: ENV_ENDPOINT,
             OTEL_EXPORTER_OTLP_HEADERS: ENV_HEADERS,
@@ -130,6 +148,8 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         exporter = OTLPLogExporter(
             endpoint="endpoint.local:69/logs",
             certificate_file="/hello.crt",
+            client_key_file="/client-key.pem",
+            client_certificate_file="/client-cert.pem",
             headers={"testHeader1": "value1", "testHeader2": "value2"},
             timeout=70,
             compression=Compression.NoCompression,
@@ -138,6 +158,8 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
 
         self.assertEqual(exporter._endpoint, "endpoint.local:69/logs")
         self.assertEqual(exporter._certificate_file, "/hello.crt")
+        self.assertEqual(exporter._client_certificate_file, "/client-cert.pem")
+        self.assertEqual(exporter._client_key_file, "/client-key.pem")
         self.assertEqual(exporter._timeout, 70)
         self.assertIs(exporter._compression, Compression.NoCompression)
         self.assertEqual(
@@ -150,6 +172,8 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         "os.environ",
         {
             OTEL_EXPORTER_OTLP_CERTIFICATE: ENV_CERTIFICATE,
+            OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE: ENV_CLIENT_CERTIFICATE,
+            OTEL_EXPORTER_OTLP_CLIENT_KEY: ENV_CLIENT_KEY,
             OTEL_EXPORTER_OTLP_COMPRESSION: Compression.Gzip.value,
             OTEL_EXPORTER_OTLP_ENDPOINT: ENV_ENDPOINT,
             OTEL_EXPORTER_OTLP_HEADERS: ENV_HEADERS,
@@ -164,6 +188,10 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             exporter._endpoint, ENV_ENDPOINT + DEFAULT_LOGS_EXPORT_PATH
         )
         self.assertEqual(exporter._certificate_file, ENV_CERTIFICATE)
+        self.assertEqual(
+            exporter._client_certificate_file, ENV_CLIENT_CERTIFICATE
+        )
+        self.assertEqual(exporter._client_key_file, ENV_CLIENT_KEY)
         self.assertEqual(exporter._timeout, int(ENV_TIMEOUT))
         self.assertIs(exporter._compression, Compression.Gzip)
         self.assertEqual(
