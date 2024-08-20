@@ -1043,7 +1043,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         # run this test case with the same values used in a previous execution,
         # check the value printed by that previous execution of this test case
         # and use the same value for the seed variable in the line below.
-        # seed = 4539544373807492135
+        seed = 3373389994391084876
 
         random_generator = Random(seed)
         print(f"seed for {currentframe().f_code.co_name} is {seed}")
