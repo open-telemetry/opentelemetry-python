@@ -28,12 +28,16 @@ from opentelemetry.exporter.otlp.proto.common._internal import (
 from opentelemetry.exporter.otlp.proto.common._log_encoder import encode_logs
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_CLIENT_KEY,
     OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_EXPORTER_OTLP_HEADERS,
     OTEL_EXPORTER_OTLP_TIMEOUT,
     OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
     OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY,
     OTEL_EXPORTER_OTLP_LOGS_HEADERS,
     OTEL_EXPORTER_OTLP_LOGS_TIMEOUT,
     OTEL_EXPORTER_OTLP_LOGS_COMPRESSION,
@@ -67,6 +71,8 @@ class OTLPLogExporter(LogExporter):
         self,
         endpoint: Optional[str] = None,
         certificate_file: Optional[str] = None,
+        client_key_file: Optional[str] = None,
+        client_certificate_file: Optional[str] = None,
         headers: Optional[Dict[str, str]] = None,
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
@@ -78,9 +84,23 @@ class OTLPLogExporter(LogExporter):
                 environ.get(OTEL_EXPORTER_OTLP_ENDPOINT, DEFAULT_ENDPOINT)
             ),
         )
+        # Keeping these as instance variables because they are used in tests
         self._certificate_file = certificate_file or environ.get(
             OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
             environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE, True),
+        )
+        self._client_key_file = client_key_file or environ.get(
+            OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY,
+            environ.get(OTEL_EXPORTER_OTLP_CLIENT_KEY, None),
+        )
+        self._client_certificate_file = client_certificate_file or environ.get(
+            OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE,
+            environ.get(OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE, None),
+        )
+        self._client_cert = (
+            (self._client_certificate_file, self._client_key_file)
+            if self._client_certificate_file and self._client_key_file
+            else self._client_certificate_file
         )
         headers_string = environ.get(
             OTEL_EXPORTER_OTLP_LOGS_HEADERS,
@@ -120,6 +140,7 @@ class OTLPLogExporter(LogExporter):
             data=data,
             verify=self._certificate_file,
             timeout=self._timeout,
+            cert=self._client_cert,
         )
 
     @staticmethod
