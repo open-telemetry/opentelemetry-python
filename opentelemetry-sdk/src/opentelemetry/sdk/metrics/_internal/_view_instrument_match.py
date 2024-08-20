@@ -40,7 +40,6 @@ class _ViewInstrumentMatch:
         instrument: Instrument,
         instrument_class_aggregation: Dict[type, Aggregation],
     ):
-        self._start_time_unix_nano = time_ns()
         self._view = view
         self._instrument = instrument
         self._attributes_aggregation: Dict[frozenset, _Aggregation] = {}
@@ -107,7 +106,7 @@ class _ViewInstrumentMatch:
                             self._view._aggregation._create_aggregation(
                                 self._instrument,
                                 attributes,
-                                self._start_time_unix_nano,
+                                time_ns(),
                             )
                         )
                     else:
@@ -116,7 +115,7 @@ class _ViewInstrumentMatch:
                         ]._create_aggregation(
                             self._instrument,
                             attributes,
-                            self._start_time_unix_nano,
+                            time_ns(),
                         )
                     self._attributes_aggregation[aggr_key] = aggregation
 

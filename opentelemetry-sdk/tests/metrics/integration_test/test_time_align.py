@@ -26,6 +26,11 @@ from opentelemetry.sdk.metrics.export import (
 
 
 class TestTimeAlign(TestCase):
+
+    # This delay is needed for these tests to pass when they are run in
+    # Windows.
+    delay = 0.0001
+
     def test_time_align_cumulative(self):
         reader = InMemoryMetricReader()
         meter_provider = MeterProvider(metric_readers=[reader])
@@ -36,9 +41,11 @@ class TestTimeAlign(TestCase):
         counter_1 = meter.create_counter("counter_1")
 
         counter_0.add(10, {"label": "value1"})
+        sleep(self.delay)
         counter_0.add(10, {"label": "value2"})
-        sleep(0.5)
+        sleep(self.delay)
         counter_1.add(10, {"label": "value1"})
+        sleep(self.delay)
         counter_1.add(10, {"label": "value2"})
 
         metrics = reader.get_metrics_data()
@@ -56,11 +63,11 @@ class TestTimeAlign(TestCase):
             .data.data_points
         )
 
-        self.assertEqual(
+        self.assertLess(
             data_points_0_0[0].start_time_unix_nano,
             data_points_0_0[1].start_time_unix_nano,
         )
-        self.assertEqual(
+        self.assertLess(
             data_points_0_1[0].start_time_unix_nano,
             data_points_0_1[1].start_time_unix_nano,
         )
@@ -83,9 +90,11 @@ class TestTimeAlign(TestCase):
         )
 
         counter_0.add(10, {"label": "value1"})
+        sleep(self.delay)
         counter_0.add(10, {"label": "value2"})
-        sleep(0.5)
+        sleep(self.delay)
         counter_1.add(10, {"label": "value1"})
+        sleep(self.delay)
         counter_1.add(10, {"label": "value2"})
 
         metrics = reader.get_metrics_data()
@@ -103,11 +112,11 @@ class TestTimeAlign(TestCase):
             .data.data_points
         )
 
-        self.assertEqual(
+        self.assertLess(
             data_points_1_0[0].start_time_unix_nano,
             data_points_1_0[1].start_time_unix_nano,
         )
-        self.assertEqual(
+        self.assertLess(
             data_points_1_1[0].start_time_unix_nano,
             data_points_1_1[1].start_time_unix_nano,
         )
@@ -161,9 +170,11 @@ class TestTimeAlign(TestCase):
         counter_1 = meter.create_counter("counter_1")
 
         counter_0.add(10, {"label": "value1"})
+        sleep(self.delay)
         counter_0.add(10, {"label": "value2"})
-        sleep(0.5)
+        sleep(self.delay)
         counter_1.add(10, {"label": "value1"})
+        sleep(self.delay)
         counter_1.add(10, {"label": "value2"})
 
         metrics = reader.get_metrics_data()
@@ -181,11 +192,11 @@ class TestTimeAlign(TestCase):
             .data.data_points
         )
 
-        self.assertEqual(
+        self.assertLess(
             data_points_0_0[0].start_time_unix_nano,
             data_points_0_0[1].start_time_unix_nano,
         )
-        self.assertEqual(
+        self.assertLess(
             data_points_0_1[0].start_time_unix_nano,
             data_points_0_1[1].start_time_unix_nano,
         )
@@ -208,9 +219,11 @@ class TestTimeAlign(TestCase):
         )
 
         counter_0.add(10, {"label": "value1"})
+        sleep(self.delay)
         counter_0.add(10, {"label": "value2"})
-        sleep(0.5)
+        sleep(self.delay)
         counter_1.add(10, {"label": "value1"})
+        sleep(self.delay)
         counter_1.add(10, {"label": "value2"})
 
         metrics = reader.get_metrics_data()

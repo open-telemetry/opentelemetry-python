@@ -217,7 +217,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
 
     @patch(
         "opentelemetry.sdk.metrics._internal._view_instrument_match.time_ns",
-        side_effect=[0, time_ns()],
+        side_effect=[0, 1, 2],
     )
     def test_collect_resets_start_time_unix_nano(self, mock_time_ns):
         instrument = Mock(name="instrument")
@@ -234,10 +234,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             ),
         )
         start_time_unix_nano = 0
-        self.assertEqual(mock_time_ns.call_count, 1)
-        self.assertEqual(
-            view_instrument_match._start_time_unix_nano, start_time_unix_nano
-        )
+        self.assertEqual(mock_time_ns.call_count, 0)
 
         # +1 call to _create_aggregation
         view_instrument_match.consume_measurement(
@@ -254,10 +251,6 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         )
         self.assertIsNotNone(collected_data_points)
         self.assertEqual(len(collected_data_points), 1)
-        self.assertEqual(
-            view_instrument_match._start_time_unix_nano,
-            collection_start_time_unix_nano,
-        )
 
         # +1 call to _create_aggregation
         view_instrument_match.consume_measurement(
@@ -266,7 +259,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             )
         )
         view_instrument_match._view._aggregation._create_aggregation.assert_called_with(
-            instrument, {"foo": "bar1"}, collection_start_time_unix_nano
+            instrument, {"foo": "bar1"}, 1
         )
         collection_start_time_unix_nano = time_ns()
         collected_data_points = view_instrument_match.collect(
@@ -276,10 +269,6 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         self.assertEqual(len(collected_data_points), 2)
         collected_data_points = view_instrument_match.collect(
             AggregationTemporality.CUMULATIVE, collection_start_time_unix_nano
-        )
-        self.assertEqual(
-            view_instrument_match._start_time_unix_nano,
-            collection_start_time_unix_nano,
         )
         # # +1 call to create_aggregation
         view_instrument_match.consume_measurement(
@@ -305,10 +294,6 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         self.assertEqual(
             view_instrument_match._view._aggregation._create_aggregation.call_count,
             5,
-        )
-        self.assertEqual(
-            view_instrument_match._start_time_unix_nano,
-            collection_start_time_unix_nano,
         )
 
     def test_data_point_check(self):
