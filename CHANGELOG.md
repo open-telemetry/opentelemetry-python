@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4103](https://github.com/open-telemetry/opentelemetry-python/pull/4103))
 - Update semantic conventions to version 1.27.0
   ([#4104](https://github.com/open-telemetry/opentelemetry-python/pull/4104))
+- Export ExponentialHistogram and ExponentialHistogramDataPoint
+  ([#4134](https://github.com/open-telemetry/opentelemetry-python/pull/4134))
 - Implement Client Key and Certificate File Support for All OTLP Exporters
   ([#4116](https://github.com/open-telemetry/opentelemetry-python/pull/4116))
 
