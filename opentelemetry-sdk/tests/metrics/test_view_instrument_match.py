@@ -14,8 +14,9 @@
 
 # pylint: disable=protected-access
 
+from time import time_ns
 from unittest import TestCase
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock, Mock, patch
 
 from opentelemetry.sdk.metrics._internal._view_instrument_match import (
     _ViewInstrumentMatch,
@@ -213,6 +214,102 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
 
         self.assertEqual(number_data_point.attributes, {"c": "d"})
         self.assertEqual(number_data_point.value, 0)
+
+    @patch(
+        "opentelemetry.sdk.metrics._internal._view_instrument_match.time_ns",
+        side_effect=[0, time_ns()],
+    )
+    def test_collect_resets_start_time_unix_nano(self, mock_time_ns):
+        instrument = Mock(name="instrument")
+        instrument.instrumentation_scope = self.mock_instrumentation_scope
+        view_instrument_match = _ViewInstrumentMatch(
+            view=View(
+                instrument_name="instrument",
+                name="name",
+                aggregation=self.mock_aggregation_factory,
+            ),
+            instrument=instrument,
+            instrument_class_aggregation=MagicMock(
+                **{"__getitem__.return_value": DefaultAggregation()}
+            ),
+        )
+        start_time_unix_nano = 0
+        self.assertEqual(mock_time_ns.call_count, 1)
+        self.assertEqual(
+            view_instrument_match._start_time_unix_nano, start_time_unix_nano
+        )
+
+        # +1 call to _create_aggregation
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=0, instrument=instrument, attributes={"foo": "bar0"}
+            )
+        )
+        view_instrument_match._view._aggregation._create_aggregation.assert_called_with(
+            instrument, {"foo": "bar0"}, start_time_unix_nano
+        )
+        collection_start_time_unix_nano = time_ns()
+        collected_data_points = view_instrument_match.collect(
+            AggregationTemporality.CUMULATIVE, collection_start_time_unix_nano
+        )
+        self.assertIsNotNone(collected_data_points)
+        self.assertEqual(len(collected_data_points), 1)
+        self.assertEqual(
+            view_instrument_match._start_time_unix_nano,
+            collection_start_time_unix_nano,
+        )
+
+        # +1 call to _create_aggregation
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=0, instrument=instrument, attributes={"foo": "bar1"}
+            )
+        )
+        view_instrument_match._view._aggregation._create_aggregation.assert_called_with(
+            instrument, {"foo": "bar1"}, collection_start_time_unix_nano
+        )
+        collection_start_time_unix_nano = time_ns()
+        collected_data_points = view_instrument_match.collect(
+            AggregationTemporality.CUMULATIVE, collection_start_time_unix_nano
+        )
+        self.assertIsNotNone(collected_data_points)
+        self.assertEqual(len(collected_data_points), 2)
+        collected_data_points = view_instrument_match.collect(
+            AggregationTemporality.CUMULATIVE, collection_start_time_unix_nano
+        )
+        self.assertEqual(
+            view_instrument_match._start_time_unix_nano,
+            collection_start_time_unix_nano,
+        )
+        # # +1 call to create_aggregation
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=0, instrument=instrument, attributes={"foo": "bar"}
+            )
+        )
+
+        # No new calls to _create_aggregation because attributes remain the same
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=0, instrument=instrument, attributes={"foo": "bar"}
+            )
+        )
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=0, instrument=instrument, attributes={"foo": "bar"}
+            )
+        )
+        # In total we have 5 calls for _create_aggregation
+        # 1 from the _ViewInstrumentMatch initialization and 4
+        # from the consume_measurement calls with different attributes
+        self.assertEqual(
+            view_instrument_match._view._aggregation._create_aggregation.call_count,
+            5,
+        )
+        self.assertEqual(
+            view_instrument_match._start_time_unix_nano,
+            collection_start_time_unix_nano,
+        )
 
     def test_data_point_check(self):
         instrument1 = _Counter(
