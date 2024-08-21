@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Implementation of Events API
+  ([#4054](https://github.com/open-telemetry/opentelemetry-python/pull/4054))
 - Make log sdk add `exception.message` to logRecord for exceptions whose argument 
   is an exception not a string message
   ([#4122](https://github.com/open-telemetry/opentelemetry-python/pull/4122))
