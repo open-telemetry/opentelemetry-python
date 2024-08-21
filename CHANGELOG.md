@@ -31,8 +31,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4134](https://github.com/open-telemetry/opentelemetry-python/pull/4134))
 - Implement Client Key and Certificate File Support for All OTLP Exporters
   ([#4116](https://github.com/open-telemetry/opentelemetry-python/pull/4116))
-- Implement Client Key and Certificate File Support for All OTLP Exporters
-  ([#4116](https://github.com/open-telemetry/opentelemetry-python/pull/4116))
 - Remove `_start_time_unix_nano` attribute from `_ViewInstrumentMatch` in favor
   of using `time_ns()` at the moment when the aggregation object is created
   ([#4137](https://github.com/open-telemetry/opentelemetry-python/pull/4137))
