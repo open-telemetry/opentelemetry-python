@@ -270,13 +270,15 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         collected_data_points = view_instrument_match.collect(
             AggregationTemporality.CUMULATIVE, collection_start_time_unix_nano
         )
-        # # +1 call to create_aggregation
+        # +1 call to create_aggregation
         view_instrument_match.consume_measurement(
             Measurement(
                 value=0, instrument=instrument, attributes={"foo": "bar"}
             )
         )
-
+        view_instrument_match._view._aggregation._create_aggregation.assert_called_with(
+            instrument, {"foo": "bar"}, 2
+        )
         # No new calls to _create_aggregation because attributes remain the same
         view_instrument_match.consume_measurement(
             Measurement(
