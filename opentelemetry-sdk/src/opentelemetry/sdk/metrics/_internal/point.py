@@ -183,8 +183,10 @@ class Histogram:
 
 
 # pylint: disable=invalid-name
-DataT = Union[Sum, Gauge, Histogram]
-DataPointT = Union[NumberDataPoint, HistogramDataPoint]
+DataT = Union[Sum, Gauge, Histogram, ExponentialHistogram]
+DataPointT = Union[
+    NumberDataPoint, HistogramDataPoint, ExponentialHistogramDataPoint
+]
 
 
 @dataclass(frozen=True)

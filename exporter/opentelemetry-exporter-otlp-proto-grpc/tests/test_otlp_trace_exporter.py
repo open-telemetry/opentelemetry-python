@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=too-many-lines
+
 import os
 import threading
 from concurrent.futures import ThreadPoolExecutor
@@ -56,6 +58,8 @@ from opentelemetry.proto.trace.v1.trace_pb2 import Status
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
     OTEL_EXPORTER_OTLP_TRACES_COMPRESSION,
     OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
     OTEL_EXPORTER_OTLP_TRACES_HEADERS,
@@ -171,6 +175,7 @@ class TestOTLPSpanExporter(TestCase):
                         "attributes": BoundedAttributes(
                             attributes={"a": 1, "b": False}
                         ),
+                        "dropped_attributes": 0,
                         "kind": OTLPSpan.SpanKind.SPAN_KIND_INTERNAL,  # pylint: disable=no-member
                     }
                 )
@@ -230,8 +235,6 @@ class TestOTLPSpanExporter(TestCase):
         "os.environ",
         {
             OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "collector:4317",
-            OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE: THIS_DIR
-            + "/fixtures/test.cert",
             OTEL_EXPORTER_OTLP_TRACES_HEADERS: " key1=value1,KEY2 = value=2",
             OTEL_EXPORTER_OTLP_TRACES_TIMEOUT: "10",
             OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: "gzip",
@@ -242,16 +245,74 @@ class TestOTLPSpanExporter(TestCase):
     )
     def test_env_variables(self, mock_exporter_mixin):
         OTLPSpanExporter()
+        self.assertTrue(len(mock_exporter_mixin.call_args_list) == 1)
+        _, kwargs = mock_exporter_mixin.call_args_list[0]
+        self.assertEqual(kwargs["endpoint"], "collector:4317")
+        self.assertEqual(kwargs["headers"], " key1=value1,KEY2 = value=2")
+        self.assertEqual(kwargs["timeout"], 10)
+        self.assertEqual(kwargs["compression"], Compression.Gzip)
+        self.assertIsNone(kwargs["credentials"])
+
+    @patch.dict(
+        "os.environ",
+        {
+            OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "collector:4317",
+            OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE: THIS_DIR
+            + "/fixtures/test.cert",
+            OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE: THIS_DIR
+            + "/fixtures/test-client-cert.pem",
+            OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY: THIS_DIR
+            + "/fixtures/test-client-key.pem",
+            OTEL_EXPORTER_OTLP_TRACES_HEADERS: " key1=value1,KEY2 = value=2",
+            OTEL_EXPORTER_OTLP_TRACES_TIMEOUT: "10",
+            OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: "gzip",
+        },
+    )
+    @patch(
+        "opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__"
+    )
+    def test_env_variables_with_client_certificates(self, mock_exporter_mixin):
+        OTLPSpanExporter()
 
         self.assertTrue(len(mock_exporter_mixin.call_args_list) == 1)
         _, kwargs = mock_exporter_mixin.call_args_list[0]
-
         self.assertEqual(kwargs["endpoint"], "collector:4317")
         self.assertEqual(kwargs["headers"], " key1=value1,KEY2 = value=2")
         self.assertEqual(kwargs["timeout"], 10)
         self.assertEqual(kwargs["compression"], Compression.Gzip)
         self.assertIsNotNone(kwargs["credentials"])
         self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
+
+    @patch.dict(
+        "os.environ",
+        {
+            OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "collector:4317",
+            OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE: THIS_DIR
+            + "/fixtures/test.cert",
+            OTEL_EXPORTER_OTLP_TRACES_HEADERS: " key1=value1,KEY2 = value=2",
+            OTEL_EXPORTER_OTLP_TRACES_TIMEOUT: "10",
+            OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: "gzip",
+        },
+    )
+    @patch(
+        "opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__"
+    )
+    @patch("logging.Logger.error")
+    def test_env_variables_with_only_certificate(
+        self, mock_logger_error, mock_exporter_mixin
+    ):
+        OTLPSpanExporter()
+
+        self.assertTrue(len(mock_exporter_mixin.call_args_list) == 1)
+        _, kwargs = mock_exporter_mixin.call_args_list[0]
+        self.assertEqual(kwargs["endpoint"], "collector:4317")
+        self.assertEqual(kwargs["headers"], " key1=value1,KEY2 = value=2")
+        self.assertEqual(kwargs["timeout"], 10)
+        self.assertEqual(kwargs["compression"], Compression.Gzip)
+        self.assertIsNotNone(kwargs["credentials"])
+        self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
+
+        mock_logger_error.assert_not_called()
 
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"
@@ -867,20 +928,6 @@ class TestOTLPSpanExporter(TestCase):
         self.assertEqual(arr_value.values[0].string_value, "asd")
         self.assertTrue(isinstance(arr_value.values[1], AnyValue))
         self.assertEqual(arr_value.values[1].string_value, "123")
-
-        # Tracing specs currently does not support Mapping type attributes
-        # map_value = _translate_key_values(
-        #     "map_type", {"asd": "123", "def": "456"}
-        # )
-        # self.assertTrue(isinstance(map_value, KeyValue))
-        # self.assertEqual(map_value.key, "map_type")
-        # self.assertTrue(isinstance(map_value.value, AnyValue))
-        # self.assertTrue(isinstance(map_value.value.kvlist_value, KeyValueList))
-
-        # kvlist_value = map_value.value.kvlist_value
-        # self.assertTrue(isinstance(kvlist_value.values[0], KeyValue))
-        # self.assertEqual(kvlist_value.values[0].key, "asd")
-        # self.assertEqual(kvlist_value.values[0].value.string_value, "123")
 
     def test_dropped_values(self):
         span = get_span_with_dropped_attributes_events_links()

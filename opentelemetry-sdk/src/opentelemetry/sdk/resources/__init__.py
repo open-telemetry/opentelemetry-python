@@ -59,6 +59,7 @@ import abc
 import concurrent.futures
 import logging
 import os
+import platform
 import sys
 import typing
 from json import dumps
@@ -125,8 +126,9 @@ KUBERNETES_JOB_UID = ResourceAttributes.K8S_JOB_UID
 KUBERNETES_JOB_NAME = ResourceAttributes.K8S_JOB_NAME
 KUBERNETES_CRON_JOB_UID = ResourceAttributes.K8S_CRONJOB_UID
 KUBERNETES_CRON_JOB_NAME = ResourceAttributes.K8S_CRONJOB_NAME
-OS_TYPE = ResourceAttributes.OS_TYPE
 OS_DESCRIPTION = ResourceAttributes.OS_DESCRIPTION
+OS_TYPE = ResourceAttributes.OS_TYPE
+OS_VERSION = ResourceAttributes.OS_VERSION
 PROCESS_PID = ResourceAttributes.PROCESS_PID
 PROCESS_PARENT_PID = ResourceAttributes.PROCESS_PARENT_PID
 PROCESS_EXECUTABLE_NAME = ResourceAttributes.PROCESS_EXECUTABLE_NAME
@@ -182,16 +184,17 @@ class Resource:
         if not attributes:
             attributes = {}
 
+        otel_experimental_resource_detectors = {"otel"}.union(
+            {
+                otel_experimental_resource_detector.strip()
+                for otel_experimental_resource_detector in environ.get(
+                    OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, ""
+                ).split(",")
+                if otel_experimental_resource_detector
+            }
+        )
+
         resource_detectors: List[ResourceDetector] = []
-
-        resource = _DEFAULT_RESOURCE
-
-        otel_experimental_resource_detectors = environ.get(
-            OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, "otel"
-        ).split(",")
-
-        if "otel" not in otel_experimental_resource_detectors:
-            otel_experimental_resource_detectors.append("otel")
 
         resource_detector: str
         for resource_detector in otel_experimental_resource_detectors:
@@ -382,6 +385,90 @@ class ProcessResourceDetector(ResourceDetector):
             resource_info[PROCESS_OWNER] = username
 
         return Resource(resource_info)  # type: ignore
+
+
+class OsResourceDetector(ResourceDetector):
+    """Detect os resources based on `Operating System conventions <https://opentelemetry.io/docs/specs/semconv/resource/os/>`_."""
+
+    def detect(self) -> "Resource":
+        """Returns a resource with with ``os.type`` and ``os.version``.
+
+        Python's platform library
+        ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+        To grab this information, Python's ``platform`` does not return what a
+        user might expect it to. Below is a breakdown of its return values in
+        different operating systems.
+
+        .. code-block:: python
+            :caption: Linux
+
+            >>> platform.system()
+            'Linux'
+            >>> platform.release()
+            '6.5.0-35-generic'
+            >>> platform.version()
+            '#35~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Tue May  7 09:00:52 UTC 2'
+
+        .. code-block:: python
+            :caption: MacOS
+
+            >>> platform.system()
+            'Darwin'
+            >>> platform.release()
+            '23.0.0'
+            >>> platform.version()
+            'Darwin Kernel Version 23.0.0: Fri Sep 15 14:42:57 PDT 2023; root:xnu-10002.1.13~1/RELEASE_ARM64_T8112'
+
+        .. code-block:: python
+            :caption: Windows
+
+            >>> platform.system()
+            'Windows'
+            >>> platform.release()
+            '2022Server'
+            >>> platform.version()
+            '10.0.20348'
+
+        .. code-block:: python
+            :caption: FreeBSD
+
+            >>> platform.system()
+            'FreeBSD'
+            >>> platform.release()
+            '14.1-RELEASE'
+            >>> platform.version()
+            'FreeBSD 14.1-RELEASE releng/14.1-n267679-10e31f0946d8 GENERIC'
+
+        .. code-block:: python
+            :caption: Solaris
+
+            >>> platform.system()
+            'SunOS'
+            >>> platform.release()
+            '5.11'
+            >>> platform.version()
+            '11.4.0.15.0'
+
+        """
+
+        os_type = platform.system().lower()
+        os_version = platform.release()
+
+        # See docstring
+        if os_type == "windows":
+            os_version = platform.version()
+        # Align SunOS with conventions
+        elif os_type == "sunos":
+            os_type = "solaris"
+            os_version = platform.version()
+
+        return Resource(
+            {
+                OS_TYPE: os_type,
+                OS_VERSION: os_version,
+            }
+        )
 
 
 def get_aggregated_resources(
