@@ -29,7 +29,7 @@ class TestTimeAlign(TestCase):
 
     # This delay is needed for these tests to pass when they are run in
     # Windows.
-    delay = 0.0001
+    delay = 0.001
 
     def test_time_align_cumulative(self):
         reader = InMemoryMetricReader()
@@ -62,6 +62,8 @@ class TestTimeAlign(TestCase):
             .metrics[1]
             .data.data_points
         )
+        self.assertEqual(len(data_points_0_0), 2)
+        self.assertEqual(len(data_points_0_1), 2)
 
         self.assertLess(
             data_points_0_0[0].start_time_unix_nano,
@@ -111,6 +113,9 @@ class TestTimeAlign(TestCase):
             .metrics[1]
             .data.data_points
         )
+
+        self.assertEqual(len(data_points_1_0), 2)
+        self.assertEqual(len(data_points_1_1), 2)
 
         self.assertLess(
             data_points_1_0[0].start_time_unix_nano,
@@ -191,6 +196,8 @@ class TestTimeAlign(TestCase):
             .metrics[1]
             .data.data_points
         )
+        self.assertEqual(len(data_points_0_0), 2)
+        self.assertEqual(len(data_points_0_1), 2)
 
         self.assertLess(
             data_points_0_0[0].start_time_unix_nano,
@@ -240,6 +247,8 @@ class TestTimeAlign(TestCase):
             .metrics[1]
             .data.data_points
         )
+        self.assertEqual(len(data_points_1_0), 2)
+        self.assertEqual(len(data_points_1_1), 2)
 
         self.assertEqual(
             data_points_1_0[0].start_time_unix_nano,
