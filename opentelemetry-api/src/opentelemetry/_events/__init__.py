@@ -43,6 +43,8 @@ class Event(LogRecord):
         severity_number: Optional[SeverityNumber] = None,
         attributes: Optional[Attributes] = None,
     ):
+        attributes = attributes or {}
+        event_attributes = {**attributes, "event.name": name}
         super().__init__(
             timestamp=timestamp,
             trace_id=trace_id,
@@ -50,7 +52,7 @@ class Event(LogRecord):
             trace_flags=trace_flags,
             body=body,  # type: ignore
             severity_number=severity_number,
-            attributes=attributes,
+            attributes=event_attributes,
         )
         self.name = name
 

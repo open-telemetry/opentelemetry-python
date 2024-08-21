@@ -8,4 +8,4 @@ class TestEvent(unittest.TestCase):
         event = Event("example", 123, attributes={"key": "value"})
         self.assertEqual(event.name, "example")
         self.assertEqual(event.timestamp, 123)
-        self.assertEqual(event.attributes, {"key": "value"})
+        self.assertEqual(event.attributes, {"key": "value", "event.name": "example"})
