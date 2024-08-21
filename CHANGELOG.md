@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Implementation of Events API
   ([#4054](https://github.com/open-telemetry/opentelemetry-python/pull/4054))
+- Make log sdk add `exception.message` to logRecord for exceptions whose argument 
+  is an exception not a string message
+  ([#4122](https://github.com/open-telemetry/opentelemetry-python/pull/4122))
 - Fix use of `link.attributes.dropped`, which may not exist
   ([#4119](https://github.com/open-telemetry/opentelemetry-python/pull/4119))
 - Running mypy on SDK resources
@@ -24,6 +27,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4103](https://github.com/open-telemetry/opentelemetry-python/pull/4103))
 - Update semantic conventions to version 1.27.0
   ([#4104](https://github.com/open-telemetry/opentelemetry-python/pull/4104))
+- Export ExponentialHistogram and ExponentialHistogramDataPoint
+  ([#4134](https://github.com/open-telemetry/opentelemetry-python/pull/4134))
+- Implement Client Key and Certificate File Support for All OTLP Exporters
+  ([#4116](https://github.com/open-telemetry/opentelemetry-python/pull/4116))
 
 ## Version 1.26.0/0.47b0 (2024-07-25)
 
