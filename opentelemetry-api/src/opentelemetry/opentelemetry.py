@@ -16,6 +16,7 @@ from inspect import signature
 
 
 class OpenTelemetry:
+    # pylint: disable=no-member
     def __init__(self, *args, **kwargs) -> None:
 
         object.__setattr__(self, "_args", list(args))
@@ -23,6 +24,7 @@ class OpenTelemetry:
         object.__setattr__(self, "_repr", None)
 
     def __repr__(self) -> str:
+        # pylint: disable=too-many-branches
 
         if self._repr is not None:
             return self._repr
@@ -31,7 +33,7 @@ class OpenTelemetry:
 
         parameters = signature(self.__init__).parameters.values()
 
-        for index, parameter in enumerate(parameters):
+        for parameter in parameters:
             if (
                 parameter.kind is parameter.POSITIONAL_ONLY
                 or parameter.kind is parameter.POSITIONAL_OR_KEYWORD
@@ -44,7 +46,7 @@ class OpenTelemetry:
                 for _ in range(len(self._args)):
                     repr_.append(repr(self._args.pop(0)))
 
-        for index, parameter in enumerate(parameters):
+        for parameter in parameters:
             if parameter.kind is parameter.KEYWORD_ONLY:
                 if self._args:
                     value = self._args.pop(0)

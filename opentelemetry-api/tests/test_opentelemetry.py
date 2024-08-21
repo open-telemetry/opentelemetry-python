@@ -18,6 +18,8 @@ from opentelemetry.opentelemetry import OpenTelemetry
 
 
 class TestOpenTelemetry(TestCase):
+    # pylint: disable=useless-parent-delegation
+    # pylint: disable=too-many-public-methods
     def test_opentelemetry(self):
         class OpenTelemetryChild(OpenTelemetry):
             def __init__(self):
@@ -330,7 +332,9 @@ class TestOpenTelemetry(TestCase):
             "OpenTelemetryChild('a', 'b', c='c', d='d')",
         )
 
-        class OpenTelemetryChild(OpenTelemetry):
+        class OpenTelemetryChild(
+            OpenTelemetry
+        ):  # pylint: disable=function-redefined
             def __init__(self, a, b, *, c="c", d="d"):
                 super().__init__(a, b, c=c, d=d)
 

@@ -520,6 +520,7 @@ class NonRecordingSpan(Span):
     """
 
     def __init__(self, context: "SpanContext") -> None:
+        super().__init__(context)
         self._context = context
 
     def get_span_context(self) -> "SpanContext":
