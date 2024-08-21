@@ -17,9 +17,8 @@ from typing import Optional
 from deprecated import deprecated
 
 from opentelemetry.attributes import BoundedAttributes
-from opentelemetry.util.types import Attributes
-
 from opentelemetry.opentelemetry import OpenTelemetry
+from opentelemetry.util.types import Attributes
 
 
 class InstrumentationInfo(OpenTelemetry):
@@ -38,6 +37,7 @@ class InstrumentationInfo(OpenTelemetry):
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
     ):
+        super().__init__(name, version=version, schema_url=schema_url)
         self._name = name
         self._version = version
         if schema_url is None:
@@ -93,6 +93,9 @@ class InstrumentationScope(OpenTelemetry):
         schema_url: Optional[str] = None,
         attributes: Optional[Attributes] = None,
     ) -> None:
+        super().__init__(
+            name, version=version, schema_url=schema_url, attributes=attributes
+        )
         self._name = name
         self._version = version
         if schema_url is None:

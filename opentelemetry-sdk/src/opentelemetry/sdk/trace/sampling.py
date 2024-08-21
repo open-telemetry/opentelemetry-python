@@ -184,6 +184,9 @@ class SamplingResult(OpenTelemetry):
         attributes: "Attributes" = None,
         trace_state: Optional["TraceState"] = None,
     ) -> None:
+        super().__init__(
+            decision, attributes=attributes, trace_state=trace_state
+        )
         self.decision = decision
         if attributes is None:
             self.attributes = MappingProxyType({})

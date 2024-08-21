@@ -53,6 +53,7 @@ class BoundedList(OpenTelemetry, Sequence):
     """
 
     def __init__(self, maxlen: Optional[int]):
+        super().__init__(maxlen)
         self.dropped = 0
         self._dq = deque(maxlen=maxlen)  # type: deque
         self._lock = threading.Lock()
@@ -101,6 +102,7 @@ class BoundedDict(OpenTelemetry, MutableMapping):
     """
 
     def __init__(self, maxlen: Optional[int]):
+        super().__init__(maxlen)
         if maxlen is not None:
             if not isinstance(maxlen, int):
                 raise ValueError

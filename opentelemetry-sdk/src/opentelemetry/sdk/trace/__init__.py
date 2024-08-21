@@ -621,6 +621,16 @@ class SpanLimits(OpenTelemetry):
         max_span_attribute_length: Optional[int] = None,
     ):
 
+        super().__init__(
+            max_attributes=max_attributes,
+            max_events=max_events,
+            max_links=max_links,
+            max_span_attributes=max_span_attributes,
+            max_event_attributes=max_event_attributes,
+            max_link_attributes=max_link_attributes,
+            max_attribute_length=max_attribute_length,
+            max_span_attribute_length=max_span_attribute_length,
+        )
         # span events and links count
         self.max_events = self._from_env_if_absent(
             max_events,
