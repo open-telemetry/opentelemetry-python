@@ -31,7 +31,7 @@ class Observation(OpenTelemetry):
     def __init__(
         self, value: Union[int, float], attributes: Attributes = None
     ) -> None:
-        super().__init__(value, attributes)
+        super().__init__(value, attributes=attributes)
         self._value = value
         self._attributes = attributes
 
