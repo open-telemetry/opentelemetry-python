@@ -81,9 +81,9 @@ class TestOTLPAttributeEncoder(unittest.TestCase):
                         )
                     ),
                 ),
-                PB2AnyValue(
+                PB2KeyValue(
                     key="binary_data",
-                    value=PB2AnyValue(bytes_value=b'x00\x01\x02'),
+                    value=PB2AnyValue(bytes_value= b'x00\x01\x02'),
                 ),
             ],
         )
