@@ -1050,9 +1050,8 @@ class TestExponentialBucketHistogramAggregation(TestCase):
 
         values = []
         for i in range(2000):
-            value = random_generator.randint(0, 1000)
-            while i == 0 and value == 0:
-                value = random_generator.randint(0, 1000)
+            # avoid both values being 0
+            value = random_generator.randint(0 if i else 1, 1000)
             values.append(value)
             histogram.aggregate(Measurement(value, Mock()))
             if i % 20 == 0:
