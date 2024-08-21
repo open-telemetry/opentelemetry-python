@@ -14,3 +14,4 @@ OpenTelemetry Python API
     trace
     metrics
     environment_variables
+    opentelemetry
