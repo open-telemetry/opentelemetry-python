@@ -51,11 +51,15 @@ from opentelemetry.proto.metrics.v1 import metrics_pb2 as pb2  # noqa: F401
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_EXPORTER_OTLP_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_CLIENT_KEY,
     OTEL_EXPORTER_OTLP_HEADERS,
     OTEL_EXPORTER_OTLP_TIMEOUT,
     OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
     OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY,
     OTEL_EXPORTER_OTLP_METRICS_HEADERS,
     OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
     OTEL_EXPORTER_OTLP_METRICS_COMPRESSION,
@@ -96,6 +100,8 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         self,
         endpoint: Optional[str] = None,
         certificate_file: Optional[str] = None,
+        client_key_file: Optional[str] = None,
+        client_certificate_file: Optional[str] = None,
         headers: Optional[Dict[str, str]] = None,
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
@@ -112,6 +118,19 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         self._certificate_file = certificate_file or environ.get(
             OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,
             environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE, True),
+        )
+        self._client_key_file = client_key_file or environ.get(
+            OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY,
+            environ.get(OTEL_EXPORTER_OTLP_CLIENT_KEY, None),
+        )
+        self._client_certificate_file = client_certificate_file or environ.get(
+            OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE,
+            environ.get(OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE, None),
+        )
+        self._client_cert = (
+            (self._client_certificate_file, self._client_key_file)
+            if self._client_certificate_file and self._client_key_file
+            else self._client_certificate_file
         )
         headers_string = environ.get(
             OTEL_EXPORTER_OTLP_METRICS_HEADERS,
@@ -156,6 +175,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             data=data,
             verify=self._certificate_file,
             timeout=self._timeout,
+            cert=self._client_cert,
         )
 
     @staticmethod
