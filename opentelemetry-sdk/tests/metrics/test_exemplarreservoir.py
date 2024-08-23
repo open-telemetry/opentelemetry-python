@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-#from opentelemetry.context import Context
+from opentelemetry.context import Context
 from opentelemetry.trace import INVALID_SPAN, SpanContext, TraceFlags
 from opentelemetry import trace
 from time import time_ns
@@ -58,6 +58,26 @@ class TestSimpleFixedSizeExemplarReservoir(TestCase):
         exemplars = reservoir.collect({"key2": "value2", "key3": "value3"})
         self.assertEqual(len(exemplars), 1)
         self.assertNotEqual("key1", exemplars[0].filtered_attributes)
+    
+    def test_reset_after_collection(self):
+        reservoir = SimpleFixedSizeExemplarReservoir(4)
+
+        reservoir.offer(1.0, time_ns(), {"attribute": "value1"}, Context())
+        reservoir.offer(2.0, time_ns(), {"attribute": "value2"}, Context())
+        reservoir.offer(3.0, time_ns(), {"attribute": "value3"}, Context())
+
+        exemplars = reservoir.collect({})
+        self.assertEqual(len(exemplars), 3)
+
+        # Offer new measurements after reset
+        reservoir.offer(4.0, time_ns(), {"attribute": "value4"}, Context())
+        reservoir.offer(5.0, time_ns(), {"attribute": "value5"}, Context())
+
+        # Collect again and check the number of exemplars
+        new_exemplars = reservoir.collect({})
+        self.assertEqual(len(new_exemplars), 2)
+        self.assertEqual(new_exemplars[0].value, 4.0)
+        self.assertEqual(new_exemplars[1].value, 5.0)
 
 class TestAlignedHistogramBucketExemplarReservoir(TestCase):
     
@@ -78,14 +98,40 @@ class TestAlignedHistogramBucketExemplarReservoir(TestCase):
         reservoir.offer(52, time_ns(), {"bucket": "5"}, ctx)
         reservoir.offer(7, time_ns(), {"bucket": "3"}, ctx)
         reservoir.offer(6, time_ns(), {"bucket": "3"}, ctx)
+        
         exemplars = reservoir.collect({"bucket": "3"})
+        
         self.assertEqual(len(exemplars), 2)
         self.assertEqual(exemplars[0].value, 6)            
         self.assertEqual(exemplars[1].value, 52)
         self.assertEqual(len(exemplars[0].filtered_attributes), 0)
         self.assertNotEqual(exemplars[1].filtered_attributes, {"bucket": "5"})
+    def test_last_measurement_in_bucket(self):
+        reservoir = AlignedHistogramBucketExemplarReservoir([0, 5, 10, 25])
+        span_context = SpanContext(
+            trace_id=self.TRACE_ID,
+            span_id=self.SPAN_ID,
+            is_remote=False,
+            trace_flags=TraceFlags(TraceFlags.SAMPLED),
+            trace_state={}
+        )
+        span = trace.NonRecordingSpan(span_context)
+        ctx = trace.set_span_in_context(span)
+        
+        # Offer values to the reservoir
+        reservoir.offer(2, time_ns(), {"bucket": "1"}, ctx)   # Bucket 1
+        reservoir.offer(7, time_ns(), {"bucket": "2"}, ctx)   # Bucket 2
+        reservoir.offer(8, time_ns(), {"bucket": "2"}, ctx)   # Bucket 2 - should replace the 7
+        reservoir.offer(15, time_ns(), {"bucket": "3"}, ctx)  # Bucket 3
 
-
+        exemplars = reservoir.collect({})
+        
+        # Check that each bucket has the correct value
+        self.assertEqual(len(exemplars), 3)  
+        self.assertEqual(exemplars[0].value, 2)
+        self.assertEqual(exemplars[1].value, 8)
+        self.assertEqual(exemplars[2].value, 15)
+        
 class TestExemplarReservoirFactory(TestCase):
     def test_sum_aggregation(self):
         exemplar_reservoir = default_reservoir_factory(_SumAggregation)

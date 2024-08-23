@@ -26,7 +26,7 @@ from opentelemetry.sdk.metrics._internal.aggregation import (
     _DropAggregation,
     _LastValueAggregation,
 )
-from opentelemetry.sdk.metrics._internal.instrument import _Counter
+from opentelemetry.sdk.metrics._internal.instrument import _Counter, _Histogram
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.sdk_configuration import (
     SdkConfiguration,
@@ -38,7 +38,29 @@ from opentelemetry.sdk.metrics.view import (
     LastValueAggregation,
     View,
 )
+from opentelemetry.sdk.metrics._internal.aggregation import (
+    Aggregation,
+    DefaultAggregation,
+    _Aggregation,
+    _ExplicitBucketHistogramAggregation,
+    _ExponentialBucketHistogramAggregation,
+)
+from opentelemetry.sdk.metrics._internal.exemplar import (
+    AlignedHistogramBucketExemplarReservoir,
+    ExemplarReservoir,
+    ExemplarReservoirFactory,
+    SimpleFixedSizeExemplarReservoir
+)
+from typing import Callable, Optional, Set, Type, Any, Sequence
 
+def generalized_reservoir_factory(size: int = 1, boundaries: Sequence[float] = None) -> Callable[[Type[_Aggregation]], ExemplarReservoirFactory]:
+        def factory(aggregationType: Type[_Aggregation]) -> ExemplarReservoirFactory:
+            if issubclass(aggregationType, _ExplicitBucketHistogramAggregation):
+                return lambda **kwargs: AlignedHistogramBucketExemplarReservoir(boundaries=boundaries or [], **{k: v for k, v in kwargs.items() if k != 'boundaries'})
+            else:
+                return lambda **kwargs: SimpleFixedSizeExemplarReservoir(size=size, **kwargs)
+        
+        return factory
 
 class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
     @classmethod
@@ -353,3 +375,207 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             ],
             _LastValueAggregation,
         )
+class TestSimpleFixedSizeExemplarReservoir(TestCase):
+    
+    def test_consume_measurement_with_custom_reservoir_factory(self):
+        simple_fixed_size_factory = generalized_reservoir_factory(size=10)
+
+        # Create an instance of _Counter
+        instrument1 = _Counter(
+            name="instrument1",
+            instrumentation_scope=None,  
+            measurement_consumer=None,  
+            description="description",
+            unit="unit",
+        )
+
+        view_instrument_match = _ViewInstrumentMatch(
+            view=View(
+                instrument_name="instrument1",
+                name="name",
+                aggregation=DefaultAggregation(),
+                exemplar_reservoir_factory=simple_fixed_size_factory,
+            ),
+            instrument=instrument1,
+            instrument_class_aggregation={_Counter: DefaultAggregation()},
+        )
+
+        # Consume measurements with the same attributes to ensure aggregation
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=2.0,
+                time_unix_nano=time_ns(),
+                instrument=instrument1,
+                context=Context(),
+                attributes={"attribute1": "value1"},
+            )
+        )
+
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=4.0,
+                time_unix_nano=time_ns(),
+                instrument=instrument1,
+                context=Context(),
+                attributes={"attribute2": "value2"},
+            )
+        )
+
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=5.0,
+                time_unix_nano=time_ns(),
+                instrument=instrument1,
+                context=Context(),
+                attributes={"attribute2": "value2"},
+            )
+        )
+
+        data_points = view_instrument_match.collect(AggregationTemporality.CUMULATIVE, 0)
+        
+        # Ensure only one data point is collected
+        self.assertEqual(len(data_points), 2)
+
+        # Verify that exemplars have been correctly stored and collected
+        self.assertEqual(len(data_points[0].exemplars), 1)
+        self.assertEqual(len(data_points[1].exemplars), 2)
+
+        self.assertEqual(data_points[0].exemplars[0].value, 2.0)
+        self.assertEqual(data_points[1].exemplars[0].value, 4.0)
+        self.assertEqual(data_points[1].exemplars[1].value, 5.0)
+
+
+    def test_consume_measurement_with_exemplars(self):
+        # Create an instance of _Counter
+        instrument1 = _Counter(
+            name="instrument1",
+            instrumentation_scope=None,  # No mock, set to None or actual scope if available
+            measurement_consumer=None,  # No mock, set to None or actual consumer if available
+            description="description",
+            unit="unit",
+        )
+
+        view_instrument_match = _ViewInstrumentMatch(
+            view=View(
+                instrument_name="instrument1",
+                name="name",
+                aggregation=DefaultAggregation(),
+            ),
+            instrument=instrument1,
+            instrument_class_aggregation={_Counter: DefaultAggregation()},
+        )
+
+        # Consume measurements with the same attributes to ensure aggregation
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=4.0,
+                time_unix_nano=time_ns(),
+                instrument=instrument1,
+                context=Context(),
+                attributes={"attribute2": "value2"},
+            )
+        )
+
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=5.0,
+                time_unix_nano=time_ns(),
+                instrument=instrument1,
+                context=Context(),
+                attributes={"attribute2": "value2"},
+            )
+        )
+
+        # Collect the data points
+        data_points = view_instrument_match.collect(AggregationTemporality.CUMULATIVE, 0)
+        
+        # Ensure only one data point is collected
+        self.assertEqual(len(data_points), 1)
+
+        # Verify that exemplars have been correctly stored and collected
+        self.assertEqual(len(data_points[0].exemplars), 2)
+
+        self.assertEqual(data_points[0].exemplars[0].value, 4.0)
+        self.assertEqual(data_points[0].exemplars[1].value, 5.0)
+
+class TestAlignedHistogramBucketExemplarReservoir(TestCase):
+    
+    def test_consume_measurement_with_custom_reservoir_factory(self):
+        # Custom factory for AlignedHistogramBucketExemplarReservoir with specific boundaries
+        histogram_reservoir_factory = generalized_reservoir_factory(boundaries=[0, 5, 10, 25])
+
+        # Create an instance of _Histogram
+        instrument1 = _Histogram(
+            name="instrument1",
+            instrumentation_scope=None,
+            measurement_consumer=None,
+            description="description",
+            unit="unit",
+        )
+
+        view_instrument_match = _ViewInstrumentMatch(
+            view=View(
+                instrument_name="instrument1",
+                name="name",
+                aggregation=DefaultAggregation(),
+                exemplar_reservoir_factory=histogram_reservoir_factory,
+            ),
+            instrument=instrument1,
+            instrument_class_aggregation={_Histogram: DefaultAggregation()},
+        )
+
+        # Consume measurements with different values to ensure they are placed in the correct buckets
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=2.0,  # Should go into the first bucket (0 to 5)
+                time_unix_nano=time_ns(),
+                instrument=instrument1,
+                context=Context(),
+                attributes={"attribute1": "value1"},
+            )
+        )
+
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=7.0,  # Should go into the second bucket (5 to 10)
+                time_unix_nano=time_ns(),
+                instrument=instrument1,
+                context=Context(),
+                attributes={"attribute2": "value2"},
+            )
+        )
+        
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=8.0,  # Should go into the second bucket (5 to 10)
+                time_unix_nano=time_ns(),
+                instrument=instrument1,
+                context=Context(),
+                attributes={"attribute2": "value2"},
+            )
+        )
+
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=15.0,  # Should go into the third bucket (10 to 25)
+                time_unix_nano=time_ns(),
+                instrument=instrument1,
+                context=Context(),
+                attributes={"attribute3": "value3"},
+            )
+        )
+
+        # Collect the data points
+        data_points = view_instrument_match.collect(AggregationTemporality.CUMULATIVE, 0)
+        
+        # Ensure three data points are collected, one for each bucket
+        self.assertEqual(len(data_points), 3)
+
+        # Verify that exemplars have been correctly stored and collected in their respective buckets
+        self.assertEqual(len(data_points[0].exemplars), 1)
+        self.assertEqual(len(data_points[1].exemplars), 1)
+        self.assertEqual(len(data_points[2].exemplars), 1)
+
+        self.assertEqual(data_points[0].exemplars[0].value, 2.0)  # First bucket
+        self.assertEqual(data_points[1].exemplars[0].value, 8.0)  # Second bucket
+        self.assertEqual(data_points[2].exemplars[0].value, 15.0) # Third bucket
