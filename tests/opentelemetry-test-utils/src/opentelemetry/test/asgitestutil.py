@@ -100,15 +100,14 @@ class AsyncAsgiTestBase(TestBase, IsolatedAsyncioTestCase):
     async def send_default_request(self):
         await self.send_input({"type": "http.request", "body": b""})
 
-    async def get_output(self):
-        output = await self.communicator.receive_output(0)
-        return output
+    async def get_output(self, timeout=1):
+        return await self.communicator.receive_output(timeout)
 
-    async def get_all_output(self):
+    async def get_all_output(self, timeout=1):
         outputs = []
         while True:
             try:
-                outputs.append(await self.get_output())
+                outputs.append(await self.communicator.receive_output(timeout))
             except asyncio.TimeoutError:
                 break
         return outputs
