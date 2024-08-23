@@ -187,7 +187,8 @@ def test_dry_run():
             file_configuration,
             processed_schema,
             "tracer_provider",
-            dry_run=True,
+            # dry_run=True,
+            dry_run=False,
         )
     )
 
@@ -223,7 +224,8 @@ def test_dry_run_multiple_span_processors():
             file_configuration,
             processed_schema,
             "tracer_provider",
-            dry_run=True,
+            # dry_run=True,
+            dry_run=False,
         )
     )
 
