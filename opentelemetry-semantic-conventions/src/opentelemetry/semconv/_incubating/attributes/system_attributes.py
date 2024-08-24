@@ -24,7 +24,7 @@ The logical CPU number [0..n-1].
 
 SYSTEM_CPU_STATE: Final = "system.cpu.state"
 """
-The state of the CPU.
+Deprecated: Replaced by `cpu.mode`.
 """
 
 SYSTEM_DEVICE: Final = "system.device"
@@ -88,6 +88,7 @@ Deprecated: Replaced by `system.process.status`.
 """
 
 
+@deprecated(reason="The attribute system.cpu.state is deprecated - Replaced by `cpu.mode`")  # type: ignore
 class SystemCpuStateValues(Enum):
     USER = "user"
     """user."""
