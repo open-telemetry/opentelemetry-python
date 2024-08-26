@@ -96,12 +96,10 @@ Meeting notes are available as a public [Google doc](https://docs.google.com/doc
 
 Approvers ([@open-telemetry/python-approvers](https://github.com/orgs/open-telemetry/teams/python-approvers)):
 
-- [Aaron Abbott](https://github.com/aabmass), Google
 - [Emídio Neto](https://github.com/emdneto), Zenvia
 - [Jeremy Voss](https://github.com/jeremydvoss), Microsoft
 - [Owais Lone](https://github.com/owais), Splunk
 - [Pablo Collins](https://github.com/pmcollins), Splunk
-- [Riccardo Magliocchetti](https://github.com/xrmx), Elastic
 - [Shalev Roda](https://github.com/shalevr), Cisco
 - [Srikanth Chekuri](https://github.com/srikanthccv), signoz.io
 - [Tammy Baylis](https://github.com/tammy-baylis-swi), SolarWinds
@@ -122,8 +120,10 @@ Emeritus Approvers
 
 Maintainers ([@open-telemetry/python-maintainers](https://github.com/orgs/open-telemetry/teams/python-maintainers)):
 
+- [Aaron Abbott](https://github.com/aabmass), Google
 - [Diego Hurtado](https://github.com/ocelotl), Lightstep
 - [Leighton Chen](https://github.com/lzchen), Microsoft
+- [Riccardo Magliocchetti](https://github.com/xrmx), Elastic
 
 Emeritus Maintainers:
 
