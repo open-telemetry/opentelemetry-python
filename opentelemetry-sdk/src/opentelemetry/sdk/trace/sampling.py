@@ -121,7 +121,7 @@ be an empty string. For example:
     # ...
     class CustomSamplerFactory:
         @staticmethod
-        get_sampler(sampler_argument):
+        def get_sampler(sampler_argument):
             try:
                 rate = float(sampler_argument)
                 return CustomSampler(rate)
