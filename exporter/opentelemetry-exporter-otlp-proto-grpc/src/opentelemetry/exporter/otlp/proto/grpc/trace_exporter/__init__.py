@@ -91,7 +91,7 @@ class OTLPSpanExporter(
         headers: Optional[
             Union[Sequence[Tuple[str, str]], Dict[str, str], str]
         ] = None,
-        timeout: Optional[int] = None,
+        timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
     ):
         if insecure is None:
@@ -112,7 +112,7 @@ class OTLPSpanExporter(
 
         environ_timeout = environ.get(OTEL_EXPORTER_OTLP_TRACES_TIMEOUT)
         environ_timeout = (
-            int(environ_timeout) if environ_timeout is not None else None
+            float(environ_timeout) if environ_timeout is not None else None
         )
 
         compression = (

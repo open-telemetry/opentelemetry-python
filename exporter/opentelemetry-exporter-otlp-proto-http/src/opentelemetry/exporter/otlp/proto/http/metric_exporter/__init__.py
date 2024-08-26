@@ -105,7 +105,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         client_key_file: Optional[str] = None,
         client_certificate_file: Optional[str] = None,
         headers: Optional[Dict[str, str]] = None,
-        timeout: Optional[int] = None,
+        timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
         session: Optional[requests.Session] = None,
         preferred_temporality: Dict[type, AggregationTemporality] = None,
@@ -141,7 +141,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         self._headers = headers or parse_env_headers(
             headers_string, liberal=True
         )
-        self._timeout = timeout or int(
+        self._timeout = timeout or float(
             environ.get(
                 OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
                 environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, DEFAULT_TIMEOUT),
@@ -163,9 +163,13 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         )
 
         self._shutdown = False
-        self._exporter = RetryingExporter(self._export, MetricExportResult)
+        self._exporter = RetryingExporter(
+            self._export, MetricExportResult, self._timeout
+        )
 
-    def _export(self, serialized_data: bytes):
+    def _export(
+        self, serialized_data: bytes, timeout_sec: float
+    ) -> MetricExportResult:
         data = serialized_data
         if self._compression == Compression.Gzip:
             gzip_data = BytesIO()
@@ -179,7 +183,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             url=self._endpoint,
             data=data,
             verify=self._certificate_file,
-            timeout=self._timeout,
+            timeout=timeout_sec,
             cert=self._client_cert,
         )
 

@@ -98,7 +98,7 @@ class OTLPMetricExporter(
         headers: Optional[
             Union[TypingSequence[Tuple[str, str]], Dict[str, str], str]
         ] = None,
-        timeout: Optional[int] = None,
+        timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
         preferred_temporality: Dict[type, AggregationTemporality] = None,
         preferred_aggregation: Dict[type, Aggregation] = None,
@@ -123,7 +123,7 @@ class OTLPMetricExporter(
 
         environ_timeout = environ.get(OTEL_EXPORTER_OTLP_METRICS_TIMEOUT)
         environ_timeout = (
-            int(environ_timeout) if environ_timeout is not None else None
+            float(environ_timeout) if environ_timeout is not None else None
         )
 
         compression = (

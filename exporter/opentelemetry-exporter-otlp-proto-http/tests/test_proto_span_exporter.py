@@ -66,7 +66,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
         self.assertEqual(exporter._certificate_file, True)
         self.assertEqual(exporter._client_certificate_file, None)
         self.assertEqual(exporter._client_key_file, None)
-        self.assertEqual(exporter._timeout, DEFAULT_TIMEOUT)
+        self.assertEqual(exporter._exporter._timeout_sec, DEFAULT_TIMEOUT)
         self.assertIs(exporter._compression, DEFAULT_COMPRESSION)
         self.assertEqual(exporter._headers, {})
         self.assertIsInstance(exporter._session, requests.Session)
@@ -108,7 +108,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
             exporter._client_certificate_file, "traces/client-cert.pem"
         )
         self.assertEqual(exporter._client_key_file, "traces/client-key.pem")
-        self.assertEqual(exporter._timeout, 40)
+        self.assertEqual(exporter._exporter._timeout_sec, 40)
         self.assertIs(exporter._compression, Compression.Deflate)
         self.assertEqual(
             exporter._headers,
@@ -151,7 +151,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
             exporter._client_certificate_file, "path/to/client-cert.pem"
         )
         self.assertEqual(exporter._client_key_file, "path/to/client-key.pem")
-        self.assertEqual(exporter._timeout, 20)
+        self.assertEqual(exporter._exporter._timeout_sec, 20)
         self.assertIs(exporter._compression, Compression.NoCompression)
         self.assertEqual(
             exporter._headers,
@@ -179,7 +179,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
             exporter._client_certificate_file, OS_ENV_CLIENT_CERTIFICATE
         )
         self.assertEqual(exporter._client_key_file, OS_ENV_CLIENT_KEY)
-        self.assertEqual(exporter._timeout, int(OS_ENV_TIMEOUT))
+        self.assertEqual(exporter._exporter._timeout_sec, int(OS_ENV_TIMEOUT))
         self.assertIs(exporter._compression, Compression.Gzip)
         self.assertEqual(
             exporter._headers, {"envheader1": "val1", "envheader2": "val2"}

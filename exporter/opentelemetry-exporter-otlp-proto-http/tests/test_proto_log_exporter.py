@@ -77,7 +77,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         self.assertEqual(exporter._certificate_file, True)
         self.assertEqual(exporter._client_certificate_file, None)
         self.assertEqual(exporter._client_key_file, None)
-        self.assertEqual(exporter._timeout, DEFAULT_TIMEOUT)
+        self.assertEqual(exporter._exporter._timeout_sec, DEFAULT_TIMEOUT)
         self.assertIs(exporter._compression, DEFAULT_COMPRESSION)
         self.assertEqual(exporter._headers, {})
         self.assertIsInstance(exporter._session, requests.Session)
@@ -119,7 +119,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             exporter._client_certificate_file, "logs/client-cert.pem"
         )
         self.assertEqual(exporter._client_key_file, "logs/client-key.pem")
-        self.assertEqual(exporter._timeout, 40)
+        self.assertEqual(exporter._exporter._timeout_sec, 40)
         self.assertIs(exporter._compression, Compression.Deflate)
         self.assertEqual(
             exporter._headers,
@@ -160,7 +160,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         self.assertEqual(exporter._certificate_file, "/hello.crt")
         self.assertEqual(exporter._client_certificate_file, "/client-cert.pem")
         self.assertEqual(exporter._client_key_file, "/client-key.pem")
-        self.assertEqual(exporter._timeout, 70)
+        self.assertEqual(exporter._exporter._timeout_sec, 70)
         self.assertIs(exporter._compression, Compression.NoCompression)
         self.assertEqual(
             exporter._headers,
@@ -192,7 +192,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             exporter._client_certificate_file, ENV_CLIENT_CERTIFICATE
         )
         self.assertEqual(exporter._client_key_file, ENV_CLIENT_KEY)
-        self.assertEqual(exporter._timeout, int(ENV_TIMEOUT))
+        self.assertEqual(exporter._exporter._timeout_sec, int(ENV_TIMEOUT))
         self.assertIs(exporter._compression, Compression.Gzip)
         self.assertEqual(
             exporter._headers, {"envheader1": "val1", "envheader2": "val2"}

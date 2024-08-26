@@ -164,7 +164,7 @@ def _get_credentials(
 class OTLPExporterMixin(
     ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResultT]
 ):
-    """OTLP span exporter
+    """OTLP exporter
 
     Args:
         endpoint: OpenTelemetry Collector receiver endpoint
@@ -183,7 +183,7 @@ class OTLPExporterMixin(
         headers: Optional[
             Union[TypingSequence[Tuple[str, str]], Dict[str, str], str]
         ] = None,
-        timeout: Optional[int] = None,
+        timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
     ):
         super().__init__()
@@ -220,8 +220,8 @@ class OTLPExporterMixin(
         else:
             self._headers = tuple(self._headers) + tuple(_OTLP_GRPC_HEADERS)
 
-        self._timeout = timeout or int(
-            environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, 10)
+        timeout_sec = timeout or float(
+            environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, 10.0)
         )
         self._collector_kwargs = None
 
@@ -249,7 +249,9 @@ class OTLPExporterMixin(
             )
 
         self._shutdown = False
-        self._exporter = RetryingExporter(self._export, self._result)
+        self._exporter = RetryingExporter(
+            self._export, self._result, timeout_sec
+        )
 
     @abstractmethod
     def _translate_data(
@@ -258,13 +260,15 @@ class OTLPExporterMixin(
         pass
 
     def _export(
-        self, data: Union[TypingSequence[ReadableSpan], MetricsData]
+        self,
+        data: Union[TypingSequence[ReadableSpan], MetricsData],
+        timeout_sec: float,
     ) -> ExportResultT:
         try:
             self._client.Export(
                 request=self._translate_data(data),
                 metadata=self._headers,
-                timeout=self._timeout,
+                timeout=timeout_sec,
             )
 
             return self._result.SUCCESS

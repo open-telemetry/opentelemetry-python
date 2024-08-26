@@ -33,11 +33,13 @@ class RetryableExportError(Exception):
 class RetryingExporter(Generic[ExportResultT]):
     def __init__(
         self,
-        export_function: Callable[[ExportPayloadT], ExportResultT],
+        export_function: Callable[[ExportPayloadT, float], ExportResultT],
         result: Type[ExportResultT],
+        timeout_sec: float,
     ):
         self._export_function = export_function
         self._result = result
+        self._timeout_sec = timeout_sec
 
         self._shutdown = False
         self._export_lock = threading.Lock()
@@ -67,7 +69,7 @@ class RetryingExporter(Generic[ExportResultT]):
 
             with self._export_lock:
                 try:
-                    return self._export_function(payload)
+                    return self._export_function(payload, self._timeout_sec)
                 except RetryableExportError as exc:
                     delay_sec = (
                         exc.retry_delay_sec
