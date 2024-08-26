@@ -542,7 +542,7 @@ class PeriodicExportingMetricReader(MetricReader):
                     metrics_data, timeout_millis=timeout_millis
                 )
         except Exception as e:
-            _logger.exception("Exception while exporting metrics %s", str(e))
+            _logger.exception("Exception while exporting metrics")
         detach(token)
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:

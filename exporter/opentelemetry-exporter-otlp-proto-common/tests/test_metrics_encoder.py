@@ -15,6 +15,9 @@
 # pylint: disable=protected-access
 import unittest
 
+from opentelemetry.exporter.otlp.proto.common._internal.metrics_encoder import (
+    EncodingException,
+)
 from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
     encode_metrics,
 )
@@ -814,3 +817,34 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
         # pylint: disable=protected-access
         actual = encode_metrics(metrics_data)
         self.assertEqual(expected, actual)
+
+    def test_encoding_exception_reraise(self):
+        big_number = 2**63
+        metrics_data = MetricsData(
+            resource_metrics=[
+                ResourceMetrics(
+                    resource=Resource(
+                        attributes={},
+                        schema_url="resource_schema_url",
+                    ),
+                    scope_metrics=[
+                        ScopeMetrics(
+                            scope=SDKInstrumentationScope(
+                                name="first_name",
+                                version="first_version",
+                                schema_url="insrumentation_scope_schema_url",
+                            ),
+                            metrics=[_generate_sum("sum_double", big_number)],
+                            schema_url="instrumentation_scope_schema_url",
+                        )
+                    ],
+                    schema_url="resource_schema_url",
+                )
+            ]
+        )
+        with self.assertRaises(EncodingException) as context:
+            encode_metrics(metrics_data)
+
+        # assert that the EncodingException wraps the metric and original exception
+        assert isinstance(context.exception.metric, Metric)
+        assert isinstance(context.exception.original_exception, ValueError)
