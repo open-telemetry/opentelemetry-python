@@ -122,7 +122,7 @@ CONTRIB_REPO_SHA=dde62cebffe519c35875af6d06fae053b3be65ec tox
 ```
 
 The continuation integration overrides that environment variable with as per the configuration
-[here](https://github.com/open-telemetry/opentelemetry-python/blob/main/.github/workflows/test.yml#L13).
+[here](https://github.com/open-telemetry/opentelemetry-python/blob/main/.github/workflows/test_0.yml#L14).
 
 ### Benchmarks
 
@@ -195,9 +195,9 @@ opened in the Contrib repo with changes to make the packages compatible.
 
 Follow these steps:
 1. Open Core repo PR (Contrib Tests will fail)
-2. Open Contrib repo PR and modify its `CORE_REPO_SHA` in `.github/workflows/test.yml`
+2. Open Contrib repo PR and modify its `CORE_REPO_SHA` in `.github/workflows/test_x.yml`
 to equal the commit SHA of the Core repo PR to pass tests
-3. Modify the Core repo PR `CONTRIB_REPO_SHA` in `.github/workflows/test.yml` to
+3. Modify the Core repo PR `CONTRIB_REPO_SHA` in `.github/workflows/test_x.yml` to
 equal the commit SHA of the Contrib repo PR to pass Contrib repo tests (a sanity
 check for the Maintainers & Approvers)
 4. Merge the Contrib repo
