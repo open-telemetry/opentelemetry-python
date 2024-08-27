@@ -28,6 +28,8 @@ from opentelemetry.sdk.metrics import (
 )
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _encode_attributes,
+    _encode_span_id, 
+    _encode_trace_id,
 )
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
@@ -216,6 +218,7 @@ def encode_metrics(data: MetricsData) -> ExportMetricsServiceRequest:
                                 data_point.attributes
                             ),
                             time_unix_nano=data_point.time_unix_nano,
+                            exemplars=encode_exemplars(data_point.exemplars),
                         )
                         if isinstance(data_point.value, int):
                             pt.as_int = data_point.value
@@ -233,6 +236,7 @@ def encode_metrics(data: MetricsData) -> ExportMetricsServiceRequest:
                             start_time_unix_nano=(
                                 data_point.start_time_unix_nano
                             ),
+                            exemplars=encode_exemplars(data_point.exemplars),
                             count=data_point.count,
                             sum=data_point.sum,
                             bucket_counts=data_point.bucket_counts,
@@ -255,6 +259,7 @@ def encode_metrics(data: MetricsData) -> ExportMetricsServiceRequest:
                                 data_point.start_time_unix_nano
                             ),
                             time_unix_nano=data_point.time_unix_nano,
+                            exemplars=encode_exemplars(data_point.exemplars),
                         )
                         if isinstance(data_point.value, int):
                             pt.as_int = data_point.value
@@ -296,6 +301,7 @@ def encode_metrics(data: MetricsData) -> ExportMetricsServiceRequest:
                             start_time_unix_nano=(
                                 data_point.start_time_unix_nano
                             ),
+                            exemplars=encode_exemplars(data_point.exemplars),
                             count=data_point.count,
                             sum=data_point.sum,
                             scale=data_point.scale,
@@ -336,3 +342,32 @@ def encode_metrics(data: MetricsData) -> ExportMetricsServiceRequest:
         )
     resource_metrics = resource_data
     return ExportMetricsServiceRequest(resource_metrics=resource_metrics)
+
+def encode_exemplars(sdk_exemplars: list) -> list:
+    """
+    Converts a list of SDK Exemplars into a list of protobuf Exemplars.
+
+    Args:
+        sdk_exemplars (list): The list of exemplars from the OpenTelemetry SDK.
+
+    Returns:
+        list: A list of protobuf exemplars.
+    """
+    pb_exemplars = []
+    for sdk_exemplar in sdk_exemplars:
+        pb_exemplar = pb2.Exemplar(
+            time_unix_nano=sdk_exemplar.time_unix_nano,
+            span_id=_encode_span_id(sdk_exemplar.span_id),
+            trace_id=_encode_trace_id(sdk_exemplar.trace_id),
+            filtered_attributes=_encode_attributes(sdk_exemplar.filtered_attributes),
+        )
+        # Assign the value based on its type in the SDK exemplar
+        if isinstance(sdk_exemplar.value, float):
+            pb_exemplar.as_double = sdk_exemplar.value
+        elif isinstance(sdk_exemplar.value, int):
+            pb_exemplar.as_int = sdk_exemplar.value
+        else:
+            raise ValueError("Exemplar value must be an int or float")
+        pb_exemplars.append(pb_exemplar)
+    
+    return pb_exemplars
