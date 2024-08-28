@@ -192,7 +192,7 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       !contains(github.event.pull_request.labels.*.name, 'Skip generate-workflows')
-      && github.actor != 'opentelemetrybot'
+      && github.actor != 'opentelemetrybot' && github.event_name == 'pull_request'
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
