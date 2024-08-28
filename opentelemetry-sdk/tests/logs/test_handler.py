@@ -267,20 +267,24 @@ class TestLoggingHandler(unittest.TestCase):
             self.assertIsInstance(log_record.body, str)
 
     def test_args_get_transformed_if_logged(self):
-        with set_up_test_logging(logging.WARNING) as (_, logger):
+        with set_up_test_logging(logging.WARNING) as (processor, logger):
 
             my_object = MagicMock()
+            my_object.__str__.return_value = "foo"
+            my_object.__int__.return_value = 42
             logger.warning("%s - %d", my_object, my_object)
 
+        self.assertEqual(processor.get_log_record(0).body, "foo - 42")
         self.assertTrue(my_object.__str__.called)
         self.assertTrue(my_object.__int__.called)
 
     def test_args_do_not_get_transformed_if_not_logged(self):
-        with set_up_test_logging(logging.WARNING) as (_, logger):
+        with set_up_test_logging(logging.WARNING) as (processor, logger):
 
             my_object = MagicMock()
             logger.info("%s - %d", my_object, my_object)
 
+        self.assertEqual(processor.log_data_emitted, [])
         self.assertFalse(my_object.__str__.called)
         self.assertFalse(my_object.__int__.called)
 
