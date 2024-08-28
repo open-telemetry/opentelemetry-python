@@ -13,7 +13,8 @@
 # limitations under the License.
 import logging
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, MagicMock
+from contextlib import contextmanager
 
 from opentelemetry._logs import NoOpLoggerProvider, SeverityNumber
 from opentelemetry._logs import get_logger as APIGetLogger
@@ -31,30 +32,28 @@ from opentelemetry.trace import INVALID_SPAN_CONTEXT
 
 class TestLoggingHandler(unittest.TestCase):
     def test_handler_default_log_level(self):
-        processor, logger = set_up_test_logging(logging.NOTSET)
+        with set_up_test_logging(logging.NOTSET) as (processor, logger):
+            # Make sure debug messages are ignored by default
+            logger.debug("Debug message")
+            assert processor.emit_count() == 0
 
-        # Make sure debug messages are ignored by default
-        logger.debug("Debug message")
-        assert processor.emit_count() == 0
-
-        # Assert emit gets called for warning message
-        with self.assertLogs(level=logging.WARNING):
-            logger.warning("Warning message")
-        self.assertEqual(processor.emit_count(), 1)
+            # Assert emit gets called for warning message
+            with self.assertLogs(level=logging.WARNING):
+                logger.warning("Warning message")
+            self.assertEqual(processor.emit_count(), 1)
 
     def test_handler_custom_log_level(self):
-        processor, logger = set_up_test_logging(logging.ERROR)
+        with set_up_test_logging(logging.ERROR) as (processor, logger):
+            with self.assertLogs(level=logging.WARNING):
+                logger.warning("Warning message test custom log level")
+            # Make sure any log with level < ERROR is ignored
+            assert processor.emit_count() == 0
 
-        with self.assertLogs(level=logging.WARNING):
-            logger.warning("Warning message test custom log level")
-        # Make sure any log with level < ERROR is ignored
-        assert processor.emit_count() == 0
-
-        with self.assertLogs(level=logging.ERROR):
-            logger.error("Mumbai, we have a major problem")
-        with self.assertLogs(level=logging.CRITICAL):
-            logger.critical("No Time For Caution")
-        self.assertEqual(processor.emit_count(), 2)
+            with self.assertLogs(level=logging.ERROR):
+                logger.error("Mumbai, we have a major problem")
+            with self.assertLogs(level=logging.CRITICAL):
+                logger.critical("No Time For Caution")
+            self.assertEqual(processor.emit_count(), 2)
 
     # pylint: disable=protected-access
     def test_log_record_emit_noop(self):
@@ -69,6 +68,9 @@ class TestLoggingHandler(unittest.TestCase):
         logger.addHandler(handler_mock)
         with self.assertLogs(level=logging.WARNING):
             logger.warning("Warning message")
+
+        # teardown
+        logger.removeHandler(handler_mock)
 
     def test_log_flush_noop(self):
         no_op_logger_provider = NoOpLoggerProvider()
@@ -86,173 +88,178 @@ class TestLoggingHandler(unittest.TestCase):
         logger.handlers[0].flush()
         no_op_logger_provider.force_flush.assert_not_called()
 
+        # teardown
+        logger.removeHandler(handler)
+
     def test_log_record_no_span_context(self):
-        processor, logger = set_up_test_logging(logging.WARNING)
-
-        # Assert emit gets called for warning message
-        with self.assertLogs(level=logging.WARNING):
-            logger.warning("Warning message")
-
-        log_record = processor.get_log_record(0)
-
-        self.assertIsNotNone(log_record)
-        self.assertEqual(log_record.trace_id, INVALID_SPAN_CONTEXT.trace_id)
-        self.assertEqual(log_record.span_id, INVALID_SPAN_CONTEXT.span_id)
-        self.assertEqual(
-            log_record.trace_flags, INVALID_SPAN_CONTEXT.trace_flags
-        )
-
-    def test_log_record_observed_timestamp(self):
-        processor, logger = set_up_test_logging(logging.WARNING)
-
-        with self.assertLogs(level=logging.WARNING):
-            logger.warning("Warning message")
-
-        log_record = processor.get_log_record(0)
-        self.assertIsNotNone(log_record.observed_timestamp)
-
-    def test_log_record_user_attributes(self):
-        """Attributes can be injected into logs by adding them to the LogRecord"""
-        processor, logger = set_up_test_logging(logging.WARNING)
-
-        # Assert emit gets called for warning message
-        with self.assertLogs(level=logging.WARNING):
-            logger.warning("Warning message", extra={"http.status_code": 200})
-
-        log_record = processor.get_log_record(0)
-
-        self.assertIsNotNone(log_record)
-        self.assertEqual(
-            log_record.attributes,
-            {**log_record.attributes, **{"http.status_code": 200}},
-        )
-        self.assertTrue(
-            log_record.attributes[SpanAttributes.CODE_FILEPATH].endswith(
-                "test_handler.py"
-            )
-        )
-        self.assertEqual(
-            log_record.attributes[SpanAttributes.CODE_FUNCTION],
-            "test_log_record_user_attributes",
-        )
-        # The line of the log statement is not a constant (changing tests may change that),
-        # so only check that the attribute is present.
-        self.assertTrue(SpanAttributes.CODE_LINENO in log_record.attributes)
-        self.assertTrue(isinstance(log_record.attributes, BoundedAttributes))
-
-    def test_log_record_exception(self):
-        """Exception information will be included in attributes"""
-        processor, logger = set_up_test_logging(logging.ERROR)
-
-        try:
-            raise ZeroDivisionError("division by zero")
-        except ZeroDivisionError:
-            with self.assertLogs(level=logging.ERROR):
-                logger.exception("Zero Division Error")
-
-        log_record = processor.get_log_record(0)
-
-        self.assertIsNotNone(log_record)
-        self.assertIn("Zero Division Error", log_record.body)
-        self.assertEqual(
-            log_record.attributes[SpanAttributes.EXCEPTION_TYPE],
-            ZeroDivisionError.__name__,
-        )
-        self.assertEqual(
-            log_record.attributes[SpanAttributes.EXCEPTION_MESSAGE],
-            "division by zero",
-        )
-        stack_trace = log_record.attributes[
-            SpanAttributes.EXCEPTION_STACKTRACE
-        ]
-        self.assertIsInstance(stack_trace, str)
-        self.assertTrue("Traceback" in stack_trace)
-        self.assertTrue("ZeroDivisionError" in stack_trace)
-        self.assertTrue("division by zero" in stack_trace)
-        self.assertTrue(__file__ in stack_trace)
-
-    def test_log_exc_info_false(self):
-        """Exception information will be included in attributes"""
-        processor, logger = set_up_test_logging(logging.NOTSET)
-
-        try:
-            raise ZeroDivisionError("division by zero")
-        except ZeroDivisionError:
-            with self.assertLogs(level=logging.ERROR):
-                logger.error("Zero Division Error", exc_info=False)
-
-        log_record = processor.get_log_record(0)
-
-        self.assertIsNotNone(log_record)
-        self.assertEqual(log_record.body, "Zero Division Error")
-        self.assertNotIn(SpanAttributes.EXCEPTION_TYPE, log_record.attributes)
-        self.assertNotIn(
-            SpanAttributes.EXCEPTION_MESSAGE, log_record.attributes
-        )
-        self.assertNotIn(
-            SpanAttributes.EXCEPTION_STACKTRACE, log_record.attributes
-        )
-
-    def test_log_record_trace_correlation(self):
-        processor, logger = set_up_test_logging(logging.WARNING)
-
-        tracer = trace.TracerProvider().get_tracer(__name__)
-        with tracer.start_as_current_span("test") as span:
-            with self.assertLogs(level=logging.CRITICAL):
-                logger.critical("Critical message within span")
+        with set_up_test_logging(logging.WARNING) as (processor, logger):
+            # Assert emit gets called for warning message
+            with self.assertLogs(level=logging.WARNING):
+                logger.warning("Warning message")
 
             log_record = processor.get_log_record(0)
 
-            self.assertEqual(log_record.body, "Critical message within span")
-            self.assertEqual(log_record.severity_text, "CRITICAL")
-            self.assertEqual(log_record.severity_number, SeverityNumber.FATAL)
-            span_context = span.get_span_context()
-            self.assertEqual(log_record.trace_id, span_context.trace_id)
-            self.assertEqual(log_record.span_id, span_context.span_id)
-            self.assertEqual(log_record.trace_flags, span_context.trace_flags)
+            self.assertIsNotNone(log_record)
+            self.assertEqual(log_record.trace_id, INVALID_SPAN_CONTEXT.trace_id)
+            self.assertEqual(log_record.span_id, INVALID_SPAN_CONTEXT.span_id)
+            self.assertEqual(
+                log_record.trace_flags, INVALID_SPAN_CONTEXT.trace_flags
+            )
+
+    def test_log_record_observed_timestamp(self):
+        with set_up_test_logging(logging.WARNING) as (processor, logger):
+            with self.assertLogs(level=logging.WARNING):
+                logger.warning("Warning message")
+
+            log_record = processor.get_log_record(0)
+            self.assertIsNotNone(log_record.observed_timestamp)
+
+    def test_log_record_user_attributes(self):
+        """Attributes can be injected into logs by adding them to the LogRecord"""
+        with set_up_test_logging(logging.WARNING) as (processor, logger):
+            # Assert emit gets called for warning message
+            with self.assertLogs(level=logging.WARNING):
+                logger.warning("Warning message", extra={"http.status_code": 200})
+
+            log_record = processor.get_log_record(0)
+
+            self.assertIsNotNone(log_record)
+            self.assertEqual(
+                log_record.attributes,
+                {**log_record.attributes, "http.status_code": 200},
+            )
+            self.assertTrue(
+                log_record.attributes[SpanAttributes.CODE_FILEPATH].endswith(
+                    "test_handler.py"
+                )
+            )
+            self.assertEqual(
+                log_record.attributes[SpanAttributes.CODE_FUNCTION],
+                "test_log_record_user_attributes",
+            )
+            # The line of the log statement is not a constant (changing tests may change that),
+            # so only check that the attribute is present.
+            self.assertTrue(SpanAttributes.CODE_LINENO in log_record.attributes)
+            self.assertTrue(isinstance(log_record.attributes, BoundedAttributes))
+
+    def test_log_record_exception(self):
+        """Exception information will be included in attributes"""
+        with set_up_test_logging(logging.ERROR) as (processor, logger):
+            try:
+                raise ZeroDivisionError("division by zero")
+            except ZeroDivisionError:
+                with self.assertLogs(level=logging.ERROR):
+                    logger.exception("Zero Division Error")
+
+            log_record = processor.get_log_record(0)
+
+            self.assertIsNotNone(log_record)
+            self.assertIn("Zero Division Error", log_record.body)
+            self.assertEqual(
+                log_record.attributes[SpanAttributes.EXCEPTION_TYPE],
+                ZeroDivisionError.__name__,
+            )
+            self.assertEqual(
+                log_record.attributes[SpanAttributes.EXCEPTION_MESSAGE],
+                "division by zero",
+            )
+            stack_trace = log_record.attributes[
+                SpanAttributes.EXCEPTION_STACKTRACE
+            ]
+            self.assertIsInstance(stack_trace, str)
+            self.assertTrue("Traceback" in stack_trace)
+            self.assertTrue("ZeroDivisionError" in stack_trace)
+            self.assertTrue("division by zero" in stack_trace)
+            self.assertTrue(__file__ in stack_trace)
+
+    def test_log_exc_info_false(self):
+        """Exception information will be included in attributes"""
+        with set_up_test_logging(logging.NOTSET) as (processor, logger):
+            try:
+                raise ZeroDivisionError("division by zero")
+            except ZeroDivisionError:
+                with self.assertLogs(level=logging.ERROR):
+                    logger.error("Zero Division Error", exc_info=False)
+
+            log_record = processor.get_log_record(0)
+
+            self.assertIsNotNone(log_record)
+            self.assertEqual(log_record.body, "Zero Division Error")
+            self.assertNotIn(SpanAttributes.EXCEPTION_TYPE, log_record.attributes)
+            self.assertNotIn(
+                SpanAttributes.EXCEPTION_MESSAGE, log_record.attributes
+            )
+            self.assertNotIn(
+                SpanAttributes.EXCEPTION_STACKTRACE, log_record.attributes
+            )
+
+    def test_log_record_trace_correlation(self):
+        with set_up_test_logging(logging.WARNING) as (processor, logger):
+            tracer = trace.TracerProvider().get_tracer(__name__)
+            with tracer.start_as_current_span("test") as span:
+                with self.assertLogs(level=logging.CRITICAL):
+                    logger.critical("Critical message within span")
+
+                log_record = processor.get_log_record(0)
+
+                self.assertEqual(log_record.body, "Critical message within span")
+                self.assertEqual(log_record.severity_text, "CRITICAL")
+                self.assertEqual(log_record.severity_number, SeverityNumber.FATAL)
+                span_context = span.get_span_context()
+                self.assertEqual(log_record.trace_id, span_context.trace_id)
+                self.assertEqual(log_record.span_id, span_context.span_id)
+                self.assertEqual(log_record.trace_flags, span_context.trace_flags)
 
     def test_log_record_args_are_translated(self):
-        processor, logger = set_up_test_logging(logging.INFO)
+        with set_up_test_logging(logging.WARNING) as (processor, logger):
+            logger.warning("Test message")
 
-        with self.assertLogs(level=logging.INFO):
-            logger.info("Test message")
-
-        log_record = processor.get_log_record(0)
-        self.assertEqual(
-            set(log_record.attributes),
-            {
-                "thread.id",
-                "code.filepath",
-                "code.lineno",
-                "code.function",
-                "thread.name",
-            },
-        )
+            log_record = processor.get_log_record(0)
+            self.assertEqual(
+                set(log_record.attributes),
+                {
+                    "code.filepath",
+                    "code.lineno",
+                    "code.function",
+                },
+            )
 
     def test_format_is_called(self):
-        processor, logger = set_up_test_logging(
-            logging.INFO,
-            logging.Formatter("%(name)s - %(levelname)s - %(message)s")
-        )
+        with set_up_test_logging(logging.WARNING, formatter=logging.Formatter("%(name)s - %(levelname)s - %(message)s")) as (processor, logger):
+            logger.warning("Test message")
 
-        with self.assertLogs(level=logging.INFO):
-            logger.info("Test message")
-
-        log_record = processor.get_log_record(0)
-        self.assertEqual(
-            log_record.body, "foo - INFO - Test message"
-        )
+            log_record = processor.get_log_record(0)
+            self.assertEqual(
+                log_record.body, "foo - WARNING - Test message"
+            )
 
     def test_log_body_is_always_string(self):
-        processor, logger = set_up_test_logging(logging.INFO)
+        with set_up_test_logging(logging.WARNING) as (processor, logger):
+            logger.warning(["something", "of", "note"])
 
-        with self.assertLogs(level=logging.INFO):
-            logger.info(["something", "of", "note"])
+            log_record = processor.get_log_record(0)
+            self.assertIsInstance(log_record.body, str)
 
-        log_record = processor.get_log_record(0)
-        self.assertIsInstance(log_record.body, str)
+    def test_args_get_transformed_if_logged(self):
+        with set_up_test_logging(logging.WARNING) as (_, logger):
+
+            my_object = MagicMock()
+            logger.warning("%s - %d", my_object, my_object)
+
+        self.assertTrue(my_object.__str__.called)
+        self.assertTrue(my_object.__int__.called)
+
+    def test_args_do_not_get_transformed_if_not_logged(self):
+        with set_up_test_logging(logging.WARNING) as (_, logger):
+
+            my_object = MagicMock()
+            logger.info("%s - %d", my_object, my_object)
+
+        self.assertFalse(my_object.__str__.called)
+        self.assertFalse(my_object.__int__.called)
 
 
+@contextmanager
 def set_up_test_logging(level, formatter=None):
     logger_provider = LoggerProvider()
     processor = FakeProcessor()
@@ -262,7 +269,8 @@ def set_up_test_logging(level, formatter=None):
     if formatter:
         handler.setFormatter(formatter)
     logger.addHandler(handler)
-    return processor, logger
+    yield processor, logger
+    logger.removeHandler(handler)
 
 
 class FakeProcessor(LogRecordProcessor):
