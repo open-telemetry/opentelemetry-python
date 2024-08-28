@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=too-many-lines
+
 import time
 from concurrent.futures import ThreadPoolExecutor
 from os.path import dirname
@@ -53,6 +55,8 @@ from opentelemetry.sdk._logs import LogData, LogRecord
 from opentelemetry.sdk._logs.export import LogExportResult
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY,
     OTEL_EXPORTER_OTLP_LOGS_COMPRESSION,
     OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
     OTEL_EXPORTER_OTLP_LOGS_HEADERS,
@@ -210,8 +214,6 @@ class TestOTLPLogExporter(TestCase):
         "os.environ",
         {
             OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "logs:4317",
-            OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE: THIS_DIR
-            + "/../fixtures/test.cert",
             OTEL_EXPORTER_OTLP_LOGS_HEADERS: " key1=value1,KEY2 = VALUE=2",
             OTEL_EXPORTER_OTLP_LOGS_TIMEOUT: "10",
             OTEL_EXPORTER_OTLP_LOGS_COMPRESSION: "gzip",
@@ -229,8 +231,69 @@ class TestOTLPLogExporter(TestCase):
         self.assertEqual(kwargs["headers"], " key1=value1,KEY2 = VALUE=2")
         self.assertEqual(kwargs["timeout"], 10)
         self.assertEqual(kwargs["compression"], Compression.Gzip)
+        self.assertIsNone(kwargs["credentials"])
+
+    # Create a new test method specifically for client certificates
+    @patch.dict(
+        "os.environ",
+        {
+            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "logs:4317",
+            OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE: THIS_DIR
+            + "/../fixtures/test.cert",
+            OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE: THIS_DIR
+            + "/../fixtures/test-client-cert.pem",
+            OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY: THIS_DIR
+            + "/../fixtures/test-client-key.pem",
+            OTEL_EXPORTER_OTLP_LOGS_HEADERS: " key1=value1,KEY2 = VALUE=2",
+            OTEL_EXPORTER_OTLP_LOGS_TIMEOUT: "10",
+            OTEL_EXPORTER_OTLP_LOGS_COMPRESSION: "gzip",
+        },
+    )
+    @patch(
+        "opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__"
+    )
+    def test_env_variables_with_client_certificates(self, mock_exporter_mixin):
+        OTLPLogExporter()
+
+        self.assertTrue(len(mock_exporter_mixin.call_args_list) == 1)
+        _, kwargs = mock_exporter_mixin.call_args_list[0]
+        self.assertEqual(kwargs["endpoint"], "logs:4317")
+        self.assertEqual(kwargs["headers"], " key1=value1,KEY2 = VALUE=2")
+        self.assertEqual(kwargs["timeout"], 10)
+        self.assertEqual(kwargs["compression"], Compression.Gzip)
         self.assertIsNotNone(kwargs["credentials"])
         self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
+
+    @patch.dict(
+        "os.environ",
+        {
+            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "logs:4317",
+            OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE: THIS_DIR
+            + "/../fixtures/test.cert",
+            OTEL_EXPORTER_OTLP_LOGS_HEADERS: " key1=value1,KEY2 = VALUE=2",
+            OTEL_EXPORTER_OTLP_LOGS_TIMEOUT: "10",
+            OTEL_EXPORTER_OTLP_LOGS_COMPRESSION: "gzip",
+        },
+    )
+    @patch(
+        "opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__"
+    )
+    @patch("logging.Logger.error")
+    def test_env_variables_with_only_certificate(
+        self, mock_logger_error, mock_exporter_mixin
+    ):
+        OTLPLogExporter()
+
+        self.assertTrue(len(mock_exporter_mixin.call_args_list) == 1)
+        _, kwargs = mock_exporter_mixin.call_args_list[0]
+        self.assertEqual(kwargs["endpoint"], "logs:4317")
+        self.assertEqual(kwargs["headers"], " key1=value1,KEY2 = VALUE=2")
+        self.assertEqual(kwargs["timeout"], 10)
+        self.assertEqual(kwargs["compression"], Compression.Gzip)
+        self.assertIsNotNone(kwargs["credentials"])
+        self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
+
+        mock_logger_error.assert_not_called()
 
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"

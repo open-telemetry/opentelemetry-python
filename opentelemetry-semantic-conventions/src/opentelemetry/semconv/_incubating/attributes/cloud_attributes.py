@@ -47,96 +47,96 @@ CLOUD_RESOURCE_ID: Final = "cloud.resource_id"
 """
 Cloud provider-specific native identifier of the monitored cloud resource (e.g. an [ARN](https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html) on AWS, a [fully qualified resource ID](https://learn.microsoft.com/rest/api/resources/resources/get-by-id) on Azure, a [full resource name](https://cloud.google.com/apis/design/resource_names#full_resource_name) on GCP).
 Note: On some cloud providers, it may not be possible to determine the full ID at startup,
-    so it may be necessary to set `cloud.resource_id` as a span attribute instead.
+so it may be necessary to set `cloud.resource_id` as a span attribute instead.
 
-    The exact value to use for `cloud.resource_id` depends on the cloud provider.
-    The following well-known definitions MUST be used if you set this attribute and they apply:
+The exact value to use for `cloud.resource_id` depends on the cloud provider.
+The following well-known definitions MUST be used if you set this attribute and they apply:
 
-    * **AWS Lambda:** The function [ARN](https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html).
-      Take care not to use the "invoked ARN" directly but replace any
-      [alias suffix](https://docs.aws.amazon.com/lambda/latest/dg/configuration-aliases.html)
-      with the resolved function version, as the same runtime instance may be invokable with
-      multiple different aliases.
-    * **GCP:** The [URI of the resource](https://cloud.google.com/iam/docs/full-resource-names)
-    * **Azure:** The [Fully Qualified Resource ID](https://docs.microsoft.com/rest/api/resources/resources/get-by-id) of the invoked function,
-      *not* the function app, having the form
-      `/subscriptions/<SUBSCIPTION_GUID>/resourceGroups/<RG>/providers/Microsoft.Web/sites/<FUNCAPP>/functions/<FUNC>`.
-      This means that a span attribute MUST be used, as an Azure function app can host multiple functions that would usually share
-      a TracerProvider.
+* **AWS Lambda:** The function [ARN](https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html).
+  Take care not to use the "invoked ARN" directly but replace any
+  [alias suffix](https://docs.aws.amazon.com/lambda/latest/dg/configuration-aliases.html)
+  with the resolved function version, as the same runtime instance may be invocable with
+  multiple different aliases.
+* **GCP:** The [URI of the resource](https://cloud.google.com/iam/docs/full-resource-names)
+* **Azure:** The [Fully Qualified Resource ID](https://docs.microsoft.com/rest/api/resources/resources/get-by-id) of the invoked function,
+  *not* the function app, having the form
+  `/subscriptions/<SUBSCIPTION_GUID>/resourceGroups/<RG>/providers/Microsoft.Web/sites/<FUNCAPP>/functions/<FUNC>`.
+  This means that a span attribute MUST be used, as an Azure function app can host multiple functions that would usually share
+  a TracerProvider.
 """
 
 
 class CloudPlatformValues(Enum):
-    ALIBABA_CLOUD_ECS: Final = "alibaba_cloud_ecs"
+    ALIBABA_CLOUD_ECS = "alibaba_cloud_ecs"
     """Alibaba Cloud Elastic Compute Service."""
-    ALIBABA_CLOUD_FC: Final = "alibaba_cloud_fc"
+    ALIBABA_CLOUD_FC = "alibaba_cloud_fc"
     """Alibaba Cloud Function Compute."""
-    ALIBABA_CLOUD_OPENSHIFT: Final = "alibaba_cloud_openshift"
+    ALIBABA_CLOUD_OPENSHIFT = "alibaba_cloud_openshift"
     """Red Hat OpenShift on Alibaba Cloud."""
-    AWS_EC2: Final = "aws_ec2"
+    AWS_EC2 = "aws_ec2"
     """AWS Elastic Compute Cloud."""
-    AWS_ECS: Final = "aws_ecs"
+    AWS_ECS = "aws_ecs"
     """AWS Elastic Container Service."""
-    AWS_EKS: Final = "aws_eks"
+    AWS_EKS = "aws_eks"
     """AWS Elastic Kubernetes Service."""
-    AWS_LAMBDA: Final = "aws_lambda"
+    AWS_LAMBDA = "aws_lambda"
     """AWS Lambda."""
-    AWS_ELASTIC_BEANSTALK: Final = "aws_elastic_beanstalk"
+    AWS_ELASTIC_BEANSTALK = "aws_elastic_beanstalk"
     """AWS Elastic Beanstalk."""
-    AWS_APP_RUNNER: Final = "aws_app_runner"
+    AWS_APP_RUNNER = "aws_app_runner"
     """AWS App Runner."""
-    AWS_OPENSHIFT: Final = "aws_openshift"
+    AWS_OPENSHIFT = "aws_openshift"
     """Red Hat OpenShift on AWS (ROSA)."""
-    AZURE_VM: Final = "azure_vm"
+    AZURE_VM = "azure_vm"
     """Azure Virtual Machines."""
-    AZURE_CONTAINER_APPS: Final = "azure_container_apps"
+    AZURE_CONTAINER_APPS = "azure_container_apps"
     """Azure Container Apps."""
-    AZURE_CONTAINER_INSTANCES: Final = "azure_container_instances"
+    AZURE_CONTAINER_INSTANCES = "azure_container_instances"
     """Azure Container Instances."""
-    AZURE_AKS: Final = "azure_aks"
+    AZURE_AKS = "azure_aks"
     """Azure Kubernetes Service."""
-    AZURE_FUNCTIONS: Final = "azure_functions"
+    AZURE_FUNCTIONS = "azure_functions"
     """Azure Functions."""
-    AZURE_APP_SERVICE: Final = "azure_app_service"
+    AZURE_APP_SERVICE = "azure_app_service"
     """Azure App Service."""
-    AZURE_OPENSHIFT: Final = "azure_openshift"
+    AZURE_OPENSHIFT = "azure_openshift"
     """Azure Red Hat OpenShift."""
-    GCP_BARE_METAL_SOLUTION: Final = "gcp_bare_metal_solution"
+    GCP_BARE_METAL_SOLUTION = "gcp_bare_metal_solution"
     """Google Bare Metal Solution (BMS)."""
-    GCP_COMPUTE_ENGINE: Final = "gcp_compute_engine"
+    GCP_COMPUTE_ENGINE = "gcp_compute_engine"
     """Google Cloud Compute Engine (GCE)."""
-    GCP_CLOUD_RUN: Final = "gcp_cloud_run"
+    GCP_CLOUD_RUN = "gcp_cloud_run"
     """Google Cloud Run."""
-    GCP_KUBERNETES_ENGINE: Final = "gcp_kubernetes_engine"
+    GCP_KUBERNETES_ENGINE = "gcp_kubernetes_engine"
     """Google Cloud Kubernetes Engine (GKE)."""
-    GCP_CLOUD_FUNCTIONS: Final = "gcp_cloud_functions"
+    GCP_CLOUD_FUNCTIONS = "gcp_cloud_functions"
     """Google Cloud Functions (GCF)."""
-    GCP_APP_ENGINE: Final = "gcp_app_engine"
+    GCP_APP_ENGINE = "gcp_app_engine"
     """Google Cloud App Engine (GAE)."""
-    GCP_OPENSHIFT: Final = "gcp_openshift"
+    GCP_OPENSHIFT = "gcp_openshift"
     """Red Hat OpenShift on Google Cloud."""
-    IBM_CLOUD_OPENSHIFT: Final = "ibm_cloud_openshift"
+    IBM_CLOUD_OPENSHIFT = "ibm_cloud_openshift"
     """Red Hat OpenShift on IBM Cloud."""
-    TENCENT_CLOUD_CVM: Final = "tencent_cloud_cvm"
+    TENCENT_CLOUD_CVM = "tencent_cloud_cvm"
     """Tencent Cloud Cloud Virtual Machine (CVM)."""
-    TENCENT_CLOUD_EKS: Final = "tencent_cloud_eks"
+    TENCENT_CLOUD_EKS = "tencent_cloud_eks"
     """Tencent Cloud Elastic Kubernetes Service (EKS)."""
-    TENCENT_CLOUD_SCF: Final = "tencent_cloud_scf"
+    TENCENT_CLOUD_SCF = "tencent_cloud_scf"
     """Tencent Cloud Serverless Cloud Function (SCF)."""
 
 
 class CloudProviderValues(Enum):
-    ALIBABA_CLOUD: Final = "alibaba_cloud"
+    ALIBABA_CLOUD = "alibaba_cloud"
     """Alibaba Cloud."""
-    AWS: Final = "aws"
+    AWS = "aws"
     """Amazon Web Services."""
-    AZURE: Final = "azure"
+    AZURE = "azure"
     """Microsoft Azure."""
-    GCP: Final = "gcp"
+    GCP = "gcp"
     """Google Cloud Platform."""
-    HEROKU: Final = "heroku"
+    HEROKU = "heroku"
     """Heroku Platform as a Service."""
-    IBM_CLOUD: Final = "ibm_cloud"
+    IBM_CLOUD = "ibm_cloud"
     """IBM Cloud."""
-    TENCENT_CLOUD: Final = "tencent_cloud"
+    TENCENT_CLOUD = "tencent_cloud"
     """Tencent Cloud."""

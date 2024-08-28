@@ -52,9 +52,9 @@ NETWORK_TRANSPORT: Final = "network.transport"
 [OSI transport layer](https://osi-model.com/transport-layer/) or [inter-process communication method](https://wikipedia.org/wiki/Inter-process_communication).
 Note: The value SHOULD be normalized to lowercase.
 
-    Consider always setting the transport when setting a port number, since
-    a port number is ambiguous without knowing the transport. For example
-    different processes could be listening on TCP port 12345 and UDP port 12345.
+Consider always setting the transport when setting a port number, since
+a port number is ambiguous without knowing the transport. For example
+different processes could be listening on TCP port 12345 and UDP port 12345.
 """
 
 NETWORK_TYPE: Final = "network.type"
@@ -65,18 +65,20 @@ Note: The value SHOULD be normalized to lowercase.
 
 
 class NetworkTransportValues(Enum):
-    TCP: Final = "tcp"
+    TCP = "tcp"
     """TCP."""
-    UDP: Final = "udp"
+    UDP = "udp"
     """UDP."""
-    PIPE: Final = "pipe"
+    PIPE = "pipe"
     """Named or anonymous pipe."""
-    UNIX: Final = "unix"
+    UNIX = "unix"
     """Unix domain socket."""
+    QUIC = "quic"
+    """QUIC."""
 
 
 class NetworkTypeValues(Enum):
-    IPV4: Final = "ipv4"
+    IPV4 = "ipv4"
     """IPv4."""
-    IPV6: Final = "ipv6"
+    IPV6 = "ipv6"
     """IPv6."""

@@ -15,6 +15,8 @@
 from enum import Enum
 from typing import Final
 
+from deprecated import deprecated
+
 PROCESS_COMMAND: Final = "process.command"
 """
 The command used to launch the process (i.e. the command name). On Linux based systems, can be set to the zeroth string in `proc/[pid]/cmdline`. On Windows, can be set to the first parameter extracted from `GetCommandLineW`.
@@ -37,7 +39,7 @@ Specifies whether the context switches for this data point were voluntary or inv
 
 PROCESS_CPU_STATE: Final = "process.cpu.state"
 """
-The CPU state of the process.
+Deprecated: Replaced by `cpu.mode`.
 """
 
 PROCESS_CREATION_TIME: Final = "process.creation.time"
@@ -112,7 +114,7 @@ An additional description about the runtime of the process, for example a specif
 
 PROCESS_RUNTIME_NAME: Final = "process.runtime.name"
 """
-The name of the runtime of this process. For compiled native binaries, this SHOULD be the name of the compiler.
+The name of the runtime of this process.
 """
 
 PROCESS_RUNTIME_VERSION: Final = "process.runtime.version"
@@ -153,23 +155,24 @@ Note: The process ID within a PID namespace. This is not necessarily unique acro
 
 
 class ProcessContextSwitchTypeValues(Enum):
-    VOLUNTARY: Final = "voluntary"
+    VOLUNTARY = "voluntary"
     """voluntary."""
-    INVOLUNTARY: Final = "involuntary"
+    INVOLUNTARY = "involuntary"
     """involuntary."""
 
 
+@deprecated(reason="The attribute process.cpu.state is deprecated - Replaced by `cpu.mode`")  # type: ignore
 class ProcessCpuStateValues(Enum):
-    SYSTEM: Final = "system"
+    SYSTEM = "system"
     """system."""
-    USER: Final = "user"
+    USER = "user"
     """user."""
-    WAIT: Final = "wait"
+    WAIT = "wait"
     """wait."""
 
 
 class ProcessPagingFaultTypeValues(Enum):
-    MAJOR: Final = "major"
+    MAJOR = "major"
     """major."""
-    MINOR: Final = "minor"
+    MINOR = "minor"
     """minor."""

@@ -23,7 +23,7 @@ Note: The causal relationship between a child Span and a parent Span.
 
 
 class OpentracingRefTypeValues(Enum):
-    CHILD_OF: Final = "child_of"
+    CHILD_OF = "child_of"
     """The parent Span depends on the child Span in some capacity."""
-    FOLLOWS_FROM: Final = "follows_from"
+    FOLLOWS_FROM = "follows_from"
     """The parent Span doesn't depend in any way on the result of the child Span."""

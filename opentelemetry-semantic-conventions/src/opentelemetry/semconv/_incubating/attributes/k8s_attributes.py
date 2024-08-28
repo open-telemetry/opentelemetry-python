@@ -23,27 +23,27 @@ K8S_CLUSTER_UID: Final = "k8s.cluster.uid"
 """
 A pseudo-ID for the cluster, set to the UID of the `kube-system` namespace.
 Note: K8s doesn't have support for obtaining a cluster ID. If this is ever
-    added, we will recommend collecting the `k8s.cluster.uid` through the
-    official APIs. In the meantime, we are able to use the `uid` of the
-    `kube-system` namespace as a proxy for cluster ID. Read on for the
-    rationale.
+added, we will recommend collecting the `k8s.cluster.uid` through the
+official APIs. In the meantime, we are able to use the `uid` of the
+`kube-system` namespace as a proxy for cluster ID. Read on for the
+rationale.
 
-    Every object created in a K8s cluster is assigned a distinct UID. The
-    `kube-system` namespace is used by Kubernetes itself and will exist
-    for the lifetime of the cluster. Using the `uid` of the `kube-system`
-    namespace is a reasonable proxy for the K8s ClusterID as it will only
-    change if the cluster is rebuilt. Furthermore, Kubernetes UIDs are
-    UUIDs as standardized by
-    [ISO/IEC 9834-8 and ITU-T X.667](https://www.itu.int/ITU-T/studygroups/com17/oid.html).
-    Which states:
+Every object created in a K8s cluster is assigned a distinct UID. The
+`kube-system` namespace is used by Kubernetes itself and will exist
+for the lifetime of the cluster. Using the `uid` of the `kube-system`
+namespace is a reasonable proxy for the K8s ClusterID as it will only
+change if the cluster is rebuilt. Furthermore, Kubernetes UIDs are
+UUIDs as standardized by
+[ISO/IEC 9834-8 and ITU-T X.667](https://www.itu.int/ITU-T/studygroups/com17/oid.html).
+Which states:
 
-    > If generated according to one of the mechanisms defined in Rec.
-      ITU-T X.667 | ISO/IEC 9834-8, a UUID is either guaranteed to be
-      different from all other UUIDs generated before 3603 A.D., or is
-      extremely likely to be different (depending on the mechanism chosen).
+> If generated according to one of the mechanisms defined in Rec.
+  ITU-T X.667 | ISO/IEC 9834-8, a UUID is either guaranteed to be
+  different from all other UUIDs generated before 3603 A.D., or is
+  extremely likely to be different (depending on the mechanism chosen).
 
-    Therefore, UIDs between clusters should be extremely unlikely to
-    conflict.
+Therefore, UIDs between clusters should be extremely unlikely to
+conflict.
 """
 
 K8S_CONTAINER_NAME: Final = "k8s.container.name"

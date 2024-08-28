@@ -19,13 +19,13 @@ from deprecated import deprecated
 
 STATE: Final = "state"
 """
-Deprecated: Replaced by `db.client.connections.state`.
+Deprecated: Replaced by `db.client.connection.state`.
 """
 
 
-@deprecated(reason="The attribute state is deprecated - Replaced by `db.client.connections.state`")  # type: ignore
+@deprecated(reason="The attribute state is deprecated - Replaced by `db.client.connection.state`")  # type: ignore
 class StateValues(Enum):
-    IDLE: Final = "idle"
+    IDLE = "idle"
     """idle."""
-    USED: Final = "used"
+    USED = "used"
     """used."""

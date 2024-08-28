@@ -24,7 +24,7 @@ The logical CPU number [0..n-1].
 
 SYSTEM_CPU_STATE: Final = "system.cpu.state"
 """
-The state of the CPU.
+Deprecated: Replaced by `cpu.mode`.
 """
 
 SYSTEM_DEVICE: Final = "system.device"
@@ -88,126 +88,127 @@ Deprecated: Replaced by `system.process.status`.
 """
 
 
+@deprecated(reason="The attribute system.cpu.state is deprecated - Replaced by `cpu.mode`")  # type: ignore
 class SystemCpuStateValues(Enum):
-    USER: Final = "user"
+    USER = "user"
     """user."""
-    SYSTEM: Final = "system"
+    SYSTEM = "system"
     """system."""
-    NICE: Final = "nice"
+    NICE = "nice"
     """nice."""
-    IDLE: Final = "idle"
+    IDLE = "idle"
     """idle."""
-    IOWAIT: Final = "iowait"
+    IOWAIT = "iowait"
     """iowait."""
-    INTERRUPT: Final = "interrupt"
+    INTERRUPT = "interrupt"
     """interrupt."""
-    STEAL: Final = "steal"
+    STEAL = "steal"
     """steal."""
 
 
 class SystemFilesystemStateValues(Enum):
-    USED: Final = "used"
+    USED = "used"
     """used."""
-    FREE: Final = "free"
+    FREE = "free"
     """free."""
-    RESERVED: Final = "reserved"
+    RESERVED = "reserved"
     """reserved."""
 
 
 class SystemFilesystemTypeValues(Enum):
-    FAT32: Final = "fat32"
+    FAT32 = "fat32"
     """fat32."""
-    EXFAT: Final = "exfat"
+    EXFAT = "exfat"
     """exfat."""
-    NTFS: Final = "ntfs"
+    NTFS = "ntfs"
     """ntfs."""
-    REFS: Final = "refs"
+    REFS = "refs"
     """refs."""
-    HFSPLUS: Final = "hfsplus"
+    HFSPLUS = "hfsplus"
     """hfsplus."""
-    EXT4: Final = "ext4"
+    EXT4 = "ext4"
     """ext4."""
 
 
 class SystemMemoryStateValues(Enum):
-    USED: Final = "used"
+    USED = "used"
     """used."""
-    FREE: Final = "free"
+    FREE = "free"
     """free."""
-    SHARED: Final = "shared"
-    """shared."""
-    BUFFERS: Final = "buffers"
+    SHARED = "shared"
+    """Deprecated: Removed, report shared memory usage with `metric.system.memory.shared` metric."""
+    BUFFERS = "buffers"
     """buffers."""
-    CACHED: Final = "cached"
+    CACHED = "cached"
     """cached."""
 
 
 class SystemNetworkStateValues(Enum):
-    CLOSE: Final = "close"
+    CLOSE = "close"
     """close."""
-    CLOSE_WAIT: Final = "close_wait"
+    CLOSE_WAIT = "close_wait"
     """close_wait."""
-    CLOSING: Final = "closing"
+    CLOSING = "closing"
     """closing."""
-    DELETE: Final = "delete"
+    DELETE = "delete"
     """delete."""
-    ESTABLISHED: Final = "established"
+    ESTABLISHED = "established"
     """established."""
-    FIN_WAIT_1: Final = "fin_wait_1"
+    FIN_WAIT_1 = "fin_wait_1"
     """fin_wait_1."""
-    FIN_WAIT_2: Final = "fin_wait_2"
+    FIN_WAIT_2 = "fin_wait_2"
     """fin_wait_2."""
-    LAST_ACK: Final = "last_ack"
+    LAST_ACK = "last_ack"
     """last_ack."""
-    LISTEN: Final = "listen"
+    LISTEN = "listen"
     """listen."""
-    SYN_RECV: Final = "syn_recv"
+    SYN_RECV = "syn_recv"
     """syn_recv."""
-    SYN_SENT: Final = "syn_sent"
+    SYN_SENT = "syn_sent"
     """syn_sent."""
-    TIME_WAIT: Final = "time_wait"
+    TIME_WAIT = "time_wait"
     """time_wait."""
 
 
 class SystemPagingDirectionValues(Enum):
-    IN: Final = "in"
+    IN = "in"
     """in."""
-    OUT: Final = "out"
+    OUT = "out"
     """out."""
 
 
 class SystemPagingStateValues(Enum):
-    USED: Final = "used"
+    USED = "used"
     """used."""
-    FREE: Final = "free"
+    FREE = "free"
     """free."""
 
 
 class SystemPagingTypeValues(Enum):
-    MAJOR: Final = "major"
+    MAJOR = "major"
     """major."""
-    MINOR: Final = "minor"
+    MINOR = "minor"
     """minor."""
 
 
 class SystemProcessStatusValues(Enum):
-    RUNNING: Final = "running"
+    RUNNING = "running"
     """running."""
-    SLEEPING: Final = "sleeping"
+    SLEEPING = "sleeping"
     """sleeping."""
-    STOPPED: Final = "stopped"
+    STOPPED = "stopped"
     """stopped."""
-    DEFUNCT: Final = "defunct"
+    DEFUNCT = "defunct"
     """defunct."""
 
 
 @deprecated(reason="The attribute system.processes.status is deprecated - Replaced by `system.process.status`")  # type: ignore
 class SystemProcessesStatusValues(Enum):
-    RUNNING: Final = "running"
+    RUNNING = "running"
     """running."""
-    SLEEPING: Final = "sleeping"
+    SLEEPING = "sleeping"
     """sleeping."""
-    STOPPED: Final = "stopped"
+    STOPPED = "stopped"
     """stopped."""
-    DEFUNCT: Final = "defunct"
+    DEFUNCT = "defunct"
     """defunct."""

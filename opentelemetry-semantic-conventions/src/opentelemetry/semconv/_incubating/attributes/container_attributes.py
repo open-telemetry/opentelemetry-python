@@ -15,6 +15,8 @@
 from enum import Enum
 from typing import Final
 
+from deprecated import deprecated
+
 CONTAINER_COMMAND: Final = "container.command"
 """
 The command used to run the container (i.e. the command name).
@@ -33,7 +35,7 @@ The full command run by the container as a single string representing the full c
 
 CONTAINER_CPU_STATE: Final = "container.cpu.state"
 """
-The CPU state for this data point.
+Deprecated: Replaced by `cpu.mode`.
 """
 
 CONTAINER_ID: Final = "container.id"
@@ -45,8 +47,8 @@ CONTAINER_IMAGE_ID: Final = "container.image.id"
 """
 Runtime specific image identifier. Usually a hash algorithm followed by a UUID.
 Note: Docker defines a sha256 of the image id; `container.image.id` corresponds to the `Image` field from the Docker container inspect [API](https://docs.docker.com/engine/api/v1.43/#tag/Container/operation/ContainerInspect) endpoint.
-    K8s defines a link to the container registry repository with digest `"imageID": "registry.azurecr.io /namespace/service/dockerfile@sha256:bdeabd40c3a8a492eaf9e8e44d0ebbb84bac7ee25ac0cf8a7159d25f62555625"`.
-    The ID is assigned by the container runtime and can vary in different environments. Consider using `oci.manifest.digest` if it is important to identify the same image in different environments/runtimes.
+K8s defines a link to the container registry repository with digest `"imageID": "registry.azurecr.io /namespace/service/dockerfile@sha256:bdeabd40c3a8a492eaf9e8e44d0ebbb84bac7ee25ac0cf8a7159d25f62555625"`.
+The ID is assigned by the container runtime and can vary in different environments. Consider using `oci.manifest.digest` if it is important to identify the same image in different environments/runtimes.
 """
 
 CONTAINER_IMAGE_NAME: Final = "container.image.name"
@@ -86,10 +88,11 @@ The container runtime managing this container.
 """
 
 
+@deprecated(reason="The attribute container.cpu.state is deprecated - Replaced by `cpu.mode`")  # type: ignore
 class ContainerCpuStateValues(Enum):
-    USER: Final = "user"
+    USER = "user"
     """When tasks of the cgroup are in user mode (Linux). When all container processes are in user mode (Windows)."""
-    SYSTEM: Final = "system"
+    SYSTEM = "system"
     """When CPU is used by the system (host OS)."""
-    KERNEL: Final = "kernel"
+    KERNEL = "kernel"
     """When tasks of the cgroup are in kernel mode (Linux). When all container processes are in kernel mode (Windows)."""

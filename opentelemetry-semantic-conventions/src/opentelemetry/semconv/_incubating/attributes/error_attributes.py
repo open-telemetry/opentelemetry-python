@@ -25,5 +25,5 @@ Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.error_
 
 @deprecated(reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.error_attributes.ErrorTypeValues`.")  # type: ignore
 class ErrorTypeValues(Enum):
-    OTHER: Final = "_OTHER"
-    """A fallback error value to be used when the instrumentation doesn't define a custom value."""
+    OTHER = "_OTHER"
+    """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.error_attributes.ErrorTypeValues.OTHER`."""

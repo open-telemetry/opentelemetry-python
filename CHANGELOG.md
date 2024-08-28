@@ -7,8 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-- Retain meaningful logrecord attributes and apply log-message formatting 
+- sdk: Add log-message formatting to the logging-implementation
   ([#3673](https://github.com/open-telemetry/opentelemetry-python/pull/3673))
+- Implementation of Events API
+  ([#4054](https://github.com/open-telemetry/opentelemetry-python/pull/4054))
+- Make log sdk add `exception.message` to logRecord for exceptions whose argument
+  is an exception not a string message
+  ([#4122](https://github.com/open-telemetry/opentelemetry-python/pull/4122))
+- Fix use of `link.attributes.dropped`, which may not exist
+  ([#4119](https://github.com/open-telemetry/opentelemetry-python/pull/4119))
+- Running mypy on SDK resources
+  ([#4053](https://github.com/open-telemetry/opentelemetry-python/pull/4053))
+- Added py.typed file to top-level module
+  ([#4084](https://github.com/open-telemetry/opentelemetry-python/pull/4084))
+- Drop Final annotation from Enum in semantic conventions
+  ([#4085](https://github.com/open-telemetry/opentelemetry-python/pull/4085))
+- Update log export example to not use root logger ([#4090](https://github.com/open-telemetry/opentelemetry-python/pull/4090))
+- sdk: Add OS resource detector
+  ([#3992](https://github.com/open-telemetry/opentelemetry-python/pull/3992))
+- sdk: Accept non URL-encoded headers in `OTEL_EXPORTER_OTLP_*HEADERS` to match other languages SDKs
+  ([#4103](https://github.com/open-telemetry/opentelemetry-python/pull/4103))
+- Update semantic conventions to version 1.27.0
+  ([#4104](https://github.com/open-telemetry/opentelemetry-python/pull/4104))
+- Export ExponentialHistogram and ExponentialHistogramDataPoint
+  ([#4134](https://github.com/open-telemetry/opentelemetry-python/pull/4134))
+- Implement Client Key and Certificate File Support for All OTLP Exporters
+  ([#4116](https://github.com/open-telemetry/opentelemetry-python/pull/4116))
+- Remove `_start_time_unix_nano` attribute from `_ViewInstrumentMatch` in favor
+  of using `time_ns()` at the moment when the aggregation object is created
+  ([#4137](https://github.com/open-telemetry/opentelemetry-python/pull/4137))
 
 ## Version 1.26.0/0.47b0 (2024-07-25)
 

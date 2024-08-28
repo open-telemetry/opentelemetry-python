@@ -14,6 +14,12 @@
 
 from typing import Final
 
+GCP_CLIENT_SERVICE: Final = "gcp.client.service"
+"""
+Identifies the Google Cloud service for which the official client library is intended.
+Note: Intended to be a stable identifier for Google Cloud client libraries that is uniform across implementation languages. The value should be derived from the canonical service domain for the service; for example, 'foo.googleapis.com' should result in a value of 'foo'.
+"""
+
 GCP_CLOUD_RUN_JOB_EXECUTION: Final = "gcp.cloud_run.job.execution"
 """
 The name of the Cloud Run [execution](https://cloud.google.com/run/docs/managing/job-executions) being run for the Job, as set by the [`CLOUD_RUN_EXECUTION`](https://cloud.google.com/run/docs/container-contract#jobs-env-vars) environment variable.

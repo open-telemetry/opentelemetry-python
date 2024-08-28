@@ -318,6 +318,7 @@ DB_CLIENT_OPERATION_DURATION: Final = "db.client.operation.duration"
 Duration of database client operations
 Instrument: histogram
 Unit: s
+Note: Batch operations SHOULD be recorded as a single operation.
 """
 
 
