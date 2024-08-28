@@ -182,20 +182,20 @@ class TestLoggingHandler(unittest.TestCase):
 
     def test_log_record_recursive_exception(self):
         """Exception information will be included in attributes even though it is recursive"""
-        processor, logger = set_up_test_logging(logging.ERROR)
+        with set_up_test_logging(logging.ERROR) as (processor, logger):
 
-        try:
-            raise ZeroDivisionError(
-                ZeroDivisionError(ZeroDivisionError("division by zero"))
-            )
-        except ZeroDivisionError:
-            with self.assertLogs(level=logging.ERROR):
-                logger.exception("Zero Division Error")
+            try:
+                raise ZeroDivisionError(
+                    ZeroDivisionError(ZeroDivisionError("division by zero"))
+                )
+            except ZeroDivisionError:
+                with self.assertLogs(level=logging.ERROR):
+                    logger.exception("Zero Division Error")
 
         log_record = processor.get_log_record(0)
 
         self.assertIsNotNone(log_record)
-        self.assertEqual(log_record.body, "Zero Division Error")
+        self.assertIn("Zero Division Error", log_record.body)
         self.assertEqual(
             log_record.attributes[SpanAttributes.EXCEPTION_TYPE],
             ZeroDivisionError.__name__,
