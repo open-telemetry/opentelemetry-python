@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- sdk: Add log-message formatting to the logging-implementation
+  ([#3673](https://github.com/open-telemetry/opentelemetry-python/pull/3673))
 - Implementation of Events API
   ([#4054](https://github.com/open-telemetry/opentelemetry-python/pull/4054))
 - Make log sdk add `exception.message` to logRecord for exceptions whose argument
@@ -1655,3 +1657,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3778](https://github.com/open-telemetry/opentelemetry-python/pull/3778))
 - Fix license field in pyproject.toml files
   ([#3803](https://github.com/open-telemetry/opentelemetry-python/pull/3803))
+
