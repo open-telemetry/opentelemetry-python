@@ -1,9 +1,10 @@
 # This script is to be used by maintainers by running it locally.
 
-from requests import put
-from os import environ
-from yaml import safe_load
 from json import dumps
+from os import environ
+
+from requests import put
+from yaml import safe_load
 
 job_names = ["EasyCLA"]
 
