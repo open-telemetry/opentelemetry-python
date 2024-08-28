@@ -56,35 +56,6 @@ _logger = logging.getLogger(__name__)
 
 _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
 _ENV_VALUE_UNSET = ""
-_EXCLUDED_ATTRIBUTES = {
-    # pseudo-private log-record attributes, they should always be dropped
-    "args",
-    "msg",
-    "message",
-    "stack_info",
-    "exc_info",
-    "exc_text",
-    # attributes that are retained, but with a different name
-    # following semantic conventions
-    "pathname",
-    "funcName",
-    "lineno",
-    "thread",
-    "threadName",
-    # attributes that are omitted because no semantic convention exists for them yet
-    "asctime",
-    "created",
-    "filename",
-    "levelname",
-    "levelno",
-    "module",
-    "msecs",
-    "name",
-    "process",
-    "processName",
-    "relativeCreated",
-    "taskName",
-}
 
 
 class LogDroppedAttributesWarning(UserWarning):
@@ -456,6 +427,37 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
         return True
 
 
+# skip natural LogRecord attributes
+# http://docs.python.org/library/logging.html#logrecord-attributes
+_RESERVED_ATTRS = frozenset(
+    (
+        "asctime",
+        "args",
+        "created",
+        "exc_info",
+        "exc_text",
+        "filename",
+        "funcName",
+        "message",
+        "levelname",
+        "levelno",
+        "lineno",
+        "module",
+        "msecs",
+        "msg",
+        "name",
+        "pathname",
+        "process",
+        "processName",
+        "relativeCreated",
+        "stack_info",
+        "thread",
+        "threadName",
+        "taskName",
+    )
+)
+
+
 class LoggingHandler(logging.Handler):
     """A handler class which writes logging records, in OTLP format, to
     a network destination or file. Supports signals from the `logging` module.
@@ -476,18 +478,13 @@ class LoggingHandler(logging.Handler):
     @staticmethod
     def _get_attributes(record: logging.LogRecord) -> Attributes:
         attributes = {
-            k: v
-            for k, v in vars(record).items()
-            if k not in _EXCLUDED_ATTRIBUTES and v is not None
+            k: v for k, v in vars(record).items() if k not in _RESERVED_ATTRS
         }
 
         # Add standard code attributes for logs.
         attributes[SpanAttributes.CODE_FILEPATH] = record.pathname
         attributes[SpanAttributes.CODE_FUNCTION] = record.funcName
         attributes[SpanAttributes.CODE_LINENO] = record.lineno
-        # Add thread identifiers for logs.
-        attributes[SpanAttributes.THREAD_ID] = record.thread
-        attributes[SpanAttributes.THREAD_NAME] = record.threadName
 
         if record.exc_info:
             exctype, value, tb = record.exc_info
