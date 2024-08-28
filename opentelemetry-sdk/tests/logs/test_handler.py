@@ -224,7 +224,16 @@ class TestLoggingHandler(unittest.TestCase):
                 },
             )
 
-    def test_format_is_called(self):
+    def test_default_format_is_called(self):
+        with set_up_test_logging(logging.WARNING) as (processor, logger):
+            logger.warning("Test message")
+
+            log_record = processor.get_log_record(0)
+            self.assertEqual(
+                log_record.body, "Test message"
+            )
+
+    def test_custom_format_is_called(self):
         with set_up_test_logging(logging.WARNING, formatter=logging.Formatter("%(name)s - %(levelname)s - %(message)s")) as (processor, logger):
             logger.warning("Test message")
 
