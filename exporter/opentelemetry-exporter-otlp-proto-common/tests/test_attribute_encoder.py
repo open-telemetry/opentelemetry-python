@@ -36,7 +36,7 @@ class TestOTLPAttributeEncoder(unittest.TestCase):
                 "greet": ["hola", "bonjour"],  # Sequence[str]
                 "data": [1, 2],  # Sequence[int]
                 "data_granular": [1.4, 2.4],  # Sequence[float]
-                "binary_data": b'x00\x01\x02' # bytes
+                "binary_data": b"x00\x01\x02",  # bytes
             }
         )
         self.assertEqual(
