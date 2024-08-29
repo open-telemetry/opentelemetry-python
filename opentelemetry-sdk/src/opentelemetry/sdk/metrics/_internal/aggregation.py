@@ -117,7 +117,7 @@ class _Aggregation(ABC, Generic[_DataPointVarT]):
     def _collect_exemplars(self) -> Sequence[Exemplar]:
         return self._reservoir.collect(
             self._attributes
-        )  # FIXME provide filtered data point attributes
+        )  
 
 
 class _DropAggregation(_Aggregation):
@@ -165,7 +165,7 @@ class _SumAggregation(_Aggregation[Sum]):
 
             self._value = self._value + measurement.value
 
-            super().aggregate(measurement, should_sample_exemplar)
+        super().aggregate(measurement, should_sample_exemplar)
 
     def collect(
         self,
@@ -295,7 +295,6 @@ class _SumAggregation(_Aggregation[Sum]):
         with self._lock:
             value = self._value
             self._value = None
-            exemplars = self._collect_exemplars()
 
             if (
                 self._instrument_aggregation_temporality
@@ -320,7 +319,7 @@ class _SumAggregation(_Aggregation[Sum]):
 
                     return NumberDataPoint(
                         attributes=self._attributes,
-                        exemplars=exemplars,
+                        exemplars=self._collect_exemplars(),
                         start_time_unix_nano=previous_collection_start_nano,
                         time_unix_nano=collection_start_nano,
                         value=value,
@@ -333,7 +332,7 @@ class _SumAggregation(_Aggregation[Sum]):
 
                 return NumberDataPoint(
                     attributes=self._attributes,
-                    exemplars=exemplars,
+                    exemplars=self._collect_exemplars(),
                     start_time_unix_nano=self._start_time_unix_nano,
                     time_unix_nano=collection_start_nano,
                     value=self._previous_value,
@@ -362,7 +361,7 @@ class _SumAggregation(_Aggregation[Sum]):
 
                 return NumberDataPoint(
                     attributes=self._attributes,
-                    exemplars=exemplars,
+                    exemplars=self._collect_exemplars(),
                     start_time_unix_nano=previous_collection_start_nano,
                     time_unix_nano=collection_start_nano,
                     value=result_value,
@@ -370,7 +369,7 @@ class _SumAggregation(_Aggregation[Sum]):
 
             return NumberDataPoint(
                 attributes=self._attributes,
-                exemplars=exemplars,
+                exemplars=self._collect_exemplars(),
                 start_time_unix_nano=self._start_time_unix_nano,
                 time_unix_nano=collection_start_nano,
                 value=value,

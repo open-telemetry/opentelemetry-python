@@ -4,7 +4,7 @@ from opentelemetry.context import Context
 from opentelemetry.trace import INVALID_SPAN, SpanContext, TraceFlags
 from opentelemetry import trace
 from time import time_ns
-from opentelemetry.sdk.metrics._internal.view import default_reservoir_factory
+from opentelemetry.sdk.metrics._internal.view import _default_reservoir_factory
 from opentelemetry.sdk.metrics._internal.exemplar import (
     AlignedHistogramBucketExemplarReservoir,
     ExemplarReservoir,
@@ -134,11 +134,11 @@ class TestAlignedHistogramBucketExemplarReservoir(TestCase):
         
 class TestExemplarReservoirFactory(TestCase):
     def test_sum_aggregation(self):
-        exemplar_reservoir = default_reservoir_factory(_SumAggregation)
+        exemplar_reservoir = _default_reservoir_factory(_SumAggregation)
         self.assertEqual(exemplar_reservoir, SimpleFixedSizeExemplarReservoir)
     def test_last_value_aggregation(self):
-        exemplar_reservoir = default_reservoir_factory(_LastValueAggregation)
+        exemplar_reservoir = _default_reservoir_factory(_LastValueAggregation)
         self.assertEqual(exemplar_reservoir, SimpleFixedSizeExemplarReservoir)
     def test_explicit_histogram_aggregation(self):
-        exemplar_reservoir = default_reservoir_factory(_ExplicitBucketHistogramAggregation)
+        exemplar_reservoir = _default_reservoir_factory(_ExplicitBucketHistogramAggregation)
         self.assertEqual(exemplar_reservoir, AlignedHistogramBucketExemplarReservoir)

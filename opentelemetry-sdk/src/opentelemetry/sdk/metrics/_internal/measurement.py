@@ -28,7 +28,7 @@ class Measurement:
     Attributes:
         value: Measured value
         time_unix_nano: The time the API call was made to record the Measurement
-        instrument: Measurement instrument
+        instrument: The instrument that produced this `Measurement`.
         context: The active Context of the Measurement at API call time.
         attributes: Measurement attributes
     """

@@ -47,7 +47,7 @@ from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.point import (
     ExponentialHistogramDataPoint,
 )
-from opentelemetry.sdk.metrics._internal.view import default_reservoir_factory
+from opentelemetry.sdk.metrics._internal.view import _default_reservoir_factory
 from opentelemetry.sdk.metrics.view import (
     ExponentialBucketHistogramAggregation,
 )
@@ -168,7 +168,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         exponential_histogram_aggregation = (
             _ExponentialBucketHistogramAggregation(
                 Mock(),
-                default_reservoir_factory(
+                _default_reservoir_factory(
                     _ExponentialBucketHistogramAggregation
                 ),
                 AggregationTemporality.DELTA,
@@ -209,7 +209,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         exponential_histogram_aggregation = (
             _ExponentialBucketHistogramAggregation(
                 Mock(),
-                default_reservoir_factory(
+                _default_reservoir_factory(
                     _ExponentialBucketHistogramAggregation
                 ),
                 AggregationTemporality.DELTA,
@@ -292,7 +292,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
                 exponential_histogram_aggregation = (
                     _ExponentialBucketHistogramAggregation(
                         Mock(),
-                        default_reservoir_factory(
+                        _default_reservoir_factory(
                             _ExponentialBucketHistogramAggregation
                         ),
                         AggregationTemporality.DELTA,
@@ -342,7 +342,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             exponential_histogram_aggregation = (
                 _ExponentialBucketHistogramAggregation(
                     Mock(),
-                    default_reservoir_factory(
+                    _default_reservoir_factory(
                         _ExponentialBucketHistogramAggregation
                     ),
                     AggregationTemporality.DELTA,
@@ -455,7 +455,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             exponential_histogram_aggregation = (
                 _ExponentialBucketHistogramAggregation(
                     Mock(),
-                    default_reservoir_factory(
+                    _default_reservoir_factory(
                         _ExponentialBucketHistogramAggregation
                     ),
                     AggregationTemporality.DELTA,
@@ -521,7 +521,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         exponential_histogram_aggregation_0 = (
             _ExponentialBucketHistogramAggregation(
                 Mock(),
-                default_reservoir_factory(
+                _default_reservoir_factory(
                     _ExponentialBucketHistogramAggregation
                 ),
                 AggregationTemporality.DELTA,
@@ -532,7 +532,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         exponential_histogram_aggregation_1 = (
             _ExponentialBucketHistogramAggregation(
                 Mock(),
-                default_reservoir_factory(
+                _default_reservoir_factory(
                     _ExponentialBucketHistogramAggregation
                 ),
                 AggregationTemporality.DELTA,
@@ -589,7 +589,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         exponential_histogram_aggregation = (
             _ExponentialBucketHistogramAggregation(
                 Mock(),
-                default_reservoir_factory(
+                _default_reservoir_factory(
                     _ExponentialBucketHistogramAggregation
                 ),
                 AggregationTemporality.DELTA,
@@ -675,7 +675,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         exponential_histogram_aggregation = (
             _ExponentialBucketHistogramAggregation(
                 Mock(),
-                default_reservoir_factory(
+                _default_reservoir_factory(
                     _ExponentialBucketHistogramAggregation
                 ),
                 AggregationTemporality.DELTA,
@@ -723,7 +723,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         exponential_histogram_aggregation = (
             _ExponentialBucketHistogramAggregation(
                 Mock(),
-                default_reservoir_factory(
+                _default_reservoir_factory(
                     _ExponentialBucketHistogramAggregation
                 ),
                 AggregationTemporality.DELTA,
@@ -742,7 +742,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         exponential_histogram_aggregation = (
             _ExponentialBucketHistogramAggregation(
                 Mock(),
-                default_reservoir_factory(
+                _default_reservoir_factory(
                     _ExponentialBucketHistogramAggregation
                 ),
                 AggregationTemporality.DELTA,
@@ -764,7 +764,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         exponential_histogram_aggregation_0 = (
             _ExponentialBucketHistogramAggregation(
                 Mock(),
-                default_reservoir_factory(
+                _default_reservoir_factory(
                     _ExponentialBucketHistogramAggregation
                 ),
                 AggregationTemporality.DELTA,
@@ -778,7 +778,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         exponential_histogram_aggregation_1 = (
             _ExponentialBucketHistogramAggregation(
                 Mock(),
-                default_reservoir_factory(
+                _default_reservoir_factory(
                     _ExponentialBucketHistogramAggregation
                 ),
                 AggregationTemporality.DELTA,
@@ -792,7 +792,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         exponential_histogram_aggregation_2 = (
             _ExponentialBucketHistogramAggregation(
                 Mock(),
-                default_reservoir_factory(
+                _default_reservoir_factory(
                     _ExponentialBucketHistogramAggregation
                 ),
                 AggregationTemporality.DELTA,
@@ -845,7 +845,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         exponential_histogram_aggregation_0 = (
             _ExponentialBucketHistogramAggregation(
                 Mock(),
-                default_reservoir_factory(
+                _default_reservoir_factory(
                     _ExponentialBucketHistogramAggregation
                 ),
                 AggregationTemporality.DELTA,
@@ -862,7 +862,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         exponential_histogram_aggregation_1 = (
             _ExponentialBucketHistogramAggregation(
                 Mock(),
-                default_reservoir_factory(
+                _default_reservoir_factory(
                     _ExponentialBucketHistogramAggregation
                 ),
                 AggregationTemporality.DELTA,
@@ -905,7 +905,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         exponential_histogram_aggregation_0 = (
             _ExponentialBucketHistogramAggregation(
                 Mock(),
-                default_reservoir_factory(
+                _default_reservoir_factory(
                     _ExponentialBucketHistogramAggregation
                 ),
                 AggregationTemporality.DELTA,
@@ -922,7 +922,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         exponential_histogram_aggregation_1 = (
             _ExponentialBucketHistogramAggregation(
                 Mock(),
-                default_reservoir_factory(
+                _default_reservoir_factory(
                     _ExponentialBucketHistogramAggregation
                 ),
                 AggregationTemporality.DELTA,
@@ -996,7 +996,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         exponential_histogram_aggregation = (
             _ExponentialBucketHistogramAggregation(
                 Mock(),
-                default_reservoir_factory(
+                _default_reservoir_factory(
                     _ExponentialBucketHistogramAggregation
                 ),
                 AggregationTemporality.DELTA,
@@ -1027,7 +1027,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         exponential_histogram_aggregation = (
             _ExponentialBucketHistogramAggregation(
                 Mock(),
-                default_reservoir_factory(
+                _default_reservoir_factory(
                     _ExponentialBucketHistogramAggregation
                 ),
                 AggregationTemporality.DELTA,
@@ -1061,7 +1061,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         exponential_histogram_aggregation = (
             _ExponentialBucketHistogramAggregation(
                 Mock(),
-                default_reservoir_factory(
+                _default_reservoir_factory(
                     _ExponentialBucketHistogramAggregation
                 ),
                 AggregationTemporality.DELTA,
@@ -1170,7 +1170,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
 
         histogram = _ExponentialBucketHistogramAggregation(
             Mock(),
-            default_reservoir_factory(_ExponentialBucketHistogramAggregation),
+            _default_reservoir_factory(_ExponentialBucketHistogramAggregation),
             AggregationTemporality.DELTA,
             Mock(),
         )
@@ -1232,7 +1232,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         exponential_histogram_aggregation = (
             _ExponentialBucketHistogramAggregation(
                 Mock(),
-                default_reservoir_factory(
+                _default_reservoir_factory(
                     _ExponentialBucketHistogramAggregation
                 ),
                 AggregationTemporality.DELTA,
@@ -1290,7 +1290,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         exponential_histogram_aggregation = (
             _ExponentialBucketHistogramAggregation(
                 Mock(),
-                default_reservoir_factory(
+                _default_reservoir_factory(
                     _ExponentialBucketHistogramAggregation
                 ),
                 AggregationTemporality.DELTA,

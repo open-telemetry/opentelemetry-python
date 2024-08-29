@@ -98,7 +98,7 @@ class ExemplarBucket:
         if not self.__offered:
             return None
 
-        current_attributes = (
+        filtered_attributes = (
             {
                 k: v
                 for k, v in self.__attributes.items()
@@ -109,7 +109,7 @@ class ExemplarBucket:
         )
 
         exemplar = Exemplar(
-            current_attributes,
+            filtered_attributes,
             self.__value,
             self.__time_unix_nano,
             self.__span_id,
@@ -206,11 +206,11 @@ class SimpleFixedSizeExemplarReservoir(FixedSizeExemplarReservoirABC):
         attributes: Attributes,
         ctx: Context,
     ) -> int:
-        self._measurements_seen += 1
         if self._measurements_seen < self._size:
             return self._measurements_seen
 
         index = randrange(0, self._measurements_seen)
+        self._measurements_seen += 1
         return index if index < self._size else -1
 
 
