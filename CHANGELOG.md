@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- sdk: Add support for log formatting
+  ([#4137](https://github.com/open-telemetry/opentelemetry-python/pull/4166))
+  
 ## Version 1.27.0/0.48b0 (2024-08-28)
 
 - Implementation of Events API

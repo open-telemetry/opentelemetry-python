@@ -544,10 +544,13 @@ class LoggingHandler(logging.Handler):
         # output format. Therefore, this change is considered a breaking
         # change and needs to be upgraded at an appropriate time.
         severity_number = std_to_otel(record.levelno)
-        if isinstance(record.msg, str) and record.args:
-            body = record.msg % record.args
+        if self.formatter:
+            body = self.format(record)
         else:
-            body = record.msg
+            if isinstance(record.msg, str) and record.args:
+                body = record.msg % record.args
+            else:
+                body = record.msg
 
         # related to https://github.com/open-telemetry/opentelemetry-python/issues/3548
         # Severity Text = WARN as defined in https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/logs/data-model.md#displaying-severity.
