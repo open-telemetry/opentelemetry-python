@@ -152,6 +152,8 @@ def detach(token: object) -> None:
     """
     try:
         _RUNTIME_CONTEXT.detach(token)
+    except TypeError:
+        logger.exception("Expected an instance of Token, got None")
     except Exception:  # pylint: disable=broad-exception-caught
         logger.exception("Failed to detach context")
 

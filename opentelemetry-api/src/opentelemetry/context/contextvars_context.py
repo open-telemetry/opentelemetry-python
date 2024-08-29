@@ -47,7 +47,10 @@ class ContextVarsRuntimeContext(_RuntimeContext):
         Args:
             token: A reference to a previous Context.
         """
-        self._current_context.reset(token)  # type: ignore
+        try:
+            self._current_context.reset(token)
+        except TypeError:
+            raise TypeError
 
 
 __all__ = ["ContextVarsRuntimeContext"]
