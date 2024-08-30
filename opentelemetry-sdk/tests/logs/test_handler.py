@@ -13,7 +13,7 @@
 # limitations under the License.
 import logging
 import unittest
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 
 from opentelemetry._logs import NoOpLoggerProvider, SeverityNumber
 from opentelemetry._logs import get_logger as APIGetLogger

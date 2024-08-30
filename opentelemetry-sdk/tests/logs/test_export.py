@@ -207,8 +207,9 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         ]
         self.assertEqual(expected, emitted)
 
-    def test_simple_log_record_processor_different_msg_types_with_formatter(self):
-        self.maxDiff = None
+    def test_simple_log_record_processor_different_msg_types_with_formatter(
+        self,
+    ):
         exporter = InMemoryLogExporter()
         log_record_processor = BatchLogRecordProcessor(exporter)
 
@@ -217,9 +218,9 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
 
         logger = logging.getLogger("different_msg_types")
         handler = LoggingHandler(logger_provider=provider)
-        handler.setFormatter(logging.Formatter(
-            "%(name)s - %(levelname)s - %(message)s"
-        ))
+        handler.setFormatter(
+            logging.Formatter("%(name)s - %(levelname)s - %(message)s")
+        )
         logger.addHandler(handler)
 
         logger.warning("warning message: %s", "possible upcoming heatwave")
@@ -231,13 +232,22 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
 
         finished_logs = exporter.get_finished_logs()
         expected = [
-            ("different_msg_types - WARNING - warning message: possible upcoming heatwave", "WARN"),
-            ("different_msg_types - ERROR - Very high rise in temperatures across the globe", "ERROR"),
+            (
+                "different_msg_types - WARNING - warning message: possible upcoming heatwave",
+                "WARN",
+            ),
+            (
+                "different_msg_types - ERROR - Very high rise in temperatures across the globe",
+                "ERROR",
+            ),
             (
                 "different_msg_types - CRITICAL - Temperature hits high 420 C in Hyderabad",
                 "CRITICAL",
             ),
-            ("different_msg_types - WARNING - ['list', 'of', 'strings']", "WARN"),
+            (
+                "different_msg_types - WARNING - ['list', 'of', 'strings']",
+                "WARN",
+            ),
             ("different_msg_types - ERROR - {'key': 'value'}", "ERROR"),
         ]
         emitted = [
