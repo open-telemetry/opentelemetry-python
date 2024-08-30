@@ -164,6 +164,19 @@ class FixedSizeExemplarReservoirABC(ExemplarReservoir):
         """Reset the reservoir by resetting any stateful logic after a collection cycle."""
         pass
 
+    @abstractmethod
+    def _find_bucket_index(
+        self,
+        value: Union[int, float],
+        time_unix_nano: int,
+        attributes: Attributes,
+        ctx: Context,
+    ) -> int:
+        """
+        Determines the bucket index for the given measurement.
+        Should be implemented by subclasses based on specific strategies.
+        """
+        pass
 
 class SimpleFixedSizeExemplarReservoir(FixedSizeExemplarReservoirABC):
     """This reservoir uses an uniformly-weighted sampling algorithm based on the number
