@@ -11,7 +11,7 @@ on:
 
 env:
   CORE_REPO_SHA: ${{ github.sha }}
-  CONTRIB_REPO_SHA: 5f130cdb86e13641a3bb10273bc7c68f28ec04f0
+  CONTRIB_REPO_SHA: main
   PIP_EXISTS_ACTION: w
 
 jobs:
