@@ -91,6 +91,7 @@ _ProxyInstrumentT = Union[
     _ProxyUpDownCounter,
 ]
 
+
 class MeterProvider(ABC):
     """
     MeterProvider is the entry point of the API. It provides access to `Meter` instances.
