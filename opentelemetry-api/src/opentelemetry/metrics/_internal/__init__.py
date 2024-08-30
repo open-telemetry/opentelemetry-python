@@ -91,11 +91,17 @@ _ProxyInstrumentT = Union[
     _ProxyUpDownCounter,
 ]
 
-
 class MeterProvider(ABC):
     """
     MeterProvider is the entry point of the API. It provides access to `Meter` instances.
     """
+    @abstractmethod
+    def force_flush(self, timeout_millis: float = 10_000) -> bool:
+
+
+    @abstractmethod
+    def shutdown(self, timeout_millis: float = 30_000):
+
 
     @abstractmethod
     def get_meter(
@@ -136,6 +142,12 @@ class MeterProvider(ABC):
 
 class NoOpMeterProvider(MeterProvider):
     """The default MeterProvider used when no MeterProvider implementation is available."""
+
+    def force_flush(self, timeout_millis: float = 10_000) -> bool:
+        return
+
+    def shutdown(self, timeout_millis: float = 30_000):
+        return
 
     def get_meter(
         self,
