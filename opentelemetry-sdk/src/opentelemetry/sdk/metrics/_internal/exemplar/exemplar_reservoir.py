@@ -97,7 +97,8 @@ class ExemplarBucket:
         """May return an Exemplar and resets the bucket for the next sampling period."""
         if not self.__offered:
             return None
-
+        
+        # filters out attributes from the measurement that are already included in the metric data point
         filtered_attributes = (
             {
                 k: v
@@ -137,10 +138,6 @@ class FixedSizeExemplarReservoirABC(ExemplarReservoir):
             ExemplarBucket() for _ in range(self._size)
         ]
 
-    def maxSize(self) -> int:
-        """Reservoir maximal size"""
-        return self._size
-
     def collect(self, point_attributes: Attributes) -> list[Exemplar]:
         """Returns accumulated Exemplars and also resets the reservoir for the next
         sampling period
@@ -164,7 +161,7 @@ class FixedSizeExemplarReservoirABC(ExemplarReservoir):
         return [*exemplars]
 
     def _reset(self) -> None:
-        """Reset the reservoir."""
+        """Reset the reservoir by resetting any stateful logic after a collection cycle."""
         pass
 
 
