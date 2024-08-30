@@ -95,17 +95,11 @@ class _Aggregation(ABC, Generic[_DataPointVarT]):
         self._reservoir = reservoir_factory()
         self._previous_point = None
 
-    def aggregate(
-        self, measurement: Measurement, should_sample_exemplar: bool = True
+    @abstractmethod
+    def aggregate(self, measurement: Measurement, should_sample_exemplar: bool = True
     ) -> None:
-        if should_sample_exemplar:
-            self._reservoir.offer(
-                measurement.value,
-                measurement.time_unix_nano,
-                measurement.attributes,
-                measurement.context,
-            )
-
+        pass
+    
     @abstractmethod
     def collect(
         self,
@@ -119,7 +113,14 @@ class _Aggregation(ABC, Generic[_DataPointVarT]):
             self._attributes
         )  
 
-
+    def sample_exemplar(self, measurement: Measurement) -> None:
+        self._reservoir.offer(
+                measurement.value,
+                measurement.time_unix_nano,
+                measurement.attributes,
+                measurement.context,
+            )
+        
 class _DropAggregation(_Aggregation):
     def aggregate(
         self, measurement: Measurement, should_sample_exemplar: bool = True
@@ -164,8 +165,10 @@ class _SumAggregation(_Aggregation[Sum]):
                 self._value = 0
 
             self._value = self._value + measurement.value
-
-        super().aggregate(measurement, should_sample_exemplar)
+        
+            if should_sample_exemplar:
+                self.sample_exemplar(measurement)
+        
 
     def collect(
         self,
@@ -390,8 +393,8 @@ class _LastValueAggregation(_Aggregation[GaugePoint]):
     ):
         with self._lock:
             self._value = measurement.value
-
-            super().aggregate(measurement, should_sample_exemplar)
+            if should_sample_exemplar:
+                self.sample_exemplar(measurement)
 
     def collect(
         self,
@@ -491,7 +494,8 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
             self._value[bisect_left(self._boundaries, measurement_value)] += 1
 
-            super().aggregate(measurement, should_sample_exemplar)
+            if should_sample_exemplar:
+                self.sample_exemplar(measurement)
 
     def collect(
         self,
@@ -790,7 +794,8 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             # in _ExplicitBucketHistogramAggregation.aggregate
             value.increment_bucket(bucket_index)
 
-            super().aggregate(measurement, should_sample_exemplar)
+            if should_sample_exemplar:
+                self.sample_exemplar(measurement)
 
     def collect(
         self,

@@ -204,7 +204,8 @@ class SimpleFixedSizeExemplarReservoir(FixedSizeExemplarReservoirABC):
         ctx: Context,
     ) -> int:
         if self._measurements_seen < self._size:
-            return self._measurements_seen
+            self._measurements_seen += 1
+            return self._measurements_seen - 1
 
         index = randrange(0, self._measurements_seen)
         self._measurements_seen += 1

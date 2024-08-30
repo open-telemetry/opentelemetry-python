@@ -648,7 +648,7 @@ class TestDefaultAggregation(TestCase):
 class TestExemplarsFromAggregations(TestCase):
     
     def test_collection_simple_fixed_size_reservoir(self):
-        exemplar_reservoir_factory = lambda: SimpleFixedSizeExemplarReservoir(size=5)
+        exemplar_reservoir_factory = lambda: SimpleFixedSizeExemplarReservoir(size=3)
         synchronous_sum_aggregation = _SumAggregation(
             Mock(),
             True,
