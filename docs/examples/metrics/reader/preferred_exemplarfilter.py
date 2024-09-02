@@ -13,19 +13,21 @@
 # limitations under the License.
 import time
 
+from opentelemetry import trace
 from opentelemetry.metrics import get_meter_provider, set_meter_provider
-from opentelemetry.sdk.metrics import Counter, MeterProvider
+from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics._internal.exemplar import (
-    AlwaysOffExemplarFilter,
-    AlwaysOnExemplarFilter,
     TraceBasedExemplarFilter,
 )
 from opentelemetry.sdk.metrics.export import (
     ConsoleMetricExporter,
     PeriodicExportingMetricReader,
 )
+from opentelemetry.sdk.trace import TracerProvider
 
 # Create an ExemplarFilter instance (e.g., TraceBasedExemplarFilter)
+# Default available values are AlwaysOffExemplarFilter, AlwaysOnExemplarFilter
+# and TraceBasedExemplarFilter
 exemplar_filter = TraceBasedExemplarFilter()
 
 exporter = ConsoleMetricExporter()
@@ -45,6 +47,11 @@ set_meter_provider(provider)
 meter = get_meter_provider().get_meter("exemplar-filter-example", "0.1.2")
 counter = meter.create_counter("my-counter")
 
-for value in range(10):
-    counter.add(value)
-    time.sleep(2.0)
+# Create a trace and span as the default exemplar filter `TraceBasedExemplarFilter`
+# will only store exemplar if a context exists
+trace.set_tracer_provider(TracerProvider())
+tracer = trace.get_tracer(__name__)
+with tracer.start_as_current_span("foo"):
+    for value in range(10):
+        counter.add(value)
+        time.sleep(2.0)
