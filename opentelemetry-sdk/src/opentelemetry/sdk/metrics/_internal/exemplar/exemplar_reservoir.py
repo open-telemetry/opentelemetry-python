@@ -42,9 +42,16 @@ class ExemplarReservoir(ABC):
         value: Union[int, float],
         time_unix_nano: int,
         attributes: Attributes,
-        ctx: Context,
+        context: Context,
     ) -> None:
-        """Offers a measurement to be sampled."""
+        """Offers a measurement to be sampled.
+
+        Args:
+            value: Measured value
+            time_unix_nano: Measurement instant
+            attributes: Measurement attributes
+            context: Measurement context
+        """
         raise NotImplementedError("ExemplarReservoir.offer is not implemented")
 
     @abstractmethod
@@ -79,13 +86,20 @@ class ExemplarBucket:
         value: Union[int, float],
         time_unix_nano: int,
         attributes: Attributes,
-        ctx: Context,
+        context: Context,
     ) -> None:
-        """Offers a measurement to be sampled."""
+        """Offers a measurement to be sampled.
+
+        Args:
+            value: Measured value
+            time_unix_nano: Measurement instant
+            attributes: Measurement attributes
+            context: Measurement context
+        """
         self.__value = value
         self.__time_unix_nano = time_unix_nano
         self.__attributes = attributes
-        span = trace.get_current_span(ctx)
+        span = trace.get_current_span(context)
         if span != INVALID_SPAN:
             span_context = span.get_span_context()
             self.__span_id = span_context.span_id
@@ -97,8 +111,10 @@ class ExemplarBucket:
         """May return an Exemplar and resets the bucket for the next sampling period."""
         if not self.__offered:
             return None
-        
+
         # filters out attributes from the measurement that are already included in the metric data point
+        # See the specification for more details:
+        # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/sdk.md#exemplar
         filtered_attributes = (
             {
                 k: v
@@ -120,12 +136,17 @@ class ExemplarBucket:
         return exemplar
 
     def __reset(self) -> None:
+        """Reset the bucket state after a collection cycle."""
         self.__value = 0
         self.__attributes = {}
         self.__time_unix_nano = 0
         self.__span_id = None
         self.__trace_id = None
         self.__offered = False
+
+
+class BucketIndexError(ValueError):
+    """An exception raised when the bucket index cannot be found."""
 
 
 class FixedSizeExemplarReservoirABC(ExemplarReservoir):
@@ -160,9 +181,32 @@ class FixedSizeExemplarReservoirABC(ExemplarReservoir):
         self._reset()
         return [*exemplars]
 
-    def _reset(self) -> None:
-        """Reset the reservoir by resetting any stateful logic after a collection cycle."""
-        pass
+    def offer(
+        self,
+        value: Union[int, float],
+        time_unix_nano: int,
+        attributes: Attributes,
+        context: Context,
+    ) -> None:
+        """Offers a measurement to be sampled.
+
+        Args:
+            value: Measured value
+            time_unix_nano: Measurement instant
+            attributes: Measurement attributes
+            context: Measurement context
+        """
+        try:
+            index = self._find_bucket_index(
+                value, time_unix_nano, attributes, context
+            )
+
+            self._reservoir_storage[index].offer(
+                value, time_unix_nano, attributes, context
+            )
+        except BucketIndexError:
+            # Ignore invalid bucket index
+            pass
 
     @abstractmethod
     def _find_bucket_index(
@@ -170,13 +214,30 @@ class FixedSizeExemplarReservoirABC(ExemplarReservoir):
         value: Union[int, float],
         time_unix_nano: int,
         attributes: Attributes,
-        ctx: Context,
+        context: Context,
     ) -> int:
-        """
-        Determines the bucket index for the given measurement.
-        Should be implemented by subclasses based on specific strategies.
+        """Determines the bucket index for the given measurement.
+
+        It should be implemented by subclasses based on specific strategies.
+
+        Args:
+            value: Measured value
+            time_unix_nano: Measurement instant
+            attributes: Measurement attributes
+            context: Measurement context
+
+        Returns:
+            The bucket index
+
+        Raises:
+            BucketIndexError: If no bucket index can be found.
         """
         pass
+
+    def _reset(self) -> None:
+        """Reset the reservoir by resetting any stateful logic after a collection cycle."""
+        pass
+
 
 class SimpleFixedSizeExemplarReservoir(FixedSizeExemplarReservoirABC):
     """This reservoir uses an uniformly-weighted sampling algorithm based on the number
@@ -195,34 +256,22 @@ class SimpleFixedSizeExemplarReservoir(FixedSizeExemplarReservoirABC):
         super()._reset()
         self._measurements_seen = 0
 
-    def offer(
-        self,
-        value: Union[int, float],
-        time_unix_nano: int,
-        attributes: Attributes,
-        ctx: Context,
-    ) -> None:
-        """Offers a measurement to be sampled."""
-        index = self._find_bucket_index(value, time_unix_nano, attributes, ctx)
-        if index != -1:
-            self._reservoir_storage[index].offer(
-                value, time_unix_nano, attributes, ctx
-            )
-
     def _find_bucket_index(
         self,
         value: Union[int, float],
         time_unix_nano: int,
         attributes: Attributes,
-        ctx: Context,
+        context: Context,
     ) -> int:
+        self._measurements_seen += 1
         if self._measurements_seen < self._size:
-            self._measurements_seen += 1
             return self._measurements_seen - 1
 
         index = randrange(0, self._measurements_seen)
-        self._measurements_seen += 1
-        return index if index < self._size else -1
+        if index < self._size:
+            return index
+
+        raise BucketIndexError("Unable to find the bucket index.")
 
 
 class AlignedHistogramBucketExemplarReservoir(FixedSizeExemplarReservoirABC):
@@ -243,12 +292,14 @@ class AlignedHistogramBucketExemplarReservoir(FixedSizeExemplarReservoirABC):
         value: Union[int, float],
         time_unix_nano: int,
         attributes: Attributes,
-        ctx: Context,
+        context: Context,
     ) -> None:
         """Offers a measurement to be sampled."""
-        index = self._find_bucket_index(value, time_unix_nano, attributes, ctx)
+        index = self._find_bucket_index(
+            value, time_unix_nano, attributes, context
+        )
         self._reservoir_storage[index].offer(
-            value, time_unix_nano, attributes, ctx
+            value, time_unix_nano, attributes, context
         )
 
     def _find_bucket_index(
@@ -256,7 +307,7 @@ class AlignedHistogramBucketExemplarReservoir(FixedSizeExemplarReservoirABC):
         value: Union[int, float],
         time_unix_nano: int,
         attributes: Attributes,
-        ctx: Context,
+        context: Context,
     ) -> int:
         for i, boundary in enumerate(self._boundaries):
             if value <= boundary:
@@ -264,10 +315,10 @@ class AlignedHistogramBucketExemplarReservoir(FixedSizeExemplarReservoirABC):
         return len(self._boundaries)
 
 
-ExemplarReservoirFactory: TypeAlias = Callable[
+ExemplarReservoirBuilder: TypeAlias = Callable[
     [dict[str, Any]], ExemplarReservoir
 ]
-ExemplarReservoirFactory.__doc__ = """ExemplarReservoir factory.
+ExemplarReservoirBuilder.__doc__ = """ExemplarReservoir builder.
 
 It may receive the Aggregation parameters it is bounded to; e.g.
 the _ExplicitBucketHistogramAggregation will provide the boundaries.

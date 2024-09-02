@@ -27,7 +27,7 @@ from opentelemetry.sdk.metrics._internal.aggregation import (
 )
 from opentelemetry.sdk.metrics._internal.exemplar import (
     AlignedHistogramBucketExemplarReservoir,
-    ExemplarReservoirFactory,
+    ExemplarReservoirBuilder,
     SimpleFixedSizeExemplarReservoir,
 )
 
@@ -36,7 +36,7 @@ _logger = getLogger(__name__)
 
 def _default_reservoir_factory(
     aggregationType: Type[_Aggregation],
-) -> ExemplarReservoirFactory:
+) -> ExemplarReservoirBuilder:
     """Default reservoir factory per aggregation."""
     if issubclass(aggregationType, _ExplicitBucketHistogramAggregation):
         return AlignedHistogramBucketExemplarReservoir
@@ -115,7 +115,7 @@ class View:
         attribute_keys: Optional[Set[str]] = None,
         aggregation: Optional[Aggregation] = None,
         exemplar_reservoir_factory: Optional[
-            Callable[[Type[_Aggregation]], ExemplarReservoirFactory]
+            Callable[[Type[_Aggregation]], ExemplarReservoirBuilder]
         ] = None,
         instrument_unit: Optional[str] = None,
     ):

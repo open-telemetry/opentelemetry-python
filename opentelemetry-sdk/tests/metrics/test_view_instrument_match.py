@@ -48,13 +48,13 @@ from opentelemetry.sdk.metrics._internal.aggregation import (
 from opentelemetry.sdk.metrics._internal.exemplar import (
     AlignedHistogramBucketExemplarReservoir,
     ExemplarReservoir,
-    ExemplarReservoirFactory,
+    ExemplarReservoirBuilder,
     SimpleFixedSizeExemplarReservoir
 )
 from typing import Callable, Optional, Set, Type, Any, Sequence
 
-def generalized_reservoir_factory(size: int = 1, boundaries: Sequence[float] = None) -> Callable[[Type[_Aggregation]], ExemplarReservoirFactory]:
-        def factory(aggregationType: Type[_Aggregation]) -> ExemplarReservoirFactory:
+def generalized_reservoir_factory(size: int = 1, boundaries: Sequence[float] = None) -> Callable[[Type[_Aggregation]], ExemplarReservoirBuilder]:
+        def factory(aggregationType: Type[_Aggregation]) -> ExemplarReservoirBuilder:
             if issubclass(aggregationType, _ExplicitBucketHistogramAggregation):
                 return lambda **kwargs: AlignedHistogramBucketExemplarReservoir(boundaries=boundaries or [], **{k: v for k, v in kwargs.items() if k != 'boundaries'})
             else:

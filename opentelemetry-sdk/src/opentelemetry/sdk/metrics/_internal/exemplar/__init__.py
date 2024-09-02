@@ -22,7 +22,7 @@ from .exemplar_filter import (
 from .exemplar_reservoir import (
     AlignedHistogramBucketExemplarReservoir,
     ExemplarReservoir,
-    ExemplarReservoirFactory,
+    ExemplarReservoirBuilder,
     SimpleFixedSizeExemplarReservoir,
 )
 
@@ -34,6 +34,6 @@ __all__ = [
     "TraceBasedExemplarFilter",
     "AlignedHistogramBucketExemplarReservoir",
     "ExemplarReservoir",
-    "ExemplarReservoirFactory",
+    "ExemplarReservoirBuilder",
     "SimpleFixedSizeExemplarReservoir",
 ]

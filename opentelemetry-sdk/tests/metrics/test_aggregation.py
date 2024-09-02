@@ -50,7 +50,7 @@ from opentelemetry.sdk.metrics.view import (
 from opentelemetry.util.types import Attributes
 from opentelemetry.sdk.metrics._internal.exemplar import (
     AlignedHistogramBucketExemplarReservoir,
-    ExemplarReservoirFactory,
+    ExemplarReservoirBuilder,
     SimpleFixedSizeExemplarReservoir,
 )
 

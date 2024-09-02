@@ -38,7 +38,7 @@ class ExemplarFilter(ABC):
         value: Union[int, float],
         time_unix_nano: int,
         attributes: Attributes,
-        ctx: Context,
+        context: Context,
     ) -> bool:
         """Returns whether or not a reservoir should attempt to filter a measurement.
 
@@ -46,7 +46,7 @@ class ExemplarFilter(ABC):
             value: The value of the measurement
             timestamp: A timestamp that best represents when the measurement was taken
             attributes: The complete set of measurement attributes
-            ctx: The Context of the measurement
+            context: The Context of the measurement
         """
         raise NotImplementedError(
             "ExemplarFilter.should_sample is not implemented"
@@ -65,7 +65,7 @@ class AlwaysOnExemplarFilter(ExemplarFilter):
         value: Union[int, float],
         time_unix_nano: int,
         attributes: Attributes,
-        ctx: Context,
+        context: Context,
     ) -> bool:
         """Returns whether or not a reservoir should attempt to filter a measurement.
 
@@ -73,7 +73,7 @@ class AlwaysOnExemplarFilter(ExemplarFilter):
             value: The value of the measurement
             timestamp: A timestamp that best represents when the measurement was taken
             attributes: The complete set of measurement attributes
-            ctx: The Context of the measurement
+            context: The Context of the measurement
         """
         return True
 
@@ -92,7 +92,7 @@ class AlwaysOffExemplarFilter(ExemplarFilter):
         value: Union[int, float],
         time_unix_nano: int,
         attributes: Attributes,
-        ctx: Context,
+        context: Context,
     ) -> bool:
         """Returns whether or not a reservoir should attempt to filter a measurement.
 
@@ -100,7 +100,7 @@ class AlwaysOffExemplarFilter(ExemplarFilter):
             value: The value of the measurement
             timestamp: A timestamp that best represents when the measurement was taken
             attributes: The complete set of measurement attributes
-            ctx: The Context of the measurement
+            context: The Context of the measurement
         """
         return False
 
@@ -118,7 +118,7 @@ class TraceBasedExemplarFilter(ExemplarFilter):
         value: Union[int, float],
         time_unix_nano: int,
         attributes: Attributes,
-        ctx: Context,
+        context: Context,
     ) -> bool:
         """Returns whether or not a reservoir should attempt to filter a measurement.
 
@@ -126,9 +126,9 @@ class TraceBasedExemplarFilter(ExemplarFilter):
             value: The value of the measurement
             timestamp: A timestamp that best represents when the measurement was taken
             attributes: The complete set of measurement attributes
-            ctx: The Context of the measurement
+            context: The Context of the measurement
         """
-        span = trace.get_current_span(ctx)
+        span = trace.get_current_span(context)
         if span == INVALID_SPAN:
             return False
         return span.get_span_context().trace_flags.sampled
