@@ -38,7 +38,6 @@ CallbackT = Union[
     Generator[Iterable[Observation], CallbackOptions, None],
 ]
 
-
 SYSTEM_CPU_FREQUENCY: Final = "system.cpu.frequency"
 """
 Reports the current frequency of the CPU in Hz
@@ -152,10 +151,10 @@ Instrument: counter
 Unit: s
 Note: The real elapsed time ("wall clock") used in the I/O path (time from operations running in parallel are not counted). Measured as:
 
-    - Linux: Field 13 from [procfs-diskstats](https://www.kernel.org/doc/Documentation/ABI/testing/procfs-diskstats)
-    - Windows: The complement of
-      ["Disk\\% Idle Time"](https://learn.microsoft.com/archive/blogs/askcore/windows-performance-monitor-disk-counters-explained#windows-performance-monitor-disk-counters-explained)
-      performance counter: `uptime * (100 - "Disk\\% Idle Time") / 100`.
+- Linux: Field 13 from [procfs-diskstats](https://www.kernel.org/doc/Documentation/ABI/testing/procfs-diskstats)
+- Windows: The complement of
+  ["Disk\\% Idle Time"](https://learn.microsoft.com/archive/blogs/askcore/windows-performance-monitor-disk-counters-explained#windows-performance-monitor-disk-counters-explained)
+  performance counter: `uptime * (100 - "Disk\\% Idle Time") / 100`.
 """
 
 
@@ -190,8 +189,8 @@ Instrument: counter
 Unit: s
 Note: Because it is the sum of time each request took, parallel-issued requests each contribute to make the count grow. Measured as:
 
-    - Linux: Fields 7 & 11 from [procfs-diskstats](https://www.kernel.org/doc/Documentation/ABI/testing/procfs-diskstats)
-    - Windows: "Avg. Disk sec/Read" perf counter multiplied by "Disk Reads/sec" perf counter (similar for Writes).
+- Linux: Fields 7 & 11 from [procfs-diskstats](https://www.kernel.org/doc/Documentation/ABI/testing/procfs-diskstats)
+- Windows: "Avg. Disk sec/Read" perf counter multiplied by "Disk Reads/sec" perf counter (similar for Writes).
 """
 
 
@@ -258,10 +257,10 @@ An estimate of how much memory is available for starting new applications, witho
 Instrument: updowncounter
 Unit: By
 Note: This is an alternative to `system.memory.usage` metric with `state=free`.
-    Linux starting from 3.14 exports "available" memory. It takes "free" memory as a baseline, and then factors in kernel-specific values.
-    This is supposed to be more accurate than just "free" memory.
-    For reference, see the calculations [here](https://superuser.com/a/980821).
-    See also `MemAvailable` in [/proc/meminfo](https://man7.org/linux/man-pages/man5/proc.5.html).
+Linux starting from 3.14 exports "available" memory. It takes "free" memory as a baseline, and then factors in kernel-specific values.
+This is supposed to be more accurate than just "free" memory.
+For reference, see the calculations [here](https://superuser.com/a/980821).
+See also `MemAvailable` in [/proc/meminfo](https://man7.org/linux/man-pages/man5/proc.5.html).
 """
 
 
@@ -270,6 +269,26 @@ def create_system_linux_memory_available(meter: Meter) -> UpDownCounter:
     return meter.create_up_down_counter(
         name=SYSTEM_LINUX_MEMORY_AVAILABLE,
         description="An estimate of how much memory is available for starting new applications, without causing swapping",
+        unit="By",
+    )
+
+
+SYSTEM_LINUX_MEMORY_SLAB_USAGE: Final = "system.linux.memory.slab.usage"
+"""
+Reports the memory used by the Linux kernel for managing caches of frequently used objects
+Instrument: updowncounter
+Unit: By
+Note: The sum over the `reclaimable` and `unreclaimable` state values in `linux.memory.slab.usage` SHOULD be equal to the total slab memory available on the system.
+Note that the total slab memory is not constant and may vary over time.
+See also the [Slab allocator](https://blogs.oracle.com/linux/post/understanding-linux-kernel-memory-statistics) and `Slab` in [/proc/meminfo](https://man7.org/linux/man-pages/man5/proc.5.html).
+"""
+
+
+def create_system_linux_memory_slab_usage(meter: Meter) -> UpDownCounter:
+    """Reports the memory used by the Linux kernel for managing caches of frequently used objects"""
+    return meter.create_up_down_counter(
+        name=SYSTEM_LINUX_MEMORY_SLAB_USAGE,
+        description="Reports the memory used by the Linux kernel for managing caches of frequently used objects.",
         unit="By",
     )
 
@@ -298,7 +317,7 @@ Shared memory used (mostly by tmpfs)
 Instrument: updowncounter
 Unit: By
 Note: Equivalent of `shared` from [`free` command](https://man7.org/linux/man-pages/man1/free.1.html) or
-    `Shmem` from [`/proc/meminfo`](https://man7.org/linux/man-pages/man5/proc.5.html)".
+`Shmem` from [`/proc/meminfo`](https://man7.org/linux/man-pages/man5/proc.5.html)".
 """
 
 
@@ -317,7 +336,7 @@ Reports memory in use by state
 Instrument: updowncounter
 Unit: By
 Note: The sum over all `system.memory.state` values SHOULD equal the total memory
-    available on the system, that is `system.memory.limit`.
+available on the system, that is `system.memory.limit`.
 """
 
 
@@ -370,9 +389,9 @@ Instrument: counter
 Unit: {packet}
 Note: Measured as:
 
-    - Linux: the `drop` column in `/proc/dev/net` ([source](https://web.archive.org/web/20180321091318/http://www.onlamp.com/pub/a/linux/2000/11/16/LinuxAdmin.html))
-    - Windows: [`InDiscards`/`OutDiscards`](https://docs.microsoft.com/windows/win32/api/netioapi/ns-netioapi-mib_if_row2)
-      from [`GetIfEntry2`](https://docs.microsoft.com/windows/win32/api/netioapi/nf-netioapi-getifentry2).
+- Linux: the `drop` column in `/proc/dev/net` ([source](https://web.archive.org/web/20180321091318/http://www.onlamp.com/pub/a/linux/2000/11/16/LinuxAdmin.html))
+- Windows: [`InDiscards`/`OutDiscards`](https://docs.microsoft.com/windows/win32/api/netioapi/ns-netioapi-mib_if_row2)
+  from [`GetIfEntry2`](https://docs.microsoft.com/windows/win32/api/netioapi/nf-netioapi-getifentry2).
 """
 
 
@@ -392,9 +411,9 @@ Instrument: counter
 Unit: {error}
 Note: Measured as:
 
-    - Linux: the `errs` column in `/proc/dev/net` ([source](https://web.archive.org/web/20180321091318/http://www.onlamp.com/pub/a/linux/2000/11/16/LinuxAdmin.html)).
-    - Windows: [`InErrors`/`OutErrors`](https://docs.microsoft.com/windows/win32/api/netioapi/ns-netioapi-mib_if_row2)
-      from [`GetIfEntry2`](https://docs.microsoft.com/windows/win32/api/netioapi/nf-netioapi-getifentry2).
+- Linux: the `errs` column in `/proc/dev/net` ([source](https://web.archive.org/web/20180321091318/http://www.onlamp.com/pub/a/linux/2000/11/16/LinuxAdmin.html)).
+- Windows: [`InErrors`/`OutErrors`](https://docs.microsoft.com/windows/win32/api/netioapi/ns-netioapi-mib_if_row2)
+  from [`GetIfEntry2`](https://docs.microsoft.com/windows/win32/api/netioapi/nf-netioapi-getifentry2).
 """
 
 

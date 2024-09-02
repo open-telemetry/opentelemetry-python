@@ -75,6 +75,8 @@ def _encode_value(value: Any) -> PB2AnyValue:
         return PB2AnyValue(int_value=value)
     if isinstance(value, float):
         return PB2AnyValue(double_value=value)
+    if isinstance(value, bytes):
+        return PB2AnyValue(bytes_value=value)
     if isinstance(value, Sequence):
         return PB2AnyValue(
             array_value=PB2ArrayValue(values=[_encode_value(v) for v in value])

@@ -411,6 +411,76 @@ The :envvar:`OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE` stores the path to the cert
 TLS credentials of gRPC client for metrics. Should only be used for a secure connection for exporting metrics.
 """
 
+OTEL_EXPORTER_OTLP_CLIENT_KEY = "OTEL_EXPORTER_OTLP_CLIENT_KEY"
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_CLIENT_KEY
+
+The :envvar:`OTEL_EXPORTER_OTLP_CLIENT_KEY` stores the path to the client private key to use
+in mTLS communication in PEM format.
+"""
+
+OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY = "OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY"
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY
+
+The :envvar:`OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY` stores the path to the client private key to use
+in mTLS communication in PEM format for traces.
+"""
+
+OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY = "OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY"
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY
+
+The :envvar:`OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY` stores the path to the client private key to use
+in mTLS communication in PEM format for metrics.
+"""
+
+OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY = "OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY"
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY
+
+The :envvar:`OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY` stores the path to the client private key to use
+in mTLS communication in PEM format for logs.
+"""
+
+OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE = "OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE"
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE
+
+The :envvar:`OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE` stores the path to the client certificate/chain trust for
+clients private key to use in mTLS communication in PEM format.
+"""
+
+OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE = (
+    "OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE"
+)
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE
+
+The :envvar:`OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE` stores the path to the client certificate/chain trust for
+clients private key to use in mTLS communication in PEM format for traces.
+"""
+
+OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE = (
+    "OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE"
+)
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE
+
+The :envvar:`OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE` stores the path to the client certificate/chain trust for
+clients private key to use in mTLS communication in PEM format for metrics.
+"""
+
+OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE = (
+    "OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE"
+)
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE
+
+The :envvar:`OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE` stores the path to the client certificate/chain trust for
+clients private key to use in mTLS communication in PEM format for logs.
+"""
+
 OTEL_EXPORTER_OTLP_TRACES_HEADERS = "OTEL_EXPORTER_OTLP_TRACES_HEADERS"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_TRACES_HEADERS

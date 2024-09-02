@@ -161,18 +161,20 @@ class NetworkIoDirectionValues(Enum):
 @deprecated(reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTransportValues`.")  # type: ignore
 class NetworkTransportValues(Enum):
     TCP = "tcp"
-    """TCP."""
+    """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTransportValues.TCP`."""
     UDP = "udp"
-    """UDP."""
+    """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTransportValues.UDP`."""
     PIPE = "pipe"
-    """Named or anonymous pipe."""
+    """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTransportValues.PIPE`."""
     UNIX = "unix"
-    """Unix domain socket."""
+    """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTransportValues.UNIX`."""
+    QUIC = "quic"
+    """QUIC."""
 
 
 @deprecated(reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTypeValues`.")  # type: ignore
 class NetworkTypeValues(Enum):
     IPV4 = "ipv4"
-    """IPv4."""
+    """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTypeValues.IPV4`."""
     IPV6 = "ipv6"
-    """IPv6."""
+    """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTypeValues.IPV6`."""
