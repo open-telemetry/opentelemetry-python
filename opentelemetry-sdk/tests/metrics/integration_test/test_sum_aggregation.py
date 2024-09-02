@@ -23,11 +23,7 @@ from pytest import mark
 from opentelemetry.context import Context
 from opentelemetry.metrics import Observation
 from opentelemetry.sdk.metrics import Counter, MeterProvider, ObservableCounter
-from opentelemetry.sdk.metrics._internal.exemplar import (
-    AlwaysOffExemplarFilter,
-    AlwaysOnExemplarFilter,
-    TraceBasedExemplarFilter,
-)
+from opentelemetry.sdk.metrics._internal.exemplar import AlwaysOnExemplarFilter
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     InMemoryMetricReader,

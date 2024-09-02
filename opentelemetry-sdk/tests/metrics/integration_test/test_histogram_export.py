@@ -18,7 +18,6 @@ from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics._internal.exemplar import (
     AlwaysOffExemplarFilter,
     AlwaysOnExemplarFilter,
-    TraceBasedExemplarFilter,
 )
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource

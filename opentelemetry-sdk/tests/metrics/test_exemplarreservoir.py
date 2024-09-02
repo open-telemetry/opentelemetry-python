@@ -10,12 +10,10 @@ from opentelemetry.sdk.metrics._internal.aggregation import (
 )
 from opentelemetry.sdk.metrics._internal.exemplar import (
     AlignedHistogramBucketExemplarReservoir,
-    ExemplarReservoir,
-    ExemplarReservoirFactory,
     SimpleFixedSizeExemplarReservoir,
 )
 from opentelemetry.sdk.metrics._internal.view import _default_reservoir_factory
-from opentelemetry.trace import INVALID_SPAN, SpanContext, TraceFlags
+from opentelemetry.trace import SpanContext, TraceFlags
 
 
 class TestSimpleFixedSizeExemplarReservoir(TestCase):
@@ -58,9 +56,10 @@ class TestSimpleFixedSizeExemplarReservoir(TestCase):
         reservoir.offer(
             1, time_ns(), {"key1": "value1", "key2": "value2"}, ctx
         )
-        exemplars = reservoir.collect({"key2": "value2", "key3": "value3"})
+        exemplars = reservoir.collect({"key2": "value2"})
         self.assertEqual(len(exemplars), 1)
-        self.assertNotEqual("key1", exemplars[0].filtered_attributes)
+        self.assertIn("key1", exemplars[0].filtered_attributes)
+        self.assertNotIn("key2", exemplars[0].filtered_attributes)
 
     def test_reset_after_collection(self):
         reservoir = SimpleFixedSizeExemplarReservoir(4)
@@ -101,17 +100,18 @@ class TestAlignedHistogramBucketExemplarReservoir(TestCase):
         )
         span = trace.NonRecordingSpan(span_context)
         ctx = trace.set_span_in_context(span)
-        reservoir.offer(52, time_ns(), {"bucket": "5"}, ctx)
-        reservoir.offer(7, time_ns(), {"bucket": "3"}, ctx)
-        reservoir.offer(6, time_ns(), {"bucket": "3"}, ctx)
+        reservoir.offer(80, time_ns(), {"bucket": "5"}, ctx)  # outliner
+        reservoir.offer(52, time_ns(), {"bucket": "4"}, ctx)
+        reservoir.offer(7, time_ns(), {"bucket": "1"}, ctx)
+        reservoir.offer(6, time_ns(), {"bucket": "1"}, ctx)
 
-        exemplars = reservoir.collect({"bucket": "3"})
+        exemplars = reservoir.collect({"bucket": "1"})
 
-        self.assertEqual(len(exemplars), 2)
+        self.assertEqual(len(exemplars), 3)
         self.assertEqual(exemplars[0].value, 6)
         self.assertEqual(exemplars[1].value, 52)
+        self.assertEqual(exemplars[2].value, 80)  # outliner
         self.assertEqual(len(exemplars[0].filtered_attributes), 0)
-        self.assertNotEqual(exemplars[1].filtered_attributes, {"bucket": "5"})
 
     def test_last_measurement_in_bucket(self):
         reservoir = AlignedHistogramBucketExemplarReservoir([0, 5, 10, 25])

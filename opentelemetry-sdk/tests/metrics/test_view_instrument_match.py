@@ -15,7 +15,7 @@
 # pylint: disable=protected-access
 
 from time import time_ns
-from typing import Any, Callable, Optional, Sequence, Set, Type
+from typing import Callable, Sequence, Type
 from unittest import TestCase
 from unittest.mock import MagicMock, Mock
 
@@ -24,17 +24,13 @@ from opentelemetry.sdk.metrics._internal._view_instrument_match import (
     _ViewInstrumentMatch,
 )
 from opentelemetry.sdk.metrics._internal.aggregation import (
-    Aggregation,
-    DefaultAggregation,
     _Aggregation,
     _DropAggregation,
     _ExplicitBucketHistogramAggregation,
-    _ExponentialBucketHistogramAggregation,
     _LastValueAggregation,
 )
 from opentelemetry.sdk.metrics._internal.exemplar import (
     AlignedHistogramBucketExemplarReservoir,
-    ExemplarReservoir,
     ExemplarReservoirBuilder,
     SimpleFixedSizeExemplarReservoir,
 )
@@ -65,7 +61,8 @@ def generalized_reservoir_factory(
             )
         else:
             return lambda **kwargs: SimpleFixedSizeExemplarReservoir(
-                size=size, **kwargs
+                size=size,
+                **{k: v for k, v in kwargs.items() if k != "size"},
             )
 
     return factory
@@ -74,7 +71,6 @@ def generalized_reservoir_factory(
 class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
     @classmethod
     def setUpClass(cls):
-
         cls.mock_aggregation_factory = Mock()
         cls.mock_created_aggregation = (
             cls.mock_aggregation_factory._create_aggregation()
@@ -387,7 +383,6 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
 
 
 class TestSimpleFixedSizeExemplarReservoir(TestCase):
-
     def test_consume_measurement_with_custom_reservoir_factory(self):
         simple_fixed_size_factory = generalized_reservoir_factory(size=10)
 
@@ -507,14 +502,14 @@ class TestSimpleFixedSizeExemplarReservoir(TestCase):
         self.assertEqual(len(data_points), 1)
 
         # Verify that exemplars have been correctly stored and collected
-        self.assertEqual(len(data_points[0].exemplars), 2)
+        # As the default reservoir as only one bucket, it will retain
+        # the last measurement as exemplar
+        self.assertEqual(len(data_points[0].exemplars), 1)
 
-        self.assertEqual(data_points[0].exemplars[0].value, 4.0)
-        self.assertEqual(data_points[0].exemplars[1].value, 5.0)
+        self.assertEqual(data_points[0].exemplars[0].value, 5.0)
 
 
 class TestAlignedHistogramBucketExemplarReservoir(TestCase):
-
     def test_consume_measurement_with_custom_reservoir_factory(self):
         # Custom factory for AlignedHistogramBucketExemplarReservoir with specific boundaries
         histogram_reservoir_factory = generalized_reservoir_factory(
@@ -582,6 +577,16 @@ class TestAlignedHistogramBucketExemplarReservoir(TestCase):
             )
         )
 
+        # view_instrument_match.consume_measurement(
+        #     Measurement(
+        #         value=30.0,  # Should go into the outliners bucket
+        #         time_unix_nano=time_ns(),
+        #         instrument=instrument1,
+        #         context=Context(),
+        #         attributes={"attribute3": "value3"},
+        #     )
+        # )
+
         # Collect the data points
         data_points = view_instrument_match.collect(
             AggregationTemporality.CUMULATIVE, 0
@@ -604,3 +609,4 @@ class TestAlignedHistogramBucketExemplarReservoir(TestCase):
         self.assertEqual(
             data_points[2].exemplars[0].value, 15.0
         )  # Third bucket
+        # self.assertEqual(data_points[2].exemplars[0].value, 30.0)  # Outliner bucket
