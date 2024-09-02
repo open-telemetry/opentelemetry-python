@@ -14,15 +14,10 @@
 
 import random
 import time
+from typing import Any, Callable, Optional, Sequence, Set, Type
 
 from opentelemetry.metrics import get_meter_provider, set_meter_provider
 from opentelemetry.sdk.metrics import Counter, MeterProvider
-from opentelemetry.sdk.metrics.export import (
-    ConsoleMetricExporter,
-    PeriodicExportingMetricReader,
-)
-from opentelemetry.sdk.metrics.view import View
-from typing import Callable, Optional, Set, Type, Any, Sequence
 from opentelemetry.sdk.metrics._internal.aggregation import (
     Aggregation,
     DefaultAggregation,
@@ -34,29 +29,45 @@ from opentelemetry.sdk.metrics._internal.exemplar import (
     AlignedHistogramBucketExemplarReservoir,
     ExemplarReservoir,
     ExemplarReservoirFactory,
-    SimpleFixedSizeExemplarReservoir
+    SimpleFixedSizeExemplarReservoir,
 )
+from opentelemetry.sdk.metrics.export import (
+    ConsoleMetricExporter,
+    PeriodicExportingMetricReader,
+)
+from opentelemetry.sdk.metrics.view import View
+
 
 # Returns a factory for creating an exemplar reservoir based on the aggregation type and specified parameters
-def generalized_reservoir_factory(size: int = 1, boundaries: Sequence[float] = None) -> Callable[[Type[_Aggregation]], ExemplarReservoirFactory]:
-        def factory(aggregationType: Type[_Aggregation]) -> ExemplarReservoirFactory:
-            if issubclass(aggregationType, _ExplicitBucketHistogramAggregation):
-                return lambda **kwargs: AlignedHistogramBucketExemplarReservoir(boundaries=boundaries or [], **{k: v for k, v in kwargs.items() if k != 'boundaries'})
-            else:
-                return lambda **kwargs: SimpleFixedSizeExemplarReservoir(size=size, **kwargs)
-        
-        return factory
+def generalized_reservoir_factory(
+    size: int = 1, boundaries: Sequence[float] = None
+) -> Callable[[Type[_Aggregation]], ExemplarReservoirFactory]:
+    def factory(
+        aggregationType: Type[_Aggregation],
+    ) -> ExemplarReservoirFactory:
+        if issubclass(aggregationType, _ExplicitBucketHistogramAggregation):
+            return lambda **kwargs: AlignedHistogramBucketExemplarReservoir(
+                boundaries=boundaries or [],
+                **{k: v for k, v in kwargs.items() if k != "boundaries"},
+            )
+        else:
+            return lambda **kwargs: SimpleFixedSizeExemplarReservoir(
+                size=size, **kwargs
+            )
+
+    return factory
+
 
 # Create a custom reservoir factory with specified parameters
 custom_reservoir_factory = generalized_reservoir_factory(size=10)
 
 # Create a view with the custom reservoir factory
-change_reservoir_factory_view= View(
-                instrument_name="my.counter",
-                name="name",
-                aggregation=DefaultAggregation(),
-                exemplar_reservoir_factory=custom_reservoir_factory,
-            )
+change_reservoir_factory_view = View(
+    instrument_name="my.counter",
+    name="name",
+    aggregation=DefaultAggregation(),
+    exemplar_reservoir_factory=custom_reservoir_factory,
+)
 
 # Use console exporter for the example
 exporter = ConsoleMetricExporter()

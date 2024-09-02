@@ -26,6 +26,11 @@ from opentelemetry.sdk.metrics._internal.aggregation import (
     _LastValueAggregation,
     _SumAggregation,
 )
+from opentelemetry.sdk.metrics._internal.exemplar import (
+    AlignedHistogramBucketExemplarReservoir,
+    ExemplarReservoirBuilder,
+    SimpleFixedSizeExemplarReservoir,
+)
 from opentelemetry.sdk.metrics._internal.instrument import (
     _Counter,
     _Gauge,
@@ -48,11 +53,7 @@ from opentelemetry.sdk.metrics.view import (
     SumAggregation,
 )
 from opentelemetry.util.types import Attributes
-from opentelemetry.sdk.metrics._internal.exemplar import (
-    AlignedHistogramBucketExemplarReservoir,
-    ExemplarReservoirBuilder,
-    SimpleFixedSizeExemplarReservoir,
-)
+
 
 def measurement(
     value: Union[int, float], attributes: Attributes = None
@@ -323,7 +324,9 @@ class TestExplicitBucketHistogramAggregation(TestCase):
                 Mock(),
                 AggregationTemporality.DELTA,
                 0,
-                _default_reservoir_factory(_ExplicitBucketHistogramAggregation),
+                _default_reservoir_factory(
+                    _ExplicitBucketHistogramAggregation
+                ),
                 boundaries=[0, 2, 4],
             )
         )
@@ -364,7 +367,9 @@ class TestExplicitBucketHistogramAggregation(TestCase):
                 Mock(),
                 AggregationTemporality.CUMULATIVE,
                 0,
-                _default_reservoir_factory(_ExplicitBucketHistogramAggregation),
+                _default_reservoir_factory(
+                    _ExplicitBucketHistogramAggregation
+                ),
             )
         )
 
@@ -382,7 +387,9 @@ class TestExplicitBucketHistogramAggregation(TestCase):
                 Mock(),
                 AggregationTemporality.CUMULATIVE,
                 0,
-                _default_reservoir_factory(_ExplicitBucketHistogramAggregation),
+                _default_reservoir_factory(
+                    _ExplicitBucketHistogramAggregation
+                ),
                 record_min_max=False,
             )
         )
@@ -406,7 +413,9 @@ class TestExplicitBucketHistogramAggregation(TestCase):
                 Mock(),
                 AggregationTemporality.DELTA,
                 0,
-                _default_reservoir_factory(_ExplicitBucketHistogramAggregation),
+                _default_reservoir_factory(
+                    _ExplicitBucketHistogramAggregation
+                ),
                 boundaries=[0, 1, 2],
             )
         )
@@ -445,7 +454,9 @@ class TestExplicitBucketHistogramAggregation(TestCase):
                 Mock(),
                 AggregationTemporality.CUMULATIVE,
                 0,
-                _default_reservoir_factory(_ExplicitBucketHistogramAggregation),
+                _default_reservoir_factory(
+                    _ExplicitBucketHistogramAggregation
+                ),
             )._boundaries,
             (
                 0.0,
@@ -645,10 +656,13 @@ class TestDefaultAggregation(TestCase):
         )
         self.assertIsInstance(aggregation, _LastValueAggregation)
 
+
 class TestExemplarsFromAggregations(TestCase):
-    
+
     def test_collection_simple_fixed_size_reservoir(self):
-        exemplar_reservoir_factory = lambda: SimpleFixedSizeExemplarReservoir(size=3)
+        exemplar_reservoir_factory = lambda: SimpleFixedSizeExemplarReservoir(
+            size=3
+        )
         synchronous_sum_aggregation = _SumAggregation(
             Mock(),
             True,
@@ -662,11 +676,15 @@ class TestExemplarsFromAggregations(TestCase):
         synchronous_sum_aggregation.aggregate(measurement(3))
 
         self.assertEqual(synchronous_sum_aggregation._value, 6)
-        datapoint = synchronous_sum_aggregation.collect(AggregationTemporality.CUMULATIVE, 0)
-        self.assertEqual(len(datapoint.exemplars), 3)    
-    
-    def test_collection_simple_fixed_size_reservoir_with_default_reservoir(self):
-        
+        datapoint = synchronous_sum_aggregation.collect(
+            AggregationTemporality.CUMULATIVE, 0
+        )
+        self.assertEqual(len(datapoint.exemplars), 3)
+
+    def test_collection_simple_fixed_size_reservoir_with_default_reservoir(
+        self,
+    ):
+
         synchronous_sum_aggregation = _SumAggregation(
             Mock(),
             True,
@@ -674,18 +692,22 @@ class TestExemplarsFromAggregations(TestCase):
             0,
             _default_reservoir_factory(_SumAggregation),
         )
-        
+
         synchronous_sum_aggregation.aggregate(measurement(1))
         synchronous_sum_aggregation.aggregate(measurement(2))
         synchronous_sum_aggregation.aggregate(measurement(3))
 
         self.assertEqual(synchronous_sum_aggregation._value, 6)
-        datapoint = synchronous_sum_aggregation.collect(AggregationTemporality.CUMULATIVE, 0)
-        self.assertEqual(len(datapoint.exemplars), 1)    
-    
+        datapoint = synchronous_sum_aggregation.collect(
+            AggregationTemporality.CUMULATIVE, 0
+        )
+        self.assertEqual(len(datapoint.exemplars), 1)
+
     def test_collection_aligned_histogram_bucket_reservoir(self):
         boundaries = [5.0, 10.0, 20.0]
-        exemplar_reservoir_factory = lambda: AlignedHistogramBucketExemplarReservoir(boundaries)
+        exemplar_reservoir_factory = (
+            lambda: AlignedHistogramBucketExemplarReservoir(boundaries)
+        )
         synchronous_sum_aggregation = _SumAggregation(
             Mock(),
             True,
@@ -694,24 +716,37 @@ class TestExemplarsFromAggregations(TestCase):
             exemplar_reservoir_factory,
         )
 
-        synchronous_sum_aggregation.aggregate(measurement(2.0)) 
-        synchronous_sum_aggregation.aggregate(measurement(4.0))  
-        synchronous_sum_aggregation.aggregate(measurement(6.0)) 
+        synchronous_sum_aggregation.aggregate(measurement(2.0))
+        synchronous_sum_aggregation.aggregate(measurement(4.0))
+        synchronous_sum_aggregation.aggregate(measurement(6.0))
         synchronous_sum_aggregation.aggregate(measurement(15.0))
-        synchronous_sum_aggregation.aggregate(measurement(25.0)) 
+        synchronous_sum_aggregation.aggregate(measurement(25.0))
 
-        datapoint = synchronous_sum_aggregation.collect(AggregationTemporality.CUMULATIVE, 0)
-        self.assertEqual(len(datapoint.exemplars), 4)  
+        datapoint = synchronous_sum_aggregation.collect(
+            AggregationTemporality.CUMULATIVE, 0
+        )
+        self.assertEqual(len(datapoint.exemplars), 4)
 
         # Verify that exemplars are associated with the correct boundaries
         expected_buckets = [
-            (4.0, boundaries[0]),  # First bucket, should hold the last value <= 5.0
-            (6.0, boundaries[1]),  # Second bucket, should hold the last value <= 10.0
-            (15.0, boundaries[2]), # Third bucket, should hold the last value <= 20.0
-            (25.0, None),          # Last bucket, should hold the value > 20.0
+            (
+                4.0,
+                boundaries[0],
+            ),  # First bucket, should hold the last value <= 5.0
+            (
+                6.0,
+                boundaries[1],
+            ),  # Second bucket, should hold the last value <= 10.0
+            (
+                15.0,
+                boundaries[2],
+            ),  # Third bucket, should hold the last value <= 20.0
+            (25.0, None),  # Last bucket, should hold the value > 20.0
         ]
 
-        for exemplar, (value, boundary) in zip(datapoint.exemplars, expected_buckets):
+        for exemplar, (value, boundary) in zip(
+            datapoint.exemplars, expected_buckets
+        ):
             self.assertEqual(exemplar.value, value)
             if boundary is not None:
                 self.assertLessEqual(exemplar.value, boundary)

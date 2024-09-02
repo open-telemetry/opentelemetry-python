@@ -15,6 +15,7 @@
 # pylint: disable=protected-access
 
 from time import time_ns
+from typing import Any, Callable, Optional, Sequence, Set, Type
 from unittest import TestCase
 from unittest.mock import MagicMock, Mock
 
@@ -23,8 +24,19 @@ from opentelemetry.sdk.metrics._internal._view_instrument_match import (
     _ViewInstrumentMatch,
 )
 from opentelemetry.sdk.metrics._internal.aggregation import (
+    Aggregation,
+    DefaultAggregation,
+    _Aggregation,
     _DropAggregation,
+    _ExplicitBucketHistogramAggregation,
+    _ExponentialBucketHistogramAggregation,
     _LastValueAggregation,
+)
+from opentelemetry.sdk.metrics._internal.exemplar import (
+    AlignedHistogramBucketExemplarReservoir,
+    ExemplarReservoir,
+    ExemplarReservoirBuilder,
+    SimpleFixedSizeExemplarReservoir,
 )
 from opentelemetry.sdk.metrics._internal.instrument import _Counter, _Histogram
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
@@ -38,29 +50,26 @@ from opentelemetry.sdk.metrics.view import (
     LastValueAggregation,
     View,
 )
-from opentelemetry.sdk.metrics._internal.aggregation import (
-    Aggregation,
-    DefaultAggregation,
-    _Aggregation,
-    _ExplicitBucketHistogramAggregation,
-    _ExponentialBucketHistogramAggregation,
-)
-from opentelemetry.sdk.metrics._internal.exemplar import (
-    AlignedHistogramBucketExemplarReservoir,
-    ExemplarReservoir,
-    ExemplarReservoirBuilder,
-    SimpleFixedSizeExemplarReservoir
-)
-from typing import Callable, Optional, Set, Type, Any, Sequence
 
-def generalized_reservoir_factory(size: int = 1, boundaries: Sequence[float] = None) -> Callable[[Type[_Aggregation]], ExemplarReservoirBuilder]:
-        def factory(aggregationType: Type[_Aggregation]) -> ExemplarReservoirBuilder:
-            if issubclass(aggregationType, _ExplicitBucketHistogramAggregation):
-                return lambda **kwargs: AlignedHistogramBucketExemplarReservoir(boundaries=boundaries or [], **{k: v for k, v in kwargs.items() if k != 'boundaries'})
-            else:
-                return lambda **kwargs: SimpleFixedSizeExemplarReservoir(size=size, **kwargs)
-        
-        return factory
+
+def generalized_reservoir_factory(
+    size: int = 1, boundaries: Sequence[float] = None
+) -> Callable[[Type[_Aggregation]], ExemplarReservoirBuilder]:
+    def factory(
+        aggregationType: Type[_Aggregation],
+    ) -> ExemplarReservoirBuilder:
+        if issubclass(aggregationType, _ExplicitBucketHistogramAggregation):
+            return lambda **kwargs: AlignedHistogramBucketExemplarReservoir(
+                boundaries=boundaries or [],
+                **{k: v for k, v in kwargs.items() if k != "boundaries"},
+            )
+        else:
+            return lambda **kwargs: SimpleFixedSizeExemplarReservoir(
+                size=size, **kwargs
+            )
+
+    return factory
+
 
 class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
     @classmethod
@@ -375,16 +384,18 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             ],
             _LastValueAggregation,
         )
+
+
 class TestSimpleFixedSizeExemplarReservoir(TestCase):
-    
+
     def test_consume_measurement_with_custom_reservoir_factory(self):
         simple_fixed_size_factory = generalized_reservoir_factory(size=10)
 
         # Create an instance of _Counter
         instrument1 = _Counter(
             name="instrument1",
-            instrumentation_scope=None,  
-            measurement_consumer=None,  
+            instrumentation_scope=None,
+            measurement_consumer=None,
             description="description",
             unit="unit",
         )
@@ -431,8 +442,10 @@ class TestSimpleFixedSizeExemplarReservoir(TestCase):
             )
         )
 
-        data_points = view_instrument_match.collect(AggregationTemporality.CUMULATIVE, 0)
-        
+        data_points = view_instrument_match.collect(
+            AggregationTemporality.CUMULATIVE, 0
+        )
+
         # Ensure only one data point is collected
         self.assertEqual(len(data_points), 2)
 
@@ -443,7 +456,6 @@ class TestSimpleFixedSizeExemplarReservoir(TestCase):
         self.assertEqual(data_points[0].exemplars[0].value, 2.0)
         self.assertEqual(data_points[1].exemplars[0].value, 4.0)
         self.assertEqual(data_points[1].exemplars[1].value, 5.0)
-
 
     def test_consume_measurement_with_exemplars(self):
         # Create an instance of _Counter
@@ -487,8 +499,10 @@ class TestSimpleFixedSizeExemplarReservoir(TestCase):
         )
 
         # Collect the data points
-        data_points = view_instrument_match.collect(AggregationTemporality.CUMULATIVE, 0)
-        
+        data_points = view_instrument_match.collect(
+            AggregationTemporality.CUMULATIVE, 0
+        )
+
         # Ensure only one data point is collected
         self.assertEqual(len(data_points), 1)
 
@@ -498,11 +512,14 @@ class TestSimpleFixedSizeExemplarReservoir(TestCase):
         self.assertEqual(data_points[0].exemplars[0].value, 4.0)
         self.assertEqual(data_points[0].exemplars[1].value, 5.0)
 
+
 class TestAlignedHistogramBucketExemplarReservoir(TestCase):
-    
+
     def test_consume_measurement_with_custom_reservoir_factory(self):
         # Custom factory for AlignedHistogramBucketExemplarReservoir with specific boundaries
-        histogram_reservoir_factory = generalized_reservoir_factory(boundaries=[0, 5, 10, 25])
+        histogram_reservoir_factory = generalized_reservoir_factory(
+            boundaries=[0, 5, 10, 25]
+        )
 
         # Create an instance of _Histogram
         instrument1 = _Histogram(
@@ -544,7 +561,7 @@ class TestAlignedHistogramBucketExemplarReservoir(TestCase):
                 attributes={"attribute2": "value2"},
             )
         )
-        
+
         view_instrument_match.consume_measurement(
             Measurement(
                 value=8.0,  # Should go into the second bucket (5 to 10)
@@ -566,8 +583,10 @@ class TestAlignedHistogramBucketExemplarReservoir(TestCase):
         )
 
         # Collect the data points
-        data_points = view_instrument_match.collect(AggregationTemporality.CUMULATIVE, 0)
-        
+        data_points = view_instrument_match.collect(
+            AggregationTemporality.CUMULATIVE, 0
+        )
+
         # Ensure three data points are collected, one for each bucket
         self.assertEqual(len(data_points), 3)
 
@@ -576,6 +595,12 @@ class TestAlignedHistogramBucketExemplarReservoir(TestCase):
         self.assertEqual(len(data_points[1].exemplars), 1)
         self.assertEqual(len(data_points[2].exemplars), 1)
 
-        self.assertEqual(data_points[0].exemplars[0].value, 2.0)  # First bucket
-        self.assertEqual(data_points[1].exemplars[0].value, 8.0)  # Second bucket
-        self.assertEqual(data_points[2].exemplars[0].value, 15.0) # Third bucket
+        self.assertEqual(
+            data_points[0].exemplars[0].value, 2.0
+        )  # First bucket
+        self.assertEqual(
+            data_points[1].exemplars[0].value, 8.0
+        )  # Second bucket
+        self.assertEqual(
+            data_points[2].exemplars[0].value, 15.0
+        )  # Third bucket

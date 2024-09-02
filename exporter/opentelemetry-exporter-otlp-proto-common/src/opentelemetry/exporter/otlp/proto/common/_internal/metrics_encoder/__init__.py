@@ -28,7 +28,7 @@ from opentelemetry.sdk.metrics import (
 )
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _encode_attributes,
-    _encode_span_id, 
+    _encode_span_id,
     _encode_trace_id,
 )
 from opentelemetry.sdk.environment_variables import (
@@ -343,6 +343,7 @@ def encode_metrics(data: MetricsData) -> ExportMetricsServiceRequest:
     resource_metrics = resource_data
     return ExportMetricsServiceRequest(resource_metrics=resource_metrics)
 
+
 def encode_exemplars(sdk_exemplars: list) -> list:
     """
     Converts a list of SDK Exemplars into a list of protobuf Exemplars.
@@ -359,7 +360,9 @@ def encode_exemplars(sdk_exemplars: list) -> list:
             time_unix_nano=sdk_exemplar.time_unix_nano,
             span_id=_encode_span_id(sdk_exemplar.span_id),
             trace_id=_encode_trace_id(sdk_exemplar.trace_id),
-            filtered_attributes=_encode_attributes(sdk_exemplar.filtered_attributes),
+            filtered_attributes=_encode_attributes(
+                sdk_exemplar.filtered_attributes
+            ),
         )
         # Assign the value based on its type in the SDK exemplar
         if isinstance(sdk_exemplar.value, float):
@@ -369,5 +372,5 @@ def encode_exemplars(sdk_exemplars: list) -> list:
         else:
             raise ValueError("Exemplar value must be an int or float")
         pb_exemplars.append(pb_exemplar)
-    
+
     return pb_exemplars
