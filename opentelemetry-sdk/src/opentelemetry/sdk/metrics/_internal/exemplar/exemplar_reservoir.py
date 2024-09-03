@@ -14,7 +14,7 @@
 
 from abc import ABC, abstractmethod
 from random import randrange
-from typing import Any, Callable, Optional, Sequence, TypeAlias, Union
+from typing import Any, Callable, Optional, Sequence, Union
 
 from opentelemetry import trace
 from opentelemetry.context import Context
@@ -313,7 +313,7 @@ class AlignedHistogramBucketExemplarReservoir(FixedSizeExemplarReservoirABC):
         return len(self._boundaries)
 
 
-ExemplarReservoirBuilder: TypeAlias = Callable[
+ExemplarReservoirBuilder = Callable[
     [dict[str, Any]], ExemplarReservoir
 ]
 ExemplarReservoirBuilder.__doc__ = """ExemplarReservoir builder.
