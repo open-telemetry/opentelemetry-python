@@ -107,7 +107,7 @@ class ExemplarBucket:
 
         self.__offered = True
 
-    def collect(self, point_attributes: Attributes) -> Exemplar | None:
+    def collect(self, point_attributes: Attributes) -> Optional[Exemplar]:
         """May return an Exemplar and resets the bucket for the next sampling period."""
         if not self.__offered:
             return None
@@ -232,11 +232,9 @@ class FixedSizeExemplarReservoirABC(ExemplarReservoir):
         Raises:
             BucketIndexError: If no bucket index can be found.
         """
-        pass
 
     def _reset(self) -> None:
         """Reset the reservoir by resetting any stateful logic after a collection cycle."""
-        pass
 
 
 class SimpleFixedSizeExemplarReservoir(FixedSizeExemplarReservoirABC):
@@ -309,9 +307,9 @@ class AlignedHistogramBucketExemplarReservoir(FixedSizeExemplarReservoirABC):
         attributes: Attributes,
         context: Context,
     ) -> int:
-        for i, boundary in enumerate(self._boundaries):
+        for index, boundary in enumerate(self._boundaries):
             if value <= boundary:
-                return i
+                return index
         return len(self._boundaries)
 
 

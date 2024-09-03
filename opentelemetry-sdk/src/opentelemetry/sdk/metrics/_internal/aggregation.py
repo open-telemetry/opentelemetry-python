@@ -105,7 +105,6 @@ class _Aggregation(ABC, Generic[_DataPointVarT]):
             measurement: Measurement to aggregate
             should_sample_exemplar: Whether the measurement should be sampled by the exemplars reservoir or not.
         """
-        pass
 
     @abstractmethod
     def collect(

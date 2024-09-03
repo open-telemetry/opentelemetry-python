@@ -704,15 +704,12 @@ class TestExemplarsFromAggregations(TestCase):
 
     def test_collection_aligned_histogram_bucket_reservoir(self):
         boundaries = [5.0, 10.0, 20.0]
-        exemplar_reservoir_factory = (
-            lambda: AlignedHistogramBucketExemplarReservoir(boundaries)
-        )
         synchronous_sum_aggregation = _SumAggregation(
             Mock(),
             True,
             AggregationTemporality.DELTA,
             0,
-            exemplar_reservoir_factory,
+            lambda: AlignedHistogramBucketExemplarReservoir(boundaries),
         )
 
         synchronous_sum_aggregation.aggregate(measurement(2.0))

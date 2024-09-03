@@ -52,18 +52,18 @@ def generalized_reservoir_factory(
     size: int = 1, boundaries: Sequence[float] = None
 ) -> Callable[[Type[_Aggregation]], ExemplarReservoirBuilder]:
     def factory(
-        aggregationType: Type[_Aggregation],
+        aggregation_type: Type[_Aggregation],
     ) -> ExemplarReservoirBuilder:
-        if issubclass(aggregationType, _ExplicitBucketHistogramAggregation):
+        if issubclass(aggregation_type, _ExplicitBucketHistogramAggregation):
             return lambda **kwargs: AlignedHistogramBucketExemplarReservoir(
                 boundaries=boundaries or [],
                 **{k: v for k, v in kwargs.items() if k != "boundaries"},
             )
-        else:
-            return lambda **kwargs: SimpleFixedSizeExemplarReservoir(
-                size=size,
-                **{k: v for k, v in kwargs.items() if k != "size"},
-            )
+
+        return lambda **kwargs: SimpleFixedSizeExemplarReservoir(
+            size=size,
+            **{k: v for k, v in kwargs.items() if k != "size"},
+        )
 
     return factory
 
@@ -288,7 +288,11 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         # +1 call to _create_aggregation
         view_instrument_match.consume_measurement(
             Measurement(
-                value=0, instrument=instrument, attributes={"foo": "bar0"}
+                value=0,
+                time_unix_nano=time_ns(),
+                instrument=instrument,
+                attributes={"foo": "bar0"},
+                context=Context(),
             )
         )
         view_instrument_match._view._aggregation._create_aggregation.assert_called_with(
@@ -304,7 +308,11 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         # +1 call to _create_aggregation
         view_instrument_match.consume_measurement(
             Measurement(
-                value=0, instrument=instrument, attributes={"foo": "bar1"}
+                value=0,
+                time_unix_nano=time_ns(),
+                instrument=instrument,
+                attributes={"foo": "bar1"},
+                context=Context(),
             )
         )
         view_instrument_match._view._aggregation._create_aggregation.assert_called_with(
@@ -322,7 +330,11 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         # +1 call to create_aggregation
         view_instrument_match.consume_measurement(
             Measurement(
-                value=0, instrument=instrument, attributes={"foo": "bar"}
+                value=0,
+                time_unix_nano=time_ns(),
+                instrument=instrument,
+                attributes={"foo": "bar"},
+                context=Context(),
             )
         )
         view_instrument_match._view._aggregation._create_aggregation.assert_called_with(
@@ -331,12 +343,20 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         # No new calls to _create_aggregation because attributes remain the same
         view_instrument_match.consume_measurement(
             Measurement(
-                value=0, instrument=instrument, attributes={"foo": "bar"}
+                value=0,
+                time_unix_nano=time_ns(),
+                instrument=instrument,
+                attributes={"foo": "bar"},
+                context=Context(),
             )
         )
         view_instrument_match.consume_measurement(
             Measurement(
-                value=0, instrument=instrument, attributes={"foo": "bar"}
+                value=0,
+                time_unix_nano=time_ns(),
+                instrument=instrument,
+                attributes={"foo": "bar"},
+                context=Context(),
             )
         )
         # In total we have 5 calls for _create_aggregation
@@ -520,8 +540,8 @@ class TestSimpleFixedSizeExemplarReservoir(TestCase):
             )
         )
 
-        data_points = view_instrument_match.collect(
-            AggregationTemporality.CUMULATIVE, 0
+        data_points = list(
+            view_instrument_match.collect(AggregationTemporality.CUMULATIVE, 0)
         )
 
         # Ensure only one data point is collected
@@ -577,8 +597,8 @@ class TestSimpleFixedSizeExemplarReservoir(TestCase):
         )
 
         # Collect the data points
-        data_points = view_instrument_match.collect(
-            AggregationTemporality.CUMULATIVE, 0
+        data_points = list(
+            view_instrument_match.collect(AggregationTemporality.CUMULATIVE, 0)
         )
 
         # Ensure only one data point is collected
@@ -660,19 +680,9 @@ class TestAlignedHistogramBucketExemplarReservoir(TestCase):
             )
         )
 
-        # view_instrument_match.consume_measurement(
-        #     Measurement(
-        #         value=30.0,  # Should go into the outliners bucket
-        #         time_unix_nano=time_ns(),
-        #         instrument=instrument1,
-        #         context=Context(),
-        #         attributes={"attribute3": "value3"},
-        #     )
-        # )
-
         # Collect the data points
-        data_points = view_instrument_match.collect(
-            AggregationTemporality.CUMULATIVE, 0
+        data_points = list(
+            view_instrument_match.collect(AggregationTemporality.CUMULATIVE, 0)
         )
 
         # Ensure three data points are collected, one for each bucket
@@ -692,4 +702,3 @@ class TestAlignedHistogramBucketExemplarReservoir(TestCase):
         self.assertEqual(
             data_points[2].exemplars[0].value, 15.0
         )  # Third bucket
-        # self.assertEqual(data_points[2].exemplars[0].value, 30.0)  # Outliner bucket

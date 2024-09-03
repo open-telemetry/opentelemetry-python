@@ -35,12 +35,12 @@ _logger = getLogger(__name__)
 
 
 def _default_reservoir_factory(
-    aggregationType: Type[_Aggregation],
+    aggregation_type: Type[_Aggregation],
 ) -> ExemplarReservoirBuilder:
     """Default reservoir factory per aggregation."""
-    if issubclass(aggregationType, _ExplicitBucketHistogramAggregation):
+    if issubclass(aggregation_type, _ExplicitBucketHistogramAggregation):
         return AlignedHistogramBucketExemplarReservoir
-    elif issubclass(aggregationType, _ExponentialBucketHistogramAggregation):
+    if issubclass(aggregation_type, _ExponentialBucketHistogramAggregation):
         return SimpleFixedSizeExemplarReservoir
     return SimpleFixedSizeExemplarReservoir
 
