@@ -33,11 +33,16 @@ from opentelemetry.metrics import (
 )
 from opentelemetry.metrics import UpDownCounter as APIUpDownCounter
 from opentelemetry.metrics import _Gauge as APIGauge
-from opentelemetry.sdk.environment_variables import OTEL_SDK_DISABLED
+from opentelemetry.sdk.environment_variables import (
+    OTEL_SDK_DISABLED, 
+    OTEL_METRICS_EXEMPLAR_FILTER,
+)
 from opentelemetry.sdk.metrics._internal.exceptions import MetricsTimeoutError
 from opentelemetry.sdk.metrics._internal.exemplar import (
     ExemplarFilter,
     TraceBasedExemplarFilter,
+    AlwaysOnExemplarFilter,
+    AlwaysOffExemplarFilter,
 )
 from opentelemetry.sdk.metrics._internal.instrument import (
     _Counter,
@@ -394,11 +399,12 @@ class MeterProvider(APIMeterProvider):
         self._atexit_handler = None
         if resource is None:
             resource = Resource.create({})
+        filter = environ.get(OTEL_METRICS_EXEMPLAR_FILTER, None)
         self._sdk_config = SdkConfiguration(
             exemplar_filter=(
-                TraceBasedExemplarFilter()
-                if exemplar_filter is None
-                else exemplar_filter
+                exemplar_filter
+                if exemplar_filter is not None
+                else self._get_exemplar_filter(filter)
             ),
             resource=resource,
             metric_readers=metric_readers,
@@ -556,3 +562,14 @@ class MeterProvider(APIMeterProvider):
                     self._measurement_consumer,
                 )
             return self._meters[info]
+
+    def _get_exemplar_filter(self, exemplar_filter: str) -> ExemplarFilter:
+        if not exemplar_filter or exemplar_filter == 'trace_based':
+            return TraceBasedExemplarFilter()
+        elif exemplar_filter == 'always_on':
+            return AlwaysOnExemplarFilter()
+        elif exemplar_filter == 'always_off':
+            return AlwaysOffExemplarFilter()
+        else: 
+            raise Exception("Invalid exemplar filter.")
+        
