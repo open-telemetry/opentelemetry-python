@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import unittest
-from time import time_ns
 from unittest.mock import Mock, patch
 
 from opentelemetry._events import Event
-from opentelemetry._logs import set_logger_provider, SeverityNumber
+from opentelemetry._logs import SeverityNumber, set_logger_provider
 from opentelemetry.sdk._events import EventLoggerProvider
 from opentelemetry.sdk._logs import LoggerProvider
 from opentelemetry.sdk._logs._internal import Logger, NoOpLogger
 from opentelemetry.sdk.environment_variables import OTEL_SDK_DISABLED
+
 
 class TestEventLoggerProvider(unittest.TestCase):
     def test_event_logger_provider(self):
@@ -88,17 +88,14 @@ class TestEventLoggerProvider(unittest.TestCase):
         logger_provider = LoggerProvider()
         logger_mock_inst = Mock()
         logger_mock.return_value = logger_mock_inst
-        event_logger = EventLoggerProvider(logger_provider).get_event_logger(
+        EventLoggerProvider(logger_provider).get_event_logger(
             "name",
             version="version",
             schema_url="schema_url",
             attributes={"key": "value"},
         )
         logger_mock.assert_called_once_with(
-            "name",
-            "version",
-            "schema_url",
-            {"key": "value"}
+            "name", "version", "schema_url", {"key": "value"}
         )
 
     @patch("opentelemetry.sdk._events.LogRecord")
@@ -114,10 +111,7 @@ class TestEventLoggerProvider(unittest.TestCase):
             attributes={"key": "value"},
         )
         logger_mock.assert_called_once_with(
-            "name",
-            "version",
-            "schema_url",
-            {"key": "value"}
+            "name", "version", "schema_url", {"key": "value"}
         )
         now = Mock()
         trace_id = Mock()
@@ -134,7 +128,7 @@ class TestEventLoggerProvider(unittest.TestCase):
             attributes={
                 "key": "val",
                 "foo": "bar",
-            }
+            },
         )
         log_record_mock_inst = Mock()
         log_record_mock.return_value = log_record_mock_inst

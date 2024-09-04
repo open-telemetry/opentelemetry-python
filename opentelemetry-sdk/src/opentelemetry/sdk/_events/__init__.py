@@ -16,12 +16,10 @@ from time import time_ns
 from typing import Optional
 
 from opentelemetry import trace
-from opentelemetry._logs import get_logger_provider, SeverityNumber
-from opentelemetry._events import EventLoggerProvider, EventLogger, Event
-from opentelemetry.sdk._logs import LoggerProvider, Logger, LogRecord
-
+from opentelemetry._events import Event, EventLogger, EventLoggerProvider
+from opentelemetry._logs import SeverityNumber, get_logger_provider
+from opentelemetry.sdk._logs import Logger, LoggerProvider, LogRecord
 from opentelemetry.util.types import Attributes
-
 
 _logger = logging.getLogger(__name__)
 
@@ -39,7 +37,9 @@ class EventLoggerProvider(EventLoggerProvider):
     ) -> EventLogger:
         if not name:
             _logger.warning("EventLogger created with invalid name: %s", name)
-        return EventLogger(self._logger_provider, name, version, schema_url, attributes)
+        return EventLogger(
+            self._logger_provider, name, version, schema_url, attributes
+        )
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         self._logger_provider.force_flush(timeout_millis)
@@ -60,8 +60,9 @@ class EventLogger(EventLogger):
             schema_url=schema_url,
             attributes=attributes,
         )
-        self._logger: Logger = logger_provider.get_logger(name, version, schema_url, attributes)
-
+        self._logger: Logger = logger_provider.get_logger(
+            name, version, schema_url, attributes
+        )
 
     def emit(self, event: Event) -> None:
         span_context = trace.get_current_span().get_span_context()
@@ -75,6 +76,6 @@ class EventLogger(EventLogger):
             severity_number=event.severity_number or SeverityNumber.INFO,
             body=event.body,
             resource=self._logger.resource,
-            attributes=event.attributes
+            attributes=event.attributes,
         )
         self._logger.emit(log_record)
