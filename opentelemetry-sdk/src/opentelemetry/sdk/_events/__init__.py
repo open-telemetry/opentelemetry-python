@@ -16,8 +16,8 @@ from time import time_ns
 from typing import Optional
 
 from opentelemetry import trace
-from opentelemetry._logs import SeverityNumber
-from opentelemetry._events import Attributes, EventLoggerProvider, EventLogger, Event
+from opentelemetry._logs import get_logger_provider, SeverityNumber
+from opentelemetry._events import EventLoggerProvider, EventLogger, Event
 from opentelemetry.sdk._logs import LoggerProvider, Logger, LogRecord
 
 from opentelemetry.util.types import Attributes
@@ -27,8 +27,8 @@ _logger = logging.getLogger(__name__)
 
 
 class EventLoggerProvider(EventLoggerProvider):
-    def __init__(self, logger_provider: LoggerProvider):
-        self._logger_provider = logger_provider
+    def __init__(self, logger_provider: Optional[LoggerProvider] = None):
+        self._logger_provider = logger_provider or get_logger_provider()
 
     def get_event_logger(
         self,
