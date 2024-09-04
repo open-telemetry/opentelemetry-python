@@ -42,7 +42,7 @@ class ExemplarFilter(ABC):
     ) -> bool:
         """Returns whether or not a reservoir should attempt to filter a measurement.
 
-        Attributes:
+        Args:
             value: The value of the measurement
             timestamp: A timestamp that best represents when the measurement was taken
             attributes: The complete set of measurement attributes
@@ -69,7 +69,7 @@ class AlwaysOnExemplarFilter(ExemplarFilter):
     ) -> bool:
         """Returns whether or not a reservoir should attempt to filter a measurement.
 
-        Attributes:
+        Args:
             value: The value of the measurement
             timestamp: A timestamp that best represents when the measurement was taken
             attributes: The complete set of measurement attributes
@@ -96,7 +96,7 @@ class AlwaysOffExemplarFilter(ExemplarFilter):
     ) -> bool:
         """Returns whether or not a reservoir should attempt to filter a measurement.
 
-        Attributes:
+        Args:
             value: The value of the measurement
             timestamp: A timestamp that best represents when the measurement was taken
             attributes: The complete set of measurement attributes
@@ -122,7 +122,7 @@ class TraceBasedExemplarFilter(ExemplarFilter):
     ) -> bool:
         """Returns whether or not a reservoir should attempt to filter a measurement.
 
-        Attributes:
+        Args:
             value: The value of the measurement
             timestamp: A timestamp that best represents when the measurement was taken
             attributes: The complete set of measurement attributes

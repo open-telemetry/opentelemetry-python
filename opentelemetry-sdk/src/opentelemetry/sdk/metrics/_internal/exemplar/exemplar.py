@@ -26,7 +26,7 @@ class Exemplar:
     was recorded, for example the span and trace ID of the active span when the
     exemplar was recorded.
 
-    Attributes:
+    Attributes
         trace_id: (optional) The trace associated with a recording
         span_id: (optional) The span associated with a recording
         time_unix_nano: The time of the observation
@@ -37,6 +37,10 @@ class Exemplar:
         https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/data-model.md#exemplars
         https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/sdk.md#exemplar
     """
+    # TODO Fix doc - if using valid Google `Attributes:` key, the attributes are duplicated
+    # one will come from napoleon extension and the other from autodoc extension. This
+    # will raise an sphinx error of duplicated object description
+    # See https://github.com/sphinx-doc/sphinx/issues/8664
 
     filtered_attributes: Attributes
     value: Union[int, float]

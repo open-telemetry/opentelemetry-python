@@ -25,13 +25,17 @@ class Measurement:
     """
     Represents a data point reported via the metrics API to the SDK.
 
-    Attributes:
+    Attributes
         value: Measured value
         time_unix_nano: The time the API call was made to record the Measurement
         instrument: The instrument that produced this `Measurement`.
         context: The active Context of the Measurement at API call time.
         attributes: Measurement attributes
     """
+    # TODO Fix doc - if using valid Google `Attributes:` key, the attributes are duplicated
+    # one will come from napoleon extension and the other from autodoc extension. This
+    # will raise an sphinx error of duplicated object description
+    # See https://github.com/sphinx-doc/sphinx/issues/8664
 
     value: Union[int, float]
     time_unix_nano: int
