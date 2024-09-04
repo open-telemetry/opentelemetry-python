@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Add type annotations to context's attach & detach
+  ([#4164](https://github.com/open-telemetry/opentelemetry-python/pull/4164))
+
+
 ## Version 1.27.0/0.48b0 (2024-08-28)
 
 - Implementation of Events API
