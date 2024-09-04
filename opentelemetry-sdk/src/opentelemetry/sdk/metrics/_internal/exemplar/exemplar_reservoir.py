@@ -313,9 +313,7 @@ class AlignedHistogramBucketExemplarReservoir(FixedSizeExemplarReservoirABC):
         return len(self._boundaries)
 
 
-ExemplarReservoirBuilder = Callable[
-    [dict[str, Any]], ExemplarReservoir
-]
+ExemplarReservoirBuilder = Callable[[dict[str, Any]], ExemplarReservoir]
 ExemplarReservoirBuilder.__doc__ = """ExemplarReservoir builder.
 
 It may receive the Aggregation parameters it is bounded to; e.g.

@@ -281,7 +281,9 @@ class TestProxy(MetricsGlobalsTest, TestCase):
         proxy_counter.add(amount, attributes=attributes)
         real_counter.add.assert_called_once_with(amount, attributes, None)
         proxy_updowncounter.add(amount, attributes=attributes)
-        real_updowncounter.add.assert_called_once_with(amount, attributes, None)
+        real_updowncounter.add.assert_called_once_with(
+            amount, attributes, None
+        )
         proxy_histogram.record(amount, attributes=attributes)
         real_histogram.record.assert_called_once_with(amount, attributes, None)
         proxy_gauge.set(amount, attributes=attributes)
