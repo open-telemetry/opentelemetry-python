@@ -14,7 +14,7 @@
 
 from abc import ABC, abstractmethod
 from random import randrange
-from typing import Any, Callable, Optional, Sequence, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 
 from opentelemetry import trace
 from opentelemetry.context import Context
@@ -55,7 +55,7 @@ class ExemplarReservoir(ABC):
         raise NotImplementedError("ExemplarReservoir.offer is not implemented")
 
     @abstractmethod
-    def collect(self, point_attributes: Attributes) -> list[Exemplar]:
+    def collect(self, point_attributes: Attributes) -> List[Exemplar]:
         """Returns accumulated Exemplars and also resets the reservoir for the next
         sampling period
 
@@ -155,11 +155,11 @@ class FixedSizeExemplarReservoirABC(ExemplarReservoir):
     def __init__(self, size: int, **kwargs) -> None:
         super().__init__(**kwargs)
         self._size: int = size
-        self._reservoir_storage: list[ExemplarBucket] = [
+        self._reservoir_storage: List[ExemplarBucket] = [
             ExemplarBucket() for _ in range(self._size)
         ]
 
-    def collect(self, point_attributes: Attributes) -> list[Exemplar]:
+    def collect(self, point_attributes: Attributes) -> List[Exemplar]:
         """Returns accumulated Exemplars and also resets the reservoir for the next
         sampling period
 
@@ -313,7 +313,7 @@ class AlignedHistogramBucketExemplarReservoir(FixedSizeExemplarReservoirABC):
         return len(self._boundaries)
 
 
-ExemplarReservoirBuilder = Callable[[dict[str, Any]], ExemplarReservoir]
+ExemplarReservoirBuilder = Callable[[Dict[str, Any]], ExemplarReservoir]
 ExemplarReservoirBuilder.__doc__ = """ExemplarReservoir builder.
 
 It may receive the Aggregation parameters it is bounded to; e.g.
