@@ -610,10 +610,11 @@ class TestSimpleFixedSizeExemplarReservoir(TestCase):
 
         # Verify that exemplars have been correctly stored and collected
         # As the default reservoir as only one bucket, it will retain
-        # the last measurement as exemplar
+        # either one of the measurements based on random selection
         self.assertEqual(len(data_points[0].exemplars), 1)
 
-        self.assertEqual(data_points[0].exemplars[0].value, 5.0)
+        self.assertIn(data_points[0].exemplars[0].value, [4.0, 5.0])
+
 
 
 class TestAlignedHistogramBucketExemplarReservoir(TestCase):
