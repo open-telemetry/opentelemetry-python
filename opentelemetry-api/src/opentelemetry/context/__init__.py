@@ -14,6 +14,7 @@
 
 import logging
 import typing
+from contextvars import Token
 from os import environ
 from uuid import uuid4
 
@@ -130,7 +131,7 @@ def get_current() -> Context:
     return _RUNTIME_CONTEXT.get_current()
 
 
-def attach(context: Context) -> object:
+def attach(context: Context) -> Token[Context]:
     """Associates a Context with the caller's current execution unit. Returns
     a token that can be used to restore the previous Context.
 
@@ -143,7 +144,7 @@ def attach(context: Context) -> object:
     return _RUNTIME_CONTEXT.attach(context)
 
 
-def detach(token: object) -> None:
+def detach(token: Token[Context]) -> None:
     """Resets the Context associated with the caller's current execution unit
     to the value it had before attaching a specified Context.
 
@@ -152,8 +153,6 @@ def detach(token: object) -> None:
     """
     try:
         _RUNTIME_CONTEXT.detach(token)
-    except TypeError:
-        logger.exception("Expected an instance of Token, got None")
     except Exception:  # pylint: disable=broad-exception-caught
         logger.exception("Failed to detach context")
 
