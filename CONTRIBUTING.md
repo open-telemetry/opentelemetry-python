@@ -224,6 +224,23 @@ updating the GitHub workflow to reference a PR in the Contrib repo
 * Trivial change (typo, cosmetic, doc, etc.) doesn't have to wait for one day.
 * Urgent fix can take exception as long as it has been actively communicated.
 
+#### Allow edits from maintainers
+
+Something _very important_ is to allow edits from maintainers when opening a PR. This will
+allow maintainers to rebase your PR against `main` which is necessary in order to merge
+your PR. You could do it yourself too, but keep in mind that every time another PR gets
+merged, your PR will require rebasing. Since only maintainers can merge your PR it is
+almost impossible for maintainers to find your PR just when it has been rebased by you so
+that it can be merged. Allowing maintainers to edit your PR also allows them to help you
+get your PR merged by making any minor fixes to solve any issue that while being unrelated
+to your PR, can still happen.
+
+#### Fork from a personal Github account
+
+Right now Github [does not allow](https://github.com/orgs/community/discussions/5634) PRs
+to be edited by maintainers if the corresponding repo fork exists in a Github organization.
+Please for this repo in a personal Github account instead.
+
 One of the maintainers will merge the PR once it is **ready to merge**.
 
 ## Design Choices
