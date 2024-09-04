@@ -60,10 +60,10 @@ class ExemplarReservoir(ABC):
         sampling period
 
         Args:
-            point_attributes The attributes associated with metric point.
+            point_attributes: The attributes associated with metric point.
 
         Returns:
-            a list of :class:`opentelemetry.sdk.metrics.exemplar.Exemplar`s. Returned
+            a list of ``opentelemetry.sdk.metrics._internal.exemplar.exemplar.Exemplar`` s. Returned
             exemplars contain the attributes that were filtered out by the aggregator,
             but recorded alongside the original measurement.
         """
@@ -164,10 +164,10 @@ class FixedSizeExemplarReservoirABC(ExemplarReservoir):
         sampling period
 
         Args:
-            point_attributes The attributes associated with metric point.
+            point_attributes: The attributes associated with metric point.
 
         Returns:
-            a list of :class:`opentelemetry.sdk.metrics.exemplar.Exemplar`s. Returned
+            a list of ``opentelemetry.sdk.metrics._internal.exemplar.exemplar.Exemplar`` s. Returned
             exemplars contain the attributes that were filtered out by the aggregator,
             but recorded alongside the original measurement.
         """
