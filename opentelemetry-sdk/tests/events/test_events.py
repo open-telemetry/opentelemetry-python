@@ -15,19 +15,29 @@ import unittest
 from time import time_ns
 from unittest.mock import Mock, patch
 
-from opentelemetry._events import EventLogger, Event
-from opentelemetry._logs import SeverityNumber
+from opentelemetry._events import Event
+from opentelemetry._logs import set_logger_provider, SeverityNumber
 from opentelemetry.sdk._events import EventLoggerProvider
 from opentelemetry.sdk._logs import LoggerProvider
 from opentelemetry.sdk._logs._internal import Logger, NoOpLogger
 from opentelemetry.sdk.environment_variables import OTEL_SDK_DISABLED
 
 class TestEventLoggerProvider(unittest.TestCase):
-    def test_logger_provider(self):
+    def test_event_logger_provider(self):
         logger_provider = LoggerProvider()
         event_logger_provider = EventLoggerProvider(
             logger_provider=logger_provider
         )
+
+        self.assertEqual(
+            event_logger_provider._logger_provider,
+            logger_provider,
+        )
+
+    def test_event_logger_provider_default(self):
+        logger_provider = LoggerProvider()
+        set_logger_provider(logger_provider)
+        event_logger_provider = EventLoggerProvider()
 
         self.assertEqual(
             event_logger_provider._logger_provider,
