@@ -128,24 +128,26 @@ class TestEventLoggerProvider(unittest.TestCase):
             attributes={
                 "key": "val",
                 "foo": "bar",
+                "event.name": "not this one"
             },
         )
         log_record_mock_inst = Mock()
         log_record_mock.return_value = log_record_mock_inst
         event_logger.emit(event)
-        log_record_mock.called_once_with(
-            now,
-            None,
-            trace_id,
-            span_id,
-            trace_flags,
-            None,
-            SeverityNumber.ERROR,
-            "test body",
-            event_logger._logger.resource,
-            {
+        log_record_mock.assert_called_once_with(
+            timestamp=now,
+            observed_timestamp=None,
+            trace_id=trace_id,
+            span_id=span_id,
+            trace_flags=trace_flags,
+            severity_text=None,
+            severity_number=SeverityNumber.ERROR,
+            body="test body",
+            resource=event_logger._logger.resource,
+            attributes={
                 "key": "val",
                 "foo": "bar",
+                "event.name": "test_event",
             },
         )
         logger_mock_inst.emit.assert_called_once_with(log_record_mock_inst)
