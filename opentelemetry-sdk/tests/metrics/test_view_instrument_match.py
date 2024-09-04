@@ -39,6 +39,7 @@ from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.sdk_configuration import (
     SdkConfiguration,
 )
+from opentelemetry.sdk.metrics._internal.view import _default_reservoir_factory
 from opentelemetry.sdk.metrics.export import AggregationTemporality
 from opentelemetry.sdk.metrics.view import (
     DefaultAggregation,
@@ -296,7 +297,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             )
         )
         view_instrument_match._view._aggregation._create_aggregation.assert_called_with(
-            instrument, {"foo": "bar0"}, start_time_unix_nano
+            instrument, {"foo": "bar0"}, _default_reservoir_factory, start_time_unix_nano
         )
         collection_start_time_unix_nano = time_ns()
         collected_data_points = view_instrument_match.collect(
@@ -316,7 +317,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             )
         )
         view_instrument_match._view._aggregation._create_aggregation.assert_called_with(
-            instrument, {"foo": "bar1"}, 1
+            instrument, {"foo": "bar1"}, _default_reservoir_factory, 1
         )
         collection_start_time_unix_nano = time_ns()
         collected_data_points = view_instrument_match.collect(
@@ -338,7 +339,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             )
         )
         view_instrument_match._view._aggregation._create_aggregation.assert_called_with(
-            instrument, {"foo": "bar"}, 2
+            instrument, {"foo": "bar"}, _default_reservoir_factory, 2
         )
         # No new calls to _create_aggregation because attributes remain the same
         view_instrument_match.consume_measurement(
