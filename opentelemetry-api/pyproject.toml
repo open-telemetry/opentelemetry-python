@@ -27,9 +27,7 @@ classifiers = [
 ]
 dependencies = [
     "Deprecated >= 1.2.6",
-    # FIXME This should be able to be removed after 3.12 is released if there is a reliable API
-    # in importlib.metadata.
-    "importlib-metadata >= 6.0, <= 8.4.0",
+    "importlib-metadata >= 6.0, <= 8.4.0; python_version >= '3.8' and python_version <= '3.9'",
 ]
 dynamic = [
     "version",
