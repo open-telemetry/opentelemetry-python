@@ -14,6 +14,7 @@
 
 from io import StringIO
 from json import loads
+from os import linesep
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
@@ -117,7 +118,8 @@ class TestConsoleExporter(TestCase):
         provider.shutdown()
 
         output.seek(0)
-        result_0 = loads("".join(output.readlines()))
+        joined_output = "".join(output.readlines())
+        result_0 = loads(joined_output.strip(linesep))
 
         self.assertGreater(len(result_0), 0)
 
