@@ -37,6 +37,7 @@ class Exemplar:
         https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/data-model.md#exemplars
         https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/sdk.md#exemplar
     """
+
     # TODO Fix doc - if using valid Google `Attributes:` key, the attributes are duplicated
     # one will come from napoleon extension and the other from autodoc extension. This
     # will raise an sphinx error of duplicated object description

@@ -297,7 +297,10 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             )
         )
         view_instrument_match._view._aggregation._create_aggregation.assert_called_with(
-            instrument, {"foo": "bar0"}, _default_reservoir_factory, start_time_unix_nano
+            instrument,
+            {"foo": "bar0"},
+            _default_reservoir_factory,
+            start_time_unix_nano,
         )
         collection_start_time_unix_nano = time_ns()
         collected_data_points = view_instrument_match.collect(

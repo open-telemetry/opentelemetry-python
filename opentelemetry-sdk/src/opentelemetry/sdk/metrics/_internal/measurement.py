@@ -32,6 +32,7 @@ class Measurement:
         context: The active Context of the Measurement at API call time.
         attributes: Measurement attributes
     """
+
     # TODO Fix doc - if using valid Google `Attributes:` key, the attributes are duplicated
     # one will come from napoleon extension and the other from autodoc extension. This
     # will raise an sphinx error of duplicated object description
