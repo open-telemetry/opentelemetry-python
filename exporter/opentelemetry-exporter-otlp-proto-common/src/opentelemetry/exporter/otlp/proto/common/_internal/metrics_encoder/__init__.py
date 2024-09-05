@@ -256,7 +256,7 @@ def _encode_metric(metric, pb2_metric):
             pt = pb2.NumberDataPoint(
                 attributes=_encode_attributes(data_point.attributes),
                 time_unix_nano=data_point.time_unix_nano,
-                exemplars=encode_exemplars(data_point.exemplars),
+                exemplars=_encode_exemplars(data_point.exemplars),
             )
             if isinstance(data_point.value, int):
                 pt.as_int = data_point.value
@@ -270,7 +270,7 @@ def _encode_metric(metric, pb2_metric):
                 attributes=_encode_attributes(data_point.attributes),
                 time_unix_nano=data_point.time_unix_nano,
                 start_time_unix_nano=data_point.start_time_unix_nano,
-                exemplars=encode_exemplars(data_point.exemplars),
+                exemplars=_encode_exemplars(data_point.exemplars),
                 count=data_point.count,
                 sum=data_point.sum,
                 bucket_counts=data_point.bucket_counts,
@@ -289,7 +289,7 @@ def _encode_metric(metric, pb2_metric):
                 attributes=_encode_attributes(data_point.attributes),
                 start_time_unix_nano=data_point.start_time_unix_nano,
                 time_unix_nano=data_point.time_unix_nano,
-                exemplars=encode_exemplars(data_point.exemplars),
+                exemplars=_encode_exemplars(data_point.exemplars),
             )
             if isinstance(data_point.value, int):
                 pt.as_int = data_point.value
@@ -327,7 +327,7 @@ def _encode_metric(metric, pb2_metric):
                 attributes=_encode_attributes(data_point.attributes),
                 time_unix_nano=data_point.time_unix_nano,
                 start_time_unix_nano=data_point.start_time_unix_nano,
-                exemplars=encode_exemplars(data_point.exemplars),
+                exemplars=_encode_exemplars(data_point.exemplars),
                 count=data_point.count,
                 sum=data_point.sum,
                 scale=data_point.scale,
@@ -350,7 +350,7 @@ def _encode_metric(metric, pb2_metric):
         )
 
 
-def encode_exemplars(sdk_exemplars: list) -> list:
+def _encode_exemplars(sdk_exemplars: list) -> list:
     """
     Converts a list of SDK Exemplars into a list of protobuf Exemplars.
 
