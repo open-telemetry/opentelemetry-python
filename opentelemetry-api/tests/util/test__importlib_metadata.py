@@ -30,7 +30,7 @@ class TestDependencies(TestCase):
         # pylint: disable=import-outside-toplevel
         # pylint: disable=unused-import
         # pylint: disable=import-error
-        if version_info.minor < 10:
+        if version_info < (3, 10):
             try:
                 import importlib_metadata  # type: ignore
 

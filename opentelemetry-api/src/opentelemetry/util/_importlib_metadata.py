@@ -19,7 +19,7 @@
 
 from sys import version_info
 
-if version_info.minor < 10:
+if version_info < (3, 10):
 
     # pylint: disable=import-error
     from importlib_metadata import version  # type: ignore
