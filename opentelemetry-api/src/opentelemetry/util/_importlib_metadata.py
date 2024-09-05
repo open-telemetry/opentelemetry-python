@@ -23,18 +23,32 @@ if version_info.minor < 10:
 
     # pylint: disable=import-error
     from importlib_metadata import version  # type: ignore
-    from importlib_metadata import EntryPoint, EntryPoints
+    from importlib_metadata import (
+        Distribution,
+        EntryPoint,
+        EntryPoints,
+        PackageNotFoundError,
+        distributions,
+    )
     from importlib_metadata import (
         entry_points as importlib_metadata_entry_points,
     )
+    from importlib_metadata import requires
 
 else:
 
-    from importlib.metadata import EntryPoint, EntryPoints
+    from importlib.metadata import (  # type: ignore
+        Distribution,
+        EntryPoint,
+        EntryPoints,
+        PackageNotFoundError,
+        distributions,
+    )
     from importlib.metadata import (
         entry_points as importlib_metadata_entry_points,
     )
-    from importlib.metadata import version
+
+    from importlib.metadata import requires, version  # isort: skip
 
 
 def entry_points(**params) -> EntryPoints:  # type: ignore
@@ -77,4 +91,13 @@ def entry_points(**params) -> EntryPoints:  # type: ignore
     return importlib_metadata_entry_points(**params)  # type: ignore
 
 
-__all__ = ["entry_points", "version", "EntryPoint", "EntryPoints"]
+__all__ = [
+    "entry_points",
+    "version",
+    "EntryPoint",
+    "EntryPoints",
+    "requires",
+    "Distribution",
+    "distributions",
+    "PackageNotFoundError",
+]
