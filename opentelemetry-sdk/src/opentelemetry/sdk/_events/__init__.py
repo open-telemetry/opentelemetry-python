@@ -16,7 +16,11 @@ from time import time_ns
 from typing import Optional
 
 from opentelemetry import trace
-from opentelemetry._events import Event, EventLogger, EventLoggerProvider
+from opentelemetry._events import (
+    Event,
+    EventLogger as APIEventLogger,
+    EventLoggerProvider as APIEventLoggerProvider,
+)
 from opentelemetry._logs import SeverityNumber, get_logger_provider
 from opentelemetry.sdk._logs import Logger, LoggerProvider, LogRecord
 from opentelemetry.util.types import Attributes
@@ -24,28 +28,7 @@ from opentelemetry.util.types import Attributes
 _logger = logging.getLogger(__name__)
 
 
-class EventLoggerProvider(EventLoggerProvider):
-    def __init__(self, logger_provider: Optional[LoggerProvider] = None):
-        self._logger_provider = logger_provider or get_logger_provider()
-
-    def get_event_logger(
-        self,
-        name: str,
-        version: Optional[str] = None,
-        schema_url: Optional[str] = None,
-        attributes: Optional[Attributes] = None,
-    ) -> EventLogger:
-        if not name:
-            _logger.warning("EventLogger created with invalid name: %s", name)
-        return EventLogger(
-            self._logger_provider, name, version, schema_url, attributes
-        )
-
-    def force_flush(self, timeout_millis: int = 30000) -> bool:
-        self._logger_provider.force_flush(timeout_millis)
-
-
-class EventLogger(EventLogger):
+class EventLogger(APIEventLogger):
     def __init__(
         self,
         logger_provider: LoggerProvider,
@@ -79,3 +62,27 @@ class EventLogger(EventLogger):
             attributes=event.attributes,
         )
         self._logger.emit(log_record)
+
+
+class EventLoggerProvider(APIEventLoggerProvider):
+    def __init__(self, logger_provider: Optional[LoggerProvider] = None):
+        self._logger_provider = logger_provider or get_logger_provider()
+
+    def get_event_logger(
+        self,
+        name: str,
+        version: Optional[str] = None,
+        schema_url: Optional[str] = None,
+        attributes: Optional[Attributes] = None,
+    ) -> EventLogger:
+        if not name:
+            _logger.warning("EventLogger created with invalid name: %s", name)
+        return EventLogger(
+            self._logger_provider, name, version, schema_url, attributes
+        )
+    
+    def shutdown(self):
+        self._logger_provider.shutdown()
+
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        self._logger_provider.force_flush(timeout_millis)

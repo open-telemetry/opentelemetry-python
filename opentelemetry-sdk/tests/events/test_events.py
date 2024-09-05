@@ -83,6 +83,12 @@ class TestEventLoggerProvider(unittest.TestCase):
         event_logger.force_flush(1000)
         logger_provider.force_flush.assert_called_once_with(1000)
 
+    def test_shutdown(self):
+        logger_provider = Mock()
+        event_logger = EventLoggerProvider(logger_provider)
+        event_logger.shutdown()
+        logger_provider.shutdown.assert_called_once()
+
     @patch("opentelemetry.sdk._logs._internal.LoggerProvider.get_logger")
     def test_event_logger(self, logger_mock):
         logger_provider = LoggerProvider()
@@ -128,7 +134,7 @@ class TestEventLoggerProvider(unittest.TestCase):
             attributes={
                 "key": "val",
                 "foo": "bar",
-                "event.name": "not this one"
+                "event.name": "not this one",
             },
         )
         log_record_mock_inst = Mock()
