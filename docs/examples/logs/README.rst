@@ -19,7 +19,7 @@ Start the Collector locally to see data being exported. Write the following file
 
     exporters:
       debug:
-        verbosity: debug
+        verbosity: detailed
 
     processors:
       batch:
