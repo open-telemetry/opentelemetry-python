@@ -615,6 +615,52 @@ class TestSimpleFixedSizeExemplarReservoir(TestCase):
 
         self.assertIn(data_points[0].exemplars[0].value, [4.0, 5.0])
 
+    def test_consume_measurement_with_exemplars_and_view_attributes_filter(
+        self,
+    ):
+        value = 22
+        # Create an instance of _Counter
+        instrument1 = _Counter(
+            name="instrument1",
+            instrumentation_scope=None,  # No mock, set to None or actual scope if available
+            measurement_consumer=None,  # No mock, set to None or actual consumer if available
+        )
+
+        view_instrument_match = _ViewInstrumentMatch(
+            view=View(
+                instrument_name="instrument1",
+                name="name",
+                attribute_keys={"X", "Y"},
+            ),
+            instrument=instrument1,
+            instrument_class_aggregation={_Counter: DefaultAggregation()},
+        )
+
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=value,
+                time_unix_nano=time_ns(),
+                instrument=instrument1,
+                context=Context(),
+                attributes={"X": "x-value", "Y": "y-value", "Z": "z-value"},
+            )
+        )
+
+        # Collect the data points
+        data_points = list(
+            view_instrument_match.collect(AggregationTemporality.CUMULATIVE, 0)
+        )
+
+        # Ensure only one data point is collected
+        self.assertEqual(len(data_points), 1)
+
+        # Verify that exemplars have been correctly stored and collected
+        self.assertEqual(len(data_points[0].exemplars), 1)
+
+        # Check the exemplar has the dropped attribute
+        exemplar = list(data_points[0].exemplars)[0]
+        self.assertEqual(exemplar.value, value)
+        self.assertDictEqual(exemplar.filtered_attributes, {"Z": "z-value"})
 
 
 class TestAlignedHistogramBucketExemplarReservoir(TestCase):
