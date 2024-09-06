@@ -80,7 +80,6 @@ class EventLoggerProvider(APIEventLoggerProvider):
         return EventLogger(
             self._logger_provider, name, version, schema_url, attributes
         )
-    
     def shutdown(self):
         self._logger_provider.shutdown()
 
