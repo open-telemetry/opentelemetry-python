@@ -333,6 +333,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
                 for init_scale in [0, 4]:
                     self.ascending_sequence_test(max_size, offset, init_scale)
 
+    # pylint: disable=too-many-locals
     def ascending_sequence_test(
         self, max_size: int, offset: int, init_scale: int
     ):
