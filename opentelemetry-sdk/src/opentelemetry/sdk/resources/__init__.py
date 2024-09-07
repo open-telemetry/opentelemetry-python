@@ -60,6 +60,7 @@ import concurrent.futures
 import logging
 import os
 import platform
+import socket
 import sys
 import typing
 from json import dumps
@@ -105,6 +106,7 @@ FAAS_ID = ResourceAttributes.FAAS_ID
 FAAS_VERSION = ResourceAttributes.FAAS_VERSION
 FAAS_INSTANCE = ResourceAttributes.FAAS_INSTANCE
 HOST_NAME = ResourceAttributes.HOST_NAME
+HOST_ARCH = ResourceAttributes.HOST_ARCH
 HOST_TYPE = ResourceAttributes.HOST_TYPE
 HOST_IMAGE_NAME = ResourceAttributes.HOST_IMAGE_NAME
 HOST_IMAGE_ID = ResourceAttributes.HOST_IMAGE_ID
@@ -159,7 +161,7 @@ class Resource:
     _schema_url: str
 
     def __init__(
-        self, attributes: Attributes, schema_url: typing.Optional[str] = None
+            self, attributes: Attributes, schema_url: typing.Optional[str] = None
     ):
         self._attributes = BoundedAttributes(attributes=attributes)
         if schema_url is None:
@@ -168,8 +170,8 @@ class Resource:
 
     @staticmethod
     def create(
-        attributes: typing.Optional[Attributes] = None,
-        schema_url: typing.Optional[str] = None,
+            attributes: typing.Optional[Attributes] = None,
+            schema_url: typing.Optional[str] = None,
     ) -> "Resource":
         """Creates a new `Resource` from attributes.
 
@@ -188,8 +190,8 @@ class Resource:
             {
                 otel_experimental_resource_detector.strip()
                 for otel_experimental_resource_detector in environ.get(
-                    OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, ""
-                ).split(",")
+                OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, ""
+            ).split(",")
                 if otel_experimental_resource_detector
             }
         )
@@ -276,8 +278,8 @@ class Resource:
         if not isinstance(other, Resource):
             return False
         return (
-            self._attributes == other._attributes
-            and self._schema_url == other._schema_url
+                self._attributes == other._attributes
+                and self._schema_url == other._schema_url
         )
 
     def __hash__(self) -> int:
@@ -353,7 +355,7 @@ class ProcessResourceDetector(ResourceDetector):
                 (
                     sys.version_info[:3]
                     if sys.version_info.releaselevel == "final"
-                    and not sys.version_info.serial
+                       and not sys.version_info.serial
                     else sys.version_info
                 ),
             )
@@ -471,10 +473,36 @@ class OsResourceDetector(ResourceDetector):
         )
 
 
+class HostResourceDetector(ResourceDetector):
+    """
+       The HostResourceDetector detects host resources using OpenTelemetry.
+       """
+
+    def detect(self) -> "Resource":
+        try:
+            resource = Resource.get_empty()
+            host_name = socket.gethostname()
+            if host_name:
+                resource = resource.merge(Resource({HOST_NAME: host_name}))
+            host_arch = platform.machine()
+            if host_arch:
+                resource = resource.merge(Resource({HOST_ARCH: host_arch}))
+            return resource
+        except Exception as e:
+            logger.warning(
+                "%s Resource Detection failed silently: %s",
+                self.__class__.__name__,
+                e,
+            )
+            if self.raise_on_error:
+                raise e
+            return Resource.get_empty()
+
+
 def get_aggregated_resources(
-    detectors: typing.List["ResourceDetector"],
-    initial_resource: typing.Optional[Resource] = None,
-    timeout: int = 5,
+        detectors: typing.List["ResourceDetector"],
+        initial_resource: typing.Optional[Resource] = None,
+        timeout: int = 5,
 ) -> "Resource":
     """Retrieves resources from detectors in the order that they were passed
 
