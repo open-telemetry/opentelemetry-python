@@ -252,6 +252,21 @@ class SpanShim(Span):
         self._otel_span.set_attribute(key, value)
         return self
 
+    def _sanitize_attribute_value(self, key, value):
+        if isinstance(value, (str, bool, int, float)):
+            return value
+        if isinstance(value, (list, tuple)):
+            return [self._sanitize_attribute_value(key, v) for v in value]
+        # For unsupported types, convert to string
+        logger.warning(
+            "Invalid type %s for attribute '%s' value. Expected one of "
+            "['bool', 'str', 'bytes', 'int', 'float'] or a sequence of those types. "
+            "Converting to string.",
+            type(value).__name__,
+            key,
+        )
+        return str(value)
+
     def log_kv(
         self, key_values: Attributes, timestamp: float = None
     ) -> "SpanShim":
@@ -280,7 +295,16 @@ class SpanShim(Span):
             event_timestamp = None
 
         event_name = util.event_name_from_kv(key_values)
-        self._otel_span.add_event(event_name, key_values, event_timestamp)
+
+        # Sanitize the key_values dictionary
+        sanitized_key_values = {
+            k: self._sanitize_attribute_value(k, v)
+            for k, v in key_values.items()
+        }
+
+        self._otel_span.add_event(
+            event_name, sanitized_key_values, event_timestamp
+        )
         return self
 
     @deprecated(reason="This method is deprecated in favor of log_kv")

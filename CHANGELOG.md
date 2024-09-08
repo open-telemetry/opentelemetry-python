@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4154](https://github.com/open-telemetry/opentelemetry-python/pull/4154))
 - sdk: Add support for log formatting
   ([#4137](https://github.com/open-telemetry/opentelemetry-python/pull/4166))
+- Fixed OpenTracing Shim to properly convert exceptions to the format expected by OpenTelemetry
+  ([#4184](https://github.com/open-telemetry/opentelemetry-python/pull/4184))
 
 ## Version 1.27.0/0.48b0 (2024-08-28)
 

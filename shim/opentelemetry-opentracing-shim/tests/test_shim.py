@@ -673,3 +673,55 @@ class TestShim(TestCase):
                     scope.span.unwrap().parent,
                     opentelemetry_span.context,
                 )
+
+    def test_log_kv_sanitization(self):
+        """Test that log_kv correctly sanitizes non-primitive types and logs warnings."""
+        with self.assertLogs(level="WARNING") as log_context:
+            with self.shim.start_span("TestSpan") as span:
+                # Test primitive types
+                span.log_kv(
+                    {"str": "string", "int": 123, "float": 1.23, "bool": True}
+                )
+
+                # Test sequence of primitive types
+                span.log_kv({"list": [1, 2, 3], "tuple": ("a", "b", "c")})
+
+                # Test non-primitive type
+                class CustomClass:
+                    def __str__(self):
+                        return "CustomClass"
+
+                span.log_kv(
+                    {"custom": CustomClass(), "exception": Exception("Test")}
+                )
+
+        # Verify the logged key-value pairs
+        events = span.unwrap().events
+        self.assertEqual(len(events), 3)  # Three log_kv calls
+
+        # Check primitive types
+        self.assertEqual(events[0].attributes["str"], "string")
+        self.assertEqual(events[0].attributes["int"], 123)
+        self.assertEqual(events[0].attributes["float"], 1.23)
+        self.assertEqual(events[0].attributes["bool"], True)
+
+        # Check sequence types
+        self.assertEqual(events[1].attributes["list"], (1, 2, 3))
+        self.assertEqual(events[1].attributes["tuple"], ("a", "b", "c"))
+
+        # Check non-primitive types
+        self.assertEqual(events[2].attributes["custom"], "CustomClass")
+        self.assertEqual(str(events[2].attributes["exception"]), "Test")
+
+        # Verify that warnings were logged
+        self.assertEqual(
+            len(log_context.records), 2
+        )  # Two warnings should be logged
+        self.assertIn(
+            "Invalid type CustomClass for attribute 'custom' value",
+            log_context.output[0],
+        )
+        self.assertIn(
+            "Invalid type Exception for attribute 'exception' value",
+            log_context.output[1],
+        )
