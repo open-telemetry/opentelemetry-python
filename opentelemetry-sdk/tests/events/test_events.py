@@ -163,7 +163,9 @@ class TestEventLoggerProvider(unittest.TestCase):
 
     @patch("opentelemetry.sdk._events.LogRecord")
     @patch("opentelemetry.sdk._logs._internal.LoggerProvider.get_logger")
-    def test_event_logger_emit_sdk_disabled(self, logger_mock, log_record_mock):
+    def test_event_logger_emit_sdk_disabled(
+        self, logger_mock, log_record_mock
+    ):
         logger_provider = LoggerProvider()
         logger_mock_inst = Mock(spec=NoOpLogger)
         logger_mock.return_value = logger_mock_inst
