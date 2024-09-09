@@ -160,3 +160,41 @@ class TestEventLoggerProvider(unittest.TestCase):
             },
         )
         logger_mock_inst.emit.assert_called_once_with(log_record_mock_inst)
+
+    @patch("opentelemetry.sdk._events.LogRecord")
+    @patch("opentelemetry.sdk._logs._internal.LoggerProvider.get_logger")
+    def test_event_logger_emit_sdk_disabled(self, logger_mock, log_record_mock):
+        logger_provider = LoggerProvider()
+        logger_mock_inst = Mock(spec=NoOpLogger)
+        logger_mock.return_value = logger_mock_inst
+        event_logger = EventLoggerProvider(logger_provider).get_event_logger(
+            "name",
+            version="version",
+            schema_url="schema_url",
+            attributes={"key": "value"},
+        )
+        logger_mock.assert_called_once_with(
+            "name", "version", "schema_url", {"key": "value"}
+        )
+        now = Mock()
+        trace_id = Mock()
+        span_id = Mock()
+        trace_flags = Mock()
+        event = Event(
+            name="test_event",
+            timestamp=now,
+            trace_id=trace_id,
+            span_id=span_id,
+            trace_flags=trace_flags,
+            body="test body",
+            severity_number=SeverityNumber.ERROR,
+            attributes={
+                "key": "val",
+                "foo": "bar",
+                "event.name": "not this one",
+            },
+        )
+        log_record_mock_inst = Mock()
+        log_record_mock.return_value = log_record_mock_inst
+        event_logger.emit(event)
+        logger_mock_inst.emit.assert_not_called()
