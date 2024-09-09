@@ -21,7 +21,7 @@ from opentelemetry._events import (
     EventLogger as APIEventLogger,
     EventLoggerProvider as APIEventLoggerProvider,
 )
-from opentelemetry._logs import SeverityNumber, get_logger_provider
+from opentelemetry._logs import NoOpLogger, SeverityNumber, get_logger_provider
 from opentelemetry.sdk._logs import Logger, LoggerProvider, LogRecord
 from opentelemetry.util.types import Attributes
 
@@ -48,6 +48,9 @@ class EventLogger(APIEventLogger):
         )
 
     def emit(self, event: Event) -> None:
+        if isinstance(self._logger, NoOpLogger):
+            # Do nothing if SDK is disabled
+            return
         span_context = trace.get_current_span().get_span_context()
         log_record = LogRecord(
             timestamp=event.timestamp or time_ns(),
@@ -58,7 +61,7 @@ class EventLogger(APIEventLogger):
             severity_text=None,
             severity_number=event.severity_number or SeverityNumber.INFO,
             body=event.body,
-            resource=self._logger.resource,
+            resource=getattr(self._logger, "resource", None),,
             attributes=event.attributes,
         )
         self._logger.emit(log_record)
