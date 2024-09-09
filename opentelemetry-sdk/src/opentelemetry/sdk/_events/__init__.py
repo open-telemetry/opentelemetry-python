@@ -16,11 +16,9 @@ from time import time_ns
 from typing import Optional
 
 from opentelemetry import trace
-from opentelemetry._events import (
-    Event,
-    EventLogger as APIEventLogger,
-    EventLoggerProvider as APIEventLoggerProvider,
-)
+from opentelemetry._events import Event
+from opentelemetry._events import EventLogger as APIEventLogger
+from opentelemetry._events import EventLoggerProvider as APIEventLoggerProvider
 from opentelemetry._logs import NoOpLogger, SeverityNumber, get_logger_provider
 from opentelemetry.sdk._logs import Logger, LoggerProvider, LogRecord
 from opentelemetry.util.types import Attributes
@@ -83,7 +81,7 @@ class EventLoggerProvider(APIEventLoggerProvider):
         return EventLogger(
             self._logger_provider, name, version, schema_url, attributes
         )
-    
+
     def shutdown(self):
         self._logger_provider.shutdown()
 
