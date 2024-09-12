@@ -33,6 +33,7 @@ class CompositePropagator(textmap.TextMapPropagator):
     def __init__(
         self, propagators: typing.Sequence[textmap.TextMapPropagator]
     ) -> None:
+        super().__init__(propagators)
         self._propagators = propagators
 
     def extract(

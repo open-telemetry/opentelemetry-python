@@ -14,10 +14,11 @@
 
 from typing import Union
 
+from opentelemetry.opentelemetry import OpenTelemetry
 from opentelemetry.util.types import Attributes
 
 
-class Observation:
+class Observation(OpenTelemetry):
     """A measurement observed in an asynchronous instrument
 
     Return/yield instances of this class from asynchronous instrument callbacks.
@@ -30,6 +31,7 @@ class Observation:
     def __init__(
         self, value: Union[int, float], attributes: Attributes = None
     ) -> None:
+        super().__init__(value, attributes=attributes)
         self._value = value
         self._attributes = attributes
 
@@ -47,6 +49,3 @@ class Observation:
             and self.value == other.value
             and self.attributes == other.attributes
         )
-
-    def __repr__(self) -> str:
-        return f"Observation(value={self.value}, attributes={self.attributes})"

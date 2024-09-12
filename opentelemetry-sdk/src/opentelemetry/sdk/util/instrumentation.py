@@ -17,10 +17,11 @@ from typing import Optional
 from deprecated import deprecated
 
 from opentelemetry.attributes import BoundedAttributes
+from opentelemetry.opentelemetry import OpenTelemetry
 from opentelemetry.util.types import Attributes
 
 
-class InstrumentationInfo:
+class InstrumentationInfo(OpenTelemetry):
     """Immutable information about an instrumentation library module.
 
     See `opentelemetry.trace.TracerProvider.get_tracer` for the meaning of these
@@ -36,14 +37,12 @@ class InstrumentationInfo:
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
     ):
+        super().__init__(name, version=version, schema_url=schema_url)
         self._name = name
         self._version = version
         if schema_url is None:
             schema_url = ""
         self._schema_url = schema_url
-
-    def __repr__(self):
-        return f"{type(self).__name__}({self._name}, {self._version}, {self._schema_url})"
 
     def __hash__(self):
         return hash((self._name, self._version, self._schema_url))
@@ -77,7 +76,7 @@ class InstrumentationInfo:
         return self._name
 
 
-class InstrumentationScope:
+class InstrumentationScope(OpenTelemetry):
     """A logical unit of the application code with which the emitted telemetry can be
     associated.
 
@@ -94,15 +93,15 @@ class InstrumentationScope:
         schema_url: Optional[str] = None,
         attributes: Optional[Attributes] = None,
     ) -> None:
+        super().__init__(
+            name, version=version, schema_url=schema_url, attributes=attributes
+        )
         self._name = name
         self._version = version
         if schema_url is None:
             schema_url = ""
         self._schema_url = schema_url
         self._attributes = BoundedAttributes(attributes=attributes)
-
-    def __repr__(self) -> str:
-        return f"{type(self).__name__}({self._name}, {self._version}, {self._schema_url}, {self._attributes})"
 
     def __hash__(self) -> int:
         return hash((self._name, self._version, self._schema_url))
