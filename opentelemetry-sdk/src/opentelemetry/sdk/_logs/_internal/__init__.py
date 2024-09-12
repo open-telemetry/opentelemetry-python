@@ -22,7 +22,7 @@ import traceback
 import warnings
 from os import environ
 from time import time_ns
-from typing import Any, Callable, Optional, Tuple, Union  # noqa
+from typing import Callable, Dict, List, Optional, Tuple, Union  # noqa
 
 from opentelemetry._logs import Logger as APILogger
 from opentelemetry._logs import LoggerProvider as APILoggerProvider
@@ -68,6 +68,8 @@ class LogDroppedAttributesWarning(UserWarning):
 
 
 warnings.simplefilter("once", LogDroppedAttributesWarning)
+
+Any = Union[str, bool, int, float, bytes, List["Any"], Dict[str, "Any"], None]
 
 
 class LogLimits:
