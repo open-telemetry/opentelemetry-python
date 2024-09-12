@@ -475,7 +475,7 @@ class OsResourceDetector(ResourceDetector):
 
 class HostResourceDetector(ResourceDetector):
     """
-       The HostResourceDetector detects host resources using OpenTelemetry.
+       The HostResourceDetector detects the hostname and architecture attributes.
        """
 
     def detect(self) -> "Resource":
