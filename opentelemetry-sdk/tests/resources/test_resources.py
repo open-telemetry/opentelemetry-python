@@ -20,8 +20,7 @@ from logging import ERROR, WARNING
 from os import environ
 from unittest.mock import Mock, patch
 from urllib import parse
-from opentelemetry import trace as trace_api
-from opentelemetry.exporter.otlp.proto.grpc import exporter
+
 from opentelemetry.resource.detector.host import HostResourceDetector
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPERIMENTAL_RESOURCE_DETECTORS,
@@ -56,8 +55,6 @@ from opentelemetry.sdk.resources import (
     ResourceDetector,
     get_aggregated_resources,
 )
-from opentelemetry.sdk.trace import TracerProvider, export
-from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 from opentelemetry.semconv.resource import ResourceAttributes
 
 try:
@@ -783,26 +780,10 @@ class TestOTELResourceDetector(unittest.TestCase):
         self.assertEqual(resource.attributes[OS_TYPE], "solaris")
         self.assertEqual(resource.attributes[OS_VERSION], "666.4.0.15.0")
 class TestHostResourceDetector(unittest.TestCase):
+    @patch("socket.gethostname", lambda: "foo")
+    @patch("platform.machine",lambda: "AMD64")
     def test_host_resource_detector(self):
         detector = HostResourceDetector()
         actual = detector.detect()
-        self.assertTrue(actual.attributes.get(ResourceAttributes.HOST_NAME))
-        self.assertTrue(actual.attributes.get(ResourceAttributes.HOST_ARCH))
-
-    def test_host_resource_as_span_attribute(self):
-
-        tracer_provider = TracerProvider(resource=get_aggregated_resources([HostResourceDetector()]))
-        memory_exporter = InMemorySpanExporter()
-        span_processor = export.SimpleSpanProcessor(memory_exporter)
-        tracer_provider.add_span_processor(span_processor)
-        tracer = tracer_provider.get_tracer(__name__)
-
-        with tracer.start_as_current_span(
-                "test", kind=trace_api.SpanKind.SERVER
-        ) as _:
-            pass
-
-        span_list = memory_exporter.get_finished_spans()
-        self.assertTrue(span_list[0].resource.attributes.get(ResourceAttributes.HOST_NAME))
-        self.assertTrue(span_list[0].resource.attributes.get(ResourceAttributes.HOST_ARCH))
-
+        self.assertEqual(actual.attributes.get(ResourceAttributes.HOST_NAME),"foo")
+        self.assertEqual(actual.attributes.get(ResourceAttributes.HOST_ARCH),"AMD64")

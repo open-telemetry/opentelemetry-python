@@ -479,24 +479,11 @@ class HostResourceDetector(ResourceDetector):
        """
 
     def detect(self) -> "Resource":
-        try:
-            resource = Resource.get_empty()
-            host_name = socket.gethostname()
-            if host_name:
-                resource = resource.merge(Resource({HOST_NAME: host_name}))
-            host_arch = platform.machine()
-            if host_arch:
-                resource = resource.merge(Resource({HOST_ARCH: host_arch}))
-            return resource
-        except Exception as e:
-            logger.warning(
-                "%s Resource Detection failed silently: %s",
-                self.__class__.__name__,
-                e,
-            )
-            if self.raise_on_error:
-                raise e
-            return Resource.get_empty()
+        return Resource({
+            HOST_NAME: socket.gethostname(),
+            HOST_ARCH: platform.machine(),
+        })
+
 
 
 def get_aggregated_resources(
