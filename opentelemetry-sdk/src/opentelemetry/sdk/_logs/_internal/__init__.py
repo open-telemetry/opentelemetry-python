@@ -69,7 +69,9 @@ class LogDroppedAttributesWarning(UserWarning):
 
 warnings.simplefilter("once", LogDroppedAttributesWarning)
 
-Any = Union[str, bool, int, float, bytes, List["Any"], Dict[str, "Any"], None]
+OtelAny = Union[
+    str, bool, int, float, bytes, List["OtelAny"], Dict[str, "OtelAny"], None
+]
 
 
 class LogLimits:
@@ -181,7 +183,7 @@ class LogRecord(APILogRecord):
         trace_flags: Optional[TraceFlags] = None,
         severity_text: Optional[str] = None,
         severity_number: Optional[SeverityNumber] = None,
-        body: Optional[Any] = None,
+        body: Optional[OtelAny] = None,
         resource: Optional[Resource] = None,
         attributes: Optional[Attributes] = None,
         limits: Optional[LogLimits] = _UnsetLogLimits,
@@ -383,8 +385,8 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
     def _submit_and_wait(
         self,
         func: Callable[[LogRecordProcessor], Callable[..., None]],
-        *args: Any,
-        **kwargs: Any,
+        *args: OtelAny,
+        **kwargs: OtelAny,
     ):
         futures = []
         for lp in self._log_record_processors:
