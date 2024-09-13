@@ -22,7 +22,7 @@ import traceback
 import warnings
 from os import environ
 from time import time_ns
-from typing import Callable, Dict, List, Optional, Tuple, Union  # noqa
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union  # noqa
 
 from opentelemetry._logs import Logger as APILogger
 from opentelemetry._logs import LoggerProvider as APILoggerProvider
@@ -69,8 +69,8 @@ class LogDroppedAttributesWarning(UserWarning):
 
 warnings.simplefilter("once", LogDroppedAttributesWarning)
 
-OtelAny = Union[
-    str, bool, int, float, bytes, List["OtelAny"], Dict[str, "OtelAny"], None
+AnyValue = Union[
+    str, bool, int, float, bytes, List["AnyValue"], Dict[str, "AnyValue"], None
 ]
 
 
@@ -183,7 +183,7 @@ class LogRecord(APILogRecord):
         trace_flags: Optional[TraceFlags] = None,
         severity_text: Optional[str] = None,
         severity_number: Optional[SeverityNumber] = None,
-        body: Optional[OtelAny] = None,
+        body: Optional[AnyValue] = None,
         resource: Optional[Resource] = None,
         attributes: Optional[Attributes] = None,
         limits: Optional[LogLimits] = _UnsetLogLimits,
@@ -385,8 +385,8 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
     def _submit_and_wait(
         self,
         func: Callable[[LogRecordProcessor], Callable[..., None]],
-        *args: OtelAny,
-        **kwargs: OtelAny,
+        *args: Any,
+        **kwargs: Any,
     ):
         futures = []
         for lp in self._log_record_processors:
