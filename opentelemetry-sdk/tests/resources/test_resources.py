@@ -779,11 +779,17 @@ class TestOTELResourceDetector(unittest.TestCase):
 
         self.assertEqual(resource.attributes[OS_TYPE], "solaris")
         self.assertEqual(resource.attributes[OS_VERSION], "666.4.0.15.0")
+
+
 class TestHostResourceDetector(unittest.TestCase):
     @patch("socket.gethostname", lambda: "foo")
-    @patch("platform.machine",lambda: "AMD64")
+    @patch("platform.machine", lambda: "AMD64")
     def test_host_resource_detector(self):
         detector = HostResourceDetector()
         actual = detector.detect()
-        self.assertEqual(actual.attributes.get(ResourceAttributes.HOST_NAME),"foo")
-        self.assertEqual(actual.attributes.get(ResourceAttributes.HOST_ARCH),"AMD64")
+        self.assertEqual(
+            actual.attributes.get(ResourceAttributes.HOST_NAME), "foo"
+        )
+        self.assertEqual(
+            actual.attributes.get(ResourceAttributes.HOST_ARCH), "AMD64"
+        )
