@@ -16,14 +16,23 @@
 import io
 from typing import Generator, Iterable, List
 from unittest import TestCase
+from unittest.mock import Mock, patch
 
+from opentelemetry.context import Context
 from opentelemetry.metrics import CallbackOptions, Instrument, Observation
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 
 # FIXME Test that the instrument methods can be called concurrently safely.
 
+TEST_TIMESTAMP = 1_234_567_890
+TEST_CONTEXT = Context()
 
+
+@patch(
+    "opentelemetry.sdk.metrics._internal.instrument.time_ns",
+    Mock(return_value=TEST_TIMESTAMP),
+)
 class TestCpuTimeIntegration(TestCase):
     """Integration test of scraping CPU time from proc stat with an observable
     counter"""
@@ -47,92 +56,128 @@ softirq 1644603067 0 166540056 208 309152755 8936439 0 1354908 935642970 13 2229
         return [
             Measurement(
                 6150.29,
+                TEST_TIMESTAMP,
                 instrument=instrument,
+                context=TEST_CONTEXT,
                 attributes={"cpu": "cpu0", "state": "user"},
             ),
             Measurement(
                 3177.46,
+                TEST_TIMESTAMP,
                 instrument=instrument,
+                context=TEST_CONTEXT,
                 attributes={"cpu": "cpu0", "state": "nice"},
             ),
             Measurement(
                 5946.01,
+                TEST_TIMESTAMP,
                 instrument=instrument,
+                context=TEST_CONTEXT,
                 attributes={"cpu": "cpu0", "state": "system"},
             ),
             Measurement(
                 891264.59,
+                TEST_TIMESTAMP,
                 instrument=instrument,
+                context=TEST_CONTEXT,
                 attributes={"cpu": "cpu0", "state": "idle"},
             ),
             Measurement(
                 1296.29,
+                TEST_TIMESTAMP,
                 instrument=instrument,
+                context=TEST_CONTEXT,
                 attributes={"cpu": "cpu0", "state": "iowait"},
             ),
             Measurement(
                 0.0,
+                TEST_TIMESTAMP,
                 instrument=instrument,
+                context=TEST_CONTEXT,
                 attributes={"cpu": "cpu0", "state": "irq"},
             ),
             Measurement(
                 8343.46,
+                TEST_TIMESTAMP,
                 instrument=instrument,
+                context=TEST_CONTEXT,
                 attributes={"cpu": "cpu0", "state": "softirq"},
             ),
             Measurement(
                 421.37,
+                TEST_TIMESTAMP,
                 instrument=instrument,
+                context=TEST_CONTEXT,
                 attributes={"cpu": "cpu0", "state": "guest"},
             ),
             Measurement(
                 0,
+                TEST_TIMESTAMP,
                 instrument=instrument,
+                context=TEST_CONTEXT,
                 attributes={"cpu": "cpu0", "state": "guest_nice"},
             ),
             Measurement(
                 5882.32,
+                TEST_TIMESTAMP,
                 instrument=instrument,
+                context=TEST_CONTEXT,
                 attributes={"cpu": "cpu1", "state": "user"},
             ),
             Measurement(
                 3491.85,
+                TEST_TIMESTAMP,
                 instrument=instrument,
+                context=TEST_CONTEXT,
                 attributes={"cpu": "cpu1", "state": "nice"},
             ),
             Measurement(
                 6404.92,
+                TEST_TIMESTAMP,
                 instrument=instrument,
+                context=TEST_CONTEXT,
                 attributes={"cpu": "cpu1", "state": "system"},
             ),
             Measurement(
                 891564.11,
+                TEST_TIMESTAMP,
                 instrument=instrument,
+                context=TEST_CONTEXT,
                 attributes={"cpu": "cpu1", "state": "idle"},
             ),
             Measurement(
                 1244.85,
+                TEST_TIMESTAMP,
                 instrument=instrument,
+                context=TEST_CONTEXT,
                 attributes={"cpu": "cpu1", "state": "iowait"},
             ),
             Measurement(
                 0,
+                TEST_TIMESTAMP,
                 instrument=instrument,
+                context=TEST_CONTEXT,
                 attributes={"cpu": "cpu1", "state": "irq"},
             ),
             Measurement(
                 2410.04,
+                TEST_TIMESTAMP,
                 instrument=instrument,
+                context=TEST_CONTEXT,
                 attributes={"cpu": "cpu1", "state": "softirq"},
             ),
             Measurement(
                 418.62,
+                TEST_TIMESTAMP,
                 instrument=instrument,
+                context=TEST_CONTEXT,
                 attributes={"cpu": "cpu1", "state": "guest"},
             ),
             Measurement(
                 0,
+                TEST_TIMESTAMP,
                 instrument=instrument,
+                context=TEST_CONTEXT,
                 attributes={"cpu": "cpu1", "state": "guest_nice"},
             ),
         ]
