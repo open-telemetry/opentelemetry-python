@@ -786,6 +786,9 @@ class TestHostResourceDetector(unittest.TestCase):
     @patch("socket.gethostname", lambda: "foo")
     @patch("platform.machine", lambda: "AMD64")
     def test_host_resource_detector(self):
-        resource = get_aggregated_resources([HostResourceDetector()])
+        resource = get_aggregated_resources(
+            [HostResourceDetector()],
+            Resource({}),
+        )
         self.assertEqual(resource.attributes[HOST_NAME], "foo")
         self.assertEqual(resource.attributes[HOST_ARCH], "AMD64")
