@@ -21,7 +21,6 @@ from os import environ
 from unittest.mock import Mock, patch
 from urllib import parse
 
-from opentelemetry.resource.detector.host import HostResourceDetector
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPERIMENTAL_RESOURCE_DETECTORS,
 )
@@ -48,6 +47,7 @@ from opentelemetry.sdk.resources import (
     TELEMETRY_SDK_LANGUAGE,
     TELEMETRY_SDK_NAME,
     TELEMETRY_SDK_VERSION,
+    HostResourceDetector,
     OsResourceDetector,
     OTELResourceDetector,
     ProcessResourceDetector,
