@@ -28,6 +28,8 @@ from opentelemetry.sdk.resources import (
     _DEFAULT_RESOURCE,
     _EMPTY_RESOURCE,
     _OPENTELEMETRY_SDK_VERSION,
+    HOST_ARCH,
+    HOST_NAME,
     OS_TYPE,
     OS_VERSION,
     OTEL_RESOURCE_ATTRIBUTES,
@@ -55,7 +57,6 @@ from opentelemetry.sdk.resources import (
     ResourceDetector,
     get_aggregated_resources,
 )
-from opentelemetry.semconv.resource import ResourceAttributes
 
 try:
     import psutil
@@ -785,11 +786,6 @@ class TestHostResourceDetector(unittest.TestCase):
     @patch("socket.gethostname", lambda: "foo")
     @patch("platform.machine", lambda: "AMD64")
     def test_host_resource_detector(self):
-        detector = HostResourceDetector()
-        actual = detector.detect()
-        self.assertEqual(
-            actual.attributes.get(ResourceAttributes.HOST_NAME), "foo"
-        )
-        self.assertEqual(
-            actual.attributes.get(ResourceAttributes.HOST_ARCH), "AMD64"
-        )
+        resource = get_aggregated_resources([HostResourceDetector()])
+        self.assertEqual(resource.attributes[HOST_NAME], "foo")
+        self.assertEqual(resource.attributes[HOST_ARCH], "AMD64")
