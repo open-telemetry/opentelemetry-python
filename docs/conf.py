@@ -138,6 +138,18 @@ nitpick_ignore = [
         "py:class",
         "opentelemetry.proto.collector.logs.v1.logs_service_pb2.ExportLogsServiceRequest",
     ),
+    (
+        "py:class",
+        "opentelemetry.sdk.metrics._internal.exemplar.exemplar_reservoir.FixedSizeExemplarReservoirABC",
+    ),
+    (
+        "py:class",
+        "opentelemetry.sdk.metrics._internal.exemplar.exemplar.Exemplar",
+    ),
+    (
+        "py:class",
+        "opentelemetry.sdk.metrics._internal.aggregation._Aggregation",
+    ),
 ]
 
 # Add any paths that contain templates here, relative to this directory.

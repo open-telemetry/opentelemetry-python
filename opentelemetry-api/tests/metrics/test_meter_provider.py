@@ -279,13 +279,15 @@ class TestProxy(MetricsGlobalsTest, TestCase):
         real_gauge.assert_not_called()
 
         proxy_counter.add(amount, attributes=attributes)
-        real_counter.add.assert_called_once_with(amount, attributes)
+        real_counter.add.assert_called_once_with(amount, attributes, None)
         proxy_updowncounter.add(amount, attributes=attributes)
-        real_updowncounter.add.assert_called_once_with(amount, attributes)
+        real_updowncounter.add.assert_called_once_with(
+            amount, attributes, None
+        )
         proxy_histogram.record(amount, attributes=attributes)
-        real_histogram.record.assert_called_once_with(amount, attributes)
+        real_histogram.record.assert_called_once_with(amount, attributes, None)
         proxy_gauge.set(amount, attributes=attributes)
-        real_gauge.set.assert_called_once_with(amount, attributes)
+        real_gauge.set.assert_called_once_with(amount, attributes, None)
 
     def test_proxy_meter_with_real_meter(self) -> None:
         # Creating new instruments on the _ProxyMeter with a real meter set
