@@ -19,6 +19,7 @@ from opentelemetry.util._importlib_metadata import EntryPoint, EntryPoints
 from opentelemetry.util._importlib_metadata import (
     entry_points as importlib_metadata_entry_points,
 )
+from opentelemetry.util._importlib_metadata import version
 
 
 class TestEntryPoints(TestCase):
@@ -106,3 +107,5 @@ class TestEntryPoints(TestCase):
         entry_points = importlib_metadata_entry_points(group="abc", name="abc")
         self.assertIsInstance(entry_points, EntryPoints)
         self.assertEqual(len(entry_points), 0)
+
+        self.assertIsInstance(version("opentelemetry-api"), str)

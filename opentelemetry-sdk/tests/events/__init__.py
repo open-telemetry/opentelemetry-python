@@ -11,27 +11,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-# FIXME: Use importlib.metadata when support for 3.11 is dropped if the rest of
-# the supported versions at that time have the same API.
-from importlib_metadata import (  # type: ignore
-    Distribution,
-    EntryPoint,
-    EntryPoints,
-    PackageNotFoundError,
-    distributions,
-    entry_points,
-    requires,
-    version,
-)
-
-__all__ = [
-    "entry_points",
-    "version",
-    "EntryPoint",
-    "EntryPoints",
-    "requires",
-    "Distribution",
-    "distributions",
-    "PackageNotFoundError",
-]
