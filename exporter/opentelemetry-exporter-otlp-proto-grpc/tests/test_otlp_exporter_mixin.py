@@ -121,7 +121,7 @@ class TestOTLPExporterMixin(TestCase):
                     "while exporting mock to localhost:4317"
                 ),
             )
-        self.assertEqual(warning.records[1].message, "Retrying in 0s")
+        self.assertEqual(warning.records[1].message, "Retrying in 0.00s")
 
     def test_shutdown(self):
         result_mock = Mock()
@@ -194,7 +194,7 @@ class TestOTLPExporterMixin(TestCase):
             def _exporting(self) -> str:
                 return "mock"
 
-        otlp_mock_exporter = OTLPMockExporter()
+        otlp_mock_exporter = OTLPMockExporter(timeout=0.05)
 
         # pylint: disable=protected-access
         export_thread = threading.Thread(

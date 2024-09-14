@@ -18,7 +18,7 @@ import unittest
 from itertools import repeat
 from logging import WARNING
 from typing import Type
-from unittest.mock import Mock, patch
+from unittest.mock import ANY, Mock, patch
 
 from opentelemetry.exporter.otlp.proto.common.exporter import (
     RetryableExportError,
@@ -42,7 +42,12 @@ class TestRetryableExporter(unittest.TestCase):
                 with self.assertLogs(level=WARNING):
                     result = exporter.export_with_retry("payload")
             self.assertIs(result, result_type.SUCCESS)
-            export_func.assert_called_once_with("payload", 10.0)
+            export_func.assert_called_once_with(
+                "payload", ANY
+            )  # Timeout checked in the following line
+            self.assertAlmostEqual(
+                export_func.call_args_list[0][0][1], 10.0, places=4
+            )
 
         with self.subTest("Export Fail"):
             export_func.reset_mock()
@@ -51,7 +56,12 @@ class TestRetryableExporter(unittest.TestCase):
                 with self.assertLogs(exporter_logger, level=WARNING):
                     result = exporter.export_with_retry("payload")
             self.assertIs(result, result_type.FAILURE)
-            export_func.assert_called_once_with("payload", 10.0)
+            export_func.assert_called_once_with(
+                "payload", ANY
+            )  # Timeout checked in the following line
+            self.assertAlmostEqual(
+                export_func.call_args_list[0][0][1], 10.0, places=4
+            )
 
     @patch(
         "opentelemetry.exporter.otlp.proto.common.exporter._create_exp_backoff_generator",
@@ -113,38 +123,36 @@ class TestRetryableExporter(unittest.TestCase):
             result = exporter.export_with_retry("payload")
         self.assertIs(result, result_type.SUCCESS)
         self.assertEqual(wait_mock.call_count, len(side_effects) - 1)
-        self.assertEqual(wait_mock.call_args_list[0].args, (0.0,))
         self.assertEqual(wait_mock.call_args_list[1].args, (0.25,))
         self.assertEqual(wait_mock.call_args_list[2].args, (0.75,))
         self.assertEqual(wait_mock.call_args_list[3].args, (1.00,))
 
-    # Does not work like this yet. Will be enabled soon.
-    # @patch(
-    #     "opentelemetry.exporter.otlp.proto.common.exporter._create_exp_backoff_generator",
-    #     return_value=repeat(0.1),
-    # )
-    # def test_retry_delay_exceeds_timeout(self, mock_backoff):
-    #    """
-    #    Test we timeout if we can't respect retry_delay.
-    #    """
-    #    side_effects = [
-    #        RetryableExportError(0.25),
-    #        RetryableExportError(1.0),  # should timeout here
-    #        result_type.SUCCESS,
-    #    ]
+    @patch(
+        "opentelemetry.exporter.otlp.proto.common.exporter._create_exp_backoff_generator",
+        return_value=repeat(0.1),
+    )
+    def test_retry_delay_exceeds_timeout(self, mock_backoff):
+        """
+        Test we timeout if we can't respect retry_delay.
+        """
+        side_effects = [
+            RetryableExportError(0.25),
+            RetryableExportError(1.0),  # should timeout here
+            result_type.SUCCESS,
+        ]
 
-    #    mock_export_func = Mock(side_effect=side_effects)
-    #    exporter = RetryingExporter(
-    #        mock_export_func,
-    #        result_type,
-    #        timeout_sec=0.5,
-    #    )
+        mock_export_func = Mock(side_effect=side_effects)
+        exporter = RetryingExporter(
+            mock_export_func,
+            result_type,
+            timeout_sec=0.5,
+        )
 
-    #    with self.assertLogs(level=WARNING):
-    #        self.assertEqual(
-    #            exporter.export_with_retry("payload"), result_type.FAILURE
-    #        )
-    #    self.assertEqual(mock_export_func.call_count, 2)
+        with self.assertLogs(level=WARNING):
+            self.assertEqual(
+                exporter.export_with_retry("payload"), result_type.FAILURE
+            )
+        self.assertEqual(mock_export_func.call_count, 2)
 
     def test_shutdown(self):
         """Test we refuse to export if shut down."""
@@ -301,7 +309,7 @@ class TestRetryableExporter(unittest.TestCase):
         self.assertTrue(exporter._shutdown)
         self.assertIs(export_wrapped.result, result_type.FAILURE)
         print(warning.records)
-        self.assertEqual(warning.records[0].message, "Retrying in 1s")
+        self.assertEqual(warning.records[0].message, "Retrying in 1.00s")
         self.assertEqual(
             warning.records[-1].message,
             "Export cancelled due to shutdown timing out",

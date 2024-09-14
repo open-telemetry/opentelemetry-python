@@ -14,6 +14,7 @@
 import threading
 from contextlib import contextmanager
 from logging import getLogger
+from time import time
 from typing import Callable, Generic, Iterator, Optional, Type, TypeVar
 
 from ._internal import _create_exp_backoff_generator
@@ -31,6 +32,28 @@ class RetryableExportError(Exception):
 
 
 class RetryingExporter(Generic[ExportResultT]):
+    """OTLP exporter helper to handle retries and timeouts
+
+    Encapsulates timeout behavior for shutdown and export tasks.
+
+    Accepts a callable `export_function` of the form
+
+        def export_function(
+            payload: object,
+            timeout_sec: float,
+        ) -> result:
+            ....
+
+    that either returns the appropriate export result, or raises a RetryableExportError exception if
+    the encountered error should be retried.
+
+    Args:
+        export_function: A callable handling a single export attempt to be used by
+            export_with_retry()
+        result: Enum-like type defining SUCCESS and FAILURE values returned by export.
+        timeout_sec: Timeout for exports in seconds.
+    """
+
     def __init__(
         self,
         export_function: Callable[[ExportPayloadT, float], ExportResultT],
@@ -53,16 +76,41 @@ class RetryingExporter(Generic[ExportResultT]):
         with acquire_timeout(self._export_lock, timeout_millis / 1e3):
             self._shutdown.set()
 
-    def export_with_retry(self, payload: ExportPayloadT) -> ExportResultT:
+    def export_with_retry(  # pylint: disable=too-many-return-statements
+        self, payload: ExportPayloadT
+    ) -> ExportResultT:
+        """Exports payload with handling of retryable errors
+
+        Calls the export_function provided at initialization with the following signature:
+
+            export_function(payload, timeout_sec=remaining_time)
+
+        where `remaining_time` is updated with each retry.
+
+        Retries will be attempted using exponential backoff. If retry_delay_sec is specified in the
+        raised error, a retry attempt will not occur before that delay. If a retry after that delay
+        is not possible, will immediately abort without retrying.
+
+        Will reattempt the export until timeout has passed, at which point the export will be
+        abandoned and a failure will be returned. A pending shutdown timing out will also cause
+        retries to time out.
+
+        Note: Can block longer than timeout if export_function is blocking. Ensure export_function
+            blocks minimally and does not attempt retries.
+
+        Args:
+            payload: Data to be exported, which is forwarded to the underlying export
+        """
         # After the call to shutdown, subsequent calls to Export are
         # not allowed and should return a Failure result.
         if self._shutdown.is_set():
             _logger.warning("Exporter already shutdown, ignoring batch")
             return self._result.FAILURE
 
-        with acquire_timeout(
-            self._export_lock, self._timeout_sec
-        ) as is_locked:
+        timeout_sec = self._timeout_sec
+        deadline_sec = time() + timeout_sec
+
+        with acquire_timeout(self._export_lock, timeout_sec) as is_locked:
             if not is_locked:
                 _logger.warning(
                     "Exporter failed to acquire lock before timeout"
@@ -73,9 +121,12 @@ class RetryingExporter(Generic[ExportResultT]):
             # expo returns a generator that yields delay values which grow
             # exponentially. Once delay is greater than max_value, the yielded
             # value will remain constant.
-            for delay in _create_exp_backoff_generator(max_value=max_value):
-                if delay == max_value:
-                    return self._result.FAILURE
+            for delay_sec in _create_exp_backoff_generator(
+                max_value=max_value
+            ):
+                remaining_time_sec = deadline_sec - time()
+                if remaining_time_sec < 1e-09:
+                    return self._result.FAILURE  # Timed out
 
                 if self._shutdown.is_set():
                     _logger.warning(
@@ -84,14 +135,21 @@ class RetryingExporter(Generic[ExportResultT]):
                     return self._result.FAILURE
 
                 try:
-                    return self._export_function(payload, self._timeout_sec)
+                    return self._export_function(payload, remaining_time_sec)
                 except RetryableExportError as exc:
+                    time_remaining_sec = deadline_sec - time()
+
                     delay_sec = (
                         exc.retry_delay_sec
                         if exc.retry_delay_sec is not None
-                        else delay
+                        else min(time_remaining_sec, delay_sec)
                     )
-                    _logger.warning("Retrying in %ss", delay_sec)
+
+                    if delay_sec > time_remaining_sec:
+                        # We should not exceed the requested timeout
+                        return self._result.FAILURE
+
+                    _logger.warning("Retrying in %0.2fs", delay_sec)
                     self._shutdown.wait(delay_sec)
 
             return self._result.FAILURE

@@ -134,7 +134,7 @@ class TestOTLPSpanExporter(TestCase):
 
     def setUp(self):
         tracer_provider = TracerProvider()
-        self.exporter = OTLPSpanExporter(insecure=True)
+        self.exporter = OTLPSpanExporter(insecure=True, timeout=0.05)
         tracer_provider.add_span_processor(SimpleSpanProcessor(self.exporter))
         self.tracer = tracer_provider.get_tracer(__name__)
 
@@ -545,7 +545,7 @@ class TestOTLPSpanExporter(TestCase):
     )
     def test_unavailable_delay(self, mock_expo):
 
-        mock_expo.configure_mock(**{"return_value": [1]})
+        mock_expo.configure_mock(**{"return_value": [0.01]})
 
         add_TraceServiceServicer_to_server(
             TraceServiceServicerUNAVAILABLEDelay(), self.server

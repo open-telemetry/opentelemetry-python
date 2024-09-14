@@ -21,6 +21,7 @@ from unittest.mock import MagicMock, Mock, call, patch
 import requests
 import responses
 from google.protobuf.json_format import MessageToDict
+from responses.registries import OrderedRegistry
 
 from opentelemetry._logs import SeverityNumber
 from opentelemetry.exporter.otlp.proto.http import Compression
@@ -269,15 +270,18 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         else:
             self.fail("No log records found")
 
-    @responses.activate
+    # Pylint is wrong about this
+    @responses.activate(  # pylint: disable=unexpected-keyword-arg,no-value-for-parameter
+        registry=OrderedRegistry
+    )
     def test_exponential_backoff(self):
-        # return a retryable error
-        responses.add(
-            responses.POST,
-            "http://logs.example.com/export",
-            json={"error": "something exploded"},
-            status=500,
-        )
+        for status in [500, 500, 500, 200]:
+            responses.add(
+                responses.POST,
+                "http://logs.example.com/export",
+                json={"error": "something exploded"},
+                status=status,
+            )
 
         exporter = OTLPLogExporter(endpoint="http://logs.example.com/export")
         logs = self._get_sdk_log_data()
@@ -287,9 +291,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             "wait",
         ) as wait_mock:
             exporter.export(logs)
-        wait_mock.assert_has_calls(
-            [call(1), call(2), call(4), call(8), call(16), call(32)]
-        )
+        wait_mock.assert_has_calls([call(1), call(2), call(4)])
 
     @staticmethod
     def _get_sdk_log_data() -> List[LogData]:

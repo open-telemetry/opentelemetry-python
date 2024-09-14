@@ -15,11 +15,12 @@
 from logging import WARNING
 from os import environ
 from unittest import TestCase
-from unittest.mock import MagicMock, Mock, call, patch
+from unittest.mock import ANY, MagicMock, Mock, call, patch
 
+import responses
 from requests import Session
 from requests.models import Response
-from responses import POST, activate, add
+from responses.registries import OrderedRegistry
 
 from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
     encode_metrics,
@@ -324,19 +325,25 @@ class TestOTLPMetricExporter(TestCase):
             url=exporter._endpoint,
             data=serialized_data.SerializeToString(),
             verify=exporter._certificate_file,
-            timeout=exporter._timeout,
+            timeout=ANY,  # Is checked in the following line
             cert=exporter._client_cert,
         )
-
-    @activate
-    def test_exponential_backoff(self):
-        # return a retryable error
-        add(
-            POST,
-            "http://metrics.example.com/export",
-            json={"error": "something exploded"},
-            status=500,
+        self.assertAlmostEqual(
+            mock_post.call_args_list[0][1]["timeout"], 10.0, places=4
         )
+
+    # Pylint is wrong about this
+    @responses.activate(  # pylint: disable=unexpected-keyword-arg,no-value-for-parameter
+        registry=OrderedRegistry
+    )
+    def test_exponential_backoff(self):
+        for status in [500, 500, 500, 200]:
+            responses.add(
+                responses.POST,
+                "http://metrics.example.com/export",
+                json={"error": "something exploded"},
+                status=status,
+            )
 
         exporter = OTLPMetricExporter(
             endpoint="http://metrics.example.com/export"
@@ -348,9 +355,7 @@ class TestOTLPMetricExporter(TestCase):
             "wait",
         ) as wait_mock:
             exporter.export(metrics_data)
-        wait_mock.assert_has_calls(
-            [call(1), call(2), call(4), call(8), call(16), call(32)]
-        )
+        wait_mock.assert_has_calls([call(1), call(2), call(4)])
 
     def test_aggregation_temporality(self):
 

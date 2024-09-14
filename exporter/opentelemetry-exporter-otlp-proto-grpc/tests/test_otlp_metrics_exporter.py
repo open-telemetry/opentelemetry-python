@@ -148,7 +148,7 @@ class TestOTLPMetricExporter(TestCase):
 
     def setUp(self):
 
-        self.exporter = OTLPMetricExporter()
+        self.exporter = OTLPMetricExporter(timeout=0.05)
 
         self.server = server(ThreadPoolExecutor(max_workers=10))
 
@@ -507,7 +507,7 @@ class TestOTLPMetricExporter(TestCase):
     )
     def test_unavailable_delay(self, mock_expo):
 
-        mock_expo.configure_mock(**{"return_value": [1]})
+        mock_expo.configure_mock(**{"return_value": [0.01]})
 
         add_MetricsServiceServicer_to_server(
             MetricsServiceServicerUNAVAILABLEDelay(), self.server

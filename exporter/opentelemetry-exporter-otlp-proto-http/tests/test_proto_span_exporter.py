@@ -17,6 +17,7 @@ from unittest.mock import MagicMock, Mock, call, patch
 
 import requests
 import responses
+from responses.registries import OrderedRegistry
 
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
@@ -233,15 +234,18 @@ class TestOTLPSpanExporter(unittest.TestCase):
             )
 
     # pylint: disable=no-self-use
-    @responses.activate
+    # Pylint is wrong about this
+    @responses.activate(  # pylint: disable=unexpected-keyword-arg,no-value-for-parameter
+        registry=OrderedRegistry
+    )
     def test_exponential_backoff(self):
-        # return a retryable error
-        responses.add(
-            responses.POST,
-            "http://traces.example.com/export",
-            json={"error": "something exploded"},
-            status=500,
-        )
+        for status in [500, 500, 500, 200]:
+            responses.add(
+                responses.POST,
+                "http://traces.example.com/export",
+                json={"error": "something exploded"},
+                status=status,
+            )
 
         exporter = OTLPSpanExporter(
             endpoint="http://traces.example.com/export"
@@ -262,9 +266,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
             "wait",  # pylint: disable=protected-access
         ) as wait_mock:
             exporter.export([span])
-        wait_mock.assert_has_calls(
-            [call(1), call(2), call(4), call(8), call(16), call(32)]
-        )
+        wait_mock.assert_has_calls([call(1), call(2), call(4)])
 
     def test_2xx_status_code(self):
         """

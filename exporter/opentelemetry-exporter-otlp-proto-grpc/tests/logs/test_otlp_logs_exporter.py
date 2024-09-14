@@ -413,7 +413,7 @@ class TestOTLPLogExporter(TestCase):
     )
     def test_unavailable_delay(self, mock_expo):
 
-        mock_expo.configure_mock(**{"return_value": [1]})
+        mock_expo.configure_mock(**{"return_value": [0.01]})
 
         add_LogsServiceServicer_to_server(
             LogsServiceServicerUNAVAILABLEDelay(), self.server
