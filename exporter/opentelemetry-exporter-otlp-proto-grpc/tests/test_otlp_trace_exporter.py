@@ -525,33 +525,39 @@ class TestOTLPSpanExporter(TestCase):
     @patch(
         "opentelemetry.exporter.otlp.proto.common.exporter._create_exp_backoff_generator"
     )
-    @patch("opentelemetry.exporter.otlp.proto.common.exporter.sleep")
-    def test_unavailable(self, mock_sleep, mock_expo):
+    def test_unavailable(self, mock_expo):
 
         mock_expo.configure_mock(**{"return_value": [0.01]})
 
         add_TraceServiceServicer_to_server(
             TraceServiceServicerUNAVAILABLE(), self.server
         )
-        result = self.exporter.export([self.span])
+        with patch.object(
+            self.exporter._exporter._shutdown,  # pylint: disable=protected-access
+            "wait",
+        ) as wait_mock:
+            result = self.exporter.export([self.span])
         self.assertEqual(result, SpanExportResult.FAILURE)
-        mock_sleep.assert_called_with(0.01)
+        wait_mock.assert_called_with(0.01)
 
     @patch(
         "opentelemetry.exporter.otlp.proto.common.exporter._create_exp_backoff_generator"
     )
-    @patch("opentelemetry.exporter.otlp.proto.common.exporter.sleep")
-    def test_unavailable_delay(self, mock_sleep, mock_expo):
+    def test_unavailable_delay(self, mock_expo):
 
         mock_expo.configure_mock(**{"return_value": [1]})
 
         add_TraceServiceServicer_to_server(
             TraceServiceServicerUNAVAILABLEDelay(), self.server
         )
-        self.assertEqual(
-            self.exporter.export([self.span]), SpanExportResult.FAILURE
-        )
-        mock_sleep.assert_called_with(0.01)
+        with patch.object(
+            self.exporter._exporter._shutdown,  # pylint: disable=protected-access
+            "wait",
+        ) as wait_mock:
+            self.assertEqual(
+                self.exporter.export([self.span]), SpanExportResult.FAILURE
+            )
+        wait_mock.assert_called_with(0.01)
 
     def test_success(self):
         add_TraceServiceServicer_to_server(

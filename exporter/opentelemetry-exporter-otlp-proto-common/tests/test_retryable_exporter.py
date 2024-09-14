@@ -67,11 +67,14 @@ class TestRetryableExporter(unittest.TestCase):
             result_type.SUCCESS,
         ]
         export_func = Mock(side_effect=side_effect)
-        exporter = RetryingExporter(export_func, result_type, timeout_sec=10.0)
+        exporter = RetryingExporter(export_func, result_type, timeout_sec=0.1)
 
         with self.subTest("Retry until success"):
-            with self.assertLogs(level=WARNING):
+            with patch.object(
+                exporter._shutdown, "wait"  # pylint: disable=protected-access
+            ) as wait_mock, self.assertLogs(level=WARNING):
                 result = exporter.export_with_retry("")
+            self.assertEqual(wait_mock.call_count, len(side_effect) - 1)
             self.assertEqual(export_func.call_count, len(side_effect))
             self.assertIs(result, result_type.SUCCESS)
 
@@ -104,11 +107,10 @@ class TestRetryableExporter(unittest.TestCase):
             Mock(side_effect=side_effects), result_type, timeout_sec=10.0
         )
 
-        with patch(
-            "opentelemetry.exporter.otlp.proto.common.exporter.sleep"
-        ) as wait_mock:
-            with self.assertLogs(level=WARNING):
-                result = exporter.export_with_retry("payload")
+        with patch.object(
+            exporter._shutdown, "wait"  # pylint: disable=protected-access
+        ) as wait_mock, self.assertLogs(level=WARNING):
+            result = exporter.export_with_retry("payload")
         self.assertIs(result, result_type.SUCCESS)
         self.assertEqual(wait_mock.call_count, len(side_effects) - 1)
         self.assertEqual(wait_mock.call_args_list[0].args, (0.0,))
@@ -118,8 +120,8 @@ class TestRetryableExporter(unittest.TestCase):
 
     # Does not work like this yet. Will be enabled soon.
     # @patch(
-    #    "opentelemetry.exporter.otlp.proto.common.exporter._create_exp_backoff_generator",
-    #    return_value=repeat(0.1),
+    #     "opentelemetry.exporter.otlp.proto.common.exporter._create_exp_backoff_generator",
+    #     return_value=repeat(0.1),
     # )
     # def test_retry_delay_exceeds_timeout(self, mock_backoff):
     #    """
@@ -168,11 +170,14 @@ class TestRetryableExporter(unittest.TestCase):
         )
         mock_export_func.assert_called_once()
 
-    @patch("opentelemetry.exporter.otlp.proto.common.exporter.sleep")
-    def test_shutdown_wait_last_export(self, mock_sleep):
+    @patch(
+        "opentelemetry.exporter.otlp.proto.common.exporter._create_exp_backoff_generator",
+        return_value=repeat(0.01),
+    )
+    def test_shutdown_wait_last_export(self, mock_backoff):
         """Test that shutdown waits for ongoing export to complete."""
 
-        timeout_sec = 10.0
+        timeout_sec = 0.05
 
         class ExportFunc:
             is_exporting = threading.Event()
@@ -236,7 +241,6 @@ class TestRetryableExporter(unittest.TestCase):
                     name="shutdown_thread", target=exporter.shutdown
                 )
                 shutdown_thread.start()
-                time.sleep(0.025)
                 export_func.ready_to_continue.set()
             finally:
                 export_thread.join()
@@ -248,58 +252,57 @@ class TestRetryableExporter(unittest.TestCase):
         self.assertTrue(exporter._shutdown)
         self.assertIs(export_wrapped.result, result_type.SUCCESS)
 
-    # Does not work like this yet. Will be enabled soon.
-    # def test_shutdown_timeout_cancels_export_retries(self):
-    #    """Test that shutdown timing out cancels ongoing retries."""
+    def test_shutdown_timeout_cancels_export_retries(self):
+        """Test that shutdown timing out cancels ongoing retries."""
 
-    #    class ExportFunc:
-    #        is_exporting = threading.Event()
-    #        ready_to_continue = threading.Event()
-    #        mock_export_func = Mock(side_effect=RetryableExportError(None))
+        class ExportFunc:
+            is_exporting = threading.Event()
+            ready_to_continue = threading.Event()
+            mock_export_func = Mock(side_effect=RetryableExportError(None))
 
-    #        def __call__(self, *args, **kwargs):
-    #            self.is_exporting.set()
-    #            self.ready_to_continue.wait()
-    #            return self.mock_export_func(*args, **kwargs)
+            def __call__(self, *args, **kwargs):
+                self.is_exporting.set()
+                self.ready_to_continue.wait()
+                return self.mock_export_func(*args, **kwargs)
 
-    #    export_func = ExportFunc()
+        export_func = ExportFunc()
 
-    #    exporter = RetryingExporter(export_func, result_type, timeout_sec=30.0)
+        exporter = RetryingExporter(export_func, result_type, timeout_sec=30.0)
 
-    #    class ExportWrap:
-    #        def __init__(self) -> None:
-    #            self.result = None
+        class ExportWrap:
+            def __init__(self) -> None:
+                self.result = None
 
-    #        def __call__(self, *args, **kwargs):
-    #            self.result = exporter.export_with_retry("payload")
-    #            return self.result
+            def __call__(self, *args, **kwargs):
+                self.result = exporter.export_with_retry("payload")
+                return self.result
 
-    #    export_wrapped = ExportWrap()
+        export_wrapped = ExportWrap()
 
-    #    shutdown_timeout = 1
+        shutdown_timeout = 0.02
 
-    #    export_thread = threading.Thread(target=export_wrapped)
-    #    with self.assertLogs(level=WARNING) as warning:
-    #        try:
-    #            export_thread.start()
-    #            export_func.is_exporting.wait()
-    #            start_time = time.time()
-    #            shutdown_thread = threading.Thread(
-    #                target=exporter.shutdown, args=[shutdown_timeout * 1e3]
-    #            )
-    #            shutdown_thread.start()
-    #            time.sleep(0)
-    #            export_func.ready_to_continue.set()
-    #        finally:
-    #            export_thread.join()
-    #            shutdown_thread.join()
-    #    duration = time.time() - start_time
-    #    self.assertAlmostEqual(duration, shutdown_timeout, places=1)
-    #    # pylint: disable=protected-access
-    #    self.assertTrue(exporter._shutdown)
-    #    self.assertIs(export_wrapped.result, result_type.FAILURE)
-    #    print(warning.records)
-    #    self.assertEqual(
-    #        warning.records[-1].message,
-    #        "Export cancelled due to shutdown timing out",
-    #    )
+        export_thread = threading.Thread(target=export_wrapped)
+        with self.assertLogs(level=WARNING) as warning:
+            try:
+                export_thread.start()
+                export_func.is_exporting.wait()
+                start_time = time.time()
+                shutdown_thread = threading.Thread(
+                    target=exporter.shutdown, args=[shutdown_timeout * 1e3]
+                )
+                shutdown_thread.start()
+                export_func.ready_to_continue.set()
+            finally:
+                export_thread.join()
+                shutdown_thread.join()
+        duration = time.time() - start_time
+        self.assertAlmostEqual(duration, shutdown_timeout, places=1)
+        # pylint: disable=protected-access
+        self.assertTrue(exporter._shutdown)
+        self.assertIs(export_wrapped.result, result_type.FAILURE)
+        print(warning.records)
+        self.assertEqual(warning.records[0].message, "Retrying in 1s")
+        self.assertEqual(
+            warning.records[-1].message,
+            "Export cancelled due to shutdown timing out",
+        )

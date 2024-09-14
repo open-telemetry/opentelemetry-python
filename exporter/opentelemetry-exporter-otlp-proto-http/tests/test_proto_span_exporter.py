@@ -234,8 +234,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
 
     # pylint: disable=no-self-use
     @responses.activate
-    @patch("opentelemetry.exporter.otlp.proto.common.exporter.sleep")
-    def test_exponential_backoff(self, mock_sleep):
+    def test_exponential_backoff(self):
         # return a retryable error
         responses.add(
             responses.POST,
@@ -258,8 +257,12 @@ class TestOTLPSpanExporter(unittest.TestCase):
             ),
         )
 
-        exporter.export([span])
-        mock_sleep.assert_has_calls(
+        with patch.object(
+            exporter._exporter._shutdown,
+            "wait",  # pylint: disable=protected-access
+        ) as wait_mock:
+            exporter.export([span])
+        wait_mock.assert_has_calls(
             [call(1), call(2), call(4), call(8), call(16), call(32)]
         )
 

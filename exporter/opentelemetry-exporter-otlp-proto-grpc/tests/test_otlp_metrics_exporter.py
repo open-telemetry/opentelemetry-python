@@ -484,54 +484,64 @@ class TestOTLPMetricExporter(TestCase):
     @patch(
         "opentelemetry.exporter.otlp.proto.common.exporter._create_exp_backoff_generator"
     )
-    @patch("opentelemetry.exporter.otlp.proto.common.exporter.sleep")
-    def test_unavailable(self, mock_sleep, mock_expo):
+    def test_unavailable(self, mock_expo):
 
         mock_expo.configure_mock(**{"return_value": [0.01]})
 
         add_MetricsServiceServicer_to_server(
             MetricsServiceServicerUNAVAILABLE(), self.server
         )
-        self.assertEqual(
-            self.exporter.export(self.metrics["sum_int"]),
-            MetricExportResult.FAILURE,
-        )
-        mock_sleep.assert_called_with(0.01)
+
+        with patch.object(
+            self.exporter._exporter._shutdown,  # pylint: disable=protected-access
+            "wait",
+        ) as wait_mock:
+            self.assertEqual(
+                self.exporter.export(self.metrics["sum_int"]),
+                MetricExportResult.FAILURE,
+            )
+        wait_mock.assert_called_with(0.01)
 
     @patch(
         "opentelemetry.exporter.otlp.proto.common.exporter._create_exp_backoff_generator"
     )
-    @patch("opentelemetry.exporter.otlp.proto.common.exporter.sleep")
-    def test_unavailable_delay(self, mock_sleep, mock_expo):
+    def test_unavailable_delay(self, mock_expo):
 
         mock_expo.configure_mock(**{"return_value": [1]})
 
         add_MetricsServiceServicer_to_server(
             MetricsServiceServicerUNAVAILABLEDelay(), self.server
         )
-        self.assertEqual(
-            self.exporter.export(self.metrics["sum_int"]),
-            MetricExportResult.FAILURE,
-        )
-        mock_sleep.assert_called_with(0.01)
+        with patch.object(
+            self.exporter._exporter._shutdown,  # pylint: disable=protected-access
+            "wait",
+        ) as wait_mock:
+            self.assertEqual(
+                self.exporter.export(self.metrics["sum_int"]),
+                MetricExportResult.FAILURE,
+            )
+        wait_mock.assert_called_with(0.01)
 
     @patch(
         "opentelemetry.exporter.otlp.proto.common.exporter._create_exp_backoff_generator"
     )
-    @patch("opentelemetry.exporter.otlp.proto.common.exporter.sleep")
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.logger.error")
-    def test_unknown_logs(self, mock_logger_error, mock_sleep, mock_expo):
+    def test_unknown_logs(self, mock_logger_error, mock_expo):
 
         mock_expo.configure_mock(**{"return_value": [1]})
 
         add_MetricsServiceServicer_to_server(
             MetricsServiceServicerUNKNOWN(), self.server
         )
-        self.assertEqual(
-            self.exporter.export(self.metrics["sum_int"]),
-            MetricExportResult.FAILURE,
-        )
-        mock_sleep.assert_not_called()
+        with patch.object(
+            self.exporter._exporter._shutdown,  # pylint: disable=protected-access
+            "wait",
+        ) as wait_mock:
+            self.assertEqual(
+                self.exporter.export(self.metrics["sum_int"]),
+                MetricExportResult.FAILURE,
+            )
+        wait_mock.assert_not_called()
         mock_logger_error.assert_called_with(
             "Failed to export %s to %s, error code: %s",
             "metrics",

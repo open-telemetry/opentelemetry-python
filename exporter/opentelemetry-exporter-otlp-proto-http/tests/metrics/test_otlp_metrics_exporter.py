@@ -329,8 +329,7 @@ class TestOTLPMetricExporter(TestCase):
         )
 
     @activate
-    @patch("opentelemetry.exporter.otlp.proto.common.exporter.sleep")
-    def test_exponential_backoff(self, mock_sleep):
+    def test_exponential_backoff(self):
         # return a retryable error
         add(
             POST,
@@ -344,8 +343,12 @@ class TestOTLPMetricExporter(TestCase):
         )
         metrics_data = self.metrics["sum_int"]
 
-        exporter.export(metrics_data)
-        mock_sleep.assert_has_calls(
+        with patch.object(
+            exporter._exporter._shutdown,  # pylint: disable=protected-access
+            "wait",
+        ) as wait_mock:
+            exporter.export(metrics_data)
+        wait_mock.assert_has_calls(
             [call(1), call(2), call(4), call(8), call(16), call(32)]
         )
 

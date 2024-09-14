@@ -14,7 +14,6 @@
 import threading
 from contextlib import contextmanager
 from logging import getLogger
-from time import sleep
 from typing import Callable, Generic, Iterator, Optional, Type, TypeVar
 
 from ._internal import _create_exp_backoff_generator
@@ -42,18 +41,22 @@ class RetryingExporter(Generic[ExportResultT]):
         self._result = result
         self._timeout_sec = timeout_sec
 
-        self._shutdown = False
+        self._shutdown = threading.Event()
         self._export_lock = threading.Lock()
 
     def shutdown(self, timeout_millis: float = 30_000) -> None:
-        # wait for the last export if any
+        """Shutdown the retrying exporter
+
+        Waits for the current export to finish up to `timeout_millis`. In case the timeout is
+        reached, the export will be interrupted to to prevent application hanging after completion.
+        """
         with acquire_timeout(self._export_lock, timeout_millis / 1e3):
-            self._shutdown = True
+            self._shutdown.set()
 
     def export_with_retry(self, payload: ExportPayloadT) -> ExportResultT:
         # After the call to shutdown, subsequent calls to Export are
         # not allowed and should return a Failure result.
-        if self._shutdown:
+        if self._shutdown.is_set():
             _logger.warning("Exporter already shutdown, ignoring batch")
             return self._result.FAILURE
 
@@ -71,7 +74,13 @@ class RetryingExporter(Generic[ExportResultT]):
             # exponentially. Once delay is greater than max_value, the yielded
             # value will remain constant.
             for delay in _create_exp_backoff_generator(max_value=max_value):
-                if delay == max_value or self._shutdown:
+                if delay == max_value:
+                    return self._result.FAILURE
+
+                if self._shutdown.is_set():
+                    _logger.warning(
+                        "Export cancelled due to shutdown timing out"
+                    )
                     return self._result.FAILURE
 
                 try:
@@ -83,7 +92,7 @@ class RetryingExporter(Generic[ExportResultT]):
                         else delay
                     )
                     _logger.warning("Retrying in %ss", delay_sec)
-                    sleep(delay_sec)
+                    self._shutdown.wait(delay_sec)
 
             return self._result.FAILURE
 

@@ -391,34 +391,42 @@ class TestOTLPLogExporter(TestCase):
     @patch(
         "opentelemetry.exporter.otlp.proto.common.exporter._create_exp_backoff_generator"
     )
-    @patch("opentelemetry.exporter.otlp.proto.common.exporter.sleep")
-    def test_unavailable(self, mock_sleep, mock_expo):
+    def test_unavailable(self, mock_expo):
 
         mock_expo.configure_mock(**{"return_value": [0.01]})
 
         add_LogsServiceServicer_to_server(
             LogsServiceServicerUNAVAILABLE(), self.server
         )
-        self.assertEqual(
-            self.exporter.export([self.log_data_1]), LogExportResult.FAILURE
-        )
-        mock_sleep.assert_called_with(0.01)
+        with patch.object(
+            self.exporter._exporter._shutdown,  # pylint: disable=protected-access
+            "wait",
+        ) as wait_mock:
+            self.assertEqual(
+                self.exporter.export([self.log_data_1]),
+                LogExportResult.FAILURE,
+            )
+        wait_mock.assert_called_with(0.01)
 
     @patch(
         "opentelemetry.exporter.otlp.proto.common.exporter._create_exp_backoff_generator"
     )
-    @patch("opentelemetry.exporter.otlp.proto.common.exporter.sleep")
-    def test_unavailable_delay(self, mock_sleep, mock_expo):
+    def test_unavailable_delay(self, mock_expo):
 
         mock_expo.configure_mock(**{"return_value": [1]})
 
         add_LogsServiceServicer_to_server(
             LogsServiceServicerUNAVAILABLEDelay(), self.server
         )
-        self.assertEqual(
-            self.exporter.export([self.log_data_1]), LogExportResult.FAILURE
-        )
-        mock_sleep.assert_called_with(0.01)
+        with patch.object(
+            self.exporter._exporter._shutdown,  # pylint: disable=protected-access
+            "wait",
+        ) as wait_mock:
+            self.assertEqual(
+                self.exporter.export([self.log_data_1]),
+                LogExportResult.FAILURE,
+            )
+        wait_mock.assert_called_with(0.01)
 
     def test_success(self):
         add_LogsServiceServicer_to_server(
