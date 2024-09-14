@@ -226,3 +226,71 @@ class TestOTLPExporterMixin(TestCase):
             )
         finally:
             export_thread.join()
+
+    def test_shutdown_wait_for_last_export_not_finishing_within_shutdown_timeout(
+        self,
+    ):
+        result_mock = Mock()
+        rpc_error = RpcError()
+
+        def code(self):
+            return StatusCode.UNAVAILABLE
+
+        def trailing_metadata(self):
+            return {
+                "google.rpc.retryinfo-bin": RetryInfo(
+                    retry_delay=Duration(nanos=int(1e7))
+                ).SerializeToString()
+            }
+
+        rpc_error.code = MethodType(code, rpc_error)
+        rpc_error.trailing_metadata = MethodType(trailing_metadata, rpc_error)
+
+        class OTLPMockExporter(OTLPExporterMixin):
+            _result = result_mock
+            _stub = Mock(
+                **{"return_value": Mock(**{"Export.side_effect": rpc_error})}
+            )
+
+            def _translate_data(
+                self, data: Sequence[SDKDataT]
+            ) -> ExportServiceRequestT:
+                pass
+
+            def export(self, data):
+                return self._exporter.export_with_retry(data)
+
+            @property
+            def _exporting(self) -> str:
+                return "mock"
+
+        otlp_mock_exporter = OTLPMockExporter()
+
+        # pylint: disable=protected-access
+        export_thread = threading.Thread(
+            target=otlp_mock_exporter.export, args=({},)
+        )
+        export_thread.start()
+        try:
+            # pylint: disable=protected-access
+
+            # Wait for the export thread to hold the lock. Since the main thread is not synchronized
+            # with the export thread, the thread may not be ready yet.
+            for _ in range(5):
+                if otlp_mock_exporter._exporter._export_lock.locked():
+                    break
+                time.sleep(0.01)
+            self.assertTrue(otlp_mock_exporter._exporter._export_lock.locked())
+
+            # 6 retries with a fixed retry delay of 10ms (see TraceServiceServicerUNAVAILABLEDelay)
+            # The default shutdown timeout is 30 seconds
+            # This means the retries will finish long before the shutdown flag will be set
+            start_time = time_ns()
+            otlp_mock_exporter.shutdown(0.001)
+            now = time_ns()
+            # Verify that the shutdown method finished within the shutdown timeout
+            self.assertLessEqual(now, (start_time + 3e10))
+            self.assertTrue(otlp_mock_exporter._shutdown)
+        finally:
+            export_thread.join()
+        self.assertFalse(otlp_mock_exporter._exporter._export_lock.locked())

@@ -12,9 +12,10 @@
 # limitations under the License.
 
 import threading
+from contextlib import contextmanager
 from logging import getLogger
 from time import sleep
-from typing import Callable, Generic, Optional, Type, TypeVar
+from typing import Callable, Generic, Iterator, Optional, Type, TypeVar
 
 from ._internal import _create_exp_backoff_generator
 
@@ -46,11 +47,8 @@ class RetryingExporter(Generic[ExportResultT]):
 
     def shutdown(self, timeout_millis: float = 30_000) -> None:
         # wait for the last export if any
-        self._export_lock.acquire(  # pylint: disable=consider-using-with
-            timeout=timeout_millis / 1e3
-        )
-        self._shutdown = True
-        self._export_lock.release()
+        with acquire_timeout(self._export_lock, timeout_millis / 1e3):
+            self._shutdown = True
 
     def export_with_retry(self, payload: ExportPayloadT) -> ExportResultT:
         # After the call to shutdown, subsequent calls to Export are
@@ -59,15 +57,23 @@ class RetryingExporter(Generic[ExportResultT]):
             _logger.warning("Exporter already shutdown, ignoring batch")
             return self._result.FAILURE
 
-        max_value = 64
-        # expo returns a generator that yields delay values which grow
-        # exponentially. Once delay is greater than max_value, the yielded
-        # value will remain constant.
-        for delay in _create_exp_backoff_generator(max_value=max_value):
-            if delay == max_value or self._shutdown:
+        with acquire_timeout(
+            self._export_lock, self._timeout_sec
+        ) as is_locked:
+            if not is_locked:
+                _logger.warning(
+                    "Exporter failed to acquire lock before timeout"
+                )
                 return self._result.FAILURE
 
-            with self._export_lock:
+            max_value = 64
+            # expo returns a generator that yields delay values which grow
+            # exponentially. Once delay is greater than max_value, the yielded
+            # value will remain constant.
+            for delay in _create_exp_backoff_generator(max_value=max_value):
+                if delay == max_value or self._shutdown:
+                    return self._result.FAILURE
+
                 try:
                     return self._export_function(payload, self._timeout_sec)
                 except RetryableExportError as exc:
@@ -79,4 +85,14 @@ class RetryingExporter(Generic[ExportResultT]):
                     _logger.warning("Retrying in %ss", delay_sec)
                     sleep(delay_sec)
 
-        return self._result.FAILURE
+            return self._result.FAILURE
+
+
+@contextmanager
+def acquire_timeout(lock: threading.Lock, timeout: float) -> Iterator[bool]:
+    result = lock.acquire(timeout=timeout)
+    try:
+        yield result
+    finally:
+        if result:
+            lock.release()
