@@ -34,6 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove `_start_time_unix_nano` attribute from `_ViewInstrumentMatch` in favor
   of using `time_ns()` at the moment when the aggregation object is created
   ([#4137](https://github.com/open-telemetry/opentelemetry-python/pull/4137))
+- Improve timeout and retry mechanic of exporters
+  ([#4183](https://github.com/open-telemetry/opentelemetry-python/pull/4183))
 
 ## Version 1.26.0/0.47b0 (2024-07-25)
 
