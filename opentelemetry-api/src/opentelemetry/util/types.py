@@ -13,8 +13,11 @@
 # limitations under the License.
 
 
-from typing import Mapping, Optional, Sequence, Tuple, Union
+from typing import Dict, List, Mapping, Optional, Sequence, Tuple, Union
 
+AnyValue = Union[
+    str, bool, int, float, bytes, List["AnyValue"], Dict[str, "AnyValue"], None
+]
 AttributeValue = Union[
     str,
     bool,
