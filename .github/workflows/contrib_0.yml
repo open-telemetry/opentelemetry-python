@@ -2060,6 +2060,34 @@ jobs:
       - name: Run tests
         run: tox -e py38-test-instrumentation-aio-pika-3 -- -ra
 
+  py38-test-instrumentation-aiokafka:
+    name: instrumentation-aiokafka 
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout contrib repo @ SHA - ${{ env.CONTRIB_REPO_SHA }}
+        uses: actions/checkout@v4
+        with:
+          repository: open-telemetry/opentelemetry-python-contrib
+          ref: ${{ env.CONTRIB_REPO_SHA }}
+
+      - name: Checkout core repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+        with:
+          repository: open-telemetry/opentelemetry-python
+          path: opentelemetry-python-core
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.8"
+          architecture: "x64"
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Run tests
+        run: tox -e py38-test-instrumentation-aiokafka -- -ra
+
   py38-test-instrumentation-kafka-python:
     name: instrumentation-kafka-python 
     runs-on: ubuntu-latest
