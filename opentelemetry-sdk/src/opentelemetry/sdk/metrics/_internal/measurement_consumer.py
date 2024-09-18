@@ -79,7 +79,15 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
 
     def consume_measurement(self, measurement: Measurement) -> None:
         for reader_storage in self._reader_storages.values():
-            reader_storage.consume_measurement(measurement)
+            reader_storage.consume_measurement(
+                measurement,
+                self._sdk_config.exemplar_filter.should_sample(
+                    measurement.value,
+                    measurement.time_unix_nano,
+                    measurement.attributes,
+                    measurement.context,
+                ),
+            )
 
     def register_asynchronous_instrument(
         self,
