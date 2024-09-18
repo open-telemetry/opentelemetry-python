@@ -122,7 +122,7 @@ CONTRIB_REPO_SHA=dde62cebffe519c35875af6d06fae053b3be65ec tox
 ```
 
 The continuation integration overrides that environment variable with as per the configuration
-[here](https://github.com/open-telemetry/opentelemetry-python/blob/main/.github/workflows/test.yml#L13).
+[here](https://github.com/open-telemetry/opentelemetry-python/blob/main/.github/workflows/test_0.yml#L14).
 
 ### Benchmarks
 
@@ -195,9 +195,9 @@ opened in the Contrib repo with changes to make the packages compatible.
 
 Follow these steps:
 1. Open Core repo PR (Contrib Tests will fail)
-2. Open Contrib repo PR and modify its `CORE_REPO_SHA` in `.github/workflows/test.yml`
+2. Open Contrib repo PR and modify its `CORE_REPO_SHA` in `.github/workflows/test_x.yml`
 to equal the commit SHA of the Core repo PR to pass tests
-3. Modify the Core repo PR `CONTRIB_REPO_SHA` in `.github/workflows/test.yml` to
+3. Modify the Core repo PR `CONTRIB_REPO_SHA` in `.github/workflows/test_x.yml` to
 equal the commit SHA of the Contrib repo PR to pass Contrib repo tests (a sanity
 check for the Maintainers & Approvers)
 4. Merge the Contrib repo
@@ -223,6 +223,23 @@ updating the GitHub workflow to reference a PR in the Contrib repo
   reasonable time to review.
 * Trivial change (typo, cosmetic, doc, etc.) doesn't have to wait for one day.
 * Urgent fix can take exception as long as it has been actively communicated.
+
+#### Allow edits from maintainers
+
+Something _very important_ is to allow edits from maintainers when opening a PR. This will
+allow maintainers to rebase your PR against `main` which is necessary in order to merge
+your PR. You could do it yourself too, but keep in mind that every time another PR gets
+merged, your PR will require rebasing. Since only maintainers can merge your PR it is
+almost impossible for maintainers to find your PR just when it has been rebased by you so
+that it can be merged. Allowing maintainers to edit your PR also allows them to help you
+get your PR merged by making any minor fixes to solve any issue that while being unrelated
+to your PR, can still happen.
+
+#### Fork from a personal Github account
+
+Right now Github [does not allow](https://github.com/orgs/community/discussions/5634) PRs
+to be edited by maintainers if the corresponding repo fork exists in a Github organization.
+Please for this repo in a personal Github account instead.
 
 One of the maintainers will merge the PR once it is **ready to merge**.
 

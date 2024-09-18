@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Include metric info in encoding exceptions
+  ([#4154](https://github.com/open-telemetry/opentelemetry-python/pull/4154))
+- sdk: Add support for log formatting
+  ([#4137](https://github.com/open-telemetry/opentelemetry-python/pull/4166))
+- sdk: Implementation of exemplars
+  ([#4094](https://github.com/open-telemetry/opentelemetry-python/pull/4094))
+- Implement events sdk
+  ([#4176](https://github.com/open-telemetry/opentelemetry-python/pull/4176))
+
+## Version 1.27.0/0.48b0 (2024-08-28)
+
 - Implementation of Events API
   ([#4054](https://github.com/open-telemetry/opentelemetry-python/pull/4054))
 - Make log sdk add `exception.message` to logRecord for exceptions whose argument
@@ -27,6 +38,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4103](https://github.com/open-telemetry/opentelemetry-python/pull/4103))
 - Update semantic conventions to version 1.27.0
   ([#4104](https://github.com/open-telemetry/opentelemetry-python/pull/4104))
+- Add support to type bytes for OTLP AnyValue
+  ([#4128](https://github.com/open-telemetry/opentelemetry-python/pull/4128))
 - Export ExponentialHistogram and ExponentialHistogramDataPoint
   ([#4134](https://github.com/open-telemetry/opentelemetry-python/pull/4134))
 - Implement Client Key and Certificate File Support for All OTLP Exporters
