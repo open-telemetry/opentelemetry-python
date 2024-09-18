@@ -43,6 +43,7 @@ class TestSynchronousMeasurementConsumer(TestCase):
         reader_mocks = [Mock() for _ in range(5)]
         SynchronousMeasurementConsumer(
             SdkConfiguration(
+                exemplar_filter=Mock(),
                 resource=Mock(),
                 metric_readers=reader_mocks,
                 views=Mock(),
@@ -59,6 +60,7 @@ class TestSynchronousMeasurementConsumer(TestCase):
 
         consumer = SynchronousMeasurementConsumer(
             SdkConfiguration(
+                exemplar_filter=Mock(should_sample=Mock(return_value=False)),
                 resource=Mock(),
                 metric_readers=reader_mocks,
                 views=Mock(),
@@ -69,7 +71,7 @@ class TestSynchronousMeasurementConsumer(TestCase):
 
         for rs_mock in reader_storage_mocks:
             rs_mock.consume_measurement.assert_called_once_with(
-                measurement_mock
+                measurement_mock, False
             )
 
     def test_collect_passed_to_reader_stage(self, MockMetricReaderStorage):
@@ -80,6 +82,7 @@ class TestSynchronousMeasurementConsumer(TestCase):
 
         consumer = SynchronousMeasurementConsumer(
             SdkConfiguration(
+                exemplar_filter=Mock(),
                 resource=Mock(),
                 metric_readers=reader_mocks,
                 views=Mock(),
@@ -98,6 +101,7 @@ class TestSynchronousMeasurementConsumer(TestCase):
         MockMetricReaderStorage.return_value = reader_storage_mock
         consumer = SynchronousMeasurementConsumer(
             SdkConfiguration(
+                exemplar_filter=Mock(),
                 resource=Mock(),
                 metric_readers=[reader_mock],
                 views=Mock(),
@@ -125,6 +129,7 @@ class TestSynchronousMeasurementConsumer(TestCase):
         MockMetricReaderStorage.return_value = reader_storage_mock
         consumer = SynchronousMeasurementConsumer(
             SdkConfiguration(
+                exemplar_filter=Mock(),
                 resource=Mock(),
                 metric_readers=[reader_mock],
                 views=Mock(),
@@ -157,6 +162,7 @@ class TestSynchronousMeasurementConsumer(TestCase):
         MockMetricReaderStorage.return_value = reader_storage_mock
         consumer = SynchronousMeasurementConsumer(
             SdkConfiguration(
+                exemplar_filter=Mock(),
                 resource=Mock(),
                 metric_readers=[reader_mock],
                 views=Mock(),

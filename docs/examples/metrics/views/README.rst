@@ -7,6 +7,7 @@ These examples show how to customize the metrics that are output by the SDK usin
 * change_name.py: Shows how to change the name of a metric.
 * limit_num_of_attrs.py: Shows how to limit the number of attributes that are output for a metric.
 * drop_metrics_from_instrument.py: Shows how to drop measurements from an instrument.
+* change_reservoir_factory.py: Shows how to use your own ``ExemplarReservoir``
 
 The source files of these examples are available :scm_web:`here <docs/examples/metrics/views/>`.
 

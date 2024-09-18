@@ -15,9 +15,12 @@
 # pylint: disable=no-self-use
 
 from logging import WARNING
-from unittest import TestCase
-from unittest.mock import Mock
 
+# from time import time_ns
+from unittest import TestCase
+from unittest.mock import Mock, patch
+
+from opentelemetry.context import Context
 from opentelemetry.metrics import Observation
 from opentelemetry.metrics._internal.instrument import CallbackOptions
 from opentelemetry.sdk.metrics import (
@@ -85,21 +88,23 @@ class TestUpDownCounter(TestCase):
 
 
 TEST_ATTRIBUTES = {"foo": "bar"}
+TEST_CONTEXT = Context()
+TEST_TIMESTAMP = 1_000_000_000
 
 
 def callable_callback_0(options: CallbackOptions):
     return [
-        Observation(1, attributes=TEST_ATTRIBUTES),
-        Observation(2, attributes=TEST_ATTRIBUTES),
-        Observation(3, attributes=TEST_ATTRIBUTES),
+        Observation(1, attributes=TEST_ATTRIBUTES, context=TEST_CONTEXT),
+        Observation(2, attributes=TEST_ATTRIBUTES, context=TEST_CONTEXT),
+        Observation(3, attributes=TEST_ATTRIBUTES, context=TEST_CONTEXT),
     ]
 
 
 def callable_callback_1(options: CallbackOptions):
     return [
-        Observation(4, attributes=TEST_ATTRIBUTES),
-        Observation(5, attributes=TEST_ATTRIBUTES),
-        Observation(6, attributes=TEST_ATTRIBUTES),
+        Observation(4, attributes=TEST_ATTRIBUTES, context=TEST_CONTEXT),
+        Observation(5, attributes=TEST_ATTRIBUTES, context=TEST_CONTEXT),
+        Observation(6, attributes=TEST_ATTRIBUTES, context=TEST_CONTEXT),
     ]
 
 
@@ -107,9 +112,9 @@ def generator_callback_0():
     options = yield
     assert isinstance(options, CallbackOptions)
     options = yield [
-        Observation(1, attributes=TEST_ATTRIBUTES),
-        Observation(2, attributes=TEST_ATTRIBUTES),
-        Observation(3, attributes=TEST_ATTRIBUTES),
+        Observation(1, attributes=TEST_ATTRIBUTES, context=TEST_CONTEXT),
+        Observation(2, attributes=TEST_ATTRIBUTES, context=TEST_CONTEXT),
+        Observation(3, attributes=TEST_ATTRIBUTES, context=TEST_CONTEXT),
     ]
     assert isinstance(options, CallbackOptions)
 
@@ -118,13 +123,17 @@ def generator_callback_1():
     options = yield
     assert isinstance(options, CallbackOptions)
     options = yield [
-        Observation(4, attributes=TEST_ATTRIBUTES),
-        Observation(5, attributes=TEST_ATTRIBUTES),
-        Observation(6, attributes=TEST_ATTRIBUTES),
+        Observation(4, attributes=TEST_ATTRIBUTES, context=TEST_CONTEXT),
+        Observation(5, attributes=TEST_ATTRIBUTES, context=TEST_CONTEXT),
+        Observation(6, attributes=TEST_ATTRIBUTES, context=TEST_CONTEXT),
     ]
     assert isinstance(options, CallbackOptions)
 
 
+@patch(
+    "opentelemetry.sdk.metrics._internal.instrument.time_ns",
+    Mock(return_value=TEST_TIMESTAMP),
+)
 class TestObservableGauge(TestCase):
     def testname(self):
         self.assertEqual(_ObservableGauge("name", Mock(), Mock()).name, "name")
@@ -135,19 +144,30 @@ class TestObservableGauge(TestCase):
             "name", Mock(), Mock(), [callable_callback_0]
         )
 
-        self.assertEqual(
-            list(observable_gauge.callback(CallbackOptions())),
+        assert list(observable_gauge.callback(CallbackOptions())) == (
             [
                 Measurement(
-                    1, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                    1,
+                    TEST_TIMESTAMP,
+                    instrument=observable_gauge,
+                    context=TEST_CONTEXT,
+                    attributes=TEST_ATTRIBUTES,
                 ),
                 Measurement(
-                    2, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                    2,
+                    TEST_TIMESTAMP,
+                    instrument=observable_gauge,
+                    context=TEST_CONTEXT,
+                    attributes=TEST_ATTRIBUTES,
                 ),
                 Measurement(
-                    3, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                    3,
+                    TEST_TIMESTAMP,
+                    instrument=observable_gauge,
+                    context=TEST_CONTEXT,
+                    attributes=TEST_ATTRIBUTES,
                 ),
-            ],
+            ]
         )
 
     def test_callable_multiple_callable_callback(self):
@@ -159,22 +179,46 @@ class TestObservableGauge(TestCase):
             list(observable_gauge.callback(CallbackOptions())),
             [
                 Measurement(
-                    1, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                    1,
+                    TEST_TIMESTAMP,
+                    instrument=observable_gauge,
+                    context=TEST_CONTEXT,
+                    attributes=TEST_ATTRIBUTES,
                 ),
                 Measurement(
-                    2, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                    2,
+                    TEST_TIMESTAMP,
+                    instrument=observable_gauge,
+                    context=TEST_CONTEXT,
+                    attributes=TEST_ATTRIBUTES,
                 ),
                 Measurement(
-                    3, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                    3,
+                    TEST_TIMESTAMP,
+                    instrument=observable_gauge,
+                    context=TEST_CONTEXT,
+                    attributes=TEST_ATTRIBUTES,
                 ),
                 Measurement(
-                    4, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                    4,
+                    TEST_TIMESTAMP,
+                    instrument=observable_gauge,
+                    context=TEST_CONTEXT,
+                    attributes=TEST_ATTRIBUTES,
                 ),
                 Measurement(
-                    5, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                    5,
+                    TEST_TIMESTAMP,
+                    instrument=observable_gauge,
+                    context=TEST_CONTEXT,
+                    attributes=TEST_ATTRIBUTES,
                 ),
                 Measurement(
-                    6, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                    6,
+                    TEST_TIMESTAMP,
+                    instrument=observable_gauge,
+                    context=TEST_CONTEXT,
+                    attributes=TEST_ATTRIBUTES,
                 ),
             ],
         )
@@ -188,13 +232,25 @@ class TestObservableGauge(TestCase):
             list(observable_gauge.callback(CallbackOptions())),
             [
                 Measurement(
-                    1, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                    1,
+                    TEST_TIMESTAMP,
+                    instrument=observable_gauge,
+                    context=TEST_CONTEXT,
+                    attributes=TEST_ATTRIBUTES,
                 ),
                 Measurement(
-                    2, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                    2,
+                    TEST_TIMESTAMP,
+                    instrument=observable_gauge,
+                    context=TEST_CONTEXT,
+                    attributes=TEST_ATTRIBUTES,
                 ),
                 Measurement(
-                    3, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                    3,
+                    TEST_TIMESTAMP,
+                    instrument=observable_gauge,
+                    context=TEST_CONTEXT,
+                    attributes=TEST_ATTRIBUTES,
                 ),
             ],
         )
@@ -211,22 +267,46 @@ class TestObservableGauge(TestCase):
             list(observable_gauge.callback(CallbackOptions())),
             [
                 Measurement(
-                    1, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                    1,
+                    TEST_TIMESTAMP,
+                    instrument=observable_gauge,
+                    context=TEST_CONTEXT,
+                    attributes=TEST_ATTRIBUTES,
                 ),
                 Measurement(
-                    2, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                    2,
+                    TEST_TIMESTAMP,
+                    instrument=observable_gauge,
+                    context=TEST_CONTEXT,
+                    attributes=TEST_ATTRIBUTES,
                 ),
                 Measurement(
-                    3, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                    3,
+                    TEST_TIMESTAMP,
+                    instrument=observable_gauge,
+                    context=TEST_CONTEXT,
+                    attributes=TEST_ATTRIBUTES,
                 ),
                 Measurement(
-                    4, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                    4,
+                    TEST_TIMESTAMP,
+                    instrument=observable_gauge,
+                    context=TEST_CONTEXT,
+                    attributes=TEST_ATTRIBUTES,
                 ),
                 Measurement(
-                    5, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                    5,
+                    TEST_TIMESTAMP,
+                    instrument=observable_gauge,
+                    context=TEST_CONTEXT,
+                    attributes=TEST_ATTRIBUTES,
                 ),
                 Measurement(
-                    6, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                    6,
+                    TEST_TIMESTAMP,
+                    instrument=observable_gauge,
+                    context=TEST_CONTEXT,
+                    attributes=TEST_ATTRIBUTES,
                 ),
             ],
         )
@@ -237,6 +317,10 @@ class TestObservableGauge(TestCase):
             ObservableGauge("name", Mock(), Mock())
 
 
+@patch(
+    "opentelemetry.sdk.metrics._internal.instrument.time_ns",
+    Mock(return_value=TEST_TIMESTAMP),
+)
 class TestObservableCounter(TestCase):
     def test_callable_callback_0(self):
         observable_counter = _ObservableCounter(
@@ -248,17 +332,23 @@ class TestObservableCounter(TestCase):
             [
                 Measurement(
                     1,
+                    TEST_TIMESTAMP,
                     instrument=observable_counter,
+                    context=TEST_CONTEXT,
                     attributes=TEST_ATTRIBUTES,
                 ),
                 Measurement(
                     2,
+                    TEST_TIMESTAMP,
                     instrument=observable_counter,
+                    context=TEST_CONTEXT,
                     attributes=TEST_ATTRIBUTES,
                 ),
                 Measurement(
                     3,
+                    TEST_TIMESTAMP,
                     instrument=observable_counter,
+                    context=TEST_CONTEXT,
                     attributes=TEST_ATTRIBUTES,
                 ),
             ],
@@ -274,17 +364,23 @@ class TestObservableCounter(TestCase):
             [
                 Measurement(
                     1,
+                    TEST_TIMESTAMP,
                     instrument=observable_counter,
+                    context=TEST_CONTEXT,
                     attributes=TEST_ATTRIBUTES,
                 ),
                 Measurement(
                     2,
+                    TEST_TIMESTAMP,
                     instrument=observable_counter,
+                    context=TEST_CONTEXT,
                     attributes=TEST_ATTRIBUTES,
                 ),
                 Measurement(
                     3,
+                    TEST_TIMESTAMP,
                     instrument=observable_counter,
+                    context=TEST_CONTEXT,
                     attributes=TEST_ATTRIBUTES,
                 ),
             ],
@@ -313,6 +409,10 @@ class TestGauge(TestCase):
             _SDKGauge("name", Mock(), Mock())
 
 
+@patch(
+    "opentelemetry.sdk.metrics._internal.instrument.time_ns",
+    Mock(return_value=TEST_TIMESTAMP),
+)
 class TestObservableUpDownCounter(TestCase):
     def test_callable_callback_0(self):
         observable_up_down_counter = _ObservableUpDownCounter(
@@ -324,17 +424,23 @@ class TestObservableUpDownCounter(TestCase):
             [
                 Measurement(
                     1,
+                    TEST_TIMESTAMP,
                     instrument=observable_up_down_counter,
+                    context=TEST_CONTEXT,
                     attributes=TEST_ATTRIBUTES,
                 ),
                 Measurement(
                     2,
+                    TEST_TIMESTAMP,
                     instrument=observable_up_down_counter,
+                    context=TEST_CONTEXT,
                     attributes=TEST_ATTRIBUTES,
                 ),
                 Measurement(
                     3,
+                    TEST_TIMESTAMP,
                     instrument=observable_up_down_counter,
+                    context=TEST_CONTEXT,
                     attributes=TEST_ATTRIBUTES,
                 ),
             ],
@@ -350,17 +456,23 @@ class TestObservableUpDownCounter(TestCase):
             [
                 Measurement(
                     1,
+                    TEST_TIMESTAMP,
                     instrument=observable_up_down_counter,
+                    context=TEST_CONTEXT,
                     attributes=TEST_ATTRIBUTES,
                 ),
                 Measurement(
                     2,
+                    TEST_TIMESTAMP,
                     instrument=observable_up_down_counter,
+                    context=TEST_CONTEXT,
                     attributes=TEST_ATTRIBUTES,
                 ),
                 Measurement(
                     3,
+                    TEST_TIMESTAMP,
                     instrument=observable_up_down_counter,
+                    context=TEST_CONTEXT,
                     attributes=TEST_ATTRIBUTES,
                 ),
             ],

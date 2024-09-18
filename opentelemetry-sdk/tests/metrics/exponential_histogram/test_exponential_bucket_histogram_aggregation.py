@@ -21,9 +21,11 @@ from logging import WARNING
 from math import ldexp
 from random import Random, randrange
 from sys import float_info, maxsize
+from time import time_ns
 from types import MethodType
 from unittest.mock import Mock, patch
 
+from opentelemetry.context import Context
 from opentelemetry.sdk.metrics._internal.aggregation import (
     AggregationTemporality,
     _ExponentialBucketHistogramAggregation,
@@ -45,6 +47,7 @@ from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.point import (
     ExponentialHistogramDataPoint,
 )
+from opentelemetry.sdk.metrics._internal.view import _default_reservoir_factory
 from opentelemetry.sdk.metrics.view import (
     ExponentialBucketHistogramAggregation,
 )
@@ -52,7 +55,6 @@ from opentelemetry.test import TestCase
 
 
 def get_counts(buckets: Buckets) -> int:
-
     counts = []
 
     for index in range(len(buckets)):
@@ -72,7 +74,6 @@ def swap(
     first: _ExponentialBucketHistogramAggregation,
     second: _ExponentialBucketHistogramAggregation,
 ):
-
     for attribute in [
         "_value_positive",
         "_value_negative",
@@ -93,7 +94,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
     def test_create_aggregation(self, mock_logarithm_mapping):
         exponential_bucket_histogram_aggregation = (
             ExponentialBucketHistogramAggregation()
-        )._create_aggregation(Mock(), Mock(), Mock())
+        )._create_aggregation(Mock(), Mock(), Mock(), Mock())
 
         self.assertEqual(
             exponential_bucket_histogram_aggregation._max_scale, 20
@@ -103,7 +104,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
 
         exponential_bucket_histogram_aggregation = (
             ExponentialBucketHistogramAggregation(max_scale=10)
-        )._create_aggregation(Mock(), Mock(), Mock())
+        )._create_aggregation(Mock(), Mock(), Mock(), Mock())
 
         self.assertEqual(
             exponential_bucket_histogram_aggregation._max_scale, 10
@@ -114,7 +115,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         with self.assertLogs(level=WARNING):
             exponential_bucket_histogram_aggregation = (
                 ExponentialBucketHistogramAggregation(max_scale=100)
-            )._create_aggregation(Mock(), Mock(), Mock())
+            )._create_aggregation(Mock(), Mock(), Mock(), Mock())
 
         self.assertEqual(
             exponential_bucket_histogram_aggregation._max_scale, 100
@@ -127,7 +128,6 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         self.assertGreaterEqual(first, (second * (1 - epsilon)))
 
     def require_equal(self, a, b):
-
         if a._sum == 0 or b._sum == 0:
             self.assertAlmostEqual(a._sum, b._sum, 1e-6)
         else:
@@ -167,13 +167,27 @@ class TestExponentialBucketHistogramAggregation(TestCase):
 
         exponential_histogram_aggregation = (
             _ExponentialBucketHistogramAggregation(
-                Mock(), AggregationTemporality.DELTA, Mock(), max_size=4
+                Mock(),
+                _default_reservoir_factory(
+                    _ExponentialBucketHistogramAggregation
+                ),
+                AggregationTemporality.DELTA,
+                Mock(),
+                max_size=4,
             )
         )
 
-        exponential_histogram_aggregation.aggregate(Measurement(2, Mock()))
-        exponential_histogram_aggregation.aggregate(Measurement(4, Mock()))
-        exponential_histogram_aggregation.aggregate(Measurement(1, Mock()))
+        now = time_ns()
+        ctx = Context()
+        exponential_histogram_aggregation.aggregate(
+            Measurement(2, now, Mock(), ctx)
+        )
+        exponential_histogram_aggregation.aggregate(
+            Measurement(4, now, Mock(), ctx)
+        )
+        exponential_histogram_aggregation.aggregate(
+            Measurement(1, now, Mock(), ctx)
+        )
 
         self.assertEqual(
             exponential_histogram_aggregation._value_positive.offset, -1
@@ -194,16 +208,36 @@ class TestExponentialBucketHistogramAggregation(TestCase):
 
         exponential_histogram_aggregation = (
             _ExponentialBucketHistogramAggregation(
-                Mock(), AggregationTemporality.DELTA, Mock(), max_size=4
+                Mock(),
+                _default_reservoir_factory(
+                    _ExponentialBucketHistogramAggregation
+                ),
+                AggregationTemporality.DELTA,
+                Mock(),
+                max_size=4,
             )
         )
 
-        exponential_histogram_aggregation.aggregate(Measurement(2, Mock()))
-        exponential_histogram_aggregation.aggregate(Measurement(2, Mock()))
-        exponential_histogram_aggregation.aggregate(Measurement(2, Mock()))
-        exponential_histogram_aggregation.aggregate(Measurement(1, Mock()))
-        exponential_histogram_aggregation.aggregate(Measurement(8, Mock()))
-        exponential_histogram_aggregation.aggregate(Measurement(0.5, Mock()))
+        now = time_ns()
+        ctx = Context()
+        exponential_histogram_aggregation.aggregate(
+            Measurement(2, now, Mock(), ctx)
+        )
+        exponential_histogram_aggregation.aggregate(
+            Measurement(2, now, Mock(), ctx)
+        )
+        exponential_histogram_aggregation.aggregate(
+            Measurement(2, now, Mock(), ctx)
+        )
+        exponential_histogram_aggregation.aggregate(
+            Measurement(1, now, Mock(), ctx)
+        )
+        exponential_histogram_aggregation.aggregate(
+            Measurement(8, now, Mock(), ctx)
+        )
+        exponential_histogram_aggregation.aggregate(
+            Measurement(0.5, now, Mock(), ctx)
+        )
 
         self.assertEqual(
             exponential_histogram_aggregation._value_positive.offset, -1
@@ -217,9 +251,11 @@ class TestExponentialBucketHistogramAggregation(TestCase):
     def test_permutations(self):
         """
         Tests that every permutation of certain sequences with maxSize=2
-        results¶ in the same scale=-1 histogram.
+        results in the same scale=-1 histogram.
         """
 
+        now = time_ns()
+        ctx = Context()
         for test_values, expected in [
             [
                 [0.5, 1.0, 2.0],
@@ -252,12 +288,13 @@ class TestExponentialBucketHistogramAggregation(TestCase):
                 },
             ],
         ]:
-
             for permutation in permutations(test_values):
-
                 exponential_histogram_aggregation = (
                     _ExponentialBucketHistogramAggregation(
                         Mock(),
+                        _default_reservoir_factory(
+                            _ExponentialBucketHistogramAggregation
+                        ),
                         AggregationTemporality.DELTA,
                         Mock(),
                         max_size=2,
@@ -265,9 +302,8 @@ class TestExponentialBucketHistogramAggregation(TestCase):
                 )
 
                 for value in permutation:
-
                     exponential_histogram_aggregation.aggregate(
-                        Measurement(value, Mock())
+                        Measurement(value, now, Mock(), ctx)
                     )
 
                 self.assertEqual(
@@ -292,21 +328,24 @@ class TestExponentialBucketHistogramAggregation(TestCase):
                 )
 
     def test_ascending_sequence(self):
-
         for max_size in [3, 4, 6, 9]:
             for offset in range(-5, 6):
                 for init_scale in [0, 4]:
                     self.ascending_sequence_test(max_size, offset, init_scale)
 
+    # pylint: disable=too-many-locals
     def ascending_sequence_test(
         self, max_size: int, offset: int, init_scale: int
     ):
-
+        now = time_ns()
+        ctx = Context()
         for step in range(max_size, max_size * 4):
-
             exponential_histogram_aggregation = (
                 _ExponentialBucketHistogramAggregation(
                     Mock(),
+                    _default_reservoir_factory(
+                        _ExponentialBucketHistogramAggregation
+                    ),
                     AggregationTemporality.DELTA,
                     Mock(),
                     max_size=max_size,
@@ -326,7 +365,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             for index in range(max_size):
                 value = center_val(mapping, offset + index)
                 exponential_histogram_aggregation.aggregate(
-                    Measurement(value, Mock())
+                    Measurement(value, now, Mock(), ctx)
                 )
                 sum_ += value
 
@@ -339,7 +378,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             )
 
             exponential_histogram_aggregation.aggregate(
-                Measurement(max_val, Mock())
+                Measurement(max_val, now, Mock(), ctx)
             )
             sum_ += max_val
 
@@ -403,7 +442,8 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             )
 
     def test_reset(self):
-
+        now = time_ns()
+        ctx = Context()
         for increment in [0x1, 0x100, 0x10000, 0x100000000, 0x200000000]:
 
             def mock_increment(self, bucket_index: int) -> None:
@@ -415,7 +455,13 @@ class TestExponentialBucketHistogramAggregation(TestCase):
 
             exponential_histogram_aggregation = (
                 _ExponentialBucketHistogramAggregation(
-                    Mock(), AggregationTemporality.DELTA, Mock(), max_size=256
+                    Mock(),
+                    _default_reservoir_factory(
+                        _ExponentialBucketHistogramAggregation
+                    ),
+                    AggregationTemporality.DELTA,
+                    Mock(),
+                    max_size=256,
                 )
             )
 
@@ -439,7 +485,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
                     ),
                 ):
                     exponential_histogram_aggregation.aggregate(
-                        Measurement(value, Mock())
+                        Measurement(value, now, Mock(), ctx)
                     )
             exponential_histogram_aggregation._count *= increment
             exponential_histogram_aggregation._sum *= increment
@@ -470,15 +516,29 @@ class TestExponentialBucketHistogramAggregation(TestCase):
                 )
 
     def test_move_into(self):
+        now = time_ns()
+        ctx = Context()
 
         exponential_histogram_aggregation_0 = (
             _ExponentialBucketHistogramAggregation(
-                Mock(), AggregationTemporality.DELTA, Mock(), max_size=256
+                Mock(),
+                _default_reservoir_factory(
+                    _ExponentialBucketHistogramAggregation
+                ),
+                AggregationTemporality.DELTA,
+                Mock(),
+                max_size=256,
             )
         )
         exponential_histogram_aggregation_1 = (
             _ExponentialBucketHistogramAggregation(
-                Mock(), AggregationTemporality.DELTA, Mock(), max_size=256
+                Mock(),
+                _default_reservoir_factory(
+                    _ExponentialBucketHistogramAggregation
+                ),
+                AggregationTemporality.DELTA,
+                Mock(),
+                max_size=256,
             )
         )
 
@@ -487,10 +547,10 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         for index in range(2, 257):
             expect += index
             exponential_histogram_aggregation_0.aggregate(
-                Measurement(index, Mock())
+                Measurement(index, now, Mock(), ctx)
             )
             exponential_histogram_aggregation_0.aggregate(
-                Measurement(0, Mock())
+                Measurement(0, now, Mock(), ctx)
             )
 
         swap(
@@ -524,10 +584,18 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             )
 
     def test_very_large_numbers(self):
+        now = time_ns()
+        ctx = Context()
 
         exponential_histogram_aggregation = (
             _ExponentialBucketHistogramAggregation(
-                Mock(), AggregationTemporality.DELTA, Mock(), max_size=2
+                Mock(),
+                _default_reservoir_factory(
+                    _ExponentialBucketHistogramAggregation
+                ),
+                AggregationTemporality.DELTA,
+                Mock(),
+                max_size=2,
             )
         )
 
@@ -546,10 +614,10 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             )
 
         exponential_histogram_aggregation.aggregate(
-            Measurement(2**-100, Mock())
+            Measurement(2**-100, now, Mock(), ctx)
         )
         exponential_histogram_aggregation.aggregate(
-            Measurement(2**100, Mock())
+            Measurement(2**100, now, Mock(), ctx)
         )
 
         self.assertLessEqual(
@@ -565,10 +633,10 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         expect_balanced(1)
 
         exponential_histogram_aggregation.aggregate(
-            Measurement(2**-127, Mock())
+            Measurement(2**-127, now, Mock(), ctx)
         )
         exponential_histogram_aggregation.aggregate(
-            Measurement(2**128, Mock())
+            Measurement(2**128, now, Mock(), ctx)
         )
 
         self.assertLessEqual(
@@ -584,10 +652,10 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         expect_balanced(2)
 
         exponential_histogram_aggregation.aggregate(
-            Measurement(2**-129, Mock())
+            Measurement(2**-129, now, Mock(), ctx)
         )
         exponential_histogram_aggregation.aggregate(
-            Measurement(2**255, Mock())
+            Measurement(2**255, now, Mock(), ctx)
         )
 
         self.assertLessEqual(
@@ -602,19 +670,29 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         expect_balanced(3)
 
     def test_full_range(self):
+        now = time_ns()
+        ctx = Context()
 
         exponential_histogram_aggregation = (
             _ExponentialBucketHistogramAggregation(
-                Mock(), AggregationTemporality.DELTA, Mock(), max_size=2
+                Mock(),
+                _default_reservoir_factory(
+                    _ExponentialBucketHistogramAggregation
+                ),
+                AggregationTemporality.DELTA,
+                Mock(),
+                max_size=2,
             )
         )
 
         exponential_histogram_aggregation.aggregate(
-            Measurement(float_info.max, Mock())
+            Measurement(float_info.max, now, Mock(), ctx)
         )
-        exponential_histogram_aggregation.aggregate(Measurement(1, Mock()))
         exponential_histogram_aggregation.aggregate(
-            Measurement(2**-1074, Mock())
+            Measurement(1, now, Mock(), ctx)
+        )
+        exponential_histogram_aggregation.aggregate(
+            Measurement(2**-1074, now, Mock(), ctx)
         )
 
         self.assertEqual(
@@ -641,16 +719,22 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         )
 
     def test_aggregator_min_max(self):
-
+        now = time_ns()
+        ctx = Context()
         exponential_histogram_aggregation = (
             _ExponentialBucketHistogramAggregation(
-                Mock(), AggregationTemporality.DELTA, Mock()
+                Mock(),
+                _default_reservoir_factory(
+                    _ExponentialBucketHistogramAggregation
+                ),
+                AggregationTemporality.DELTA,
+                Mock(),
             )
         )
 
         for value in [1, 3, 5, 7, 9]:
             exponential_histogram_aggregation.aggregate(
-                Measurement(value, Mock())
+                Measurement(value, now, Mock(), ctx)
             )
 
         self.assertEqual(1, exponential_histogram_aggregation._min)
@@ -658,41 +742,62 @@ class TestExponentialBucketHistogramAggregation(TestCase):
 
         exponential_histogram_aggregation = (
             _ExponentialBucketHistogramAggregation(
-                Mock(), AggregationTemporality.DELTA, Mock()
+                Mock(),
+                _default_reservoir_factory(
+                    _ExponentialBucketHistogramAggregation
+                ),
+                AggregationTemporality.DELTA,
+                Mock(),
             )
         )
 
         for value in [-1, -3, -5, -7, -9]:
             exponential_histogram_aggregation.aggregate(
-                Measurement(value, Mock())
+                Measurement(value, now, Mock(), ctx)
             )
 
         self.assertEqual(-9, exponential_histogram_aggregation._min)
         self.assertEqual(-1, exponential_histogram_aggregation._max)
 
     def test_aggregator_copy_swap(self):
-
+        now = time_ns()
+        ctx = Context()
         exponential_histogram_aggregation_0 = (
             _ExponentialBucketHistogramAggregation(
-                Mock(), AggregationTemporality.DELTA, Mock()
+                Mock(),
+                _default_reservoir_factory(
+                    _ExponentialBucketHistogramAggregation
+                ),
+                AggregationTemporality.DELTA,
+                Mock(),
             )
         )
         for value in [1, 3, 5, 7, 9, -1, -3, -5]:
             exponential_histogram_aggregation_0.aggregate(
-                Measurement(value, Mock())
+                Measurement(value, now, Mock(), ctx)
             )
         exponential_histogram_aggregation_1 = (
             _ExponentialBucketHistogramAggregation(
-                Mock(), AggregationTemporality.DELTA, Mock()
+                Mock(),
+                _default_reservoir_factory(
+                    _ExponentialBucketHistogramAggregation
+                ),
+                AggregationTemporality.DELTA,
+                Mock(),
             )
         )
         for value in [5, 4, 3, 2]:
             exponential_histogram_aggregation_1.aggregate(
-                Measurement(value, Mock())
+                Measurement(value, now, Mock(), ctx)
             )
         exponential_histogram_aggregation_2 = (
             _ExponentialBucketHistogramAggregation(
-                Mock(), AggregationTemporality.DELTA, Mock()
+                Mock(),
+                _default_reservoir_factory(
+                    _ExponentialBucketHistogramAggregation
+                ),
+                AggregationTemporality.DELTA,
+                Mock(),
             )
         )
 
@@ -735,10 +840,17 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         )
 
     def test_zero_count_by_increment(self):
+        now = time_ns()
+        ctx = Context()
 
         exponential_histogram_aggregation_0 = (
             _ExponentialBucketHistogramAggregation(
-                Mock(), AggregationTemporality.DELTA, Mock()
+                Mock(),
+                _default_reservoir_factory(
+                    _ExponentialBucketHistogramAggregation
+                ),
+                AggregationTemporality.DELTA,
+                Mock(),
             )
         )
 
@@ -746,11 +858,16 @@ class TestExponentialBucketHistogramAggregation(TestCase):
 
         for _ in range(increment):
             exponential_histogram_aggregation_0.aggregate(
-                Measurement(0, Mock())
+                Measurement(0, now, Mock(), ctx)
             )
         exponential_histogram_aggregation_1 = (
             _ExponentialBucketHistogramAggregation(
-                Mock(), AggregationTemporality.DELTA, Mock()
+                Mock(),
+                _default_reservoir_factory(
+                    _ExponentialBucketHistogramAggregation
+                ),
+                AggregationTemporality.DELTA,
+                Mock(),
             )
         )
 
@@ -772,7 +889,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             ),
         ):
             exponential_histogram_aggregation_1.aggregate(
-                Measurement(0, Mock())
+                Measurement(0, now, Mock(), ctx)
             )
             exponential_histogram_aggregation_1._count *= increment
             exponential_histogram_aggregation_1._zero_count *= increment
@@ -783,10 +900,17 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         )
 
     def test_one_count_by_increment(self):
+        now = time_ns()
+        ctx = Context()
 
         exponential_histogram_aggregation_0 = (
             _ExponentialBucketHistogramAggregation(
-                Mock(), AggregationTemporality.DELTA, Mock()
+                Mock(),
+                _default_reservoir_factory(
+                    _ExponentialBucketHistogramAggregation
+                ),
+                AggregationTemporality.DELTA,
+                Mock(),
             )
         )
 
@@ -794,11 +918,16 @@ class TestExponentialBucketHistogramAggregation(TestCase):
 
         for _ in range(increment):
             exponential_histogram_aggregation_0.aggregate(
-                Measurement(1, Mock())
+                Measurement(1, now, Mock(), ctx)
             )
         exponential_histogram_aggregation_1 = (
             _ExponentialBucketHistogramAggregation(
-                Mock(), AggregationTemporality.DELTA, Mock()
+                Mock(),
+                _default_reservoir_factory(
+                    _ExponentialBucketHistogramAggregation
+                ),
+                AggregationTemporality.DELTA,
+                Mock(),
             )
         )
 
@@ -820,7 +949,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             ),
         ):
             exponential_histogram_aggregation_1.aggregate(
-                Measurement(1, Mock())
+                Measurement(1, now, Mock(), ctx)
             )
             exponential_histogram_aggregation_1._count *= increment
             exponential_histogram_aggregation_1._sum *= increment
@@ -831,13 +960,11 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         )
 
     def test_boundary_statistics(self):
-
         total = MAX_NORMAL_EXPONENT - MIN_NORMAL_EXPONENT + 1
 
         for scale in range(
             LogarithmMapping._min_scale, LogarithmMapping._max_scale + 1
         ):
-
             above = 0
             below = 0
 
@@ -870,6 +997,9 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         exponential_histogram_aggregation = (
             _ExponentialBucketHistogramAggregation(
                 Mock(),
+                _default_reservoir_factory(
+                    _ExponentialBucketHistogramAggregation
+                ),
                 AggregationTemporality.DELTA,
                 Mock(),
                 max_size=_ExponentialBucketHistogramAggregation._min_max_size,
@@ -892,31 +1022,49 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         """
         Tests a repeated cycle of aggregation and collection.
         """
+        now = time_ns()
+        ctx = Context()
+
         exponential_histogram_aggregation = (
             _ExponentialBucketHistogramAggregation(
                 Mock(),
+                _default_reservoir_factory(
+                    _ExponentialBucketHistogramAggregation
+                ),
                 AggregationTemporality.DELTA,
                 Mock(),
             )
         )
 
-        exponential_histogram_aggregation.aggregate(Measurement(2, Mock()))
+        exponential_histogram_aggregation.aggregate(
+            Measurement(2, now, Mock(), ctx)
+        )
         exponential_histogram_aggregation.collect(
             AggregationTemporality.CUMULATIVE, 0
         )
-        exponential_histogram_aggregation.aggregate(Measurement(2, Mock()))
+        exponential_histogram_aggregation.aggregate(
+            Measurement(2, now, Mock(), ctx)
+        )
         exponential_histogram_aggregation.collect(
             AggregationTemporality.CUMULATIVE, 0
         )
-        exponential_histogram_aggregation.aggregate(Measurement(2, Mock()))
+        exponential_histogram_aggregation.aggregate(
+            Measurement(2, now, Mock(), ctx)
+        )
         exponential_histogram_aggregation.collect(
             AggregationTemporality.CUMULATIVE, 0
         )
 
     def test_collect_results_cumulative(self) -> None:
+        now = time_ns()
+        ctx = Context()
+
         exponential_histogram_aggregation = (
             _ExponentialBucketHistogramAggregation(
                 Mock(),
+                _default_reservoir_factory(
+                    _ExponentialBucketHistogramAggregation
+                ),
                 AggregationTemporality.DELTA,
                 Mock(),
             )
@@ -925,13 +1073,19 @@ class TestExponentialBucketHistogramAggregation(TestCase):
 
         self.assertEqual(exponential_histogram_aggregation._mapping._scale, 20)
 
-        exponential_histogram_aggregation.aggregate(Measurement(2, Mock()))
+        exponential_histogram_aggregation.aggregate(
+            Measurement(2, now, Mock(), ctx)
+        )
         self.assertEqual(exponential_histogram_aggregation._mapping._scale, 20)
 
-        exponential_histogram_aggregation.aggregate(Measurement(4, Mock()))
+        exponential_histogram_aggregation.aggregate(
+            Measurement(4, now, Mock(), ctx)
+        )
         self.assertEqual(exponential_histogram_aggregation._mapping._scale, 7)
 
-        exponential_histogram_aggregation.aggregate(Measurement(1, Mock()))
+        exponential_histogram_aggregation.aggregate(
+            Measurement(1, now, Mock(), ctx)
+        )
         self.assertEqual(exponential_histogram_aggregation._mapping._scale, 6)
 
         collection_0 = exponential_histogram_aggregation.collect(
@@ -952,11 +1106,21 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         self.assertEqual(collection_0.min, 1)
         self.assertEqual(collection_0.max, 4)
 
-        exponential_histogram_aggregation.aggregate(Measurement(1, Mock()))
-        exponential_histogram_aggregation.aggregate(Measurement(8, Mock()))
-        exponential_histogram_aggregation.aggregate(Measurement(0.5, Mock()))
-        exponential_histogram_aggregation.aggregate(Measurement(0.1, Mock()))
-        exponential_histogram_aggregation.aggregate(Measurement(0.045, Mock()))
+        exponential_histogram_aggregation.aggregate(
+            Measurement(1, now, Mock(), ctx)
+        )
+        exponential_histogram_aggregation.aggregate(
+            Measurement(8, now, Mock(), ctx)
+        )
+        exponential_histogram_aggregation.aggregate(
+            Measurement(0.5, now, Mock(), ctx)
+        )
+        exponential_histogram_aggregation.aggregate(
+            Measurement(0.1, now, Mock(), ctx)
+        )
+        exponential_histogram_aggregation.aggregate(
+            Measurement(0.045, now, Mock(), ctx)
+        )
 
         collection_1 = exponential_histogram_aggregation.collect(
             AggregationTemporality.CUMULATIVE, Mock()
@@ -1002,8 +1166,12 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         self.assertEqual(collection_1.max, 8)
 
     def test_cumulative_aggregation_with_random_data(self) -> None:
+        now = time_ns()
+        ctx = Context()
+
         histogram = _ExponentialBucketHistogramAggregation(
             Mock(),
+            _default_reservoir_factory(_ExponentialBucketHistogramAggregation),
             AggregationTemporality.DELTA,
             Mock(),
         )
@@ -1053,22 +1221,31 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             # avoid both values being 0
             value = random_generator.randint(0 if i else 1, 1000)
             values.append(value)
-            histogram.aggregate(Measurement(value, Mock()))
+            histogram.aggregate(Measurement(value, now, Mock(), ctx))
             if i % 20 == 0:
                 collect_and_validate(values, histogram)
 
         collect_and_validate(values, histogram)
 
     def test_merge_collect_cumulative(self):
+        now = time_ns()
+        ctx = Context()
+
         exponential_histogram_aggregation = (
             _ExponentialBucketHistogramAggregation(
-                Mock(), AggregationTemporality.DELTA, Mock(), max_size=4
+                Mock(),
+                _default_reservoir_factory(
+                    _ExponentialBucketHistogramAggregation
+                ),
+                AggregationTemporality.DELTA,
+                Mock(),
+                max_size=4,
             )
         )
 
         for value in [2, 4, 8, 16]:
             exponential_histogram_aggregation.aggregate(
-                Measurement(value, Mock())
+                Measurement(value, now, Mock(), ctx)
             )
 
         self.assertEqual(exponential_histogram_aggregation._mapping.scale, 0)
@@ -1089,7 +1266,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
 
         for value in [1, 2, 4, 8]:
             exponential_histogram_aggregation.aggregate(
-                Measurement(1 / value, Mock())
+                Measurement(1 / value, now, Mock(), ctx)
             )
 
         self.assertEqual(exponential_histogram_aggregation._mapping.scale, 0)
@@ -1109,15 +1286,24 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         self.assertEqual(result_1.scale, -1)
 
     def test_merge_collect_delta(self):
+        now = time_ns()
+        ctx = Context()
+
         exponential_histogram_aggregation = (
             _ExponentialBucketHistogramAggregation(
-                Mock(), AggregationTemporality.DELTA, Mock(), max_size=4
+                Mock(),
+                _default_reservoir_factory(
+                    _ExponentialBucketHistogramAggregation
+                ),
+                AggregationTemporality.DELTA,
+                Mock(),
+                max_size=4,
             )
         )
 
         for value in [2, 4, 8, 16]:
             exponential_histogram_aggregation.aggregate(
-                Measurement(value, Mock())
+                Measurement(value, now, Mock(), ctx)
             )
 
         self.assertEqual(exponential_histogram_aggregation._mapping.scale, 0)
@@ -1136,7 +1322,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
 
         for value in [1, 2, 4, 8]:
             exponential_histogram_aggregation.aggregate(
-                Measurement(1 / value, Mock())
+                Measurement(1 / value, now, Mock(), ctx)
             )
 
         self.assertEqual(exponential_histogram_aggregation._mapping.scale, 0)
