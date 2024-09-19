@@ -144,8 +144,9 @@ class TestBase(unittest.TestCase):
             logging.disable(logging.NOTSET)
 
     def get_sorted_metrics(self):
+        metrics_data = self.memory_metrics_reader.get_metrics_data()
         resource_metrics = (
-            self.memory_metrics_reader.get_metrics_data().resource_metrics
+            metrics_data.resource_metrics if metrics_data else []
         )
 
         all_metrics = []
