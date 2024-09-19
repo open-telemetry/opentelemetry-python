@@ -82,7 +82,7 @@ Every public symbol is something that has to be kept in order to maintain backwa
 
 To check if your PR is adding public symbols, run `tox -e public-symbols-check`. This will always fail if public symbols are being added/removed. The idea
 behind this is that every PR that adds/removes public symbols fails in CI, forcing reviewers to check the symbols to make sure they are strictly necessary.
-If after checking them, it is considered that they are indeed necessary, the PR will be labeled with `Skip Public API check` so that this check is not
+If after checking them, it is considered that they are indeed necessary, the PR will be labeled with `Approve Public API check` so that this check is not
 run.
 
 Also, we try to keep our console output as clean as possible. Most of the time this means catching expected log messages in the test cases:
