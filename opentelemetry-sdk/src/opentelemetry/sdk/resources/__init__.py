@@ -475,15 +475,16 @@ class OsResourceDetector(ResourceDetector):
 
 class HostResourceDetector(ResourceDetector):
     """
-       The HostResourceDetector detects the hostname and architecture attributes.
-       """
+    The HostResourceDetector detects the hostname and architecture attributes.
+    """
 
     def detect(self) -> "Resource":
-        return Resource({
-            HOST_NAME: socket.gethostname(),
-            HOST_ARCH: platform.machine(),
-        })
-
+        return Resource(
+            {
+                HOST_NAME: socket.gethostname(),
+                HOST_ARCH: platform.machine(),
+            }
+        )
 
 
 def get_aggregated_resources(

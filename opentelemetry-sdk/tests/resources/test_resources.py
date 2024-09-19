@@ -792,3 +792,11 @@ class TestHostResourceDetector(unittest.TestCase):
         )
         self.assertEqual(resource.attributes[HOST_NAME], "foo")
         self.assertEqual(resource.attributes[HOST_ARCH], "AMD64")
+
+    @patch.dict(
+        environ, {OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: "host"}, clear=True
+    )
+    def test_resource_detector_entry_points_host(self):
+        resource = Resource({}).create()
+        self.assertIn(HOST_NAME, resource.attributes)
+        self.assertIn(HOST_ARCH, resource.attributes)
