@@ -147,7 +147,7 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       !contains(github.event.pull_request.labels.*.name, 'Approve Public API check')
-      && github.actor != 'opentelemetrybot'
+      && github.actor != 'opentelemetrybot' && github.event_name == 'pull_request'
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4

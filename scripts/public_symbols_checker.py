@@ -139,7 +139,7 @@ if added_symbols or removed_symbols:
     print(
         "Please make sure that all of them are strictly necessary, if not, "
         "please consider prefixing them with an underscore to make them "
-        'private. After that, please label this PR with "Skip Public API '
+        'private. After that, please label this PR with "Approve Public API '
         'check".'
     )
     print()
@@ -154,7 +154,7 @@ if added_symbols or removed_symbols:
     print(
         "Please make sure no public symbols are removed, if so, please "
         "consider deprecating them instead. After that, please label this "
-        'PR with "Skip Public API check".'
+        'PR with "Approve Public API check".'
     )
     exit(1)
 else:
