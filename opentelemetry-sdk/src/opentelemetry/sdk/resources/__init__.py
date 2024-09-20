@@ -479,10 +479,12 @@ class HostResourceDetector(ResourceDetector):
     """
 
     def detect(self) -> "Resource":
+        _host_name = socket.gethostname()
+        _host_arch = platform.machine()
         return Resource(
             {
-                HOST_NAME: socket.gethostname(),
-                HOST_ARCH: platform.machine(),
+                HOST_NAME: _host_name,
+                HOST_ARCH: _host_arch,
             }
         )
 
