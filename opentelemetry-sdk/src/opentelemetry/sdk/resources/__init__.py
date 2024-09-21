@@ -473,7 +473,7 @@ class OsResourceDetector(ResourceDetector):
         )
 
 
-class HostResourceDetector(ResourceDetector):
+class _HostResourceDetector(ResourceDetector):
     """
     The HostResourceDetector detects the hostname and architecture attributes.
     """
