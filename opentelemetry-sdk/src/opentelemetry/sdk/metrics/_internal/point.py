@@ -14,12 +14,13 @@
 
 # pylint: disable=unused-import
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from json import dumps, loads
 from typing import Optional, Sequence, Union
 
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics._internal
+from opentelemetry.sdk.metrics._internal.exemplar import Exemplar
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.util.types import Attributes
@@ -35,6 +36,7 @@ class NumberDataPoint:
     start_time_unix_nano: int
     time_unix_nano: int
     value: Union[int, float]
+    exemplars: Sequence[Exemplar] = field(default_factory=list)
 
     def to_json(self, indent=4) -> str:
         return dumps(asdict(self), indent=indent)
@@ -55,6 +57,7 @@ class HistogramDataPoint:
     explicit_bounds: Sequence[float]
     min: float
     max: float
+    exemplars: Sequence[Exemplar] = field(default_factory=list)
 
     def to_json(self, indent=4) -> str:
         return dumps(asdict(self), indent=indent)
@@ -85,6 +88,7 @@ class ExponentialHistogramDataPoint:
     flags: int
     min: float
     max: float
+    exemplars: Sequence[Exemplar] = field(default_factory=list)
 
     def to_json(self, indent=4) -> str:
         return dumps(asdict(self), indent=indent)

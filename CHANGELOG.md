@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4154](https://github.com/open-telemetry/opentelemetry-python/pull/4154))
 - sdk: Add support for log formatting
   ([#4137](https://github.com/open-telemetry/opentelemetry-python/pull/4166))
+- sdk: Implementation of exemplars
+  ([#4094](https://github.com/open-telemetry/opentelemetry-python/pull/4094))
 - Implement events sdk
   ([#4176](https://github.com/open-telemetry/opentelemetry-python/pull/4176))
 

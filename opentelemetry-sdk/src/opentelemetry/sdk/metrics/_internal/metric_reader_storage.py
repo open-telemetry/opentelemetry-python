@@ -113,11 +113,15 @@ class MetricReaderStorage:
 
             return view_instrument_matches
 
-    def consume_measurement(self, measurement: Measurement) -> None:
+    def consume_measurement(
+        self, measurement: Measurement, should_sample_exemplar: bool = True
+    ) -> None:
         for view_instrument_match in self._get_or_init_view_instrument_match(
             measurement.instrument
         ):
-            view_instrument_match.consume_measurement(measurement)
+            view_instrument_match.consume_measurement(
+                measurement, should_sample_exemplar
+            )
 
     def collect(self) -> Optional[MetricsData]:
         # Use a list instead of yielding to prevent a slow reader from holding

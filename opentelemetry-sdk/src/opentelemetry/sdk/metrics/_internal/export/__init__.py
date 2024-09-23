@@ -404,7 +404,7 @@ class InMemoryMetricReader(MetricReader):
 
     def get_metrics_data(
         self,
-    ) -> "opentelemetry.sdk.metrics.export.MetricsData":
+    ) -> Optional["opentelemetry.sdk.metrics.export.MetricsData"]:
         """Reads and returns current metrics from the SDK"""
         with self._lock:
             self.collect()

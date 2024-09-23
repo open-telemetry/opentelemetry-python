@@ -135,8 +135,6 @@ class TestExponentialBucketHistogramAggregation(TestCase):
 
             results.append(reader.get_metrics_data())
 
-        provider.shutdown()
-
         for metrics_data in results:
             self.assertIsNone(metrics_data)
 

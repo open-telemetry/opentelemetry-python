@@ -12,19 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=unused-import
-
-from dataclasses import dataclass
-from typing import Sequence
-
-# This kind of import is needed to avoid Sphinx errors.
-import opentelemetry.sdk.metrics
-import opentelemetry.sdk.resources
+from opentelemetry.test.test_base import TestBase
 
 
-@dataclass
-class SdkConfiguration:
-    exemplar_filter: "opentelemetry.sdk.metrics.ExemplarFilter"
-    resource: "opentelemetry.sdk.resources.Resource"
-    metric_readers: Sequence["opentelemetry.sdk.metrics.MetricReader"]
-    views: Sequence["opentelemetry.sdk.metrics.View"]
+class TestBaseTestCase(TestBase):
+    def test_get_sorted_metrics_works_without_metrics(self):
+        metrics = self.get_sorted_metrics()
+        self.assertEqual(metrics, [])
