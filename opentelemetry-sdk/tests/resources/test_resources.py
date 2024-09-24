@@ -49,12 +49,12 @@ from opentelemetry.sdk.resources import (
     TELEMETRY_SDK_LANGUAGE,
     TELEMETRY_SDK_NAME,
     TELEMETRY_SDK_VERSION,
-    HostResourceDetector,
     OsResourceDetector,
     OTELResourceDetector,
     ProcessResourceDetector,
     Resource,
     ResourceDetector,
+    _HostResourceDetector,
     get_aggregated_resources,
 )
 
@@ -787,7 +787,7 @@ class TestHostResourceDetector(unittest.TestCase):
     @patch("platform.machine", lambda: "AMD64")
     def test_host_resource_detector(self):
         resource = get_aggregated_resources(
-            [HostResourceDetector()],
+            [_HostResourceDetector()],
             Resource({}),
         )
         self.assertEqual(resource.attributes[HOST_NAME], "foo")
