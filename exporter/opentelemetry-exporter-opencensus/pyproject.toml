@@ -43,7 +43,7 @@ opencensus = "opentelemetry.exporter.opencensus.trace_exporter:OpenCensusSpanExp
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/exporter/opentelemetry-exporter-opencensus"
 
 [tool.hatch.version]
-path = "src/opentelemetry/exporter/opencensus/version.py"
+path = "src/opentelemetry/exporter/opencensus/version/__init__.py"
 
 [tool.hatch.build.targets.sdist]
 include = [
