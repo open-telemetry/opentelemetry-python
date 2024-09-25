@@ -567,15 +567,15 @@ def update_version_files(targets, version, packages):
             ["tool"]["hatch"]["version"]["path"]
         )
 
-        with open(version_file_path) as _file:
-            text = _file.read()
+        with open(version_file_path) as file:
+            text = file.read()
 
         if replace in text:
             print(f"{version_file_path} already contains {replace}")
             continue
 
-        with open(version_file_path, "w", encoding="utf-8") as _file:
-            _file.write(re.sub(search, replace, text))
+        with open(version_file_path, "w", encoding="utf-8") as file:
+            file.write(re.sub(search, replace, text))
 
 
 def update_dependencies(targets, version, packages):
