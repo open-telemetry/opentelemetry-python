@@ -169,8 +169,41 @@ class TestLoggingHandler(unittest.TestCase):
         self.assertTrue("division by zero" in stack_trace)
         self.assertTrue(__file__ in stack_trace)
 
+    def test_log_record_recursive_exception(self):
+        """Exception information will be included in attributes even though it is recursive"""
+        processor, logger = set_up_test_logging(logging.ERROR)
+
+        try:
+            raise ZeroDivisionError(
+                ZeroDivisionError(ZeroDivisionError("division by zero"))
+            )
+        except ZeroDivisionError:
+            with self.assertLogs(level=logging.ERROR):
+                logger.exception("Zero Division Error")
+
+        log_record = processor.get_log_record(0)
+
+        self.assertIsNotNone(log_record)
+        self.assertEqual(log_record.body, "Zero Division Error")
+        self.assertEqual(
+            log_record.attributes[SpanAttributes.EXCEPTION_TYPE],
+            ZeroDivisionError.__name__,
+        )
+        self.assertEqual(
+            log_record.attributes[SpanAttributes.EXCEPTION_MESSAGE],
+            "division by zero",
+        )
+        stack_trace = log_record.attributes[
+            SpanAttributes.EXCEPTION_STACKTRACE
+        ]
+        self.assertIsInstance(stack_trace, str)
+        self.assertTrue("Traceback" in stack_trace)
+        self.assertTrue("ZeroDivisionError" in stack_trace)
+        self.assertTrue("division by zero" in stack_trace)
+        self.assertTrue(__file__ in stack_trace)
+
     def test_log_exc_info_false(self):
-        """Exception information will be included in attributes"""
+        """Exception information will not be included in attributes"""
         processor, logger = set_up_test_logging(logging.NOTSET)
 
         try:
@@ -209,13 +242,53 @@ class TestLoggingHandler(unittest.TestCase):
             self.assertEqual(log_record.span_id, span_context.span_id)
             self.assertEqual(log_record.trace_flags, span_context.trace_flags)
 
+    def test_warning_without_formatter(self):
+        processor, logger = set_up_test_logging(logging.WARNING)
+        logger.warning("Test message")
 
-def set_up_test_logging(level):
+        log_record = processor.get_log_record(0)
+        self.assertEqual(log_record.body, "Test message")
+
+    def test_exception_without_formatter(self):
+        processor, logger = set_up_test_logging(logging.WARNING)
+        logger.exception("Test exception")
+
+        log_record = processor.get_log_record(0)
+        self.assertEqual(log_record.body, "Test exception")
+
+    def test_warning_with_formatter(self):
+        processor, logger = set_up_test_logging(
+            logging.WARNING,
+            formatter=logging.Formatter(
+                "%(name)s - %(levelname)s - %(message)s"
+            ),
+        )
+        logger.warning("Test message")
+
+        log_record = processor.get_log_record(0)
+        self.assertEqual(log_record.body, "foo - WARNING - Test message")
+
+    def test_log_body_is_always_string_with_formatter(self):
+        processor, logger = set_up_test_logging(
+            logging.WARNING,
+            formatter=logging.Formatter(
+                "%(name)s - %(levelname)s - %(message)s"
+            ),
+        )
+        logger.warning(["something", "of", "note"])
+
+        log_record = processor.get_log_record(0)
+        self.assertIsInstance(log_record.body, str)
+
+
+def set_up_test_logging(level, formatter=None):
     logger_provider = LoggerProvider()
     processor = FakeProcessor()
     logger_provider.add_log_record_processor(processor)
     logger = logging.getLogger("foo")
     handler = LoggingHandler(level=level, logger_provider=logger_provider)
+    if formatter:
+        handler.setFormatter(formatter)
     logger.addHandler(handler)
     return processor, logger
 

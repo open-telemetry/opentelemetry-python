@@ -43,6 +43,7 @@ from opentelemetry.sdk.metrics._internal.point import (  # noqa: F401
 
 __all__ = [
     "AggregationTemporality",
+    "Buckets",
     "ConsoleMetricExporter",
     "InMemoryMetricReader",
     "MetricExporter",
@@ -51,6 +52,8 @@ __all__ = [
     "PeriodicExportingMetricReader",
     "DataPointT",
     "DataT",
+    "ExponentialHistogram",
+    "ExponentialHistogramDataPoint",
     "Gauge",
     "Histogram",
     "HistogramDataPoint",

@@ -68,10 +68,10 @@ The list of built-in values for ``OTEL_TRACES_SAMPLER`` are:
 
     * always_on - Sampler that always samples spans, regardless of the parent span's sampling decision.
     * always_off - Sampler that never samples spans, regardless of the parent span's sampling decision.
-    * traceidratio - Sampler that samples probabalistically based on rate.
+    * traceidratio - Sampler that samples probabilistically based on rate.
     * parentbased_always_on - (default) Sampler that respects its parent span's sampling decision, but otherwise always samples.
     * parentbased_always_off - Sampler that respects its parent span's sampling decision, but otherwise never samples.
-    * parentbased_traceidratio - Sampler that respects its parent span's sampling decision, but otherwise samples probabalistically based on rate.
+    * parentbased_traceidratio - Sampler that respects its parent span's sampling decision, but otherwise samples probabilistically based on rate.
 
 Sampling probability can be set with ``OTEL_TRACES_SAMPLER_ARG`` if the sampler is traceidratio or parentbased_traceidratio. Rate must be in the range [0.0,1.0]. When not provided rate will be set to
 1.0 (maximum rate possible).
@@ -121,7 +121,7 @@ be an empty string. For example:
     # ...
     class CustomSamplerFactory:
         @staticmethod
-        get_sampler(sampler_argument):
+        def get_sampler(sampler_argument):
             try:
                 rate = float(sampler_argument)
                 return CustomSampler(rate)
@@ -386,7 +386,7 @@ DEFAULT_ON = ParentBased(ALWAYS_ON)
 class ParentBasedTraceIdRatio(ParentBased):
     """
     Sampler that respects its parent span's sampling decision, but otherwise
-    samples probabalistically based on `rate`.
+    samples probabilistically based on `rate`.
     """
 
     def __init__(self, rate: float):

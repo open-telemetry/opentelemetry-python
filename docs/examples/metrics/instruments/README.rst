@@ -13,7 +13,7 @@ Start the Collector locally to see data being exported. Write the following file
                     endpoint: 0.0.0.0:4317
 
     exporters:
-        logging:
+        debug:
 
     processors:
         batch:
@@ -22,7 +22,7 @@ Start the Collector locally to see data being exported. Write the following file
         pipelines:
             metrics:
                 receivers: [otlp]
-                exporters: [logging]
+                exporters: [debug]
   
 Then start the Docker container:
 
@@ -41,4 +41,41 @@ The resulting metrics will appear in the output from the collector and look simi
 
 .. code-block:: sh
 
-TODO
+    ScopeMetrics #0
+    ScopeMetrics SchemaURL:
+    InstrumentationScope getting-started 0.1.2
+    Metric #0
+    Descriptor:
+         -> Name: counter
+         -> Description:
+         -> Unit:
+         -> DataType: Sum
+         -> IsMonotonic: true
+         -> AggregationTemporality: Cumulative
+    NumberDataPoints #0
+    StartTimestamp: 2024-08-09 11:21:42.145179 +0000 UTC
+    Timestamp: 2024-08-09 11:21:42.145325 +0000 UTC
+    Value: 1
+    Metric #1
+    Descriptor:
+         -> Name: updown_counter
+         -> Description:
+         -> Unit:
+         -> DataType: Sum
+         -> IsMonotonic: false
+         -> AggregationTemporality: Cumulative
+    NumberDataPoints #0
+    StartTimestamp: 2024-08-09 11:21:42.145202 +0000 UTC
+    Timestamp: 2024-08-09 11:21:42.145325 +0000 UTC
+    Value: -4
+    Metric #2
+    Descriptor:
+         -> Name: histogram
+         -> Description:
+         -> Unit:
+         -> DataType: Histogram
+         -> AggregationTemporality: Cumulative
+    HistogramDataPoints #0
+    StartTimestamp: 2024-08-09 11:21:42.145221 +0000 UTC
+    Timestamp: 2024-08-09 11:21:42.145325 +0000 UTC
+    Count: 1

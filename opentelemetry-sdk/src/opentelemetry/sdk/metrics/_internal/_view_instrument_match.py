@@ -40,7 +40,6 @@ class _ViewInstrumentMatch:
         instrument: Instrument,
         instrument_class_aggregation: Dict[type, Aggregation],
     ):
-        self._start_time_unix_nano = time_ns()
         self._view = view
         self._instrument = instrument
         self._attributes_aggregation: Dict[frozenset, _Aggregation] = {}
@@ -52,12 +51,20 @@ class _ViewInstrumentMatch:
         )
         if not isinstance(self._view._aggregation, DefaultAggregation):
             self._aggregation = self._view._aggregation._create_aggregation(
-                self._instrument, None, 0
+                self._instrument,
+                None,
+                self._view._exemplar_reservoir_factory,
+                0,
             )
         else:
             self._aggregation = self._instrument_class_aggregation[
                 self._instrument.__class__
-            ]._create_aggregation(self._instrument, None, 0)
+            ]._create_aggregation(
+                self._instrument,
+                None,
+                self._view._exemplar_reservoir_factory,
+                0,
+            )
 
     def conflicts(self, other: "_ViewInstrumentMatch") -> bool:
         # pylint: disable=protected-access
@@ -81,7 +88,9 @@ class _ViewInstrumentMatch:
         return result
 
     # pylint: disable=protected-access
-    def consume_measurement(self, measurement: Measurement) -> None:
+    def consume_measurement(
+        self, measurement: Measurement, should_sample_exemplar: bool = True
+    ) -> None:
 
         if self._view._attribute_keys is not None:
 
@@ -107,7 +116,8 @@ class _ViewInstrumentMatch:
                             self._view._aggregation._create_aggregation(
                                 self._instrument,
                                 attributes,
-                                self._start_time_unix_nano,
+                                self._view._exemplar_reservoir_factory,
+                                time_ns(),
                             )
                         )
                     else:
@@ -116,11 +126,14 @@ class _ViewInstrumentMatch:
                         ]._create_aggregation(
                             self._instrument,
                             attributes,
-                            self._start_time_unix_nano,
+                            self._view._exemplar_reservoir_factory,
+                            time_ns(),
                         )
                     self._attributes_aggregation[aggr_key] = aggregation
 
-        self._attributes_aggregation[aggr_key].aggregate(measurement)
+        self._attributes_aggregation[aggr_key].aggregate(
+            measurement, should_sample_exemplar
+        )
 
     def collect(
         self,

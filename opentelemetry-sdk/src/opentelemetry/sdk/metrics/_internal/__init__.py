@@ -33,8 +33,17 @@ from opentelemetry.metrics import (
 )
 from opentelemetry.metrics import UpDownCounter as APIUpDownCounter
 from opentelemetry.metrics import _Gauge as APIGauge
-from opentelemetry.sdk.environment_variables import OTEL_SDK_DISABLED
+from opentelemetry.sdk.environment_variables import (
+    OTEL_METRICS_EXEMPLAR_FILTER,
+    OTEL_SDK_DISABLED,
+)
 from opentelemetry.sdk.metrics._internal.exceptions import MetricsTimeoutError
+from opentelemetry.sdk.metrics._internal.exemplar import (
+    AlwaysOffExemplarFilter,
+    AlwaysOnExemplarFilter,
+    ExemplarFilter,
+    TraceBasedExemplarFilter,
+)
 from opentelemetry.sdk.metrics._internal.instrument import (
     _Counter,
     _Gauge,
@@ -340,6 +349,17 @@ class Meter(APIMeter):
             return instrument
 
 
+def _get_exemplar_filter(exemplar_filter: str) -> ExemplarFilter:
+    if exemplar_filter == "trace_based":
+        return TraceBasedExemplarFilter()
+    if exemplar_filter == "always_on":
+        return AlwaysOnExemplarFilter()
+    if exemplar_filter == "always_off":
+        return AlwaysOffExemplarFilter()
+    msg = f"Unknown exemplar filter '{exemplar_filter}'."
+    raise ValueError(msg)
+
+
 class MeterProvider(APIMeterProvider):
     r"""See `opentelemetry.metrics.MeterProvider`.
 
@@ -380,7 +400,8 @@ class MeterProvider(APIMeterProvider):
         metric_readers: Sequence[
             "opentelemetry.sdk.metrics.export.MetricReader"
         ] = (),
-        resource: Resource = None,
+        resource: Optional[Resource] = None,
+        exemplar_filter: Optional[ExemplarFilter] = None,
         shutdown_on_exit: bool = True,
         views: Sequence["opentelemetry.sdk.metrics.view.View"] = (),
     ):
@@ -390,6 +411,12 @@ class MeterProvider(APIMeterProvider):
         if resource is None:
             resource = Resource.create({})
         self._sdk_config = SdkConfiguration(
+            exemplar_filter=(
+                exemplar_filter
+                or _get_exemplar_filter(
+                    environ.get(OTEL_METRICS_EXEMPLAR_FILTER, "trace_based")
+                )
+            ),
             resource=resource,
             metric_readers=metric_readers,
             views=views,

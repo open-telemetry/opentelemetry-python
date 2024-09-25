@@ -491,7 +491,9 @@ class LoggingHandler(logging.Handler):
             if exctype is not None:
                 attributes[SpanAttributes.EXCEPTION_TYPE] = exctype.__name__
             if value is not None and value.args:
-                attributes[SpanAttributes.EXCEPTION_MESSAGE] = value.args[0]
+                attributes[SpanAttributes.EXCEPTION_MESSAGE] = str(
+                    value.args[0]
+                )
             if tb is not None:
                 # https://github.com/open-telemetry/opentelemetry-specification/blob/9fa7c656b26647b27e485a6af7e38dc716eba98a/specification/trace/semantic_conventions/exceptions.md#stacktrace-representation
                 attributes[SpanAttributes.EXCEPTION_STACKTRACE] = "".join(
@@ -542,10 +544,13 @@ class LoggingHandler(logging.Handler):
         # output format. Therefore, this change is considered a breaking
         # change and needs to be upgraded at an appropriate time.
         severity_number = std_to_otel(record.levelno)
-        if isinstance(record.msg, str) and record.args:
-            body = record.msg % record.args
+        if self.formatter:
+            body = self.format(record)
         else:
-            body = record.msg
+            if isinstance(record.msg, str) and record.args:
+                body = record.msg % record.args
+            else:
+                body = record.msg
 
         # related to https://github.com/open-telemetry/opentelemetry-python/issues/3548
         # Severity Text = WARN as defined in https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/logs/data-model.md#displaying-severity.
