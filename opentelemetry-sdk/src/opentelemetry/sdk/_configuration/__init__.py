@@ -43,6 +43,9 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TRACES_PROTOCOL,
     OTEL_TRACES_SAMPLER,
     OTEL_TRACES_SAMPLER_ARG,
+    OTEL_LOG_LEVEL,
+    OTEL_PYTHON_LOG_LEVEL,
+    OTEL_PYTHON_LOG_FORMAT,
 )
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import (
@@ -238,6 +241,17 @@ def _init_logging(
     exporters: Dict[str, Type[LogExporter]],
     resource: Resource = None,
 ):
+    print("_init_logging")
+    log_format = environ.get(OTEL_PYTHON_LOG_FORMAT, logging.BASIC_FORMAT)
+    LEVELS = {
+        "debug": logging.DEBUG,
+        "info": logging.INFO,
+        "warning": logging.WARNING,
+        "error": logging.ERROR,
+    }
+    # log_level = LEVELS.get(environ.get(OTEL_PYTHON_LOG_LEVEL, "info"), logging.INFO)
+    log_level = LEVELS.get(environ.get(OTEL_PYTHON_LOG_LEVEL), logging.INFO)
+
     provider = LoggerProvider(resource=resource)
     set_logger_provider(provider)
 
@@ -249,7 +263,17 @@ def _init_logging(
 
     handler = LoggingHandler(level=logging.NOTSET, logger_provider=provider)
 
-    logging.getLogger().addHandler(handler)
+    # fmt = Formatter(fs, dfs, style)
+    # handler.setFormatter(fmt)    
+    # logging.getLogger().addHandler(handler)
+    # logging.getLogger().setLevel(log_level)
+    # logging.getLogger().addHandler(handler)
+
+    logging.basicConfig(
+        format=log_format,
+        level=log_level,
+        handlers=(handler,)
+    )
 
 
 def _import_exporters(
@@ -364,6 +388,7 @@ def _initialize_components(
     id_generator: IdGenerator = None,
     logging_enabled: Optional[bool] = None,
 ):
+    print("_initialize_components")
     if trace_exporter_names is None:
         trace_exporter_names = []
     if metric_exporter_names is None:
