@@ -24,6 +24,11 @@ from opentelemetry.sdk.resources import (
     _get_entity_detectors,
     _select_entities,
 )
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
+    InMemorySpanExporter,
+)
 
 
 class TestEntities(TestCase):
@@ -142,3 +147,35 @@ class TestEntities(TestCase):
             },
         )
         self.assertEqual(resource.schema_url, "")
+
+    def test_export_entities(self):
+
+        tracer_provider = TracerProvider(
+            resource=Resource.create_using_entities()
+        )
+
+        tracer = tracer_provider.get_tracer(__name__)
+
+        in_memory_exporter = InMemorySpanExporter()
+        tracer_provider.add_span_processor(
+            SimpleSpanProcessor(in_memory_exporter)
+        )
+
+        with tracer.start_as_current_span("a"):
+            with tracer.start_as_current_span("b"):
+                with tracer.start_as_current_span("c"):
+                    pass
+
+        for span in in_memory_exporter.get_finished_spans():
+            self.assertEqual(
+                span.resource.attributes,
+                {
+                    "telemetry.sdk.language": "python",
+                    "telemetry.sdk.name": "opentelemetry",
+                    "telemetry.sdk.version": "1.28.0.dev0",
+                    "a": "b",
+                    "c": "d",
+                    "service.name": "unknown_service",
+                },
+            )
+            self.assertEqual(span.resource.schema_url, "")
