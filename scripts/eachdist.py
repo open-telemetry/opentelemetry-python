@@ -7,6 +7,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+from toml import load
 from configparser import ConfigParser
 from inspect import cleandoc
 from itertools import chain
@@ -554,14 +555,27 @@ def filter_packages(targets, packages):
 
 
 def update_version_files(targets, version, packages):
-    print("updating version.py files")
-    targets = filter_packages(targets, packages)
-    update_files(
-        targets,
-        "version.py",
-        "__version__ .*",
-        f'__version__ = "{version}"',
-    )
+    print("updating version/__init__.py files")
+
+    search = "__version__ .*"
+    replace = f'__version__ = "{version}"'
+
+    for target in filter_packages(targets, packages):
+
+        version_file_path = target.joinpath(
+            load(target.joinpath("pyproject.toml"))
+            ["tool"]["hatch"]["version"]["path"]
+        )
+
+        with open(version_file_path) as file:
+            text = file.read()
+
+        if replace in text:
+            print(f"{version_file_path} already contains {replace}")
+            continue
+
+        with open(version_file_path, "w", encoding="utf-8") as file:
+            file.write(re.sub(search, replace, text))
 
 
 def update_dependencies(targets, version, packages):
