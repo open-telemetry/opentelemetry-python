@@ -28,4 +28,4 @@ markupsafe~=2.0
 
 # Jaeger generated protobufs do not currently support protobuf 4.x. This can be removed once
 # they're regenerated.
-protobuf~=3.19
+#protobuf~=3.19
