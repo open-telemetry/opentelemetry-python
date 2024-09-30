@@ -2,5 +2,5 @@
 # both protobuf 3.19.x and 4.x (see https://github.com/protocolbuffers/protobuf/issues/11123).
 # Bump this version with caution to preserve compatibility with protobuf 3.
 # https://github.com/open-telemetry/opentelemetry-python/blob/main/opentelemetry-proto/pyproject.toml#L28
-grpcio-tools==1.48.1
-mypy-protobuf~=3.0.0
+grpcio-tools==1.66.0
+mypy-protobuf~=3.6.0
