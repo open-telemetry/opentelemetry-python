@@ -39,7 +39,7 @@ zipkin = "opentelemetry.exporter.zipkin.proto.http:ZipkinExporter"
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/exporter/opentelemetry-exporter-zipkin"
 
 [tool.hatch.version]
-path = "src/opentelemetry/exporter/zipkin/version.py"
+path = "src/opentelemetry/exporter/zipkin/version/__init__.py"
 
 [tool.hatch.build.targets.sdist]
 include = [
