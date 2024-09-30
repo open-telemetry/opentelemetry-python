@@ -1,11 +1,9 @@
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
+    SimpleSpanProcessor,
 )
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.resources import (
-    Resource,
-)
-from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 
 """
 This example shows how entities are used to create a Resource. There are 2
@@ -23,15 +21,11 @@ These 3 spans are exported to the console, the entities attributes can be found
 in the "resource" section of the exported spans.
 """
 
-tracer_provider = TracerProvider(
-    resource=Resource.create_using_entities()
-)
+tracer_provider = TracerProvider(resource=Resource.create_using_entities())
 
 tracer = tracer_provider.get_tracer(__name__)
 
-tracer_provider.add_span_processor(
-    SimpleSpanProcessor(ConsoleSpanExporter())
-)
+tracer_provider.add_span_processor(SimpleSpanProcessor(ConsoleSpanExporter()))
 
 with tracer.start_as_current_span("a"):
     with tracer.start_as_current_span("b"):

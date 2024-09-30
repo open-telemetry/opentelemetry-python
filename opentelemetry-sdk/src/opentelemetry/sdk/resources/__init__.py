@@ -64,7 +64,7 @@ from abc import ABC, abstractmethod
 from json import dumps
 from os import environ
 from types import ModuleType
-from typing import List, Mapping, MutableMapping, Optional, cast
+from typing import Any, List, Mapping, MutableMapping, Optional, Set, cast
 from urllib import parse
 from warnings import warn
 
@@ -158,11 +158,12 @@ class Entity:
         self,
         type_: str,
         id_: Mapping[str, str],
-        attributes: Optional[Attributes] = None,
+        attributes: Optional[Mapping[str, str]] = None,
         schema_url: Optional[str] = None,
     ):
 
         if not type_:
+            # pylint: disable=broad-exception-raised
             raise Exception("Entity type must not be empty")
 
         if attributes is None:
@@ -174,6 +175,7 @@ class Entity:
         # during the lifetime of the entity. id_ must contain at least one
         # attribute.
         if not id_:
+            # pylint: disable=broad-exception-raised
             raise Exception("Entity id must not be empty")
 
         self._id = id_
@@ -188,11 +190,11 @@ class Entity:
         self._schema_url = schema_url
 
     @property
-    def type(self):
+    def type(self) -> str:
         return self._type
 
     @property
-    def id(self):
+    def id(self) -> Mapping[str, str]:
         # FIXME we need a checker here that makes sure that the id attributes
         # are compliant with the spec. Not implementing it here since this
         # seems like a thing that should be available to other components as
@@ -200,11 +202,11 @@ class Entity:
         return self._id
 
     @property
-    def attributes(self):
+    def attributes(self) -> Mapping[str, str]:
         return self._attributes
 
     @property
-    def schema_url(self):
+    def schema_url(self) -> str:
         return self._schema_url
 
 
@@ -218,7 +220,7 @@ class Resource:
         self,
         attributes: Attributes,
         schema_url: Optional[str] = None,
-        *entities,
+        entities: Optional[List[Entity]] = None,
     ):
         self._attributes = BoundedAttributes(attributes=attributes)
         if schema_url is None:
@@ -315,9 +317,11 @@ class Resource:
         resource_attributes = {}
 
         for selected_entity in selected_entities:
+            # pylint: disable=protected-access
             for key, value in selected_entity._id.items():
                 resource_attributes[key] = value
 
+            # pylint: disable=protected-access
             for key, value in selected_entity._attributes.items():
                 resource_attributes[key] = value
 
@@ -325,10 +329,10 @@ class Resource:
 
         for selected_entity in selected_entities:
             if selected_entity.schema_url != entity_schema_url:
-                entity_schema_url = None
+                entity_schema_url = None  # type: ignore
                 break
 
-        resource_attributes.update(attributes)
+        resource_attributes.update(attributes)  # type: ignore
 
         resource = Resource.create(
             attributes=resource_attributes, schema_url=entity_schema_url
@@ -409,72 +413,6 @@ class Resource:
         )
 
 
-def _get_entity_detectors():
-
-    entity_detectors: List[ResourceDetector] = []
-
-    for entity_detector in entry_points(
-        group="opentelemetry_entity_detector",
-    ):
-
-        entity_detectors.append(entity_detector.load()())
-
-    # This checker is added here but it could live in the configuration
-    # mechanism, so that it detects a possible error when 2 entity
-    # detectors have the same priority even earlier.
-    if len(entity_detectors) > 1:
-
-        sorted_entity_detectors = sorted(
-            entity_detectors, key=lambda x: x.priority
-        )
-
-        priorities = set()
-
-        for entity_detector in sorted_entity_detectors:
-
-            if entity_detector.priority in priorities:
-                raise ValueError(
-                    f"Duplicate priority {entity_detector.priority}"
-                    f"for entity detector of type {type(entity_detector)}"
-                )
-
-            priorities.add(entity_detector.priority)
-
-    return entity_detectors
-
-
-def _select_entities(unselected_entities):
-
-    selected_entities = [unselected_entities.pop(0)]
-
-    for unselected_entity in unselected_entities:
-
-        for selected_entity in selected_entities:
-
-            if selected_entity.type == unselected_entity.type:
-                if (
-                    selected_entity.id == unselected_entity.id
-                    and selected_entity.schema_url
-                    == (unselected_entity.schema_url)
-                ):
-                    for key, value in unselected_entity.attributes.items():
-                        if key not in selected_entity.attributes.keys():
-                            selected_entity._attributes[key] = value
-                    break
-                elif (
-                    selected_entity.id == unselected_entity.id
-                    and selected_entity.schema_url
-                    != (unselected_entity.schema_url)
-                ):
-                    break
-                elif selected_entity.id != unselected_entity.id:
-                    break
-        else:
-            selected_entities.append(unselected_entity)
-
-    return selected_entities
-
-
 _EMPTY_RESOURCE = Resource({})
 _DEFAULT_RESOURCE = Resource(
     {
@@ -490,7 +428,7 @@ class Detector(ABC):
         self.raise_on_error = raise_on_error
 
     @abstractmethod
-    def detect(self):
+    def detect(self) -> Any:  # type: ignore
         raise NotImplementedError()
 
 
@@ -501,8 +439,6 @@ class ResourceDetector(Detector):
 
 
 class EntityDetector(Detector):
-    def __init__(self, raise_on_error: bool = False) -> None:
-        self.raise_on_error = raise_on_error
 
     @abstractmethod
     def detect(self) -> "Entity":
@@ -510,7 +446,7 @@ class EntityDetector(Detector):
 
     @property
     @abstractmethod
-    def priority(self):
+    def priority(self) -> int:
         raise NotImplementedError()
 
 
@@ -532,7 +468,7 @@ class Type0EntityDetector(EntityDetector):
         return self._entity
 
     @property
-    def priority(self):
+    def priority(self) -> int:
         # This probably needs a configuration mechanism so that it can get its
         # priority from some configuration file or something else.
         return 0
@@ -557,10 +493,78 @@ class Type1EntityDetector(EntityDetector):
         return self._entity
 
     @property
-    def priority(self):
+    def priority(self) -> int:
         # This probably needs a configuration mechanism so that it can get its
         # priority from some configuration file or something else.
         return 1
+
+
+def _get_entity_detectors() -> List[EntityDetector]:
+
+    entity_detectors: List[EntityDetector] = []
+
+    for entity_detector in entry_points(  # type: ignore
+        group="opentelemetry_entity_detector",
+    ):
+
+        entity_detectors.append(entity_detector.load()())  # type: ignore
+
+    # This checker is added here but it could live in the configuration
+    # mechanism, so that it detects a possible error when 2 entity
+    # detectors have the same priority even earlier.
+    if len(entity_detectors) > 1:
+
+        sorted_entity_detectors = sorted(
+            entity_detectors, key=lambda x: x.priority  # type: ignore
+        )
+
+        priorities: Set[int] = set()
+
+        for entity_detector in sorted_entity_detectors:
+
+            if entity_detector.priority in priorities:  # type: ignore
+                raise ValueError(
+                    f"Duplicate priority {entity_detector.priority}"  # type: ignore
+                    f"for entity detector of type {type(entity_detector)}"  # type: ignore
+                )
+
+            priorities.add(entity_detector.priority)  # type: ignore
+
+    return entity_detectors
+
+
+def _select_entities(unselected_entities: List[Entity]) -> List[Entity]:
+    # pylint: disable=too-many-nested-blocks
+
+    selected_entities = [unselected_entities.pop(0)]
+
+    for unselected_entity in unselected_entities:
+
+        for selected_entity in selected_entities:
+
+            if selected_entity.type == unselected_entity.type:
+                if (
+                    selected_entity.id == unselected_entity.id
+                    and selected_entity.schema_url
+                    == (unselected_entity.schema_url)
+                ):
+                    for key, value in unselected_entity.attributes.items():
+                        if key not in selected_entity.attributes.keys():
+                            # pylint: disable=protected-access
+                            selected_entity._attributes[key] = value  # type: ignore
+                    break
+                if (
+                    selected_entity.id == unselected_entity.id
+                    and selected_entity.schema_url
+                    != (unselected_entity.schema_url)
+                ):
+                    break
+                if selected_entity.id != unselected_entity.id:
+                    break
+        else:
+            selected_entities.append(unselected_entity)
+
+    return selected_entities
 
 
 class OTELResourceDetector(ResourceDetector):
