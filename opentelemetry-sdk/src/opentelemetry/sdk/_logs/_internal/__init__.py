@@ -20,8 +20,8 @@ import logging
 import threading
 import traceback
 import warnings
-from functools import lru_cache
 from os import environ
+from threading import Lock
 from time import time_ns
 from typing import Any, Callable, Optional, Tuple, Union  # noqa
 
@@ -582,9 +582,12 @@ class LoggingHandler(logging.Handler):
 
     def flush(self) -> None:
         """
-        Flushes the logging output. Skip flushing if logger is NoOp.
+        Flushes the logging output. Skip flushing if logging_provider has no force_flush method.
         """
-        self._logger_provider.force_flush()
+        if hasattr(self._logger_provider, "force_flush") and callable(
+            self._logger_provider.force_flush
+        ):
+            self._logger_provider.force_flush()
 
 
 class Logger(APILogger):
@@ -641,12 +644,13 @@ class LoggerProvider(APILoggerProvider):
         self._at_exit_handler = None
         if shutdown_on_exit:
             self._at_exit_handler = atexit.register(self.shutdown)
+        self._logger_cache = {}
+        self._logger_cache_lock = Lock()
 
     @property
     def resource(self):
         return self._resource
 
-    @lru_cache(maxsize=None)
     def get_logger(
         self,
         name: str,
@@ -662,16 +666,28 @@ class LoggerProvider(APILoggerProvider):
                 schema_url=schema_url,
                 attributes=attributes,
             )
-        return Logger(
-            self._resource,
-            self._multi_log_record_processor,
-            InstrumentationScope(
-                name,
-                version,
-                schema_url,
-                attributes,
-            ),
-        )
+        key = (name, version, schema_url)
+        # Fast path if the logger is already in the cache, return it
+        if key in self._logger_cache:
+            return self._logger_cache[key]
+
+        # Lock to prevent race conditions when registering loggers with the same key
+        with self._logger_cache_lock:
+            # Check again in case another thread added the logger while waiting
+            if key in self._logger_cache:
+                return self._logger_cache[key]
+
+            self._logger_cache[key] = Logger(
+                self._resource,
+                self._multi_log_record_processor,
+                InstrumentationScope(
+                    name,
+                    version,
+                    schema_url,
+                    attributes,
+                ),
+            )
+            return self._logger_cache[key]
 
     def add_log_record_processor(
         self, log_record_processor: LogRecordProcessor
