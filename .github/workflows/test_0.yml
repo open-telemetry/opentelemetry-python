@@ -124,8 +124,8 @@ jobs:
       - name: Run tests
         run: tox -e pypy3-test-opentelemetry-api -- -ra
 
-  py38-test-opentelemetry-proto_ubuntu-latest:
-    name: opentelemetry-proto 3.8 Ubuntu
+  py38-test-opentelemetry-proto-protobuf5_ubuntu-latest:
+    name: opentelemetry-proto-protobuf5 3.8 Ubuntu
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -140,10 +140,10 @@ jobs:
         run: pip install tox
 
       - name: Run tests
-        run: tox -e py38-test-opentelemetry-proto -- -ra
+        run: tox -e py38-test-opentelemetry-proto-protobuf5 -- -ra
 
-  py39-test-opentelemetry-proto_ubuntu-latest:
-    name: opentelemetry-proto 3.9 Ubuntu
+  py39-test-opentelemetry-proto-protobuf5_ubuntu-latest:
+    name: opentelemetry-proto-protobuf5 3.9 Ubuntu
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -158,10 +158,10 @@ jobs:
         run: pip install tox
 
       - name: Run tests
-        run: tox -e py39-test-opentelemetry-proto -- -ra
+        run: tox -e py39-test-opentelemetry-proto-protobuf5 -- -ra
 
-  py310-test-opentelemetry-proto_ubuntu-latest:
-    name: opentelemetry-proto 3.10 Ubuntu
+  py310-test-opentelemetry-proto-protobuf5_ubuntu-latest:
+    name: opentelemetry-proto-protobuf5 3.10 Ubuntu
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -176,10 +176,10 @@ jobs:
         run: pip install tox
 
       - name: Run tests
-        run: tox -e py310-test-opentelemetry-proto -- -ra
+        run: tox -e py310-test-opentelemetry-proto-protobuf5 -- -ra
 
-  py311-test-opentelemetry-proto_ubuntu-latest:
-    name: opentelemetry-proto 3.11 Ubuntu
+  py311-test-opentelemetry-proto-protobuf5_ubuntu-latest:
+    name: opentelemetry-proto-protobuf5 3.11 Ubuntu
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -194,10 +194,10 @@ jobs:
         run: pip install tox
 
       - name: Run tests
-        run: tox -e py311-test-opentelemetry-proto -- -ra
+        run: tox -e py311-test-opentelemetry-proto-protobuf5 -- -ra
 
-  py312-test-opentelemetry-proto_ubuntu-latest:
-    name: opentelemetry-proto 3.12 Ubuntu
+  py312-test-opentelemetry-proto-protobuf5_ubuntu-latest:
+    name: opentelemetry-proto-protobuf5 3.12 Ubuntu
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -212,10 +212,10 @@ jobs:
         run: pip install tox
 
       - name: Run tests
-        run: tox -e py312-test-opentelemetry-proto -- -ra
+        run: tox -e py312-test-opentelemetry-proto-protobuf5 -- -ra
 
-  pypy3-test-opentelemetry-proto_ubuntu-latest:
-    name: opentelemetry-proto pypy-3.8 Ubuntu
+  pypy3-test-opentelemetry-proto-protobuf5_ubuntu-latest:
+    name: opentelemetry-proto-protobuf5 pypy-3.8 Ubuntu
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -230,7 +230,7 @@ jobs:
         run: pip install tox
 
       - name: Run tests
-        run: tox -e pypy3-test-opentelemetry-proto -- -ra
+        run: tox -e pypy3-test-opentelemetry-proto-protobuf5 -- -ra
 
   py38-test-opentelemetry-sdk_ubuntu-latest:
     name: opentelemetry-sdk 3.8 Ubuntu
@@ -2104,8 +2104,8 @@ jobs:
       - name: Run tests
         run: tox -e pypy3-test-opentelemetry-api -- -ra
 
-  py38-test-opentelemetry-proto_windows-latest:
-    name: opentelemetry-proto 3.8 Windows
+  py38-test-opentelemetry-proto-protobuf5_windows-latest:
+    name: opentelemetry-proto-protobuf5 3.8 Windows
     runs-on: windows-latest
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2123,10 +2123,10 @@ jobs:
         run: git config --system core.longpaths true
 
       - name: Run tests
-        run: tox -e py38-test-opentelemetry-proto -- -ra
+        run: tox -e py38-test-opentelemetry-proto-protobuf5 -- -ra
 
-  py39-test-opentelemetry-proto_windows-latest:
-    name: opentelemetry-proto 3.9 Windows
+  py39-test-opentelemetry-proto-protobuf5_windows-latest:
+    name: opentelemetry-proto-protobuf5 3.9 Windows
     runs-on: windows-latest
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2144,10 +2144,10 @@ jobs:
         run: git config --system core.longpaths true
 
       - name: Run tests
-        run: tox -e py39-test-opentelemetry-proto -- -ra
+        run: tox -e py39-test-opentelemetry-proto-protobuf5 -- -ra
 
-  py310-test-opentelemetry-proto_windows-latest:
-    name: opentelemetry-proto 3.10 Windows
+  py310-test-opentelemetry-proto-protobuf5_windows-latest:
+    name: opentelemetry-proto-protobuf5 3.10 Windows
     runs-on: windows-latest
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2165,10 +2165,10 @@ jobs:
         run: git config --system core.longpaths true
 
       - name: Run tests
-        run: tox -e py310-test-opentelemetry-proto -- -ra
+        run: tox -e py310-test-opentelemetry-proto-protobuf5 -- -ra
 
-  py311-test-opentelemetry-proto_windows-latest:
-    name: opentelemetry-proto 3.11 Windows
+  py311-test-opentelemetry-proto-protobuf5_windows-latest:
+    name: opentelemetry-proto-protobuf5 3.11 Windows
     runs-on: windows-latest
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2186,10 +2186,10 @@ jobs:
         run: git config --system core.longpaths true
 
       - name: Run tests
-        run: tox -e py311-test-opentelemetry-proto -- -ra
+        run: tox -e py311-test-opentelemetry-proto-protobuf5 -- -ra
 
-  py312-test-opentelemetry-proto_windows-latest:
-    name: opentelemetry-proto 3.12 Windows
+  py312-test-opentelemetry-proto-protobuf5_windows-latest:
+    name: opentelemetry-proto-protobuf5 3.12 Windows
     runs-on: windows-latest
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2207,10 +2207,10 @@ jobs:
         run: git config --system core.longpaths true
 
       - name: Run tests
-        run: tox -e py312-test-opentelemetry-proto -- -ra
+        run: tox -e py312-test-opentelemetry-proto-protobuf5 -- -ra
 
-  pypy3-test-opentelemetry-proto_windows-latest:
-    name: opentelemetry-proto pypy-3.8 Windows
+  pypy3-test-opentelemetry-proto-protobuf5_windows-latest:
+    name: opentelemetry-proto-protobuf5 pypy-3.8 Windows
     runs-on: windows-latest
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2228,7 +2228,7 @@ jobs:
         run: git config --system core.longpaths true
 
       - name: Run tests
-        run: tox -e pypy3-test-opentelemetry-proto -- -ra
+        run: tox -e pypy3-test-opentelemetry-proto-protobuf5 -- -ra
 
   py38-test-opentelemetry-sdk_windows-latest:
     name: opentelemetry-sdk 3.8 Windows
