@@ -209,8 +209,7 @@ class _CustomCollector:
             )
 
             if metric_family_id_metric_family:
-                for metric_family in metric_family_id_metric_family.values():
-                    yield metric_family
+                yield from metric_family_id_metric_family.values()
 
     # pylint: disable=too-many-locals,too-many-branches
     def _translate_to_prometheus(

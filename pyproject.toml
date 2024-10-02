@@ -18,3 +18,12 @@ exclude = '''
 [tool.pytest.ini_options]
 addopts = "-rs -v"
 log_cli = true
+
+[tool.pyright]
+typeCheckingMode = "off"
+reportMissingTypeStubs = "error"
+include = [
+    "opentelemetry-api/src",
+    "opentelemetry-sdk/src",
+    "opentelemetry-semantic-conventions/src",
+]

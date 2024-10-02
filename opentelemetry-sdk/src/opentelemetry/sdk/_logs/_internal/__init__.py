@@ -50,7 +50,7 @@ from opentelemetry.trace import (
     get_current_span,
 )
 from opentelemetry.trace.span import TraceFlags
-from opentelemetry.util.types import Attributes
+from opentelemetry.util.types import AnyValue, Attributes
 
 _logger = logging.getLogger(__name__)
 
@@ -179,7 +179,7 @@ class LogRecord(APILogRecord):
         trace_flags: Optional[TraceFlags] = None,
         severity_text: Optional[str] = None,
         severity_number: Optional[SeverityNumber] = None,
-        body: Optional[Any] = None,
+        body: Optional[AnyValue] = None,
         resource: Optional[Resource] = None,
         attributes: Optional[Attributes] = None,
         limits: Optional[LogLimits] = _UnsetLogLimits,
