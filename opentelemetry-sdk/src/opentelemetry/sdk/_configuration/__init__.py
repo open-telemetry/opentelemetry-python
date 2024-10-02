@@ -45,7 +45,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_TRACES_SAMPLER_ARG,
     # TODO which env vars
     OTEL_LOG_LEVEL,
-    OTEL_PYTHON_LOG_LEVEL,
+    # OTEL_PYTHON_LOG_LEVEL,
     OTEL_PYTHON_LOG_FORMAT,
 )
 from opentelemetry.sdk.metrics import MeterProvider
@@ -249,7 +249,7 @@ def _init_logging(
         "warning": logging.WARNING,
         "error": logging.ERROR,
     }
-    log_level = levels.get(environ.get(OTEL_PYTHON_LOG_LEVEL, "info").lower(), logging.INFO)
+    log_level = levels.get(environ.get(OTEL_LOG_LEVEL, "info").lower(), logging.INFO)
 
     provider = LoggerProvider(resource=resource)
     set_logger_provider(provider)
