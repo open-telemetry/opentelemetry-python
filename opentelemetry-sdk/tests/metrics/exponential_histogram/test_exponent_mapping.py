@@ -389,9 +389,9 @@ class TestExponentMapping(TestCase):
 
             self.assertEqual(
                 exponent_mapping.map_to_index(
-                    nextafter(
+                    nextafter(  # pylint: disable=possibly-used-before-assignment
                         MIN_NORMAL_VALUE, inf
-                    )  # pylint: disable=possibly-used-before-assignment
+                    )
                 ),
                 MIN_NORMAL_EXPONENT >> -scale,
             )
