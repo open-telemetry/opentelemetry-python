@@ -7,10 +7,10 @@ from opentelemetry.proto.collector.logs.v1 import (
     logs_service_pb2 as opentelemetry_dot_proto_dot_collector_dot_logs_dot_v1_dot_logs__service__pb2,
 )
 
-GRPC_GENERATED_VERSION = "1.65.5"
+GRPC_GENERATED_VERSION = "1.63.2"
 GRPC_VERSION = grpc.__version__
-EXPECTED_ERROR_RELEASE = "1.66.0"
-SCHEDULED_RELEASE_DATE = "August 6, 2024"
+EXPECTED_ERROR_RELEASE = "1.65.0"
+SCHEDULED_RELEASE_DATE = "June 25, 2024"
 _version_not_supported = False
 
 try:
@@ -83,10 +83,6 @@ def add_LogsServiceServicer_to_server(servicer, server):
         rpc_method_handlers,
     )
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers(
-        "opentelemetry.proto.collector.logs.v1.LogsService",
-        rpc_method_handlers,
-    )
 
 
 # This class is part of an EXPERIMENTAL API.
