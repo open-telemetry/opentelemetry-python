@@ -381,7 +381,6 @@ def _initialize_components(
     id_generator: IdGenerator = None,
     logging_enabled: Optional[bool] = None,
 ):
-    print("_initialize_components")
     if trace_exporter_names is None:
         trace_exporter_names = []
     if metric_exporter_names is None:
