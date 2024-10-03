@@ -210,6 +210,7 @@ class MetricReaderStorage:
                     metrics.append(
                         Metric(
                             # pylint: disable=protected-access
+                            # pylint: disable=possibly-used-before-assignment
                             name=view_instrument_match._name,
                             description=view_instrument_match._description,
                             unit=view_instrument_match._instrument.unit,
