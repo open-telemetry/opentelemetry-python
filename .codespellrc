@@ -1,4 +1,5 @@
 [codespell]
 # skipping auto generated folders
-skip = ./.tox,./.mypy_cache,./docs/_build,./target,*/LICENSE,./venv,.git,./opentelemetry-semantic-conventions,*-requirements*.txt
+skip = ./.tox,./.mypy_cache,./docs/_build,./target,*/LICENSE,./venv,.git,./opentelemetry-semantic-conventions,*-requirements*.txt,./_file_configuration/.nox
+
 ignore-words-list = ans,ue,ot,hist,ro
