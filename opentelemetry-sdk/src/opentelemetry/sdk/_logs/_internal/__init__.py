@@ -36,6 +36,7 @@ from opentelemetry._logs import (
     std_to_otel,
 )
 from opentelemetry.attributes import BoundedAttributes
+from opentelemetry.context.context import Context
 from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_COUNT_LIMIT,
     OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
@@ -597,6 +598,33 @@ class Logger(APILogger):
         """
         log_data = LogData(record, self._instrumentation_scope)
         self._multi_log_record_processor.emit(log_data)
+
+    def emit_event(
+        self,
+        name: str,
+        timestamp: Optional[int] = None,
+        context: Optional[Context] = None,
+        body: Optional[Any] = None,
+        severity_number: Optional[SeverityNumber] = None,
+        attributes: Optional[Attributes] = None,
+    ) -> None:
+        """Emits the :class:`LogData` by associating :class:`LogRecord`
+        and instrumentation info.
+        """
+        event_attributes = {**(attributes or {}), "event.name": name}
+
+        current_span_context = get_current_span(context).get_span_context()
+        self.emit(
+            LogRecord(
+                timestamp=timestamp or time_ns(),
+                trace_id=current_span_context.trace_id,
+                span_id=current_span_context.span_id,
+                trace_flags=current_span_context.trace_flags,
+                severity_number=severity_number,
+                body=body,
+                attributes=event_attributes,
+            )
+        )
 
 
 class LoggerProvider(APILoggerProvider):

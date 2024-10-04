@@ -14,9 +14,8 @@
 
 import unittest
 
-from opentelemetry import _events as events_api
+from opentelemetry import _logs as logging_api
 from opentelemetry import trace as trace_api
-from opentelemetry._logs import _internal as logging_api
 from opentelemetry.metrics import _internal as metrics_api
 from opentelemetry.metrics._internal import _ProxyMeterProvider
 from opentelemetry.util._once import Once
@@ -44,16 +43,6 @@ def reset_logging_globals() -> None:
     logging_api._LOGGER_PROVIDER_SET_ONCE = Once()  # type: ignore[attr-defined]
     logging_api._LOGGER_PROVIDER = None  # type: ignore[attr-defined]
     logging_api._PROXY_LOGGER_PROVIDER = logging_api.ProxyLoggerProvider()  # type: ignore[attr-defined]
-
-
-# pylint: disable=protected-access
-def reset_event_globals() -> None:
-    """WARNING: only use this for tests."""
-    events_api._EVENT_LOGGER_PROVIDER_SET_ONCE = Once()  # type: ignore[attr-defined]
-    events_api._EVENT_LOGGER_PROVIDER = None  # type: ignore[attr-defined]
-    events_api._PROXY_EVENT_LOGGER_PROVIDER = (
-        events_api.ProxyEventLoggerProvider()
-    )  # type: ignore[attr-defined]
 
 
 class TraceGlobalsTest(unittest.TestCase):
@@ -99,18 +88,3 @@ class LoggingGlobalsTest(unittest.TestCase):
     def tearDown(self) -> None:
         super().tearDown()
         reset_logging_globals()
-
-
-class EventsGlobalsTest(unittest.TestCase):
-    """Resets logging API globals in setUp/tearDown
-
-    Use as a base class or mixin for your test that modifies logging API globals.
-    """
-
-    def setUp(self) -> None:
-        super().setUp()
-        reset_event_globals()
-
-    def tearDown(self) -> None:
-        super().tearDown()
-        reset_event_globals()
