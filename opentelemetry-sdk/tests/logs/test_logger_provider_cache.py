@@ -23,58 +23,44 @@ def create_logger(handler, name):
     return logger
 
 
-class TestLogProviderCache(unittest.TestCase):
+class TestLoggerProviderCache(unittest.TestCase):
 
     def test_get_logger_single_handler(self):
         handler, logger_provider = set_up_logging_handler(level=logging.DEBUG)
 
-        cache_info = logger_provider._get_logger_cached.cache_clear()
-
         logger = create_logger(handler, "test_logger")
 
         # Ensure logger is lazily cached
-        cache_info = logger_provider._get_logger_cached.cache_info()
-        self.assertEqual(0, cache_info.currsize)
+        self.assertEqual(0, len(logger_provider._logger_cache))
 
         logger.warning("test message")
 
-        cache_info = logger_provider._get_logger_cached.cache_info()
-        self.assertEqual(1, cache_info.currsize)
-        self.assertEqual(1, cache_info.misses)
+        self.assertEqual(1, len(logger_provider._logger_cache))
 
         # Ensure only one logger is cached
         rounds = 100
         for _ in range(rounds):
             logger.warning("test message")
 
-        cache_info = logger_provider._get_logger_cached.cache_info()
-        self.assertEqual(1, cache_info.currsize)
-        self.assertEqual(1, cache_info.misses)
+        self.assertEqual(1, len(logger_provider._logger_cache))
 
     def test_get_logger_multiple_loggers(self):
         handler, logger_provider = set_up_logging_handler(level=logging.DEBUG)
-
-        cache_info = logger_provider._get_logger_cached.cache_clear()
 
         num_loggers = 10
         loggers = [create_logger(handler, str(i)) for i in range(num_loggers)]
 
         # Ensure loggers are lazily cached
-        cache_info = logger_provider._get_logger_cached.cache_info()
-        self.assertEqual(0, cache_info.currsize)
+        self.assertEqual(0, len(logger_provider._logger_cache))
 
         for logger in loggers:
             logger.warning("test message")
 
-        cache_info = logger_provider._get_logger_cached.cache_info()
-        self.assertEqual(num_loggers, cache_info.currsize)
-        self.assertEqual(num_loggers, cache_info.misses)
+        self.assertEqual(num_loggers, len(logger_provider._logger_cache))
 
         rounds = 100
         for _ in range(rounds):
             for logger in loggers:
                 logger.warning("test message")
 
-        cache_info = logger_provider._get_logger_cached.cache_info()
-        self.assertEqual(num_loggers, cache_info.currsize)
-        self.assertEqual(num_loggers, cache_info.misses)
+        self.assertEqual(num_loggers, len(logger_provider._logger_cache))
