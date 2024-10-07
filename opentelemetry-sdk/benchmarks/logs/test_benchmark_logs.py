@@ -32,7 +32,7 @@ def test_simple_get_logger_different_names(benchmark, num_loggers):
     ]
 
     def benchmark_get_logger():
-        for i in range(1000):
-            loggers[i % num_loggers].warning("test message")
+        for index in range(1000):
+            loggers[index % num_loggers].warning("test message")
 
     benchmark(benchmark_get_logger)

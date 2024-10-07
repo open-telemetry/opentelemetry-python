@@ -20,8 +20,8 @@ import logging
 import threading
 import traceback
 import warnings
+from functools import lru_cache
 from os import environ
-from threading import Lock
 from time import time_ns
 from typing import Any, Callable, Optional, Tuple, Union  # noqa
 
@@ -644,12 +644,46 @@ class LoggerProvider(APILoggerProvider):
         self._at_exit_handler = None
         if shutdown_on_exit:
             self._at_exit_handler = atexit.register(self.shutdown)
-        self._logger_cache = {}
-        self._logger_cache_lock = Lock()
 
     @property
     def resource(self):
         return self._resource
+
+    def _get_logger_no_cache(
+        self,
+        name: str,
+        version: Optional[str] = None,
+        schema_url: Optional[str] = None,
+        attributes: Optional[Attributes] = None,
+    ) -> Logger:
+        return Logger(
+            self._resource,
+            self._multi_log_record_processor,
+            InstrumentationScope(
+                name,
+                version,
+                schema_url,
+                attributes,
+            ),
+        )
+
+    @lru_cache(maxsize=None)
+    def _get_logger_cached(
+        self,
+        name: str,
+        version: Optional[str] = None,
+        schema_url: Optional[str] = None,
+    ) -> Logger:
+        return Logger(
+            self._resource,
+            self._multi_log_record_processor,
+            InstrumentationScope(
+                name,
+                version,
+                schema_url,
+                None,
+            ),
+        )
 
     def get_logger(
         self,
@@ -666,28 +700,12 @@ class LoggerProvider(APILoggerProvider):
                 schema_url=schema_url,
                 attributes=attributes,
             )
-        key = (name, version, schema_url)
-        # Fast path if the logger is already in the cache, return it
-        if key in self._logger_cache:
-            return self._logger_cache[key]
-
-        # Lock to prevent race conditions when registering loggers with the same key
-        with self._logger_cache_lock:
-            # Check again in case another thread added the logger while waiting
-            if key in self._logger_cache:
-                return self._logger_cache[key]
-
-            self._logger_cache[key] = Logger(
-                self._resource,
-                self._multi_log_record_processor,
-                InstrumentationScope(
-                    name,
-                    version,
-                    schema_url,
-                    attributes,
-                ),
+        if attributes is None:
+            return self._get_logger_cached(name, version, schema_url)
+        else:
+            return self._get_logger_no_cache(
+                name, version, schema_url, attributes
             )
-            return self._logger_cache[key]
 
     def add_log_record_processor(
         self, log_record_processor: LogRecordProcessor
