@@ -7,12 +7,13 @@ import shlex
 import shutil
 import subprocess
 import sys
-from toml import load
 from configparser import ConfigParser
 from inspect import cleandoc
 from itertools import chain
 from os.path import basename
 from pathlib import Path, PurePath
+
+from toml import load
 
 DEFAULT_ALLSEP = " "
 DEFAULT_ALLFMT = "{rel}"

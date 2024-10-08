@@ -128,11 +128,21 @@ class TestLogRecord(unittest.TestCase):
                     attributes=attr,
                     limits=limits,
                 )
-        self.assertEqual(len(cw), 1)
-        self.assertIsInstance(cw[-1].message, LogDroppedAttributesWarning)
+
+        non_deprecation_warnings = []
+
+        for warning in cw:
+            if warning.category is DeprecationWarning:
+                continue
+            non_deprecation_warnings.append(warning)
+
+        self.assertEqual(len(non_deprecation_warnings), 1)
+        self.assertIsInstance(
+            non_deprecation_warnings[0].message, LogDroppedAttributesWarning
+        )
         self.assertIn(
             "Log record attributes were dropped due to limits",
-            str(cw[-1].message),
+            str(non_deprecation_warnings[0].message),
         )
 
     def test_log_record_dropped_attributes_unset_limits(self):

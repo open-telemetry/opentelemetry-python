@@ -1,10 +1,10 @@
 from pathlib import Path
 
 from generate_workflows_lib import (
-    generate_test_workflow,
-    generate_lint_workflow,
     generate_contrib_workflow,
-    generate_misc_workflow
+    generate_lint_workflow,
+    generate_misc_workflow,
+    generate_test_workflow,
 )
 
 tox_ini_path = Path(__file__).parent.parent.parent.joinpath("tox.ini")
