@@ -468,11 +468,14 @@ class LoggingHandler(logging.Handler):
         self,
         level=logging.NOTSET,
         logger_provider=None,
+        instrumentation_scope=None,
     ) -> None:
         super().__init__(level=level)
         self._logger_provider = logger_provider or get_logger_provider()
         self._logger = get_logger(
-            __name__, logger_provider=self._logger_provider
+            __name__,
+            logger_provider=self._logger_provider,
+            instrumentation_scope=instrumentation_scope,
         )
 
     @staticmethod
@@ -653,6 +656,7 @@ class LoggerProvider(APILoggerProvider):
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
         attributes: Optional[Attributes] = None,
+        instrumentation_scope: Optional[InstrumentationScope] = None,
     ) -> Logger:
         if self._disabled:
             _logger.warning("SDK is disabled.")
@@ -661,6 +665,17 @@ class LoggerProvider(APILoggerProvider):
                 version=version,
                 schema_url=schema_url,
                 attributes=attributes,
+            )
+        if instrumentation_scope:
+            return Logger(
+                self._resource,
+                self._multi_log_record_processor,
+                InstrumentationScope(
+                    instrumentation_scope.name,
+                    instrumentation_scope.version,
+                    instrumentation_scope.schema_url,
+                    instrumentation_scope.attributes,
+                ),
             )
         return Logger(
             self._resource,
