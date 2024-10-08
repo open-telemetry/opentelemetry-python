@@ -60,6 +60,7 @@ import concurrent.futures
 import logging
 import os
 import platform
+import socket
 import sys
 import typing
 from json import dumps
@@ -105,6 +106,7 @@ FAAS_ID = ResourceAttributes.FAAS_ID
 FAAS_VERSION = ResourceAttributes.FAAS_VERSION
 FAAS_INSTANCE = ResourceAttributes.FAAS_INSTANCE
 HOST_NAME = ResourceAttributes.HOST_NAME
+HOST_ARCH = ResourceAttributes.HOST_ARCH
 HOST_TYPE = ResourceAttributes.HOST_TYPE
 HOST_IMAGE_NAME = ResourceAttributes.HOST_IMAGE_NAME
 HOST_IMAGE_ID = ResourceAttributes.HOST_IMAGE_ID
@@ -467,6 +469,20 @@ class OsResourceDetector(ResourceDetector):
             {
                 OS_TYPE: os_type,
                 OS_VERSION: os_version,
+            }
+        )
+
+
+class _HostResourceDetector(ResourceDetector):
+    """
+    The HostResourceDetector detects the hostname and architecture attributes.
+    """
+
+    def detect(self) -> "Resource":
+        return Resource(
+            {
+                HOST_NAME: socket.gethostname(),
+                HOST_ARCH: platform.machine(),
             }
         )
 
