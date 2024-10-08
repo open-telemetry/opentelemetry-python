@@ -565,4 +565,3 @@ class PeriodicExportingMetricReader(MetricReader):
         super().force_flush(timeout_millis=timeout_millis)
         self._exporter.force_flush(timeout_millis=timeout_millis)
         return True
-    
