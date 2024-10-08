@@ -483,7 +483,7 @@ class _HostResourceDetector(ResourceDetector):
         _host_arch = platform.machine()
         return Resource(
             {
-                HOST_NAME: _host_name,
+                HOST_NAME: socket.gethostname(),
                 HOST_ARCH: _host_arch,
             }
         )
