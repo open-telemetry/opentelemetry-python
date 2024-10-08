@@ -33,6 +33,7 @@ def get_dict_as_key(
     labels: Mapping[str, AttributeValue]
 ) -> AttributesAsKey: ...
 
+# pylint: disable=no-self-use
 class BoundedList(Sequence[_T]):
     """An append only list with a fixed max size.
 
@@ -51,7 +52,9 @@ class BoundedList(Sequence[_T]):
     def append(self, item: _T): ...
     def extend(self, seq: Sequence[_T]): ...
     @classmethod
-    def from_seq(cls, maxlen: int, seq: Iterable[_T]) -> BoundedList[_T]: ...
+    def from_seq(
+        cls, maxlen: int, seq: Iterable[_T]
+    ) -> BoundedList[_T]: ...  # pylint: disable=undefined-variable
 
 class BoundedDict(MutableMapping[_KT, _VT]):
     """An ordered dict with a fixed max capacity.
@@ -70,4 +73,4 @@ class BoundedDict(MutableMapping[_KT, _VT]):
     @classmethod
     def from_map(
         cls, maxlen: int, mapping: Mapping[_KT, _VT]
-    ) -> BoundedDict[_KT, _VT]: ...
+    ) -> BoundedDict[_KT, _VT]: ...  # pylint: disable=undefined-variable
