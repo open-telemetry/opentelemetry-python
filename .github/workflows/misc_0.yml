@@ -124,8 +124,8 @@ jobs:
       - name: Run tests
         run: tox -e docs
 
-  docker-tests-proto:
-    name: docker-tests-proto
+  docker-tests-otlpexporter:
+    name: docker-tests-otlpexporter
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -140,7 +140,25 @@ jobs:
         run: pip install tox
 
       - name: Run tests
-        run: tox -e docker-tests-proto
+        run: tox -e docker-tests-otlpexporter
+
+  docker-tests-opencensus:
+    name: docker-tests-opencensus
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Run tests
+        run: tox -e docker-tests-opencensus
 
   public-symbols-check:
     name: public-symbols-check
