@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from sys import version_info
+# pylint: disable=invalid-name,no-self-use
+
 from time import sleep
 from unittest import TestCase
 from unittest.mock import MagicMock, Mock, patch
@@ -42,6 +43,7 @@ class TestSynchronousMeasurementConsumer(TestCase):
         reader_mocks = [Mock() for _ in range(5)]
         SynchronousMeasurementConsumer(
             SdkConfiguration(
+                exemplar_filter=Mock(),
                 resource=Mock(),
                 metric_readers=reader_mocks,
                 views=Mock(),
@@ -58,6 +60,7 @@ class TestSynchronousMeasurementConsumer(TestCase):
 
         consumer = SynchronousMeasurementConsumer(
             SdkConfiguration(
+                exemplar_filter=Mock(should_sample=Mock(return_value=False)),
                 resource=Mock(),
                 metric_readers=reader_mocks,
                 views=Mock(),
@@ -68,7 +71,7 @@ class TestSynchronousMeasurementConsumer(TestCase):
 
         for rs_mock in reader_storage_mocks:
             rs_mock.consume_measurement.assert_called_once_with(
-                measurement_mock
+                measurement_mock, False
             )
 
     def test_collect_passed_to_reader_stage(self, MockMetricReaderStorage):
@@ -79,6 +82,7 @@ class TestSynchronousMeasurementConsumer(TestCase):
 
         consumer = SynchronousMeasurementConsumer(
             SdkConfiguration(
+                exemplar_filter=Mock(),
                 resource=Mock(),
                 metric_readers=reader_mocks,
                 views=Mock(),
@@ -97,6 +101,7 @@ class TestSynchronousMeasurementConsumer(TestCase):
         MockMetricReaderStorage.return_value = reader_storage_mock
         consumer = SynchronousMeasurementConsumer(
             SdkConfiguration(
+                exemplar_filter=Mock(),
                 resource=Mock(),
                 metric_readers=[reader_mock],
                 views=Mock(),
@@ -124,6 +129,7 @@ class TestSynchronousMeasurementConsumer(TestCase):
         MockMetricReaderStorage.return_value = reader_storage_mock
         consumer = SynchronousMeasurementConsumer(
             SdkConfiguration(
+                exemplar_filter=Mock(),
                 resource=Mock(),
                 metric_readers=[reader_mock],
                 views=Mock(),
@@ -156,6 +162,7 @@ class TestSynchronousMeasurementConsumer(TestCase):
         MockMetricReaderStorage.return_value = reader_storage_mock
         consumer = SynchronousMeasurementConsumer(
             SdkConfiguration(
+                exemplar_filter=Mock(),
                 resource=Mock(),
                 metric_readers=[reader_mock],
                 views=Mock(),
@@ -175,16 +182,11 @@ class TestSynchronousMeasurementConsumer(TestCase):
 
         consumer.collect(reader_mock)
 
-        if version_info < (3, 8):
-            callback_options_time_call = mock_callback_options.mock_calls[-1][
-                2
-            ]["timeout_millis"]
-        else:
-            callback_options_time_call = mock_callback_options.mock_calls[
-                -1
-            ].kwargs["timeout_millis"]
+        callback_options_time_call = mock_callback_options.mock_calls[
+            -1
+        ].kwargs["timeout_millis"]
 
         self.assertLess(
             callback_options_time_call,
-            10000 * 10**6,
+            10000,
         )

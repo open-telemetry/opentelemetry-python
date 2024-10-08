@@ -29,12 +29,14 @@ from opentelemetry.metrics import (
     ObservableGauge,
     ObservableUpDownCounter,
     UpDownCounter,
+    _Gauge,
 )
 
 # FIXME Test that the instrument methods can be called concurrently safely.
 
 
 class ChildInstrument(Instrument):
+    # pylint: disable=useless-parent-delegation
     def __init__(self, name, *args, unit="", description="", **kwargs):
         super().__init__(
             name, *args, unit=unit, description=description, **kwargs
@@ -277,6 +279,50 @@ class TestHistogram(TestCase):
         self.assertIsNone(NoOpHistogram("name").record(1))
 
 
+class TestGauge(TestCase):
+    def test_create_gauge(self):
+        """
+        Test that the Gauge can be created with create_gauge.
+        """
+
+        self.assertTrue(
+            isinstance(NoOpMeter("name").create_gauge("name"), _Gauge)
+        )
+
+    def test_api_gauge_abstract(self):
+        """
+        Test that the API Gauge is an abstract class.
+        """
+
+        self.assertTrue(isabstract(_Gauge))
+
+    def test_create_gauge_api(self):
+        """
+        Test that the API for creating a gauge accepts the name of the instrument.
+        Test that the API for creating a gauge accepts a sequence of callbacks.
+        Test that the API for creating a gauge accepts the unit of the instrument.
+        Test that the API for creating a gauge accepts the description of the instrument
+        """
+
+        create_gauge_signature = signature(Meter.create_gauge)
+        self.assertIn("name", create_gauge_signature.parameters.keys())
+        self.assertIs(
+            create_gauge_signature.parameters["name"].default,
+            Signature.empty,
+        )
+        create_gauge_signature = signature(Meter.create_gauge)
+        create_gauge_signature = signature(Meter.create_gauge)
+        self.assertIn("unit", create_gauge_signature.parameters.keys())
+        self.assertIs(create_gauge_signature.parameters["unit"].default, "")
+
+        create_gauge_signature = signature(Meter.create_gauge)
+        self.assertIn("description", create_gauge_signature.parameters.keys())
+        self.assertIs(
+            create_gauge_signature.parameters["description"].default,
+            "",
+        )
+
+
 class TestObservableGauge(TestCase):
     def test_create_observable_gauge(self):
         """
@@ -455,6 +501,7 @@ class TestUpDownCounter(TestCase):
 
 
 class TestObservableUpDownCounter(TestCase):
+    # pylint: disable=protected-access
     def test_create_observable_up_down_counter(self):
         """
         Test that the ObservableUpDownCounter can be created with create_observable_up_down_counter.

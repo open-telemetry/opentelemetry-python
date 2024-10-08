@@ -12,19 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=too-many-lines
+
 import threading
-import time
 from concurrent.futures import ThreadPoolExecutor
 
 # pylint: disable=too-many-lines
 from logging import WARNING
 from os import environ
 from os.path import dirname
+from time import time_ns
 from typing import List
 from unittest import TestCase
 from unittest.mock import patch
 
-from google.protobuf.duration_pb2 import Duration
+from google.protobuf.duration_pb2 import (  # pylint: disable=no-name-in-module
+    Duration,
+)
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import ChannelCredentials, Compression, StatusCode, server
 
@@ -43,6 +47,8 @@ from opentelemetry.proto.common.v1.common_pb2 import InstrumentationScope
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY,
     OTEL_EXPORTER_OTLP_METRICS_COMPRESSION,
     OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION,
     OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
@@ -95,7 +101,7 @@ class MetricsServiceServicerUNAVAILABLEDelay(MetricsServiceServicer):
                 (
                     "google.rpc.retryinfo-bin",
                     RetryInfo(
-                        retry_delay=Duration(seconds=4)
+                        retry_delay=Duration(nanos=int(1e7))
                     ).SerializeToString(),
                 ),
             )
@@ -108,6 +114,14 @@ class MetricsServiceServicerUNAVAILABLE(MetricsServiceServicer):
     # pylint: disable=invalid-name,unused-argument,no-self-use
     def Export(self, request, context):
         context.set_code(StatusCode.UNAVAILABLE)
+
+        return ExportMetricsServiceResponse()
+
+
+class MetricsServiceServicerUNKNOWN(MetricsServiceServicer):
+    # pylint: disable=invalid-name,unused-argument,no-self-use
+    def Export(self, request, context):
+        context.set_code(StatusCode.UNKNOWN)
 
         return ExportMetricsServiceResponse()
 
@@ -211,8 +225,6 @@ class TestOTLPMetricExporter(TestCase):
         "os.environ",
         {
             OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: "collector:4317",
-            OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE: THIS_DIR
-            + "/fixtures/test.cert",
             OTEL_EXPORTER_OTLP_METRICS_HEADERS: " key1=value1,KEY2 = value=2",
             OTEL_EXPORTER_OTLP_METRICS_TIMEOUT: "10",
             OTEL_EXPORTER_OTLP_METRICS_COMPRESSION: "gzip",
@@ -231,8 +243,69 @@ class TestOTLPMetricExporter(TestCase):
         self.assertEqual(kwargs["headers"], " key1=value1,KEY2 = value=2")
         self.assertEqual(kwargs["timeout"], 10)
         self.assertEqual(kwargs["compression"], Compression.Gzip)
+        self.assertIsNone(kwargs["credentials"])
+
+    @patch.dict(
+        "os.environ",
+        {
+            OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: "collector:4317",
+            OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE: THIS_DIR
+            + "/fixtures/test.cert",
+            OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE: THIS_DIR
+            + "/fixtures/test-client-cert.pem",
+            OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY: THIS_DIR
+            + "/fixtures/test-client-key.pem",
+            OTEL_EXPORTER_OTLP_METRICS_HEADERS: " key1=value1,KEY2 = value=2",
+            OTEL_EXPORTER_OTLP_METRICS_TIMEOUT: "10",
+            OTEL_EXPORTER_OTLP_METRICS_COMPRESSION: "gzip",
+        },
+    )
+    @patch(
+        "opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__"
+    )
+    def test_env_variables_with_client_certificates(self, mock_exporter_mixin):
+        OTLPMetricExporter()
+
+        self.assertTrue(len(mock_exporter_mixin.call_args_list) == 1)
+        _, kwargs = mock_exporter_mixin.call_args_list[0]
+
+        self.assertEqual(kwargs["endpoint"], "collector:4317")
+        self.assertEqual(kwargs["headers"], " key1=value1,KEY2 = value=2")
+        self.assertEqual(kwargs["timeout"], 10)
+        self.assertEqual(kwargs["compression"], Compression.Gzip)
         self.assertIsNotNone(kwargs["credentials"])
         self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
+
+    @patch.dict(
+        "os.environ",
+        {
+            OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: "collector:4317",
+            OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE: THIS_DIR
+            + "/fixtures/test.cert",
+            OTEL_EXPORTER_OTLP_METRICS_HEADERS: " key1=value1,KEY2 = value=2",
+            OTEL_EXPORTER_OTLP_METRICS_TIMEOUT: "10",
+            OTEL_EXPORTER_OTLP_METRICS_COMPRESSION: "gzip",
+        },
+    )
+    @patch(
+        "opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__"
+    )
+    @patch("logging.Logger.error")
+    def test_env_variables_with_only_certificate(
+        self, mock_logger_error, mock_exporter_mixin
+    ):
+        OTLPMetricExporter()
+
+        self.assertTrue(len(mock_exporter_mixin.call_args_list) == 1)
+        _, kwargs = mock_exporter_mixin.call_args_list[0]
+        self.assertEqual(kwargs["endpoint"], "collector:4317")
+        self.assertEqual(kwargs["headers"], " key1=value1,KEY2 = value=2")
+        self.assertEqual(kwargs["timeout"], 10)
+        self.assertEqual(kwargs["compression"], Compression.Gzip)
+        self.assertIsNotNone(kwargs["credentials"])
+        self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
+
+        mock_logger_error.assert_not_called()
 
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"
@@ -413,7 +486,7 @@ class TestOTLPMetricExporter(TestCase):
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
     def test_unavailable(self, mock_sleep, mock_expo):
 
-        mock_expo.configure_mock(**{"return_value": [1]})
+        mock_expo.configure_mock(**{"return_value": [0.01]})
 
         add_MetricsServiceServicer_to_server(
             MetricsServiceServicerUNAVAILABLE(), self.server
@@ -422,7 +495,7 @@ class TestOTLPMetricExporter(TestCase):
             self.exporter.export(self.metrics["sum_int"]),
             MetricExportResult.FAILURE,
         )
-        mock_sleep.assert_called_with(1)
+        mock_sleep.assert_called_with(0.01)
 
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc.exporter._create_exp_backoff_generator"
@@ -439,7 +512,32 @@ class TestOTLPMetricExporter(TestCase):
             self.exporter.export(self.metrics["sum_int"]),
             MetricExportResult.FAILURE,
         )
-        mock_sleep.assert_called_with(4)
+        mock_sleep.assert_called_with(0.01)
+
+    @patch(
+        "opentelemetry.exporter.otlp.proto.grpc.exporter._create_exp_backoff_generator"
+    )
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.logger.error")
+    def test_unknown_logs(self, mock_logger_error, mock_sleep, mock_expo):
+
+        mock_expo.configure_mock(**{"return_value": [1]})
+
+        add_MetricsServiceServicer_to_server(
+            MetricsServiceServicerUNKNOWN(), self.server
+        )
+        self.assertEqual(
+            self.exporter.export(self.metrics["sum_int"]),
+            MetricExportResult.FAILURE,
+        )
+        mock_sleep.assert_not_called()
+        mock_logger_error.assert_called_with(
+            "Failed to export %s to %s, error code: %s",
+            "metrics",
+            "localhost:4317",
+            StatusCode.UNKNOWN,
+            exc_info=True,
+        )
 
     def test_success(self):
         add_MetricsServiceServicer_to_server(
@@ -767,9 +865,9 @@ class TestOTLPMetricExporter(TestCase):
             # pylint: disable=protected-access
             self.assertTrue(self.exporter._export_lock.locked())
             # delay is 4 seconds while the default shutdown timeout is 30_000 milliseconds
-            start_time = time.time()
+            start_time = time_ns()
             self.exporter.shutdown()
-            now = time.time()
+            now = time_ns()
             self.assertGreaterEqual(now, (start_time + 30 / 1000))
             # pylint: disable=protected-access
             self.assertTrue(self.exporter._shutdown)
@@ -934,6 +1032,24 @@ class TestOTLPMetricExporter(TestCase):
                 OTLPMetricExporter()._preferred_aggregation[Histogram],
                 ExplicitBucketHistogramAggregation,
             )
+
+    def test_preferred_aggregation_override(self):
+
+        histogram_aggregation = ExplicitBucketHistogramAggregation(
+            boundaries=[0.05, 0.1, 0.5, 1, 5, 10],
+        )
+
+        exporter = OTLPMetricExporter(
+            preferred_aggregation={
+                Histogram: histogram_aggregation,
+            },
+        )
+
+        self.assertEqual(
+            # pylint: disable=protected-access
+            exporter._preferred_aggregation[Histogram],
+            histogram_aggregation,
+        )
 
 
 def _resource_metrics(

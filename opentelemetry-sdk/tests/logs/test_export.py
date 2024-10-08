@@ -67,7 +67,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         self.assertEqual(len(finished_logs), 1)
         warning_log_record = finished_logs[0].log_record
         self.assertEqual(warning_log_record.body, "Something is wrong")
-        self.assertEqual(warning_log_record.severity_text, "WARNING")
+        self.assertEqual(warning_log_record.severity_text, "WARN")
         self.assertEqual(
             warning_log_record.severity_number, SeverityNumber.WARN
         )
@@ -122,7 +122,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         self.assertEqual(len(finished_logs), 1)
         log_record = finished_logs[0].log_record
         self.assertEqual(log_record.body, "Warning message")
-        self.assertEqual(log_record.severity_text, "WARNING")
+        self.assertEqual(log_record.severity_text, "WARN")
         self.assertEqual(log_record.severity_number, SeverityNumber.WARN)
         self.assertEqual(log_record.trace_id, INVALID_SPAN_CONTEXT.trace_id)
         self.assertEqual(log_record.span_id, INVALID_SPAN_CONTEXT.span_id)
@@ -162,7 +162,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         self.assertEqual(len(finished_logs), 1)
         warning_log_record = finished_logs[0].log_record
         self.assertEqual(warning_log_record.body, "Something is wrong")
-        self.assertEqual(warning_log_record.severity_text, "WARNING")
+        self.assertEqual(warning_log_record.severity_text, "WARN")
         self.assertEqual(
             warning_log_record.severity_number, SeverityNumber.WARN
         )
@@ -192,14 +192,63 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
 
         finished_logs = exporter.get_finished_logs()
         expected = [
-            ("warning message: possible upcoming heatwave", "WARNING"),
+            ("warning message: possible upcoming heatwave", "WARN"),
             ("Very high rise in temperatures across the globe", "ERROR"),
             (
                 "Temperature hits high 420 C in Hyderabad",
                 "CRITICAL",
             ),
-            (["list", "of", "strings"], "WARNING"),
+            (["list", "of", "strings"], "WARN"),
             ({"key": "value"}, "ERROR"),
+        ]
+        emitted = [
+            (item.log_record.body, item.log_record.severity_text)
+            for item in finished_logs
+        ]
+        self.assertEqual(expected, emitted)
+
+    def test_simple_log_record_processor_different_msg_types_with_formatter(
+        self,
+    ):
+        exporter = InMemoryLogExporter()
+        log_record_processor = BatchLogRecordProcessor(exporter)
+
+        provider = LoggerProvider()
+        provider.add_log_record_processor(log_record_processor)
+
+        logger = logging.getLogger("different_msg_types")
+        handler = LoggingHandler(logger_provider=provider)
+        handler.setFormatter(
+            logging.Formatter("%(name)s - %(levelname)s - %(message)s")
+        )
+        logger.addHandler(handler)
+
+        logger.warning("warning message: %s", "possible upcoming heatwave")
+        logger.error("Very high rise in temperatures across the globe")
+        logger.critical("Temperature hits high 420 C in Hyderabad")
+        logger.warning(["list", "of", "strings"])
+        logger.error({"key": "value"})
+        log_record_processor.shutdown()
+
+        finished_logs = exporter.get_finished_logs()
+        expected = [
+            (
+                "different_msg_types - WARNING - warning message: possible upcoming heatwave",
+                "WARN",
+            ),
+            (
+                "different_msg_types - ERROR - Very high rise in temperatures across the globe",
+                "ERROR",
+            ),
+            (
+                "different_msg_types - CRITICAL - Temperature hits high 420 C in Hyderabad",
+                "CRITICAL",
+            ),
+            (
+                "different_msg_types - WARNING - ['list', 'of', 'strings']",
+                "WARN",
+            ),
+            ("different_msg_types - ERROR - {'key': 'value'}", "ERROR"),
         ]
         emitted = [
             (item.log_record.body, item.log_record.severity_text)
@@ -367,7 +416,7 @@ class TestBatchLogRecordProcessor(ConcurrencyTestBase):
 
         finished_logs = exporter.get_finished_logs()
         expected = [
-            ("warning message: possible upcoming heatwave", "WARNING"),
+            ("warning message: possible upcoming heatwave", "WARN"),
             ("Very high rise in temperatures across the globe", "ERROR"),
             (
                 "Temperature hits high 420 C in Hyderabad",

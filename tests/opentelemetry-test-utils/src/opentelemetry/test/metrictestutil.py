@@ -13,14 +13,19 @@
 # limitations under the License.
 
 
+from typing import Optional
+
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     Gauge,
+    Histogram,
+    HistogramDataPoint,
     Metric,
     NumberDataPoint,
     Sum,
 )
+from opentelemetry.util.types import Attributes
 
 
 def _generate_metric(
@@ -78,7 +83,7 @@ def _generate_gauge(
             data_points=[
                 NumberDataPoint(
                     attributes=attributes,
-                    start_time_unix_nano=1641946015139533244,
+                    start_time_unix_nano=None,
                     time_unix_nano=1641946016139533244,
                     value=value,
                 )
@@ -95,6 +100,37 @@ def _generate_unsupported_metric(
     return _generate_metric(
         name,
         None,
+        description=description,
+        unit=unit,
+    )
+
+
+def _generate_histogram(
+    name: str,
+    attributes: Attributes = None,
+    description: Optional[str] = None,
+    unit: Optional[str] = None,
+) -> Metric:
+    if attributes is None:
+        attributes = BoundedAttributes(attributes={"a": 1, "b": True})
+    return _generate_metric(
+        name,
+        Histogram(
+            data_points=[
+                HistogramDataPoint(
+                    attributes=attributes,
+                    start_time_unix_nano=1641946016139533244,
+                    time_unix_nano=1641946016139533244,
+                    count=6,
+                    sum=579.0,
+                    bucket_counts=[1, 3, 2],
+                    explicit_bounds=[123.0, 456.0],
+                    min=1,
+                    max=457,
+                )
+            ],
+            aggregation_temporality=AggregationTemporality.CUMULATIVE,
+        ),
         description=description,
         unit=unit,
     )

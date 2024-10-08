@@ -42,6 +42,8 @@ from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401
 from opentelemetry.proto.metrics.v1 import metrics_pb2 as pb2  # noqa: F401
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY,
     OTEL_EXPORTER_OTLP_METRICS_COMPRESSION,
     OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
     OTEL_EXPORTER_OTLP_METRICS_HEADERS,
@@ -113,7 +115,10 @@ class OTLPMetricExporter(
             and environ.get(OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE) is not None
         ):
             credentials = _get_credentials(
-                credentials, OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE
+                credentials,
+                OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,
+                OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY,
+                OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE,
             )
 
         environ_timeout = environ.get(OTEL_EXPORTER_OTLP_METRICS_TIMEOUT)
@@ -127,7 +132,9 @@ class OTLPMetricExporter(
             else compression
         )
 
-        self._common_configuration(preferred_temporality)
+        self._common_configuration(
+            preferred_temporality, preferred_aggregation
+        )
 
         OTLPExporterMixin.__init__(
             self,

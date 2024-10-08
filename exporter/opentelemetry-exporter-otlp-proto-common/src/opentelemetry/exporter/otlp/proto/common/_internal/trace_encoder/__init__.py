@@ -17,27 +17,25 @@ from collections import defaultdict
 from typing import List, Optional, Sequence
 
 from opentelemetry.exporter.otlp.proto.common._internal import (
-    _encode_trace_id,
-    _encode_span_id,
-    _encode_instrumentation_scope,
     _encode_attributes,
+    _encode_instrumentation_scope,
     _encode_resource,
+    _encode_span_id,
+    _encode_trace_id,
 )
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
     ExportTraceServiceRequest as PB2ExportTraceServiceRequest,
 )
 from opentelemetry.proto.trace.v1.trace_pb2 import (
-    ScopeSpans as PB2ScopeSpans,
-)
-from opentelemetry.proto.trace.v1.trace_pb2 import (
     ResourceSpans as PB2ResourceSpans,
 )
+from opentelemetry.proto.trace.v1.trace_pb2 import ScopeSpans as PB2ScopeSpans
 from opentelemetry.proto.trace.v1.trace_pb2 import Span as PB2SPan
+from opentelemetry.proto.trace.v1.trace_pb2 import SpanFlags as PB2SpanFlags
 from opentelemetry.proto.trace.v1.trace_pb2 import Status as PB2Status
 from opentelemetry.sdk.trace import Event, ReadableSpan
-from opentelemetry.trace import Link
-from opentelemetry.trace import SpanKind
-from opentelemetry.trace.span import SpanContext, TraceState, Status
+from opentelemetry.trace import Link, SpanKind
+from opentelemetry.trace.span import SpanContext, Status, TraceState
 
 # pylint: disable=E1101
 _SPAN_KIND_MAP = {
@@ -97,10 +95,18 @@ def _encode_resource_spans(
             PB2ResourceSpans(
                 resource=_encode_resource(sdk_resource),
                 scope_spans=scope_spans,
+                schema_url=sdk_resource.schema_url,
             )
         )
 
     return pb2_resource_spans
+
+
+def _span_flags(parent_span_context: Optional[SpanContext]) -> int:
+    flags = PB2SpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK
+    if parent_span_context and parent_span_context.is_remote:
+        flags |= PB2SpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK
+    return flags
 
 
 def _encode_span(sdk_span: ReadableSpan) -> PB2SPan:
@@ -121,6 +127,7 @@ def _encode_span(sdk_span: ReadableSpan) -> PB2SPan:
         dropped_attributes_count=sdk_span.dropped_attributes,
         dropped_events_count=sdk_span.dropped_events,
         dropped_links_count=sdk_span.dropped_links,
+        flags=_span_flags(sdk_span.parent),
     )
 
 
@@ -135,7 +142,7 @@ def _encode_events(
                 name=event.name,
                 time_unix_nano=event.timestamp,
                 attributes=_encode_attributes(event.attributes),
-                dropped_attributes_count=event.attributes.dropped,
+                dropped_attributes_count=event.dropped_attributes,
             )
             pb2_events.append(encoded_event)
     return pb2_events
@@ -150,7 +157,8 @@ def _encode_links(links: Sequence[Link]) -> Sequence[PB2SPan.Link]:
                 trace_id=_encode_trace_id(link.context.trace_id),
                 span_id=_encode_span_id(link.context.span_id),
                 attributes=_encode_attributes(link.attributes),
-                dropped_attributes_count=link.attributes.dropped,
+                dropped_attributes_count=link.dropped_attributes,
+                flags=_span_flags(link.context),
             )
             pb2_links.append(encoded_link)
     return pb2_links

@@ -111,7 +111,7 @@ class SimpleSpanProcessor(SpanProcessor):
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
             self.span_exporter.export((span,))
-        # pylint: disable=broad-except
+        # pylint: disable=broad-exception-caught
         except Exception:
             logger.exception("Exception while exporting Span.")
         detach(token)
@@ -203,7 +203,6 @@ class BatchSpanProcessor(SpanProcessor):
             None
         ] * self.max_export_batch_size  # type: typing.List[typing.Optional[Span]]
         self.worker_thread.start()
-        # Only available in *nix since py37.
         if hasattr(os, "register_at_fork"):
             os.register_at_fork(
                 after_in_child=self._at_fork_reinit
@@ -366,7 +365,7 @@ class BatchSpanProcessor(SpanProcessor):
             # Ignore type b/c the Optional[None]+slicing is too "clever"
             # for mypy
             self.span_exporter.export(self.spans_list[:idx])  # type: ignore
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-exception-caught
             logger.exception("Exception while exporting Span batch.")
         detach(token)
 

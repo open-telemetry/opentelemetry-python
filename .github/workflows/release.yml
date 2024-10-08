@@ -12,7 +12,7 @@ jobs:
             exit 1
           fi
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set environment variables
         run: |
@@ -45,12 +45,6 @@ jobs:
 
           echo "PRIOR_VERSION_WHEN_PATCH=$prior_version_when_patch" >> $GITHUB_ENV
 
-        # check out main branch to verify there won't be problems with merging the change log
-        # at the end of this workflow
-      - uses: actions/checkout@v3
-        with:
-          ref: main
-
       - run: |
           if [[ -z $PRIOR_VERSION_WHEN_PATCH ]]; then
             # not making a patch release
@@ -60,13 +54,19 @@ jobs:
             fi
           fi
 
+      # check out main branch to verify there won't be problems with merging the change log
+      # at the end of this workflow
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
         # back to the release branch
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
         # next few steps publish to pypi
-      - uses: actions/setup-python@v1
+      - uses: actions/setup-python@v5
         with:
-          python-version: '3.7'
+          python-version: '3.8'
 
       - name: Build wheels
         run: ./scripts/build.sh
@@ -127,7 +127,7 @@ jobs:
                             --discussion-category announcements \
                             v$STABLE_VERSION
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           # the step below is creating a pull request against main
           ref: main

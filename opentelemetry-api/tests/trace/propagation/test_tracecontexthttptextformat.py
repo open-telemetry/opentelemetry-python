@@ -39,7 +39,7 @@ class TestTraceContextFormat(unittest.TestCase):
         If no traceparent header is received, the vendor creates a new
         trace-id and parent-id that represents the current request.
         """
-        output = {}  # type:typing.Dict[str, typing.List[str]]
+        output: typing.Dict[str, typing.List[str]] = {}
         span = trace.get_current_span(FORMAT.extract(output))
         self.assertIsInstance(span.get_span_context(), trace.SpanContext)
 
@@ -47,9 +47,9 @@ class TestTraceContextFormat(unittest.TestCase):
         """When there is a traceparent and tracestate header, data from
         both should be added to the SpanContext.
         """
-        traceparent_value = "00-{trace_id}-{span_id}-00".format(
-            trace_id=format(self.TRACE_ID, "032x"),
-            span_id=format(self.SPAN_ID, "016x"),
+        traceparent_value = (
+            f"00-{format(self.TRACE_ID, '032x')}-"
+            f"{format(self.SPAN_ID, '016x')}-00"
         )
         tracestate_value = "foo=1,bar=2,baz=3"
         span_context = trace.get_current_span(
@@ -66,7 +66,7 @@ class TestTraceContextFormat(unittest.TestCase):
             span_context.trace_state, {"foo": "1", "bar": "2", "baz": "3"}
         )
         self.assertTrue(span_context.is_remote)
-        output = {}  # type:typing.Dict[str, str]
+        output: typing.Dict[str, str] = {}
         span = trace.NonRecordingSpan(span_context)
 
         ctx = trace.set_span_in_context(span)
@@ -145,7 +145,7 @@ class TestTraceContextFormat(unittest.TestCase):
         Empty and whitespace-only list members are allowed. Vendors MUST accept
         empty tracestate headers but SHOULD avoid sending them.
         """
-        output = {}  # type:typing.Dict[str, str]
+        output: typing.Dict[str, str] = {}
         span = trace.NonRecordingSpan(
             trace.SpanContext(self.TRACE_ID, self.SPAN_ID, is_remote=False)
         )
@@ -177,7 +177,7 @@ class TestTraceContextFormat(unittest.TestCase):
 
     def test_propagate_invalid_context(self):
         """Do not propagate invalid trace context."""
-        output = {}  # type:typing.Dict[str, str]
+        output: typing.Dict[str, str] = {}
         ctx = trace.set_span_in_context(trace.INVALID_SPAN)
         FORMAT.inject(output, context=ctx)
         self.assertFalse("traceparent" in output)

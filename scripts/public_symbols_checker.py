@@ -41,7 +41,11 @@ def get_symbols(change_type, diff_lines_getter, prefix):
         .iter_change_type(change_type)
     ):
 
-        b_file_path = diff_lines.b_blob.path
+        if diff_lines.b_blob is None:
+            # This happens if a file has been removed completely.
+            b_file_path = diff_lines.a_blob.path
+        else:
+            b_file_path = diff_lines.b_blob.path
         b_file_path_obj = Path(b_file_path)
 
         if (
@@ -119,11 +123,11 @@ def remove_common_symbols():
             del removed_symbols[file_path]
 
 
-if added_symbols or removed_symbols:
+# If a symbol is added and removed in the same commit, we consider it as not
+# added or removed.
+remove_common_symbols()
 
-    # If a symbol is added and removed in the same commit, we consider it
-    # as not added or removed.
-    remove_common_symbols()
+if added_symbols or removed_symbols:
     print("The code in this branch adds the following public symbols:")
     print()
     for file_path_, symbols_ in added_symbols.items():
@@ -135,7 +139,7 @@ if added_symbols or removed_symbols:
     print(
         "Please make sure that all of them are strictly necessary, if not, "
         "please consider prefixing them with an underscore to make them "
-        'private. After that, please label this PR with "Skip Public API '
+        'private. After that, please label this PR with "Approve Public API '
         'check".'
     )
     print()
@@ -150,7 +154,7 @@ if added_symbols or removed_symbols:
     print(
         "Please make sure no public symbols are removed, if so, please "
         "consider deprecating them instead. After that, please label this "
-        'PR with "Skip Public API check".'
+        'PR with "Approve Public API check".'
     )
     exit(1)
 else:

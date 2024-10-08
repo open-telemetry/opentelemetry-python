@@ -110,17 +110,21 @@ class MetricReaderStorage:
                         aggregation_cardinality_limit = self._aggregation_cardinality_limit
                     )
                 )
-            self._instrument_view_instrument_matches[
-                instrument
-            ] = view_instrument_matches
+            self._instrument_view_instrument_matches[instrument] = (
+                view_instrument_matches
+            )
 
             return view_instrument_matches
 
-    def consume_measurement(self, measurement: Measurement) -> None:
+    def consume_measurement(
+        self, measurement: Measurement, should_sample_exemplar: bool = True
+    ) -> None:
         for view_instrument_match in self._get_or_init_view_instrument_match(
             measurement.instrument
         ):
-            view_instrument_match.consume_measurement(measurement)
+            view_instrument_match.consume_measurement(
+                measurement, should_sample_exemplar
+            )
 
     def collect(self) -> Optional[MetricsData]:
         # Use a list instead of yielding to prevent a slow reader from holding
@@ -139,9 +143,9 @@ class MetricReaderStorage:
 
         with self._lock:
 
-            instrumentation_scope_scope_metrics: (
-                Dict[InstrumentationScope, ScopeMetrics]
-            ) = {}
+            instrumentation_scope_scope_metrics: Dict[
+                InstrumentationScope, ScopeMetrics
+            ] = {}
 
             for (
                 instrument,
@@ -209,6 +213,7 @@ class MetricReaderStorage:
                     metrics.append(
                         Metric(
                             # pylint: disable=protected-access
+                            # pylint: disable=possibly-used-before-assignment
                             name=view_instrument_match._name,
                             description=view_instrument_match._description,
                             unit=view_instrument_match._instrument.unit,

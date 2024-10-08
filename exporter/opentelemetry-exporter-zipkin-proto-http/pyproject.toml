@@ -7,34 +7,33 @@ name = "opentelemetry-exporter-zipkin-proto-http"
 dynamic = ["version"]
 description = "Zipkin Span Protobuf Exporter for OpenTelemetry"
 readme = "README.rst"
-license = "Apache-2.0"
-requires-python = ">=3.7"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.8"
 authors = [
   { name = "OpenTelemetry Authors", email = "cncf-opentelemetry-contributors@lists.cncf.io" },
 ]
 classifiers = [
   "Development Status :: 5 - Production/Stable",
+  "Framework :: OpenTelemetry",
+  "Framework :: OpenTelemetry :: Exporters",
   "Intended Audience :: Developers",
   "License :: OSI Approved :: Apache Software License",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.7",
   "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
   "Typing :: Typed",
 ]
 dependencies = [
   "opentelemetry-api ~= 1.3",
-  "opentelemetry-exporter-zipkin-json == 1.21.0.dev",
+  "opentelemetry-exporter-zipkin-json == 1.28.0.dev",
   "opentelemetry-sdk ~= 1.11",
   "protobuf ~= 3.12",
   "requests ~= 2.7",
 ]
-
-[project.optional-dependencies]
-test = []
 
 [project.entry-points.opentelemetry_traces_exporter]
 zipkin_proto = "opentelemetry.exporter.zipkin.proto.http:ZipkinExporter"
@@ -43,7 +42,7 @@ zipkin_proto = "opentelemetry.exporter.zipkin.proto.http:ZipkinExporter"
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/exporter/opentelemetry-exporter-zipkin-proto-http"
 
 [tool.hatch.version]
-path = "src/opentelemetry/exporter/zipkin/proto/http/version.py"
+path = "src/opentelemetry/exporter/zipkin/proto/http/version/__init__.py"
 
 [tool.hatch.build.targets.sdist]
 include = [

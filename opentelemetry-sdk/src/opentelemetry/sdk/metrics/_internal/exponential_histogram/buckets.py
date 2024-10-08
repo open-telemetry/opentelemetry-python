@@ -73,6 +73,10 @@ class Buckets:
     def counts(self):
         return self._counts
 
+    def get_offset_counts(self):
+        bias = self.__index_base - self.__index_start
+        return self._counts[-bias:] + self._counts[:-bias]
+
     def grow(self, needed: int, max_size: int) -> None:
 
         size = len(self._counts)
@@ -129,7 +133,6 @@ class Buckets:
         bias = self.__index_base - self.__index_start
 
         if bias != 0:
-
             self.__index_base = self.__index_start
 
             # [0, 1, 2, 3, 4] Original backing array
@@ -174,3 +177,17 @@ class Buckets:
 
     def increment_bucket(self, bucket_index: int, increment: int = 1) -> None:
         self._counts[bucket_index] += increment
+
+    def copy_empty(self) -> "Buckets":
+        copy = Buckets()
+
+        # pylint: disable=no-member
+        # pylint: disable=protected-access
+        # pylint: disable=attribute-defined-outside-init
+        # pylint: disable=invalid-name
+        copy._Buckets__index_base = self._Buckets__index_base
+        copy._Buckets__index_start = self._Buckets__index_start
+        copy._Buckets__index_end = self._Buckets__index_end
+        copy._counts = [0 for _ in self._counts]
+
+        return copy

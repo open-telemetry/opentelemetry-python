@@ -16,9 +16,12 @@ import abc
 import time
 import typing
 import unittest
+from platform import python_implementation, system
 from threading import Event
 from typing import Optional
 from unittest import mock
+
+from pytest import mark
 
 from opentelemetry import trace as trace_api
 from opentelemetry.context import Context
@@ -266,6 +269,10 @@ class TestConcurrentMultiSpanProcessor(
     ) -> trace.ConcurrentMultiSpanProcessor:
         return trace.ConcurrentMultiSpanProcessor(3)
 
+    @mark.skipif(
+        python_implementation() == "PyPy" and system() == "Windows",
+        reason="This test randomly fails in Windows with PyPy",
+    )
     def test_force_flush_late_by_timeout(self):
         multi_processor = trace.ConcurrentMultiSpanProcessor(5)
         wait_event = Event()

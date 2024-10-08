@@ -1,0 +1,36 @@
+name: SDK Benchmark Tests
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  sdk-benchmarks:
+    runs-on: self-hosted
+    steps:
+    - name: Checkout Core Repo @ SHA - ${{ github.sha }}
+      uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+        architecture: 'x64'
+    - name: Install tox
+      run: pip install tox
+    - name: Run tox
+      run: tox -e benchmark-opentelemetry-sdk -- -k opentelemetry-sdk/benchmarks --benchmark-json=opentelemetry-sdk/output.json
+    - name: Report on SDK benchmark results
+      uses: benchmark-action/github-action-benchmark@v1
+      with:
+        name: OpenTelemetry Python SDK Benchmarks
+        tool: pytest
+        output-file-path: opentelemetry-sdk/output.json
+        gh-pages-branch: gh-pages
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        # Make a commit on `gh-pages` with benchmarks from previous step
+        benchmark-data-dir-path: "benchmarks"
+        auto-push: true
+        max-items-in-chart: 100
+        # Alert with a commit comment on possible performance regression
+        alert-threshold: '200%'
+        comment-on-alert: true

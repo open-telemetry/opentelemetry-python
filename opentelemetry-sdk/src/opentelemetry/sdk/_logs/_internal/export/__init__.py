@@ -127,7 +127,7 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
             self._exporter.export((log_data,))
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-exception-caught
             _logger.exception("Exception while exporting logs.")
         detach(token)
 
@@ -166,6 +166,10 @@ class BatchLogRecordProcessor(LogRecordProcessor):
     - :envvar:`OTEL_BLRP_EXPORT_TIMEOUT`
     """
 
+    _queue: Deque[LogData]
+    _flush_request: Optional[_FlushRequest]
+    _log_records: List[Optional[LogData]]
+
     def __init__(
         self,
         exporter: LogExporter,
@@ -201,9 +205,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
         self._schedule_delay_millis = schedule_delay_millis
         self._max_export_batch_size = max_export_batch_size
         self._export_timeout_millis = export_timeout_millis
-        self._queue = collections.deque(
-            [], max_queue_size
-        )  # type: Deque[LogData]
+        self._queue = collections.deque([], max_queue_size)
         self._worker_thread = threading.Thread(
             name="OtelBatchLogRecordProcessor",
             target=self.worker,
@@ -211,12 +213,9 @@ class BatchLogRecordProcessor(LogRecordProcessor):
         )
         self._condition = threading.Condition(threading.Lock())
         self._shutdown = False
-        self._flush_request = None  # type: Optional[_FlushRequest]
-        self._log_records = [
-            None
-        ] * self._max_export_batch_size  # type: List[Optional[LogData]]
+        self._flush_request = None
+        self._log_records = [None] * self._max_export_batch_size
         self._worker_thread.start()
-        # Only available in *nix since py37.
         if hasattr(os, "register_at_fork"):
             os.register_at_fork(
                 after_in_child=self._at_fork_reinit
@@ -236,7 +235,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
 
     def worker(self):
         timeout = self._schedule_delay_millis / 1e3
-        flush_request = None  # type: Optional[_FlushRequest]
+        flush_request: Optional[_FlushRequest] = None
         while not self._shutdown:
             with self._condition:
                 if self._shutdown:
@@ -310,7 +309,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
             self._exporter.export(self._log_records[:idx])  # type: ignore
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-exception-caught
             _logger.exception("Exception while exporting logs.")
         detach(token)
 

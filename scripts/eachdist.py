@@ -7,6 +7,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+from toml import load
 from configparser import ConfigParser
 from inspect import cleandoc
 from itertools import chain
@@ -195,7 +196,6 @@ def parse_args(args=None):
 
     setup_instparser(instparser)
     instparser.add_argument("--editable", "-e", action="store_true")
-    instparser.add_argument("--with-test-deps", action="store_true")
     instparser.add_argument("--with-dev-deps", action="store_true")
     instparser.add_argument("--eager-upgrades", action="store_true")
 
@@ -208,7 +208,6 @@ def parse_args(args=None):
         editable=True,
         with_dev_deps=True,
         eager_upgrades=True,
-        with_test_deps=True,
     )
 
     lintparser = subparsers.add_parser(
@@ -466,16 +465,7 @@ def install_args(args):
             check=True,
         )
 
-    allfmt = "-e 'file://{}" if args.editable else "'file://{}"
-    # packages should provide an extra_requires that is named
-    # 'test', to denote test dependencies.
-    extras = []
-    if args.with_test_deps:
-        extras.append("test")
-    if extras:
-        allfmt += f"[{','.join(extras)}]"
-    # note the trailing single quote, to close the quote opened above.
-    allfmt += "'"
+    allfmt = "-e 'file://{}'" if args.editable else "'file://{}'"
 
     execute_args(
         parse_subargs(
@@ -488,6 +478,7 @@ def install_args(args):
             ),
         )
     )
+
     if args.with_dev_deps:
         rootpath = find_projectroot()
         runsubprocess(
@@ -564,14 +555,27 @@ def filter_packages(targets, packages):
 
 
 def update_version_files(targets, version, packages):
-    print("updating version.py files")
-    targets = filter_packages(targets, packages)
-    update_files(
-        targets,
-        "version.py",
-        "__version__ .*",
-        f'__version__ = "{version}"',
-    )
+    print("updating version/__init__.py files")
+
+    search = "__version__ .*"
+    replace = f'__version__ = "{version}"'
+
+    for target in filter_packages(targets, packages):
+
+        version_file_path = target.joinpath(
+            load(target.joinpath("pyproject.toml"))
+            ["tool"]["hatch"]["version"]["path"]
+        )
+
+        with open(version_file_path) as file:
+            text = file.read()
+
+        if replace in text:
+            print(f"{version_file_path} already contains {replace}")
+            continue
+
+        with open(version_file_path, "w", encoding="utf-8") as file:
+            file.write(re.sub(search, replace, text))
 
 
 def update_dependencies(targets, version, packages):

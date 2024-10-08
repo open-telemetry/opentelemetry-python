@@ -12,13 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=too-many-lines
+
 import time
 from concurrent.futures import ThreadPoolExecutor
 from os.path import dirname
 from unittest import TestCase
 from unittest.mock import patch
 
-from google.protobuf.duration_pb2 import Duration
+from google.protobuf.duration_pb2 import (  # pylint: disable=no-name-in-module
+    Duration,
+)
+from google.protobuf.json_format import MessageToDict
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import ChannelCredentials, Compression, StatusCode, server
 
@@ -50,6 +55,8 @@ from opentelemetry.sdk._logs import LogData, LogRecord
 from opentelemetry.sdk._logs.export import LogExportResult
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY,
     OTEL_EXPORTER_OTLP_LOGS_COMPRESSION,
     OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
     OTEL_EXPORTER_OTLP_LOGS_HEADERS,
@@ -75,7 +82,7 @@ class LogsServiceServicerUNAVAILABLEDelay(LogsServiceServicer):
                 (
                     "google.rpc.retryinfo-bin",
                     RetryInfo(
-                        retry_delay=Duration(seconds=4)
+                        retry_delay=Duration(nanos=int(1e7))
                     ).SerializeToString(),
                 ),
             )
@@ -165,6 +172,36 @@ class TestOTLPLogExporter(TestCase):
                 "third_name", "third_version"
             ),
         )
+        self.log_data_4 = LogData(
+            log_record=LogRecord(
+                timestamp=int(time.time() * 1e9),
+                trace_id=0,
+                span_id=5213367945872657629,
+                trace_flags=TraceFlags(0x01),
+                severity_text="ERROR",
+                severity_number=SeverityNumber.WARN,
+                body="Invalid trace id check",
+                resource=SDKResource({"service": "myapp"}),
+            ),
+            instrumentation_scope=InstrumentationScope(
+                "fourth_name", "fourth_version"
+            ),
+        )
+        self.log_data_5 = LogData(
+            log_record=LogRecord(
+                timestamp=int(time.time() * 1e9),
+                trace_id=2604504634922341076776623263868986801,
+                span_id=0,
+                trace_flags=TraceFlags(0x01),
+                severity_text="ERROR",
+                severity_number=SeverityNumber.WARN,
+                body="Invalid span id check",
+                resource=SDKResource({"service": "myapp"}),
+            ),
+            instrumentation_scope=InstrumentationScope(
+                "fifth_name", "fifth_version"
+            ),
+        )
 
     def tearDown(self):
         self.server.stop(None)
@@ -177,8 +214,6 @@ class TestOTLPLogExporter(TestCase):
         "os.environ",
         {
             OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "logs:4317",
-            OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE: THIS_DIR
-            + "/../fixtures/test.cert",
             OTEL_EXPORTER_OTLP_LOGS_HEADERS: " key1=value1,KEY2 = VALUE=2",
             OTEL_EXPORTER_OTLP_LOGS_TIMEOUT: "10",
             OTEL_EXPORTER_OTLP_LOGS_COMPRESSION: "gzip",
@@ -196,8 +231,69 @@ class TestOTLPLogExporter(TestCase):
         self.assertEqual(kwargs["headers"], " key1=value1,KEY2 = VALUE=2")
         self.assertEqual(kwargs["timeout"], 10)
         self.assertEqual(kwargs["compression"], Compression.Gzip)
+        self.assertIsNone(kwargs["credentials"])
+
+    # Create a new test method specifically for client certificates
+    @patch.dict(
+        "os.environ",
+        {
+            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "logs:4317",
+            OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE: THIS_DIR
+            + "/../fixtures/test.cert",
+            OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE: THIS_DIR
+            + "/../fixtures/test-client-cert.pem",
+            OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY: THIS_DIR
+            + "/../fixtures/test-client-key.pem",
+            OTEL_EXPORTER_OTLP_LOGS_HEADERS: " key1=value1,KEY2 = VALUE=2",
+            OTEL_EXPORTER_OTLP_LOGS_TIMEOUT: "10",
+            OTEL_EXPORTER_OTLP_LOGS_COMPRESSION: "gzip",
+        },
+    )
+    @patch(
+        "opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__"
+    )
+    def test_env_variables_with_client_certificates(self, mock_exporter_mixin):
+        OTLPLogExporter()
+
+        self.assertTrue(len(mock_exporter_mixin.call_args_list) == 1)
+        _, kwargs = mock_exporter_mixin.call_args_list[0]
+        self.assertEqual(kwargs["endpoint"], "logs:4317")
+        self.assertEqual(kwargs["headers"], " key1=value1,KEY2 = VALUE=2")
+        self.assertEqual(kwargs["timeout"], 10)
+        self.assertEqual(kwargs["compression"], Compression.Gzip)
         self.assertIsNotNone(kwargs["credentials"])
         self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
+
+    @patch.dict(
+        "os.environ",
+        {
+            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "logs:4317",
+            OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE: THIS_DIR
+            + "/../fixtures/test.cert",
+            OTEL_EXPORTER_OTLP_LOGS_HEADERS: " key1=value1,KEY2 = VALUE=2",
+            OTEL_EXPORTER_OTLP_LOGS_TIMEOUT: "10",
+            OTEL_EXPORTER_OTLP_LOGS_COMPRESSION: "gzip",
+        },
+    )
+    @patch(
+        "opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__"
+    )
+    @patch("logging.Logger.error")
+    def test_env_variables_with_only_certificate(
+        self, mock_logger_error, mock_exporter_mixin
+    ):
+        OTLPLogExporter()
+
+        self.assertTrue(len(mock_exporter_mixin.call_args_list) == 1)
+        _, kwargs = mock_exporter_mixin.call_args_list[0]
+        self.assertEqual(kwargs["endpoint"], "logs:4317")
+        self.assertEqual(kwargs["headers"], " key1=value1,KEY2 = VALUE=2")
+        self.assertEqual(kwargs["timeout"], 10)
+        self.assertEqual(kwargs["compression"], Compression.Gzip)
+        self.assertIsNotNone(kwargs["credentials"])
+        self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
+
+        mock_logger_error.assert_not_called()
 
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"
@@ -298,7 +394,7 @@ class TestOTLPLogExporter(TestCase):
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
     def test_unavailable(self, mock_sleep, mock_expo):
 
-        mock_expo.configure_mock(**{"return_value": [1]})
+        mock_expo.configure_mock(**{"return_value": [0.01]})
 
         add_LogsServiceServicer_to_server(
             LogsServiceServicerUNAVAILABLE(), self.server
@@ -306,7 +402,7 @@ class TestOTLPLogExporter(TestCase):
         self.assertEqual(
             self.exporter.export([self.log_data_1]), LogExportResult.FAILURE
         )
-        mock_sleep.assert_called_with(1)
+        mock_sleep.assert_called_with(0.01)
 
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc.exporter._create_exp_backoff_generator"
@@ -322,7 +418,7 @@ class TestOTLPLogExporter(TestCase):
         self.assertEqual(
             self.exporter.export([self.log_data_1]), LogExportResult.FAILURE
         )
-        mock_sleep.assert_called_with(4)
+        mock_sleep.assert_called_with(0.01)
 
     def test_success(self):
         add_LogsServiceServicer_to_server(
@@ -339,6 +435,43 @@ class TestOTLPLogExporter(TestCase):
         self.assertEqual(
             self.exporter.export([self.log_data_1]), LogExportResult.FAILURE
         )
+
+    def export_log_and_deserialize(self, log_data):
+        # pylint: disable=protected-access
+        translated_data = self.exporter._translate_data([log_data])
+        request_dict = MessageToDict(translated_data)
+        log_records = (
+            request_dict.get("resourceLogs")[0]
+            .get("scopeLogs")[0]
+            .get("logRecords")
+        )
+        return log_records
+
+    def test_exported_log_without_trace_id(self):
+        log_records = self.export_log_and_deserialize(self.log_data_4)
+        if log_records:
+            log_record = log_records[0]
+            self.assertIn("spanId", log_record)
+            self.assertNotIn(
+                "traceId",
+                log_record,
+                "traceId should not be present in the log record",
+            )
+        else:
+            self.fail("No log records found")
+
+    def test_exported_log_without_span_id(self):
+        log_records = self.export_log_and_deserialize(self.log_data_5)
+        if log_records:
+            log_record = log_records[0]
+            self.assertIn("traceId", log_record)
+            self.assertNotIn(
+                "spanId",
+                log_record,
+                "spanId should not be present in the log record",
+            )
+        else:
+            self.fail("No log records found")
 
     def test_translate_log_data(self):
 
@@ -361,6 +494,7 @@ class TestOTLPLogExporter(TestCase):
                                 PB2LogRecord(
                                     # pylint: disable=no-member
                                     time_unix_nano=self.log_data_1.log_record.timestamp,
+                                    observed_time_unix_nano=self.log_data_1.log_record.observed_timestamp,
                                     severity_number=self.log_data_1.log_record.severity_number.value,
                                     severity_text="WARNING",
                                     span_id=int.to_bytes(
@@ -420,6 +554,7 @@ class TestOTLPLogExporter(TestCase):
                                 PB2LogRecord(
                                     # pylint: disable=no-member
                                     time_unix_nano=self.log_data_1.log_record.timestamp,
+                                    observed_time_unix_nano=self.log_data_1.log_record.observed_timestamp,
                                     severity_number=self.log_data_1.log_record.severity_number.value,
                                     severity_text="WARNING",
                                     span_id=int.to_bytes(
@@ -457,6 +592,7 @@ class TestOTLPLogExporter(TestCase):
                                 PB2LogRecord(
                                     # pylint: disable=no-member
                                     time_unix_nano=self.log_data_2.log_record.timestamp,
+                                    observed_time_unix_nano=self.log_data_2.log_record.observed_timestamp,
                                     severity_number=self.log_data_2.log_record.severity_number.value,
                                     severity_text="INFO",
                                     span_id=int.to_bytes(
@@ -502,6 +638,7 @@ class TestOTLPLogExporter(TestCase):
                                 PB2LogRecord(
                                     # pylint: disable=no-member
                                     time_unix_nano=self.log_data_3.log_record.timestamp,
+                                    observed_time_unix_nano=self.log_data_3.log_record.observed_timestamp,
                                     severity_number=self.log_data_3.log_record.severity_number.value,
                                     severity_text="ERROR",
                                     span_id=int.to_bytes(

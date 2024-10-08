@@ -387,6 +387,7 @@ class ScopeShim(Scope):
                 :meth:`opentelemetry.trace.use_span`.
         """
 
+        # pylint: disable=unnecessary-dunder-call
         otel_span = span_cm.__enter__()
         span_context = SpanContextShim(otel_span.get_span_context())
         span = SpanShim(manager.tracer, span_context, otel_span)

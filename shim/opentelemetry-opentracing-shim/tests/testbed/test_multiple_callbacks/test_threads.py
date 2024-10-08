@@ -55,6 +55,7 @@ class TestThreads(OpenTelemetryTestCase):
     def task(self, interval, parent_span):
         logger.info("Starting task")
 
+        scope = None
         try:
             scope = self.tracer.scope_manager.activate(parent_span, False)
             with self.tracer.start_active_span("task"):

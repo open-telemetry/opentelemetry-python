@@ -10,7 +10,7 @@ jobs:
   prereqs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Verify prerequisites
         env:
@@ -39,7 +39,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: prereqs
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+
+      - name: Install toml
+        run: pip install toml
 
       - name: Create release branch
         env:
@@ -103,7 +106,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: prereqs
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+
+      - name: Install toml
+        run: pip install toml
 
       - name: Set environment variables
         env:

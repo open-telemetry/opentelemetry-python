@@ -51,11 +51,15 @@ from opentelemetry.proto.metrics.v1 import metrics_pb2 as pb2  # noqa: F401
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_EXPORTER_OTLP_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_CLIENT_KEY,
     OTEL_EXPORTER_OTLP_HEADERS,
     OTEL_EXPORTER_OTLP_TIMEOUT,
     OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
     OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY,
     OTEL_EXPORTER_OTLP_METRICS_HEADERS,
     OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
     OTEL_EXPORTER_OTLP_METRICS_COMPRESSION,
@@ -96,6 +100,8 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         self,
         endpoint: Optional[str] = None,
         certificate_file: Optional[str] = None,
+        client_key_file: Optional[str] = None,
+        client_certificate_file: Optional[str] = None,
         headers: Optional[Dict[str, str]] = None,
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
@@ -113,11 +119,26 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,
             environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE, True),
         )
+        self._client_key_file = client_key_file or environ.get(
+            OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY,
+            environ.get(OTEL_EXPORTER_OTLP_CLIENT_KEY, None),
+        )
+        self._client_certificate_file = client_certificate_file or environ.get(
+            OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE,
+            environ.get(OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE, None),
+        )
+        self._client_cert = (
+            (self._client_certificate_file, self._client_key_file)
+            if self._client_certificate_file and self._client_key_file
+            else self._client_certificate_file
+        )
         headers_string = environ.get(
             OTEL_EXPORTER_OTLP_METRICS_HEADERS,
             environ.get(OTEL_EXPORTER_OTLP_HEADERS, ""),
         )
-        self._headers = headers or parse_env_headers(headers_string)
+        self._headers = headers or parse_env_headers(
+            headers_string, liberal=True
+        )
         self._timeout = timeout or int(
             environ.get(
                 OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
@@ -135,9 +156,11 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                 {"Content-Encoding": self._compression.value}
             )
 
-        self._common_configuration(preferred_temporality)
+        self._common_configuration(
+            preferred_temporality, preferred_aggregation
+        )
 
-    def _export(self, serialized_data: str):
+    def _export(self, serialized_data: bytes):
         data = serialized_data
         if self._compression == Compression.Gzip:
             gzip_data = BytesIO()
@@ -145,13 +168,14 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                 gzip_stream.write(serialized_data)
             data = gzip_data.getvalue()
         elif self._compression == Compression.Deflate:
-            data = zlib.compress(bytes(serialized_data))
+            data = zlib.compress(serialized_data)
 
         return self._session.post(
             url=self._endpoint,
             data=data,
             verify=self._certificate_file,
             timeout=self._timeout,
+            cert=self._client_cert,
         )
 
     @staticmethod
@@ -178,7 +202,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
 
             resp = self._export(serialized_data.SerializeToString())
             # pylint: disable=no-else-return
-            if resp.status_code in (200, 202):
+            if resp.ok:
                 return MetricExportResult.SUCCESS
             elif self._retryable(resp):
                 _logger.warning(

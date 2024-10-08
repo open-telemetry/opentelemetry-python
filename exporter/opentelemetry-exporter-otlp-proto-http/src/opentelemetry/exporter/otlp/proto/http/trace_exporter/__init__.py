@@ -31,11 +31,15 @@ from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
     OTEL_EXPORTER_OTLP_TRACES_COMPRESSION,
+    OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
     OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
     OTEL_EXPORTER_OTLP_TRACES_HEADERS,
     OTEL_EXPORTER_OTLP_TRACES_TIMEOUT,
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_COMPRESSION,
+    OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_CLIENT_KEY,
     OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_EXPORTER_OTLP_HEADERS,
     OTEL_EXPORTER_OTLP_TIMEOUT,
@@ -65,6 +69,8 @@ class OTLPSpanExporter(SpanExporter):
         self,
         endpoint: Optional[str] = None,
         certificate_file: Optional[str] = None,
+        client_key_file: Optional[str] = None,
+        client_certificate_file: Optional[str] = None,
         headers: Optional[Dict[str, str]] = None,
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
@@ -80,11 +86,26 @@ class OTLPSpanExporter(SpanExporter):
             OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
             environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE, True),
         )
+        self._client_key_file = client_key_file or environ.get(
+            OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
+            environ.get(OTEL_EXPORTER_OTLP_CLIENT_KEY, None),
+        )
+        self._client_certificate_file = client_certificate_file or environ.get(
+            OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
+            environ.get(OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE, None),
+        )
+        self._client_cert = (
+            (self._client_certificate_file, self._client_key_file)
+            if self._client_certificate_file and self._client_key_file
+            else self._client_certificate_file
+        )
         headers_string = environ.get(
             OTEL_EXPORTER_OTLP_TRACES_HEADERS,
             environ.get(OTEL_EXPORTER_OTLP_HEADERS, ""),
         )
-        self._headers = headers or parse_env_headers(headers_string)
+        self._headers = headers or parse_env_headers(
+            headers_string, liberal=True
+        )
         self._timeout = timeout or int(
             environ.get(
                 OTEL_EXPORTER_OTLP_TRACES_TIMEOUT,
@@ -101,7 +122,7 @@ class OTLPSpanExporter(SpanExporter):
             )
         self._shutdown = False
 
-    def _export(self, serialized_data: str):
+    def _export(self, serialized_data: bytes):
         data = serialized_data
         if self._compression == Compression.Gzip:
             gzip_data = BytesIO()
@@ -109,13 +130,14 @@ class OTLPSpanExporter(SpanExporter):
                 gzip_stream.write(serialized_data)
             data = gzip_data.getvalue()
         elif self._compression == Compression.Deflate:
-            data = zlib.compress(bytes(serialized_data))
+            data = zlib.compress(serialized_data)
 
         return self._session.post(
             url=self._endpoint,
             data=data,
             verify=self._certificate_file,
             timeout=self._timeout,
+            cert=self._client_cert,
         )
 
     @staticmethod
@@ -126,25 +148,19 @@ class OTLPSpanExporter(SpanExporter):
             return True
         return False
 
-    def export(self, spans) -> SpanExportResult:
-        # After the call to Shutdown subsequent calls to Export are
-        # not allowed and should return a Failure result.
-        if self._shutdown:
-            _logger.warning("Exporter already shutdown, ignoring batch")
-            return SpanExportResult.FAILURE
+    def _serialize_spans(self, spans):
+        return encode_spans(spans).SerializePartialToString()
 
-        serialized_data = encode_spans(spans).SerializeToString()
-
+    def _export_serialized_spans(self, serialized_data):
         for delay in _create_exp_backoff_generator(
             max_value=self._MAX_RETRY_TIMEOUT
         ):
-
             if delay == self._MAX_RETRY_TIMEOUT:
                 return SpanExportResult.FAILURE
 
             resp = self._export(serialized_data)
             # pylint: disable=no-else-return
-            if resp.status_code in (200, 202):
+            if resp.ok:
                 return SpanExportResult.SUCCESS
             elif self._retryable(resp):
                 _logger.warning(
@@ -162,6 +178,17 @@ class OTLPSpanExporter(SpanExporter):
                 )
                 return SpanExportResult.FAILURE
         return SpanExportResult.FAILURE
+
+    def export(self, spans) -> SpanExportResult:
+        # After the call to Shutdown subsequent calls to Export are
+        # not allowed and should return a Failure result.
+        if self._shutdown:
+            _logger.warning("Exporter already shutdown, ignoring batch")
+            return SpanExportResult.FAILURE
+
+        serialized_data = self._serialize_spans(spans)
+
+        return self._export_serialized_spans(serialized_data)
 
     def shutdown(self):
         if self._shutdown:

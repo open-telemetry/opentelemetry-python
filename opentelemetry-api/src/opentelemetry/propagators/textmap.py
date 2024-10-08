@@ -18,6 +18,7 @@ import typing
 from opentelemetry.context.context import Context
 
 CarrierT = typing.TypeVar("CarrierT")
+# pylint: disable=invalid-name
 CarrierValT = typing.Union[typing.List[str], str]
 
 

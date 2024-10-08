@@ -40,6 +40,7 @@ from opentelemetry.sdk._configuration import (
     _init_metrics,
     _init_tracing,
     _initialize_components,
+    _OTelSDKConfigurator,
 )
 from opentelemetry.sdk._logs import LoggingHandler
 from opentelemetry.sdk._logs.export import ConsoleLogExporter
@@ -645,7 +646,7 @@ class TestLoggingInit(TestCase):
     @patch("opentelemetry.sdk._configuration._init_tracing")
     @patch("opentelemetry.sdk._configuration._init_logging")
     def test_logging_init_disable_default(self, logging_mock, tracing_mock):
-        _initialize_components("auto-version")
+        _initialize_components(auto_instrumentation_version="auto-version")
         self.assertEqual(logging_mock.call_count, 0)
         self.assertEqual(tracing_mock.call_count, 1)
 
@@ -660,7 +661,7 @@ class TestLoggingInit(TestCase):
     @patch("opentelemetry.sdk._configuration._init_logging")
     def test_logging_init_enable_env(self, logging_mock, tracing_mock):
         with self.assertLogs(level=WARNING):
-            _initialize_components("auto-version")
+            _initialize_components(auto_instrumentation_version="auto-version")
         self.assertEqual(logging_mock.call_count, 1)
         self.assertEqual(tracing_mock.call_count, 1)
 
@@ -677,7 +678,7 @@ class TestLoggingInit(TestCase):
     def test_initialize_components_resource(
         self, metrics_mock, logging_mock, tracing_mock
     ):
-        _initialize_components("auto-version")
+        _initialize_components(auto_instrumentation_version="auto-version")
         self.assertEqual(logging_mock.call_count, 1)
         self.assertEqual(tracing_mock.call_count, 1)
         self.assertEqual(metrics_mock.call_count, 1)
@@ -691,6 +692,101 @@ class TestLoggingInit(TestCase):
         self.assertEqual(logging_resource, tracing_resource)
         self.assertEqual(logging_resource, metrics_resource)
         self.assertEqual(tracing_resource, metrics_resource)
+
+    @patch.dict(
+        environ,
+        {
+            "OTEL_TRACES_EXPORTER": _EXPORTER_OTLP,
+            "OTEL_METRICS_EXPORTER": _EXPORTER_OTLP_PROTO_GRPC,
+            "OTEL_LOGS_EXPORTER": _EXPORTER_OTLP_PROTO_HTTP,
+        },
+    )
+    @patch.dict(
+        environ,
+        {
+            "OTEL_RESOURCE_ATTRIBUTES": "service.name=otlp-service, custom.key.1=env-value",
+            "OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED": "False",
+        },
+    )
+    @patch("opentelemetry.sdk._configuration.Resource")
+    @patch("opentelemetry.sdk._configuration._import_exporters")
+    @patch("opentelemetry.sdk._configuration._get_exporter_names")
+    @patch("opentelemetry.sdk._configuration._init_tracing")
+    @patch("opentelemetry.sdk._configuration._init_logging")
+    @patch("opentelemetry.sdk._configuration._init_metrics")
+    def test_initialize_components_kwargs(
+        self,
+        metrics_mock,
+        logging_mock,
+        tracing_mock,
+        exporter_names_mock,
+        import_exporters_mock,
+        resource_mock,
+    ):
+        exporter_names_mock.return_value = [
+            "env_var_exporter_1",
+            "env_var_exporter_2",
+        ]
+        import_exporters_mock.return_value = (
+            "TEST_SPAN_EXPORTERS_DICT",
+            "TEST_METRICS_EXPORTERS_DICT",
+            "TEST_LOG_EXPORTERS_DICT",
+        )
+        resource_mock.create.return_value = "TEST_RESOURCE"
+        kwargs = {
+            "auto_instrumentation_version": "auto-version",
+            "trace_exporter_names": ["custom_span_exporter"],
+            "metric_exporter_names": ["custom_metric_exporter"],
+            "log_exporter_names": ["custom_log_exporter"],
+            "sampler": "TEST_SAMPLER",
+            "resource_attributes": {
+                "custom.key.1": "pass-in-value-1",
+                "custom.key.2": "pass-in-value-2",
+            },
+            "id_generator": "TEST_GENERATOR",
+            "logging_enabled": True,
+        }
+        _initialize_components(**kwargs)
+
+        import_exporters_mock.assert_called_once_with(
+            [
+                "custom_span_exporter",
+                "env_var_exporter_1",
+                "env_var_exporter_2",
+            ],
+            [
+                "custom_metric_exporter",
+                "env_var_exporter_1",
+                "env_var_exporter_2",
+            ],
+            [
+                "custom_log_exporter",
+                "env_var_exporter_1",
+                "env_var_exporter_2",
+            ],
+        )
+        resource_mock.create.assert_called_once_with(
+            {
+                "telemetry.auto.version": "auto-version",
+                "custom.key.1": "pass-in-value-1",
+                "custom.key.2": "pass-in-value-2",
+            }
+        )
+        # Resource is checked separates
+        tracing_mock.assert_called_once_with(
+            exporters="TEST_SPAN_EXPORTERS_DICT",
+            id_generator="TEST_GENERATOR",
+            sampler="TEST_SAMPLER",
+            resource="TEST_RESOURCE",
+        )
+        metrics_mock.assert_called_once_with(
+            "TEST_METRICS_EXPORTERS_DICT",
+            "TEST_RESOURCE",
+        )
+        logging_mock.assert_called_once_with(
+            "TEST_LOG_EXPORTERS_DICT",
+            "TEST_RESOURCE",
+        )
 
 
 class TestMetricsInit(TestCase):
@@ -826,11 +922,9 @@ class TestExporterNames(TestCase):
             )
         assert len(logs_context.output) == 1
 
-    @patch.dict(environ, {"OTEL_TRACES_EXPORTER": "jaeger,zipkin"})
+    @patch.dict(environ, {"OTEL_TRACES_EXPORTER": "zipkin"})
     def test_multiple_exporters(self):
-        self.assertEqual(
-            sorted(_get_exporter_names("traces")), ["jaeger", "zipkin"]
-        )
+        self.assertEqual(sorted(_get_exporter_names("traces")), ["zipkin"])
 
     @patch.dict(environ, {"OTEL_TRACES_EXPORTER": "none"})
     def test_none_exporters(self):
@@ -912,3 +1006,22 @@ class TestImportConfigComponents(TestCase):
             str(error.value),
             "Requested component 'a' not found in entry point 'name'",
         )
+
+
+class TestConfigurator(TestCase):
+    class CustomConfigurator(_OTelSDKConfigurator):
+        def _configure(self, **kwargs):
+            kwargs["sampler"] = "TEST_SAMPLER"
+            super()._configure(**kwargs)
+
+    @patch("opentelemetry.sdk._configuration._initialize_components")
+    def test_custom_configurator(self, mock_init_comp):
+        custom_configurator = TestConfigurator.CustomConfigurator()
+        custom_configurator._configure(
+            auto_instrumentation_version="TEST_VERSION2"
+        )
+        kwargs = {
+            "auto_instrumentation_version": "TEST_VERSION2",
+            "sampler": "TEST_SAMPLER",
+        }
+        mock_init_comp.assert_called_once_with(**kwargs)

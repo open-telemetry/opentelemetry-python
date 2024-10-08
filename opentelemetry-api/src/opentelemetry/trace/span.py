@@ -3,7 +3,7 @@ import logging
 import re
 import types as python_types
 import typing
-from collections import OrderedDict
+import warnings
 
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
@@ -118,6 +118,27 @@ class Span(abc.ABC):
         timestamp if the `timestamp` argument is omitted.
         """
 
+    def add_link(  # pylint: disable=no-self-use
+        self,
+        context: "SpanContext",
+        attributes: types.Attributes = None,
+    ) -> None:
+        """Adds a `Link`.
+
+        Adds a single `Link` with the `SpanContext` of the span to link to and,
+        optionally, attributes passed as arguments. Implementations may ignore
+        calls with an invalid span context if both attributes and TraceState
+        are empty.
+
+        Note: It is preferred to add links at span creation, instead of calling
+        this method later since samplers can only consider information already
+        present during span creation.
+        """
+        warnings.warn(
+            "Span.add_link() not implemented and will be a no-op. "
+            "Use opentelemetry-sdk >= 1.23 to add links after span creation"
+        )
+
     @abc.abstractmethod
     def update_name(self, name: str) -> None:
         """Updates the `Span` name.
@@ -149,7 +170,7 @@ class Span(abc.ABC):
     @abc.abstractmethod
     def record_exception(
         self,
-        exception: Exception,
+        exception: BaseException,
         attributes: types.Attributes = None,
         timestamp: typing.Optional[int] = None,
         escaped: bool = False,
@@ -218,7 +239,7 @@ class TraceState(typing.Mapping[str, str]):
             typing.Sequence[typing.Tuple[str, str]]
         ] = None,
     ) -> None:
-        self._dict = OrderedDict()  # type: OrderedDict[str, str]
+        self._dict = {}  # type: dict[str, str]
         if entries is None:
             return
         if len(entries) > _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS:
@@ -310,9 +331,8 @@ class TraceState(typing.Mapping[str, str]):
             )
             return self
         prev_state = self._dict.copy()
-        prev_state[key] = value
-        prev_state.move_to_end(key, last=False)
-        new_state = list(prev_state.items())
+        prev_state.pop(key, None)
+        new_state = [(key, value), *prev_state.items()]
         return TraceState(new_state)
 
     def delete(self, key: str) -> "TraceState":
@@ -362,7 +382,7 @@ class TraceState(typing.Mapping[str, str]):
             If the number of keys is beyond the maximum, all values
             will be discarded and an empty tracestate will be returned.
         """
-        pairs = OrderedDict()  # type: OrderedDict[str, str]
+        pairs = {}  # type: dict[str, str]
         for header in header_list:
             members: typing.List[str] = re.split(_delimiter_pattern, header)
             for member in members:
@@ -525,6 +545,13 @@ class NonRecordingSpan(Span):
     ) -> None:
         pass
 
+    def add_link(
+        self,
+        context: "SpanContext",
+        attributes: types.Attributes = None,
+    ) -> None:
+        pass
+
     def update_name(self, name: str) -> None:
         pass
 
@@ -537,7 +564,7 @@ class NonRecordingSpan(Span):
 
     def record_exception(
         self,
-        exception: Exception,
+        exception: BaseException,
         attributes: types.Attributes = None,
         timestamp: typing.Optional[int] = None,
         escaped: bool = False,

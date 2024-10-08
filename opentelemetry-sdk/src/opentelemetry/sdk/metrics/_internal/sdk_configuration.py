@@ -24,6 +24,7 @@ import opentelemetry.sdk.resources
 
 @dataclass
 class SdkConfiguration:
+    exemplar_filter: "opentelemetry.sdk.metrics.ExemplarFilter"
     resource: "opentelemetry.sdk.resources.Resource"
     metric_readers: Sequence["opentelemetry.sdk.metrics.MetricReader"]
     views: Sequence["opentelemetry.sdk.metrics.View"]

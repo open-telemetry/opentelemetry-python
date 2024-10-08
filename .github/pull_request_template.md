@@ -1,6 +1,8 @@
 # Description
 
+<!--
 Please include a summary of the change and which issue is fixed. Please also include relevant motivation and context. List any dependencies that are required for this change.
+-->
 
 Fixes # (issue)
 
@@ -21,6 +23,7 @@ Please describe the tests that you ran to verify your changes. Provide instructi
 
 # Does This PR Require a Contrib Repo Change?
 
+<!--
 Answer the following question based on these examples of changes that would require a Contrib Repo Change:
 - [The OTel specification](https://github.com/open-telemetry/opentelemetry-specification) has changed which prompted this PR to update the method interfaces of `opentelemetry-api/` or `opentelemetry-sdk/`
 - The method interfaces of `test/util` have changed
@@ -33,6 +36,7 @@ Answer the following question based on these examples of changes that would requ
 - Major changes to project information, such as in:
     - `README.md`
     - `CONTRIBUTING.md`
+-->
 
 - [ ] Yes. - Link to PR: 
 - [ ] No.

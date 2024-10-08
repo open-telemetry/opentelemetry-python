@@ -1,26 +1,22 @@
-pylint==2.11.0
-flake8~=3.7
-isort~=5.8
-black~=22.3.0
-httpretty~=1.0
-mypy==0.931
-sphinx~=3.5.4
-sphinx-rtd-theme~=0.5
-sphinx-autodoc-typehints~=1.12.0
-pytest==7.1.3
-pytest-cov>=2.8
-readme-renderer~=24.0
-# This version of grpcio-tools ships with protoc 3.19.4 which appears to be compatible with
-# both protobuf 3.19.x and 4.x (see https://github.com/protocolbuffers/protobuf/issues/11123).
-# Bump this version with caution to preserve compatibility with protobuf 3.
-# https://github.com/open-telemetry/opentelemetry-python/blob/main/opentelemetry-proto/pyproject.toml#L28
-grpcio-tools==1.48.1
-mypy-protobuf~=3.0.0
-# temporary fix. we should update the jinja, flask deps
-# See https://github.com/pallets/markupsafe/issues/282
-# breaking change introduced in markupsafe causes jinja, flask to break
-markupsafe==2.0.1
+pylint==3.2.1
+flake8==6.1.0
+isort==5.12.0
+black==24.3.0
+httpretty==1.1.4
+mypy==1.9.0
+sphinx==7.1.2
+sphinx-rtd-theme==2.0.0rc4
+sphinx-autodoc-typehints==1.25.2
+pytest==7.4.4
+pytest-cov==4.1.0
+readme-renderer==42.0
+markupsafe==2.1.3
 bleach==4.1.0 # This dependency was updated to a breaking version.
 codespell==2.1.0
-requests==2.31.0
+requests==2.32.3
 ruamel.yaml==0.17.21
+asgiref==3.7.2
+psutil==5.9.6
+GitPython==3.1.41
+pre-commit==3.7.0; python_version >= '3.9'
+pre-commit==3.5.0; python_version < '3.9'

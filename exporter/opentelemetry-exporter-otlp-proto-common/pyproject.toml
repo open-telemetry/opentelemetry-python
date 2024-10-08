@@ -7,34 +7,34 @@ name = "opentelemetry-exporter-otlp-proto-common"
 dynamic = ["version"]
 description = "OpenTelemetry Protobuf encoding"
 readme = "README.rst"
-license = "Apache-2.0"
-requires-python = ">=3.7"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.8"
 authors = [
   { name = "OpenTelemetry Authors", email = "cncf-opentelemetry-contributors@lists.cncf.io" },
 ]
 classifiers = [
   "Development Status :: 5 - Production/Stable",
+  "Framework :: OpenTelemetry",
+  "Framework :: OpenTelemetry :: Exporters",
   "Intended Audience :: Developers",
   "License :: OSI Approved :: Apache Software License",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.7",
   "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
-  "opentelemetry-proto == 1.21.0.dev",
-  "backoff >= 1.10.0, < 2.0.0; python_version<'3.7'",
-  "backoff >= 1.10.0, < 3.0.0; python_version>='3.7'",
+  "opentelemetry-proto == 1.28.0.dev",
 ]
 
 [project.urls]
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/exporter/opentelemetry-exporter-otlp-proto-common"
 
 [tool.hatch.version]
-path = "src/opentelemetry/exporter/otlp/proto/common/version.py"
+path = "src/opentelemetry/exporter/otlp/proto/common/version/__init__.py"
 
 [tool.hatch.build.targets.sdist]
 include = [

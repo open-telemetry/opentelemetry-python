@@ -7,27 +7,29 @@ name = "opentelemetry-exporter-otlp"
 dynamic = ["version"]
 description = "OpenTelemetry Collector Exporters"
 readme = "README.rst"
-license = "Apache-2.0"
-requires-python = ">=3.7"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.8"
 authors = [
   { name = "OpenTelemetry Authors", email = "cncf-opentelemetry-contributors@lists.cncf.io" },
 ]
 classifiers = [
   "Development Status :: 5 - Production/Stable",
+  "Framework :: OpenTelemetry",
+  "Framework :: OpenTelemetry :: Exporters",
   "Intended Audience :: Developers",
   "License :: OSI Approved :: Apache Software License",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.7",
   "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
   "Typing :: Typed",
 ]
 dependencies = [
-  "opentelemetry-exporter-otlp-proto-grpc == 1.21.0.dev",
-  "opentelemetry-exporter-otlp-proto-http == 1.21.0.dev",
+  "opentelemetry-exporter-otlp-proto-grpc == 1.28.0.dev",
+  "opentelemetry-exporter-otlp-proto-http == 1.28.0.dev",
 ]
 
 [project.entry-points.opentelemetry_logs_exporter]
@@ -43,7 +45,7 @@ otlp = "opentelemetry.exporter.otlp.proto.grpc.trace_exporter:OTLPSpanExporter"
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/exporter/opentelemetry-exporter-otlp"
 
 [tool.hatch.version]
-path = "src/opentelemetry/exporter/otlp/version.py"
+path = "src/opentelemetry/exporter/otlp/version/__init__.py"
 
 [tool.hatch.build.targets.sdist]
 include = [

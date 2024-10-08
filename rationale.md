@@ -28,7 +28,7 @@ Public portions of the SDK (constructors, configuration, end-user interfaces) mu
 
 ## Core components
 
-Core components refer to the set of components which are required as per the spec. This includes API, SDK, propagators (B3 and Jaeger) and exporters which are required by the specification. These exporters are OTLP, Jaeger and Zipkin.
+Core components refer to the set of components which are required as per the spec. This includes API, SDK, propagators (B3 and Jaeger) and exporters which are required by the specification. These exporters are OTLP, and Zipkin.
 
 ## Mature or stable Signals
 

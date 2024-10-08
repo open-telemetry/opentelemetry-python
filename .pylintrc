@@ -28,7 +28,7 @@ limit-inference-results=100
 
 # List of plugins (as comma separated values of python modules names) to load,
 # usually to register additional checkers.
-load-plugins=
+load-plugins=pylint.extensions.no_self_use
 
 # Pickle collected data for later comparisons.
 persistent=yes
@@ -43,6 +43,9 @@ suggestion-mode=yes
 # Allow loading of arbitrary C extensions. Extensions are imported into the
 # active Python interpreter and may run arbitrary code.
 unsafe-load-any-extension=no
+
+# Run python dependant checks considering the baseline version
+py-version=3.8
 
 
 [MESSAGES CONTROL]
@@ -68,7 +71,6 @@ disable=missing-docstring,
       duplicate-code,
       ungrouped-imports, # Leave this up to isort
       wrong-import-order, # Leave this up to isort
-      bad-continuation, # Leave this up to black
       line-too-long, # Leave this up to black
       exec-used,
       super-with-arguments, # temp-pylint-upgrade
@@ -76,6 +78,7 @@ disable=missing-docstring,
       raise-missing-from, # temp-pylint-upgrade
       unused-argument, # temp-pylint-upgrade
       redefined-builtin,
+      cyclic-import,
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
@@ -165,7 +168,7 @@ notes=FIXME,
 # List of decorators that produce context managers, such as
 # contextlib.contextmanager. Add to this list to register other decorators that
 # produce valid context managers.
-contextmanager-decorators=contextlib.contextmanager
+contextmanager-decorators=contextlib.contextmanager, _agnosticcontextmanager
 
 # List of members which are set dynamically and missed by pylint inference
 # system, and so shouldn't trigger E1101 when accessed. Python regular
@@ -262,13 +265,6 @@ max-line-length=79
 
 # Maximum number of lines in a module.
 max-module-lines=1000
-
-# List of optional constructs for which whitespace checking is disabled. `dict-
-# separator` is used to allow tabulation in dicts, etc.: {1  : 1,\n222: 2}.
-# `trailing-comma` allows a space between comma and closing bracket: (a, ).
-# `empty-line` allows space-only lines.
-no-space-check=trailing-comma,
-               dict-separator
 
 # Allow the body of a class to be on the same line as the declaration if body
 # contains single statement.
@@ -488,9 +484,7 @@ max-statements=50
 # Minimum number of public methods for a class (see R0903).
 min-public-methods=2
 
-
 [EXCEPTIONS]
 
-# Exceptions that will emit a warning when being caught. Defaults to
-# "Exception".
-overgeneral-exceptions=Exception
+# Exceptions that will emit a warning when being caught.
+overgeneral-exceptions=builtins.Exception

@@ -15,10 +15,12 @@
 # pylint: disable=too-many-ancestors, unused-import
 
 from logging import getLogger
+from time import time_ns
 from typing import Dict, Generator, Iterable, List, Optional, Union
 
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics
+from opentelemetry.context import Context, get_current
 from opentelemetry.metrics import CallbackT
 from opentelemetry.metrics import Counter as APICounter
 from opentelemetry.metrics import Histogram as APIHistogram
@@ -28,6 +30,7 @@ from opentelemetry.metrics import (
     ObservableUpDownCounter as APIObservableUpDownCounter,
 )
 from opentelemetry.metrics import UpDownCounter as APIUpDownCounter
+from opentelemetry.metrics import _Gauge as APIGauge
 from opentelemetry.metrics._internal.instrument import CallbackOptions
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
@@ -53,9 +56,11 @@ class _Synchronous:
         result = self._check_name_unit_description(name, unit, description)
 
         if result["name"] is None:
+            # pylint: disable=broad-exception-raised
             raise Exception(_ERROR_MESSAGE.format(name))
 
         if result["unit"] is None:
+            # pylint: disable=broad-exception-raised
             raise Exception(_ERROR_MESSAGE.format(unit))
 
         name = result["name"]
@@ -84,9 +89,11 @@ class _Asynchronous:
         result = self._check_name_unit_description(name, unit, description)
 
         if result["name"] is None:
+            # pylint: disable=broad-exception-raised
             raise Exception(_ERROR_MESSAGE.format(name))
 
         if result["unit"] is None:
+            # pylint: disable=broad-exception-raised
             raise Exception(_ERROR_MESSAGE.format(unit))
 
         name = result["name"]
@@ -132,10 +139,12 @@ class _Asynchronous:
                 for api_measurement in callback(callback_options):
                     yield Measurement(
                         api_measurement.value,
+                        time_unix_nano=time_ns(),
                         instrument=self,
+                        context=api_measurement.context or get_current(),
                         attributes=api_measurement.attributes,
                     )
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # pylint: disable=broad-exception-caught
                 _logger.exception(
                     "Callback failed for instrument %s.", self.name
                 )
@@ -148,15 +157,25 @@ class Counter(_Synchronous, APICounter):
         return super().__new__(cls)
 
     def add(
-        self, amount: Union[int, float], attributes: Dict[str, str] = None
+        self,
+        amount: Union[int, float],
+        attributes: Dict[str, str] = None,
+        context: Optional[Context] = None,
     ):
         if amount < 0:
             _logger.warning(
                 "Add amount must be non-negative on Counter %s.", self.name
             )
             return
+        time_unix_nano = time_ns()
         self._measurement_consumer.consume_measurement(
-            Measurement(amount, self, attributes)
+            Measurement(
+                amount,
+                time_unix_nano,
+                self,
+                context or get_current(),
+                attributes,
+            )
         )
 
 
@@ -167,10 +186,20 @@ class UpDownCounter(_Synchronous, APIUpDownCounter):
         return super().__new__(cls)
 
     def add(
-        self, amount: Union[int, float], attributes: Dict[str, str] = None
+        self,
+        amount: Union[int, float],
+        attributes: Dict[str, str] = None,
+        context: Optional[Context] = None,
     ):
+        time_unix_nano = time_ns()
         self._measurement_consumer.consume_measurement(
-            Measurement(amount, self, attributes)
+            Measurement(
+                amount,
+                time_unix_nano,
+                self,
+                context or get_current(),
+                attributes,
+            )
         )
 
 
@@ -199,7 +228,10 @@ class Histogram(_Synchronous, APIHistogram):
         return super().__new__(cls)
 
     def record(
-        self, amount: Union[int, float], attributes: Dict[str, str] = None
+        self,
+        amount: Union[int, float],
+        attributes: Dict[str, str] = None,
+        context: Optional[Context] = None,
     ):
         if amount < 0:
             _logger.warning(
@@ -207,8 +239,39 @@ class Histogram(_Synchronous, APIHistogram):
                 self.name,
             )
             return
+        time_unix_nano = time_ns()
         self._measurement_consumer.consume_measurement(
-            Measurement(amount, self, attributes)
+            Measurement(
+                amount,
+                time_unix_nano,
+                self,
+                context or get_current(),
+                attributes,
+            )
+        )
+
+
+class Gauge(_Synchronous, APIGauge):
+    def __new__(cls, *args, **kwargs):
+        if cls is Gauge:
+            raise TypeError("Gauge must be instantiated via a meter.")
+        return super().__new__(cls)
+
+    def set(
+        self,
+        amount: Union[int, float],
+        attributes: Dict[str, str] = None,
+        context: Optional[Context] = None,
+    ):
+        time_unix_nano = time_ns()
+        self._measurement_consumer.consume_measurement(
+            Measurement(
+                amount,
+                time_unix_nano,
+                self,
+                context or get_current(),
+                attributes,
+            )
         )
 
 
@@ -239,6 +302,10 @@ class _ObservableUpDownCounter(ObservableUpDownCounter):
 
 
 class _Histogram(Histogram):
+    pass
+
+
+class _Gauge(Gauge):
     pass
 
 

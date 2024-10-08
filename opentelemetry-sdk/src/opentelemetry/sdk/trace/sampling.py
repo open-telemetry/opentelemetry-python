@@ -68,10 +68,10 @@ The list of built-in values for ``OTEL_TRACES_SAMPLER`` are:
 
     * always_on - Sampler that always samples spans, regardless of the parent span's sampling decision.
     * always_off - Sampler that never samples spans, regardless of the parent span's sampling decision.
-    * traceidratio - Sampler that samples probabalistically based on rate.
+    * traceidratio - Sampler that samples probabilistically based on rate.
     * parentbased_always_on - (default) Sampler that respects its parent span's sampling decision, but otherwise always samples.
     * parentbased_always_off - Sampler that respects its parent span's sampling decision, but otherwise never samples.
-    * parentbased_traceidratio - Sampler that respects its parent span's sampling decision, but otherwise samples probabalistically based on rate.
+    * parentbased_traceidratio - Sampler that respects its parent span's sampling decision, but otherwise samples probabilistically based on rate.
 
 Sampling probability can be set with ``OTEL_TRACES_SAMPLER_ARG`` if the sampler is traceidratio or parentbased_traceidratio. Rate must be in the range [0.0,1.0]. When not provided rate will be set to
 1.0 (maximum rate possible).
@@ -121,7 +121,7 @@ be an empty string. For example:
     # ...
     class CustomSamplerFactory:
         @staticmethod
-        get_sampler(sampler_argument):
+        def get_sampler(sampler_argument):
             try:
                 rate = float(sampler_argument)
                 return CustomSampler(rate)
@@ -184,7 +184,7 @@ class SamplingResult:
         self,
         decision: Decision,
         attributes: "Attributes" = None,
-        trace_state: "TraceState" = None,
+        trace_state: Optional["TraceState"] = None,
     ) -> None:
         self.decision = decision
         if attributes is None:
@@ -201,10 +201,10 @@ class Sampler(abc.ABC):
         parent_context: Optional["Context"],
         trace_id: int,
         name: str,
-        kind: SpanKind = None,
+        kind: Optional[SpanKind] = None,
         attributes: Attributes = None,
-        links: Sequence["Link"] = None,
-        trace_state: "TraceState" = None,
+        links: Optional[Sequence["Link"]] = None,
+        trace_state: Optional["TraceState"] = None,
     ) -> "SamplingResult":
         pass
 
@@ -216,7 +216,7 @@ class Sampler(abc.ABC):
 class StaticSampler(Sampler):
     """Sampler that always returns the same decision."""
 
-    def __init__(self, decision: "Decision"):
+    def __init__(self, decision: "Decision") -> None:
         self._decision = decision
 
     def should_sample(
@@ -224,10 +224,10 @@ class StaticSampler(Sampler):
         parent_context: Optional["Context"],
         trace_id: int,
         name: str,
-        kind: SpanKind = None,
+        kind: Optional[SpanKind] = None,
         attributes: Attributes = None,
-        links: Sequence["Link"] = None,
-        trace_state: "TraceState" = None,
+        links: Optional[Sequence["Link"]] = None,
+        trace_state: Optional["TraceState"] = None,
     ) -> "SamplingResult":
         if self._decision is Decision.DROP:
             attributes = None
@@ -285,10 +285,10 @@ class TraceIdRatioBased(Sampler):
         parent_context: Optional["Context"],
         trace_id: int,
         name: str,
-        kind: SpanKind = None,
+        kind: Optional[SpanKind] = None,
         attributes: Attributes = None,
-        links: Sequence["Link"] = None,
-        trace_state: "TraceState" = None,
+        links: Optional[Sequence["Link"]] = None,
+        trace_state: Optional["TraceState"] = None,
     ) -> "SamplingResult":
         decision = Decision.DROP
         if trace_id & self.TRACE_ID_LIMIT < self.bound:
@@ -340,10 +340,10 @@ class ParentBased(Sampler):
         parent_context: Optional["Context"],
         trace_id: int,
         name: str,
-        kind: SpanKind = None,
+        kind: Optional[SpanKind] = None,
         attributes: Attributes = None,
-        links: Sequence["Link"] = None,
-        trace_state: "TraceState" = None,
+        links: Optional[Sequence["Link"]] = None,
+        trace_state: Optional["TraceState"] = None,
     ) -> "SamplingResult":
         parent_span_context = get_current_span(
             parent_context
@@ -386,7 +386,7 @@ DEFAULT_ON = ParentBased(ALWAYS_ON)
 class ParentBasedTraceIdRatio(ParentBased):
     """
     Sampler that respects its parent span's sampling decision, but otherwise
-    samples probabalistically based on `rate`.
+    samples probabilistically based on `rate`.
     """
 
     def __init__(self, rate: float):
@@ -443,7 +443,9 @@ def _get_from_env_or_default() -> Sampler:
     return _KNOWN_SAMPLERS[trace_sampler]
 
 
-def _get_parent_trace_state(parent_context) -> Optional["TraceState"]:
+def _get_parent_trace_state(
+    parent_context: Optional[Context],
+) -> Optional["TraceState"]:
     parent_span_context = get_current_span(parent_context).get_span_context()
     if parent_span_context is None or not parent_span_context.is_valid:
         return None

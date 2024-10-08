@@ -15,19 +15,26 @@ Start the Collector locally to see data being exported. Write the following file
       otlp:
         protocols:
           grpc:
+            endpoint: 0.0.0.0:4317
+
+    exporters:
+      debug:
+        verbosity: detailed
 
     processors:
       batch:
-
-    exporters:
-      logging:
 
     service:
         pipelines:
             logs:
                 receivers: [otlp]
-                exporters: [logging]
-  
+                processors: [batch]
+                exporters: [debug]
+            traces:
+                receivers: [otlp]
+                processors: [batch]
+                exporters: [debug]
+
 Then start the Docker container:
 
 .. code-block:: sh

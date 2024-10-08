@@ -27,6 +27,8 @@ from opentelemetry.context import get_current
 
 
 class TestW3CBaggagePropagator(TestCase):
+    # pylint: disable=protected-access
+    # pylint: disable=too-many-public-methods
     def setUp(self):
         self.propagator = W3CBaggagePropagator()
 
@@ -38,7 +40,7 @@ class TestW3CBaggagePropagator(TestCase):
     def _inject(self, values):
         """Test helper"""
         ctx = get_current()
-        for k, v in values.items():
+        for k, v in values.items():  # pylint: disable=invalid-name
             ctx = set_baggage(k, v, context=ctx)
         output = {}
         self.propagator.inject(output, context=ctx)
@@ -134,11 +136,13 @@ class TestW3CBaggagePropagator(TestCase):
                 self._extract(
                     ",".join(
                         [
-                            f"key{index}=value{index}"
-                            if index != 2
-                            else (
-                                f"key{index}="
-                                f"value{'s' * (W3CBaggagePropagator._MAX_PAIR_LENGTH + 1)}"
+                            (
+                                f"key{index}=value{index}"
+                                if index != 2
+                                else (
+                                    f"key{index}="
+                                    f"value{'s' * (W3CBaggagePropagator._MAX_PAIR_LENGTH + 1)}"
+                                )
                             )
                             for index in range(
                                 W3CBaggagePropagator._MAX_PAIRS + 1
@@ -162,9 +166,11 @@ class TestW3CBaggagePropagator(TestCase):
                 self._extract(
                     ",".join(
                         [
-                            f"key{index}=value{index}"
-                            if index != 2
-                            else f"key{index}xvalue{index}"
+                            (
+                                f"key{index}=value{index}"
+                                if index != 2
+                                else f"key{index}xvalue{index}"
+                            )
                             for index in range(
                                 W3CBaggagePropagator._MAX_PAIRS + 1
                             )

@@ -81,7 +81,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
         )
 
         parent_span_context = SDKSpanContext(
-            trace_id, 0x1111111111111111, is_remote=False
+            trace_id, 0x1111111111111111, is_remote=True
         )
 
         other_context = SDKSpanContext(
@@ -111,7 +111,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
             links=(
                 SDKLink(context=other_context, attributes={"key_bool": True}),
             ),
-            resource=SDKResource({}),
+            resource=SDKResource({}, "resource_schema_url"),
         )
         span1.start(start_time=start_times[0])
         span1.set_attribute("key_bool", False)
@@ -143,7 +143,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
             name="test-span-4",
             context=other_context,
             parent=None,
-            resource=SDKResource({}),
+            resource=SDKResource({}, "resource_schema_url"),
             instrumentation_scope=SDKInstrumentationScope(
                 name="name", version="version"
             ),
@@ -163,6 +163,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
         pb2_service_request = PB2ExportTraceServiceRequest(
             resource_spans=[
                 PB2ResourceSpans(
+                    schema_url="resource_schema_url",
                     resource=PB2Resource(),
                     scope_spans=[
                         PB2ScopeSpans(
@@ -251,12 +252,14 @@ class TestOTLPTraceEncoder(unittest.TestCase):
                                                     ),
                                                 ),
                                             ],
+                                            flags=0x100,
                                         )
                                     ],
                                     status=PB2Status(
                                         code=SDKStatusCode.ERROR.value,
                                         message="Example description",
                                     ),
+                                    flags=0x300,
                                 )
                             ],
                         ),
@@ -283,6 +286,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
                                     events=None,
                                     links=None,
                                     status={},
+                                    flags=0x100,
                                 )
                             ],
                         ),
@@ -320,6 +324,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
                                     events=None,
                                     links=None,
                                     status={},
+                                    flags=0x100,
                                 ),
                                 PB2SPan(
                                     trace_id=trace_id,
@@ -345,6 +350,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
                                     events=None,
                                     links=None,
                                     status={},
+                                    flags=0x100,
                                 ),
                             ],
                         )
