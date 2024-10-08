@@ -53,6 +53,10 @@ OTEL_LOG_LEVEL = "OTEL_LOG_LEVEL"
 The :envvar:`OTEL_LOG_LEVEL` environment variable sets the log level used by the SDK logger
 Default: "info"
 """
+# TODO: OTEL_LOG_LEVEL vs OTEL_PYTHON_LOG_LEVEL
+# TODO: add docstring
+OTEL_PYTHON_LOG_FORMAT = "OTEL_PYTHON_LOG_FORMAT"
+OTEL_PYTHON_LOG_LEVEL = "OTEL_PYTHON_LOG_LEVEL"
 
 OTEL_TRACES_SAMPLER = "OTEL_TRACES_SAMPLER"
 """

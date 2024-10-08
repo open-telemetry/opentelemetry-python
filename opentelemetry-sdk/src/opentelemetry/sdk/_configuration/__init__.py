@@ -43,6 +43,10 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TRACES_PROTOCOL,
     OTEL_TRACES_SAMPLER,
     OTEL_TRACES_SAMPLER_ARG,
+    # TODO which env vars
+    OTEL_LOG_LEVEL,
+    # OTEL_PYTHON_LOG_LEVEL,
+    OTEL_PYTHON_LOG_FORMAT,
 )
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import (
@@ -238,6 +242,15 @@ def _init_logging(
     exporters: Dict[str, Type[LogExporter]],
     resource: Resource = None,
 ):
+    log_format = environ.get(OTEL_PYTHON_LOG_FORMAT, logging.BASIC_FORMAT)
+    levels = {
+        "debug": logging.DEBUG,
+        "info": logging.INFO,
+        "warning": logging.WARNING,
+        "error": logging.ERROR,
+    }
+    log_level = levels.get(environ.get(OTEL_LOG_LEVEL, "info").lower(), logging.INFO)
+
     provider = LoggerProvider(resource=resource)
     set_logger_provider(provider)
 
@@ -249,7 +262,11 @@ def _init_logging(
 
     handler = LoggingHandler(level=logging.NOTSET, logger_provider=provider)
 
-    logging.getLogger().addHandler(handler)
+    logging.basicConfig(
+        format=log_format,
+        level=log_level,
+        handlers=(handler,)
+    )
 
 
 def _import_exporters(
