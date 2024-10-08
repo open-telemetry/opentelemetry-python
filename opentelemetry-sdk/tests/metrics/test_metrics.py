@@ -36,7 +36,6 @@ from opentelemetry.sdk.metrics import (
 )
 from opentelemetry.sdk.metrics._internal import SynchronousMeasurementConsumer
 from opentelemetry.sdk.metrics.export import (
-    InMemoryMetricExporter,
     Metric,
     MetricExportResult,
     MetricReader,

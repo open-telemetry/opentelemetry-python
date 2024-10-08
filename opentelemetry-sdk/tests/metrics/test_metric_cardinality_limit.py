@@ -5,15 +5,13 @@ from unittest import TestCase
 from opentelemetry.sdk.metrics import MeterProvider
 
 from opentelemetry.sdk.metrics.export import (
-    InMemoryMetricExporter,
-    PeriodicExportingMetricReader,
+    InMemoryMetricReader,
 )
 
 class TestMetricCardinalityLimit(TestCase):
 
     def setUp(self):
-        self.exporter = InMemoryMetricExporter()
-        self.reader = PeriodicExportingMetricReader(exporter=self.exporter, export_interval_millis=500)
+        self.reader = InMemoryMetricReader()
         self.meter_provider = MeterProvider(metric_readers=[self.reader])
         self.meter = self.meter_provider.get_meter("test_meter")
 
@@ -30,7 +28,7 @@ class TestMetricCardinalityLimit(TestCase):
         self.reader.force_flush()
 
         # Retrieve the metrics from the in-memory exporter
-        metric_data = self.exporter.metrics
+        metric_data = self.reader.get_metrics_data()
 
         # Check if the length of the metric data doesn't exceed 2000
         self.assertTrue(len(metric_data) <= 2000)
