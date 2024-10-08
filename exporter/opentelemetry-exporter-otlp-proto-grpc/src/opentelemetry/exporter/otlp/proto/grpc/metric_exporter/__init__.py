@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from time import time
 from dataclasses import replace
 from logging import getLogger
 from os import environ
@@ -98,7 +99,7 @@ class OTLPMetricExporter(
         headers: Optional[
             Union[TypingSequence[Tuple[str, str]], Dict[str, str], str]
         ] = None,
-        timeout: Optional[int] = None,
+        timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
         preferred_temporality: Dict[type, AggregationTemporality] = None,
         preferred_aggregation: Dict[type, Aggregation] = None,
@@ -123,7 +124,7 @@ class OTLPMetricExporter(
 
         environ_timeout = environ.get(OTEL_EXPORTER_OTLP_METRICS_TIMEOUT)
         environ_timeout = (
-            int(environ_timeout) if environ_timeout is not None else None
+            float(environ_timeout) if environ_timeout is not None else None
         )
 
         compression = (
@@ -157,17 +158,26 @@ class OTLPMetricExporter(
     def export(
         self,
         metrics_data: MetricsData,
-        timeout_millis: float = 10_000,
+        timeout_millis: Optional[float] = None,
         **kwargs,
     ) -> MetricExportResult:
-        # TODO(#2663): OTLPExporterMixin should pass timeout to gRPC
+        timeout_sec = (
+            timeout_millis / 1000
+            if timeout_millis is not None
+            else self._exporter._timeout_sec  # pylint: disable=protected-access
+        )
+
         if self._max_export_batch_size is None:
-            return self._export(data=metrics_data)
+            return self._exporter.export_with_retry(metrics_data, timeout_sec)
 
         export_result = MetricExportResult.SUCCESS
 
+        deadline_sec = time() + timeout_sec
         for split_metrics_data in self._split_metrics_data(metrics_data):
-            split_export_result = self._export(data=split_metrics_data)
+            time_remaining_sec = deadline_sec - time()
+            split_export_result = self._exporter.export_with_retry(
+                split_metrics_data, timeout_sec=time_remaining_sec
+            )
 
             if split_export_result is MetricExportResult.FAILURE:
                 export_result = MetricExportResult.FAILURE

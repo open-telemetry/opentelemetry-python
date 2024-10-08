@@ -17,13 +17,13 @@ import logging
 import zlib
 from io import BytesIO
 from os import environ
-from typing import Dict, Optional
-from time import sleep
+from typing import Dict, Optional, Sequence
 
 import requests
 
-from opentelemetry.exporter.otlp.proto.common._internal import (
-    _create_exp_backoff_generator,
+from opentelemetry.exporter.otlp.proto.common.exporter import (
+    RetryableExportError,
+    RetryingExporter,
 )
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
@@ -44,6 +44,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_HEADERS,
     OTEL_EXPORTER_OTLP_TIMEOUT,
 )
+from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.exporter.otlp.proto.http import (
     _OTLP_HTTP_HEADERS,
@@ -72,7 +73,7 @@ class OTLPSpanExporter(SpanExporter):
         client_key_file: Optional[str] = None,
         client_certificate_file: Optional[str] = None,
         headers: Optional[Dict[str, str]] = None,
-        timeout: Optional[int] = None,
+        timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
         session: Optional[requests.Session] = None,
     ):
@@ -106,7 +107,7 @@ class OTLPSpanExporter(SpanExporter):
         self._headers = headers or parse_env_headers(
             headers_string, liberal=True
         )
-        self._timeout = timeout or int(
+        timeout_sec = timeout or float(
             environ.get(
                 OTEL_EXPORTER_OTLP_TRACES_TIMEOUT,
                 environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, DEFAULT_TIMEOUT),
@@ -121,8 +122,13 @@ class OTLPSpanExporter(SpanExporter):
                 {"Content-Encoding": self._compression.value}
             )
         self._shutdown = False
+        self._exporter = RetryingExporter(
+            self._export, SpanExportResult, timeout_sec
+        )
 
-    def _export(self, serialized_data: bytes):
+    def _export(
+        self, serialized_data: bytes, timeout_sec: float
+    ) -> SpanExportResult:
         data = serialized_data
         if self._compression == Compression.Gzip:
             gzip_data = BytesIO()
@@ -132,13 +138,30 @@ class OTLPSpanExporter(SpanExporter):
         elif self._compression == Compression.Deflate:
             data = zlib.compress(serialized_data)
 
-        return self._session.post(
+        resp = self._session.post(
             url=self._endpoint,
             data=data,
             verify=self._certificate_file,
-            timeout=self._timeout,
+            timeout=timeout_sec,
             cert=self._client_cert,
         )
+
+        if resp.ok:
+            return SpanExportResult.SUCCESS
+
+        if self._retryable(resp):
+            _logger.warning(
+                "Transient error %s encountered while exporting span batch",
+                resp.reason,
+            )
+            raise RetryableExportError(None)
+
+        _logger.error(
+            "Failed to export batch code: %s, reason: %s",
+            resp.status_code,
+            resp.text,
+        )
+        return SpanExportResult.FAILURE
 
     @staticmethod
     def _retryable(resp: requests.Response) -> bool:
@@ -148,38 +171,14 @@ class OTLPSpanExporter(SpanExporter):
             return True
         return False
 
-    def _serialize_spans(self, spans):
+    def _serialize_spans(self, spans: Sequence[ReadableSpan]) -> str:
         return encode_spans(spans).SerializePartialToString()
 
-    def _export_serialized_spans(self, serialized_data):
-        for delay in _create_exp_backoff_generator(
-            max_value=self._MAX_RETRY_TIMEOUT
-        ):
-            if delay == self._MAX_RETRY_TIMEOUT:
-                return SpanExportResult.FAILURE
-
-            resp = self._export(serialized_data)
-            # pylint: disable=no-else-return
-            if resp.ok:
-                return SpanExportResult.SUCCESS
-            elif self._retryable(resp):
-                _logger.warning(
-                    "Transient error %s encountered while exporting span batch, retrying in %ss.",
-                    resp.reason,
-                    delay,
-                )
-                sleep(delay)
-                continue
-            else:
-                _logger.error(
-                    "Failed to export batch code: %s, reason: %s",
-                    resp.status_code,
-                    resp.text,
-                )
-                return SpanExportResult.FAILURE
-        return SpanExportResult.FAILURE
-
-    def export(self, spans) -> SpanExportResult:
+    def export(
+        self,
+        spans: Sequence[ReadableSpan],
+        timeout_millis: Optional[float] = None,
+    ) -> SpanExportResult:
         # After the call to Shutdown subsequent calls to Export are
         # not allowed and should return a Failure result.
         if self._shutdown:
@@ -187,8 +186,12 @@ class OTLPSpanExporter(SpanExporter):
             return SpanExportResult.FAILURE
 
         serialized_data = self._serialize_spans(spans)
-
-        return self._export_serialized_spans(serialized_data)
+        return self._exporter.export_with_retry(
+            serialized_data,
+            timeout_sec=(
+                timeout_millis / 1000.0 if timeout_millis is not None else None
+            ),
+        )
 
     def shutdown(self):
         if self._shutdown:

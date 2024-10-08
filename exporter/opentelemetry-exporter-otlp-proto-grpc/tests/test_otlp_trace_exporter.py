@@ -16,6 +16,7 @@
 
 import os
 import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
 from logging import WARNING
 from time import time_ns
@@ -31,6 +32,9 @@ from grpc import ChannelCredentials, Compression, StatusCode, server
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _encode_key_value,
+)
+from opentelemetry.exporter.otlp.proto.common.exporter import (
+    RetryableExportError,
 )
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
     OTLPSpanExporter,
@@ -133,7 +137,7 @@ class TestOTLPSpanExporter(TestCase):
 
     def setUp(self):
         tracer_provider = TracerProvider()
-        self.exporter = OTLPSpanExporter(insecure=True)
+        self.exporter = OTLPSpanExporter(insecure=True, timeout=0.05)
         tracer_provider.add_span_processor(SimpleSpanProcessor(self.exporter))
         self.tracer = tracer_provider.get_tracer(__name__)
 
@@ -522,35 +526,54 @@ class TestOTLPSpanExporter(TestCase):
         )
 
     @patch(
-        "opentelemetry.exporter.otlp.proto.grpc.exporter._create_exp_backoff_generator"
+        "opentelemetry.exporter.otlp.proto.grpc.trace_exporter.OTLPSpanExporter._export",
+        side_effect=RetryableExportError(None),
     )
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
-    def test_unavailable(self, mock_sleep, mock_expo):
+    def test_export_uses_arg_timeout_when_given(self, export_mock) -> None:
+        exporter = OTLPSpanExporter(timeout=20)
+
+        with self.assertLogs(level="WARNING"):
+            start = time.time()
+            exporter.export([self.span], timeout_millis=100.0)
+            duration = time.time() - start
+        self.assertAlmostEqual(duration, 0.1, places=1)
+
+    @patch(
+        "opentelemetry.exporter.otlp.proto.common.exporter._create_exp_backoff_generator"
+    )
+    def test_unavailable(self, mock_expo):
 
         mock_expo.configure_mock(**{"return_value": [0.01]})
 
         add_TraceServiceServicer_to_server(
             TraceServiceServicerUNAVAILABLE(), self.server
         )
-        result = self.exporter.export([self.span])
+        with patch.object(
+            self.exporter._exporter._shutdown,  # pylint: disable=protected-access
+            "wait",
+        ) as wait_mock:
+            result = self.exporter.export([self.span])
         self.assertEqual(result, SpanExportResult.FAILURE)
-        mock_sleep.assert_called_with(0.01)
+        wait_mock.assert_called_with(0.01)
 
     @patch(
-        "opentelemetry.exporter.otlp.proto.grpc.exporter._create_exp_backoff_generator"
+        "opentelemetry.exporter.otlp.proto.common.exporter._create_exp_backoff_generator"
     )
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
-    def test_unavailable_delay(self, mock_sleep, mock_expo):
+    def test_unavailable_delay(self, mock_expo):
 
-        mock_expo.configure_mock(**{"return_value": [1]})
+        mock_expo.configure_mock(**{"return_value": [0.01]})
 
         add_TraceServiceServicer_to_server(
             TraceServiceServicerUNAVAILABLEDelay(), self.server
         )
-        self.assertEqual(
-            self.exporter.export([self.span]), SpanExportResult.FAILURE
-        )
-        mock_sleep.assert_called_with(0.01)
+        with patch.object(
+            self.exporter._exporter._shutdown,  # pylint: disable=protected-access
+            "wait",
+        ) as wait_mock:
+            self.assertEqual(
+                self.exporter.export([self.span]), SpanExportResult.FAILURE
+            )
+        wait_mock.assert_called_with(0.01)
 
     def test_success(self):
         add_TraceServiceServicer_to_server(
@@ -988,7 +1011,9 @@ class TestOTLPSpanExporter(TestCase):
                 "Exporter already shutdown, ignoring batch",
             )
 
-    def test_shutdown_wait_last_export(self):
+    def test_shutdown_wait_for_last_export_finishing_within_shutdown_timeout(
+        self,
+    ):
         add_TraceServiceServicer_to_server(
             TraceServiceServicerUNAVAILABLEDelay(), self.server
         )
@@ -999,16 +1024,25 @@ class TestOTLPSpanExporter(TestCase):
         export_thread.start()
         try:
             # pylint: disable=protected-access
-            self.assertTrue(self.exporter._export_lock.locked())
-            # delay is 4 seconds while the default shutdown timeout is 30_000 milliseconds
+
+            # Wait for the export thread to hold the lock. Since the main thread is not synchronized
+            # with the export thread, the thread may not be ready yet.
+            for _ in range(5):
+                if self.exporter._exporter._export_lock.locked():
+                    break
+                time.sleep(0.01)
+            self.assertTrue(self.exporter._exporter._export_lock.locked())
+
+            # 6 retries with a fixed retry delay of 10ms (see TraceServiceServicerUNAVAILABLEDelay)
+            # The default shutdown timeout is 30 seconds
+            # This means the retries will finish long before the shutdown flag will be set
             start_time = time_ns()
             self.exporter.shutdown()
             now = time_ns()
-            self.assertGreaterEqual(now, (start_time + 30 / 1000))
-            # pylint: disable=protected-access
+            # Verify that the shutdown method finished within the shutdown timeout
+            self.assertLessEqual(now, (start_time + 3e10))
             self.assertTrue(self.exporter._shutdown)
-            # pylint: disable=protected-access
-            self.assertFalse(self.exporter._export_lock.locked())
+            self.assertFalse(self.exporter._exporter._export_lock.locked())
         finally:
             export_thread.join()
 
