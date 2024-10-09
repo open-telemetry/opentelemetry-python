@@ -675,23 +675,13 @@ class LoggerProvider(APILoggerProvider):
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
     ) -> Logger:
-        key = (name, version, schema_url)
-        if key in self._logger_cache:
-            return self._logger_cache[key]
-
         with self._logger_cache_lock:
+            key = (name, version, schema_url)
             if key in self._logger_cache:
                 return self._logger_cache[key]
 
-            self._logger_cache[key] = Logger(
-                self._resource,
-                self._multi_log_record_processor,
-                InstrumentationScope(
-                    name,
-                    version,
-                    schema_url,
-                    None,
-                ),
+            self._logger_cache[key] = self._get_logger_no_cache(
+                name, version, schema_url
             )
             return self._logger_cache[key]
 
