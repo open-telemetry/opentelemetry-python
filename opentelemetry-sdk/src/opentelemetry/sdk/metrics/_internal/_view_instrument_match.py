@@ -34,6 +34,7 @@ _logger = getLogger(__name__)
 _OVERFLOW_ATTRIBUTE = ("otel.metric.overflow", "true")
 _DEFAULT_AGGREGATION_LIMIT = 2000
 
+
 class _ViewInstrumentMatch:
     def __init__(
         self,
@@ -47,7 +48,9 @@ class _ViewInstrumentMatch:
         self._attributes_aggregation: Dict[frozenset, _Aggregation] = {}
         self._lock = Lock()
         self._instrument_class_aggregation = instrument_class_aggregation
-        self._aggregation_cardinality_limit = view._aggregation_cardinality_limit or _DEFAULT_AGGREGATION_LIMIT
+        self._aggregation_cardinality_limit = (
+            view._aggregation_cardinality_limit or _DEFAULT_AGGREGATION_LIMIT
+        )
         self._name = self._view._name or self._instrument.name
         self._description = (
             self._view._description or self._instrument.description
@@ -91,10 +94,14 @@ class _ViewInstrumentMatch:
         return result
 
     def get_aggregation_key(self, attributes):
-        if len(self._attributes_aggregation) >= self._aggregation_cardinality_limit - 1:
+        if (
+            len(self._attributes_aggregation)
+            >= self._aggregation_cardinality_limit - 1
+        ):
             _logger.warning(
-                "Metric cardinality limit of {} exceeded. Aggregating under overflow attribute."
-                .format(self._aggregation_cardinality_limit)
+                "Metric cardinality limit of {} exceeded. Aggregating under overflow attribute.".format(
+                    self._aggregation_cardinality_limit
+                )
             )
             aggr_key = frozenset([_OVERFLOW_ATTRIBUTE])
         else:
