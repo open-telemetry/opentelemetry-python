@@ -118,6 +118,7 @@ class View:
             Callable[[Type[_Aggregation]], ExemplarReservoirBuilder]
         ] = None,
         instrument_unit: Optional[str] = None,
+        aggregation_cardinality_limit: Optional[int] = None,
     ):
         if (
             instrument_type
@@ -158,6 +159,7 @@ class View:
         self._description = description
         self._attribute_keys = attribute_keys
         self._aggregation = aggregation or self._default_aggregation
+        self._aggregation_cardinality_limit = aggregation_cardinality_limit
         self._exemplar_reservoir_factory = (
             exemplar_reservoir_factory or _default_reservoir_factory
         )

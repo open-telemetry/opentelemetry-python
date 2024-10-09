@@ -31,6 +31,8 @@ from opentelemetry.sdk.metrics._internal.point import DataPointT
 from opentelemetry.sdk.metrics._internal.view import View
 
 _logger = getLogger(__name__)
+_OVERFLOW_ATTRIBUTE = ("otel.metric.overflow", "true")
+_DEFAULT_AGGREGATION_LIMIT = 2000
 
 
 class _ViewInstrumentMatch:
@@ -45,6 +47,9 @@ class _ViewInstrumentMatch:
         self._attributes_aggregation: Dict[frozenset, _Aggregation] = {}
         self._lock = Lock()
         self._instrument_class_aggregation = instrument_class_aggregation
+        self._aggregation_cardinality_limit = (
+            view._aggregation_cardinality_limit or _DEFAULT_AGGREGATION_LIMIT
+        )
         self._name = self._view._name or self._instrument.name
         self._description = (
             self._view._description or self._instrument.description
@@ -87,6 +92,20 @@ class _ViewInstrumentMatch:
 
         return result
 
+    def get_aggregation_key(self, attributes):
+        if (
+            len(self._attributes_aggregation)
+            >= self._aggregation_cardinality_limit - 1
+        ):
+            _logger.warning(
+                "Metric cardinality limit of %s exceeded. Aggregating under overflow attribute.",
+                self._aggregation_cardinality_limit,
+            )
+            aggr_key = frozenset([_OVERFLOW_ATTRIBUTE])
+        else:
+            aggr_key = frozenset(attributes.items())
+        return aggr_key
+
     # pylint: disable=protected-access
     def consume_measurement(
         self, measurement: Measurement, should_sample_exemplar: bool = True
@@ -104,7 +123,7 @@ class _ViewInstrumentMatch:
         else:
             attributes = {}
 
-        aggr_key = frozenset(attributes.items())
+        aggr_key = self.get_aggregation_key(attributes)
 
         if aggr_key not in self._attributes_aggregation:
             with self._lock:

@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4094](https://github.com/open-telemetry/opentelemetry-python/pull/4094))
 - Implement events sdk
   ([#4176](https://github.com/open-telemetry/opentelemetry-python/pull/4176))
+- Basic protection against the unintended cardinality explosion 
+  ([#3486](https://github.com/open-telemetry/opentelemetry-python/pull/3486))
 
 ## Version 1.27.0/0.48b0 (2024-08-28)
 

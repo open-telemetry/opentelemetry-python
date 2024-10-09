@@ -79,9 +79,18 @@ class TestLogRecord(unittest.TestCase):
             max_attributes=1,
         )
 
-        result = LogRecord(
-            timestamp=0, body="a log line", attributes=attr, limits=limits
-        )
+        with warnings.catch_warnings(record=True) as cw:
+            warnings.simplefilter("always")
+            result = LogRecord(
+                timestamp=0, body="a log line", attributes=attr, limits=limits
+            )
+
+            self.assertTrue(
+                any(
+                    issubclass(warning.category, LogDroppedAttributesWarning)
+                    for warning in cw
+                )
+            )
         self.assertTrue(result.dropped_attributes == 1)
 
     def test_log_record_dropped_attributes_set_limits_max_attribute_length(
@@ -93,9 +102,18 @@ class TestLogRecord(unittest.TestCase):
             max_attribute_length=1,
         )
 
-        result = LogRecord(
-            timestamp=0, body="a log line", attributes=attr, limits=limits
-        )
+        with warnings.catch_warnings(record=True) as cw:
+            warnings.simplefilter("always")
+            result = LogRecord(
+                timestamp=0, body="a log line", attributes=attr, limits=limits
+            )
+            # would not be dropping any attributes if the limit is not set
+            self.assertFalse(
+                any(
+                    issubclass(warning.category, LogDroppedAttributesWarning)
+                    for warning in cw
+                )
+            )
         self.assertTrue(result.dropped_attributes == 0)
         self.assertEqual(expected, result.attributes)
 
@@ -107,9 +125,19 @@ class TestLogRecord(unittest.TestCase):
             max_attribute_length=1,
         )
 
-        result = LogRecord(
-            timestamp=0, body="a log line", attributes=attr, limits=limits
-        )
+        with warnings.catch_warnings(record=True) as cw:
+            warnings.simplefilter("always")
+            result = LogRecord(
+                timestamp=0, body="a log line", attributes=attr, limits=limits
+            )
+
+            self.assertTrue(
+                any(
+                    issubclass(warning.category, LogDroppedAttributesWarning)
+                    for warning in cw
+                )
+            )
+
         self.assertTrue(result.dropped_attributes == 1)
         self.assertEqual(expected, result.attributes)
 
