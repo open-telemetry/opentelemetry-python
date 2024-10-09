@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4094](https://github.com/open-telemetry/opentelemetry-python/pull/4094))
 - Implement events sdk
   ([#4176](https://github.com/open-telemetry/opentelemetry-python/pull/4176))
-- Add support to protobuf5
+- Add support to protobuf 5+ and drop support to protobuf 3 and 4
   ([#4206](https://github.com/open-telemetry/opentelemetry-python/pull/4206))
 
 ## Version 1.27.0/0.48b0 (2024-08-28)
