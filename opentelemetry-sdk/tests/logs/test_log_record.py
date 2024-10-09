@@ -107,9 +107,19 @@ class TestLogRecord(unittest.TestCase):
             max_attribute_length=1,
         )
 
-        result = LogRecord(
-            timestamp=0, body="a log line", attributes=attr, limits=limits
-        )
+        with warnings.catch_warnings(record=True) as cw:
+            warnings.simplefilter("always")
+            result = LogRecord(
+                timestamp=0, body="a log line", attributes=attr, limits=limits
+            )
+
+            self.assertTrue(
+                any(
+                    issubclass(warning.category, LogDroppedAttributesWarning)
+                    for warning in cw
+                )
+            )
+
         self.assertTrue(result.dropped_attributes == 1)
         self.assertEqual(expected, result.attributes)
 
