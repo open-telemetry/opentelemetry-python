@@ -28,7 +28,7 @@ class TestMetricCardinalityLimit(TestCase):
         metric_data = self.reader.get_metrics_data()
 
         # Check if the length of the metric data doesn't exceed 2000
-        self.assertTrue(len(metric_data.metrics) <= 2000)
+        self.assertTrue(len(metric_data.resource_metrics) <= 2000)
 
         # Check if a warning or an error was logged
         with self.assertLogs(level=WARNING):
