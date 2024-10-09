@@ -41,7 +41,6 @@ class _ViewInstrumentMatch:
         view: View,
         instrument: Instrument,
         instrument_class_aggregation: Dict[type, Aggregation],
-        aggregation_cardinality_limit: Optional[int],
     ):
         self._view = view
         self._instrument = instrument
@@ -99,9 +98,8 @@ class _ViewInstrumentMatch:
             >= self._aggregation_cardinality_limit - 1
         ):
             _logger.warning(
-                "Metric cardinality limit of {} exceeded. Aggregating under overflow attribute.".format(
-                    self._aggregation_cardinality_limit
-                )
+                "Metric cardinality limit of %s exceeded. Aggregating under overflow attribute.",
+                self._aggregation_cardinality_limit,
             )
             aggr_key = frozenset([_OVERFLOW_ATTRIBUTE])
         else:

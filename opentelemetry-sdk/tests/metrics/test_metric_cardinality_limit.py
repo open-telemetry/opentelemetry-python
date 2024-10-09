@@ -17,8 +17,8 @@ class TestMetricCardinalityLimit(TestCase):
         counter = self.meter.create_counter("cardinality_test_counter")
 
         # Generate and add more than 2000 unique labels
-        for i in range(2100):
-            label = {"key": f"value_{i}"}
+        for ind in range(2100):
+            label = {"key": f"value_{ind}"}
             counter.add(1, label)
 
         # Simulate an export to get the metrics into the in-memory exporter

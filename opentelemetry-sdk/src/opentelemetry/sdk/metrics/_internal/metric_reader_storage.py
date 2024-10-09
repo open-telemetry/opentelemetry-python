@@ -107,7 +107,6 @@ class MetricReaderStorage:
                         instrument_class_aggregation=(
                             self._instrument_class_aggregation
                         ),
-                        aggregation_cardinality_limit=self._aggregation_cardinality_limit,
                     )
                 )
             self._instrument_view_instrument_matches[instrument] = (
