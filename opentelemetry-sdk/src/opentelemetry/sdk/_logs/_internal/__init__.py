@@ -438,6 +438,7 @@ _RESERVED_ATTRS = frozenset(
         "exc_text",
         "filename",
         "funcName",
+        "getMessage",
         "message",
         "levelname",
         "levelno",
@@ -545,7 +546,7 @@ class LoggingHandler(logging.Handler):
             body = self.format(record)
         else:
             if isinstance(record.msg, str) and record.args:
-                body = record.msg % record.args
+                body = record.getMessage()
             else:
                 body = record.msg
 
