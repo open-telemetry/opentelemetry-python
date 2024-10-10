@@ -34,8 +34,8 @@ jobs:
       - name: Run tests
         run: tox -e lint-opentelemetry-api
 
-  lint-opentelemetry-proto:
-    name: opentelemetry-proto
+  lint-opentelemetry-proto-protobuf5:
+    name: opentelemetry-proto-protobuf5
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -50,7 +50,7 @@ jobs:
         run: pip install tox
 
       - name: Run tests
-        run: tox -e lint-opentelemetry-proto
+        run: tox -e lint-opentelemetry-proto-protobuf5
 
   lint-opentelemetry-sdk:
     name: opentelemetry-sdk

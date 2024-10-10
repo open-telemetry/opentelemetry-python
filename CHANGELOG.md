@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4176](https://github.com/open-telemetry/opentelemetry-python/pull/4176))
 - Update semantic conventions to version 1.28.0
   ([#4218](https://github.com/open-telemetry/opentelemetry-python/pull/4218))
+- Add support to protobuf 5+ and drop support to protobuf 3 and 4
+  ([#4206](https://github.com/open-telemetry/opentelemetry-python/pull/4206))
 
 ## Version 1.27.0/0.48b0 (2024-08-28)
 

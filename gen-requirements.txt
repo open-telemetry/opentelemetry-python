@@ -1,6 +1,5 @@
-# This version of grpcio-tools ships with protoc 3.19.4 which appears to be compatible with
-# both protobuf 3.19.x and 4.x (see https://github.com/protocolbuffers/protobuf/issues/11123).
-# Bump this version with caution to preserve compatibility with protobuf 3.
-# https://github.com/open-telemetry/opentelemetry-python/blob/main/opentelemetry-proto/pyproject.toml#L28
-grpcio-tools==1.48.1
-mypy-protobuf~=3.0.0
+# Use caution when bumping this version to ensure compatibility with the currently supported protobuf version.
+# Pinning this to the oldest grpcio version that supports protobuf 5 helps avoid RuntimeWarning messages
+# from the generated protobuf code and ensures continued stability for newer grpcio versions.
+grpcio-tools==1.63.2
+mypy-protobuf~=3.5.0

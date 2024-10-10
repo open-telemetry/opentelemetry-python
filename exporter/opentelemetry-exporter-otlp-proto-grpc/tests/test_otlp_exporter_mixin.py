@@ -23,7 +23,9 @@ from unittest.mock import Mock, patch
 from google.protobuf.duration_pb2 import (  # pylint: disable=no-name-in-module
     Duration,
 )
-from google.rpc.error_details_pb2 import RetryInfo
+from google.rpc.error_details_pb2 import (  # pylint: disable=no-name-in-module
+    RetryInfo,
+)
 from grpc import Compression
 
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (

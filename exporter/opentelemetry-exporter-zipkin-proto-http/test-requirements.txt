@@ -17,7 +17,6 @@ urllib3==2.2.2
 wrapt==1.16.0
 zipp==3.19.2
 -e opentelemetry-api
--e opentelemetry-proto
 -e exporter/opentelemetry-exporter-zipkin-json
 -e opentelemetry-sdk
 -e tests/opentelemetry-test-utils
