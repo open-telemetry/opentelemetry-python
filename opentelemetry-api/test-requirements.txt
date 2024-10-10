@@ -1,6 +1,6 @@
 asgiref==3.7.2
 Deprecated==1.2.14
-importlib-metadata==8.4.0
+importlib-metadata==8.5.0
 iniconfig==2.0.0
 packaging==24.0
 pluggy==1.5.0
@@ -9,7 +9,7 @@ pytest==7.4.4
 tomli==2.0.1
 typing_extensions==4.10.0
 wrapt==1.16.0
-zipp==3.19.2
+zipp==3.20.2
 -e opentelemetry-sdk
 -e opentelemetry-semantic-conventions
 -e tests/opentelemetry-test-utils
