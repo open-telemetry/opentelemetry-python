@@ -211,3 +211,21 @@ def create_process_thread_count(meter: Meter) -> UpDownCounter:
         description="Process threads count.",
         unit="{thread}",
     )
+
+
+PROCESS_UPTIME: Final = "process.uptime"
+"""
+The time the process has been running
+Instrument: counter
+Unit: s
+Note: Instrumentations SHOULD use counter with type `double` and measure uptime with at least millisecond precision.
+"""
+
+
+def create_process_uptime(meter: Meter) -> Counter:
+    """The time the process has been running"""
+    return meter.create_counter(
+        name=PROCESS_UPTIME,
+        description="The time the process has been running.",
+        unit="s",
+    )
