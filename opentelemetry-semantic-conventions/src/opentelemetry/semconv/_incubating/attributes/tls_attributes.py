@@ -68,7 +68,7 @@ Date/Time indicating when client certificate is first considered valid.
 
 TLS_CLIENT_SERVER_NAME: Final = "tls.client.server_name"
 """
-Deprecated: Replaced by `server.address.
+Deprecated: Replaced by `server.address`.
 """
 
 TLS_CLIENT_SUBJECT: Final = "tls.client.subject"

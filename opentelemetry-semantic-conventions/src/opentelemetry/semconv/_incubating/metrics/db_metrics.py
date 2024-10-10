@@ -106,7 +106,7 @@ DB_CLIENT_CONNECTION_PENDING_REQUESTS: Final = (
     "db.client.connection.pending_requests"
 )
 """
-The number of pending requests for an open connection, cumulative for the entire pool
+The number of current pending requests for an open connection
 Instrument: updowncounter
 Unit: {request}
 """
@@ -115,10 +115,10 @@ Unit: {request}
 def create_db_client_connection_pending_requests(
     meter: Meter,
 ) -> UpDownCounter:
-    """The number of pending requests for an open connection, cumulative for the entire pool"""
+    """The number of current pending requests for an open connection"""
     return meter.create_up_down_counter(
         name=DB_CLIENT_CONNECTION_PENDING_REQUESTS,
-        description="The number of pending requests for an open connection, cumulative for the entire pool",
+        description="The number of current pending requests for an open connection",
         unit="{request}",
     )
 
