@@ -207,6 +207,30 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         ]
         self.assertEqual(expected, emitted)
 
+    def test_simple_event(self):
+        exporter = InMemoryLogExporter()
+        log_record_processor = BatchLogRecordProcessor(exporter)
+
+        provider = LoggerProvider()
+        provider.add_log_record_processor(log_record_processor)
+
+        logger = provider.get_logger("test_event")
+
+        logger.emit_event("test_event",
+                            body={"body_field": "val"},
+                            attributes={"key": "val", "foo": 42})
+        log_record_processor.shutdown()
+
+        finished_logs = exporter.get_finished_logs()
+        self.assertEqual(1, len(finished_logs))
+
+        emitted = finished_logs[0].log_record
+        self.assertEqual({"body_field": "val"}, emitted.body)
+        self.assertEqual("test_event", emitted.attributes["event.name"])
+        self.assertIsNone(emitted.severity_number)
+        self.assertEqual("val", emitted.attributes["key"])
+        self.assertEqual(42, emitted.attributes["foo"])
+
     def test_simple_log_record_processor_different_msg_types_with_formatter(
         self,
     ):
