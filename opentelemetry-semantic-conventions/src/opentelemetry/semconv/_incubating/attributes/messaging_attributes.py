@@ -271,7 +271,7 @@ MESSAGING_SERVICEBUS_DESTINATION_SUBSCRIPTION_NAME: Final = (
     "messaging.servicebus.destination.subscription_name"
 )
 """
-Deprecated: Replaced by `messaging.servicebus.destination.subscription_name`.
+Deprecated: Replaced by `messaging.destination.subscription.name`.
 """
 
 MESSAGING_SERVICEBUS_DISPOSITION_STATUS: Final = (
@@ -303,10 +303,10 @@ Note: The actual messaging system may differ from the one known by the client. F
 
 
 class MessagingOperationTypeValues(Enum):
-    PUBLISH = "publish"
-    """One or more messages are provided for publishing to an intermediary. If a single message is published, the context of the "Publish" span can be used as the creation context and no "Create" span needs to be created."""
     CREATE = "create"
-    """A message is created. "Create" spans always refer to a single message and are used to provide a unique creation context for messages in batch publishing scenarios."""
+    """A message is created. "Create" spans always refer to a single message and are used to provide a unique creation context for messages in batch sending scenarios."""
+    SEND = "send"
+    """One or more messages are provided for sending to an intermediary. If a single message is sent, the context of the "Send" span can be used as the creation context and no "Create" span needs to be created."""
     RECEIVE = "receive"
     """One or more messages are requested by a consumer. This operation refers to pull-based scenarios, where consumers explicitly call methods of messaging SDKs to receive messages."""
     PROCESS = "process"
@@ -315,6 +315,8 @@ class MessagingOperationTypeValues(Enum):
     """One or more messages are settled."""
     DELIVER = "deliver"
     """Deprecated: Replaced by `process`."""
+    PUBLISH = "publish"
+    """Deprecated: Replaced by `send`."""
 
 
 class MessagingRocketmqConsumptionModelValues(Enum):
