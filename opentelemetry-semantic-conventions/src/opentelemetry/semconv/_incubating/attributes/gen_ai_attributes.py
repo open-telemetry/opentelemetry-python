@@ -17,8 +17,33 @@ from typing import Final
 
 GEN_AI_COMPLETION: Final = "gen_ai.completion"
 """
-The full response received from the GenAI model.
-Note: It's RECOMMENDED to format completions as JSON string matching [OpenAI messages format](https://platform.openai.com/docs/guides/text-generation).
+Deprecated: Removed, no replacement at this time.
+"""
+
+GEN_AI_OPENAI_REQUEST_RESPONSE_FORMAT: Final = (
+    "gen_ai.openai.request.response_format"
+)
+"""
+The response format that is requested.
+"""
+
+GEN_AI_OPENAI_REQUEST_SEED: Final = "gen_ai.openai.request.seed"
+"""
+Requests with same seed value more likely to return same result.
+"""
+
+GEN_AI_OPENAI_REQUEST_SERVICE_TIER: Final = (
+    "gen_ai.openai.request.service_tier"
+)
+"""
+The service tier requested. May be a specific tier, detault, or auto.
+"""
+
+GEN_AI_OPENAI_RESPONSE_SERVICE_TIER: Final = (
+    "gen_ai.openai.response.service_tier"
+)
+"""
+The service tier used for the response.
 """
 
 GEN_AI_OPERATION_NAME: Final = "gen_ai.operation.name"
@@ -29,8 +54,7 @@ Note: If one of the predefined values applies, but specific system uses a differ
 
 GEN_AI_PROMPT: Final = "gen_ai.prompt"
 """
-The full prompt sent to the GenAI model.
-Note: It's RECOMMENDED to format prompts as JSON string matching [OpenAI messages format](https://platform.openai.com/docs/guides/text-generation).
+Deprecated: Removed, no replacement at this time.
 """
 
 GEN_AI_REQUEST_FREQUENCY_PENALTY: Final = "gen_ai.request.frequency_penalty"
@@ -126,6 +150,22 @@ GEN_AI_USAGE_PROMPT_TOKENS: Final = "gen_ai.usage.prompt_tokens"
 """
 Deprecated: Replaced by `gen_ai.usage.input_tokens` attribute.
 """
+
+
+class GenAiOpenaiRequestResponseFormatValues(Enum):
+    TEXT = "text"
+    """Text response format."""
+    JSON_OBJECT = "json_object"
+    """JSON object response format."""
+    JSON_SCHEMA = "json_schema"
+    """JSON schema response format."""
+
+
+class GenAiOpenaiRequestServiceTierValues(Enum):
+    AUTO = "auto"
+    """The system will utilize scale tier credits until they are exhausted."""
+    DEFAULT = "default"
+    """The system will utilize the default scale tier."""
 
 
 class GenAiOperationNameValues(Enum):

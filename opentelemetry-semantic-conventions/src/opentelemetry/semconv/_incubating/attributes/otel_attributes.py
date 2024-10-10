@@ -19,12 +19,12 @@ from deprecated import deprecated
 
 OTEL_LIBRARY_NAME: Final = "otel.library.name"
 """
-Deprecated: use the `otel.scope.name` attribute.
+Deprecated: Use the `otel.scope.name` attribute.
 """
 
 OTEL_LIBRARY_VERSION: Final = "otel.library.version"
 """
-Deprecated: use the `otel.scope.version` attribute.
+Deprecated: Use the `otel.scope.version` attribute.
 """
 
 OTEL_SCOPE_NAME: Final = "otel.scope.name"
