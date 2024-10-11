@@ -561,7 +561,7 @@ OTEL_EXPORTER_OTLP_LOGS_INSECURE = "OTEL_EXPORTER_OTLP_LOGS_INSECURE"
 .. envvar:: OTEL_EXPORTER_OTLP_LOGS_INSECURE
 
 The :envvar:`OTEL_EXPORTER_OTLP_LOGS_INSECURE` represents whether to enable client transport security
-for gRPC requests for metrics. A scheme of https takes precedence over the this configuration setting.
+for gRPC requests for logs. A scheme of https takes precedence over the this configuration setting.
 Default: False
 """
 
@@ -581,7 +581,7 @@ OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE = (
 .. envvar:: OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE
 
 The :envvar:`OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE` stores the path to the certificate file for
-TLS credentials of gRPC client for traces. Should only be used for a secure connection for tracing.
+TLS credentials of gRPC client for metrics. Should only be used for a secure connection for metrics.
 """
 
 OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE = "OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE"
@@ -589,7 +589,7 @@ OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE = "OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE"
 .. envvar:: OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE
 
 The :envvar:`OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE` stores the path to the certificate file for
-TLS credentials of gRPC client for traces. Should only be used for a secure connection for tracing.
+TLS credentials of gRPC client for logs. Should only be used for a secure connection for logs.
 """
 
 OTEL_EXPORTER_OTLP_METRICS_HEADERS = "OTEL_EXPORTER_OTLP_METRICS_HEADERS"
