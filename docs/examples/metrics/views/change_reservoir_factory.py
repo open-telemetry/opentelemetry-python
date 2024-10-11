@@ -44,6 +44,9 @@ def custom_reservoir_factory(
     if issubclass(aggregationType, _ExplicitBucketHistogramAggregation):
         return AlignedHistogramBucketExemplarReservoir
     else:
+        # Custom reservoir must accept `**kwargs` that may set the `size` for
+        # _ExponentialBucketHistogramAggregation or the `boundaries` for
+        # _ExplicitBucketHistogramAggregation
         return lambda **kwargs: SimpleFixedSizeExemplarReservoir(
             size=10,
             **{k: v for k, v in kwargs.items() if k != "size"},

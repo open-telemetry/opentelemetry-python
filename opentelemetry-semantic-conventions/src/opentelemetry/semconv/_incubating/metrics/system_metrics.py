@@ -167,6 +167,23 @@ def create_system_disk_io_time(meter: Meter) -> Counter:
     )
 
 
+SYSTEM_DISK_LIMIT: Final = "system.disk.limit"
+"""
+The total storage capacity of the disk
+Instrument: updowncounter
+Unit: By
+"""
+
+
+def create_system_disk_limit(meter: Meter) -> UpDownCounter:
+    """The total storage capacity of the disk"""
+    return meter.create_up_down_counter(
+        name=SYSTEM_DISK_LIMIT,
+        description="The total storage capacity of the disk",
+        unit="By",
+    )
+
+
 SYSTEM_DISK_MERGED: Final = "system.disk.merged"
 """
 Instrument: counter
@@ -218,17 +235,38 @@ def create_system_disk_operations(meter: Meter) -> Counter:
     )
 
 
-SYSTEM_FILESYSTEM_USAGE: Final = "system.filesystem.usage"
+SYSTEM_FILESYSTEM_LIMIT: Final = "system.filesystem.limit"
 """
+The total storage capacity of the filesystem
 Instrument: updowncounter
 Unit: By
 """
 
 
+def create_system_filesystem_limit(meter: Meter) -> UpDownCounter:
+    """The total storage capacity of the filesystem"""
+    return meter.create_up_down_counter(
+        name=SYSTEM_FILESYSTEM_LIMIT,
+        description="The total storage capacity of the filesystem",
+        unit="By",
+    )
+
+
+SYSTEM_FILESYSTEM_USAGE: Final = "system.filesystem.usage"
+"""
+Reports a filesystem's space usage across different states
+Instrument: updowncounter
+Unit: By
+Note: The sum of all `system.filesystem.usage` values over the different `system.filesystem.state` attributes
+SHOULD equal the total storage capacity of the filesystem, that is `system.filesystem.limit`.
+"""
+
+
 def create_system_filesystem_usage(meter: Meter) -> UpDownCounter:
+    """Reports a filesystem's space usage across different states"""
     return meter.create_up_down_counter(
         name=SYSTEM_FILESYSTEM_USAGE,
-        description="",
+        description="Reports a filesystem's space usage across different states.",
         unit="By",
     )
 

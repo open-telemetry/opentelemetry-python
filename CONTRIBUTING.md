@@ -82,7 +82,7 @@ Every public symbol is something that has to be kept in order to maintain backwa
 
 To check if your PR is adding public symbols, run `tox -e public-symbols-check`. This will always fail if public symbols are being added/removed. The idea
 behind this is that every PR that adds/removes public symbols fails in CI, forcing reviewers to check the symbols to make sure they are strictly necessary.
-If after checking them, it is considered that they are indeed necessary, the PR will be labeled with `Skip Public API check` so that this check is not
+If after checking them, it is considered that they are indeed necessary, the PR will be labeled with `Approve Public API check` so that this check is not
 run.
 
 Also, we try to keep our console output as clean as possible. Most of the time this means catching expected log messages in the test cases:
@@ -223,6 +223,23 @@ updating the GitHub workflow to reference a PR in the Contrib repo
   reasonable time to review.
 * Trivial change (typo, cosmetic, doc, etc.) doesn't have to wait for one day.
 * Urgent fix can take exception as long as it has been actively communicated.
+
+#### Allow edits from maintainers
+
+Something _very important_ is to allow edits from maintainers when opening a PR. This will
+allow maintainers to rebase your PR against `main` which is necessary in order to merge
+your PR. You could do it yourself too, but keep in mind that every time another PR gets
+merged, your PR will require rebasing. Since only maintainers can merge your PR it is
+almost impossible for maintainers to find your PR just when it has been rebased by you so
+that it can be merged. Allowing maintainers to edit your PR also allows them to help you
+get your PR merged by making any minor fixes to solve any issue that while being unrelated
+to your PR, can still happen.
+
+#### Fork from a personal Github account
+
+Right now Github [does not allow](https://github.com/orgs/community/discussions/5634) PRs
+to be edited by maintainers if the corresponding repo fork exists in a Github organization.
+Please for this repo in a personal Github account instead.
 
 One of the maintainers will merge the PR once it is **ready to merge**.
 

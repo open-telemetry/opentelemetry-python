@@ -13,9 +13,29 @@
 # limitations under the License.
 
 
-from typing import Final
+from typing import (
+    Callable,
+    Final,
+    Generator,
+    Iterable,
+    Optional,
+    Sequence,
+    Union,
+)
 
-from opentelemetry.metrics import Counter, Meter
+from opentelemetry.metrics import (
+    CallbackOptions,
+    Counter,
+    Meter,
+    ObservableGauge,
+    Observation,
+)
+
+# pylint: disable=invalid-name
+CallbackT = Union[
+    Callable[[CallbackOptions], Iterable[Observation]],
+    Generator[Iterable[Observation], CallbackOptions, None],
+]
 
 CONTAINER_CPU_TIME: Final = "container.cpu.time"
 """
@@ -32,6 +52,27 @@ def create_container_cpu_time(meter: Meter) -> Counter:
         name=CONTAINER_CPU_TIME,
         description="Total CPU time consumed",
         unit="s",
+    )
+
+
+CONTAINER_CPU_USAGE: Final = "container.cpu.usage"
+"""
+Container's CPU usage, measured in cpus. Range from 0 to the number of allocatable CPUs
+Instrument: gauge
+Unit: {cpu}
+Note: CPU usage of the specific container on all available CPU cores, averaged over the sample window.
+"""
+
+
+def create_container_cpu_usage(
+    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+) -> ObservableGauge:
+    """Container's CPU usage, measured in cpus. Range from 0 to the number of allocatable CPUs"""
+    return meter.create_observable_gauge(
+        name=CONTAINER_CPU_USAGE,
+        callbacks=callbacks,
+        description="Container's CPU usage, measured in cpus. Range from 0 to the number of allocatable CPUs",
+        unit="{cpu}",
     )
 
 

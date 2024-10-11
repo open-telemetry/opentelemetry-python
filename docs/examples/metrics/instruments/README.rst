@@ -13,7 +13,7 @@ Start the Collector locally to see data being exported. Write the following file
                     endpoint: 0.0.0.0:4317
 
     exporters:
-        logging:
+        debug:
 
     processors:
         batch:
@@ -22,7 +22,7 @@ Start the Collector locally to see data being exported. Write the following file
         pipelines:
             metrics:
                 receivers: [otlp]
-                exporters: [logging]
+                exporters: [debug]
   
 Then start the Docker container:
 

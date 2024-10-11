@@ -7,11 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-- sdk: Implementation of exemplars
-  ([#4094](https://github.com/open-telemetry/opentelemetry-python/pull/4094))
+- Removed superfluous py.typed markers and added them where they were missing
+  ([#4172](https://github.com/open-telemetry/opentelemetry-python/pull/4172))
+- Include metric info in encoding exceptions
+  ([#4154](https://github.com/open-telemetry/opentelemetry-python/pull/4154))
 - sdk: Add support for log formatting
   ([#4137](https://github.com/open-telemetry/opentelemetry-python/pull/4166))
-  
+- sdk: Implementation of exemplars
+  ([#4094](https://github.com/open-telemetry/opentelemetry-python/pull/4094))
+- Implement events sdk
+  ([#4176](https://github.com/open-telemetry/opentelemetry-python/pull/4176))
+- Update semantic conventions to version 1.28.0
+  ([#4218](https://github.com/open-telemetry/opentelemetry-python/pull/4218))
+
 ## Version 1.27.0/0.48b0 (2024-08-28)
 
 - Implementation of Events API

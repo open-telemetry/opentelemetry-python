@@ -16,19 +16,24 @@ import time
 from opentelemetry import trace
 from opentelemetry.metrics import get_meter_provider, set_meter_provider
 from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics._internal.exemplar import (
-    TraceBasedExemplarFilter,
-)
+from opentelemetry.sdk.metrics._internal.exemplar import AlwaysOnExemplarFilter
 from opentelemetry.sdk.metrics.export import (
     ConsoleMetricExporter,
     PeriodicExportingMetricReader,
 )
 from opentelemetry.sdk.trace import TracerProvider
 
-# Create an ExemplarFilter instance (e.g., TraceBasedExemplarFilter)
-# Default available values are AlwaysOffExemplarFilter, AlwaysOnExemplarFilter
-# and TraceBasedExemplarFilter
-exemplar_filter = TraceBasedExemplarFilter()
+# Create an ExemplarFilter instance
+# Available values are AlwaysOffExemplarFilter, AlwaysOnExemplarFilter
+# and TraceBasedExemplarFilter.
+# The default value is `TraceBasedExemplarFilter`.
+#
+# You can also use the environment variable `OTEL_METRICS_EXEMPLAR_FILTER`
+# to change the default value.
+#
+# You can also define your own filter by implementing the abstract class
+# `ExemplarFilter`
+exemplar_filter = AlwaysOnExemplarFilter()
 
 exporter = ConsoleMetricExporter()
 

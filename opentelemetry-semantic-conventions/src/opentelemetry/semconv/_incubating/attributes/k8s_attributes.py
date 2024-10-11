@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from enum import Enum
 from typing import Final
 
 K8S_CLUSTER_NAME: Final = "k8s.cluster.name"
@@ -162,3 +163,28 @@ K8S_STATEFULSET_UID: Final = "k8s.statefulset.uid"
 """
 The UID of the StatefulSet.
 """
+
+K8S_VOLUME_NAME: Final = "k8s.volume.name"
+"""
+The name of the K8s volume.
+"""
+
+K8S_VOLUME_TYPE: Final = "k8s.volume.type"
+"""
+The type of the K8s volume.
+"""
+
+
+class K8sVolumeTypeValues(Enum):
+    PERSISTENT_VOLUME_CLAIM = "persistentVolumeClaim"
+    """A [persistentVolumeClaim](https://v1-29.docs.kubernetes.io/docs/concepts/storage/volumes/#persistentvolumeclaim) volume."""
+    CONFIG_MAP = "configMap"
+    """A [configMap](https://v1-29.docs.kubernetes.io/docs/concepts/storage/volumes/#configmap) volume."""
+    DOWNWARD_API = "downwardAPI"
+    """A [downwardAPI](https://v1-29.docs.kubernetes.io/docs/concepts/storage/volumes/#downwardapi) volume."""
+    EMPTY_DIR = "emptyDir"
+    """An [emptyDir](https://v1-29.docs.kubernetes.io/docs/concepts/storage/volumes/#emptydir) volume."""
+    SECRET = "secret"
+    """A [secret](https://v1-29.docs.kubernetes.io/docs/concepts/storage/volumes/#secret) volume."""
+    LOCAL = "local"
+    """A [local](https://v1-29.docs.kubernetes.io/docs/concepts/storage/volumes/#local) volume."""
