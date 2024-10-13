@@ -1,20 +1,3 @@
-[tool.black]
-line-length = 79
-exclude = '''
-(
-  /(  # generated files
-    .tox|
-    venv|
-    venv.*|
-    .venv.*|
-    target.*|
-    .*/build/lib/.*|
-    exporter/opentelemetry-exporter-zipkin-proto-http/src/opentelemetry/exporter/zipkin/proto/http/v2/gen|
-    opentelemetry-proto/src/opentelemetry/proto/.*/.*|
-    scripts
-  )/
-)
-'''
 [tool.pytest.ini_options]
 addopts = "-rs -v"
 log_cli = true
@@ -27,3 +10,42 @@ include = [
     "opentelemetry-sdk/src",
     "opentelemetry-semantic-conventions/src",
 ]
+
+[tool.ruff]
+# https://docs.astral.sh/ruff/configuration/
+target-version = "py38"
+line-length = 79
+extend-exclude = [
+  "*_pb2*.py*",
+]
+output-format = "concise"
+
+[tool.ruff.lint]
+# https://docs.astral.sh/ruff/linter/#rule-selection
+# pylint: https://github.com/astral-sh/ruff/issues/970
+select = [
+  "I",   # isort
+  "F",   # pyflakes
+  "E",   # pycodestyle errors
+  "W",   # pycodestyle warnings
+  "PLC", # pylint convention
+  "PLE", # pylint error
+  "Q",   # flake8-quotes
+]
+
+ignore = [
+  "E501", # line-too-long
+]
+
+[tool.ruff.lint.per-file-ignores]
+"docs/**/*.*" = ["PLE"]
+
+[tool.ruff.lint.isort]
+known-third-party = [
+  "psutil",
+  "pytest",
+  "redis",
+  "redis_opentracing",
+  "opencensus",
+]
+known-first-party = ["opentelemetry", "opentelemetry_example_app"]
