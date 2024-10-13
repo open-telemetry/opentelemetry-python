@@ -67,3 +67,41 @@ class TestLoggerProviderCache(unittest.TestCase):
                 logger.warning("test message")
 
         self.assertEqual(num_loggers, len(logger_cache))
+
+    def test_provider_get_logger_no_cache(self):
+        _, logger_provider = set_up_logging_handler(level=logging.DEBUG)
+        # pylint: disable=protected-access
+        logger_cache = logger_provider._logger_cache
+
+        logger_provider.get_logger(
+            name="test_logger",
+            version="version",
+            schema_url="schema_url",
+            attributes={"key": "value"},
+        )
+
+        # Ensure logger is not cached if attributes is set
+        self.assertEqual(0, len(logger_cache))
+
+    def test_provider_get_logger_cached(self):
+        _, logger_provider = set_up_logging_handler(level=logging.DEBUG)
+        # pylint: disable=protected-access
+        logger_cache = logger_provider._logger_cache
+
+        logger_provider.get_logger(
+            name="test_logger",
+            version="version",
+            schema_url="schema_url",
+        )
+
+        # Ensure only one logger is cached
+        self.assertEqual(1, len(logger_cache))
+
+        logger_provider.get_logger(
+            name="test_logger",
+            version="version",
+            schema_url="schema_url",
+        )
+
+        # Ensure only one logger is cached
+        self.assertEqual(1, len(logger_cache))
