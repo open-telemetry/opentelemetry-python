@@ -100,7 +100,9 @@ The container runtime managing this container.
 """
 
 
-@deprecated(reason="The attribute container.cpu.state is deprecated - Replaced by `cpu.mode`")  # type: ignore
+@deprecated(
+    reason="The attribute container.cpu.state is deprecated - Replaced by `cpu.mode`"
+)  # type: ignore
 class ContainerCpuStateValues(Enum):
     USER = "user"
     """When tasks of the cgroup are in user mode (Linux). When all container processes are in user mode (Windows)."""

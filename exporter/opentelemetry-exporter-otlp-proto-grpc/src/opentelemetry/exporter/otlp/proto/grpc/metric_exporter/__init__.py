@@ -16,18 +16,18 @@ from logging import getLogger
 from os import environ
 from typing import Dict, Iterable, List, Optional, Tuple, Union
 from typing import Sequence as TypingSequence
-from grpc import ChannelCredentials, Compression
 
+from grpc import ChannelCredentials, Compression
+from opentelemetry.exporter.otlp.proto.common._internal.metrics_encoder import (
+    OTLPMetricExporterMixin,
+)
 from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
     encode_metrics,
 )
-from opentelemetry.sdk.metrics._internal.aggregation import Aggregation
-from opentelemetry.exporter.otlp.proto.grpc.exporter import (
+from opentelemetry.exporter.otlp.proto.grpc.exporter import (  # noqa: F401
     OTLPExporterMixin,
     _get_credentials,
     environ_to_compression,
-)
-from opentelemetry.exporter.otlp.proto.grpc.exporter import (  # noqa: F401
     get_resource_data,
 )
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
@@ -50,24 +50,24 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_INSECURE,
     OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
 )
-from opentelemetry.sdk.metrics.export import (
+from opentelemetry.sdk.metrics._internal.aggregation import Aggregation
+from opentelemetry.sdk.metrics.export import (  # noqa: F401
     AggregationTemporality,
     DataPointT,
+    Gauge,
     Metric,
     MetricExporter,
     MetricExportResult,
     MetricsData,
     ResourceMetrics,
     ScopeMetrics,
+    Sum,
 )
 from opentelemetry.sdk.metrics.export import (  # noqa: F401
-    Gauge,
-    Histogram as HistogramType,
-    Sum,
     ExponentialHistogram as ExponentialHistogramType,
 )
-from opentelemetry.exporter.otlp.proto.common._internal.metrics_encoder import (
-    OTLPMetricExporterMixin,
+from opentelemetry.sdk.metrics.export import (  # noqa: F401
+    Histogram as HistogramType,
 )
 
 _logger = getLogger(__name__)
@@ -104,7 +104,6 @@ class OTLPMetricExporter(
         preferred_aggregation: Dict[type, Aggregation] = None,
         max_export_batch_size: Optional[int] = None,
     ):
-
         if insecure is None:
             insecure = environ.get(OTEL_EXPORTER_OTLP_METRICS_INSECURE)
             if insecure is not None:

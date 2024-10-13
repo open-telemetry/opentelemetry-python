@@ -26,7 +26,6 @@ from opentelemetry.sdk.metrics.export import (
 
 
 class TestTimeAlign(TestCase):
-
     # This delay is needed for these tests to pass when they are run in
     # Windows.
     delay = 0.001

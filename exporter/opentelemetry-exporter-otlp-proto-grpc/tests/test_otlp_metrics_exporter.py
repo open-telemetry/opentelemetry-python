@@ -148,7 +148,6 @@ class TestOTLPMetricExporter(TestCase):
     # pylint: disable=too-many-public-methods
 
     def setUp(self):
-
         self.exporter = OTLPMetricExporter()
 
         self.server = server(ThreadPoolExecutor(max_workers=10))
@@ -487,7 +486,6 @@ class TestOTLPMetricExporter(TestCase):
     )
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
     def test_unavailable(self, mock_sleep, mock_expo):
-
         mock_expo.configure_mock(**{"return_value": [0.01]})
 
         add_MetricsServiceServicer_to_server(
@@ -504,7 +502,6 @@ class TestOTLPMetricExporter(TestCase):
     )
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
     def test_unavailable_delay(self, mock_sleep, mock_expo):
-
         mock_expo.configure_mock(**{"return_value": [1]})
 
         add_MetricsServiceServicer_to_server(
@@ -522,7 +519,6 @@ class TestOTLPMetricExporter(TestCase):
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.logger.error")
     def test_unknown_logs(self, mock_logger_error, mock_sleep, mock_expo):
-
         mock_expo.configure_mock(**{"return_value": [1]})
 
         add_MetricsServiceServicer_to_server(
@@ -892,7 +888,6 @@ class TestOTLPMetricExporter(TestCase):
             environ,
             {OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "CUMULATIVE"},
         ):
-
             otlp_metric_exporter = OTLPMetricExporter()
 
             for (
@@ -905,7 +900,6 @@ class TestOTLPMetricExporter(TestCase):
         with patch.dict(
             environ, {OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "ABC"}
         ):
-
             with self.assertLogs(level=WARNING):
                 otlp_metric_exporter = OTLPMetricExporter()
 
@@ -920,7 +914,6 @@ class TestOTLPMetricExporter(TestCase):
             environ,
             {OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "DELTA"},
         ):
-
             otlp_metric_exporter = OTLPMetricExporter()
 
             self.assertEqual(
@@ -954,7 +947,6 @@ class TestOTLPMetricExporter(TestCase):
             environ,
             {OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "LOWMEMORY"},
         ):
-
             otlp_metric_exporter = OTLPMetricExporter()
 
             self.assertEqual(
@@ -985,7 +977,6 @@ class TestOTLPMetricExporter(TestCase):
             )
 
     def test_exponential_explicit_bucket_histogram(self):
-
         self.assertIsInstance(
             # pylint: disable=protected-access
             OTLPMetricExporter()._preferred_aggregation[Histogram],
@@ -1036,7 +1027,6 @@ class TestOTLPMetricExporter(TestCase):
             )
 
     def test_preferred_aggregation_override(self):
-
         histogram_aggregation = ExplicitBucketHistogramAggregation(
             boundaries=[0.05, 0.1, 0.5, 1, 5, 10],
         )

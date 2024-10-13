@@ -142,8 +142,7 @@ class ConsoleMetricExporter(MetricExporter):
         out: IO = stdout,
         formatter: Callable[
             ["opentelemetry.sdk.metrics.export.MetricsData"], str
-        ] = lambda metrics_data: metrics_data.to_json()
-        + linesep,
+        ] = lambda metrics_data: metrics_data.to_json() + linesep,
         preferred_temporality: Dict[type, AggregationTemporality] = None,
         preferred_aggregation: Dict[
             type, "opentelemetry.sdk.metrics.view.Aggregation"
@@ -333,7 +332,6 @@ class MetricReader(ABC):
         metrics = self._collect(self, timeout_millis=timeout_millis)
 
         if metrics is not None:
-
             self._receive_metrics(
                 metrics,
                 timeout_millis=timeout_millis,
@@ -490,9 +488,7 @@ class PeriodicExportingMetricReader(MetricReader):
             )
             self._daemon_thread.start()
             if hasattr(os, "register_at_fork"):
-                os.register_at_fork(
-                    after_in_child=self._at_fork_reinit
-                )  # pylint: disable=protected-access
+                os.register_at_fork(after_in_child=self._at_fork_reinit)  # pylint: disable=protected-access
         elif self._export_interval_millis <= 0:
             raise ValueError(
                 f"interval value {self._export_interval_millis} is invalid \
@@ -533,7 +529,6 @@ class PeriodicExportingMetricReader(MetricReader):
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> None:
-
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         # pylint: disable=broad-exception-caught,invalid-name
         try:

@@ -53,7 +53,7 @@ Note that the OpenTelemetry project documents certain `"standard attributes"
 <https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/semantic_conventions/README.md>`_
 that have prescribed semantic meanings, for example ``service.name`` in the
 above example.
- """
+"""
 
 import abc
 import concurrent.futures
@@ -320,7 +320,6 @@ class ResourceDetector(abc.ABC):
 class OTELResourceDetector(ResourceDetector):
     # pylint: disable=no-self-use
     def detect(self) -> "Resource":
-
         env_resources_items = environ.get(OTEL_RESOURCE_ATTRIBUTES)
         env_resource_map = {}
 

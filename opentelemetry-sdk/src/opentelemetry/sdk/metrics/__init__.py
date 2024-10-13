@@ -25,15 +25,15 @@ from opentelemetry.sdk.metrics._internal.exemplar import (
     SimpleFixedSizeExemplarReservoir,
     TraceBasedExemplarFilter,
 )
-from opentelemetry.sdk.metrics._internal.instrument import Counter
-from opentelemetry.sdk.metrics._internal.instrument import Gauge as _Gauge
 from opentelemetry.sdk.metrics._internal.instrument import (
+    Counter,
     Histogram,
     ObservableCounter,
     ObservableGauge,
     ObservableUpDownCounter,
     UpDownCounter,
 )
+from opentelemetry.sdk.metrics._internal.instrument import Gauge as _Gauge
 
 __all__ = [
     "AlignedHistogramBucketExemplarReservoir",

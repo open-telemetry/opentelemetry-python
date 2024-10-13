@@ -130,7 +130,6 @@ class TestW3CBaggagePropagator(TestCase):
         )
 
     def test_header_max_entries_skip_invalid_entry(self):
-
         with self.assertLogs(level=WARNING) as warning:
             self.assertEqual(
                 self._extract(
@@ -227,7 +226,6 @@ class TestW3CBaggagePropagator(TestCase):
     @patch("opentelemetry.baggage.propagation.get_all")
     @patch("opentelemetry.baggage.propagation._format_baggage")
     def test_fields(self, mock_format_baggage, mock_baggage):
-
         mock_setter = Mock()
 
         self.propagator.inject({}, setter=mock_setter)
@@ -250,7 +248,6 @@ class TestW3CBaggagePropagator(TestCase):
 
     @patch("opentelemetry.baggage._BAGGAGE_KEY", new="abc")
     def test_inject_extract(self):
-
         carrier = {}
 
         context = set_baggage(

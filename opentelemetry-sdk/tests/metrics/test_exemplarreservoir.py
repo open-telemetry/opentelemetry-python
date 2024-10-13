@@ -17,7 +17,6 @@ from opentelemetry.trace import SpanContext, TraceFlags
 
 
 class TestSimpleFixedSizeExemplarReservoir(TestCase):
-
     TRACE_ID = int("d4cda95b652f4a1592b449d5929fda1b", 16)
     SPAN_ID = int("6e0c63257de34c92", 16)
 
@@ -83,7 +82,6 @@ class TestSimpleFixedSizeExemplarReservoir(TestCase):
 
 
 class TestAlignedHistogramBucketExemplarReservoir(TestCase):
-
     TRACE_ID = int("d4cda95b652f4a1592b449d5929fda1b", 16)
     SPAN_ID = int("6e0c63257de34c92", 16)
 

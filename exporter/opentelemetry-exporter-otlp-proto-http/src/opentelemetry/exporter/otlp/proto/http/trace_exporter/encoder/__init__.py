@@ -35,10 +35,10 @@ from opentelemetry.proto.resource.v1.resource_pb2 import (  # noqa: F401
     Resource as PB2Resource,
 )
 from opentelemetry.proto.trace.v1.trace_pb2 import (  # noqa: F401
-    ScopeSpans as PB2ScopeSpans,
+    ResourceSpans as PB2ResourceSpans,
 )
 from opentelemetry.proto.trace.v1.trace_pb2 import (  # noqa: F401
-    ResourceSpans as PB2ResourceSpans,
+    ScopeSpans as PB2ScopeSpans,
 )
 from opentelemetry.proto.trace.v1.trace_pb2 import (  # noqa: F401
     Span as PB2SPan,
@@ -46,17 +46,21 @@ from opentelemetry.proto.trace.v1.trace_pb2 import (  # noqa: F401
 from opentelemetry.proto.trace.v1.trace_pb2 import (  # noqa: F401
     Status as PB2Status,
 )
-from opentelemetry.sdk.trace import Event  # noqa: F401
+from opentelemetry.sdk.trace import (
+    Event,  # noqa: F401
+    Resource,  # noqa: F401
+)
+from opentelemetry.sdk.trace import Span as SDKSpan  # noqa: F401
 from opentelemetry.sdk.util.instrumentation import (  # noqa: F401
     InstrumentationScope,
 )
-from opentelemetry.sdk.trace import Resource  # noqa: F401
-from opentelemetry.sdk.trace import Span as SDKSpan  # noqa: F401
-from opentelemetry.trace import Link  # noqa: F401
-from opentelemetry.trace import SpanKind  # noqa: F401
+from opentelemetry.trace import (
+    Link,  # noqa: F401
+    SpanKind,  # noqa: F401
+)
 from opentelemetry.trace.span import (  # noqa: F401
     SpanContext,
-    TraceState,
     Status,
+    TraceState,
 )
 from opentelemetry.util.types import Attributes  # noqa: F401
