@@ -34,14 +34,16 @@ class TestLoggerProviderCache(unittest.TestCase):
         # Ensure logger is lazily cached
         self.assertEqual(0, len(logger_cache))
 
-        logger.warning("test message")
+        with self.assertLogs(level=logging.WARNING):
+            logger.warning("test message")
 
         self.assertEqual(1, len(logger_cache))
 
         # Ensure only one logger is cached
-        rounds = 100
-        for _ in range(rounds):
-            logger.warning("test message")
+        with self.assertLogs(level=logging.WARNING):
+            rounds = 100
+            for _ in range(rounds):
+                logger.warning("test message")
 
         self.assertEqual(1, len(logger_cache))
 
@@ -56,15 +58,17 @@ class TestLoggerProviderCache(unittest.TestCase):
         # Ensure loggers are lazily cached
         self.assertEqual(0, len(logger_cache))
 
-        for logger in loggers:
-            logger.warning("test message")
+        with self.assertLogs(level=logging.WARNING):
+            for logger in loggers:
+                logger.warning("test message")
 
         self.assertEqual(num_loggers, len(logger_cache))
 
-        rounds = 100
-        for _ in range(rounds):
-            for logger in loggers:
-                logger.warning("test message")
+        with self.assertLogs(level=logging.WARNING):
+            rounds = 100
+            for _ in range(rounds):
+                for logger in loggers:
+                    logger.warning("test message")
 
         self.assertEqual(num_loggers, len(logger_cache))
 
