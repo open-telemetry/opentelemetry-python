@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4218](https://github.com/open-telemetry/opentelemetry-python/pull/4218))
 - Record logger name as the instrumentation scope name
   ([#4208](https://github.com/open-telemetry/opentelemetry-python/pull/4208))
+- Update environment variable descriptions to match signal
+  ([#4222](https://github.com/open-telemetry/opentelemetry-python/pull/4222))
 
 ## Version 1.27.0/0.48b0 (2024-08-28)
 
