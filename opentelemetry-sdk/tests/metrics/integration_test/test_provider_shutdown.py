@@ -57,7 +57,7 @@ class FakeMetricsExporter(MetricExporter):
 
 
 class TestMeterProviderShutdown(TestCase):
-    def test_meter_provider_shutdown_triggers_garbage_collection(self):
+    def test_meter_provider_shutdown_cleans_up_successfully(self):
         def create_and_shutdown():
             exporter = FakeMetricsExporter()
             exporter_wr = weakref.ref(exporter)
