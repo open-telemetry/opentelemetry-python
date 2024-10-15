@@ -12,10 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import weakref
-
-# pylint: disable=protected-access,no-self-use
-
-
 from logging import WARNING
 from time import sleep
 from typing import Iterable, Sequence
@@ -47,6 +43,11 @@ from opentelemetry.sdk.metrics.view import SumAggregation, View
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.test import TestCase
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase, MockFunc
+
+# pylint: disable=protected-access,no-self-use
+
+
+
 
 
 class DummyMetricReader(MetricReader):
