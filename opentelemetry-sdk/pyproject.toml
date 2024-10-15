@@ -70,6 +70,10 @@ process = "opentelemetry.sdk.resources:ProcessResourceDetector"
 os = "opentelemetry.sdk.resources:OsResourceDetector"
 host = "opentelemetry.sdk.resources:_HostResourceDetector"
 
+[project.entry-points.opentelemetry_entity_detector]
+type0= "opentelemetry.sdk.resources:Type0EntityDetector"
+type1= "opentelemetry.sdk.resources:Type1EntityDetector"
+
 [project.urls]
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/opentelemetry-sdk"
 
