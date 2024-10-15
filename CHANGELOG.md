@@ -13,12 +13,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4154](https://github.com/open-telemetry/opentelemetry-python/pull/4154))
 - sdk: Add support for log formatting
   ([#4137](https://github.com/open-telemetry/opentelemetry-python/pull/4166))
+- sdk: Add Host resource detector
+  ([#4182](https://github.com/open-telemetry/opentelemetry-python/pull/4182))
 - sdk: Implementation of exemplars
   ([#4094](https://github.com/open-telemetry/opentelemetry-python/pull/4094))
 - Implement events sdk
   ([#4176](https://github.com/open-telemetry/opentelemetry-python/pull/4176))
-- Drop `OTEL_PYTHON_EXPERIMENTAL_DISABLE_PROMETHEUS_UNIT_NORMALIZATION`
-  environment variable
+- Update semantic conventions to version 1.28.0
+  ([#4218](https://github.com/open-telemetry/opentelemetry-python/pull/4218))
+- Add support to protobuf 5+ and drop support to protobuf 3 and 4
+  ([#4206](https://github.com/open-telemetry/opentelemetry-python/pull/4206))
+- Update environment variable descriptions to match signal
+  ([#4222](https://github.com/open-telemetry/opentelemetry-python/pull/4222))
+- Record logger name as the instrumentation scope name
+  ([#4208](https://github.com/open-telemetry/opentelemetry-python/pull/4208))
+- Drop `OTEL_PYTHON_EXPERIMENTAL_DISABLE_PROMETHEUS_UNIT_NORMALIZATION` environment variable
   ([#4217](https://github.com/open-telemetry/opentelemetry-python/pull/4217))
 
 ## Version 1.27.0/0.48b0 (2024-08-28)

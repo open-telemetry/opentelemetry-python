@@ -74,7 +74,7 @@ The total size of the request in bytes. This should be the total number of bytes
 
 HTTP_REQUEST_CONTENT_LENGTH: Final = "http.request_content_length"
 """
-Deprecated: Replaced by `http.request.header.content-length`.
+Deprecated: Replaced by `http.request.header.<key>`.
 """
 
 HTTP_REQUEST_CONTENT_LENGTH_UNCOMPRESSED: Final = (
@@ -106,7 +106,7 @@ Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.http_a
 
 HTTP_RESPONSE_CONTENT_LENGTH: Final = "http.response_content_length"
 """
-Deprecated: Replaced by `http.response.header.content-length`.
+Deprecated: Replaced by `http.response.header.<key>`.
 """
 
 HTTP_RESPONSE_CONTENT_LENGTH_UNCOMPRESSED: Final = (
