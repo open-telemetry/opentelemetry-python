@@ -73,9 +73,11 @@ class TestMeterProviderShutdown(TestCase):
             return exporter_wr, reader_wr, provider_wr
 
         # When: the provider is shutdown
-        exporter_weakref, reader_weakref, provider_weakref = (
-            create_and_shutdown()
-        )
+        (
+            exporter_weakref,
+            reader_weakref,
+            provider_weakref,
+        ) = create_and_shutdown()
         gc.collect()
 
         # Then: the provider, exporter and reader should be garbage collected

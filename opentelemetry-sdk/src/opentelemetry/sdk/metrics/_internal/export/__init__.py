@@ -247,27 +247,27 @@ class MetricReader(ABC):
                 if typ is Counter:
                     self._instrument_class_temporality[_Counter] = temporality
                 elif typ is UpDownCounter:
-                    self._instrument_class_temporality[_UpDownCounter] = (
-                        temporality
-                    )
+                    self._instrument_class_temporality[
+                        _UpDownCounter
+                    ] = temporality
                 elif typ is Histogram:
-                    self._instrument_class_temporality[_Histogram] = (
-                        temporality
-                    )
+                    self._instrument_class_temporality[
+                        _Histogram
+                    ] = temporality
                 elif typ is Gauge:
                     self._instrument_class_temporality[_Gauge] = temporality
                 elif typ is ObservableCounter:
-                    self._instrument_class_temporality[_ObservableCounter] = (
-                        temporality
-                    )
+                    self._instrument_class_temporality[
+                        _ObservableCounter
+                    ] = temporality
                 elif typ is ObservableUpDownCounter:
                     self._instrument_class_temporality[
                         _ObservableUpDownCounter
                     ] = temporality
                 elif typ is ObservableGauge:
-                    self._instrument_class_temporality[_ObservableGauge] = (
-                        temporality
-                    )
+                    self._instrument_class_temporality[
+                        _ObservableGauge
+                    ] = temporality
                 else:
                     raise Exception(f"Invalid instrument class found {typ}")
 
@@ -287,27 +287,27 @@ class MetricReader(ABC):
                 if typ is Counter:
                     self._instrument_class_aggregation[_Counter] = aggregation
                 elif typ is UpDownCounter:
-                    self._instrument_class_aggregation[_UpDownCounter] = (
-                        aggregation
-                    )
+                    self._instrument_class_aggregation[
+                        _UpDownCounter
+                    ] = aggregation
                 elif typ is Histogram:
-                    self._instrument_class_aggregation[_Histogram] = (
-                        aggregation
-                    )
+                    self._instrument_class_aggregation[
+                        _Histogram
+                    ] = aggregation
                 elif typ is Gauge:
                     self._instrument_class_aggregation[_Gauge] = aggregation
                 elif typ is ObservableCounter:
-                    self._instrument_class_aggregation[_ObservableCounter] = (
-                        aggregation
-                    )
+                    self._instrument_class_aggregation[
+                        _ObservableCounter
+                    ] = aggregation
                 elif typ is ObservableUpDownCounter:
                     self._instrument_class_aggregation[
                         _ObservableUpDownCounter
                     ] = aggregation
                 elif typ is ObservableGauge:
-                    self._instrument_class_aggregation[_ObservableGauge] = (
-                        aggregation
-                    )
+                    self._instrument_class_aggregation[
+                        _ObservableGauge
+                    ] = aggregation
                 else:
                     raise Exception(f"Invalid instrument class found {typ}")
 
