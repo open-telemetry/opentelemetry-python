@@ -34,6 +34,7 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.metrics import (
     Counter,
+    Exemplar,
     Histogram,
     ObservableCounter,
     ObservableGauge,
@@ -58,6 +59,8 @@ from opentelemetry.sdk.metrics.view import (
     ExplicitBucketHistogramAggregation,
     ExponentialBucketHistogramAggregation,
 )
+from os import environ
+from typing import Dict
 
 _logger = logging.getLogger(__name__)
 
@@ -341,7 +344,7 @@ def _encode_metric(metric, pb2_metric):
         )
 
 
-def _encode_exemplars(sdk_exemplars: list) -> list:
+def _encode_exemplars(sdk_exemplars: list[Exemplar]) -> list:
     """
     Converts a list of SDK Exemplars into a list of protobuf Exemplars.
 
@@ -353,14 +356,26 @@ def _encode_exemplars(sdk_exemplars: list) -> list:
     """
     pb_exemplars = []
     for sdk_exemplar in sdk_exemplars:
-        pb_exemplar = pb2.Exemplar(
-            time_unix_nano=sdk_exemplar.time_unix_nano,
-            span_id=_encode_span_id(sdk_exemplar.span_id),
-            trace_id=_encode_trace_id(sdk_exemplar.trace_id),
-            filtered_attributes=_encode_attributes(
-                sdk_exemplar.filtered_attributes
-            ),
-        )
+        if (
+            sdk_exemplar.span_id is not None
+            and sdk_exemplar.trace_id is not None
+        ):
+            pb_exemplar = pb2.Exemplar(
+                time_unix_nano=sdk_exemplar.time_unix_nano,
+                span_id=_encode_span_id(sdk_exemplar.span_id),
+                trace_id=_encode_trace_id(sdk_exemplar.trace_id),
+                filtered_attributes=_encode_attributes(
+                    sdk_exemplar.filtered_attributes
+                ),
+            )
+        else:
+            pb_exemplar = pb2.Exemplar(
+                time_unix_nano=sdk_exemplar.time_unix_nano,
+                filtered_attributes=_encode_attributes(
+                    sdk_exemplar.filtered_attributes
+                ),
+            )
+
         # Assign the value based on its type in the SDK exemplar
         if isinstance(sdk_exemplar.value, float):
             pb_exemplar.as_double = sdk_exemplar.value
