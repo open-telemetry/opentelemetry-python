@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import weakref
 
 # pylint: disable=protected-access,no-self-use
 
@@ -67,7 +68,7 @@ class DummyMetricReader(MetricReader):
 class TestMeterProvider(ConcurrencyTestBase, TestCase):
     def tearDown(self):
 
-        MeterProvider._all_metric_readers = set()
+        MeterProvider._all_metric_readers = weakref.WeakSet()
 
     @patch.object(Resource, "create")
     def test_init_default(self, resource_patch):
