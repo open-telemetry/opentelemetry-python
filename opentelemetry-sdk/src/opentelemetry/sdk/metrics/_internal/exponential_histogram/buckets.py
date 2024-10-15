@@ -16,7 +16,6 @@ from math import ceil, log2
 
 
 class Buckets:
-
     # No method of this class is protected by locks because instances of this
     # class are only used in methods that are protected by locks themselves.
 
@@ -78,7 +77,6 @@ class Buckets:
         return self._counts[-bias:] + self._counts[:-bias]
 
     def grow(self, needed: int, max_size: int) -> None:
-
         size = len(self._counts)
         bias = self.__index_base - self.__index_start
         old_positive_limit = size - bias
@@ -160,7 +158,6 @@ class Buckets:
             index = mod
 
             while index < each and inpos < size:
-
                 if outpos != inpos:
                     self._counts[outpos] += self._counts[inpos]
                     self._counts[inpos] = 0

@@ -23,7 +23,9 @@ Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.error_
 """
 
 
-@deprecated(reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.error_attributes.ErrorTypeValues`.")  # type: ignore
+@deprecated(
+    reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.error_attributes.ErrorTypeValues`."
+)  # type: ignore
 class ErrorTypeValues(Enum):
     OTHER = "_OTHER"
     """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.error_attributes.ErrorTypeValues.OTHER`."""

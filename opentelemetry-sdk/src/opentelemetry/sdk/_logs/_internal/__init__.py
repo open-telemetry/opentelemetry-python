@@ -108,7 +108,6 @@ class LogLimits:
         max_attributes: Optional[int] = None,
         max_attribute_length: Optional[int] = None,
     ):
-
         # attribute count
         global_max_attributes = self._from_env_if_absent(
             max_attributes, OTEL_ATTRIBUTE_COUNT_LIMIT

@@ -88,7 +88,9 @@ Deprecated: Replaced by `system.process.status`.
 """
 
 
-@deprecated(reason="The attribute system.cpu.state is deprecated - Replaced by `cpu.mode`")  # type: ignore
+@deprecated(
+    reason="The attribute system.cpu.state is deprecated - Replaced by `cpu.mode`"
+)  # type: ignore
 class SystemCpuStateValues(Enum):
     USER = "user"
     """user."""
@@ -202,7 +204,9 @@ class SystemProcessStatusValues(Enum):
     """defunct."""
 
 
-@deprecated(reason="The attribute system.processes.status is deprecated - Replaced by `system.process.status`")  # type: ignore
+@deprecated(
+    reason="The attribute system.processes.status is deprecated - Replaced by `system.process.status`"
+)  # type: ignore
 class SystemProcessesStatusValues(Enum):
     RUNNING = "running"
     """running."""

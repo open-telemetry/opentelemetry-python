@@ -7,12 +7,13 @@ import shlex
 import shutil
 import subprocess
 import sys
-from toml import load
 from configparser import ConfigParser
 from inspect import cleandoc
 from itertools import chain
 from os.path import basename
 from pathlib import Path, PurePath
+
+from toml import load
 
 DEFAULT_ALLSEP = " "
 DEFAULT_ALLFMT = "{rel}"
@@ -508,7 +509,8 @@ def lint_args(args):
 
     runsubprocess(
         args.dry_run,
-        ("black", "--config", "pyproject.toml", ".") + (("--diff", "--check") if args.check_only else ()),
+        ("black", "--config", "pyproject.toml", ".")
+        + (("--diff", "--check") if args.check_only else ()),
         cwd=rootdir,
         check=True,
     )
@@ -519,7 +521,9 @@ def lint_args(args):
         cwd=rootdir,
         check=True,
     )
-    runsubprocess(args.dry_run, ("flake8", "--config", ".flake8", rootdir), check=True)
+    runsubprocess(
+        args.dry_run, ("flake8", "--config", ".flake8", rootdir), check=True
+    )
     execute_args(
         parse_subargs(
             args, ("exec", "pylint {}", "--all", "--mode", "lintroots")
@@ -561,10 +565,10 @@ def update_version_files(targets, version, packages):
     replace = f'__version__ = "{version}"'
 
     for target in filter_packages(targets, packages):
-
         version_file_path = target.joinpath(
-            load(target.joinpath("pyproject.toml"))
-            ["tool"]["hatch"]["version"]["path"]
+            load(target.joinpath("pyproject.toml"))["tool"]["hatch"][
+                "version"
+            ]["path"]
         )
 
         with open(version_file_path) as file:
@@ -581,8 +585,8 @@ def update_version_files(targets, version, packages):
 def update_dependencies(targets, version, packages):
     print("updating dependencies")
     # PEP 508 allowed specifier operators
-    operators = ['==', '!=', '<=', '>=', '<', '>', '===', '~=', '=']
-    operators_pattern = '|'.join(re.escape(op) for op in operators)
+    operators = ["==", "!=", "<=", ">=", "<", ">", "===", "~=", "="]
+    operators_pattern = "|".join(re.escape(op) for op in operators)
 
     for pkg in packages:
         search = rf"({basename(pkg)}[^,]*)({operators_pattern})(.*\.dev)"
@@ -664,7 +668,14 @@ def format_args(args):
     )
     runsubprocess(
         args.dry_run,
-        ("isort", "--settings-path", f"{root_dir}/.isort.cfg", "--profile", "black", "."),
+        (
+            "isort",
+            "--settings-path",
+            f"{root_dir}/.isort.cfg",
+            "--profile",
+            "black",
+            ".",
+        ),
         cwd=format_dir,
         check=True,
     )

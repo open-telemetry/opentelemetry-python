@@ -98,7 +98,6 @@ def test_get_meter_provider(reset_meter_provider):
     with patch.dict(
         "os.environ", {OTEL_PYTHON_METER_PROVIDER: "test_meter_provider"}
     ):
-
         with patch("opentelemetry.metrics._internal._load_provider", Mock()):
             with patch(
                 "opentelemetry.metrics._internal.cast",

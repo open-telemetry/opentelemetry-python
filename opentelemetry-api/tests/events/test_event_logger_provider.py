@@ -35,7 +35,6 @@ class TestGlobals(EventsGlobalsTest, unittest.TestCase):
                 "OTEL_PYTHON_EVENT_LOGGER_PROVIDER": "test_event_logger_provider"
             },
         ):
-
             with patch("opentelemetry._events._load_provider", Mock()):
                 with patch(
                     "opentelemetry._events.cast",

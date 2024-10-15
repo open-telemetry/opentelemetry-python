@@ -25,7 +25,6 @@ from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 
 class TestHistogramExport(TestCase):
     def test_histogram_counter_collection(self):
-
         in_memory_metric_reader = InMemoryMetricReader()
 
         provider = MeterProvider(
@@ -94,7 +93,6 @@ class TestHistogramExport(TestCase):
         )
 
     def test_histogram_with_exemplars(self):
-
         in_memory_metric_reader = InMemoryMetricReader()
 
         provider = MeterProvider(

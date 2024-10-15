@@ -29,7 +29,6 @@ class Test_Providers(TestCase):  # pylint: disable=invalid-name
     )
     @patch("opentelemetry.util._importlib_metadata.entry_points")
     def test__providers(self, mock_entry_points):
-
         reload(_providers)
 
         mock_entry_points.configure_mock(

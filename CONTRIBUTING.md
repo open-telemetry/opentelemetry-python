@@ -58,20 +58,15 @@ You can run `tox` with the following arguments:
   Python version
 - `tox -e spellcheck` to run a spellcheck on all the code
 - `tox -e lint-some-package` to run lint checks on `some-package`
+- `tox -e ruff` to run ruff linter and formatter checks against the entire codebase
 
-`black` and `isort` are executed when `tox -e lint` is run. The reported errors can be tedious to fix manually.
-An easier way to do so is:
-
-1. Run `.tox/lint/bin/black .`
-2. Run `.tox/lint/bin/isort .`
-
-Or you can call formatting and linting in one command by [pre-commit](https://pre-commit.com/):
+`ruff check` and `ruff format` are executed when `tox -e ruff` is run. We strongly recommend you to configure [pre-commit](https://pre-commit.com/) locally to run `ruff` automatically before each commit by installing it as git hooks. You just need to [install pre-commit](https://pre-commit.com/#install) in your environment:
 
 ```console
-$ pre-commit
+$ pip install pre-commit -c dev-requirements.txt
 ```
 
-You can also configure it to run lint tools automatically before committing with:
+and run this command inside the git repository:
 
 ```console
 $ pre-commit install

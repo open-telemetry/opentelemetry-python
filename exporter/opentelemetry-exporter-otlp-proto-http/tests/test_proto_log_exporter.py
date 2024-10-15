@@ -68,7 +68,6 @@ ENV_TIMEOUT = "30"
 
 class TestOTLPHTTPLogExporter(unittest.TestCase):
     def test_constructor_default(self):
-
         exporter = OTLPLogExporter()
 
         self.assertEqual(
@@ -181,7 +180,6 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         },
     )
     def test_exporter_env(self):
-
         exporter = OTLPLogExporter()
 
         self.assertEqual(

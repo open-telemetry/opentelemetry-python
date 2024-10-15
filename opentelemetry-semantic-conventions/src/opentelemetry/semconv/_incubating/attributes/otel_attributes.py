@@ -48,7 +48,9 @@ Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.otel_a
 """
 
 
-@deprecated(reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.otel_attributes.OtelStatusCodeValues`.")  # type: ignore
+@deprecated(
+    reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.otel_attributes.OtelStatusCodeValues`."
+)  # type: ignore
 class OtelStatusCodeValues(Enum):
     OK = "OK"
     """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.otel_attributes.OtelStatusCodeValues.OK`."""
