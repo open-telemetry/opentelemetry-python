@@ -21,6 +21,7 @@ import threading
 import traceback
 import warnings
 from os import environ
+from threading import Lock
 from time import time_ns
 from typing import Any, Callable, Optional, Tuple, Union  # noqa
 
@@ -470,9 +471,6 @@ class LoggingHandler(logging.Handler):
     ) -> None:
         super().__init__(level=level)
         self._logger_provider = logger_provider or get_logger_provider()
-        self._logger = get_logger(
-            __name__, logger_provider=self._logger_provider
-        )
 
     @staticmethod
     def _get_attributes(record: logging.LogRecord) -> Attributes:
@@ -557,6 +555,7 @@ class LoggingHandler(logging.Handler):
             "WARN" if record.levelname == "WARNING" else record.levelname
         )
 
+        logger = get_logger(record.name, logger_provider=self._logger_provider)
         return LogRecord(
             timestamp=timestamp,
             observed_timestamp=observered_timestamp,
@@ -566,7 +565,7 @@ class LoggingHandler(logging.Handler):
             severity_text=level_name,
             severity_number=severity_number,
             body=body,
-            resource=self._logger.resource,
+            resource=logger.resource,
             attributes=attributes,
         )
 
@@ -576,14 +575,17 @@ class LoggingHandler(logging.Handler):
 
         The record is translated to OTel format, and then sent across the pipeline.
         """
-        if not isinstance(self._logger, NoOpLogger):
-            self._logger.emit(self._translate(record))
+        logger = get_logger(record.name, logger_provider=self._logger_provider)
+        if not isinstance(logger, NoOpLogger):
+            logger.emit(self._translate(record))
 
     def flush(self) -> None:
         """
-        Flushes the logging output. Skip flushing if logger is NoOp.
+        Flushes the logging output. Skip flushing if logging_provider has no force_flush method.
         """
-        if not isinstance(self._logger, NoOpLogger):
+        if hasattr(self._logger_provider, "force_flush") and callable(
+            self._logger_provider.force_flush
+        ):
             self._logger_provider.force_flush()
 
 
@@ -641,10 +643,46 @@ class LoggerProvider(APILoggerProvider):
         self._at_exit_handler = None
         if shutdown_on_exit:
             self._at_exit_handler = atexit.register(self.shutdown)
+        self._logger_cache = {}
+        self._logger_cache_lock = Lock()
 
     @property
     def resource(self):
         return self._resource
+
+    def _get_logger_no_cache(
+        self,
+        name: str,
+        version: Optional[str] = None,
+        schema_url: Optional[str] = None,
+        attributes: Optional[Attributes] = None,
+    ) -> Logger:
+        return Logger(
+            self._resource,
+            self._multi_log_record_processor,
+            InstrumentationScope(
+                name,
+                version,
+                schema_url,
+                attributes,
+            ),
+        )
+
+    def _get_logger_cached(
+        self,
+        name: str,
+        version: Optional[str] = None,
+        schema_url: Optional[str] = None,
+    ) -> Logger:
+        with self._logger_cache_lock:
+            key = (name, version, schema_url)
+            if key in self._logger_cache:
+                return self._logger_cache[key]
+
+            self._logger_cache[key] = self._get_logger_no_cache(
+                name, version, schema_url
+            )
+            return self._logger_cache[key]
 
     def get_logger(
         self,
@@ -661,16 +699,9 @@ class LoggerProvider(APILoggerProvider):
                 schema_url=schema_url,
                 attributes=attributes,
             )
-        return Logger(
-            self._resource,
-            self._multi_log_record_processor,
-            InstrumentationScope(
-                name,
-                version,
-                schema_url,
-                attributes,
-            ),
-        )
+        if attributes is None:
+            return self._get_logger_cached(name, version, schema_url)
+        return self._get_logger_no_cache(name, version, schema_url, attributes)
 
     def add_log_record_processor(
         self, log_record_processor: LogRecordProcessor
