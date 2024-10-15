@@ -14,6 +14,7 @@
 
 import math
 import os
+import weakref
 from abc import ABC, abstractmethod
 from enum import Enum
 from logging import getLogger
@@ -490,8 +491,10 @@ class PeriodicExportingMetricReader(MetricReader):
             )
             self._daemon_thread.start()
             if hasattr(os, "register_at_fork"):
+                weak_at_fork = weakref.WeakMethod(self._at_fork_reinit)
+
                 os.register_at_fork(
-                    after_in_child=self._at_fork_reinit
+                    after_in_child=lambda: weak_at_fork()()
                 )  # pylint: disable=protected-access
         elif self._export_interval_millis <= 0:
             raise ValueError(
