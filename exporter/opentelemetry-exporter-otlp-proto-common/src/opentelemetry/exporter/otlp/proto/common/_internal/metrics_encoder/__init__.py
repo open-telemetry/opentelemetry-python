@@ -13,53 +13,48 @@
 # limitations under the License.
 import logging
 
-from opentelemetry.sdk.metrics.export import (
-    MetricExporter,
-)
-from opentelemetry.sdk.metrics.view import Aggregation
-from os import environ
-from opentelemetry.sdk.metrics import (
-    Counter,
-    Histogram,
-    ObservableCounter,
-    ObservableGauge,
-    ObservableUpDownCounter,
-    UpDownCounter,
-)
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _encode_attributes,
     _encode_span_id,
     _encode_trace_id,
-)
-from opentelemetry.sdk.environment_variables import (
-    OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
-)
-from opentelemetry.sdk.metrics.export import (
-    AggregationTemporality,
 )
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
     ExportMetricsServiceRequest,
 )
 from opentelemetry.proto.common.v1.common_pb2 import InstrumentationScope
 from opentelemetry.proto.metrics.v1 import metrics_pb2 as pb2
-from opentelemetry.sdk.metrics.export import (
-    MetricsData,
-    Gauge,
-    Histogram as HistogramType,
-    Sum,
-    ExponentialHistogram as ExponentialHistogramType,
-)
-from typing import Dict
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as PB2Resource,
 )
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION,
+    OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
+)
+from opentelemetry.sdk.metrics import (
+    Counter,
+    Exemplar,
+    Histogram,
+    ObservableCounter,
+    ObservableGauge,
+    ObservableUpDownCounter,
+    UpDownCounter,
+)
+from opentelemetry.sdk.metrics.export import (
+    AggregationTemporality,
+    ExponentialHistogram as ExponentialHistogramType,
+    Gauge,
+    Histogram as HistogramType,
+    MetricsData,
+    MetricExporter,
+    Sum,
 )
 from opentelemetry.sdk.metrics.view import (
+    Aggregation,
     ExponentialBucketHistogramAggregation,
     ExplicitBucketHistogramAggregation,
 )
+from os import environ
+from typing import Dict
 
 _logger = logging.getLogger(__name__)
 
@@ -350,7 +345,7 @@ def _encode_metric(metric, pb2_metric):
         )
 
 
-def _encode_exemplars(sdk_exemplars: list) -> list:
+def _encode_exemplars(sdk_exemplars: list[Exemplar]) -> list:
     """
     Converts a list of SDK Exemplars into a list of protobuf Exemplars.
 
@@ -362,14 +357,26 @@ def _encode_exemplars(sdk_exemplars: list) -> list:
     """
     pb_exemplars = []
     for sdk_exemplar in sdk_exemplars:
-        pb_exemplar = pb2.Exemplar(
-            time_unix_nano=sdk_exemplar.time_unix_nano,
-            span_id=_encode_span_id(sdk_exemplar.span_id),
-            trace_id=_encode_trace_id(sdk_exemplar.trace_id),
-            filtered_attributes=_encode_attributes(
-                sdk_exemplar.filtered_attributes
-            ),
-        )
+        if (
+            sdk_exemplar.span_id is not None
+            and sdk_exemplar.trace_id is not None
+        ):
+            pb_exemplar = pb2.Exemplar(
+                time_unix_nano=sdk_exemplar.time_unix_nano,
+                span_id=_encode_span_id(sdk_exemplar.span_id),
+                trace_id=_encode_trace_id(sdk_exemplar.trace_id),
+                filtered_attributes=_encode_attributes(
+                    sdk_exemplar.filtered_attributes
+                ),
+            )
+        else:
+            pb_exemplar = pb2.Exemplar(
+                time_unix_nano=sdk_exemplar.time_unix_nano,
+                filtered_attributes=_encode_attributes(
+                    sdk_exemplar.filtered_attributes
+                ),
+            )
+
         # Assign the value based on its type in the SDK exemplar
         if isinstance(sdk_exemplar.value, float):
             pb_exemplar.as_double = sdk_exemplar.value
