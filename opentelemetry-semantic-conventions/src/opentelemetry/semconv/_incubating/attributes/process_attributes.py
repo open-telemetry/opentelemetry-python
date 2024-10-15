@@ -195,7 +195,9 @@ class ProcessContextSwitchTypeValues(Enum):
     """involuntary."""
 
 
-@deprecated(reason="The attribute process.cpu.state is deprecated - Replaced by `cpu.mode`")  # type: ignore
+@deprecated(
+    reason="The attribute process.cpu.state is deprecated - Replaced by `cpu.mode`"
+)  # type: ignore
 class ProcessCpuStateValues(Enum):
     SYSTEM = "system"
     """system."""

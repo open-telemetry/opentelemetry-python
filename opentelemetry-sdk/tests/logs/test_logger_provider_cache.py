@@ -24,7 +24,6 @@ def create_logger(handler, name):
 
 
 class TestLoggerProviderCache(unittest.TestCase):
-
     def test_get_logger_single_handler(self):
         handler, logger_provider = set_up_logging_handler(level=logging.DEBUG)
         # pylint: disable=protected-access

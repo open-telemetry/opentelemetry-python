@@ -115,7 +115,6 @@ class LogarithmMapping(Mapping):
         )
 
     def get_lower_boundary(self, index: int) -> float:
-
         if index >= self._max_normal_lower_boundary_index:
             if index == self._max_normal_lower_boundary_index:
                 return 2 * exp(

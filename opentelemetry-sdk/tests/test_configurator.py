@@ -985,7 +985,6 @@ class TestImportConfigComponents(TestCase):
     def test__import_config_components_missing_entry_point(
         self, mock_entry_points
     ):
-
         with raises(RuntimeError) as error:
             _import_config_components(["a", "b", "c"], "name")
         self.assertEqual(
@@ -999,7 +998,6 @@ class TestImportConfigComponents(TestCase):
     def test__import_config_components_missing_component(
         self, mock_entry_points
     ):
-
         with raises(RuntimeError) as error:
             _import_config_components(["a", "b", "c"], "name")
         self.assertEqual(

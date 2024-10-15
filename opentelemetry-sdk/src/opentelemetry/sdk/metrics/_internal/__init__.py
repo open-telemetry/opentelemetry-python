@@ -87,7 +87,6 @@ class Meter(APIMeter):
         self._instrument_id_instrument_lock = Lock()
 
     def create_counter(self, name, unit="", description="") -> APICounter:
-
         (
             is_instrument_registered,
             instrument_id,
@@ -123,7 +122,6 @@ class Meter(APIMeter):
     def create_up_down_counter(
         self, name, unit="", description=""
     ) -> APIUpDownCounter:
-
         (
             is_instrument_registered,
             instrument_id,
@@ -161,7 +159,6 @@ class Meter(APIMeter):
     def create_observable_counter(
         self, name, callbacks=None, unit="", description=""
     ) -> APIObservableCounter:
-
         (
             is_instrument_registered,
             instrument_id,
@@ -200,7 +197,6 @@ class Meter(APIMeter):
             return instrument
 
     def create_histogram(self, name, unit="", description="") -> APIHistogram:
-
         (
             is_instrument_registered,
             instrument_id,
@@ -233,7 +229,6 @@ class Meter(APIMeter):
             return instrument
 
     def create_gauge(self, name, unit="", description="") -> APIGauge:
-
         (
             is_instrument_registered,
             instrument_id,
@@ -269,7 +264,6 @@ class Meter(APIMeter):
     def create_observable_gauge(
         self, name, callbacks=None, unit="", description=""
     ) -> APIObservableGauge:
-
         (
             is_instrument_registered,
             instrument_id,
@@ -310,7 +304,6 @@ class Meter(APIMeter):
     def create_observable_up_down_counter(
         self, name, callbacks=None, unit="", description=""
     ) -> APIObservableUpDownCounter:
-
         (
             is_instrument_registered,
             instrument_id,
@@ -435,7 +428,6 @@ class MeterProvider(APIMeterProvider):
         self._shutdown = False
 
         for metric_reader in self._sdk_config.metric_readers:
-
             with self._all_metric_readers_lock:
                 if metric_reader in self._all_metric_readers:
                     # pylint: disable=broad-exception-raised
@@ -468,11 +460,9 @@ class MeterProvider(APIMeterProvider):
 
             # pylint: disable=broad-exception-caught
             except Exception as error:
-
                 metric_reader_error[metric_reader] = error
 
         if metric_reader_error:
-
             metric_reader_error_string = "\n".join(
                 [
                     f"{metric_reader.__class__.__name__}: {repr(error)}"
@@ -516,7 +506,6 @@ class MeterProvider(APIMeterProvider):
 
             # pylint: disable=broad-exception-caught
             except Exception as error:
-
                 metric_reader_error[metric_reader] = error
 
         if self._atexit_handler is not None:
@@ -524,7 +513,6 @@ class MeterProvider(APIMeterProvider):
             self._atexit_handler = None
 
         if metric_reader_error:
-
             metric_reader_error_string = "\n".join(
                 [
                     f"{metric_reader.__class__.__name__}: {repr(error)}"
@@ -548,7 +536,6 @@ class MeterProvider(APIMeterProvider):
         schema_url: Optional[str] = None,
         attributes: Optional[Attributes] = None,
     ) -> Meter:
-
         if self._disabled:
             _logger.warning("SDK is disabled.")
             return NoOpMeter(name, version=version, schema_url=schema_url)

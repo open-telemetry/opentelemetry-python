@@ -91,9 +91,7 @@ class _ViewInstrumentMatch:
     def consume_measurement(
         self, measurement: Measurement, should_sample_exemplar: bool = True
     ) -> None:
-
         if self._view._attribute_keys is not None:
-
             attributes = {}
 
             for key, value in (measurement.attributes or {}).items():
@@ -140,7 +138,6 @@ class _ViewInstrumentMatch:
         collection_aggregation_temporality: AggregationTemporality,
         collection_start_nanos: int,
     ) -> Optional[Sequence[DataPointT]]:
-
         data_points: List[DataPointT] = []
         with self._lock:
             for aggregation in self._attributes_aggregation.values():

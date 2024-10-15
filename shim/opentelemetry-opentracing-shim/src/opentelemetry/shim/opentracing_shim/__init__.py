@@ -112,15 +112,17 @@ from opentelemetry.context import (
 from opentelemetry.propagate import get_global_textmap
 from opentelemetry.shim.opentracing_shim import util
 from opentelemetry.shim.opentracing_shim.version import __version__
-from opentelemetry.trace import INVALID_SPAN_CONTEXT, Link, NonRecordingSpan
-from opentelemetry.trace import SpanContext as OtelSpanContext
-from opentelemetry.trace import Tracer as OtelTracer
 from opentelemetry.trace import (
+    INVALID_SPAN_CONTEXT,
+    Link,
+    NonRecordingSpan,
     TracerProvider,
     get_current_span,
     set_span_in_context,
     use_span,
 )
+from opentelemetry.trace import SpanContext as OtelSpanContext
+from opentelemetry.trace import Tracer as OtelTracer
 from opentelemetry.util.types import Attributes
 
 ValueT = TypeVar("ValueT", int, float, bool, str)

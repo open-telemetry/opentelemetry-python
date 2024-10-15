@@ -15,16 +15,18 @@
 from unittest import TestCase
 
 from opentelemetry.metrics import MeterProvider
-from opentelemetry.util._importlib_metadata import EntryPoint, EntryPoints
+from opentelemetry.util._importlib_metadata import (
+    EntryPoint,
+    EntryPoints,
+    version,
+)
 from opentelemetry.util._importlib_metadata import (
     entry_points as importlib_metadata_entry_points,
 )
-from opentelemetry.util._importlib_metadata import version
 
 
 class TestEntryPoints(TestCase):
     def test_entry_points(self):
-
         self.assertIsInstance(
             next(
                 iter(

@@ -286,7 +286,9 @@ class DbClientConnectionStateValues(Enum):
     """used."""
 
 
-@deprecated(reason="The attribute db.client.connections.state is deprecated - Replaced by `db.client.connection.state`")  # type: ignore
+@deprecated(
+    reason="The attribute db.client.connections.state is deprecated - Replaced by `db.client.connection.state`"
+)  # type: ignore
 class DbClientConnectionsStateValues(Enum):
     IDLE = "idle"
     """idle."""

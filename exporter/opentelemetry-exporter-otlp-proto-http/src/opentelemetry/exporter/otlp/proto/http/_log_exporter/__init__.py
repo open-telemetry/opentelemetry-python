@@ -17,8 +17,8 @@ import logging
 import zlib
 from io import BytesIO
 from os import environ
-from typing import Dict, Optional, Sequence
 from time import sleep
+from typing import Dict, Optional, Sequence
 
 import requests
 
@@ -26,6 +26,15 @@ from opentelemetry.exporter.otlp.proto.common._internal import (
     _create_exp_backoff_generator,
 )
 from opentelemetry.exporter.otlp.proto.common._log_encoder import encode_logs
+from opentelemetry.exporter.otlp.proto.http import (
+    _OTLP_HTTP_HEADERS,
+    Compression,
+)
+from opentelemetry.sdk._logs import LogData
+from opentelemetry.sdk._logs.export import (
+    LogExporter,
+    LogExportResult,
+)
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
@@ -33,26 +42,16 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_EXPORTER_OTLP_HEADERS,
-    OTEL_EXPORTER_OTLP_TIMEOUT,
-    OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
     OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
     OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY,
+    OTEL_EXPORTER_OTLP_LOGS_COMPRESSION,
+    OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
     OTEL_EXPORTER_OTLP_LOGS_HEADERS,
     OTEL_EXPORTER_OTLP_LOGS_TIMEOUT,
-    OTEL_EXPORTER_OTLP_LOGS_COMPRESSION,
-)
-from opentelemetry.sdk._logs import LogData
-from opentelemetry.sdk._logs.export import (
-    LogExporter,
-    LogExportResult,
-)
-from opentelemetry.exporter.otlp.proto.http import (
-    _OTLP_HTTP_HEADERS,
-    Compression,
+    OTEL_EXPORTER_OTLP_TIMEOUT,
 )
 from opentelemetry.util.re import parse_env_headers
-
 
 _logger = logging.getLogger(__name__)
 
@@ -64,7 +63,6 @@ DEFAULT_TIMEOUT = 10  # in seconds
 
 
 class OTLPLogExporter(LogExporter):
-
     _MAX_RETRY_TIMEOUT = 64
 
     def __init__(
@@ -163,7 +161,6 @@ class OTLPLogExporter(LogExporter):
         for delay in _create_exp_backoff_generator(
             max_value=self._MAX_RETRY_TIMEOUT
         ):
-
             if delay == self._MAX_RETRY_TIMEOUT:
                 return LogExportResult.FAILURE
 

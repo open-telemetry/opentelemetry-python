@@ -54,7 +54,6 @@ class TestAsyncio(OpenTelemetryTestCase):
     async def task(self, span):
         # Create a new Span for this task
         with self.tracer.start_active_span("task"):
-
             with self.tracer.scope_manager.activate(span, True):
                 # Simulate work strictly related to the initial Span
                 pass
