@@ -494,7 +494,7 @@ class PeriodicExportingMetricReader(MetricReader):
                 weak_at_fork = weakref.WeakMethod(self._at_fork_reinit)
 
                 os.register_at_fork(
-                    after_in_child=lambda: weak_at_fork()()
+                    after_in_child=lambda: weak_at_fork()()  # pylint: disable=unnecessary-lambda
                 )  # pylint: disable=protected-access
         elif self._export_interval_millis <= 0:
             raise ValueError(

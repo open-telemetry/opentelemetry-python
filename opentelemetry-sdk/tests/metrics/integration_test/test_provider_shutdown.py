@@ -18,13 +18,19 @@ import weakref
 from typing import Sequence
 from unittest import TestCase
 
-from opentelemetry.proto.metrics.v1.metrics_pb2 import Metric
 from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics._internal.export import MetricExporter, MetricExportResult, PeriodicExportingMetricReader
+from opentelemetry.sdk.metrics.export import (
+    Metric,
+    MetricExporter,
+    MetricExportResult,
+    PeriodicExportingMetricReader,
+)
 
 
 class FakeMetricsExporter(MetricExporter):
-    def __init__(self, wait=0, preferred_temporality=None, preferred_aggregation=None):
+    def __init__(
+        self, wait=0, preferred_temporality=None, preferred_aggregation=None
+    ):
         self.wait = wait
         self.metrics = []
         self._shutdown = False
@@ -34,10 +40,10 @@ class FakeMetricsExporter(MetricExporter):
         )
 
     def export(
-            self,
-            metrics_data: Sequence[Metric],
-            timeout_millis: float = 10_000,
-            **kwargs,
+        self,
+        metrics_data: Sequence[Metric],
+        timeout_millis: float = 10_000,
+        **kwargs,
     ) -> MetricExportResult:
         time.sleep(self.wait)
         self.metrics.extend(metrics_data)
@@ -67,7 +73,9 @@ class TestMeterProviderShutdown(TestCase):
             return exporter_wr, reader_wr, provider_wr
 
         # When: the provider is shutdown
-        exporter_weakref, reader_weakref, provider_weakref = create_and_shutdown()
+        exporter_weakref, reader_weakref, provider_weakref = (
+            create_and_shutdown()
+        )
         gc.collect()
 
         # Then: the provider, exporter and reader should be garbage collected
