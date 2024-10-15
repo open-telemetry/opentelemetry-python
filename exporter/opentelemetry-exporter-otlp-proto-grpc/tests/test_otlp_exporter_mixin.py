@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import threading
+import time
 from logging import WARNING
 from time import time_ns
 from types import MethodType
@@ -65,7 +66,7 @@ class TestOTLPExporterMixin(TestCase):
                 environ_to_compression("test_invalid")
 
     @patch(
-        "opentelemetry.exporter.otlp.proto.grpc.exporter._create_exp_backoff_generator"
+        "opentelemetry.exporter.otlp.proto.common.exporter._create_exp_backoff_generator"
     )
     def test_export_warning(self, mock_expo):
         mock_expo.configure_mock(**{"return_value": [0]})
@@ -88,6 +89,9 @@ class TestOTLPExporterMixin(TestCase):
             ) -> ExportServiceRequestT:
                 pass
 
+            def export(self, data):
+                return self._exporter.export_with_retry(data)
+
             @property
             def _exporting(self) -> str:
                 return "mock"
@@ -95,8 +99,7 @@ class TestOTLPExporterMixin(TestCase):
         otlp_mock_exporter = OTLPMockExporter()
 
         with self.assertLogs(level=WARNING) as warning:
-            # pylint: disable=protected-access
-            otlp_mock_exporter._export(Mock())
+            otlp_mock_exporter.export(Mock())
             self.assertEqual(
                 warning.records[0].message,
                 "Failed to export mock to localhost:4317, error code: None",
@@ -112,15 +115,15 @@ class TestOTLPExporterMixin(TestCase):
         rpc_error.trailing_metadata = MethodType(trailing_metadata, rpc_error)
 
         with self.assertLogs(level=WARNING) as warning:
-            # pylint: disable=protected-access
-            otlp_mock_exporter._export([])
+            otlp_mock_exporter.export([])
             self.assertEqual(
                 warning.records[0].message,
                 (
                     "Transient error StatusCode.CANCELLED encountered "
-                    "while exporting mock to localhost:4317, retrying in 0s."
+                    "while exporting mock to localhost:4317"
                 ),
             )
+        self.assertEqual(warning.records[1].message, "Retrying in 0.00s")
 
     def test_shutdown(self):
         result_mock = Mock()
@@ -134,6 +137,9 @@ class TestOTLPExporterMixin(TestCase):
             ) -> ExportServiceRequestT:
                 pass
 
+            def export(self, data):
+                return self._exporter.export_with_retry(data)
+
             @property
             def _exporting(self) -> str:
                 return "mock"
@@ -141,21 +147,21 @@ class TestOTLPExporterMixin(TestCase):
         otlp_mock_exporter = OTLPMockExporter()
 
         with self.assertLogs(level=WARNING) as warning:
-            # pylint: disable=protected-access
             self.assertEqual(
-                otlp_mock_exporter._export(data={}), result_mock.SUCCESS
+                otlp_mock_exporter.export(data={}), result_mock.SUCCESS
             )
             otlp_mock_exporter.shutdown()
-            # pylint: disable=protected-access
             self.assertEqual(
-                otlp_mock_exporter._export(data={}), result_mock.FAILURE
+                otlp_mock_exporter.export(data={}), result_mock.FAILURE
             )
             self.assertEqual(
                 warning.records[0].message,
                 "Exporter already shutdown, ignoring batch",
             )
 
-    def test_shutdown_wait_last_export(self):
+    def test_shutdown_wait_for_last_export_finishing_within_shutdown_timeout(
+        self,
+    ):
         result_mock = Mock()
         rpc_error = RpcError()
 
@@ -183,6 +189,79 @@ class TestOTLPExporterMixin(TestCase):
             ) -> ExportServiceRequestT:
                 pass
 
+            def export(self, data):
+                return self._exporter.export_with_retry(data)
+
+            @property
+            def _exporting(self) -> str:
+                return "mock"
+
+        otlp_mock_exporter = OTLPMockExporter(timeout=0.05)
+
+        # pylint: disable=protected-access
+        export_thread = threading.Thread(
+            target=otlp_mock_exporter.export, args=({},)
+        )
+        export_thread.start()
+        try:
+            # pylint: disable=protected-access
+
+            # Wait for the export thread to hold the lock. Since the main thread is not synchronized
+            # with the export thread, the thread may not be ready yet.
+            for _ in range(5):
+                if otlp_mock_exporter._exporter._export_lock.locked():
+                    break
+                time.sleep(0.01)
+            self.assertTrue(otlp_mock_exporter._exporter._export_lock.locked())
+
+            # 6 retries with a fixed retry delay of 10ms (see TraceServiceServicerUNAVAILABLEDelay)
+            # The default shutdown timeout is 30 seconds
+            # This means the retries will finish long before the shutdown flag will be set
+            start_time = time_ns()
+            otlp_mock_exporter.shutdown()
+            now = time_ns()
+            # Verify that the shutdown method finished within the shutdown timeout
+            self.assertLessEqual(now, (start_time + 3e10))
+            self.assertTrue(otlp_mock_exporter._shutdown)
+            self.assertFalse(
+                otlp_mock_exporter._exporter._export_lock.locked()
+            )
+        finally:
+            export_thread.join()
+
+    def test_shutdown_wait_for_last_export_not_finishing_within_shutdown_timeout(
+        self,
+    ):
+        result_mock = Mock()
+        rpc_error = RpcError()
+
+        def code(self):
+            return StatusCode.UNAVAILABLE
+
+        def trailing_metadata(self):
+            return {
+                "google.rpc.retryinfo-bin": RetryInfo(
+                    retry_delay=Duration(nanos=int(1e7))
+                ).SerializeToString()
+            }
+
+        rpc_error.code = MethodType(code, rpc_error)
+        rpc_error.trailing_metadata = MethodType(trailing_metadata, rpc_error)
+
+        class OTLPMockExporter(OTLPExporterMixin):
+            _result = result_mock
+            _stub = Mock(
+                **{"return_value": Mock(**{"Export.side_effect": rpc_error})}
+            )
+
+            def _translate_data(
+                self, data: Sequence[SDKDataT]
+            ) -> ExportServiceRequestT:
+                pass
+
+            def export(self, data):
+                return self._exporter.export_with_retry(data)
+
             @property
             def _exporting(self) -> str:
                 return "mock"
@@ -191,20 +270,29 @@ class TestOTLPExporterMixin(TestCase):
 
         # pylint: disable=protected-access
         export_thread = threading.Thread(
-            target=otlp_mock_exporter._export, args=({},)
+            target=otlp_mock_exporter.export, args=({},)
         )
         export_thread.start()
         try:
             # pylint: disable=protected-access
-            self.assertTrue(otlp_mock_exporter._export_lock.locked())
-            # delay is 1 second while the default shutdown timeout is 30_000 milliseconds
+
+            # Wait for the export thread to hold the lock. Since the main thread is not synchronized
+            # with the export thread, the thread may not be ready yet.
+            for _ in range(5):
+                if otlp_mock_exporter._exporter._export_lock.locked():
+                    break
+                time.sleep(0.01)
+            self.assertTrue(otlp_mock_exporter._exporter._export_lock.locked())
+
+            # 6 retries with a fixed retry delay of 10ms (see TraceServiceServicerUNAVAILABLEDelay)
+            # The default shutdown timeout is 30 seconds
+            # This means the retries will finish long before the shutdown flag will be set
             start_time = time_ns()
-            otlp_mock_exporter.shutdown()
+            otlp_mock_exporter.shutdown(0.001)
             now = time_ns()
-            self.assertGreaterEqual(now, (start_time + 30 / 1000))
-            # pylint: disable=protected-access
+            # Verify that the shutdown method finished within the shutdown timeout
+            self.assertLessEqual(now, (start_time + 3e10))
             self.assertTrue(otlp_mock_exporter._shutdown)
-            # pylint: disable=protected-access
-            self.assertFalse(otlp_mock_exporter._export_lock.locked())
         finally:
             export_thread.join()
+        self.assertFalse(otlp_mock_exporter._exporter._export_lock.locked())

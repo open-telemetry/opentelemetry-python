@@ -15,14 +15,19 @@
 # pylint: disable=protected-access
 
 import unittest
+from time import time
 from typing import List
 from unittest.mock import MagicMock, Mock, call, patch
 
 import requests
 import responses
 from google.protobuf.json_format import MessageToDict
+from responses.registries import OrderedRegistry
 
 from opentelemetry._logs import SeverityNumber
+from opentelemetry.exporter.otlp.proto.common.exporter import (
+    RetryableExportError,
+)
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http._log_exporter import (
     DEFAULT_COMPRESSION,
@@ -77,7 +82,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         self.assertEqual(exporter._certificate_file, True)
         self.assertEqual(exporter._client_certificate_file, None)
         self.assertEqual(exporter._client_key_file, None)
-        self.assertEqual(exporter._timeout, DEFAULT_TIMEOUT)
+        self.assertEqual(exporter._exporter._timeout_sec, DEFAULT_TIMEOUT)
         self.assertIs(exporter._compression, DEFAULT_COMPRESSION)
         self.assertEqual(exporter._headers, {})
         self.assertIsInstance(exporter._session, requests.Session)
@@ -119,7 +124,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             exporter._client_certificate_file, "logs/client-cert.pem"
         )
         self.assertEqual(exporter._client_key_file, "logs/client-key.pem")
-        self.assertEqual(exporter._timeout, 40)
+        self.assertEqual(exporter._exporter._timeout_sec, 40)
         self.assertIs(exporter._compression, Compression.Deflate)
         self.assertEqual(
             exporter._headers,
@@ -160,7 +165,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         self.assertEqual(exporter._certificate_file, "/hello.crt")
         self.assertEqual(exporter._client_certificate_file, "/client-cert.pem")
         self.assertEqual(exporter._client_key_file, "/client-key.pem")
-        self.assertEqual(exporter._timeout, 70)
+        self.assertEqual(exporter._exporter._timeout_sec, 70)
         self.assertIs(exporter._compression, Compression.NoCompression)
         self.assertEqual(
             exporter._headers,
@@ -192,12 +197,27 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             exporter._client_certificate_file, ENV_CLIENT_CERTIFICATE
         )
         self.assertEqual(exporter._client_key_file, ENV_CLIENT_KEY)
-        self.assertEqual(exporter._timeout, int(ENV_TIMEOUT))
+        self.assertEqual(exporter._exporter._timeout_sec, int(ENV_TIMEOUT))
         self.assertIs(exporter._compression, Compression.Gzip)
         self.assertEqual(
             exporter._headers, {"envheader1": "val1", "envheader2": "val2"}
         )
         self.assertIsInstance(exporter._session, requests.Session)
+
+    @patch(
+        "opentelemetry.exporter.otlp.proto.http._log_exporter.OTLPLogExporter._export",
+        side_effect=RetryableExportError(None),
+    )
+    def test_export_uses_arg_timeout_when_given(self, export_mock) -> None:
+        exporter = OTLPLogExporter(
+            endpoint="http://traces.example.com/export", timeout=20
+        )
+
+        with self.assertLogs(level="WARNING"):
+            start = time()
+            exporter.export(self._get_sdk_log_data(), timeout_millis=100.0)
+            duration = time() - start
+        self.assertAlmostEqual(duration, 0.1, places=1)
 
     @staticmethod
     def export_log_and_deserialize(log):
@@ -269,24 +289,28 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         else:
             self.fail("No log records found")
 
-    @responses.activate
-    @patch("opentelemetry.exporter.otlp.proto.http._log_exporter.sleep")
-    def test_exponential_backoff(self, mock_sleep):
-        # return a retryable error
-        responses.add(
-            responses.POST,
-            "http://logs.example.com/export",
-            json={"error": "something exploded"},
-            status=500,
-        )
+    # Pylint is wrong about this
+    @responses.activate(  # pylint: disable=unexpected-keyword-arg,no-value-for-parameter
+        registry=OrderedRegistry
+    )
+    def test_exponential_backoff(self):
+        for status in [500, 500, 500, 200]:
+            responses.add(
+                responses.POST,
+                "http://logs.example.com/export",
+                json={"error": "something exploded"},
+                status=status,
+            )
 
         exporter = OTLPLogExporter(endpoint="http://logs.example.com/export")
         logs = self._get_sdk_log_data()
 
-        exporter.export(logs)
-        mock_sleep.assert_has_calls(
-            [call(1), call(2), call(4), call(8), call(16), call(32)]
-        )
+        with patch.object(
+            exporter._exporter._shutdown,  # pylint: disable=protected-access
+            "wait",
+        ) as wait_mock:
+            exporter.export(logs)
+        wait_mock.assert_has_calls([call(1), call(2), call(4)])
 
     @staticmethod
     def _get_sdk_log_data() -> List[LogData]:
@@ -358,12 +382,14 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
 
         return [log1, log2, log3, log4]
 
-    @patch.object(OTLPLogExporter, "_export", return_value=Mock(ok=True))
-    def test_2xx_status_code(self, mock_otlp_metric_exporter):
+    def test_2xx_status_code(self):
         """
         Test that any HTTP 2XX code returns a successful result
         """
 
         self.assertEqual(
-            OTLPLogExporter().export(MagicMock()), LogExportResult.SUCCESS
+            OTLPLogExporter(
+                session=Mock(**{"post.return_value": Mock(ok=True)})
+            ).export(MagicMock()),
+            LogExportResult.SUCCESS,
         )

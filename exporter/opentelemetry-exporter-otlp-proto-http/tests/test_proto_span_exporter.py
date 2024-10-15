@@ -13,11 +13,16 @@
 # limitations under the License.
 
 import unittest
+from time import time
 from unittest.mock import MagicMock, Mock, call, patch
 
 import requests
 import responses
+from responses.registries import OrderedRegistry
 
+from opentelemetry.exporter.otlp.proto.common.exporter import (
+    RetryableExportError,
+)
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     DEFAULT_COMPRESSION,
@@ -66,7 +71,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
         self.assertEqual(exporter._certificate_file, True)
         self.assertEqual(exporter._client_certificate_file, None)
         self.assertEqual(exporter._client_key_file, None)
-        self.assertEqual(exporter._timeout, DEFAULT_TIMEOUT)
+        self.assertEqual(exporter._exporter._timeout_sec, DEFAULT_TIMEOUT)
         self.assertIs(exporter._compression, DEFAULT_COMPRESSION)
         self.assertEqual(exporter._headers, {})
         self.assertIsInstance(exporter._session, requests.Session)
@@ -108,7 +113,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
             exporter._client_certificate_file, "traces/client-cert.pem"
         )
         self.assertEqual(exporter._client_key_file, "traces/client-key.pem")
-        self.assertEqual(exporter._timeout, 40)
+        self.assertEqual(exporter._exporter._timeout_sec, 40)
         self.assertIs(exporter._compression, Compression.Deflate)
         self.assertEqual(
             exporter._headers,
@@ -151,7 +156,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
             exporter._client_certificate_file, "path/to/client-cert.pem"
         )
         self.assertEqual(exporter._client_key_file, "path/to/client-key.pem")
-        self.assertEqual(exporter._timeout, 20)
+        self.assertEqual(exporter._exporter._timeout_sec, 20)
         self.assertIs(exporter._compression, Compression.NoCompression)
         self.assertEqual(
             exporter._headers,
@@ -179,7 +184,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
             exporter._client_certificate_file, OS_ENV_CLIENT_CERTIFICATE
         )
         self.assertEqual(exporter._client_key_file, OS_ENV_CLIENT_KEY)
-        self.assertEqual(exporter._timeout, int(OS_ENV_TIMEOUT))
+        self.assertEqual(exporter._exporter._timeout_sec, int(OS_ENV_TIMEOUT))
         self.assertIs(exporter._compression, Compression.Gzip)
         self.assertEqual(
             exporter._headers, {"envheader1": "val1", "envheader2": "val2"}
@@ -232,17 +237,43 @@ class TestOTLPSpanExporter(unittest.TestCase):
                 ),
             )
 
-    # pylint: disable=no-self-use
-    @responses.activate
-    @patch("opentelemetry.exporter.otlp.proto.http.trace_exporter.sleep")
-    def test_exponential_backoff(self, mock_sleep):
-        # return a retryable error
-        responses.add(
-            responses.POST,
-            "http://traces.example.com/export",
-            json={"error": "something exploded"},
-            status=500,
+    @patch(
+        "opentelemetry.exporter.otlp.proto.http.trace_exporter.OTLPSpanExporter._export",
+        side_effect=RetryableExportError(None),
+    )
+    def test_export_uses_arg_timeout_when_given(self, export_mock) -> None:
+        exporter = OTLPSpanExporter(
+            endpoint="http://traces.example.com/export", timeout=20
         )
+
+        span = _Span(
+            "abc",
+            context=Mock(
+                trace_state={"a": "b", "c": "d"},
+                span_id=10217189687419569865,
+                trace_id=67545097771067222548457157018666467027,
+            ),
+        )
+
+        with self.assertLogs(level="WARNING"):
+            start = time()
+            exporter.export([span], timeout_millis=100.0)
+            duration = time() - start
+        self.assertAlmostEqual(duration, 0.1, places=1)
+
+    # pylint: disable=no-self-use
+    # Pylint is wrong about this
+    @responses.activate(  # pylint: disable=unexpected-keyword-arg,no-value-for-parameter
+        registry=OrderedRegistry
+    )
+    def test_exponential_backoff(self):
+        for status in [500, 500, 500, 200]:
+            responses.add(
+                responses.POST,
+                "http://traces.example.com/export",
+                json={"error": "something exploded"},
+                status=status,
+            )
 
         exporter = OTLPSpanExporter(
             endpoint="http://traces.example.com/export"
@@ -258,17 +289,21 @@ class TestOTLPSpanExporter(unittest.TestCase):
             ),
         )
 
-        exporter.export([span])
-        mock_sleep.assert_has_calls(
-            [call(1), call(2), call(4), call(8), call(16), call(32)]
-        )
+        with patch.object(
+            exporter._exporter._shutdown,
+            "wait",  # pylint: disable=protected-access
+        ) as wait_mock:
+            exporter.export([span])
+        wait_mock.assert_has_calls([call(1), call(2), call(4)])
 
-    @patch.object(OTLPSpanExporter, "_export", return_value=Mock(ok=True))
-    def test_2xx_status_code(self, mock_otlp_metric_exporter):
+    def test_2xx_status_code(self):
         """
         Test that any HTTP 2XX code returns a successful result
         """
 
         self.assertEqual(
-            OTLPSpanExporter().export(MagicMock()), SpanExportResult.SUCCESS
+            OTLPSpanExporter(
+                session=Mock(**{"post.return_value": Mock(ok=True)})
+            ).export(MagicMock()),
+            SpanExportResult.SUCCESS,
         )
