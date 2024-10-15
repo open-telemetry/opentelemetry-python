@@ -63,7 +63,6 @@ class ChildMeter(Meter):
 class TestMeter(TestCase):
     # pylint: disable=no-member
     def test_repeated_instrument_names(self):
-
         try:
             test_meter = NoOpMeter("name")
 

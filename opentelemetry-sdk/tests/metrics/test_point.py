@@ -36,7 +36,6 @@ from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 class TestToJson(TestCase):
     @classmethod
     def setUpClass(cls):
-
         cls.attributes_0 = {
             "a": "b",
             "b": True,
@@ -215,7 +214,6 @@ class TestToJson(TestCase):
         cls.metrics_data_0_str = f'{{"resource_metrics": [{cls.resource_metrics_0_str}, {cls.resource_metrics_1_str}]}}'
 
     def test_number_data_point(self):
-
         self.assertEqual(
             self.number_data_point_0.to_json(indent=None),
             self.number_data_point_0_str,
@@ -226,7 +224,6 @@ class TestToJson(TestCase):
         )
 
     def test_histogram_data_point(self):
-
         self.assertEqual(
             self.histogram_data_point_0.to_json(indent=None),
             self.histogram_data_point_0_str,
@@ -237,34 +234,28 @@ class TestToJson(TestCase):
         )
 
     def test_exp_histogram_data_point(self):
-
         self.assertEqual(
             self.exp_histogram_data_point_0.to_json(indent=None),
             self.exp_histogram_data_point_0_str,
         )
 
     def test_sum(self):
-
         self.assertEqual(self.sum_0.to_json(indent=None), self.sum_0_str)
 
     def test_gauge(self):
-
         self.assertEqual(self.gauge_0.to_json(indent=None), self.gauge_0_str)
 
     def test_histogram(self):
-
         self.assertEqual(
             self.histogram_0.to_json(indent=None), self.histogram_0_str
         )
 
     def test_exp_histogram(self):
-
         self.assertEqual(
             self.exp_histogram_0.to_json(indent=None), self.exp_histogram_0_str
         )
 
     def test_metric(self):
-
         self.assertEqual(self.metric_0.to_json(indent=None), self.metric_0_str)
 
         self.assertEqual(self.metric_1.to_json(indent=None), self.metric_1_str)
@@ -272,7 +263,6 @@ class TestToJson(TestCase):
         self.assertEqual(self.metric_2.to_json(indent=None), self.metric_2_str)
 
     def test_scope_metrics(self):
-
         self.assertEqual(
             self.scope_metrics_0.to_json(indent=None), self.scope_metrics_0_str
         )
@@ -281,7 +271,6 @@ class TestToJson(TestCase):
         )
 
     def test_resource_metrics(self):
-
         self.assertEqual(
             self.resource_metrics_0.to_json(indent=None),
             self.resource_metrics_0_str,
@@ -292,7 +281,6 @@ class TestToJson(TestCase):
         )
 
     def test_metrics_data(self):
-
         self.assertEqual(
             self.metrics_data_0.to_json(indent=None), self.metrics_data_0_str
         )

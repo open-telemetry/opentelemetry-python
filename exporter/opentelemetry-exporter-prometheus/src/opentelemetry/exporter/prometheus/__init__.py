@@ -88,14 +88,14 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_PROMETHEUS_HOST,
     OTEL_EXPORTER_PROMETHEUS_PORT,
 )
-from opentelemetry.sdk.metrics import Counter
-from opentelemetry.sdk.metrics import Histogram as HistogramInstrument
 from opentelemetry.sdk.metrics import (
+    Counter,
     ObservableCounter,
     ObservableGauge,
     ObservableUpDownCounter,
     UpDownCounter,
 )
+from opentelemetry.sdk.metrics import Histogram as HistogramInstrument
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     Gauge,
@@ -290,7 +290,6 @@ class _CustomCollector:
                     isinstance(metric.data, Sum)
                     and not should_convert_sum_to_gauge
                 ):
-
                     metric_family_id = "|".join(
                         [pre_metric_family_id, CounterMetricFamily.__name__]
                     )
@@ -311,7 +310,6 @@ class _CustomCollector:
                     isinstance(metric.data, Gauge)
                     or should_convert_sum_to_gauge
                 ):
-
                     metric_family_id = "|".join(
                         [pre_metric_family_id, GaugeMetricFamily.__name__]
                     )
@@ -332,7 +330,6 @@ class _CustomCollector:
                         metric_family_id
                     ].add_metric(labels=label_values, value=value)
                 elif isinstance(metric.data, Histogram):
-
                     metric_family_id = "|".join(
                         [pre_metric_family_id, HistogramMetricFamily.__name__]
                     )

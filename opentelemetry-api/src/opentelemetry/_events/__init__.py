@@ -31,7 +31,6 @@ _logger = getLogger(__name__)
 
 
 class Event(LogRecord):
-
     def __init__(
         self,
         name: str,
@@ -58,7 +57,6 @@ class Event(LogRecord):
 
 
 class EventLogger(ABC):
-
     def __init__(
         self,
         name: str,
@@ -77,7 +75,6 @@ class EventLogger(ABC):
 
 
 class NoOpEventLogger(EventLogger):
-
     def emit(self, event: Event) -> None:
         pass
 
@@ -119,7 +116,6 @@ class ProxyEventLogger(EventLogger):
 
 
 class EventLoggerProvider(ABC):
-
     @abstractmethod
     def get_event_logger(
         self,
@@ -132,7 +128,6 @@ class EventLoggerProvider(ABC):
 
 
 class NoOpEventLoggerProvider(EventLoggerProvider):
-
     def get_event_logger(
         self,
         name: str,
@@ -146,7 +141,6 @@ class NoOpEventLoggerProvider(EventLoggerProvider):
 
 
 class ProxyEventLoggerProvider(EventLoggerProvider):
-
     def get_event_logger(
         self,
         name: str,
@@ -175,7 +169,6 @@ _PROXY_EVENT_LOGGER_PROVIDER = ProxyEventLoggerProvider()
 
 
 def get_event_logger_provider() -> EventLoggerProvider:
-
     global _EVENT_LOGGER_PROVIDER  # pylint: disable=global-variable-not-assigned
     if _EVENT_LOGGER_PROVIDER is None:
         if _OTEL_PYTHON_EVENT_LOGGER_PROVIDER not in environ:
@@ -208,7 +201,6 @@ def _set_event_logger_provider(
 def set_event_logger_provider(
     event_logger_provider: EventLoggerProvider,
 ) -> None:
-
     _set_event_logger_provider(event_logger_provider, log=True)
 
 

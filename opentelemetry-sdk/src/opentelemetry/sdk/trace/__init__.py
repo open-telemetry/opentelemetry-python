@@ -619,7 +619,6 @@ class SpanLimits:
         max_attribute_length: Optional[int] = None,
         max_span_attribute_length: Optional[int] = None,
     ):
-
         # span events and links count
         self.max_events = self._from_env_if_absent(
             max_events,
@@ -726,12 +725,10 @@ _UnsetLimits = SpanLimits(
 )
 
 # not removed for backward compat. please use SpanLimits instead.
-SPAN_ATTRIBUTE_COUNT_LIMIT = (
-    SpanLimits._from_env_if_absent(  # pylint: disable=protected-access
-        None,
-        OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
-        _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
-    )
+SPAN_ATTRIBUTE_COUNT_LIMIT = SpanLimits._from_env_if_absent(  # pylint: disable=protected-access
+    None,
+    OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
+    _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
 )
 
 
@@ -890,7 +887,6 @@ class Span(trace_api.Span, ReadableSpan):
         context: SpanContext,
         attributes: types.Attributes = None,
     ) -> None:
-
         if not _is_valid_link(context, attributes):
             return
 
@@ -1118,7 +1114,6 @@ class Tracer(trace_api.Tracer):
         record_exception: bool = True,
         set_status_on_exception: bool = True,
     ) -> trace_api.Span:
-
         parent_span_context = trace_api.get_current_span(
             context
         ).get_span_context()

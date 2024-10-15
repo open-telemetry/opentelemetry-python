@@ -37,9 +37,7 @@ def _load_runtime_context() -> _RuntimeContext:
     # environment variables
     default_context = "contextvars_context"
 
-    configured_context = environ.get(
-        OTEL_PYTHON_CONTEXT, default_context
-    )  # type: str
+    configured_context = environ.get(OTEL_PYTHON_CONTEXT, default_context)  # type: str
 
     try:
         return next(  # type: ignore

@@ -58,5 +58,4 @@ mkdir -p ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semcon
 generate "./" "./${INCUBATING_DIR}/" "any"
 
 cd "$ROOT_DIR"
-${ROOT_DIR}/.tox/lint/bin/black --config pyproject.toml ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv
-${ROOT_DIR}/.tox/lint/bin/isort ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv
+tox -e ruff

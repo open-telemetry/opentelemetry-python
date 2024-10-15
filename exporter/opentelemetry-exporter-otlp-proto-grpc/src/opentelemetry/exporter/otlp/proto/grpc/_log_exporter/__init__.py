@@ -12,10 +12,10 @@
 # limitations under the License.
 
 from os import environ
-from typing import Dict, Optional, Tuple, Union, Sequence
+from typing import Dict, Optional, Sequence, Tuple, Union
 from typing import Sequence as TypingSequence
-from grpc import ChannelCredentials, Compression
 
+from grpc import ChannelCredentials, Compression
 from opentelemetry.exporter.otlp.proto.common._log_encoder import encode_logs
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (
     OTLPExporterMixin,
@@ -28,10 +28,9 @@ from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2_grpc import (
     LogsServiceStub,
 )
-from opentelemetry.sdk._logs import LogRecord as SDKLogRecord
 from opentelemetry.sdk._logs import LogData
+from opentelemetry.sdk._logs import LogRecord as SDKLogRecord
 from opentelemetry.sdk._logs.export import LogExporter, LogExportResult
-
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
     OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE,
@@ -48,7 +47,6 @@ class OTLPLogExporter(
     LogExporter,
     OTLPExporterMixin[SDKLogRecord, ExportLogsServiceRequest, LogExportResult],
 ):
-
     _result = LogExportResult
     _stub = LogsServiceStub
 
