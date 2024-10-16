@@ -43,12 +43,16 @@ from opentelemetry.sdk.metrics import (
 )
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
-    ExponentialHistogram as ExponentialHistogramType,
     Gauge,
-    Histogram as HistogramType,
     MetricExporter,
     MetricsData,
     Sum,
+)
+from opentelemetry.sdk.metrics.export import (
+    ExponentialHistogram as ExponentialHistogramType,
+)
+from opentelemetry.sdk.metrics.export import (
+    Histogram as HistogramType,
 )
 from opentelemetry.sdk.metrics.view import (
     Aggregation,

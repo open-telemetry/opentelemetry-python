@@ -93,11 +93,13 @@ from opentelemetry.sdk.environment_variables import (
 from opentelemetry.sdk.metrics import (
     Counter,
     Exemplar,
-    Histogram as HistogramInstrument,
     ObservableCounter,
     ObservableGauge,
     ObservableUpDownCounter,
     UpDownCounter,
+)
+from opentelemetry.sdk.metrics import (
+    Histogram as HistogramInstrument,
 )
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,

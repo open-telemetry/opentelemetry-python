@@ -34,7 +34,7 @@ from opentelemetry.exporter.prometheus import (
 from opentelemetry.sdk.environment_variables import (
     OTEL_PYTHON_EXPERIMENTAL_DISABLE_PROMETHEUS_UNIT_NORMALIZATION,
 )
-from opentelemetry.sdk.metrics import MeterProvider, Exemplar
+from opentelemetry.sdk.metrics import Exemplar, MeterProvider
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     Histogram,
@@ -45,13 +45,13 @@ from opentelemetry.sdk.metrics.export import (
     ScopeMetrics,
 )
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.trace import format_span_id, format_trace_id
 from opentelemetry.test.metrictestutil import (
     _generate_gauge,
     _generate_histogram,
     _generate_sum,
     _generate_unsupported_metric,
 )
+from opentelemetry.trace import format_span_id, format_trace_id
 
 
 class TestPrometheusMetricReader(TestCase):
