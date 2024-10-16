@@ -77,8 +77,8 @@ class ExemplarBucket:
         self.__value: Union[int, float] = 0
         self.__attributes: Attributes = None
         self.__time_unix_nano: int = 0
-        self.__span_id: Optional[str] = None
-        self.__trace_id: Optional[str] = None
+        self.__span_id: Optional[int] = None
+        self.__trace_id: Optional[int] = None
         self.__offered: bool = False
 
     def offer(

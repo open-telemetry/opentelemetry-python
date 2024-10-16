@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4182](https://github.com/open-telemetry/opentelemetry-python/pull/4182))
 - sdk: Implementation of exemplars
   ([#4094](https://github.com/open-telemetry/opentelemetry-python/pull/4094))
+- sdk: Add exemplars to the Prometheus exporter
+  ([#4178](https://github.com/open-telemetry/opentelemetry-python/pull/4178))
 - Implement events sdk
   ([#4176](https://github.com/open-telemetry/opentelemetry-python/pull/4176))
 - Update semantic conventions to version 1.28.0
