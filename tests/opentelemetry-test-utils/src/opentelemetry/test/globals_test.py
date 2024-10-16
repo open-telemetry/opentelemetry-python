@@ -51,7 +51,9 @@ def reset_event_globals() -> None:
     """WARNING: only use this for tests."""
     events_api._EVENT_LOGGER_PROVIDER_SET_ONCE = Once()  # type: ignore[attr-defined]
     events_api._EVENT_LOGGER_PROVIDER = None  # type: ignore[attr-defined]
-    events_api._PROXY_EVENT_LOGGER_PROVIDER = events_api.ProxyEventLoggerProvider()  # type: ignore[attr-defined]
+    events_api._PROXY_EVENT_LOGGER_PROVIDER = (
+        events_api.ProxyEventLoggerProvider()
+    )  # type: ignore[attr-defined]
 
 
 class TraceGlobalsTest(unittest.TestCase):

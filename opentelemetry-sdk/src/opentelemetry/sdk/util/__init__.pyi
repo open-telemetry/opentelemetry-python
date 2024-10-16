@@ -30,7 +30,7 @@ _VT = TypeVar("_VT")
 
 def ns_to_iso_str(nanoseconds: int) -> str: ...
 def get_dict_as_key(
-    labels: Mapping[str, AttributeValue]
+    labels: Mapping[str, AttributeValue],
 ) -> AttributesAsKey: ...
 
 # pylint: disable=no-self-use
@@ -52,9 +52,7 @@ class BoundedList(Sequence[_T]):
     def append(self, item: _T): ...
     def extend(self, seq: Sequence[_T]): ...
     @classmethod
-    def from_seq(
-        cls, maxlen: int, seq: Iterable[_T]
-    ) -> BoundedList[_T]: ...  # pylint: disable=undefined-variable
+    def from_seq(cls, maxlen: int, seq: Iterable[_T]) -> BoundedList[_T]: ...  # pylint: disable=undefined-variable
 
 class BoundedDict(MutableMapping[_KT, _VT]):
     """An ordered dict with a fixed max capacity.

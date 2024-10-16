@@ -55,15 +55,13 @@ from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.point import Buckets as BucketsPoint
 from opentelemetry.sdk.metrics._internal.point import (
     ExponentialHistogramDataPoint,
+    HistogramDataPoint,
+    NumberDataPoint,
+    Sum,
 )
 from opentelemetry.sdk.metrics._internal.point import Gauge as GaugePoint
 from opentelemetry.sdk.metrics._internal.point import (
     Histogram as HistogramPoint,
-)
-from opentelemetry.sdk.metrics._internal.point import (
-    HistogramDataPoint,
-    NumberDataPoint,
-    Sum,
 )
 from opentelemetry.util.types import Attributes
 
@@ -328,7 +326,6 @@ class _SumAggregation(_Aggregation[Sum]):
                     collection_aggregation_temporality
                     is AggregationTemporality.DELTA
                 ):
-
                     previous_collection_start_nano = (
                         self._previous_collection_start_nano
                     )
@@ -498,7 +495,6 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
     def aggregate(
         self, measurement: Measurement, should_sample_exemplar: bool = True
     ) -> None:
-
         with self._lock:
             if self._value is None:
                 self._value = self._get_empty_bucket_counts()
@@ -545,7 +541,6 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     collection_aggregation_temporality
                     is AggregationTemporality.DELTA
                 ):
-
                     previous_collection_start_nano = (
                         self._previous_collection_start_nano
                     )
@@ -765,7 +760,6 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 high = index
 
             if is_rescaling_needed:
-
                 scale_change = self._get_scale_change(low, high)
                 self._downscale(
                     scale_change,
@@ -851,7 +845,6 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     collection_aggregation_temporality
                     is AggregationTemporality.DELTA
                 ):
-
                     previous_collection_start_nano = (
                         self._previous_collection_start_nano
                     )
@@ -1062,7 +1055,6 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         current_scale,
         min_scale,
     ):
-
         (previous_point_low, previous_point_high) = self._get_low_high(
             previous_point_buckets, self._previous_scale, min_scale
         )
@@ -1100,7 +1092,6 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         return LogarithmMapping(scale)
 
     def _get_scale_change(self, low, high):
-
         change = 0
 
         while high - low >= self._max_size:
@@ -1113,7 +1104,6 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
     @staticmethod
     def _downscale(change: int, positive, negative):
-
         if change == 0:
             return
 
@@ -1132,13 +1122,11 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         min_scale,
         aggregation_temporality,
     ):
-
         current_change = current_scale - min_scale
 
         for current_bucket_index, current_bucket in enumerate(
             current_buckets.counts
         ):
-
             if current_bucket == 0:
                 continue
 
@@ -1235,7 +1223,6 @@ class DefaultAggregation(Aggregation):
         ],
         start_time_unix_nano: int,
     ) -> _Aggregation:
-
         # pylint: disable=too-many-return-statements
         if isinstance(instrument, Counter):
             return _SumAggregation(
@@ -1326,7 +1313,6 @@ class ExponentialBucketHistogramAggregation(Aggregation):
         ],
         start_time_unix_nano: int,
     ) -> _Aggregation:
-
         instrument_aggregation_temporality = AggregationTemporality.UNSPECIFIED
         if isinstance(instrument, Synchronous):
             instrument_aggregation_temporality = AggregationTemporality.DELTA
@@ -1392,7 +1378,6 @@ class ExplicitBucketHistogramAggregation(Aggregation):
         ],
         start_time_unix_nano: int,
     ) -> _Aggregation:
-
         instrument_aggregation_temporality = AggregationTemporality.UNSPECIFIED
         if isinstance(instrument, Synchronous):
             instrument_aggregation_temporality = AggregationTemporality.DELTA
@@ -1426,7 +1411,6 @@ class SumAggregation(Aggregation):
         ],
         start_time_unix_nano: int,
     ) -> _Aggregation:
-
         instrument_aggregation_temporality = AggregationTemporality.UNSPECIFIED
         if isinstance(instrument, Synchronous):
             instrument_aggregation_temporality = AggregationTemporality.DELTA

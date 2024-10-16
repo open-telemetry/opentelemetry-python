@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-from typing import List
+from os import environ
+from typing import Dict, List
 
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _encode_attributes,
@@ -45,17 +46,15 @@ from opentelemetry.sdk.metrics.export import (
     ExponentialHistogram as ExponentialHistogramType,
     Gauge,
     Histogram as HistogramType,
-    MetricsData,
     MetricExporter,
+    MetricsData,
     Sum,
 )
 from opentelemetry.sdk.metrics.view import (
     Aggregation,
-    ExponentialBucketHistogramAggregation,
     ExplicitBucketHistogramAggregation,
+    ExponentialBucketHistogramAggregation,
 )
-from os import environ
-from typing import Dict
 
 _logger = logging.getLogger(__name__)
 
@@ -66,7 +65,6 @@ class OTLPMetricExporterMixin:
         preferred_temporality: Dict[type, AggregationTemporality] = None,
         preferred_aggregation: Dict[type, Aggregation] = None,
     ) -> None:
-
         MetricExporter.__init__(
             self,
             preferred_temporality=self._get_temporality(preferred_temporality),
@@ -76,7 +74,6 @@ class OTLPMetricExporterMixin:
     def _get_temporality(
         self, preferred_temporality: Dict[type, AggregationTemporality]
     ) -> Dict[type, AggregationTemporality]:
-
         otel_exporter_otlp_metrics_temporality_preference = (
             environ.get(
                 OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
@@ -133,7 +130,6 @@ class OTLPMetricExporterMixin:
         self,
         preferred_aggregation: Dict[type, Aggregation],
     ) -> Dict[type, Aggregation]:
-
         otel_exporter_otlp_metrics_default_histogram_aggregation = environ.get(
             OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION,
             "explicit_bucket_histogram",
@@ -142,17 +138,14 @@ class OTLPMetricExporterMixin:
         if otel_exporter_otlp_metrics_default_histogram_aggregation == (
             "base2_exponential_bucket_histogram"
         ):
-
             instrument_class_aggregation = {
                 Histogram: ExponentialBucketHistogramAggregation(),
             }
 
         else:
-
             if otel_exporter_otlp_metrics_default_histogram_aggregation != (
                 "explicit_bucket_histogram"
             ):
-
                 _logger.warning(
                     (
                         "Invalid value for %s: %s, using explicit bucket "
@@ -302,7 +295,6 @@ def _encode_metric(metric, pb2_metric):
 
     elif isinstance(metric.data, ExponentialHistogramType):
         for data_point in metric.data.data_points:
-
             if data_point.positive.bucket_counts:
                 positive = pb2.ExponentialHistogramDataPoint.Buckets(
                     offset=data_point.positive.offset,

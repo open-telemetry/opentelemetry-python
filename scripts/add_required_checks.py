@@ -1,18 +1,23 @@
 # This script is to be used by maintainers by running it locally.
 
-from requests import put
-from os import environ
-from yaml import safe_load
 from json import dumps
+from os import environ
+
+from requests import put
+from yaml import safe_load
 
 job_names = ["EasyCLA"]
 
 # Check that the files below are all the workflow YAML files that should be
 # considered.
 for yml_file_name in [
-    "test_0", "test_1", "misc_0", "lint_0", "contrib_0", "check-links"
+    "test_0",
+    "test_1",
+    "misc_0",
+    "lint_0",
+    "contrib_0",
+    "check-links",
 ]:
-
     with open(f"../.github/workflows/{yml_file_name}.yml") as yml_file:
         job_names.extend(
             [job["name"] for job in safe_load(yml_file)["jobs"].values()]
@@ -35,9 +40,9 @@ response = put(
         # and read and write permissions must be granted for administration
         # permissions and read permissions must be granted for metadata
         # permissions.
-        "Authorization": f"token {environ.get('REQUIRED_CHECKS_TOKEN')}"
+        "Authorization": f"token {environ.get('REQUIRED_CHECKS_TOKEN')}",
     },
-    data=dumps({"contexts": job_names})
+    data=dumps({"contexts": job_names}),
 )
 
 if response.status_code == 200:

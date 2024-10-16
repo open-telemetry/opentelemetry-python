@@ -67,7 +67,7 @@ from itertools import chain
 from json import dumps
 from logging import getLogger
 from os import environ
-from typing import Deque, Dict, Iterable, Sequence, Tuple, Union, Optional
+from typing import Deque, Dict, Iterable, Optional, Sequence, Tuple, Union
 
 from prometheus_client import start_http_server
 from prometheus_client.core import (
@@ -78,6 +78,7 @@ from prometheus_client.core import (
     InfoMetricFamily,
 )
 from prometheus_client.core import Metric as PrometheusMetric
+from prometheus_client.samples import Exemplar as PrometheusExemplar
 
 from opentelemetry.exporter.prometheus._mapping import (
     map_unit,
@@ -107,11 +108,8 @@ from opentelemetry.sdk.metrics.export import (
     MetricsData,
     Sum,
 )
-from opentelemetry.util.types import Attributes
 from opentelemetry.trace import format_span_id, format_trace_id
-
-from prometheus_client.samples import Exemplar as PrometheusExemplar
-
+from opentelemetry.util.types import Attributes
 
 _logger = getLogger(__name__)
 
