@@ -55,6 +55,8 @@ from opentelemetry.trace import format_span_id, format_trace_id
 
 
 class TestPrometheusMetricReader(TestCase):
+    # pylint: disable=too-many-public-methods
+
     def setUp(self):
         self._mock_registry_register = Mock()
         self._registry_register_patch = patch(
