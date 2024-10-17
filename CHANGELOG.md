@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4222](https://github.com/open-telemetry/opentelemetry-python/pull/4222))
 - Record logger name as the instrumentation scope name
   ([#4208](https://github.com/open-telemetry/opentelemetry-python/pull/4208))
+- Drop `OTEL_PYTHON_EXPERIMENTAL_DISABLE_PROMETHEUS_UNIT_NORMALIZATION` environment variable
+  ([#4217](https://github.com/open-telemetry/opentelemetry-python/pull/4217))
 
 ## Version 1.27.0/0.48b0 (2024-08-28)
 
