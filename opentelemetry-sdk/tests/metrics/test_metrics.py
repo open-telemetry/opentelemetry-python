@@ -14,7 +14,7 @@
 
 # pylint: disable=protected-access,no-self-use
 
-
+import weakref
 from logging import WARNING
 from time import sleep
 from typing import Iterable, Sequence
@@ -66,7 +66,7 @@ class DummyMetricReader(MetricReader):
 
 class TestMeterProvider(ConcurrencyTestBase, TestCase):
     def tearDown(self):
-        MeterProvider._all_metric_readers = set()
+        MeterProvider._all_metric_readers = weakref.WeakSet()
 
     @patch.object(Resource, "create")
     def test_init_default(self, resource_patch):

@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import weakref
 from atexit import register, unregister
 from logging import getLogger
 from os import environ
@@ -386,7 +386,7 @@ class MeterProvider(APIMeterProvider):
     """
 
     _all_metric_readers_lock = Lock()
-    _all_metric_readers = set()
+    _all_metric_readers = weakref.WeakSet()
 
     def __init__(
         self,
