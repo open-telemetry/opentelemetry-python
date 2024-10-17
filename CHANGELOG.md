@@ -29,7 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4208](https://github.com/open-telemetry/opentelemetry-python/pull/4208))
 - Fix memory leak in exporter and reader
   ([#4224](https://github.com/open-telemetry/opentelemetry-python/pull/4224))
-
+- Drop `OTEL_PYTHON_EXPERIMENTAL_DISABLE_PROMETHEUS_UNIT_NORMALIZATION` environment variable
+  ([#4217](https://github.com/open-telemetry/opentelemetry-python/pull/4217))
 
 ## Version 1.27.0/0.48b0 (2024-08-28)
 
