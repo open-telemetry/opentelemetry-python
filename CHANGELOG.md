@@ -31,6 +31,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4224](https://github.com/open-telemetry/opentelemetry-python/pull/4224))
 - Drop `OTEL_PYTHON_EXPERIMENTAL_DISABLE_PROMETHEUS_UNIT_NORMALIZATION` environment variable
   ([#4217](https://github.com/open-telemetry/opentelemetry-python/pull/4217))
+- Improve compatibility with other logging libraries that override
+  `LogRecord.getMessage()` in order to customize message formatting
+  ([#4216](https://github.com/open-telemetry/opentelemetry-python/pull/4216))
 
 ## Version 1.27.0/0.48b0 (2024-08-28)
 
