@@ -47,7 +47,7 @@ sys.path[:0] = source_dirs + exp_dirs + shim_dirs
 # -- Project information -----------------------------------------------------
 
 project = "OpenTelemetry Python"
-docs_copyright = "OpenTelemetry Authors"  # pylint: disable=redefined-builtin
+copyright = "OpenTelemetry Authors"  # pylint: disable=redefined-builtin
 author = "OpenTelemetry Authors"
 
 
