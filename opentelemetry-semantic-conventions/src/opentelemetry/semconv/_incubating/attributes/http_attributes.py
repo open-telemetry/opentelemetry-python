@@ -74,7 +74,7 @@ The total size of the request in bytes. This should be the total number of bytes
 
 HTTP_REQUEST_CONTENT_LENGTH: Final = "http.request_content_length"
 """
-Deprecated: Replaced by `http.request.header.content-length`.
+Deprecated: Replaced by `http.request.header.<key>`.
 """
 
 HTTP_REQUEST_CONTENT_LENGTH_UNCOMPRESSED: Final = (
@@ -106,7 +106,7 @@ Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.http_a
 
 HTTP_RESPONSE_CONTENT_LENGTH: Final = "http.response_content_length"
 """
-Deprecated: Replaced by `http.response.header.content-length`.
+Deprecated: Replaced by `http.response.header.<key>`.
 """
 
 HTTP_RESPONSE_CONTENT_LENGTH_UNCOMPRESSED: Final = (
@@ -159,7 +159,9 @@ class HttpConnectionStateValues(Enum):
     """idle state."""
 
 
-@deprecated(reason="The attribute http.flavor is deprecated - Replaced by `network.protocol.name`")  # type: ignore
+@deprecated(
+    reason="The attribute http.flavor is deprecated - Replaced by `network.protocol.name`"
+)  # type: ignore
 class HttpFlavorValues(Enum):
     HTTP_1_0 = "1.0"
     """HTTP/1.0."""
@@ -175,7 +177,9 @@ class HttpFlavorValues(Enum):
     """QUIC protocol."""
 
 
-@deprecated(reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.http_attributes.HttpRequestMethodValues`.")  # type: ignore
+@deprecated(
+    reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.http_attributes.HttpRequestMethodValues`."
+)  # type: ignore
 class HttpRequestMethodValues(Enum):
     CONNECT = "CONNECT"
     """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.http_attributes.HttpRequestMethodValues.CONNECT`."""

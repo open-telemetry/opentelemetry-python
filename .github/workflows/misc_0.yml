@@ -124,8 +124,8 @@ jobs:
       - name: Run tests
         run: tox -e docs
 
-  docker-tests-proto3:
-    name: docker-tests-proto3
+  docker-tests-otlpexporter:
+    name: docker-tests-otlpexporter
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -140,10 +140,10 @@ jobs:
         run: pip install tox
 
       - name: Run tests
-        run: tox -e docker-tests-proto3
+        run: tox -e docker-tests-otlpexporter
 
-  docker-tests-proto4:
-    name: docker-tests-proto4
+  docker-tests-opencensus:
+    name: docker-tests-opencensus
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -158,7 +158,7 @@ jobs:
         run: pip install tox
 
       - name: Run tests
-        run: tox -e docker-tests-proto4
+        run: tox -e docker-tests-opencensus
 
   public-symbols-check:
     name: public-symbols-check
@@ -199,6 +199,11 @@ jobs:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
       - name: Install tox
         run: pip install tox
 
@@ -228,3 +233,21 @@ jobs:
 
       - name: Check workflows are up to date
         run: git diff --exit-code || (echo 'Generated workflows are out of date, run "tox -e generate-workflows" and commit the changes in this PR.' && exit 1)
+
+  ruff:
+    name: ruff
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Run tests
+        run: tox -e ruff

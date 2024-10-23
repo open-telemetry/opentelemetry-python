@@ -144,7 +144,6 @@ def translate_to_collector(spans: Sequence[ReadableSpan]):
 
         if span.events:
             for event in span.events:
-
                 collector_annotation = trace_pb2.Span.TimeEvent.Annotation(
                     description=trace_pb2.TruncatableString(value=event.name)
                 )

@@ -62,18 +62,33 @@ MESSAGING_CLIENT_PUBLISHED_MESSAGES: Final = (
     "messaging.client.published.messages"
 )
 """
-Number of messages producer attempted to publish to the broker
-Instrument: counter
-Unit: {message}
-Note: This metric MUST NOT count messages that were created haven't yet been attempted to be published.
+Deprecated: Replaced by `messaging.client.sent.messages`.
 """
 
 
 def create_messaging_client_published_messages(meter: Meter) -> Counter:
-    """Number of messages producer attempted to publish to the broker"""
+    """Deprecated. Use `messaging.client.sent.messages` instead"""
     return meter.create_counter(
         name=MESSAGING_CLIENT_PUBLISHED_MESSAGES,
-        description="Number of messages producer attempted to publish to the broker.",
+        description="Deprecated. Use `messaging.client.sent.messages` instead.",
+        unit="{message}",
+    )
+
+
+MESSAGING_CLIENT_SENT_MESSAGES: Final = "messaging.client.sent.messages"
+"""
+Number of messages producer attempted to send to the broker
+Instrument: counter
+Unit: {message}
+Note: This metric MUST NOT count messages that were created but haven't yet been sent.
+"""
+
+
+def create_messaging_client_sent_messages(meter: Meter) -> Counter:
+    """Number of messages producer attempted to send to the broker"""
+    return meter.create_counter(
+        name=MESSAGING_CLIENT_SENT_MESSAGES,
+        description="Number of messages producer attempted to send to the broker.",
         unit="{message}",
     )
 

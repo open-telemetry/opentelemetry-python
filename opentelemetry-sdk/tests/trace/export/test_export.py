@@ -179,7 +179,6 @@ class TestBatchSpanProcessor(ConcurrencyTestBase):
         },
     )
     def test_args_env_var(self):
-
         batch_span_processor = export.BatchSpanProcessor(
             MySpanExporter(destination=[])
         )
@@ -190,7 +189,6 @@ class TestBatchSpanProcessor(ConcurrencyTestBase):
         self.assertEqual(batch_span_processor.export_timeout_millis, 4)
 
     def test_args_env_var_defaults(self):
-
         batch_span_processor = export.BatchSpanProcessor(
             MySpanExporter(destination=[])
         )
@@ -210,7 +208,6 @@ class TestBatchSpanProcessor(ConcurrencyTestBase):
         },
     )
     def test_args_env_var_value_error(self):
-
         logger.disabled = True
         batch_span_processor = export.BatchSpanProcessor(
             MySpanExporter(destination=[])

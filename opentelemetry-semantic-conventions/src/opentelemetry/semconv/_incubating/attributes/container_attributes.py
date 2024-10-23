@@ -25,12 +25,12 @@ Note: If using embedded credentials or sensitive data, it is recommended to remo
 
 CONTAINER_COMMAND_ARGS: Final = "container.command_args"
 """
-All the command arguments (including the command/executable itself) run by the container. [2].
+All the command arguments (including the command/executable itself) run by the container.
 """
 
 CONTAINER_COMMAND_LINE: Final = "container.command_line"
 """
-The full command run by the container as a single string representing the full command. [2].
+The full command run by the container as a single string representing the full command.
 """
 
 CONTAINER_CPU_STATE: Final = "container.cpu.state"
@@ -38,9 +38,21 @@ CONTAINER_CPU_STATE: Final = "container.cpu.state"
 Deprecated: Replaced by `cpu.mode`.
 """
 
+CONTAINER_CSI_PLUGIN_NAME: Final = "container.csi.plugin.name"
+"""
+The name of the CSI ([Container Storage Interface](https://github.com/container-storage-interface/spec)) plugin used by the volume.
+Note: This can sometimes be referred to as a "driver" in CSI implementations. This should represent the `name` field of the GetPluginInfo RPC.
+"""
+
+CONTAINER_CSI_VOLUME_ID: Final = "container.csi.volume.id"
+"""
+The unique volume ID returned by the CSI ([Container Storage Interface](https://github.com/container-storage-interface/spec)) plugin.
+Note: This can sometimes be referred to as a "volume handle" in CSI implementations. This should represent the `Volume.volume_id` field in CSI spec.
+"""
+
 CONTAINER_ID: Final = "container.id"
 """
-Container ID. Usually a UUID, as for example used to [identify Docker containers](https://docs.docker.com/engine/reference/run/#container-identification). The UUID might be abbreviated.
+Container ID. Usually a UUID, as for example used to [identify Docker containers](https://docs.docker.com/engine/containers/run/#container-identification). The UUID might be abbreviated.
 """
 
 CONTAINER_IMAGE_ID: Final = "container.image.id"
@@ -88,7 +100,9 @@ The container runtime managing this container.
 """
 
 
-@deprecated(reason="The attribute container.cpu.state is deprecated - Replaced by `cpu.mode`")  # type: ignore
+@deprecated(
+    reason="The attribute container.cpu.state is deprecated - Replaced by `cpu.mode`"
+)  # type: ignore
 class ContainerCpuStateValues(Enum):
     USER = "user"
     """When tasks of the cgroup are in user mode (Linux). When all container processes are in user mode (Windows)."""

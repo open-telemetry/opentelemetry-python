@@ -53,13 +53,14 @@ Note that the OpenTelemetry project documents certain `"standard attributes"
 <https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/semantic_conventions/README.md>`_
 that have prescribed semantic meanings, for example ``service.name`` in the
 above example.
- """
+"""
 
 import abc
 import concurrent.futures
 import logging
 import os
 import platform
+import socket
 import sys
 import typing
 from json import dumps
@@ -105,6 +106,7 @@ FAAS_ID = ResourceAttributes.FAAS_ID
 FAAS_VERSION = ResourceAttributes.FAAS_VERSION
 FAAS_INSTANCE = ResourceAttributes.FAAS_INSTANCE
 HOST_NAME = ResourceAttributes.HOST_NAME
+HOST_ARCH = ResourceAttributes.HOST_ARCH
 HOST_TYPE = ResourceAttributes.HOST_TYPE
 HOST_IMAGE_NAME = ResourceAttributes.HOST_IMAGE_NAME
 HOST_IMAGE_ID = ResourceAttributes.HOST_IMAGE_ID
@@ -320,7 +322,6 @@ class ResourceDetector(abc.ABC):
 class OTELResourceDetector(ResourceDetector):
     # pylint: disable=no-self-use
     def detect(self) -> "Resource":
-
         env_resources_items = environ.get(OTEL_RESOURCE_ATTRIBUTES)
         env_resource_map = {}
 
@@ -467,6 +468,20 @@ class OsResourceDetector(ResourceDetector):
             {
                 OS_TYPE: os_type,
                 OS_VERSION: os_version,
+            }
+        )
+
+
+class _HostResourceDetector(ResourceDetector):
+    """
+    The HostResourceDetector detects the hostname and architecture attributes.
+    """
+
+    def detect(self) -> "Resource":
+        return Resource(
+            {
+                HOST_NAME: socket.gethostname(),
+                HOST_ARCH: platform.machine(),
             }
         )
 

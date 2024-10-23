@@ -129,7 +129,6 @@ environ_propagators = environ.get(
     "tracecontext,baggage",
 )
 
-
 if environ_propagators.lower() == "none":
     propagators = []
 else:
@@ -145,6 +144,8 @@ else:
                             group="opentelemetry_propagator",
                             name=propagator,
                         )
+
+
                     )
                 ).load()()
             )

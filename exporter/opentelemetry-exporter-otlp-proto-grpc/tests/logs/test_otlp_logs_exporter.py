@@ -24,7 +24,9 @@ from google.protobuf.duration_pb2 import (  # pylint: disable=no-name-in-module
     Duration,
 )
 from google.protobuf.json_format import MessageToDict
-from google.rpc.error_details_pb2 import RetryInfo
+from google.rpc.error_details_pb2 import (  # pylint: disable=no-name-in-module
+    RetryInfo,
+)
 from grpc import ChannelCredentials, Compression, StatusCode, server
 
 from opentelemetry._logs import SeverityNumber
@@ -41,11 +43,10 @@ from opentelemetry.proto.collector.logs.v1.logs_service_pb2_grpc import (
     LogsServiceServicer,
     add_LogsServiceServicer_to_server,
 )
-from opentelemetry.proto.common.v1.common_pb2 import AnyValue
+from opentelemetry.proto.common.v1.common_pb2 import AnyValue, KeyValue
 from opentelemetry.proto.common.v1.common_pb2 import (
     InstrumentationScope as PB2InstrumentationScope,
 )
-from opentelemetry.proto.common.v1.common_pb2 import KeyValue
 from opentelemetry.proto.logs.v1.logs_pb2 import LogRecord as PB2LogRecord
 from opentelemetry.proto.logs.v1.logs_pb2 import ResourceLogs, ScopeLogs
 from opentelemetry.proto.resource.v1.resource_pb2 import (
@@ -393,7 +394,6 @@ class TestOTLPLogExporter(TestCase):
     )
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
     def test_unavailable(self, mock_sleep, mock_expo):
-
         mock_expo.configure_mock(**{"return_value": [0.01]})
 
         add_LogsServiceServicer_to_server(
@@ -409,7 +409,6 @@ class TestOTLPLogExporter(TestCase):
     )
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
     def test_unavailable_delay(self, mock_sleep, mock_expo):
-
         mock_expo.configure_mock(**{"return_value": [1]})
 
         add_LogsServiceServicer_to_server(
@@ -474,7 +473,6 @@ class TestOTLPLogExporter(TestCase):
             self.fail("No log records found")
 
     def test_translate_log_data(self):
-
         expected = ExportLogsServiceRequest(
             resource_logs=[
                 ResourceLogs(

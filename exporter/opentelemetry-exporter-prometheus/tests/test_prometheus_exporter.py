@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from os import environ
 from textwrap import dedent
 from unittest import TestCase
 from unittest.mock import Mock, patch
@@ -27,9 +26,6 @@ from prometheus_client.core import (
 from opentelemetry.exporter.prometheus import (
     PrometheusMetricReader,
     _CustomCollector,
-)
-from opentelemetry.sdk.environment_variables import (
-    OTEL_PYTHON_EXPERIMENTAL_DISABLE_PROMETHEUS_UNIT_NORMALIZATION,
 )
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import (
@@ -321,7 +317,6 @@ class TestPrometheusMetricReader(TestCase):
             self.assertEqual(prometheus_metric.samples[0].labels["os"], "Unix")
 
     def test_check_value(self):
-
         collector = _CustomCollector()
 
         self.assertEqual(collector._check_value(1), "1")
@@ -335,7 +330,6 @@ class TestPrometheusMetricReader(TestCase):
         self.assertEqual(collector._check_value(None), "null")
 
     def test_multiple_collection_calls(self):
-
         metric_reader = PrometheusMetricReader()
         provider = MeterProvider(metric_readers=[metric_reader])
         meter = provider.get_meter("getting-started", "0.1.2")
@@ -547,25 +541,6 @@ class TestPrometheusMetricReader(TestCase):
                 # HELP test_counter_total foo
                 # TYPE test_counter_total counter
                 test_counter_total{a="1",b="true"} 1.0
-                """
-            ),
-        )
-
-    # TODO(#3929): remove this opt-out option
-    @patch.dict(
-        environ,
-        {
-            OTEL_PYTHON_EXPERIMENTAL_DISABLE_PROMETHEUS_UNIT_NORMALIZATION: "true"
-        },
-    )
-    def test_metric_name_with_unit_normalization_disabled(self):
-        self.verify_text_format(
-            _generate_sum(name="test_unit_not_normalized", value=1, unit="s"),
-            dedent(
-                """\
-                # HELP test_unit_not_normalized_s_total foo
-                # TYPE test_unit_not_normalized_s_total counter
-                test_unit_not_normalized_s_total{a="1",b="true"} 1.0
                 """
             ),
         )

@@ -80,11 +80,12 @@ The name of a collection (table, container) within the database.
 Note: It is RECOMMENDED to capture the value as provided by the application without attempting to do any case normalization.
 If the collection name is parsed from the query text, it SHOULD be the first collection name found in the query and it SHOULD match the value provided in the query text including any schema and database name prefix.
 For batch operations, if the individual operations are known to have the same collection name then that collection name SHOULD be used, otherwise `db.collection.name` SHOULD NOT be captured.
+This attribute has stability level RELEASE CANDIDATE.
 """
 
 DB_CONNECTION_STRING: Final = "db.connection_string"
 """
-Deprecated: "Replaced by `server.address` and `server.port`.".
+Deprecated: Replaced by `server.address` and `server.port`.
 """
 
 DB_COSMOSDB_CLIENT_ID: Final = "db.cosmosdb.client_id"
@@ -104,7 +105,7 @@ Deprecated: Replaced by `db.collection.name`.
 
 DB_COSMOSDB_OPERATION_TYPE: Final = "db.cosmosdb.operation_type"
 """
-CosmosDB Operation Type.
+Cosmos DB Operation Type.
 """
 
 DB_COSMOSDB_REQUEST_CHARGE: Final = "db.cosmosdb.request_charge"
@@ -121,7 +122,7 @@ Request payload size in bytes.
 
 DB_COSMOSDB_STATUS_CODE: Final = "db.cosmosdb.status_code"
 """
-Cosmos DB status code.
+Deprecated: Replaced by `db.response.status_code`.
 """
 
 DB_COSMOSDB_SUB_STATUS_CODE: Final = "db.cosmosdb.sub_status_code"
@@ -176,6 +177,7 @@ The name of the database, fully qualified within the server address and port.
 Note: If a database system has multiple namespace components, they SHOULD be concatenated (potentially using database system specific conventions) from most general to most specific namespace component, and more specific namespaces SHOULD NOT be captured without the more general namespaces, to ensure that "startswith" queries for the more general namespaces will be valid.
 Semantic conventions for individual database systems SHOULD document what `db.namespace` means in the context of that system.
 It is RECOMMENDED to capture the value as provided by the application without attempting to do any case normalization.
+This attribute has stability level RELEASE CANDIDATE.
 """
 
 DB_OPERATION: Final = "db.operation"
@@ -185,8 +187,9 @@ Deprecated: Replaced by `db.operation.name`.
 
 DB_OPERATION_BATCH_SIZE: Final = "db.operation.batch.size"
 """
-The number of queries included in a [batch operation](/docs/database/database-spans.md#batch-operations).
+The number of queries included in a batch operation.
 Note: Operations are only considered batches when they contain two or more operations, and so `db.operation.batch.size` SHOULD never be `1`.
+This attribute has stability level RELEASE CANDIDATE.
 """
 
 DB_OPERATION_NAME: Final = "db.operation.name"
@@ -195,6 +198,7 @@ The name of the operation or command being executed.
 Note: It is RECOMMENDED to capture the value as provided by the application without attempting to do any case normalization.
 If the operation name is parsed from the query text, it SHOULD be the first operation name found in the query.
 For batch operations, if the individual operations are known to have the same operation name then that operation name SHOULD be used prepended by `BATCH `, otherwise `db.operation.name` SHOULD be `BATCH` or some other database system specific term if more applicable.
+This attribute has stability level RELEASE CANDIDATE.
 """
 
 DB_QUERY_PARAMETER_TEMPLATE: Final = "db.query.parameter"
@@ -202,6 +206,7 @@ DB_QUERY_PARAMETER_TEMPLATE: Final = "db.query.parameter"
 A query parameter used in `db.query.text`, with `<key>` being the parameter name, and the attribute value being a string representation of the parameter value.
 Note: Query parameters should only be captured when `db.query.text` is parameterized with placeholders.
 If a parameter has no name and instead is referenced only by index, then `<key>` SHOULD be the 0-based index.
+This attribute has stability level RELEASE CANDIDATE.
 """
 
 DB_QUERY_TEXT: Final = "db.query.text"
@@ -210,11 +215,20 @@ The database query being executed.
 Note: For sanitization see [Sanitization of `db.query.text`](../../docs/database/database-spans.md#sanitization-of-dbquerytext).
 For batch operations, if the individual operations are known to have the same query text then that query text SHOULD be used, otherwise all of the individual query texts SHOULD be concatenated with separator `; ` or some other database system specific separator if more applicable.
 Even though parameterized query text can potentially have sensitive data, by using a parameterized query the user is giving a strong signal that any sensitive data will be passed as parameter values, and the benefit to observability of capturing the static part of the query text by default outweighs the risk.
+This attribute has stability level RELEASE CANDIDATE.
 """
 
 DB_REDIS_DATABASE_INDEX: Final = "db.redis.database_index"
 """
 Deprecated: Replaced by `db.namespace`.
+"""
+
+DB_RESPONSE_STATUS_CODE: Final = "db.response.status_code"
+"""
+Database response status code.
+Note: The status code returned by the database. Usually it represents an error code, but may also represent partial success, warning, or differentiate between various types of successful outcomes.
+Semantic conventions for individual database systems SHOULD document what `db.response.status_code` means in the context of that system.
+This attribute has stability level RELEASE CANDIDATE.
 """
 
 DB_SQL_TABLE: Final = "db.sql.table"
@@ -231,6 +245,7 @@ DB_SYSTEM: Final = "db.system"
 """
 The database management system (DBMS) product as identified by the client instrumentation.
 Note: The actual DBMS may differ from the one identified by the client. For example, when using PostgreSQL client libraries to connect to a CockroachDB, the `db.system` is set to `postgresql` based on the instrumentation's best knowledge.
+This attribute has stability level RELEASE CANDIDATE.
 """
 
 DB_USER: Final = "db.user"
@@ -271,7 +286,9 @@ class DbClientConnectionStateValues(Enum):
     """used."""
 
 
-@deprecated(reason="The attribute db.client.connections.state is deprecated - Replaced by `db.client.connection.state`")  # type: ignore
+@deprecated(
+    reason="The attribute db.client.connections.state is deprecated - Replaced by `db.client.connection.state`"
+)  # type: ignore
 class DbClientConnectionsStateValues(Enum):
     IDLE = "idle"
     """idle."""
@@ -287,36 +304,36 @@ class DbCosmosdbConnectionModeValues(Enum):
 
 
 class DbCosmosdbOperationTypeValues(Enum):
-    INVALID = "Invalid"
-    """invalid."""
-    CREATE = "Create"
-    """create."""
-    PATCH = "Patch"
-    """patch."""
-    READ = "Read"
-    """read."""
-    READ_FEED = "ReadFeed"
-    """read_feed."""
-    DELETE = "Delete"
-    """delete."""
-    REPLACE = "Replace"
-    """replace."""
-    EXECUTE = "Execute"
-    """execute."""
-    QUERY = "Query"
-    """query."""
-    HEAD = "Head"
-    """head."""
-    HEAD_FEED = "HeadFeed"
-    """head_feed."""
-    UPSERT = "Upsert"
-    """upsert."""
-    BATCH = "Batch"
+    BATCH = "batch"
     """batch."""
-    QUERY_PLAN = "QueryPlan"
-    """query_plan."""
-    EXECUTE_JAVASCRIPT = "ExecuteJavaScript"
+    CREATE = "create"
+    """create."""
+    DELETE = "delete"
+    """delete."""
+    EXECUTE = "execute"
+    """execute."""
+    EXECUTE_JAVASCRIPT = "execute_javascript"
     """execute_javascript."""
+    INVALID = "invalid"
+    """invalid."""
+    HEAD = "head"
+    """head."""
+    HEAD_FEED = "head_feed"
+    """head_feed."""
+    PATCH = "patch"
+    """patch."""
+    QUERY = "query"
+    """query."""
+    QUERY_PLAN = "query_plan"
+    """query_plan."""
+    READ = "read"
+    """read."""
+    READ_FEED = "read_feed"
+    """read_feed."""
+    REPLACE = "replace"
+    """replace."""
+    UPSERT = "upsert"
+    """upsert."""
 
 
 class DbSystemValues(Enum):
@@ -383,7 +400,7 @@ class DbSystemValues(Enum):
     INTERBASE = "interbase"
     """InterBase."""
     MARIADB = "mariadb"
-    """MariaDB."""
+    """MariaDB (This value has stability level RELEASE CANDIDATE)."""
     MAXDB = "maxdb"
     """SAP MaxDB."""
     MEMCACHED = "memcached"
@@ -391,11 +408,11 @@ class DbSystemValues(Enum):
     MONGODB = "mongodb"
     """MongoDB."""
     MSSQL = "mssql"
-    """Microsoft SQL Server."""
+    """Microsoft SQL Server (This value has stability level RELEASE CANDIDATE)."""
     MSSQLCOMPACT = "mssqlcompact"
     """Deprecated: Removed, use `other_sql` instead."""
     MYSQL = "mysql"
-    """MySQL."""
+    """MySQL (This value has stability level RELEASE CANDIDATE)."""
     NEO4J = "neo4j"
     """Neo4j."""
     NETEZZA = "netezza"
@@ -409,7 +426,7 @@ class DbSystemValues(Enum):
     POINTBASE = "pointbase"
     """PointBase."""
     POSTGRESQL = "postgresql"
-    """PostgreSQL."""
+    """PostgreSQL (This value has stability level RELEASE CANDIDATE)."""
     PROGRESS = "progress"
     """Progress Database."""
     REDIS = "redis"

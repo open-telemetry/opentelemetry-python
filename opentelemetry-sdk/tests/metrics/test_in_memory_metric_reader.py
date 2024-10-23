@@ -111,7 +111,6 @@ class TestInMemoryMetricReader(TestCase):
         )
 
     def test_cumulative_multiple_collect(self):
-
         reader = InMemoryMetricReader(
             preferred_temporality={Counter: AggregationTemporality.CUMULATIVE}
         )
