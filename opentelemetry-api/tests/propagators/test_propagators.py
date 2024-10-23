@@ -61,12 +61,6 @@ class TestPropagators(TestCase):
             **{"side_effect": test_propagators}
         )
 
-        from importlib import reload
-
-        import opentelemetry.propagate
-
-        reload(opentelemetry.propagate)
-
     @patch.dict(environ, {OTEL_PROPAGATORS: "a,  b,   c  "})
     @patch("opentelemetry.propagators.composite.CompositePropagator")
     @patch("opentelemetry.util._importlib_metadata.entry_points")
