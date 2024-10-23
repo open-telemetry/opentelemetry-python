@@ -130,28 +130,31 @@ environ_propagators = environ.get(
 )
 
 
-for propagator in environ_propagators.split(","):
-    propagator = propagator.strip()
+if environ_propagators.lower() == "none":
+    propagators = []
+else:
+    for propagator in environ_propagators.split(","):
+        propagator = propagator.strip()
 
-    try:
+        try:
 
-        propagators.append(  # type: ignore
-            next(  # type: ignore
-                iter(  # type: ignore
-                    entry_points(  # type: ignore
-                        group="opentelemetry_propagator",
-                        name=propagator,
+            propagators.append(  # type: ignore
+                next(  # type: ignore
+                    iter(  # type: ignore
+                        entry_points(  # type: ignore
+                            group="opentelemetry_propagator",
+                            name=propagator,
+                        )
                     )
-                )
-            ).load()()
-        )
-    except StopIteration:
-        raise ValueError(
-            f"Propagator {propagator} not found. It is either misspelled or not installed."
-        )
-    except Exception:  # pylint: disable=broad-exception-caught
-        logger.exception("Failed to load propagator: %s", propagator)
-        raise
+                ).load()()
+            )
+        except StopIteration:
+            raise ValueError(
+                f"Propagator {propagator} not found. It is either misspelled or not installed."
+            )
+        except Exception:  # pylint: disable=broad-exception-caught
+            logger.exception("Failed to load propagator: %s", propagator)
+            raise
 
 
 _HTTP_TEXT_FORMAT = composite.CompositePropagator(propagators)  # type: ignore

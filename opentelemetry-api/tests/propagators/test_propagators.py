@@ -50,6 +50,24 @@ class TestPropagators(TestCase):
 
         reload(opentelemetry.propagate)
 
+    @patch.dict(environ, {OTEL_PROPAGATORS: "none"})
+    @patch("opentelemetry.propagators.composite.CompositePropagator")
+    def test_no_propagators_loaded(self, mock_compositehttppropagator):
+        def test_propagators(propagators):
+            self.assertEqual(
+                propagators, []
+            )  # Expecting an empty list of propagators
+
+        mock_compositehttppropagator.configure_mock(
+            **{"side_effect": test_propagators}
+        )
+
+        from importlib import reload
+
+        import opentelemetry.propagate
+
+        reload(opentelemetry.propagate)
+
     @patch.dict(environ, {OTEL_PROPAGATORS: "a,  b,   c  "})
     @patch("opentelemetry.propagators.composite.CompositePropagator")
     @patch("opentelemetry.util._importlib_metadata.entry_points")
