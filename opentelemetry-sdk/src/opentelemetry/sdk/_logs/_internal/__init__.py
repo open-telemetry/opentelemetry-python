@@ -504,51 +504,26 @@ class LoggingHandler(logging.Handler):
         observered_timestamp = time_ns()
         span_context = get_current_span().get_span_context()
         attributes = self._get_attributes(record)
-        # This comment is taken from GanyedeNil's PR #3343, I have redacted it
-        # slightly for clarity:
-        # According to the definition of the Body field type in the
-        # OTel 1.22.0 Logs Data Model article, the Body field should be of
-        # type 'any' and should not use the str method to directly translate
-        # the msg. This is because str only converts non-text types into a
-        # human-readable form, rather than a standard format, which leads to
-        # the need for additional operations when collected through a log
-        # collector.
-        # Considering that he Body field should be of type 'any' and should not
-        # use the str method but record.msg is also a string type, then the
-        # difference is just the self.args formatting?
-        # The primary consideration depends on the ultimate purpose of the log.
-        # Converting the default log directly into a string is acceptable as it
-        # will be required to be presented in a more readable format. However,
-        # this approach might not be as "standard" when hoping to aggregate
-        # logs and perform subsequent data analysis. In the context of log
-        # extraction, it would be more appropriate for the msg to be
-        # converted into JSON format or remain unchanged, as it will eventually
-        # be transformed into JSON. If the final output JSON data contains a
-        # structure that appears similar to JSON but is not, it may confuse
-        # users. This is particularly true for operation and maintenance
-        # personnel who need to deal with log data in various languages.
-        # Where is the JSON converting occur? and what about when the msg
-        # represents something else but JSON, the expected behavior change?
-        # For the ConsoleLogExporter, it performs the to_json operation in
-        # opentelemetry.sdk._logs._internal.export.ConsoleLogExporter.__init__,
-        # so it can handle any type of input without problems. As for the
-        # OTLPLogExporter, it also handles any type of input encoding in
-        # _encode_log located in
-        # opentelemetry.exporter.otlp.proto.common._internal._log_encoder.
-        # Therefore, no extra operation is needed to support this change.
-        # The only thing to consider is the users who have already been using
-        # this SDK. If they upgrade the SDK after this change, they will need
-        # to readjust their logging collection rules to adapt to the latest
-        # output format. Therefore, this change is considered a breaking
-        # change and needs to be upgraded at an appropriate time.
         severity_number = std_to_otel(record.levelno)
         if self.formatter:
             body = self.format(record)
         else:
-            if isinstance(record.msg, str) and record.args:
-                body = record.getMessage()
-            else:
+            # `record.getMessage()` uses `record.msg` as a template to format
+            # `record.args` into. There is a special case in `record.getMessage()`
+            # where it will only attempt formatting if args are provided,
+            # otherwise, it just stringifies `record.msg`.
+            #
+            # Since the OTLP body field has a type of 'any' and the logging module
+            # is sometimes used in such a way that objects incorrectly end up
+            # set as record.msg, in those cases we would like to bypass
+            # `record.getMessage()` completely and set the body to the object
+            # itself instead of its string representation.
+            # For more background, see: https://github.com/open-telemetry/opentelemetry-python/pull/4216
+            if not record.args and not isinstance(record.msg, str):
+                # no args are provided so it's *mostly* safe to use the message template as the body
                 body = record.msg
+            else:
+                body = record.getMessage()
 
         # related to https://github.com/open-telemetry/opentelemetry-python/issues/3548
         # Severity Text = WARN as defined in https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/logs/data-model.md#displaying-severity.
