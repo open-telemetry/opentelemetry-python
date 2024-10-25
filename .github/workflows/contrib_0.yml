@@ -16,6 +16,34 @@ env:
 
 jobs:
 
+  py38-test-instrumentation-openai-v2:
+    name: instrumentation-openai-v2 
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout contrib repo @ SHA - ${{ env.CONTRIB_REPO_SHA }}
+        uses: actions/checkout@v4
+        with:
+          repository: open-telemetry/opentelemetry-python-contrib
+          ref: ${{ env.CONTRIB_REPO_SHA }}
+
+      - name: Checkout core repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+        with:
+          repository: open-telemetry/opentelemetry-python
+          path: opentelemetry-python-core
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.8"
+          architecture: "x64"
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Run tests
+        run: tox -e py38-test-instrumentation-openai-v2 -- -ra
+
   py38-test-resource-detector-container:
     name: resource-detector-container 
     runs-on: ubuntu-latest
