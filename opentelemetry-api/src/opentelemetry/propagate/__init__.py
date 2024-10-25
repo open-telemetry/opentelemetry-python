@@ -129,32 +129,31 @@ environ_propagators = environ.get(
     "tracecontext,baggage",
 )
 
+# Simplified logic to handle "none" case
 if environ_propagators.lower() == "none":
     propagators = []
 else:
-    propagators = environ_propagators.split(",")
-
-for propagator in environ_propagators.split(","):
-    propagator = propagator.strip()
-
-    try:
-        propagators.append(  # type: ignore
-            next(  # type: ignore
-                iter(  # type: ignore
-                    entry_points(  # type: ignore
-                        group="opentelemetry_propagator",
-                        name=propagator,
+    propagators = []
+    for propagator in environ_propagators.split(","):
+        propagator = propagator.strip()
+        try:
+            propagators.append(  # type: ignore
+                next(  # type: ignore
+                    iter(  # type: ignore
+                        entry_points(  # type: ignore
+                            group="opentelemetry_propagator",
+                            name=propagator,
+                        )
                     )
-                )
-            ).load()()
-        )
-    except StopIteration:
-        raise ValueError(
-            f"Propagator {propagator} not found. It is either misspelled or not installed."
-        )
-    except Exception:  # pylint: disable=broad-exception-caught
-        logger.exception("Failed to load propagator: %s", propagator)
-        raise
+                ).load()()
+            )
+        except StopIteration:
+            raise ValueError(
+                f"Propagator {propagator} not found. It is either misspelled or not installed."
+            )
+        except Exception:  # pylint: disable=broad-exception-caught
+            logger.exception("Failed to load propagator: %s", propagator)
+            raise
 
 
 _HTTP_TEXT_FORMAT = composite.CompositePropagator(propagators)  # type: ignore
