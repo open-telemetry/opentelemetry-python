@@ -17,6 +17,7 @@
 import threading
 from abc import ABC, abstractmethod
 from collections.abc import Sequence  # noqa: F401
+from importlib.metadata import PackageNotFoundError, version
 from logging import getLogger
 from os import environ
 from time import sleep
@@ -36,6 +37,7 @@ from urllib.parse import urlparse
 
 from deprecated import deprecated
 from google.rpc.error_details_pb2 import RetryInfo
+from packaging.version import InvalidVersion, Version
 
 from grpc import (
     ChannelCredentials,
@@ -261,6 +263,7 @@ class OTLPExporterMixin(
 
         self._export_lock = threading.Lock()
         self._shutdown = False
+        self._check_backoff_version()
 
     @abstractmethod
     def _translate_data(
@@ -370,3 +373,26 @@ class OTLPExporterMixin(
         warning messages.
         """
         pass
+
+    def _check_backoff_version(self):
+        try:
+            # Attempt to get the version of `backoff`
+            backoff_version_str = version("backoff")
+            backoff_version = Version(backoff_version_str)
+        except PackageNotFoundError:
+            backoff_version = None
+            logger.error(
+                "backoff package not found, falling back to default behavior."
+            )
+        except InvalidVersion:
+            logger.error(
+                "Failed to parse backoff version; it may not follow semantic versioning."
+            )
+            backoff_version = None
+
+        # Proceed with version-specific handling if available
+        if backoff_version:
+            if backoff_version < Version("2.2.1"):
+                logger.warning(
+                    f"Using backoff version {backoff_version}. Upgrade to 2.2.1 or later recommended for compatibility."
+                )
