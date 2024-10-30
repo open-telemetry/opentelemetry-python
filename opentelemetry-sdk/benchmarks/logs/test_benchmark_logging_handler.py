@@ -25,14 +25,15 @@ def _create_logger(handler, name):
 
 
 @pytest.mark.parametrize("num_loggers", [1, 10, 100, 1000])
-def test_simple_get_logger_different_names(benchmark, num_loggers):
+def test_simple_get_logger_different_names(benchmark, num_loggers, caplog):
     handler = _set_up_logging_handler(level=logging.DEBUG)
     loggers = [
         _create_logger(handler, str(f"logger_{i}")) for i in range(num_loggers)
     ]
 
     def benchmark_get_logger():
-        for index in range(1000):
-            loggers[index % num_loggers].warning("test message")
+        with caplog.at_level(logging.ERROR):
+            for index in range(1000):
+                loggers[index % num_loggers].warning("test message")
 
     benchmark(benchmark_get_logger)
