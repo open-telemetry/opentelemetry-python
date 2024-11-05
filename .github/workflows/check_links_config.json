@@ -9,6 +9,7 @@
         {
             "pattern": "http(s)?://example.com"
         },
+        {
             "pattern": "^Version.*"
         }
     ],
