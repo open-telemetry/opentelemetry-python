@@ -11,7 +11,7 @@ on:
 
 env:
   CORE_REPO_SHA: main
-  CONTRIB_REPO_SHA: main
+  CONTRIB_REPO_SHA: 925d8442c91ab7a89296ab20eb7cca688d4ea1cd
   PIP_EXISTS_ACTION: w
 
 jobs:
