@@ -84,7 +84,7 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
                 measurement.time_unix_nano,
                 measurement.attributes,
                 measurement.context,
-            ),
+            )
         )
         for reader_storage in self._reader_storages.values():
             reader_storage.consume_measurement(
@@ -134,7 +134,7 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
                             measurement.time_unix_nano,
                             measurement.attributes,
                             measurement.context,
-                        ),
+                        )
                     )
                     metric_reader_storage.consume_measurement(
                         measurement, should_sample_exemplar

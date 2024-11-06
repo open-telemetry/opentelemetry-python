@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=protected-access
+# pylint: disable=protected-access,too-many-lines
 import unittest
 
 from opentelemetry.exporter.otlp.proto.common._internal.metrics_encoder import (

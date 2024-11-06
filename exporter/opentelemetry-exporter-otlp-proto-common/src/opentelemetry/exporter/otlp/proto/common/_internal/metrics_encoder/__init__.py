@@ -13,7 +13,7 @@
 # limitations under the License.
 import logging
 from os import environ
-from typing import Dict
+from typing import Dict, List
 
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _encode_attributes,
@@ -59,8 +59,6 @@ from opentelemetry.sdk.metrics.view import (
     ExplicitBucketHistogramAggregation,
     ExponentialBucketHistogramAggregation,
 )
-from os import environ
-from typing import Dict
 
 _logger = logging.getLogger(__name__)
 
@@ -344,7 +342,7 @@ def _encode_metric(metric, pb2_metric):
         )
 
 
-def _encode_exemplars(sdk_exemplars: list[Exemplar]) -> list:
+def _encode_exemplars(sdk_exemplars: List[Exemplar]) -> List[pb2.Exemplar]:
     """
     Converts a list of SDK Exemplars into a list of protobuf Exemplars.
 
