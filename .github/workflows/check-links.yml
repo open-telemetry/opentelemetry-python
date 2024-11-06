@@ -23,7 +23,10 @@ jobs:
   check-links:
     runs-on: ubuntu-latest
     needs: changedfiles
-    if: ${{needs.changedfiles.outputs.md}}
+    if:
+    if: |
+      github.event.pull_request.user.login != 'opentelemetrybot' && github.event_name == 'pull_request'
+      && ${{needs.changedfiles.outputs.md}}
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
@@ -38,6 +41,5 @@ jobs:
           markdown-link-check \
             --verbose \
             --config .github/workflows/check_links_config.json \
-            --skip-path CHANGELOG.md \
             ${{needs.changedfiles.outputs.md}} \
             || { echo "Check that anchor links are lowercase"; exit 1; }

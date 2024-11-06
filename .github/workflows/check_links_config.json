@@ -8,9 +8,6 @@
         },
         {
             "pattern": "http(s)?://example.com"
-        },
-        {
-            "pattern": "CHANGELOG.md"
         }
     ],
     "aliveStatusCodes": [429, 200]
