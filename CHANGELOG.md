@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## Version 1.28.0/0.49b0 (2024-11-05)
+
 - Removed superfluous py.typed markers and added them where they were missing
   ([#4172](https://github.com/open-telemetry/opentelemetry-python/pull/4172))
 - Include metric info in encoding exceptions
