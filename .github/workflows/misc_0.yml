@@ -11,7 +11,7 @@ on:
 
 env:
   CORE_REPO_SHA: main
-  CONTRIB_REPO_SHA: be0c78c8c11d05787edb53104c92a3a959f6a70c
+  CONTRIB_REPO_SHA: main
   PIP_EXISTS_ACTION: w
 
 jobs:
@@ -109,6 +109,8 @@ jobs:
   docs:
     name: docs
     runs-on: ubuntu-latest
+    if: |
+      github.event.pull_request.user.login != 'opentelemetrybot' && github.event_name == 'pull_request'
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
