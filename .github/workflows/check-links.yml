@@ -23,7 +23,6 @@ jobs:
   check-links:
     runs-on: ubuntu-latest
     needs: changedfiles
-    if:
     if: |
       github.event.pull_request.user.login != 'opentelemetrybot' && github.event_name == 'pull_request'
       && ${{needs.changedfiles.outputs.md}}
