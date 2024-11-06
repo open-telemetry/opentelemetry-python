@@ -100,7 +100,7 @@ class TestSynchronousMeasurementConsumer(TestCase):
         MockMetricReaderStorage.return_value = reader_storage_mock
         consumer = SynchronousMeasurementConsumer(
             SdkConfiguration(
-                exemplar_filter=Mock(),
+                exemplar_filter=Mock(should_sample=Mock(return_value=False)),
                 resource=Mock(),
                 metric_readers=[reader_mock],
                 views=Mock(),
@@ -121,6 +121,9 @@ class TestSynchronousMeasurementConsumer(TestCase):
         self.assertEqual(
             len(reader_storage_mock.consume_measurement.mock_calls), 5
         )
+        # assert consume_measurement was called with at least 2 arguments the second
+        # matching the mocked exemplar filter
+        self.assertFalse(reader_storage_mock.consume_measurement.call_args[1])
 
     def test_collect_timeout(self, MockMetricReaderStorage):
         reader_mock = Mock()
