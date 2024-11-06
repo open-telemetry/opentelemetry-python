@@ -43,9 +43,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TRACES_PROTOCOL,
     OTEL_TRACES_SAMPLER,
     OTEL_TRACES_SAMPLER_ARG,
-    # TODO which env vars
     OTEL_LOG_LEVEL,
-    # OTEL_PYTHON_LOG_LEVEL,
     OTEL_PYTHON_LOG_FORMAT,
 )
 from opentelemetry.sdk.metrics import MeterProvider
@@ -461,7 +459,8 @@ class _OTelSDKConfigurator(_BaseConfigurator):
 
     Initializes several crucial OTel SDK components (i.e. TracerProvider,
     MeterProvider, Processors...) according to a default implementation. Other
-    Configurators can subclass and slightly alter this initialization.
+    Configurators can subclass and slightly alter
+     this initialization.
 
     NOTE: This class should not be instantiated nor should it become an entry
     point on the `opentelemetry-sdk` package. Instead, distros should subclass
