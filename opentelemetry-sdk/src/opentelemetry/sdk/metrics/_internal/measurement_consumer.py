@@ -136,7 +136,9 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
                             measurement.context,
                         ),
                     )
-                    metric_reader_storage.consume_measurement(measurement, should_sample_exemplar)
+                    metric_reader_storage.consume_measurement(
+                        measurement, should_sample_exemplar
+                    )
 
             result = self._reader_storages[metric_reader].collect()
 
