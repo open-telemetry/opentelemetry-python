@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from abc import ABC, abstractmethod
-from typing import Union
+from typing import Optional, Union
 
 from opentelemetry import trace
 from opentelemetry.context import Context
@@ -38,7 +38,7 @@ class ExemplarFilter(ABC):
         value: Union[int, float],
         time_unix_nano: int,
         attributes: Attributes,
-        context: Context,
+        context: Optional[Context],
     ) -> bool:
         """Returns whether or not a reservoir should attempt to filter a measurement.
 
@@ -65,7 +65,7 @@ class AlwaysOnExemplarFilter(ExemplarFilter):
         value: Union[int, float],
         time_unix_nano: int,
         attributes: Attributes,
-        context: Context,
+        context: Optional[Context],
     ) -> bool:
         """Returns whether or not a reservoir should attempt to filter a measurement.
 
@@ -92,7 +92,7 @@ class AlwaysOffExemplarFilter(ExemplarFilter):
         value: Union[int, float],
         time_unix_nano: int,
         attributes: Attributes,
-        context: Context,
+        context: Optional[Context],
     ) -> bool:
         """Returns whether or not a reservoir should attempt to filter a measurement.
 
@@ -118,7 +118,7 @@ class TraceBasedExemplarFilter(ExemplarFilter):
         value: Union[int, float],
         time_unix_nano: int,
         attributes: Attributes,
-        context: Context,
+        context: Optional[Context],
     ) -> bool:
         """Returns whether or not a reservoir should attempt to filter a measurement.
 

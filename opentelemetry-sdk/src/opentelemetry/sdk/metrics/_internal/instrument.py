@@ -20,7 +20,7 @@ from typing import Dict, Generator, Iterable, List, Optional, Union
 
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics
-from opentelemetry.context import Context, get_current
+from opentelemetry.context import Context
 from opentelemetry.metrics import CallbackT
 from opentelemetry.metrics import Counter as APICounter
 from opentelemetry.metrics import Histogram as APIHistogram
@@ -138,7 +138,7 @@ class _Asynchronous:
                         api_measurement.value,
                         time_unix_nano=time_ns(),
                         instrument=self,
-                        context=api_measurement.context or get_current(),
+                        context=api_measurement.context,
                         attributes=api_measurement.attributes,
                     )
             except Exception:  # pylint: disable=broad-exception-caught
@@ -170,7 +170,7 @@ class Counter(_Synchronous, APICounter):
                 amount,
                 time_unix_nano,
                 self,
-                context or get_current(),
+                context,
                 attributes,
             )
         )
@@ -194,7 +194,7 @@ class UpDownCounter(_Synchronous, APIUpDownCounter):
                 amount,
                 time_unix_nano,
                 self,
-                context or get_current(),
+                context,
                 attributes,
             )
         )
@@ -242,7 +242,7 @@ class Histogram(_Synchronous, APIHistogram):
                 amount,
                 time_unix_nano,
                 self,
-                context or get_current(),
+                context,
                 attributes,
             )
         )
@@ -266,7 +266,7 @@ class Gauge(_Synchronous, APIGauge):
                 amount,
                 time_unix_nano,
                 self,
-                context or get_current(),
+                context,
                 attributes,
             )
         )
