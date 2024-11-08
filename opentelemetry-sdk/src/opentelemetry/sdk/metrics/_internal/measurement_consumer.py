@@ -78,15 +78,17 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
         ] = []
 
     def consume_measurement(self, measurement: Measurement) -> None:
+        should_sample_exemplar = (
+            self._sdk_config.exemplar_filter.should_sample(
+                measurement.value,
+                measurement.time_unix_nano,
+                measurement.attributes,
+                measurement.context,
+            )
+        )
         for reader_storage in self._reader_storages.values():
             reader_storage.consume_measurement(
-                measurement,
-                self._sdk_config.exemplar_filter.should_sample(
-                    measurement.value,
-                    measurement.time_unix_nano,
-                    measurement.attributes,
-                    measurement.context,
-                ),
+                measurement, should_sample_exemplar
             )
 
     def register_asynchronous_instrument(
@@ -126,7 +128,17 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
                     )
 
                 for measurement in measurements:
-                    metric_reader_storage.consume_measurement(measurement)
+                    should_sample_exemplar = (
+                        self._sdk_config.exemplar_filter.should_sample(
+                            measurement.value,
+                            measurement.time_unix_nano,
+                            measurement.attributes,
+                            measurement.context,
+                        )
+                    )
+                    metric_reader_storage.consume_measurement(
+                        measurement, should_sample_exemplar
+                    )
 
             result = self._reader_storages[metric_reader].collect()
 

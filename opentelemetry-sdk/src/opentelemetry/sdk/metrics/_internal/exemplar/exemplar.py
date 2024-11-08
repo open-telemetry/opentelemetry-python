@@ -46,5 +46,5 @@ class Exemplar:
     filtered_attributes: Attributes
     value: Union[int, float]
     time_unix_nano: int
-    span_id: Optional[str] = None
-    trace_id: Optional[str] = None
+    span_id: Optional[int] = None
+    trace_id: Optional[int] = None
