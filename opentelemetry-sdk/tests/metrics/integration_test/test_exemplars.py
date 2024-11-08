@@ -11,11 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import os
 from unittest import TestCase, mock
 
-from opentelemetry import trace
+from opentelemetry import trace as trace_api
 from opentelemetry.sdk.metrics import Exemplar, MeterProvider
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
@@ -41,7 +40,6 @@ class TestExemplars(TestCase):
         counter = meter.create_counter("testcounter")
         counter.add(10, {"label": "value1"})
         data = reader.get_metrics_data()
-
         metrics = data.resource_metrics[0].scope_metrics[0].metrics
         self.assertEqual(
             metrics,
@@ -86,18 +84,123 @@ class TestExemplars(TestCase):
             trace_flags=TraceFlags(TraceFlags.SAMPLED),
             trace_state={},
         )
-        span = trace.NonRecordingSpan(span_context)
-        trace.set_span_in_context(span)
-
+        span = trace_api.NonRecordingSpan(span_context)
+        trace_api.set_span_in_context(span)
         reader = InMemoryMetricReader()
         meter_provider = MeterProvider(
             metric_readers=[reader],
         )
+
         meter = meter_provider.get_meter("testmeter")
         counter = meter.create_counter("testcounter")
-        counter.add(10, {"label": "value1"})
+        with trace_api.use_span(span):
+            counter.add(10, {"label": "value1"})
         data = reader.get_metrics_data()
+        metrics = data.resource_metrics[0].scope_metrics[0].metrics
+        self.assertEqual(
+            metrics,
+            [
+                Metric(
+                    name="testcounter",
+                    description="",
+                    unit="",
+                    data=Sum(
+                        data_points=[
+                            NumberDataPoint(
+                                attributes={"label": "value1"},
+                                start_time_unix_nano=mock.ANY,
+                                time_unix_nano=mock.ANY,
+                                value=10,
+                                exemplars=[
+                                    Exemplar(
+                                        filtered_attributes={},
+                                        value=10,
+                                        time_unix_nano=mock.ANY,
+                                        span_id=self.SPAN_ID,
+                                        trace_id=self.TRACE_ID,
+                                    ),
+                                ],
+                            )
+                        ],
+                        aggregation_temporality=AggregationTemporality.CUMULATIVE,
+                        is_monotonic=True,
+                    ),
+                )
+            ],
+        )
 
+    def test_default_exemplar_filter(self):
+        span_context = SpanContext(
+            trace_id=self.TRACE_ID,
+            span_id=self.SPAN_ID,
+            is_remote=False,
+            trace_flags=TraceFlags(TraceFlags.SAMPLED),
+            trace_state={},
+        )
+        span = trace_api.NonRecordingSpan(span_context)
+        trace_api.set_span_in_context(span)
+        reader = InMemoryMetricReader()
+        meter_provider = MeterProvider(
+            metric_readers=[reader],
+        )
+
+        meter = meter_provider.get_meter("testmeter")
+        counter = meter.create_counter("testcounter")
+        with trace_api.use_span(span):
+            counter.add(10, {"label": "value1"})
+        data = reader.get_metrics_data()
+        metrics = data.resource_metrics[0].scope_metrics[0].metrics
+        self.assertEqual(
+            metrics,
+            [
+                Metric(
+                    name="testcounter",
+                    description="",
+                    unit="",
+                    data=Sum(
+                        data_points=[
+                            NumberDataPoint(
+                                attributes={"label": "value1"},
+                                start_time_unix_nano=mock.ANY,
+                                time_unix_nano=mock.ANY,
+                                value=10,
+                                exemplars=[
+                                    Exemplar(
+                                        filtered_attributes={},
+                                        value=10,
+                                        time_unix_nano=mock.ANY,
+                                        span_id=self.SPAN_ID,
+                                        trace_id=self.TRACE_ID,
+                                    ),
+                                ],
+                            )
+                        ],
+                        aggregation_temporality=AggregationTemporality.CUMULATIVE,
+                        is_monotonic=True,
+                    ),
+                )
+            ],
+        )
+
+    def test_exemplar_trace_based_manual_context(self):
+        span_context = SpanContext(
+            trace_id=self.TRACE_ID,
+            span_id=self.SPAN_ID,
+            is_remote=False,
+            trace_flags=TraceFlags(TraceFlags.SAMPLED),
+            trace_state={},
+        )
+        span = trace_api.NonRecordingSpan(span_context)
+        ctx = trace_api.set_span_in_context(span)
+        reader = InMemoryMetricReader()
+        meter_provider = MeterProvider(
+            metric_readers=[reader],
+        )
+
+        meter = meter_provider.get_meter("testmeter")
+        counter = meter.create_counter("testcounter")
+        counter.add(10, {"label": "value1"}, context=ctx)
+        data = reader.get_metrics_data()
         metrics = data.resource_metrics[0].scope_metrics[0].metrics
         self.assertEqual(
             metrics,
@@ -142,9 +245,8 @@ class TestExemplars(TestCase):
             trace_flags=TraceFlags(TraceFlags.SAMPLED),
             trace_state={},
         )
-        span = trace.NonRecordingSpan(span_context)
-        trace.set_span_in_context(span)
-
+        span = trace_api.NonRecordingSpan(span_context)
+        trace_api.set_span_in_context(span)
         reader = InMemoryMetricReader()
         meter_provider = MeterProvider(
             metric_readers=[reader],
@@ -153,7 +255,6 @@ class TestExemplars(TestCase):
         counter = meter.create_counter("testcounter")
         counter.add(10, {"label": "value1"})
         data = reader.get_metrics_data()
-
         metrics = data.resource_metrics[0].scope_metrics[0].metrics
         self.assertEqual(
             metrics,
