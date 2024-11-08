@@ -692,7 +692,7 @@ class LoggerProvider(APILoggerProvider):
         attributes: Optional[Attributes] = None,
     ) -> Logger:
         if self._disabled:
-            _logger.warning("SDK is disabled.")
+            warnings.warn("SDK is disabled.")
             return NoOpLogger(
                 name,
                 version=version,
