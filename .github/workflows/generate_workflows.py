@@ -17,4 +17,5 @@ generate_test_workflow(
     "windows-latest",
 )
 generate_lint_workflow(tox_ini_path, workflows_directory_path)
+generate_contrib_workflow(workflows_directory_path)
 generate_misc_workflow(tox_ini_path, workflows_directory_path)
