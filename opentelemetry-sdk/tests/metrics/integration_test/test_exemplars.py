@@ -253,7 +253,8 @@ class TestExemplars(TestCase):
         )
         meter = meter_provider.get_meter("testmeter")
         counter = meter.create_counter("testcounter")
-        counter.add(10, {"label": "value1"})
+        with trace_api.use_span(span):
+            counter.add(10, {"label": "value1"})
         data = reader.get_metrics_data()
         metrics = data.resource_metrics[0].scope_metrics[0].metrics
         self.assertEqual(
