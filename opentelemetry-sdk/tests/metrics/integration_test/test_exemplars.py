@@ -129,6 +129,41 @@ class TestExemplars(TestCase):
             ],
         )
 
+    def test_default_exemplar_filter_no_span(self):
+        reader = InMemoryMetricReader()
+        meter_provider = MeterProvider(
+            metric_readers=[reader],
+        )
+
+        meter = meter_provider.get_meter("testmeter")
+        counter = meter.create_counter("testcounter")
+        counter.add(10, {"label": "value1"})
+        data = reader.get_metrics_data()
+        metrics = data.resource_metrics[0].scope_metrics[0].metrics
+        self.assertEqual(
+            metrics,
+            [
+                Metric(
+                    name="testcounter",
+                    description="",
+                    unit="",
+                    data=Sum(
+                        data_points=[
+                            NumberDataPoint(
+                                attributes={"label": "value1"},
+                                start_time_unix_nano=mock.ANY,
+                                time_unix_nano=mock.ANY,
+                                value=10,
+                                exemplars=[],
+                            )
+                        ],
+                        aggregation_temporality=AggregationTemporality.CUMULATIVE,
+                        is_monotonic=True,
+                    ),
+                )
+            ],
+        )
+
     def test_default_exemplar_filter(self):
         span_context = SpanContext(
             trace_id=self.TRACE_ID,
