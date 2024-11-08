@@ -16,8 +16,8 @@ env:
 
 jobs:
 
-  py38-test-instrumentation-openai-v2:
-    name: instrumentation-openai-v2 
+  py38-test-instrumentation-openai-v2-0:
+    name: instrumentation-openai-v2-0 
     runs-on: ubuntu-latest
     steps:
       - name: Checkout contrib repo @ SHA - ${{ env.CONTRIB_REPO_SHA }}
@@ -42,7 +42,35 @@ jobs:
         run: pip install tox
 
       - name: Run tests
-        run: tox -e py38-test-instrumentation-openai-v2 -- -ra
+        run: tox -e py38-test-instrumentation-openai-v2-0 -- -ra
+
+  py38-test-instrumentation-openai-v2-1:
+    name: instrumentation-openai-v2-1 
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout contrib repo @ SHA - ${{ env.CONTRIB_REPO_SHA }}
+        uses: actions/checkout@v4
+        with:
+          repository: open-telemetry/opentelemetry-python-contrib
+          ref: ${{ env.CONTRIB_REPO_SHA }}
+
+      - name: Checkout core repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+        with:
+          repository: open-telemetry/opentelemetry-python
+          path: opentelemetry-python-core
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.8"
+          architecture: "x64"
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Run tests
+        run: tox -e py38-test-instrumentation-openai-v2-1 -- -ra
 
   py38-test-resource-detector-container:
     name: resource-detector-container 
@@ -72,8 +100,8 @@ jobs:
       - name: Run tests
         run: tox -e py38-test-resource-detector-container -- -ra
 
-  py38-test-resource-detector-azure:
-    name: resource-detector-azure 
+  py38-test-resource-detector-azure-0:
+    name: resource-detector-azure-0 
     runs-on: ubuntu-latest
     steps:
       - name: Checkout contrib repo @ SHA - ${{ env.CONTRIB_REPO_SHA }}
@@ -98,10 +126,10 @@ jobs:
         run: pip install tox
 
       - name: Run tests
-        run: tox -e py38-test-resource-detector-azure -- -ra
+        run: tox -e py38-test-resource-detector-azure-0 -- -ra
 
-  py38-test-sdk-extension-aws:
-    name: sdk-extension-aws 
+  py38-test-resource-detector-azure-1:
+    name: resource-detector-azure-1 
     runs-on: ubuntu-latest
     steps:
       - name: Checkout contrib repo @ SHA - ${{ env.CONTRIB_REPO_SHA }}
@@ -126,7 +154,63 @@ jobs:
         run: pip install tox
 
       - name: Run tests
-        run: tox -e py38-test-sdk-extension-aws -- -ra
+        run: tox -e py38-test-resource-detector-azure-1 -- -ra
+
+  py38-test-sdk-extension-aws-0:
+    name: sdk-extension-aws-0 
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout contrib repo @ SHA - ${{ env.CONTRIB_REPO_SHA }}
+        uses: actions/checkout@v4
+        with:
+          repository: open-telemetry/opentelemetry-python-contrib
+          ref: ${{ env.CONTRIB_REPO_SHA }}
+
+      - name: Checkout core repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+        with:
+          repository: open-telemetry/opentelemetry-python
+          path: opentelemetry-python-core
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.8"
+          architecture: "x64"
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Run tests
+        run: tox -e py38-test-sdk-extension-aws-0 -- -ra
+
+  py38-test-sdk-extension-aws-1:
+    name: sdk-extension-aws-1 
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout contrib repo @ SHA - ${{ env.CONTRIB_REPO_SHA }}
+        uses: actions/checkout@v4
+        with:
+          repository: open-telemetry/opentelemetry-python-contrib
+          ref: ${{ env.CONTRIB_REPO_SHA }}
+
+      - name: Checkout core repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+        with:
+          repository: open-telemetry/opentelemetry-python
+          path: opentelemetry-python-core
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.8"
+          architecture: "x64"
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Run tests
+        run: tox -e py38-test-sdk-extension-aws-1 -- -ra
 
   py38-test-distro:
     name: distro 
@@ -1584,6 +1668,34 @@ jobs:
       - name: Run tests
         run: tox -e py38-test-instrumentation-sqlalchemy-1 -- -ra
 
+  py38-test-instrumentation-sqlalchemy-2:
+    name: instrumentation-sqlalchemy-2 
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout contrib repo @ SHA - ${{ env.CONTRIB_REPO_SHA }}
+        uses: actions/checkout@v4
+        with:
+          repository: open-telemetry/opentelemetry-python-contrib
+          ref: ${{ env.CONTRIB_REPO_SHA }}
+
+      - name: Checkout core repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+        with:
+          repository: open-telemetry/opentelemetry-python
+          path: opentelemetry-python-core
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.8"
+          architecture: "x64"
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Run tests
+        run: tox -e py38-test-instrumentation-sqlalchemy-2 -- -ra
+
   py38-test-instrumentation-redis:
     name: instrumentation-redis 
     runs-on: ubuntu-latest
@@ -1864,8 +1976,8 @@ jobs:
       - name: Run tests
         run: tox -e py38-test-util-http -- -ra
 
-  py38-test-propagator-aws-xray:
-    name: propagator-aws-xray 
+  py38-test-propagator-aws-xray-0:
+    name: propagator-aws-xray-0 
     runs-on: ubuntu-latest
     steps:
       - name: Checkout contrib repo @ SHA - ${{ env.CONTRIB_REPO_SHA }}
@@ -1890,7 +2002,35 @@ jobs:
         run: pip install tox
 
       - name: Run tests
-        run: tox -e py38-test-propagator-aws-xray -- -ra
+        run: tox -e py38-test-propagator-aws-xray-0 -- -ra
+
+  py38-test-propagator-aws-xray-1:
+    name: propagator-aws-xray-1 
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout contrib repo @ SHA - ${{ env.CONTRIB_REPO_SHA }}
+        uses: actions/checkout@v4
+        with:
+          repository: open-telemetry/opentelemetry-python-contrib
+          ref: ${{ env.CONTRIB_REPO_SHA }}
+
+      - name: Checkout core repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+        with:
+          repository: open-telemetry/opentelemetry-python
+          path: opentelemetry-python-core
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.8"
+          architecture: "x64"
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Run tests
+        run: tox -e py38-test-propagator-aws-xray-1 -- -ra
 
   py38-test-propagator-ot-trace:
     name: propagator-ot-trace 
