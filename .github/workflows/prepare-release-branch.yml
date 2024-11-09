@@ -12,6 +12,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install toml
+        run: pip install toml
+
       - name: Verify prerequisites
         env:
           PRERELEASE_VERSION: ${{ github.event.inputs.prerelease_version }}
