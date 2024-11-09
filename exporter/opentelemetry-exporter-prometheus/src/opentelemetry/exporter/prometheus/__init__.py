@@ -67,7 +67,7 @@ from itertools import chain
 from json import dumps
 from logging import getLogger
 from os import environ
-from typing import Deque, Dict, Iterable, Sequence, Tuple, Union
+from typing import Deque, Dict, Iterable, Optional, Sequence, Tuple, Union
 
 from prometheus_client import start_http_server
 from prometheus_client.core import (
@@ -78,6 +78,7 @@ from prometheus_client.core import (
     InfoMetricFamily,
 )
 from prometheus_client.core import Metric as PrometheusMetric
+from prometheus_client.samples import Exemplar as PrometheusExemplar
 
 from opentelemetry.exporter.prometheus._mapping import (
     map_unit,
@@ -90,12 +91,15 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.metrics import (
     Counter,
+    Exemplar,
     ObservableCounter,
     ObservableGauge,
     ObservableUpDownCounter,
     UpDownCounter,
 )
-from opentelemetry.sdk.metrics import Histogram as HistogramInstrument
+from opentelemetry.sdk.metrics import (
+    Histogram as HistogramInstrument,
+)
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     Gauge,
@@ -105,6 +109,7 @@ from opentelemetry.sdk.metrics.export import (
     MetricsData,
     Sum,
 )
+from opentelemetry.trace import format_span_id, format_trace_id
 from opentelemetry.util.types import Attributes
 
 _logger = getLogger(__name__)
@@ -114,16 +119,32 @@ _TARGET_INFO_DESCRIPTION = "Target metadata"
 
 
 def _convert_buckets(
-    bucket_counts: Sequence[int], explicit_bounds: Sequence[float]
-) -> Sequence[Tuple[str, int]]:
+    bucket_counts: Sequence[int],
+    explicit_bounds: Sequence[float],
+    exemplars: Optional[Sequence[PrometheusExemplar]] = None,
+) -> Sequence[Tuple[str, int, Optional[Exemplar]]]:
     buckets = []
     total_count = 0
+    previous_bound = float("-inf")
+
+    exemplars = list(reversed(exemplars or []))
+    exemplar = exemplars.pop() if exemplars else None
+
     for upper_bound, count in zip(
         chain(explicit_bounds, ["+Inf"]),
         bucket_counts,
     ):
         total_count += count
-        buckets.append((f"{upper_bound}", total_count))
+        current_exemplar = None
+        upper_bound_f = float(upper_bound)
+        while exemplar and previous_bound <= exemplar.value < upper_bound_f:
+            if current_exemplar is None:
+                # Assign the exemplar to the current bucket if it's the first valid one found
+                current_exemplar = exemplar
+            exemplar = exemplars.pop() if exemplars else None
+        previous_bound = upper_bound_f
+
+        buckets.append((f"{upper_bound}", total_count, current_exemplar))
 
     return buckets
 
@@ -238,6 +259,10 @@ class _CustomCollector:
             for number_data_point in metric.data.data_points:
                 label_keys = []
                 label_values = []
+                exemplars = [
+                    self._convert_exemplar(ex)
+                    for ex in number_data_point.exemplars
+                ]
 
                 for key, value in sorted(number_data_point.attributes.items()):
                     label_keys.append(sanitize_attribute(key))
@@ -263,6 +288,7 @@ class _CustomCollector:
                                 number_data_point.explicit_bounds
                             ),
                             "sum": number_data_point.sum,
+                            "exemplars": exemplars,
                         }
                     )
                 else:
@@ -351,7 +377,9 @@ class _CustomCollector:
                     ].add_metric(
                         labels=label_values,
                         buckets=_convert_buckets(
-                            value["bucket_counts"], value["explicit_bounds"]
+                            value["bucket_counts"],
+                            value["explicit_bounds"],
+                            value["exemplars"],
                         ),
                         sum_value=value["sum"],
                     )
@@ -379,6 +407,37 @@ class _CustomCollector:
         info = InfoMetricFamily(name, description, labels=attributes)
         info.add_metric(labels=list(attributes.keys()), value=attributes)
         return info
+
+    def _convert_exemplar(self, exemplar_data: Exemplar) -> PrometheusExemplar:
+        """
+        Converts the SDK exemplar into a Prometheus Exemplar, including proper time conversion.
+
+        Parameters:
+        - value (float): The value associated with the exemplar.
+        - exemplar_data (ExemplarData): An OpenTelemetry exemplar data object containing attributes and timing information.
+
+        Returns:
+        - Exemplar: A Prometheus Exemplar object with correct labeling and timing.
+        """
+        labels = {
+            sanitize_attribute(key): str(value)
+            for key, value in exemplar_data.filtered_attributes.items()
+        }
+
+        # Add trace_id and span_id to labels only if they are valid and not None
+        if (
+            exemplar_data.trace_id is not None
+            and exemplar_data.span_id is not None
+        ):
+            labels["trace_id"] = format_trace_id(exemplar_data.trace_id)
+            labels["span_id"] = format_span_id(exemplar_data.span_id)
+
+        # Convert time from nanoseconds to seconds
+        timestamp_seconds = exemplar_data.time_unix_nano / 1e9
+        prom_exemplar = PrometheusExemplar(
+            labels, exemplar_data.value, timestamp_seconds
+        )
+        return prom_exemplar
 
 
 class _AutoPrometheusMetricReader(PrometheusMetricReader):

@@ -347,7 +347,7 @@ def _encode_exemplars(sdk_exemplars: List[Exemplar]) -> List[pb2.Exemplar]:
     Converts a list of SDK Exemplars into a list of protobuf Exemplars.
 
     Args:
-        sdk_exemplars (list): The list of exemplars from the OpenTelemetry SDK.
+        sdk_exemplars: The list of exemplars from the OpenTelemetry SDK.
 
     Returns:
         list: A list of protobuf exemplars.

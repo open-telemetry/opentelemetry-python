@@ -22,12 +22,15 @@ from prometheus_client.core import (
     GaugeMetricFamily,
     InfoMetricFamily,
 )
+from prometheus_client.openmetrics.exposition import (
+    generate_latest as openmetrics_generate_latest,
+)
 
 from opentelemetry.exporter.prometheus import (
     PrometheusMetricReader,
     _CustomCollector,
 )
-from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics import Exemplar, MeterProvider
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     Histogram,
@@ -44,9 +47,12 @@ from opentelemetry.test.metrictestutil import (
     _generate_sum,
     _generate_unsupported_metric,
 )
+from opentelemetry.trace import format_span_id, format_trace_id
 
 
 class TestPrometheusMetricReader(TestCase):
+    # pylint: disable=too-many-public-methods
+
     def setUp(self):
         self._mock_registry_register = Mock()
         self._registry_register_patch = patch(
@@ -55,7 +61,10 @@ class TestPrometheusMetricReader(TestCase):
         )
 
     def verify_text_format(
-        self, metric: Metric, expect_prometheus_text: str
+        self,
+        metric: Metric,
+        expect_prometheus_text: str,
+        openmetrics_generator: bool = False,
     ) -> None:
         metrics_data = MetricsData(
             resource_metrics=[
@@ -75,7 +84,11 @@ class TestPrometheusMetricReader(TestCase):
 
         collector = _CustomCollector(disable_target_info=True)
         collector.add_metrics_data(metrics_data)
-        result_bytes = generate_latest(collector)
+        result_bytes = (
+            openmetrics_generate_latest(collector)
+            if openmetrics_generator
+            else generate_latest(collector)
+        )
         result = result_bytes.decode("utf-8")
         self.assertEqual(result, expect_prometheus_text)
 
@@ -129,6 +142,67 @@ class TestPrometheusMetricReader(TestCase):
                 test_name_seconds_sum{histo="1"} 579.0
                 """
             ),
+        )
+
+    def test_histogram_with_exemplar_to_prometheus(self):
+        span_id = 10217189687419569865
+        trace_id = 67545097771067222548457157018666467027
+        metric = Metric(
+            name="test@name",
+            description="foo",
+            unit="s",
+            data=Histogram(
+                data_points=[
+                    HistogramDataPoint(
+                        attributes={"histo": 1},
+                        start_time_unix_nano=1641946016139533244,
+                        time_unix_nano=1641946016139533244,
+                        exemplars=[
+                            Exemplar(
+                                {"filtered": "banana"},
+                                305.0,
+                                1641946016139533244,
+                                span_id,
+                                trace_id,
+                            ),
+                            # Will be ignored as part of the same buckets
+                            Exemplar(
+                                {"filtered": "banana"},
+                                298.0,
+                                1641946016139533400,
+                                span_id,
+                                trace_id,
+                            ),
+                        ],
+                        count=6,
+                        sum=579.0,
+                        bucket_counts=[1, 3, 2],
+                        explicit_bounds=[123.0, 456.0],
+                        min=1,
+                        max=457,
+                    )
+                ],
+                aggregation_temporality=AggregationTemporality.DELTA,
+            ),
+        )
+        span_str = format_span_id(span_id)
+        trace_str = format_trace_id(trace_id)
+        self.verify_text_format(
+            metric,
+            dedent(
+                f"""\
+                # HELP test_name_seconds foo
+                # TYPE test_name_seconds histogram
+                # UNIT test_name_seconds seconds
+                test_name_seconds_bucket{{histo="1",le="123.0"}} 1.0
+                test_name_seconds_bucket{{histo="1",le="456.0"}} 4.0 # {{filtered="banana",span_id="{span_str}",trace_id="{trace_str}"}} 305.0 1641946016.1395333
+                test_name_seconds_bucket{{histo="1",le="+Inf"}} 6.0
+                test_name_seconds_count{{histo="1"}} 6.0
+                test_name_seconds_sum{{histo="1"}} 579.0
+                # EOF
+                """
+            ),
+            openmetrics_generator=True,
         )
 
     def test_monotonic_sum_to_prometheus(self):
