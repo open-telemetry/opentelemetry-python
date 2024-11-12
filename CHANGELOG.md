@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4251](https://github.com/open-telemetry/opentelemetry-python/pull/4251))
 - Fix recursion error with sdk disabled and handler added to root logger
   ([#4259](https://github.com/open-telemetry/opentelemetry-python/pull/4259))
+- sdk: setup EventLogger when OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED is set
+  ([#4270](https://github.com/open-telemetry/opentelemetry-python/pull/4270))
 
 ## Version 1.28.0/0.49b0 (2024-11-05)
 
