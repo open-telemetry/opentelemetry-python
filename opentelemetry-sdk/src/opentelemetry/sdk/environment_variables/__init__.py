@@ -311,6 +311,12 @@ The :envvar:`OTEL_EXPORTER_OTLP_HEADERS` contains the key-value pairs to be used
 associated with gRPC or HTTP requests.
 """
 
+OTEL_EXPORTER_OTLP_CHANNEL_OPTIONS = "OTEL_EXPORTER_OTLP_CHANNEL_OPTIONS"
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_CHANNEL_OPTIONS
+
+The :envvar:`OTEL_EXPORTER_OTLP_CHANNEL_OPTIONS` represents the channel options for the OTLP exporter.
+"""
 
 OTEL_EXPORTER_OTLP_COMPRESSION = "OTEL_EXPORTER_OTLP_COMPRESSION"
 """
@@ -345,13 +351,6 @@ The :envvar:`OTEL_EXPORTER_OTLP_ENDPOINT` target to which the exporter is going 
 The endpoint MUST be a valid URL host, and MAY contain a scheme (http or https), port and path.
 A scheme of https indicates a secure connection and takes precedence over the insecure configuration setting.
 Default: "http://localhost:4317"
-"""
-
-OTEL_EXPORTER_OTLP_CHANNEL_OPTIONS = "OTEL_EXPORTER_OTLP_CHANNEL_OPTIONS"
-"""
-.. envvar:: OTEL_EXPORTER_OTLP_CHANNEL_OPTIONS
-
-The :envvar:`OTEL_EXPORTER_OTLP_CHANNEL_OPTIONS` represents the channel options for the OTLP exporter.
 """
 
 OTEL_EXPORTER_OTLP_INSECURE = "OTEL_EXPORTER_OTLP_INSECURE"

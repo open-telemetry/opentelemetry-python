@@ -183,6 +183,7 @@ class OTLPExporterMixin(
         insecure: Connection type
         credentials: ChannelCredentials object for server authentication
         headers: Headers to send when exporting
+        channel_options: Options to pass to the gRPC channel
         timeout: Backend request timeout in seconds
         compression: gRPC compression method to use
     """
@@ -194,6 +195,9 @@ class OTLPExporterMixin(
         credentials: Optional[ChannelCredentials] = None,
         headers: Optional[
             Union[TypingSequence[Tuple[str, str]], Dict[str, str], str]
+        ] = None,
+        channel_options: Optional[
+            Union[TypingSequence[Tuple[str, str]], str]
         ] = None,
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
@@ -243,11 +247,14 @@ class OTLPExporterMixin(
             else compression
         ) or Compression.NoCompression
 
-        options = None
-        channel_options = environ.get(OTEL_EXPORTER_OTLP_CHANNEL_OPTIONS)
-        if channel_options:
-            options = []
-            for item in channel_options.split(","):
+        self._collector_kwargs = None
+
+        self._channel_options = channel_options or environ.get(
+            OTEL_EXPORTER_OTLP_CHANNEL_OPTIONS
+        )
+        if isinstance(self._channel_options, str):
+            self._channel_options: List[Tuple[str, str]] = []
+            for item in self._channel_options.split(","):
                 try:
                     key, value = item.split("=", maxsplit=1)
                 except ValueError as exc:
@@ -257,12 +264,14 @@ class OTLPExporterMixin(
                         exc,
                     )
                     continue
-                options.append((key, value))
+                self._channel_options.append((key, value))
 
         if insecure:
             self._client = self._stub(
                 insecure_channel(
-                    self._endpoint, compression=compression, options=options
+                    self._endpoint,
+                    compression=compression,
+                    options=self._channel_options,
                 )
             )
         else:
@@ -277,7 +286,7 @@ class OTLPExporterMixin(
                     self._endpoint,
                     credentials,
                     compression=compression,
-                    options=options,
+                    options=self._channel_options,
                 )
             )
 

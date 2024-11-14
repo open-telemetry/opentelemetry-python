@@ -47,6 +47,7 @@ from opentelemetry.proto.trace.v1.trace_pb2 import (  # noqa: F401
 )
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_TRACES_CHANNEL_OPTIONS,
     OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
     OTEL_EXPORTER_OTLP_TRACES_COMPRESSION,
@@ -76,6 +77,7 @@ class OTLPSpanExporter(
         insecure: Connection type
         credentials: Credentials object for server authentication
         headers: Headers to send when exporting
+        channel_options: Options to pass to the gRPC channel
         timeout: Backend request timeout in seconds
         compression: gRPC compression method to use
     """
@@ -90,6 +92,9 @@ class OTLPSpanExporter(
         credentials: Optional[ChannelCredentials] = None,
         headers: Optional[
             Union[TypingSequence[Tuple[str, str]], Dict[str, str], str]
+        ] = None,
+        channel_options: Optional[
+            Union[TypingSequence[Tuple[str, str]], str]
         ] = None,
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
@@ -129,6 +134,8 @@ class OTLPSpanExporter(
                 "credentials": credentials,
                 "headers": headers
                 or environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS),
+                "channel_options": channel_options
+                or environ.get(OTEL_EXPORTER_OTLP_TRACES_CHANNEL_OPTIONS),
                 "timeout": timeout or environ_timeout,
                 "compression": compression,
             }

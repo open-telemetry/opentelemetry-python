@@ -42,6 +42,7 @@ from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401
 from opentelemetry.proto.metrics.v1 import metrics_pb2 as pb2  # noqa: F401
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_METRICS_CHANNEL_OPTIONS,
     OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY,
     OTEL_EXPORTER_OTLP_METRICS_COMPRESSION,
@@ -98,6 +99,9 @@ class OTLPMetricExporter(
         headers: Optional[
             Union[TypingSequence[Tuple[str, str]], Dict[str, str], str]
         ] = None,
+        channel_options: Optional[
+            Union[TypingSequence[Tuple[str, str]], str]
+        ] = None,
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
         preferred_temporality: Dict[type, AggregationTemporality] = None,
@@ -142,6 +146,8 @@ class OTLPMetricExporter(
             insecure=insecure,
             credentials=credentials,
             headers=headers or environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS),
+            channel_options=channel_options
+            or environ.get(OTEL_EXPORTER_OTLP_METRICS_CHANNEL_OPTIONS),
             timeout=timeout or environ_timeout,
             compression=compression,
         )
