@@ -9,7 +9,10 @@
       (otherwise the workflow will pick up the version from `main` and just remove the `.dev` suffix).
   * Review the two pull requests that it creates.
     (one is targeted to the release branch and one is targeted to `main`).
-    * The builds will fail for both the `main` and release pr because of validation rules. Follow the [release workflow](https://github.com/open-telemetry/opentelemetry-python-contrib/blob/main/RELEASING.md) for the contrib repo up until this same point. Change the SHAs of each PR to point at each other to get the `main` and release builds to pass.
+    * The builds will fail for both the `main` and release pr because of validation rules. Follow the [release workflow](https://github.com/open-telemetry/opentelemetry-python-contrib/blob/main/RELEASING.md) for the contrib repo up until this same point.
+    * Change the CONTRIB_REPO_SHA of core PRs to point to their counterpart in contrib.
+    * Change the CORE_REPO_SHA of contrib PRs to point to their counterpart in core.
+    * Release builds now should pass.
   * Merge the release PR.
   * Merge the PR to main (this can be done separately from [making the release](#making-the-release))
 
