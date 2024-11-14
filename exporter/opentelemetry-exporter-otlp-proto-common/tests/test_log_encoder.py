@@ -51,6 +51,18 @@ class TestOTLPLogEncoder(unittest.TestCase):
         sdk_logs, expected_encoding = self.get_test_logs()
         self.assertEqual(encode_logs(sdk_logs), expected_encoding)
 
+    def test_encode_no_body(self):
+        sdk_logs, expected_encoding = self.get_test_logs()
+        for log in sdk_logs:
+            log.log_record.body = None
+
+        for resource_log in expected_encoding.resource_logs:
+            for scope_log in resource_log.scope_logs:
+                for log_record in scope_log.log_records:
+                    log_record.ClearField("body")
+
+        self.assertEqual(encode_logs(sdk_logs), expected_encoding)
+
     def test_dropped_attributes_count(self):
         sdk_logs = self._get_test_logs_dropped_attributes()
         encoded_logs = encode_logs(sdk_logs)
