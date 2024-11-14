@@ -54,7 +54,7 @@
     git push --delete origin tagname
     git push origin stable
     ```
-  * This will ensure that READTHEDOCs for core are pointing at the stable release.
+  * This will ensure that READTHEDOCS for core are pointing at the stable release.
   * To validate this worked, ensure the stable build has run successfully:
     https://readthedocs.org/projects/opentelemetry-python/builds/.
     If the build has not run automatically, it can be manually trigger via the READTHEDOCs interface.
