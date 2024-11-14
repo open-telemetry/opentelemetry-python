@@ -61,6 +61,7 @@ from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401
 from opentelemetry.proto.resource.v1.resource_pb2 import Resource  # noqa: F401
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_CHANNEL_OPTIONS,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_KEY,
     OTEL_EXPORTER_OTLP_COMPRESSION,
@@ -242,9 +243,27 @@ class OTLPExporterMixin(
             else compression
         ) or Compression.NoCompression
 
+        options = None
+        channel_options = environ.get(OTEL_EXPORTER_OTLP_CHANNEL_OPTIONS)
+        if channel_options:
+            options = []
+            for item in channel_options.split(","):
+                try:
+                    key, value = item.split("=", maxsplit=1)
+                except ValueError as exc:
+                    logger.warning(
+                        "Invalid key value channel option pair %s: %s",
+                        item,
+                        exc,
+                    )
+                    continue
+                options.append((key, value))
+
         if insecure:
             self._client = self._stub(
-                insecure_channel(self._endpoint, compression=compression)
+                insecure_channel(
+                    self._endpoint, compression=compression, options=options
+                )
             )
         else:
             credentials = _get_credentials(
@@ -255,7 +274,10 @@ class OTLPExporterMixin(
             )
             self._client = self._stub(
                 secure_channel(
-                    self._endpoint, credentials, compression=compression
+                    self._endpoint,
+                    credentials,
+                    compression=compression,
+                    options=options,
                 )
             )
 

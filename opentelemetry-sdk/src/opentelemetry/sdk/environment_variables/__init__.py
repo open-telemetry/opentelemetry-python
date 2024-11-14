@@ -347,6 +347,13 @@ A scheme of https indicates a secure connection and takes precedence over the in
 Default: "http://localhost:4317"
 """
 
+OTEL_EXPORTER_OTLP_CHANNEL_OPTIONS = "OTEL_EXPORTER_OTLP_CHANNEL_OPTIONS"
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_CHANNEL_OPTIONS
+
+The :envvar:`OTEL_EXPORTER_OTLP_CHANNEL_OPTIONS` represents the channel options for the OTLP exporter.
+"""
+
 OTEL_EXPORTER_OTLP_INSECURE = "OTEL_EXPORTER_OTLP_INSECURE"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_INSECURE
