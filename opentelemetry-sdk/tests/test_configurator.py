@@ -586,14 +586,32 @@ class TestLoggingInit(TestCase):
             "opentelemetry.sdk._configuration.set_logger_provider"
         )
 
+        self.event_logger_provider_instance_mock = Mock()
+        self.event_logger_provider_patch = patch(
+            "opentelemetry.sdk._configuration.EventLoggerProvider",
+            return_value=self.event_logger_provider_instance_mock,
+        )
+        self.set_event_logger_provider_patch = patch(
+            "opentelemetry.sdk._configuration.set_event_logger_provider"
+        )
+
         self.processor_mock = self.processor_patch.start()
         self.provider_mock = self.provider_patch.start()
         self.set_provider_mock = self.set_provider_patch.start()
+
+        self.event_logger_provider_mock = (
+            self.event_logger_provider_patch.start()
+        )
+        self.set_event_logger_provider_mock = (
+            self.set_event_logger_provider_patch.start()
+        )
 
     def tearDown(self):
         self.processor_patch.stop()
         self.set_provider_patch.stop()
         self.provider_patch.stop()
+        self.event_logger_provider_patch.stop()
+        self.set_event_logger_provider_patch.stop()
         root_logger = getLogger("root")
         root_logger.handlers = [
             handler
@@ -615,6 +633,12 @@ class TestLoggingInit(TestCase):
         self.assertEqual(
             provider.resource.attributes.get("telemetry.auto.version"),
             "auto-version",
+        )
+        self.event_logger_provider_mock.assert_called_once_with(
+            logger_provider=provider
+        )
+        self.set_event_logger_provider_mock.assert_called_once_with(
+            self.event_logger_provider_instance_mock
         )
 
     @patch.dict(
