@@ -240,8 +240,8 @@ def parse_args(args=None):
         "update_patch_versions",
         help="Updates version numbers during patch release, used by maintainers and CI",
     )
-    releaseparser.set_defaults(func=release_args)
-    releaseparser.add_argument("--versions", required=True)
+    patchreleaseparser.set_defaults(func=patch_release_args)
+    patchreleaseparser.add_argument("--versions", required=True)
 
     fmtparser = subparsers.add_parser(
         "format",
@@ -614,7 +614,6 @@ def update_patch_dependencies(targets, version, prev_version, packages):
 
     for pkg in packages:
         search = rf"({basename(pkg)}[^,]*)(\s?({operators_pattern})\s?)(.*{prev_version})"
-        print(search)
         replace = r"\1\2 " + version
         update_files(
             targets,
@@ -672,18 +671,20 @@ def patch_release_args(args):
     targets = list(find_targets_unordered(rootpath))
     cfg = ConfigParser()
     cfg.read(str(find_projectroot() / "eachdist.ini"))
-    versions = args.versions
+    versions = args.versions.split(",")
     # stable
     mcfg = cfg["stable"]
     packages = mcfg["packages"].split()
     print(f"update stable packages to {versions[0]}")
     update_patch_dependencies(targets, versions[0], versions[2], packages)
+    update_version_files(targets, versions[0], packages)
 
     # prerelease
     mcfg = cfg["prerelease"]
     packages = mcfg["packages"].split()
     print(f"update prerelease packages to {versions[1]}")
     update_patch_dependencies(targets, versions[1], versions[3], packages)
+    update_version_files(targets, versions[1], packages)
 
 
 def test_args(args):
