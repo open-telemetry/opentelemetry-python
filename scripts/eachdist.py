@@ -236,6 +236,13 @@ def parse_args(args=None):
         "releaseargs", nargs=argparse.REMAINDER, help=extraargs_help("pytest")
     )
 
+    patchreleaseparser = subparsers.add_parser(
+        "update_patch_versions",
+        help="Updates version numbers during patch release, used by maintainers and CI",
+    )
+    releaseparser.set_defaults(func=release_args)
+    releaseparser.add_argument("--versions", required=True)
+
     fmtparser = subparsers.add_parser(
         "format",
         help="Formats all source code with black and isort.",
@@ -599,6 +606,24 @@ def update_dependencies(targets, version, packages):
         )
 
 
+def update_patch_dependencies(targets, version, prev_version, packages):
+    print("updating patch dependencies")
+    # PEP 508 allowed specifier operators
+    operators = ["==", "!=", "<=", ">=", "<", ">", "===", "~=", "="]
+    operators_pattern = "|".join(re.escape(op) for op in operators)
+
+    for pkg in packages:
+        search = rf"({basename(pkg)}[^,]*)(\s?({operators_pattern})\s?)(.*{prev_version})"
+        print(search)
+        replace = r"\1\2 " + version
+        update_files(
+            targets,
+            "pyproject.toml",
+            search,
+            replace,
+        )
+
+
 def update_files(targets, filename, search, replace):
     errors = False
     for target in targets:
@@ -638,6 +663,27 @@ def release_args(args):
         print(f"update {group} packages to {version}")
         update_dependencies(targets, version, packages)
         update_version_files(targets, version, packages)
+
+
+def patch_release_args(args):
+    print("preparing patch release")
+
+    rootpath = find_projectroot()
+    targets = list(find_targets_unordered(rootpath))
+    cfg = ConfigParser()
+    cfg.read(str(find_projectroot() / "eachdist.ini"))
+    versions = args.versions
+    # stable
+    mcfg = cfg["stable"]
+    packages = mcfg["packages"].split()
+    print(f"update stable packages to {versions[0]}")
+    update_patch_dependencies(targets, versions[0], versions[2], packages)
+
+    # prerelease
+    mcfg = cfg["prerelease"]
+    packages = mcfg["packages"].split()
+    print(f"update prerelease packages to {versions[1]}")
+    update_patch_dependencies(targets, versions[1], versions[3], packages)
 
 
 def test_args(args):
