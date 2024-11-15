@@ -241,7 +241,11 @@ def parse_args(args=None):
         help="Updates version numbers during patch release, used by maintainers and CI",
     )
     patchreleaseparser.set_defaults(func=patch_release_args)
-    patchreleaseparser.add_argument("--versions", required=True)
+    patchreleaseparser.add_argument("--stable_version", required=True)
+    patchreleaseparser.add_argument("--unstable_version", required=True)
+    patchreleaseparser.add_argument("--stable_version_prev", required=True)
+    patchreleaseparser.add_argument("--unstable_version_prev", required=True)
+
 
     fmtparser = subparsers.add_parser(
         "format",
