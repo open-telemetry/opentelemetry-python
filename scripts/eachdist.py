@@ -246,7 +246,6 @@ def parse_args(args=None):
     patchreleaseparser.add_argument("--stable_version_prev", required=True)
     patchreleaseparser.add_argument("--unstable_version_prev", required=True)
 
-
     fmtparser = subparsers.add_parser(
         "format",
         help="Formats all source code with black and isort.",
@@ -675,20 +674,23 @@ def patch_release_args(args):
     targets = list(find_targets_unordered(rootpath))
     cfg = ConfigParser()
     cfg.read(str(find_projectroot() / "eachdist.ini"))
-    versions = args.versions.split(",")
     # stable
     mcfg = cfg["stable"]
     packages = mcfg["packages"].split()
-    print(f"update stable packages to {versions[0]}")
-    update_patch_dependencies(targets, versions[0], versions[2], packages)
-    update_version_files(targets, versions[0], packages)
+    print(f"update stable packages to {args.stable_version}")
+    update_patch_dependencies(
+        targets, args.stable_version, args.stable_version_prev, packages
+    )
+    update_version_files(targets, args.stable_version, packages)
 
     # prerelease
     mcfg = cfg["prerelease"]
     packages = mcfg["packages"].split()
-    print(f"update prerelease packages to {versions[1]}")
-    update_patch_dependencies(targets, versions[1], versions[3], packages)
-    update_version_files(targets, versions[1], packages)
+    print(f"update prerelease packages to {args.unstable_version}")
+    update_patch_dependencies(
+        targets, args.unstable_version, args.unstable_version_prev, packages
+    )
+    update_version_files(targets, args.unstable_version, packages)
 
 
 def test_args(args):
