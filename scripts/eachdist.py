@@ -616,8 +616,9 @@ def update_patch_dependencies(targets, version, prev_version, packages):
     operators_pattern = "|".join(re.escape(op) for op in operators)
 
     for pkg in packages:
-        search = rf"({basename(pkg)}[^,]*)(\s?({operators_pattern})\s?)(.*{prev_version})"
-        replace = r"\1\2 " + version
+        search = rf"({basename(pkg)}[^,]*?)(\s?({operators_pattern})\s?)(.*{prev_version})"
+        replace = r"\g<1>\g<2>" + version
+        print(f"{search=}\t{replace=}\t{pkg=}")
         update_files(
             targets,
             "pyproject.toml",
