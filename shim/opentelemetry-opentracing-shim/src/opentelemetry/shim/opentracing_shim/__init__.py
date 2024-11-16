@@ -684,7 +684,7 @@ class TracerShim(Tracer):
         context = SpanContextShim(span.get_span_context())
         return SpanShim(self, context, span)
 
-    def inject(self, span_context, format: object, carrier: object):
+    def inject(self, span_context, _format: object, carrier: object):
         """Injects ``span_context`` into ``carrier``.
 
         See base class for more details.
@@ -703,7 +703,7 @@ class TracerShim(Tracer):
         # TODO: Support Format.BINARY once it is supported in
         # opentelemetry-python.
 
-        if format not in self._supported_formats:
+        if _format not in self._supported_formats:
             raise UnsupportedFormatException
 
         propagator = get_global_textmap()
@@ -715,7 +715,7 @@ class TracerShim(Tracer):
         ctx = set_span_in_context(span)
         propagator.inject(carrier, context=ctx)
 
-    def extract(self, format: object, carrier: object):
+    def extract(self, _format: object, carrier: object):
         """Returns an ``opentracing.SpanContext`` instance extracted from a
         ``carrier``.
 
@@ -737,7 +737,7 @@ class TracerShim(Tracer):
         # uses the configured propagators in opentelemetry.propagators.
         # TODO: Support Format.BINARY once it is supported in
         # opentelemetry-python.
-        if format not in self._supported_formats:
+        if _format not in self._supported_formats:
             raise UnsupportedFormatException
 
         propagator = get_global_textmap()

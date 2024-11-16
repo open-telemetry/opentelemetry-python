@@ -13,14 +13,16 @@ from opentelemetry.trace.span import SpanContext
 
 class TestAlwaysOnExemplarFilter(TestCase):
     def test_should_sample(self):
-        filter = AlwaysOnExemplarFilter()
-        self.assertTrue(filter.should_sample(10, 0, {}, Context()))
+        self.assertTrue(
+            AlwaysOnExemplarFilter().should_sample(10, 0, {}, Context())
+        )
 
 
 class TestAlwaysOffExemplarFilter(TestCase):
     def test_should_sample(self):
-        filter = AlwaysOffExemplarFilter()
-        self.assertFalse(filter.should_sample(10, 0, {}, Context()))
+        self.assertFalse(
+            AlwaysOffExemplarFilter().should_sample(10, 0, {}, Context())
+        )
 
 
 class TestTraceBasedExemplarFilter(TestCase):
@@ -28,7 +30,6 @@ class TestTraceBasedExemplarFilter(TestCase):
     SPAN_ID = int("6e0c63257de34c92", 16)
 
     def test_should_not_sample_without_trace(self):
-        filter = TraceBasedExemplarFilter()
         span_context = SpanContext(
             trace_id=self.TRACE_ID,
             span_id=self.SPAN_ID,
@@ -38,14 +39,16 @@ class TestTraceBasedExemplarFilter(TestCase):
         )
         span = trace.NonRecordingSpan(span_context)
         ctx = trace.set_span_in_context(span)
-        self.assertFalse(filter.should_sample(10, 0, {}, ctx))
+        self.assertFalse(
+            TraceBasedExemplarFilter().should_sample(10, 0, {}, ctx)
+        )
 
     def test_should_not_sample_with_invalid_span(self):
-        filter = TraceBasedExemplarFilter()
-        self.assertFalse(filter.should_sample(10, 0, {}, Context()))
+        self.assertFalse(
+            TraceBasedExemplarFilter().should_sample(10, 0, {}, Context())
+        )
 
     def test_should_sample_when_trace_is_sampled(self):
-        filter = TraceBasedExemplarFilter()
         span_context = SpanContext(
             trace_id=self.TRACE_ID,
             span_id=self.SPAN_ID,
@@ -55,4 +58,6 @@ class TestTraceBasedExemplarFilter(TestCase):
         )
         span = trace.NonRecordingSpan(span_context)
         ctx = trace.set_span_in_context(span)
-        self.assertTrue(filter.should_sample(10, 0, {}, ctx))
+        self.assertTrue(
+            TraceBasedExemplarFilter().should_sample(10, 0, {}, ctx)
+        )
