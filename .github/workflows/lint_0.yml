@@ -11,7 +11,7 @@ on:
 
 env:
   CORE_REPO_SHA: main
-  CONTRIB_REPO_SHA: c65e27333e7c7b6ea2e5eb56191c16f024430881
+  CONTRIB_REPO_SHA: opentelemetrybot/prepare-release-1.28.2-0.49b2
   PIP_EXISTS_ACTION: w
 
 jobs:
