@@ -21,6 +21,7 @@ class TestGlobals(EventsGlobalsTest, unittest.TestCase):
         self.assertIs(get_event_logger_provider(), elp_mock)
         logger_mock.warning.assert_not_called()
 
+    # pylint: disable=no-self-use
     @patch("opentelemetry._events._logger")
     def test_set_event_logger_provider_will_warn_second_call(
         self, logger_mock
