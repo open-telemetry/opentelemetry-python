@@ -48,13 +48,14 @@ def _encode_log(log_data: LogData) -> PB2LogRecord:
         if log_data.log_record.trace_id == 0
         else _encode_trace_id(log_data.log_record.trace_id)
     )
+    body = log_data.log_record.body
     return PB2LogRecord(
         time_unix_nano=log_data.log_record.timestamp,
         observed_time_unix_nano=log_data.log_record.observed_timestamp,
         span_id=span_id,
         trace_id=trace_id,
         flags=int(log_data.log_record.trace_flags),
-        body=_encode_value(log_data.log_record.body),
+        body=_encode_value(body) if body is not None else None,
         severity_text=log_data.log_record.severity_text,
         attributes=_encode_attributes(log_data.log_record.attributes),
         dropped_attributes_count=log_data.log_record.dropped_attributes,
