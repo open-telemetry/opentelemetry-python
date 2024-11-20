@@ -1,4 +1,4 @@
-name: Test 0
+name: Test tox-gh
 
 on:
   push:
