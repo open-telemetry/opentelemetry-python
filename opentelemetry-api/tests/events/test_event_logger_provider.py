@@ -11,13 +11,28 @@ from opentelemetry.test.globals_test import EventsGlobalsTest
 
 
 class TestGlobals(EventsGlobalsTest, unittest.TestCase):
-    def test_set_event_logger_provider(self):
+    @patch("opentelemetry._events._logger")
+    def test_set_event_logger_provider(self, logger_mock):
         elp_mock = Mock()
         # pylint: disable=protected-access
         self.assertIsNone(events._EVENT_LOGGER_PROVIDER)
         set_event_logger_provider(elp_mock)
         self.assertIs(events._EVENT_LOGGER_PROVIDER, elp_mock)
         self.assertIs(get_event_logger_provider(), elp_mock)
+        logger_mock.warning.assert_not_called()
+
+    # pylint: disable=no-self-use
+    @patch("opentelemetry._events._logger")
+    def test_set_event_logger_provider_will_warn_second_call(
+        self, logger_mock
+    ):
+        elp_mock = Mock()
+        set_event_logger_provider(elp_mock)
+        set_event_logger_provider(elp_mock)
+
+        logger_mock.warning.assert_called_once_with(
+            "Overriding of current EventLoggerProvider is not allowed"
+        )
 
     def test_get_event_logger_provider(self):
         # pylint: disable=protected-access

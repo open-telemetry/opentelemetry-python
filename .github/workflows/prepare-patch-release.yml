@@ -8,6 +8,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install toml
+        run: pip install toml
+
       - run: |
           if [[ ! $GITHUB_REF_NAME =~ ^release/v[0-9]+\.[0-9]+\.x-0\.[0-9]+bx$ ]]; then
             echo this workflow should only be run against long-term release branches
@@ -40,14 +43,18 @@ jobs:
             exit 1
           fi
 
+          stable_version_prev="$stable_major_minor.$((stable_patch))"
+          unstable_version_prev="0.${unstable_minor}b$((unstable_patch))"
           stable_version="$stable_major_minor.$((stable_patch + 1))"
           unstable_version="0.${unstable_minor}b$((unstable_patch + 1))"
 
           echo "STABLE_VERSION=$stable_version" >> $GITHUB_ENV
           echo "UNSTABLE_VERSION=$unstable_version" >> $GITHUB_ENV
+          echo "STABLE_VERSION_PREV=$stable_version_prev" >> $GITHUB_ENV
+          echo "UNSTABLE_VERSION_PREV=$unstable_version_prev" >> $GITHUB_ENV
 
       - name: Update version
-        run: .github/scripts/update-version.sh $STABLE_VERSION $UNSTABLE_VERSION
+        run: .github/scripts/update-version-patch.sh $STABLE_VERSION $UNSTABLE_VERSION $STABLE_VERSION_PREV $UNSTABLE_VERSION_PREV
 
       - name: Update the change log with the approximate release date
         run: |

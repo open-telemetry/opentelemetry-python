@@ -236,6 +236,16 @@ def parse_args(args=None):
         "releaseargs", nargs=argparse.REMAINDER, help=extraargs_help("pytest")
     )
 
+    patchreleaseparser = subparsers.add_parser(
+        "update_patch_versions",
+        help="Updates version numbers during patch release, used by maintainers and CI",
+    )
+    patchreleaseparser.set_defaults(func=patch_release_args)
+    patchreleaseparser.add_argument("--stable_version", required=True)
+    patchreleaseparser.add_argument("--unstable_version", required=True)
+    patchreleaseparser.add_argument("--stable_version_prev", required=True)
+    patchreleaseparser.add_argument("--unstable_version_prev", required=True)
+
     fmtparser = subparsers.add_parser(
         "format",
         help="Formats all source code with black and isort.",
@@ -599,6 +609,24 @@ def update_dependencies(targets, version, packages):
         )
 
 
+def update_patch_dependencies(targets, version, prev_version, packages):
+    print("updating patch dependencies")
+    # PEP 508 allowed specifier operators
+    operators = ["==", "!=", "<=", ">=", "<", ">", "===", "~=", "="]
+    operators_pattern = "|".join(re.escape(op) for op in operators)
+
+    for pkg in packages:
+        search = rf"({basename(pkg)}[^,]*?)(\s?({operators_pattern})\s?)(.*{prev_version})"
+        replace = r"\g<1>\g<2>" + version
+        print(f"{search=}\t{replace=}\t{pkg=}")
+        update_files(
+            targets,
+            "pyproject.toml",
+            search,
+            replace,
+        )
+
+
 def update_files(targets, filename, search, replace):
     errors = False
     for target in targets:
@@ -638,6 +666,32 @@ def release_args(args):
         print(f"update {group} packages to {version}")
         update_dependencies(targets, version, packages)
         update_version_files(targets, version, packages)
+
+
+def patch_release_args(args):
+    print("preparing patch release")
+
+    rootpath = find_projectroot()
+    targets = list(find_targets_unordered(rootpath))
+    cfg = ConfigParser()
+    cfg.read(str(find_projectroot() / "eachdist.ini"))
+    # stable
+    mcfg = cfg["stable"]
+    packages = mcfg["packages"].split()
+    print(f"update stable packages to {args.stable_version}")
+    update_patch_dependencies(
+        targets, args.stable_version, args.stable_version_prev, packages
+    )
+    update_version_files(targets, args.stable_version, packages)
+
+    # prerelease
+    mcfg = cfg["prerelease"]
+    packages = mcfg["packages"].split()
+    print(f"update prerelease packages to {args.unstable_version}")
+    update_patch_dependencies(
+        targets, args.unstable_version, args.unstable_version_prev, packages
+    )
+    update_version_files(targets, args.unstable_version, packages)
 
 
 def test_args(args):

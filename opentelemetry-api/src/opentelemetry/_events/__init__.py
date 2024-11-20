@@ -192,7 +192,7 @@ def _set_event_logger_provider(
 
     did_set = _EVENT_LOGGER_PROVIDER_SET_ONCE.do_once(set_elp)
 
-    if log and did_set:
+    if log and not did_set:
         _logger.warning(
             "Overriding of current EventLoggerProvider is not allowed"
         )

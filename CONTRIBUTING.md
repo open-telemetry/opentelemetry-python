@@ -58,6 +58,7 @@ You can run `tox` with the following arguments:
   Python version
 - `tox -e spellcheck` to run a spellcheck on all the code
 - `tox -e lint-some-package` to run lint checks on `some-package`
+- `tox -e generate-workflows` to run creation of new CI workflows if tox environments have been updated
 - `tox -e ruff` to run ruff linter and formatter checks against the entire codebase
 
 `ruff check` and `ruff format` are executed when `tox -e ruff` is run. We strongly recommend you to configure [pre-commit](https://pre-commit.com/) locally to run `ruff` automatically before each commit by installing it as git hooks. You just need to [install pre-commit](https://pre-commit.com/#install) in your environment:
@@ -284,6 +285,7 @@ When updating the minimum supported Python version remember to:
 
 - Remove the version in `pyproject.toml` trove classifiers
 - Remove the version from `tox.ini`
+- Update github workflows accordingly with `tox -e generate-workflows`
 - Search for `sys.version_info` usage and remove code for unsupported versions
 - Bump `py-version` in `.pylintrc` for Python version dependent checks
 
@@ -293,7 +295,7 @@ When adding support for a new Python release remember to:
 
 - Add the version in `tox.ini`
 - Add the version in `pyproject.toml` trove classifiers
-- Update github workflows accordingly; lint and benchmarks use the latest supported version
+- Update github workflows accordingly with `tox -e generate-workflows`; lint and benchmarks use the latest supported version
 - Update `.pre-commit-config.yaml`
 - Update tox examples in the documentation
 

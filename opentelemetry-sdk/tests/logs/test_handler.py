@@ -11,9 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import logging
+import os
 import unittest
-from unittest.mock import Mock
+import warnings
+from unittest.mock import Mock, patch
 
 from opentelemetry._logs import NoOpLoggerProvider, SeverityNumber
 from opentelemetry._logs import get_logger as APIGetLogger
@@ -280,12 +283,27 @@ class TestLoggingHandler(unittest.TestCase):
         log_record = processor.get_log_record(0)
         self.assertIsInstance(log_record.body, str)
 
+    @patch.dict(os.environ, {"OTEL_SDK_DISABLED": "true"})
+    def test_handler_root_logger_with_disabled_sdk_does_not_go_into_recursion_error(
+        self,
+    ):
+        processor, logger = set_up_test_logging(
+            logging.NOTSET, root_logger=True
+        )
+        with warnings.catch_warnings(record=True) as cw:
+            logger.warning("hello")
 
-def set_up_test_logging(level, formatter=None):
+        self.assertEqual(len(cw), 1)
+        self.assertEqual("SDK is disabled.", str(cw[0].message))
+
+        self.assertEqual(processor.emit_count(), 0)
+
+
+def set_up_test_logging(level, formatter=None, root_logger=False):
     logger_provider = LoggerProvider()
     processor = FakeProcessor()
     logger_provider.add_log_record_processor(processor)
-    logger = logging.getLogger("foo")
+    logger = logging.getLogger(None if root_logger else "foo")
     handler = LoggingHandler(level=level, logger_provider=logger_provider)
     if formatter:
         handler.setFormatter(formatter)
