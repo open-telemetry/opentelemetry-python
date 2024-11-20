@@ -1,0 +1,43 @@
+name: Test 0
+
+on:
+  push:
+    branches-ignore:
+    - 'release/*'
+  pull_request:
+
+env:
+  CORE_REPO_SHA: main
+  CONTRIB_REPO_SHA: main
+  PIP_EXISTS_ACTION: w
+
+jobs:
+  test:
+    name: ${{ matrix.python-version }}-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    env:
+      py38: "3.8"
+      py39: "3.9"
+      py310: "3.10"
+      py311: "3.11"
+      py312: "3.12"
+      pypy3: pypy-3.8
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [py38, py39, py310, py311, py312, pypy3]
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+      - name: Set up Python ${{ env[matrix.python-version] }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env[matrix.python-version] }}
+          architecture: 'x64'
+      - name: Install tox
+        run: pip install tox tox-uv tox-gh
+      - name: Run tests
+        run: tox run --skip-pkg-install
+        env:
+          TOX_GH_MAJOR_MINOR: ${{ env[matrix.python-version] }}
