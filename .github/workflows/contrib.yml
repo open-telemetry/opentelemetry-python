@@ -7,7 +7,7 @@ on:
   pull_request:
 
 jobs:
-  test_0:
+  contrib_0:
     uses: emdneto/opentelemetry-python-contrib/.github/workflows/core_contrib_test_0.yml@generate-workflows-core
     with:
       CORE_REPO_SHA: ${{ github.sha }}
