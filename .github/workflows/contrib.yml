@@ -1,0 +1,16 @@
+name: Core Contrib Test
+
+on:
+  push:
+    branches-ignore:
+    - 'release/*'
+  pull_request:
+
+env:
+  CORE_REPO_SHA: ${{ github.sha }}
+
+jobs:
+  core_contrib_0:
+    uses: open-telemetry/opentelemetry-python-contrib/.github/workflows/core_contrib_test_0.yml@de4c1741ae6504b17ea6e563e50ff740c61a1004
+    with:
+      CORE_REPO_SHA: ${{ github.sha }}
