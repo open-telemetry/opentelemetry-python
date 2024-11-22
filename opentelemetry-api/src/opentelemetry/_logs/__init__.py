@@ -123,6 +123,14 @@ class Logger(ABC):
         self._attributes = attributes
 
     @abstractmethod
+    def is_enabled(
+        self,
+        severity_number: Optional[SeverityNumber] = None,
+        context: Optional[Context] = None
+    ) -> bool:
+        """Returns True if the logger is enabled for given severity and context, False otherwise."""
+
+    @abstractmethod
     def emit(self, record: "LogRecord") -> None:
         """Emits a :class:`LogRecord` representing a log to the processing pipeline."""
 
@@ -131,12 +139,14 @@ class Logger(ABC):
         self,
         name: str,
         timestamp: Optional[int] = None,
+        observed_timestamp: Optional[int] = None,
+        severity_number: Optional[SeverityNumber] = None,
+        severity_text: Optional[str] = None,
         context: Optional[Context] = None,
         body: Optional[Any] = None,
-        severity_number: Optional[SeverityNumber] = None,
         attributes: Optional[Attributes] = None,
     ) -> None:
-        """Emits a :class:`LogRecord` representing a event to the processing pipeline."""
+        """Emits an event to the processing pipeline."""
 
 
 class NoOpLogger(Logger):
@@ -144,6 +154,13 @@ class NoOpLogger(Logger):
 
     All operations are no-op.
     """
+
+    def is_enabled(
+        self,
+        severity_number: Optional[SeverityNumber] = None,
+        context: Optional[Context] = None
+    ) -> bool:
+        return False
 
     def emit(self, record: "LogRecord") -> None:
         pass
@@ -189,6 +206,13 @@ class ProxyLogger(Logger):
             )
             return self._real_logger
         return self._noop_logger
+
+    def is_enabled(
+        self,
+        severity_number: Optional[SeverityNumber] = None,
+        context: Optional[Context] = None
+    ) -> bool:
+        return self._logger.is_enabled(severity_number=severity_number, context=context)
 
     def emit(self, record: LogRecord) -> None:
         self._logger.emit(record)

@@ -592,6 +592,14 @@ class Logger(APILogger):
     def resource(self):
         return self._resource
 
+    def is_enabled(
+        self,
+        severity_number: Optional[SeverityNumber] = None,
+        context: Optional[Context] = None
+    ) -> bool:
+        """Returns True if the logger is enabled for given severity and context, False otherwise."""
+        return True # TODO
+
     def emit(self, record: LogRecord):
         """Emits the :class:`LogData` by associating :class:`LogRecord`
         and instrumentation info.
@@ -603,28 +611,34 @@ class Logger(APILogger):
         self,
         name: str,
         timestamp: Optional[int] = None,
+        observed_timestamp: Optional[int] = None,
+        severity_number: Optional[SeverityNumber] = None,
+        severity_text: Optional[str] = None,
         context: Optional[Context] = None,
         body: Optional[Any] = None,
-        severity_number: Optional[SeverityNumber] = None,
         attributes: Optional[Attributes] = None,
     ) -> None:
         """Emits the :class:`LogData` by associating :class:`LogRecord`
         and instrumentation info.
         """
-        event_attributes = {**(attributes or {}), "event.name": name}
 
-        current_span_context = get_current_span(context).get_span_context()
-        self.emit(
-            LogRecord(
-                timestamp=timestamp or time_ns(),
-                trace_id=current_span_context.trace_id,
-                span_id=current_span_context.span_id,
-                trace_flags=current_span_context.trace_flags,
-                severity_number=severity_number,
-                body=body,
-                attributes=event_attributes,
+        if self.is_enabled(severity_number, context):
+            event_attributes = {**(attributes or {}), "event.name": name}
+
+            current_span_context = get_current_span(context).get_span_context()
+            self.emit(
+                LogRecord(
+                    timestamp=timestamp or time_ns(),
+                    observed_timestamp=observed_timestamp or time_ns(),
+                    trace_id=current_span_context.trace_id,
+                    span_id=current_span_context.span_id,
+                    trace_flags=current_span_context.trace_flags,
+                    severity_text=severity_text,
+                    severity_number=severity_number,
+                    body=body,
+                    attributes=event_attributes,
+                )
             )
-        )
 
 
 class LoggerProvider(APILoggerProvider):
