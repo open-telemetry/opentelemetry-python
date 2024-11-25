@@ -16,6 +16,7 @@ import json
 import unittest
 import warnings
 
+from opentelemetry._logs.severity import SeverityNumber
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk._logs import (
     LogDroppedAttributesWarning,
@@ -30,7 +31,7 @@ class TestLogRecord(unittest.TestCase):
         expected = json.dumps(
             {
                 "body": "a log line",
-                "severity_number": "None",
+                "severity_number": None,
                 "severity_text": None,
                 "attributes": None,
                 "dropped_attributes": 0,
@@ -56,8 +57,20 @@ class TestLogRecord(unittest.TestCase):
         self.assertEqual(expected, actual.to_json(indent=4))
         self.assertEqual(
             actual.to_json(indent=None),
-            '{"body": "a log line", "severity_number": "None", "severity_text": null, "attributes": null, "dropped_attributes": 0, "timestamp": "1970-01-01T00:00:00.000000Z", "observed_timestamp": "1970-01-01T00:00:00.000000Z", "trace_id": "", "span_id": "", "trace_flags": null, "resource": {"attributes": {"service.name": "foo"}, "schema_url": ""}}',
+            '{"body": "a log line", "severity_number": null, "severity_text": null, "attributes": null, "dropped_attributes": 0, "timestamp": "1970-01-01T00:00:00.000000Z", "observed_timestamp": "1970-01-01T00:00:00.000000Z", "trace_id": "", "span_id": "", "trace_flags": null, "resource": {"attributes": {"service.name": "foo"}, "schema_url": ""}}',
         )
+
+    def test_log_record_to_json_serializes_severity_number_as_int(self):
+        actual = LogRecord(
+            timestamp=0,
+            severity_number=SeverityNumber.WARN,
+            observed_timestamp=0,
+            body="a log line",
+            resource=Resource({"service.name": "foo"}),
+        )
+
+        decoded = json.loads(actual.to_json())
+        self.assertEqual(SeverityNumber.WARN.value, decoded["severity_number"])
 
     def test_log_record_bounded_attributes(self):
         attr = {"key": "value"}
