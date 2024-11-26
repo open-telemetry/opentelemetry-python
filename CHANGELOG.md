@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4270](https://github.com/open-telemetry/opentelemetry-python/pull/4270))
 - api: fix logging of duplicate EventLogger setup warning
   ([#4299](https://github.com/open-telemetry/opentelemetry-python/pull/4299))
+- sdk: fix setting of process owner in ProcessResourceDetector
+  ([#4311](https://github.com/open-telemetry/opentelemetry-python/pull/4311))
 - sdk: fix serialization of logs severity_number field to int
   ([#4324](https://github.com/open-telemetry/opentelemetry-python/pull/4324))
 

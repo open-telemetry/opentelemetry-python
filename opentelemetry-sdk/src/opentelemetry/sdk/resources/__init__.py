@@ -84,7 +84,7 @@ psutil: Optional[ModuleType] = None
 try:
     import psutil as psutil_module
 
-    pustil = psutil_module
+    psutil = psutil_module
 except ImportError:
     pass
 
