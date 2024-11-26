@@ -13,7 +13,6 @@ _tox_test_env_regex = re_compile(
     r"(?P<name>[-\w]+\w)-?(?P<test_requirements>\d+)?"
 )
 _tox_lint_env_regex = re_compile(r"lint-(?P<name>[-\w]+)")
-# _tox_lint_other_regex = re_compile(r"(ruff|)")
 _tox_contrib_env_regex = re_compile(
     r"py38-test-(?P<name>[-\w]+\w)-?(?P<contrib_requirements>\d+)?"
 )
