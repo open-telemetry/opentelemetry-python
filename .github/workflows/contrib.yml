@@ -3,11 +3,15 @@ name: Core Contrib Test
 on:
   push:
     branches-ignore:
-    - 'release/*'
+      - 'release/*'
   pull_request:
+
+env:
+  CORE_REPO_SHA: ${{ github.sha }}
+  CONTRIB_REPO_SHA: main
 
 jobs:
   contrib_0:
-    uses: open-telemetry/opentelemetry-python-contrib/.github/workflows/core_contrib_test_0.yml@main
+    uses: open-telemetry/opentelemetry-python-contrib/.github/workflows/core_contrib_test_0.yml@${{ env.CONTRIB_REPO_SHA }}
     with:
-      CORE_REPO_SHA: ${{ github.sha }}
+      CORE_REPO_SHA: ${{ env.CORE_REPO_SHA }}
