@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4270](https://github.com/open-telemetry/opentelemetry-python/pull/4270))
 - api: fix logging of duplicate EventLogger setup warning
   ([#4299](https://github.com/open-telemetry/opentelemetry-python/pull/4299))
-- Remove `TestBase.assertEqualSpanInstrumentationInfo` method
+- Remove `TestBase.assertEqualSpanInstrumentationInfo` method, use `assertEqualSpanInstrumentationScope` instead
   ([#4310](https://github.com/open-telemetry/opentelemetry-python/pull/4310))
 
 ## Version 1.28.0/0.49b0 (2024-11-05)
