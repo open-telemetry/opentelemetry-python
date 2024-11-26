@@ -230,6 +230,52 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
                 item.instrumentation_scope.name, "different_msg_types"
             )
 
+    def test_simple_log_record_processor_custom_single_obj(self):
+        """
+        Tests that special-case handling for logging a single non-string object
+        is correctly applied.
+        """
+        exporter = InMemoryLogExporter()
+        log_record_processor = BatchLogRecordProcessor(exporter)
+
+        provider = LoggerProvider()
+        provider.add_log_record_processor(log_record_processor)
+
+        logger = logging.getLogger("single_obj")
+        logger.addHandler(LoggingHandler(logger_provider=provider))
+
+        # NOTE: the behaviour of `record.getMessage` is detailed in the
+        # `logging.Logger.debug` documentation:
+        # > The msg is the message format string, and the args are the arguments
+        # > which are merged into msg using the string formatting operator. [...]
+        # > No % formatting operation is performed on msg when no args are supplied.
+
+        # This test uses the presence of '%s' in the first arg to determine if
+        # formatting was applied
+
+        # string msg with no args - getMessage bypasses formatting and sets the string directly
+        logger.warning("a string with a percent-s: %s")
+        # string msg with args - getMessage formats args into the msg
+        logger.warning("a string with a percent-s: %s", "and arg")
+        # non-string msg with args - getMessage stringifies msg and formats args into it
+        logger.warning(["a non-string with a percent-s", "%s"], "and arg")
+        # non-string msg with no args:
+        #  - normally getMessage would stringify the object and bypass formatting
+        #  - SPECIAL CASE: bypass stringification as well to keep the raw object
+        logger.warning(["a non-string with a percent-s", "%s"])
+        log_record_processor.shutdown()
+
+        finished_logs = exporter.get_finished_logs()
+        expected = [
+            ("a string with a percent-s: %s"),
+            ("a string with a percent-s: and arg"),
+            ("['a non-string with a percent-s', 'and arg']"),
+            (["a non-string with a percent-s", "%s"]),
+        ]
+        for emitted, expected in zip(finished_logs, expected):
+            self.assertEqual(emitted.log_record.body, expected)
+            self.assertEqual(emitted.instrumentation_scope.name, "single_obj")
+
     def test_simple_log_record_processor_different_msg_types_with_formatter(
         self,
     ):

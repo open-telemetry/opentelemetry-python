@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4299](https://github.com/open-telemetry/opentelemetry-python/pull/4299))
 - sdk: fix setting of process owner in ProcessResourceDetector
   ([#4311](https://github.com/open-telemetry/opentelemetry-python/pull/4311))
+- sdk: fix serialization of logs severity_number field to int
+  ([#4324](https://github.com/open-telemetry/opentelemetry-python/pull/4324))
 
 ## Version 1.28.0/0.49b0 (2024-11-05)
 
@@ -46,6 +48,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4224](https://github.com/open-telemetry/opentelemetry-python/pull/4224))
 - Drop `OTEL_PYTHON_EXPERIMENTAL_DISABLE_PROMETHEUS_UNIT_NORMALIZATION` environment variable
   ([#4217](https://github.com/open-telemetry/opentelemetry-python/pull/4217))
+- Improve compatibility with other logging libraries that override
+  `LogRecord.getMessage()` in order to customize message formatting
+  ([#4216](https://github.com/open-telemetry/opentelemetry-python/pull/4216))
 
 ## Version 1.27.0/0.48b0 (2024-08-28)
 
