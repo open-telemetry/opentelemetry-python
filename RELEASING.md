@@ -46,7 +46,7 @@
   * Check the [action logs](https://github.com/open-telemetry/opentelemetry-python/actions?query=workflow%3APublish) to make sure packages have been uploaded to PyPI
   * Check the release history (e.g. https://pypi.org/project/opentelemetry-api/#history) on PyPI
   * If for some reason the action failed, see [Publish failed](#publish-failed) below
-* Move stable tag
+* Move stable tag and kick-off documentation build
   * Run the following (TODO automate):
     ```bash
     git tag -d stable
@@ -54,10 +54,10 @@
     git push --delete origin tagname
     git push origin stable
     ```
-  * This will ensure that READTHEDOCS for core are pointing at the stable release.
-  * To validate this worked, ensure the stable build has run successfully:
+  * ReadTheDocs will not automatically rebuild on tag changes, so manually kick-off a build of stable:
     https://readthedocs.org/projects/opentelemetry-python/builds/.
-    If the build has not run automatically, it can be manually trigger via the READTHEDOCs interface.
+    ![ReadTheDocs build instructions](.github/rtd-build-instructions.png)
+  * This will ensure that ReadTheDocs for core are pointing at the stable release.
 
 ## Notes about version numbering for stable components
 
