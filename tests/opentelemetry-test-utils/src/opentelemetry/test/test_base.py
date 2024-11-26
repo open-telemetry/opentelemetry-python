@@ -70,10 +70,6 @@ class TestBase(unittest.TestCase):
             self, self.memory_exporter.get_finished_spans()
         )
 
-    def assertEqualSpanInstrumentationInfo(self, span, module):
-        self.assertEqual(span.instrumentation_info.name, module.__name__)
-        self.assertEqual(span.instrumentation_info.version, module.__version__)
-
     def assertEqualSpanInstrumentationScope(self, span, module):
         self.assertEqual(span.instrumentation_scope.name, module.__name__)
         self.assertEqual(
