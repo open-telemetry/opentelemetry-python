@@ -221,7 +221,9 @@ class LogRecord(APILogRecord):
         return json.dumps(
             {
                 "body": self.body,
-                "severity_number": repr(self.severity_number),
+                "severity_number": self.severity_number.value
+                if self.severity_number is not None
+                else None,
                 "severity_text": self.severity_text,
                 "attributes": (
                     dict(self.attributes) if bool(self.attributes) else None
