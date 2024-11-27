@@ -90,6 +90,34 @@ class SpanExporter:
         """
 
 
+class AsyncSpanExporter:
+    """Interface for exporting spans asynchronously.
+
+    Interface to be implemented by services that want to export spans recorded
+    in their own format.
+
+    To export data this MUST be registered to the :class`opentelemetry.sdk.trace.Tracer` using a
+    `SimpleSpanProcessor` or a `BatchSpanProcessor`.
+    """
+
+    async def export(
+        self, spans: typing.Sequence[ReadableSpan]
+    ) -> "SpanExportResult":
+        """Exports a batch of telemetry data asynchronously.
+
+        Args:
+            spans: The list of `opentelemetry.trace.Span` objects to be exported
+
+        Returns:
+            The result of the export
+        """
+
+    async def shutdown(self) -> None:
+        """Shuts down the exporter asynchronously.
+
+        Called when the SDK is shut down.
+        """      
+
 class SimpleSpanProcessor(SpanProcessor):
     """Simple SpanProcessor implementation.
 
