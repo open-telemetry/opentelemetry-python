@@ -15,6 +15,7 @@
 # pylint: disable=protected-access
 
 from math import inf
+from random import randint
 from time import sleep, time_ns
 from typing import Union
 from unittest import TestCase
@@ -627,6 +628,22 @@ class TestDefaultAggregation(TestCase):
             0,
         )
         self.assertIsInstance(aggregation, _ExplicitBucketHistogramAggregation)
+
+    def test_histogram_with_advisory(self):
+        boundaries = [randint(0, 1000)]
+        aggregation = self.default_aggregation._create_aggregation(
+            _Histogram(
+                "name",
+                Mock(),
+                Mock(),
+                advisory={"ExplicitBucketBoundaries": boundaries},
+            ),
+            Mock(),
+            _default_reservoir_factory,
+            0,
+        )
+        self.assertIsInstance(aggregation, _ExplicitBucketHistogramAggregation)
+        self.assertEqual(aggregation._boundaries, tuple(boundaries))
 
     def test_gauge(self):
         aggregation = self.default_aggregation._create_aggregation(

@@ -437,6 +437,25 @@ class _LastValueAggregation(_Aggregation[GaugePoint]):
         )
 
 
+_DEFAULT_EXPLICIT_BUCKET_HISTOGRAM_AGGREGATION_BOUNDARIES: Sequence[float] = (
+    0.0,
+    5.0,
+    10.0,
+    25.0,
+    50.0,
+    75.0,
+    100.0,
+    250.0,
+    500.0,
+    750.0,
+    1000.0,
+    2500.0,
+    5000.0,
+    7500.0,
+    10000.0,
+)
+
+
 class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
     def __init__(
         self,
@@ -444,25 +463,14 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         instrument_aggregation_temporality: AggregationTemporality,
         start_time_unix_nano: int,
         reservoir_builder: ExemplarReservoirBuilder,
-        boundaries: Sequence[float] = (
-            0.0,
-            5.0,
-            10.0,
-            25.0,
-            50.0,
-            75.0,
-            100.0,
-            250.0,
-            500.0,
-            750.0,
-            1000.0,
-            2500.0,
-            5000.0,
-            7500.0,
-            10000.0,
-        ),
+        boundaries: Optional[Sequence[float]] = None,
         record_min_max: bool = True,
     ):
+        if boundaries is None:
+            boundaries = (
+                _DEFAULT_EXPLICIT_BUCKET_HISTOGRAM_AGGREGATION_BOUNDARIES
+            )
+
         super().__init__(
             attributes,
             reservoir_builder=partial(
@@ -1268,6 +1276,11 @@ class DefaultAggregation(Aggregation):
             )
 
         if isinstance(instrument, Histogram):
+            boundaries: Optional[Sequence[float]] = (
+                instrument.advisory.get("ExplicitBucketBoundaries")
+                if instrument.advisory is not None
+                else None
+            )
             return _ExplicitBucketHistogramAggregation(
                 attributes,
                 reservoir_builder=reservoir_factory(
@@ -1276,6 +1289,7 @@ class DefaultAggregation(Aggregation):
                 instrument_aggregation_temporality=(
                     AggregationTemporality.DELTA
                 ),
+                boundaries=boundaries,
                 start_time_unix_nano=start_time_unix_nano,
             )
 
@@ -1347,25 +1361,13 @@ class ExplicitBucketHistogramAggregation(Aggregation):
 
     def __init__(
         self,
-        boundaries: Sequence[float] = (
-            0.0,
-            5.0,
-            10.0,
-            25.0,
-            50.0,
-            75.0,
-            100.0,
-            250.0,
-            500.0,
-            750.0,
-            1000.0,
-            2500.0,
-            5000.0,
-            7500.0,
-            10000.0,
-        ),
+        boundaries: Optional[Sequence[float]] = None,
         record_min_max: bool = True,
     ) -> None:
+        if boundaries is None:
+            boundaries = (
+                _DEFAULT_EXPLICIT_BUCKET_HISTOGRAM_AGGREGATION_BOUNDARIES
+            )
         self._boundaries = boundaries
         self._record_min_max = record_min_max
 
