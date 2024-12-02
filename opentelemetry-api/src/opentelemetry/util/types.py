@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-from typing import Mapping, Optional, Sequence, Tuple, Union
+from typing import Literal, Mapping, Optional, Sequence, Tuple, Union
 
 # This is the implementation of the "Any" type as specified by the specifications of OpenTelemetry data model for logs.
 # For more details, refer to the OTel specification:
@@ -55,4 +54,9 @@ AttributesAsKey = Tuple[
         ],
     ],
     ...,
+]
+
+MetricsInstrumentAdvisoryKey = Literal["ExplicitBucketBoundaries"]
+MetricsInstrumentAdvisory = Optional[
+    Mapping[MetricsInstrumentAdvisoryKey, AnyValue]
 ]
