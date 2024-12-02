@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4324](https://github.com/open-telemetry/opentelemetry-python/pull/4324))
 - Remove `TestBase.assertEqualSpanInstrumentationInfo` method, use `assertEqualSpanInstrumentationScope` instead
   ([#4310](https://github.com/open-telemetry/opentelemetry-python/pull/4310))
+- sdk: instantiate lazily `ExemplarBucket`s in `ExemplarReservoir`s
+  ([#4260](https://github.com/open-telemetry/opentelemetry-python/pull/4260))
 
 ## Version 1.28.0/0.49b0 (2024-11-05)
 
