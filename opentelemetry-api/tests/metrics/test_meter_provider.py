@@ -274,7 +274,7 @@ class TestProxy(MetricsGlobalsTest, TestCase):
             name, unit, description
         )
         real_meter.create_histogram.assert_called_once_with(
-            name, unit, description
+            name, unit, description, None
         )
         real_meter.create_gauge.assert_called_once_with(
             name, unit, description

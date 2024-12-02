@@ -35,7 +35,7 @@ from typing import (
 from opentelemetry import metrics
 from opentelemetry.context import Context
 from opentelemetry.metrics._internal.observation import Observation
-from opentelemetry.util.types import Attributes
+from opentelemetry.util.types import Attributes, MetricsInstrumentAdvisory
 
 _logger = getLogger(__name__)
 
@@ -331,6 +331,16 @@ class Histogram(Synchronous):
     """
 
     @abstractmethod
+    def __init__(
+        self,
+        name: str,
+        unit: str = "",
+        description: str = "",
+        advisory: MetricsInstrumentAdvisory = None,
+    ) -> None:
+        pass
+
+    @abstractmethod
     def record(
         self,
         amount: Union[int, float],
@@ -348,8 +358,11 @@ class NoOpHistogram(Histogram):
         name: str,
         unit: str = "",
         description: str = "",
+        advisory: MetricsInstrumentAdvisory = None,
     ) -> None:
-        super().__init__(name, unit=unit, description=description)
+        super().__init__(
+            name, unit=unit, description=description, advisory=advisory
+        )
 
     def record(
         self,
@@ -361,6 +374,20 @@ class NoOpHistogram(Histogram):
 
 
 class _ProxyHistogram(_ProxyInstrument[Histogram], Histogram):
+    # pylint: disable=super-init-not-called
+    def __init__(
+        self,
+        name: str,
+        unit: str = "",
+        description: str = "",
+        advisory: MetricsInstrumentAdvisory = None,
+    ) -> None:
+        self._name = name
+        self._unit = unit
+        self._description = description
+        self._advisory = advisory
+        self._real_instrument: Optional[InstrumentT] = None
+
     def record(
         self,
         amount: Union[int, float],
@@ -372,7 +399,7 @@ class _ProxyHistogram(_ProxyInstrument[Histogram], Histogram):
 
     def _create_real_instrument(self, meter: "metrics.Meter") -> Histogram:
         return meter.create_histogram(
-            self._name, self._unit, self._description
+            self._name, self._unit, self._description, self._advisory
         )
 
 

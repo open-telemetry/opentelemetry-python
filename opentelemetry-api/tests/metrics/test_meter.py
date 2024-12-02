@@ -39,7 +39,7 @@ class ChildMeter(Meter):
             name, callbacks, unit=unit, description=description
         )
 
-    def create_histogram(self, name, unit="", description=""):
+    def create_histogram(self, name, unit="", description="", advisory=None):
         super().create_histogram(name, unit=unit, description=description)
 
     def create_gauge(self, name, unit="", description=""):
