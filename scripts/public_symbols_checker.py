@@ -55,6 +55,8 @@ def get_symbols(change_type, diff_lines_getter, prefix):
                 and part[1] != "_"
                 # tests directories
                 or part == "tests"
+                # benchmarks directories
+                or part == "benchmarks"
                 for part in b_file_path_obj.parts
             )
         ):
