@@ -25,7 +25,7 @@ reported by `cf app <app-name> --guid`.
 CLOUDFOUNDRY_APP_INSTANCE_ID: Final = "cloudfoundry.app.instance.id"
 """
 The index of the application instance. 0 when just one instance is active.
-Note: CloudFoundry defines the `instance_id` in the [Loggegator v2 envelope](https://github.com/cloudfoundry/loggregator-api#v2-envelope).
+Note: CloudFoundry defines the `instance_id` in the [Loggregator v2 envelope](https://github.com/cloudfoundry/loggregator-api#v2-envelope).
 It is used for logs and metrics emitted by CloudFoundry. It is
 supposed to contain the application instance index for applications
 deployed on the runtime.

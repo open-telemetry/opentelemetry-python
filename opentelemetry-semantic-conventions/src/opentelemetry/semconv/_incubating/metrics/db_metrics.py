@@ -313,6 +313,48 @@ def create_db_client_connections_wait_time(meter: Meter) -> Histogram:
     )
 
 
+DB_CLIENT_COSMOSDB_ACTIVE_INSTANCE_COUNT: Final = (
+    "db.client.cosmosdb.active_instance.count"
+)
+"""
+Number of active client instances
+Instrument: updowncounter
+Unit: {instance}
+"""
+
+
+def create_db_client_cosmosdb_active_instance_count(
+    meter: Meter,
+) -> UpDownCounter:
+    """Number of active client instances"""
+    return meter.create_up_down_counter(
+        name=DB_CLIENT_COSMOSDB_ACTIVE_INSTANCE_COUNT,
+        description="Number of active client instances",
+        unit="{instance}",
+    )
+
+
+DB_CLIENT_COSMOSDB_OPERATION_REQUEST_CHARGE: Final = (
+    "db.client.cosmosdb.operation.request_charge"
+)
+"""
+[Request charge](https://learn.microsoft.com/azure/cosmos-db/request-units) consumed by the operation
+Instrument: histogram
+Unit: {request_unit}
+"""
+
+
+def create_db_client_cosmosdb_operation_request_charge(
+    meter: Meter,
+) -> Histogram:
+    """[Request charge](https://learn.microsoft.com/azure/cosmos-db/request-units) consumed by the operation"""
+    return meter.create_histogram(
+        name=DB_CLIENT_COSMOSDB_OPERATION_REQUEST_CHARGE,
+        description="[Request charge](https://learn.microsoft.com/azure/cosmos-db/request-units) consumed by the operation",
+        unit="{request_unit}",
+    )
+
+
 DB_CLIENT_OPERATION_DURATION: Final = "db.client.operation.duration"
 """
 Duration of database client operations
@@ -328,4 +370,21 @@ def create_db_client_operation_duration(meter: Meter) -> Histogram:
         name=DB_CLIENT_OPERATION_DURATION,
         description="Duration of database client operations.",
         unit="s",
+    )
+
+
+DB_CLIENT_RESPONSE_RETURNED_ROWS: Final = "db.client.response.returned_rows"
+"""
+The actual number of records returned by the database operation
+Instrument: histogram
+Unit: {row}
+"""
+
+
+def create_db_client_response_returned_rows(meter: Meter) -> Histogram:
+    """The actual number of records returned by the database operation"""
+    return meter.create_histogram(
+        name=DB_CLIENT_RESPONSE_RETURNED_ROWS,
+        description="The actual number of records returned by the database operation.",
+        unit="{row}",
     )

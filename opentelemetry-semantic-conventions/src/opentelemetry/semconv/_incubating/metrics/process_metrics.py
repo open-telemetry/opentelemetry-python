@@ -216,16 +216,20 @@ def create_process_thread_count(meter: Meter) -> UpDownCounter:
 PROCESS_UPTIME: Final = "process.uptime"
 """
 The time the process has been running
-Instrument: counter
+Instrument: gauge
 Unit: s
-Note: Instrumentations SHOULD use counter with type `double` and measure uptime with at least millisecond precision.
+Note: Instrumentations SHOULD use a gauge with type `double` and measure uptime in seconds as a floating point number with the highest precision available.
+The actual accuracy would depend on the instrumentation and operating system.
 """
 
 
-def create_process_uptime(meter: Meter) -> Counter:
+def create_process_uptime(
+    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+) -> ObservableGauge:
     """The time the process has been running"""
-    return meter.create_counter(
+    return meter.create_observable_gauge(
         name=PROCESS_UPTIME,
+        callbacks=callbacks,
         description="The time the process has been running.",
         unit="s",
     )

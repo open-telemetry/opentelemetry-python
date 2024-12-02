@@ -47,6 +47,11 @@ NETWORK_CONNECTION_TYPE: Final = "network.connection.type"
 The internet connection type.
 """
 
+NETWORK_INTERFACE_NAME: Final = "network.interface.name"
+"""
+The network interface name.
+"""
+
 NETWORK_IO_DIRECTION: Final = "network.io.direction"
 """
 The network IO operation direction.

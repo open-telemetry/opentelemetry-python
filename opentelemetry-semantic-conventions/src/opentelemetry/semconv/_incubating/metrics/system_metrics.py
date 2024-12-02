@@ -591,3 +591,25 @@ def create_system_process_created(meter: Meter) -> Counter:
         description="Total number of processes created over uptime of the host",
         unit="{process}",
     )
+
+
+SYSTEM_UPTIME: Final = "system.uptime"
+"""
+The time the system has been running
+Instrument: gauge
+Unit: s
+Note: Instrumentations SHOULD use a gauge with type `double` and measure uptime in seconds as a floating point number with the highest precision available.
+The actual accuracy would depend on the instrumentation and operating system.
+"""
+
+
+def create_system_uptime(
+    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+) -> ObservableGauge:
+    """The time the system has been running"""
+    return meter.create_observable_gauge(
+        name=SYSTEM_UPTIME,
+        callbacks=callbacks,
+        description="The time the system has been running",
+        unit="s",
+    )

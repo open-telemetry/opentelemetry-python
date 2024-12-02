@@ -15,6 +15,11 @@
 from enum import Enum
 from typing import Final
 
+NETWORK_INTERFACE_NAME: Final = "network.interface.name"
+"""
+The network interface name.
+"""
+
 NETWORK_LOCAL_ADDRESS: Final = "network.local.address"
 """
 Local address of the network connection - IP address or Unix domain socket name.
@@ -37,7 +42,7 @@ Peer port number of the network connection.
 
 NETWORK_PROTOCOL_NAME: Final = "network.protocol.name"
 """
-[OSI application layer](https://osi-model.com/application-layer/) or non-OSI equivalent.
+[OSI application layer](https://wikipedia.org/wiki/Application_layer) or non-OSI equivalent.
 Note: The value SHOULD be normalized to lowercase.
 """
 
@@ -49,7 +54,7 @@ Note: If protocol version is subject to negotiation (for example using [ALPN](ht
 
 NETWORK_TRANSPORT: Final = "network.transport"
 """
-[OSI transport layer](https://osi-model.com/transport-layer/) or [inter-process communication method](https://wikipedia.org/wiki/Inter-process_communication).
+[OSI transport layer](https://wikipedia.org/wiki/Transport_layer) or [inter-process communication method](https://wikipedia.org/wiki/Inter-process_communication).
 Note: The value SHOULD be normalized to lowercase.
 
 Consider always setting the transport when setting a port number, since
@@ -59,7 +64,7 @@ different processes could be listening on TCP port 12345 and UDP port 12345.
 
 NETWORK_TYPE: Final = "network.type"
 """
-[OSI network layer](https://osi-model.com/network-layer/) or non-OSI equivalent.
+[OSI network layer](https://wikipedia.org/wiki/Network_layer) or non-OSI equivalent.
 Note: The value SHOULD be normalized to lowercase.
 """
 
