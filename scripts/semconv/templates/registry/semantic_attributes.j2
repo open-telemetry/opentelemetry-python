@@ -53,7 +53,7 @@ from typing import Final
 {%- set multiline = attribute.name not in ctx.excluded_attributes -%}
 {%- set doc_string = write_docstring(attr_name, attribute.brief, attribute.note, attribute.deprecated, attribute.stability, multiline)-%}
 {%- set prefix = "" if multiline else "# " -%}
-{{prefix}}{{attr_name}} : Final = "{{attribute.name}}"
+{{prefix}}{{attr_name}}: Final = "{{attribute.name}}"
 {{prefix}}{{doc_string}}
 {% endfor %}
 

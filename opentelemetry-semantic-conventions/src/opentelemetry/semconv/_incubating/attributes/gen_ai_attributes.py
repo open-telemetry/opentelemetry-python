@@ -36,7 +36,7 @@ GEN_AI_OPENAI_REQUEST_SERVICE_TIER: Final = (
     "gen_ai.openai.request.service_tier"
 )
 """
-The service tier requested. May be a specific tier, detault, or auto.
+The service tier requested. May be a specific tier, default, or auto.
 """
 
 GEN_AI_OPENAI_RESPONSE_SERVICE_TIER: Final = (
@@ -44,6 +44,13 @@ GEN_AI_OPENAI_RESPONSE_SERVICE_TIER: Final = (
 )
 """
 The service tier used for the response.
+"""
+
+GEN_AI_OPENAI_RESPONSE_SYSTEM_FINGERPRINT: Final = (
+    "gen_ai.openai.response.system_fingerprint"
+)
+"""
+A fingerprint to track any eventual change in the Generative AI environment.
 """
 
 GEN_AI_OPERATION_NAME: Final = "gen_ai.operation.name"
@@ -55,6 +62,12 @@ Note: If one of the predefined values applies, but specific system uses a differ
 GEN_AI_PROMPT: Final = "gen_ai.prompt"
 """
 Deprecated: Removed, no replacement at this time.
+"""
+
+GEN_AI_REQUEST_ENCODING_FORMATS: Final = "gen_ai.request.encoding_formats"
+"""
+The encoding formats requested in an embeddings operation, if specified.
+Note: In some GenAI systems the encoding formats are called embedding types. Also, some GenAI systems only accept a single format per request.
 """
 
 GEN_AI_REQUEST_FREQUENCY_PENALTY: Final = "gen_ai.request.frequency_penalty"
@@ -173,6 +186,8 @@ class GenAiOperationNameValues(Enum):
     """Chat completion operation such as [OpenAI Chat API](https://platform.openai.com/docs/api-reference/chat)."""
     TEXT_COMPLETION = "text_completion"
     """Text completions operation such as [OpenAI Completions API (Legacy)](https://platform.openai.com/docs/api-reference/completions)."""
+    EMBEDDINGS = "embeddings"
+    """Embeddings operation such as [OpenAI Create embeddings API](https://platform.openai.com/docs/api-reference/embeddings/create)."""
 
 
 class GenAiSystemValues(Enum):
@@ -184,6 +199,12 @@ class GenAiSystemValues(Enum):
     """Anthropic."""
     COHERE = "cohere"
     """Cohere."""
+    AZ_AI_INFERENCE = "az.ai.inference"
+    """Azure AI Inference."""
+    IBM_WATSONX_AI = "ibm.watsonx.ai"
+    """IBM Watsonx AI."""
+    AWS_BEDROCK = "aws.bedrock"
+    """AWS Bedrock."""
 
 
 class GenAiTokenTypeValues(Enum):

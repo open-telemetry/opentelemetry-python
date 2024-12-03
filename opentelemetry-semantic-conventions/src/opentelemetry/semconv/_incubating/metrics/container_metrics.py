@@ -128,3 +128,25 @@ def create_container_network_io(meter: Meter) -> Counter:
         description="Network bytes for the container.",
         unit="By",
     )
+
+
+CONTAINER_UPTIME: Final = "container.uptime"
+"""
+The time the container has been running
+Instrument: gauge
+Unit: s
+Note: Instrumentations SHOULD use a gauge with type `double` and measure uptime in seconds as a floating point number with the highest precision available.
+The actual accuracy would depend on the instrumentation and operating system.
+"""
+
+
+def create_container_uptime(
+    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+) -> ObservableGauge:
+    """The time the container has been running"""
+    return meter.create_observable_gauge(
+        name=CONTAINER_UPTIME,
+        callbacks=callbacks,
+        description="The time the container has been running",
+        unit="s",
+    )

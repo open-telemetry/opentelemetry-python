@@ -29,7 +29,7 @@ SHOULD use the following UUID as the namespace: `4d63009a-8d0f-11ee-aad7-4c796ed
 
 UUIDs are typically recommended, as only an opaque value for the purposes of identifying a service instance is
 needed. Similar to what can be seen in the man page for the
-[`/etc/machine-id`](https://www.freedesktop.org/software/systemd/man/machine-id.html) file, the underlying
+[`/etc/machine-id`](https://www.freedesktop.org/software/systemd/man/latest/machine-id.html) file, the underlying
 data, such as pod name and namespace should be treated as confidential, being the user's choice to expose it
 or not via another resource attribute.
 

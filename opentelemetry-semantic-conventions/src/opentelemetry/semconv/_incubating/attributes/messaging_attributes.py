@@ -26,7 +26,7 @@ MESSAGING_CLIENT_ID: Final = "messaging.client.id"
 A unique identifier for the client that consumes or produces a message.
 """
 
-# MESSAGING_CLIENT_ID : Final = "messaging.client_id"
+# MESSAGING_CLIENT_ID: Final = "messaging.client_id"
 # Deprecated: Replaced by `messaging.client.id`.
 
 MESSAGING_CONSUMER_GROUP_NAME: Final = "messaging.consumer.group.name"

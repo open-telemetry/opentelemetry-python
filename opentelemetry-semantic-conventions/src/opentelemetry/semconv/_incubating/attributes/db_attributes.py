@@ -78,8 +78,13 @@ DB_COLLECTION_NAME: Final = "db.collection.name"
 """
 The name of a collection (table, container) within the database.
 Note: It is RECOMMENDED to capture the value as provided by the application without attempting to do any case normalization.
-If the collection name is parsed from the query text, it SHOULD be the first collection name found in the query and it SHOULD match the value provided in the query text including any schema and database name prefix.
-For batch operations, if the individual operations are known to have the same collection name then that collection name SHOULD be used, otherwise `db.collection.name` SHOULD NOT be captured.
+
+The collection name SHOULD NOT be extracted from `db.query.text`,
+unless the query format is known to only ever have a single collection name present.
+
+For batch operations, if the individual operations are known to have the same collection name
+then that collection name SHOULD be used.
+
 This attribute has stability level RELEASE CANDIDATE.
 """
 
@@ -98,6 +103,11 @@ DB_COSMOSDB_CONNECTION_MODE: Final = "db.cosmosdb.connection_mode"
 Cosmos client connection mode.
 """
 
+DB_COSMOSDB_CONSISTENCY_LEVEL: Final = "db.cosmosdb.consistency_level"
+"""
+Account or request [consistency level](https://learn.microsoft.com/azure/cosmos-db/consistency-levels).
+"""
+
 DB_COSMOSDB_CONTAINER: Final = "db.cosmosdb.container"
 """
 Deprecated: Replaced by `db.collection.name`.
@@ -105,12 +115,18 @@ Deprecated: Replaced by `db.collection.name`.
 
 DB_COSMOSDB_OPERATION_TYPE: Final = "db.cosmosdb.operation_type"
 """
-Cosmos DB Operation Type.
+Deprecated: No replacement at this time.
+"""
+
+DB_COSMOSDB_REGIONS_CONTACTED: Final = "db.cosmosdb.regions_contacted"
+"""
+List of regions contacted during operation in the order that they were contacted. If there is more than one region listed, it indicates that the operation was performed on multiple regions i.e. cross-regional call.
+Note: Region name matches the format of `displayName` in [Azure Location API](https://learn.microsoft.com/rest/api/subscription/subscriptions/list-locations?view=rest-subscription-2021-10-01&tabs=HTTP#location).
 """
 
 DB_COSMOSDB_REQUEST_CHARGE: Final = "db.cosmosdb.request_charge"
 """
-RU consumed for that operation.
+Request units consumed for the operation.
 """
 
 DB_COSMOSDB_REQUEST_CONTENT_LENGTH: Final = (
@@ -195,17 +211,38 @@ This attribute has stability level RELEASE CANDIDATE.
 DB_OPERATION_NAME: Final = "db.operation.name"
 """
 The name of the operation or command being executed.
-Note: It is RECOMMENDED to capture the value as provided by the application without attempting to do any case normalization.
-If the operation name is parsed from the query text, it SHOULD be the first operation name found in the query.
-For batch operations, if the individual operations are known to have the same operation name then that operation name SHOULD be used prepended by `BATCH `, otherwise `db.operation.name` SHOULD be `BATCH` or some other database system specific term if more applicable.
+Note: It is RECOMMENDED to capture the value as provided by the application
+without attempting to do any case normalization.
+
+The operation name SHOULD NOT be extracted from `db.query.text`,
+unless the query format is known to only ever have a single operation name present.
+
+For batch operations, if the individual operations are known to have the same operation name
+then that operation name SHOULD be used prepended by `BATCH `,
+otherwise `db.operation.name` SHOULD be `BATCH` or some other database
+system specific term if more applicable.
+
+This attribute has stability level RELEASE CANDIDATE.
+"""
+
+DB_OPERATION_PARAMETER_TEMPLATE: Final = "db.operation.parameter"
+"""
+A database operation parameter, with `<key>` being the parameter name, and the attribute value being a string representation of the parameter value.
+Note: If a parameter has no name and instead is referenced only by index, then `<key>` SHOULD be the 0-based index.
+If `db.query.text` is also captured, then `db.operation.parameter.<key>` SHOULD match up with the parameterized placeholders present in `db.query.text`.
 This attribute has stability level RELEASE CANDIDATE.
 """
 
 DB_QUERY_PARAMETER_TEMPLATE: Final = "db.query.parameter"
 """
-A query parameter used in `db.query.text`, with `<key>` being the parameter name, and the attribute value being a string representation of the parameter value.
-Note: Query parameters should only be captured when `db.query.text` is parameterized with placeholders.
-If a parameter has no name and instead is referenced only by index, then `<key>` SHOULD be the 0-based index.
+Deprecated: Replaced by `db.operation.parameter`.
+"""
+
+DB_QUERY_SUMMARY: Final = "db.query.summary"
+"""
+Low cardinality representation of a database query text.
+Note: `db.query.summary` provides static summary of the query text. It describes a class of database queries and is useful as a grouping key, especially when analyzing telemetry for database calls involving complex queries.
+Summary may be available to the instrumentation through instrumentation hooks or other means. If it is not available, instrumentations that support query parsing SHOULD generate a summary following [Generating query summary](../../docs/database/database-spans.md#generating-a-summary-of-the-query-text) section.
 This attribute has stability level RELEASE CANDIDATE.
 """
 
@@ -221,6 +258,11 @@ This attribute has stability level RELEASE CANDIDATE.
 DB_REDIS_DATABASE_INDEX: Final = "db.redis.database_index"
 """
 Deprecated: Replaced by `db.namespace`.
+"""
+
+DB_RESPONSE_RETURNED_ROWS: Final = "db.response.returned_rows"
+"""
+Number of rows returned by the operation.
 """
 
 DB_RESPONSE_STATUS_CODE: Final = "db.response.status_code"
@@ -298,11 +340,27 @@ class DbClientConnectionsStateValues(Enum):
 
 class DbCosmosdbConnectionModeValues(Enum):
     GATEWAY = "gateway"
-    """Gateway (HTTP) connections mode."""
+    """Gateway (HTTP) connection."""
     DIRECT = "direct"
     """Direct connection."""
 
 
+class DbCosmosdbConsistencyLevelValues(Enum):
+    STRONG = "Strong"
+    """strong."""
+    BOUNDED_STALENESS = "BoundedStaleness"
+    """bounded_staleness."""
+    SESSION = "Session"
+    """session."""
+    EVENTUAL = "Eventual"
+    """eventual."""
+    CONSISTENT_PREFIX = "ConsistentPrefix"
+    """consistent_prefix."""
+
+
+@deprecated(
+    reason="The attribute db.cosmosdb.operation_type is deprecated - No replacement at this time"
+)  # type: ignore
 class DbCosmosdbOperationTypeValues(Enum):
     BATCH = "batch"
     """batch."""
