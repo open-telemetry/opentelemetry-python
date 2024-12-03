@@ -48,7 +48,7 @@ A string containing the time when the data was accessed in the [ISO 8601](https:
 FAAS_INSTANCE: Final = "faas.instance"
 """
 The execution environment ID as a string, that will be potentially reused for other invocations to the same function/function version.
-Note: * **AWS Lambda:** Use the (full) log stream name.
+Note: - **AWS Lambda:** Use the (full) log stream name.
 """
 
 FAAS_INVOCATION_ID: Final = "faas.invocation_id"
@@ -93,7 +93,7 @@ For some cloud providers, the above definition is ambiguous. The following
 definition of function name MUST be used for this attribute
 (and consequently the span name) for the listed cloud providers/products:
 
-* **Azure:**  The full name `<FUNCAPP>/<FUNC>`, i.e., function app name
+- **Azure:**  The full name `<FUNCAPP>/<FUNC>`, i.e., function app name
   followed by a forward slash followed by the function name (this form
   can also be seen in the resource JSON for the function).
   This means that a span attribute MUST be used, as an Azure function
@@ -116,13 +116,13 @@ FAAS_VERSION: Final = "faas.version"
 The immutable version of the function being executed.
 Note: Depending on the cloud provider and platform, use:
 
-* **AWS Lambda:** The [function version](https://docs.aws.amazon.com/lambda/latest/dg/configuration-versions.html)
+- **AWS Lambda:** The [function version](https://docs.aws.amazon.com/lambda/latest/dg/configuration-versions.html)
   (an integer represented as a decimal string).
-* **Google Cloud Run (Services):** The [revision](https://cloud.google.com/run/docs/managing/revisions)
+- **Google Cloud Run (Services):** The [revision](https://cloud.google.com/run/docs/managing/revisions)
   (i.e., the function name plus the revision suffix).
-* **Google Cloud Functions:** The value of the
+- **Google Cloud Functions:** The value of the
   [`K_REVISION` environment variable](https://cloud.google.com/functions/docs/env-var#runtime_environment_variables_set_automatically).
-* **Azure Functions:** Not applicable. Do not set this attribute.
+- **Azure Functions:** Not applicable. Do not set this attribute.
 """
 
 

@@ -63,11 +63,18 @@ PROCESS_EXECUTABLE_BUILD_ID_GO: Final = "process.executable.build_id.go"
 The Go build ID as retrieved by `go tool buildid <go executable>`.
 """
 
+PROCESS_EXECUTABLE_BUILD_ID_HTLHASH: Final = (
+    "process.executable.build_id.htlhash"
+)
+"""
+Profiling specific build ID for executables. See the OTel specification for Profiles for more information.
+"""
+
 PROCESS_EXECUTABLE_BUILD_ID_PROFILING: Final = (
     "process.executable.build_id.profiling"
 )
 """
-Profiling specific build ID for executables. See the OTel specification for Profiles for more information.
+Deprecated: Replaced by `process.executable.build_id.htlhash`.
 """
 
 PROCESS_EXECUTABLE_NAME: Final = "process.executable.name"
@@ -98,6 +105,12 @@ The PID of the process's group leader. This is also the process group ID (PGID) 
 PROCESS_INTERACTIVE: Final = "process.interactive"
 """
 Whether the process is connected to an interactive shell.
+"""
+
+PROCESS_LINUX_CGROUP: Final = "process.linux.cgroup"
+"""
+The control group associated with the process.
+Note: Control groups (cgroups) are a kernel feature used to organize and manage process resources. This attribute provides the path(s) to the cgroup(s) associated with the process, which should match the contents of the [/proc/<PID>/cgroup](https://man7.org/linux/man-pages/man7/cgroups.7.html) file.
 """
 
 PROCESS_OWNER: Final = "process.owner"

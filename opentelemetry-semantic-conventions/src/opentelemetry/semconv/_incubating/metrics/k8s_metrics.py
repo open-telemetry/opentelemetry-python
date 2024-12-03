@@ -97,6 +97,62 @@ def create_k8s_node_memory_usage(
     )
 
 
+K8S_NODE_NETWORK_ERRORS: Final = "k8s.node.network.errors"
+"""
+Node network errors
+Instrument: counter
+Unit: {error}
+"""
+
+
+def create_k8s_node_network_errors(meter: Meter) -> Counter:
+    """Node network errors"""
+    return meter.create_counter(
+        name=K8S_NODE_NETWORK_ERRORS,
+        description="Node network errors",
+        unit="{error}",
+    )
+
+
+K8S_NODE_NETWORK_IO: Final = "k8s.node.network.io"
+"""
+Network bytes for the Node
+Instrument: counter
+Unit: By
+"""
+
+
+def create_k8s_node_network_io(meter: Meter) -> Counter:
+    """Network bytes for the Node"""
+    return meter.create_counter(
+        name=K8S_NODE_NETWORK_IO,
+        description="Network bytes for the Node",
+        unit="By",
+    )
+
+
+K8S_NODE_UPTIME: Final = "k8s.node.uptime"
+"""
+The time the Node has been running
+Instrument: gauge
+Unit: s
+Note: Instrumentations SHOULD use a gauge with type `double` and measure uptime in seconds as a floating point number with the highest precision available.
+The actual accuracy would depend on the instrumentation and operating system.
+"""
+
+
+def create_k8s_node_uptime(
+    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+) -> ObservableGauge:
+    """The time the Node has been running"""
+    return meter.create_observable_gauge(
+        name=K8S_NODE_UPTIME,
+        callbacks=callbacks,
+        description="The time the Node has been running",
+        unit="s",
+    )
+
+
 K8S_POD_CPU_TIME: Final = "k8s.pod.cpu.time"
 """
 Total CPU time consumed
@@ -154,4 +210,60 @@ def create_k8s_pod_memory_usage(
         callbacks=callbacks,
         description="Memory usage of the Pod",
         unit="By",
+    )
+
+
+K8S_POD_NETWORK_ERRORS: Final = "k8s.pod.network.errors"
+"""
+Pod network errors
+Instrument: counter
+Unit: {error}
+"""
+
+
+def create_k8s_pod_network_errors(meter: Meter) -> Counter:
+    """Pod network errors"""
+    return meter.create_counter(
+        name=K8S_POD_NETWORK_ERRORS,
+        description="Pod network errors",
+        unit="{error}",
+    )
+
+
+K8S_POD_NETWORK_IO: Final = "k8s.pod.network.io"
+"""
+Network bytes for the Pod
+Instrument: counter
+Unit: By
+"""
+
+
+def create_k8s_pod_network_io(meter: Meter) -> Counter:
+    """Network bytes for the Pod"""
+    return meter.create_counter(
+        name=K8S_POD_NETWORK_IO,
+        description="Network bytes for the Pod",
+        unit="By",
+    )
+
+
+K8S_POD_UPTIME: Final = "k8s.pod.uptime"
+"""
+The time the Pod has been running
+Instrument: gauge
+Unit: s
+Note: Instrumentations SHOULD use a gauge with type `double` and measure uptime in seconds as a floating point number with the highest precision available.
+The actual accuracy would depend on the instrumentation and operating system.
+"""
+
+
+def create_k8s_pod_uptime(
+    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+) -> ObservableGauge:
+    """The time the Pod has been running"""
+    return meter.create_observable_gauge(
+        name=K8S_POD_UPTIME,
+        callbacks=callbacks,
+        description="The time the Pod has been running",
+        unit="s",
     )

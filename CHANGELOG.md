@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4310](https://github.com/open-telemetry/opentelemetry-python/pull/4310))
 - sdk: instantiate lazily `ExemplarBucket`s in `ExemplarReservoir`s
   ([#4260](https://github.com/open-telemetry/opentelemetry-python/pull/4260))
+- semantic-conventions: Bump to 1.29.0
+  ([#4337](https://github.com/open-telemetry/opentelemetry-python/pull/4337))
 
 ## Version 1.28.0/0.49b0 (2024-11-05)
 
