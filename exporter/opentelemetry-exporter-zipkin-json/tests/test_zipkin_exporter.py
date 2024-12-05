@@ -145,6 +145,14 @@ class TestZipkinExporter(unittest.TestCase):
         self.assertEqual(SpanExportResult.SUCCESS, status)
 
     @patch("requests.Session.post")
+    def test_export_success_no_content(self, mock_post):
+        mock_post.return_value = MockResponse(204)
+        spans = []
+        exporter = ZipkinExporter()
+        status = exporter.export(spans)
+        self.assertEqual(SpanExportResult.SUCCESS, status)
+
+    @patch("requests.Session.post")
     def test_export_invalid_response(self, mock_post):
         mock_post.return_value = MockResponse(404)
         spans = []

@@ -88,7 +88,6 @@ from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.trace import Span
 
 DEFAULT_ENDPOINT = "http://localhost:9411/api/v2/spans"
-REQUESTS_SUCCESS_STATUS_CODES = (200, 202)
 
 logger = logging.getLogger(__name__)
 
@@ -163,7 +162,7 @@ class ZipkinExporter(SpanExporter):
             timeout=self.timeout,
         )
 
-        if result.status_code not in REQUESTS_SUCCESS_STATUS_CODES:
+        if not result.ok:
             logger.error(
                 "Traces cannot be uploaded; status code: %s, message %s",
                 result.status_code,
