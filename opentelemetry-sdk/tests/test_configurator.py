@@ -17,7 +17,7 @@
 from logging import WARNING, getLogger
 from os import environ
 from typing import Dict, Iterable, Optional, Sequence
-from unittest import TestCase
+from unittest import TestCase, mock
 from unittest.mock import Mock, patch
 
 from pytest import raises
@@ -667,12 +667,38 @@ class TestLoggingInit(TestCase):
         environ,
         {"OTEL_RESOURCE_ATTRIBUTES": "service.name=otlp-service"},
     )
+    def test_logging_init_exporter_without_handler_setup(self):
+        resource = Resource.create({})
+        _init_logging(
+            {"otlp": DummyOTLPLogExporter},
+            resource=resource,
+            setup_logging_handler=False,
+        )
+        self.assertEqual(self.set_provider_mock.call_count, 1)
+        provider = self.set_provider_mock.call_args[0][0]
+        self.assertIsInstance(provider, DummyLoggerProvider)
+        self.assertIsInstance(provider.resource, Resource)
+        self.assertEqual(
+            provider.resource.attributes.get("service.name"),
+            "otlp-service",
+        )
+        self.assertIsInstance(provider.processor, DummyLogRecordProcessor)
+        self.assertIsInstance(
+            provider.processor.exporter, DummyOTLPLogExporter
+        )
+        getLogger(__name__).error("hello")
+        self.assertFalse(provider.processor.exporter.export_called)
+
+    @patch.dict(
+        environ,
+        {"OTEL_RESOURCE_ATTRIBUTES": "service.name=otlp-service"},
+    )
     @patch("opentelemetry.sdk._configuration._init_tracing")
     @patch("opentelemetry.sdk._configuration._init_logging")
     def test_logging_init_disable_default(self, logging_mock, tracing_mock):
         _initialize_components(auto_instrumentation_version="auto-version")
-        self.assertEqual(logging_mock.call_count, 0)
         self.assertEqual(tracing_mock.call_count, 1)
+        logging_mock.assert_called_once_with(mock.ANY, mock.ANY, False)
 
     @patch.dict(
         environ,
@@ -686,7 +712,7 @@ class TestLoggingInit(TestCase):
     def test_logging_init_enable_env(self, logging_mock, tracing_mock):
         with self.assertLogs(level=WARNING):
             _initialize_components(auto_instrumentation_version="auto-version")
-        self.assertEqual(logging_mock.call_count, 1)
+        logging_mock.assert_called_once_with(mock.ANY, mock.ANY, True)
         self.assertEqual(tracing_mock.call_count, 1)
 
     @patch.dict(
@@ -768,7 +794,7 @@ class TestLoggingInit(TestCase):
                 "custom.key.2": "pass-in-value-2",
             },
             "id_generator": "TEST_GENERATOR",
-            "logging_enabled": True,
+            "setup_logging_handler": True,
         }
         _initialize_components(**kwargs)
 
@@ -810,6 +836,7 @@ class TestLoggingInit(TestCase):
         logging_mock.assert_called_once_with(
             "TEST_LOG_EXPORTERS_DICT",
             "TEST_RESOURCE",
+            True,
         )
 
 

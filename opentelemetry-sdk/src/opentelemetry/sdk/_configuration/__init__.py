@@ -236,6 +236,7 @@ def _init_metrics(
 def _init_logging(
     exporters: Dict[str, Type[LogExporter]],
     resource: Resource = None,
+    setup_logging_handler: bool = True,
 ):
     provider = LoggerProvider(resource=resource)
     set_logger_provider(provider)
@@ -246,12 +247,14 @@ def _init_logging(
             BatchLogRecordProcessor(exporter_class(**exporter_args))
         )
 
-    handler = LoggingHandler(level=logging.NOTSET, logger_provider=provider)
-
-    logging.getLogger().addHandler(handler)
-
     event_logger_provider = EventLoggerProvider(logger_provider=provider)
     set_event_logger_provider(event_logger_provider)
+
+    if setup_logging_handler:
+        handler = LoggingHandler(
+            level=logging.NOTSET, logger_provider=provider
+        )
+        logging.getLogger().addHandler(handler)
 
 
 def _import_exporters(
@@ -364,7 +367,7 @@ def _initialize_components(
     sampler: Optional[Sampler] = None,
     resource_attributes: Optional[Attributes] = None,
     id_generator: IdGenerator = None,
-    logging_enabled: Optional[bool] = None,
+    setup_logging_handler: Optional[bool] = None,
 ):
     if trace_exporter_names is None:
         trace_exporter_names = []
@@ -401,8 +404,8 @@ def _initialize_components(
         resource=resource,
     )
     _init_metrics(metric_exporters, resource)
-    if logging_enabled is None:
-        logging_enabled = (
+    if setup_logging_handler is None:
+        setup_logging_handler = (
             os.getenv(
                 _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED, "false"
             )
@@ -410,8 +413,7 @@ def _initialize_components(
             .lower()
             == "true"
         )
-    if logging_enabled:
-        _init_logging(log_exporters, resource)
+    _init_logging(log_exporters, resource, setup_logging_handler)
 
 
 class _BaseConfigurator(ABC):
