@@ -16,13 +16,15 @@
 
 from logging import WARNING, getLogger
 from os import environ
-from typing import Dict, Iterable, Optional, Sequence
+from typing import Dict, Iterable, Optional, Sequence, Any
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
 from pytest import raises
 
 from opentelemetry import trace
+from opentelemetry._logs import SeverityNumber
+from opentelemetry.sdk._logs import LogRecord
 from opentelemetry.context import Context
 from opentelemetry.environment_variables import OTEL_PYTHON_ID_GENERATOR
 from opentelemetry.sdk._configuration import (
@@ -109,8 +111,28 @@ class DummyLogger:
         self.resource = resource
         self.processor = processor
 
-    def emit(self, record):
-        self.processor.emit(record)
+    def emit(self,
+        event_name: str = None,
+        timestamp: Optional[int] = None,
+        observed_timestamp: Optional[int] = None,
+        severity_number: Optional[SeverityNumber] = None,
+        severity_text: Optional[str] = None,
+        context: Optional[Context] = None,
+        body: Optional[Any] = None,
+        attributes: Optional[Attributes] = None,
+        ):
+
+        span_context = trace.get_current_span(context).get_span_context()
+        self.processor.emit(LogRecord(event_name=event_name,
+                                      timestamp=timestamp,
+                                      observed_timestamp=observed_timestamp,
+                                      severity_number=severity_number,
+                                      severity_text=severity_text,
+                                      trace_id=span_context.trace_id,
+                                      span_id=span_context.span_id,
+                                      trace_flags=span_context.trace_flags,
+                                      body=body,
+                                      attributes=attributes))
 
 
 class DummyLogRecordProcessor:
@@ -586,32 +608,14 @@ class TestLoggingInit(TestCase):
             "opentelemetry.sdk._configuration.set_logger_provider"
         )
 
-        self.event_logger_provider_instance_mock = Mock()
-        self.event_logger_provider_patch = patch(
-            "opentelemetry.sdk._configuration.EventLoggerProvider",
-            return_value=self.event_logger_provider_instance_mock,
-        )
-        self.set_event_logger_provider_patch = patch(
-            "opentelemetry.sdk._configuration.set_event_logger_provider"
-        )
-
         self.processor_mock = self.processor_patch.start()
         self.provider_mock = self.provider_patch.start()
         self.set_provider_mock = self.set_provider_patch.start()
-
-        self.event_logger_provider_mock = (
-            self.event_logger_provider_patch.start()
-        )
-        self.set_event_logger_provider_mock = (
-            self.set_event_logger_provider_patch.start()
-        )
 
     def tearDown(self):
         self.processor_patch.stop()
         self.set_provider_patch.stop()
         self.provider_patch.stop()
-        self.event_logger_provider_patch.stop()
-        self.set_event_logger_provider_patch.stop()
         root_logger = getLogger("root")
         root_logger.handlers = [
             handler
@@ -633,12 +637,6 @@ class TestLoggingInit(TestCase):
         self.assertEqual(
             provider.resource.attributes.get("telemetry.auto.version"),
             "auto-version",
-        )
-        self.event_logger_provider_mock.assert_called_once_with(
-            logger_provider=provider
-        )
-        self.set_event_logger_provider_mock.assert_called_once_with(
-            self.event_logger_provider_instance_mock
         )
 
     @patch.dict(
