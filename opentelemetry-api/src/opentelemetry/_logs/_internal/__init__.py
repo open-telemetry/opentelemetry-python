@@ -36,50 +36,16 @@ The following code shows how to obtain a logger using the global :class:`.Logger
 from abc import ABC, abstractmethod
 from logging import getLogger
 from os import environ
-from time import time_ns
 from typing import Any, Optional, cast
 
 from opentelemetry._logs.severity import SeverityNumber
+from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import _OTEL_PYTHON_LOGGER_PROVIDER
-from opentelemetry.trace.span import TraceFlags
 from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
 from opentelemetry.util.types import Attributes
 
 _logger = getLogger(__name__)
-
-
-class LogRecord(ABC):
-    """A LogRecord instance represents an event being logged.
-
-    LogRecord instances are created and emitted via `Logger`
-    every time something is logged. They contain all the information
-    pertinent to the event being logged.
-    """
-
-    def __init__(
-        self,
-        timestamp: Optional[int] = None,
-        observed_timestamp: Optional[int] = None,
-        trace_id: Optional[int] = None,
-        span_id: Optional[int] = None,
-        trace_flags: Optional["TraceFlags"] = None,
-        severity_text: Optional[str] = None,
-        severity_number: Optional[SeverityNumber] = None,
-        body: Optional[Any] = None,
-        attributes: Optional["Attributes"] = None,
-    ):
-        self.timestamp = timestamp
-        if observed_timestamp is None:
-            observed_timestamp = time_ns()
-        self.observed_timestamp = observed_timestamp
-        self.trace_id = trace_id
-        self.span_id = span_id
-        self.trace_flags = trace_flags
-        self.severity_text = severity_text
-        self.severity_number = severity_number
-        self.body = body  # type: ignore
-        self.attributes = attributes
 
 
 class Logger(ABC):
@@ -99,8 +65,26 @@ class Logger(ABC):
         self._attributes = attributes
 
     @abstractmethod
-    def emit(self, record: "LogRecord") -> None:
-        """Emits a :class:`LogRecord` representing a log to the processing pipeline."""
+    def is_enabled(
+        self,
+        severity_number: Optional[SeverityNumber] = None,
+        context: Optional[Context] = None,
+    ) -> bool:
+        """Returns True if the logger is enabled for given severity and context, False otherwise."""
+
+    @abstractmethod
+    def emit(
+        self,
+        name: str = None,
+        timestamp: Optional[int] = None,
+        observed_timestamp: Optional[int] = None,
+        severity_number: Optional[SeverityNumber] = None,
+        severity_text: Optional[str] = None,
+        context: Optional[Context] = None,
+        body: Optional[Any] = None,
+        attributes: Optional[Attributes] = None,
+    ) -> None:
+        """Emits a log record."""
 
 
 class NoOpLogger(Logger):
@@ -109,7 +93,24 @@ class NoOpLogger(Logger):
     All operations are no-op.
     """
 
-    def emit(self, record: "LogRecord") -> None:
+    def is_enabled(
+        self,
+        severity_number: Optional[SeverityNumber] = None,
+        context: Optional[Context] = None,
+    ) -> bool:
+        return False
+
+    def emit(
+        self,
+        name: str = None,
+        timestamp: Optional[int] = None,
+        observed_timestamp: Optional[int] = None,
+        severity_number: Optional[SeverityNumber] = None,
+        severity_text: Optional[str] = None,
+        context: Optional[Context] = None,
+        body: Optional[Any] = None,
+        attributes: Optional[Attributes] = None,
+    ) -> None:
         pass
 
 
@@ -143,8 +144,36 @@ class ProxyLogger(Logger):
             return self._real_logger
         return self._noop_logger
 
-    def emit(self, record: LogRecord) -> None:
-        self._logger.emit(record)
+    def is_enabled(
+        self,
+        severity_number: Optional[SeverityNumber] = None,
+        context: Optional[Context] = None,
+    ) -> bool:
+        return self._logger.is_enabled(
+            severity_number=severity_number, context=context
+        )
+
+    def emit(
+        self,
+        name: str = None,
+        timestamp: Optional[int] = None,
+        observed_timestamp: Optional[int] = None,
+        severity_number: Optional[SeverityNumber] = None,
+        severity_text: Optional[str] = None,
+        context: Optional[Context] = None,
+        body: Optional[Any] = None,
+        attributes: Optional[Attributes] = None,
+    ) -> None:
+        self._logger.emit(
+            name=name,
+            timestamp=timestamp,
+            observed_timestamp=observed_timestamp,
+            severity_number=severity_number,
+            severity_text=severity_text,
+            context=context,
+            body=body,
+            attributes=attributes,
+        )
 
 
 class LoggerProvider(ABC):

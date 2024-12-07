@@ -29,7 +29,7 @@ from opentelemetry.context import (
     detach,
     set_value,
 )
-from opentelemetry.sdk._logs import LogData, LogRecord, LogRecordProcessor
+from opentelemetry.sdk._logs import LogRecord, LogRecordProcessor
 from opentelemetry.sdk.environment_variables import (
     OTEL_BLRP_EXPORT_TIMEOUT,
     OTEL_BLRP_MAX_EXPORT_BATCH_SIZE,
@@ -65,11 +65,11 @@ class LogExporter(abc.ABC):
     """
 
     @abc.abstractmethod
-    def export(self, batch: Sequence[LogData]):
+    def export(self, batch: Sequence[LogRecord]):
         """Exports a batch of logs.
 
         Args:
-            batch: The list of `LogData` objects to be exported
+            batch: The list of `LogRecord` objects to be exported
 
         Returns:
             The result of the export
@@ -100,9 +100,9 @@ class ConsoleLogExporter(LogExporter):
         self.out = out
         self.formatter = formatter
 
-    def export(self, batch: Sequence[LogData]):
-        for data in batch:
-            self.out.write(self.formatter(data.log_record))
+    def export(self, batch: Sequence[LogRecord]):
+        for log_record in batch:
+            self.out.write(self.formatter(log_record))
         self.out.flush()
         return LogExportResult.SUCCESS
 
@@ -112,7 +112,7 @@ class ConsoleLogExporter(LogExporter):
 
 class SimpleLogRecordProcessor(LogRecordProcessor):
     """This is an implementation of LogRecordProcessor which passes
-    received logs in the export-friendly LogData representation to the
+    received logs in the export-friendly LogRecord representation to the
     configured LogExporter, as soon as they are emitted.
     """
 
@@ -120,13 +120,13 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
         self._exporter = exporter
         self._shutdown = False
 
-    def emit(self, log_data: LogData):
+    def emit(self, log_record: LogRecord):
         if self._shutdown:
             _logger.warning("Processor is already shutdown, ignoring call")
             return
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
-            self._exporter.export((log_data,))
+            self._exporter.export((log_record,))
         except Exception:  # pylint: disable=broad-exception-caught
             _logger.exception("Exception while exporting logs.")
         detach(token)
@@ -152,7 +152,7 @@ _BSP_RESET_ONCE = Once()
 
 class BatchLogRecordProcessor(LogRecordProcessor):
     """This is an implementation of LogRecordProcessor which creates batches of
-    received logs in the export-friendly LogData representation and
+    received logs in the export-friendly LogRecord representation and
     send to the configured LogExporter, as soon as they are emitted.
 
     `BatchLogRecordProcessor` is configurable with the following environment
@@ -164,9 +164,9 @@ class BatchLogRecordProcessor(LogRecordProcessor):
     - :envvar:`OTEL_BLRP_EXPORT_TIMEOUT`
     """
 
-    _queue: Deque[LogData]
+    _queue: Deque[LogRecord]
     _flush_request: Optional[_FlushRequest]
-    _log_records: List[Optional[LogData]]
+    _log_records: List[Optional[LogRecord]]
 
     def __init__(
         self,
@@ -341,8 +341,8 @@ class BatchLogRecordProcessor(LogRecordProcessor):
             self._flush_request = _FlushRequest()
         return self._flush_request
 
-    def emit(self, log_data: LogData) -> None:
-        """Adds the `LogData` to queue and notifies the waiting threads
+    def emit(self, log_data: LogRecord) -> None:
+        """Adds the `LogRecord` to queue and notifies the waiting threads
         when size of queue reaches max_export_batch_size.
         """
         if self._shutdown:
