@@ -16,7 +16,7 @@
 import unittest
 from unittest.mock import Mock, patch
 
-import opentelemetry._logs as logs
+import opentelemetry._logs._internal as logs_internal
 from opentelemetry._logs import get_logger_provider, set_logger_provider
 from opentelemetry.environment_variables import _OTEL_PYTHON_LOGGER_PROVIDER
 from opentelemetry.test.globals_test import reset_logging_globals
@@ -34,26 +34,28 @@ class TestGlobals(unittest.TestCase):
     def test_set_logger_provider(self):
         lp_mock = Mock()
         # pylint: disable=protected-access
-        self.assertIsNone(logs._LOGGER_PROVIDER)
+        self.assertIsNone(logs_internal._LOGGER_PROVIDER)
         set_logger_provider(lp_mock)
-        self.assertIs(logs._LOGGER_PROVIDER, lp_mock)
+        self.assertIs(logs_internal._LOGGER_PROVIDER, lp_mock)
         self.assertIs(get_logger_provider(), lp_mock)
 
     def test_get_logger_provider(self):
         # pylint: disable=protected-access
-        self.assertIsNone(logs._LOGGER_PROVIDER)
+        self.assertIsNone(logs_internal._LOGGER_PROVIDER)
 
-        self.assertIsInstance(get_logger_provider(), logs.ProxyLoggerProvider)
+        self.assertIsInstance(
+            get_logger_provider(), logs_internal.ProxyLoggerProvider
+        )
 
-        logs._LOGGER_PROVIDER = None
+        logs_internal._LOGGER_PROVIDER = None
 
         with patch.dict(
             "os.environ",
             {_OTEL_PYTHON_LOGGER_PROVIDER: "test_logger_provider"},
         ):
-            with patch("opentelemetry._logs._load_provider", Mock()):
+            with patch("opentelemetry._logs._internal._load_provider", Mock()):
                 with patch(
-                    "opentelemetry._logs.cast",
+                    "opentelemetry._logs._internal.cast",
                     Mock(**{"return_value": "test_logger_provider"}),
                 ):
                     self.assertEqual(

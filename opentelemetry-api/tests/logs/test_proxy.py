@@ -16,6 +16,7 @@
 import typing
 import unittest
 
+import opentelemetry._logs._internal as _logs_internal
 from opentelemetry import _logs
 from opentelemetry.context.context import Context
 from opentelemetry.test.globals_test import LoggingGlobalsTest
@@ -52,11 +53,11 @@ class TestProxy(LoggingGlobalsTest, unittest.TestCase):
     def test_proxy_logger(self):
         provider = _logs.get_logger_provider()
         # proxy provider
-        self.assertIsInstance(provider, _logs.ProxyLoggerProvider)
+        self.assertIsInstance(provider, _logs_internal.ProxyLoggerProvider)
 
         # provider returns proxy logger
         logger = provider.get_logger("proxy-test")
-        self.assertIsInstance(logger, _logs.ProxyLogger)
+        self.assertIsInstance(logger, _logs_internal.ProxyLogger)
 
         # set a real provider
         _logs.set_logger_provider(TestProvider())

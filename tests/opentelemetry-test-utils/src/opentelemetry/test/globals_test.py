@@ -14,8 +14,8 @@
 
 import unittest
 
-from opentelemetry import _logs as logging_api
 from opentelemetry import trace as trace_api
+from opentelemetry._logs import _internal as logging_api
 from opentelemetry.metrics import _internal as metrics_api
 from opentelemetry.metrics._internal import _ProxyMeterProvider
 from opentelemetry.util._once import Once
