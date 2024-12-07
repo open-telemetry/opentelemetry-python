@@ -14,6 +14,7 @@
 
 from math import exp, floor, ldexp, log
 from threading import Lock
+from typing import Any, Dict
 
 from opentelemetry.sdk.metrics._internal.exponential_histogram.mapping import (
     Mapping,
@@ -35,25 +36,25 @@ class LogarithmMapping(Mapping):
     # Reference implementation here:
     # https://github.com/open-telemetry/opentelemetry-go/blob/0e6f9c29c10d6078e8131418e1d1d166c7195d61/sdk/metric/aggregator/exponential/mapping/logarithm/logarithm.go
 
-    _mappings = {}
+    _mappings: Dict[int, Any] = {}
     _mappings_lock = Lock()
 
     _min_scale = 1
     _max_scale = 20
 
-    def _get_min_scale(self):
+    def _get_min_scale(self) -> int:
         # _min_scale ensures that ExponentMapping is used for zero and negative
         # scale values.
         return self._min_scale
 
-    def _get_max_scale(self):
+    def _get_max_scale(self) -> int:
         # FIXME The Go implementation uses a value of 20 here, find out the
         # right value for this implementation, more information here:
         # https://github.com/lightstep/otel-launcher-go/blob/c9ca8483be067a39ab306b09060446e7fda65f35/lightstep/sdk/metric/aggregator/histogram/structure/README.md#mapping-function
         # https://github.com/open-telemetry/opentelemetry-go/blob/0e6f9c29c10d6078e8131418e1d1d166c7195d61/sdk/metric/aggregator/exponential/mapping/logarithm/logarithm.go#L32-L45
         return self._max_scale
 
-    def _init(self, scale: int):
+    def _init(self, scale: int) -> None:
         # pylint: disable=attribute-defined-outside-init
 
         super()._init(scale)
@@ -80,7 +81,7 @@ class LogarithmMapping(Mapping):
         # (MIN_NORMAL_VALUE, MIN_NORMAL_VALUE * base]. One less than this index
         # corresponds with the bucket containing values <= MIN_NORMAL_VALUE.
         self._min_normal_lower_boundary_index = (
-            MIN_NORMAL_EXPONENT << self._scale
+            MIN_NORMAL_EXPONENT << self._scale  # type: ignore
         )
 
         # self._max_normal_lower_boundary_index is the index such that
@@ -92,7 +93,7 @@ class LogarithmMapping(Mapping):
         # represented. One greater than this index corresponds with the bucket
         # containing values > 2 ** 1024.
         self._max_normal_lower_boundary_index = (
-            (MAX_NORMAL_EXPONENT + 1) << self._scale
+            (MAX_NORMAL_EXPONENT + 1) << self._scale  # type: ignore
         ) - 1
 
     def map_to_index(self, value: float) -> int:
@@ -102,30 +103,30 @@ class LogarithmMapping(Mapping):
 
         # value is subnormal
         if value <= MIN_NORMAL_VALUE:
-            return self._min_normal_lower_boundary_index - 1
+            return self._min_normal_lower_boundary_index - 1  # type: ignore
 
         # value is an exact power of two.
         if get_ieee_754_mantissa(value) == 0:
             exponent = get_ieee_754_exponent(value)
             return (exponent << self._scale) - 1
 
-        return min(
+        return min(  # type: ignore
             floor(log(value) * self._scale_factor),
-            self._max_normal_lower_boundary_index,
+            self._max_normal_lower_boundary_index,  # type: ignore
         )
 
     def get_lower_boundary(self, index: int) -> float:
-        if index >= self._max_normal_lower_boundary_index:
-            if index == self._max_normal_lower_boundary_index:
+        if index >= self._max_normal_lower_boundary_index:  # type: ignore
+            if index == self._max_normal_lower_boundary_index:  # type: ignore
                 return 2 * exp(
                     (index - (1 << self._scale)) / self._scale_factor
                 )
             raise MappingOverflowError()
 
-        if index <= self._min_normal_lower_boundary_index:
-            if index == self._min_normal_lower_boundary_index:
+        if index <= self._min_normal_lower_boundary_index:  # type: ignore
+            if index == self._min_normal_lower_boundary_index:  # type: ignore
                 return MIN_NORMAL_VALUE
-            if index == self._min_normal_lower_boundary_index - 1:
+            if index == self._min_normal_lower_boundary_index - 1:  # type: ignore
                 return (
                     exp((index + (1 << self._scale)) / self._scale_factor) / 2
                 )

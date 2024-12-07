@@ -160,10 +160,10 @@ class Decision(enum.Enum):
     # IsRecording() == true AND Sampled flag` MUST be set.
     RECORD_AND_SAMPLE = 2
 
-    def is_recording(self):
+    def is_recording(self) -> bool:
         return self in (Decision.RECORD_ONLY, Decision.RECORD_AND_SAMPLE)
 
-    def is_sampled(self):
+    def is_sampled(self) -> bool:
         return self is Decision.RECORD_AND_SAMPLE
 
 
@@ -179,7 +179,7 @@ class SamplingResult:
     """
 
     def __repr__(self) -> str:
-        return f"{type(self).__name__}({str(self.decision)}, attributes={str(self.attributes)})"
+        return f"{type(self).__name__}({str(self.decision)}, attributes={str(self.attributes)})"  # type: ignore
 
     def __init__(
         self,
@@ -189,7 +189,7 @@ class SamplingResult:
     ) -> None:
         self.decision = decision
         if attributes is None:
-            self.attributes = MappingProxyType({})
+            self.attributes = MappingProxyType({})  # type: ignore
         else:
             self.attributes = MappingProxyType(attributes)
         self.trace_state = trace_state
@@ -373,7 +373,7 @@ class ParentBased(Sampler):
             links=links,
         )
 
-    def get_description(self):
+    def get_description(self) -> str:
         return f"ParentBased{{root:{self._root.get_description()},remoteParentSampled:{self._remote_parent_sampled.get_description()},remoteParentNotSampled:{self._remote_parent_not_sampled.get_description()},localParentSampled:{self._local_parent_sampled.get_description()},localParentNotSampled:{self._local_parent_not_sampled.get_description()}}}"
 
 
@@ -396,22 +396,22 @@ class ParentBasedTraceIdRatio(ParentBased):
 
 
 class _AlwaysOff(StaticSampler):
-    def __init__(self, _):
+    def __init__(self, _):  # type: ignore
         super().__init__(Decision.DROP)
 
 
 class _AlwaysOn(StaticSampler):
-    def __init__(self, _):
+    def __init__(self, _):  # type: ignore
         super().__init__(Decision.RECORD_AND_SAMPLE)
 
 
 class _ParentBasedAlwaysOff(ParentBased):
-    def __init__(self, _):
+    def __init__(self, _):  # type: ignore
         super().__init__(ALWAYS_OFF)
 
 
 class _ParentBasedAlwaysOn(ParentBased):
-    def __init__(self, _):
+    def __init__(self, _):  # type: ignore
         super().__init__(ALWAYS_ON)
 
 
@@ -435,13 +435,13 @@ def _get_from_env_or_default() -> Sampler:
 
     if trace_sampler in ("traceidratio", "parentbased_traceidratio"):
         try:
-            rate = float(os.getenv(OTEL_TRACES_SAMPLER_ARG))
+            rate = float(os.getenv(OTEL_TRACES_SAMPLER_ARG, 1.0))
         except (ValueError, TypeError):
             _logger.warning("Could not convert TRACES_SAMPLER_ARG to float.")
             rate = 1.0
-        return _KNOWN_SAMPLERS[trace_sampler](rate)
+        return _KNOWN_SAMPLERS[trace_sampler](rate)  # type: ignore
 
-    return _KNOWN_SAMPLERS[trace_sampler]
+    return _KNOWN_SAMPLERS[trace_sampler]  # type: ignore
 
 
 def _get_parent_trace_state(
