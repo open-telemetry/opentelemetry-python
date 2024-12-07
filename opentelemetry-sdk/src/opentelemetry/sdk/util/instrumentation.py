@@ -29,7 +29,7 @@ class InstrumentationInfo:
 
     __slots__ = ("_name", "_version", "_schema_url")
 
-    @deprecated(version="1.11.1", reason="You should use InstrumentationScope")
+    @deprecated(version="1.11.1", reason="You should use InstrumentationScope")  # type: ignore
     def __init__(
         self,
         name: str,
@@ -42,26 +42,26 @@ class InstrumentationInfo:
             schema_url = ""
         self._schema_url = schema_url
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{type(self).__name__}({self._name}, {self._version}, {self._schema_url})"
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((self._name, self._version, self._schema_url))
 
-    def __eq__(self, value):
+    def __eq__(self, value: object) -> bool:
         return type(value) is type(self) and (
             self._name,
             self._version,
             self._schema_url,
-        ) == (value._name, value._version, value._schema_url)
+        ) == (value._name, value._version, value._schema_url)  # type: ignore
 
-    def __lt__(self, value):
+    def __lt__(self, value: object) -> bool:
         if type(value) is not type(self):
             return NotImplemented
-        return (self._name, self._version, self._schema_url) < (
-            value._name,
-            value._version,
-            value._schema_url,
+        return (self._name, self._version, self._schema_url) < (  # type: ignore
+            value._name,  # type: ignore
+            value._version,  # type: ignore
+            value._schema_url,  # type: ignore
         )
 
     @property
@@ -153,14 +153,14 @@ class InstrumentationScope:
     def attributes(self) -> Attributes:
         return self._attributes
 
-    def to_json(self, indent=4) -> str:
+    def to_json(self, indent: int=4) -> str:
         return dumps(
-            {
+            {  # type: ignore
                 "name": self._name,
                 "version": self._version,
                 "schema_url": self._schema_url,
-                "attributes": (
-                    dict(self._attributes) if bool(self._attributes) else None
+                "attributes": (  # type: ignore
+                    dict(self._attributes) if bool(self._attributes) else None  # type: ignore
                 ),
             },
             indent=indent,

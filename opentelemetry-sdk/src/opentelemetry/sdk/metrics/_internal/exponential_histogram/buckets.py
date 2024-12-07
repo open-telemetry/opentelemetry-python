@@ -13,13 +13,14 @@
 # limitations under the License.
 
 from math import ceil, log2
+from typing import List
 
 
 class Buckets:
     # No method of this class is protected by locks because instances of this
     # class are only used in methods that are protected by locks themselves.
 
-    def __init__(self):
+    def __init__(self):  # type: ignore
         self._counts = [0]
 
         # The term index refers to the number of the exponential histogram bucket
@@ -69,16 +70,16 @@ class Buckets:
         self.__index_base = value
 
     @property
-    def counts(self):
+    def counts(self) -> List[int]:
         return self._counts
 
-    def get_offset_counts(self):
+    def get_offset_counts(self) -> List[int]:
         bias = self.__index_base - self.__index_start
         return self._counts[-bias:] + self._counts[:-bias]
 
     def grow(self, needed: int, max_size: int) -> None:
-        size = len(self._counts)
-        bias = self.__index_base - self.__index_start
+        size: int = len(self._counts)
+        bias: int = self.__index_base - self.__index_start
         old_positive_limit = size - bias
 
         # 2 ** ceil(log2(needed)) finds the smallest power of two that is larger
@@ -91,9 +92,9 @@ class Buckets:
         # 2 ** ceil(log2(6)) == 8
         # 2 ** ceil(log2(7)) == 8
         # 2 ** ceil(log2(8)) == 8
-        new_size = min(2 ** ceil(log2(needed)), max_size)
+        new_size: int = min(2 ** ceil(log2(needed)), max_size)  # type: ignore
 
-        new_positive_limit = new_size - bias
+        new_positive_limit: int = new_size - bias
 
         tmp = [0] * new_size
         tmp[new_positive_limit:] = self._counts[old_positive_limit:]
@@ -176,15 +177,15 @@ class Buckets:
         self._counts[bucket_index] += increment
 
     def copy_empty(self) -> "Buckets":
-        copy = Buckets()
+        copy = Buckets()  # type: ignore
 
         # pylint: disable=no-member
         # pylint: disable=protected-access
         # pylint: disable=attribute-defined-outside-init
         # pylint: disable=invalid-name
-        copy._Buckets__index_base = self._Buckets__index_base
-        copy._Buckets__index_start = self._Buckets__index_start
-        copy._Buckets__index_end = self._Buckets__index_end
+        copy._Buckets__index_base = self._Buckets__index_base  # type: ignore
+        copy._Buckets__index_start = self._Buckets__index_start  # type: ignore
+        copy._Buckets__index_end = self._Buckets__index_end  # type: ignore
         copy._counts = [0 for _ in self._counts]
 
         return copy
