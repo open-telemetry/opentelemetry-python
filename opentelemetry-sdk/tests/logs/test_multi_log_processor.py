@@ -41,9 +41,7 @@ class AnotherLogRecordProcessor(LogRecordProcessor):
     def emit(self, log_record):
         if self._closed:
             return
-        self._log_list.append(
-            (log_record.body, log_record.severity_text)
-        )
+        self._log_list.append((log_record.body, log_record.severity_text))
 
     def shutdown(self):
         self._closed = True

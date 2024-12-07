@@ -127,73 +127,73 @@ class TestOTLPLogExporter(TestCase):
         self.server.start()
 
         self.log_data_1 = LogRecord(
-                timestamp=int(time.time() * 1e9),
-                trace_id=2604504634922341076776623263868986797,
-                span_id=5213367945872657620,
-                trace_flags=TraceFlags(0x01),
-                severity_text="WARNING",
-                severity_number=SeverityNumber.WARN,
-                body="Zhengzhou, We have a heaviest rains in 1000 years",
-                resource=SDKResource({"key": "value"}),
-                attributes={"a": 1, "b": "c"},
-                instrumentation_scope=InstrumentationScope(
-                    "first_name", "first_version"
-                ),
-            )
+            timestamp=int(time.time() * 1e9),
+            trace_id=2604504634922341076776623263868986797,
+            span_id=5213367945872657620,
+            trace_flags=TraceFlags(0x01),
+            severity_text="WARNING",
+            severity_number=SeverityNumber.WARN,
+            body="Zhengzhou, We have a heaviest rains in 1000 years",
+            resource=SDKResource({"key": "value"}),
+            attributes={"a": 1, "b": "c"},
+            instrumentation_scope=InstrumentationScope(
+                "first_name", "first_version"
+            ),
+        )
         self.log_data_2 = LogRecord(
-                timestamp=int(time.time() * 1e9),
-                trace_id=2604504634922341076776623263868986799,
-                span_id=5213367945872657623,
-                trace_flags=TraceFlags(0x01),
-                severity_text="INFO",
-                severity_number=SeverityNumber.INFO2,
-                body="Sydney, Opera House is closed",
-                resource=SDKResource({"key": "value"}),
-                attributes={"custom_attr": [1, 2, 3]},
-                instrumentation_scope=InstrumentationScope(
-                    "second_name", "second_version"
-                ),
-            )
+            timestamp=int(time.time() * 1e9),
+            trace_id=2604504634922341076776623263868986799,
+            span_id=5213367945872657623,
+            trace_flags=TraceFlags(0x01),
+            severity_text="INFO",
+            severity_number=SeverityNumber.INFO2,
+            body="Sydney, Opera House is closed",
+            resource=SDKResource({"key": "value"}),
+            attributes={"custom_attr": [1, 2, 3]},
+            instrumentation_scope=InstrumentationScope(
+                "second_name", "second_version"
+            ),
+        )
         self.log_data_3 = LogRecord(
-                timestamp=int(time.time() * 1e9),
-                trace_id=2604504634922341076776623263868986800,
-                span_id=5213367945872657628,
-                trace_flags=TraceFlags(0x01),
-                severity_text="ERROR",
-                severity_number=SeverityNumber.WARN,
-                body="Mumbai, Boil water before drinking",
-                resource=SDKResource({"service": "myapp"}),
-                instrumentation_scope=InstrumentationScope(
-                    "third_name", "third_version"
-                ),
-            )
+            timestamp=int(time.time() * 1e9),
+            trace_id=2604504634922341076776623263868986800,
+            span_id=5213367945872657628,
+            trace_flags=TraceFlags(0x01),
+            severity_text="ERROR",
+            severity_number=SeverityNumber.WARN,
+            body="Mumbai, Boil water before drinking",
+            resource=SDKResource({"service": "myapp"}),
+            instrumentation_scope=InstrumentationScope(
+                "third_name", "third_version"
+            ),
+        )
         self.log_data_4 = LogRecord(
-                timestamp=int(time.time() * 1e9),
-                trace_id=0,
-                span_id=5213367945872657629,
-                trace_flags=TraceFlags(0x01),
-                severity_text="ERROR",
-                severity_number=SeverityNumber.WARN,
-                body="Invalid trace id check",
-                resource=SDKResource({"service": "myapp"}),
-                instrumentation_scope=InstrumentationScope(
-                    "fourth_name", "fourth_version"
-                ),
-            )
+            timestamp=int(time.time() * 1e9),
+            trace_id=0,
+            span_id=5213367945872657629,
+            trace_flags=TraceFlags(0x01),
+            severity_text="ERROR",
+            severity_number=SeverityNumber.WARN,
+            body="Invalid trace id check",
+            resource=SDKResource({"service": "myapp"}),
+            instrumentation_scope=InstrumentationScope(
+                "fourth_name", "fourth_version"
+            ),
+        )
 
         self.log_data_5 = LogRecord(
-                timestamp=int(time.time() * 1e9),
-                trace_id=2604504634922341076776623263868986801,
-                span_id=0,
-                trace_flags=TraceFlags(0x01),
-                severity_text="ERROR",
-                severity_number=SeverityNumber.WARN,
-                body="Invalid span id check",
-                resource=SDKResource({"service": "myapp"}),
-                instrumentation_scope=InstrumentationScope(
-                    "fifth_name", "fifth_version"
-                ),
-            )
+            timestamp=int(time.time() * 1e9),
+            trace_id=2604504634922341076776623263868986801,
+            span_id=0,
+            trace_flags=TraceFlags(0x01),
+            severity_text="ERROR",
+            severity_number=SeverityNumber.WARN,
+            body="Invalid span id check",
+            resource=SDKResource({"service": "myapp"}),
+            instrumentation_scope=InstrumentationScope(
+                "fifth_name", "fifth_version"
+            ),
+        )
 
     def tearDown(self):
         self.server.stop(None)
@@ -507,9 +507,7 @@ class TestOTLPLogExporter(TestCase):
                                             value=AnyValue(string_value="c"),
                                         ),
                                     ],
-                                    flags=int(
-                                        self.log_data_1.trace_flags
-                                    ),
+                                    flags=int(self.log_data_1.trace_flags),
                                 )
                             ],
                         )
@@ -567,9 +565,7 @@ class TestOTLPLogExporter(TestCase):
                                             value=AnyValue(string_value="c"),
                                         ),
                                     ],
-                                    flags=int(
-                                        self.log_data_1.trace_flags
-                                    ),
+                                    flags=int(self.log_data_1.trace_flags),
                                 )
                             ],
                         ),
@@ -601,9 +597,7 @@ class TestOTLPLogExporter(TestCase):
                                             value=_encode_value([1, 2, 3]),
                                         ),
                                     ],
-                                    flags=int(
-                                        self.log_data_2.trace_flags
-                                    ),
+                                    flags=int(self.log_data_2.trace_flags),
                                 )
                             ],
                         ),
@@ -642,9 +636,7 @@ class TestOTLPLogExporter(TestCase):
                                         "Mumbai, Boil water before drinking"
                                     ),
                                     attributes=[],
-                                    flags=int(
-                                        self.log_data_3.trace_flags
-                                    ),
+                                    flags=int(self.log_data_3.trace_flags),
                                 )
                             ],
                         )

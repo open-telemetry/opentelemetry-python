@@ -214,17 +214,17 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
 
     def test_exported_log_without_trace_id(self):
         log = SDKLogRecord(
-                timestamp=1644650195189786182,
-                trace_id=0,
-                span_id=1312458408527513292,
-                trace_flags=TraceFlags(0x01),
-                severity_text="WARN",
-                severity_number=SeverityNumber.WARN,
-                body="Invalid trace id check",
-                resource=SDKResource({"first_resource": "value"}),
-                attributes={"a": 1, "b": "c"},
-                instrumentation_scope=InstrumentationScope("name", "version"),
-            )
+            timestamp=1644650195189786182,
+            trace_id=0,
+            span_id=1312458408527513292,
+            trace_flags=TraceFlags(0x01),
+            severity_text="WARN",
+            severity_number=SeverityNumber.WARN,
+            body="Invalid trace id check",
+            resource=SDKResource({"first_resource": "value"}),
+            attributes={"a": 1, "b": "c"},
+            instrumentation_scope=InstrumentationScope("name", "version"),
+        )
         log_records = TestOTLPHTTPLogExporter.export_log_and_deserialize(log)
         if log_records:
             log_record = log_records[0]
@@ -239,17 +239,17 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
 
     def test_exported_log_without_span_id(self):
         log = SDKLogRecord(
-                timestamp=1644650195189786360,
-                trace_id=89564621134313219400156819398935297696,
-                span_id=0,
-                trace_flags=TraceFlags(0x01),
-                severity_text="WARN",
-                severity_number=SeverityNumber.WARN,
-                body="Invalid span id check",
-                resource=SDKResource({"first_resource": "value"}),
-                attributes={"a": 1, "b": "c"},
-                instrumentation_scope=InstrumentationScope("name", "version"),
-            )
+            timestamp=1644650195189786360,
+            trace_id=89564621134313219400156819398935297696,
+            span_id=0,
+            trace_flags=TraceFlags(0x01),
+            severity_text="WARN",
+            severity_number=SeverityNumber.WARN,
+            body="Invalid span id check",
+            resource=SDKResource({"first_resource": "value"}),
+            attributes={"a": 1, "b": "c"},
+            instrumentation_scope=InstrumentationScope("name", "version"),
+        )
         log_records = TestOTLPHTTPLogExporter.export_log_and_deserialize(log)
         if log_records:
             log_record = log_records[0]
@@ -284,62 +284,62 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
     @staticmethod
     def _get_sdk_log_data() -> List[SDKLogRecord]:
         log1 = SDKLogRecord(
-                timestamp=1644650195189786880,
-                trace_id=89564621134313219400156819398935297684,
-                span_id=1312458408527513268,
-                trace_flags=TraceFlags(0x01),
-                severity_text="WARN",
-                severity_number=SeverityNumber.WARN,
-                body="Do not go gentle into that good night. Rage, rage against the dying of the light",
-                resource=SDKResource({"first_resource": "value"}),
-                attributes={"a": 1, "b": "c"},
-                instrumentation_scope=InstrumentationScope(
-                    "first_name", "first_version"
-                ),
-            )
+            timestamp=1644650195189786880,
+            trace_id=89564621134313219400156819398935297684,
+            span_id=1312458408527513268,
+            trace_flags=TraceFlags(0x01),
+            severity_text="WARN",
+            severity_number=SeverityNumber.WARN,
+            body="Do not go gentle into that good night. Rage, rage against the dying of the light",
+            resource=SDKResource({"first_resource": "value"}),
+            attributes={"a": 1, "b": "c"},
+            instrumentation_scope=InstrumentationScope(
+                "first_name", "first_version"
+            ),
+        )
 
         log2 = SDKLogRecord(
-                timestamp=1644650249738562048,
-                trace_id=0,
-                span_id=0,
-                trace_flags=TraceFlags.DEFAULT,
-                severity_text="WARN",
-                severity_number=SeverityNumber.WARN,
-                body="Cooper, this is no time for caution!",
-                resource=SDKResource({"second_resource": "CASE"}),
-                attributes={},
-                instrumentation_scope=InstrumentationScope(
-                    "second_name", "second_version"
-                ),
-            )
+            timestamp=1644650249738562048,
+            trace_id=0,
+            span_id=0,
+            trace_flags=TraceFlags.DEFAULT,
+            severity_text="WARN",
+            severity_number=SeverityNumber.WARN,
+            body="Cooper, this is no time for caution!",
+            resource=SDKResource({"second_resource": "CASE"}),
+            attributes={},
+            instrumentation_scope=InstrumentationScope(
+                "second_name", "second_version"
+            ),
+        )
 
         log3 = SDKLogRecord(
-                timestamp=1644650427658989056,
-                trace_id=271615924622795969659406376515024083555,
-                span_id=4242561578944770265,
-                trace_flags=TraceFlags(0x01),
-                severity_text="DEBUG",
-                severity_number=SeverityNumber.DEBUG,
-                body="To our galaxy",
-                resource=SDKResource({"second_resource": "CASE"}),
-                attributes={"a": 1, "b": "c"},
-                instrumentation_scope=None,
-            )
+            timestamp=1644650427658989056,
+            trace_id=271615924622795969659406376515024083555,
+            span_id=4242561578944770265,
+            trace_flags=TraceFlags(0x01),
+            severity_text="DEBUG",
+            severity_number=SeverityNumber.DEBUG,
+            body="To our galaxy",
+            resource=SDKResource({"second_resource": "CASE"}),
+            attributes={"a": 1, "b": "c"},
+            instrumentation_scope=None,
+        )
 
         log4 = SDKLogRecord(
-                timestamp=1644650584292683008,
-                trace_id=212592107417388365804938480559624925555,
-                span_id=6077757853989569223,
-                trace_flags=TraceFlags(0x01),
-                severity_text="INFO",
-                severity_number=SeverityNumber.INFO,
-                body="Love is the one thing that transcends time and space",
-                resource=SDKResource({"first_resource": "value"}),
-                attributes={"filename": "model.py", "func_name": "run_method"},
-                instrumentation_scope=InstrumentationScope(
-                    "another_name", "another_version"
-                ),
-            )
+            timestamp=1644650584292683008,
+            trace_id=212592107417388365804938480559624925555,
+            span_id=6077757853989569223,
+            trace_flags=TraceFlags(0x01),
+            severity_text="INFO",
+            severity_number=SeverityNumber.INFO,
+            body="Love is the one thing that transcends time and space",
+            resource=SDKResource({"first_resource": "value"}),
+            attributes={"filename": "model.py", "func_name": "run_method"},
+            instrumentation_scope=InstrumentationScope(
+                "another_name", "another_version"
+            ),
+        )
 
         return [log1, log2, log3, log4]
 

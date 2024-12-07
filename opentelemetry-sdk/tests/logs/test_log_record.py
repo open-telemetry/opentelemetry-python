@@ -26,6 +26,7 @@ from opentelemetry.sdk._logs import (
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
+
 class TestLogRecord(unittest.TestCase):
     def test_log_record_to_json(self):
         expected = json.dumps(
@@ -59,9 +60,7 @@ class TestLogRecord(unittest.TestCase):
             observed_timestamp=0,
             body="a log line",
             resource=Resource({"service.name": "foo"}),
-            instrumentation_scope=InstrumentationScope(
-                "name", "version"
-            ),
+            instrumentation_scope=InstrumentationScope("name", "version"),
         )
 
         self.assertEqual(expected, actual.to_json(indent=4))
@@ -78,9 +77,7 @@ class TestLogRecord(unittest.TestCase):
             observed_timestamp=0,
             body="a log line",
             resource=Resource({"service.name": "foo"}),
-            instrumentation_scope=InstrumentationScope(
-                "name", "version"
-            ),
+            instrumentation_scope=InstrumentationScope("name", "version"),
         )
 
         decoded = json.loads(actual.to_json())

@@ -24,7 +24,6 @@ from unittest.mock import Mock, patch
 from opentelemetry._logs import SeverityNumber
 from opentelemetry.sdk import trace
 from opentelemetry.sdk._logs import (
-    LogRecord,
     LoggerProvider,
     LoggingHandler,
     LogRecord,
@@ -220,10 +219,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
             (["list", "of", "strings"], "WARN"),
             ({"key": "value"}, "ERROR"),
         ]
-        emitted = [
-            (item.body, item.severity_text)
-            for item in finished_logs
-        ]
+        emitted = [(item.body, item.severity_text) for item in finished_logs]
         self.assertEqual(expected, emitted)
         for item in finished_logs:
             self.assertEqual(
@@ -319,10 +315,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
             ),
             ("different_msg_types - ERROR - {'key': 'value'}", "ERROR"),
         ]
-        emitted = [
-            (item.body, item.severity_text)
-            for item in finished_logs
-        ]
+        emitted = [(item.body, item.severity_text) for item in finished_logs]
         self.assertEqual(expected, emitted)
 
 
@@ -492,10 +485,7 @@ class TestBatchLogRecordProcessor(ConcurrencyTestBase):
                 "CRITICAL",
             ),
         ]
-        emitted = [
-            (item.body, item.severity_text)
-            for item in finished_logs
-        ]
+        emitted = [(item.body, item.severity_text) for item in finished_logs]
         self.assertEqual(expected, emitted)
         for item in finished_logs:
             self.assertEqual(item.instrumentation_scope.name, "shutdown")
@@ -624,19 +614,19 @@ class TestConsoleLogExporter(unittest.TestCase):
     def test_export(self):  # pylint: disable=no-self-use
         """Check that the console exporter prints log records."""
         log_record = LogRecord(
-                timestamp=int(time.time() * 1e9),
-                trace_id=2604504634922341076776623263868986797,
-                span_id=5213367945872657620,
-                trace_flags=TraceFlags(0x01),
-                severity_text="WARN",
-                severity_number=SeverityNumber.WARN,
-                body="Zhengzhou, We have a heaviest rains in 1000 years",
-                resource=SDKResource({"key": "value"}),
-                attributes={"a": 1, "b": "c"},
-                instrumentation_scope=InstrumentationScope(
-                    "first_name", "first_version"
-                ),
-            )
+            timestamp=int(time.time() * 1e9),
+            trace_id=2604504634922341076776623263868986797,
+            span_id=5213367945872657620,
+            trace_flags=TraceFlags(0x01),
+            severity_text="WARN",
+            severity_number=SeverityNumber.WARN,
+            body="Zhengzhou, We have a heaviest rains in 1000 years",
+            resource=SDKResource({"key": "value"}),
+            attributes={"a": 1, "b": "c"},
+            instrumentation_scope=InstrumentationScope(
+                "first_name", "first_version"
+            ),
+        )
         exporter = ConsoleLogExporter()
         # Mocking stdout interferes with debugging and test reporting, mock on
         # the exporter instance instead.

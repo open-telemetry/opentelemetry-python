@@ -186,7 +186,9 @@ class LogRecord:
     ):
         self.event_name = event_name
         self.timestamp = timestamp
-        self.observed_timestamp = observed_timestamp if observed_timestamp is not None else time_ns()
+        self.observed_timestamp = (
+            observed_timestamp if observed_timestamp is not None else time_ns()
+        )
         self.trace_id = trace_id
         self.span_id = span_id
         self.trace_flags = trace_flags
@@ -195,11 +197,11 @@ class LogRecord:
         self.body = body
         self.instrumentation_scope = instrumentation_scope
         self.attributes = BoundedAttributes(
-                    maxlen=limits.max_attributes,
-                    attributes=attributes if bool(attributes) else None,
-                    immutable=False,
-                    max_value_len=limits.max_attribute_length,
-                )
+            maxlen=limits.max_attributes,
+            attributes=attributes if bool(attributes) else None,
+            immutable=False,
+            max_value_len=limits.max_attribute_length,
+        )
 
         self.resource = (
             resource if isinstance(resource, Resource) else Resource.create({})
@@ -244,7 +246,9 @@ class LogRecord:
                 ),
                 "trace_flags": self.trace_flags,
                 "resource": json.loads(self.resource.to_json()),
-                "instrumentation_scope": json.loads(self.instrumentation_scope.to_json()),
+                "instrumentation_scope": json.loads(
+                    self.instrumentation_scope.to_json()
+                ),
             },
             indent=indent,
         )
@@ -491,7 +495,9 @@ class LoggingHandler(logging.Handler):
                 )
         return attributes
 
-    def _translate_and_emit(self,  logger: APILogger, record: logging.LogRecord) -> LogRecord:
+    def _translate_and_emit(
+        self, logger: APILogger, record: logging.LogRecord
+    ) -> LogRecord:
         timestamp = int(record.created * 1e9)
         attributes = self._get_attributes(record)
         severity_number = std_to_otel(record.levelno)
@@ -581,7 +587,8 @@ class Logger(APILogger):
         """Returns True if the logger is enabled for given severity and context, False otherwise."""
         return True  # TODO
 
-    def emit(self,
+    def emit(
+        self,
         event_name: str = None,
         timestamp: Optional[int] = None,
         observed_timestamp: Optional[int] = None,
@@ -590,7 +597,7 @@ class Logger(APILogger):
         context: Optional[Context] = None,
         body: Optional[Any] = None,
         attributes: Optional[Attributes] = None,
-        ):
+    ):
         """Emits the :class:`LogRecord`."""
 
         span_context = get_current_span(context).get_span_context()
@@ -609,6 +616,7 @@ class Logger(APILogger):
             instrumentation_scope=self._instrumentation_scope,
         )
         self._multi_log_record_processor.emit(log_record)
+
 
 class LoggerProvider(APILoggerProvider):
     def __init__(

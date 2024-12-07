@@ -23,9 +23,9 @@ from opentelemetry._logs import get_logger as APIGetLogger
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk import trace
 from opentelemetry.sdk._logs import (
-    LogRecord,
     LoggerProvider,
     LoggingHandler,
+    LogRecord,
     LogRecordProcessor,
 )
 from opentelemetry.semconv.trace import SpanAttributes
