@@ -17,6 +17,7 @@ import typing
 import unittest
 
 from opentelemetry import _logs
+from opentelemetry.context.context import Context
 from opentelemetry.test.globals_test import LoggingGlobalsTest
 from opentelemetry.util.types import Attributes
 
@@ -33,7 +34,16 @@ class TestProvider(_logs.NoOpLoggerProvider):
 
 
 class LoggerTest(_logs.NoOpLogger):
-    def emit(self, record: _logs.LogRecord) -> None:
+    def emit(self,
+        name: str = None,
+        timestamp: typing.Optional[int] = None,
+        observed_timestamp: typing.Optional[int] = None,
+        severity_number: typing.Optional[_logs.SeverityNumber] = None,
+        severity_text: typing.Optional[str] = None,
+        context: typing.Optional[Context] = None,
+        body: typing.Optional[typing.Any] = None,
+        attributes: typing.Optional[Attributes] = None,
+    ) -> None:
         pass
 
 

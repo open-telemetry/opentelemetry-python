@@ -27,7 +27,6 @@ from typing import Any, Callable, Optional, Tuple, Union  # noqa
 
 from opentelemetry._logs import Logger as APILogger
 from opentelemetry._logs import LoggerProvider as APILoggerProvider
-from opentelemetry._logs import LogRecord as APILogRecord
 from opentelemetry._logs import (
     NoOpLogger,
     SeverityNumber,
@@ -53,8 +52,6 @@ from opentelemetry.trace import (
 )
 from opentelemetry.trace.span import TraceFlags
 from opentelemetry.util.types import AnyValue, Attributes
-
-_logger = logging.getLogger(__name__)
 
 _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
 _ENV_VALUE_UNSET = ""
@@ -163,7 +160,7 @@ _UnsetLogLimits = LogLimits(
 )
 
 
-class LogRecord(APILogRecord):
+class LogRecord:
     """A LogRecord instance represents an event being logged.
 
     LogRecord instances are created and emitted via `Logger`
@@ -173,6 +170,7 @@ class LogRecord(APILogRecord):
 
     def __init__(
         self,
+        event_name: Optional[str] = None,
         timestamp: Optional[int] = None,
         observed_timestamp: Optional[int] = None,
         trace_id: Optional[int] = None,
@@ -185,24 +183,22 @@ class LogRecord(APILogRecord):
         attributes: Optional[Attributes] = None,
         limits: Optional[LogLimits] = _UnsetLogLimits,
     ):
-        super().__init__(
-            **{
-                "timestamp": timestamp,
-                "observed_timestamp": observed_timestamp,
-                "trace_id": trace_id,
-                "span_id": span_id,
-                "trace_flags": trace_flags,
-                "severity_text": severity_text,
-                "severity_number": severity_number,
-                "body": body,
-                "attributes": BoundedAttributes(
+        self.event_name = event_name
+        self.timestamp = timestamp
+        self.observed_timestamp = observed_timestamp if observed_timestamp is not None else time_ns()
+        self.trace_id = trace_id
+        self.span_id = span_id
+        self.trace_flags = trace_flags
+        self.severity_text = severity_text
+        self.severity_number = severity_number
+        self.body = body
+        self.attributes = BoundedAttributes(
                     maxlen=limits.max_attributes,
                     attributes=attributes if bool(attributes) else None,
                     immutable=False,
                     max_value_len=limits.max_attribute_length,
-                ),
-            }
-        )
+                )
+
         self.resource = (
             resource if isinstance(resource, Resource) else Resource.create({})
         )
@@ -221,6 +217,7 @@ class LogRecord(APILogRecord):
     def to_json(self, indent=4) -> str:
         return json.dumps(
             {
+                "event_name": self.event_name,
                 "body": self.body,
                 "severity_number": self.severity_number.value
                 if self.severity_number is not None
@@ -502,10 +499,8 @@ class LoggingHandler(logging.Handler):
                 )
         return attributes
 
-    def _translate(self, record: logging.LogRecord) -> LogRecord:
+    def _translate_and_emit(self,  logger: APILogger, record: logging.LogRecord) -> LogRecord:
         timestamp = int(record.created * 1e9)
-        observered_timestamp = time_ns()
-        span_context = get_current_span().get_span_context()
         attributes = self._get_attributes(record)
         severity_number = std_to_otel(record.levelno)
         if self.formatter:
@@ -534,17 +529,11 @@ class LoggingHandler(logging.Handler):
             "WARN" if record.levelname == "WARNING" else record.levelname
         )
 
-        logger = get_logger(record.name, logger_provider=self._logger_provider)
-        return LogRecord(
+        logger.emit(
             timestamp=timestamp,
-            observed_timestamp=observered_timestamp,
-            trace_id=span_context.trace_id,
-            span_id=span_context.span_id,
-            trace_flags=span_context.trace_flags,
             severity_text=level_name,
             severity_number=severity_number,
             body=body,
-            resource=logger.resource,
             attributes=attributes,
         )
 
@@ -556,7 +545,7 @@ class LoggingHandler(logging.Handler):
         """
         logger = get_logger(record.name, logger_provider=self._logger_provider)
         if not isinstance(logger, NoOpLogger):
-            logger.emit(self._translate(record))
+            self._translate_and_emit(logger, record)
 
     def flush(self) -> None:
         """
@@ -595,21 +584,13 @@ class Logger(APILogger):
     def is_enabled(
         self,
         severity_number: Optional[SeverityNumber] = None,
-        context: Optional[Context] = None
+        context: Optional[Context] = None,
     ) -> bool:
         """Returns True if the logger is enabled for given severity and context, False otherwise."""
-        return True # TODO
+        return True  # TODO
 
-    def emit(self, record: LogRecord):
-        """Emits the :class:`LogData` by associating :class:`LogRecord`
-        and instrumentation info.
-        """
-        log_data = LogData(record, self._instrumentation_scope)
-        self._multi_log_record_processor.emit(log_data)
-
-    def emit_event(
-        self,
-        name: str,
+    def emit(self,
+        event_name: str = None,
         timestamp: Optional[int] = None,
         observed_timestamp: Optional[int] = None,
         severity_number: Optional[SeverityNumber] = None,
@@ -617,29 +598,25 @@ class Logger(APILogger):
         context: Optional[Context] = None,
         body: Optional[Any] = None,
         attributes: Optional[Attributes] = None,
-    ) -> None:
-        """Emits the :class:`LogData` by associating :class:`LogRecord`
-        and instrumentation info.
-        """
+        ):
+        """Emits the :class:`LogRecord`."""
 
-        if self.is_enabled(severity_number, context):
-            event_attributes = {**(attributes or {}), "event.name": name}
-
-            current_span_context = get_current_span(context).get_span_context()
-            self.emit(
-                LogRecord(
-                    timestamp=timestamp or time_ns(),
-                    observed_timestamp=observed_timestamp or time_ns(),
-                    trace_id=current_span_context.trace_id,
-                    span_id=current_span_context.span_id,
-                    trace_flags=current_span_context.trace_flags,
-                    severity_text=severity_text,
-                    severity_number=severity_number,
-                    body=body,
-                    attributes=event_attributes,
-                )
-            )
-
+        span_context = get_current_span(context).get_span_context()
+        log_record = LogRecord(
+            event_name=event_name,
+            timestamp=timestamp,
+            observed_timestamp=observed_timestamp,
+            severity_number=severity_number,
+            severity_text=severity_text,
+            trace_id=span_context.trace_id,
+            span_id=span_context.span_id,
+            trace_flags=span_context.trace_flags,
+            body=body,
+            attributes=attributes,
+            resource=self._resource,
+        )
+        log_data = LogData(log_record, self._instrumentation_scope)
+        self._multi_log_record_processor.emit(log_data)
 
 class LoggerProvider(APILoggerProvider):
     def __init__(

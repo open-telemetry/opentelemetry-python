@@ -73,39 +73,6 @@ from opentelemetry.util.types import Attributes
 _logger = getLogger(__name__)
 
 
-class LogRecord(ABC):
-    """A LogRecord instance represents an event being logged.
-
-    LogRecord instances are created and emitted via `Logger`
-    every time something is logged. They contain all the information
-    pertinent to the event being logged.
-    """
-
-    def __init__(
-        self,
-        timestamp: Optional[int] = None,
-        observed_timestamp: Optional[int] = None,
-        trace_id: Optional[int] = None,
-        span_id: Optional[int] = None,
-        trace_flags: Optional["TraceFlags"] = None,
-        severity_text: Optional[str] = None,
-        severity_number: Optional[SeverityNumber] = None,
-        body: Optional[Any] = None,
-        attributes: Optional["Attributes"] = None,
-    ):
-        self.timestamp = timestamp
-        if observed_timestamp is None:
-            observed_timestamp = time_ns()
-        self.observed_timestamp = observed_timestamp
-        self.trace_id = trace_id
-        self.span_id = span_id
-        self.trace_flags = trace_flags
-        self.severity_text = severity_text
-        self.severity_number = severity_number
-        self.body = body  # type: ignore
-        self.attributes = attributes
-
-
 class Logger(ABC):
     """Handles emitting events and logs via `LogRecord`."""
 
@@ -126,18 +93,14 @@ class Logger(ABC):
     def is_enabled(
         self,
         severity_number: Optional[SeverityNumber] = None,
-        context: Optional[Context] = None
+        context: Optional[Context] = None,
     ) -> bool:
         """Returns True if the logger is enabled for given severity and context, False otherwise."""
 
     @abstractmethod
-    def emit(self, record: "LogRecord") -> None:
-        """Emits a :class:`LogRecord` representing a log to the processing pipeline."""
-
-    @abstractmethod
-    def emit_event(
+    def emit(
         self,
-        name: str,
+        name: str = None,
         timestamp: Optional[int] = None,
         observed_timestamp: Optional[int] = None,
         severity_number: Optional[SeverityNumber] = None,
@@ -146,7 +109,7 @@ class Logger(ABC):
         body: Optional[Any] = None,
         attributes: Optional[Attributes] = None,
     ) -> None:
-        """Emits an event to the processing pipeline."""
+        """Emits a log record."""
 
 
 class NoOpLogger(Logger):
@@ -158,20 +121,19 @@ class NoOpLogger(Logger):
     def is_enabled(
         self,
         severity_number: Optional[SeverityNumber] = None,
-        context: Optional[Context] = None
+        context: Optional[Context] = None,
     ) -> bool:
         return False
 
-    def emit(self, record: "LogRecord") -> None:
-        pass
-
-    def emit_event(
+    def emit(
         self,
-        name: str,
+        name: str = None,
         timestamp: Optional[int] = None,
+        observed_timestamp: Optional[int] = None,
+        severity_number: Optional[SeverityNumber] = None,
+        severity_text: Optional[str] = None,
         context: Optional[Context] = None,
         body: Optional[Any] = None,
-        severity_number: Optional[SeverityNumber] = None,
         attributes: Optional[Attributes] = None,
     ) -> None:
         pass
@@ -210,24 +172,32 @@ class ProxyLogger(Logger):
     def is_enabled(
         self,
         severity_number: Optional[SeverityNumber] = None,
-        context: Optional[Context] = None
+        context: Optional[Context] = None,
     ) -> bool:
-        return self._logger.is_enabled(severity_number=severity_number, context=context)
+        return self._logger.is_enabled(
+            severity_number=severity_number, context=context
+        )
 
-    def emit(self, record: LogRecord) -> None:
-        self._logger.emit(record)
-
-    def emit_event(
+    def emit(
         self,
-        name: str,
+        name: str = None,
         timestamp: Optional[int] = None,
+        observed_timestamp: Optional[int] = None,
+        severity_number: Optional[SeverityNumber] = None,
+        severity_text: Optional[str] = None,
         context: Optional[Context] = None,
         body: Optional[Any] = None,
-        severity_number: Optional[SeverityNumber] = None,
         attributes: Optional[Attributes] = None,
     ) -> None:
-        self._logger.emit_event(
-            name, timestamp, context, body, severity_number, attributes
+        self._logger.emit(
+            name=name,
+            timestamp=timestamp,
+            observed_timestamp=observed_timestamp,
+            severity_number=severity_number,
+            severity_text=severity_text,
+            context=context,
+            body=body,
+            attributes=attributes,
         )
 
 

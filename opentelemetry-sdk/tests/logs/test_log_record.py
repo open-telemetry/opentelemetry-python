@@ -30,6 +30,7 @@ class TestLogRecord(unittest.TestCase):
     def test_log_record_to_json(self):
         expected = json.dumps(
             {
+                "event_name": None,
                 "body": "a log line",
                 "severity_number": None,
                 "severity_text": None,
@@ -57,7 +58,7 @@ class TestLogRecord(unittest.TestCase):
         self.assertEqual(expected, actual.to_json(indent=4))
         self.assertEqual(
             actual.to_json(indent=None),
-            '{"body": "a log line", "severity_number": null, "severity_text": null, "attributes": null, "dropped_attributes": 0, "timestamp": "1970-01-01T00:00:00.000000Z", "observed_timestamp": "1970-01-01T00:00:00.000000Z", "trace_id": "", "span_id": "", "trace_flags": null, "resource": {"attributes": {"service.name": "foo"}, "schema_url": ""}}',
+            '{"event_name": null, "body": "a log line", "severity_number": null, "severity_text": null, "attributes": null, "dropped_attributes": 0, "timestamp": "1970-01-01T00:00:00.000000Z", "observed_timestamp": "1970-01-01T00:00:00.000000Z", "trace_id": "", "span_id": "", "trace_flags": null, "resource": {"attributes": {"service.name": "foo"}, "schema_url": ""}}',
         )
 
     def test_log_record_to_json_serializes_severity_number_as_int(self):
