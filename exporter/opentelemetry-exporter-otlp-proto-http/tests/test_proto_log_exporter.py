@@ -35,7 +35,6 @@ from opentelemetry.exporter.otlp.proto.http.version import __version__
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
     ExportLogsServiceRequest,
 )
-from opentelemetry.sdk._logs import LogData
 from opentelemetry.sdk._logs import LogRecord as SDKLogRecord
 from opentelemetry.sdk._logs.export import LogExportResult
 from opentelemetry.sdk.environment_variables import (
@@ -214,8 +213,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             return log_records
 
     def test_exported_log_without_trace_id(self):
-        log = LogData(
-            log_record=SDKLogRecord(
+        log = SDKLogRecord(
                 timestamp=1644650195189786182,
                 trace_id=0,
                 span_id=1312458408527513292,
@@ -225,9 +223,8 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                 body="Invalid trace id check",
                 resource=SDKResource({"first_resource": "value"}),
                 attributes={"a": 1, "b": "c"},
-            ),
-            instrumentation_scope=InstrumentationScope("name", "version"),
-        )
+                instrumentation_scope=InstrumentationScope("name", "version"),
+            )
         log_records = TestOTLPHTTPLogExporter.export_log_and_deserialize(log)
         if log_records:
             log_record = log_records[0]
@@ -241,8 +238,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             self.fail("No log records found")
 
     def test_exported_log_without_span_id(self):
-        log = LogData(
-            log_record=SDKLogRecord(
+        log = SDKLogRecord(
                 timestamp=1644650195189786360,
                 trace_id=89564621134313219400156819398935297696,
                 span_id=0,
@@ -252,9 +248,8 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                 body="Invalid span id check",
                 resource=SDKResource({"first_resource": "value"}),
                 attributes={"a": 1, "b": "c"},
-            ),
-            instrumentation_scope=InstrumentationScope("name", "version"),
-        )
+                instrumentation_scope=InstrumentationScope("name", "version"),
+            )
         log_records = TestOTLPHTTPLogExporter.export_log_and_deserialize(log)
         if log_records:
             log_record = log_records[0]
@@ -287,9 +282,8 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         )
 
     @staticmethod
-    def _get_sdk_log_data() -> List[LogData]:
-        log1 = LogData(
-            log_record=SDKLogRecord(
+    def _get_sdk_log_data() -> List[SDKLogRecord]:
+        log1 = SDKLogRecord(
                 timestamp=1644650195189786880,
                 trace_id=89564621134313219400156819398935297684,
                 span_id=1312458408527513268,
@@ -299,14 +293,12 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                 body="Do not go gentle into that good night. Rage, rage against the dying of the light",
                 resource=SDKResource({"first_resource": "value"}),
                 attributes={"a": 1, "b": "c"},
-            ),
-            instrumentation_scope=InstrumentationScope(
-                "first_name", "first_version"
-            ),
-        )
+                instrumentation_scope=InstrumentationScope(
+                    "first_name", "first_version"
+                ),
+            )
 
-        log2 = LogData(
-            log_record=SDKLogRecord(
+        log2 = SDKLogRecord(
                 timestamp=1644650249738562048,
                 trace_id=0,
                 span_id=0,
@@ -316,14 +308,12 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                 body="Cooper, this is no time for caution!",
                 resource=SDKResource({"second_resource": "CASE"}),
                 attributes={},
-            ),
-            instrumentation_scope=InstrumentationScope(
-                "second_name", "second_version"
-            ),
-        )
+                instrumentation_scope=InstrumentationScope(
+                    "second_name", "second_version"
+                ),
+            )
 
-        log3 = LogData(
-            log_record=SDKLogRecord(
+        log3 = SDKLogRecord(
                 timestamp=1644650427658989056,
                 trace_id=271615924622795969659406376515024083555,
                 span_id=4242561578944770265,
@@ -333,12 +323,10 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                 body="To our galaxy",
                 resource=SDKResource({"second_resource": "CASE"}),
                 attributes={"a": 1, "b": "c"},
-            ),
-            instrumentation_scope=None,
-        )
+                instrumentation_scope=None,
+            )
 
-        log4 = LogData(
-            log_record=SDKLogRecord(
+        log4 = SDKLogRecord(
                 timestamp=1644650584292683008,
                 trace_id=212592107417388365804938480559624925555,
                 span_id=6077757853989569223,
@@ -348,11 +336,10 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                 body="Love is the one thing that transcends time and space",
                 resource=SDKResource({"first_resource": "value"}),
                 attributes={"filename": "model.py", "func_name": "run_method"},
-            ),
-            instrumentation_scope=InstrumentationScope(
-                "another_name", "another_version"
-            ),
-        )
+                instrumentation_scope=InstrumentationScope(
+                    "another_name", "another_version"
+                ),
+            )
 
         return [log1, log2, log3, log4]
 

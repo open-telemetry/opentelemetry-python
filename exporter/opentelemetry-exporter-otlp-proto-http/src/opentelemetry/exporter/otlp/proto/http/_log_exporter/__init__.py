@@ -30,7 +30,8 @@ from opentelemetry.exporter.otlp.proto.http import (
     _OTLP_HTTP_HEADERS,
     Compression,
 )
-from opentelemetry.sdk._logs import LogData
+
+from opentelemetry.sdk._logs import LogRecord
 from opentelemetry.sdk._logs.export import (
     LogExporter,
     LogExportResult,
@@ -149,7 +150,7 @@ class OTLPLogExporter(LogExporter):
             return True
         return False
 
-    def export(self, batch: Sequence[LogData]) -> LogExportResult:
+    def export(self, batch: Sequence[LogRecord]) -> LogExportResult:
         # After the call to Shutdown subsequent calls to Export are
         # not allowed and should return a Failure result.
         if self._shutdown:
