@@ -182,6 +182,7 @@ class LogRecord:
         resource: Optional[Resource] = None,
         attributes: Optional[Attributes] = None,
         limits: Optional[LogLimits] = _UnsetLogLimits,
+        instrumentation_scope: Optional[InstrumentationScope] = None,
     ):
         self.event_name = event_name
         self.timestamp = timestamp
@@ -192,6 +193,7 @@ class LogRecord:
         self.severity_text = severity_text
         self.severity_number = severity_number
         self.body = body
+        self.instrumentation_scope = instrumentation_scope
         self.attributes = BoundedAttributes(
                     maxlen=limits.max_attributes,
                     attributes=attributes if bool(attributes) else None,
@@ -202,6 +204,7 @@ class LogRecord:
         self.resource = (
             resource if isinstance(resource, Resource) else Resource.create({})
         )
+
         if self.dropped_attributes > 0:
             warnings.warn(
                 "Log record attributes were dropped due to limits",
@@ -241,6 +244,7 @@ class LogRecord:
                 ),
                 "trace_flags": self.trace_flags,
                 "resource": json.loads(self.resource.to_json()),
+                "instrumentation_scope": json.loads(self.instrumentation_scope.to_json()),
             },
             indent=indent,
         )
@@ -252,18 +256,6 @@ class LogRecord:
         return 0
 
 
-class LogData:
-    """Readable LogRecord data plus associated InstrumentationLibrary."""
-
-    def __init__(
-        self,
-        log_record: LogRecord,
-        instrumentation_scope: InstrumentationScope,
-    ):
-        self.log_record = log_record
-        self.instrumentation_scope = instrumentation_scope
-
-
 class LogRecordProcessor(abc.ABC):
     """Interface to hook the log record emitting action.
 
@@ -273,8 +265,8 @@ class LogRecordProcessor(abc.ABC):
     """
 
     @abc.abstractmethod
-    def emit(self, log_data: LogData):
-        """Emits the `LogData`"""
+    def emit(self, log_data: LogRecord):
+        """Emits the `LogRecord`"""
 
     @abc.abstractmethod
     def shutdown(self):
@@ -317,9 +309,9 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
         with self._lock:
             self._log_record_processors += (log_record_processor,)
 
-    def emit(self, log_data: LogData) -> None:
+    def emit(self, log_record: LogRecord) -> None:
         for lp in self._log_record_processors:
-            lp.emit(log_data)
+            lp.emit(log_record)
 
     def shutdown(self) -> None:
         """Shutdown the log processors one by one"""
@@ -391,8 +383,8 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
         for future in futures:
             future.result()
 
-    def emit(self, log_data: LogData):
-        self._submit_and_wait(lambda lp: lp.emit, log_data)
+    def emit(self, log_record: LogRecord):
+        self._submit_and_wait(lambda lp: lp.emit, log_record)
 
     def shutdown(self):
         self._submit_and_wait(lambda lp: lp.shutdown)
@@ -614,9 +606,9 @@ class Logger(APILogger):
             body=body,
             attributes=attributes,
             resource=self._resource,
+            instrumentation_scope=self._instrumentation_scope,
         )
-        log_data = LogData(log_record, self._instrumentation_scope)
-        self._multi_log_record_processor.emit(log_data)
+        self._multi_log_record_processor.emit(log_record)
 
 class LoggerProvider(APILoggerProvider):
     def __init__(

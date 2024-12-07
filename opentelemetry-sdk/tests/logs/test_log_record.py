@@ -24,7 +24,7 @@ from opentelemetry.sdk._logs import (
     LogRecord,
 )
 from opentelemetry.sdk.resources import Resource
-
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
 class TestLogRecord(unittest.TestCase):
     def test_log_record_to_json(self):
@@ -45,6 +45,12 @@ class TestLogRecord(unittest.TestCase):
                     "attributes": {"service.name": "foo"},
                     "schema_url": "",
                 },
+                "instrumentation_scope": {
+                    "name": "name",
+                    "version": "version",
+                    "schema_url": "",
+                    "attributes": None,
+                },
             },
             indent=4,
         )
@@ -53,12 +59,16 @@ class TestLogRecord(unittest.TestCase):
             observed_timestamp=0,
             body="a log line",
             resource=Resource({"service.name": "foo"}),
+            instrumentation_scope=InstrumentationScope(
+                "name", "version"
+            ),
         )
 
         self.assertEqual(expected, actual.to_json(indent=4))
+
         self.assertEqual(
             actual.to_json(indent=None),
-            '{"event_name": null, "body": "a log line", "severity_number": null, "severity_text": null, "attributes": null, "dropped_attributes": 0, "timestamp": "1970-01-01T00:00:00.000000Z", "observed_timestamp": "1970-01-01T00:00:00.000000Z", "trace_id": "", "span_id": "", "trace_flags": null, "resource": {"attributes": {"service.name": "foo"}, "schema_url": ""}}',
+            '{"event_name": null, "body": "a log line", "severity_number": null, "severity_text": null, "attributes": null, "dropped_attributes": 0, "timestamp": "1970-01-01T00:00:00.000000Z", "observed_timestamp": "1970-01-01T00:00:00.000000Z", "trace_id": "", "span_id": "", "trace_flags": null, "resource": {"attributes": {"service.name": "foo"}, "schema_url": ""}, "instrumentation_scope": {"name": "name", "version": "version", "schema_url": "", "attributes": null}}',
         )
 
     def test_log_record_to_json_serializes_severity_number_as_int(self):
@@ -68,6 +78,9 @@ class TestLogRecord(unittest.TestCase):
             observed_timestamp=0,
             body="a log line",
             resource=Resource({"service.name": "foo"}),
+            instrumentation_scope=InstrumentationScope(
+                "name", "version"
+            ),
         )
 
         decoded = json.loads(actual.to_json())

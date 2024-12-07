@@ -30,44 +30,43 @@ from opentelemetry.proto.logs.v1.logs_pb2 import (
     ResourceLogs,
     ScopeLogs,
 )
-from opentelemetry.sdk._logs import LogData
 
-
-def encode_logs(batch: Sequence[LogData]) -> ExportLogsServiceRequest:
+from opentelemetry.sdk._logs import LogRecord as SDKLogRecord
+def encode_logs(batch: Sequence[SDKLogRecord]) -> ExportLogsServiceRequest:
     return ExportLogsServiceRequest(resource_logs=_encode_resource_logs(batch))
 
 
-def _encode_log(log_data: LogData) -> PB2LogRecord:
+def _encode_log(log_record: SDKLogRecord) -> PB2LogRecord:
     span_id = (
         None
-        if log_data.log_record.span_id == 0
-        else _encode_span_id(log_data.log_record.span_id)
+        if log_record.span_id == 0
+        else _encode_span_id(log_record.span_id)
     )
     trace_id = (
         None
-        if log_data.log_record.trace_id == 0
-        else _encode_trace_id(log_data.log_record.trace_id)
+        if log_record.trace_id == 0
+        else _encode_trace_id(log_record.trace_id)
     )
-    body = log_data.log_record.body
+    body = log_record.body
     return PB2LogRecord(
-        time_unix_nano=log_data.log_record.timestamp,
-        observed_time_unix_nano=log_data.log_record.observed_timestamp,
+        time_unix_nano=log_record.timestamp,
+        observed_time_unix_nano=log_record.observed_timestamp,
         span_id=span_id,
         trace_id=trace_id,
-        flags=int(log_data.log_record.trace_flags),
+        flags=int(log_record.trace_flags),
         body=_encode_value(body) if body is not None else None,
-        severity_text=log_data.log_record.severity_text,
-        attributes=_encode_attributes(log_data.log_record.attributes),
-        dropped_attributes_count=log_data.log_record.dropped_attributes,
-        severity_number=log_data.log_record.severity_number.value,
+        severity_text=log_record.severity_text,
+        attributes=_encode_attributes(log_record.attributes),
+        dropped_attributes_count=log_record.dropped_attributes,
+        severity_number=log_record.severity_number.value,
     )
 
 
-def _encode_resource_logs(batch: Sequence[LogData]) -> List[ResourceLogs]:
+def _encode_resource_logs(batch: Sequence[SDKLogRecord]) -> List[ResourceLogs]:
     sdk_resource_logs = defaultdict(lambda: defaultdict(list))
 
     for sdk_log in batch:
-        sdk_resource = sdk_log.log_record.resource
+        sdk_resource = sdk_log.resource
         sdk_instrumentation = sdk_log.instrumentation_scope or None
         pb2_log = _encode_log(sdk_log)
 
