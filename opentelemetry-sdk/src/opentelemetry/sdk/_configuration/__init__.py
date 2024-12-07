@@ -248,6 +248,7 @@ def _init_logging(
 
     logging.getLogger().addHandler(handler)
 
+
 def _import_exporters(
     trace_exporter_names: Sequence[str],
     metric_exporter_names: Sequence[str],

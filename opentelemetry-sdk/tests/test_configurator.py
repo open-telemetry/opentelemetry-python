@@ -16,7 +16,7 @@
 
 from logging import WARNING, getLogger
 from os import environ
-from typing import Dict, Iterable, Optional, Sequence, Any
+from typing import Any, Dict, Iterable, Optional, Sequence
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
@@ -24,7 +24,6 @@ from pytest import raises
 
 from opentelemetry import trace
 from opentelemetry._logs import SeverityNumber
-from opentelemetry.sdk._logs import LogRecord
 from opentelemetry.context import Context
 from opentelemetry.environment_variables import OTEL_PYTHON_ID_GENERATOR
 from opentelemetry.sdk._configuration import (
@@ -44,7 +43,7 @@ from opentelemetry.sdk._configuration import (
     _initialize_components,
     _OTelSDKConfigurator,
 )
-from opentelemetry.sdk._logs import LoggingHandler
+from opentelemetry.sdk._logs import LoggingHandler, LogRecord
 from opentelemetry.sdk._logs.export import ConsoleLogExporter
 from opentelemetry.sdk.environment_variables import (
     OTEL_TRACES_SAMPLER,
@@ -111,7 +110,8 @@ class DummyLogger:
         self.resource = resource
         self.processor = processor
 
-    def emit(self,
+    def emit(
+        self,
         event_name: str = None,
         timestamp: Optional[int] = None,
         observed_timestamp: Optional[int] = None,
@@ -120,19 +120,22 @@ class DummyLogger:
         context: Optional[Context] = None,
         body: Optional[Any] = None,
         attributes: Optional[Attributes] = None,
-        ):
-
+    ):
         span_context = trace.get_current_span(context).get_span_context()
-        self.processor.emit(LogRecord(event_name=event_name,
-                                      timestamp=timestamp,
-                                      observed_timestamp=observed_timestamp,
-                                      severity_number=severity_number,
-                                      severity_text=severity_text,
-                                      trace_id=span_context.trace_id,
-                                      span_id=span_context.span_id,
-                                      trace_flags=span_context.trace_flags,
-                                      body=body,
-                                      attributes=attributes))
+        self.processor.emit(
+            LogRecord(
+                event_name=event_name,
+                timestamp=timestamp,
+                observed_timestamp=observed_timestamp,
+                severity_number=severity_number,
+                severity_text=severity_text,
+                trace_id=span_context.trace_id,
+                span_id=span_context.span_id,
+                trace_flags=span_context.trace_flags,
+                body=body,
+                attributes=attributes,
+            )
+        )
 
 
 class DummyLogRecordProcessor:

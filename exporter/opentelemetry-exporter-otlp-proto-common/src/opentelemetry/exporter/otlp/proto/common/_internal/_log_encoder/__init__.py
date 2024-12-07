@@ -30,8 +30,9 @@ from opentelemetry.proto.logs.v1.logs_pb2 import (
     ResourceLogs,
     ScopeLogs,
 )
-
 from opentelemetry.sdk._logs import LogRecord as SDKLogRecord
+
+
 def encode_logs(batch: Sequence[SDKLogRecord]) -> ExportLogsServiceRequest:
     return ExportLogsServiceRequest(resource_logs=_encode_resource_logs(batch))
 

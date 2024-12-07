@@ -30,7 +30,6 @@ from opentelemetry.exporter.otlp.proto.http import (
     _OTLP_HTTP_HEADERS,
     Compression,
 )
-
 from opentelemetry.sdk._logs import LogRecord
 from opentelemetry.sdk._logs.export import (
     LogExporter,
