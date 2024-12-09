@@ -37,14 +37,14 @@ from abc import ABC, abstractmethod
 from logging import getLogger
 from os import environ
 from time import time_ns
-from typing import Any, Optional, cast
+from typing import Optional, cast
 
 from opentelemetry._logs.severity import SeverityNumber
 from opentelemetry.environment_variables import _OTEL_PYTHON_LOGGER_PROVIDER
 from opentelemetry.trace.span import TraceFlags
 from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
-from opentelemetry.util.types import Attributes
+from opentelemetry.util.types import AnyValue, LogAttributes
 
 _logger = getLogger(__name__)
 
@@ -66,8 +66,8 @@ class LogRecord(ABC):
         trace_flags: Optional["TraceFlags"] = None,
         severity_text: Optional[str] = None,
         severity_number: Optional[SeverityNumber] = None,
-        body: Optional[Any] = None,
-        attributes: Optional["Attributes"] = None,
+        body: AnyValue = None,
+        attributes: Optional[LogAttributes] = None,
     ):
         self.timestamp = timestamp
         if observed_timestamp is None:
@@ -78,7 +78,7 @@ class LogRecord(ABC):
         self.trace_flags = trace_flags
         self.severity_text = severity_text
         self.severity_number = severity_number
-        self.body = body  # type: ignore
+        self.body = body
         self.attributes = attributes
 
 
@@ -90,7 +90,7 @@ class Logger(ABC):
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
-        attributes: Optional[Attributes] = None,
+        attributes: Optional[LogAttributes] = None,
     ) -> None:
         super().__init__()
         self._name = name
@@ -119,7 +119,7 @@ class ProxyLogger(Logger):
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
-        attributes: Optional[Attributes] = None,
+        attributes: Optional[LogAttributes] = None,
     ):
         self._name = name
         self._version = version
@@ -158,7 +158,7 @@ class LoggerProvider(ABC):
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
-        attributes: Optional[Attributes] = None,
+        attributes: Optional[LogAttributes] = None,
     ) -> Logger:
         """Returns a `Logger` for use by the given instrumentation library.
 
@@ -196,7 +196,7 @@ class NoOpLoggerProvider(LoggerProvider):
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
-        attributes: Optional[Attributes] = None,
+        attributes: Optional[LogAttributes] = None,
     ) -> Logger:
         """Returns a NoOpLogger."""
         return NoOpLogger(
@@ -210,7 +210,7 @@ class ProxyLoggerProvider(LoggerProvider):
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
-        attributes: Optional[Attributes] = None,
+        attributes: Optional[LogAttributes] = None,
     ) -> Logger:
         if _LOGGER_PROVIDER:
             return _LOGGER_PROVIDER.get_logger(
@@ -273,7 +273,7 @@ def get_logger(
     instrumenting_library_version: str = "",
     logger_provider: Optional[LoggerProvider] = None,
     schema_url: Optional[str] = None,
-    attributes: Optional[Attributes] = None,
+    attributes: Optional[LogAttributes] = None,
 ) -> "Logger":
     """Returns a `Logger` for use within a python process.
 

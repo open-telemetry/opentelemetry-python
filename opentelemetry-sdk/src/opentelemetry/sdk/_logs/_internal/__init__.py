@@ -52,7 +52,7 @@ from opentelemetry.trace import (
     get_current_span,
 )
 from opentelemetry.trace.span import TraceFlags
-from opentelemetry.util.types import AnyValue, Attributes
+from opentelemetry.util.types import AnyValue, LogAttributes
 
 _logger = logging.getLogger(__name__)
 
@@ -182,7 +182,7 @@ class LogRecord(APILogRecord):
         severity_number: SeverityNumber | None = None,
         body: AnyValue | None = None,
         resource: Resource | None = None,
-        attributes: Attributes | None = None,
+        attributes: LogAttributes | None = None,
         limits: LogLimits | None = _UnsetLogLimits,
     ):
         super().__init__(
@@ -477,7 +477,7 @@ class LoggingHandler(logging.Handler):
         self._logger_provider = logger_provider or get_logger_provider()
 
     @staticmethod
-    def _get_attributes(record: logging.LogRecord) -> Attributes:
+    def _get_attributes(record: logging.LogRecord) -> LogAttributes:
         attributes = {
             k: v for k, v in vars(record).items() if k not in _RESERVED_ATTRS
         }
@@ -636,7 +636,7 @@ class LoggerProvider(APILoggerProvider):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: Attributes | None = None,
+        attributes: LogAttributes | None = None,
     ) -> Logger:
         return Logger(
             self._resource,
@@ -670,7 +670,7 @@ class LoggerProvider(APILoggerProvider):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: Attributes | None = None,
+        attributes: LogAttributes | None = None,
     ) -> Logger:
         if self._disabled:
             return NoOpLogger(
