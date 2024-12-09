@@ -78,7 +78,7 @@ class LogRecord(ABC):
         self.trace_flags = trace_flags
         self.severity_text = severity_text
         self.severity_number = severity_number
-        self.body = body  # type: ignore
+        self.body = body
         self.attributes = attributes
 
 
