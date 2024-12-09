@@ -37,14 +37,14 @@ from abc import ABC, abstractmethod
 from logging import getLogger
 from os import environ
 from time import time_ns
-from typing import Any, Optional, cast
+from typing import Optional, cast
 
 from opentelemetry._logs.severity import SeverityNumber
 from opentelemetry.environment_variables import _OTEL_PYTHON_LOGGER_PROVIDER
 from opentelemetry.trace.span import TraceFlags
 from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
-from opentelemetry.util.types import LogAttributes
+from opentelemetry.util.types import AnyValue, LogAttributes
 
 _logger = getLogger(__name__)
 
@@ -66,7 +66,7 @@ class LogRecord(ABC):
         trace_flags: Optional["TraceFlags"] = None,
         severity_text: Optional[str] = None,
         severity_number: Optional[SeverityNumber] = None,
-        body: Optional[Any] = None,
+        body: AnyValue = None,
         attributes: LogAttributes = None,
     ):
         self.timestamp = timestamp
