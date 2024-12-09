@@ -57,4 +57,4 @@ AttributesAsKey = Tuple[
     ...,
 ]
 
-LogAttributes = Optional[Mapping[str, AnyValue]]
+LogAttributes = Optional[Mapping[str, "AnyValue"]]
