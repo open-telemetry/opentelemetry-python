@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4521](https://github.com/open-telemetry/opentelemetry-python/pull/4521))
 - opentelemetry-sdk: Fix serialization of objects in log handler
   ([#4528](https://github.com/open-telemetry/opentelemetry-python/pull/4528))
+- Fix serialization of extended attributes for logs signal
+  ([#4342](https://github.com/open-telemetry/opentelemetry-python/pull/4342))
 
 ## Version 1.31.0/0.52b0 (2025-03-12)
 
