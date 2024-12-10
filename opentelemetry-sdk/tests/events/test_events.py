@@ -123,15 +123,11 @@ class TestEventLoggerProvider(unittest.TestCase):
             "name", "version", "schema_url", {"key": "value"}
         )
         now = Mock()
-        trace_id = Mock()
-        span_id = Mock()
-        trace_flags = Mock()
+        span_context = Mock()
         event = Event(
             name="test_event",
             timestamp=now,
-            trace_id=trace_id,
-            span_id=span_id,
-            trace_flags=trace_flags,
+            span_context=span_context,
             body="test body",
             severity_number=SeverityNumber.ERROR,
             attributes={
@@ -146,9 +142,9 @@ class TestEventLoggerProvider(unittest.TestCase):
         log_record_mock.assert_called_once_with(
             timestamp=now,
             observed_timestamp=None,
-            trace_id=trace_id,
-            span_id=span_id,
-            trace_flags=trace_flags,
+            trace_id=span_context.trace_id,
+            span_id=span_context.span_id,
+            trace_flags=span_context.trace_flags,
             severity_text=None,
             severity_number=SeverityNumber.ERROR,
             body="test body",
@@ -179,15 +175,11 @@ class TestEventLoggerProvider(unittest.TestCase):
             "name", "version", "schema_url", {"key": "value"}
         )
         now = Mock()
-        trace_id = Mock()
-        span_id = Mock()
-        trace_flags = Mock()
+        span_context = Mock()
         event = Event(
             name="test_event",
             timestamp=now,
-            trace_id=trace_id,
-            span_id=span_id,
-            trace_flags=trace_flags,
+            span_context=span_context,
             body="test body",
             severity_number=SeverityNumber.ERROR,
             attributes={
