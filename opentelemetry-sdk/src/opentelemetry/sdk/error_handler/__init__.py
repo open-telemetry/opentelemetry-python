@@ -84,7 +84,6 @@ class _DefaultErrorHandler(ErrorHandler):
 
     # pylint: disable=useless-return
     def _handle(self, error: Exception, *args, **kwargs):
-
         logger.exception("Error handled by default error handler: ")
         return None
 
@@ -111,9 +110,7 @@ class GlobalErrorHandler:
 
     # pylint: disable=no-self-use
     def __exit__(self, exc_type, exc_value, traceback):
-
         if exc_value is None:
-
             return None
 
         plugin_handled = False
@@ -123,19 +120,15 @@ class GlobalErrorHandler:
         )
 
         for error_handler_entry_point in error_handler_entry_points:
-
             error_handler_class = error_handler_entry_point.load()
 
             if issubclass(error_handler_class, exc_value.__class__):
-
                 try:
-
                     error_handler_class()._handle(exc_value)
                     plugin_handled = True
 
                 # pylint: disable=broad-exception-caught
                 except Exception as error_handling_error:
-
                     logger.exception(
                         "%s error while handling error"
                         " %s by error handler %s",
@@ -145,7 +138,6 @@ class GlobalErrorHandler:
                     )
 
         if not plugin_handled:
-
             _DefaultErrorHandler()._handle(exc_value)
 
         return True

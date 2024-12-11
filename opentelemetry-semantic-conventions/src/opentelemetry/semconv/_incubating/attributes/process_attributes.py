@@ -17,6 +17,12 @@ from typing import Final
 
 from deprecated import deprecated
 
+PROCESS_ARGS_COUNT: Final = "process.args_count"
+"""
+Length of the process.command_args array.
+Note: This field can be useful for querying or performing bucket analysis on how many arguments were provided to start a process. More arguments may be an indication of suspicious activity.
+"""
+
 PROCESS_COMMAND: Final = "process.command"
 """
 The command used to launch the process (i.e. the command name). On Linux based systems, can be set to the zeroth string in `proc/[pid]/cmdline`. On Windows, can be set to the first parameter extracted from `GetCommandLineW`.
@@ -47,6 +53,30 @@ PROCESS_CREATION_TIME: Final = "process.creation.time"
 The date and time the process was created, in ISO 8601 format.
 """
 
+PROCESS_EXECUTABLE_BUILD_ID_GNU: Final = "process.executable.build_id.gnu"
+"""
+The GNU build ID as found in the `.note.gnu.build-id` ELF section (hex string).
+"""
+
+PROCESS_EXECUTABLE_BUILD_ID_GO: Final = "process.executable.build_id.go"
+"""
+The Go build ID as retrieved by `go tool buildid <go executable>`.
+"""
+
+PROCESS_EXECUTABLE_BUILD_ID_HTLHASH: Final = (
+    "process.executable.build_id.htlhash"
+)
+"""
+Profiling specific build ID for executables. See the OTel specification for Profiles for more information.
+"""
+
+PROCESS_EXECUTABLE_BUILD_ID_PROFILING: Final = (
+    "process.executable.build_id.profiling"
+)
+"""
+Deprecated: Replaced by `process.executable.build_id.htlhash`.
+"""
+
 PROCESS_EXECUTABLE_NAME: Final = "process.executable.name"
 """
 The name of the process executable. On Linux based systems, can be set to the `Name` in `proc/[pid]/status`. On Windows, can be set to the base name of `GetProcessImageFileNameW`.
@@ -75,6 +105,12 @@ The PID of the process's group leader. This is also the process group ID (PGID) 
 PROCESS_INTERACTIVE: Final = "process.interactive"
 """
 Whether the process is connected to an interactive shell.
+"""
+
+PROCESS_LINUX_CGROUP: Final = "process.linux.cgroup"
+"""
+The control group associated with the process.
+Note: Control groups (cgroups) are a kernel feature used to organize and manage process resources. This attribute provides the path(s) to the cgroup(s) associated with the process, which should match the contents of the [/proc/<PID>/cgroup](https://man7.org/linux/man-pages/man7/cgroups.7.html) file.
 """
 
 PROCESS_OWNER: Final = "process.owner"
@@ -137,6 +173,12 @@ PROCESS_SESSION_LEADER_PID: Final = "process.session_leader.pid"
 The PID of the process's session leader. This is also the session ID (SID) of the process.
 """
 
+PROCESS_TITLE: Final = "process.title"
+"""
+Process title (proctitle).
+Note: In many Unix-like systems, process title (proctitle), is the string that represents the name or command line of a running process, displayed by system monitoring tools like ps, top, and htop.
+"""
+
 PROCESS_USER_ID: Final = "process.user.id"
 """
 The effective user ID (EUID) of the process.
@@ -153,6 +195,11 @@ Virtual process identifier.
 Note: The process ID within a PID namespace. This is not necessarily unique across all processes on the host but it is unique within the process namespace that the process exists within.
 """
 
+PROCESS_WORKING_DIRECTORY: Final = "process.working_directory"
+"""
+The working directory of the process.
+"""
+
 
 class ProcessContextSwitchTypeValues(Enum):
     VOLUNTARY = "voluntary"
@@ -161,7 +208,9 @@ class ProcessContextSwitchTypeValues(Enum):
     """involuntary."""
 
 
-@deprecated(reason="The attribute process.cpu.state is deprecated - Replaced by `cpu.mode`")  # type: ignore
+@deprecated(
+    reason="The attribute process.cpu.state is deprecated - Replaced by `cpu.mode`"
+)  # type: ignore
 class ProcessCpuStateValues(Enum):
     SYSTEM = "system"
     """system."""

@@ -70,10 +70,6 @@ class TestBase(unittest.TestCase):
             self, self.memory_exporter.get_finished_spans()
         )
 
-    def assertEqualSpanInstrumentationInfo(self, span, module):
-        self.assertEqual(span.instrumentation_info.name, module.__name__)
-        self.assertEqual(span.instrumentation_info.version, module.__version__)
-
     def assertEqualSpanInstrumentationScope(self, span, module):
         self.assertEqual(span.instrumentation_scope.name, module.__name__)
         self.assertEqual(
@@ -144,8 +140,9 @@ class TestBase(unittest.TestCase):
             logging.disable(logging.NOTSET)
 
     def get_sorted_metrics(self):
+        metrics_data = self.memory_metrics_reader.get_metrics_data()
         resource_metrics = (
-            self.memory_metrics_reader.get_metrics_data().resource_metrics
+            metrics_data.resource_metrics if metrics_data else []
         )
 
         all_metrics = []

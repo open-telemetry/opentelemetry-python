@@ -14,7 +14,7 @@
 
 # pylint: disable=protected-access,no-self-use
 
-
+import weakref
 from logging import WARNING
 from time import sleep
 from typing import Iterable, Sequence
@@ -66,8 +66,7 @@ class DummyMetricReader(MetricReader):
 
 class TestMeterProvider(ConcurrencyTestBase, TestCase):
     def tearDown(self):
-
-        MeterProvider._all_metric_readers = set()
+        MeterProvider._all_metric_readers = weakref.WeakSet()
 
     @patch.object(Resource, "create")
     def test_init_default(self, resource_patch):
@@ -247,7 +246,6 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         )
 
     def test_shutdown(self):
-
         mock_metric_reader_0 = MagicMock(
             **{
                 "shutdown.side_effect": ZeroDivisionError(),
@@ -355,7 +353,6 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
     def test_register_asynchronous_instrument(
         self, mock_sync_measurement_consumer
     ):
-
         meter_provider = MeterProvider()
 
         # pylint: disable=no-member
@@ -564,7 +561,6 @@ class InMemoryMetricExporter(MetricExporter):
 
 class TestDuplicateInstrumentAggregateData(TestCase):
     def test_duplicate_instrument_aggregate_data(self):
-
         exporter = InMemoryMetricExporter()
         reader = PeriodicExportingMetricReader(
             exporter, export_interval_millis=500

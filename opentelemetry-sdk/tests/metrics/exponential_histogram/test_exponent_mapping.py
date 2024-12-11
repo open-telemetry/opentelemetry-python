@@ -49,7 +49,6 @@ def right_boundary(scale: int, index: int) -> float:
 
 class TestExponentMapping(TestCase):
     def test_singleton(self):
-
         self.assertIs(ExponentMapping(-3), ExponentMapping(-3))
         self.assertIsNot(ExponentMapping(-3), ExponentMapping(-5))
 
@@ -63,19 +62,16 @@ class TestExponentMapping(TestCase):
         "exponent_mapping.ExponentMapping._init"
     )
     def test_init_called_once(self, mock_init):  # pylint: disable=no-self-use
-
         ExponentMapping(-3)
         ExponentMapping(-3)
 
         mock_init.assert_called_once()
 
     def test_exponent_mapping_0(self):
-
         with self.assertNotRaises(Exception):
             ExponentMapping(0)
 
     def test_exponent_mapping_zero(self):
-
         exponent_mapping = ExponentMapping(0)
 
         # This is the equivalent to 1.1 in hexadecimal
@@ -135,7 +131,6 @@ class TestExponentMapping(TestCase):
         )
 
     def test_exponent_mapping_min_scale(self):
-
         exponent_mapping = ExponentMapping(ExponentMapping._min_scale)
         self.assertEqual(exponent_mapping.map_to_index(1.000001), 0)
         self.assertEqual(exponent_mapping.map_to_index(1), -1)
@@ -309,7 +304,6 @@ class TestExponentMapping(TestCase):
         self.assertEqual(exponent_mapping.map_to_index(2**-975), -61)
 
     def test_exponent_index_max(self):
-
         for scale in range(
             ExponentMapping._min_scale, ExponentMapping._max_scale
         ):
@@ -389,7 +383,9 @@ class TestExponentMapping(TestCase):
 
             self.assertEqual(
                 exponent_mapping.map_to_index(
-                    nextafter(MIN_NORMAL_VALUE, inf)
+                    nextafter(  # pylint: disable=possibly-used-before-assignment
+                        MIN_NORMAL_VALUE, inf
+                    )
                 ),
                 MIN_NORMAL_EXPONENT >> -scale,
             )

@@ -17,7 +17,7 @@ from typing import Final
 
 TEST_CASE_NAME: Final = "test.case.name"
 """
-The fully qualified human readable name of the [test case](https://en.wikipedia.org/wiki/Test_case).
+The fully qualified human readable name of the [test case](https://wikipedia.org/wiki/Test_case).
 """
 
 TEST_CASE_RESULT_STATUS: Final = "test.case.result.status"
@@ -27,7 +27,7 @@ The status of the actual test case result from test execution.
 
 TEST_SUITE_NAME: Final = "test.suite.name"
 """
-The human readable name of a [test suite](https://en.wikipedia.org/wiki/Test_suite).
+The human readable name of a [test suite](https://wikipedia.org/wiki/Test_suite).
 """
 
 TEST_SUITE_RUN_STATUS: Final = "test.suite.run.status"

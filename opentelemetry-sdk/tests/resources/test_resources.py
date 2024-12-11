@@ -28,6 +28,8 @@ from opentelemetry.sdk.resources import (
     _DEFAULT_RESOURCE,
     _EMPTY_RESOURCE,
     _OPENTELEMETRY_SDK_VERSION,
+    HOST_ARCH,
+    HOST_NAME,
     OS_TYPE,
     OS_VERSION,
     OTEL_RESOURCE_ATTRIBUTES,
@@ -52,6 +54,7 @@ from opentelemetry.sdk.resources import (
     ProcessResourceDetector,
     Resource,
     ResourceDetector,
+    _HostResourceDetector,
     get_aggregated_resources,
 )
 
@@ -777,3 +780,23 @@ class TestOTELResourceDetector(unittest.TestCase):
 
         self.assertEqual(resource.attributes[OS_TYPE], "solaris")
         self.assertEqual(resource.attributes[OS_VERSION], "666.4.0.15.0")
+
+
+class TestHostResourceDetector(unittest.TestCase):
+    @patch("socket.gethostname", lambda: "foo")
+    @patch("platform.machine", lambda: "AMD64")
+    def test_host_resource_detector(self):
+        resource = get_aggregated_resources(
+            [_HostResourceDetector()],
+            Resource({}),
+        )
+        self.assertEqual(resource.attributes[HOST_NAME], "foo")
+        self.assertEqual(resource.attributes[HOST_ARCH], "AMD64")
+
+    @patch.dict(
+        environ, {OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: "host"}, clear=True
+    )
+    def test_resource_detector_entry_points_host(self):
+        resource = Resource({}).create()
+        self.assertIn(HOST_NAME, resource.attributes)
+        self.assertIn(HOST_ARCH, resource.attributes)

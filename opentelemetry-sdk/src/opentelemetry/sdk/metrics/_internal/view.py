@@ -15,15 +15,34 @@
 
 from fnmatch import fnmatch
 from logging import getLogger
-from typing import Optional, Set, Type
+from typing import Callable, Optional, Set, Type
 
 from opentelemetry.metrics import Instrument
 from opentelemetry.sdk.metrics._internal.aggregation import (
     Aggregation,
     DefaultAggregation,
+    _Aggregation,
+    _ExplicitBucketHistogramAggregation,
+    _ExponentialBucketHistogramAggregation,
+)
+from opentelemetry.sdk.metrics._internal.exemplar import (
+    AlignedHistogramBucketExemplarReservoir,
+    ExemplarReservoirBuilder,
+    SimpleFixedSizeExemplarReservoir,
 )
 
 _logger = getLogger(__name__)
+
+
+def _default_reservoir_factory(
+    aggregation_type: Type[_Aggregation],
+) -> ExemplarReservoirBuilder:
+    """Default reservoir factory per aggregation."""
+    if issubclass(aggregation_type, _ExplicitBucketHistogramAggregation):
+        return AlignedHistogramBucketExemplarReservoir
+    if issubclass(aggregation_type, _ExponentialBucketHistogramAggregation):
+        return SimpleFixedSizeExemplarReservoir
+    return SimpleFixedSizeExemplarReservoir
 
 
 class View:
@@ -73,6 +92,9 @@ class View:
             corresponding metrics stream. If `None` an instance of
             `DefaultAggregation` will be used.
 
+        exemplar_reservoir_factory: This is a metric stream customizing attribute:
+            the exemplar reservoir factory
+
         instrument_unit: This is an instrument matching attribute: the unit the
             instrument must have to match the view.
 
@@ -92,6 +114,9 @@ class View:
         description: Optional[str] = None,
         attribute_keys: Optional[Set[str]] = None,
         aggregation: Optional[Aggregation] = None,
+        exemplar_reservoir_factory: Optional[
+            Callable[[Type[_Aggregation]], ExemplarReservoirBuilder]
+        ] = None,
         instrument_unit: Optional[str] = None,
     ):
         if (
@@ -120,8 +145,8 @@ class View:
                 "characters in instrument_name"
             )
 
-        # _name, _description, _aggregation and _attribute_keys will be
-        # accessed when instantiating a _ViewInstrumentMatch.
+        # _name, _description, _aggregation, _exemplar_reservoir_factory and
+        # _attribute_keys will be accessed when instantiating a _ViewInstrumentMatch.
         self._name = name
         self._instrument_type = instrument_type
         self._instrument_name = instrument_name
@@ -133,11 +158,13 @@ class View:
         self._description = description
         self._attribute_keys = attribute_keys
         self._aggregation = aggregation or self._default_aggregation
+        self._exemplar_reservoir_factory = (
+            exemplar_reservoir_factory or _default_reservoir_factory
+        )
 
     # pylint: disable=too-many-return-statements
     # pylint: disable=too-many-branches
     def _match(self, instrument: Instrument) -> bool:
-
         if self._instrument_type is not None:
             if not isinstance(instrument, self._instrument_type):
                 return False

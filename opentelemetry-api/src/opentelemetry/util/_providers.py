@@ -30,9 +30,7 @@ logger = getLogger(__name__)
 def _load_provider(
     provider_environment_variable: str, provider: str
 ) -> Provider:  # type: ignore[type-var]
-
     try:
-
         provider_name = cast(
             str,
             environ.get(provider_environment_variable, f"default_{provider}"),

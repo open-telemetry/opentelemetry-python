@@ -15,10 +15,12 @@
 # pylint: disable=too-many-ancestors, unused-import
 
 from logging import getLogger
+from time import time_ns
 from typing import Dict, Generator, Iterable, List, Optional, Union
 
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics
+from opentelemetry.context import Context, get_current
 from opentelemetry.metrics import CallbackT
 from opentelemetry.metrics import Counter as APICounter
 from opentelemetry.metrics import Histogram as APIHistogram
@@ -108,11 +110,8 @@ class _Asynchronous:
         self._callbacks: List[CallbackT] = []
 
         if callbacks is not None:
-
             for callback in callbacks:
-
                 if isinstance(callback, Generator):
-
                     # advance generator to it's first yield
                     next(callback)
 
@@ -137,7 +136,9 @@ class _Asynchronous:
                 for api_measurement in callback(callback_options):
                     yield Measurement(
                         api_measurement.value,
+                        time_unix_nano=time_ns(),
                         instrument=self,
+                        context=api_measurement.context or get_current(),
                         attributes=api_measurement.attributes,
                     )
             except Exception:  # pylint: disable=broad-exception-caught
@@ -153,15 +154,25 @@ class Counter(_Synchronous, APICounter):
         return super().__new__(cls)
 
     def add(
-        self, amount: Union[int, float], attributes: Dict[str, str] = None
+        self,
+        amount: Union[int, float],
+        attributes: Dict[str, str] = None,
+        context: Optional[Context] = None,
     ):
         if amount < 0:
             _logger.warning(
                 "Add amount must be non-negative on Counter %s.", self.name
             )
             return
+        time_unix_nano = time_ns()
         self._measurement_consumer.consume_measurement(
-            Measurement(amount, self, attributes)
+            Measurement(
+                amount,
+                time_unix_nano,
+                self,
+                context or get_current(),
+                attributes,
+            )
         )
 
 
@@ -172,10 +183,20 @@ class UpDownCounter(_Synchronous, APIUpDownCounter):
         return super().__new__(cls)
 
     def add(
-        self, amount: Union[int, float], attributes: Dict[str, str] = None
+        self,
+        amount: Union[int, float],
+        attributes: Dict[str, str] = None,
+        context: Optional[Context] = None,
     ):
+        time_unix_nano = time_ns()
         self._measurement_consumer.consume_measurement(
-            Measurement(amount, self, attributes)
+            Measurement(
+                amount,
+                time_unix_nano,
+                self,
+                context or get_current(),
+                attributes,
+            )
         )
 
 
@@ -204,7 +225,10 @@ class Histogram(_Synchronous, APIHistogram):
         return super().__new__(cls)
 
     def record(
-        self, amount: Union[int, float], attributes: Dict[str, str] = None
+        self,
+        amount: Union[int, float],
+        attributes: Dict[str, str] = None,
+        context: Optional[Context] = None,
     ):
         if amount < 0:
             _logger.warning(
@@ -212,8 +236,15 @@ class Histogram(_Synchronous, APIHistogram):
                 self.name,
             )
             return
+        time_unix_nano = time_ns()
         self._measurement_consumer.consume_measurement(
-            Measurement(amount, self, attributes)
+            Measurement(
+                amount,
+                time_unix_nano,
+                self,
+                context or get_current(),
+                attributes,
+            )
         )
 
 
@@ -224,10 +255,20 @@ class Gauge(_Synchronous, APIGauge):
         return super().__new__(cls)
 
     def set(
-        self, amount: Union[int, float], attributes: Dict[str, str] = None
+        self,
+        amount: Union[int, float],
+        attributes: Dict[str, str] = None,
+        context: Optional[Context] = None,
     ):
+        time_unix_nano = time_ns()
         self._measurement_consumer.consume_measurement(
-            Measurement(amount, self, attributes)
+            Measurement(
+                amount,
+                time_unix_nano,
+                self,
+                context or get_current(),
+                attributes,
+            )
         )
 
 

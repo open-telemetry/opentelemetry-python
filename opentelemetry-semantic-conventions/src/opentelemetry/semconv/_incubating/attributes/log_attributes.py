@@ -42,7 +42,7 @@ The stream associated with the log. See below for a list of well-known values.
 
 LOG_RECORD_ORIGINAL: Final = "log.record.original"
 """
-The complete orignal Log Record.
+The complete original Log Record.
 Note: This value MAY be added when processing a Log Record which was originally transmitted as a string or equivalent data type AND the Body field of the Log Record does not contain the same value. (e.g. a syslog or a log record read from a file.).
 """
 

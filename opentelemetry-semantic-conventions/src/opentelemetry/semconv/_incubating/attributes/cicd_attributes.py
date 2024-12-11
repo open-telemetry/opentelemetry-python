@@ -27,7 +27,7 @@ The unique identifier of a pipeline run within a CI/CD system.
 
 CICD_PIPELINE_TASK_NAME: Final = "cicd.pipeline.task.name"
 """
-The human readable name of a task within a pipeline. Task here most closely aligns with a [computing process](https://en.wikipedia.org/wiki/Pipeline_(computing)) in a pipeline. Other terms for tasks include commands, steps, and procedures.
+The human readable name of a task within a pipeline. Task here most closely aligns with a [computing process](https://wikipedia.org/wiki/Pipeline_(computing)) in a pipeline. Other terms for tasks include commands, steps, and procedures.
 """
 
 CICD_PIPELINE_TASK_RUN_ID: Final = "cicd.pipeline.task.run.id"
@@ -37,7 +37,7 @@ The unique identifier of a task run within a pipeline.
 
 CICD_PIPELINE_TASK_RUN_URL_FULL: Final = "cicd.pipeline.task.run.url.full"
 """
-The [URL](https://en.wikipedia.org/wiki/URL) of the pipeline run providing the complete address in order to locate and identify the pipeline run.
+The [URL](https://wikipedia.org/wiki/URL) of the pipeline run providing the complete address in order to locate and identify the pipeline run.
 """
 
 CICD_PIPELINE_TASK_TYPE: Final = "cicd.pipeline.task.type"

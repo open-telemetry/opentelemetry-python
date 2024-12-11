@@ -17,8 +17,40 @@ from typing import Final
 
 GEN_AI_COMPLETION: Final = "gen_ai.completion"
 """
-The full response received from the GenAI model.
-Note: It's RECOMMENDED to format completions as JSON string matching [OpenAI messages format](https://platform.openai.com/docs/guides/text-generation).
+Deprecated: Removed, no replacement at this time.
+"""
+
+GEN_AI_OPENAI_REQUEST_RESPONSE_FORMAT: Final = (
+    "gen_ai.openai.request.response_format"
+)
+"""
+The response format that is requested.
+"""
+
+GEN_AI_OPENAI_REQUEST_SEED: Final = "gen_ai.openai.request.seed"
+"""
+Requests with same seed value more likely to return same result.
+"""
+
+GEN_AI_OPENAI_REQUEST_SERVICE_TIER: Final = (
+    "gen_ai.openai.request.service_tier"
+)
+"""
+The service tier requested. May be a specific tier, default, or auto.
+"""
+
+GEN_AI_OPENAI_RESPONSE_SERVICE_TIER: Final = (
+    "gen_ai.openai.response.service_tier"
+)
+"""
+The service tier used for the response.
+"""
+
+GEN_AI_OPENAI_RESPONSE_SYSTEM_FINGERPRINT: Final = (
+    "gen_ai.openai.response.system_fingerprint"
+)
+"""
+A fingerprint to track any eventual change in the Generative AI environment.
 """
 
 GEN_AI_OPERATION_NAME: Final = "gen_ai.operation.name"
@@ -29,8 +61,13 @@ Note: If one of the predefined values applies, but specific system uses a differ
 
 GEN_AI_PROMPT: Final = "gen_ai.prompt"
 """
-The full prompt sent to the GenAI model.
-Note: It's RECOMMENDED to format prompts as JSON string matching [OpenAI messages format](https://platform.openai.com/docs/guides/text-generation).
+Deprecated: Removed, no replacement at this time.
+"""
+
+GEN_AI_REQUEST_ENCODING_FORMATS: Final = "gen_ai.request.encoding_formats"
+"""
+The encoding formats requested in an embeddings operation, if specified.
+Note: In some GenAI systems the encoding formats are called embedding types. Also, some GenAI systems only accept a single format per request.
 """
 
 GEN_AI_REQUEST_FREQUENCY_PENALTY: Final = "gen_ai.request.frequency_penalty"
@@ -128,11 +165,29 @@ Deprecated: Replaced by `gen_ai.usage.input_tokens` attribute.
 """
 
 
+class GenAiOpenaiRequestResponseFormatValues(Enum):
+    TEXT = "text"
+    """Text response format."""
+    JSON_OBJECT = "json_object"
+    """JSON object response format."""
+    JSON_SCHEMA = "json_schema"
+    """JSON schema response format."""
+
+
+class GenAiOpenaiRequestServiceTierValues(Enum):
+    AUTO = "auto"
+    """The system will utilize scale tier credits until they are exhausted."""
+    DEFAULT = "default"
+    """The system will utilize the default scale tier."""
+
+
 class GenAiOperationNameValues(Enum):
     CHAT = "chat"
     """Chat completion operation such as [OpenAI Chat API](https://platform.openai.com/docs/api-reference/chat)."""
     TEXT_COMPLETION = "text_completion"
     """Text completions operation such as [OpenAI Completions API (Legacy)](https://platform.openai.com/docs/api-reference/completions)."""
+    EMBEDDINGS = "embeddings"
+    """Embeddings operation such as [OpenAI Create embeddings API](https://platform.openai.com/docs/api-reference/embeddings/create)."""
 
 
 class GenAiSystemValues(Enum):
@@ -144,6 +199,12 @@ class GenAiSystemValues(Enum):
     """Anthropic."""
     COHERE = "cohere"
     """Cohere."""
+    AZ_AI_INFERENCE = "az.ai.inference"
+    """Azure AI Inference."""
+    IBM_WATSONX_AI = "ibm.watsonx.ai"
+    """IBM Watsonx AI."""
+    AWS_BEDROCK = "aws.bedrock"
+    """AWS Bedrock."""
 
 
 class GenAiTokenTypeValues(Enum):

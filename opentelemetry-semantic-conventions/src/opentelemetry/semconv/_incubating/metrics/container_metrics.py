@@ -13,9 +13,29 @@
 # limitations under the License.
 
 
-from typing import Final
+from typing import (
+    Callable,
+    Final,
+    Generator,
+    Iterable,
+    Optional,
+    Sequence,
+    Union,
+)
 
-from opentelemetry.metrics import Counter, Meter
+from opentelemetry.metrics import (
+    CallbackOptions,
+    Counter,
+    Meter,
+    ObservableGauge,
+    Observation,
+)
+
+# pylint: disable=invalid-name
+CallbackT = Union[
+    Callable[[CallbackOptions], Iterable[Observation]],
+    Generator[Iterable[Observation], CallbackOptions, None],
+]
 
 CONTAINER_CPU_TIME: Final = "container.cpu.time"
 """
@@ -32,6 +52,27 @@ def create_container_cpu_time(meter: Meter) -> Counter:
         name=CONTAINER_CPU_TIME,
         description="Total CPU time consumed",
         unit="s",
+    )
+
+
+CONTAINER_CPU_USAGE: Final = "container.cpu.usage"
+"""
+Container's CPU usage, measured in cpus. Range from 0 to the number of allocatable CPUs
+Instrument: gauge
+Unit: {cpu}
+Note: CPU usage of the specific container on all available CPU cores, averaged over the sample window.
+"""
+
+
+def create_container_cpu_usage(
+    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+) -> ObservableGauge:
+    """Container's CPU usage, measured in cpus. Range from 0 to the number of allocatable CPUs"""
+    return meter.create_observable_gauge(
+        name=CONTAINER_CPU_USAGE,
+        callbacks=callbacks,
+        description="Container's CPU usage, measured in cpus. Range from 0 to the number of allocatable CPUs",
+        unit="{cpu}",
     )
 
 
@@ -86,4 +127,26 @@ def create_container_network_io(meter: Meter) -> Counter:
         name=CONTAINER_NETWORK_IO,
         description="Network bytes for the container.",
         unit="By",
+    )
+
+
+CONTAINER_UPTIME: Final = "container.uptime"
+"""
+The time the container has been running
+Instrument: gauge
+Unit: s
+Note: Instrumentations SHOULD use a gauge with type `double` and measure uptime in seconds as a floating point number with the highest precision available.
+The actual accuracy would depend on the instrumentation and operating system.
+"""
+
+
+def create_container_uptime(
+    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+) -> ObservableGauge:
+    """The time the container has been running"""
+    return meter.create_observable_gauge(
+        name=CONTAINER_UPTIME,
+        callbacks=callbacks,
+        description="The time the container has been running",
+        unit="s",
     )

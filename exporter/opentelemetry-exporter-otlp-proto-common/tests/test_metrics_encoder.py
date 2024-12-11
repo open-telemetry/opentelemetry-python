@@ -12,9 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=protected-access
+# pylint: disable=protected-access,too-many-lines
 import unittest
 
+from opentelemetry.exporter.otlp.proto.common._internal.metrics_encoder import (
+    EncodingException,
+)
 from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
     encode_metrics,
 )
@@ -30,19 +33,21 @@ from opentelemetry.proto.metrics.v1 import metrics_pb2 as pb2
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as OTLPResource,
 )
-from opentelemetry.sdk.metrics.export import AggregationTemporality, Buckets
+from opentelemetry.sdk.metrics import Exemplar
 from opentelemetry.sdk.metrics.export import (
-    ExponentialHistogram as ExponentialHistogramType,
-)
-from opentelemetry.sdk.metrics.export import ExponentialHistogramDataPoint
-from opentelemetry.sdk.metrics.export import Histogram as HistogramType
-from opentelemetry.sdk.metrics.export import (
+    AggregationTemporality,
+    Buckets,
+    ExponentialHistogramDataPoint,
     HistogramDataPoint,
     Metric,
     MetricsData,
     ResourceMetrics,
     ScopeMetrics,
 )
+from opentelemetry.sdk.metrics.export import (
+    ExponentialHistogram as ExponentialHistogramType,
+)
+from opentelemetry.sdk.metrics.export import Histogram as HistogramType
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import (
     InstrumentationScope as SDKInstrumentationScope,
@@ -51,6 +56,9 @@ from opentelemetry.test.metrictestutil import _generate_gauge, _generate_sum
 
 
 class TestOTLPMetricsEncoder(unittest.TestCase):
+    span_id = int("6e0c63257de34c92", 16)
+    trace_id = int("d4cda95b652f4a1592b449d5929fda1b", 16)
+
     histogram = Metric(
         name="histogram",
         description="foo",
@@ -61,6 +69,22 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                     attributes={"a": 1, "b": True},
                     start_time_unix_nano=1641946016139533244,
                     time_unix_nano=1641946016139533244,
+                    exemplars=[
+                        Exemplar(
+                            {"filtered": "banana"},
+                            298.0,
+                            1641946016139533400,
+                            span_id,
+                            trace_id,
+                        ),
+                        Exemplar(
+                            {"filtered": "banana"},
+                            298.0,
+                            1641946016139533400,
+                            None,
+                            None,
+                        ),
+                    ],
                     count=5,
                     sum=67,
                     bucket_counts=[1, 4],
@@ -456,7 +480,34 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                 sum=67,
                                                 bucket_counts=[1, 4],
                                                 explicit_bounds=[10.0, 20.0],
-                                                exemplars=[],
+                                                exemplars=[
+                                                    pb2.Exemplar(
+                                                        time_unix_nano=1641946016139533400,
+                                                        as_double=298,
+                                                        span_id=b"n\x0cc%}\xe3L\x92",
+                                                        trace_id=b"\xd4\xcd\xa9[e/J\x15\x92\xb4I\xd5\x92\x9f\xda\x1b",
+                                                        filtered_attributes=[
+                                                            KeyValue(
+                                                                key="filtered",
+                                                                value=AnyValue(
+                                                                    string_value="banana"
+                                                                ),
+                                                            )
+                                                        ],
+                                                    ),
+                                                    pb2.Exemplar(
+                                                        time_unix_nano=1641946016139533400,
+                                                        as_double=298,
+                                                        filtered_attributes=[
+                                                            KeyValue(
+                                                                key="filtered",
+                                                                value=AnyValue(
+                                                                    string_value="banana"
+                                                                ),
+                                                            )
+                                                        ],
+                                                    ),
+                                                ],
                                                 max=18.0,
                                                 min=8.0,
                                             )
@@ -559,7 +610,34 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                 sum=67,
                                                 bucket_counts=[1, 4],
                                                 explicit_bounds=[10.0, 20.0],
-                                                exemplars=[],
+                                                exemplars=[
+                                                    pb2.Exemplar(
+                                                        time_unix_nano=1641946016139533400,
+                                                        as_double=298,
+                                                        span_id=b"n\x0cc%}\xe3L\x92",
+                                                        trace_id=b"\xd4\xcd\xa9[e/J\x15\x92\xb4I\xd5\x92\x9f\xda\x1b",
+                                                        filtered_attributes=[
+                                                            KeyValue(
+                                                                key="filtered",
+                                                                value=AnyValue(
+                                                                    string_value="banana"
+                                                                ),
+                                                            )
+                                                        ],
+                                                    ),
+                                                    pb2.Exemplar(
+                                                        time_unix_nano=1641946016139533400,
+                                                        as_double=298,
+                                                        filtered_attributes=[
+                                                            KeyValue(
+                                                                key="filtered",
+                                                                value=AnyValue(
+                                                                    string_value="banana"
+                                                                ),
+                                                            )
+                                                        ],
+                                                    ),
+                                                ],
                                                 max=18.0,
                                                 min=8.0,
                                             )
@@ -594,7 +672,34 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                 sum=67,
                                                 bucket_counts=[1, 4],
                                                 explicit_bounds=[10.0, 20.0],
-                                                exemplars=[],
+                                                exemplars=[
+                                                    pb2.Exemplar(
+                                                        time_unix_nano=1641946016139533400,
+                                                        as_double=298,
+                                                        span_id=b"n\x0cc%}\xe3L\x92",
+                                                        trace_id=b"\xd4\xcd\xa9[e/J\x15\x92\xb4I\xd5\x92\x9f\xda\x1b",
+                                                        filtered_attributes=[
+                                                            KeyValue(
+                                                                key="filtered",
+                                                                value=AnyValue(
+                                                                    string_value="banana"
+                                                                ),
+                                                            )
+                                                        ],
+                                                    ),
+                                                    pb2.Exemplar(
+                                                        time_unix_nano=1641946016139533400,
+                                                        as_double=298,
+                                                        filtered_attributes=[
+                                                            KeyValue(
+                                                                key="filtered",
+                                                                value=AnyValue(
+                                                                    string_value="banana"
+                                                                ),
+                                                            )
+                                                        ],
+                                                    ),
+                                                ],
                                                 max=18.0,
                                                 min=8.0,
                                             )
@@ -636,7 +741,34 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                 sum=67,
                                                 bucket_counts=[1, 4],
                                                 explicit_bounds=[10.0, 20.0],
-                                                exemplars=[],
+                                                exemplars=[
+                                                    pb2.Exemplar(
+                                                        time_unix_nano=1641946016139533400,
+                                                        as_double=298,
+                                                        span_id=b"n\x0cc%}\xe3L\x92",
+                                                        trace_id=b"\xd4\xcd\xa9[e/J\x15\x92\xb4I\xd5\x92\x9f\xda\x1b",
+                                                        filtered_attributes=[
+                                                            KeyValue(
+                                                                key="filtered",
+                                                                value=AnyValue(
+                                                                    string_value="banana"
+                                                                ),
+                                                            )
+                                                        ],
+                                                    ),
+                                                    pb2.Exemplar(
+                                                        time_unix_nano=1641946016139533400,
+                                                        as_double=298,
+                                                        filtered_attributes=[
+                                                            KeyValue(
+                                                                key="filtered",
+                                                                value=AnyValue(
+                                                                    string_value="banana"
+                                                                ),
+                                                            )
+                                                        ],
+                                                    ),
+                                                ],
                                                 max=18.0,
                                                 min=8.0,
                                             )
@@ -678,7 +810,34 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                 sum=67,
                                                 bucket_counts=[1, 4],
                                                 explicit_bounds=[10.0, 20.0],
-                                                exemplars=[],
+                                                exemplars=[
+                                                    pb2.Exemplar(
+                                                        time_unix_nano=1641946016139533400,
+                                                        as_double=298,
+                                                        span_id=b"n\x0cc%}\xe3L\x92",
+                                                        trace_id=b"\xd4\xcd\xa9[e/J\x15\x92\xb4I\xd5\x92\x9f\xda\x1b",
+                                                        filtered_attributes=[
+                                                            KeyValue(
+                                                                key="filtered",
+                                                                value=AnyValue(
+                                                                    string_value="banana"
+                                                                ),
+                                                            )
+                                                        ],
+                                                    ),
+                                                    pb2.Exemplar(
+                                                        time_unix_nano=1641946016139533400,
+                                                        as_double=298,
+                                                        filtered_attributes=[
+                                                            KeyValue(
+                                                                key="filtered",
+                                                                value=AnyValue(
+                                                                    string_value="banana"
+                                                                ),
+                                                            )
+                                                        ],
+                                                    ),
+                                                ],
                                                 max=18.0,
                                                 min=8.0,
                                             )
@@ -814,3 +973,35 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
         # pylint: disable=protected-access
         actual = encode_metrics(metrics_data)
         self.assertEqual(expected, actual)
+
+    def test_encoding_exception_reraise(self):
+        # this number is too big to fit in a signed 64-bit proto field and causes a ValueError
+        big_number = 2**63
+        metrics_data = MetricsData(
+            resource_metrics=[
+                ResourceMetrics(
+                    resource=Resource(
+                        attributes={},
+                        schema_url="resource_schema_url",
+                    ),
+                    scope_metrics=[
+                        ScopeMetrics(
+                            scope=SDKInstrumentationScope(
+                                name="first_name",
+                                version="first_version",
+                                schema_url="insrumentation_scope_schema_url",
+                            ),
+                            metrics=[_generate_sum("sum_double", big_number)],
+                            schema_url="instrumentation_scope_schema_url",
+                        )
+                    ],
+                    schema_url="resource_schema_url",
+                )
+            ]
+        )
+        with self.assertRaises(EncodingException) as context:
+            encode_metrics(metrics_data)
+
+        # assert that the EncodingException wraps the metric and original exception
+        assert isinstance(context.exception.metric, Metric)
+        assert isinstance(context.exception.original_exception, ValueError)

@@ -57,7 +57,6 @@ OS_ENV_TIMEOUT = "30"
 # pylint: disable=protected-access
 class TestOTLPSpanExporter(unittest.TestCase):
     def test_constructor_default(self):
-
         exporter = OTLPSpanExporter()
 
         self.assertEqual(
@@ -171,7 +170,6 @@ class TestOTLPSpanExporter(unittest.TestCase):
         },
     )
     def test_exporter_env(self):
-
         exporter = OTLPSpanExporter()
 
         self.assertEqual(exporter._certificate_file, OS_ENV_CERTIFICATE)
@@ -190,7 +188,6 @@ class TestOTLPSpanExporter(unittest.TestCase):
         {OTEL_EXPORTER_OTLP_ENDPOINT: OS_ENV_ENDPOINT},
     )
     def test_exporter_env_endpoint_without_slash(self):
-
         exporter = OTLPSpanExporter()
 
         self.assertEqual(
@@ -203,7 +200,6 @@ class TestOTLPSpanExporter(unittest.TestCase):
         {OTEL_EXPORTER_OTLP_ENDPOINT: OS_ENV_ENDPOINT + "/"},
     )
     def test_exporter_env_endpoint_with_slash(self):
-
         exporter = OTLPSpanExporter()
 
         self.assertEqual(
@@ -218,7 +214,6 @@ class TestOTLPSpanExporter(unittest.TestCase):
         },
     )
     def test_headers_parse_from_env(self):
-
         with self.assertLogs(level="WARNING") as cm:
             _ = OTLPSpanExporter()
 

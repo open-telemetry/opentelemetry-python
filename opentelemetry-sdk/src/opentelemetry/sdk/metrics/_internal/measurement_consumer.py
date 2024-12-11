@@ -78,8 +78,18 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
         ] = []
 
     def consume_measurement(self, measurement: Measurement) -> None:
+        should_sample_exemplar = (
+            self._sdk_config.exemplar_filter.should_sample(
+                measurement.value,
+                measurement.time_unix_nano,
+                measurement.attributes,
+                measurement.context,
+            )
+        )
         for reader_storage in self._reader_storages.values():
-            reader_storage.consume_measurement(measurement)
+            reader_storage.consume_measurement(
+                measurement, should_sample_exemplar
+            )
 
     def register_asynchronous_instrument(
         self,
@@ -95,7 +105,6 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
         metric_reader: "opentelemetry.sdk.metrics.MetricReader",
         timeout_millis: float = 10_000,
     ) -> Optional[Iterable[Metric]]:
-
         with self._lock:
             metric_reader_storage = self._reader_storages[metric_reader]
             # for now, just use the defaults
@@ -105,11 +114,9 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
             default_timeout_ns = 10000 * 1e6
 
             for async_instrument in self._async_instruments:
-
                 remaining_time = deadline_ns - time_ns()
 
                 if remaining_time < default_timeout_ns:
-
                     callback_options = CallbackOptions(
                         timeout_millis=remaining_time / 1e6
                     )
@@ -121,7 +128,17 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
                     )
 
                 for measurement in measurements:
-                    metric_reader_storage.consume_measurement(measurement)
+                    should_sample_exemplar = (
+                        self._sdk_config.exemplar_filter.should_sample(
+                            measurement.value,
+                            measurement.time_unix_nano,
+                            measurement.attributes,
+                            measurement.context,
+                        )
+                    )
+                    metric_reader_storage.consume_measurement(
+                        measurement, should_sample_exemplar
+                    )
 
             result = self._reader_storages[metric_reader].collect()
 

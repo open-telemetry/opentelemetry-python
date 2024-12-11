@@ -138,6 +138,18 @@ nitpick_ignore = [
         "py:class",
         "opentelemetry.proto.collector.logs.v1.logs_service_pb2.ExportLogsServiceRequest",
     ),
+    (
+        "py:class",
+        "opentelemetry.sdk.metrics._internal.exemplar.exemplar_reservoir.FixedSizeExemplarReservoirABC",
+    ),
+    (
+        "py:class",
+        "opentelemetry.sdk.metrics._internal.exemplar.exemplar.Exemplar",
+    ),
+    (
+        "py:class",
+        "opentelemetry.sdk.metrics._internal.aggregation._Aggregation",
+    ),
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -192,9 +204,7 @@ rst_epilog = """
 .. |SCM_WEB| replace:: {s}
 .. |SCM_RAW_WEB| replace:: {sr}
 .. |SCM_BRANCH| replace:: {b}
-""".format(
-    s=scm_web, sr=scm_raw_web, b=branch
-)
+""".format(s=scm_web, sr=scm_raw_web, b=branch)
 
 # used to have links to repo files
 extlinks = {

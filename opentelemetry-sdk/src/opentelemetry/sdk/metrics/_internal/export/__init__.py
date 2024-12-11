@@ -14,6 +14,7 @@
 
 import math
 import os
+import weakref
 from abc import ABC, abstractmethod
 from enum import Enum
 from logging import getLogger
@@ -142,8 +143,7 @@ class ConsoleMetricExporter(MetricExporter):
         out: IO = stdout,
         formatter: Callable[
             ["opentelemetry.sdk.metrics.export.MetricsData"], str
-        ] = lambda metrics_data: metrics_data.to_json()
-        + linesep,
+        ] = lambda metrics_data: metrics_data.to_json() + linesep,
         preferred_temporality: Dict[type, AggregationTemporality] = None,
         preferred_aggregation: Dict[
             type, "opentelemetry.sdk.metrics.view.Aggregation"
@@ -333,7 +333,6 @@ class MetricReader(ABC):
         metrics = self._collect(self, timeout_millis=timeout_millis)
 
         if metrics is not None:
-
             self._receive_metrics(
                 metrics,
                 timeout_millis=timeout_millis,
@@ -404,7 +403,7 @@ class InMemoryMetricReader(MetricReader):
 
     def get_metrics_data(
         self,
-    ) -> "opentelemetry.sdk.metrics.export.MetricsData":
+    ) -> Optional["opentelemetry.sdk.metrics.export.MetricsData"]:
         """Reads and returns current metrics from the SDK"""
         with self._lock:
             self.collect()
@@ -490,9 +489,11 @@ class PeriodicExportingMetricReader(MetricReader):
             )
             self._daemon_thread.start()
             if hasattr(os, "register_at_fork"):
+                weak_at_fork = weakref.WeakMethod(self._at_fork_reinit)
+
                 os.register_at_fork(
-                    after_in_child=self._at_fork_reinit
-                )  # pylint: disable=protected-access
+                    after_in_child=lambda: weak_at_fork()()  # pylint: disable=unnecessary-lambda, protected-access
+                )
         elif self._export_interval_millis <= 0:
             raise ValueError(
                 f"interval value {self._export_interval_millis} is invalid \
@@ -533,7 +534,6 @@ class PeriodicExportingMetricReader(MetricReader):
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> None:
-
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         # pylint: disable=broad-exception-caught,invalid-name
         try:
@@ -541,8 +541,8 @@ class PeriodicExportingMetricReader(MetricReader):
                 self._exporter.export(
                     metrics_data, timeout_millis=timeout_millis
                 )
-        except Exception as e:
-            _logger.exception("Exception while exporting metrics %s", str(e))
+        except Exception:
+            _logger.exception("Exception while exporting metrics")
         detach(token)
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:

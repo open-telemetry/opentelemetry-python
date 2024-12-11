@@ -58,20 +58,16 @@ You can run `tox` with the following arguments:
   Python version
 - `tox -e spellcheck` to run a spellcheck on all the code
 - `tox -e lint-some-package` to run lint checks on `some-package`
+- `tox -e generate-workflows` to run creation of new CI workflows if tox environments have been updated
+- `tox -e ruff` to run ruff linter and formatter checks against the entire codebase
 
-`black` and `isort` are executed when `tox -e lint` is run. The reported errors can be tedious to fix manually.
-An easier way to do so is:
-
-1. Run `.tox/lint/bin/black .`
-2. Run `.tox/lint/bin/isort .`
-
-Or you can call formatting and linting in one command by [pre-commit](https://pre-commit.com/):
+`ruff check` and `ruff format` are executed when `tox -e ruff` is run. We strongly recommend you to configure [pre-commit](https://pre-commit.com/) locally to run `ruff` automatically before each commit by installing it as git hooks. You just need to [install pre-commit](https://pre-commit.com/#install) in your environment:
 
 ```console
-$ pre-commit
+$ pip install pre-commit -c dev-requirements.txt
 ```
 
-You can also configure it to run lint tools automatically before committing with:
+and run this command inside the git repository:
 
 ```console
 $ pre-commit install
@@ -82,7 +78,7 @@ Every public symbol is something that has to be kept in order to maintain backwa
 
 To check if your PR is adding public symbols, run `tox -e public-symbols-check`. This will always fail if public symbols are being added/removed. The idea
 behind this is that every PR that adds/removes public symbols fails in CI, forcing reviewers to check the symbols to make sure they are strictly necessary.
-If after checking them, it is considered that they are indeed necessary, the PR will be labeled with `Skip Public API check` so that this check is not
+If after checking them, it is considered that they are indeed necessary, the PR will be labeled with `Approve Public API check` so that this check is not
 run.
 
 Also, we try to keep our console output as clean as possible. Most of the time this means catching expected log messages in the test cases:
@@ -224,6 +220,23 @@ updating the GitHub workflow to reference a PR in the Contrib repo
 * Trivial change (typo, cosmetic, doc, etc.) doesn't have to wait for one day.
 * Urgent fix can take exception as long as it has been actively communicated.
 
+#### Allow edits from maintainers
+
+Something _very important_ is to allow edits from maintainers when opening a PR. This will
+allow maintainers to rebase your PR against `main` which is necessary in order to merge
+your PR. You could do it yourself too, but keep in mind that every time another PR gets
+merged, your PR will require rebasing. Since only maintainers can merge your PR it is
+almost impossible for maintainers to find your PR just when it has been rebased by you so
+that it can be merged. Allowing maintainers to edit your PR also allows them to help you
+get your PR merged by making any minor fixes to solve any issue that while being unrelated
+to your PR, can still happen.
+
+#### Fork from a personal Github account
+
+Right now Github [does not allow](https://github.com/orgs/community/discussions/5634) PRs
+to be edited by maintainers if the corresponding repo fork exists in a Github organization.
+Please for this repo in a personal Github account instead.
+
 One of the maintainers will merge the PR once it is **ready to merge**.
 
 ## Design Choices
@@ -272,6 +285,7 @@ When updating the minimum supported Python version remember to:
 
 - Remove the version in `pyproject.toml` trove classifiers
 - Remove the version from `tox.ini`
+- Update github workflows accordingly with `tox -e generate-workflows`
 - Search for `sys.version_info` usage and remove code for unsupported versions
 - Bump `py-version` in `.pylintrc` for Python version dependent checks
 
@@ -281,7 +295,7 @@ When adding support for a new Python release remember to:
 
 - Add the version in `tox.ini`
 - Add the version in `pyproject.toml` trove classifiers
-- Update github workflows accordingly; lint and benchmarks use the latest supported version
+- Update github workflows accordingly with `tox -e generate-workflows`; lint and benchmarks use the latest supported version
 - Update `.pre-commit-config.yaml`
 - Update tox examples in the documentation
 

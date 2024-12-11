@@ -113,11 +113,15 @@ class MetricReaderStorage:
 
             return view_instrument_matches
 
-    def consume_measurement(self, measurement: Measurement) -> None:
+    def consume_measurement(
+        self, measurement: Measurement, should_sample_exemplar: bool = True
+    ) -> None:
         for view_instrument_match in self._get_or_init_view_instrument_match(
             measurement.instrument
         ):
-            view_instrument_match.consume_measurement(measurement)
+            view_instrument_match.consume_measurement(
+                measurement, should_sample_exemplar
+            )
 
     def collect(self) -> Optional[MetricsData]:
         # Use a list instead of yielding to prevent a slow reader from holding
@@ -135,7 +139,6 @@ class MetricReaderStorage:
         collection_start_nanos = time_ns()
 
         with self._lock:
-
             instrumentation_scope_scope_metrics: Dict[
                 InstrumentationScope, ScopeMetrics
             ] = {}
@@ -151,7 +154,6 @@ class MetricReaderStorage:
                 metrics: List[Metric] = []
 
                 for view_instrument_match in view_instrument_matches:
-
                     data_points = view_instrument_match.collect(
                         aggregation_temporality, collection_start_nanos
                     )
@@ -206,6 +208,7 @@ class MetricReaderStorage:
                     metrics.append(
                         Metric(
                             # pylint: disable=protected-access
+                            # pylint: disable=possibly-used-before-assignment
                             name=view_instrument_match._name,
                             description=view_instrument_match._description,
                             unit=view_instrument_match._instrument.unit,
@@ -214,7 +217,6 @@ class MetricReaderStorage:
                     )
 
                 if metrics:
-
                     if instrument.instrumentation_scope not in (
                         instrumentation_scope_scope_metrics
                     ):
@@ -231,7 +233,6 @@ class MetricReaderStorage:
                         ].metrics.extend(metrics)
 
             if instrumentation_scope_scope_metrics:
-
                 return MetricsData(
                     resource_metrics=[
                         ResourceMetrics(
@@ -276,7 +277,6 @@ class MetricReaderStorage:
                     if existing_view_instrument_match.conflicts(
                         new_view_instrument_match
                     ):
-
                         _logger.warning(
                             "Views %s and %s will cause conflicting "
                             "metrics identities",

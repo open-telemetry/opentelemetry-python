@@ -20,8 +20,10 @@ from unittest import TestCase
 
 from pytest import mark
 
+from opentelemetry.context import Context
 from opentelemetry.metrics import Observation
 from opentelemetry.sdk.metrics import Counter, MeterProvider, ObservableCounter
+from opentelemetry.sdk.metrics._internal.exemplar import AlwaysOnExemplarFilter
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     InMemoryMetricReader,
@@ -39,7 +41,6 @@ class TestSumAggregation(TestCase):
         ),
     )
     def test_asynchronous_delta_temporality(self):
-
         eight_multiple_generator = count(start=8, step=8)
 
         counter = 0
@@ -125,7 +126,6 @@ class TestSumAggregation(TestCase):
         )
 
         for metrics_data in results[1:]:
-
             metric_data = (
                 metrics_data.resource_metrics[0]
                 .scope_metrics[0]
@@ -164,7 +164,6 @@ class TestSumAggregation(TestCase):
         ),
     )
     def test_asynchronous_cumulative_temporality(self):
-
         eight_multiple_generator = count(start=8, step=8)
 
         counter = 0
@@ -226,7 +225,6 @@ class TestSumAggregation(TestCase):
         )
 
         for index, metrics_data in enumerate(results):
-
             metric_data = (
                 metrics_data.resource_metrics[0]
                 .scope_metrics[0]
@@ -261,7 +259,6 @@ class TestSumAggregation(TestCase):
         ),
     )
     def test_synchronous_delta_temporality(self):
-
         aggregation = SumAggregation()
 
         reader = InMemoryMetricReader(
@@ -277,7 +274,6 @@ class TestSumAggregation(TestCase):
         results = []
 
         for _ in range(10):
-
             results.append(reader.get_metrics_data())
 
         for metrics_data in results:
@@ -323,7 +319,6 @@ class TestSumAggregation(TestCase):
         )
 
         for metrics_data in results[1:]:
-
             metric_data = (
                 metrics_data.resource_metrics[0]
                 .scope_metrics[0]
@@ -343,7 +338,6 @@ class TestSumAggregation(TestCase):
         results = []
 
         for _ in range(10):
-
             results.append(reader.get_metrics_data())
 
         for metrics_data in results:
@@ -392,7 +386,6 @@ class TestSumAggregation(TestCase):
         ),
     )
     def test_synchronous_cumulative_temporality(self):
-
         aggregation = SumAggregation()
 
         reader = InMemoryMetricReader(
@@ -408,7 +401,6 @@ class TestSumAggregation(TestCase):
         results = []
 
         for _ in range(10):
-
             results.append(reader.get_metrics_data())
 
         for metrics_data in results:
@@ -417,7 +409,6 @@ class TestSumAggregation(TestCase):
         results = []
 
         for _ in range(10):
-
             counter.add(8)
             results.append(reader.get_metrics_data())
 
@@ -431,7 +422,6 @@ class TestSumAggregation(TestCase):
         )
 
         for index, metrics_data in enumerate(results):
-
             metric_data = (
                 metrics_data.resource_metrics[0]
                 .scope_metrics[0]
@@ -447,7 +437,6 @@ class TestSumAggregation(TestCase):
         results = []
 
         for _ in range(10):
-
             results.append(reader.get_metrics_data())
 
         provider.shutdown()
@@ -462,7 +451,6 @@ class TestSumAggregation(TestCase):
         )
 
         for metrics_data in results:
-
             metric_data = (
                 metrics_data.resource_metrics[0]
                 .scope_metrics[0]
@@ -474,3 +462,37 @@ class TestSumAggregation(TestCase):
                 start_time_unix_nano, metric_data.start_time_unix_nano
             )
             self.assertEqual(metric_data.value, 80)
+
+    def test_sum_aggregation_with_exemplars(self):
+        in_memory_metric_reader = InMemoryMetricReader()
+
+        provider = MeterProvider(
+            metric_readers=[in_memory_metric_reader],
+            exemplar_filter=AlwaysOnExemplarFilter(),
+        )
+
+        meter = provider.get_meter("my-meter")
+        counter = meter.create_counter("my_counter")
+
+        counter.add(2, {"attribute": "value1"}, context=Context())
+        counter.add(5, {"attribute": "value2"}, context=Context())
+        counter.add(3, {"attribute": "value3"}, context=Context())
+
+        metric_data = in_memory_metric_reader.get_metrics_data()
+
+        self.assertEqual(
+            len(metric_data.resource_metrics[0].scope_metrics[0].metrics), 1
+        )
+
+        sum_metric = (
+            metric_data.resource_metrics[0].scope_metrics[0].metrics[0]
+        )
+
+        data_points = sum_metric.data.data_points
+        self.assertEqual(len(data_points), 3)
+
+        self.assertEqual(data_points[0].exemplars[0].value, 2.0)
+        self.assertEqual(data_points[1].exemplars[0].value, 5.0)
+        self.assertEqual(data_points[2].exemplars[0].value, 3.0)
+
+        provider.shutdown()

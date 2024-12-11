@@ -47,6 +47,11 @@ NETWORK_CONNECTION_TYPE: Final = "network.connection.type"
 The internet connection type.
 """
 
+NETWORK_INTERFACE_NAME: Final = "network.interface.name"
+"""
+The network interface name.
+"""
+
 NETWORK_IO_DIRECTION: Final = "network.io.direction"
 """
 The network IO operation direction.
@@ -158,7 +163,9 @@ class NetworkIoDirectionValues(Enum):
     """receive."""
 
 
-@deprecated(reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTransportValues`.")  # type: ignore
+@deprecated(
+    reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTransportValues`."
+)  # type: ignore
 class NetworkTransportValues(Enum):
     TCP = "tcp"
     """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTransportValues.TCP`."""
@@ -172,7 +179,9 @@ class NetworkTransportValues(Enum):
     """QUIC."""
 
 
-@deprecated(reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTypeValues`.")  # type: ignore
+@deprecated(
+    reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTypeValues`."
+)  # type: ignore
 class NetworkTypeValues(Enum):
     IPV4 = "ipv4"
     """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTypeValues.IPV4`."""

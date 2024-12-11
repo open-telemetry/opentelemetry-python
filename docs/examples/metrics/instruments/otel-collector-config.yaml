@@ -5,7 +5,7 @@ receivers:
                 endpoint: 0.0.0.0:4317
 
 exporters:
-    logging:
+    debug:
 
 processors:
     batch:
@@ -14,4 +14,4 @@ service:
     pipelines:
         metrics:
             receivers: [otlp]
-            exporters: [logging]
+            exporters: [debug]

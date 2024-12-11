@@ -111,7 +111,6 @@ class TestUseTracer(unittest.TestCase):
         self.assertEqual(trace.get_current_span(), trace.INVALID_SPAN)
 
     def test_use_span_end_on_exit(self):
-
         test_span = SpanTest(trace.INVALID_SPAN_CONTEXT)
 
         with trace.use_span(test_span):

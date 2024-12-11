@@ -17,6 +17,7 @@ import unittest
 from opentelemetry.sdk.util import BoundedList
 
 
+# pylint: disable=unsubscriptable-object
 class TestBoundedList(unittest.TestCase):
     base = [52, 36, 53, 29, 54, 99, 56, 48, 22, 35, 21, 65, 10, 95, 42, 60]
 

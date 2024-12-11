@@ -21,6 +21,7 @@ import threading
 import traceback
 import warnings
 from os import environ
+from threading import Lock
 from time import time_ns
 from typing import Any, Callable, Optional, Tuple, Union  # noqa
 
@@ -50,7 +51,7 @@ from opentelemetry.trace import (
     get_current_span,
 )
 from opentelemetry.trace.span import TraceFlags
-from opentelemetry.util.types import Attributes
+from opentelemetry.util.types import AnyValue, Attributes
 
 _logger = logging.getLogger(__name__)
 
@@ -107,7 +108,6 @@ class LogLimits:
         max_attributes: Optional[int] = None,
         max_attribute_length: Optional[int] = None,
     ):
-
         # attribute count
         global_max_attributes = self._from_env_if_absent(
             max_attributes, OTEL_ATTRIBUTE_COUNT_LIMIT
@@ -179,7 +179,7 @@ class LogRecord(APILogRecord):
         trace_flags: Optional[TraceFlags] = None,
         severity_text: Optional[str] = None,
         severity_number: Optional[SeverityNumber] = None,
-        body: Optional[Any] = None,
+        body: Optional[AnyValue] = None,
         resource: Optional[Resource] = None,
         attributes: Optional[Attributes] = None,
         limits: Optional[LogLimits] = _UnsetLogLimits,
@@ -221,7 +221,9 @@ class LogRecord(APILogRecord):
         return json.dumps(
             {
                 "body": self.body,
-                "severity_number": repr(self.severity_number),
+                "severity_number": self.severity_number.value
+                if self.severity_number is not None
+                else None,
                 "severity_text": self.severity_text,
                 "attributes": (
                     dict(self.attributes) if bool(self.attributes) else None
@@ -438,6 +440,7 @@ _RESERVED_ATTRS = frozenset(
         "exc_text",
         "filename",
         "funcName",
+        "getMessage",
         "message",
         "levelname",
         "levelno",
@@ -471,9 +474,6 @@ class LoggingHandler(logging.Handler):
     ) -> None:
         super().__init__(level=level)
         self._logger_provider = logger_provider or get_logger_provider()
-        self._logger = get_logger(
-            __name__, logger_provider=self._logger_provider
-        )
 
     @staticmethod
     def _get_attributes(record: logging.LogRecord) -> Attributes:
@@ -506,48 +506,26 @@ class LoggingHandler(logging.Handler):
         observered_timestamp = time_ns()
         span_context = get_current_span().get_span_context()
         attributes = self._get_attributes(record)
-        # This comment is taken from GanyedeNil's PR #3343, I have redacted it
-        # slightly for clarity:
-        # According to the definition of the Body field type in the
-        # OTel 1.22.0 Logs Data Model article, the Body field should be of
-        # type 'any' and should not use the str method to directly translate
-        # the msg. This is because str only converts non-text types into a
-        # human-readable form, rather than a standard format, which leads to
-        # the need for additional operations when collected through a log
-        # collector.
-        # Considering that he Body field should be of type 'any' and should not
-        # use the str method but record.msg is also a string type, then the
-        # difference is just the self.args formatting?
-        # The primary consideration depends on the ultimate purpose of the log.
-        # Converting the default log directly into a string is acceptable as it
-        # will be required to be presented in a more readable format. However,
-        # this approach might not be as "standard" when hoping to aggregate
-        # logs and perform subsequent data analysis. In the context of log
-        # extraction, it would be more appropriate for the msg to be
-        # converted into JSON format or remain unchanged, as it will eventually
-        # be transformed into JSON. If the final output JSON data contains a
-        # structure that appears similar to JSON but is not, it may confuse
-        # users. This is particularly true for operation and maintenance
-        # personnel who need to deal with log data in various languages.
-        # Where is the JSON converting occur? and what about when the msg
-        # represents something else but JSON, the expected behavior change?
-        # For the ConsoleLogExporter, it performs the to_json operation in
-        # opentelemetry.sdk._logs._internal.export.ConsoleLogExporter.__init__,
-        # so it can handle any type of input without problems. As for the
-        # OTLPLogExporter, it also handles any type of input encoding in
-        # _encode_log located in
-        # opentelemetry.exporter.otlp.proto.common._internal._log_encoder.
-        # Therefore, no extra operation is needed to support this change.
-        # The only thing to consider is the users who have already been using
-        # this SDK. If they upgrade the SDK after this change, they will need
-        # to readjust their logging collection rules to adapt to the latest
-        # output format. Therefore, this change is considered a breaking
-        # change and needs to be upgraded at an appropriate time.
         severity_number = std_to_otel(record.levelno)
-        if isinstance(record.msg, str) and record.args:
-            body = record.msg % record.args
+        if self.formatter:
+            body = self.format(record)
         else:
-            body = record.msg
+            # `record.getMessage()` uses `record.msg` as a template to format
+            # `record.args` into. There is a special case in `record.getMessage()`
+            # where it will only attempt formatting if args are provided,
+            # otherwise, it just stringifies `record.msg`.
+            #
+            # Since the OTLP body field has a type of 'any' and the logging module
+            # is sometimes used in such a way that objects incorrectly end up
+            # set as record.msg, in those cases we would like to bypass
+            # `record.getMessage()` completely and set the body to the object
+            # itself instead of its string representation.
+            # For more background, see: https://github.com/open-telemetry/opentelemetry-python/pull/4216
+            if not record.args and not isinstance(record.msg, str):
+                # no args are provided so it's *mostly* safe to use the message template as the body
+                body = record.msg
+            else:
+                body = record.getMessage()
 
         # related to https://github.com/open-telemetry/opentelemetry-python/issues/3548
         # Severity Text = WARN as defined in https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/logs/data-model.md#displaying-severity.
@@ -555,6 +533,7 @@ class LoggingHandler(logging.Handler):
             "WARN" if record.levelname == "WARNING" else record.levelname
         )
 
+        logger = get_logger(record.name, logger_provider=self._logger_provider)
         return LogRecord(
             timestamp=timestamp,
             observed_timestamp=observered_timestamp,
@@ -564,7 +543,7 @@ class LoggingHandler(logging.Handler):
             severity_text=level_name,
             severity_number=severity_number,
             body=body,
-            resource=self._logger.resource,
+            resource=logger.resource,
             attributes=attributes,
         )
 
@@ -574,14 +553,17 @@ class LoggingHandler(logging.Handler):
 
         The record is translated to OTel format, and then sent across the pipeline.
         """
-        if not isinstance(self._logger, NoOpLogger):
-            self._logger.emit(self._translate(record))
+        logger = get_logger(record.name, logger_provider=self._logger_provider)
+        if not isinstance(logger, NoOpLogger):
+            logger.emit(self._translate(record))
 
     def flush(self) -> None:
         """
-        Flushes the logging output. Skip flushing if logger is NoOp.
+        Flushes the logging output. Skip flushing if logging_provider has no force_flush method.
         """
-        if not isinstance(self._logger, NoOpLogger):
+        if hasattr(self._logger_provider, "force_flush") and callable(
+            self._logger_provider.force_flush
+        ):
             self._logger_provider.force_flush()
 
 
@@ -639,26 +621,20 @@ class LoggerProvider(APILoggerProvider):
         self._at_exit_handler = None
         if shutdown_on_exit:
             self._at_exit_handler = atexit.register(self.shutdown)
+        self._logger_cache = {}
+        self._logger_cache_lock = Lock()
 
     @property
     def resource(self):
         return self._resource
 
-    def get_logger(
+    def _get_logger_no_cache(
         self,
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
         attributes: Optional[Attributes] = None,
     ) -> Logger:
-        if self._disabled:
-            _logger.warning("SDK is disabled.")
-            return NoOpLogger(
-                name,
-                version=version,
-                schema_url=schema_url,
-                attributes=attributes,
-            )
         return Logger(
             self._resource,
             self._multi_log_record_processor,
@@ -669,6 +645,41 @@ class LoggerProvider(APILoggerProvider):
                 attributes,
             ),
         )
+
+    def _get_logger_cached(
+        self,
+        name: str,
+        version: Optional[str] = None,
+        schema_url: Optional[str] = None,
+    ) -> Logger:
+        with self._logger_cache_lock:
+            key = (name, version, schema_url)
+            if key in self._logger_cache:
+                return self._logger_cache[key]
+
+            self._logger_cache[key] = self._get_logger_no_cache(
+                name, version, schema_url
+            )
+            return self._logger_cache[key]
+
+    def get_logger(
+        self,
+        name: str,
+        version: Optional[str] = None,
+        schema_url: Optional[str] = None,
+        attributes: Optional[Attributes] = None,
+    ) -> Logger:
+        if self._disabled:
+            warnings.warn("SDK is disabled.")
+            return NoOpLogger(
+                name,
+                version=version,
+                schema_url=schema_url,
+                attributes=attributes,
+            )
+        if attributes is None:
+            return self._get_logger_cached(name, version, schema_url)
+        return self._get_logger_no_cache(name, version, schema_url, attributes)
 
     def add_log_record_processor(
         self, log_record_processor: LogRecordProcessor

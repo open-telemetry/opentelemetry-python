@@ -29,7 +29,7 @@ classifiers = [
 ]
 dependencies = [
   "opentelemetry-api ~= 1.3",
-  "opentelemetry-exporter-zipkin-json == 1.28.0.dev",
+  "opentelemetry-exporter-zipkin-json == 1.29.0.dev",
   "opentelemetry-sdk ~= 1.11",
   "protobuf ~= 3.12",
   "requests ~= 2.7",
@@ -42,7 +42,7 @@ zipkin_proto = "opentelemetry.exporter.zipkin.proto.http:ZipkinExporter"
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/exporter/opentelemetry-exporter-zipkin-proto-http"
 
 [tool.hatch.version]
-path = "src/opentelemetry/exporter/zipkin/proto/http/version.py"
+path = "src/opentelemetry/exporter/zipkin/proto/http/version/__init__.py"
 
 [tool.hatch.build.targets.sdist]
 include = [

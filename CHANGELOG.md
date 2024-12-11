@@ -9,7 +9,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add type annotations to context's attach & detach
   ([#4164](https://github.com/open-telemetry/opentelemetry-python/pull/4164))
+- Fix crash exporting a log record with None body
+  ([#4276](https://github.com/open-telemetry/opentelemetry-python/pull/4276))
+- Fix metrics export with exemplar and no context and filtering observable instruments
+  ([#4251](https://github.com/open-telemetry/opentelemetry-python/pull/4251))
+- Fix recursion error with sdk disabled and handler added to root logger
+  ([#4259](https://github.com/open-telemetry/opentelemetry-python/pull/4259))
+- sdk: setup EventLogger when OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED is set
+  ([#4270](https://github.com/open-telemetry/opentelemetry-python/pull/4270))
+- api: fix logging of duplicate EventLogger setup warning
+  ([#4299](https://github.com/open-telemetry/opentelemetry-python/pull/4299))
+- sdk: fix setting of process owner in ProcessResourceDetector
+  ([#4311](https://github.com/open-telemetry/opentelemetry-python/pull/4311))
+- sdk: fix serialization of logs severity_number field to int
+  ([#4324](https://github.com/open-telemetry/opentelemetry-python/pull/4324))
+- Remove `TestBase.assertEqualSpanInstrumentationInfo` method, use `assertEqualSpanInstrumentationScope` instead
+  ([#4310](https://github.com/open-telemetry/opentelemetry-python/pull/4310))
+- sdk: instantiate lazily `ExemplarBucket`s in `ExemplarReservoir`s
+  ([#4260](https://github.com/open-telemetry/opentelemetry-python/pull/4260))
+- semantic-conventions: Bump to 1.29.0
+  ([#4337](https://github.com/open-telemetry/opentelemetry-python/pull/4337))
 
+## Version 1.28.0/0.49b0 (2024-11-05)
+
+- Removed superfluous py.typed markers and added them where they were missing
+  ([#4172](https://github.com/open-telemetry/opentelemetry-python/pull/4172))
+- Include metric info in encoding exceptions
+  ([#4154](https://github.com/open-telemetry/opentelemetry-python/pull/4154))
+- sdk: Add support for log formatting
+  ([#4137](https://github.com/open-telemetry/opentelemetry-python/pull/4166))
+- sdk: Add Host resource detector
+  ([#4182](https://github.com/open-telemetry/opentelemetry-python/pull/4182))
+- sdk: Implementation of exemplars
+  ([#4094](https://github.com/open-telemetry/opentelemetry-python/pull/4094))
+- Implement events sdk
+  ([#4176](https://github.com/open-telemetry/opentelemetry-python/pull/4176))
+- Update semantic conventions to version 1.28.0
+  ([#4218](https://github.com/open-telemetry/opentelemetry-python/pull/4218))
+- Add support to protobuf 5+ and drop support to protobuf 3 and 4
+  ([#4206](https://github.com/open-telemetry/opentelemetry-python/pull/4206))
+- Update environment variable descriptions to match signal
+  ([#4222](https://github.com/open-telemetry/opentelemetry-python/pull/4222))
+- Record logger name as the instrumentation scope name
+  ([#4208](https://github.com/open-telemetry/opentelemetry-python/pull/4208))
+- Fix memory leak in exporter and reader
+  ([#4224](https://github.com/open-telemetry/opentelemetry-python/pull/4224))
+- Drop `OTEL_PYTHON_EXPERIMENTAL_DISABLE_PROMETHEUS_UNIT_NORMALIZATION` environment variable
+  ([#4217](https://github.com/open-telemetry/opentelemetry-python/pull/4217))
+- Improve compatibility with other logging libraries that override
+  `LogRecord.getMessage()` in order to customize message formatting
+  ([#4216](https://github.com/open-telemetry/opentelemetry-python/pull/4216))
 
 ## Version 1.27.0/0.48b0 (2024-08-28)
 

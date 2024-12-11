@@ -270,7 +270,7 @@ OTEL_EXPORTER_OTLP_PROTOCOL = "OTEL_EXPORTER_OTLP_PROTOCOL"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_PROTOCOL
 
-The :envvar:`OTEL_EXPORTER_OTLP_PROTOCOL` represents the the transport protocol for the
+The :envvar:`OTEL_EXPORTER_OTLP_PROTOCOL` represents the transport protocol for the
 OTLP exporter.
 """
 
@@ -278,21 +278,21 @@ OTEL_EXPORTER_OTLP_TRACES_PROTOCOL = "OTEL_EXPORTER_OTLP_TRACES_PROTOCOL"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_TRACES_PROTOCOL
 
-The :envvar:`OTEL_EXPORTER_OTLP_TRACES_PROTOCOL` represents the the transport protocol for spans.
+The :envvar:`OTEL_EXPORTER_OTLP_TRACES_PROTOCOL` represents the transport protocol for spans.
 """
 
 OTEL_EXPORTER_OTLP_METRICS_PROTOCOL = "OTEL_EXPORTER_OTLP_METRICS_PROTOCOL"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_METRICS_PROTOCOL
 
-The :envvar:`OTEL_EXPORTER_OTLP_METRICS_PROTOCOL` represents the the transport protocol for metrics.
+The :envvar:`OTEL_EXPORTER_OTLP_METRICS_PROTOCOL` represents the transport protocol for metrics.
 """
 
 OTEL_EXPORTER_OTLP_LOGS_PROTOCOL = "OTEL_EXPORTER_OTLP_LOGS_PROTOCOL"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_LOGS_PROTOCOL
 
-The :envvar:`OTEL_EXPORTER_OTLP_LOGS_PROTOCOL` represents the the transport protocol for logs.
+The :envvar:`OTEL_EXPORTER_OTLP_LOGS_PROTOCOL` represents the transport protocol for logs.
 """
 
 OTEL_EXPORTER_OTLP_CERTIFICATE = "OTEL_EXPORTER_OTLP_CERTIFICATE"
@@ -561,7 +561,7 @@ OTEL_EXPORTER_OTLP_LOGS_INSECURE = "OTEL_EXPORTER_OTLP_LOGS_INSECURE"
 .. envvar:: OTEL_EXPORTER_OTLP_LOGS_INSECURE
 
 The :envvar:`OTEL_EXPORTER_OTLP_LOGS_INSECURE` represents whether to enable client transport security
-for gRPC requests for metrics. A scheme of https takes precedence over the this configuration setting.
+for gRPC requests for logs. A scheme of https takes precedence over the this configuration setting.
 Default: False
 """
 
@@ -581,7 +581,7 @@ OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE = (
 .. envvar:: OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE
 
 The :envvar:`OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE` stores the path to the certificate file for
-TLS credentials of gRPC client for traces. Should only be used for a secure connection for tracing.
+TLS credentials of gRPC client for metrics. Should only be used for a secure connection for metrics.
 """
 
 OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE = "OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE"
@@ -589,7 +589,7 @@ OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE = "OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE"
 .. envvar:: OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE
 
 The :envvar:`OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE` stores the path to the certificate file for
-TLS credentials of gRPC client for traces. Should only be used for a secure connection for tracing.
+TLS credentials of gRPC client for logs. Should only be used for a secure connection for logs.
 """
 
 OTEL_EXPORTER_OTLP_METRICS_HEADERS = "OTEL_EXPORTER_OTLP_METRICS_HEADERS"
@@ -779,22 +779,4 @@ Default: 9464
 
 This is an experimental environment variable and the name of this variable and its behavior can
 change in a non-backwards compatible way.
-"""
-
-
-# TODO(#3929): remove this opt-out option
-OTEL_PYTHON_EXPERIMENTAL_DISABLE_PROMETHEUS_UNIT_NORMALIZATION = (
-    "OTEL_PYTHON_EXPERIMENTAL_DISABLE_PROMETHEUS_UNIT_NORMALIZATION"
-)
-"""
-.. envvar:: OTEL_PYTHON_EXPERIMENTAL_DISABLE_PROMETHEUS_UNIT_NORMALIZATION
-
-The :envvar:`OTEL_PYTHON_EXPERIMENTAL_DISABLE_PROMETHEUS_UNIT_NORMALIZATION` environment
-variable allows you to opt-out of the unit normalization described `in the specification
-<https://github.com/open-telemetry/opentelemetry-specification/blob/v1.33.0/specification/compatibility/prometheus_and_openmetrics.md#metric-metadata-1>`_.
-
-Default: False
-
-This is an temporary environment variable that provides backward compatibility but will be
-removed in the future https://github.com/open-telemetry/opentelemetry-python/issues/3929.
 """

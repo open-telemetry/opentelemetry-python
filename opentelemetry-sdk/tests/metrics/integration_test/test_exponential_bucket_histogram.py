@@ -29,7 +29,6 @@ from opentelemetry.sdk.metrics.view import (
 
 
 class TestExponentialBucketHistogramAggregation(TestCase):
-
     test_values = [2, 4, 1, 1, 8, 0.5, 0.1, 0.045]
 
     @mark.skipif(
@@ -67,7 +66,6 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         results = []
 
         for _ in range(10):
-
             results.append(reader.get_metrics_data())
 
         for metrics_data in results:
@@ -132,10 +130,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         results = []
 
         for _ in range(10):
-
             results.append(reader.get_metrics_data())
-
-        provider.shutdown()
 
         for metrics_data in results:
             self.assertIsNone(metrics_data)
@@ -186,7 +181,6 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         ),
     )
     def test_synchronous_cumulative_temporality(self):
-
         aggregation = ExponentialBucketHistogramAggregation()
 
         reader = InMemoryMetricReader(

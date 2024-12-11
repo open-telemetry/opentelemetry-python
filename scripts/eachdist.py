@@ -13,6 +13,8 @@ from itertools import chain
 from os.path import basename
 from pathlib import Path, PurePath
 
+from toml import load
+
 DEFAULT_ALLSEP = " "
 DEFAULT_ALLFMT = "{rel}"
 
@@ -233,6 +235,16 @@ def parse_args(args=None):
     releaseparser.add_argument(
         "releaseargs", nargs=argparse.REMAINDER, help=extraargs_help("pytest")
     )
+
+    patchreleaseparser = subparsers.add_parser(
+        "update_patch_versions",
+        help="Updates version numbers during patch release, used by maintainers and CI",
+    )
+    patchreleaseparser.set_defaults(func=patch_release_args)
+    patchreleaseparser.add_argument("--stable_version", required=True)
+    patchreleaseparser.add_argument("--unstable_version", required=True)
+    patchreleaseparser.add_argument("--stable_version_prev", required=True)
+    patchreleaseparser.add_argument("--unstable_version_prev", required=True)
 
     fmtparser = subparsers.add_parser(
         "format",
@@ -507,7 +519,8 @@ def lint_args(args):
 
     runsubprocess(
         args.dry_run,
-        ("black", "--config", "pyproject.toml", ".") + (("--diff", "--check") if args.check_only else ()),
+        ("black", "--config", "pyproject.toml", ".")
+        + (("--diff", "--check") if args.check_only else ()),
         cwd=rootdir,
         check=True,
     )
@@ -518,7 +531,9 @@ def lint_args(args):
         cwd=rootdir,
         check=True,
     )
-    runsubprocess(args.dry_run, ("flake8", "--config", ".flake8", rootdir), check=True)
+    runsubprocess(
+        args.dry_run, ("flake8", "--config", ".flake8", rootdir), check=True
+    )
     execute_args(
         parse_subargs(
             args, ("exec", "pylint {}", "--all", "--mode", "lintroots")
@@ -554,25 +569,56 @@ def filter_packages(targets, packages):
 
 
 def update_version_files(targets, version, packages):
-    print("updating version.py files")
-    targets = filter_packages(targets, packages)
-    update_files(
-        targets,
-        "version.py",
-        "__version__ .*",
-        f'__version__ = "{version}"',
-    )
+    print("updating version/__init__.py files")
+
+    search = "__version__ .*"
+    replace = f'__version__ = "{version}"'
+
+    for target in filter_packages(targets, packages):
+        version_file_path = target.joinpath(
+            load(target.joinpath("pyproject.toml"))["tool"]["hatch"][
+                "version"
+            ]["path"]
+        )
+
+        with open(version_file_path) as file:
+            text = file.read()
+
+        if replace in text:
+            print(f"{version_file_path} already contains {replace}")
+            continue
+
+        with open(version_file_path, "w", encoding="utf-8") as file:
+            file.write(re.sub(search, replace, text))
 
 
 def update_dependencies(targets, version, packages):
     print("updating dependencies")
     # PEP 508 allowed specifier operators
-    operators = ['==', '!=', '<=', '>=', '<', '>', '===', '~=', '=']
-    operators_pattern = '|'.join(re.escape(op) for op in operators)
+    operators = ["==", "!=", "<=", ">=", "<", ">", "===", "~=", "="]
+    operators_pattern = "|".join(re.escape(op) for op in operators)
 
     for pkg in packages:
         search = rf"({basename(pkg)}[^,]*)({operators_pattern})(.*\.dev)"
         replace = r"\1\2 " + version
+        update_files(
+            targets,
+            "pyproject.toml",
+            search,
+            replace,
+        )
+
+
+def update_patch_dependencies(targets, version, prev_version, packages):
+    print("updating patch dependencies")
+    # PEP 508 allowed specifier operators
+    operators = ["==", "!=", "<=", ">=", "<", ">", "===", "~=", "="]
+    operators_pattern = "|".join(re.escape(op) for op in operators)
+
+    for pkg in packages:
+        search = rf"({basename(pkg)}[^,]*?)(\s?({operators_pattern})\s?)(.*{prev_version})"
+        replace = r"\g<1>\g<2>" + version
+        print(f"{search=}\t{replace=}\t{pkg=}")
         update_files(
             targets,
             "pyproject.toml",
@@ -622,6 +668,32 @@ def release_args(args):
         update_version_files(targets, version, packages)
 
 
+def patch_release_args(args):
+    print("preparing patch release")
+
+    rootpath = find_projectroot()
+    targets = list(find_targets_unordered(rootpath))
+    cfg = ConfigParser()
+    cfg.read(str(find_projectroot() / "eachdist.ini"))
+    # stable
+    mcfg = cfg["stable"]
+    packages = mcfg["packages"].split()
+    print(f"update stable packages to {args.stable_version}")
+    update_patch_dependencies(
+        targets, args.stable_version, args.stable_version_prev, packages
+    )
+    update_version_files(targets, args.stable_version, packages)
+
+    # prerelease
+    mcfg = cfg["prerelease"]
+    packages = mcfg["packages"].split()
+    print(f"update prerelease packages to {args.unstable_version}")
+    update_patch_dependencies(
+        targets, args.unstable_version, args.unstable_version_prev, packages
+    )
+    update_version_files(targets, args.unstable_version, packages)
+
+
 def test_args(args):
     clean_remainder_args(args.pytestargs)
     execute_args(
@@ -650,7 +722,14 @@ def format_args(args):
     )
     runsubprocess(
         args.dry_run,
-        ("isort", "--settings-path", f"{root_dir}/.isort.cfg", "--profile", "black", "."),
+        (
+            "isort",
+            "--settings-path",
+            f"{root_dir}/.isort.cfg",
+            "--profile",
+            "black",
+            ".",
+        ),
         cwd=format_dir,
         check=True,
     )

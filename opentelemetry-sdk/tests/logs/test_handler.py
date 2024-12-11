@@ -11,9 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import logging
+import os
 import unittest
-from unittest.mock import Mock
+import warnings
+from unittest.mock import Mock, patch
 
 from opentelemetry._logs import NoOpLoggerProvider, SeverityNumber
 from opentelemetry._logs import get_logger as APIGetLogger
@@ -242,13 +245,68 @@ class TestLoggingHandler(unittest.TestCase):
             self.assertEqual(log_record.span_id, span_context.span_id)
             self.assertEqual(log_record.trace_flags, span_context.trace_flags)
 
+    def test_warning_without_formatter(self):
+        processor, logger = set_up_test_logging(logging.WARNING)
+        logger.warning("Test message")
 
-def set_up_test_logging(level):
+        log_record = processor.get_log_record(0)
+        self.assertEqual(log_record.body, "Test message")
+
+    def test_exception_without_formatter(self):
+        processor, logger = set_up_test_logging(logging.WARNING)
+        logger.exception("Test exception")
+
+        log_record = processor.get_log_record(0)
+        self.assertEqual(log_record.body, "Test exception")
+
+    def test_warning_with_formatter(self):
+        processor, logger = set_up_test_logging(
+            logging.WARNING,
+            formatter=logging.Formatter(
+                "%(name)s - %(levelname)s - %(message)s"
+            ),
+        )
+        logger.warning("Test message")
+
+        log_record = processor.get_log_record(0)
+        self.assertEqual(log_record.body, "foo - WARNING - Test message")
+
+    def test_log_body_is_always_string_with_formatter(self):
+        processor, logger = set_up_test_logging(
+            logging.WARNING,
+            formatter=logging.Formatter(
+                "%(name)s - %(levelname)s - %(message)s"
+            ),
+        )
+        logger.warning(["something", "of", "note"])
+
+        log_record = processor.get_log_record(0)
+        self.assertIsInstance(log_record.body, str)
+
+    @patch.dict(os.environ, {"OTEL_SDK_DISABLED": "true"})
+    def test_handler_root_logger_with_disabled_sdk_does_not_go_into_recursion_error(
+        self,
+    ):
+        processor, logger = set_up_test_logging(
+            logging.NOTSET, root_logger=True
+        )
+        with warnings.catch_warnings(record=True) as cw:
+            logger.warning("hello")
+
+        self.assertEqual(len(cw), 1)
+        self.assertEqual("SDK is disabled.", str(cw[0].message))
+
+        self.assertEqual(processor.emit_count(), 0)
+
+
+def set_up_test_logging(level, formatter=None, root_logger=False):
     logger_provider = LoggerProvider()
     processor = FakeProcessor()
     logger_provider.add_log_record_processor(processor)
-    logger = logging.getLogger("foo")
+    logger = logging.getLogger(None if root_logger else "foo")
     handler = LoggingHandler(level=level, logger_provider=logger_provider)
+    if formatter:
+        handler.setFormatter(formatter)
     logger.addHandler(handler)
     return processor, logger
 

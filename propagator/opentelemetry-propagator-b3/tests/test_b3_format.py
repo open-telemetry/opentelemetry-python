@@ -29,7 +29,6 @@ from opentelemetry.trace.propagation import _SPAN_KEY
 
 
 def get_child_parent_new_carrier(old_carrier, propagator):
-
     ctx = propagator.extract(old_carrier)
     parent_span_context = trace_api.get_current_span(ctx).get_span_context()
 

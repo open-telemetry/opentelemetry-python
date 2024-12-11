@@ -211,3 +211,25 @@ def create_process_thread_count(meter: Meter) -> UpDownCounter:
         description="Process threads count.",
         unit="{thread}",
     )
+
+
+PROCESS_UPTIME: Final = "process.uptime"
+"""
+The time the process has been running
+Instrument: gauge
+Unit: s
+Note: Instrumentations SHOULD use a gauge with type `double` and measure uptime in seconds as a floating point number with the highest precision available.
+The actual accuracy would depend on the instrumentation and operating system.
+"""
+
+
+def create_process_uptime(
+    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+) -> ObservableGauge:
+    """The time the process has been running"""
+    return meter.create_observable_gauge(
+        name=PROCESS_UPTIME,
+        callbacks=callbacks,
+        description="The time the process has been running.",
+        unit="s",
+    )

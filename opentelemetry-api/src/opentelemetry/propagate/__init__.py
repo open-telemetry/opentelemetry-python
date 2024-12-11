@@ -134,7 +134,6 @@ for propagator in environ_propagators.split(","):
     propagator = propagator.strip()
 
     try:
-
         propagators.append(  # type: ignore
             next(  # type: ignore
                 iter(  # type: ignore

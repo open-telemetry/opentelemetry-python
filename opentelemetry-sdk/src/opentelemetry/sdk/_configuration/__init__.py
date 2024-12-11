@@ -25,6 +25,7 @@ from typing import Callable, Dict, List, Optional, Sequence, Tuple, Type, Union
 
 from typing_extensions import Literal
 
+from opentelemetry._events import set_event_logger_provider
 from opentelemetry._logs import set_logger_provider
 from opentelemetry.environment_variables import (
     OTEL_LOGS_EXPORTER,
@@ -33,6 +34,7 @@ from opentelemetry.environment_variables import (
     OTEL_TRACES_EXPORTER,
 )
 from opentelemetry.metrics import set_meter_provider
+from opentelemetry.sdk._events import EventLoggerProvider
 from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
 from opentelemetry.sdk._logs.export import BatchLogRecordProcessor, LogExporter
 from opentelemetry.sdk.environment_variables import (
@@ -91,7 +93,6 @@ _logger = logging.getLogger(__name__)
 def _import_config_components(
     selected_components: List[str], entry_point_name: str
 ) -> Sequence[Tuple[str, object]]:
-
     component_implementations = []
 
     for selected_component in selected_components:
@@ -109,13 +110,11 @@ def _import_config_components(
                 )
             )
         except KeyError:
-
             raise RuntimeError(
                 f"Requested entry point '{entry_point_name}' not found"
             )
 
         except StopIteration:
-
             raise RuntimeError(
                 f"Requested component '{selected_component}' not found in "
                 f"entry point '{entry_point_name}'"
@@ -177,7 +176,7 @@ def _get_exporter_entry_point(
 
 
 def _get_exporter_names(
-    signal_type: Literal["traces", "metrics", "logs"]
+    signal_type: Literal["traces", "metrics", "logs"],
 ) -> Sequence[str]:
     names = environ.get(_EXPORTER_ENV_BY_SIGNAL_TYPE.get(signal_type, ""))
 
@@ -250,6 +249,9 @@ def _init_logging(
     handler = LoggingHandler(level=logging.NOTSET, logger_provider=provider)
 
     logging.getLogger().addHandler(handler)
+
+    event_logger_provider = EventLoggerProvider(logger_provider=provider)
+    set_event_logger_provider(event_logger_provider)
 
 
 def _import_exporters(
@@ -424,7 +426,6 @@ class _BaseConfigurator(ABC):
     _is_instrumented = False
 
     def __new__(cls, *args, **kwargs):
-
         if cls._instance is None:
             cls._instance = object.__new__(cls, *args, **kwargs)
 

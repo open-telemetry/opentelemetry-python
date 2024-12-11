@@ -29,7 +29,6 @@ removed_symbols = defaultdict(list)
 
 
 def get_symbols(change_type, diff_lines_getter, prefix):
-
     if change_type == "D" or prefix == r"\-":
         file_path_symbols = removed_symbols
     else:
@@ -40,7 +39,6 @@ def get_symbols(change_type, diff_lines_getter, prefix):
         .diff(repo.head.commit)
         .iter_change_type(change_type)
     ):
-
         if diff_lines.b_blob is None:
             # This happens if a file has been removed completely.
             b_file_path = diff_lines.a_blob.path
@@ -53,9 +51,12 @@ def get_symbols(change_type, diff_lines_getter, prefix):
             or "opentelemetry" not in b_file_path
             or any(
                 # single leading underscore
-                part[0] == "_" and part[1] != "_"
+                part[0] == "_"
+                and part[1] != "_"
                 # tests directories
                 or part == "tests"
+                # benchmarks directories
+                or part == "benchmarks"
                 for part in b_file_path_obj.parts
             )
         ):
@@ -139,7 +140,7 @@ if added_symbols or removed_symbols:
     print(
         "Please make sure that all of them are strictly necessary, if not, "
         "please consider prefixing them with an underscore to make them "
-        'private. After that, please label this PR with "Skip Public API '
+        'private. After that, please label this PR with "Approve Public API '
         'check".'
     )
     print()
@@ -154,7 +155,7 @@ if added_symbols or removed_symbols:
     print(
         "Please make sure no public symbols are removed, if so, please "
         "consider deprecating them instead. After that, please label this "
-        'PR with "Skip Public API check".'
+        'PR with "Approve Public API check".'
     )
     exit(1)
 else:

@@ -1,7 +1,4 @@
-pylint==3.0.2
-flake8==6.1.0
-isort==5.12.0
-black==24.3.0
+pylint==3.2.1
 httpretty==1.1.4
 mypy==1.9.0
 sphinx==7.1.2
@@ -20,3 +17,4 @@ psutil==5.9.6
 GitPython==3.1.41
 pre-commit==3.7.0; python_version >= '3.9'
 pre-commit==3.5.0; python_version < '3.9'
+ruff==0.6.9
