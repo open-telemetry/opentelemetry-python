@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 - Add type annotations to context's attach & detach
-  ([#4164](https://github.com/open-telemetry/opentelemetry-python/pull/4164))
+  ([#4164](https://github.com/open-telemetry/opentelemetry-python/pull/4346))
 - Fix crash exporting a log record with None body
   ([#4276](https://github.com/open-telemetry/opentelemetry-python/pull/4276))
 - Fix metrics export with exemplar and no context and filtering observable instruments
