@@ -49,7 +49,7 @@ _logger = getLogger(__name__)
 
 
 class Logger(ABC):
-    """Handles emitting events and logs via `LogRecord`."""
+    """Handles emitting events and logs."""
 
     def __init__(
         self,
@@ -75,7 +75,7 @@ class Logger(ABC):
     @abstractmethod
     def emit(
         self,
-        name: str = None,
+        event_name: str = None,
         timestamp: Optional[int] = None,
         observed_timestamp: Optional[int] = None,
         severity_number: Optional[SeverityNumber] = None,
@@ -102,7 +102,7 @@ class NoOpLogger(Logger):
 
     def emit(
         self,
-        name: str = None,
+        event_name: str = None,
         timestamp: Optional[int] = None,
         observed_timestamp: Optional[int] = None,
         severity_number: Optional[SeverityNumber] = None,
@@ -155,7 +155,7 @@ class ProxyLogger(Logger):
 
     def emit(
         self,
-        name: str = None,
+        event_name: str = None,
         timestamp: Optional[int] = None,
         observed_timestamp: Optional[int] = None,
         severity_number: Optional[SeverityNumber] = None,
@@ -165,7 +165,7 @@ class ProxyLogger(Logger):
         attributes: Optional[Attributes] = None,
     ) -> None:
         self._logger.emit(
-            name=name,
+            event_name=event_name,
             timestamp=timestamp,
             observed_timestamp=observed_timestamp,
             severity_number=severity_number,
