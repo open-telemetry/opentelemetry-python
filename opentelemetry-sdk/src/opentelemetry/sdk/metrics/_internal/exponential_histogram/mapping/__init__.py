@@ -21,18 +21,18 @@ class Mapping(ABC):
     """
 
     # pylint: disable=no-member
-    def __new__(cls, scale: int):
-        with cls._mappings_lock:
+    def __new__(cls, scale: int) -> "Mapping":
+        with cls._mappings_lock:  # type: ignore
             # cls._mappings and cls._mappings_lock are implemented in each of
             # the child classes as a dictionary and a lock, respectively. They
             # are not instantiated here because that would lead to both child
             # classes having the same instance of cls._mappings and
             # cls._mappings_lock.
-            if scale not in cls._mappings:
-                cls._mappings[scale] = super().__new__(cls)
-                cls._mappings[scale]._init(scale)
+            if scale not in cls._mappings:  # type: ignore
+                cls._mappings[scale] = super().__new__(cls)  # type: ignore
+                cls._mappings[scale]._init(scale)  # type: ignore
 
-        return cls._mappings[scale]
+        return cls._mappings[scale]  # type: ignore
 
     @abstractmethod
     def _init(self, scale: int) -> None:
@@ -40,11 +40,11 @@ class Mapping(ABC):
 
         if scale > self._get_max_scale():
             # pylint: disable=broad-exception-raised
-            raise Exception(f"scale is larger than {self._max_scale}")
+            raise Exception(f"scale is larger than {self._max_scale}")  # type: ignore
 
         if scale < self._get_min_scale():
             # pylint: disable=broad-exception-raised
-            raise Exception(f"scale is smaller than {self._min_scale}")
+            raise Exception(f"scale is smaller than {self._min_scale}")  # type: ignore
 
         # The size of the exponential histogram buckets is determined by a
         # parameter known as scale, larger values of scale will produce smaller

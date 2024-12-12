@@ -136,6 +136,7 @@ class SpanProcessor:
         Returns:
             False if the timeout is exceeded, True otherwise.
         """
+        return False
 
 
 # Temporary fix until https://github.com/PyCQA/pylint/issues/4098 is resolved
@@ -150,7 +151,7 @@ class SynchronousMultiSpanProcessor(SpanProcessor):
 
     _span_processors: Tuple[SpanProcessor, ...]
 
-    def __init__(self):
+    def __init__(self) -> None:
         # use a tuple to avoid race conditions when adding a new span and
         # iterating through it on "on_start" and "on_end".
         self._span_processors = ()
@@ -236,10 +237,10 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
         func: Callable[[SpanProcessor], Callable[..., None]],
         *args: Any,
         **kwargs: Any,
-    ):
+    ) -> None:
         futures = []
         for sp in self._span_processors:
-            future = self._executor.submit(func(sp), *args, **kwargs)
+            future = self._executor.submit(func(sp), *args, **kwargs)  # type: ignore
             futures.append(future)
         for future in futures:
             future.result()
@@ -344,19 +345,19 @@ class Event(EventBase):
         return 0
 
 
-def _check_span_ended(func):
-    def wrapper(self, *args, **kwargs):
+def _check_span_ended(func):  # type: ignore
+    def wrapper(self, *args, **kwargs):  # type: ignore
         already_ended = False
-        with self._lock:  # pylint: disable=protected-access
-            if self._end_time is None:  # pylint: disable=protected-access
-                func(self, *args, **kwargs)
+        with self._lock:  # type: ignore # pylint: disable=protected-access
+            if self._end_time is None:  # type: ignore # pylint: disable=protected-access
+                func(self, *args, **kwargs)  # type: ignore
             else:
                 already_ended = True
 
         if already_ended:
-            logger.warning("Tried calling %s on an ended span.", func.__name__)
+            logger.warning("Tried calling %s on an ended span.", func.__name__)  # type: ignore
 
-    return wrapper
+    return wrapper  # type: ignore
 
 
 def _is_valid_link(context: SpanContext, attributes: types.Attributes) -> bool:
@@ -428,11 +429,11 @@ class ReadableSpan:
     def name(self) -> str:
         return self._name
 
-    def get_span_context(self):
+    def get_span_context(self) -> Optional[trace_api.SpanContext]:
         return self._context
 
     @property
-    def context(self):
+    def context(self) -> Optional[trace_api.SpanContext]:
         return self._context
 
     @property
@@ -472,7 +473,7 @@ class ReadableSpan:
         return self._resource
 
     @property
-    @deprecated(
+    @deprecated(  # type: ignore
         version="1.11.1", reason="You should use instrumentation_scope"
     )
     def instrumentation_info(self) -> Optional[InstrumentationInfo]:
@@ -482,7 +483,7 @@ class ReadableSpan:
     def instrumentation_scope(self) -> Optional[InstrumentationScope]:
         return self._instrumentation_scope
 
-    def to_json(self, indent: int = 4):
+    def to_json(self, indent: int = 4) -> str:
         parent_id = None
         if self.parent is not None:
             parent_id = f"0x{trace_api.format_span_id(self.parent.span_id)}"
@@ -501,7 +502,7 @@ class ReadableSpan:
         if self._status.description:
             status["description"] = self._status.description
 
-        f_span = {
+        f_span = {  # type: ignore
             "name": self._name,
             "context": (
                 self._format_context(self._context) if self._context else None
@@ -511,13 +512,13 @@ class ReadableSpan:
             "start_time": start_time,
             "end_time": end_time,
             "status": status,
-            "attributes": self._format_attributes(self._attributes),
-            "events": self._format_events(self._events),
-            "links": self._format_links(self._links),
-            "resource": json.loads(self.resource.to_json()),
+            "attributes": self._format_attributes(self._attributes),  # type: ignore
+            "events": self._format_events(self._events),  # type: ignore
+            "links": self._format_links(self._links),  # type: ignore
+            "resource": json.loads(self.resource.to_json()),  # type: ignore
         }
 
-        return json.dumps(f_span, indent=indent)
+        return json.dumps(f_span, indent=indent)  # type: ignore
 
     @staticmethod
     def _format_context(context: SpanContext) -> Dict[str, str]:
@@ -528,20 +529,20 @@ class ReadableSpan:
         }
 
     @staticmethod
-    def _format_attributes(
+    def _format_attributes(  # type: ignore
         attributes: types.Attributes,
     ) -> Optional[Dict[str, Any]]:
         if attributes is not None and not isinstance(attributes, dict):
-            return dict(attributes)
+            return dict(attributes)  # type: ignore
         return attributes
 
     @staticmethod
-    def _format_events(events: Sequence[Event]) -> List[Dict[str, Any]]:
-        return [
-            {
+    def _format_events(events: Sequence[Event]) -> List[Dict[str, Any]]:  # type: ignore
+        return [  # type: ignore
+            {  # type: ignore
                 "name": event.name,
                 "timestamp": util.ns_to_iso_str(event.timestamp),
-                "attributes": Span._format_attributes(  # pylint: disable=protected-access
+                "attributes": Span._format_attributes(  # type: ignore # pylint: disable=protected-access
                     event.attributes
                 ),
             }
@@ -549,13 +550,13 @@ class ReadableSpan:
         ]
 
     @staticmethod
-    def _format_links(links: Sequence[trace_api.Link]) -> List[Dict[str, Any]]:
-        return [
-            {
-                "context": Span._format_context(  # pylint: disable=protected-access
+    def _format_links(links: Sequence[trace_api.Link]) -> List[Dict[str, Any]]:  # type: ignore
+        return [  # type: ignore
+            {  # type: ignore
+                "context": Span._format_context(# pylint: disable=protected-access
                     link.context
                 ),
-                "attributes": Span._format_attributes(  # pylint: disable=protected-access
+                "attributes": Span._format_attributes(  # type: ignore # pylint: disable=protected-access
                     link.attributes
                 ),
             }
@@ -681,7 +682,7 @@ class SpanLimits:
             self.max_attribute_length,
         )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{type(self).__name__}(max_span_attributes={self.max_span_attributes}, max_events_attributes={self.max_event_attributes}, max_link_attributes={self.max_link_attributes}, max_attributes={self.max_attributes}, max_events={self.max_events}, max_links={self.max_links}, max_attribute_length={self.max_attribute_length})"
 
     @classmethod
@@ -754,7 +755,7 @@ class Span(trace_api.Span, ReadableSpan):
         limits: `SpanLimits` instance that was passed to the `TracerProvider`
     """
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs):  # type: ignore
         if cls is Span:
             raise TypeError("Span must be instantiated via a tracer.")
         return super().__new__(cls)
@@ -776,7 +777,7 @@ class Span(trace_api.Span, ReadableSpan):
         instrumentation_info: Optional[InstrumentationInfo] = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
-        limits=_UnsetLimits,
+        limits: SpanLimits = _UnsetLimits,
         instrumentation_scope: Optional[InstrumentationScope] = None,
     ) -> None:
         if resource is None:
@@ -803,7 +804,7 @@ class Span(trace_api.Span, ReadableSpan):
             immutable=False,
             max_value_len=self._limits.max_span_attribute_length,
         )
-        self._events = self._new_events()
+        self._events = self._new_events()  # type: ignore
         if events:
             for event in events:
                 event._attributes = BoundedAttributes(
@@ -811,19 +812,19 @@ class Span(trace_api.Span, ReadableSpan):
                     event.attributes,
                     max_value_len=self._limits.max_attribute_length,
                 )
-                self._events.append(event)
+                self._events.append(event)  # type: ignore
 
         self._links = self._new_links(links)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'{type(self).__name__}(name="{self._name}", context={self._context})'
 
-    def _new_events(self):
-        return BoundedList(self._limits.max_events)
+    def _new_events(self):  # type: ignore
+        return BoundedList(self._limits.max_events)  # type: ignore
 
-    def _new_links(self, links: Sequence[trace_api.Link]):
+    def _new_links(self, links: Sequence[trace_api.Link]):  # type: ignore
         if not links:
-            return BoundedList(self._limits.max_links)
+            return BoundedList(self._limits.max_links)  # type: ignore
 
         valid_links = []
         for link in links:
@@ -836,9 +837,9 @@ class Span(trace_api.Span, ReadableSpan):
                 )
                 valid_links.append(link)
 
-        return BoundedList.from_seq(self._limits.max_links, valid_links)
+        return BoundedList.from_seq(self._limits.max_links, valid_links)  # type: ignore
 
-    def get_span_context(self):
+    def get_span_context(self):  # type: ignore
         return self._context
 
     def set_attributes(
@@ -850,14 +851,14 @@ class Span(trace_api.Span, ReadableSpan):
                 return
 
             for key, value in attributes.items():
-                self._attributes[key] = value
+                self._attributes[key] = value  # type: ignore
 
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
         return self.set_attributes({key: value})
 
-    @_check_span_ended
+    @_check_span_ended  # type: ignore
     def _add_event(self, event: EventBase) -> None:
-        self._events.append(event)
+        self._events.append(event)  # type: ignore
 
     def add_event(
         self,
@@ -878,9 +879,9 @@ class Span(trace_api.Span, ReadableSpan):
             )
         )
 
-    @_check_span_ended
+    @_check_span_ended  # type: ignore
     def _add_link(self, link: trace_api.Link) -> None:
-        self._links.append(link)
+        self._links.append(link)  # type: ignore
 
     def add_link(
         self,
@@ -946,14 +947,14 @@ class Span(trace_api.Span, ReadableSpan):
 
         self._span_processor.on_end(self._readable_span())
 
-    @_check_span_ended
+    @_check_span_ended  # type: ignore
     def update_name(self, name: str) -> None:
         self._name = name
 
     def is_recording(self) -> bool:
         return self._end_time is None
 
-    @_check_span_ended
+    @_check_span_ended  # type: ignore
     def set_status(
         self,
         status: typing.Union[Status, StatusCode],
@@ -998,10 +999,14 @@ class Span(trace_api.Span, ReadableSpan):
             # Records status if span is used as context manager
             # i.e. with tracer.start_span() as span:
             if self._set_status_on_exception:
+                if exc_type is not None:
+                    description = f"{exc_type.__name__}: {exc_val}"
+                else:
+                    description = f"{exc_val}"
                 self.set_status(
                     Status(
                         status_code=StatusCode.ERROR,
-                        description=f"{exc_type.__name__}: {exc_val}",
+                        description=description,
                     )
                 )
 
@@ -1127,7 +1132,7 @@ class Tracer(trace_api.Tracer):
 
         # is_valid determines root span
         if parent_span_context is None or not parent_span_context.is_valid:
-            parent_span_context = None
+            parent_span_context = None  # type: ignore
             trace_id = self.id_generator.generate_trace_id()
         else:
             trace_id = parent_span_context.trace_id
@@ -1164,10 +1169,10 @@ class Tracer(trace_api.Tracer):
                 parent=parent_span_context,
                 sampler=self.sampler,
                 resource=self.resource,
-                attributes=sampling_result.attributes.copy(),
+                attributes=sampling_result.attributes.copy(),  # type: ignore
                 span_processor=self.span_processor,
                 kind=kind,
-                links=links,
+                links=links,  # type: ignore
                 instrumentation_info=self.instrumentation_info,
                 record_exception=record_exception,
                 set_status_on_exception=set_status_on_exception,
@@ -1176,7 +1181,7 @@ class Tracer(trace_api.Tracer):
             )
             span.start(start_time=start_time, parent_context=context)
         else:
-            span = trace_api.NonRecordingSpan(context=span_context)
+            span = trace_api.NonRecordingSpan(context=span_context)  # type: ignore
         return span
 
 
@@ -1200,7 +1205,7 @@ class TracerProvider(trace_api.TracerProvider):
         if id_generator is None:
             self.id_generator = RandomIdGenerator()
         else:
-            self.id_generator = id_generator
+            self.id_generator = id_generator  # type: ignore
         if resource is None:
             self._resource = Resource.create({})
         else:
@@ -1277,7 +1282,7 @@ class TracerProvider(trace_api.TracerProvider):
         # SynchronousMultiSpanProcessor and ConcurrentMultiSpanProcessor.
         self._active_span_processor.add_span_processor(span_processor)
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         """Shut down the span processors added to the tracer provider."""
         self._active_span_processor.shutdown()
         if self._atexit_handler is not None:
