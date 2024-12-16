@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Run mypy on SDK resources
+  ([#4360](https://github.com/open-telemetry/opentelemetry-python/pull/4360))
+
 ## Version 1.29.0/0.50b0 (2024-12-11)
 
 - Fix crash exporting a log record with None body
@@ -126,20 +129,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improve resource field structure for LogRecords
   ([#3972](https://github.com/open-telemetry/opentelemetry-python/pull/3972))
 - Update Semantic Conventions code generation scripts:
-  - fix namespace exclusion that resulted in dropping  `os` and `net` namespaces.
+  - fix namespace exclusion that resulted in dropping `os` and `net` namespaces.
   - add `Final` decorator to constants to prevent collisions
   - enable mypy and fix detected issues
   - allow to drop specific attributes in preparation for Semantic Conventions v1.26.0
-  ([#3973](https://github.com/open-telemetry/opentelemetry-python/pull/3966))
+    ([#3973](https://github.com/open-telemetry/opentelemetry-python/pull/3966))
 - Update semantic conventions to version 1.26.0.
   ([#3964](https://github.com/open-telemetry/opentelemetry-python/pull/3964))
 - Use semconv exception attributes for record exceptions in spans
   ([#3979](https://github.com/open-telemetry/opentelemetry-python/pull/3979))
-- Fix _encode_events assumes events.attributes.dropped exists
+- Fix \_encode_events assumes events.attributes.dropped exists
   ([#3965](https://github.com/open-telemetry/opentelemetry-python/pull/3965))
 - Validate links at span creation
   ([#3991](https://github.com/open-telemetry/opentelemetry-python/pull/3991))
-- Add attributes field in  `MeterProvider.get_meter` and `InstrumentationScope`
+- Add attributes field in `MeterProvider.get_meter` and `InstrumentationScope`
   ([#4015](https://github.com/open-telemetry/opentelemetry-python/pull/4015))
 - Fix inaccessible `SCHEMA_URL` constants in `opentelemetry-semantic-conventions`
   ([#4069](https://github.com/open-telemetry/opentelemetry-python/pull/4069))
@@ -169,10 +172,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `SpanAttributes`, `ResourceAttributes`, and `MetricInstruments` are deprecated.
   - Attribute and metric definitions are now grouped by the namespace.
   - Stable attributes and metrics are moved to `opentelemetry.semconv.attributes`
-  and `opentelemetry.semconv.metrics` modules.
+    and `opentelemetry.semconv.metrics` modules.
   - Stable and experimental attributes and metrics are defined under
-  `opentelemetry.semconv._incubating` import path.
-  ([#3586](https://github.com/open-telemetry/opentelemetry-python/pull/3586))
+    `opentelemetry.semconv._incubating` import path.
+    ([#3586](https://github.com/open-telemetry/opentelemetry-python/pull/3586))
 - Rename test objects to avoid pytest warnings
   ([#3823] (https://github.com/open-telemetry/opentelemetry-python/pull/3823))
 - Add span flags to OTLP spans and links
@@ -184,11 +187,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix prometheus metric name and unit conversion
   ([#3924](https://github.com/open-telemetry/opentelemetry-python/pull/3924))
   - this is a breaking change to prometheus metric names so they comply with the
-  [specification](https://github.com/open-telemetry/opentelemetry-specification/blob/v1.33.0/specification/compatibility/prometheus_and_openmetrics.md#otlp-metric-points-to-prometheus).
+    [specification](https://github.com/open-telemetry/opentelemetry-specification/blob/v1.33.0/specification/compatibility/prometheus_and_openmetrics.md#otlp-metric-points-to-prometheus).
   - you can temporarily opt-out of the unit normalization by setting the environment variable
-  `OTEL_PYTHON_EXPERIMENTAL_DISABLE_PROMETHEUS_UNIT_NORMALIZATION=true`
+    `OTEL_PYTHON_EXPERIMENTAL_DISABLE_PROMETHEUS_UNIT_NORMALIZATION=true`
   - common unit abbreviations are converted to Prometheus conventions (`s` -> `seconds`),
-  following the [collector's implementation](https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/c0b51136575aa7ba89326d18edb4549e7e1bbdb9/pkg/translator/prometheus/normalize_name.go#L108)
+    following the [collector's implementation](https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/c0b51136575aa7ba89326d18edb4549e7e1bbdb9/pkg/translator/prometheus/normalize_name.go#L108)
   - repeated `_` are replaced with a single `_`
   - unit annotations (enclosed in curly braces like `{requests}`) are stripped away
   - units with slash are converted e.g. `m/s` -> `meters_per_second`.
@@ -274,7 +277,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Version 1.21.0/0.42b0 (2023-11-01)
 
 - Fix `SumAggregation`
-￼  ([#3390](https://github.com/open-telemetry/opentelemetry-python/pull/3390))
+  ￼ ([#3390](https://github.com/open-telemetry/opentelemetry-python/pull/3390))
 - Fix handling of empty metric collection cycles
   ([#3335](https://github.com/open-telemetry/opentelemetry-python/pull/3335))
 - Fix error when no LoggerProvider configured for LoggingHandler
@@ -293,7 +296,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3413](https://github.com/open-telemetry/opentelemetry-python/pull/3413))
 - Implement Process Resource detector
   ([#3472](https://github.com/open-telemetry/opentelemetry-python/pull/3472))
-
 
 ## Version 1.20.0/0.41b0 (2023-09-04)
 
@@ -323,7 +325,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Default LogRecord observed_timestamp to current timestamp
   [#3377](https://github.com/open-telemetry/opentelemetry-python/pull/3377))
 
-
 ## Version 1.18.0/0.39b0 (2023-05-19)
 
 - Select histogram aggregation with an environment variable
@@ -342,7 +343,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3237](https://github.com/open-telemetry/opentelemetry-python/pull/3237))
 - Add benchmark tests for metrics
   ([#3267](https://github.com/open-telemetry/opentelemetry-python/pull/3267))
-
 
 ## Version 1.17.0/0.38b0 (2023-03-22)
 
@@ -363,7 +363,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version 1.16.0/0.37b0 (2023-02-17)
 
-- Change ``__all__`` to be statically defined.
+- Change `__all__` to be statically defined.
   ([#3143](https://github.com/open-telemetry/opentelemetry-python/pull/3143))
 - Remove the ability to set a global metric prefix for Prometheus exporter
   ([#3137](https://github.com/open-telemetry/opentelemetry-python/pull/3137))
@@ -403,7 +403,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3027](https://github.com/open-telemetry/opentelemetry-python/pull/3027))
 - Update logging to include logging api as per specification
   ([#3038](https://github.com/open-telemetry/opentelemetry-python/pull/3038))
-- Fix: Avoid generator in metrics _ViewInstrumentMatch.collect()
+- Fix: Avoid generator in metrics \_ViewInstrumentMatch.collect()
   ([#3035](https://github.com/open-telemetry/opentelemetry-python/pull/3035)
 - [exporter-otlp-proto-grpc] add user agent string
   ([#3009](https://github.com/open-telemetry/opentelemetry-python/pull/3009))
@@ -1690,7 +1690,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3575](https://github.com/open-telemetry/opentelemetry-python/pull/3575))
 - Remove dependency on 'backoff' library
   ([#3679](https://github.com/open-telemetry/opentelemetry-python/pull/3679))
-
 
 - Make create_gauge non-abstract method
   ([#3817](https://github.com/open-telemetry/opentelemetry-python/pull/3817))
