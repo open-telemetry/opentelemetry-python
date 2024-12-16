@@ -15,7 +15,10 @@
 import datetime
 import threading
 from collections import deque
-from collections.abc import MutableMapping, Sequence
+from collections.abc import (  # pylint: disable=import-error
+    MutableMapping,
+    Sequence,
+)
 from typing import Optional
 
 from deprecated import deprecated

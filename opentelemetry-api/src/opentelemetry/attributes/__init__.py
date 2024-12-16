@@ -15,7 +15,7 @@
 import logging
 import threading
 from collections import OrderedDict
-from collections.abc import MutableMapping
+from collections.abc import MutableMapping  # pylint: disable=import-error
 from typing import Optional, Sequence, Tuple, Union
 
 from opentelemetry.util import types
