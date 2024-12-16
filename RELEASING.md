@@ -52,7 +52,7 @@
     git tag -d stable
     git tag stable
     git push --delete origin stable
-    git push --tags origin stable
+    git push origin tag stable
     ```
   * ReadTheDocs will not automatically rebuild on tag changes, so manually kick-off a build of stable:
     https://readthedocs.org/projects/opentelemetry-python/builds/.
