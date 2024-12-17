@@ -386,7 +386,7 @@ class _ProxyHistogram(_ProxyInstrument[Histogram], Histogram):
         self._unit = unit
         self._description = description
         self._advisory = advisory
-        self._real_instrument: Optional[InstrumentT] = None
+        self._real_instrument: Optional[Histogram] = None
 
     def record(
         self,
