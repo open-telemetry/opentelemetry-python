@@ -14,12 +14,11 @@
 
 import weakref
 from atexit import register, unregister
-from collections.abc import Sequence
 from logging import getLogger
 from os import environ
 from threading import Lock
 from time import time_ns
-from typing import Optional
+from typing import Optional, Sequence
 
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics
