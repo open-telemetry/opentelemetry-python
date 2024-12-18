@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Always setup logs sdk, OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED only controls python `logging` module handler setup
   ([#4340](https://github.com/open-telemetry/opentelemetry-python/pull/4340))
+
+
+## Version 1.29.0/0.50b0 (2024-12-11)
+
 - Fix crash exporting a log record with None body
   ([#4276](https://github.com/open-telemetry/opentelemetry-python/pull/4276))
 - Fix metrics export with exemplar and no context and filtering observable instruments
