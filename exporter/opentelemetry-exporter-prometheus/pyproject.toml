@@ -38,6 +38,7 @@ prometheus = "opentelemetry.exporter.prometheus:_AutoPrometheusMetricReader"
 
 [project.urls]
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/exporter/opentelemetry-exporter-prometheus"
+Repository = "https://github.com/open-telemetry/opentelemetry-python"
 
 [tool.hatch.version]
 path = "src/opentelemetry/exporter/prometheus/version/__init__.py"

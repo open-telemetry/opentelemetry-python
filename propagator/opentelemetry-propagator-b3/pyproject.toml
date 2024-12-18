@@ -37,6 +37,7 @@ b3multi = "opentelemetry.propagators.b3:B3MultiFormat"
 
 [project.urls]
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/propagator/opentelemetry-propagator-b3"
+Repository = "https://github.com/open-telemetry/opentelemetry-python"
 
 [tool.hatch.version]
 path = "src/opentelemetry/propagators/b3/version/__init__.py"
