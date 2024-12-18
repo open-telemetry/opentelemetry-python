@@ -89,6 +89,9 @@ def _encode_resource_spans(
                 PB2ScopeSpans(
                     scope=(_encode_instrumentation_scope(sdk_instrumentation)),
                     spans=pb2_spans,
+                    schema_url=sdk_instrumentation.schema_url
+                    if sdk_instrumentation
+                    else None,
                 )
             )
         pb2_resource_spans.append(

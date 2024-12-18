@@ -59,6 +59,7 @@ def _encode_instrumentation_scope(
     return PB2InstrumentationScope(
         name=instrumentation_scope.name,
         version=instrumentation_scope.version,
+        attributes=_encode_attributes(instrumentation_scope.attributes),
     )
 
 
