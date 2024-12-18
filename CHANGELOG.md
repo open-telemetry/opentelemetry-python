@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Add proper type for logs signal attributes
+  ([#4342](https://github.com/open-telemetry/opentelemetry-python/pull/4342))
+  
 ## Version 1.29.0/0.50b0 (2024-12-11)
 
 - Fix crash exporting a log record with None body
