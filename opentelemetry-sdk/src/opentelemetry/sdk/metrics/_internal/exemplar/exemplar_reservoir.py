@@ -184,7 +184,7 @@ class FixedSizeExemplarReservoirABC(ExemplarReservoir):
         exemplars = [
             e
             for e in (
-                bucket.collect(point_attributes)  # type: ignore
+                bucket.collect(point_attributes)
                 for _, bucket in sorted(self._reservoir_storage.items())
             )
             if e is not None
