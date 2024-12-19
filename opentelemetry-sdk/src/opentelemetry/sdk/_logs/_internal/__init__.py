@@ -27,7 +27,6 @@ from typing import Any, Callable, Optional, Tuple, Union  # noqa
 
 from opentelemetry._logs import Logger as APILogger
 from opentelemetry._logs import LoggerProvider as APILoggerProvider
-from opentelemetry._logs import LogRecord as APILogRecord
 from opentelemetry._logs import (
     NoOpLogger,
     SeverityNumber,
@@ -36,6 +35,7 @@ from opentelemetry._logs import (
     std_to_otel,
 )
 from opentelemetry.attributes import BoundedAttributes
+from opentelemetry.context.context import Context
 from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_COUNT_LIMIT,
     OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
@@ -52,8 +52,6 @@ from opentelemetry.trace import (
 )
 from opentelemetry.trace.span import TraceFlags
 from opentelemetry.util.types import AnyValue, Attributes
-
-_logger = logging.getLogger(__name__)
 
 _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
 _ENV_VALUE_UNSET = ""
@@ -162,7 +160,7 @@ _UnsetLogLimits = LogLimits(
 )
 
 
-class LogRecord(APILogRecord):
+class LogRecord:
     """A LogRecord instance represents an event being logged.
 
     LogRecord instances are created and emitted via `Logger`
@@ -172,6 +170,7 @@ class LogRecord(APILogRecord):
 
     def __init__(
         self,
+        event_name: Optional[str] = None,
         timestamp: Optional[int] = None,
         observed_timestamp: Optional[int] = None,
         trace_id: Optional[int] = None,
@@ -183,28 +182,31 @@ class LogRecord(APILogRecord):
         resource: Optional[Resource] = None,
         attributes: Optional[Attributes] = None,
         limits: Optional[LogLimits] = _UnsetLogLimits,
+        instrumentation_scope: Optional[InstrumentationScope] = None,
     ):
-        super().__init__(
-            **{
-                "timestamp": timestamp,
-                "observed_timestamp": observed_timestamp,
-                "trace_id": trace_id,
-                "span_id": span_id,
-                "trace_flags": trace_flags,
-                "severity_text": severity_text,
-                "severity_number": severity_number,
-                "body": body,
-                "attributes": BoundedAttributes(
-                    maxlen=limits.max_attributes,
-                    attributes=attributes if bool(attributes) else None,
-                    immutable=False,
-                    max_value_len=limits.max_attribute_length,
-                ),
-            }
+        self.event_name = event_name
+        self.timestamp = timestamp
+        self.observed_timestamp = (
+            observed_timestamp if observed_timestamp is not None else time_ns()
         )
+        self.trace_id = trace_id
+        self.span_id = span_id
+        self.trace_flags = trace_flags
+        self.severity_text = severity_text
+        self.severity_number = severity_number
+        self.body = body
+        self.instrumentation_scope = instrumentation_scope
+        self.attributes = BoundedAttributes(
+            maxlen=limits.max_attributes,
+            attributes=attributes if bool(attributes) else None,
+            immutable=False,
+            max_value_len=limits.max_attribute_length,
+        )
+
         self.resource = (
             resource if isinstance(resource, Resource) else Resource.create({})
         )
+
         if self.dropped_attributes > 0:
             warnings.warn(
                 "Log record attributes were dropped due to limits",
@@ -220,6 +222,7 @@ class LogRecord(APILogRecord):
     def to_json(self, indent=4) -> str:
         return json.dumps(
             {
+                "event_name": self.event_name,
                 "body": self.body,
                 "severity_number": self.severity_number.value
                 if self.severity_number is not None
@@ -243,6 +246,9 @@ class LogRecord(APILogRecord):
                 ),
                 "trace_flags": self.trace_flags,
                 "resource": json.loads(self.resource.to_json()),
+                "instrumentation_scope": json.loads(
+                    self.instrumentation_scope.to_json()
+                ),
             },
             indent=indent,
         )
@@ -254,18 +260,6 @@ class LogRecord(APILogRecord):
         return 0
 
 
-class LogData:
-    """Readable LogRecord data plus associated InstrumentationLibrary."""
-
-    def __init__(
-        self,
-        log_record: LogRecord,
-        instrumentation_scope: InstrumentationScope,
-    ):
-        self.log_record = log_record
-        self.instrumentation_scope = instrumentation_scope
-
-
 class LogRecordProcessor(abc.ABC):
     """Interface to hook the log record emitting action.
 
@@ -275,8 +269,8 @@ class LogRecordProcessor(abc.ABC):
     """
 
     @abc.abstractmethod
-    def emit(self, log_data: LogData):
-        """Emits the `LogData`"""
+    def emit(self, log_data: LogRecord):
+        """Emits the `LogRecord`"""
 
     @abc.abstractmethod
     def shutdown(self):
@@ -319,9 +313,9 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
         with self._lock:
             self._log_record_processors += (log_record_processor,)
 
-    def emit(self, log_data: LogData) -> None:
+    def emit(self, log_record: LogRecord) -> None:
         for lp in self._log_record_processors:
-            lp.emit(log_data)
+            lp.emit(log_record)
 
     def shutdown(self) -> None:
         """Shutdown the log processors one by one"""
@@ -393,8 +387,8 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
         for future in futures:
             future.result()
 
-    def emit(self, log_data: LogData):
-        self._submit_and_wait(lambda lp: lp.emit, log_data)
+    def emit(self, log_record: LogRecord):
+        self._submit_and_wait(lambda lp: lp.emit, log_record)
 
     def shutdown(self):
         self._submit_and_wait(lambda lp: lp.shutdown)
@@ -501,10 +495,10 @@ class LoggingHandler(logging.Handler):
                 )
         return attributes
 
-    def _translate(self, record: logging.LogRecord) -> LogRecord:
+    def _translate_and_emit(
+        self, logger: APILogger, record: logging.LogRecord
+    ) -> LogRecord:
         timestamp = int(record.created * 1e9)
-        observered_timestamp = time_ns()
-        span_context = get_current_span().get_span_context()
         attributes = self._get_attributes(record)
         severity_number = std_to_otel(record.levelno)
         if self.formatter:
@@ -533,17 +527,11 @@ class LoggingHandler(logging.Handler):
             "WARN" if record.levelname == "WARNING" else record.levelname
         )
 
-        logger = get_logger(record.name, logger_provider=self._logger_provider)
-        return LogRecord(
+        logger.emit(
             timestamp=timestamp,
-            observed_timestamp=observered_timestamp,
-            trace_id=span_context.trace_id,
-            span_id=span_context.span_id,
-            trace_flags=span_context.trace_flags,
             severity_text=level_name,
             severity_number=severity_number,
             body=body,
-            resource=logger.resource,
             attributes=attributes,
         )
 
@@ -555,7 +543,7 @@ class LoggingHandler(logging.Handler):
         """
         logger = get_logger(record.name, logger_provider=self._logger_provider)
         if not isinstance(logger, NoOpLogger):
-            logger.emit(self._translate(record))
+            self._translate_and_emit(logger, record)
 
     def flush(self) -> None:
         """
@@ -591,12 +579,43 @@ class Logger(APILogger):
     def resource(self):
         return self._resource
 
-    def emit(self, record: LogRecord):
-        """Emits the :class:`LogData` by associating :class:`LogRecord`
-        and instrumentation info.
-        """
-        log_data = LogData(record, self._instrumentation_scope)
-        self._multi_log_record_processor.emit(log_data)
+    def is_enabled(
+        self,
+        severity_number: Optional[SeverityNumber] = None,
+        context: Optional[Context] = None,
+    ) -> bool:
+        """Returns True if the logger is enabled for given severity and context, False otherwise."""
+        return True  # TODO
+
+    def emit(
+        self,
+        event_name: str = None,
+        timestamp: Optional[int] = None,
+        observed_timestamp: Optional[int] = None,
+        severity_number: Optional[SeverityNumber] = None,
+        severity_text: Optional[str] = None,
+        context: Optional[Context] = None,
+        body: Optional[Any] = None,
+        attributes: Optional[Attributes] = None,
+    ):
+        """Emits the :class:`LogRecord`."""
+
+        span_context = get_current_span(context).get_span_context()
+        log_record = LogRecord(
+            event_name=event_name,
+            timestamp=timestamp,
+            observed_timestamp=observed_timestamp,
+            severity_number=severity_number,
+            severity_text=severity_text,
+            trace_id=span_context.trace_id,
+            span_id=span_context.span_id,
+            trace_flags=span_context.trace_flags,
+            body=body,
+            attributes=attributes,
+            resource=self._resource,
+            instrumentation_scope=self._instrumentation_scope,
+        )
+        self._multi_log_record_processor.emit(log_record)
 
 
 class LoggerProvider(APILoggerProvider):
