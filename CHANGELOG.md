@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix OTLP encoders missing instrumentation scope schema url and attributes
   ([#4359](https://github.com/open-telemetry/opentelemetry-python/pull/4359))  
 
+- Add Python 3.13 support
+  ([#4353](https://github.com/open-telemetry/opentelemetry-python/pull/4353))
+
 ## Version 1.29.0/0.50b0 (2024-12-11)
 
 - Fix crash exporting a log record with None body
