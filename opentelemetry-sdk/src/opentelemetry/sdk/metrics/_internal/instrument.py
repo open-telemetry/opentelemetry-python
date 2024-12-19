@@ -227,7 +227,7 @@ class Histogram(_Synchronous, APIHistogram):
         measurement_consumer: "opentelemetry.sdk.metrics.MeasurementConsumer",
         unit: str = "",
         description: str = "",
-        advisory: MetricsInstrumentAdvisory = None,
+        advisory: Optional[MetricsInstrumentAdvisory] = None,
     ):
         super().__init__(
             name,
