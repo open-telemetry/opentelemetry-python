@@ -379,7 +379,7 @@ class Meter(ABC):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: MetricsInstrumentAdvisory = None,
+        advisory: Optional[MetricsInstrumentAdvisory] = None,
     ) -> Histogram:
         """Creates a :class:`~opentelemetry.metrics.Histogram` instrument
 
@@ -527,7 +527,7 @@ class _ProxyMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: MetricsInstrumentAdvisory = None,
+        advisory: Optional[MetricsInstrumentAdvisory] = None,
     ) -> Histogram:
         with self._lock:
             if self._real_meter:
@@ -688,7 +688,7 @@ class NoOpMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: MetricsInstrumentAdvisory = None,
+        advisory: Optional[MetricsInstrumentAdvisory] = None,
     ) -> Histogram:
         """Returns a no-op Histogram."""
         if self._is_instrument_registered(

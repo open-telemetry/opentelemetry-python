@@ -336,7 +336,7 @@ class Histogram(Synchronous):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: MetricsInstrumentAdvisory = None,
+        advisory: Optional[MetricsInstrumentAdvisory] = None,
     ) -> None:
         pass
 
@@ -358,7 +358,7 @@ class NoOpHistogram(Histogram):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: MetricsInstrumentAdvisory = None,
+        advisory: Optional[MetricsInstrumentAdvisory] = None,
     ) -> None:
         super().__init__(
             name, unit=unit, description=description, advisory=advisory
@@ -380,7 +380,7 @@ class _ProxyHistogram(_ProxyInstrument[Histogram], Histogram):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: MetricsInstrumentAdvisory = None,
+        advisory: Optional[MetricsInstrumentAdvisory] = None,
     ) -> None:
         self._name = name
         self._unit = unit

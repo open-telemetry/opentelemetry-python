@@ -202,7 +202,7 @@ class Meter(APIMeter):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: MetricsInstrumentAdvisory = None,
+        advisory: Optional[MetricsInstrumentAdvisory] = None,
     ) -> APIHistogram:
         if advisory is not None:
             raise_error = False
