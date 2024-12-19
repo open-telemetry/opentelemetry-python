@@ -764,6 +764,7 @@ def get_meter(
     version: str = "",
     meter_provider: Optional[MeterProvider] = None,
     schema_url: Optional[str] = None,
+    attributes: Optional[Attributes] = None,
 ) -> "Meter":
     """Returns a `Meter` for use by the given instrumentation library.
 
@@ -774,7 +775,7 @@ def get_meter(
     """
     if meter_provider is None:
         meter_provider = get_meter_provider()
-    return meter_provider.get_meter(name, version, schema_url)
+    return meter_provider.get_meter(name, version, schema_url, attributes)
 
 
 def _set_meter_provider(meter_provider: MeterProvider, log: bool) -> None:
