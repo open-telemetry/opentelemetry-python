@@ -51,7 +51,7 @@ from opentelemetry.trace import (
     get_current_span,
 )
 from opentelemetry.trace.span import TraceFlags
-from opentelemetry.util.types import AnyValue, Attributes
+from opentelemetry.util.types import AnyValue, LogAttributes
 
 _logger = logging.getLogger(__name__)
 
@@ -179,9 +179,9 @@ class LogRecord(APILogRecord):
         trace_flags: Optional[TraceFlags] = None,
         severity_text: Optional[str] = None,
         severity_number: Optional[SeverityNumber] = None,
-        body: Optional[AnyValue] = None,
+        body: AnyValue = None,
         resource: Optional[Resource] = None,
-        attributes: Optional[Attributes] = None,
+        attributes: LogAttributes = None,
         limits: Optional[LogLimits] = _UnsetLogLimits,
     ):
         super().__init__(
@@ -476,7 +476,7 @@ class LoggingHandler(logging.Handler):
         self._logger_provider = logger_provider or get_logger_provider()
 
     @staticmethod
-    def _get_attributes(record: logging.LogRecord) -> Attributes:
+    def _get_attributes(record: logging.LogRecord) -> LogAttributes:
         attributes = {
             k: v for k, v in vars(record).items() if k not in _RESERVED_ATTRS
         }
@@ -633,7 +633,7 @@ class LoggerProvider(APILoggerProvider):
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
-        attributes: Optional[Attributes] = None,
+        attributes: LogAttributes = None,
     ) -> Logger:
         return Logger(
             self._resource,
@@ -667,7 +667,7 @@ class LoggerProvider(APILoggerProvider):
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
-        attributes: Optional[Attributes] = None,
+        attributes: LogAttributes = None,
     ) -> Logger:
         if self._disabled:
             warnings.warn("SDK is disabled.")
