@@ -25,6 +25,7 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
   "opentelemetry-api ~= 1.12",
@@ -38,6 +39,7 @@ prometheus = "opentelemetry.exporter.prometheus:_AutoPrometheusMetricReader"
 
 [project.urls]
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/exporter/opentelemetry-exporter-prometheus"
+Repository = "https://github.com/open-telemetry/opentelemetry-python"
 
 [tool.hatch.version]
 path = "src/opentelemetry/exporter/prometheus/version/__init__.py"

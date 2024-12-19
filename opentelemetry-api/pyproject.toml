@@ -23,6 +23,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Typing :: Typed",
 ]
 dependencies = [
@@ -53,6 +54,7 @@ default_tracer_provider = "opentelemetry.trace:NoOpTracerProvider"
 
 [project.urls]
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/opentelemetry-api"
+Repository = "https://github.com/open-telemetry/opentelemetry-python"
 
 [tool.hatch.version]
 path = "src/opentelemetry/version/__init__.py"
