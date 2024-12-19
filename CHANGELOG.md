@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Add `attributes` field in `metrics.get_meter` wrapper function
+  ([#4364](https://github.com/open-telemetry/opentelemetry-python/pull/4364))
+
 ## Version 1.29.0/0.50b0 (2024-12-11)
 
 - Fix crash exporting a log record with None body
