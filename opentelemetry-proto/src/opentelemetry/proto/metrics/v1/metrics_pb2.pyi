@@ -959,7 +959,7 @@ class HistogramDataPoint(google.protobuf.message.Message):
     events, and is assumed to be monotonic over the values of these events.
     Negative events *can* be recorded, but sum should not be filled out when
     doing so.  This is specifically to enforce compatibility w/ OpenMetrics,
-    see: https://github.com/OpenObservability/OpenMetrics/blob/main/specification/OpenMetrics.md#histogram
+    see: https://github.com/prometheus/OpenMetrics/blob/v1.0.0/specification/OpenMetrics.md#histogram
     """
     @property
     def bucket_counts(
@@ -1205,7 +1205,7 @@ class ExponentialHistogramDataPoint(google.protobuf.message.Message):
     events, and is assumed to be monotonic over the values of these events.
     Negative events *can* be recorded, but sum should not be filled out when
     doing so.  This is specifically to enforce compatibility w/ OpenMetrics,
-    see: https://github.com/OpenObservability/OpenMetrics/blob/main/specification/OpenMetrics.md#histogram
+    see: https://github.com/prometheus/OpenMetrics/blob/v1.0.0/specification/OpenMetrics.md#histogram
     """
     scale: builtins.int
     """scale describes the resolution of the histogram.  Boundaries are
@@ -1451,7 +1451,7 @@ class SummaryDataPoint(google.protobuf.message.Message):
     events, and is assumed to be monotonic over the values of these events.
     Negative events *can* be recorded, but sum should not be filled out when
     doing so.  This is specifically to enforce compatibility w/ OpenMetrics,
-    see: https://github.com/OpenObservability/OpenMetrics/blob/main/specification/OpenMetrics.md#summary
+    see: https://github.com/prometheus/OpenMetrics/blob/v1.0.0/specification/OpenMetrics.md#summary
     """
     @property
     def quantile_values(
