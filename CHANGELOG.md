@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Run mypy on SDK resources
+  ([#4360](https://github.com/open-telemetry/opentelemetry-python/pull/4360))
+
 ## Version 1.29.0/0.50b0 (2024-12-11)
 
 - Fix crash exporting a log record with None body
@@ -274,7 +277,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Version 1.21.0/0.42b0 (2023-11-01)
 
 - Fix `SumAggregation`
-￼  ([#3390](https://github.com/open-telemetry/opentelemetry-python/pull/3390))
+  ([#3390](https://github.com/open-telemetry/opentelemetry-python/pull/3390))
 - Fix handling of empty metric collection cycles
   ([#3335](https://github.com/open-telemetry/opentelemetry-python/pull/3335))
 - Fix error when no LoggerProvider configured for LoggingHandler
@@ -293,7 +296,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3413](https://github.com/open-telemetry/opentelemetry-python/pull/3413))
 - Implement Process Resource detector
   ([#3472](https://github.com/open-telemetry/opentelemetry-python/pull/3472))
-
 
 ## Version 1.20.0/0.41b0 (2023-09-04)
 
@@ -323,7 +325,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Default LogRecord observed_timestamp to current timestamp
   [#3377](https://github.com/open-telemetry/opentelemetry-python/pull/3377))
 
-
 ## Version 1.18.0/0.39b0 (2023-05-19)
 
 - Select histogram aggregation with an environment variable
@@ -342,7 +343,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3237](https://github.com/open-telemetry/opentelemetry-python/pull/3237))
 - Add benchmark tests for metrics
   ([#3267](https://github.com/open-telemetry/opentelemetry-python/pull/3267))
-
 
 ## Version 1.17.0/0.38b0 (2023-03-22)
 
@@ -1690,7 +1690,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3575](https://github.com/open-telemetry/opentelemetry-python/pull/3575))
 - Remove dependency on 'backoff' library
   ([#3679](https://github.com/open-telemetry/opentelemetry-python/pull/3679))
-
 
 - Make create_gauge non-abstract method
   ([#3817](https://github.com/open-telemetry/opentelemetry-python/pull/3817))
