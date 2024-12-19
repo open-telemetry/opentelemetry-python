@@ -38,6 +38,7 @@ zipkin_json = "opentelemetry.exporter.zipkin.json:ZipkinExporter"
 
 [project.urls]
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/exporter/opentelemetry-exporter-zipkin-json"
+Repository = "https://github.com/open-telemetry/opentelemetry-python"
 
 [tool.hatch.version]
 path = "src/opentelemetry/exporter/zipkin/json/version/__init__.py"
