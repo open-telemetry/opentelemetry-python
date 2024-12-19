@@ -74,7 +74,7 @@ from opentelemetry.metrics._internal.instrument import (
 )
 from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
-from opentelemetry.util.types import Attributes
+from opentelemetry.util.types import Attributes, MetricsInstrumentAdvisory
 
 _logger = getLogger(__name__)
 
@@ -379,6 +379,7 @@ class Meter(ABC):
         name: str,
         unit: str = "",
         description: str = "",
+        advisory: MetricsInstrumentAdvisory = None,
     ) -> Histogram:
         """Creates a :class:`~opentelemetry.metrics.Histogram` instrument
 
@@ -526,13 +527,14 @@ class _ProxyMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
+        advisory: MetricsInstrumentAdvisory = None,
     ) -> Histogram:
         with self._lock:
             if self._real_meter:
                 return self._real_meter.create_histogram(
-                    name, unit, description
+                    name, unit, description, advisory
                 )
-            proxy = _ProxyHistogram(name, unit, description)
+            proxy = _ProxyHistogram(name, unit, description, advisory)
             self._instruments.append(proxy)
             return proxy
 
@@ -686,6 +688,7 @@ class NoOpMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
+        advisory: MetricsInstrumentAdvisory = None,
     ) -> Histogram:
         """Returns a no-op Histogram."""
         if self._is_instrument_registered(
@@ -699,7 +702,9 @@ class NoOpMeter(Meter):
                 unit,
                 description,
             )
-        return NoOpHistogram(name, unit=unit, description=description)
+        return NoOpHistogram(
+            name, unit=unit, description=description, advisory=advisory
+        )
 
     def create_observable_gauge(
         self,

@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import weakref
 from atexit import register, unregister
 from logging import getLogger
@@ -63,7 +64,7 @@ from opentelemetry.sdk.metrics._internal.sdk_configuration import (
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.util._once import Once
-from opentelemetry.util.types import Attributes
+from opentelemetry.util.types import Attributes, MetricsInstrumentAdvisory
 
 _logger = getLogger(__name__)
 
@@ -196,7 +197,29 @@ class Meter(APIMeter):
             self._instrument_id_instrument[instrument_id] = instrument
             return instrument
 
-    def create_histogram(self, name, unit="", description="") -> APIHistogram:
+    def create_histogram(
+        self,
+        name: str,
+        unit: str = "",
+        description: str = "",
+        advisory: MetricsInstrumentAdvisory = None,
+    ) -> APIHistogram:
+        if advisory is not None:
+            raise_error = False
+            try:
+                boundaries = advisory["ExplicitBucketBoundaries"]
+                raise_error = not (
+                    boundaries
+                    and all(isinstance(e, (int, float)) for e in boundaries)
+                )
+            except (KeyError, TypeError):
+                raise_error = True
+
+            if raise_error:
+                raise ValueError(
+                    "Advisory must be a dict with ExplicitBucketBoundaries key containing a sequence of numbers"
+                )
+
         (
             is_instrument_registered,
             instrument_id,
@@ -223,6 +246,7 @@ class Meter(APIMeter):
             self._measurement_consumer,
             unit,
             description,
+            advisory,
         )
         with self._instrument_id_instrument_lock:
             self._instrument_id_instrument[instrument_id] = instrument
