@@ -33,6 +33,7 @@ from opentelemetry.sdk._logs import LogRecord as SDKLogRecord
 from opentelemetry.sdk._logs.export import LogExporter, LogExportResult
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_LOGS_CHANNEL_OPTIONS,
     OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY,
     OTEL_EXPORTER_OTLP_LOGS_COMPRESSION,
@@ -57,6 +58,9 @@ class OTLPLogExporter(
         credentials: Optional[ChannelCredentials] = None,
         headers: Optional[
             Union[TypingSequence[Tuple[str, str]], Dict[str, str], str]
+        ] = None,
+        channel_options: Optional[
+            Union[TypingSequence[Tuple[str, str]], str]
         ] = None,
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
@@ -91,12 +95,17 @@ class OTLPLogExporter(
 
         headers = headers or environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS)
 
+        channel_options = channel_options or environ.get(
+            OTEL_EXPORTER_OTLP_LOGS_CHANNEL_OPTIONS
+        )
+
         super().__init__(
             **{
                 "endpoint": endpoint,
                 "insecure": insecure,
                 "credentials": credentials,
                 "headers": headers,
+                "channel_options": channel_options,
                 "timeout": timeout or environ_timeout,
                 "compression": compression,
             }
