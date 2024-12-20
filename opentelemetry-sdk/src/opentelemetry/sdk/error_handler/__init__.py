@@ -115,7 +115,11 @@ class GlobalErrorHandler:
 
         plugin_handled = False
 
-        error_handler_entry_points = entry_points(
+        a = 1
+        a = "haha"
+        a = getLogger('haha')
+
+        error_handler_entry_points = entry_points(  # type: ignore
             group="opentelemetry_error_handler"
         )
 
