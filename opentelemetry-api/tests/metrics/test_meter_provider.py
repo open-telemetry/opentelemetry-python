@@ -29,7 +29,11 @@ from opentelemetry.metrics import (
     get_meter_provider,
     set_meter_provider,
 )
-from opentelemetry.metrics._internal import _ProxyMeter, _ProxyMeterProvider
+from opentelemetry.metrics._internal import (
+    _ProxyMeter,
+    _ProxyMeterProvider,
+    get_meter,
+)
 from opentelemetry.metrics._internal.instrument import (
     _ProxyCounter,
     _ProxyGauge,
@@ -140,6 +144,25 @@ class TestGetMeter(TestCase):
         self.assertTrue(isinstance(meter, NoOpMeter))
 
         self.assertEqual(meter.name, None)
+
+    def test_get_meter_wrapper(self):
+        """
+        `metrics._internal.get_meter` called with valid parameters and a NoOpMeterProvider
+        should return a NoOpMeter with the same parameters.
+        """
+
+        meter = get_meter(
+            "name",
+            version="version",
+            meter_provider=NoOpMeterProvider(),
+            schema_url="schema_url",
+            attributes={"key": "value", "key2": 5, "key3": "value3"},
+        )
+
+        self.assertIsInstance(meter, NoOpMeter)
+        self.assertEqual(meter.name, "name")
+        self.assertEqual(meter.version, "version")
+        self.assertEqual(meter.schema_url, "schema_url")
 
 
 class TestProxy(MetricsGlobalsTest, TestCase):
