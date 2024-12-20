@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-- Run mypy on SDK resources
+- Add type hints to SDK resources
   ([#4360](https://github.com/open-telemetry/opentelemetry-python/pull/4360))
 
 ## Version 1.29.0/0.50b0 (2024-12-11)
