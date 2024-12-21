@@ -110,7 +110,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                             scope=SDKInstrumentationScope(
                                 name="first_name",
                                 version="first_version",
-                                schema_url="insrumentation_scope_schema_url",
+                                schema_url="instrumentation_scope_schema_url",
                             ),
                             metrics=[_generate_sum("sum_int", 33)],
                             schema_url="instrumentation_scope_schema_url",
@@ -137,6 +137,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                             scope=InstrumentationScope(
                                 name="first_name", version="first_version"
                             ),
+                            schema_url="instrumentation_scope_schema_url",
                             metrics=[
                                 pb2.Metric(
                                     name="sum_int",
@@ -190,7 +191,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                             scope=SDKInstrumentationScope(
                                 name="first_name",
                                 version="first_version",
-                                schema_url="insrumentation_scope_schema_url",
+                                schema_url="instrumentation_scope_schema_url",
                             ),
                             metrics=[_generate_sum("sum_double", 2.98)],
                             schema_url="instrumentation_scope_schema_url",
@@ -217,6 +218,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                             scope=InstrumentationScope(
                                 name="first_name", version="first_version"
                             ),
+                            schema_url="instrumentation_scope_schema_url",
                             metrics=[
                                 pb2.Metric(
                                     name="sum_double",
@@ -270,7 +272,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                             scope=SDKInstrumentationScope(
                                 name="first_name",
                                 version="first_version",
-                                schema_url="insrumentation_scope_schema_url",
+                                schema_url="instrumentation_scope_schema_url",
                             ),
                             metrics=[_generate_gauge("gauge_int", 9000)],
                             schema_url="instrumentation_scope_schema_url",
@@ -297,6 +299,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                             scope=InstrumentationScope(
                                 name="first_name", version="first_version"
                             ),
+                            schema_url="instrumentation_scope_schema_url",
                             metrics=[
                                 pb2.Metric(
                                     name="gauge_int",
@@ -348,7 +351,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                             scope=SDKInstrumentationScope(
                                 name="first_name",
                                 version="first_version",
-                                schema_url="insrumentation_scope_schema_url",
+                                schema_url="instrumentation_scope_schema_url",
                             ),
                             metrics=[_generate_gauge("gauge_double", 52.028)],
                             schema_url="instrumentation_scope_schema_url",
@@ -375,6 +378,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                             scope=InstrumentationScope(
                                 name="first_name", version="first_version"
                             ),
+                            schema_url="instrumentation_scope_schema_url",
                             metrics=[
                                 pb2.Metric(
                                     name="gauge_double",
@@ -425,7 +429,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                             scope=SDKInstrumentationScope(
                                 name="first_name",
                                 version="first_version",
-                                schema_url="insrumentation_scope_schema_url",
+                                schema_url="instrumentation_scope_schema_url",
                             ),
                             metrics=[self.histogram],
                             schema_url="instrumentation_scope_schema_url",
@@ -452,6 +456,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                             scope=InstrumentationScope(
                                 name="first_name", version="first_version"
                             ),
+                            schema_url="instrumentation_scope_schema_url",
                             metrics=[
                                 pb2.Metric(
                                     name="histogram",
@@ -537,7 +542,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                             scope=SDKInstrumentationScope(
                                 name="first_name",
                                 version="first_version",
-                                schema_url="insrumentation_scope_schema_url",
+                                schema_url="instrumentation_scope_schema_url",
                             ),
                             metrics=[self.histogram, self.histogram],
                             schema_url="instrumentation_scope_schema_url",
@@ -546,7 +551,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                             scope=SDKInstrumentationScope(
                                 name="second_name",
                                 version="second_version",
-                                schema_url="insrumentation_scope_schema_url",
+                                schema_url="instrumentation_scope_schema_url",
                             ),
                             metrics=[self.histogram],
                             schema_url="instrumentation_scope_schema_url",
@@ -555,7 +560,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                             scope=SDKInstrumentationScope(
                                 name="third_name",
                                 version="third_version",
-                                schema_url="insrumentation_scope_schema_url",
+                                schema_url="instrumentation_scope_schema_url",
                             ),
                             metrics=[self.histogram],
                             schema_url="instrumentation_scope_schema_url",
@@ -582,6 +587,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                             scope=InstrumentationScope(
                                 name="first_name", version="first_version"
                             ),
+                            schema_url="instrumentation_scope_schema_url",
                             metrics=[
                                 pb2.Metric(
                                     name="histogram",
@@ -713,6 +719,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                             scope=InstrumentationScope(
                                 name="second_name", version="second_version"
                             ),
+                            schema_url="instrumentation_scope_schema_url",
                             metrics=[
                                 pb2.Metric(
                                     name="histogram",
@@ -782,6 +789,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                             scope=InstrumentationScope(
                                 name="third_name", version="third_version"
                             ),
+                            schema_url="instrumentation_scope_schema_url",
                             metrics=[
                                 pb2.Metric(
                                     name="histogram",
@@ -892,7 +900,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                             scope=SDKInstrumentationScope(
                                 name="first_name",
                                 version="first_version",
-                                schema_url="insrumentation_scope_schema_url",
+                                schema_url="instrumentation_scope_schema_url",
                             ),
                             metrics=[exponential_histogram],
                             schema_url="instrumentation_scope_schema_url",
@@ -919,6 +927,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                             scope=InstrumentationScope(
                                 name="first_name", version="first_version"
                             ),
+                            schema_url="instrumentation_scope_schema_url",
                             metrics=[
                                 pb2.Metric(
                                     name="exponential_histogram",
@@ -989,7 +998,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                             scope=SDKInstrumentationScope(
                                 name="first_name",
                                 version="first_version",
-                                schema_url="insrumentation_scope_schema_url",
+                                schema_url="instrumentation_scope_schema_url",
                             ),
                             metrics=[_generate_sum("sum_double", big_number)],
                             schema_url="instrumentation_scope_schema_url",
@@ -1005,3 +1014,88 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
         # assert that the EncodingException wraps the metric and original exception
         assert isinstance(context.exception.metric, Metric)
         assert isinstance(context.exception.original_exception, ValueError)
+
+    def test_encode_scope_with_attributes(self):
+        metrics_data = MetricsData(
+            resource_metrics=[
+                ResourceMetrics(
+                    resource=Resource(
+                        attributes=None,
+                        schema_url="resource_schema_url",
+                    ),
+                    scope_metrics=[
+                        ScopeMetrics(
+                            scope=SDKInstrumentationScope(
+                                name="first_name",
+                                version="first_version",
+                                schema_url="instrumentation_scope_schema_url",
+                                attributes={"one": 1, "two": "2"},
+                            ),
+                            metrics=[_generate_sum("sum_int", 88)],
+                            schema_url="instrumentation_scope_schema_url",
+                        )
+                    ],
+                    schema_url="resource_schema_url",
+                )
+            ]
+        )
+        expected = ExportMetricsServiceRequest(
+            resource_metrics=[
+                pb2.ResourceMetrics(
+                    schema_url="resource_schema_url",
+                    resource=OTLPResource(),
+                    scope_metrics=[
+                        pb2.ScopeMetrics(
+                            scope=InstrumentationScope(
+                                name="first_name",
+                                version="first_version",
+                                attributes=[
+                                    KeyValue(
+                                        key="one", value=AnyValue(int_value=1)
+                                    ),
+                                    KeyValue(
+                                        key="two",
+                                        value=AnyValue(string_value="2"),
+                                    ),
+                                ],
+                            ),
+                            schema_url="instrumentation_scope_schema_url",
+                            metrics=[
+                                pb2.Metric(
+                                    name="sum_int",
+                                    unit="s",
+                                    description="foo",
+                                    sum=pb2.Sum(
+                                        data_points=[
+                                            pb2.NumberDataPoint(
+                                                attributes=[
+                                                    KeyValue(
+                                                        key="a",
+                                                        value=AnyValue(
+                                                            int_value=1
+                                                        ),
+                                                    ),
+                                                    KeyValue(
+                                                        key="b",
+                                                        value=AnyValue(
+                                                            bool_value=True
+                                                        ),
+                                                    ),
+                                                ],
+                                                start_time_unix_nano=1641946015139533244,
+                                                time_unix_nano=1641946016139533244,
+                                                as_int=88,
+                                            )
+                                        ],
+                                        aggregation_temporality=AggregationTemporality.CUMULATIVE,
+                                        is_monotonic=True,
+                                    ),
+                                )
+                            ],
+                        )
+                    ],
+                )
+            ]
+        )
+        actual = encode_metrics(metrics_data)
+        self.assertEqual(expected, actual)
