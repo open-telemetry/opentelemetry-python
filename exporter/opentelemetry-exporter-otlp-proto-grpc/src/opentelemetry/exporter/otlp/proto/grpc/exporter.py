@@ -360,6 +360,7 @@ class OTLPExporterMixin(
         # wait for the last export if any
         self._export_lock.acquire(timeout=timeout_millis / 1e3)
         self._shutdown = True
+        self._client = None
         self._export_lock.release()
 
     @property
