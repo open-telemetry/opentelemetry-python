@@ -14,29 +14,16 @@
 
 # FIXME: Use importlib.metadata when support for 3.11 is dropped if the rest of
 # the supported versions at that time have the same API.
-try:
-    from importlib.metadata import (
-        Distribution,
-        EntryPoint,
-        EntryPoints,
-        PackageNotFoundError,
-        distributions,
-        entry_points,
-        requires,
-        version,
-    )
-except Exception:
-    from importlib_metadata import (
-        Distribution,
-        EntryPoint,
-        EntryPoints,
-        PackageNotFoundError,
-        distributions,
-        entry_points,
-        requires,
-        version,
-    )
-
+from importlib_metadata import (  # type: ignore
+    Distribution,
+    EntryPoint,
+    EntryPoints,
+    PackageNotFoundError,
+    distributions,
+    entry_points,
+    requires,
+    version,
+)
 
 __all__ = [
     "entry_points",

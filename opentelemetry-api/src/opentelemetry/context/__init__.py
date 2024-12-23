@@ -41,8 +41,8 @@ def _load_runtime_context() -> _RuntimeContext:
 
     try:
         return next(  # type: ignore
-            iter(
-                entry_points(
+            iter(  # type: ignore
+                entry_points(  # type: ignore
                     group="opentelemetry_context",
                     name=configured_context,
                 )
@@ -55,8 +55,8 @@ def _load_runtime_context() -> _RuntimeContext:
             default_context,
         )
         return next(  # type: ignore
-            iter(
-                entry_points(
+            iter(  # type: ignore
+                entry_points(  # type: ignore
                     group="opentelemetry_context",
                     name=default_context,
                 )
