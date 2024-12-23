@@ -25,6 +25,7 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
   "opentelemetry-proto == 1.30.0.dev",
@@ -32,6 +33,7 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/exporter/opentelemetry-exporter-otlp-proto-common"
+Repository = "https://github.com/open-telemetry/opentelemetry-python"
 
 [tool.hatch.version]
 path = "src/opentelemetry/exporter/otlp/proto/common/version/__init__.py"

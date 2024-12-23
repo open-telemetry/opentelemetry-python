@@ -25,6 +25,7 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Typing :: Typed",
 ]
 dependencies = [
@@ -38,6 +39,7 @@ zipkin_json = "opentelemetry.exporter.zipkin.json:ZipkinExporter"
 
 [project.urls]
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/exporter/opentelemetry-exporter-zipkin-json"
+Repository = "https://github.com/open-telemetry/opentelemetry-python"
 
 [tool.hatch.version]
 path = "src/opentelemetry/exporter/zipkin/json/version/__init__.py"
