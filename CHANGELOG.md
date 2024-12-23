@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4364](https://github.com/open-telemetry/opentelemetry-python/pull/4364))
 - Add Python 3.13 support
   ([#4353](https://github.com/open-telemetry/opentelemetry-python/pull/4353))
+- Disconnect gRPC client stub when shutting down `OTLPSpanExporter`
+  ([#4370](https://github.com/open-telemetry/opentelemetry-python/pull/4370))
 
 ## Version 1.29.0/0.50b0 (2024-12-11)
 
