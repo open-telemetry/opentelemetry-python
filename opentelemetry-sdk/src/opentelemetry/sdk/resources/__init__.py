@@ -176,7 +176,7 @@ class Resource:
     ) -> "Resource":
         """Creates a new `Resource` from attributes.
 
-        This is supposed to be called by the SDK and not by `ResourceDetector` instances.
+        `ResourceDetector` instances should not call this method.
 
         Args:
             attributes: Optional zero or more key-value pairs.
@@ -319,6 +319,7 @@ class ResourceDetector(abc.ABC):
 
     @abc.abstractmethod
     def detect(self) -> "Resource":
+        """Don't call `Resource.create` here to avoid an infinite loop, instead instantiate `Resource` directly"""
         raise NotImplementedError()
 
 
