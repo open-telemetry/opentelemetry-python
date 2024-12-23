@@ -505,22 +505,22 @@ class TestMeter(TestCase):
             "name",
             unit="unit",
             description="description",
-            advisory={"ExplicitBucketBoundaries": [0, 1, 2]},
+            advisory={"explicit_bucket_boundaries": [0, 1, 2]},
         )
 
         self.assertIsInstance(histogram, Histogram)
         self.assertEqual(histogram.name, "name")
         self.assertEqual(
-            histogram.advisory, {"ExplicitBucketBoundaries": [0, 1, 2]}
+            histogram.advisory, {"explicit_bucket_boundaries": [0, 1, 2]}
         )
 
     def test_create_histogram_advisory_validation(self):
         advisories = [
-            {"ExplicitBucketBoundaries": None},
-            {"ExplicitBucketBoundaries": []},
+            {"explicit_bucket_boundaries": None},
+            {"explicit_bucket_boundaries": []},
             {},
             [],
-            {"ExplicitBucketBoundaries": [1, 2.0, "3"]},
+            {"explicit_bucket_boundaries": [1, 2.0, "3"]},
         ]
         for advisory in advisories:
             with self.subTest(advisory=advisory):

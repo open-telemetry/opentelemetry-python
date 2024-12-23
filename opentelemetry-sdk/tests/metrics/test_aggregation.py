@@ -636,7 +636,7 @@ class TestDefaultAggregation(TestCase):
                 "name",
                 Mock(),
                 Mock(),
-                advisory={"ExplicitBucketBoundaries": boundaries},
+                advisory={"explicit_bucket_boundaries": boundaries},
             ),
             Mock(),
             _default_reservoir_factory,

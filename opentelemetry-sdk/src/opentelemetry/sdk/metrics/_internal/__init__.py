@@ -207,7 +207,7 @@ class Meter(APIMeter):
         if advisory is not None:
             raise_error = False
             try:
-                boundaries = advisory["ExplicitBucketBoundaries"]
+                boundaries = advisory["explicit_bucket_boundaries"]
                 raise_error = not (
                     boundaries
                     and all(isinstance(e, (int, float)) for e in boundaries)
@@ -217,7 +217,7 @@ class Meter(APIMeter):
 
             if raise_error:
                 raise ValueError(
-                    "Advisory must be a dict with ExplicitBucketBoundaries key containing a sequence of numbers"
+                    "Advisory must be a dict with explicit_bucket_boundaries key containing a sequence of numbers"
                 )
 
         (

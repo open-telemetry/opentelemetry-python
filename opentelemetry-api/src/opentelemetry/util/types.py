@@ -58,4 +58,4 @@ AttributesAsKey = Tuple[
 
 
 class MetricsInstrumentAdvisory(TypedDict):
-    ExplicitBucketBoundaries: Optional[AnyValue]
+    explicit_bucket_boundaries: Optional[AnyValue]
