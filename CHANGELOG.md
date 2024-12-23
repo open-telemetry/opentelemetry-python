@@ -6,9 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+
 - Fix OTLP encoders missing instrumentation scope schema url and attributes
   ([#4359](https://github.com/open-telemetry/opentelemetry-python/pull/4359))  
-
 - Add `attributes` field in `metrics.get_meter` wrapper function
   ([#4364](https://github.com/open-telemetry/opentelemetry-python/pull/4364))
 - Add Python 3.13 support
