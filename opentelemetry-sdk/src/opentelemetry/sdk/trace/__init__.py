@@ -1228,7 +1228,6 @@ class TracerProvider(trace_api.TracerProvider):
         attributes: typing.Optional[types.Attributes] = None,
     ) -> "trace_api.Tracer":
         if self._disabled:
-            logger.warning("SDK is disabled.")
             return NoOpTracer()
         if not instrumenting_module_name:  # Reject empty strings too.
             instrumenting_module_name = ""
