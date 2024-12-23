@@ -176,7 +176,7 @@ class Resource:
     ) -> "Resource":
         """Creates a new `Resource` from attributes.
 
-        This is supposed to be called by the SDK and not by ResourceDetector instances.
+        This is supposed to be called by the SDK and not by `ResourceDetector` instances.
 
         Args:
             attributes: Optional zero or more key-value pairs.
