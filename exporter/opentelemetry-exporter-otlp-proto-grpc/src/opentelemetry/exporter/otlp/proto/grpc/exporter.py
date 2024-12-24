@@ -243,9 +243,7 @@ class OTLPExporterMixin(
         ) or Compression.NoCompression
 
         if insecure:
-            self._client = self._stub(
-                insecure_channel(self._endpoint, compression=compression)
-            )
+            self._channel = insecure_channel(self._endpoint, compression=compression)
         else:
             credentials = _get_credentials(
                 credentials,
@@ -253,11 +251,10 @@ class OTLPExporterMixin(
                 OTEL_EXPORTER_OTLP_CLIENT_KEY,
                 OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
             )
-            self._client = self._stub(
-                secure_channel(
-                    self._endpoint, credentials, compression=compression
-                )
+            self._channel = secure_channel(
+                self._endpoint, credentials, compression=compression
             )
+        self._client = self._stub(self._channel)
 
         self._export_lock = threading.Lock()
         self._shutdown = False
@@ -360,7 +357,7 @@ class OTLPExporterMixin(
         # wait for the last export if any
         self._export_lock.acquire(timeout=timeout_millis / 1e3)
         self._shutdown = True
-        self._client = None
+        self._channel.close()
         self._export_lock.release()
 
     @property
