@@ -15,7 +15,6 @@
 # pylint: disable=protected-access
 
 import unittest
-import warnings
 from unittest.mock import Mock, patch
 
 from opentelemetry.sdk._logs import LoggerProvider
@@ -70,12 +69,9 @@ class TestLoggerProvider(unittest.TestCase):
 
     @patch.dict("os.environ", {OTEL_SDK_DISABLED: "true"})
     def test_get_logger_with_sdk_disabled(self):
-        with warnings.catch_warnings(record=True) as cw:
-            logger = LoggerProvider().get_logger(Mock())
+        logger = LoggerProvider().get_logger(Mock())
 
         self.assertIsInstance(logger, NoOpLogger)
-        self.assertEqual(len(cw), 1)
-        self.assertEqual("SDK is disabled.", str(cw[0].message))
 
     @patch.object(Resource, "create")
     def test_logger_provider_init(self, resource_patch):
