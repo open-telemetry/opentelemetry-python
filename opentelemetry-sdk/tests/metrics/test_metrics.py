@@ -500,6 +500,38 @@ class TestMeter(TestCase):
         self.assertIsInstance(histogram, Histogram)
         self.assertEqual(histogram.name, "name")
 
+    def test_create_histogram_with_advisory(self):
+        histogram = self.meter.create_histogram(
+            "name",
+            unit="unit",
+            description="description",
+            advisory={"explicit_bucket_boundaries": [0, 1, 2]},
+        )
+
+        self.assertIsInstance(histogram, Histogram)
+        self.assertEqual(histogram.name, "name")
+        self.assertEqual(
+            histogram.advisory, {"explicit_bucket_boundaries": [0, 1, 2]}
+        )
+
+    def test_create_histogram_advisory_validation(self):
+        advisories = [
+            {"explicit_bucket_boundaries": None},
+            {"explicit_bucket_boundaries": []},
+            {},
+            [],
+            {"explicit_bucket_boundaries": [1, 2.0, "3"]},
+        ]
+        for advisory in advisories:
+            with self.subTest(advisory=advisory):
+                with self.assertRaises(ValueError):
+                    self.meter.create_histogram(
+                        "name",
+                        unit="unit",
+                        description="description",
+                        advisory=advisory,
+                    )
+
     def test_create_observable_gauge(self):
         observable_gauge = self.meter.create_observable_gauge(
             "name", callbacks=[Mock()], unit="unit", description="description"
