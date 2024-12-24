@@ -61,6 +61,7 @@ from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401
 from opentelemetry.proto.resource.v1.resource_pb2 import Resource  # noqa: F401
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_CHANNEL_OPTIONS,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_KEY,
     OTEL_EXPORTER_OTLP_COMPRESSION,
@@ -182,6 +183,7 @@ class OTLPExporterMixin(
         insecure: Connection type
         credentials: ChannelCredentials object for server authentication
         headers: Headers to send when exporting
+        channel_options: Options to pass to the gRPC channel
         timeout: Backend request timeout in seconds
         compression: gRPC compression method to use
     """
@@ -193,6 +195,9 @@ class OTLPExporterMixin(
         credentials: Optional[ChannelCredentials] = None,
         headers: Optional[
             Union[TypingSequence[Tuple[str, str]], Dict[str, str], str]
+        ] = None,
+        channel_options: Optional[
+            Union[TypingSequence[Tuple[str, str]], str]
         ] = None,
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
@@ -242,9 +247,32 @@ class OTLPExporterMixin(
             else compression
         ) or Compression.NoCompression
 
+        self._collector_kwargs = None
+
+        self._channel_options = channel_options or environ.get(
+            OTEL_EXPORTER_OTLP_CHANNEL_OPTIONS
+        )
+        if isinstance(self._channel_options, str):
+            self._channel_options: List[Tuple[str, str]] = []
+            for item in self._channel_options.split(","):
+                try:
+                    key, value = item.split("=", maxsplit=1)
+                except ValueError as exc:
+                    logger.warning(
+                        "Invalid key value channel option pair %s: %s",
+                        item,
+                        exc,
+                    )
+                    continue
+                self._channel_options.append((key, value))
+
         if insecure:
             self._client = self._stub(
-                insecure_channel(self._endpoint, compression=compression)
+                insecure_channel(
+                    self._endpoint,
+                    compression=compression,
+                    options=self._channel_options,
+                )
             )
         else:
             credentials = _get_credentials(
@@ -255,7 +283,10 @@ class OTLPExporterMixin(
             )
             self._client = self._stub(
                 secure_channel(
-                    self._endpoint, credentials, compression=compression
+                    self._endpoint,
+                    credentials,
+                    compression=compression,
+                    options=self._channel_options,
                 )
             )
 
