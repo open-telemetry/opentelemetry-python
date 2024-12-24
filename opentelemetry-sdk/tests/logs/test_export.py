@@ -217,8 +217,8 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
                 "Temperature hits high 420 C in Hyderabad",
                 "CRITICAL",
             ),
-            (["list", "of", "strings"], "WARN"),
-            ({"key": "value"}, "ERROR"),
+            ("['list', 'of', 'strings']", "WARN"),
+            ("{'key': 'value'}", "ERROR"),
         ]
         emitted = [
             (item.log_record.body, item.log_record.severity_text)
@@ -232,8 +232,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
 
     def test_simple_log_record_processor_custom_single_obj(self):
         """
-        Tests that special-case handling for logging a single non-string object
-        is correctly applied.
+        Tests that logging a single non-string object uses getMessage
         """
         exporter = InMemoryLogExporter()
         log_record_processor = BatchLogRecordProcessor(exporter)
@@ -259,9 +258,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         logger.warning("a string with a percent-s: %s", "and arg")
         # non-string msg with args - getMessage stringifies msg and formats args into it
         logger.warning(["a non-string with a percent-s", "%s"], "and arg")
-        # non-string msg with no args:
-        #  - normally getMessage would stringify the object and bypass formatting
-        #  - SPECIAL CASE: bypass stringification as well to keep the raw object
+        # non-string msg with no args - getMessage stringifies the object and bypasses formatting
         logger.warning(["a non-string with a percent-s", "%s"])
         log_record_processor.shutdown()
 
@@ -270,7 +267,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
             ("a string with a percent-s: %s"),
             ("a string with a percent-s: and arg"),
             ("['a non-string with a percent-s', 'and arg']"),
-            (["a non-string with a percent-s", "%s"]),
+            ("['a non-string with a percent-s', '%s']"),
         ]
         for emitted, expected in zip(finished_logs, expected):
             self.assertEqual(emitted.log_record.body, expected)
