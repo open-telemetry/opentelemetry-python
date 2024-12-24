@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4353](https://github.com/open-telemetry/opentelemetry-python/pull/4353))
 - sdk: don't log or print warnings when the SDK has been disabled
   ([#4371](https://github.com/open-telemetry/opentelemetry-python/pull/4371))
+- Disconnect gRPC client stub when shutting down `OTLPSpanExporter`
+  ([#4370](https://github.com/open-telemetry/opentelemetry-python/pull/4370))
 
 ## Version 1.29.0/0.50b0 (2024-12-11)
 
