@@ -36,7 +36,6 @@ The following code shows how to obtain a logger using the global :class:`.Logger
 from opentelemetry._logs._internal import (
     Logger,
     LoggerProvider,
-    LogRecord,
     NoOpLogger,
     NoOpLoggerProvider,
     get_logger,
@@ -48,7 +47,6 @@ from opentelemetry._logs.severity import SeverityNumber, std_to_otel
 __all__ = [
     "Logger",
     "LoggerProvider",
-    "LogRecord",
     "NoOpLogger",
     "NoOpLoggerProvider",
     "get_logger",
