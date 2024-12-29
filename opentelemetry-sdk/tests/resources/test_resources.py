@@ -800,3 +800,11 @@ class TestHostResourceDetector(unittest.TestCase):
         resource = Resource({}).create()
         self.assertIn(HOST_NAME, resource.attributes)
         self.assertIn(HOST_ARCH, resource.attributes)
+
+    @patch.dict(
+        environ, {OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: "doesnotexist,host"}, clear=True
+    )
+    def test_resource_detector_entry_points_tolerate_missing_detector(self):
+        resource = Resource({}).create()
+        self.assertIn(HOST_NAME, resource.attributes)
+        self.assertIn(HOST_ARCH, resource.attributes)
