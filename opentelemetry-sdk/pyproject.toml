@@ -24,11 +24,12 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Typing :: Typed",
 ]
 dependencies = [
-  "opentelemetry-api == 1.29.0.dev",
-  "opentelemetry-semantic-conventions == 0.50b0.dev",
+  "opentelemetry-api == 1.30.0.dev",
+  "opentelemetry-semantic-conventions == 0.51b0.dev",
   "typing-extensions >= 3.7.4",
 ]
 
@@ -72,6 +73,7 @@ host = "opentelemetry.sdk.resources:_HostResourceDetector"
 
 [project.urls]
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/opentelemetry-sdk"
+Repository = "https://github.com/open-telemetry/opentelemetry-python"
 
 [tool.hatch.version]
 path = "src/opentelemetry/sdk/version/__init__.py"

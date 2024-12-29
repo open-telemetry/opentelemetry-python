@@ -23,7 +23,8 @@ This package implements `OpenTelemetry Resources
     these attributes can be included in the Resource.*
 
 Resource objects are created with `Resource.create`, which accepts attributes
-(key-values). Resources should NOT be created via constructor, and working with
+(key-values). Resources should NOT be created via constructor except by `ResourceDetector`
+instances which can't use `Resource.create` to avoid infinite loops. Working with
 `Resource` objects should only be done via the Resource API methods. Resource
 attributes can also be passed at process invocation in the
 :envvar:`OTEL_RESOURCE_ATTRIBUTES` environment variable. You should register
@@ -175,6 +176,8 @@ class Resource:
     ) -> "Resource":
         """Creates a new `Resource` from attributes.
 
+        `ResourceDetector` instances should not call this method.
+
         Args:
             attributes: Optional zero or more key-value pairs.
             schema_url: Optional URL pointing to the schema
@@ -320,6 +323,7 @@ class ResourceDetector(abc.ABC):
 
     @abc.abstractmethod
     def detect(self) -> "Resource":
+        """Don't call `Resource.create` here to avoid an infinite loop, instead instantiate `Resource` directly"""
         raise NotImplementedError()
 
 

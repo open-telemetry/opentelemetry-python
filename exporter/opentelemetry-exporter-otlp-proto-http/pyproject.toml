@@ -25,14 +25,15 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
   "Deprecated >= 1.2.6",
   "googleapis-common-protos ~= 1.52",
   "opentelemetry-api ~= 1.15",
-  "opentelemetry-proto == 1.29.0.dev",
-  "opentelemetry-sdk ~= 1.29.0.dev",
-  "opentelemetry-exporter-otlp-proto-common == 1.29.0.dev",
+  "opentelemetry-proto == 1.30.0.dev",
+  "opentelemetry-sdk ~= 1.30.0.dev",
+  "opentelemetry-exporter-otlp-proto-common == 1.30.0.dev",
   "requests ~= 2.7",
 ]
 
@@ -47,6 +48,7 @@ otlp_proto_http = "opentelemetry.exporter.otlp.proto.http._log_exporter:OTLPLogE
 
 [project.urls]
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/exporter/opentelemetry-exporter-otlp-proto-http"
+Repository = "https://github.com/open-telemetry/opentelemetry-python"
 
 [tool.hatch.version]
 path = "src/opentelemetry/exporter/otlp/proto/http/version/__init__.py"

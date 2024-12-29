@@ -24,15 +24,17 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
   "asgiref ~= 3.0",
-  "opentelemetry-api == 1.29.0.dev",
-  "opentelemetry-sdk == 1.29.0.dev",
+  "opentelemetry-api == 1.30.0.dev",
+  "opentelemetry-sdk == 1.30.0.dev",
 ]
 
 [project.urls]
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tests/opentelemetry-test-utils"
+Repository = "https://github.com/open-telemetry/opentelemetry-python"
 
 [tool.hatch.version]
 path = "src/opentelemetry/test/version/__init__.py"

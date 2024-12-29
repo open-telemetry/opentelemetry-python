@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Add `attributes` field in `metrics.get_meter` wrapper function
+  ([#4364](https://github.com/open-telemetry/opentelemetry-python/pull/4364))
+- Add Python 3.13 support
+  ([#4353](https://github.com/open-telemetry/opentelemetry-python/pull/4353))
+- sdk: don't log or print warnings when the SDK has been disabled
+  ([#4371](https://github.com/open-telemetry/opentelemetry-python/pull/4371))
+
+## Version 1.29.0/0.50b0 (2024-12-11)
+
 - Fix crash exporting a log record with None body
   ([#4276](https://github.com/open-telemetry/opentelemetry-python/pull/4276))
 - Fix metrics export with exemplar and no context and filtering observable instruments

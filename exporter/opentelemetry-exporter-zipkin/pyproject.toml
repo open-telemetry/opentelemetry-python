@@ -25,11 +25,12 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Typing :: Typed",
 ]
 dependencies = [
-  "opentelemetry-exporter-zipkin-json == 1.29.0.dev",
-  "opentelemetry-exporter-zipkin-proto-http == 1.29.0.dev",
+  "opentelemetry-exporter-zipkin-json == 1.30.0.dev",
+  "opentelemetry-exporter-zipkin-proto-http == 1.30.0.dev",
 ]
 
 [project.entry-points.opentelemetry_traces_exporter]
@@ -37,6 +38,7 @@ zipkin = "opentelemetry.exporter.zipkin.proto.http:ZipkinExporter"
 
 [project.urls]
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/exporter/opentelemetry-exporter-zipkin"
+Repository = "https://github.com/open-telemetry/opentelemetry-python"
 
 [tool.hatch.version]
 path = "src/opentelemetry/exporter/zipkin/version/__init__.py"
