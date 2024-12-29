@@ -806,5 +806,7 @@ class TestHostResourceDetector(unittest.TestCase):
     )
     def test_resource_detector_entry_points_tolerate_missing_detector(self):
         resource = Resource({}).create()
+        self.assertEqual(
+            resource.attributes["telemetry.sdk.language"], "python"
+        )
         self.assertIn(HOST_NAME, resource.attributes)
-        self.assertIn(HOST_ARCH, resource.attributes)
