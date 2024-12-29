@@ -200,16 +200,20 @@ class Resource:
 
         resource_detector: str
         for resource_detector in otel_experimental_resource_detectors:
-            resource_detectors.append(
-                next(
-                    iter(
-                        entry_points(
-                            group="opentelemetry_resource_detector",
-                            name=resource_detector.strip(),
-                        )  # type: ignore
-                    )
-                ).load()()
-            )
+            try:
+                resource_detectors.append(
+                    next(
+                        iter(
+                            entry_points(
+                                group="opentelemetry_resource_detector",
+                                name=resource_detector.strip(),
+                            )  # type: ignore
+                        )
+                    ).load()()
+                )
+            except:
+                # TODO emit warning per failed detector?
+                continue
         resource = get_aggregated_resources(
             resource_detectors, _DEFAULT_RESOURCE
         ).merge(Resource(attributes, schema_url))
