@@ -64,7 +64,7 @@ class ContextTestCases:
             self.assertEqual("yyy", context.get_value("a"))
 
             with self.assertLogs(level=ERROR):
-                context.detach("some garbage")  # type:ignore
+                context.detach("some garbage")
 
         def test_detach_out_of_order(self):
             t1 = context.attach(context.set_value("c", 1))
