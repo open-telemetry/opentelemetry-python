@@ -537,7 +537,6 @@ class MeterProvider(APIMeterProvider):
         attributes: Optional[Attributes] = None,
     ) -> Meter:
         if self._disabled:
-            _logger.warning("SDK is disabled.")
             return NoOpMeter(name, version=version, schema_url=schema_url)
 
         if self._shutdown:

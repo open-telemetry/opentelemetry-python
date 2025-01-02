@@ -1228,7 +1228,6 @@ class TracerProvider(trace_api.TracerProvider):
         attributes: typing.Optional[types.Attributes] = None,
     ) -> "trace_api.Tracer":
         if self._disabled:
-            logger.warning("SDK is disabled.")
             return NoOpTracer()
         if not instrumenting_module_name:  # Reject empty strings too.
             instrumenting_module_name = ""
@@ -1277,7 +1276,7 @@ class TracerProvider(trace_api.TracerProvider):
         # SynchronousMultiSpanProcessor and ConcurrentMultiSpanProcessor.
         self._active_span_processor.add_span_processor(span_processor)
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         """Shut down the span processors added to the tracer provider."""
         self._active_span_processor.shutdown()
         if self._atexit_handler is not None:
