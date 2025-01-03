@@ -214,8 +214,11 @@ class Resource:
                         )
                     ).load()()
                 )
-            except:
-                # TODO emit warning per failed detector?
+            except Exception as exc:  # pylint: disable=broad-exception-caught
+                logger.exception(
+                    "Failed to load resource detector %s, skipping",
+                    entrypoint.name
+                )
                 continue
         resource = get_aggregated_resources(
             resource_detectors, _DEFAULT_RESOURCE
