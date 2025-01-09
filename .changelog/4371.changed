@@ -1,0 +1,1 @@
+sdk: don't log or print warnings when the SDK has been disabled

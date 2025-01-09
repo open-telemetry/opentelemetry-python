@@ -49,3 +49,27 @@ known-third-party = [
   "opencensus",
 ]
 known-first-party = ["opentelemetry", "opentelemetry_example_app"]
+
+[tool.towncrier]
+directory = ".changelog"
+filename = "CHANGELOG.md"
+start_string = "<!-- changelog start -->\n"
+template = "scripts/changelog_template.j2"
+issue_format = "[#{issue}](https://github.com/open-telemetry/opentelemetry-python/pull/{issue})"
+wrap = true # to wrap fragments to a line length of 79
+issue_pattern = "^(\\d+)" # to allow only PR numbers as prefix (e.g. 1234.fixed)
+
+[[tool.towncrier.type]]
+directory="changed"
+name = "Changed"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory="added"
+name = "Added"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory="fixed"
+name = "Fixed"
+showcontent = true

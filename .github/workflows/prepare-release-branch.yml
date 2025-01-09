@@ -24,11 +24,6 @@ jobs:
             exit 1
           fi
 
-          if ! grep --quiet "^## Unreleased$" CHANGELOG.md; then
-            echo the change log is missing an \"Unreleased\" section
-            exit 1
-          fi
-
           if [[ ! -z $PRERELEASE_VERSION ]]; then
             stable_version=$(./scripts/eachdist.py version --mode stable)
             stable_version=${stable_version//.dev/}
@@ -44,8 +39,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install toml
-        run: pip install toml
+      - name: Install deps
+        run: pip install toml towncrier
 
       - name: Create release branch
         env:
@@ -82,10 +77,8 @@ jobs:
       - name: Update version
         run: .github/scripts/update-version.sh $STABLE_VERSION $UNSTABLE_VERSION
 
-      - name: Update the change log with the approximate release date
-        run: |
-          date=$(date "+%Y-%m-%d")
-          sed -Ei "s/^## Unreleased$/## Version ${STABLE_VERSION}\/${UNSTABLE_VERSION} ($date)/" CHANGELOG.md
+      - name: Generate changelog
+        run: towncrier build --yes --version "$STABLE_VERSION/$UNSTABLE_VERSION"
 
       - name: Use CLA approved github bot
         run: .github/scripts/use-cla-approved-github-bot.sh
@@ -111,8 +104,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install toml
-        run: pip install toml
+      - name: Install deps
+        run: pip install toml towncrier
 
       - name: Set environment variables
         env:
@@ -160,11 +153,8 @@ jobs:
       - name: Update version
         run: .github/scripts/update-version.sh $STABLE_NEXT_VERSION $UNSTABLE_NEXT_VERSION
 
-      - name: Update the change log on main
-        run: |
-          # the actual release date on main will be updated at the end of the release workflow
-          date=$(date "+%Y-%m-%d")
-          sed -Ei "s/^## Unreleased$/## Unreleased\n\n## Version ${STABLE_VERSION}\/${UNSTABLE_VERSION} ($date)/" CHANGELOG.md
+      - name: Generate changelog
+        run: towncrier build --yes --version "$STABLE_VERSION/$UNSTABLE_VERSION"
 
       - name: Use CLA approved github bot
         run: .github/scripts/use-cla-approved-github-bot.sh
