@@ -61,6 +61,7 @@ exception to standard logging, the exception won't be raised any further.
 
 from abc import ABC, abstractmethod
 from logging import getLogger
+from typing import Optional
 
 from opentelemetry.util._importlib_metadata import entry_points
 
@@ -69,7 +70,7 @@ logger = getLogger(__name__)
 
 class ErrorHandler(ABC):
     @abstractmethod
-    def _handle(self, error: Exception, *args, **kwargs):
+    def _handle(self, error: Exception, *args, **kwargs) -> None:  # type: ignore[misc, no-untyped-def]
         """
         Handle an exception
         """
@@ -83,7 +84,7 @@ class _DefaultErrorHandler(ErrorHandler):
     """
 
     # pylint: disable=useless-return
-    def _handle(self, error: Exception, *args, **kwargs):
+    def _handle(self, error: Exception, *args, **kwargs) -> None:  # type: ignore[no-untyped-def]
         logger.exception("Error handled by default error handler: ")
         return None
 
@@ -105,26 +106,26 @@ class GlobalErrorHandler:
 
         return cls._instance
 
-    def __enter__(self):
+    def __enter__(self) -> None:
         pass
 
     # pylint: disable=no-self-use
-    def __exit__(self, exc_type, exc_value, traceback):
-        if exc_value is None:
+    def __exit__(self, exc_type, exc_value, traceback) -> Optional[bool]:  # type: ignore[no-untyped-def]
+        if exc_value is None:  # type: ignore
             return None
 
         plugin_handled = False
 
-        error_handler_entry_points = entry_points(
+        error_handler_entry_points = entry_points(  # type: ignore[misc]
             group="opentelemetry_error_handler"
         )
 
-        for error_handler_entry_point in error_handler_entry_points:
-            error_handler_class = error_handler_entry_point.load()
+        for error_handler_entry_point in error_handler_entry_points:  # type: ignore[misc]
+            error_handler_class = error_handler_entry_point.load()  # type: ignore[misc]
 
-            if issubclass(error_handler_class, exc_value.__class__):
+            if issubclass(error_handler_class, exc_value.__class__):  # type: ignore[misc]
                 try:
-                    error_handler_class()._handle(exc_value)
+                    error_handler_class()._handle(exc_value)  # type: ignore[misc]
                     plugin_handled = True
 
                 # pylint: disable=broad-exception-caught
@@ -133,11 +134,11 @@ class GlobalErrorHandler:
                         "%s error while handling error"
                         " %s by error handler %s",
                         error_handling_error.__class__.__name__,
-                        exc_value.__class__.__name__,
-                        error_handler_class.__name__,
+                        exc_value.__class__.__name__,  # type: ignore[misc]
+                        error_handler_class.__name__,  # type: ignore[misc]
                     )
 
         if not plugin_handled:
-            _DefaultErrorHandler()._handle(exc_value)
+            _DefaultErrorHandler()._handle(exc_value)  # type: ignore[misc]
 
         return True

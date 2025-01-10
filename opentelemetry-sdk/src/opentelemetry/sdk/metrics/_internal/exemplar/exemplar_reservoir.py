@@ -129,7 +129,7 @@ class ExemplarBucket:
             {
                 k: v
                 for k, v in self.__attributes.items()
-                if k not in point_attributes
+                if k not in point_attributes  # type: ignore[operator]
             }
             if self.__attributes
             else None
@@ -162,8 +162,8 @@ class BucketIndexError(ValueError):
 class FixedSizeExemplarReservoirABC(ExemplarReservoir):
     """Abstract class for a reservoir with fixed size."""
 
-    def __init__(self, size: int, **kwargs) -> None:
-        super().__init__(**kwargs)
+    def __init__(self, size: int, **kwargs) -> None:  # type: ignore[no-untyped-def]
+        super().__init__(**kwargs)  # type: ignore[misc]
         self._size: int = size
         self._reservoir_storage: Mapping[int, ExemplarBucket] = defaultdict(
             ExemplarBucket
@@ -257,8 +257,8 @@ class SimpleFixedSizeExemplarReservoir(FixedSizeExemplarReservoirABC):
         https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/sdk.md#simplefixedsizeexemplarreservoir
     """
 
-    def __init__(self, size: int = 1, **kwargs) -> None:
-        super().__init__(size, **kwargs)
+    def __init__(self, size: int = 1, **kwargs) -> None:  # type: ignore[no-untyped-def]
+        super().__init__(size, **kwargs)  # type: ignore[misc]
         self._measurements_seen: int = 0
 
     def _reset(self) -> None:
@@ -292,8 +292,8 @@ class AlignedHistogramBucketExemplarReservoir(FixedSizeExemplarReservoirABC):
         https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/sdk.md#alignedhistogrambucketexemplarreservoir
     """
 
-    def __init__(self, boundaries: Sequence[float], **kwargs) -> None:
-        super().__init__(len(boundaries) + 1, **kwargs)
+    def __init__(self, boundaries: Sequence[float], **kwargs) -> None:  # type: ignore[no-untyped-def]
+        super().__init__(len(boundaries) + 1, **kwargs)  # type: ignore[misc]
         self._boundaries: Sequence[float] = boundaries
 
     def offer(
