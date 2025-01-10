@@ -9,16 +9,11 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install toml
-        run: pip install toml
+        run: pip install toml towncrier
 
       - run: |
           if [[ ! $GITHUB_REF_NAME =~ ^release/v[0-9]+\.[0-9]+\.x-0\.[0-9]+bx$ ]]; then
             echo this workflow should only be run against long-term release branches
-            exit 1
-          fi
-
-          if ! grep --quiet "^## Unreleased$" CHANGELOG.md; then
-            echo the change log is missing an \"Unreleased\" section
             exit 1
           fi
 
@@ -56,10 +51,8 @@ jobs:
       - name: Update version
         run: .github/scripts/update-version-patch.sh $STABLE_VERSION $UNSTABLE_VERSION $STABLE_VERSION_PREV $UNSTABLE_VERSION_PREV
 
-      - name: Update the change log with the approximate release date
-        run: |
-          date=$(date "+%Y-%m-%d")
-          sed -Ei "s/^## Unreleased$/## Version ${STABLE_VERSION}\/${UNSTABLE_VERSION} ($date)/" CHANGELOG.md
+      - name: Generate changelog
+        run: towncrier build --yes --version "$STABLE_VERSION/$UNSTABLE_VERSION"
 
       - name: Use CLA approved github bot
         run: .github/scripts/use-cla-approved-github-bot.sh
@@ -78,3 +71,32 @@ jobs:
                        --body "$message." \
                        --head $branch \
                        --base $GITHUB_REF_NAME
+
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Use CLA approved github bot
+        run: .github/scripts/use-cla-approved-github-bot.sh
+
+      - name: Backport patch release changelog to main
+        env:
+          # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
+          GITHUB_TOKEN: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}
+        run: |
+          release_branch="opentelemetrybot/prepare-release-${STABLE_VERSION}-${UNSTABLE_VERSION}"
+          message="Backport ${STABLE_VERSION}/${UNSTABLE_VERSION} changelog"
+          body="Backport \`${STABLE_VERSION}/${UNSTABLE_VERSION}\` changelog"
+          branch="opentelemetrybot/backport-changelog-from-${STABLE_VERSION}-${UNSTABLE_VERSION}"
+
+          git fetch origin $release_branch
+
+          # Copy the updated CHANGELOG.md from the release branch
+          git checkout $release_branch -- CHANGELOG.md
+          git commit -m "$message"
+
+          git push origin HEAD:$branch
+          gh pr create --title "$message" \
+                       --body "$body" \
+                       --head $branch \
+                       --base main

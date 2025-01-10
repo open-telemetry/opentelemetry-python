@@ -13,24 +13,48 @@ on:
 jobs:
   changelog:
     runs-on: ubuntu-latest
-    if: |
-      !contains(github.event.pull_request.labels.*.name, 'Skip Changelog')
-      && github.actor != 'opentelemetrybot'
-
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
 
-      - name: Check for CHANGELOG changes
+      - name: Fetch base branch - ${{ github.base_ref }}
+        run: git fetch origin ${{ github.base_ref }} --depth=1
+
+      - name: Ensure no changes to CHANGELOG.md
+        if: |
+          !contains(github.event.pull_request.labels.*.name, 'Skip Changelog')
+          && github.event.pull_request.user.login != 'opentelemetrybot'
         run: |
-          # Only the latest commit of the feature branch is available
-          # automatically. To diff with the base branch, we need to
-          # fetch that too (and we only need its latest commit).
-          git fetch origin ${{ github.base_ref }} --depth=1
-          if [[ $(git diff --name-only FETCH_HEAD | grep CHANGELOG) ]]
+          # If there are any changes to CHANGELOG.md, fail.
+          if [[ $(git diff --name-only FETCH_HEAD -- 'CHANGELOG.md') ]]
           then
-            echo "A CHANGELOG was modified. Looks good!"
-          else
-            echo "No CHANGELOG was modified."
-            echo "Please add a CHANGELOG entry, or add the \"Skip Changelog\" label if not required."
+            echo "CHANGELOG.md should not be directly modified."
+            echo "Please add a entry file to the .changelog/ directory instead."
+            echo "See CONTRIBUTING.md for more details."
+            echo "Alternately, add the \"Skip Changelog\" label if this job should be skipped."
             false
+          else
+            echo "CHANGELOG.md was not modified."
           fi
+
+      - name: Ensure changelog entry addition
+        if: |
+          !contains(github.event.pull_request.labels.*.name, 'Skip Changelog')
+          && github.event.pull_request.user.login != 'opentelemetrybot'
+        run: |
+          if [[ -z $(git diff --diff-filter=A --name-only FETCH_HEAD -- './.changelog/${{ github.event.pull_request.number }}*') ]]
+          then
+            echo "No changelog entry was added to the ./.changelog/ directory."
+            echo "Please add a changelog entry file to the ./.changelog/ directory."
+            echo "See CONTRIBUTING.md for more details."
+            echo "Alternately, add the \"Skip Changelog\" label if this job should be skipped."
+            false
+          else
+            echo "A changelog entry was added to the ./.changelog/ directory."
+          fi
+
+      - name: Install towncrier
+        run: pip install towncrier
+
+      - name: Generate changelog
+        run: towncrier build --draft --version "Unreleased"
