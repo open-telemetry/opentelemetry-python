@@ -15,7 +15,6 @@
 import logging
 import os
 import unittest
-import warnings
 from unittest.mock import Mock, patch
 
 from opentelemetry._logs import NoOpLoggerProvider, SeverityNumber
@@ -290,11 +289,7 @@ class TestLoggingHandler(unittest.TestCase):
         processor, logger = set_up_test_logging(
             logging.NOTSET, root_logger=True
         )
-        with warnings.catch_warnings(record=True) as cw:
-            logger.warning("hello")
-
-        self.assertEqual(len(cw), 1)
-        self.assertEqual("SDK is disabled.", str(cw[0].message))
+        logger.warning("hello")
 
         self.assertEqual(processor.emit_count(), 0)
 

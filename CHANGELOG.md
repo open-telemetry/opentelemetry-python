@@ -9,10 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix OTLP encoders missing instrumentation scope schema url and attributes
   ([#4359](https://github.com/open-telemetry/opentelemetry-python/pull/4359))  
+- Always setup logs sdk, OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED only controls python `logging` module handler setup
+  ([#4340](https://github.com/open-telemetry/opentelemetry-python/pull/4340))
 - Add `attributes` field in `metrics.get_meter` wrapper function
   ([#4364](https://github.com/open-telemetry/opentelemetry-python/pull/4364))
 - Add Python 3.13 support
   ([#4353](https://github.com/open-telemetry/opentelemetry-python/pull/4353))
+- sdk: don't log or print warnings when the SDK has been disabled
+  ([#4371](https://github.com/open-telemetry/opentelemetry-python/pull/4371))
 
 ## Version 1.29.0/0.50b0 (2024-12-11)
 
