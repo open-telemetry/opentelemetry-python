@@ -19,7 +19,6 @@ See the [OpenTelemetry Instrumentation for Python](https://opentelemetry.io/docs
 Project versioning information and stability guarantees can be found [here](./rationale.md#versioning-and-releasing).
 
 ## Getting started
-
 You can find the getting started guide for OpenTelemetry Python [here](https://opentelemetry.io/docs/instrumentation/python/getting-started/).
 
 If you are looking for **examples** on how to use the OpenTelemetry API to
