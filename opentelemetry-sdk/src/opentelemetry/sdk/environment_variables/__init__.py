@@ -669,7 +669,7 @@ _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED = (
 .. envvar:: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
 
 The :envvar:`OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED` environment variable allows users to
-enable/disable the logging SDK auto instrumentation.
+enable/disable the auto instrumentation for the python logging module.
 Default: False
 
 Note: Logs SDK and its related settings are experimental.
