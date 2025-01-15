@@ -21,7 +21,16 @@ from functools import partial
 from logging import getLogger
 from math import inf
 from threading import Lock
-from typing import Callable, Generic, List, Optional, Sequence, Type, TypeVar
+from typing import (
+    Callable,
+    Generic,
+    List,
+    Optional,
+    Sequence,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from opentelemetry.metrics import (
     Asynchronous,
@@ -463,7 +472,7 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         instrument_aggregation_temporality: AggregationTemporality,
         start_time_unix_nano: int,
         reservoir_builder: ExemplarReservoirBuilder,
-        boundaries: Optional[Sequence[float]] = None,
+        boundaries: Optional[Union[Sequence[float], Sequence[int]]] = None,
         record_min_max: bool = True,
     ):
         if boundaries is None:
@@ -1276,7 +1285,7 @@ class DefaultAggregation(Aggregation):
             )
 
         if isinstance(instrument, Histogram):
-            boundaries: Optional[Sequence[float]] = (
+            boundaries: Optional[Union[Sequence[float], Sequence[int]]] = (
                 instrument._advisory.get("explicit_bucket_boundaries")
                 if instrument._advisory is not None
                 else None
@@ -1361,7 +1370,7 @@ class ExplicitBucketHistogramAggregation(Aggregation):
 
     def __init__(
         self,
-        boundaries: Optional[Sequence[float]] = None,
+        boundaries: Optional[Union[Sequence[float], Sequence[int]]] = None,
         record_min_max: bool = True,
     ) -> None:
         if boundaries is None:
