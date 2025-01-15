@@ -236,7 +236,7 @@ class Histogram(_Synchronous, APIHistogram):
             instrumentation_scope=instrumentation_scope,
             measurement_consumer=measurement_consumer,
         )
-        self.advisory = advisory
+        self._advisory = advisory
 
     def __new__(cls, *args, **kwargs):
         if cls is Histogram:

@@ -1277,8 +1277,8 @@ class DefaultAggregation(Aggregation):
 
         if isinstance(instrument, Histogram):
             boundaries: Optional[Sequence[float]] = (
-                instrument.advisory.get("explicit_bucket_boundaries")
-                if instrument.advisory is not None
+                instrument._advisory.get("explicit_bucket_boundaries")
+                if instrument._advisory is not None
                 else None
             )
             return _ExplicitBucketHistogramAggregation(

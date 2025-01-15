@@ -511,7 +511,7 @@ class TestMeter(TestCase):
         self.assertIsInstance(histogram, Histogram)
         self.assertEqual(histogram.name, "name")
         self.assertEqual(
-            histogram.advisory, {"explicit_bucket_boundaries": [0, 1, 2]}
+            histogram._advisory, {"explicit_bucket_boundaries": [0, 1, 2]}
         )
 
     def test_create_histogram_advisory_validation(self):
