@@ -205,18 +205,19 @@ class Meter(APIMeter):
         advisory: Optional[MetricsInstrumentAdvisory] = None,
     ) -> APIHistogram:
         if advisory is not None:
-            raise_error = False
+            invalid_advisory = False
             try:
                 boundaries = advisory["explicit_bucket_boundaries"]
-                raise_error = not (
+                invalid_advisory = not (
                     boundaries
                     and all(isinstance(e, (int, float)) for e in boundaries)
                 )
             except (KeyError, TypeError):
-                raise_error = True
+                invalid_advisory = True
 
-            if raise_error:
-                raise ValueError(
+            if invalid_advisory:
+                advisory = None
+                _logger.warning(
                     "Advisory must be a dict with explicit_bucket_boundaries key containing a sequence of numbers"
                 )
 

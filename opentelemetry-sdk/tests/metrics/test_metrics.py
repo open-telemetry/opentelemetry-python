@@ -524,7 +524,7 @@ class TestMeter(TestCase):
         ]
         for advisory in advisories:
             with self.subTest(advisory=advisory):
-                with self.assertRaises(ValueError):
+                with self.assertLogs(level=WARNING):
                     self.meter.create_histogram(
                         "name",
                         unit="unit",
