@@ -30,6 +30,7 @@ from typing import (
     Dict,
     Iterator,
     List,
+    Mapping,
     MutableMapping,
     Optional,
     Sequence,
@@ -842,7 +843,7 @@ class Span(trace_api.Span, ReadableSpan):
         return self._context
 
     def set_attributes(
-        self, attributes: Dict[str, types.AttributeValue]
+        self, attributes: Mapping[str, types.AttributeValue]
     ) -> None:
         with self._lock:
             if self._end_time is not None:
