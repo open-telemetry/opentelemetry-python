@@ -24,39 +24,59 @@ from opentelemetry.metrics import Meter, NoOpMeter
 
 class ChildMeter(Meter):
     # pylint: disable=signature-differs
-    def create_counter(self, name, unit="", description=""):
-        super().create_counter(name, unit=unit, description=description)
+    def create_counter(self, name, unit="", description="", advisory=None):
+        super().create_counter(
+            name, unit=unit, description=description, advisory=advisory
+        )
 
-    def create_up_down_counter(self, name, unit="", description=""):
+    def create_up_down_counter(
+        self, name, unit="", description="", advisory=None
+    ):
         super().create_up_down_counter(
-            name, unit=unit, description=description
+            name, unit=unit, description=description, advisory=advisory
         )
 
     def create_observable_counter(
-        self, name, callbacks, unit="", description=""
+        self, name, callbacks, unit="", description="", advisory=None
     ):
         super().create_observable_counter(
-            name, callbacks, unit=unit, description=description
+            name,
+            callbacks,
+            unit=unit,
+            description=description,
+            advisory=advisory,
         )
 
     def create_histogram(self, name, unit="", description="", advisory=None):
-        super().create_histogram(name, unit=unit, description=description)
+        super().create_histogram(
+            name, unit=unit, description=description, advisory=advisory
+        )
 
-    def create_gauge(self, name, unit="", description=""):
-        super().create_gauge(name, unit=unit, description=description)
+    def create_gauge(self, name, unit="", description="", advisory=None):
+        super().create_gauge(
+            name, unit=unit, description=description, advisory=advisory
+        )
 
     def create_observable_gauge(
-        self, name, callbacks, unit="", description=""
+        self, name, callbacks, unit="", description="", advisory=None
     ):
         super().create_observable_gauge(
-            name, callbacks, unit=unit, description=description
+            name,
+            callbacks,
+            unit=unit,
+            description=description,
+            advisory=advisory,
         )
 
     def create_observable_up_down_counter(
-        self, name, callbacks, unit="", description=""
+        self, name, callbacks, unit="", description="", advisory=None
     ):
         super().create_observable_up_down_counter(
-            name, callbacks, unit=unit, description=description
+            name,
+            callbacks,
+            unit=unit,
+            description=description,
+            advisory=advisory,
         )
 
 
