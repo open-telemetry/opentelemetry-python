@@ -42,10 +42,11 @@ The following code shows how to obtain a meter using the global :class:`.MeterPr
 
 import warnings
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from logging import getLogger
 from os import environ
 from threading import Lock
-from typing import List, Optional, Sequence, Set, Tuple, Union, cast
+from typing import Dict, List, Optional, Sequence, Tuple, Union, cast
 
 from opentelemetry.environment_variables import OTEL_PYTHON_METER_PROVIDER
 from opentelemetry.metrics._internal.instrument import (
@@ -177,6 +178,13 @@ class _ProxyMeterProvider(MeterProvider):
                 meter.on_set_meter_provider(meter_provider)
 
 
+@dataclass
+class _InstrumentRegistrationStatus:
+    already_registered: bool
+    conflict: bool
+    current_advisory: Optional[MetricsInstrumentAdvisory]
+
+
 class Meter(ABC):
     """Handles instrument creation.
 
@@ -194,7 +202,7 @@ class Meter(ABC):
         self._name = name
         self._version = version
         self._schema_url = schema_url
-        self._instrument_ids: Set[str] = set()
+        self._instrument_ids: Dict[str, str] = {}
         self._instrument_ids_lock = Lock()
 
     @property
@@ -218,31 +226,50 @@ class Meter(ABC):
         """
         return self._schema_url
 
-    def _is_instrument_registered(
-        self, name: str, type_: type, unit: str, description: str
-    ) -> Tuple[bool, str]:
+    def _register_instrument(
+        self,
+        name: str,
+        type_: type,
+        unit: str,
+        description: str,
+        advisory: Optional[MetricsInstrumentAdvisory] = None,
+    ) -> Tuple[str, _InstrumentRegistrationStatus]:
         """
-        Check if an instrument with the same name, type, unit and description
-        has been registered already.
+        Register an instrument with the name, type, unit and description as
+        identifying keys and the advisory as value.
 
-        Returns a tuple. The first value is `True` if the instrument has been
-        registered already, `False` otherwise. The second value is the
-        instrument id.
+        Returns a tuple. The first value is the instrument id.
+        The second value is an `_InstrumentRegistrationStatus` where
+        `already_registered` is `True` if the instrument has been registered
+        already.
+        If `conflict` is set to True the `current_advisory` attribute contains
+        the registered instrument advisory.
         """
 
         instrument_id = ",".join(
             [name.strip().lower(), type_.__name__, unit, description]
         )
 
-        result = False
+        already_registered, conflict = False, False
+        current_advisory = None
 
         with self._instrument_ids_lock:
-            if instrument_id in self._instrument_ids:
-                result = True
+            # we are not using get because None is a valid value
+            already_registered = instrument_id in self._instrument_ids
+            if already_registered:
+                current_advisory = self._instrument_ids[instrument_id]
+                conflict = current_advisory != advisory
             else:
-                self._instrument_ids.add(instrument_id)
+                self._instrument_ids[instrument_id] = advisory
 
-        return (result, instrument_id)
+        return (
+            instrument_id,
+            _InstrumentRegistrationStatus(
+                already_registered=already_registered,
+                conflict=conflict,
+                current_advisory=current_advisory,
+            ),
+        )
 
     @abstractmethod
     def create_counter(
@@ -250,6 +277,7 @@ class Meter(ABC):
         name: str,
         unit: str = "",
         description: str = "",
+        advisory: Optional[MetricsInstrumentAdvisory] = None,
     ) -> Counter:
         """Creates a `Counter` instrument
 
@@ -266,6 +294,7 @@ class Meter(ABC):
         name: str,
         unit: str = "",
         description: str = "",
+        advisory: Optional[MetricsInstrumentAdvisory] = None,
     ) -> UpDownCounter:
         """Creates an `UpDownCounter` instrument
 
@@ -283,6 +312,7 @@ class Meter(ABC):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
+        advisory: Optional[MetricsInstrumentAdvisory] = None,
     ) -> ObservableCounter:
         """Creates an `ObservableCounter` instrument
 
@@ -395,6 +425,7 @@ class Meter(ABC):
         name: str,
         unit: str = "",
         description: str = "",
+        advisory: Optional[MetricsInstrumentAdvisory] = None,
     ) -> Gauge:
         """Creates a ``Gauge`` instrument
 
@@ -413,6 +444,7 @@ class Meter(ABC):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
+        advisory: Optional[MetricsInstrumentAdvisory] = None,
     ) -> ObservableGauge:
         """Creates an `ObservableGauge` instrument
 
@@ -433,6 +465,7 @@ class Meter(ABC):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
+        advisory: Optional[MetricsInstrumentAdvisory] = None,
     ) -> ObservableUpDownCounter:
         """Creates an `ObservableUpDownCounter` instrument
 
@@ -481,6 +514,7 @@ class _ProxyMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
+        advisory: Optional[MetricsInstrumentAdvisory] = None,
     ) -> Counter:
         with self._lock:
             if self._real_meter:
@@ -494,6 +528,7 @@ class _ProxyMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
+        advisory: Optional[MetricsInstrumentAdvisory] = None,
     ) -> UpDownCounter:
         with self._lock:
             if self._real_meter:
@@ -510,6 +545,7 @@ class _ProxyMeter(Meter):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
+        advisory: Optional[MetricsInstrumentAdvisory] = None,
     ) -> ObservableCounter:
         with self._lock:
             if self._real_meter:
@@ -543,6 +579,7 @@ class _ProxyMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
+        advisory: Optional[MetricsInstrumentAdvisory] = None,
     ) -> Gauge:
         with self._lock:
             if self._real_meter:
@@ -557,6 +594,7 @@ class _ProxyMeter(Meter):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
+        advisory: Optional[MetricsInstrumentAdvisory] = None,
     ) -> ObservableGauge:
         with self._lock:
             if self._real_meter:
@@ -575,6 +613,7 @@ class _ProxyMeter(Meter):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
+        advisory: Optional[MetricsInstrumentAdvisory] = None,
     ) -> ObservableUpDownCounter:
         with self._lock:
             if self._real_meter:
@@ -602,18 +641,22 @@ class NoOpMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
+        advisory: Optional[MetricsInstrumentAdvisory] = None,
     ) -> Counter:
         """Returns a no-op Counter."""
-        if self._is_instrument_registered(
-            name, NoOpCounter, unit, description
-        )[0]:
+        _, status = self._register_instrument(
+            name, NoOpCounter, unit, description, advisory
+        )
+        if status.conflict:
             _logger.warning(
                 "An instrument with name %s, type %s, unit %s and "
-                "description %s has been created already.",
+                "description %s has been created already with a "
+                "different advisory value %s.",
                 name,
                 Counter.__name__,
                 unit,
                 description,
+                status.current_advisory,
             )
         return NoOpCounter(name, unit=unit, description=description)
 
@@ -622,18 +665,22 @@ class NoOpMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
+        advisory: Optional[MetricsInstrumentAdvisory] = None,
     ) -> Gauge:
         """Returns a no-op Gauge."""
-        if self._is_instrument_registered(name, NoOpGauge, unit, description)[
-            0
-        ]:
+        _, status = self._register_instrument(
+            name, NoOpGauge, unit, description, advisory
+        )
+        if status.conflict:
             _logger.warning(
                 "An instrument with name %s, type %s, unit %s and "
-                "description %s has been created already.",
+                "description %s has been created already with a "
+                "different advisory value %s.",
                 name,
                 Gauge.__name__,
                 unit,
                 description,
+                status.current_advisory,
             )
         return NoOpGauge(name, unit=unit, description=description)
 
@@ -642,18 +689,22 @@ class NoOpMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
+        advisory: Optional[MetricsInstrumentAdvisory] = None,
     ) -> UpDownCounter:
         """Returns a no-op UpDownCounter."""
-        if self._is_instrument_registered(
-            name, NoOpUpDownCounter, unit, description
-        )[0]:
+        _, status = self._register_instrument(
+            name, NoOpUpDownCounter, unit, description, advisory
+        )
+        if status.conflict:
             _logger.warning(
                 "An instrument with name %s, type %s, unit %s and "
-                "description %s has been created already.",
+                "description %s has been created already with a "
+                "different advisory value %s.",
                 name,
                 UpDownCounter.__name__,
                 unit,
                 description,
+                status.current_advisory,
             )
         return NoOpUpDownCounter(name, unit=unit, description=description)
 
@@ -663,18 +714,22 @@ class NoOpMeter(Meter):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
+        advisory: Optional[MetricsInstrumentAdvisory] = None,
     ) -> ObservableCounter:
         """Returns a no-op ObservableCounter."""
-        if self._is_instrument_registered(
-            name, NoOpObservableCounter, unit, description
-        )[0]:
+        _, status = self._register_instrument(
+            name, NoOpObservableCounter, unit, description, advisory
+        )
+        if status.conflict:
             _logger.warning(
                 "An instrument with name %s, type %s, unit %s and "
-                "description %s has been created already.",
+                "description %s has been created already with a "
+                "different advisory value %s.",
                 name,
                 ObservableCounter.__name__,
                 unit,
                 description,
+                status.current_advisory,
             )
         return NoOpObservableCounter(
             name,
@@ -691,16 +746,19 @@ class NoOpMeter(Meter):
         advisory: Optional[MetricsInstrumentAdvisory] = None,
     ) -> Histogram:
         """Returns a no-op Histogram."""
-        if self._is_instrument_registered(
-            name, NoOpHistogram, unit, description
-        )[0]:
+        _, status = self._register_instrument(
+            name, NoOpHistogram, unit, description, advisory
+        )
+        if status.conflict:
             _logger.warning(
                 "An instrument with name %s, type %s, unit %s and "
-                "description %s has been created already.",
+                "description %s has been created already with a "
+                "different advisory value %s.",
                 name,
                 Histogram.__name__,
                 unit,
                 description,
+                status.current_advisory,
             )
         return NoOpHistogram(
             name, unit=unit, description=description, advisory=advisory
@@ -712,18 +770,22 @@ class NoOpMeter(Meter):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
+        advisory: Optional[MetricsInstrumentAdvisory] = None,
     ) -> ObservableGauge:
         """Returns a no-op ObservableGauge."""
-        if self._is_instrument_registered(
-            name, NoOpObservableGauge, unit, description
-        )[0]:
+        _, status = self._register_instrument(
+            name, NoOpObservableGauge, unit, description, advisory
+        )
+        if status.conflict:
             _logger.warning(
                 "An instrument with name %s, type %s, unit %s and "
-                "description %s has been created already.",
+                "description %s has been created already with a "
+                "different advisory value %s.",
                 name,
                 ObservableGauge.__name__,
                 unit,
                 description,
+                status.current_advisory,
             )
         return NoOpObservableGauge(
             name,
@@ -738,18 +800,22 @@ class NoOpMeter(Meter):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
+        advisory: Optional[MetricsInstrumentAdvisory] = None,
     ) -> ObservableUpDownCounter:
         """Returns a no-op ObservableUpDownCounter."""
-        if self._is_instrument_registered(
-            name, NoOpObservableUpDownCounter, unit, description
-        )[0]:
+        _, status = self._register_instrument(
+            name, NoOpObservableUpDownCounter, unit, description, advisory
+        )
+        if status.conflict:
             _logger.warning(
                 "An instrument with name %s, type %s, unit %s and "
-                "description %s has been created already.",
+                "description %s has been created already with a "
+                "different advisory value %s.",
                 name,
                 ObservableUpDownCounter.__name__,
                 unit,
                 description,
+                status.current_advisory,
             )
         return NoOpObservableUpDownCounter(
             name,

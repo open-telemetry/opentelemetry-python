@@ -453,7 +453,7 @@ class TestMeter(TestCase):
             "histogram",
             "gauge",
         ]:
-            with self.assertLogs(level=WARNING):
+            with self.assertNoLogs(level=WARNING):
                 getattr(self.meter, f"create_{instrument_name}")(
                     instrument_name
                 )
@@ -463,9 +463,46 @@ class TestMeter(TestCase):
             "observable_gauge",
             "observable_up_down_counter",
         ]:
-            with self.assertLogs(level=WARNING):
+            with self.assertNoLogs(level=WARNING):
                 getattr(self.meter, f"create_{instrument_name}")(
                     instrument_name, callbacks=[Mock()]
+                )
+
+    def test_repeated_instrument_names_with_different_advisory(self):
+        with self.assertNotRaises(Exception):
+            self.meter.create_counter("counter")
+            self.meter.create_up_down_counter("up_down_counter")
+            self.meter.create_observable_counter(
+                "observable_counter", callbacks=[Mock()]
+            )
+            self.meter.create_histogram("histogram")
+            self.meter.create_gauge("gauge")
+            self.meter.create_observable_gauge(
+                "observable_gauge", callbacks=[Mock()]
+            )
+            self.meter.create_observable_up_down_counter(
+                "observable_up_down_counter", callbacks=[Mock()]
+            )
+
+        for instrument_name in [
+            "counter",
+            "up_down_counter",
+            "histogram",
+            "gauge",
+        ]:
+            with self.assertLogs(level=WARNING):
+                getattr(self.meter, f"create_{instrument_name}")(
+                    instrument_name, advisory=Mock()
+                )
+
+        for instrument_name in [
+            "observable_counter",
+            "observable_gauge",
+            "observable_up_down_counter",
+        ]:
+            with self.assertLogs(level=WARNING):
+                getattr(self.meter, f"create_{instrument_name}")(
+                    instrument_name, callbacks=[Mock()], advisory=Mock()
                 )
 
     def test_create_counter(self):
@@ -621,10 +658,9 @@ class TestDuplicateInstrumentAggregateData(TestCase):
         counter_0_0 = meter_0.create_counter(
             "counter", unit="unit", description="description"
         )
-        with self.assertLogs(level=WARNING):
-            counter_0_1 = meter_0.create_counter(
-                "counter", unit="unit", description="description"
-            )
+        counter_0_1 = meter_0.create_counter(
+            "counter", unit="unit", description="description"
+        )
         counter_1_0 = meter_1.create_counter(
             "counter", unit="unit", description="description"
         )

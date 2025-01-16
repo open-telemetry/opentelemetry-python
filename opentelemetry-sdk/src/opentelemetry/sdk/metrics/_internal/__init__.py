@@ -87,24 +87,31 @@ class Meter(APIMeter):
         self._instrument_id_instrument = {}
         self._instrument_id_instrument_lock = Lock()
 
-    def create_counter(self, name, unit="", description="") -> APICounter:
+    def create_counter(
+        self, name, unit="", description="", advisory=None
+    ) -> APICounter:
         (
-            is_instrument_registered,
             instrument_id,
-        ) = self._is_instrument_registered(name, _Counter, unit, description)
+            status,
+        ) = self._register_instrument(
+            name, _Counter, unit, description, advisory
+        )
 
-        if is_instrument_registered:
+        if status.conflict:
             # FIXME #2558 go through all views here and check if this
             # instrument registration conflict can be fixed. If it can be, do
             # not log the following warning.
             _logger.warning(
                 "An instrument with name %s, type %s, unit %s and "
-                "description %s has been created already.",
+                "description %s has been created already with a "
+                "different advisory value %s.",
                 name,
                 APICounter.__name__,
                 unit,
                 description,
+                status.current_advisory,
             )
+        if status.already_registered:
             with self._instrument_id_instrument_lock:
                 return self._instrument_id_instrument[instrument_id]
 
@@ -121,27 +128,30 @@ class Meter(APIMeter):
             return instrument
 
     def create_up_down_counter(
-        self, name, unit="", description=""
+        self, name, unit="", description="", advisory=None
     ) -> APIUpDownCounter:
         (
-            is_instrument_registered,
             instrument_id,
-        ) = self._is_instrument_registered(
-            name, _UpDownCounter, unit, description
+            status,
+        ) = self._register_instrument(
+            name, _UpDownCounter, unit, description, advisory
         )
 
-        if is_instrument_registered:
+        if status.conflict:
             # FIXME #2558 go through all views here and check if this
             # instrument registration conflict can be fixed. If it can be, do
             # not log the following warning.
             _logger.warning(
                 "An instrument with name %s, type %s, unit %s and "
-                "description %s has been created already.",
+                "description %s has been created already with a "
+                "different advisory value %s.",
                 name,
                 APIUpDownCounter.__name__,
                 unit,
                 description,
+                status.current_advisory,
             )
+        if status.already_registered:
             with self._instrument_id_instrument_lock:
                 return self._instrument_id_instrument[instrument_id]
 
@@ -158,27 +168,30 @@ class Meter(APIMeter):
             return instrument
 
     def create_observable_counter(
-        self, name, callbacks=None, unit="", description=""
+        self, name, callbacks=None, unit="", description="", advisory=None
     ) -> APIObservableCounter:
         (
-            is_instrument_registered,
             instrument_id,
-        ) = self._is_instrument_registered(
-            name, _ObservableCounter, unit, description
+            status,
+        ) = self._register_instrument(
+            name, _ObservableCounter, unit, description, advisory
         )
 
-        if is_instrument_registered:
+        if status.conflict:
             # FIXME #2558 go through all views here and check if this
             # instrument registration conflict can be fixed. If it can be, do
             # not log the following warning.
             _logger.warning(
                 "An instrument with name %s, type %s, unit %s and "
-                "description %s has been created already.",
+                "description %s has been created already with a "
+                "different advisory value %s.",
                 name,
                 APIObservableCounter.__name__,
                 unit,
                 description,
+                status.current_advisory,
             )
+        if status.already_registered:
             with self._instrument_id_instrument_lock:
                 return self._instrument_id_instrument[instrument_id]
 
@@ -222,22 +235,27 @@ class Meter(APIMeter):
                 )
 
         (
-            is_instrument_registered,
             instrument_id,
-        ) = self._is_instrument_registered(name, _Histogram, unit, description)
+            status,
+        ) = self._register_instrument(
+            name, _Histogram, unit, description, advisory
+        )
 
-        if is_instrument_registered:
+        if status.conflict:
             # FIXME #2558 go through all views here and check if this
             # instrument registration conflict can be fixed. If it can be, do
             # not log the following warning.
             _logger.warning(
                 "An instrument with name %s, type %s, unit %s and "
-                "description %s has been created already.",
+                "description %s has been created already with a "
+                "different advisory value %s.",
                 name,
                 APIHistogram.__name__,
                 unit,
                 description,
+                status.current_advisory,
             )
+        if status.already_registered:
             with self._instrument_id_instrument_lock:
                 return self._instrument_id_instrument[instrument_id]
 
@@ -253,24 +271,31 @@ class Meter(APIMeter):
             self._instrument_id_instrument[instrument_id] = instrument
             return instrument
 
-    def create_gauge(self, name, unit="", description="") -> APIGauge:
+    def create_gauge(
+        self, name, unit="", description="", advisory=None
+    ) -> APIGauge:
         (
-            is_instrument_registered,
             instrument_id,
-        ) = self._is_instrument_registered(name, _Gauge, unit, description)
+            status,
+        ) = self._register_instrument(
+            name, _Gauge, unit, description, advisory
+        )
 
-        if is_instrument_registered:
+        if status.conflict:
             # FIXME #2558 go through all views here and check if this
             # instrument registration conflict can be fixed. If it can be, do
             # not log the following warning.
             _logger.warning(
                 "An instrument with name %s, type %s, unit %s and "
-                "description %s has been created already.",
+                "description %s has been created already with a "
+                "different advisory value %s.",
                 name,
                 APIGauge.__name__,
                 unit,
                 description,
+                status.current_advisory,
             )
+        if status.already_registered:
             with self._instrument_id_instrument_lock:
                 return self._instrument_id_instrument[instrument_id]
 
@@ -287,27 +312,30 @@ class Meter(APIMeter):
             return instrument
 
     def create_observable_gauge(
-        self, name, callbacks=None, unit="", description=""
+        self, name, callbacks=None, unit="", description="", advisory=None
     ) -> APIObservableGauge:
         (
-            is_instrument_registered,
             instrument_id,
-        ) = self._is_instrument_registered(
-            name, _ObservableGauge, unit, description
+            status,
+        ) = self._register_instrument(
+            name, _ObservableGauge, unit, description, advisory
         )
 
-        if is_instrument_registered:
+        if status.conflict:
             # FIXME #2558 go through all views here and check if this
             # instrument registration conflict can be fixed. If it can be, do
             # not log the following warning.
             _logger.warning(
                 "An instrument with name %s, type %s, unit %s and "
-                "description %s has been created already.",
+                "description %s has been created already with a "
+                "different advisory value %s.",
                 name,
                 APIObservableGauge.__name__,
                 unit,
                 description,
+                status.current_advisory,
             )
+        if status.already_registered:
             with self._instrument_id_instrument_lock:
                 return self._instrument_id_instrument[instrument_id]
 
@@ -327,27 +355,30 @@ class Meter(APIMeter):
             return instrument
 
     def create_observable_up_down_counter(
-        self, name, callbacks=None, unit="", description=""
+        self, name, callbacks=None, unit="", description="", advisory=None
     ) -> APIObservableUpDownCounter:
         (
-            is_instrument_registered,
             instrument_id,
-        ) = self._is_instrument_registered(
-            name, _ObservableUpDownCounter, unit, description
+            status,
+        ) = self._register_instrument(
+            name, _ObservableUpDownCounter, unit, description, advisory
         )
 
-        if is_instrument_registered:
+        if status.conflict:
             # FIXME #2558 go through all views here and check if this
             # instrument registration conflict can be fixed. If it can be, do
             # not log the following warning.
             _logger.warning(
                 "An instrument with name %s, type %s, unit %s and "
-                "description %s has been created already.",
+                "description %s has been created already with a "
+                "different advisory value %s.",
                 name,
                 APIObservableUpDownCounter.__name__,
                 unit,
                 description,
+                status.current_advisory,
             )
+        if status.already_registered:
             with self._instrument_id_instrument_lock:
                 return self._instrument_id_instrument[instrument_id]
 

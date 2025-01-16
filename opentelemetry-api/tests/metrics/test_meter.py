@@ -84,7 +84,7 @@ class TestMeter(TestCase):
             "histogram",
             "gauge",
         ]:
-            with self.assertLogs(level=WARNING):
+            with self.assertNoLogs(level=WARNING):
                 getattr(test_meter, f"create_{instrument_name}")(
                     instrument_name
                 )
@@ -94,9 +94,46 @@ class TestMeter(TestCase):
             "observable_gauge",
             "observable_up_down_counter",
         ]:
-            with self.assertLogs(level=WARNING):
+            with self.assertNoLogs(level=WARNING):
                 getattr(test_meter, f"create_{instrument_name}")(
                     instrument_name, Mock()
+                )
+
+    def test_repeated_instrument_names_with_different_advisory(self):
+        try:
+            test_meter = NoOpMeter("name")
+
+            test_meter.create_counter("counter")
+            test_meter.create_up_down_counter("up_down_counter")
+            test_meter.create_observable_counter("observable_counter", Mock())
+            test_meter.create_histogram("histogram")
+            test_meter.create_gauge("gauge")
+            test_meter.create_observable_gauge("observable_gauge", Mock())
+            test_meter.create_observable_up_down_counter(
+                "observable_up_down_counter", Mock()
+            )
+        except Exception as error:  # pylint: disable=broad-exception-caught
+            self.fail(f"Unexpected exception raised {error}")
+
+        for instrument_name in [
+            "counter",
+            "up_down_counter",
+            "histogram",
+            "gauge",
+        ]:
+            with self.assertLogs(level=WARNING):
+                getattr(test_meter, f"create_{instrument_name}")(
+                    instrument_name, advisory=Mock()
+                )
+
+        for instrument_name in [
+            "observable_counter",
+            "observable_gauge",
+            "observable_up_down_counter",
+        ]:
+            with self.assertLogs(level=WARNING):
+                getattr(test_meter, f"create_{instrument_name}")(
+                    instrument_name, Mock(), advisory=Mock()
                 )
 
     def test_create_counter(self):
