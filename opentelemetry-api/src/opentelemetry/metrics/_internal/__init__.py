@@ -202,7 +202,9 @@ class Meter(ABC):
         self._name = name
         self._version = version
         self._schema_url = schema_url
-        self._instrument_ids: Dict[str, str] = {}
+        self._instrument_ids: Dict[
+            str, Optional[MetricsInstrumentAdvisory]
+        ] = {}
         self._instrument_ids_lock = Lock()
 
     @property
@@ -277,7 +279,7 @@ class Meter(ABC):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsInstrumentAdvisory] = None,
+        advisory: None = None,
     ) -> Counter:
         """Creates a `Counter` instrument
 
@@ -294,7 +296,7 @@ class Meter(ABC):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsInstrumentAdvisory] = None,
+        advisory: None = None,
     ) -> UpDownCounter:
         """Creates an `UpDownCounter` instrument
 
@@ -312,7 +314,7 @@ class Meter(ABC):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsInstrumentAdvisory] = None,
+        advisory: None = None,
     ) -> ObservableCounter:
         """Creates an `ObservableCounter` instrument
 
@@ -425,7 +427,7 @@ class Meter(ABC):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsInstrumentAdvisory] = None,
+        advisory: None = None,
     ) -> Gauge:
         """Creates a ``Gauge`` instrument
 
@@ -444,7 +446,7 @@ class Meter(ABC):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsInstrumentAdvisory] = None,
+        advisory: None = None,
     ) -> ObservableGauge:
         """Creates an `ObservableGauge` instrument
 
@@ -465,7 +467,7 @@ class Meter(ABC):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsInstrumentAdvisory] = None,
+        advisory: None = None,
     ) -> ObservableUpDownCounter:
         """Creates an `ObservableUpDownCounter` instrument
 
@@ -514,7 +516,7 @@ class _ProxyMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsInstrumentAdvisory] = None,
+        advisory: None = None,
     ) -> Counter:
         with self._lock:
             if self._real_meter:
@@ -528,7 +530,7 @@ class _ProxyMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsInstrumentAdvisory] = None,
+        advisory: None = None,
     ) -> UpDownCounter:
         with self._lock:
             if self._real_meter:
@@ -545,7 +547,7 @@ class _ProxyMeter(Meter):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsInstrumentAdvisory] = None,
+        advisory: None = None,
     ) -> ObservableCounter:
         with self._lock:
             if self._real_meter:
@@ -579,7 +581,7 @@ class _ProxyMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsInstrumentAdvisory] = None,
+        advisory: None = None,
     ) -> Gauge:
         with self._lock:
             if self._real_meter:
@@ -594,7 +596,7 @@ class _ProxyMeter(Meter):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsInstrumentAdvisory] = None,
+        advisory: None = None,
     ) -> ObservableGauge:
         with self._lock:
             if self._real_meter:
@@ -613,7 +615,7 @@ class _ProxyMeter(Meter):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsInstrumentAdvisory] = None,
+        advisory: None = None,
     ) -> ObservableUpDownCounter:
         with self._lock:
             if self._real_meter:
@@ -641,7 +643,7 @@ class NoOpMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsInstrumentAdvisory] = None,
+        advisory: None = None,
     ) -> Counter:
         """Returns a no-op Counter."""
         _, status = self._register_instrument(
@@ -665,7 +667,7 @@ class NoOpMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsInstrumentAdvisory] = None,
+        advisory: None = None,
     ) -> Gauge:
         """Returns a no-op Gauge."""
         _, status = self._register_instrument(
@@ -689,7 +691,7 @@ class NoOpMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsInstrumentAdvisory] = None,
+        advisory: None = None,
     ) -> UpDownCounter:
         """Returns a no-op UpDownCounter."""
         _, status = self._register_instrument(
@@ -714,7 +716,7 @@ class NoOpMeter(Meter):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsInstrumentAdvisory] = None,
+        advisory: None = None,
     ) -> ObservableCounter:
         """Returns a no-op ObservableCounter."""
         _, status = self._register_instrument(
@@ -770,7 +772,7 @@ class NoOpMeter(Meter):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsInstrumentAdvisory] = None,
+        advisory: None = None,
     ) -> ObservableGauge:
         """Returns a no-op ObservableGauge."""
         _, status = self._register_instrument(
@@ -800,7 +802,7 @@ class NoOpMeter(Meter):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsInstrumentAdvisory] = None,
+        advisory: None = None,
     ) -> ObservableUpDownCounter:
         """Returns a no-op ObservableUpDownCounter."""
         _, status = self._register_instrument(
