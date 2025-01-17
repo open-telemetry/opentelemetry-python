@@ -11,6 +11,7 @@ from opentelemetry.metrics import (
 )
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+from opentelemetry.util.types import MetricsHistogramAdvisory
 
 exporter = OTLPMetricExporter(insecure=True)
 reader = PeriodicExportingMetricReader(exporter)
@@ -59,10 +60,12 @@ histogram = meter.create_histogram("histogram")
 histogram.record(99.9)
 
 
-# Histogram with explicit_bucket_boundaries advisory
+# Histogram with explicit bucket boundaries advisory
 histogram = meter.create_histogram(
     "histogram_with_advisory",
-    advisory={"explicit_bucket_boundaries": [0.0, 1.0, 2.0]},
+    advisory=MetricsHistogramAdvisory(
+        explicit_bucket_boundaries=[0.0, 1.0, 2.0]
+    ),
 )
 histogram.record(99.9)
 

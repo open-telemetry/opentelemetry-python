@@ -35,7 +35,11 @@ from typing import (
 from opentelemetry import metrics
 from opentelemetry.context import Context
 from opentelemetry.metrics._internal.observation import Observation
-from opentelemetry.util.types import Attributes, MetricsInstrumentAdvisory
+from opentelemetry.util.types import (
+    Attributes,
+    MetricsHistogramAdvisory,
+    MetricsInstrumentAdvisory,
+)
 
 _logger = getLogger(__name__)
 
@@ -380,7 +384,7 @@ class _ProxyHistogram(_ProxyInstrument[Histogram], Histogram):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsInstrumentAdvisory] = None,
+        advisory: Optional[MetricsHistogramAdvisory] = None,
     ) -> None:
         self._name = name
         self._unit = unit

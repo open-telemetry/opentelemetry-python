@@ -20,6 +20,7 @@ from opentelemetry.sdk.metrics.view import (
     ExplicitBucketHistogramAggregation,
     View,
 )
+from opentelemetry.util.types import MetricsHistogramAdvisory
 
 
 class TestHistogramAdvisory(TestCase):
@@ -31,7 +32,9 @@ class TestHistogramAdvisory(TestCase):
         meter = meter_provider.get_meter("testmeter")
         histogram = meter.create_histogram(
             "testhistogram",
-            advisory={"explicit_bucket_boundaries": [1.0, 2.0, 3.0]},
+            advisory=MetricsHistogramAdvisory(
+                explicit_bucket_boundaries=[1.0, 2.0, 3.0]
+            ),
         )
         histogram.record(1, {"label": "value"})
         histogram.record(2, {"label": "value"})
@@ -59,7 +62,9 @@ class TestHistogramAdvisory(TestCase):
         meter = meter_provider.get_meter("testmeter")
         histogram = meter.create_histogram(
             "testhistogram",
-            advisory={"explicit_bucket_boundaries": [1.0, 2.0, 3.0]},
+            advisory=MetricsHistogramAdvisory(
+                explicit_bucket_boundaries=[1.0, 2.0, 3.0]
+            ),
         )
         histogram.record(1, {"label": "value"})
         histogram.record(2, {"label": "value"})
@@ -92,7 +97,9 @@ class TestHistogramAdvisory(TestCase):
         meter = meter_provider.get_meter("testmeter")
         histogram = meter.create_histogram(
             "testhistogram",
-            advisory={"explicit_bucket_boundaries": [1.0, 2.0, 3.0]},
+            advisory=MetricsHistogramAdvisory(
+                explicit_bucket_boundaries=[1.0, 2.0, 3.0]
+            ),
         )
         histogram.record(1, {"label": "value"})
         histogram.record(2, {"label": "value"})

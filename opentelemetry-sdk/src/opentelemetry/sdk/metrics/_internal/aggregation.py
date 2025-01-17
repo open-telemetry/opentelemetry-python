@@ -1284,7 +1284,7 @@ class DefaultAggregation(Aggregation):
 
         if isinstance(instrument, Histogram):
             boundaries: Optional[Sequence[float]] = (
-                instrument._advisory.get("explicit_bucket_boundaries")
+                instrument._advisory.explicit_bucket_boundaries
                 if instrument._advisory is not None
                 else None
             )

@@ -75,7 +75,11 @@ from opentelemetry.metrics._internal.instrument import (
 )
 from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
-from opentelemetry.util.types import Attributes, MetricsInstrumentAdvisory
+from opentelemetry.util.types import (
+    Attributes,
+    MetricsHistogramAdvisory,
+    MetricsInstrumentAdvisory,
+)
 
 _logger = getLogger(__name__)
 
@@ -411,7 +415,7 @@ class Meter(ABC):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsInstrumentAdvisory] = None,
+        advisory: Optional[MetricsHistogramAdvisory] = None,
     ) -> Histogram:
         """Creates a :class:`~opentelemetry.metrics.Histogram` instrument
 
@@ -565,7 +569,7 @@ class _ProxyMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsInstrumentAdvisory] = None,
+        advisory: Optional[MetricsHistogramAdvisory] = None,
     ) -> Histogram:
         with self._lock:
             if self._real_meter:
@@ -745,7 +749,7 @@ class NoOpMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsInstrumentAdvisory] = None,
+        advisory: Optional[MetricsHistogramAdvisory] = None,
     ) -> Histogram:
         """Returns a no-op Histogram."""
         _, status = self._register_instrument(

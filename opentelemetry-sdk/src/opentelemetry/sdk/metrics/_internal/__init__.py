@@ -64,7 +64,10 @@ from opentelemetry.sdk.metrics._internal.sdk_configuration import (
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.util._once import Once
-from opentelemetry.util.types import Attributes, MetricsInstrumentAdvisory
+from opentelemetry.util.types import (
+    Attributes,
+    MetricsHistogramAdvisory,
+)
 
 _logger = getLogger(__name__)
 
@@ -215,12 +218,12 @@ class Meter(APIMeter):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsInstrumentAdvisory] = None,
+        advisory: Optional[MetricsHistogramAdvisory] = None,
     ) -> APIHistogram:
         if advisory is not None:
             invalid_advisory = False
             try:
-                boundaries = advisory["explicit_bucket_boundaries"]
+                boundaries = advisory.explicit_bucket_boundaries
                 invalid_advisory = not (
                     boundaries
                     and all(isinstance(e, float) for e in boundaries)

@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Mapping, Optional, Sequence, Tuple, TypedDict, Union
+from dataclasses import dataclass
+from typing import Mapping, Optional, Sequence, Tuple, Union
 
 # This is the implementation of the "Any" type as specified by the specifications of OpenTelemetry data model for logs.
 # For more details, refer to the OTel specification:
@@ -57,5 +58,16 @@ AttributesAsKey = Tuple[
 ]
 
 
-class MetricsInstrumentAdvisory(TypedDict):
+@dataclass
+class MetricsHistogramAdvisory:
     explicit_bucket_boundaries: Optional[Sequence[float]]
+
+
+@dataclass
+class MetricsCommonAdvisory:
+    pass
+
+
+MetricsInstrumentAdvisory = Union[
+    MetricsCommonAdvisory, MetricsHistogramAdvisory
+]

@@ -46,6 +46,7 @@ from opentelemetry.sdk.metrics.view import SumAggregation, View
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.test import TestCase
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase, MockFunc
+from opentelemetry.util.types import MetricsHistogramAdvisory
 
 
 class DummyMetricReader(MetricReader):
@@ -542,24 +543,26 @@ class TestMeter(TestCase):
             "name",
             unit="unit",
             description="description",
-            advisory={"explicit_bucket_boundaries": [0.0, 1.0, 2.0]},
+            advisory=MetricsHistogramAdvisory(
+                explicit_bucket_boundaries=[0.0, 1.0, 2.0]
+            ),
         )
 
         self.assertIsInstance(histogram, Histogram)
         self.assertEqual(histogram.name, "name")
         self.assertEqual(
             histogram._advisory,
-            {"explicit_bucket_boundaries": [0.0, 1.0, 2.0]},
+            MetricsHistogramAdvisory(
+                explicit_bucket_boundaries=[0.0, 1.0, 2.0]
+            ),
         )
 
     def test_create_histogram_advisory_validation(self):
         advisories = [
-            {"explicit_bucket_boundaries": None},
-            {"explicit_bucket_boundaries": []},
-            {},
-            [],
-            {"explicit_bucket_boundaries": [1]},
-            {"explicit_bucket_boundaries": ["1"]},
+            MetricsHistogramAdvisory(explicit_bucket_boundaries=None),
+            MetricsHistogramAdvisory(explicit_bucket_boundaries=[]),
+            MetricsHistogramAdvisory(explicit_bucket_boundaries=[1]),
+            MetricsHistogramAdvisory(explicit_bucket_boundaries=["1"]),
         ]
         for advisory in advisories:
             with self.subTest(advisory=advisory):

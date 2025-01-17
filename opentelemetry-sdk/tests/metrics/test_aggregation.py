@@ -51,7 +51,7 @@ from opentelemetry.sdk.metrics.view import (
     LastValueAggregation,
     SumAggregation,
 )
-from opentelemetry.util.types import Attributes
+from opentelemetry.util.types import Attributes, MetricsHistogramAdvisory
 
 
 def measurement(
@@ -635,7 +635,9 @@ class TestDefaultAggregation(TestCase):
                 "name",
                 Mock(),
                 Mock(),
-                advisory={"explicit_bucket_boundaries": boundaries},
+                advisory=MetricsHistogramAdvisory(
+                    explicit_bucket_boundaries=boundaries
+                ),
             ),
             Mock(),
             _default_reservoir_factory,
