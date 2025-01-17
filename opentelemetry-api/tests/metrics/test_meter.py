@@ -15,7 +15,7 @@
 
 from logging import WARNING
 from unittest import TestCase
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from opentelemetry.metrics import Meter, NoOpMeter
 
@@ -82,8 +82,10 @@ class ChildMeter(Meter):
 
 class TestMeter(TestCase):
     # pylint: disable=no-member
-    def test_repeated_instrument_names(self):
-        try:
+    # TODO: convert to assertNoLogs instead of mocking logger when 3.10 is baseline
+    @patch("opentelemetry.metrics._internal._logger")
+    def test_repeated_instrument_names(self, logger_mock):
+        with self.assertNotRaises(Exception):
             test_meter = NoOpMeter("name")
 
             test_meter.create_counter("counter")
@@ -95,8 +97,6 @@ class TestMeter(TestCase):
             test_meter.create_observable_up_down_counter(
                 "observable_up_down_counter", Mock()
             )
-        except Exception as error:  # pylint: disable=broad-exception-caught
-            self.fail(f"Unexpected exception raised {error}")
 
         for instrument_name in [
             "counter",
@@ -104,23 +104,21 @@ class TestMeter(TestCase):
             "histogram",
             "gauge",
         ]:
-            with self.assertNoLogs(level=WARNING):
-                getattr(test_meter, f"create_{instrument_name}")(
-                    instrument_name
-                )
+            getattr(test_meter, f"create_{instrument_name}")(instrument_name)
+            logger_mock.warning.assert_not_called()
 
         for instrument_name in [
             "observable_counter",
             "observable_gauge",
             "observable_up_down_counter",
         ]:
-            with self.assertNoLogs(level=WARNING):
-                getattr(test_meter, f"create_{instrument_name}")(
-                    instrument_name, Mock()
-                )
+            getattr(test_meter, f"create_{instrument_name}")(
+                instrument_name, Mock()
+            )
+            logger_mock.warning.assert_not_called()
 
     def test_repeated_instrument_names_with_different_advisory(self):
-        try:
+        with self.assertNotRaises(Exception):
             test_meter = NoOpMeter("name")
 
             test_meter.create_counter("counter")
@@ -132,8 +130,6 @@ class TestMeter(TestCase):
             test_meter.create_observable_up_down_counter(
                 "observable_up_down_counter", Mock()
             )
-        except Exception as error:  # pylint: disable=broad-exception-caught
-            self.fail(f"Unexpected exception raised {error}")
 
         for instrument_name in [
             "counter",
