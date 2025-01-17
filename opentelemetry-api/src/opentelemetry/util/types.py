@@ -60,7 +60,7 @@ AttributesAsKey = Tuple[
 
 @dataclass
 class MetricsHistogramAdvisory:
-    explicit_bucket_boundaries: Optional[Sequence[float]]
+    explicit_bucket_boundaries: Optional[Sequence[float]] = None
 
 
 @dataclass
