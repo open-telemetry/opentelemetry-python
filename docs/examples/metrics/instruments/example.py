@@ -62,7 +62,7 @@ histogram.record(99.9)
 # Histogram with explicit_bucket_boundaries advisory
 histogram = meter.create_histogram(
     "histogram_with_advisory",
-    advisory={"explicit_bucket_boundaries": [0, 1, 2]},
+    advisory={"explicit_bucket_boundaries": [0.0, 1.0, 2.0]},
 )
 histogram.record(99.9)
 

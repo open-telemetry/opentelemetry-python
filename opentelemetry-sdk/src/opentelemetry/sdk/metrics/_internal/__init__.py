@@ -223,7 +223,7 @@ class Meter(APIMeter):
                 boundaries = advisory["explicit_bucket_boundaries"]
                 invalid_advisory = not (
                     boundaries
-                    and all(isinstance(e, (int, float)) for e in boundaries)
+                    and all(isinstance(e, float) for e in boundaries)
                 )
             except (KeyError, TypeError):
                 invalid_advisory = True

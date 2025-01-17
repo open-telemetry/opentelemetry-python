@@ -29,7 +29,6 @@ from typing import (
     Sequence,
     Type,
     TypeVar,
-    Union,
 )
 
 from opentelemetry.metrics import (
@@ -472,14 +471,13 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         instrument_aggregation_temporality: AggregationTemporality,
         start_time_unix_nano: int,
         reservoir_builder: ExemplarReservoirBuilder,
-        boundaries: Optional[Union[Sequence[float], Sequence[int]]] = None,
+        boundaries: Optional[Sequence[float]] = None,
         record_min_max: bool = True,
     ):
         if boundaries is None:
             boundaries = (
                 _DEFAULT_EXPLICIT_BUCKET_HISTOGRAM_AGGREGATION_BOUNDARIES
             )
-
         super().__init__(
             attributes,
             reservoir_builder=partial(
@@ -1285,7 +1283,7 @@ class DefaultAggregation(Aggregation):
             )
 
         if isinstance(instrument, Histogram):
-            boundaries: Optional[Union[Sequence[float], Sequence[int]]] = (
+            boundaries: Optional[Sequence[float]] = (
                 instrument._advisory.get("explicit_bucket_boundaries")
                 if instrument._advisory is not None
                 else None
@@ -1370,7 +1368,7 @@ class ExplicitBucketHistogramAggregation(Aggregation):
 
     def __init__(
         self,
-        boundaries: Optional[Union[Sequence[float], Sequence[int]]] = None,
+        boundaries: Optional[Sequence[float]] = None,
         record_min_max: bool = True,
     ) -> None:
         if boundaries is None:

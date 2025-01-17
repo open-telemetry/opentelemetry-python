@@ -30,7 +30,8 @@ class TestHistogramAdvisory(TestCase):
         )
         meter = meter_provider.get_meter("testmeter")
         histogram = meter.create_histogram(
-            "testhistogram", advisory={"explicit_bucket_boundaries": [1, 2, 3]}
+            "testhistogram",
+            advisory={"explicit_bucket_boundaries": [1.0, 2.0, 3.0]},
         )
         histogram.record(1, {"label": "value"})
         histogram.record(2, {"label": "value"})
@@ -44,7 +45,9 @@ class TestHistogramAdvisory(TestCase):
         )
         metric = metrics.resource_metrics[0].scope_metrics[0].metrics[0]
         self.assertEqual(metric.name, "testhistogram")
-        self.assertEqual(metric.data.data_points[0].explicit_bounds, (1, 2, 3))
+        self.assertEqual(
+            metric.data.data_points[0].explicit_bounds, (1.0, 2.0, 3.0)
+        )
 
     def test_view_default_aggregation(self):
         reader = InMemoryMetricReader()
@@ -55,7 +58,8 @@ class TestHistogramAdvisory(TestCase):
         )
         meter = meter_provider.get_meter("testmeter")
         histogram = meter.create_histogram(
-            "testhistogram", advisory={"explicit_bucket_boundaries": [1, 2, 3]}
+            "testhistogram",
+            advisory={"explicit_bucket_boundaries": [1.0, 2.0, 3.0]},
         )
         histogram.record(1, {"label": "value"})
         histogram.record(2, {"label": "value"})
@@ -69,14 +73,16 @@ class TestHistogramAdvisory(TestCase):
         )
         metric = metrics.resource_metrics[0].scope_metrics[0].metrics[0]
         self.assertEqual(metric.name, "testhistogram")
-        self.assertEqual(metric.data.data_points[0].explicit_bounds, (1, 2, 3))
+        self.assertEqual(
+            metric.data.data_points[0].explicit_bounds, (1.0, 2.0, 3.0)
+        )
 
     def test_view_overrides_buckets(self):
         reader = InMemoryMetricReader()
         view = View(
             instrument_name="testhistogram",
             aggregation=ExplicitBucketHistogramAggregation(
-                boundaries=[10, 100, 1000]
+                boundaries=[10.0, 100.0, 1000.0]
             ),
         )
         meter_provider = MeterProvider(
@@ -85,7 +91,8 @@ class TestHistogramAdvisory(TestCase):
         )
         meter = meter_provider.get_meter("testmeter")
         histogram = meter.create_histogram(
-            "testhistogram", advisory={"explicit_bucket_boundaries": [1, 2, 3]}
+            "testhistogram",
+            advisory={"explicit_bucket_boundaries": [1.0, 2.0, 3.0]},
         )
         histogram.record(1, {"label": "value"})
         histogram.record(2, {"label": "value"})
@@ -100,5 +107,5 @@ class TestHistogramAdvisory(TestCase):
         metric = metrics.resource_metrics[0].scope_metrics[0].metrics[0]
         self.assertEqual(metric.name, "testhistogram")
         self.assertEqual(
-            metric.data.data_points[0].explicit_bounds, (10, 100, 1000)
+            metric.data.data_points[0].explicit_bounds, (10.0, 100.0, 1000.0)
         )
