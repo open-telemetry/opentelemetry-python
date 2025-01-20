@@ -46,7 +46,7 @@ from dataclasses import dataclass
 from logging import getLogger
 from os import environ
 from threading import Lock
-from typing import Dict, List, Optional, Sequence, Tuple, Union, cast
+from typing import Dict, List, Optional, Sequence, Union, cast
 
 from opentelemetry.environment_variables import OTEL_PYTHON_METER_PROVIDER
 from opentelemetry.metrics._internal.instrument import (
@@ -184,6 +184,7 @@ class _ProxyMeterProvider(MeterProvider):
 
 @dataclass
 class _InstrumentRegistrationStatus:
+    instrument_id: str
     already_registered: bool
     conflict: bool
     current_advisory: Optional[MetricsInstrumentAdvisory]
@@ -239,7 +240,7 @@ class Meter(ABC):
         unit: str,
         description: str,
         advisory: Optional[MetricsInstrumentAdvisory] = None,
-    ) -> Tuple[str, _InstrumentRegistrationStatus]:
+    ) -> _InstrumentRegistrationStatus:
         """
         Register an instrument with the name, type, unit and description as
         identifying keys and the advisory as value.
@@ -269,8 +270,8 @@ class Meter(ABC):
                 self._instrument_ids[instrument_id] = advisory
 
         return (
-            instrument_id,
             _InstrumentRegistrationStatus(
+                instrument_id=instrument_id,
                 already_registered=already_registered,
                 conflict=conflict,
                 current_advisory=current_advisory,
@@ -650,7 +651,7 @@ class NoOpMeter(Meter):
         advisory: None = None,
     ) -> Counter:
         """Returns a no-op Counter."""
-        _, status = self._register_instrument(
+        status = self._register_instrument(
             name, NoOpCounter, unit, description, advisory
         )
         if status.conflict:
@@ -674,7 +675,7 @@ class NoOpMeter(Meter):
         advisory: None = None,
     ) -> Gauge:
         """Returns a no-op Gauge."""
-        _, status = self._register_instrument(
+        status = self._register_instrument(
             name, NoOpGauge, unit, description, advisory
         )
         if status.conflict:
@@ -698,7 +699,7 @@ class NoOpMeter(Meter):
         advisory: None = None,
     ) -> UpDownCounter:
         """Returns a no-op UpDownCounter."""
-        _, status = self._register_instrument(
+        status = self._register_instrument(
             name, NoOpUpDownCounter, unit, description, advisory
         )
         if status.conflict:
@@ -723,7 +724,7 @@ class NoOpMeter(Meter):
         advisory: None = None,
     ) -> ObservableCounter:
         """Returns a no-op ObservableCounter."""
-        _, status = self._register_instrument(
+        status = self._register_instrument(
             name, NoOpObservableCounter, unit, description, advisory
         )
         if status.conflict:
@@ -752,7 +753,7 @@ class NoOpMeter(Meter):
         advisory: Optional[MetricsHistogramAdvisory] = None,
     ) -> Histogram:
         """Returns a no-op Histogram."""
-        _, status = self._register_instrument(
+        status = self._register_instrument(
             name, NoOpHistogram, unit, description, advisory
         )
         if status.conflict:
@@ -779,7 +780,7 @@ class NoOpMeter(Meter):
         advisory: None = None,
     ) -> ObservableGauge:
         """Returns a no-op ObservableGauge."""
-        _, status = self._register_instrument(
+        status = self._register_instrument(
             name, NoOpObservableGauge, unit, description, advisory
         )
         if status.conflict:
@@ -809,7 +810,7 @@ class NoOpMeter(Meter):
         advisory: None = None,
     ) -> ObservableUpDownCounter:
         """Returns a no-op ObservableUpDownCounter."""
-        _, status = self._register_instrument(
+        status = self._register_instrument(
             name, NoOpObservableUpDownCounter, unit, description, advisory
         )
         if status.conflict:

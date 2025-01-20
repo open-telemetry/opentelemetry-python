@@ -93,10 +93,7 @@ class Meter(APIMeter):
     def create_counter(
         self, name, unit="", description="", advisory=None
     ) -> APICounter:
-        (
-            instrument_id,
-            status,
-        ) = self._register_instrument(
+        status = self._register_instrument(
             name, _Counter, unit, description, advisory
         )
 
@@ -116,7 +113,7 @@ class Meter(APIMeter):
             )
         if status.already_registered:
             with self._instrument_id_instrument_lock:
-                return self._instrument_id_instrument[instrument_id]
+                return self._instrument_id_instrument[status.instrument_id]
 
         instrument = _Counter(
             name,
@@ -127,16 +124,13 @@ class Meter(APIMeter):
         )
 
         with self._instrument_id_instrument_lock:
-            self._instrument_id_instrument[instrument_id] = instrument
+            self._instrument_id_instrument[status.instrument_id] = instrument
             return instrument
 
     def create_up_down_counter(
         self, name, unit="", description="", advisory=None
     ) -> APIUpDownCounter:
-        (
-            instrument_id,
-            status,
-        ) = self._register_instrument(
+        status = self._register_instrument(
             name, _UpDownCounter, unit, description, advisory
         )
 
@@ -156,7 +150,7 @@ class Meter(APIMeter):
             )
         if status.already_registered:
             with self._instrument_id_instrument_lock:
-                return self._instrument_id_instrument[instrument_id]
+                return self._instrument_id_instrument[status.instrument_id]
 
         instrument = _UpDownCounter(
             name,
@@ -167,16 +161,13 @@ class Meter(APIMeter):
         )
 
         with self._instrument_id_instrument_lock:
-            self._instrument_id_instrument[instrument_id] = instrument
+            self._instrument_id_instrument[status.instrument_id] = instrument
             return instrument
 
     def create_observable_counter(
         self, name, callbacks=None, unit="", description="", advisory=None
     ) -> APIObservableCounter:
-        (
-            instrument_id,
-            status,
-        ) = self._register_instrument(
+        status = self._register_instrument(
             name, _ObservableCounter, unit, description, advisory
         )
 
@@ -196,7 +187,7 @@ class Meter(APIMeter):
             )
         if status.already_registered:
             with self._instrument_id_instrument_lock:
-                return self._instrument_id_instrument[instrument_id]
+                return self._instrument_id_instrument[status.instrument_id]
 
         instrument = _ObservableCounter(
             name,
@@ -210,7 +201,7 @@ class Meter(APIMeter):
         self._measurement_consumer.register_asynchronous_instrument(instrument)
 
         with self._instrument_id_instrument_lock:
-            self._instrument_id_instrument[instrument_id] = instrument
+            self._instrument_id_instrument[status.instrument_id] = instrument
             return instrument
 
     def create_histogram(
@@ -237,10 +228,7 @@ class Meter(APIMeter):
                     "Advisory must be a dict with explicit_bucket_boundaries key containing a sequence of numbers"
                 )
 
-        (
-            instrument_id,
-            status,
-        ) = self._register_instrument(
+        status = self._register_instrument(
             name, _Histogram, unit, description, advisory
         )
 
@@ -260,7 +248,7 @@ class Meter(APIMeter):
             )
         if status.already_registered:
             with self._instrument_id_instrument_lock:
-                return self._instrument_id_instrument[instrument_id]
+                return self._instrument_id_instrument[status.instrument_id]
 
         instrument = _Histogram(
             name,
@@ -271,16 +259,13 @@ class Meter(APIMeter):
             advisory,
         )
         with self._instrument_id_instrument_lock:
-            self._instrument_id_instrument[instrument_id] = instrument
+            self._instrument_id_instrument[status.instrument_id] = instrument
             return instrument
 
     def create_gauge(
         self, name, unit="", description="", advisory=None
     ) -> APIGauge:
-        (
-            instrument_id,
-            status,
-        ) = self._register_instrument(
+        status = self._register_instrument(
             name, _Gauge, unit, description, advisory
         )
 
@@ -300,7 +285,7 @@ class Meter(APIMeter):
             )
         if status.already_registered:
             with self._instrument_id_instrument_lock:
-                return self._instrument_id_instrument[instrument_id]
+                return self._instrument_id_instrument[status.instrument_id]
 
         instrument = _Gauge(
             name,
@@ -311,16 +296,13 @@ class Meter(APIMeter):
         )
 
         with self._instrument_id_instrument_lock:
-            self._instrument_id_instrument[instrument_id] = instrument
+            self._instrument_id_instrument[status.instrument_id] = instrument
             return instrument
 
     def create_observable_gauge(
         self, name, callbacks=None, unit="", description="", advisory=None
     ) -> APIObservableGauge:
-        (
-            instrument_id,
-            status,
-        ) = self._register_instrument(
+        status = self._register_instrument(
             name, _ObservableGauge, unit, description, advisory
         )
 
@@ -340,7 +322,7 @@ class Meter(APIMeter):
             )
         if status.already_registered:
             with self._instrument_id_instrument_lock:
-                return self._instrument_id_instrument[instrument_id]
+                return self._instrument_id_instrument[status.instrument_id]
 
         instrument = _ObservableGauge(
             name,
@@ -354,16 +336,13 @@ class Meter(APIMeter):
         self._measurement_consumer.register_asynchronous_instrument(instrument)
 
         with self._instrument_id_instrument_lock:
-            self._instrument_id_instrument[instrument_id] = instrument
+            self._instrument_id_instrument[status.instrument_id] = instrument
             return instrument
 
     def create_observable_up_down_counter(
         self, name, callbacks=None, unit="", description="", advisory=None
     ) -> APIObservableUpDownCounter:
-        (
-            instrument_id,
-            status,
-        ) = self._register_instrument(
+        status = self._register_instrument(
             name, _ObservableUpDownCounter, unit, description, advisory
         )
 
@@ -383,7 +362,7 @@ class Meter(APIMeter):
             )
         if status.already_registered:
             with self._instrument_id_instrument_lock:
-                return self._instrument_id_instrument[instrument_id]
+                return self._instrument_id_instrument[status.instrument_id]
 
         instrument = _ObservableUpDownCounter(
             name,
@@ -397,7 +376,7 @@ class Meter(APIMeter):
         self._measurement_consumer.register_asynchronous_instrument(instrument)
 
         with self._instrument_id_instrument_lock:
-            self._instrument_id_instrument[instrument_id] = instrument
+            self._instrument_id_instrument[status.instrument_id] = instrument
             return instrument
 
 
