@@ -270,13 +270,11 @@ class Meter(ABC):
             else:
                 self._instrument_ids[instrument_id] = advisory
 
-        return (
-            _InstrumentRegistrationStatus(
-                instrument_id=instrument_id,
-                already_registered=already_registered,
-                conflict=conflict,
-                current_advisory=current_advisory,
-            ),
+        return _InstrumentRegistrationStatus(
+            instrument_id=instrument_id,
+            already_registered=already_registered,
+            conflict=conflict,
+            current_advisory=current_advisory,
         )
 
     @abstractmethod
