@@ -544,7 +544,7 @@ class TestMeter(TestCase):
             unit="unit",
             description="description",
             advisory=MetricsHistogramAdvisory(
-                explicit_bucket_boundaries=[0.0, 1.0, 2.0]
+                explicit_bucket_boundaries=[0.0, 1.0, 2]
             ),
         )
 
@@ -552,16 +552,13 @@ class TestMeter(TestCase):
         self.assertEqual(histogram.name, "name")
         self.assertEqual(
             histogram._advisory,
-            MetricsHistogramAdvisory(
-                explicit_bucket_boundaries=[0.0, 1.0, 2.0]
-            ),
+            MetricsHistogramAdvisory(explicit_bucket_boundaries=[0.0, 1.0, 2]),
         )
 
     def test_create_histogram_advisory_validation(self):
         advisories = [
             MetricsHistogramAdvisory(explicit_bucket_boundaries=None),
             MetricsHistogramAdvisory(explicit_bucket_boundaries=[]),
-            MetricsHistogramAdvisory(explicit_bucket_boundaries=[1]),
             MetricsHistogramAdvisory(explicit_bucket_boundaries=["1"]),
         ]
         for advisory in advisories:
