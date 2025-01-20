@@ -257,7 +257,8 @@ class Meter(ABC):
             [name.strip().lower(), type_.__name__, unit, description]
         )
 
-        already_registered, conflict = False, False
+        already_registered = False
+        conflict = False
         current_advisory = None
 
         with self._instrument_ids_lock:
