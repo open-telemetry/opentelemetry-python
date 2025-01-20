@@ -37,6 +37,7 @@ from opentelemetry.context import Context
 from opentelemetry.metrics._internal.observation import Observation
 from opentelemetry.util.types import (
     Attributes,
+    MetricsCommonAdvisory,
     MetricsHistogramAdvisory,
     MetricsInstrumentAdvisory,
 )
@@ -76,6 +77,7 @@ class Instrument(ABC):
         name: str,
         unit: str = "",
         description: str = "",
+        advisory: Optional[MetricsInstrumentAdvisory] = None,
     ) -> None:
         pass
 
@@ -121,10 +123,12 @@ class _ProxyInstrument(ABC, Generic[InstrumentT]):
         name: str,
         unit: str = "",
         description: str = "",
+        advisory: Optional[MetricsInstrumentAdvisory] = None,
     ) -> None:
         self._name = name
         self._unit = unit
         self._description = description
+        self._advisory = advisory
         self._real_instrument: Optional[InstrumentT] = None
 
     def on_meter_set(self, meter: "metrics.Meter") -> None:
@@ -147,8 +151,9 @@ class _ProxyAsynchronousInstrument(_ProxyInstrument[InstrumentT]):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
+        advisory: Optional[MetricsInstrumentAdvisory] = None,
     ) -> None:
-        super().__init__(name, unit, description)
+        super().__init__(name, unit, description, advisory=advisory)
         self._callbacks = callbacks
 
 
@@ -166,8 +171,11 @@ class Asynchronous(Instrument):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
+        advisory: Optional[MetricsInstrumentAdvisory] = None,
     ) -> None:
-        super().__init__(name, unit=unit, description=description)
+        super().__init__(
+            name, unit=unit, description=description, advisory=advisory
+        )
 
 
 class Counter(Synchronous):
@@ -191,8 +199,11 @@ class NoOpCounter(Counter):
         name: str,
         unit: str = "",
         description: str = "",
+        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> None:
-        super().__init__(name, unit=unit, description=description)
+        super().__init__(
+            name, unit=unit, description=description, advisory=advisory
+        )
 
     def add(
         self,
@@ -214,7 +225,9 @@ class _ProxyCounter(_ProxyInstrument[Counter], Counter):
             self._real_instrument.add(amount, attributes, context)
 
     def _create_real_instrument(self, meter: "metrics.Meter") -> Counter:
-        return meter.create_counter(self._name, self._unit, self._description)
+        return meter.create_counter(
+            self._name, self._unit, self._description, advisory=self._advisory
+        )
 
 
 class UpDownCounter(Synchronous):
@@ -238,8 +251,11 @@ class NoOpUpDownCounter(UpDownCounter):
         name: str,
         unit: str = "",
         description: str = "",
+        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> None:
-        super().__init__(name, unit=unit, description=description)
+        super().__init__(
+            name, unit=unit, description=description, advisory=advisory
+        )
 
     def add(
         self,
@@ -262,7 +278,7 @@ class _ProxyUpDownCounter(_ProxyInstrument[UpDownCounter], UpDownCounter):
 
     def _create_real_instrument(self, meter: "metrics.Meter") -> UpDownCounter:
         return meter.create_up_down_counter(
-            self._name, self._unit, self._description
+            self._name, self._unit, self._description, advisory=self._advisory
         )
 
 
@@ -281,8 +297,15 @@ class NoOpObservableCounter(ObservableCounter):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
+        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> None:
-        super().__init__(name, callbacks, unit=unit, description=description)
+        super().__init__(
+            name,
+            callbacks,
+            unit=unit,
+            description=description,
+            advisory=advisory,
+        )
 
 
 class _ProxyObservableCounter(
@@ -292,7 +315,11 @@ class _ProxyObservableCounter(
         self, meter: "metrics.Meter"
     ) -> ObservableCounter:
         return meter.create_observable_counter(
-            self._name, self._callbacks, self._unit, self._description
+            self._name,
+            self._callbacks,
+            self._unit,
+            self._description,
+            advisory=self._advisory,
         )
 
 
@@ -312,8 +339,15 @@ class NoOpObservableUpDownCounter(ObservableUpDownCounter):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
+        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> None:
-        super().__init__(name, callbacks, unit=unit, description=description)
+        super().__init__(
+            name,
+            callbacks,
+            unit=unit,
+            description=description,
+            advisory=advisory,
+        )
 
 
 class _ProxyObservableUpDownCounter(
@@ -324,7 +358,11 @@ class _ProxyObservableUpDownCounter(
         self, meter: "metrics.Meter"
     ) -> ObservableUpDownCounter:
         return meter.create_observable_up_down_counter(
-            self._name, self._callbacks, self._unit, self._description
+            self._name,
+            self._callbacks,
+            self._unit,
+            self._description,
+            advisory=self._advisory,
         )
 
 
@@ -340,7 +378,7 @@ class Histogram(Synchronous):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsInstrumentAdvisory] = None,
+        advisory: Optional[MetricsHistogramAdvisory] = None,
     ) -> None:
         pass
 
@@ -362,7 +400,7 @@ class NoOpHistogram(Histogram):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsInstrumentAdvisory] = None,
+        advisory: Optional[MetricsHistogramAdvisory] = None,
     ) -> None:
         super().__init__(
             name, unit=unit, description=description, advisory=advisory
@@ -378,7 +416,6 @@ class NoOpHistogram(Histogram):
 
 
 class _ProxyHistogram(_ProxyInstrument[Histogram], Histogram):
-    # pylint: disable=super-init-not-called
     def __init__(
         self,
         name: str,
@@ -386,11 +423,9 @@ class _ProxyHistogram(_ProxyInstrument[Histogram], Histogram):
         description: str = "",
         advisory: Optional[MetricsHistogramAdvisory] = None,
     ) -> None:
-        self._name = name
-        self._unit = unit
-        self._description = description
-        self._advisory = advisory
-        self._real_instrument: Optional[Histogram] = None
+        super().__init__(
+            name, unit=unit, description=description, advisory=advisory
+        )
 
     def record(
         self,
@@ -403,7 +438,7 @@ class _ProxyHistogram(_ProxyInstrument[Histogram], Histogram):
 
     def _create_real_instrument(self, meter: "metrics.Meter") -> Histogram:
         return meter.create_histogram(
-            self._name, self._unit, self._description, self._advisory
+            self._name, self._unit, self._description, advisory=self._advisory
         )
 
 
@@ -423,8 +458,15 @@ class NoOpObservableGauge(ObservableGauge):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
+        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> None:
-        super().__init__(name, callbacks, unit=unit, description=description)
+        super().__init__(
+            name,
+            callbacks,
+            unit=unit,
+            description=description,
+            advisory=advisory,
+        )
 
 
 class _ProxyObservableGauge(
@@ -435,7 +477,11 @@ class _ProxyObservableGauge(
         self, meter: "metrics.Meter"
     ) -> ObservableGauge:
         return meter.create_observable_gauge(
-            self._name, self._callbacks, self._unit, self._description
+            self._name,
+            self._callbacks,
+            self._unit,
+            self._description,
+            advisory=self._advisory,
         )
 
 
@@ -460,8 +506,11 @@ class NoOpGauge(Gauge):
         name: str,
         unit: str = "",
         description: str = "",
+        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> None:
-        super().__init__(name, unit=unit, description=description)
+        super().__init__(
+            name, unit=unit, description=description, advisory=advisory
+        )
 
     def set(
         self,
@@ -486,4 +535,6 @@ class _ProxyGauge(
             self._real_instrument.set(amount, attributes, context)
 
     def _create_real_instrument(self, meter: "metrics.Meter") -> Gauge:
-        return meter.create_gauge(self._name, self._unit, self._description)
+        return meter.create_gauge(
+            self._name, self._unit, self._description, advisory=self._advisory
+        )

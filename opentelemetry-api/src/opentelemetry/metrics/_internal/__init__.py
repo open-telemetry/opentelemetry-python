@@ -77,6 +77,7 @@ from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
 from opentelemetry.util.types import (
     Attributes,
+    MetricsCommonAdvisory,
     MetricsHistogramAdvisory,
     MetricsInstrumentAdvisory,
 )
@@ -284,7 +285,7 @@ class Meter(ABC):
         unit: str,
         description: str,
         status: _InstrumentRegistrationStatus,
-    ):
+    ) -> None:
         _logger.warning(
             "An instrument with name %s, type %s, unit %s and "
             "description %s has been created already with a "
@@ -302,7 +303,7 @@ class Meter(ABC):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: None = None,
+        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> Counter:
         """Creates a `Counter` instrument
 
@@ -319,7 +320,7 @@ class Meter(ABC):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: None = None,
+        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> UpDownCounter:
         """Creates an `UpDownCounter` instrument
 
@@ -337,7 +338,7 @@ class Meter(ABC):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
-        advisory: None = None,
+        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> ObservableCounter:
         """Creates an `ObservableCounter` instrument
 
@@ -450,7 +451,7 @@ class Meter(ABC):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: None = None,
+        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> Gauge:
         """Creates a ``Gauge`` instrument
 
@@ -469,7 +470,7 @@ class Meter(ABC):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
-        advisory: None = None,
+        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> ObservableGauge:
         """Creates an `ObservableGauge` instrument
 
@@ -490,7 +491,7 @@ class Meter(ABC):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
-        advisory: None = None,
+        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> ObservableUpDownCounter:
         """Creates an `ObservableUpDownCounter` instrument
 
@@ -539,7 +540,7 @@ class _ProxyMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: None = None,
+        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> Counter:
         with self._lock:
             if self._real_meter:
@@ -553,7 +554,7 @@ class _ProxyMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: None = None,
+        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> UpDownCounter:
         with self._lock:
             if self._real_meter:
@@ -570,7 +571,7 @@ class _ProxyMeter(Meter):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
-        advisory: None = None,
+        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> ObservableCounter:
         with self._lock:
             if self._real_meter:
@@ -604,7 +605,7 @@ class _ProxyMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: None = None,
+        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> Gauge:
         with self._lock:
             if self._real_meter:
@@ -619,7 +620,7 @@ class _ProxyMeter(Meter):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
-        advisory: None = None,
+        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> ObservableGauge:
         with self._lock:
             if self._real_meter:
@@ -638,7 +639,7 @@ class _ProxyMeter(Meter):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
-        advisory: None = None,
+        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> ObservableUpDownCounter:
         with self._lock:
             if self._real_meter:
@@ -666,7 +667,7 @@ class NoOpMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: None = None,
+        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> Counter:
         """Returns a no-op Counter."""
         status = self._register_instrument(
@@ -688,7 +689,7 @@ class NoOpMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: None = None,
+        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> Gauge:
         """Returns a no-op Gauge."""
         status = self._register_instrument(
@@ -709,7 +710,7 @@ class NoOpMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: None = None,
+        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> UpDownCounter:
         """Returns a no-op UpDownCounter."""
         status = self._register_instrument(
@@ -731,7 +732,7 @@ class NoOpMeter(Meter):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
-        advisory: None = None,
+        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> ObservableCounter:
         """Returns a no-op ObservableCounter."""
         status = self._register_instrument(
@@ -781,7 +782,7 @@ class NoOpMeter(Meter):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
-        advisory: None = None,
+        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> ObservableGauge:
         """Returns a no-op ObservableGauge."""
         status = self._register_instrument(
@@ -808,7 +809,7 @@ class NoOpMeter(Meter):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
-        advisory: None = None,
+        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> ObservableUpDownCounter:
         """Returns a no-op ObservableUpDownCounter."""
         status = self._register_instrument(
