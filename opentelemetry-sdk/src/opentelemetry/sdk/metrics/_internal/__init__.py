@@ -225,7 +225,7 @@ class Meter(APIMeter):
             if invalid_advisory:
                 advisory = None
                 _logger.warning(
-                    "Advisory must be a dict with explicit_bucket_boundaries key containing a sequence of numbers"
+                    "Advisory must be a valid MetricsHistogramAdvisory with explicit_bucket_boundaries key containing a sequence of floats"
                 )
 
         status = self._register_instrument(
