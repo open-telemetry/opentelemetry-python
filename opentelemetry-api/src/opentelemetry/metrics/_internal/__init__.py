@@ -277,6 +277,25 @@ class Meter(ABC):
             current_advisory=current_advisory,
         )
 
+    @staticmethod
+    def _log_instrument_registration_conflict(
+        name: str,
+        instrumentation_type: str,
+        unit: str,
+        description: str,
+        status: _InstrumentRegistrationStatus,
+    ):
+        _logger.warning(
+            "An instrument with name %s, type %s, unit %s and "
+            "description %s has been created already with a "
+            "different advisory value %s.",
+            name,
+            Counter.__name__,
+            unit,
+            description,
+            status.current_advisory,
+        )
+
     @abstractmethod
     def create_counter(
         self,
@@ -654,16 +673,14 @@ class NoOpMeter(Meter):
             name, NoOpCounter, unit, description, advisory
         )
         if status.conflict:
-            _logger.warning(
-                "An instrument with name %s, type %s, unit %s and "
-                "description %s has been created already with a "
-                "different advisory value %s.",
+            self._log_instrument_registration_conflict(
                 name,
                 Counter.__name__,
                 unit,
                 description,
-                status.current_advisory,
+                status,
             )
+
         return NoOpCounter(name, unit=unit, description=description)
 
     def create_gauge(
@@ -678,15 +695,12 @@ class NoOpMeter(Meter):
             name, NoOpGauge, unit, description, advisory
         )
         if status.conflict:
-            _logger.warning(
-                "An instrument with name %s, type %s, unit %s and "
-                "description %s has been created already with a "
-                "different advisory value %s.",
+            self._log_instrument_registration_conflict(
                 name,
                 Gauge.__name__,
                 unit,
                 description,
-                status.current_advisory,
+                status,
             )
         return NoOpGauge(name, unit=unit, description=description)
 
@@ -702,15 +716,12 @@ class NoOpMeter(Meter):
             name, NoOpUpDownCounter, unit, description, advisory
         )
         if status.conflict:
-            _logger.warning(
-                "An instrument with name %s, type %s, unit %s and "
-                "description %s has been created already with a "
-                "different advisory value %s.",
+            self._log_instrument_registration_conflict(
                 name,
                 UpDownCounter.__name__,
                 unit,
                 description,
-                status.current_advisory,
+                status,
             )
         return NoOpUpDownCounter(name, unit=unit, description=description)
 
@@ -727,15 +738,12 @@ class NoOpMeter(Meter):
             name, NoOpObservableCounter, unit, description, advisory
         )
         if status.conflict:
-            _logger.warning(
-                "An instrument with name %s, type %s, unit %s and "
-                "description %s has been created already with a "
-                "different advisory value %s.",
+            self._log_instrument_registration_conflict(
                 name,
                 ObservableCounter.__name__,
                 unit,
                 description,
-                status.current_advisory,
+                status,
             )
         return NoOpObservableCounter(
             name,
@@ -756,15 +764,12 @@ class NoOpMeter(Meter):
             name, NoOpHistogram, unit, description, advisory
         )
         if status.conflict:
-            _logger.warning(
-                "An instrument with name %s, type %s, unit %s and "
-                "description %s has been created already with a "
-                "different advisory value %s.",
+            self._log_instrument_registration_conflict(
                 name,
                 Histogram.__name__,
                 unit,
                 description,
-                status.current_advisory,
+                status,
             )
         return NoOpHistogram(
             name, unit=unit, description=description, advisory=advisory
@@ -783,15 +788,12 @@ class NoOpMeter(Meter):
             name, NoOpObservableGauge, unit, description, advisory
         )
         if status.conflict:
-            _logger.warning(
-                "An instrument with name %s, type %s, unit %s and "
-                "description %s has been created already with a "
-                "different advisory value %s.",
+            self._log_instrument_registration_conflict(
                 name,
                 ObservableGauge.__name__,
                 unit,
                 description,
-                status.current_advisory,
+                status,
             )
         return NoOpObservableGauge(
             name,
@@ -813,15 +815,12 @@ class NoOpMeter(Meter):
             name, NoOpObservableUpDownCounter, unit, description, advisory
         )
         if status.conflict:
-            _logger.warning(
-                "An instrument with name %s, type %s, unit %s and "
-                "description %s has been created already with a "
-                "different advisory value %s.",
+            self._log_instrument_registration_conflict(
                 name,
                 ObservableUpDownCounter.__name__,
                 unit,
                 description,
-                status.current_advisory,
+                status,
             )
         return NoOpObservableUpDownCounter(
             name,
