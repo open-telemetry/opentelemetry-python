@@ -29,6 +29,7 @@ from typing import (
     Sequence,
     TypeVar,
     Union,
+    cast,
 )
 
 # pylint: disable=unused-import; needed for typing and sphinx
@@ -226,7 +227,10 @@ class _ProxyCounter(_ProxyInstrument[Counter], Counter):
 
     def _create_real_instrument(self, meter: "metrics.Meter") -> Counter:
         return meter.create_counter(
-            self._name, self._unit, self._description, advisory=self._advisory
+            self._name,
+            self._unit,
+            self._description,
+            advisory=cast(MetricsCommonAdvisory, self._advisory),
         )
 
 
@@ -278,7 +282,10 @@ class _ProxyUpDownCounter(_ProxyInstrument[UpDownCounter], UpDownCounter):
 
     def _create_real_instrument(self, meter: "metrics.Meter") -> UpDownCounter:
         return meter.create_up_down_counter(
-            self._name, self._unit, self._description, advisory=self._advisory
+            self._name,
+            self._unit,
+            self._description,
+            advisory=cast(MetricsCommonAdvisory, self._advisory),
         )
 
 
@@ -319,7 +326,7 @@ class _ProxyObservableCounter(
             self._callbacks,
             self._unit,
             self._description,
-            advisory=self._advisory,
+            advisory=cast(MetricsCommonAdvisory, self._advisory),
         )
 
 
@@ -362,7 +369,7 @@ class _ProxyObservableUpDownCounter(
             self._callbacks,
             self._unit,
             self._description,
-            advisory=self._advisory,
+            advisory=cast(MetricsCommonAdvisory, self._advisory),
         )
 
 
@@ -438,7 +445,10 @@ class _ProxyHistogram(_ProxyInstrument[Histogram], Histogram):
 
     def _create_real_instrument(self, meter: "metrics.Meter") -> Histogram:
         return meter.create_histogram(
-            self._name, self._unit, self._description, advisory=self._advisory
+            self._name,
+            self._unit,
+            self._description,
+            advisory=cast(MetricsHistogramAdvisory, self._advisory),
         )
 
 
@@ -481,7 +491,7 @@ class _ProxyObservableGauge(
             self._callbacks,
             self._unit,
             self._description,
-            advisory=self._advisory,
+            advisory=cast(MetricsCommonAdvisory, self._advisory),
         )
 
 
@@ -536,5 +546,8 @@ class _ProxyGauge(
 
     def _create_real_instrument(self, meter: "metrics.Meter") -> Gauge:
         return meter.create_gauge(
-            self._name, self._unit, self._description, advisory=self._advisory
+            self._name,
+            self._unit,
+            self._description,
+            advisory=cast(MetricsCommonAdvisory, self._advisory),
         )
