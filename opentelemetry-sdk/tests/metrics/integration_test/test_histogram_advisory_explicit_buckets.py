@@ -14,13 +14,13 @@
 
 from unittest import TestCase
 
+from opentelemetry.metrics import MetricsHistogramAdvisory
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 from opentelemetry.sdk.metrics.view import (
     ExplicitBucketHistogramAggregation,
     View,
 )
-from opentelemetry.util.types import MetricsHistogramAdvisory
 
 
 class TestHistogramAdvisory(TestCase):

@@ -21,6 +21,7 @@ from unittest import TestCase
 from unittest.mock import Mock
 
 from opentelemetry.context import Context
+from opentelemetry.metrics import MetricsHistogramAdvisory
 from opentelemetry.sdk.metrics._internal.aggregation import (
     _ExplicitBucketHistogramAggregation,
     _LastValueAggregation,
@@ -51,7 +52,7 @@ from opentelemetry.sdk.metrics.view import (
     LastValueAggregation,
     SumAggregation,
 )
-from opentelemetry.util.types import Attributes, MetricsHistogramAdvisory
+from opentelemetry.util.types import Attributes
 
 
 def measurement(

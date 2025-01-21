@@ -5,13 +5,13 @@ from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import (
 )
 from opentelemetry.metrics import (
     CallbackOptions,
+    MetricsHistogramAdvisory,
     Observation,
     get_meter_provider,
     set_meter_provider,
 )
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
-from opentelemetry.util.types import MetricsHistogramAdvisory
 
 exporter = OTLPMetricExporter(insecure=True)
 reader = PeriodicExportingMetricReader(exporter)

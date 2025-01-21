@@ -55,6 +55,8 @@ from opentelemetry.metrics._internal.instrument import (
     Counter,
     Histogram,
     Instrument,
+    MetricsCommonAdvisory,
+    MetricsHistogramAdvisory,
     NoOpCounter,
     NoOpHistogram,
     NoOpObservableCounter,
@@ -129,4 +131,6 @@ __all__ = [
     "Observation",
     "CallbackT",
     "NoOpMeter",
+    "MetricsCommonAdvisory",
+    "MetricsHistogramAdvisory",
 ]

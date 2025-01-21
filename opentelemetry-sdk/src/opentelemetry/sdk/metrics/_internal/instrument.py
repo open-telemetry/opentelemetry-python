@@ -21,7 +21,7 @@ from typing import Dict, Generator, Iterable, List, Optional, Union
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics
 from opentelemetry.context import Context, get_current
-from opentelemetry.metrics import CallbackT
+from opentelemetry.metrics import CallbackT, MetricsHistogramAdvisory
 from opentelemetry.metrics import Counter as APICounter
 from opentelemetry.metrics import Histogram as APIHistogram
 from opentelemetry.metrics import ObservableCounter as APIObservableCounter
@@ -34,7 +34,6 @@ from opentelemetry.metrics import _Gauge as APIGauge
 from opentelemetry.metrics._internal.instrument import CallbackOptions
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
-from opentelemetry.util.types import MetricsInstrumentAdvisory
 
 _logger = getLogger(__name__)
 
@@ -227,7 +226,7 @@ class Histogram(_Synchronous, APIHistogram):
         measurement_consumer: "opentelemetry.sdk.metrics.MeasurementConsumer",
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsInstrumentAdvisory] = None,
+        advisory: Optional[MetricsHistogramAdvisory] = None,
     ):
         super().__init__(
             name,

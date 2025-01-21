@@ -54,6 +54,8 @@ from opentelemetry.metrics._internal.instrument import (
     Counter,
     Gauge,
     Histogram,
+    MetricsCommonAdvisory,
+    MetricsHistogramAdvisory,
     NoOpCounter,
     NoOpGauge,
     NoOpHistogram,
@@ -65,6 +67,7 @@ from opentelemetry.metrics._internal.instrument import (
     ObservableGauge,
     ObservableUpDownCounter,
     UpDownCounter,
+    _MetricsInstrumentAdvisory,
     _ProxyCounter,
     _ProxyGauge,
     _ProxyHistogram,
@@ -77,9 +80,6 @@ from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
 from opentelemetry.util.types import (
     Attributes,
-    MetricsCommonAdvisory,
-    MetricsHistogramAdvisory,
-    MetricsInstrumentAdvisory,
 )
 
 _logger = getLogger(__name__)
@@ -188,7 +188,7 @@ class _InstrumentRegistrationStatus:
     instrument_id: str
     already_registered: bool
     conflict: bool
-    current_advisory: Optional[MetricsInstrumentAdvisory]
+    current_advisory: Optional[_MetricsInstrumentAdvisory]
 
 
 class Meter(ABC):
@@ -209,7 +209,7 @@ class Meter(ABC):
         self._version = version
         self._schema_url = schema_url
         self._instrument_ids: Dict[
-            str, Optional[MetricsInstrumentAdvisory]
+            str, Optional[_MetricsInstrumentAdvisory]
         ] = {}
         self._instrument_ids_lock = Lock()
 
@@ -240,7 +240,7 @@ class Meter(ABC):
         type_: type,
         unit: str,
         description: str,
-        advisory: Optional[MetricsInstrumentAdvisory] = None,
+        advisory: Optional[_MetricsInstrumentAdvisory] = None,
     ) -> _InstrumentRegistrationStatus:
         """
         Register an instrument with the name, type, unit and description as

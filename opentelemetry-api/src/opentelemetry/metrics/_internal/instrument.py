@@ -38,15 +38,27 @@ from opentelemetry.context import Context
 from opentelemetry.metrics._internal.observation import Observation
 from opentelemetry.util.types import (
     Attributes,
-    MetricsCommonAdvisory,
-    MetricsHistogramAdvisory,
-    MetricsInstrumentAdvisory,
 )
 
 _logger = getLogger(__name__)
 
 _name_regex = re_compile(r"[a-zA-Z][-_./a-zA-Z0-9]{0,254}")
 _unit_regex = re_compile(r"[\x00-\x7F]{0,63}")
+
+
+@dataclass(frozen=True)
+class MetricsHistogramAdvisory:
+    explicit_bucket_boundaries: Optional[Sequence[float]] = None
+
+
+@dataclass(frozen=True)
+class MetricsCommonAdvisory:
+    pass
+
+
+_MetricsInstrumentAdvisory = Union[
+    MetricsCommonAdvisory, MetricsHistogramAdvisory
+]
 
 
 @dataclass(frozen=True)
@@ -78,7 +90,7 @@ class Instrument(ABC):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsInstrumentAdvisory] = None,
+        advisory: Optional[_MetricsInstrumentAdvisory] = None,
     ) -> None:
         pass
 
@@ -124,7 +136,7 @@ class _ProxyInstrument(ABC, Generic[InstrumentT]):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsInstrumentAdvisory] = None,
+        advisory: Optional[_MetricsInstrumentAdvisory] = None,
     ) -> None:
         self._name = name
         self._unit = unit
@@ -152,7 +164,7 @@ class _ProxyAsynchronousInstrument(_ProxyInstrument[InstrumentT]):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsInstrumentAdvisory] = None,
+        advisory: Optional[_MetricsInstrumentAdvisory] = None,
     ) -> None:
         super().__init__(name, unit, description, advisory=advisory)
         self._callbacks = callbacks
@@ -172,7 +184,7 @@ class Asynchronous(Instrument):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsInstrumentAdvisory] = None,
+        advisory: Optional[_MetricsInstrumentAdvisory] = None,
     ) -> None:
         super().__init__(
             name, unit=unit, description=description, advisory=advisory

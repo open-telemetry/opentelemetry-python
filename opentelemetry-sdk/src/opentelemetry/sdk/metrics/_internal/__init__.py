@@ -26,7 +26,7 @@ from opentelemetry.metrics import Counter as APICounter
 from opentelemetry.metrics import Histogram as APIHistogram
 from opentelemetry.metrics import Meter as APIMeter
 from opentelemetry.metrics import MeterProvider as APIMeterProvider
-from opentelemetry.metrics import NoOpMeter
+from opentelemetry.metrics import MetricsHistogramAdvisory, NoOpMeter
 from opentelemetry.metrics import ObservableCounter as APIObservableCounter
 from opentelemetry.metrics import ObservableGauge as APIObservableGauge
 from opentelemetry.metrics import (
@@ -66,7 +66,6 @@ from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.util._once import Once
 from opentelemetry.util.types import (
     Attributes,
-    MetricsHistogramAdvisory,
 )
 
 _logger = getLogger(__name__)
