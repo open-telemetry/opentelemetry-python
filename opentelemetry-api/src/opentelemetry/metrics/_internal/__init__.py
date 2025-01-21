@@ -289,7 +289,7 @@ class Meter(ABC):
         _logger.warning(
             "An instrument with name %s, type %s, unit %s and "
             "description %s has been created already with a "
-            "different advisory value %s.",
+            "different advisory value %s and will be used instead.",
             name,
             Counter.__name__,
             unit,
