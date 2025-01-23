@@ -291,7 +291,7 @@ class Meter(ABC):
             "description %s has been created already with a "
             "different advisory value %s and will be used instead.",
             name,
-            instrumentation_type
+            instrumentation_type,
             unit,
             description,
             status.current_advisory,
