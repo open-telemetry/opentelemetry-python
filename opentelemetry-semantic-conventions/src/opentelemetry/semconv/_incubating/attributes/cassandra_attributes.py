@@ -12,13 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Final
-
-
-
-
-
 from enum import Enum
+from typing import Final
 
 CASSANDRA_CONSISTENCY_LEVEL: Final = "cassandra.consistency.level"
 """
@@ -45,11 +40,12 @@ CASSANDRA_QUERY_IDEMPOTENT: Final = "cassandra.query.idempotent"
 Whether or not the query is idempotent.
 """
 
-CASSANDRA_SPECULATIVE_EXECUTION_COUNT: Final = "cassandra.speculative_execution.count"
+CASSANDRA_SPECULATIVE_EXECUTION_COUNT: Final = (
+    "cassandra.speculative_execution.count"
+)
 """
 The number of times a query was speculatively executed. Not set or `0` if the query was not executed speculatively.
 """
-
 
 
 class CassandraConsistencyLevelValues(Enum):
