@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4371](https://github.com/open-telemetry/opentelemetry-python/pull/4371))
 - Fix span context manager typing by using ParamSpec from typing_extensions
   ([#4389](https://github.com/open-telemetry/opentelemetry-python/pull/4389))
+- semantic-conventions: Bump to 1.30.0
+  ([#4337](https://github.com/open-telemetry/opentelemetry-python/pull/4397))
 
 ## Version 1.29.0/0.50b0 (2024-12-11)
 
