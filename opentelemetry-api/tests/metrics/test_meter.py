@@ -24,59 +24,59 @@ from opentelemetry.metrics import Meter, NoOpMeter
 
 class ChildMeter(Meter):
     # pylint: disable=signature-differs
-    def create_counter(self, name, unit="", description="", advisory=None):
-        super().create_counter(
-            name, unit=unit, description=description, advisory=advisory
-        )
+    def create_counter(self, name, unit="", description=""):
+        super().create_counter(name, unit=unit, description=description)
 
-    def create_up_down_counter(
-        self, name, unit="", description="", advisory=None
-    ):
+    def create_up_down_counter(self, name, unit="", description=""):
         super().create_up_down_counter(
-            name, unit=unit, description=description, advisory=advisory
+            name, unit=unit, description=description
         )
 
     def create_observable_counter(
-        self, name, callbacks, unit="", description="", advisory=None
+        self, name, callbacks, unit="", description=""
     ):
         super().create_observable_counter(
             name,
             callbacks,
             unit=unit,
             description=description,
-            advisory=advisory,
         )
 
-    def create_histogram(self, name, unit="", description="", advisory=None):
+    def create_histogram(
+        self,
+        name,
+        unit="",
+        description="",
+        explicit_bucket_boundaries_advisory=None,
+    ):
         super().create_histogram(
-            name, unit=unit, description=description, advisory=advisory
+            name,
+            unit=unit,
+            description=description,
+            explicit_bucket_boundaries_advisory=explicit_bucket_boundaries_advisory,
         )
 
-    def create_gauge(self, name, unit="", description="", advisory=None):
-        super().create_gauge(
-            name, unit=unit, description=description, advisory=advisory
-        )
+    def create_gauge(self, name, unit="", description=""):
+        super().create_gauge(name, unit=unit, description=description)
 
     def create_observable_gauge(
-        self, name, callbacks, unit="", description="", advisory=None
+        self, name, callbacks, unit="", description=""
     ):
         super().create_observable_gauge(
             name,
             callbacks,
             unit=unit,
             description=description,
-            advisory=advisory,
         )
 
     def create_observable_up_down_counter(
-        self, name, callbacks, unit="", description="", advisory=None
+        self, name, callbacks, unit="", description=""
     ):
         super().create_observable_up_down_counter(
             name,
             callbacks,
             unit=unit,
             description=description,
-            advisory=advisory,
         )
 
 
@@ -123,37 +123,18 @@ class TestMeter(TestCase):
         try:
             test_meter = NoOpMeter("name")
 
-            test_meter.create_counter("counter")
-            test_meter.create_up_down_counter("up_down_counter")
-            test_meter.create_observable_counter("observable_counter", Mock())
-            test_meter.create_histogram("histogram")
-            test_meter.create_gauge("gauge")
-            test_meter.create_observable_gauge("observable_gauge", Mock())
-            test_meter.create_observable_up_down_counter(
-                "observable_up_down_counter", Mock()
+            test_meter.create_histogram(
+                "histogram", explicit_bucket_boundaries_advisory=[1.0]
             )
         except Exception as error:  # pylint: disable=broad-exception-caught
             self.fail(f"Unexpected exception raised {error}")
 
         for instrument_name in [
-            "counter",
-            "up_down_counter",
             "histogram",
-            "gauge",
         ]:
             with self.assertLogs(level=WARNING):
                 getattr(test_meter, f"create_{instrument_name}")(
-                    instrument_name, advisory=Mock()
-                )
-
-        for instrument_name in [
-            "observable_counter",
-            "observable_gauge",
-            "observable_up_down_counter",
-        ]:
-            with self.assertLogs(level=WARNING):
-                getattr(test_meter, f"create_{instrument_name}")(
-                    instrument_name, Mock(), advisory=Mock()
+                    instrument_name,
                 )
 
     def test_create_counter(self):

@@ -26,7 +26,7 @@ from opentelemetry.metrics import Counter as APICounter
 from opentelemetry.metrics import Histogram as APIHistogram
 from opentelemetry.metrics import Meter as APIMeter
 from opentelemetry.metrics import MeterProvider as APIMeterProvider
-from opentelemetry.metrics import MetricsHistogramAdvisory, NoOpMeter
+from opentelemetry.metrics import NoOpMeter
 from opentelemetry.metrics import ObservableCounter as APIObservableCounter
 from opentelemetry.metrics import ObservableGauge as APIObservableGauge
 from opentelemetry.metrics import (
@@ -89,12 +89,8 @@ class Meter(APIMeter):
         self._instrument_id_instrument = {}
         self._instrument_id_instrument_lock = Lock()
 
-    def create_counter(
-        self, name, unit="", description="", advisory=None
-    ) -> APICounter:
-        status = self._register_instrument(
-            name, _Counter, unit, description, advisory
-        )
+    def create_counter(self, name, unit="", description="") -> APICounter:
+        status = self._register_instrument(name, _Counter, unit, description)
 
         if status.conflict:
             # FIXME #2558 go through all views here and check if this
@@ -124,10 +120,10 @@ class Meter(APIMeter):
             return instrument
 
     def create_up_down_counter(
-        self, name, unit="", description="", advisory=None
+        self, name, unit="", description=""
     ) -> APIUpDownCounter:
         status = self._register_instrument(
-            name, _UpDownCounter, unit, description, advisory
+            name, _UpDownCounter, unit, description
         )
 
         if status.conflict:
@@ -158,10 +154,14 @@ class Meter(APIMeter):
             return instrument
 
     def create_observable_counter(
-        self, name, callbacks=None, unit="", description="", advisory=None
+        self,
+        name,
+        callbacks=None,
+        unit="",
+        description="",
     ) -> APIObservableCounter:
         status = self._register_instrument(
-            name, _ObservableCounter, unit, description, advisory
+            name, _ObservableCounter, unit, description
         )
 
         if status.conflict:
@@ -199,27 +199,34 @@ class Meter(APIMeter):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsHistogramAdvisory] = None,
+        explicit_bucket_boundaries_advisory: Optional[Sequence[float]] = None,
     ) -> APIHistogram:
-        if advisory is not None:
+        # FIXME: should pack everything into the class instead?
+        if explicit_bucket_boundaries_advisory is not None:
             invalid_advisory = False
             try:
-                boundaries = advisory.explicit_bucket_boundaries
                 invalid_advisory = not (
-                    boundaries
-                    and all(isinstance(e, (float, int)) for e in boundaries)
+                    explicit_bucket_boundaries_advisory
+                    and all(
+                        isinstance(e, (float, int))
+                        for e in explicit_bucket_boundaries_advisory
+                    )
                 )
             except (KeyError, TypeError):
                 invalid_advisory = True
 
             if invalid_advisory:
-                advisory = None
+                explicit_bucket_boundaries_advisory = None
                 _logger.warning(
-                    "Advisory must be a valid MetricsHistogramAdvisory with explicit_bucket_boundaries key containing a sequence of numbers"
+                    "explicit_bucket_boundaries_advisory must be a sequence of numbers"
                 )
 
         status = self._register_instrument(
-            name, _Histogram, unit, description, advisory
+            name,
+            _Histogram,
+            unit,
+            description,
+            explicit_bucket_boundaries_advisory,
         )
 
         if status.conflict:
@@ -243,18 +250,14 @@ class Meter(APIMeter):
             self._measurement_consumer,
             unit,
             description,
-            advisory,
+            explicit_bucket_boundaries_advisory,
         )
         with self._instrument_id_instrument_lock:
             self._instrument_id_instrument[status.instrument_id] = instrument
             return instrument
 
-    def create_gauge(
-        self, name, unit="", description="", advisory=None
-    ) -> APIGauge:
-        status = self._register_instrument(
-            name, _Gauge, unit, description, advisory
-        )
+    def create_gauge(self, name, unit="", description="") -> APIGauge:
+        status = self._register_instrument(name, _Gauge, unit, description)
 
         if status.conflict:
             # FIXME #2558 go through all views here and check if this
@@ -284,10 +287,10 @@ class Meter(APIMeter):
             return instrument
 
     def create_observable_gauge(
-        self, name, callbacks=None, unit="", description="", advisory=None
+        self, name, callbacks=None, unit="", description=""
     ) -> APIObservableGauge:
         status = self._register_instrument(
-            name, _ObservableGauge, unit, description, advisory
+            name, _ObservableGauge, unit, description
         )
 
         if status.conflict:
@@ -321,10 +324,10 @@ class Meter(APIMeter):
             return instrument
 
     def create_observable_up_down_counter(
-        self, name, callbacks=None, unit="", description="", advisory=None
+        self, name, callbacks=None, unit="", description=""
     ) -> APIObservableUpDownCounter:
         status = self._register_instrument(
-            name, _ObservableUpDownCounter, unit, description, advisory
+            name, _ObservableUpDownCounter, unit, description
         )
 
         if status.conflict:

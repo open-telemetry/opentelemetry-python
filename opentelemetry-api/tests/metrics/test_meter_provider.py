@@ -268,25 +268,25 @@ class TestProxy(MetricsGlobalsTest, TestCase):
 
         real_meter: Mock = real_meter_provider.get_meter()
         real_meter.create_counter.assert_called_once_with(
-            name, unit, description, advisory=None
+            name, unit, description
         )
         real_meter.create_up_down_counter.assert_called_once_with(
-            name, unit, description, advisory=None
+            name, unit, description
         )
         real_meter.create_histogram.assert_called_once_with(
-            name, unit, description, advisory=None
+            name, unit, description, explicit_bucket_boundaries_advisory=None
         )
         real_meter.create_gauge.assert_called_once_with(
-            name, unit, description, advisory=None
+            name, unit, description
         )
         real_meter.create_observable_counter.assert_called_once_with(
-            name, [callback], unit, description, advisory=None
+            name, [callback], unit, description
         )
         real_meter.create_observable_up_down_counter.assert_called_once_with(
-            name, [callback], unit, description, advisory=None
+            name, [callback], unit, description
         )
         real_meter.create_observable_gauge.assert_called_once_with(
-            name, [callback], unit, description, advisory=None
+            name, [callback], unit, description
         )
 
         # The synchronous instrument measurement methods should call through to

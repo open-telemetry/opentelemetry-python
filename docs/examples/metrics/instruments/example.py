@@ -5,7 +5,6 @@ from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import (
 )
 from opentelemetry.metrics import (
     CallbackOptions,
-    MetricsHistogramAdvisory,
     Observation,
     get_meter_provider,
     set_meter_provider,
@@ -63,9 +62,7 @@ histogram.record(99.9)
 # Histogram with explicit bucket boundaries advisory
 histogram = meter.create_histogram(
     "histogram_with_advisory",
-    advisory=MetricsHistogramAdvisory(
-        explicit_bucket_boundaries=[0.0, 1.0, 2.0]
-    ),
+    explicit_bucket_boundaries_advisory=[0.0, 1.0, 2.0],
 )
 histogram.record(99.9)
 

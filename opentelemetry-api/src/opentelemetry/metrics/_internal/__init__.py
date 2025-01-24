@@ -46,7 +46,7 @@ from dataclasses import dataclass
 from logging import getLogger
 from os import environ
 from threading import Lock
-from typing import Dict, List, Optional, Sequence, Union, cast
+from typing import Any, Dict, List, Optional, Sequence, Union, cast
 
 from opentelemetry.environment_variables import OTEL_PYTHON_METER_PROVIDER
 from opentelemetry.metrics._internal.instrument import (
@@ -54,8 +54,6 @@ from opentelemetry.metrics._internal.instrument import (
     Counter,
     Gauge,
     Histogram,
-    MetricsCommonAdvisory,
-    MetricsHistogramAdvisory,
     NoOpCounter,
     NoOpGauge,
     NoOpHistogram,
@@ -67,7 +65,6 @@ from opentelemetry.metrics._internal.instrument import (
     ObservableGauge,
     ObservableUpDownCounter,
     UpDownCounter,
-    _MetricsInstrumentAdvisory,
     _ProxyCounter,
     _ProxyGauge,
     _ProxyHistogram,
@@ -188,7 +185,7 @@ class _InstrumentRegistrationStatus:
     instrument_id: str
     already_registered: bool
     conflict: bool
-    current_advisory: Optional[_MetricsInstrumentAdvisory]
+    current_advisory: Optional[Any]
 
 
 class Meter(ABC):
@@ -208,9 +205,7 @@ class Meter(ABC):
         self._name = name
         self._version = version
         self._schema_url = schema_url
-        self._instrument_ids: Dict[
-            str, Optional[_MetricsInstrumentAdvisory]
-        ] = {}
+        self._instrument_ids: Dict[str, Optional[Any]] = {}
         self._instrument_ids_lock = Lock()
 
     @property
@@ -240,7 +235,7 @@ class Meter(ABC):
         type_: type,
         unit: str,
         description: str,
-        advisory: Optional[_MetricsInstrumentAdvisory] = None,
+        advisory: Optional[Any] = None,
     ) -> _InstrumentRegistrationStatus:
         """
         Register an instrument with the name, type, unit and description as
@@ -303,7 +298,6 @@ class Meter(ABC):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> Counter:
         """Creates a `Counter` instrument
 
@@ -320,7 +314,6 @@ class Meter(ABC):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> UpDownCounter:
         """Creates an `UpDownCounter` instrument
 
@@ -338,7 +331,6 @@ class Meter(ABC):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> ObservableCounter:
         """Creates an `ObservableCounter` instrument
 
@@ -435,7 +427,7 @@ class Meter(ABC):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsHistogramAdvisory] = None,
+        explicit_bucket_boundaries_advisory: Optional[Sequence[float]] = None,
     ) -> Histogram:
         """Creates a :class:`~opentelemetry.metrics.Histogram` instrument
 
@@ -451,7 +443,6 @@ class Meter(ABC):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> Gauge:
         """Creates a ``Gauge`` instrument
 
@@ -470,7 +461,6 @@ class Meter(ABC):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> ObservableGauge:
         """Creates an `ObservableGauge` instrument
 
@@ -491,7 +481,6 @@ class Meter(ABC):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> ObservableUpDownCounter:
         """Creates an `ObservableUpDownCounter` instrument
 
@@ -540,7 +529,6 @@ class _ProxyMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> Counter:
         with self._lock:
             if self._real_meter:
@@ -554,7 +542,6 @@ class _ProxyMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> UpDownCounter:
         with self._lock:
             if self._real_meter:
@@ -571,7 +558,6 @@ class _ProxyMeter(Meter):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> ObservableCounter:
         with self._lock:
             if self._real_meter:
@@ -589,14 +575,19 @@ class _ProxyMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsHistogramAdvisory] = None,
+        explicit_bucket_boundaries_advisory: Optional[Sequence[float]] = None,
     ) -> Histogram:
         with self._lock:
             if self._real_meter:
                 return self._real_meter.create_histogram(
-                    name, unit, description, advisory
+                    name,
+                    unit,
+                    description,
+                    explicit_bucket_boundaries_advisory,
                 )
-            proxy = _ProxyHistogram(name, unit, description, advisory)
+            proxy = _ProxyHistogram(
+                name, unit, description, explicit_bucket_boundaries_advisory
+            )
             self._instruments.append(proxy)
             return proxy
 
@@ -605,7 +596,6 @@ class _ProxyMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> Gauge:
         with self._lock:
             if self._real_meter:
@@ -620,7 +610,6 @@ class _ProxyMeter(Meter):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> ObservableGauge:
         with self._lock:
             if self._real_meter:
@@ -639,7 +628,6 @@ class _ProxyMeter(Meter):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> ObservableUpDownCounter:
         with self._lock:
             if self._real_meter:
@@ -667,11 +655,10 @@ class NoOpMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> Counter:
         """Returns a no-op Counter."""
         status = self._register_instrument(
-            name, NoOpCounter, unit, description, advisory
+            name, NoOpCounter, unit, description
         )
         if status.conflict:
             self._log_instrument_registration_conflict(
@@ -689,12 +676,9 @@ class NoOpMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> Gauge:
         """Returns a no-op Gauge."""
-        status = self._register_instrument(
-            name, NoOpGauge, unit, description, advisory
-        )
+        status = self._register_instrument(name, NoOpGauge, unit, description)
         if status.conflict:
             self._log_instrument_registration_conflict(
                 name,
@@ -710,11 +694,10 @@ class NoOpMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> UpDownCounter:
         """Returns a no-op UpDownCounter."""
         status = self._register_instrument(
-            name, NoOpUpDownCounter, unit, description, advisory
+            name, NoOpUpDownCounter, unit, description
         )
         if status.conflict:
             self._log_instrument_registration_conflict(
@@ -732,11 +715,10 @@ class NoOpMeter(Meter):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> ObservableCounter:
         """Returns a no-op ObservableCounter."""
         status = self._register_instrument(
-            name, NoOpObservableCounter, unit, description, advisory
+            name, NoOpObservableCounter, unit, description
         )
         if status.conflict:
             self._log_instrument_registration_conflict(
@@ -758,11 +740,18 @@ class NoOpMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsHistogramAdvisory] = None,
+        explicit_bucket_boundaries_advisory: Optional[Sequence[float]] = None,
     ) -> Histogram:
         """Returns a no-op Histogram."""
+        # FIXME: should be use a dataclass here instead for the advisory param?
         status = self._register_instrument(
-            name, NoOpHistogram, unit, description, advisory
+            name,
+            NoOpHistogram,
+            unit,
+            description,
+            {
+                "explicit_bucket_boundaries_advisory": explicit_bucket_boundaries_advisory
+            },
         )
         if status.conflict:
             self._log_instrument_registration_conflict(
@@ -773,7 +762,10 @@ class NoOpMeter(Meter):
                 status,
             )
         return NoOpHistogram(
-            name, unit=unit, description=description, advisory=advisory
+            name,
+            unit=unit,
+            description=description,
+            explicit_bucket_boundaries_advisory=explicit_bucket_boundaries_advisory,
         )
 
     def create_observable_gauge(
@@ -782,11 +774,10 @@ class NoOpMeter(Meter):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> ObservableGauge:
         """Returns a no-op ObservableGauge."""
         status = self._register_instrument(
-            name, NoOpObservableGauge, unit, description, advisory
+            name, NoOpObservableGauge, unit, description
         )
         if status.conflict:
             self._log_instrument_registration_conflict(
@@ -809,11 +800,10 @@ class NoOpMeter(Meter):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> ObservableUpDownCounter:
         """Returns a no-op ObservableUpDownCounter."""
         status = self._register_instrument(
-            name, NoOpObservableUpDownCounter, unit, description, advisory
+            name, NoOpObservableUpDownCounter, unit, description
         )
         if status.conflict:
             self._log_instrument_registration_conflict(

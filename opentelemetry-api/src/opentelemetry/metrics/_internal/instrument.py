@@ -29,7 +29,6 @@ from typing import (
     Sequence,
     TypeVar,
     Union,
-    cast,
 )
 
 # pylint: disable=unused-import; needed for typing and sphinx
@@ -46,19 +45,10 @@ _name_regex = re_compile(r"[a-zA-Z][-_./a-zA-Z0-9]{0,254}")
 _unit_regex = re_compile(r"[\x00-\x7F]{0,63}")
 
 
+# FIXME: remove this if we are not going to use it to store advisory in registered instruments
 @dataclass(frozen=True)
 class MetricsHistogramAdvisory:
     explicit_bucket_boundaries: Optional[Sequence[float]] = None
-
-
-@dataclass(frozen=True)
-class MetricsCommonAdvisory:
-    pass
-
-
-_MetricsInstrumentAdvisory = Union[
-    MetricsCommonAdvisory, MetricsHistogramAdvisory
-]
 
 
 @dataclass(frozen=True)
@@ -90,7 +80,6 @@ class Instrument(ABC):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[_MetricsInstrumentAdvisory] = None,
     ) -> None:
         pass
 
@@ -136,12 +125,10 @@ class _ProxyInstrument(ABC, Generic[InstrumentT]):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[_MetricsInstrumentAdvisory] = None,
     ) -> None:
         self._name = name
         self._unit = unit
         self._description = description
-        self._advisory = advisory
         self._real_instrument: Optional[InstrumentT] = None
 
     def on_meter_set(self, meter: "metrics.Meter") -> None:
@@ -164,9 +151,8 @@ class _ProxyAsynchronousInstrument(_ProxyInstrument[InstrumentT]):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
-        advisory: Optional[_MetricsInstrumentAdvisory] = None,
     ) -> None:
-        super().__init__(name, unit, description, advisory=advisory)
+        super().__init__(name, unit, description)
         self._callbacks = callbacks
 
 
@@ -184,11 +170,8 @@ class Asynchronous(Instrument):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
-        advisory: Optional[_MetricsInstrumentAdvisory] = None,
     ) -> None:
-        super().__init__(
-            name, unit=unit, description=description, advisory=advisory
-        )
+        super().__init__(name, unit=unit, description=description)
 
 
 class Counter(Synchronous):
@@ -212,11 +195,8 @@ class NoOpCounter(Counter):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> None:
-        super().__init__(
-            name, unit=unit, description=description, advisory=advisory
-        )
+        super().__init__(name, unit=unit, description=description)
 
     def add(
         self,
@@ -242,7 +222,6 @@ class _ProxyCounter(_ProxyInstrument[Counter], Counter):
             self._name,
             self._unit,
             self._description,
-            advisory=cast(MetricsCommonAdvisory, self._advisory),
         )
 
 
@@ -267,11 +246,8 @@ class NoOpUpDownCounter(UpDownCounter):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> None:
-        super().__init__(
-            name, unit=unit, description=description, advisory=advisory
-        )
+        super().__init__(name, unit=unit, description=description)
 
     def add(
         self,
@@ -297,7 +273,6 @@ class _ProxyUpDownCounter(_ProxyInstrument[UpDownCounter], UpDownCounter):
             self._name,
             self._unit,
             self._description,
-            advisory=cast(MetricsCommonAdvisory, self._advisory),
         )
 
 
@@ -316,14 +291,12 @@ class NoOpObservableCounter(ObservableCounter):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> None:
         super().__init__(
             name,
             callbacks,
             unit=unit,
             description=description,
-            advisory=advisory,
         )
 
 
@@ -338,7 +311,6 @@ class _ProxyObservableCounter(
             self._callbacks,
             self._unit,
             self._description,
-            advisory=cast(MetricsCommonAdvisory, self._advisory),
         )
 
 
@@ -358,14 +330,12 @@ class NoOpObservableUpDownCounter(ObservableUpDownCounter):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> None:
         super().__init__(
             name,
             callbacks,
             unit=unit,
             description=description,
-            advisory=advisory,
         )
 
 
@@ -381,7 +351,6 @@ class _ProxyObservableUpDownCounter(
             self._callbacks,
             self._unit,
             self._description,
-            advisory=cast(MetricsCommonAdvisory, self._advisory),
         )
 
 
@@ -397,7 +366,7 @@ class Histogram(Synchronous):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsHistogramAdvisory] = None,
+        explicit_bucket_boundaries_advisory: Optional[Sequence[float]] = None,
     ) -> None:
         pass
 
@@ -419,10 +388,13 @@ class NoOpHistogram(Histogram):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsHistogramAdvisory] = None,
+        explicit_bucket_boundaries_advisory: Optional[Sequence[float]] = None,
     ) -> None:
         super().__init__(
-            name, unit=unit, description=description, advisory=advisory
+            name,
+            unit=unit,
+            description=description,
+            explicit_bucket_boundaries_advisory=explicit_bucket_boundaries_advisory,
         )
 
     def record(
@@ -440,10 +412,11 @@ class _ProxyHistogram(_ProxyInstrument[Histogram], Histogram):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsHistogramAdvisory] = None,
+        explicit_bucket_boundaries_advisory: Optional[Sequence[float]] = None,
     ) -> None:
-        super().__init__(
-            name, unit=unit, description=description, advisory=advisory
+        super().__init__(name, unit=unit, description=description)
+        self._explicit_bucket_boundaries_advisory = (
+            explicit_bucket_boundaries_advisory
         )
 
     def record(
@@ -460,7 +433,7 @@ class _ProxyHistogram(_ProxyInstrument[Histogram], Histogram):
             self._name,
             self._unit,
             self._description,
-            advisory=cast(MetricsHistogramAdvisory, self._advisory),
+            explicit_bucket_boundaries_advisory=self._explicit_bucket_boundaries_advisory,
         )
 
 
@@ -480,14 +453,12 @@ class NoOpObservableGauge(ObservableGauge):
         callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> None:
         super().__init__(
             name,
             callbacks,
             unit=unit,
             description=description,
-            advisory=advisory,
         )
 
 
@@ -503,7 +474,6 @@ class _ProxyObservableGauge(
             self._callbacks,
             self._unit,
             self._description,
-            advisory=cast(MetricsCommonAdvisory, self._advisory),
         )
 
 
@@ -528,11 +498,8 @@ class NoOpGauge(Gauge):
         name: str,
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsCommonAdvisory] = None,
     ) -> None:
-        super().__init__(
-            name, unit=unit, description=description, advisory=advisory
-        )
+        super().__init__(name, unit=unit, description=description)
 
     def set(
         self,
@@ -561,5 +528,4 @@ class _ProxyGauge(
             self._name,
             self._unit,
             self._description,
-            advisory=cast(MetricsCommonAdvisory, self._advisory),
         )

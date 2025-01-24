@@ -14,7 +14,6 @@
 
 from unittest import TestCase
 
-from opentelemetry.metrics import MetricsHistogramAdvisory
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 from opentelemetry.sdk.metrics.view import (
@@ -32,9 +31,7 @@ class TestHistogramAdvisory(TestCase):
         meter = meter_provider.get_meter("testmeter")
         histogram = meter.create_histogram(
             "testhistogram",
-            advisory=MetricsHistogramAdvisory(
-                explicit_bucket_boundaries=[1.0, 2.0, 3.0]
-            ),
+            explicit_bucket_boundaries_advisory=[1.0, 2.0, 3.0],
         )
         histogram.record(1, {"label": "value"})
         histogram.record(2, {"label": "value"})
@@ -62,9 +59,7 @@ class TestHistogramAdvisory(TestCase):
         meter = meter_provider.get_meter("testmeter")
         histogram = meter.create_histogram(
             "testhistogram",
-            advisory=MetricsHistogramAdvisory(
-                explicit_bucket_boundaries=[1.0, 2.0, 3.0]
-            ),
+            explicit_bucket_boundaries_advisory=[1.0, 2.0, 3.0],
         )
         histogram.record(1, {"label": "value"})
         histogram.record(2, {"label": "value"})
@@ -97,9 +92,7 @@ class TestHistogramAdvisory(TestCase):
         meter = meter_provider.get_meter("testmeter")
         histogram = meter.create_histogram(
             "testhistogram",
-            advisory=MetricsHistogramAdvisory(
-                explicit_bucket_boundaries=[1.0, 2.0, 3.0]
-            ),
+            explicit_bucket_boundaries_advisory=[1.0, 2.0, 3.0],
         )
         histogram.record(1, {"label": "value"})
         histogram.record(2, {"label": "value"})

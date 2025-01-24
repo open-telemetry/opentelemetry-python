@@ -16,12 +16,12 @@
 
 from logging import getLogger
 from time import time_ns
-from typing import Dict, Generator, Iterable, List, Optional, Union
+from typing import Dict, Generator, Iterable, List, Optional, Sequence, Union
 
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics
 from opentelemetry.context import Context, get_current
-from opentelemetry.metrics import CallbackT, MetricsHistogramAdvisory
+from opentelemetry.metrics import CallbackT
 from opentelemetry.metrics import Counter as APICounter
 from opentelemetry.metrics import Histogram as APIHistogram
 from opentelemetry.metrics import ObservableCounter as APIObservableCounter
@@ -226,7 +226,7 @@ class Histogram(_Synchronous, APIHistogram):
         measurement_consumer: "opentelemetry.sdk.metrics.MeasurementConsumer",
         unit: str = "",
         description: str = "",
-        advisory: Optional[MetricsHistogramAdvisory] = None,
+        explicit_bucket_boundaries_advisory: Optional[Sequence[float]] = None,
     ):
         super().__init__(
             name,
@@ -235,7 +235,10 @@ class Histogram(_Synchronous, APIHistogram):
             instrumentation_scope=instrumentation_scope,
             measurement_consumer=measurement_consumer,
         )
-        self._advisory = advisory
+        # FIXME: should the dataclass instead?
+        self._explicit_bucket_boundaries_advisory = (
+            explicit_bucket_boundaries_advisory
+        )
 
     def __new__(cls, *args, **kwargs):
         if cls is Histogram:

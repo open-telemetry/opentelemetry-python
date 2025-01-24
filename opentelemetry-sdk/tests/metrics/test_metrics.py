@@ -21,7 +21,7 @@ from typing import Iterable, Sequence
 from unittest.mock import MagicMock, Mock, patch
 
 from opentelemetry.attributes import BoundedAttributes
-from opentelemetry.metrics import MetricsHistogramAdvisory, NoOpMeter
+from opentelemetry.metrics import NoOpMeter
 from opentelemetry.sdk.environment_variables import OTEL_SDK_DISABLED
 from opentelemetry.sdk.metrics import (
     Counter,
@@ -470,39 +470,16 @@ class TestMeter(TestCase):
 
     def test_repeated_instrument_names_with_different_advisory(self):
         with self.assertNotRaises(Exception):
-            self.meter.create_counter("counter")
-            self.meter.create_up_down_counter("up_down_counter")
-            self.meter.create_observable_counter(
-                "observable_counter", callbacks=[Mock()]
-            )
-            self.meter.create_histogram("histogram")
-            self.meter.create_gauge("gauge")
-            self.meter.create_observable_gauge(
-                "observable_gauge", callbacks=[Mock()]
-            )
-            self.meter.create_observable_up_down_counter(
-                "observable_up_down_counter", callbacks=[Mock()]
+            self.meter.create_histogram(
+                "histogram", explicit_bucket_boundaries_advisory=[1.0]
             )
 
         for instrument_name in [
-            "counter",
-            "up_down_counter",
             "histogram",
-            "gauge",
         ]:
             with self.assertLogs(level=WARNING):
                 getattr(self.meter, f"create_{instrument_name}")(
-                    instrument_name, advisory=Mock()
-                )
-
-        for instrument_name in [
-            "observable_counter",
-            "observable_gauge",
-            "observable_up_down_counter",
-        ]:
-            with self.assertLogs(level=WARNING):
-                getattr(self.meter, f"create_{instrument_name}")(
-                    instrument_name, callbacks=[Mock()], advisory=Mock()
+                    instrument_name
                 )
 
     def test_create_counter(self):
@@ -542,23 +519,20 @@ class TestMeter(TestCase):
             "name",
             unit="unit",
             description="description",
-            advisory=MetricsHistogramAdvisory(
-                explicit_bucket_boundaries=[0.0, 1.0, 2]
-            ),
+            explicit_bucket_boundaries_advisory=[0.0, 1.0, 2],
         )
 
         self.assertIsInstance(histogram, Histogram)
         self.assertEqual(histogram.name, "name")
         self.assertEqual(
-            histogram._advisory,
-            MetricsHistogramAdvisory(explicit_bucket_boundaries=[0.0, 1.0, 2]),
+            histogram._explicit_bucket_boundaries_advisory,
+            [0.0, 1.0, 2],
         )
 
     def test_create_histogram_advisory_validation(self):
         advisories = [
-            MetricsHistogramAdvisory(explicit_bucket_boundaries=None),
-            MetricsHistogramAdvisory(explicit_bucket_boundaries=[]),
-            MetricsHistogramAdvisory(explicit_bucket_boundaries=["1"]),
+            {"explicit_bucket_boundaries_advisory": []},
+            {"explicit_bucket_boundaries_advisory": ["1"]},
         ]
         for advisory in advisories:
             with self.subTest(advisory=advisory):
@@ -567,7 +541,7 @@ class TestMeter(TestCase):
                         "name",
                         unit="unit",
                         description="description",
-                        advisory=advisory,
+                        **advisory,
                     )
 
     def test_create_observable_gauge(self):

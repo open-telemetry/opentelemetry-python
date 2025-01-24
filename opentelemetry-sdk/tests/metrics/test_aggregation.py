@@ -21,7 +21,6 @@ from unittest import TestCase
 from unittest.mock import Mock
 
 from opentelemetry.context import Context
-from opentelemetry.metrics import MetricsHistogramAdvisory
 from opentelemetry.sdk.metrics._internal.aggregation import (
     _ExplicitBucketHistogramAggregation,
     _LastValueAggregation,
@@ -636,9 +635,7 @@ class TestDefaultAggregation(TestCase):
                 "name",
                 Mock(),
                 Mock(),
-                advisory=MetricsHistogramAdvisory(
-                    explicit_bucket_boundaries=boundaries
-                ),
+                explicit_bucket_boundaries_advisory=boundaries,
             ),
             Mock(),
             _default_reservoir_factory,
