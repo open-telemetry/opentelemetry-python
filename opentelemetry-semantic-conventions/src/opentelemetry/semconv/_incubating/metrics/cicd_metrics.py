@@ -13,13 +13,9 @@
 # limitations under the License.
 
 
-
 from typing import Final
 
-from opentelemetry.metrics import Meter
-from opentelemetry.metrics import Counter
-from opentelemetry.metrics import Histogram
-from opentelemetry.metrics import UpDownCounter
+from opentelemetry.metrics import Counter, Histogram, Meter, UpDownCounter
 
 CICD_PIPELINE_RUN_ACTIVE: Final = "cicd.pipeline.run.active"
 """
@@ -27,7 +23,6 @@ The number of pipeline runs currently active in the system by state
 Instrument: updowncounter
 Unit: {run}
 """
-
 
 
 def create_cicd_pipeline_run_active(meter: Meter) -> UpDownCounter:
@@ -38,13 +33,13 @@ def create_cicd_pipeline_run_active(meter: Meter) -> UpDownCounter:
         unit="{run}",
     )
 
+
 CICD_PIPELINE_RUN_DURATION: Final = "cicd.pipeline.run.duration"
 """
 Duration of a pipeline run grouped by pipeline, state and result
 Instrument: histogram
 Unit: s
 """
-
 
 
 def create_cicd_pipeline_run_duration(meter: Meter) -> Histogram:
@@ -54,6 +49,7 @@ def create_cicd_pipeline_run_duration(meter: Meter) -> Histogram:
         description="Duration of a pipeline run grouped by pipeline, state and result.",
         unit="s",
     )
+
 
 CICD_PIPELINE_RUN_ERRORS: Final = "cicd.pipeline.run.errors"
 """
@@ -65,7 +61,6 @@ This means that this error count might not be the same as the count of metric `c
 """
 
 
-
 def create_cicd_pipeline_run_errors(meter: Meter) -> Counter:
     """The number of errors encountered in pipeline runs (eg. compile, test failures)"""
     return meter.create_counter(
@@ -73,6 +68,7 @@ def create_cicd_pipeline_run_errors(meter: Meter) -> Counter:
         description="The number of errors encountered in pipeline runs (eg. compile, test failures).",
         unit="{error}",
     )
+
 
 CICD_SYSTEM_ERRORS: Final = "cicd.system.errors"
 """
@@ -83,7 +79,6 @@ Note: Errors in pipeline run execution are explicitly excluded. Ie a test failur
 """
 
 
-
 def create_cicd_system_errors(meter: Meter) -> Counter:
     """The number of errors in a component of the CICD system (eg. controller, scheduler, agent)"""
     return meter.create_counter(
@@ -92,13 +87,13 @@ def create_cicd_system_errors(meter: Meter) -> Counter:
         unit="{error}",
     )
 
+
 CICD_WORKER_COUNT: Final = "cicd.worker.count"
 """
 The number of workers on the CICD system by state
 Instrument: updowncounter
 Unit: {count}
 """
-
 
 
 def create_cicd_worker_count(meter: Meter) -> UpDownCounter:

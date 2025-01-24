@@ -14,12 +14,6 @@
 
 from typing import Final
 
-
-
-
-
-
-
 SECURITY_RULE_CATEGORY: Final = "security_rule.category"
 """
 A categorization value keyword used by the entity using the rule for detection of this event.
@@ -60,5 +54,3 @@ SECURITY_RULE_VERSION: Final = "security_rule.version"
 """
 The version / revision of the rule being used for analysis.
 """
-
-
