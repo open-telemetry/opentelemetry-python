@@ -84,8 +84,6 @@ unless the query format is known to only ever have a single collection name pres
 
 For batch operations, if the individual operations are known to have the same collection name
 then that collection name SHOULD be used.
-
-This attribute has stability level RELEASE CANDIDATE.
 """
 
 DB_CONNECTION_STRING: Final = "db.connection_string"
@@ -193,7 +191,6 @@ The name of the database, fully qualified within the server address and port.
 Note: If a database system has multiple namespace components, they SHOULD be concatenated (potentially using database system specific conventions) from most general to most specific namespace component, and more specific namespaces SHOULD NOT be captured without the more general namespaces, to ensure that "startswith" queries for the more general namespaces will be valid.
 Semantic conventions for individual database systems SHOULD document what `db.namespace` means in the context of that system.
 It is RECOMMENDED to capture the value as provided by the application without attempting to do any case normalization.
-This attribute has stability level RELEASE CANDIDATE.
 """
 
 DB_OPERATION: Final = "db.operation"
@@ -205,7 +202,6 @@ DB_OPERATION_BATCH_SIZE: Final = "db.operation.batch.size"
 """
 The number of queries included in a batch operation.
 Note: Operations are only considered batches when they contain two or more operations, and so `db.operation.batch.size` SHOULD never be `1`.
-This attribute has stability level RELEASE CANDIDATE.
 """
 
 DB_OPERATION_NAME: Final = "db.operation.name"
@@ -221,8 +217,6 @@ For batch operations, if the individual operations are known to have the same op
 then that operation name SHOULD be used prepended by `BATCH `,
 otherwise `db.operation.name` SHOULD be `BATCH` or some other database
 system specific term if more applicable.
-
-This attribute has stability level RELEASE CANDIDATE.
 """
 
 DB_OPERATION_PARAMETER_TEMPLATE: Final = "db.operation.parameter"
@@ -230,7 +224,6 @@ DB_OPERATION_PARAMETER_TEMPLATE: Final = "db.operation.parameter"
 A database operation parameter, with `<key>` being the parameter name, and the attribute value being a string representation of the parameter value.
 Note: If a parameter has no name and instead is referenced only by index, then `<key>` SHOULD be the 0-based index.
 If `db.query.text` is also captured, then `db.operation.parameter.<key>` SHOULD match up with the parameterized placeholders present in `db.query.text`.
-This attribute has stability level RELEASE CANDIDATE.
 """
 
 DB_QUERY_PARAMETER_TEMPLATE: Final = "db.query.parameter"
@@ -243,7 +236,6 @@ DB_QUERY_SUMMARY: Final = "db.query.summary"
 Low cardinality representation of a database query text.
 Note: `db.query.summary` provides static summary of the query text. It describes a class of database queries and is useful as a grouping key, especially when analyzing telemetry for database calls involving complex queries.
 Summary may be available to the instrumentation through instrumentation hooks or other means. If it is not available, instrumentations that support query parsing SHOULD generate a summary following [Generating query summary](../../docs/database/database-spans.md#generating-a-summary-of-the-query-text) section.
-This attribute has stability level RELEASE CANDIDATE.
 """
 
 DB_QUERY_TEXT: Final = "db.query.text"
@@ -252,7 +244,6 @@ The database query being executed.
 Note: For sanitization see [Sanitization of `db.query.text`](../../docs/database/database-spans.md#sanitization-of-dbquerytext).
 For batch operations, if the individual operations are known to have the same query text then that query text SHOULD be used, otherwise all of the individual query texts SHOULD be concatenated with separator `; ` or some other database system specific separator if more applicable.
 Even though parameterized query text can potentially have sensitive data, by using a parameterized query the user is giving a strong signal that any sensitive data will be passed as parameter values, and the benefit to observability of capturing the static part of the query text by default outweighs the risk.
-This attribute has stability level RELEASE CANDIDATE.
 """
 
 DB_REDIS_DATABASE_INDEX: Final = "db.redis.database_index"
@@ -270,7 +261,6 @@ DB_RESPONSE_STATUS_CODE: Final = "db.response.status_code"
 Database response status code.
 Note: The status code returned by the database. Usually it represents an error code, but may also represent partial success, warning, or differentiate between various types of successful outcomes.
 Semantic conventions for individual database systems SHOULD document what `db.response.status_code` means in the context of that system.
-This attribute has stability level RELEASE CANDIDATE.
 """
 
 DB_SQL_TABLE: Final = "db.sql.table"
@@ -287,7 +277,6 @@ DB_SYSTEM: Final = "db.system"
 """
 The database management system (DBMS) product as identified by the client instrumentation.
 Note: The actual DBMS may differ from the one identified by the client. For example, when using PostgreSQL client libraries to connect to a CockroachDB, the `db.system` is set to `postgresql` based on the instrumentation's best knowledge.
-This attribute has stability level RELEASE CANDIDATE.
 """
 
 DB_USER: Final = "db.user"

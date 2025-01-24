@@ -37,6 +37,12 @@ NETWORK_CARRIER_NAME: Final = "network.carrier.name"
 The name of the mobile carrier.
 """
 
+NETWORK_CONNECTION_STATE: Final = "network.connection.state"
+"""
+The state of network connection.
+Note: Connection states are defined as part of the [rfc9293](https://datatracker.ietf.org/doc/html/rfc9293#section-3.3.2).
+"""
+
 NETWORK_CONNECTION_SUBTYPE: Final = "network.connection.subtype"
 """
 This describes more details regarding the connection.type. It may be the type of cell technology connection, but it could be used for describing details about a wifi connection.
@@ -96,6 +102,31 @@ NETWORK_TYPE: Final = "network.type"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NETWORK_TYPE`.
 """
+
+
+class NetworkConnectionStateValues(Enum):
+    CLOSED = "closed"
+    """closed."""
+    CLOSE_WAIT = "close_wait"
+    """close_wait."""
+    CLOSING = "closing"
+    """closing."""
+    ESTABLISHED = "established"
+    """established."""
+    FIN_WAIT_1 = "fin_wait_1"
+    """fin_wait_1."""
+    FIN_WAIT_2 = "fin_wait_2"
+    """fin_wait_2."""
+    LAST_ACK = "last_ack"
+    """last_ack."""
+    LISTEN = "listen"
+    """listen."""
+    SYN_RECEIVED = "syn_received"
+    """syn_received."""
+    SYN_SENT = "syn_sent"
+    """syn_sent."""
+    TIME_WAIT = "time_wait"
+    """time_wait."""
 
 
 class NetworkConnectionSubtypeValues(Enum):

@@ -16,7 +16,7 @@ from typing import Final
 
 EXCEPTION_ESCAPED: Final = "exception.escaped"
 """
-Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.exception_attributes.EXCEPTION_ESCAPED`.
+Deprecated: It's no longer recommended to record exceptions that are handled and do not escape the scope of a span.
 """
 
 EXCEPTION_MESSAGE: Final = "exception.message"

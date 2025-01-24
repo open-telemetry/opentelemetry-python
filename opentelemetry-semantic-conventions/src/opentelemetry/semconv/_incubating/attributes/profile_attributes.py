@@ -40,3 +40,5 @@ class ProfileFrameTypeValues(Enum):
     """[Ruby](https://wikipedia.org/wiki/Ruby_(programming_language))."""
     V8JS = "v8js"
     """[V8JS](https://wikipedia.org/wiki/V8_(JavaScript_engine))."""
+    BEAM = "beam"
+    """[Erlang](https://en.wikipedia.org/wiki/BEAM_(Erlang_virtual_machine))."""
