@@ -217,7 +217,7 @@ class Resource:
             except Exception:  # pylint: disable=broad-exception-caught
                 logger.exception(
                     "Failed to load resource detector '%s', skipping",
-                    resource_detector
+                    resource_detector,
                 )
                 continue
         resource = get_aggregated_resources(
