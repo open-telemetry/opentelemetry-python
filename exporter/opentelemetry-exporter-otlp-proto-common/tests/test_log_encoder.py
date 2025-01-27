@@ -154,7 +154,25 @@ class TestOTLPLogEncoder(unittest.TestCase):
             ),
         )
 
-        return [log1, log2, log3, log4]
+        log5 = LogData(
+            log_record=SDKLogRecord(
+                timestamp=1644650584292683009,
+                observed_timestamp=1644650584292683010,
+                trace_id=212592107417388365804938480559624925555,
+                span_id=6077757853989569445,
+                trace_flags=TraceFlags(0x01),
+                severity_text="INFO",
+                severity_number=SeverityNumber.INFO,
+                body={"error": None},
+                resource=SDKResource({}),
+                attributes={},
+            ),
+            instrumentation_scope=InstrumentationScope(
+                "last_name", "last_version"
+            ),
+        )
+
+        return [log1, log2, log3, log4, log5]
 
     def get_test_logs(
         self,
@@ -282,6 +300,36 @@ class TestOTLPLogEncoder(unittest.TestCase):
                                     attributes=_encode_attributes(
                                         {"a": 1, "b": "c"}
                                     ),
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+                PB2ResourceLogs(
+                    resource=PB2Resource(),
+                    scope_logs=[
+                        PB2ScopeLogs(
+                            scope=PB2InstrumentationScope(
+                                name="last_name",
+                                version="last_version",
+                            ),
+                            log_records=[
+                                PB2LogRecord(
+                                    time_unix_nano=1644650584292683009,
+                                    observed_time_unix_nano=1644650584292683010,
+                                    trace_id=_encode_trace_id(
+                                        212592107417388365804938480559624925555
+                                    ),
+                                    span_id=_encode_span_id(
+                                        6077757853989569445,
+                                    ),
+                                    flags=int(TraceFlags(0x01)),
+                                    severity_text="INFO",
+                                    severity_number=SeverityNumber.INFO.value,
+                                    body=_encode_value(
+                                        {"error": None}, allow_null=True
+                                    ),
+                                    attributes={},
                                 ),
                             ],
                         ),
