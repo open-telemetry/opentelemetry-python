@@ -430,6 +430,7 @@ class Meter(ABC):
         name: str,
         unit: str = "",
         description: str = "",
+        *,
         explicit_bucket_boundaries_advisory: Optional[Sequence[float]] = None,
     ) -> Histogram:
         """Creates a :class:`~opentelemetry.metrics.Histogram` instrument
@@ -578,6 +579,7 @@ class _ProxyMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
+        *,
         explicit_bucket_boundaries_advisory: Optional[Sequence[float]] = None,
     ) -> Histogram:
         with self._lock:
@@ -586,7 +588,7 @@ class _ProxyMeter(Meter):
                     name,
                     unit,
                     description,
-                    explicit_bucket_boundaries_advisory,
+                    explicit_bucket_boundaries_advisory=explicit_bucket_boundaries_advisory,
                 )
             proxy = _ProxyHistogram(
                 name, unit, description, explicit_bucket_boundaries_advisory
@@ -743,6 +745,7 @@ class NoOpMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
+        *,
         explicit_bucket_boundaries_advisory: Optional[Sequence[float]] = None,
     ) -> Histogram:
         """Returns a no-op Histogram."""

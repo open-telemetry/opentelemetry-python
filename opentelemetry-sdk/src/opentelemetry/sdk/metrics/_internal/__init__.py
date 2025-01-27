@@ -199,6 +199,7 @@ class Meter(APIMeter):
         name: str,
         unit: str = "",
         description: str = "",
+        *,
         explicit_bucket_boundaries_advisory: Optional[Sequence[float]] = None,
     ) -> APIHistogram:
         if explicit_bucket_boundaries_advisory is not None:
