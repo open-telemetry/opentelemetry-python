@@ -15,11 +15,6 @@
 from enum import Enum
 from typing import Final
 
-NETWORK_INTERFACE_NAME: Final = "network.interface.name"
-"""
-The network interface name.
-"""
-
 NETWORK_LOCAL_ADDRESS: Final = "network.local.address"
 """
 Local address of the network connection - IP address or Unix domain socket name.
