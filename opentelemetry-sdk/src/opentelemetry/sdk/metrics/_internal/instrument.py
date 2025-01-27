@@ -31,7 +31,10 @@ from opentelemetry.metrics import (
 )
 from opentelemetry.metrics import UpDownCounter as APIUpDownCounter
 from opentelemetry.metrics import _Gauge as APIGauge
-from opentelemetry.metrics._internal.instrument import CallbackOptions
+from opentelemetry.metrics._internal.instrument import (
+    CallbackOptions,
+    _MetricsHistogramAdvisory,
+)
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
@@ -235,9 +238,8 @@ class Histogram(_Synchronous, APIHistogram):
             instrumentation_scope=instrumentation_scope,
             measurement_consumer=measurement_consumer,
         )
-        # FIXME: should the dataclass instead?
-        self._explicit_bucket_boundaries_advisory = (
-            explicit_bucket_boundaries_advisory
+        self._advisory = _MetricsHistogramAdvisory(
+            explicit_bucket_boundaries=explicit_bucket_boundaries_advisory
         )
 
     def __new__(cls, *args, **kwargs):

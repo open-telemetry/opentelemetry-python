@@ -45,9 +45,8 @@ _name_regex = re_compile(r"[a-zA-Z][-_./a-zA-Z0-9]{0,254}")
 _unit_regex = re_compile(r"[\x00-\x7F]{0,63}")
 
 
-# FIXME: remove this if we are not going to use it to store advisory in registered instruments
 @dataclass(frozen=True)
-class MetricsHistogramAdvisory:
+class _MetricsHistogramAdvisory:
     explicit_bucket_boundaries: Optional[Sequence[float]] = None
 
 

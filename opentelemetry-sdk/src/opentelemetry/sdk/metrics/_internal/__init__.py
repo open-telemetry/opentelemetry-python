@@ -201,7 +201,6 @@ class Meter(APIMeter):
         description: str = "",
         explicit_bucket_boundaries_advisory: Optional[Sequence[float]] = None,
     ) -> APIHistogram:
-        # FIXME: should pack everything into the class instead?
         if explicit_bucket_boundaries_advisory is not None:
             invalid_advisory = False
             try:

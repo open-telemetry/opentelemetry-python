@@ -525,7 +525,7 @@ class TestMeter(TestCase):
         self.assertIsInstance(histogram, Histogram)
         self.assertEqual(histogram.name, "name")
         self.assertEqual(
-            histogram._explicit_bucket_boundaries_advisory,
+            histogram._advisory.explicit_bucket_boundaries,
             [0.0, 1.0, 2],
         )
 

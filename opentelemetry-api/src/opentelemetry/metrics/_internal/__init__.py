@@ -46,7 +46,7 @@ from dataclasses import dataclass
 from logging import getLogger
 from os import environ
 from threading import Lock
-from typing import Any, Dict, List, Optional, Sequence, Union, cast
+from typing import Dict, List, Optional, Sequence, Union, cast
 
 from opentelemetry.environment_variables import OTEL_PYTHON_METER_PROVIDER
 from opentelemetry.metrics._internal.instrument import (
@@ -65,6 +65,7 @@ from opentelemetry.metrics._internal.instrument import (
     ObservableGauge,
     ObservableUpDownCounter,
     UpDownCounter,
+    _MetricsHistogramAdvisory,
     _ProxyCounter,
     _ProxyGauge,
     _ProxyHistogram,
@@ -185,7 +186,7 @@ class _InstrumentRegistrationStatus:
     instrument_id: str
     already_registered: bool
     conflict: bool
-    current_advisory: Optional[Any]
+    current_advisory: Optional[_MetricsHistogramAdvisory]
 
 
 class Meter(ABC):
@@ -205,7 +206,9 @@ class Meter(ABC):
         self._name = name
         self._version = version
         self._schema_url = schema_url
-        self._instrument_ids: Dict[str, Optional[Any]] = {}
+        self._instrument_ids: Dict[
+            str, Optional[_MetricsHistogramAdvisory]
+        ] = {}
         self._instrument_ids_lock = Lock()
 
     @property
@@ -235,7 +238,7 @@ class Meter(ABC):
         type_: type,
         unit: str,
         description: str,
-        advisory: Optional[Any] = None,
+        advisory: Optional[_MetricsHistogramAdvisory] = None,
     ) -> _InstrumentRegistrationStatus:
         """
         Register an instrument with the name, type, unit and description as
@@ -743,15 +746,14 @@ class NoOpMeter(Meter):
         explicit_bucket_boundaries_advisory: Optional[Sequence[float]] = None,
     ) -> Histogram:
         """Returns a no-op Histogram."""
-        # FIXME: should be use a dataclass here instead for the advisory param?
         status = self._register_instrument(
             name,
             NoOpHistogram,
             unit,
             description,
-            {
-                "explicit_bucket_boundaries_advisory": explicit_bucket_boundaries_advisory
-            },
+            _MetricsHistogramAdvisory(
+                explicit_bucket_boundaries=explicit_bucket_boundaries_advisory
+            ),
         )
         if status.conflict:
             self._log_instrument_registration_conflict(
