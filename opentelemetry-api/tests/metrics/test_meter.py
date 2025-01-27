@@ -47,6 +47,7 @@ class ChildMeter(Meter):
         name,
         unit="",
         description="",
+        *,
         explicit_bucket_boundaries_advisory=None,
     ):
         super().create_histogram(
