@@ -49,6 +49,30 @@ class TestHistogramAdvisory(TestCase):
             metric.data.data_points[0].explicit_bounds, (1.0, 2.0, 3.0)
         )
 
+    def test_empty_buckets(self):
+        reader = InMemoryMetricReader()
+        meter_provider = MeterProvider(
+            metric_readers=[reader],
+        )
+        meter = meter_provider.get_meter("testmeter")
+        histogram = meter.create_histogram(
+            "testhistogram",
+            explicit_bucket_boundaries_advisory=[],
+        )
+        histogram.record(1, {"label": "value"})
+        histogram.record(2, {"label": "value"})
+        histogram.record(3, {"label": "value"})
+
+        metrics = reader.get_metrics_data()
+        self.assertEqual(len(metrics.resource_metrics), 1)
+        self.assertEqual(len(metrics.resource_metrics[0].scope_metrics), 1)
+        self.assertEqual(
+            len(metrics.resource_metrics[0].scope_metrics[0].metrics), 1
+        )
+        metric = metrics.resource_metrics[0].scope_metrics[0].metrics[0]
+        self.assertEqual(metric.name, "testhistogram")
+        self.assertEqual(metric.data.data_points[0].explicit_bounds, ())
+
     def test_view_default_aggregation(self):
         reader = InMemoryMetricReader()
         view = View(instrument_name="testhistogram")

@@ -204,15 +204,17 @@ class Meter(APIMeter):
     ) -> APIHistogram:
         if explicit_bucket_boundaries_advisory is not None:
             invalid_advisory = False
-            try:
-                invalid_advisory = not (
-                    explicit_bucket_boundaries_advisory
-                    and all(
-                        isinstance(e, (float, int))
-                        for e in explicit_bucket_boundaries_advisory
+            if isinstance(explicit_bucket_boundaries_advisory, Sequence):
+                try:
+                    invalid_advisory = not (
+                        all(
+                            isinstance(e, (float, int))
+                            for e in explicit_bucket_boundaries_advisory
+                        )
                     )
-                )
-            except (KeyError, TypeError):
+                except (KeyError, TypeError):
+                    invalid_advisory = True
+            else:
                 invalid_advisory = True
 
             if invalid_advisory:

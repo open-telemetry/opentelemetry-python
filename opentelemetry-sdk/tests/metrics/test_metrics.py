@@ -531,7 +531,7 @@ class TestMeter(TestCase):
 
     def test_create_histogram_advisory_validation(self):
         advisories = [
-            {"explicit_bucket_boundaries_advisory": []},
+            {"explicit_bucket_boundaries_advisory": "hello"},
             {"explicit_bucket_boundaries_advisory": ["1"]},
         ]
         for advisory in advisories:
