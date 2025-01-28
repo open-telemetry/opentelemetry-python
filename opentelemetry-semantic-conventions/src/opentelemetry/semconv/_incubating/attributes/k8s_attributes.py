@@ -109,6 +109,13 @@ K8S_NAMESPACE_NAME: Final = "k8s.namespace.name"
 The name of the namespace that the pod is running in.
 """
 
+K8S_NAMESPACE_PHASE: Final = "k8s.namespace.phase"
+"""
+The phase of the K8s namespace.
+Note: This attribute aligns with the `phase` field of the
+[K8s NamespaceStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#namespacestatus-v1-core).
+"""
+
 K8S_NODE_NAME: Final = "k8s.node.name"
 """
 The name of the Node.
@@ -175,16 +182,23 @@ The type of the K8s volume.
 """
 
 
+class K8sNamespacePhaseValues(Enum):
+    ACTIVE = "active"
+    """Active namespace phase as described by [K8s API](https://pkg.go.dev/k8s.io/api@v0.31.3/core/v1#NamespacePhase)."""
+    TERMINATING = "terminating"
+    """Terminating namespace phase as described by [K8s API](https://pkg.go.dev/k8s.io/api@v0.31.3/core/v1#NamespacePhase)."""
+
+
 class K8sVolumeTypeValues(Enum):
     PERSISTENT_VOLUME_CLAIM = "persistentVolumeClaim"
-    """A [persistentVolumeClaim](https://v1-29.docs.kubernetes.io/docs/concepts/storage/volumes/#persistentvolumeclaim) volume."""
+    """A [persistentVolumeClaim](https://v1-30.docs.kubernetes.io/docs/concepts/storage/volumes/#persistentvolumeclaim) volume."""
     CONFIG_MAP = "configMap"
-    """A [configMap](https://v1-29.docs.kubernetes.io/docs/concepts/storage/volumes/#configmap) volume."""
+    """A [configMap](https://v1-30.docs.kubernetes.io/docs/concepts/storage/volumes/#configmap) volume."""
     DOWNWARD_API = "downwardAPI"
-    """A [downwardAPI](https://v1-29.docs.kubernetes.io/docs/concepts/storage/volumes/#downwardapi) volume."""
+    """A [downwardAPI](https://v1-30.docs.kubernetes.io/docs/concepts/storage/volumes/#downwardapi) volume."""
     EMPTY_DIR = "emptyDir"
-    """An [emptyDir](https://v1-29.docs.kubernetes.io/docs/concepts/storage/volumes/#emptydir) volume."""
+    """An [emptyDir](https://v1-30.docs.kubernetes.io/docs/concepts/storage/volumes/#emptydir) volume."""
     SECRET = "secret"
-    """A [secret](https://v1-29.docs.kubernetes.io/docs/concepts/storage/volumes/#secret) volume."""
+    """A [secret](https://v1-30.docs.kubernetes.io/docs/concepts/storage/volumes/#secret) volume."""
     LOCAL = "local"
-    """A [local](https://v1-29.docs.kubernetes.io/docs/concepts/storage/volumes/#local) volume."""
+    """A [local](https://v1-30.docs.kubernetes.io/docs/concepts/storage/volumes/#local) volume."""

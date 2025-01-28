@@ -20,9 +20,19 @@ CICD_PIPELINE_NAME: Final = "cicd.pipeline.name"
 The human readable name of the pipeline within a CI/CD system.
 """
 
+CICD_PIPELINE_RESULT: Final = "cicd.pipeline.result"
+"""
+The result of a pipeline run.
+"""
+
 CICD_PIPELINE_RUN_ID: Final = "cicd.pipeline.run.id"
 """
 The unique identifier of a pipeline run within a CI/CD system.
+"""
+
+CICD_PIPELINE_RUN_STATE: Final = "cicd.pipeline.run.state"
+"""
+The pipeline run goes through these states during its lifecycle.
 """
 
 CICD_PIPELINE_TASK_NAME: Final = "cicd.pipeline.task.name"
@@ -45,6 +55,40 @@ CICD_PIPELINE_TASK_TYPE: Final = "cicd.pipeline.task.type"
 The type of the task within a pipeline.
 """
 
+CICD_SYSTEM_COMPONENT: Final = "cicd.system.component"
+"""
+The name of a component of the CICD system.
+"""
+
+CICD_WORKER_STATE: Final = "cicd.worker.state"
+"""
+The state of a CICD worker / agent.
+"""
+
+
+class CicdPipelineResultValues(Enum):
+    SUCCESS = "success"
+    """The pipeline run finished successfully."""
+    FAILURE = "failure"
+    """The pipeline run did not finish successfully, eg. due to a compile error or a failing test. Such failures are usually detected by non-zero exit codes of the tools executed in the pipeline run."""
+    ERROR = "error"
+    """The pipeline run failed due to an error in the CICD system, eg. due to the worker being killed."""
+    TIMEOUT = "timeout"
+    """A timeout caused the pipeline run to be interrupted."""
+    CANCELLATION = "cancellation"
+    """The pipeline run was cancelled, eg. by a user manually cancelling the pipeline run."""
+    SKIP = "skip"
+    """The pipeline run was skipped, eg. due to a precondition not being met."""
+
+
+class CicdPipelineRunStateValues(Enum):
+    PENDING = "pending"
+    """The run pending state spans from the event triggering the pipeline run until the execution of the run starts (eg. time spent in a queue, provisioning agents, creating run resources)."""
+    EXECUTING = "executing"
+    """The executing state spans the execution of any run tasks (eg. build, test)."""
+    FINALIZING = "finalizing"
+    """The finalizing state spans from when the run has finished executing (eg. cleanup of run resources)."""
+
 
 class CicdPipelineTaskTypeValues(Enum):
     BUILD = "build"
@@ -53,3 +97,12 @@ class CicdPipelineTaskTypeValues(Enum):
     """test."""
     DEPLOY = "deploy"
     """deploy."""
+
+
+class CicdWorkerStateValues(Enum):
+    AVAILABLE = "available"
+    """The worker is not performing work for the CICD system. It is available to the CICD system to perform work on (online / idle)."""
+    BUSY = "busy"
+    """The worker is performing work for the CICD system."""
+    OFFLINE = "offline"
+    """The worker is not available to the CICD system (disconnected / down)."""
