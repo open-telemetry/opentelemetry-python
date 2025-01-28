@@ -89,7 +89,27 @@ def create_vcs_change_time_to_approval(
     return meter.create_observable_gauge(
         name=VCS_CHANGE_TIME_TO_APPROVAL,
         callbacks=callbacks,
-        description="The amount of time since its creation it took a change (pull request/merge request/changelist) to get the first approval",
+        description="The amount of time since its creation it took a change (pull request/merge request/changelist) to get the first approval.",
+        unit="s",
+    )
+
+
+VCS_CHANGE_TIME_TO_MERGE: Final = "vcs.change.time_to_merge"
+"""
+The amount of time since its creation it took a change (pull request/merge request/changelist) to get merged into the target(base) ref
+Instrument: gauge
+Unit: s
+"""
+
+
+def create_vcs_change_time_to_merge(
+    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+) -> ObservableGauge:
+    """The amount of time since its creation it took a change (pull request/merge request/changelist) to get merged into the target(base) ref"""
+    return meter.create_observable_gauge(
+        name=VCS_CHANGE_TIME_TO_MERGE,
+        callbacks=callbacks,
+        description="The amount of time since its creation it took a change (pull request/merge request/changelist) to get merged into the target(base) ref.",
         unit="s",
     )
 
@@ -126,7 +146,7 @@ def create_vcs_ref_count(meter: Meter) -> UpDownCounter:
     """The number of refs of type branch or tag in a repository"""
     return meter.create_up_down_counter(
         name=VCS_REF_COUNT,
-        description="The number of refs of type branch or tag in a repository",
+        description="The number of refs of type branch or tag in a repository.",
         unit="{ref}",
     )
 
@@ -149,7 +169,7 @@ def create_vcs_ref_lines_delta(
     return meter.create_observable_gauge(
         name=VCS_REF_LINES_DELTA,
         callbacks=callbacks,
-        description="The number of lines added/removed in a ref (branch) relative to the ref from the `vcs.ref.base.name` attribute",
+        description="The number of lines added/removed in a ref (branch) relative to the ref from the `vcs.ref.base.name` attribute.",
         unit="{line}",
     )
 
@@ -208,6 +228,6 @@ def create_vcs_repository_count(meter: Meter) -> UpDownCounter:
     """The number of repositories in an organization"""
     return meter.create_up_down_counter(
         name=VCS_REPOSITORY_COUNT,
-        description="The number of repositories in an organization",
+        description="The number of repositories in an organization.",
         unit="{repository}",
     )

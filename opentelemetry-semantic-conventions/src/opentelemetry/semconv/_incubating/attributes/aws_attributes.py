@@ -181,6 +181,11 @@ AWS_EKS_CLUSTER_ARN: Final = "aws.eks.cluster.arn"
 The ARN of an EKS cluster.
 """
 
+AWS_EXTENDED_REQUEST_ID: Final = "aws.extended_request_id"
+"""
+The AWS extended request ID as returned in the response header `x-amz-id-2`.
+"""
+
 AWS_LAMBDA_INVOKED_ARN: Final = "aws.lambda.invoked_arn"
 """
 The full invoked ARN as provided on the `Context` passed to the function (`Lambda-Runtime-Invoked-Function-Arn` header on the `/runtime/invocation/next` applicable).
@@ -212,7 +217,7 @@ The name(s) of the AWS log stream(s) an application is writing to.
 
 AWS_REQUEST_ID: Final = "aws.request_id"
 """
-The AWS request ID as returned in the response headers `x-amz-request-id` or `x-amz-requestid`.
+The AWS request ID as returned in the response headers `x-amzn-requestid`, `x-amzn-request-id` or `x-amz-request-id`.
 """
 
 AWS_S3_BUCKET: Final = "aws.s3.bucket"

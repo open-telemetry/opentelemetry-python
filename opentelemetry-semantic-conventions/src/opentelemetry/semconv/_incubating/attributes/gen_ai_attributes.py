@@ -29,7 +29,7 @@ The response format that is requested.
 
 GEN_AI_OPENAI_REQUEST_SEED: Final = "gen_ai.openai.request.seed"
 """
-Requests with same seed value more likely to return same result.
+Deprecated: Replaced by `gen_ai.request.seed` attribute.
 """
 
 GEN_AI_OPENAI_REQUEST_SERVICE_TIER: Final = (
@@ -90,6 +90,11 @@ GEN_AI_REQUEST_PRESENCE_PENALTY: Final = "gen_ai.request.presence_penalty"
 The presence penalty setting for the GenAI request.
 """
 
+GEN_AI_REQUEST_SEED: Final = "gen_ai.request.seed"
+"""
+Requests with same seed value more likely to return same result.
+"""
+
 GEN_AI_REQUEST_STOP_SEQUENCES: Final = "gen_ai.request.stop_sequences"
 """
 List of sequences that the model will use to stop generating further tokens.
@@ -132,8 +137,10 @@ Note: The `gen_ai.system` describes a family of GenAI models with specific model
 by `gen_ai.request.model` and `gen_ai.response.model` attributes.
 
 The actual GenAI product may differ from the one identified by the client.
-For example, when using OpenAI client libraries to communicate with Mistral, the `gen_ai.system`
-is set to `openai` based on the instrumentation's best knowledge.
+Multiple systems, including Azure OpenAI and Gemini, are accessible by OpenAI client
+libraries. In such cases, the `gen_ai.system` is set to `openai` based on the
+instrumentation's best knowledge, instead of the actual system. The `server.address`
+attribute may help identify the actual system in use for `openai`.
 
 For custom model, a custom friendly name SHOULD be used.
 If none of these options apply, the `gen_ai.system` SHOULD be set to `_OTHER`.
@@ -195,16 +202,30 @@ class GenAiSystemValues(Enum):
     """OpenAI."""
     VERTEX_AI = "vertex_ai"
     """Vertex AI."""
+    GEMINI = "gemini"
+    """Gemini."""
     ANTHROPIC = "anthropic"
     """Anthropic."""
     COHERE = "cohere"
     """Cohere."""
     AZ_AI_INFERENCE = "az.ai.inference"
     """Azure AI Inference."""
+    AZ_AI_OPENAI = "az.ai.openai"
+    """Azure OpenAI."""
     IBM_WATSONX_AI = "ibm.watsonx.ai"
     """IBM Watsonx AI."""
     AWS_BEDROCK = "aws.bedrock"
     """AWS Bedrock."""
+    PERPLEXITY = "perplexity"
+    """Perplexity."""
+    XAI = "xai"
+    """xAI."""
+    DEEPSEEK = "deepseek"
+    """DeepSeek."""
+    GROQ = "groq"
+    """Groq."""
+    MISTRAL_AI = "mistral_ai"
+    """Mistral AI."""
 
 
 class GenAiTokenTypeValues(Enum):

@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [BREAKING] semantic-conventions: Remove `opentelemetry.semconv.attributes.network_attributes.NETWORK_INTERFACE_NAME`
   introduced by mistake in the wrong module.
   ([#4391](https://github.com/open-telemetry/opentelemetry-python/pull/4391))
+- semantic-conventions: Bump to 1.30.0
+  ([#4337](https://github.com/open-telemetry/opentelemetry-python/pull/4397))
 
 ## Version 1.29.0/0.50b0 (2024-12-11)
 
