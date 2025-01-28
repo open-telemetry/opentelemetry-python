@@ -99,7 +99,7 @@ def _encode_value(
     raise Exception(f"Invalid type {type(value)} of value {value}")
 
 
-def _encode_key_value(key: str, value: Any, allow_null=False) -> PB2KeyValue:
+def _encode_key_value(key: str, value: Any, allow_null: bool = False) -> PB2KeyValue:
     return PB2KeyValue(
         key=key, value=_encode_value(value, allow_null=allow_null)
     )
