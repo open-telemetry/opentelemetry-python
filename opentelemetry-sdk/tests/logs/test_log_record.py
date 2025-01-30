@@ -45,7 +45,7 @@ class TestLogRecord(unittest.TestCase):
                     "schema_url": "",
                 },
             },
-            indent: Optional[int] = 4,
+            indent=4,
         )
         actual = LogRecord(
             timestamp=0,
@@ -54,7 +54,7 @@ class TestLogRecord(unittest.TestCase):
             resource=Resource({"service.name": "foo"}),
         )
 
-        self.assertEqual(expected, actual.to_json(indent: Optional[int] = 4))
+        self.assertEqual(expected, actual.to_json(indent=4))
         self.assertEqual(
             actual.to_json(indent=None),
             '{"body": "a log line", "severity_number": null, "severity_text": null, "attributes": null, "dropped_attributes": 0, "timestamp": "1970-01-01T00:00:00.000000Z", "observed_timestamp": "1970-01-01T00:00:00.000000Z", "trace_id": "", "span_id": "", "trace_flags": null, "resource": {"attributes": {"service.name": "foo"}, "schema_url": ""}}',
