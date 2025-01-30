@@ -38,7 +38,7 @@ class NumberDataPoint:
     value: Union[int, float]
     exemplars: Sequence[Exemplar] = field(default_factory=list)
 
-    def to_json(self, indent=4) -> str:
+    def to_json(self, indent: Optional[int] = 4) -> str:
         return dumps(asdict(self), indent=indent)
 
 
@@ -59,7 +59,7 @@ class HistogramDataPoint:
     max: float
     exemplars: Sequence[Exemplar] = field(default_factory=list)
 
-    def to_json(self, indent=4) -> str:
+    def to_json(self, indent: Optional[int] = 4) -> str:
         return dumps(asdict(self), indent=indent)
 
 
@@ -90,7 +90,7 @@ class ExponentialHistogramDataPoint:
     max: float
     exemplars: Sequence[Exemplar] = field(default_factory=list)
 
-    def to_json(self, indent=4) -> str:
+    def to_json(self, indent: Optional[int] = 4) -> str:
         return dumps(asdict(self), indent=indent)
 
 
@@ -105,7 +105,7 @@ class ExponentialHistogram:
         "opentelemetry.sdk.metrics.export.AggregationTemporality"
     )
 
-    def to_json(self, indent=4) -> str:
+    def to_json(self, indent: Optional[int] = 4) -> str:
         return dumps(
             {
                 "data_points": [
@@ -129,7 +129,7 @@ class Sum:
     )
     is_monotonic: bool
 
-    def to_json(self, indent=4) -> str:
+    def to_json(self, indent: Optional[int] = 4) -> str:
         return dumps(
             {
                 "data_points": [
@@ -151,7 +151,7 @@ class Gauge:
 
     data_points: Sequence[NumberDataPoint]
 
-    def to_json(self, indent=4) -> str:
+    def to_json(self, indent: Optional[int] = 4) -> str:
         return dumps(
             {
                 "data_points": [
@@ -173,7 +173,7 @@ class Histogram:
         "opentelemetry.sdk.metrics.export.AggregationTemporality"
     )
 
-    def to_json(self, indent=4) -> str:
+    def to_json(self, indent: Optional[int] = 4) -> str:
         return dumps(
             {
                 "data_points": [
@@ -203,7 +203,7 @@ class Metric:
     unit: Optional[str]
     data: DataT
 
-    def to_json(self, indent=4) -> str:
+    def to_json(self, indent: Optional[int] = 4) -> str:
         return dumps(
             {
                 "name": self.name,
@@ -223,7 +223,7 @@ class ScopeMetrics:
     metrics: Sequence[Metric]
     schema_url: str
 
-    def to_json(self, indent=4) -> str:
+    def to_json(self, indent: Optional[int] = 4) -> str:
         return dumps(
             {
                 "scope": loads(self.scope.to_json(indent=indent)),
@@ -245,7 +245,7 @@ class ResourceMetrics:
     scope_metrics: Sequence[ScopeMetrics]
     schema_url: str
 
-    def to_json(self, indent=4) -> str:
+    def to_json(self, indent: Optional[int] = 4) -> str:
         return dumps(
             {
                 "resource": loads(self.resource.to_json(indent=indent)),
@@ -265,7 +265,7 @@ class MetricsData:
 
     resource_metrics: Sequence[ResourceMetrics]
 
-    def to_json(self, indent=4) -> str:
+    def to_json(self, indent: Optional[int] = 4) -> str:
         return dumps(
             {
                 "resource_metrics": [
