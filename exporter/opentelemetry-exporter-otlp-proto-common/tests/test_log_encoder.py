@@ -28,9 +28,15 @@ from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
 )
 from opentelemetry.proto.common.v1.common_pb2 import AnyValue as PB2AnyValue
 from opentelemetry.proto.common.v1.common_pb2 import (
+    ArrayValue as PB2ArrayValue,
+)
+from opentelemetry.proto.common.v1.common_pb2 import (
     InstrumentationScope as PB2InstrumentationScope,
 )
 from opentelemetry.proto.common.v1.common_pb2 import KeyValue as PB2KeyValue
+from opentelemetry.proto.common.v1.common_pb2 import (
+    KeyValueList as PB2KeyValueList,
+)
 from opentelemetry.proto.logs.v1.logs_pb2 import LogRecord as PB2LogRecord
 from opentelemetry.proto.logs.v1.logs_pb2 import (
     ResourceLogs as PB2ResourceLogs,
@@ -154,7 +160,25 @@ class TestOTLPLogEncoder(unittest.TestCase):
             ),
         )
 
-        return [log1, log2, log3, log4]
+        log5 = LogData(
+            log_record=SDKLogRecord(
+                timestamp=1644650584292683009,
+                observed_timestamp=1644650584292683010,
+                trace_id=212592107417388365804938480559624925555,
+                span_id=6077757853989569445,
+                trace_flags=TraceFlags(0x01),
+                severity_text="INFO",
+                severity_number=SeverityNumber.INFO,
+                body={"error": None, "array_with_nones": [1, None, 2]},
+                resource=SDKResource({}),
+                attributes={},
+            ),
+            instrumentation_scope=InstrumentationScope(
+                "last_name", "last_version"
+            ),
+        )
+
+        return [log1, log2, log3, log4, log5]
 
     def get_test_logs(
         self,
@@ -282,6 +306,56 @@ class TestOTLPLogEncoder(unittest.TestCase):
                                     attributes=_encode_attributes(
                                         {"a": 1, "b": "c"}
                                     ),
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+                PB2ResourceLogs(
+                    resource=PB2Resource(),
+                    scope_logs=[
+                        PB2ScopeLogs(
+                            scope=PB2InstrumentationScope(
+                                name="last_name",
+                                version="last_version",
+                            ),
+                            log_records=[
+                                PB2LogRecord(
+                                    time_unix_nano=1644650584292683009,
+                                    observed_time_unix_nano=1644650584292683010,
+                                    trace_id=_encode_trace_id(
+                                        212592107417388365804938480559624925555
+                                    ),
+                                    span_id=_encode_span_id(
+                                        6077757853989569445,
+                                    ),
+                                    flags=int(TraceFlags(0x01)),
+                                    severity_text="INFO",
+                                    severity_number=SeverityNumber.INFO.value,
+                                    body=PB2AnyValue(
+                                        kvlist_value=PB2KeyValueList(
+                                            values=[
+                                                PB2KeyValue(key="error"),
+                                                PB2KeyValue(
+                                                    key="array_with_nones",
+                                                    value=PB2AnyValue(
+                                                        array_value=PB2ArrayValue(
+                                                            values=[
+                                                                PB2AnyValue(
+                                                                    int_value=1
+                                                                ),
+                                                                PB2AnyValue(),
+                                                                PB2AnyValue(
+                                                                    int_value=2
+                                                                ),
+                                                            ]
+                                                        )
+                                                    ),
+                                                ),
+                                            ]
+                                        )
+                                    ),
+                                    attributes={},
                                 ),
                             ],
                         ),
