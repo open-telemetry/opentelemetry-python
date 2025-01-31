@@ -84,7 +84,7 @@ def _encode_value(
     if isinstance(value, Sequence):
         return PB2AnyValue(
             array_value=PB2ArrayValue(
-                values=[_encode_value(v, allow_null=allow_null) for v in value]
+                values=_encode_array(value, allow_null=allow_null)
             )
         )
     elif isinstance(value, Mapping):
@@ -99,10 +99,25 @@ def _encode_value(
     raise Exception(f"Invalid type {type(value)} of value {value}")
 
 
-def _encode_key_value(key: str, value: Any, allow_null: bool = False) -> PB2KeyValue:
+def _encode_key_value(
+    key: str, value: Any, allow_null: bool = False
+) -> PB2KeyValue:
     return PB2KeyValue(
         key=key, value=_encode_value(value, allow_null=allow_null)
     )
+
+
+def _encode_array(
+    array: Sequence[Any], allow_null: bool = False
+) -> Sequence[PB2AnyValue]:
+    return [
+        _encode_value(v, allow_null=allow_null)
+        if v is not None
+        # Use an empty AnyValue to respresent None in an array. Behavior may change pending
+        # https://github.com/open-telemetry/opentelemetry-specification/issues/4392
+        else PB2AnyValue()
+        for v in array
+    ]
 
 
 def _encode_span_id(span_id: int) -> bytes:

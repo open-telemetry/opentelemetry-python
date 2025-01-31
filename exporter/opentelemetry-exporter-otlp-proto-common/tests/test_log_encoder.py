@@ -28,9 +28,15 @@ from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
 )
 from opentelemetry.proto.common.v1.common_pb2 import AnyValue as PB2AnyValue
 from opentelemetry.proto.common.v1.common_pb2 import (
+    ArrayValue as PB2ArrayValue,
+)
+from opentelemetry.proto.common.v1.common_pb2 import (
     InstrumentationScope as PB2InstrumentationScope,
 )
 from opentelemetry.proto.common.v1.common_pb2 import KeyValue as PB2KeyValue
+from opentelemetry.proto.common.v1.common_pb2 import (
+    KeyValueList as PB2KeyValueList,
+)
 from opentelemetry.proto.logs.v1.logs_pb2 import LogRecord as PB2LogRecord
 from opentelemetry.proto.logs.v1.logs_pb2 import (
     ResourceLogs as PB2ResourceLogs,
@@ -163,7 +169,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
                 trace_flags=TraceFlags(0x01),
                 severity_text="INFO",
                 severity_number=SeverityNumber.INFO,
-                body={"error": None},
+                body={"error": None, "array_with_nones": [1, None, 2]},
                 resource=SDKResource({}),
                 attributes={},
             ),
@@ -326,8 +332,28 @@ class TestOTLPLogEncoder(unittest.TestCase):
                                     flags=int(TraceFlags(0x01)),
                                     severity_text="INFO",
                                     severity_number=SeverityNumber.INFO.value,
-                                    body=_encode_value(
-                                        {"error": None}, allow_null=True
+                                    body=PB2AnyValue(
+                                        kvlist_value=PB2KeyValueList(
+                                            values=[
+                                                PB2KeyValue(key="error"),
+                                                PB2KeyValue(
+                                                    key="array_with_nones",
+                                                    value=PB2AnyValue(
+                                                        array_value=PB2ArrayValue(
+                                                            values=[
+                                                                PB2AnyValue(
+                                                                    int_value=1
+                                                                ),
+                                                                PB2AnyValue(),
+                                                                PB2AnyValue(
+                                                                    int_value=2
+                                                                ),
+                                                            ]
+                                                        )
+                                                    ),
+                                                ),
+                                            ]
+                                        )
                                     ),
                                     attributes={},
                                 ),
