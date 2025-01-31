@@ -117,7 +117,7 @@ def _encode_array(
     return [
         _encode_value(v, allow_null=allow_null)
         if v is not None
-        # Use an empty AnyValue to respresent None in an array. Behavior may change pending
+        # Use an empty AnyValue to represent None in an array. Behavior may change pending
         # https://github.com/open-telemetry/opentelemetry-specification/issues/4392
         else PB2AnyValue()
         for v in array
