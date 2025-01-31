@@ -110,6 +110,10 @@ def _encode_key_value(
 def _encode_array(
     array: Sequence[Any], allow_null: bool = False
 ) -> Sequence[PB2AnyValue]:
+    if not allow_null:
+        # Let the exception get raised by _encode_value()
+        return [_encode_value(v, allow_null=allow_null) for v in array]
+
     return [
         _encode_value(v, allow_null=allow_null)
         if v is not None
