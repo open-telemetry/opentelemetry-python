@@ -35,12 +35,19 @@ from typing import (
 from opentelemetry import metrics
 from opentelemetry.context import Context
 from opentelemetry.metrics._internal.observation import Observation
-from opentelemetry.util.types import Attributes
+from opentelemetry.util.types import (
+    Attributes,
+)
 
 _logger = getLogger(__name__)
 
 _name_regex = re_compile(r"[a-zA-Z][-_./a-zA-Z0-9]{0,254}")
 _unit_regex = re_compile(r"[\x00-\x7F]{0,63}")
+
+
+@dataclass(frozen=True)
+class _MetricsHistogramAdvisory:
+    explicit_bucket_boundaries: Optional[Sequence[float]] = None
 
 
 @dataclass(frozen=True)
@@ -210,7 +217,11 @@ class _ProxyCounter(_ProxyInstrument[Counter], Counter):
             self._real_instrument.add(amount, attributes, context)
 
     def _create_real_instrument(self, meter: "metrics.Meter") -> Counter:
-        return meter.create_counter(self._name, self._unit, self._description)
+        return meter.create_counter(
+            self._name,
+            self._unit,
+            self._description,
+        )
 
 
 class UpDownCounter(Synchronous):
@@ -258,7 +269,9 @@ class _ProxyUpDownCounter(_ProxyInstrument[UpDownCounter], UpDownCounter):
 
     def _create_real_instrument(self, meter: "metrics.Meter") -> UpDownCounter:
         return meter.create_up_down_counter(
-            self._name, self._unit, self._description
+            self._name,
+            self._unit,
+            self._description,
         )
 
 
@@ -278,7 +291,12 @@ class NoOpObservableCounter(ObservableCounter):
         unit: str = "",
         description: str = "",
     ) -> None:
-        super().__init__(name, callbacks, unit=unit, description=description)
+        super().__init__(
+            name,
+            callbacks,
+            unit=unit,
+            description=description,
+        )
 
 
 class _ProxyObservableCounter(
@@ -288,7 +306,10 @@ class _ProxyObservableCounter(
         self, meter: "metrics.Meter"
     ) -> ObservableCounter:
         return meter.create_observable_counter(
-            self._name, self._callbacks, self._unit, self._description
+            self._name,
+            self._callbacks,
+            self._unit,
+            self._description,
         )
 
 
@@ -309,7 +330,12 @@ class NoOpObservableUpDownCounter(ObservableUpDownCounter):
         unit: str = "",
         description: str = "",
     ) -> None:
-        super().__init__(name, callbacks, unit=unit, description=description)
+        super().__init__(
+            name,
+            callbacks,
+            unit=unit,
+            description=description,
+        )
 
 
 class _ProxyObservableUpDownCounter(
@@ -320,7 +346,10 @@ class _ProxyObservableUpDownCounter(
         self, meter: "metrics.Meter"
     ) -> ObservableUpDownCounter:
         return meter.create_observable_up_down_counter(
-            self._name, self._callbacks, self._unit, self._description
+            self._name,
+            self._callbacks,
+            self._unit,
+            self._description,
         )
 
 
@@ -329,6 +358,16 @@ class Histogram(Synchronous):
     that are likely to be statistically meaningful. It is intended for statistics such as
     histograms, summaries, and percentile.
     """
+
+    @abstractmethod
+    def __init__(
+        self,
+        name: str,
+        unit: str = "",
+        description: str = "",
+        explicit_bucket_boundaries_advisory: Optional[Sequence[float]] = None,
+    ) -> None:
+        pass
 
     @abstractmethod
     def record(
@@ -348,8 +387,14 @@ class NoOpHistogram(Histogram):
         name: str,
         unit: str = "",
         description: str = "",
+        explicit_bucket_boundaries_advisory: Optional[Sequence[float]] = None,
     ) -> None:
-        super().__init__(name, unit=unit, description=description)
+        super().__init__(
+            name,
+            unit=unit,
+            description=description,
+            explicit_bucket_boundaries_advisory=explicit_bucket_boundaries_advisory,
+        )
 
     def record(
         self,
@@ -361,6 +406,18 @@ class NoOpHistogram(Histogram):
 
 
 class _ProxyHistogram(_ProxyInstrument[Histogram], Histogram):
+    def __init__(
+        self,
+        name: str,
+        unit: str = "",
+        description: str = "",
+        explicit_bucket_boundaries_advisory: Optional[Sequence[float]] = None,
+    ) -> None:
+        super().__init__(name, unit=unit, description=description)
+        self._explicit_bucket_boundaries_advisory = (
+            explicit_bucket_boundaries_advisory
+        )
+
     def record(
         self,
         amount: Union[int, float],
@@ -372,7 +429,10 @@ class _ProxyHistogram(_ProxyInstrument[Histogram], Histogram):
 
     def _create_real_instrument(self, meter: "metrics.Meter") -> Histogram:
         return meter.create_histogram(
-            self._name, self._unit, self._description
+            self._name,
+            self._unit,
+            self._description,
+            explicit_bucket_boundaries_advisory=self._explicit_bucket_boundaries_advisory,
         )
 
 
@@ -393,7 +453,12 @@ class NoOpObservableGauge(ObservableGauge):
         unit: str = "",
         description: str = "",
     ) -> None:
-        super().__init__(name, callbacks, unit=unit, description=description)
+        super().__init__(
+            name,
+            callbacks,
+            unit=unit,
+            description=description,
+        )
 
 
 class _ProxyObservableGauge(
@@ -404,7 +469,10 @@ class _ProxyObservableGauge(
         self, meter: "metrics.Meter"
     ) -> ObservableGauge:
         return meter.create_observable_gauge(
-            self._name, self._callbacks, self._unit, self._description
+            self._name,
+            self._callbacks,
+            self._unit,
+            self._description,
         )
 
 
@@ -455,4 +523,8 @@ class _ProxyGauge(
             self._real_instrument.set(amount, attributes, context)
 
     def _create_real_instrument(self, meter: "metrics.Meter") -> Gauge:
-        return meter.create_gauge(self._name, self._unit, self._description)
+        return meter.create_gauge(
+            self._name,
+            self._unit,
+            self._description,
+        )

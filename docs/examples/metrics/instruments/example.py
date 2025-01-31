@@ -58,5 +58,13 @@ observable_updown_counter = meter.create_observable_up_down_counter(
 histogram = meter.create_histogram("histogram")
 histogram.record(99.9)
 
+
+# Histogram with explicit bucket boundaries advisory
+histogram = meter.create_histogram(
+    "histogram_with_advisory",
+    explicit_bucket_boundaries_advisory=[0.0, 1.0, 2.0],
+)
+histogram.record(99.9)
+
 # Async Gauge
 gauge = meter.create_observable_gauge("gauge", [observable_gauge_func])

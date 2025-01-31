@@ -628,6 +628,22 @@ class TestDefaultAggregation(TestCase):
         )
         self.assertIsInstance(aggregation, _ExplicitBucketHistogramAggregation)
 
+    def test_histogram_with_advisory(self):
+        boundaries = [1.0, 2.0, 3.0]
+        aggregation = self.default_aggregation._create_aggregation(
+            _Histogram(
+                "name",
+                Mock(),
+                Mock(),
+                explicit_bucket_boundaries_advisory=boundaries,
+            ),
+            Mock(),
+            _default_reservoir_factory,
+            0,
+        )
+        self.assertIsInstance(aggregation, _ExplicitBucketHistogramAggregation)
+        self.assertEqual(aggregation._boundaries, tuple(boundaries))
+
     def test_gauge(self):
         aggregation = self.default_aggregation._create_aggregation(
             _Gauge(
