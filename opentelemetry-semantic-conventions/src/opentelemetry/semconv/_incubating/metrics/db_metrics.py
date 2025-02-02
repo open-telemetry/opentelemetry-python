@@ -317,19 +317,17 @@ DB_CLIENT_COSMOSDB_ACTIVE_INSTANCE_COUNT: Final = (
     "db.client.cosmosdb.active_instance.count"
 )
 """
-Number of active client instances
-Instrument: updowncounter
-Unit: {instance}
+Deprecated: Replaced by `azure.cosmosdb.client.active_instance.count`.
 """
 
 
 def create_db_client_cosmosdb_active_instance_count(
     meter: Meter,
 ) -> UpDownCounter:
-    """Number of active client instances"""
+    """Deprecated, use `azure.cosmosdb.client.active_instance.count` instead"""
     return meter.create_up_down_counter(
         name=DB_CLIENT_COSMOSDB_ACTIVE_INSTANCE_COUNT,
-        description="Number of active client instances",
+        description="Deprecated, use `azure.cosmosdb.client.active_instance.count` instead.",
         unit="{instance}",
     )
 
@@ -338,19 +336,17 @@ DB_CLIENT_COSMOSDB_OPERATION_REQUEST_CHARGE: Final = (
     "db.client.cosmosdb.operation.request_charge"
 )
 """
-[Request charge](https://learn.microsoft.com/azure/cosmos-db/request-units) consumed by the operation
-Instrument: histogram
-Unit: {request_unit}
+Deprecated: Replaced by `azure.cosmosdb.client.operation.request_charge`.
 """
 
 
 def create_db_client_cosmosdb_operation_request_charge(
     meter: Meter,
 ) -> Histogram:
-    """[Request charge](https://learn.microsoft.com/azure/cosmos-db/request-units) consumed by the operation"""
+    """Deprecated, use `azure.cosmosdb.client.operation.request_charge` instead"""
     return meter.create_histogram(
         name=DB_CLIENT_COSMOSDB_OPERATION_REQUEST_CHARGE,
-        description="[Request charge](https://learn.microsoft.com/azure/cosmos-db/request-units) consumed by the operation",
+        description="Deprecated, use `azure.cosmosdb.client.operation.request_charge` instead.",
         unit="{request_unit}",
     )
 

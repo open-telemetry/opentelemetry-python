@@ -16,7 +16,7 @@
 
 from logging import getLogger
 from time import time_ns
-from typing import Dict, Generator, Iterable, List, Optional, Union
+from typing import Dict, Generator, Iterable, List, Optional, Sequence, Union
 
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics
@@ -31,7 +31,10 @@ from opentelemetry.metrics import (
 )
 from opentelemetry.metrics import UpDownCounter as APIUpDownCounter
 from opentelemetry.metrics import _Gauge as APIGauge
-from opentelemetry.metrics._internal.instrument import CallbackOptions
+from opentelemetry.metrics._internal.instrument import (
+    CallbackOptions,
+    _MetricsHistogramAdvisory,
+)
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
@@ -219,6 +222,26 @@ class ObservableUpDownCounter(_Asynchronous, APIObservableUpDownCounter):
 
 
 class Histogram(_Synchronous, APIHistogram):
+    def __init__(
+        self,
+        name: str,
+        instrumentation_scope: InstrumentationScope,
+        measurement_consumer: "opentelemetry.sdk.metrics.MeasurementConsumer",
+        unit: str = "",
+        description: str = "",
+        explicit_bucket_boundaries_advisory: Optional[Sequence[float]] = None,
+    ):
+        super().__init__(
+            name,
+            unit=unit,
+            description=description,
+            instrumentation_scope=instrumentation_scope,
+            measurement_consumer=measurement_consumer,
+        )
+        self._advisory = _MetricsHistogramAdvisory(
+            explicit_bucket_boundaries=explicit_bucket_boundaries_advisory
+        )
+
     def __new__(cls, *args, **kwargs):
         if cls is Histogram:
             raise TypeError("Histogram must be instantiated via a meter.")
