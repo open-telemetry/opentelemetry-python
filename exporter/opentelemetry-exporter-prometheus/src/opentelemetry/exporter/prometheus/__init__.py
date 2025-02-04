@@ -268,8 +268,11 @@ class _CustomCollector:
                 else:
                     values.append(number_data_point.value)
 
-            for pre_metric_family_id, label_values, value in zip(
-                per_metric_family_ids, label_values_data_points, values
+            for pre_metric_family_id, label_keys, label_values, value in zip(
+                per_metric_family_ids,
+                label_keys_data_points,
+                label_values_data_points,
+                values,
             ):
                 is_non_monotonic_sum = (
                     isinstance(metric.data, Sum)
