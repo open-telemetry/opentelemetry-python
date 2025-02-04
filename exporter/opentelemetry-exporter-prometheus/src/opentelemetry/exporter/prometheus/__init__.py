@@ -268,7 +268,7 @@ class _CustomCollector:
                 else:
                     values.append(number_data_point.value)
 
-            for pre_metric_family_id, label_keys, label_values, value in zip(
+            for per_metric_family_id, label_keys, label_values, value in zip(
                 per_metric_family_ids,
                 label_keys_data_points,
                 label_values_data_points,
@@ -294,7 +294,7 @@ class _CustomCollector:
                     and not should_convert_sum_to_gauge
                 ):
                     metric_family_id = "|".join(
-                        [pre_metric_family_id, CounterMetricFamily.__name__]
+                        [per_metric_family_id, CounterMetricFamily.__name__]
                     )
 
                     if metric_family_id not in metric_family_id_metric_family:
@@ -314,7 +314,7 @@ class _CustomCollector:
                     or should_convert_sum_to_gauge
                 ):
                     metric_family_id = "|".join(
-                        [pre_metric_family_id, GaugeMetricFamily.__name__]
+                        [per_metric_family_id, GaugeMetricFamily.__name__]
                     )
 
                     if (
@@ -334,7 +334,7 @@ class _CustomCollector:
                     ].add_metric(labels=label_values, value=value)
                 elif isinstance(metric.data, Histogram):
                     metric_family_id = "|".join(
-                        [pre_metric_family_id, HistogramMetricFamily.__name__]
+                        [per_metric_family_id, HistogramMetricFamily.__name__]
                     )
 
                     if (
