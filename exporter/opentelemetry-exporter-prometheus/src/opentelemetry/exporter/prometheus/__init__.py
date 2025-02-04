@@ -224,15 +224,14 @@ class _CustomCollector:
                     metrics.append(metric)
 
         for metric in metrics:
-            label_valuess = []
+            label_values_data_points = []
+            label_keys_data_points = []
             values = []
 
-            pre_metric_family_ids = []
+            per_metric_family_ids = []
 
             metric_name = sanitize_full_name(metric.name)
-
             metric_description = metric.description or ""
-
             metric_unit = map_unit(metric.unit)
 
             for number_data_point in metric.data.data_points:
@@ -243,7 +242,7 @@ class _CustomCollector:
                     label_keys.append(sanitize_attribute(key))
                     label_values.append(self._check_value(value))
 
-                pre_metric_family_ids.append(
+                per_metric_family_ids.append(
                     "|".join(
                         [
                             metric_name,
@@ -254,7 +253,8 @@ class _CustomCollector:
                     )
                 )
 
-                label_valuess.append(label_values)
+                label_values_data_points.append(label_values)
+                label_keys_data_points.append(label_keys)
                 if isinstance(number_data_point, HistogramDataPoint):
                     values.append(
                         {
@@ -269,7 +269,7 @@ class _CustomCollector:
                     values.append(number_data_point.value)
 
             for pre_metric_family_id, label_values, value in zip(
-                pre_metric_family_ids, label_valuess, values
+                per_metric_family_ids, label_values_data_points, values
             ):
                 is_non_monotonic_sum = (
                     isinstance(metric.data, Sum)
