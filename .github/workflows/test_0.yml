@@ -14,6 +14,7 @@ env:
   CONTRIB_REPO_SHA: opentelemetrybot/prepare-release-1.30.0-0.51b0
   PIP_EXISTS_ACTION: w
 
+
 jobs:
 
   py38-test-opentelemetry-api_ubuntu-latest:
