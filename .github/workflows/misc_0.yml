@@ -11,7 +11,7 @@ on:
 
 env:
   CORE_REPO_SHA: main
-  CONTRIB_REPO_SHA: opentelemetrybot/update-version-to-1.31.0.dev-0.52b0.dev
+  CONTRIB_REPO_SHA: main
   PIP_EXISTS_ACTION: w
 
 jobs:
