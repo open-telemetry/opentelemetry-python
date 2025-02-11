@@ -9,12 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add type annotations to context's attach & detach
   ([#4164](https://github.com/open-telemetry/opentelemetry-python/pull/4346))
+- Tolerates exceptions when loading resource detectors via `OTEL_EXPERIMENTAL_RESOURCE_DETECTORS`
+  ([#4373](https://github.com/open-telemetry/opentelemetry-python/pull/4373))
+
+## Version 1.30.0/0.51b0 (2025-02-03)
+
+- Always setup logs sdk, OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED only controls python `logging` module handler setup
+  ([#4340](https://github.com/open-telemetry/opentelemetry-python/pull/4340))
 - Add `attributes` field in `metrics.get_meter` wrapper function
   ([#4364](https://github.com/open-telemetry/opentelemetry-python/pull/4364))
 - Add Python 3.13 support
   ([#4353](https://github.com/open-telemetry/opentelemetry-python/pull/4353))
 - sdk: don't log or print warnings when the SDK has been disabled
   ([#4371](https://github.com/open-telemetry/opentelemetry-python/pull/4371))
+- Fix span context manager typing by using ParamSpec from typing_extensions
+  ([#4389](https://github.com/open-telemetry/opentelemetry-python/pull/4389))
+- Fix serialization of None values in logs body to match 1.31.0+ data model
+  ([#4400](https://github.com/open-telemetry/opentelemetry-python/pull/4400))
+- [BREAKING] semantic-conventions: Remove `opentelemetry.semconv.attributes.network_attributes.NETWORK_INTERFACE_NAME`
+  introduced by mistake in the wrong module.
+  ([#4391](https://github.com/open-telemetry/opentelemetry-python/pull/4391))
+- Add support for explicit bucket boundaries advisory for Histograms
+  ([#4361](https://github.com/open-telemetry/opentelemetry-python/pull/4361))
+- semantic-conventions: Bump to 1.30.0
+  ([#4337](https://github.com/open-telemetry/opentelemetry-python/pull/4397))
 
 ## Version 1.29.0/0.50b0 (2024-12-11)
 

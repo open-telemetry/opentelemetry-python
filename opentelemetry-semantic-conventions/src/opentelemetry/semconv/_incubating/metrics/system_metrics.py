@@ -63,6 +63,7 @@ SYSTEM_CPU_LOGICAL_COUNT: Final = "system.cpu.logical.count"
 Reports the number of logical (virtual) processor cores created by the operating system to manage multitasking
 Instrument: updowncounter
 Unit: {cpu}
+Note: Calculated by multiplying the number of sockets by the number of cores per socket, and then by the number of threads per core.
 """
 
 
@@ -80,6 +81,7 @@ SYSTEM_CPU_PHYSICAL_COUNT: Final = "system.cpu.physical.count"
 Reports the number of actual physical processor cores on the hardware
 Instrument: updowncounter
 Unit: {cpu}
+Note: Calculated by multiplying the number of sockets by the number of cores per socket.
 """
 
 
