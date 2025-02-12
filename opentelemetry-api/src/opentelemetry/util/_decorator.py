@@ -15,18 +15,20 @@
 import asyncio
 import contextlib
 import functools
-import typing
-from typing import Callable, Generic, Iterator, TypeVar
+from typing import TYPE_CHECKING, Callable, Generic, Iterator, TypeVar
 
 V = TypeVar("V")
 R = TypeVar("R")  # Return type
 Pargs = TypeVar("Pargs")  # Generic type for arguments
 Pkwargs = TypeVar("Pkwargs")  # Generic type for arguments
 
-if hasattr(typing, "ParamSpec"):
-    # only available in python 3.10+
-    # https://peps.python.org/pep-0612/
-    P = typing.ParamSpec("P")  # Generic type for all arguments
+# We don't actually depend on typing_extensions but we can use it in CI with this conditional
+# import. ParamSpec can be imported directly from typing after python 3.9 is dropped
+# https://peps.python.org/pep-0612/.
+if TYPE_CHECKING:
+    from typing_extensions import ParamSpec
+
+    P = ParamSpec("P")  # Generic type for all arguments
 
 
 class _AgnosticContextManager(

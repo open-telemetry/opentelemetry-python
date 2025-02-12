@@ -59,7 +59,7 @@ The memory state.
 
 SYSTEM_NETWORK_STATE: Final = "system.network.state"
 """
-A stateless protocol MUST NOT set this attribute.
+Deprecated: Removed, report network connection state with `network.connection.state` attribute.
 """
 
 SYSTEM_PAGING_DIRECTION: Final = "system.paging.direction"
@@ -145,6 +145,9 @@ class SystemMemoryStateValues(Enum):
     """cached."""
 
 
+@deprecated(
+    reason="The attribute system.network.state is deprecated - Removed, report network connection state with `network.connection.state` attribute"
+)  # type: ignore
 class SystemNetworkStateValues(Enum):
     CLOSE = "close"
     """close."""

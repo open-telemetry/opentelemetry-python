@@ -40,49 +40,65 @@ The type of line change being measured on a branch or change.
 VCS_REF_BASE_NAME: Final = "vcs.ref.base.name"
 """
 The name of the [reference](https://git-scm.com/docs/gitglossary#def_ref) such as **branch** or **tag** in the repository.
+Note: `base` refers to the starting point of a change. For example, `main`
+would be the base reference of type branch if you've created a new
+reference of type branch from it and created new commits.
 """
 
 VCS_REF_BASE_REVISION: Final = "vcs.ref.base.revision"
 """
 The revision, literally [revised version](https://www.merriam-webster.com/dictionary/revision), The revision most often refers to a commit object in Git, or a revision number in SVN.
-Note: The revision can be a full [hash value (see glossary)](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.186-5.pdf),
+Note: `base` refers to the starting point of a change. For example, `main`
+would be the base reference of type branch if you've created a new
+reference of type branch from it and created new commits. The
+revision can be a full [hash value (see
+glossary)](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.186-5.pdf),
 of the recorded change to a ref within a repository pointing to a
 commit [commit](https://git-scm.com/docs/git-commit) object. It does
-not necessarily have to be a hash; it can simply define a
-[revision number](https://svnbook.red-bean.com/en/1.7/svn.tour.revs.specifiers.html)
+not necessarily have to be a hash; it can simply define a [revision
+number](https://svnbook.red-bean.com/en/1.7/svn.tour.revs.specifiers.html)
 which is an integer that is monotonically increasing. In cases where
-it is identical to the `ref.base.name`, it SHOULD still be included. It is
-up to the implementer to decide which value to set as the revision
-based on the VCS system and situational context.
+it is identical to the `ref.base.name`, it SHOULD still be included.
+It is up to the implementer to decide which value to set as the
+revision based on the VCS system and situational context.
 """
 
 VCS_REF_BASE_TYPE: Final = "vcs.ref.base.type"
 """
 The type of the [reference](https://git-scm.com/docs/gitglossary#def_ref) in the repository.
+Note: `base` refers to the starting point of a change. For example, `main`
+would be the base reference of type branch if you've created a new
+reference of type branch from it and created new commits.
 """
 
 VCS_REF_HEAD_NAME: Final = "vcs.ref.head.name"
 """
 The name of the [reference](https://git-scm.com/docs/gitglossary#def_ref) such as **branch** or **tag** in the repository.
+Note: `head` refers to where you are right now; the current reference at a
+given time.
 """
 
 VCS_REF_HEAD_REVISION: Final = "vcs.ref.head.revision"
 """
 The revision, literally [revised version](https://www.merriam-webster.com/dictionary/revision), The revision most often refers to a commit object in Git, or a revision number in SVN.
-Note: The revision can be a full [hash value (see glossary)](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.186-5.pdf),
+Note: `head` refers to where you are right now; the current reference at a
+given time.The revision can be a full [hash value (see
+glossary)](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.186-5.pdf),
 of the recorded change to a ref within a repository pointing to a
 commit [commit](https://git-scm.com/docs/git-commit) object. It does
-not necessarily have to be a hash; it can simply define a
-[revision number](https://svnbook.red-bean.com/en/1.7/svn.tour.revs.specifiers.html)
+not necessarily have to be a hash; it can simply define a [revision
+number](https://svnbook.red-bean.com/en/1.7/svn.tour.revs.specifiers.html)
 which is an integer that is monotonically increasing. In cases where
-it is identical to the `ref.head.name`, it SHOULD still be included. It is
-up to the implementer to decide which value to set as the revision
-based on the VCS system and situational context.
+it is identical to the `ref.head.name`, it SHOULD still be included.
+It is up to the implementer to decide which value to set as the
+revision based on the VCS system and situational context.
 """
 
 VCS_REF_HEAD_TYPE: Final = "vcs.ref.head.type"
 """
 The type of the [reference](https://git-scm.com/docs/gitglossary#def_ref) in the repository.
+Note: `head` refers to where you are right now; the current reference at a
+given time.
 """
 
 VCS_REF_TYPE: Final = "vcs.ref.type"
@@ -98,6 +114,14 @@ Deprecated: Deprecated, use `vcs.change.id` instead.
 VCS_REPOSITORY_CHANGE_TITLE: Final = "vcs.repository.change.title"
 """
 Deprecated: Deprecated, use `vcs.change.title` instead.
+"""
+
+VCS_REPOSITORY_NAME: Final = "vcs.repository.name"
+"""
+The human readable name of the repository. It SHOULD NOT include any additional identifier like Group/SubGroup in GitLab or organization in GitHub.
+Note: Due to it only being the name, it can clash with forks of the same
+repository if collecting telemetry across multiple orgs or groups in
+the same backends.
 """
 
 VCS_REPOSITORY_REF_NAME: Final = "vcs.repository.ref.name"
@@ -117,7 +141,9 @@ Deprecated: Deprecated, use `vcs.ref.head.type` instead.
 
 VCS_REPOSITORY_URL_FULL: Final = "vcs.repository.url.full"
 """
-The [URL](https://wikipedia.org/wiki/URL) of the repository providing the complete address in order to locate and identify the repository.
+The [canonical URL](https://support.google.com/webmasters/answer/10347851?hl=en#:~:text=A%20canonical%20URL%20is%20the,Google%20chooses%20one%20as%20canonical.) of the repository providing the complete HTTP(S) address in order to locate and identify the repository through a browser.
+Note: In Git Version Control Systems, the canonical URL SHOULD NOT include
+the `.git` extension.
 """
 
 VCS_REVISION_DELTA_DIRECTION: Final = "vcs.revision_delta.direction"

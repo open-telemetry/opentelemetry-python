@@ -15,7 +15,7 @@
 
 from logging import WARNING
 from unittest import TestCase
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from opentelemetry.metrics import Meter, NoOpMeter
 
@@ -36,11 +36,26 @@ class ChildMeter(Meter):
         self, name, callbacks, unit="", description=""
     ):
         super().create_observable_counter(
-            name, callbacks, unit=unit, description=description
+            name,
+            callbacks,
+            unit=unit,
+            description=description,
         )
 
-    def create_histogram(self, name, unit="", description=""):
-        super().create_histogram(name, unit=unit, description=description)
+    def create_histogram(
+        self,
+        name,
+        unit="",
+        description="",
+        *,
+        explicit_bucket_boundaries_advisory=None,
+    ):
+        super().create_histogram(
+            name,
+            unit=unit,
+            description=description,
+            explicit_bucket_boundaries_advisory=explicit_bucket_boundaries_advisory,
+        )
 
     def create_gauge(self, name, unit="", description=""):
         super().create_gauge(name, unit=unit, description=description)
@@ -49,20 +64,28 @@ class ChildMeter(Meter):
         self, name, callbacks, unit="", description=""
     ):
         super().create_observable_gauge(
-            name, callbacks, unit=unit, description=description
+            name,
+            callbacks,
+            unit=unit,
+            description=description,
         )
 
     def create_observable_up_down_counter(
         self, name, callbacks, unit="", description=""
     ):
         super().create_observable_up_down_counter(
-            name, callbacks, unit=unit, description=description
+            name,
+            callbacks,
+            unit=unit,
+            description=description,
         )
 
 
 class TestMeter(TestCase):
     # pylint: disable=no-member
-    def test_repeated_instrument_names(self):
+    # TODO: convert to assertNoLogs instead of mocking logger when 3.10 is baseline
+    @patch("opentelemetry.metrics._internal._logger")
+    def test_repeated_instrument_names(self, logger_mock):
         try:
             test_meter = NoOpMeter("name")
 
@@ -84,19 +107,35 @@ class TestMeter(TestCase):
             "histogram",
             "gauge",
         ]:
-            with self.assertLogs(level=WARNING):
-                getattr(test_meter, f"create_{instrument_name}")(
-                    instrument_name
-                )
+            getattr(test_meter, f"create_{instrument_name}")(instrument_name)
+            logger_mock.warning.assert_not_called()
 
         for instrument_name in [
             "observable_counter",
             "observable_gauge",
             "observable_up_down_counter",
         ]:
+            getattr(test_meter, f"create_{instrument_name}")(
+                instrument_name, Mock()
+            )
+            logger_mock.warning.assert_not_called()
+
+    def test_repeated_instrument_names_with_different_advisory(self):
+        try:
+            test_meter = NoOpMeter("name")
+
+            test_meter.create_histogram(
+                "histogram", explicit_bucket_boundaries_advisory=[1.0]
+            )
+        except Exception as error:  # pylint: disable=broad-exception-caught
+            self.fail(f"Unexpected exception raised {error}")
+
+        for instrument_name in [
+            "histogram",
+        ]:
             with self.assertLogs(level=WARNING):
                 getattr(test_meter, f"create_{instrument_name}")(
-                    instrument_name, Mock()
+                    instrument_name,
                 )
 
     def test_create_counter(self):

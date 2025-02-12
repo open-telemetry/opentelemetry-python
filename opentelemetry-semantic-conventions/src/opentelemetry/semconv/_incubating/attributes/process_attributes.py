@@ -110,7 +110,7 @@ Whether the process is connected to an interactive shell.
 PROCESS_LINUX_CGROUP: Final = "process.linux.cgroup"
 """
 The control group associated with the process.
-Note: Control groups (cgroups) are a kernel feature used to organize and manage process resources. This attribute provides the path(s) to the cgroup(s) associated with the process, which should match the contents of the [/proc/<PID>/cgroup](https://man7.org/linux/man-pages/man7/cgroups.7.html) file.
+Note: Control groups (cgroups) are a kernel feature used to organize and manage process resources. This attribute provides the path(s) to the cgroup(s) associated with the process, which should match the contents of the [/proc/\\[PID\\]/cgroup](https://man7.org/linux/man-pages/man7/cgroups.7.html) file.
 """
 
 PROCESS_OWNER: Final = "process.owner"

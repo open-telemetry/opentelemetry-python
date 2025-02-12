@@ -88,6 +88,24 @@ class TestOTLPAttributeEncoder(unittest.TestCase):
             ],
         )
 
+    def test_encode_attributes_error_list_none(self):
+        with self.assertLogs(level=ERROR) as error:
+            result = _encode_attributes(
+                {"a": 1, "bad_key": ["test", None, "test"], "b": 2}
+            )
+
+        self.assertEqual(len(error.records), 1)
+        self.assertEqual(error.records[0].msg, "Failed to encode key %s: %s")
+        self.assertEqual(error.records[0].args[0], "bad_key")
+        self.assertIsInstance(error.records[0].args[1], Exception)
+        self.assertEqual(
+            result,
+            [
+                PB2KeyValue(key="a", value=PB2AnyValue(int_value=1)),
+                PB2KeyValue(key="b", value=PB2AnyValue(int_value=2)),
+            ],
+        )
+
     def test_encode_attributes_error_logs_key(self):
         with self.assertLogs(level=ERROR) as error:
             result = _encode_attributes({"a": 1, "bad_key": None, "b": 2})
