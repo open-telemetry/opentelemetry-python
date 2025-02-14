@@ -431,7 +431,9 @@ class TestMeter(TestCase):
     def setUp(self):
         self.meter = Meter(Mock(), Mock())
 
-    def test_repeated_instrument_names(self):
+    # TODO: convert to assertNoLogs instead of mocking logger when 3.10 is baseline
+    @patch("opentelemetry.sdk.metrics._internal._logger")
+    def test_repeated_instrument_names(self, logger_mock):
         with self.assertNotRaises(Exception):
             self.meter.create_counter("counter")
             self.meter.create_up_down_counter("up_down_counter")
@@ -453,19 +455,31 @@ class TestMeter(TestCase):
             "histogram",
             "gauge",
         ]:
-            with self.assertLogs(level=WARNING):
-                getattr(self.meter, f"create_{instrument_name}")(
-                    instrument_name
-                )
+            getattr(self.meter, f"create_{instrument_name}")(instrument_name)
+            logger_mock.warning.assert_not_called()
 
         for instrument_name in [
             "observable_counter",
             "observable_gauge",
             "observable_up_down_counter",
         ]:
+            getattr(self.meter, f"create_{instrument_name}")(
+                instrument_name, callbacks=[Mock()]
+            )
+            logger_mock.warning.assert_not_called()
+
+    def test_repeated_instrument_names_with_different_advisory(self):
+        with self.assertNotRaises(Exception):
+            self.meter.create_histogram(
+                "histogram", explicit_bucket_boundaries_advisory=[1.0]
+            )
+
+        for instrument_name in [
+            "histogram",
+        ]:
             with self.assertLogs(level=WARNING):
                 getattr(self.meter, f"create_{instrument_name}")(
-                    instrument_name, callbacks=[Mock()]
+                    instrument_name
                 )
 
     def test_create_counter(self):
@@ -499,6 +513,36 @@ class TestMeter(TestCase):
 
         self.assertIsInstance(histogram, Histogram)
         self.assertEqual(histogram.name, "name")
+
+    def test_create_histogram_with_advisory(self):
+        histogram = self.meter.create_histogram(
+            "name",
+            unit="unit",
+            description="description",
+            explicit_bucket_boundaries_advisory=[0.0, 1.0, 2],
+        )
+
+        self.assertIsInstance(histogram, Histogram)
+        self.assertEqual(histogram.name, "name")
+        self.assertEqual(
+            histogram._advisory.explicit_bucket_boundaries,
+            [0.0, 1.0, 2],
+        )
+
+    def test_create_histogram_advisory_validation(self):
+        advisories = [
+            {"explicit_bucket_boundaries_advisory": "hello"},
+            {"explicit_bucket_boundaries_advisory": ["1"]},
+        ]
+        for advisory in advisories:
+            with self.subTest(advisory=advisory):
+                with self.assertLogs(level=WARNING):
+                    self.meter.create_histogram(
+                        "name",
+                        unit="unit",
+                        description="description",
+                        **advisory,
+                    )
 
     def test_create_observable_gauge(self):
         observable_gauge = self.meter.create_observable_gauge(
@@ -589,10 +633,9 @@ class TestDuplicateInstrumentAggregateData(TestCase):
         counter_0_0 = meter_0.create_counter(
             "counter", unit="unit", description="description"
         )
-        with self.assertLogs(level=WARNING):
-            counter_0_1 = meter_0.create_counter(
-                "counter", unit="unit", description="description"
-            )
+        counter_0_1 = meter_0.create_counter(
+            "counter", unit="unit", description="description"
+        )
         counter_1_0 = meter_1.create_counter(
             "counter", unit="unit", description="description"
         )
