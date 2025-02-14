@@ -95,6 +95,14 @@ _OTEL_SAMPLER_ENTRY_POINT_GROUP = "opentelemetry_traces_sampler"
 _logger = logging.getLogger(__name__)
 
 
+def _import_config_component(
+    selected_component: str, entry_point_name: str
+) -> object:
+    return _import_config_components([selected_component], entry_point_name)[
+        0
+    ][1]
+
+
 def _import_config_components(
     selected_components: List[str], entry_point_name: str
 ) -> Sequence[Tuple[str, object]]:
@@ -399,12 +407,10 @@ def _initialize_components(
     auth_header_setter = None
     auth_ext = os.getenv(OTEL_AUTH_HEADER_EXTENSION)
     if auth_ext:
-        auth_header_setter = next(
-            iter(entry_points(group="opentelemetry_auth_header_extension"))
-        ).load()
-        if isinstance(auth_header_setter, BaseAuthHeaderSetter):
-            auth_header_setter = auth_header_setter()
-        else:
+        auth_header_setter = _import_config_component(
+            auth_ext, "opentelemetry_auth_header_extension"
+        )()
+        if not isinstance(auth_header_setter, BaseAuthHeaderSetter):
             raise RuntimeError(f"{auth_ext} is not an BaseAuthHeaderSetter")
     if sampler is None:
         sampler_name = _get_sampler()
