@@ -87,6 +87,12 @@ _ENVIRON_TO_COMPRESSION = {
 }
 
 
+class BaseAuthHeaderSetter(ABC):
+
+    @abstractmethod
+    def get_auth_header(self) -> Tuple[str, str]:
+        pass
+
 class InvalidCompressionValueException(Exception):
     def __init__(self, environ_key: str, environ_value: str):
         super().__init__(
@@ -196,9 +202,10 @@ class OTLPExporterMixin(
         ] = None,
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
+        auth_header_setter: BaseAuthHeaderSetter = None,
     ):
         super().__init__()
-
+        self._auth_header_setter = auth_header_setter
         self._endpoint = endpoint or environ.get(
             OTEL_EXPORTER_OTLP_ENDPOINT, "http://localhost:4317"
         )
@@ -293,12 +300,14 @@ class OTLPExporterMixin(
         for delay in _create_exp_backoff_generator(max_value=max_value):
             if delay == max_value or self._shutdown:
                 return self._result.FAILURE
-
+            headers = self._headers
+            if self._auth_header_setter:
+                headers += self._auth_header_setter.get_auth_header()
             with self._export_lock:
                 try:
                     self._client.Export(
                         request=self._translate_data(data),
-                        metadata=self._headers,
+                        metadata=headers,
                         timeout=self._timeout,
                     )
 

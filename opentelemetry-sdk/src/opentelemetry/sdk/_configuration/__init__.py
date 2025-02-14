@@ -20,6 +20,7 @@ OpenTelemetry SDK Configurator for Easy Instrumentation with Distros
 import logging
 import os
 from abc import ABC, abstractmethod
+from inspect import signature
 from os import environ
 from typing import Callable, Dict, List, Optional, Sequence, Tuple, Type, Union
 
@@ -33,12 +34,16 @@ from opentelemetry.environment_variables import (
     OTEL_PYTHON_ID_GENERATOR,
     OTEL_TRACES_EXPORTER,
 )
+from opentelemetry.exporter.otlp.proto.grpc.exporter import (
+    BaseAuthHeaderSetter,
+)
 from opentelemetry.metrics import set_meter_provider
 from opentelemetry.sdk._events import EventLoggerProvider
 from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
 from opentelemetry.sdk._logs.export import BatchLogRecordProcessor, LogExporter
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
+    OTEL_AUTH_HEADER_EXTENSION,
     OTEL_EXPORTER_OTLP_LOGS_PROTOCOL,
     OTEL_EXPORTER_OTLP_METRICS_PROTOCOL,
     OTEL_EXPORTER_OTLP_PROTOCOL,
@@ -194,6 +199,7 @@ def _init_tracing(
     id_generator: IdGenerator = None,
     sampler: Sampler = None,
     resource: Resource = None,
+    auth_header_setter: BaseAuthHeaderSetter = None,
 ):
     provider = TracerProvider(
         id_generator=id_generator,
@@ -204,6 +210,8 @@ def _init_tracing(
 
     for _, exporter_class in exporters.items():
         exporter_args = {}
+        if "auth_header_setter" in signature(exporter_class).parameters:
+            exporter_args["auth_header_setter"] = auth_header_setter
         provider.add_span_processor(
             BatchSpanProcessor(exporter_class(**exporter_args))
         )
@@ -214,12 +222,17 @@ def _init_metrics(
         str, Union[Type[MetricExporter], Type[MetricReader]]
     ],
     resource: Resource = None,
+    auth_header_setter: BaseAuthHeaderSetter = None,
 ):
     metric_readers = []
 
     for _, exporter_or_reader_class in exporters_or_readers.items():
         exporter_args = {}
-
+        if (
+            "auth_header_setter"
+            in signature(exporter_or_reader_class).parameters
+        ):
+            exporter_args["auth_header_setter"] = auth_header_setter
         if issubclass(exporter_or_reader_class, MetricReader):
             metric_readers.append(exporter_or_reader_class(**exporter_args))
         else:
@@ -237,12 +250,15 @@ def _init_logging(
     exporters: Dict[str, Type[LogExporter]],
     resource: Resource = None,
     setup_logging_handler: bool = True,
+    auth_header_setter: BaseAuthHeaderSetter = None,
 ):
     provider = LoggerProvider(resource=resource)
     set_logger_provider(provider)
 
     for _, exporter_class in exporters.items():
         exporter_args = {}
+        if "auth_header_setter" in signature(exporter_class).parameters:
+            exporter_args["auth_header_setter"] = auth_header_setter
         provider.add_log_record_processor(
             BatchLogRecordProcessor(exporter_class(**exporter_args))
         )
@@ -380,6 +396,16 @@ def _initialize_components(
         metric_exporter_names + _get_exporter_names("metrics"),
         log_exporter_names + _get_exporter_names("logs"),
     )
+    auth_header_setter = None
+    auth_ext = os.getenv(OTEL_AUTH_HEADER_EXTENSION)
+    if auth_ext:
+        auth_header_setter = next(
+            iter(entry_points(group="opentelemetry_auth_header_extension"))
+        ).load()
+        if isinstance(auth_header_setter, BaseAuthHeaderSetter):
+            auth_header_setter = auth_header_setter()
+        else:
+            raise RuntimeError(f"{auth_ext} is not an BaseAuthHeaderSetter")
     if sampler is None:
         sampler_name = _get_sampler()
         sampler = _import_sampler(sampler_name)
@@ -402,8 +428,13 @@ def _initialize_components(
         id_generator=id_generator,
         sampler=sampler,
         resource=resource,
+        auth_header_setter=auth_header_setter,
     )
-    _init_metrics(metric_exporters, resource)
+    _init_metrics(
+        metric_exporters,
+        resource,
+        auth_header_setter=auth_header_setter,
+    )
     if setup_logging_handler is None:
         setup_logging_handler = (
             os.getenv(
@@ -413,7 +444,12 @@ def _initialize_components(
             .lower()
             == "true"
         )
-    _init_logging(log_exporters, resource, setup_logging_handler)
+    _init_logging(
+        log_exporters,
+        resource,
+        setup_logging_handler,
+        auth_header_setter=auth_header_setter,
+    )
 
 
 class _BaseConfigurator(ABC):

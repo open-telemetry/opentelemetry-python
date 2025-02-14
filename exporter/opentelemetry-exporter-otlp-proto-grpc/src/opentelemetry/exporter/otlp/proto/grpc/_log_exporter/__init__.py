@@ -18,6 +18,7 @@ from typing import Sequence as TypingSequence
 from grpc import ChannelCredentials, Compression
 from opentelemetry.exporter.otlp.proto.common._log_encoder import encode_logs
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (
+    BaseAuthHeaderSetter,
     OTLPExporterMixin,
     _get_credentials,
     environ_to_compression,
@@ -60,6 +61,7 @@ class OTLPLogExporter(
         ] = None,
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
+        auth_header_setter: BaseAuthHeaderSetter = None,
     ):
         if insecure is None:
             insecure = environ.get(OTEL_EXPORTER_OTLP_LOGS_INSECURE)
@@ -99,6 +101,7 @@ class OTLPLogExporter(
                 "headers": headers,
                 "timeout": timeout or environ_timeout,
                 "compression": compression,
+                "auth_header_setter": auth_header_setter,
             }
         )
 
