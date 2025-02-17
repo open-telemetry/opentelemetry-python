@@ -110,16 +110,6 @@ def _clean_attribute(
 def _clean_attribute_value(
     value: types.AttributeValue, limit: Optional[int]
 ) -> Optional[types.AttributeValue]:
-    if value is None:
-        return None
-
-    if isinstance(value, bytes):
-        try:
-            value = value.decode()
-        except UnicodeDecodeError:
-            _logger.warning("Byte attribute could not be decoded.")
-            return None
-
     if limit is not None and isinstance(value, str):
         value = value[:limit]
     return value
