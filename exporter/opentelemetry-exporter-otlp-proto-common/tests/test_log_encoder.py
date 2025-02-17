@@ -177,7 +177,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
                 "last_name", "last_version"
             ),
         )
-        
+
         log6 = LogData(
             log_record=SDKLogRecord(
                 timestamp=1644650584292683022,
