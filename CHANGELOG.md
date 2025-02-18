@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+- opentelemetry-sdk: fix OTLP exporting of Histograms with explicit buckets advisory
+  ([#4434](https://github.com/open-telemetry/opentelemetry-python/pull/4434))
+
 ## Version 1.30.0/0.51b0 (2025-02-03)
 
 - Always setup logs sdk, OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED only controls python `logging` module handler setup
