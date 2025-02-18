@@ -12,4 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = "0.52b0.dev"
+from typing import Final
+
+ELASTICSEARCH_NODE_NAME: Final = "elasticsearch.node.name"
+"""
+Represents the human-readable identifier of the node/instance to which a request was routed.
+"""
