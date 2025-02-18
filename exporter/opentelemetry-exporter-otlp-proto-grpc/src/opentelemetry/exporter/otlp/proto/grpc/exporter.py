@@ -243,7 +243,9 @@ class OTLPExporterMixin(
         ) or Compression.NoCompression
 
         if insecure:
-            self._channel = insecure_channel(self._endpoint, compression=compression)
+            self._channel = insecure_channel(
+                self._endpoint, compression=compression
+            )
         else:
             credentials = _get_credentials(
                 credentials,
