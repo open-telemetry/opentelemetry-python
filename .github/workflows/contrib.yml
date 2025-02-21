@@ -5,7 +5,8 @@ on:
     branches-ignore:
     - 'release/*'
   pull_request:
-
+env:
+  FOO: "bar"
 jobs:
   contrib_0:
     uses: emdneto/opentelemetry-python-contrib/.github/workflows/core_contrib_test_0.yml@fix-uv
