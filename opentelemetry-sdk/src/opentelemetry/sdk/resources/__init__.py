@@ -203,16 +203,23 @@ class Resource:
 
         resource_detector: str
         for resource_detector in otel_experimental_resource_detectors:
-            resource_detectors.append(
-                next(
-                    iter(
-                        entry_points(
-                            group="opentelemetry_resource_detector",
-                            name=resource_detector.strip(),
-                        )  # type: ignore
-                    )
-                ).load()()
-            )
+            try:
+                resource_detectors.append(
+                    next(
+                        iter(
+                            entry_points(
+                                group="opentelemetry_resource_detector",
+                                name=resource_detector.strip(),
+                            )  # type: ignore
+                        )
+                    ).load()()
+                )
+            except Exception:  # pylint: disable=broad-exception-caught
+                logger.exception(
+                    "Failed to load resource detector '%s', skipping",
+                    resource_detector,
+                )
+                continue
         resource = get_aggregated_resources(
             resource_detectors, _DEFAULT_RESOURCE
         ).merge(Resource(attributes, schema_url))
