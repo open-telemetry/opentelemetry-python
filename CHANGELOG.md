@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Fix OTLP encoders missing instrumentation scope schema url and attributes
+  ([#4359](https://github.com/open-telemetry/opentelemetry-python/pull/4359))  
 - Tolerates exceptions when loading resource detectors via `OTEL_EXPERIMENTAL_RESOURCE_DETECTORS`
   ([#4373](https://github.com/open-telemetry/opentelemetry-python/pull/4373))
 - opentelemetry-sdk: fix OTLP exporting of Histograms with explicit buckets advisory

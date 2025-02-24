@@ -178,7 +178,54 @@ class TestOTLPLogEncoder(unittest.TestCase):
             ),
         )
 
-        return [log1, log2, log3, log4, log5]
+        log6 = LogData(
+            log_record=SDKLogRecord(
+                timestamp=1644650584292683022,
+                observed_timestamp=1644650584292683022,
+                trace_id=212592107417388365804938480559624925522,
+                span_id=6077757853989569222,
+                trace_flags=TraceFlags(0x01),
+                severity_text="ERROR",
+                severity_number=SeverityNumber.ERROR,
+                body="This instrumentation scope has a schema url",
+                resource=SDKResource(
+                    {"first_resource": "value"},
+                    "resource_schema_url",
+                ),
+                attributes={"filename": "model.py", "func_name": "run_method"},
+            ),
+            instrumentation_scope=InstrumentationScope(
+                "scope_with_url",
+                "scope_with_url_version",
+                "instrumentation_schema_url",
+            ),
+        )
+
+        log7 = LogData(
+            log_record=SDKLogRecord(
+                timestamp=1644650584292683033,
+                observed_timestamp=1644650584292683033,
+                trace_id=212592107417388365804938480559624925533,
+                span_id=6077757853989569233,
+                trace_flags=TraceFlags(0x01),
+                severity_text="FATAL",
+                severity_number=SeverityNumber.FATAL,
+                body="This instrumentation scope has a schema url and attributes",
+                resource=SDKResource(
+                    {"first_resource": "value"},
+                    "resource_schema_url",
+                ),
+                attributes={"filename": "model.py", "func_name": "run_method"},
+            ),
+            instrumentation_scope=InstrumentationScope(
+                "scope_with_attributes",
+                "scope_with_attributes_version",
+                "instrumentation_schema_url",
+                {"one": 1, "two": "2"},
+            ),
+        )
+
+        return [log1, log2, log3, log4, log5, log6, log7]
 
     def get_test_logs(
         self,
@@ -243,6 +290,71 @@ class TestOTLPLogEncoder(unittest.TestCase):
                                     severity_number=SeverityNumber.INFO.value,
                                     body=_encode_value(
                                         "Love is the one thing that transcends time and space"
+                                    ),
+                                    attributes=_encode_attributes(
+                                        {
+                                            "filename": "model.py",
+                                            "func_name": "run_method",
+                                        }
+                                    ),
+                                )
+                            ],
+                        ),
+                        PB2ScopeLogs(
+                            scope=PB2InstrumentationScope(
+                                name="scope_with_url",
+                                version="scope_with_url_version",
+                            ),
+                            schema_url="instrumentation_schema_url",
+                            log_records=[
+                                PB2LogRecord(
+                                    time_unix_nano=1644650584292683022,
+                                    observed_time_unix_nano=1644650584292683022,
+                                    trace_id=_encode_trace_id(
+                                        212592107417388365804938480559624925522
+                                    ),
+                                    span_id=_encode_span_id(
+                                        6077757853989569222
+                                    ),
+                                    flags=int(TraceFlags(0x01)),
+                                    severity_text="ERROR",
+                                    severity_number=SeverityNumber.ERROR.value,
+                                    body=_encode_value(
+                                        "This instrumentation scope has a schema url"
+                                    ),
+                                    attributes=_encode_attributes(
+                                        {
+                                            "filename": "model.py",
+                                            "func_name": "run_method",
+                                        }
+                                    ),
+                                )
+                            ],
+                        ),
+                        PB2ScopeLogs(
+                            scope=PB2InstrumentationScope(
+                                name="scope_with_attributes",
+                                version="scope_with_attributes_version",
+                                attributes=_encode_attributes(
+                                    {"one": 1, "two": "2"}
+                                ),
+                            ),
+                            schema_url="instrumentation_schema_url",
+                            log_records=[
+                                PB2LogRecord(
+                                    time_unix_nano=1644650584292683033,
+                                    observed_time_unix_nano=1644650584292683033,
+                                    trace_id=_encode_trace_id(
+                                        212592107417388365804938480559624925533
+                                    ),
+                                    span_id=_encode_span_id(
+                                        6077757853989569233
+                                    ),
+                                    flags=int(TraceFlags(0x01)),
+                                    severity_text="FATAL",
+                                    severity_number=SeverityNumber.FATAL.value,
+                                    body=_encode_value(
+                                        "This instrumentation scope has a schema url and attributes"
                                     ),
                                     attributes=_encode_attributes(
                                         {
