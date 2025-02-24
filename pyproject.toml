@@ -3,12 +3,19 @@ addopts = "-rs -v"
 log_cli = true
 
 [tool.pyright]
-typeCheckingMode = "off"
+typeCheckingMode = "strict"
 reportMissingTypeStubs = "error"
 include = [
     "opentelemetry-api/src",
     "opentelemetry-sdk/src",
     "opentelemetry-semantic-conventions/src",
+]
+reportUnnecessaryTypeIgnoreComment = true
+pythonVersion >= "3.9"
+reportPrivateUsage = false  # Ignore private attributes added by instrumentation packages.
+
+exclude = [
+  "opentelemetry-python/tests/**",
 ]
 
 [tool.ruff]
