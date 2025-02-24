@@ -69,7 +69,7 @@ service_protos=$(grep -REl "service \w+ {" $PROTO_REPO_DIR/opentelemetry/)
 python -m grpc_tools.protoc \
     -I $PROTO_REPO_DIR \
     --python_out=. \
-    --mypy_out=. \ 
+    --mypy_out=. \
     --grpc_python_out=. \
     $service_protos
 

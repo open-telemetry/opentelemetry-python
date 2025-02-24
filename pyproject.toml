@@ -4,7 +4,6 @@ log_cli = true
 
 [tool.pyright]
 typeCheckingMode = "strict"
-reportMissingTypeStubs = "error"
 include = [
     "opentelemetry-api/src",
     "opentelemetry-sdk/src",
@@ -22,9 +21,6 @@ ignore = [
 reportUnnecessaryTypeIgnoreComment = true
 pythonVersion = "3.9"
 reportPrivateUsage = false  # Ignore private attributes added by instrumentation packages.
-reportUnusedFunction = true
-reportUnusedVariable = true
-reportUnusedImport = true
 
 exclude = [
   "tests/**",
