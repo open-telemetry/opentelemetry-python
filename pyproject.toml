@@ -9,13 +9,25 @@ include = [
     "opentelemetry-api/src",
     "opentelemetry-sdk/src",
     "opentelemetry-semantic-conventions/src",
+    "opentelemetry-proto/src",
+    "scripts"
+]
+ignore = [
+  "docs/**",
+  "exporter/**",
+  "propagator/**",
+  "shim/**",
+
 ]
 reportUnnecessaryTypeIgnoreComment = true
-pythonVersion >= "3.9"
+pythonVersion = "3.9"
 reportPrivateUsage = false  # Ignore private attributes added by instrumentation packages.
+reportUnusedFunction = true
+reportUnusedVariable = true
+reportUnusedImport = true
 
 exclude = [
-  "opentelemetry-python/tests/**",
+  "tests/**",
 ]
 
 [tool.ruff]

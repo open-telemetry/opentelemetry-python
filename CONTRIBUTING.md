@@ -60,6 +60,11 @@ You can run `tox` with the following arguments:
 - `tox -e lint-some-package` to run lint checks on `some-package`
 - `tox -e generate-workflows` to run creation of new CI workflows if tox environments have been updated
 - `tox -e ruff` to run ruff linter and formatter checks against the entire codebase
+- `tox -e pyright` to run pyright against entire code base.
+- `tox -e public-symbols-check` to run public_symbols_checker.py.
+- `tox -e docker-tests-{otlpexporter,opencensus}` to run tests in both or either one location.
+- `tox -e tracecontext` to run integration tests for tracecontext.
+- `tox -d sphinx-build` to build html sphinx docs.
 
 `ruff check` and `ruff format` are executed when `tox -e ruff` is run. We strongly recommend you to configure [pre-commit](https://pre-commit.com/) locally to run `ruff` automatically before each commit by installing it as git hooks. You just need to [install pre-commit](https://pre-commit.com/#install) in your environment:
 
