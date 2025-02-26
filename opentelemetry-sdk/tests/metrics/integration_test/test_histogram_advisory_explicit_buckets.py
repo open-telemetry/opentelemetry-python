@@ -15,6 +15,7 @@
 from unittest import TestCase
 
 from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics._internal.instrument import Histogram
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 from opentelemetry.sdk.metrics.view import (
     ExplicitBucketHistogramAggregation,
@@ -132,4 +133,34 @@ class TestHistogramAdvisory(TestCase):
         self.assertEqual(metric.name, "testhistogram")
         self.assertEqual(
             metric.data.data_points[0].explicit_bounds, (10.0, 100.0, 1000.0)
+        )
+
+    def test_explicit_aggregation(self):
+        reader = InMemoryMetricReader(
+            preferred_aggregation={
+                Histogram: ExplicitBucketHistogramAggregation()
+            }
+        )
+        meter_provider = MeterProvider(
+            metric_readers=[reader],
+        )
+        meter = meter_provider.get_meter("testmeter")
+        histogram = meter.create_histogram(
+            "testhistogram",
+            explicit_bucket_boundaries_advisory=[1.0, 2.0, 3.0],
+        )
+        histogram.record(1, {"label": "value"})
+        histogram.record(2, {"label": "value"})
+        histogram.record(3, {"label": "value"})
+
+        metrics = reader.get_metrics_data()
+        self.assertEqual(len(metrics.resource_metrics), 1)
+        self.assertEqual(len(metrics.resource_metrics[0].scope_metrics), 1)
+        self.assertEqual(
+            len(metrics.resource_metrics[0].scope_metrics[0].metrics), 1
+        )
+        metric = metrics.resource_metrics[0].scope_metrics[0].metrics[0]
+        self.assertEqual(metric.name, "testhistogram")
+        self.assertEqual(
+            metric.data.data_points[0].explicit_bounds, (1.0, 2.0, 3.0)
         )

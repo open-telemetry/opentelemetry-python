@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Tolerates exceptions when loading resource detectors via `OTEL_EXPERIMENTAL_RESOURCE_DETECTORS`
+  ([#4373](https://github.com/open-telemetry/opentelemetry-python/pull/4373))
+- opentelemetry-sdk: fix OTLP exporting of Histograms with explicit buckets advisory
+  ([#4434](https://github.com/open-telemetry/opentelemetry-python/pull/4434))
+- opentelemetry-exporter-otlp-proto-grpc: better dependency version range for Python 3.13
+  ([#4444](https://github.com/open-telemetry/opentelemetry-python/pull/4444))
+- opentelemetry-exporter-opencensus: better dependency version range for Python 3.13
+  ([#4444](https://github.com/open-telemetry/opentelemetry-python/pull/4444))
+- Updated `tracecontext-integration-test` gitref to `d782773b2cf2fa4afd6a80a93b289d8a74ca894d`
+  ([#4448](https://github.com/open-telemetry/opentelemetry-python/pull/4448))
+
+## Version 1.30.0/0.51b0 (2025-02-03)
+
 - Always setup logs sdk, OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED only controls python `logging` module handler setup
   ([#4340](https://github.com/open-telemetry/opentelemetry-python/pull/4340))
 - Add `attributes` field in `metrics.get_meter` wrapper function
