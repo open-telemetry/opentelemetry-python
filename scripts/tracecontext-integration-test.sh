@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e 
 # hard-coding the git tag to ensure stable builds.
-TRACECONTEXT_GIT_TAG="98f210efd89c63593dce90e2bae0a1bdcb986f51"
+TRACECONTEXT_GIT_TAG="d782773b2cf2fa4afd6a80a93b289d8a74ca894d"
 # clone w3c tracecontext tests
 mkdir -p target
 rm -rf ./target/trace-context
@@ -24,4 +24,11 @@ onshutdown()
 }
 trap onshutdown EXIT
 cd ./target/trace-context/test
-python test.py http://127.0.0.1:5000/verify-tracecontext
+
+# The disabled test is not compatible with an optional part of the W3C 
+# spec that we have implemented (dropping duplicated keys from tracestate).
+# W3C are planning to include flags for optional features in the test suite.
+# https://github.com/w3c/trace-context/issues/529
+# FIXME: update test to use flags for optional features when available.
+export SERVICE_ENDPOINT=http://127.0.0.1:5000/verify-tracecontext
+pytest test.py -k "not test_tracestate_duplicated_keys"
