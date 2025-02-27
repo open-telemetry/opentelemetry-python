@@ -170,31 +170,45 @@ pull requests (PRs).
 To create a new PR, fork the project in GitHub and clone the upstream repo:
 
 ```console
-$ git clone https://github.com/open-telemetry/opentelemetry-python.git
-$ cd opentelemetry-python
+git clone https://github.com/open-telemetry/opentelemetry-python.git
+cd opentelemetry-python
 ```
 
 Add your fork as an origin:
 
 ```console
-$ git remote add fork https://github.com/YOUR_GITHUB_USERNAME/opentelemetry-python.git
+git remote add fork https://github.com/YOUR_GITHUB_USERNAME/opentelemetry-python.git
 ```
 
-Run tests:
+Make sure you have all supported versions of Python installed, install tox only for the first time:
 
 ```sh
-# make sure you have all supported versions of Python installed
-$ pip install tox  # only first time.
-$ tox  # execute in the root of the repository
+pip install tox
+```
+
+Run tests in the root of the repository (this will run all tox environments and may take some time):
+
+```sh
+tox
 ```
 
 Check out a new branch, make modifications and push the branch to your fork:
 
 ```sh
-$ git checkout -b feature
-# edit files
-$ git commit
-$ git push fork feature
+git checkout -b feature
+```
+
+After you edit the files, stage changes in the current directory:
+
+```sh
+git add .
+```
+
+Then run the following to commit the changes:
+
+```sh
+git commit
+git push fork feature
 ```
 
 Open a pull request against the main `opentelemetry-python` repo.
