@@ -7,6 +7,23 @@ resolution-markers = [
     "python_full_version < '3.9'",
 ]
 
+[manifest]
+members = [
+    "opentelemetry-api",
+    "opentelemetry-exporter-otlp-proto-common",
+    "opentelemetry-exporter-otlp-proto-grpc",
+    "opentelemetry-exporter-otlp-proto-http",
+    "opentelemetry-exporter-prometheus",
+    "opentelemetry-exporter-zipkin-json",
+    "opentelemetry-propagator-b3",
+    "opentelemetry-propagator-jaeger",
+    "opentelemetry-proto",
+    "opentelemetry-python",
+    "opentelemetry-sdk",
+    "opentelemetry-semantic-conventions",
+    "opentelemetry-test-utils",
+]
+
 [[package]]
 name = "asgiref"
 version = "3.8.1"
@@ -257,20 +274,6 @@ requires-dist = [
 ]
 
 [[package]]
-name = "opentelemetry-exporter-otlp"
-source = { editable = "exporter/opentelemetry-exporter-otlp" }
-dependencies = [
-    { name = "opentelemetry-exporter-otlp-proto-grpc" },
-    { name = "opentelemetry-exporter-otlp-proto-http" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "opentelemetry-exporter-otlp-proto-grpc", specifier = "==1.31.0.dev0" },
-    { name = "opentelemetry-exporter-otlp-proto-http", specifier = "==1.31.0.dev0" },
-]
-
-[[package]]
 name = "opentelemetry-exporter-otlp-proto-common"
 source = { editable = "exporter/opentelemetry-exporter-otlp-proto-common" }
 dependencies = [
@@ -278,7 +281,7 @@ dependencies = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "opentelemetry-proto", specifier = "==1.31.0.dev0" }]
+requires-dist = [{ name = "opentelemetry-proto", editable = "opentelemetry-proto" }]
 
 [[package]]
 name = "opentelemetry-exporter-otlp-proto-grpc"
@@ -299,10 +302,10 @@ requires-dist = [
     { name = "googleapis-common-protos", specifier = "~=1.52" },
     { name = "grpcio", marker = "python_full_version < '3.13'", specifier = ">=1.63.2,<2.0.0" },
     { name = "grpcio", marker = "python_full_version >= '3.13'", specifier = ">=1.66.2,<2.0.0" },
-    { name = "opentelemetry-api", specifier = "~=1.15" },
-    { name = "opentelemetry-exporter-otlp-proto-common", specifier = "==1.31.0.dev0" },
-    { name = "opentelemetry-proto", specifier = "==1.31.0.dev0" },
-    { name = "opentelemetry-sdk", specifier = "~=1.31.0.dev0" },
+    { name = "opentelemetry-api", editable = "opentelemetry-api" },
+    { name = "opentelemetry-exporter-otlp-proto-common", editable = "exporter/opentelemetry-exporter-otlp-proto-common" },
+    { name = "opentelemetry-proto", editable = "opentelemetry-proto" },
+    { name = "opentelemetry-sdk", editable = "opentelemetry-sdk" },
 ]
 
 [[package]]
@@ -322,10 +325,10 @@ dependencies = [
 requires-dist = [
     { name = "deprecated", specifier = ">=1.2.6" },
     { name = "googleapis-common-protos", specifier = "~=1.52" },
-    { name = "opentelemetry-api", specifier = "~=1.15" },
-    { name = "opentelemetry-exporter-otlp-proto-common", specifier = "==1.31.0.dev0" },
-    { name = "opentelemetry-proto", specifier = "==1.31.0.dev0" },
-    { name = "opentelemetry-sdk", specifier = "~=1.31.0.dev0" },
+    { name = "opentelemetry-api", editable = "opentelemetry-api" },
+    { name = "opentelemetry-exporter-otlp-proto-common", editable = "exporter/opentelemetry-exporter-otlp-proto-common" },
+    { name = "opentelemetry-proto", editable = "opentelemetry-proto" },
+    { name = "opentelemetry-sdk", editable = "opentelemetry-sdk" },
     { name = "requests", specifier = "~=2.7" },
 ]
 
@@ -340,8 +343,8 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "opentelemetry-api", specifier = "~=1.12" },
-    { name = "opentelemetry-sdk", specifier = "~=1.31.0.dev0" },
+    { name = "opentelemetry-api", editable = "opentelemetry-api" },
+    { name = "opentelemetry-sdk", editable = "opentelemetry-sdk" },
     { name = "prometheus-client", specifier = ">=0.5.0,<1.0.0" },
 ]
 
@@ -356,8 +359,8 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "opentelemetry-api", specifier = "~=1.3" },
-    { name = "opentelemetry-sdk", specifier = "~=1.11" },
+    { name = "opentelemetry-api", editable = "opentelemetry-api" },
+    { name = "opentelemetry-sdk", editable = "opentelemetry-sdk" },
     { name = "requests", specifier = "~=2.7" },
 ]
 
@@ -372,7 +375,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "deprecated", specifier = ">=1.2.6" },
-    { name = "opentelemetry-api", specifier = "~=1.3" },
+    { name = "opentelemetry-api", editable = "opentelemetry-api" },
 ]
 
 [[package]]
@@ -383,7 +386,7 @@ dependencies = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "opentelemetry-api", specifier = "~=1.3" }]
+requires-dist = [{ name = "opentelemetry-api", editable = "opentelemetry-api" }]
 
 [[package]]
 name = "opentelemetry-proto"
@@ -401,7 +404,6 @@ version = "0.0.0"
 source = { virtual = "." }
 dependencies = [
     { name = "opentelemetry-api" },
-    { name = "opentelemetry-exporter-otlp" },
     { name = "opentelemetry-exporter-otlp-proto-common" },
     { name = "opentelemetry-exporter-otlp-proto-grpc" },
     { name = "opentelemetry-exporter-otlp-proto-http" },
@@ -418,7 +420,6 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "opentelemetry-api", editable = "opentelemetry-api" },
-    { name = "opentelemetry-exporter-otlp", editable = "exporter/opentelemetry-exporter-otlp" },
     { name = "opentelemetry-exporter-otlp-proto-common", editable = "exporter/opentelemetry-exporter-otlp-proto-common" },
     { name = "opentelemetry-exporter-otlp-proto-grpc", editable = "exporter/opentelemetry-exporter-otlp-proto-grpc" },
     { name = "opentelemetry-exporter-otlp-proto-http", editable = "exporter/opentelemetry-exporter-otlp-proto-http" },
@@ -443,8 +444,8 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "opentelemetry-api", specifier = "==1.31.0.dev0" },
-    { name = "opentelemetry-semantic-conventions", specifier = "==0.52b0.dev0" },
+    { name = "opentelemetry-api", editable = "opentelemetry-api" },
+    { name = "opentelemetry-semantic-conventions", editable = "opentelemetry-semantic-conventions" },
     { name = "typing-extensions", specifier = ">=3.7.4" },
 ]
 
@@ -459,7 +460,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "deprecated", specifier = ">=1.2.6" },
-    { name = "opentelemetry-api", specifier = "==1.31.0.dev0" },
+    { name = "opentelemetry-api", editable = "opentelemetry-api" },
 ]
 
 [[package]]
@@ -474,8 +475,8 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "asgiref", specifier = "~=3.0" },
-    { name = "opentelemetry-api", specifier = "==1.31.0.dev0" },
-    { name = "opentelemetry-sdk", specifier = "==1.31.0.dev0" },
+    { name = "opentelemetry-api", editable = "opentelemetry-api" },
+    { name = "opentelemetry-sdk", editable = "opentelemetry-sdk" },
 ]
 
 [[package]]
