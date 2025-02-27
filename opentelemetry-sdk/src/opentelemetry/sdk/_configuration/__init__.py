@@ -45,6 +45,11 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TRACES_PROTOCOL,
     OTEL_TRACES_SAMPLER,
     OTEL_TRACES_SAMPLER_ARG,
+    OTEL_EXPORTER_CUSTOMIZER,
+)
+from opentelemetry.exporter.otlp.customizer import (
+    BaseOTLPExporters,
+    OTLPExporterCustomizerBase,
 )
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import (
@@ -89,6 +94,13 @@ _OTEL_SAMPLER_ENTRY_POINT_GROUP = "opentelemetry_traces_sampler"
 
 _logger = logging.getLogger(__name__)
 
+
+def _import_config_component(
+    selected_component: str, entry_point_name: str
+) -> object:
+    return _import_config_components([selected_component], entry_point_name)[
+        0
+    ][1]
 
 def _import_config_components(
     selected_components: List[str], entry_point_name: str
@@ -194,6 +206,7 @@ def _init_tracing(
     id_generator: IdGenerator = None,
     sampler: Sampler = None,
     resource: Resource = None,
+    exporter_customizer: OTLPExporterCustomizerBase=None,
 ):
     provider = TracerProvider(
         id_generator=id_generator,
@@ -203,9 +216,12 @@ def _init_tracing(
     set_tracer_provider(provider)
 
     for _, exporter_class in exporters.items():
-        exporter_args = {}
+        if exporter_customizer and isinstance(exporter_class, BaseOTLPExporters.__args__):
+            exporter_instance = exporter_customizer.customize_exporter(exporter_class)
+        else:
+            exporter_instance = exporter_class()
         provider.add_span_processor(
-            BatchSpanProcessor(exporter_class(**exporter_args))
+            BatchSpanProcessor(exporter_instance)
         )
 
 
@@ -214,6 +230,7 @@ def _init_metrics(
         str, Union[Type[MetricExporter], Type[MetricReader]]
     ],
     resource: Resource = None,
+    exporter_customizer: OTLPExporterCustomizerBase=None,
 ):
     metric_readers = []
 
@@ -223,9 +240,13 @@ def _init_metrics(
         if issubclass(exporter_or_reader_class, MetricReader):
             metric_readers.append(exporter_or_reader_class(**exporter_args))
         else:
+            if exporter_customizer and isinstance(exporter_or_reader_class, BaseOTLPExporters.__args__):
+                exporter_instance = exporter_customizer.customize_exporter(exporter_or_reader_class)
+            else:
+                exporter_instance = exporter_or_reader_class()
             metric_readers.append(
                 PeriodicExportingMetricReader(
-                    exporter_or_reader_class(**exporter_args)
+                    exporter_instance
                 )
             )
 
@@ -237,14 +258,18 @@ def _init_logging(
     exporters: Dict[str, Type[LogExporter]],
     resource: Resource = None,
     setup_logging_handler: bool = True,
+    exporter_customizer: OTLPExporterCustomizerBase=None,
 ):
     provider = LoggerProvider(resource=resource)
     set_logger_provider(provider)
 
     for _, exporter_class in exporters.items():
-        exporter_args = {}
+        if exporter_customizer and isinstance(exporter_class, BaseOTLPExporters.__args__):
+            exporter_instance = exporter_customizer.customize_exporter(exporter_class)
+        else:
+            exporter_instance = exporter_class()
         provider.add_log_record_processor(
-            BatchLogRecordProcessor(exporter_class(**exporter_args))
+            BatchLogRecordProcessor(exporter_instance)
         )
 
     event_logger_provider = EventLoggerProvider(logger_provider=provider)
@@ -380,6 +405,14 @@ def _initialize_components(
         metric_exporter_names + _get_exporter_names("metrics"),
         log_exporter_names + _get_exporter_names("logs"),
     )
+    exporter_customizer = None
+    customizer_name = os.getenv(OTEL_EXPORTER_CUSTOMIZER)
+    if customizer_name:
+        exporter_customizer = _import_config_component(
+            customizer_name, "opentelemetry_otlp_exporter_customizer"
+        )()
+        if not isinstance(exporter_customizer, OTLPExporterCustomizerBase):
+            raise RuntimeError(f"{customizer_name} is not an OTLPExporterCustomizerBase")
     if sampler is None:
         sampler_name = _get_sampler()
         sampler = _import_sampler(sampler_name)
@@ -402,8 +435,9 @@ def _initialize_components(
         id_generator=id_generator,
         sampler=sampler,
         resource=resource,
+        exporter_customizer=exporter_customizer,
     )
-    _init_metrics(metric_exporters, resource)
+    _init_metrics(metric_exporters, resource, exporter_customizer=exporter_customizer,)
     if setup_logging_handler is None:
         setup_logging_handler = (
             os.getenv(
@@ -413,7 +447,7 @@ def _initialize_components(
             .lower()
             == "true"
         )
-    _init_logging(log_exporters, resource, setup_logging_handler)
+    _init_logging(log_exporters, resource, setup_logging_handler, exporter_customizer=exporter_customizer)
 
 
 class _BaseConfigurator(ABC):
