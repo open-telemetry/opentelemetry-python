@@ -45,7 +45,7 @@ some aspects of development, including testing against multiple Python versions.
 To install `tox`, run:
 
 ```console
-$ pip install tox
+pip install tox
 ```
 
 You can run `tox` with the following arguments:
@@ -60,18 +60,35 @@ You can run `tox` with the following arguments:
 - `tox -e lint-some-package` to run lint checks on `some-package`
 - `tox -e generate-workflows` to run creation of new CI workflows if tox environments have been updated
 - `tox -e ruff` to run ruff linter and formatter checks against the entire codebase
+- `tox -e pre-commit` to run all `pre-commit` actions
 
 `ruff check` and `ruff format` are executed when `tox -e ruff` is run. We strongly recommend you to configure [pre-commit](https://pre-commit.com/) locally to run `ruff` automatically before each commit by installing it as git hooks. You just need to [install pre-commit](https://pre-commit.com/#install) in your environment:
 
 ```console
-$ pip install pre-commit -c dev-requirements.txt
+pip install pre-commit -c dev-requirements.txt
 ```
 
 and run this command inside the git repository:
 
 ```console
-$ pre-commit install
+pre-commit install
 ```
+
+### Virtual Environment
+
+You can also create a single virtual environment to make it easier to run local tests.
+
+For that, you'll need to install [`uv`](https://docs.astral.sh/uv/getting-started/installation/).
+
+After installing `uv`, you can run the following command:
+
+```sh
+uv sync
+```
+
+This will create a virtual environment in the `.venv` directory and install all the necessary dependencies.
+
+### Public Symbols
 
 We try to keep the amount of _public symbols_ in our code minimal. A public symbol is any Python identifier that does not start with an underscore.
 Every public symbol is something that has to be kept in order to maintain backwards compatibility, so we try to have as few as possible.
@@ -107,7 +124,7 @@ See
 [`tox.ini`](https://github.com/open-telemetry/opentelemetry-python/blob/main/tox.ini)
 for more detail on available tox commands.
 
-#### Contrib repo
+### Contrib repo
 
 Some of the `tox` targets install packages from the [OpenTelemetry Python Contrib Repository](https://github.com/open-telemetry/opentelemetry-python.git) via
 pip. The version of the packages installed defaults to the `main` branch in that repository when `tox` is run locally. It is possible to install packages tagged

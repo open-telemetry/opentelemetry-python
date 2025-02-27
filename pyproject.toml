@@ -1,3 +1,49 @@
+[project]
+name = "opentelemetry-python"
+version = "0.0.0" # This is not used.
+requires-python = ">=3.8"
+dependencies = [
+  "opentelemetry-api",
+  "opentelemetry-sdk",
+  "opentelemetry-semantic-conventions",
+  "opentelemetry-proto",
+  "opentelemetry-test-utils",
+  "opentelemetry-exporter-otlp-proto-grpc",
+  "opentelemetry-exporter-otlp-proto-http",
+  "opentelemetry-exporter-otlp-proto-common",
+  "opentelemetry-exporter-otlp",
+  "opentelemetry-propagator-jaeger",
+  "opentelemetry-propagator-b3",
+  "opentelemetry-exporter-zipkin-json",
+  "opentelemetry-exporter-prometheus",
+]
+
+# https://docs.astral.sh/uv/reference/settings/
+[tool.uv]
+package = false # https://docs.astral.sh/uv/reference/settings/#package
+required-version = ">=0.6.0"
+
+[tool.uv.sources]
+opentelemetry-api = { path = "opentelemetry-api", editable = true}
+opentelemetry-sdk = { path = "opentelemetry-sdk", editable = true }
+opentelemetry-proto = { path = "opentelemetry-proto", editable = true }
+opentelemetry-semantic-conventions = { path = "opentelemetry-semantic-conventions", editable = true }
+opentelemetry-test-utils = { path = "tests/opentelemetry-test-utils", editable = true }
+opentelemetry-exporter-otlp-proto-grpc = { path = "exporter/opentelemetry-exporter-otlp-proto-grpc", editable = true }
+opentelemetry-exporter-otlp-proto-http = { path = "exporter/opentelemetry-exporter-otlp-proto-http", editable = true }
+opentelemetry-exporter-otlp-proto-common = { path = "exporter/opentelemetry-exporter-otlp-proto-common", editable = true }
+# zipkin
+# opentelemetry-exporter-zipkin-proto-http = { path = "exporter/opentelemetry-exporter-zipkin-proto-http", editable = true }
+opentelemetry-exporter-zipkin-json = { path = "exporter/opentelemetry-exporter-zipkin-json", editable = true }
+# opencensus
+# opentelemetry-exporter-opencensus = { path = "exporter/opentelemetry-exporter-opencensus", editable = true }
+# prometheus
+opentelemetry-exporter-prometheus = { path = "exporter/opentelemetry-exporter-prometheus", editable = true }
+opentelemetry-exporter-otlp = { path = "exporter/opentelemetry-exporter-otlp", editable = true }
+# propagators
+opentelemetry-propagator-jaeger = { path = "propagator/opentelemetry-propagator-jaeger", editable = true }
+opentelemetry-propagator-b3 = { path = "propagator/opentelemetry-propagator-b3", editable = true }
+
 [tool.pytest.ini_options]
 addopts = "-rs -v"
 log_cli = true
