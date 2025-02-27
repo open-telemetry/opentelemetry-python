@@ -217,7 +217,7 @@ class LogRecord(APILogRecord):
             return NotImplemented
         return self.__dict__ == other.__dict__
 
-    def to_json(self, indent=4) -> str:
+    def to_json(self, indent: Optional[int] = 4) -> str:
         return json.dumps(
             {
                 "body": self.body,
