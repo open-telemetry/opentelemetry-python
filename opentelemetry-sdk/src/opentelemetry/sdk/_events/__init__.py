@@ -27,7 +27,7 @@ _logger = logging.getLogger(__name__)
 
 
 class EventLogger(APIEventLogger):
-    def __init__(
+    def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         logger_provider: LoggerProvider,
         name: str,

@@ -85,7 +85,7 @@ class TestJaegerPropagator(TestCase):
         old_carrier = {FORMAT.TRACE_ID_KEY: self.serialized_uber_trace_id}
         _, new_carrier = get_context_new_carrier(old_carrier)
         self.assertEqual(
-            self.serialized_uber_trace_id.split(":")[0],
+            self.serialized_uber_trace_id.split(":", maxsplit=1)[0],
             new_carrier[FORMAT.TRACE_ID_KEY].split(":")[0],
         )
 

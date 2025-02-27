@@ -97,7 +97,7 @@ logger = logging.getLogger(__name__)
 
 
 class ZipkinExporter(SpanExporter):
-    def __init__(
+    def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         version: Protocol = Protocol.V2,
         endpoint: Optional[str] = None,

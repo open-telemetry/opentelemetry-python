@@ -374,7 +374,7 @@ class ReadableSpan:
 
     """
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         name: str,
         context: Optional[trace_api.SpanContext] = None,
@@ -609,7 +609,7 @@ class SpanLimits:
 
     UNSET = -1
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         max_attributes: Optional[int] = None,
         max_events: Optional[int] = None,
@@ -761,7 +761,7 @@ class Span(trace_api.Span, ReadableSpan):
         return super().__new__(cls)
 
     # pylint: disable=too-many-locals
-    def __init__(
+    def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         name: str,
         context: trace_api.SpanContext,
@@ -1053,7 +1053,7 @@ class _Span(Span):
 class Tracer(trace_api.Tracer):
     """See `opentelemetry.trace.Tracer`."""
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         sampler: sampling.Sampler,
         resource: Resource,
@@ -1074,7 +1074,7 @@ class Tracer(trace_api.Tracer):
         self._instrumentation_scope = instrumentation_scope
 
     @_agnosticcontextmanager  # pylint: disable=protected-access
-    def start_as_current_span(
+    def start_as_current_span(  # pylint: disable=too-many-positional-arguments
         self,
         name: str,
         context: Optional[context_api.Context] = None,
@@ -1104,7 +1104,7 @@ class Tracer(trace_api.Tracer):
         ) as span:
             yield span
 
-    def start_span(  # pylint: disable=too-many-locals
+    def start_span(  # pylint: disable=too-many-locals  # pylint: disable=too-many-positional-arguments
         self,
         name: str,
         context: Optional[context_api.Context] = None,
@@ -1184,7 +1184,7 @@ class Tracer(trace_api.Tracer):
 class TracerProvider(trace_api.TracerProvider):
     """See `opentelemetry.trace.TracerProvider`."""
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         sampler: Optional[sampling.Sampler] = None,
         resource: Optional[Resource] = None,

@@ -152,7 +152,7 @@ class BatchSpanProcessor(SpanProcessor):
     - :envvar:`OTEL_BSP_EXPORT_TIMEOUT`
     """
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         span_exporter: SpanExporter,
         max_queue_size: int = None,

@@ -232,7 +232,7 @@ class Meter(ABC):
         """
         return self._schema_url
 
-    def _register_instrument(
+    def _register_instrument(  # pylint: disable=too-many-positional-arguments
         self,
         name: str,
         type_: type,

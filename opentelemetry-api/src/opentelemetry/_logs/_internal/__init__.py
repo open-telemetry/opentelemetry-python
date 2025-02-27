@@ -57,7 +57,7 @@ class LogRecord(ABC):
     pertinent to the event being logged.
     """
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         timestamp: Optional[int] = None,
         observed_timestamp: Optional[int] = None,

@@ -197,7 +197,7 @@ class SamplingResult:
 
 class Sampler(abc.ABC):
     @abc.abstractmethod
-    def should_sample(
+    def should_sample(  # pylint: disable=too-many-positional-arguments
         self,
         parent_context: Optional["Context"],
         trace_id: int,
@@ -220,7 +220,7 @@ class StaticSampler(Sampler):
     def __init__(self, decision: "Decision") -> None:
         self._decision = decision
 
-    def should_sample(
+    def should_sample(  # pylint: disable=too-many-positional-arguments
         self,
         parent_context: Optional["Context"],
         trace_id: int,
@@ -281,7 +281,7 @@ class TraceIdRatioBased(Sampler):
     def bound(self) -> int:
         return self._bound
 
-    def should_sample(
+    def should_sample(  # pylint: disable=too-many-positional-arguments
         self,
         parent_context: Optional["Context"],
         trace_id: int,
@@ -322,7 +322,7 @@ class ParentBased(Sampler):
             not sampled.
     """
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         root: Sampler,
         remote_parent_sampled: Sampler = ALWAYS_ON,
@@ -336,7 +336,7 @@ class ParentBased(Sampler):
         self._local_parent_sampled = local_parent_sampled
         self._local_parent_not_sampled = local_parent_not_sampled
 
-    def should_sample(
+    def should_sample(  # pylint: disable=too-many-positional-arguments
         self,
         parent_context: Optional["Context"],
         trace_id: int,

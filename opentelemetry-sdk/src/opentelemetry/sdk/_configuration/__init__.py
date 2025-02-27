@@ -359,7 +359,7 @@ def _import_id_generator(id_generator_name: str) -> IdGenerator:
     raise RuntimeError(f"{id_generator_name} is not an IdGenerator")
 
 
-def _initialize_components(
+def _initialize_components(  # pylint: disable=too-many-positional-arguments
     auto_instrumentation_version: Optional[str] = None,
     trace_exporter_names: Optional[List[str]] = None,
     metric_exporter_names: Optional[List[str]] = None,

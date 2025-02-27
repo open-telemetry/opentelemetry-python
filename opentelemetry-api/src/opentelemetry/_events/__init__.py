@@ -31,7 +31,7 @@ _logger = getLogger(__name__)
 
 
 class Event(LogRecord):
-    def __init__(
+    def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         name: str,
         timestamp: Optional[int] = None,

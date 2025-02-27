@@ -103,7 +103,7 @@ class View:
 
     _default_aggregation = DefaultAggregation()
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         instrument_type: Optional[Type[Instrument]] = None,
         instrument_name: Optional[str] = None,

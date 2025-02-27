@@ -134,7 +134,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         with self.assertLogs(level=WARNING):
             pmr.shutdown()
 
-    def _create_periodic_reader(
+    def _create_periodic_reader(  # pylint: disable=too-many-positional-arguments
         self, metrics, exporter, collect_wait=0, interval=60000, timeout=30000
     ):
         pmr = PeriodicExportingMetricReader(

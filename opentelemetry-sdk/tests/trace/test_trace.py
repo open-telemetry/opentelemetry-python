@@ -1910,7 +1910,7 @@ class TestSpanLimits(unittest.TestCase):
         self.assertEqual(2, span.events[0].dropped_attributes)
         self.assertEqual(2, span.links[0].dropped_attributes)
 
-    def _test_span_limits(
+    def _test_span_limits(  # pylint: disable=too-many-positional-arguments
         self,
         tracer,
         max_attrs,

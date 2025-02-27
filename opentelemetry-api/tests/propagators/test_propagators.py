@@ -134,7 +134,7 @@ class TestTraceContextTextMapPropagator(TestCase):
 
         return context
 
-    def traceparent_helper_generator(
+    def traceparent_helper_generator(  # pylint: disable=too-many-positional-arguments
         self,
         version=0x00,
         trace_id=0x00000000000000000000000000000001,
@@ -146,7 +146,7 @@ class TestTraceContextTextMapPropagator(TestCase):
         carrier = {"traceparent": traceparent}
         return self.traceparent_helper(carrier)
 
-    def valid_traceparent_helper(
+    def valid_traceparent_helper(  # pylint: disable=too-many-positional-arguments
         self,
         version=0x00,
         trace_id=0x00000000000000000000000000000001,
@@ -188,7 +188,7 @@ class TestTraceContextTextMapPropagator(TestCase):
 
         return context, span, span_context
 
-    def invalid_traceparent_helper(
+    def invalid_traceparent_helper(  # pylint: disable=too-many-positional-arguments
         self,
         version=0x00,
         trace_id=0x00000000000000000000000000000001,

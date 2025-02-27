@@ -47,7 +47,7 @@ _ERROR_MESSAGE = (
 
 
 class _Synchronous:
-    def __init__(
+    def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         name: str,
         instrumentation_scope: InstrumentationScope,
@@ -79,7 +79,7 @@ class _Synchronous:
 
 
 class _Asynchronous:
-    def __init__(
+    def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         name: str,
         instrumentation_scope: InstrumentationScope,
@@ -222,7 +222,7 @@ class ObservableUpDownCounter(_Asynchronous, APIObservableUpDownCounter):
 
 
 class Histogram(_Synchronous, APIHistogram):
-    def __init__(
+    def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         name: str,
         instrumentation_scope: InstrumentationScope,
