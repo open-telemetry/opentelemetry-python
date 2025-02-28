@@ -152,7 +152,7 @@ nitpick_ignore = [
     ),
     (
         "py:class",
-        "_contextvars:Token",
+        "contextvars:Token",
     ),
 ]
 
