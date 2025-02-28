@@ -23,7 +23,7 @@ from os import environ, linesep
 from sys import stdout
 from threading import Event, Lock, RLock, Thread
 from time import time_ns
-from typing import IO, Callable, Dict, Iterable, Optional
+from typing import IO, Callable, Iterable, Optional
 
 from typing_extensions import final
 
