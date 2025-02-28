@@ -28,8 +28,8 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
-  "opentelemetry-api == 1.31.0.dev",
-  "opentelemetry-semantic-conventions == 0.52b0.dev",
+  "opentelemetry-api == 1.30.0",
+  "opentelemetry-semantic-conventions == 0.51b0",
   "typing-extensions >= 3.7.4",
 ]
 

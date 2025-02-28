@@ -23,6 +23,7 @@ from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
 )
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (  # noqa: F401
+    BaseAuthHeaderSetter,
     OTLPExporterMixin,
     _get_credentials,
     environ_to_compression,
@@ -93,6 +94,7 @@ class OTLPSpanExporter(
         ] = None,
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
+        auth_header_setter: BaseAuthHeaderSetter = None,
     ):
         if insecure is None:
             insecure = environ.get(OTEL_EXPORTER_OTLP_TRACES_INSECURE)
@@ -131,6 +133,7 @@ class OTLPSpanExporter(
                 or environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS),
                 "timeout": timeout or environ_timeout,
                 "compression": compression,
+                "auth_header_setter": auth_header_setter,
             }
         )
 

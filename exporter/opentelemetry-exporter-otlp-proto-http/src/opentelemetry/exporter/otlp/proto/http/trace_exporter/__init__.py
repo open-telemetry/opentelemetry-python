@@ -28,6 +28,9 @@ from opentelemetry.exporter.otlp.proto.common._internal import (
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
 )
+from opentelemetry.exporter.otlp.proto.grpc.exporter import (
+    BaseAuthHeaderSetter,
+)
 from opentelemetry.exporter.otlp.proto.http import (
     _OTLP_HTTP_HEADERS,
     Compression,
@@ -73,7 +76,9 @@ class OTLPSpanExporter(SpanExporter):
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
         session: Optional[requests.Session] = None,
+        auth_header_setter: BaseAuthHeaderSetter = None,
     ):
+        self._auth_header_setter = auth_header_setter
         self._endpoint = endpoint or environ.get(
             OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
             _append_trace_path(
@@ -121,6 +126,8 @@ class OTLPSpanExporter(SpanExporter):
         self._shutdown = False
 
     def _export(self, serialized_data: bytes):
+        if self._auth_header_setter:
+            self._session.headers["Authorization"] = self._auth_header_setter.get_auth_header()[1]
         data = serialized_data
         if self._compression == Compression.Gzip:
             gzip_data = BytesIO()

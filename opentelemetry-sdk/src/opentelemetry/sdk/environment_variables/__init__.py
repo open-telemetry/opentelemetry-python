@@ -12,6 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+OTEL_AUTH_HEADER_EXTENSION = "OTEL_AUTH_HEADER_EXTENSION"
+"""
+.. envvar:: OTEL_AUTH_HEADER_EXTENSION
+
+The :envvar:`OTEL_AUTH_HEADER_EXTENSION` environment variable sets the auth header extension to be
+used by the Trace, Log and Metric exporter classes.
+"""
+
 OTEL_SDK_DISABLED = "OTEL_SDK_DISABLED"
 """
 .. envvar:: OTEL_SDK_DISABLED

@@ -40,6 +40,9 @@ from opentelemetry.exporter.otlp.proto.common._internal.metrics_encoder import (
 from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
     encode_metrics,
 )
+from opentelemetry.exporter.otlp.proto.grpc.exporter import (
+    BaseAuthHeaderSetter,
+)
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (  # noqa: F401
     ExportMetricsServiceRequest,
@@ -111,7 +114,9 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         session: Optional[requests.Session] = None,
         preferred_temporality: Dict[type, AggregationTemporality] = None,
         preferred_aggregation: Dict[type, Aggregation] = None,
+        auth_header_setter: BaseAuthHeaderSetter = None,
     ):
+        self._auth_header_setter = auth_header_setter
         self._endpoint = endpoint or environ.get(
             OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
             _append_metrics_path(
@@ -164,6 +169,8 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         )
 
     def _export(self, serialized_data: bytes):
+        if self._auth_header_setter:
+            self._session.headers["Authorization"] = self._auth_header_setter.get_auth_header()[1]
         data = serialized_data
         if self._compression == Compression.Gzip:
             gzip_data = BytesIO()

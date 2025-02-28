@@ -20,12 +20,18 @@ from os import environ
 from time import sleep
 from typing import Dict, Optional, Sequence
 
+import google.auth
+import grpc
 import requests
+from google.auth.transport.grpc import AuthMetadataPlugin
 
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _create_exp_backoff_generator,
 )
 from opentelemetry.exporter.otlp.proto.common._log_encoder import encode_logs
+from opentelemetry.exporter.otlp.proto.grpc.exporter import (
+    BaseAuthHeaderSetter,
+)
 from opentelemetry.exporter.otlp.proto.http import (
     _OTLP_HTTP_HEADERS,
     Compression,
@@ -75,7 +81,9 @@ class OTLPLogExporter(LogExporter):
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
         session: Optional[requests.Session] = None,
+        auth_header_setter: BaseAuthHeaderSetter = None,
     ):
+        self._auth_header_setter = auth_header_setter
         self._endpoint = endpoint or environ.get(
             OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
             _append_logs_path(
@@ -124,6 +132,8 @@ class OTLPLogExporter(LogExporter):
         self._shutdown = False
 
     def _export(self, serialized_data: bytes):
+        if self._auth_header_setter:
+            self._session.headers["Authorization"] = self._auth_header_setter.get_auth_header()[1]
         data = serialized_data
         if self._compression == Compression.Gzip:
             gzip_data = BytesIO()
