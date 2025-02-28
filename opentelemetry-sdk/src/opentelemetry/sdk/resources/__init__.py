@@ -297,7 +297,7 @@ class Resource:
             f"{dumps(self._attributes.copy(), sort_keys=True)}|{self._schema_url}"  # type: ignore
         )
 
-    def to_json(self, indent: int = 4) -> str:
+    def to_json(self, indent: Optional[int] = 4) -> str:
         attributes: MutableMapping[str, AttributeValue] = dict(
             self._attributes
         )
