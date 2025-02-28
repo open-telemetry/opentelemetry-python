@@ -1,0 +1,1 @@
+Customizer base class for OTLP exporters.

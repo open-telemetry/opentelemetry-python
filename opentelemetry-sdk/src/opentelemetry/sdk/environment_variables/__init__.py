@@ -11,6 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+OTEL_EXPORTER_CUSTOMIZER = "OTEL_EXPORTER_CUSTOMIZER"
+"""
+.. envvar:: OTEL_EXPORTER_CUSTOMIZER
+
+The :envvar:`OTEL_EXPORTER_CUSTOMIZER` environment sets a customizer for all exporters (traces, logs, and metrics).
+"""
+# TODO: Add environment variables for customizers specific to traces / logs / metrics.
 
 OTEL_SDK_DISABLED = "OTEL_SDK_DISABLED"
 """
