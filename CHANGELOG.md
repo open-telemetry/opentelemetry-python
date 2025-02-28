@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4444](https://github.com/open-telemetry/opentelemetry-python/pull/4444))
 - Updated `tracecontext-integration-test` gitref to `d782773b2cf2fa4afd6a80a93b289d8a74ca894d`
   ([#4448](https://github.com/open-telemetry/opentelemetry-python/pull/4448))
+- Make `trace_api.use_span()` record `BaseException` as well as `Exception`
+  ([#4406](https://github.com/open-telemetry/opentelemetry-python/pull/4406))
 
 ## Version 1.30.0/0.51b0 (2025-02-03)
 
@@ -39,8 +41,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4361](https://github.com/open-telemetry/opentelemetry-python/pull/4361))
 - semantic-conventions: Bump to 1.30.0
   ([#4337](https://github.com/open-telemetry/opentelemetry-python/pull/4397))
-- Make `trace_api.use_span()` record `BaseException` as well as `Exception`
-  ([#4406](https://github.com/open-telemetry/opentelemetry-python/pull/4406))
 
 ## Version 1.29.0/0.50b0 (2024-12-11)
 
