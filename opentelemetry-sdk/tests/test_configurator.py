@@ -698,7 +698,9 @@ class TestLoggingInit(TestCase):
     def test_logging_init_disable_default(self, logging_mock, tracing_mock):
         _initialize_components(auto_instrumentation_version="auto-version")
         self.assertEqual(tracing_mock.call_count, 1)
-        logging_mock.assert_called_once_with(mock.ANY, mock.ANY, False)
+        logging_mock.assert_called_once_with(
+            mock.ANY, mock.ANY, False, "%(levelname)s:%(name)s:%(message)s"
+        )
 
     @patch.dict(
         environ,
@@ -712,7 +714,9 @@ class TestLoggingInit(TestCase):
     def test_logging_init_enable_env(self, logging_mock, tracing_mock):
         with self.assertLogs(level=WARNING):
             _initialize_components(auto_instrumentation_version="auto-version")
-        logging_mock.assert_called_once_with(mock.ANY, mock.ANY, True)
+        logging_mock.assert_called_once_with(
+            mock.ANY, mock.ANY, True, "%(levelname)s:%(name)s:%(message)s"
+        )
         self.assertEqual(tracing_mock.call_count, 1)
 
     @patch.dict(
@@ -837,6 +841,7 @@ class TestLoggingInit(TestCase):
             "TEST_LOG_EXPORTERS_DICT",
             "TEST_RESOURCE",
             True,
+            "%(levelname)s:%(name)s:%(message)s",
         )
 
 

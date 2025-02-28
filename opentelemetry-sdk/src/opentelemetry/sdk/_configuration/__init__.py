@@ -237,6 +237,7 @@ def _init_logging(
     exporters: Dict[str, Type[LogExporter]],
     resource: Resource = None,
     setup_logging_handler: bool = True,
+    log_format: str = None,
 ):
     provider = LoggerProvider(resource=resource)
     set_logger_provider(provider)
@@ -251,10 +252,25 @@ def _init_logging(
     set_event_logger_provider(event_logger_provider)
 
     if setup_logging_handler:
-        handler = LoggingHandler(
-            level=logging.NOTSET, logger_provider=provider
+        logger = logging.getLogger()
+        logger.addHandler(
+            LoggingHandler(level=logging.NOTSET, logger_provider=provider)
         )
-        logging.getLogger().addHandler(handler)
+
+        # The `log_format` variable typically is read from OTEL_PYTHON_LOG_FORMAT and defaults to
+        # logging.DEFAULT_FORMAT.
+        if log_format:
+            # Users of auto-instrumentation have noted that if they enable Python logging instrumentation,
+            # their console logs disappear. This is because adding the LoggingHandler above means calls to
+            # `logging.basicConfig()` will be no-ops, which will in turn cause logs to no longer be printed to the
+            # console. To provide a better experience, here we explicitly set a stream (aka console) handler if
+            # log_format is set. This causes logs to continue to be printed to the console if they request
+            # OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED, but users can control both the console log format string
+            # via OTEL_PYTHON_LOG_FORMAT, and turn console logging off altogether by making OTEL_PYTHON_LOG_FORMAT
+            # empty.
+            stream_handler = logging.StreamHandler()
+            stream_handler.setFormatter(logging.Formatter(log_format))
+            logger.addHandler(stream_handler)
 
 
 def _import_exporters(
@@ -413,7 +429,8 @@ def _initialize_components(
             .lower()
             == "true"
         )
-    _init_logging(log_exporters, resource, setup_logging_handler)
+    log_format = os.getenv("OTEL_PYTHON_LOG_FORMAT", logging.BASIC_FORMAT)
+    _init_logging(log_exporters, resource, setup_logging_handler, log_format)
 
 
 class _BaseConfigurator(ABC):
