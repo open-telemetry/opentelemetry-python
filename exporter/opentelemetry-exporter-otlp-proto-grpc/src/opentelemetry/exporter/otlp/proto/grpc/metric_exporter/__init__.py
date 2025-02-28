@@ -100,8 +100,10 @@ class OTLPMetricExporter(
         ] = None,
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
-        preferred_temporality: Dict[type, AggregationTemporality] = None,
-        preferred_aggregation: Dict[type, Aggregation] = None,
+        preferred_temporality: Optional[
+            Dict[type, AggregationTemporality]
+        ] = None,
+        preferred_aggregation: Optional[Dict[type, Aggregation]] = None,
         max_export_batch_size: Optional[int] = None,
     ):
         if insecure is None:

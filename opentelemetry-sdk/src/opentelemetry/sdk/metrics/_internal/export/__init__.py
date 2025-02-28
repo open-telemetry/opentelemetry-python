@@ -91,9 +91,11 @@ class MetricExporter(ABC):
 
     def __init__(
         self,
-        preferred_temporality: Dict[type, AggregationTemporality] = None,
-        preferred_aggregation: Dict[
-            type, "opentelemetry.sdk.metrics.view.Aggregation"
+        preferred_temporality: Optional[
+            Dict[type, AggregationTemporality]
+        ] = None,
+        preferred_aggregation: Optional[
+            Dict[type, "opentelemetry.sdk.metrics.view.Aggregation"]
         ] = None,
     ) -> None:
         self._preferred_temporality = preferred_temporality
@@ -144,9 +146,11 @@ class ConsoleMetricExporter(MetricExporter):
         formatter: Callable[
             ["opentelemetry.sdk.metrics.export.MetricsData"], str
         ] = lambda metrics_data: metrics_data.to_json() + linesep,
-        preferred_temporality: Dict[type, AggregationTemporality] = None,
-        preferred_aggregation: Dict[
-            type, "opentelemetry.sdk.metrics.view.Aggregation"
+        preferred_temporality: Optional[
+            Dict[type, AggregationTemporality]
+        ] = None,
+        preferred_aggregation: Optional[
+            Dict[type, "opentelemetry.sdk.metrics.view.Aggregation"]
         ] = None,
     ):
         super().__init__(
@@ -209,9 +213,11 @@ class MetricReader(ABC):
 
     def __init__(
         self,
-        preferred_temporality: Dict[type, AggregationTemporality] = None,
-        preferred_aggregation: Dict[
-            type, "opentelemetry.sdk.metrics.view.Aggregation"
+        preferred_temporality: Optional[
+            Dict[type, AggregationTemporality]
+        ] = None,
+        preferred_aggregation: Optional[
+            Dict[type, "opentelemetry.sdk.metrics.view.Aggregation"]
         ] = None,
     ) -> None:
         self._collect: Callable[
@@ -387,9 +393,11 @@ class InMemoryMetricReader(MetricReader):
 
     def __init__(
         self,
-        preferred_temporality: Dict[type, AggregationTemporality] = None,
-        preferred_aggregation: Dict[
-            type, "opentelemetry.sdk.metrics.view.Aggregation"
+        preferred_temporality: Optional[
+            Dict[type, AggregationTemporality]
+        ] = None,
+        preferred_aggregation: Optional[
+            Dict[type, "opentelemetry.sdk.metrics.view.Aggregation"]
         ] = None,
     ) -> None:
         super().__init__(

@@ -602,11 +602,13 @@ class Logger(APILogger):
 class LoggerProvider(APILoggerProvider):
     def __init__(
         self,
-        resource: Resource = None,
+        resource: Optional[Resource] = None,
         shutdown_on_exit: bool = True,
-        multi_log_record_processor: Union[
-            SynchronousMultiLogRecordProcessor,
-            ConcurrentMultiLogRecordProcessor,
+        multi_log_record_processor: Optional[
+            Union[
+                SynchronousMultiLogRecordProcessor,
+                ConcurrentMultiLogRecordProcessor,
+            ]
         ] = None,
     ):
         if resource is None:

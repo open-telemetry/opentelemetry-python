@@ -15,7 +15,7 @@
 # pylint: disable=protected-access
 
 from time import time_ns
-from typing import Callable, Sequence, Type
+from typing import Callable, Optional, Sequence, Type
 from unittest import TestCase
 from unittest.mock import MagicMock, Mock, patch
 
@@ -50,7 +50,7 @@ from opentelemetry.sdk.metrics.view import (
 
 
 def generalized_reservoir_factory(
-    size: int = 1, boundaries: Sequence[float] = None
+    size: int = 1, boundaries: Optional[Sequence[float]] = None
 ) -> Callable[[Type[_Aggregation]], ExemplarReservoirBuilder]:
     def factory(
         aggregation_type: Type[_Aggregation],

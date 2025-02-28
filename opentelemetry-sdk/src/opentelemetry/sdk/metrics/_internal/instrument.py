@@ -159,7 +159,7 @@ class Counter(_Synchronous, APICounter):
     def add(
         self,
         amount: Union[int, float],
-        attributes: Dict[str, str] = None,
+        attributes: Optional[Dict[str, str]] = None,
         context: Optional[Context] = None,
     ):
         if amount < 0:
@@ -188,7 +188,7 @@ class UpDownCounter(_Synchronous, APIUpDownCounter):
     def add(
         self,
         amount: Union[int, float],
-        attributes: Dict[str, str] = None,
+        attributes: Optional[Dict[str, str]] = None,
         context: Optional[Context] = None,
     ):
         time_unix_nano = time_ns()
@@ -250,7 +250,7 @@ class Histogram(_Synchronous, APIHistogram):
     def record(
         self,
         amount: Union[int, float],
-        attributes: Dict[str, str] = None,
+        attributes: Optional[Dict[str, str]] = None,
         context: Optional[Context] = None,
     ):
         if amount < 0:
@@ -280,7 +280,7 @@ class Gauge(_Synchronous, APIGauge):
     def set(
         self,
         amount: Union[int, float],
-        attributes: Dict[str, str] = None,
+        attributes: Optional[Dict[str, str]] = None,
         context: Optional[Context] = None,
     ):
         time_unix_nano = time_ns()

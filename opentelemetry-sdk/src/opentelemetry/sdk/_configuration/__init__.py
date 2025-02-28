@@ -191,9 +191,9 @@ def _get_exporter_names(
 
 def _init_tracing(
     exporters: Dict[str, Type[SpanExporter]],
-    id_generator: IdGenerator = None,
-    sampler: Sampler = None,
-    resource: Resource = None,
+    id_generator: Optional[IdGenerator] = None,
+    sampler: Optional[Sampler] = None,
+    resource: Optional[Resource] = None,
 ):
     provider = TracerProvider(
         id_generator=id_generator,
@@ -213,7 +213,7 @@ def _init_metrics(
     exporters_or_readers: Dict[
         str, Union[Type[MetricExporter], Type[MetricReader]]
     ],
-    resource: Resource = None,
+    resource: Optional[Resource] = None,
 ):
     metric_readers = []
 
@@ -235,7 +235,7 @@ def _init_metrics(
 
 def _init_logging(
     exporters: Dict[str, Type[LogExporter]],
-    resource: Resource = None,
+    resource: Optional[Resource] = None,
     setup_logging_handler: bool = True,
 ):
     provider = LoggerProvider(resource=resource)
@@ -366,7 +366,7 @@ def _initialize_components(
     log_exporter_names: Optional[List[str]] = None,
     sampler: Optional[Sampler] = None,
     resource_attributes: Optional[Attributes] = None,
-    id_generator: IdGenerator = None,
+    id_generator: Optional[IdGenerator] = None,
     setup_logging_handler: Optional[bool] = None,
 ):
     if trace_exporter_names is None:

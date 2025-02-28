@@ -376,7 +376,7 @@ class BatchSpanProcessor(SpanProcessor):
         while self.queue:
             self._export_batch()
 
-    def force_flush(self, timeout_millis: int = None) -> bool:
+    def force_flush(self, timeout_millis: Optional[int] = None) -> bool:
         if timeout_millis is None:
             timeout_millis = self.export_timeout_millis
 

@@ -109,7 +109,9 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
         session: Optional[requests.Session] = None,
-        preferred_temporality: Optional[Dict[type, AggregationTemporality]] = None,
+        preferred_temporality: Optional[
+            Dict[type, AggregationTemporality]
+        ] = None,
         preferred_aggregation: Optional[Dict[type, Aggregation]] = None,
     ):
         self._endpoint = endpoint or environ.get(

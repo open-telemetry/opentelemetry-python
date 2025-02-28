@@ -171,10 +171,10 @@ class BatchLogRecordProcessor(LogRecordProcessor):
     def __init__(
         self,
         exporter: LogExporter,
-        schedule_delay_millis: float = None,
-        max_export_batch_size: int = None,
-        export_timeout_millis: float = None,
-        max_queue_size: int = None,
+        schedule_delay_millis: Optional[float] = None,
+        max_export_batch_size: Optional[int] = None,
+        export_timeout_millis: Optional[float] = None,
+        max_queue_size: Optional[int] = None,
     ):
         if max_queue_size is None:
             max_queue_size = BatchLogRecordProcessor._default_max_queue_size()

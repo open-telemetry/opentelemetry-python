@@ -219,7 +219,7 @@ class SpanShim(Span):
         self._otel_span.update_name(operation_name)
         return self
 
-    def finish(self, finish_time: float = None):
+    def finish(self, finish_time: Optional[float] = None):
         """Ends the OpenTelemetry span wrapped by this :class:`SpanShim`.
 
         If *finish_time* is provided, the time value is converted to the
@@ -255,7 +255,7 @@ class SpanShim(Span):
         return self
 
     def log_kv(
-        self, key_values: Attributes, timestamp: float = None
+        self, key_values: Attributes, timestamp: Optional[float] = None
     ) -> "SpanShim":
         """Logs an event for the wrapped OpenTelemetry span.
 
@@ -560,10 +560,10 @@ class TracerShim(Tracer):
     def start_active_span(
         self,
         operation_name: str,
-        child_of: Union[SpanShim, SpanContextShim] = None,
-        references: list = None,
+        child_of: Optional[Union[SpanShim, SpanContextShim]] = None,
+        references: Optional[list] = None,
         tags: Attributes = None,
-        start_time: float = None,
+        start_time: Optional[float] = None,
         ignore_active_span: bool = False,
         finish_on_close: bool = True,
     ) -> "ScopeShim":
@@ -613,11 +613,11 @@ class TracerShim(Tracer):
 
     def start_span(
         self,
-        operation_name: str = None,
-        child_of: Union[SpanShim, SpanContextShim] = None,
-        references: list = None,
+        operation_name: Optional[str] = None,
+        child_of: Optional[Union[SpanShim, SpanContextShim]] = None,
+        references: Optional[list] = None,
         tags: Attributes = None,
-        start_time: float = None,
+        start_time: Optional[float] = None,
         ignore_active_span: bool = False,
     ) -> SpanShim:
         """Implements the ``start_span()`` method from the base class.

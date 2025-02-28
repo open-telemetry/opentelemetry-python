@@ -136,8 +136,10 @@ class DummyMetricReader(MetricReader):
     def __init__(
         self,
         exporter: MetricExporter,
-        preferred_temporality: Dict[type, AggregationTemporality] = None,
-        preferred_aggregation: Dict[type, Aggregation] = None,
+        preferred_temporality: Optional[
+            Dict[type, AggregationTemporality]
+        ] = None,
+        preferred_aggregation: Optional[Dict[type, Aggregation]] = None,
         export_interval_millis: Optional[float] = None,
         export_timeout_millis: Optional[float] = None,
     ) -> None:
@@ -253,10 +255,10 @@ class CustomRatioSampler(TraceIdRatioBased):
         parent_context: Optional["Context"],
         trace_id: int,
         name: str,
-        kind: SpanKind = None,
+        kind: Optional[SpanKind] = None,
         attributes: Attributes = None,
-        links: Sequence[Link] = None,
-        trace_state: TraceState = None,
+        links: Optional[Sequence[Link]] = None,
+        trace_state: Optional[TraceState] = None,
     ) -> "SamplingResult":
         return SamplingResult(
             Decision.RECORD_AND_SAMPLE,

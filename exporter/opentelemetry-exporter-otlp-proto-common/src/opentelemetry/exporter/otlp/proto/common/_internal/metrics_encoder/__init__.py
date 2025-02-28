@@ -13,7 +13,7 @@
 # limitations under the License.
 import logging
 from os import environ
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _encode_attributes,
@@ -66,8 +66,10 @@ _logger = logging.getLogger(__name__)
 class OTLPMetricExporterMixin:
     def _common_configuration(
         self,
-        preferred_temporality: Dict[type, AggregationTemporality] = None,
-        preferred_aggregation: Dict[type, Aggregation] = None,
+        preferred_temporality: Optional[
+            Dict[type, AggregationTemporality]
+        ] = None,
+        preferred_aggregation: Optional[Dict[type, Aggregation]] = None,
     ) -> None:
         MetricExporter.__init__(
             self,
