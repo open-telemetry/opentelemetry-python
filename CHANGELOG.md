@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Add type annotations to context's attach & detach
+  ([#4346](https://github.com/open-telemetry/opentelemetry-python/pull/4346))
 - prometheus-exporter: fix labels out of place for data points with different
   attribute sets
   ([#4413](https://github.com/open-telemetry/opentelemetry-python/pull/4413))
