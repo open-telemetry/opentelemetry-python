@@ -43,7 +43,7 @@ def _generate_metric(
     )
 
 
-def _generate_sum(
+def _generate_sum(  # pylint: disable=too-many-positional-arguments
     name,
     value,
     attributes=None,

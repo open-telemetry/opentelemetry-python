@@ -438,7 +438,7 @@ class SpanContext(
         trace_state: Tracing-system-specific info to propagate.
     """
 
-    def __new__(
+    def __new__(  # pylint: disable=too-many-positional-arguments
         cls,
         trace_id: int,
         span_id: int,

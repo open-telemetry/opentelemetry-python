@@ -163,7 +163,7 @@ class _DropAggregation(_Aggregation):
 
 
 class _SumAggregation(_Aggregation[Sum]):
-    def __init__(
+    def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         attributes: Attributes,
         instrument_is_monotonic: bool,
@@ -465,7 +465,7 @@ _DEFAULT_EXPLICIT_BUCKET_HISTOGRAM_AGGREGATION_BOUNDARIES: Sequence[float] = (
 
 
 class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
-    def __init__(
+    def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         attributes: Attributes,
         instrument_aggregation_temporality: AggregationTemporality,
@@ -625,7 +625,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
     # giant exponential bucket histograms.
     _max_max_size = 16384
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         attributes: Attributes,
         reservoir_builder: ExemplarReservoirBuilder,
@@ -1129,7 +1129,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         positive.downscale(change)
         negative.downscale(change)
 
-    def _merge(
+    def _merge(  # pylint: disable=too-many-positional-arguments
         self,
         previous_buckets: Buckets,
         current_buckets: Buckets,

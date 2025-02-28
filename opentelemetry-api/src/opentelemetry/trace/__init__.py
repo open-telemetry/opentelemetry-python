@@ -283,7 +283,7 @@ class Tracer(ABC):
     """
 
     @abstractmethod
-    def start_span(
+    def start_span(  # pylint: disable=too-many-positional-arguments
         self,
         name: str,
         context: Optional[Context] = None,
@@ -338,7 +338,7 @@ class Tracer(ABC):
 
     @_agnosticcontextmanager
     @abstractmethod
-    def start_as_current_span(
+    def start_as_current_span(  # pylint: disable=too-many-positional-arguments
         self,
         name: str,
         context: Optional[Context] = None,
@@ -458,7 +458,7 @@ class NoOpTracer(Tracer):
     All operations are no-op.
     """
 
-    def start_span(
+    def start_span(  # pylint: disable=too-many-positional-arguments
         self,
         name: str,
         context: Optional[Context] = None,
@@ -469,11 +469,10 @@ class NoOpTracer(Tracer):
         record_exception: bool = True,
         set_status_on_exception: bool = True,
     ) -> "Span":
-        # pylint: disable=unused-argument,no-self-use
         return INVALID_SPAN
 
     @_agnosticcontextmanager
-    def start_as_current_span(
+    def start_as_current_span(  # pylint: disable=too-many-positional-arguments
         self,
         name: str,
         context: Optional[Context] = None,
@@ -485,7 +484,6 @@ class NoOpTracer(Tracer):
         set_status_on_exception: bool = True,
         end_on_exit: bool = True,
     ) -> Iterator["Span"]:
-        # pylint: disable=unused-argument,no-self-use
         yield INVALID_SPAN
 
 

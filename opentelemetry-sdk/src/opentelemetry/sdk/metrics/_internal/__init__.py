@@ -409,7 +409,7 @@ class MeterProvider(APIMeterProvider):
     _all_metric_readers_lock = Lock()
     _all_metric_readers = weakref.WeakSet()
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         metric_readers: Sequence[
             "opentelemetry.sdk.metrics.export.MetricReader"

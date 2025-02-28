@@ -168,7 +168,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
     _flush_request: Optional[_FlushRequest]
     _log_records: List[Optional[LogData]]
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         exporter: LogExporter,
         schedule_delay_millis: float = None,

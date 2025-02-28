@@ -557,7 +557,7 @@ class TracerShim(Tracer):
 
         return self._otel_tracer
 
-    def start_active_span(
+    def start_active_span(  # pylint: disable=too-many-positional-arguments
         self,
         operation_name: str,
         child_of: Union[SpanShim, SpanContextShim] = None,
@@ -611,7 +611,7 @@ class TracerShim(Tracer):
         )
         return self._scope_manager.activate(span, finish_on_close)
 
-    def start_span(
+    def start_span(  # pylint: disable=too-many-positional-arguments
         self,
         operation_name: str = None,
         child_of: Union[SpanShim, SpanContextShim] = None,
