@@ -874,6 +874,19 @@ class TestOTLPMetricExporter(TestCase):
         finally:
             export_thread.join()
 
+    def test_export_over_closed_grpc_channel(self):
+        add_MetricsServiceServicer_to_server(
+            MetricsServiceServicerSUCCESS(), self.server
+        )
+        self.exporter.export(self.metrics["sum_int"])
+        self.exporter.shutdown()
+        data = self.exporter._translate_data(self.metrics["sum_int"])
+        with self.assertRaises(ValueError) as err:
+            self.exporter._client.Export(request=data)
+        self.assertEqual(
+            str(err.exception),
+            "Cannot invoke RPC on closed channel!"
+        )
     def test_aggregation_temporality(self):
         # pylint: disable=protected-access
 
