@@ -153,7 +153,7 @@ class InstrumentationScope:
     def attributes(self) -> Attributes:
         return self._attributes
 
-    def to_json(self, indent=4) -> str:
+    def to_json(self, indent: Optional[int] = 4) -> str:
         return dumps(
             {
                 "name": self._name,
