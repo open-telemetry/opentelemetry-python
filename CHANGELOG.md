@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add type annotations to context's attach & detach
   ([#4346](https://github.com/open-telemetry/opentelemetry-python/pull/4346))
+- prometheus-exporter: fix labels out of place for data points with different
+  attribute sets
+  ([#4413](https://github.com/open-telemetry/opentelemetry-python/pull/4413))
+- Type indent parameter in to_json
+  ([#4402](https://github.com/open-telemetry/opentelemetry-python/pull/4402))
 - Tolerates exceptions when loading resource detectors via `OTEL_EXPERIMENTAL_RESOURCE_DETECTORS`
   ([#4373](https://github.com/open-telemetry/opentelemetry-python/pull/4373))
 - opentelemetry-sdk: fix OTLP exporting of Histograms with explicit buckets advisory
