@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
 
 import collections
 import logging
@@ -21,7 +22,6 @@ import typing
 from enum import Enum
 from os import environ, linesep
 from time import time_ns
-from typing import Optional
 
 from opentelemetry.context import (
     _SUPPRESS_INSTRUMENTATION_KEY,
@@ -155,10 +155,10 @@ class BatchSpanProcessor(SpanProcessor):
     def __init__(
         self,
         span_exporter: SpanExporter,
-        max_queue_size: int = None,
-        schedule_delay_millis: float = None,
-        max_export_batch_size: int = None,
-        export_timeout_millis: float = None,
+        max_queue_size: int | None = None,
+        schedule_delay_millis: float | None = None,
+        max_export_batch_size: int | None = None,
+        export_timeout_millis: float | None = None,
     ):
         if max_queue_size is None:
             max_queue_size = BatchSpanProcessor._default_max_queue_size()
@@ -204,7 +204,7 @@ class BatchSpanProcessor(SpanProcessor):
         self._pid = os.getpid()
 
     def on_start(
-        self, span: Span, parent_context: typing.Optional[Context] = None
+        self, span: Span, parent_context: Context | None = None
     ) -> None:
         pass
 
@@ -376,7 +376,7 @@ class BatchSpanProcessor(SpanProcessor):
         while self.queue:
             self._export_batch()
 
-    def force_flush(self, timeout_millis: int = None) -> bool:
+    def force_flush(self, timeout_millis: int | None = None) -> bool:
         if timeout_millis is None:
             timeout_millis = self.export_timeout_millis
 
@@ -497,7 +497,7 @@ class ConsoleSpanExporter(SpanExporter):
 
     def __init__(
         self,
-        service_name: Optional[str] = None,
+        service_name: str | None = None,
         out: typing.IO = sys.stdout,
         formatter: typing.Callable[
             [ReadableSpan], str

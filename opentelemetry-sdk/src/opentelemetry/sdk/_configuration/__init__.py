@@ -17,11 +17,13 @@
 OpenTelemetry SDK Configurator for Easy Instrumentation with Distros
 """
 
+from __future__ import annotations
+
 import logging
 import os
 from abc import ABC, abstractmethod
 from os import environ
-from typing import Callable, Dict, List, Optional, Sequence, Tuple, Type, Union
+from typing import Callable, Sequence, Type, Union
 
 from typing_extensions import Literal
 
@@ -91,8 +93,8 @@ _logger = logging.getLogger(__name__)
 
 
 def _import_config_components(
-    selected_components: List[str], entry_point_name: str
-) -> Sequence[Tuple[str, object]]:
+    selected_components: list[str], entry_point_name: str
+) -> Sequence[tuple[str, object]]:
     component_implementations = []
 
     for selected_component in selected_components:
@@ -123,7 +125,7 @@ def _import_config_components(
     return component_implementations
 
 
-def _get_sampler() -> Optional[str]:
+def _get_sampler() -> str | None:
     return environ.get(OTEL_TRACES_SAMPLER, None)
 
 
@@ -190,10 +192,10 @@ def _get_exporter_names(
 
 
 def _init_tracing(
-    exporters: Dict[str, Type[SpanExporter]],
-    id_generator: IdGenerator = None,
-    sampler: Sampler = None,
-    resource: Resource = None,
+    exporters: dict[str, Type[SpanExporter]],
+    id_generator: IdGenerator | None = None,
+    sampler: Sampler | None = None,
+    resource: Resource | None = None,
 ):
     provider = TracerProvider(
         id_generator=id_generator,
@@ -210,10 +212,10 @@ def _init_tracing(
 
 
 def _init_metrics(
-    exporters_or_readers: Dict[
+    exporters_or_readers: dict[
         str, Union[Type[MetricExporter], Type[MetricReader]]
     ],
-    resource: Resource = None,
+    resource: Resource | None = None,
 ):
     metric_readers = []
 
@@ -234,8 +236,8 @@ def _init_metrics(
 
 
 def _init_logging(
-    exporters: Dict[str, Type[LogExporter]],
-    resource: Resource = None,
+    exporters: dict[str, Type[LogExporter]],
+    resource: Resource | None = None,
     setup_logging_handler: bool = True,
 ):
     provider = LoggerProvider(resource=resource)
@@ -261,10 +263,10 @@ def _import_exporters(
     trace_exporter_names: Sequence[str],
     metric_exporter_names: Sequence[str],
     log_exporter_names: Sequence[str],
-) -> Tuple[
-    Dict[str, Type[SpanExporter]],
-    Dict[str, Union[Type[MetricExporter], Type[MetricReader]]],
-    Dict[str, Type[LogExporter]],
+) -> tuple[
+    dict[str, Type[SpanExporter]],
+    dict[str, Union[Type[MetricExporter], Type[MetricReader]]],
+    dict[str, Type[LogExporter]],
 ]:
     trace_exporters = {}
     metric_exporters = {}
@@ -315,7 +317,7 @@ def _import_sampler_factory(sampler_name: str) -> Callable[[str], Sampler]:
     return sampler_impl
 
 
-def _import_sampler(sampler_name: str) -> Optional[Sampler]:
+def _import_sampler(sampler_name: str) -> Sampler | None:
     if not sampler_name:
         return None
     try:
@@ -360,14 +362,14 @@ def _import_id_generator(id_generator_name: str) -> IdGenerator:
 
 
 def _initialize_components(
-    auto_instrumentation_version: Optional[str] = None,
-    trace_exporter_names: Optional[List[str]] = None,
-    metric_exporter_names: Optional[List[str]] = None,
-    log_exporter_names: Optional[List[str]] = None,
-    sampler: Optional[Sampler] = None,
-    resource_attributes: Optional[Attributes] = None,
-    id_generator: IdGenerator = None,
-    setup_logging_handler: Optional[bool] = None,
+    auto_instrumentation_version: str | None = None,
+    trace_exporter_names: list[str] | None = None,
+    metric_exporter_names: list[str] | None = None,
+    log_exporter_names: list[str] | None = None,
+    sampler: Sampler | None = None,
+    resource_attributes: Attributes | None = None,
+    id_generator: IdGenerator | None = None,
+    setup_logging_handler: bool | None = None,
 ):
     if trace_exporter_names is None:
         trace_exporter_names = []
