@@ -150,6 +150,10 @@ nitpick_ignore = [
         "py:class",
         "opentelemetry.sdk.metrics._internal.aggregation._Aggregation",
     ),
+    (
+        "py:class",
+        "_contextvars:Token",
+    ),
 ]
 
 # Add any paths that contain templates here, relative to this directory.
