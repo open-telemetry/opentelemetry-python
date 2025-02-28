@@ -42,13 +42,15 @@ members = [
   "opentelemetry-sdk",
   "opentelemetry-semantic-conventions",
   "opentelemetry-proto",
-  "exporter/opentelemetry-exporter-otlp-proto-grpc",
-  "exporter/opentelemetry-exporter-otlp-proto-http",
-  "exporter/opentelemetry-exporter-otlp-proto-common",
-  "exporter/opentelemetry-exporter-zipkin-json",
-  "exporter/opentelemetry-exporter-prometheus",
+  "exporter/*",
   "propagator/*",
   "tests/opentelemetry-test-utils",
+]
+
+exclude = [
+  "exporter/opentelemetry-exporter-opencensus",
+  "exporter/opentelemetry-exporter-zipkin",
+  "exporter/opentelemetry-exporter-zipkin-proto-http",
 ]
 
 [tool.pytest.ini_options]

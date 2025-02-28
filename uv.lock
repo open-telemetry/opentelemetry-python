@@ -10,6 +10,7 @@ resolution-markers = [
 [manifest]
 members = [
     "opentelemetry-api",
+    "opentelemetry-exporter-otlp",
     "opentelemetry-exporter-otlp-proto-common",
     "opentelemetry-exporter-otlp-proto-grpc",
     "opentelemetry-exporter-otlp-proto-http",
@@ -271,6 +272,20 @@ dependencies = [
 requires-dist = [
     { name = "deprecated", specifier = ">=1.2.6" },
     { name = "importlib-metadata", specifier = ">=6.0,<8.7.0" },
+]
+
+[[package]]
+name = "opentelemetry-exporter-otlp"
+source = { editable = "exporter/opentelemetry-exporter-otlp" }
+dependencies = [
+    { name = "opentelemetry-exporter-otlp-proto-grpc" },
+    { name = "opentelemetry-exporter-otlp-proto-http" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "opentelemetry-exporter-otlp-proto-grpc", editable = "exporter/opentelemetry-exporter-otlp-proto-grpc" },
+    { name = "opentelemetry-exporter-otlp-proto-http", editable = "exporter/opentelemetry-exporter-otlp-proto-http" },
 ]
 
 [[package]]
