@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4402](https://github.com/open-telemetry/opentelemetry-python/pull/4402))
 - Tolerates exceptions when loading resource detectors via `OTEL_EXPERIMENTAL_RESOURCE_DETECTORS`
   ([#4373](https://github.com/open-telemetry/opentelemetry-python/pull/4373))
+- Disconnect gRPC client stub when shutting down `OTLPSpanExporter`
+  ([#4370](https://github.com/open-telemetry/opentelemetry-python/pull/4370))
 - opentelemetry-sdk: fix OTLP exporting of Histograms with explicit buckets advisory
   ([#4434](https://github.com/open-telemetry/opentelemetry-python/pull/4434))
 - opentelemetry-exporter-otlp-proto-grpc: better dependency version range for Python 3.13
