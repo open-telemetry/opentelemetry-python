@@ -13,10 +13,11 @@
 # limitations under the License.
 # type: ignore
 # pylint: skip-file
+from __future__ import annotations
 
 from logging import WARNING, getLogger
 from os import environ
-from typing import Dict, Iterable, Optional, Sequence
+from typing import Iterable, Optional, Sequence
 from unittest import TestCase, mock
 from unittest.mock import Mock, patch
 
@@ -136,12 +137,11 @@ class DummyMetricReader(MetricReader):
     def __init__(
         self,
         exporter: MetricExporter,
-        preferred_temporality: Optional[
-            Dict[type, AggregationTemporality]
-        ] = None,
-        preferred_aggregation: Optional[Dict[type, Aggregation]] = None,
-        export_interval_millis: Optional[float] = None,
-        export_timeout_millis: Optional[float] = None,
+        preferred_temporality: dict[type, AggregationTemporality]
+        | None = None,
+        preferred_aggregation: dict[type, Aggregation] | None = None,
+        export_interval_millis: float | None = None,
+        export_timeout_millis: float | None = None,
     ) -> None:
         super().__init__(
             preferred_temporality=preferred_temporality,
@@ -252,13 +252,13 @@ class CustomRatioSampler(TraceIdRatioBased):
 
     def should_sample(
         self,
-        parent_context: Optional["Context"],
+        parent_context: "Context" | None,
         trace_id: int,
         name: str,
-        kind: Optional[SpanKind] = None,
+        kind: SpanKind | None = None,
         attributes: Attributes = None,
-        links: Optional[Sequence[Link]] = None,
-        trace_state: Optional[TraceState] = None,
+        links: Sequence[Link] | None = None,
+        trace_state: TraceState | None = None,
     ) -> "SamplingResult":
         return SamplingResult(
             Decision.RECORD_AND_SAMPLE,

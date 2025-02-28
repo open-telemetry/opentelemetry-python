@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
 
 import math
 import os
@@ -91,12 +92,12 @@ class MetricExporter(ABC):
 
     def __init__(
         self,
-        preferred_temporality: Optional[
-            Dict[type, AggregationTemporality]
-        ] = None,
-        preferred_aggregation: Optional[
-            Dict[type, "opentelemetry.sdk.metrics.view.Aggregation"]
-        ] = None,
+        preferred_temporality: dict[type, AggregationTemporality]
+        | None = None,
+        preferred_aggregation: dict[
+            type, "opentelemetry.sdk.metrics.view.Aggregation"
+        ]
+        | None = None,
     ) -> None:
         self._preferred_temporality = preferred_temporality
         self._preferred_aggregation = preferred_aggregation
@@ -146,12 +147,12 @@ class ConsoleMetricExporter(MetricExporter):
         formatter: Callable[
             ["opentelemetry.sdk.metrics.export.MetricsData"], str
         ] = lambda metrics_data: metrics_data.to_json() + linesep,
-        preferred_temporality: Optional[
-            Dict[type, AggregationTemporality]
-        ] = None,
-        preferred_aggregation: Optional[
-            Dict[type, "opentelemetry.sdk.metrics.view.Aggregation"]
-        ] = None,
+        preferred_temporality: dict[type, AggregationTemporality]
+        | None = None,
+        preferred_aggregation: dict[
+            type, "opentelemetry.sdk.metrics.view.Aggregation"
+        ]
+        | None = None,
     ):
         super().__init__(
             preferred_temporality=preferred_temporality,
@@ -213,12 +214,12 @@ class MetricReader(ABC):
 
     def __init__(
         self,
-        preferred_temporality: Optional[
-            Dict[type, AggregationTemporality]
-        ] = None,
-        preferred_aggregation: Optional[
-            Dict[type, "opentelemetry.sdk.metrics.view.Aggregation"]
-        ] = None,
+        preferred_temporality: dict[type, AggregationTemporality]
+        | None = None,
+        preferred_aggregation: dict[
+            type, "opentelemetry.sdk.metrics.view.Aggregation"
+        ]
+        | None = None,
     ) -> None:
         self._collect: Callable[
             [
@@ -393,12 +394,12 @@ class InMemoryMetricReader(MetricReader):
 
     def __init__(
         self,
-        preferred_temporality: Optional[
-            Dict[type, AggregationTemporality]
-        ] = None,
-        preferred_aggregation: Optional[
-            Dict[type, "opentelemetry.sdk.metrics.view.Aggregation"]
-        ] = None,
+        preferred_temporality: dict[type, AggregationTemporality]
+        | None = None,
+        preferred_aggregation: dict[
+            type, "opentelemetry.sdk.metrics.view.Aggregation"
+        ]
+        | None = None,
     ) -> None:
         super().__init__(
             preferred_temporality=preferred_temporality,

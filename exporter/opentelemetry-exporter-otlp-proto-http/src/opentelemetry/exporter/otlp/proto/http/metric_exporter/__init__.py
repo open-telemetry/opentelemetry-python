@@ -10,6 +10,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
 
 import gzip
 import logging
@@ -23,7 +24,6 @@ from typing import (  # noqa: F401
     Dict,
     List,
     Mapping,
-    Optional,
     Sequence,
 )
 
@@ -101,18 +101,17 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
 
     def __init__(
         self,
-        endpoint: Optional[str] = None,
-        certificate_file: Optional[str] = None,
-        client_key_file: Optional[str] = None,
-        client_certificate_file: Optional[str] = None,
-        headers: Optional[Dict[str, str]] = None,
-        timeout: Optional[int] = None,
-        compression: Optional[Compression] = None,
-        session: Optional[requests.Session] = None,
-        preferred_temporality: Optional[
-            Dict[type, AggregationTemporality]
-        ] = None,
-        preferred_aggregation: Optional[Dict[type, Aggregation]] = None,
+        endpoint: str | None = None,
+        certificate_file: str | None = None,
+        client_key_file: str | None = None,
+        client_certificate_file: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: int | None = None,
+        compression: Compression | None = None,
+        session: requests.Session | None = None,
+        preferred_temporality: dict[type, AggregationTemporality]
+        | None = None,
+        preferred_aggregation: dict[type, Aggregation] | None = None,
     ):
         self._endpoint = endpoint or environ.get(
             OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,

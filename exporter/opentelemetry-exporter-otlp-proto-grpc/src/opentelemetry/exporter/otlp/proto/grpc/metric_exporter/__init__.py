@@ -11,10 +11,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from dataclasses import replace
 from logging import getLogger
 from os import environ
-from typing import Dict, Iterable, List, Optional, Tuple, Union
+from typing import Iterable, List, Tuple, Union
 from typing import Sequence as TypingSequence
 
 from grpc import ChannelCredentials, Compression
@@ -92,19 +94,17 @@ class OTLPMetricExporter(
 
     def __init__(
         self,
-        endpoint: Optional[str] = None,
-        insecure: Optional[bool] = None,
-        credentials: Optional[ChannelCredentials] = None,
-        headers: Optional[
-            Union[TypingSequence[Tuple[str, str]], Dict[str, str], str]
-        ] = None,
-        timeout: Optional[int] = None,
-        compression: Optional[Compression] = None,
-        preferred_temporality: Optional[
-            Dict[type, AggregationTemporality]
-        ] = None,
-        preferred_aggregation: Optional[Dict[type, Aggregation]] = None,
-        max_export_batch_size: Optional[int] = None,
+        endpoint: str | None = None,
+        insecure: bool | None = None,
+        credentials: ChannelCredentials | None = None,
+        headers: Union[TypingSequence[Tuple[str, str]], dict[str, str], str]
+        | None = None,
+        timeout: int | None = None,
+        compression: Compression | None = None,
+        preferred_temporality: dict[type, AggregationTemporality]
+        | None = None,
+        preferred_aggregation: dict[type, Aggregation] | None = None,
+        max_export_batch_size: int | None = None,
     ):
         if insecure is None:
             insecure = environ.get(OTEL_EXPORTER_OTLP_METRICS_INSECURE)
@@ -148,7 +148,7 @@ class OTLPMetricExporter(
             compression=compression,
         )
 
-        self._max_export_batch_size: Optional[int] = max_export_batch_size
+        self._max_export_batch_size: int | None = max_export_batch_size
 
     def _translate_data(
         self, data: MetricsData

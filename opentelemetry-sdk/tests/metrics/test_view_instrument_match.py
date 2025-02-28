@@ -13,9 +13,10 @@
 # limitations under the License.
 
 # pylint: disable=protected-access
+from __future__ import annotations
 
 from time import time_ns
-from typing import Callable, Optional, Sequence, Type
+from typing import Callable, Sequence, Type
 from unittest import TestCase
 from unittest.mock import MagicMock, Mock, patch
 
@@ -50,7 +51,7 @@ from opentelemetry.sdk.metrics.view import (
 
 
 def generalized_reservoir_factory(
-    size: int = 1, boundaries: Optional[Sequence[float]] = None
+    size: int = 1, boundaries: Sequence[float] | None = None
 ) -> Callable[[Type[_Aggregation]], ExemplarReservoirBuilder]:
     def factory(
         aggregation_type: Type[_Aggregation],

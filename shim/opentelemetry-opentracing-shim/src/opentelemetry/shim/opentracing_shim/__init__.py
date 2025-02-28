@@ -84,6 +84,7 @@ API
 
 # TODO: make pylint use 3p opentracing module for type inference
 # pylint:disable=no-member
+from __future__ import annotations
 
 import logging
 from types import TracebackType
@@ -219,7 +220,7 @@ class SpanShim(Span):
         self._otel_span.update_name(operation_name)
         return self
 
-    def finish(self, finish_time: Optional[float] = None):
+    def finish(self, finish_time: float | None = None):
         """Ends the OpenTelemetry span wrapped by this :class:`SpanShim`.
 
         If *finish_time* is provided, the time value is converted to the
@@ -255,7 +256,7 @@ class SpanShim(Span):
         return self
 
     def log_kv(
-        self, key_values: Attributes, timestamp: Optional[float] = None
+        self, key_values: Attributes, timestamp: float | None = None
     ) -> "SpanShim":
         """Logs an event for the wrapped OpenTelemetry span.
 
@@ -560,10 +561,10 @@ class TracerShim(Tracer):
     def start_active_span(
         self,
         operation_name: str,
-        child_of: Optional[Union[SpanShim, SpanContextShim]] = None,
-        references: Optional[list] = None,
+        child_of: SpanShim | SpanContextShim | None = None,
+        references: list | None = None,
         tags: Attributes = None,
-        start_time: Optional[float] = None,
+        start_time: float | None = None,
         ignore_active_span: bool = False,
         finish_on_close: bool = True,
     ) -> "ScopeShim":
