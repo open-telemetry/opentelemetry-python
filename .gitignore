@@ -56,8 +56,6 @@ htmlcov
 # Sphinx
 _build/
 
-# mypy
-.mypy_cache/
 target
 
 # Django example
