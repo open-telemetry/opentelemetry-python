@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Add type annotations to context's attach & detach
+  ([#4346](https://github.com/open-telemetry/opentelemetry-python/pull/4346))
 - Fix OTLP encoders missing instrumentation scope schema url and attributes
   ([#4359](https://github.com/open-telemetry/opentelemetry-python/pull/4359))  
 - prometheus-exporter: fix labels out of place for data points with different
