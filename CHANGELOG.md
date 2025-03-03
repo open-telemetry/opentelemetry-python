@@ -30,6 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4448](https://github.com/open-telemetry/opentelemetry-python/pull/4448))
 - Make `trace_api.use_span()` record `BaseException` as well as `Exception`
   ([#4406](https://github.com/open-telemetry/opentelemetry-python/pull/4406))
+- Fix env var error message for TraceLimits/SpanLimits
+  ([#4458](https://github.com/open-telemetry/opentelemetry-python/pull/4458))
 
 ## Version 1.30.0/0.51b0 (2025-02-03)
 
