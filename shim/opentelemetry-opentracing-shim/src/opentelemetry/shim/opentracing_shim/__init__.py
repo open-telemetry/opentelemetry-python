@@ -88,7 +88,7 @@ from __future__ import annotations
 
 import logging
 from types import TracebackType
-from typing import Optional, Type, TypeVar, Union
+from typing import Type, TypeVar
 
 from deprecated import deprecated
 from opentracing import (
@@ -307,7 +307,7 @@ class SpanShim(Span):
             key, value, context=self._context._baggage
         )
 
-    def get_baggage_item(self, key: str) -> Optional[object]:
+    def get_baggage_item(self, key: str) -> object | None:
         """Retrieves value of the baggage item with the given key.
 
         Args:
@@ -425,9 +425,9 @@ class ScopeShim(Scope):
 
     def _end_span_scope(
         self,
-        exc_type: Optional[Type[BaseException]],
-        exc_val: Optional[BaseException],
-        exc_tb: Optional[TracebackType],
+        exc_type: Type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
     ) -> None:
         detach(self._token)
         if self._span_cm is not None:
