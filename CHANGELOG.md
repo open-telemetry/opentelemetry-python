@@ -7,8 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Add type annotations to context's attach & detach
+  ([#4346](https://github.com/open-telemetry/opentelemetry-python/pull/4346))
+- Fix OTLP encoders missing instrumentation scope schema url and attributes
+  ([#4359](https://github.com/open-telemetry/opentelemetry-python/pull/4359))  
+- prometheus-exporter: fix labels out of place for data points with different
+  attribute sets
+  ([#4413](https://github.com/open-telemetry/opentelemetry-python/pull/4413))
+- Type indent parameter in to_json
+  ([#4402](https://github.com/open-telemetry/opentelemetry-python/pull/4402))
 - Tolerates exceptions when loading resource detectors via `OTEL_EXPERIMENTAL_RESOURCE_DETECTORS`
   ([#4373](https://github.com/open-telemetry/opentelemetry-python/pull/4373))
+- Disconnect gRPC client stub when shutting down `OTLPSpanExporter`
+  ([#4370](https://github.com/open-telemetry/opentelemetry-python/pull/4370))
 - opentelemetry-sdk: fix OTLP exporting of Histograms with explicit buckets advisory
   ([#4434](https://github.com/open-telemetry/opentelemetry-python/pull/4434))
 - opentelemetry-exporter-otlp-proto-grpc: better dependency version range for Python 3.13
@@ -17,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4444](https://github.com/open-telemetry/opentelemetry-python/pull/4444))
 - Updated `tracecontext-integration-test` gitref to `d782773b2cf2fa4afd6a80a93b289d8a74ca894d`
   ([#4448](https://github.com/open-telemetry/opentelemetry-python/pull/4448))
+- Make `trace_api.use_span()` record `BaseException` as well as `Exception`
+  ([#4406](https://github.com/open-telemetry/opentelemetry-python/pull/4406))
+- Fix env var error message for TraceLimits/SpanLimits
+  ([#4458](https://github.com/open-telemetry/opentelemetry-python/pull/4458))
 - Fix memory leak in Log & Trace exporter
   ([#4449](https://github.com/open-telemetry/opentelemetry-python/pull/4449))
 

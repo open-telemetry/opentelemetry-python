@@ -134,7 +134,7 @@ class LogLimits:
         if value == cls.UNSET:
             return None
 
-        err_msg = "{0} must be a non-negative integer but got {}"
+        err_msg = "{} must be a non-negative integer but got {}"
 
         # if no value is provided for the limit, try to load it from env
         if value is None:
@@ -217,7 +217,7 @@ class LogRecord(APILogRecord):
             return NotImplemented
         return self.__dict__ == other.__dict__
 
-    def to_json(self, indent=4) -> str:
+    def to_json(self, indent: Optional[int] = 4) -> str:
         return json.dumps(
             {
                 "body": self.body,

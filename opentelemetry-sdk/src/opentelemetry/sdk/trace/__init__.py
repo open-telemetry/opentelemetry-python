@@ -483,7 +483,7 @@ class ReadableSpan:
     def instrumentation_scope(self) -> Optional[InstrumentationScope]:
         return self._instrumentation_scope
 
-    def to_json(self, indent: int = 4):
+    def to_json(self, indent: Optional[int] = 4):
         parent_id = None
         if self.parent is not None:
             parent_id = f"0x{trace_api.format_span_id(self.parent.span_id)}"
@@ -692,7 +692,7 @@ class SpanLimits:
         if value == cls.UNSET:
             return None
 
-        err_msg = "{0} must be a non-negative integer but got {}"
+        err_msg = "{} must be a non-negative integer but got {}"
 
         # if no value is provided for the limit, try to load it from env
         if value is None:
