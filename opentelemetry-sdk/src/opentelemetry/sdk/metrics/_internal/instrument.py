@@ -13,10 +13,11 @@
 # limitations under the License.
 
 # pylint: disable=too-many-ancestors, unused-import
+from __future__ import annotations
 
 from logging import getLogger
 from time import time_ns
-from typing import Dict, Generator, Iterable, List, Optional, Sequence, Union
+from typing import Generator, Iterable, List, Sequence, Union
 
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics
@@ -84,7 +85,7 @@ class _Asynchronous:
         name: str,
         instrumentation_scope: InstrumentationScope,
         measurement_consumer: "opentelemetry.sdk.metrics.MeasurementConsumer",
-        callbacks: Optional[Iterable[CallbackT]] = None,
+        callbacks: Iterable[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
     ):
@@ -159,8 +160,8 @@ class Counter(_Synchronous, APICounter):
     def add(
         self,
         amount: Union[int, float],
-        attributes: Dict[str, str] = None,
-        context: Optional[Context] = None,
+        attributes: dict[str, str] | None = None,
+        context: Context | None = None,
     ):
         if amount < 0:
             _logger.warning(
@@ -188,8 +189,8 @@ class UpDownCounter(_Synchronous, APIUpDownCounter):
     def add(
         self,
         amount: Union[int, float],
-        attributes: Dict[str, str] = None,
-        context: Optional[Context] = None,
+        attributes: dict[str, str] | None = None,
+        context: Context | None = None,
     ):
         time_unix_nano = time_ns()
         self._measurement_consumer.consume_measurement(
@@ -229,7 +230,7 @@ class Histogram(_Synchronous, APIHistogram):
         measurement_consumer: "opentelemetry.sdk.metrics.MeasurementConsumer",
         unit: str = "",
         description: str = "",
-        explicit_bucket_boundaries_advisory: Optional[Sequence[float]] = None,
+        explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
     ):
         super().__init__(
             name,
@@ -250,8 +251,8 @@ class Histogram(_Synchronous, APIHistogram):
     def record(
         self,
         amount: Union[int, float],
-        attributes: Dict[str, str] = None,
-        context: Optional[Context] = None,
+        attributes: dict[str, str] | None = None,
+        context: Context | None = None,
     ):
         if amount < 0:
             _logger.warning(
@@ -280,8 +281,8 @@ class Gauge(_Synchronous, APIGauge):
     def set(
         self,
         amount: Union[int, float],
-        attributes: Dict[str, str] = None,
-        context: Optional[Context] = None,
+        attributes: dict[str, str] | None = None,
+        context: Context | None = None,
     ):
         time_unix_nano = time_ns()
         self._measurement_consumer.consume_measurement(

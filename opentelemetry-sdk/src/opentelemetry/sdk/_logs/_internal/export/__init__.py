@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
 
 import abc
 import collections
@@ -165,16 +166,16 @@ class BatchLogRecordProcessor(LogRecordProcessor):
     """
 
     _queue: Deque[LogData]
-    _flush_request: Optional[_FlushRequest]
-    _log_records: List[Optional[LogData]]
+    _flush_request: _FlushRequest | None
+    _log_records: List[LogData | None]
 
     def __init__(
         self,
         exporter: LogExporter,
-        schedule_delay_millis: float = None,
-        max_export_batch_size: int = None,
-        export_timeout_millis: float = None,
-        max_queue_size: int = None,
+        schedule_delay_millis: float | None = None,
+        max_export_batch_size: int | None = None,
+        export_timeout_millis: float | None = None,
+        max_queue_size: int | None = None,
     ):
         if max_queue_size is None:
             max_queue_size = BatchLogRecordProcessor._default_max_queue_size()
