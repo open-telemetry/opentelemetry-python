@@ -1367,10 +1367,6 @@ class ExplicitBucketHistogramAggregation(Aggregation):
         boundaries: Optional[Sequence[float]] = None,
         record_min_max: bool = True,
     ) -> None:
-        if boundaries is None:
-            boundaries = (
-                _DEFAULT_EXPLICIT_BUCKET_HISTOGRAM_AGGREGATION_BOUNDARIES
-            )
         self._boundaries = boundaries
         self._record_min_max = record_min_max
 
@@ -1389,6 +1385,12 @@ class ExplicitBucketHistogramAggregation(Aggregation):
         elif isinstance(instrument, Asynchronous):
             instrument_aggregation_temporality = (
                 AggregationTemporality.CUMULATIVE
+            )
+
+        if self._boundaries is None:
+            self._boundaries = (
+                instrument._advisory.explicit_bucket_boundaries
+                or _DEFAULT_EXPLICIT_BUCKET_HISTOGRAM_AGGREGATION_BOUNDARIES
             )
 
         return _ExplicitBucketHistogramAggregation(
