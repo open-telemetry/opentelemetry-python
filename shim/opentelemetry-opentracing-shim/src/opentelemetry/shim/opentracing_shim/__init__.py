@@ -614,11 +614,11 @@ class TracerShim(Tracer):
 
     def start_span(
         self,
-        operation_name: Optional[str] = None,
-        child_of: Optional[Union[SpanShim, SpanContextShim]] = None,
-        references: Optional[list] = None,
+        operation_name: str | None = None,
+        child_of: SpanShim | SpanContextShim | None = None,
+        references: list | None = None,
         tags: Attributes = None,
-        start_time: Optional[float] = None,
+        start_time: float | None = None,
         ignore_active_span: bool = False,
     ) -> SpanShim:
         """Implements the ``start_span()`` method from the base class.
