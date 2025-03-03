@@ -72,12 +72,16 @@ class TestOTLPTraceEncoder(unittest.TestCase):
             base_time + 150 * 10**6,
             base_time + 300 * 10**6,
             base_time + 400 * 10**6,
+            base_time + 500 * 10**6,
+            base_time + 600 * 10**6,
         )
         end_times = (
             start_times[0] + (50 * 10**6),
             start_times[1] + (100 * 10**6),
             start_times[2] + (200 * 10**6),
             start_times[3] + (300 * 10**6),
+            start_times[4] + (400 * 10**6),
+            start_times[5] + (500 * 10**6),
         )
 
         parent_span_context = SDKSpanContext(
@@ -151,7 +155,42 @@ class TestOTLPTraceEncoder(unittest.TestCase):
         span4.start(start_time=start_times[3])
         span4.end(end_time=end_times[3])
 
-        return [span1, span2, span3, span4]
+        span5 = SDKSpan(
+            name="test-span-5",
+            context=other_context,
+            parent=None,
+            resource=SDKResource(
+                attributes={"key_resource": "another_resource"},
+                schema_url="resource_schema_url",
+            ),
+            instrumentation_scope=SDKInstrumentationScope(
+                name="scope_1_name",
+                version="scope_1_version",
+                schema_url="scope_1_schema_url",
+            ),
+        )
+        span5.start(start_time=start_times[4])
+        span5.end(end_time=end_times[4])
+
+        span6 = SDKSpan(
+            name="test-span-6",
+            context=other_context,
+            parent=None,
+            resource=SDKResource(
+                attributes={"key_resource": "another_resource"},
+                schema_url="resource_schema_url",
+            ),
+            instrumentation_scope=SDKInstrumentationScope(
+                name="scope_2_name",
+                version="scope_2_version",
+                schema_url="scope_2_schema_url",
+                attributes={"one": "1", "two": 2},
+            ),
+        )
+        span6.start(start_time=start_times[5])
+        span6.end(end_time=end_times[5])
+
+        return [span1, span2, span3, span4, span5, span6]
 
     def get_exhaustive_test_spans(
         self,
@@ -354,6 +393,86 @@ class TestOTLPTraceEncoder(unittest.TestCase):
                                 ),
                             ],
                         )
+                    ],
+                ),
+                PB2ResourceSpans(
+                    resource=PB2Resource(
+                        attributes=[
+                            PB2KeyValue(
+                                key="key_resource",
+                                value=PB2AnyValue(
+                                    string_value="another_resource"
+                                ),
+                            ),
+                        ],
+                    ),
+                    schema_url="resource_schema_url",
+                    scope_spans=[
+                        PB2ScopeSpans(
+                            scope=PB2InstrumentationScope(
+                                name="scope_1_name", version="scope_1_version"
+                            ),
+                            schema_url="scope_1_schema_url",
+                            spans=[
+                                PB2SPan(
+                                    trace_id=trace_id,
+                                    span_id=_encode_span_id(
+                                        otel_spans[4].context.span_id
+                                    ),
+                                    trace_state=None,
+                                    parent_span_id=None,
+                                    name=otel_spans[4].name,
+                                    kind=span_kind,
+                                    start_time_unix_nano=otel_spans[
+                                        4
+                                    ].start_time,
+                                    end_time_unix_nano=otel_spans[4].end_time,
+                                    attributes=None,
+                                    events=None,
+                                    links=None,
+                                    status={},
+                                    flags=0x100,
+                                ),
+                            ],
+                        ),
+                        PB2ScopeSpans(
+                            scope=PB2InstrumentationScope(
+                                name="scope_2_name",
+                                version="scope_2_version",
+                                attributes=[
+                                    PB2KeyValue(
+                                        key="one",
+                                        value=PB2AnyValue(string_value="1"),
+                                    ),
+                                    PB2KeyValue(
+                                        key="two",
+                                        value=PB2AnyValue(int_value=2),
+                                    ),
+                                ],
+                            ),
+                            schema_url="scope_2_schema_url",
+                            spans=[
+                                PB2SPan(
+                                    trace_id=trace_id,
+                                    span_id=_encode_span_id(
+                                        otel_spans[5].context.span_id
+                                    ),
+                                    trace_state=None,
+                                    parent_span_id=None,
+                                    name=otel_spans[5].name,
+                                    kind=span_kind,
+                                    start_time_unix_nano=otel_spans[
+                                        5
+                                    ].start_time,
+                                    end_time_unix_nano=otel_spans[5].end_time,
+                                    attributes=None,
+                                    events=None,
+                                    links=None,
+                                    status={},
+                                    flags=0x100,
+                                ),
+                            ],
+                        ),
                     ],
                 ),
             ]

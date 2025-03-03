@@ -19,13 +19,13 @@ from typing import Dict, List
 
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _encode_attributes,
+    _encode_instrumentation_scope,
     _encode_span_id,
     _encode_trace_id,
 )
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
     ExportMetricsServiceRequest,
 )
-from opentelemetry.proto.common.v1.common_pb2 import InstrumentationScope
 from opentelemetry.proto.metrics.v1 import metrics_pb2 as pb2
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as PB2Resource,
@@ -222,10 +222,8 @@ def _encode_resource_metrics(resource_metrics, resource_metrics_dict):
         # there is no need to check for existing instrumentation scopes
         # here.
         pb2_scope_metrics = pb2.ScopeMetrics(
-            scope=InstrumentationScope(
-                name=instrumentation_scope.name,
-                version=instrumentation_scope.version,
-            )
+            scope=_encode_instrumentation_scope(instrumentation_scope),
+            schema_url=instrumentation_scope.schema_url,
         )
 
         scope_metrics_dict[instrumentation_scope] = pb2_scope_metrics

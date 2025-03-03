@@ -82,6 +82,9 @@ def _encode_resource_logs(batch: Sequence[LogData]) -> List[ResourceLogs]:
                 ScopeLogs(
                     scope=(_encode_instrumentation_scope(sdk_instrumentation)),
                     log_records=pb2_logs,
+                    schema_url=sdk_instrumentation.schema_url
+                    if sdk_instrumentation
+                    else None,
                 )
             )
         pb2_resource_logs.append(
