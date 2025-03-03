@@ -1,3 +1,58 @@
+[project]
+name = "opentelemetry-python"
+version = "0.0.0" # This is not used.
+requires-python = ">=3.8"
+dependencies = [
+  "opentelemetry-api",
+  "opentelemetry-sdk",
+  "opentelemetry-semantic-conventions",
+  "opentelemetry-proto",
+  "opentelemetry-test-utils",
+  "opentelemetry-exporter-otlp-proto-grpc",
+  "opentelemetry-exporter-otlp-proto-http",
+  "opentelemetry-exporter-otlp-proto-common",
+  "opentelemetry-exporter-zipkin-json",
+  "opentelemetry-exporter-prometheus",
+  "opentelemetry-propagator-jaeger",
+  "opentelemetry-propagator-b3",
+]
+
+# https://docs.astral.sh/uv/reference/settings/
+[tool.uv]
+package = false # https://docs.astral.sh/uv/reference/settings/#package
+required-version = ">=0.6.0"
+
+[tool.uv.sources]
+opentelemetry-api = { workspace = true}
+opentelemetry-sdk = { workspace = true }
+opentelemetry-proto = { workspace = true }
+opentelemetry-semantic-conventions = { workspace = true }
+opentelemetry-test-utils = { workspace = true }
+opentelemetry-exporter-otlp-proto-grpc = { workspace = true }
+opentelemetry-exporter-otlp-proto-http = { workspace = true }
+opentelemetry-exporter-otlp-proto-common = { workspace = true }
+opentelemetry-exporter-zipkin-json = { workspace = true }
+opentelemetry-exporter-prometheus = {workspace = true }
+opentelemetry-propagator-jaeger = { workspace = true }
+opentelemetry-propagator-b3 = { workspace = true }
+
+[tool.uv.workspace]
+members = [
+  "opentelemetry-api",
+  "opentelemetry-sdk",
+  "opentelemetry-semantic-conventions",
+  "opentelemetry-proto",
+  "exporter/*",
+  "propagator/*",
+  "tests/opentelemetry-test-utils",
+]
+
+exclude = [
+  "exporter/opentelemetry-exporter-opencensus",
+  "exporter/opentelemetry-exporter-zipkin",
+  "exporter/opentelemetry-exporter-zipkin-proto-http",
+]
+
 [tool.pytest.ini_options]
 addopts = "-rs -v"
 log_cli = true
