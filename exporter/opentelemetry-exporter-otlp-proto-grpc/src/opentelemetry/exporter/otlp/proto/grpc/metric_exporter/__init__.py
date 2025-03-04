@@ -25,6 +25,7 @@ from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
     encode_metrics,
 )
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (  # noqa: F401
+    BaseAuthHeaderSetter,
     OTLPExporterMixin,
     _get_credentials,
     environ_to_compression,
@@ -103,6 +104,7 @@ class OTLPMetricExporter(
         preferred_temporality: Dict[type, AggregationTemporality] = None,
         preferred_aggregation: Dict[type, Aggregation] = None,
         max_export_batch_size: Optional[int] = None,
+        auth_header_setter: BaseAuthHeaderSetter = None,
     ):
         if insecure is None:
             insecure = environ.get(OTEL_EXPORTER_OTLP_METRICS_INSECURE)
@@ -144,6 +146,7 @@ class OTLPMetricExporter(
             headers=headers or environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS),
             timeout=timeout or environ_timeout,
             compression=compression,
+            auth_header_setter=auth_header_setter,
         )
 
         self._max_export_batch_size: Optional[int] = max_export_batch_size
