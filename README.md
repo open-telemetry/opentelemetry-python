@@ -97,7 +97,7 @@ Meeting notes are available as a public [Google doc](https://docs.google.com/doc
 
 Approvers ([@open-telemetry/python-approvers](https://github.com/orgs/open-telemetry/teams/python-approvers)):
 
-- [Emídio Neto](https://github.com/emdneto), Zenvia
+- [Emídio Neto](https://github.com/emdneto), PicPay
 - [Jeremy Voss](https://github.com/jeremydvoss), Microsoft
 - [Owais Lone](https://github.com/owais), Splunk
 - [Pablo Collins](https://github.com/pmcollins), Splunk
