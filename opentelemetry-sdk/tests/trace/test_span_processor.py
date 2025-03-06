@@ -11,8 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import abc
+import threading
 import time
 import typing
 import unittest
@@ -26,6 +26,10 @@ from pytest import mark
 from opentelemetry import trace as trace_api
 from opentelemetry.context import Context
 from opentelemetry.sdk import trace
+from opentelemetry.sdk.trace.export import (
+    BatchSpanProcessor,
+    ConsoleSpanExporter,
+)
 
 
 def span_event_start_fmt(span_processor_name, span_name):
@@ -314,3 +318,25 @@ class TestConcurrentMultiSpanProcessor(
         for mock_processor in mocks:
             self.assertEqual(1, mock_processor.force_flush.call_count)
         multi_processor.shutdown()
+
+    def test_executor_shutdown(self):
+        span_proc = trace.ConcurrentMultiSpanProcessor()
+        span_proc.add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))
+
+        provider = trace.TracerProvider()
+        provider.add_span_processor(span_proc)
+
+        tracer = provider.get_tracer(__name__)
+        with tracer.start_as_current_span("foo"):
+            pass
+
+        shutdown_thread = threading.Thread(target=span_proc._executor.shutdown)  # pylint: disable=protected-access
+        shutdown_thread.start()
+
+        try:
+            span_proc.shutdown()
+            shutdown_thread.join()
+        except RuntimeError as unexpected_error:
+            self.fail(
+                f"Unexpected error raised during shutdown: {unexpected_error}"
+            )
