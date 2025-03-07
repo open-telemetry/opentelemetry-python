@@ -55,8 +55,8 @@ cd $repo_root/opentelemetry-proto/src
 
 # clean up old generated code
 find opentelemetry/ -regex ".*_pb2.*\.pyi?" -exec rm {} +
-# generate proto code for all protos
 
+# generate proto code for all protos
 all_protos=$(find $PROTO_REPO_DIR/ -iname "*.proto")
 python -m grpc_tools.protoc \
     -I $PROTO_REPO_DIR \
