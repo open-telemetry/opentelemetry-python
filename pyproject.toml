@@ -16,7 +16,6 @@ ignore = [
   "exporter/**",
   "propagator/**",
   "shim/**",
-
 ]
 reportUnnecessaryTypeIgnoreComment = true
 pythonVersion = "3.9"
