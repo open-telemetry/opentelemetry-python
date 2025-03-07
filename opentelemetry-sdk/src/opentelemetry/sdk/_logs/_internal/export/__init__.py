@@ -20,6 +20,7 @@ import logging
 import os
 import sys
 import threading
+import weakref
 from os import environ, linesep
 from time import time_ns
 from typing import IO, Callable, Deque, List, Optional, Sequence
@@ -216,7 +217,8 @@ class BatchLogRecordProcessor(LogRecordProcessor):
         self._log_records = [None] * self._max_export_batch_size
         self._worker_thread.start()
         if hasattr(os, "register_at_fork"):
-            os.register_at_fork(after_in_child=self._at_fork_reinit)  # pylint: disable=protected-access
+            weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
+            os.register_at_fork(after_in_child=lambda: weak_reinit()())  # pylint: disable=unnecessary-lambda
         self._pid = os.getpid()
 
     def _at_fork_reinit(self):
