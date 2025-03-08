@@ -1017,6 +1017,21 @@ class TestOTLPSpanExporter(TestCase):
         finally:
             export_thread.join()
 
+    def test_export_over_closed_grpc_channel(self):
+        # pylint: disable=protected-access
+
+        add_TraceServiceServicer_to_server(
+            TraceServiceServicerSUCCESS(), self.server
+        )
+        self.exporter.export([self.span])
+        self.exporter.shutdown()
+        data = self.exporter._translate_data([self.span])
+        with self.assertRaises(ValueError) as err:
+            self.exporter._client.Export(request=data)
+        self.assertEqual(
+            str(err.exception), "Cannot invoke RPC on closed channel!"
+        )
+
 
 def _create_span_with_status(status: SDKStatus):
     span = _Span(

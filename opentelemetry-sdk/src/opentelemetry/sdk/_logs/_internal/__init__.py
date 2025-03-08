@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
 
 import abc
 import atexit
@@ -23,7 +24,7 @@ import warnings
 from os import environ
 from threading import Lock
 from time import time_ns
-from typing import Any, Callable, Optional, Tuple, Union  # noqa
+from typing import Any, Callable, Tuple, Union  # noqa
 
 from opentelemetry._logs import Logger as APILogger
 from opentelemetry._logs import LoggerProvider as APILoggerProvider
@@ -105,8 +106,8 @@ class LogLimits:
 
     def __init__(
         self,
-        max_attributes: Optional[int] = None,
-        max_attribute_length: Optional[int] = None,
+        max_attributes: int | None = None,
+        max_attribute_length: int | None = None,
     ):
         # attribute count
         global_max_attributes = self._from_env_if_absent(
@@ -129,12 +130,12 @@ class LogLimits:
 
     @classmethod
     def _from_env_if_absent(
-        cls, value: Optional[int], env_var: str, default: Optional[int] = None
-    ) -> Optional[int]:
+        cls, value: int | None, env_var: str, default: int | None = None
+    ) -> int | None:
         if value == cls.UNSET:
             return None
 
-        err_msg = "{0} must be a non-negative integer but got {}"
+        err_msg = "{} must be a non-negative integer but got {}"
 
         # if no value is provided for the limit, try to load it from env
         if value is None:
@@ -172,17 +173,17 @@ class LogRecord(APILogRecord):
 
     def __init__(
         self,
-        timestamp: Optional[int] = None,
-        observed_timestamp: Optional[int] = None,
-        trace_id: Optional[int] = None,
-        span_id: Optional[int] = None,
-        trace_flags: Optional[TraceFlags] = None,
-        severity_text: Optional[str] = None,
-        severity_number: Optional[SeverityNumber] = None,
-        body: Optional[AnyValue] = None,
-        resource: Optional[Resource] = None,
-        attributes: Optional[Attributes] = None,
-        limits: Optional[LogLimits] = _UnsetLogLimits,
+        timestamp: int | None = None,
+        observed_timestamp: int | None = None,
+        trace_id: int | None = None,
+        span_id: int | None = None,
+        trace_flags: TraceFlags | None = None,
+        severity_text: str | None = None,
+        severity_number: SeverityNumber | None = None,
+        body: AnyValue | None = None,
+        resource: Resource | None = None,
+        attributes: Attributes | None = None,
+        limits: LogLimits | None = _UnsetLogLimits,
     ):
         super().__init__(
             **{
@@ -217,7 +218,7 @@ class LogRecord(APILogRecord):
             return NotImplemented
         return self.__dict__ == other.__dict__
 
-    def to_json(self, indent=4) -> str:
+    def to_json(self, indent: int | None = 4) -> str:
         return json.dumps(
             {
                 "body": self.body,
@@ -602,12 +603,11 @@ class Logger(APILogger):
 class LoggerProvider(APILoggerProvider):
     def __init__(
         self,
-        resource: Resource = None,
+        resource: Resource | None = None,
         shutdown_on_exit: bool = True,
-        multi_log_record_processor: Union[
-            SynchronousMultiLogRecordProcessor,
-            ConcurrentMultiLogRecordProcessor,
-        ] = None,
+        multi_log_record_processor: SynchronousMultiLogRecordProcessor
+        | ConcurrentMultiLogRecordProcessor
+        | None = None,
     ):
         if resource is None:
             self._resource = Resource.create({})
@@ -631,9 +631,9 @@ class LoggerProvider(APILoggerProvider):
     def _get_logger_no_cache(
         self,
         name: str,
-        version: Optional[str] = None,
-        schema_url: Optional[str] = None,
-        attributes: Optional[Attributes] = None,
+        version: str | None = None,
+        schema_url: str | None = None,
+        attributes: Attributes | None = None,
     ) -> Logger:
         return Logger(
             self._resource,
@@ -649,8 +649,8 @@ class LoggerProvider(APILoggerProvider):
     def _get_logger_cached(
         self,
         name: str,
-        version: Optional[str] = None,
-        schema_url: Optional[str] = None,
+        version: str | None = None,
+        schema_url: str | None = None,
     ) -> Logger:
         with self._logger_cache_lock:
             key = (name, version, schema_url)
@@ -665,9 +665,9 @@ class LoggerProvider(APILoggerProvider):
     def get_logger(
         self,
         name: str,
-        version: Optional[str] = None,
-        schema_url: Optional[str] = None,
-        attributes: Optional[Attributes] = None,
+        version: str | None = None,
+        schema_url: str | None = None,
+        attributes: Attributes | None = None,
     ) -> Logger:
         if self._disabled:
             return NoOpLogger(
