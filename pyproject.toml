@@ -2,29 +2,6 @@
 addopts = "-rs -v"
 log_cli = true
 
-[tool.pyright]
-typeCheckingMode = "strict"
-include = [
-    "opentelemetry-api/src",
-    "opentelemetry-sdk/src",
-    "opentelemetry-semantic-conventions/src",
-    "opentelemetry-proto/src",
-    "scripts"
-]
-ignore = [
-  "docs/**",
-  "exporter/**",
-  "propagator/**",
-  "shim/**",
-]
-reportUnnecessaryTypeIgnoreComment = true
-pythonVersion = "3.9"
-reportPrivateUsage = false  # Ignore private attributes added by instrumentation packages.
-
-exclude = [
-  "tests/**",
-]
-
 [tool.ruff]
 # https://docs.astral.sh/ruff/configuration/
 target-version = "py38"
@@ -63,3 +40,18 @@ known-third-party = [
   "opencensus",
 ]
 known-first-party = ["opentelemetry", "opentelemetry_example_app"]
+
+[tool.pyright]
+typeCheckingMode = "standard"
+pythonVersion = "3.8"
+reportPrivateUsage = false
+
+include = [
+  "opentelemetry-semantic-conventions",
+  "opentelemetry-api",
+]
+
+# When packages are correct typed add them to the strict list
+strict = [
+  "opentelemetry-semantic-conventions",
+]
