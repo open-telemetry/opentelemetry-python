@@ -1,3 +1,4 @@
+# pylint: disable=redefined-outer-name, invalid-name
 import pytest
 
 from opentelemetry import trace
@@ -17,10 +18,10 @@ def baggage_size(request):
     return request.param
 
 
-def set_baggage_operation(baggage_size=10):
+def set_baggage_operation(size=10):
     with tracer.start_span(name="root span"):
         ctx = get_all()
-        for i in range(baggage_size):
+        for i in range(size):
             ctx = set_baggage(f"foo{i}", f"bar{i}", context=ctx)
     return ctx
 
