@@ -36,6 +36,7 @@ from opentelemetry.environment_variables import (
     OTEL_TRACES_EXPORTER,
 )
 from opentelemetry.metrics import set_meter_provider
+from opentelemetry.sdk._config_customizer import _BaseConfiguratorCustomizer
 from opentelemetry.sdk._events import EventLoggerProvider
 from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
 from opentelemetry.sdk._logs.export import BatchLogRecordProcessor, LogExporter
@@ -196,6 +197,7 @@ def _init_tracing(
     id_generator: IdGenerator | None = None,
     sampler: Sampler | None = None,
     resource: Resource | None = None,
+    customizer: _BaseConfiguratorCustomizer | None = None,
 ):
     provider = TracerProvider(
         id_generator=id_generator,
@@ -205,10 +207,11 @@ def _init_tracing(
     set_tracer_provider(provider)
 
     for _, exporter_class in exporters.items():
-        exporter_args = {}
-        provider.add_span_processor(
-            BatchSpanProcessor(exporter_class(**exporter_args))
-        )
+        if customizer:
+            exporter = customizer.init_span_exporter(exporter_class)
+        else:
+            exporter = exporter_class()
+        provider.add_span_processor(BatchSpanProcessor(exporter))
 
 
 def _init_metrics(
@@ -216,6 +219,7 @@ def _init_metrics(
         str, Union[Type[MetricExporter], Type[MetricReader]]
     ],
     resource: Resource | None = None,
+    customizer: _BaseConfiguratorCustomizer | None = None,
 ):
     metric_readers = []
 
@@ -225,11 +229,13 @@ def _init_metrics(
         if issubclass(exporter_or_reader_class, MetricReader):
             metric_readers.append(exporter_or_reader_class(**exporter_args))
         else:
-            metric_readers.append(
-                PeriodicExportingMetricReader(
-                    exporter_or_reader_class(**exporter_args)
+            if customizer:
+                exporter = customizer.init_metric_exporter(
+                    exporter_or_reader_class
                 )
-            )
+            else:
+                exporter = exporter_or_reader_class()
+            metric_readers.append(PeriodicExportingMetricReader(exporter))
 
     provider = MeterProvider(resource=resource, metric_readers=metric_readers)
     set_meter_provider(provider)
@@ -239,15 +245,17 @@ def _init_logging(
     exporters: dict[str, Type[LogExporter]],
     resource: Resource | None = None,
     setup_logging_handler: bool = True,
+    customizer: _BaseConfiguratorCustomizer | None = None,
 ):
     provider = LoggerProvider(resource=resource)
     set_logger_provider(provider)
 
     for _, exporter_class in exporters.items():
-        exporter_args = {}
-        provider.add_log_record_processor(
-            BatchLogRecordProcessor(exporter_class(**exporter_args))
-        )
+        if customizer:
+            exporter = customizer.init_log_exporter(exporter_class)
+        else:
+            exporter = exporter_class()
+        provider.add_log_record_processor(BatchLogRecordProcessor(exporter))
 
     event_logger_provider = EventLoggerProvider(logger_provider=provider)
     set_event_logger_provider(event_logger_provider)
@@ -370,6 +378,7 @@ def _initialize_components(
     resource_attributes: Attributes | None = None,
     id_generator: IdGenerator | None = None,
     setup_logging_handler: bool | None = None,
+    customizer: _BaseConfiguratorCustomizer | None = None,
 ):
     if trace_exporter_names is None:
         trace_exporter_names = []
@@ -397,15 +406,19 @@ def _initialize_components(
         )
     # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
     # from the env variable else defaults to "unknown_service"
-    resource = Resource.create(resource_attributes)
+    if customizer:
+        resource = customizer.init_resource()
+    else:
+        resource = Resource.create(resource_attributes)
 
     _init_tracing(
         exporters=span_exporters,
         id_generator=id_generator,
         sampler=sampler,
         resource=resource,
+        customizer=customizer,
     )
-    _init_metrics(metric_exporters, resource)
+    _init_metrics(metric_exporters, resource, customizer)
     if setup_logging_handler is None:
         setup_logging_handler = (
             os.getenv(
@@ -415,7 +428,9 @@ def _initialize_components(
             .lower()
             == "true"
         )
-    _init_logging(log_exporters, resource, setup_logging_handler)
+    _init_logging(
+        log_exporters, resource, setup_logging_handler, customizer=customizer
+    )
 
 
 class _BaseConfigurator(ABC):
