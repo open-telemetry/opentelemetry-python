@@ -44,7 +44,6 @@ known-first-party = ["opentelemetry", "opentelemetry_example_app"]
 [tool.pyright]
 typeCheckingMode = "standard"
 pythonVersion = "3.8"
-reportPrivateUsage = false
 
 include = [
   "opentelemetry-semantic-conventions",
