@@ -101,7 +101,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
 
     _MAX_RETRY_TIMEOUT = 64
 
-    # pylint: disable=too-many-positional-arguments
+    # pylint: disable=too-many-arguments
     def __init__(
         self,
         endpoint: str | None = None,
