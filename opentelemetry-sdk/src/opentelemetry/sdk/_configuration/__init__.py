@@ -253,6 +253,37 @@ def _init_logging(
     set_event_logger_provider(event_logger_provider)
 
     if setup_logging_handler:
+        # noinspection PyPep8Naming
+        original_basicConfig = logging.basicConfig
+
+        # noinspection PyPep8Naming
+        def patched_basicConfig(*args, **kwargs):
+            # Get the root logger
+            root = logging.getLogger()
+
+            # Check if the only handler is our OTel handler
+            has_only_otel = len(root.handlers) == 1 and isinstance(
+                root.handlers[0], LoggingHandler
+            )
+
+            if has_only_otel:
+                # Temporarily remove OTel handler
+                otel_handler = root.handlers[0]
+                root.handlers = []
+
+                # Call original basicConfig
+                original_basicConfig(*args, **kwargs)
+
+                # Add OTel handler back
+                root.addHandler(otel_handler)
+            else:
+                # Normal behavior
+                original_basicConfig(*args, **kwargs)
+
+        # Apply the monkey patch
+        logging.basicConfig = patched_basicConfig
+
+        # Add OTel handler
         handler = LoggingHandler(
             level=logging.NOTSET, logger_provider=provider
         )
