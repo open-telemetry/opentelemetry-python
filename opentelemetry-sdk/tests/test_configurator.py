@@ -842,6 +842,32 @@ class TestLoggingInit(TestCase):
             True,
         )
 
+    def test_basicConfig_works_with_otel_handler(self):
+        with ClearLoggingHandlers():
+            # Initialize auto-instrumentation with logging enabled
+            _init_logging(
+                {"otlp": DummyOTLPLogExporter},
+                Resource.create({}),
+                setup_logging_handler=True,
+            )
+
+            # Call basicConfig - this should work despite OTel handler being present
+            logging.basicConfig(level=logging.INFO)
+
+            # Verify a StreamHandler was added
+            root_logger = logging.getLogger()
+            stream_handlers = [
+                h
+                for h in root_logger.handlers
+                if isinstance(h, logging.StreamHandler)
+                and not isinstance(h, LoggingHandler)
+            ]
+            self.assertEqual(
+                len(stream_handlers),
+                1,
+                "basicConfig should add a StreamHandler even when OTel handler exists",
+            )
+
 
 class TestMetricsInit(TestCase):
     def setUp(self):
