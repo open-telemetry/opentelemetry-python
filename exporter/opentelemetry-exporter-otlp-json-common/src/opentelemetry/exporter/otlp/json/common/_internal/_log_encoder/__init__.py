@@ -184,27 +184,29 @@ def _encode_attributes(attributes: Dict[str, Any]) -> List[Dict[str, Any]]:
 def _encode_attribute_value(value: Any) -> Dict[str, Any]:
     """Encodes a single attribute value into OTLP JSON format."""
     if isinstance(value, bool):
-        return {"boolValue": value}
+        return {"value": {"boolValue": value}}
     if isinstance(value, int):
-        return {"intValue": str(value)}
+        return {"value": {"intValue": value}}
     if isinstance(value, float):
-        return {"doubleValue": value}
+        return {"value": {"doubleValue": value}}
     if isinstance(value, str):
-        return {"stringValue": value}
+        return {"value": {"stringValue": value}}
     if isinstance(value, (list, tuple)):
         if not value:
-            return {"arrayValue": {"values": []}}
+            return {"value": {"arrayValue": {"values": []}}}
 
         array_value = {"values": []}
         for element in value:
-            element_value = _encode_attribute_value(element)
+            element_value = _encode_attribute_value(element)["value"]
             array_value["values"].append(element_value)
 
-        return {"arrayValue": array_value}
+        return {"value": {"arrayValue": array_value}}
     if isinstance(value, bytes):
-        return {"bytesValue": base64.b64encode(value).decode("ascii")}
+        return {
+            "value": {"bytesValue": base64.b64encode(value).decode("ascii")}
+        }
     # Convert anything else to string
-    return {"stringValue": str(value)}
+    return {"value": {"stringValue": str(value)}}
 
 
 # pylint: disable=too-many-return-statements
