@@ -447,7 +447,7 @@ class Meter(ABC):
         name: str,
         unit: str = "",
         description: str = "",
-    ) -> Gauge:  # type: ignore[reportReturnType]
+    ) -> Gauge:  # pyright: ignore[reportReturnType]
         """Creates a ``Gauge`` instrument
 
         Args:
