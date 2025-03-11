@@ -15,10 +15,11 @@
 # pylint: skip-file
 from __future__ import annotations
 
-from logging import WARNING, getLogger
+import logging
+from logging import getLogger, WARNING
 from os import environ
 from typing import Iterable, Optional, Sequence
-from unittest import TestCase, mock
+from unittest import mock, TestCase
 from unittest.mock import Mock, patch
 
 from pytest import raises
@@ -58,7 +59,7 @@ from opentelemetry.sdk.metrics.export import (
     MetricReader,
 )
 from opentelemetry.sdk.metrics.view import Aggregation
-from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+from opentelemetry.sdk.resources import Resource, SERVICE_NAME
 from opentelemetry.sdk.trace.export import ConsoleSpanExporter
 from opentelemetry.sdk.trace.id_generator import IdGenerator, RandomIdGenerator
 from opentelemetry.sdk.trace.sampling import (
@@ -1076,3 +1077,51 @@ class TestConfigurator(TestCase):
             "sampler": "TEST_SAMPLER",
         }
         mock_init_comp.assert_called_once_with(**kwargs)
+
+
+class ClearLoggingHandlers:
+    def __init__(self):
+        self.root_logger = getLogger()
+        self.original_handlers = None
+
+    def __enter__(self):
+        # Save original state
+        self.original_handlers = self.root_logger.handlers[:]
+        # Remove all handlers
+        self.root_logger.handlers = []
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        # Restore original state
+        self.root_logger.handlers = []
+        for handler in self.original_handlers:
+            self.root_logger.addHandler(handler)
+
+
+class TestClearLoggingHandlers(TestCase):
+    def test_preserves_handlers(self):
+        root_logger = getLogger()  # Get the root logger
+        initial_handlers = root_logger.handlers[
+            :
+        ]  # Save initial test environment handlers
+
+        # Add our test handler
+        test_handler = logging.StreamHandler()
+        root_logger.addHandler(test_handler)
+        expected_handlers = initial_handlers + [test_handler]
+
+        with ClearLoggingHandlers():
+            # Should have no handlers during the test
+            self.assertEqual(len(root_logger.handlers), 0)
+
+            # Add a temporary handler that should get cleaned up
+            temp_handler = logging.StreamHandler()
+            root_logger.addHandler(temp_handler)
+
+        # After the test, should be back to initial handlers plus our test handler
+        self.assertEqual(len(root_logger.handlers), len(expected_handlers))
+        for h1, h2 in zip(root_logger.handlers, expected_handlers):
+            self.assertIs(h1, h2)
+
+        # Cleanup our test handler
+        root_logger.removeHandler(test_handler)
