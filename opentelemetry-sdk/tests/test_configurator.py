@@ -43,6 +43,7 @@ from opentelemetry.sdk._configuration import (
     _OTelSDKConfigurator,
 )
 from opentelemetry.sdk._logs import LoggingHandler
+from opentelemetry.sdk._logs._internal.export import LogExporter
 from opentelemetry.sdk._logs.export import ConsoleLogExporter
 from opentelemetry.sdk.environment_variables import (
     OTEL_TRACES_SAMPLER,
@@ -201,7 +202,7 @@ class OTLPSpanExporter:
     pass
 
 
-class DummyOTLPLogExporter:
+class DummyOTLPLogExporter(LogExporter):
     def __init__(self, *args, **kwargs):
         self.export_called = False
 
