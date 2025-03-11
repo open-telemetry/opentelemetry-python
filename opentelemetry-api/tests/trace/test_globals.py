@@ -155,10 +155,10 @@ class TestUseTracer(unittest.TestCase):
                 raise TestUseSpanException("test error")
 
         self.assertEqual(
-            test_span.recorded_status.status_code,  # pyright: ignore [reportAttributeAccessIssue]
+            test_span.recorded_status.status_code,  # type: ignore[reportAttributeAccessIssue]
             StatusCode.ERROR,
         )
         self.assertEqual(
-            test_span.recorded_status.description,  # pyright: ignore [reportAttributeAccessIssue]
+            test_span.recorded_status.description,  # type: ignore[reportAttributeAccessIssue]
             "TestUseSpanException: test error",
         )
