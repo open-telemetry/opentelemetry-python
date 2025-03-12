@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- semantic-conventions: Bump to 1.31.0
+  ([#4471](https://github.com/open-telemetry/opentelemetry-python/pull/4471))
 - Add type annotations to context's attach & detach
   ([#4346](https://github.com/open-telemetry/opentelemetry-python/pull/4346))
 - Fix OTLP encoders missing instrumentation scope schema url and attributes
@@ -32,6 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4406](https://github.com/open-telemetry/opentelemetry-python/pull/4406))
 - Fix env var error message for TraceLimits/SpanLimits
   ([#4458](https://github.com/open-telemetry/opentelemetry-python/pull/4458))
+- pylint-ci updated python version to 3.13
+  ([#4450](https://github.com/open-telemetry/opentelemetry-python/pull/4450))
 - Fix intermittent `Connection aborted` error when using otlp/http exporters
   ([#4477](https://github.com/open-telemetry/opentelemetry-python/pull/4477))
 
