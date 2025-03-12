@@ -45,6 +45,8 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TRACES_PROTOCOL,
     OTEL_TRACES_SAMPLER,
     OTEL_TRACES_SAMPLER_ARG,
+    OTEL_LOG_LEVEL,
+    OTEL_PYTHON_LOG_FORMAT,
 )
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import (
@@ -86,6 +88,15 @@ _RANDOM_ID_GENERATOR = "random"
 _DEFAULT_ID_GENERATOR = _RANDOM_ID_GENERATOR
 
 _OTEL_SAMPLER_ENTRY_POINT_GROUP = "opentelemetry_traces_sampler"
+
+_OTEL_LOG_LEVEL_BY_NAME = {
+    "notset": logging.NOTSET,
+    "debug": logging.DEBUG,
+    "info": logging.INFO,
+    "warn": logging.WARNING,
+    "warning": logging.WARNING,
+    "error": logging.ERROR,
+}
 
 _logger = logging.getLogger(__name__)
 
@@ -129,6 +140,10 @@ def _get_sampler() -> Optional[str]:
 
 def _get_id_generator() -> str:
     return environ.get(OTEL_PYTHON_ID_GENERATOR, _DEFAULT_ID_GENERATOR)
+
+def _get_log_level() -> int:
+    #TODO: Refactor to include env var check
+    return _OTEL_LOG_LEVEL_BY_NAME.get(environ.get(OTEL_LOG_LEVEL, "notset").lower().strip(), logging.INFO)
 
 
 def _get_exporter_entry_point(
@@ -251,10 +266,19 @@ def _init_logging(
     set_event_logger_provider(event_logger_provider)
 
     if setup_logging_handler:
+        # Log Handler
+        root_logger = logging.getLogger()
         handler = LoggingHandler(
-            level=logging.NOTSET, logger_provider=provider
+            logger_provider=provider
         )
-        logging.getLogger().addHandler(handler)
+        # Log level
+        if OTEL_LOG_LEVEL in environ:
+            handler.setLevel(_get_log_level())
+        # Log format
+        if OTEL_PYTHON_LOG_FORMAT in environ:
+            log_format = environ.get(OTEL_PYTHON_LOG_FORMAT, logging.BASIC_FORMAT)
+            handler.setFormatter(logging.Formatter(log_format))
+        root_logger.addHandler(handler)  
 
 
 def _import_exporters(
@@ -447,7 +471,8 @@ class _OTelSDKConfigurator(_BaseConfigurator):
 
     Initializes several crucial OTel SDK components (i.e. TracerProvider,
     MeterProvider, Processors...) according to a default implementation. Other
-    Configurators can subclass and slightly alter this initialization.
+    Configurators can subclass and slightly alter
+     this initialization.
 
     NOTE: This class should not be instantiated nor should it become an entry
     point on the `opentelemetry-sdk` package. Instead, distros should subclass
