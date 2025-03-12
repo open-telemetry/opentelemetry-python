@@ -19,7 +19,7 @@ from deprecated import deprecated
 
 SYSTEM_CPU_LOGICAL_NUMBER: Final = "system.cpu.logical_number"
 """
-The logical CPU number [0..n-1].
+Deprecated, use `cpu.logical_number` instead.
 """
 
 SYSTEM_CPU_STATE: Final = "system.cpu.state"

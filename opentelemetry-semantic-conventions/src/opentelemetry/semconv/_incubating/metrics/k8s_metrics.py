@@ -206,7 +206,10 @@ Current number of replica pods managed by this horizontal pod autoscaler, as las
 Instrument: updowncounter
 Unit: {pod}
 Note: This metric aligns with the `currentReplicas` field of the
-[K8s HorizontalPodAutoscalerStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#horizontalpodautoscalerstatus-v2-autoscaling).
+[K8s HorizontalPodAutoscalerStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#horizontalpodautoscalerstatus-v2-autoscaling)
+
+This metric SHOULD, at a minimum, be reported against a
+[`k8s.hpa`](../resource/k8s.md#horizontalpodautoscaler) resource.
 """
 
 
@@ -225,7 +228,10 @@ Desired number of replica pods managed by this horizontal pod autoscaler, as las
 Instrument: updowncounter
 Unit: {pod}
 Note: This metric aligns with the `desiredReplicas` field of the
-[K8s HorizontalPodAutoscalerStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#horizontalpodautoscalerstatus-v2-autoscaling).
+[K8s HorizontalPodAutoscalerStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#horizontalpodautoscalerstatus-v2-autoscaling)
+
+This metric SHOULD, at a minimum, be reported against a
+[`k8s.hpa`](../resource/k8s.md#horizontalpodautoscaler) resource.
 """
 
 
@@ -244,7 +250,10 @@ The upper limit for the number of replica pods to which the autoscaler can scale
 Instrument: updowncounter
 Unit: {pod}
 Note: This metric aligns with the `maxReplicas` field of the
-[K8s HorizontalPodAutoscalerSpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#horizontalpodautoscalerspec-v2-autoscaling).
+[K8s HorizontalPodAutoscalerSpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#horizontalpodautoscalerspec-v2-autoscaling)
+
+This metric SHOULD, at a minimum, be reported against a
+[`k8s.hpa`](../resource/k8s.md#horizontalpodautoscaler) resource.
 """
 
 
@@ -263,7 +272,10 @@ The lower limit for the number of replica pods to which the autoscaler can scale
 Instrument: updowncounter
 Unit: {pod}
 Note: This metric aligns with the `minReplicas` field of the
-[K8s HorizontalPodAutoscalerSpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#horizontalpodautoscalerspec-v2-autoscaling).
+[K8s HorizontalPodAutoscalerSpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#horizontalpodautoscalerspec-v2-autoscaling)
+
+This metric SHOULD, at a minimum, be reported against a
+[`k8s.hpa`](../resource/k8s.md#horizontalpodautoscaler) resource.
 """
 
 
@@ -348,7 +360,7 @@ The max desired number of pods the job should run at any given time
 Instrument: updowncounter
 Unit: {pod}
 Note: This metric aligns with the `parallelism` field of the
-[K8s JobSpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#jobspec-v1-batch.
+[K8s JobSpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#jobspec-v1-batch).
 
 This metric SHOULD, at a minimum, be reported against a
 [`k8s.job`](../resource/k8s.md#job) resource.
@@ -685,21 +697,17 @@ K8S_REPLICATION_CONTROLLER_AVAILABLE_PODS: Final = (
     "k8s.replication_controller.available_pods"
 )
 """
-Total number of available replica pods (ready for at least minReadySeconds) targeted by this replication controller
-Instrument: updowncounter
-Unit: {pod}
-Note: This metric aligns with the `availableReplicas` field of the
-[K8s ReplicationControllerStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#replicationcontrollerstatus-v1-core).
+Deprecated: Replaced by `k8s.replicationcontroller.available_pods`.
 """
 
 
 def create_k8s_replication_controller_available_pods(
     meter: Meter,
 ) -> UpDownCounter:
-    """Total number of available replica pods (ready for at least minReadySeconds) targeted by this replication controller"""
+    """Deprecated, use `k8s.replicationcontroller.available_pods` instead"""
     return meter.create_up_down_counter(
         name=K8S_REPLICATION_CONTROLLER_AVAILABLE_PODS,
-        description="Total number of available replica pods (ready for at least minReadySeconds) targeted by this replication controller",
+        description="Deprecated, use `k8s.replicationcontroller.available_pods` instead.",
         unit="{pod}",
     )
 
@@ -708,20 +716,68 @@ K8S_REPLICATION_CONTROLLER_DESIRED_PODS: Final = (
     "k8s.replication_controller.desired_pods"
 )
 """
-Number of desired replica pods in this replication controller
-Instrument: updowncounter
-Unit: {pod}
-Note: This metric aligns with the `replicas` field of the
-[K8s ReplicationControllerSpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#replicationcontrollerspec-v1-core).
+Deprecated: Replaced by `k8s.replicationcontroller.desired_pods`.
 """
 
 
 def create_k8s_replication_controller_desired_pods(
     meter: Meter,
 ) -> UpDownCounter:
-    """Number of desired replica pods in this replication controller"""
+    """Deprecated, use `k8s.replicationcontroller.desired_pods` instead"""
     return meter.create_up_down_counter(
         name=K8S_REPLICATION_CONTROLLER_DESIRED_PODS,
+        description="Deprecated, use `k8s.replicationcontroller.desired_pods` instead.",
+        unit="{pod}",
+    )
+
+
+K8S_REPLICATIONCONTROLLER_AVAILABLE_PODS: Final = (
+    "k8s.replicationcontroller.available_pods"
+)
+"""
+Total number of available replica pods (ready for at least minReadySeconds) targeted by this replication controller
+Instrument: updowncounter
+Unit: {pod}
+Note: This metric aligns with the `availableReplicas` field of the
+[K8s ReplicationControllerStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#replicationcontrollerstatus-v1-core)
+
+This metric SHOULD, at a minimum, be reported against a
+[`k8s.replicationcontroller`](../resource/k8s.md#replicationcontroller) resource.
+"""
+
+
+def create_k8s_replicationcontroller_available_pods(
+    meter: Meter,
+) -> UpDownCounter:
+    """Total number of available replica pods (ready for at least minReadySeconds) targeted by this replication controller"""
+    return meter.create_up_down_counter(
+        name=K8S_REPLICATIONCONTROLLER_AVAILABLE_PODS,
+        description="Total number of available replica pods (ready for at least minReadySeconds) targeted by this replication controller",
+        unit="{pod}",
+    )
+
+
+K8S_REPLICATIONCONTROLLER_DESIRED_PODS: Final = (
+    "k8s.replicationcontroller.desired_pods"
+)
+"""
+Number of desired replica pods in this replication controller
+Instrument: updowncounter
+Unit: {pod}
+Note: This metric aligns with the `replicas` field of the
+[K8s ReplicationControllerSpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#replicationcontrollerspec-v1-core)
+
+This metric SHOULD, at a minimum, be reported against a
+[`k8s.replicationcontroller`](../resource/k8s.md#replicationcontroller) resource.
+"""
+
+
+def create_k8s_replicationcontroller_desired_pods(
+    meter: Meter,
+) -> UpDownCounter:
+    """Number of desired replica pods in this replication controller"""
+    return meter.create_up_down_counter(
+        name=K8S_REPLICATIONCONTROLLER_DESIRED_PODS,
         description="Number of desired replica pods in this replication controller",
         unit="{pod}",
     )

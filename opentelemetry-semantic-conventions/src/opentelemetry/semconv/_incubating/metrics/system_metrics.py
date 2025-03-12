@@ -40,20 +40,18 @@ CallbackT = Union[
 
 SYSTEM_CPU_FREQUENCY: Final = "system.cpu.frequency"
 """
-Reports the current frequency of the CPU in Hz
-Instrument: gauge
-Unit: {Hz}
+Deprecated: Replaced by `cpu.frequency`.
 """
 
 
 def create_system_cpu_frequency(
     meter: Meter, callbacks: Optional[Sequence[CallbackT]]
 ) -> ObservableGauge:
-    """Reports the current frequency of the CPU in Hz"""
+    """Deprecated. Use `cpu.frequency` instead"""
     return meter.create_observable_gauge(
         name=SYSTEM_CPU_FREQUENCY,
         callbacks=callbacks,
-        description="Reports the current frequency of the CPU in Hz",
+        description="Deprecated. Use `cpu.frequency` instead.",
         unit="{Hz}",
     )
 
@@ -96,37 +94,33 @@ def create_system_cpu_physical_count(meter: Meter) -> UpDownCounter:
 
 SYSTEM_CPU_TIME: Final = "system.cpu.time"
 """
-Seconds each logical CPU spent on each mode
-Instrument: counter
-Unit: s
+Deprecated: Replaced by `cpu.time`.
 """
 
 
 def create_system_cpu_time(meter: Meter) -> Counter:
-    """Seconds each logical CPU spent on each mode"""
+    """Deprecated. Use `cpu.time` instead"""
     return meter.create_counter(
         name=SYSTEM_CPU_TIME,
-        description="Seconds each logical CPU spent on each mode",
+        description="Deprecated. Use `cpu.time` instead.",
         unit="s",
     )
 
 
 SYSTEM_CPU_UTILIZATION: Final = "system.cpu.utilization"
 """
-Difference in system.cpu.time since the last measurement, divided by the elapsed time and number of logical CPUs
-Instrument: gauge
-Unit: 1
+Deprecated: Replaced by `cpu.utilization`.
 """
 
 
 def create_system_cpu_utilization(
     meter: Meter, callbacks: Optional[Sequence[CallbackT]]
 ) -> ObservableGauge:
-    """Difference in system.cpu.time since the last measurement, divided by the elapsed time and number of logical CPUs"""
+    """Deprecated. Use `cpu.utilization` instead"""
     return meter.create_observable_gauge(
         name=SYSTEM_CPU_UTILIZATION,
         callbacks=callbacks,
-        description="Difference in system.cpu.time since the last measurement, divided by the elapsed time and number of logical CPUs",
+        description="Deprecated. Use `cpu.utilization` instead.",
         unit="1",
     )
 
