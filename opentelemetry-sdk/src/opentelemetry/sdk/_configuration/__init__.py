@@ -266,29 +266,18 @@ def _patch_basic_config():
     original_basic_config = logging.basicConfig
 
     def patched_basic_config(*args, **kwargs):
-        # Get the root logger
         root = logging.getLogger()
-
-        # Check if the only handler is our OTel handler
         has_only_otel = len(root.handlers) == 1 and isinstance(
             root.handlers[0], LoggingHandler
         )
-
         if has_only_otel:
-            # Temporarily remove OTel handler
             otel_handler = root.handlers[0]
             root.handlers = []
-
-            # Call original basicConfig
             original_basic_config(*args, **kwargs)
-
-            # Add OTel handler back
             root.addHandler(otel_handler)
         else:
-            # Normal behavior
             original_basic_config(*args, **kwargs)
 
-    # Apply the monkey patch
     logging.basicConfig = patched_basic_config
 
 
