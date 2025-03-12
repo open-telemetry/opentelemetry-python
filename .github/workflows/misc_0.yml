@@ -88,8 +88,8 @@ jobs:
       - name: Run tests
         run: tox -e mypyinstalled
 
-  pyright:
-    name: pyright
+  typecheck:
+    name: typecheck
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -104,7 +104,7 @@ jobs:
         run: pip install tox
 
       - name: Run tests
-        run: tox -e pyright
+        run: tox -e typecheck
 
   docs:
     name: docs

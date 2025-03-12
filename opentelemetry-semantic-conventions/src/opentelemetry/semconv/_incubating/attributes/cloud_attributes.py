@@ -45,7 +45,7 @@ Note: Refer to your provider's docs to see the available regions, for example [A
 
 CLOUD_RESOURCE_ID: Final = "cloud.resource_id"
 """
-Cloud provider-specific native identifier of the monitored cloud resource (e.g. an [ARN](https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html) on AWS, a [fully qualified resource ID](https://learn.microsoft.com/rest/api/resources/resources/get-by-id) on Azure, a [full resource name](https://cloud.google.com/apis/design/resource_names#full_resource_name) on GCP).
+Cloud provider-specific native identifier of the monitored cloud resource (e.g. an [ARN](https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html) on AWS, a [fully qualified resource ID](https://learn.microsoft.com/rest/api/resources/resources/get-by-id) on Azure, a [full resource name](https://google.aip.dev/122#full-resource-names) on GCP).
 Note: On some cloud providers, it may not be possible to determine the full ID at startup,
 so it may be necessary to set `cloud.resource_id` as a span attribute instead.
 

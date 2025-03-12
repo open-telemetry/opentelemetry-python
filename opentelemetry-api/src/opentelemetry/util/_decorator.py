@@ -62,11 +62,11 @@ class _AgnosticContextManager(
         except StopIteration:
             raise RuntimeError("generator didn't yield") from None
 
-    def __call__(self, func: V) -> V:
+    def __call__(self, func: V) -> V:  # pyright: ignore [reportIncompatibleMethodOverride]
         if asyncio.iscoroutinefunction(func):
 
             @functools.wraps(func)  # type: ignore
-            async def async_wrapper(*args: Pargs, **kwargs: Pkwargs) -> R:
+            async def async_wrapper(*args: Pargs, **kwargs: Pkwargs) -> R:  # pyright: ignore [reportInvalidTypeVarUse]
                 with self._recreate_cm():  # type: ignore
                     return await func(*args, **kwargs)  # type: ignore
 
@@ -78,8 +78,8 @@ def _agnosticcontextmanager(
     func: "Callable[P, Iterator[R]]",
 ) -> "Callable[P, _AgnosticContextManager[R]]":
     @functools.wraps(func)
-    def helper(*args: Pargs, **kwargs: Pkwargs) -> _AgnosticContextManager[R]:
-        return _AgnosticContextManager(func, args, kwargs)
+    def helper(*args: Pargs, **kwargs: Pkwargs) -> _AgnosticContextManager[R]:  # pyright: ignore [reportInvalidTypeVarUse]
+        return _AgnosticContextManager(func, args, kwargs)  # pyright: ignore [reportArgumentType]
 
     # Ignoring the type to keep the original signature of the function
     return helper  # type: ignore[return-value]
