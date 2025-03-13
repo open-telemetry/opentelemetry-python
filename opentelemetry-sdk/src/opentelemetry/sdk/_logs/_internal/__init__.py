@@ -511,22 +511,7 @@ class LoggingHandler(logging.Handler):
         if self.formatter:
             body = self.format(record)
         else:
-            # `record.getMessage()` uses `record.msg` as a template to format
-            # `record.args` into. There is a special case in `record.getMessage()`
-            # where it will only attempt formatting if args are provided,
-            # otherwise, it just stringifies `record.msg`.
-            #
-            # Since the OTLP body field has a type of 'any' and the logging module
-            # is sometimes used in such a way that objects incorrectly end up
-            # set as record.msg, in those cases we would like to bypass
-            # `record.getMessage()` completely and set the body to the object
-            # itself instead of its string representation.
-            # For more background, see: https://github.com/open-telemetry/opentelemetry-python/pull/4216
-            if not record.args and not isinstance(record.msg, str):
-                # no args are provided so it's *mostly* safe to use the message template as the body
-                body = record.msg
-            else:
-                body = record.getMessage()
+            body = record.getMessage()
 
         # related to https://github.com/open-telemetry/opentelemetry-python/issues/3548
         # Severity Text = WARN as defined in https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/logs/data-model.md#displaying-severity.
