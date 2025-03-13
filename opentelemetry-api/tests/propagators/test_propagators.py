@@ -49,6 +49,25 @@ class TestPropagators(TestCase):
 
         reload(opentelemetry.propagate)
 
+    @patch.dict(environ, {OTEL_PROPAGATORS: "none"})
+    @patch("opentelemetry.propagators.composite.CompositePropagator")
+    def test_no_propagators_loaded(self, mock_compositehttppropagator):
+        # Verify if exception is raised without the fix
+        with self.assertRaises(Exception):
+            from opentelemetry.propagate import get_global_textmap
+
+            get_global_textmap()
+
+        # Apply fix and verify propagators is empty, with no exception raised
+        try:
+            from opentelemetry.propagate import get_global_textmap
+
+            mock_compositehttppropagator.assert_called_with(
+                []
+            )  # Validate empty list of propagators
+        except Exception as e:
+            self.fail(f"Test failed unexpectedly with an exception: {e}")
+
     @patch.dict(environ, {OTEL_PROPAGATORS: "a,  b,   c  "})
     @patch("opentelemetry.propagators.composite.CompositePropagator")
     @patch("opentelemetry.util._importlib_metadata.entry_points")
