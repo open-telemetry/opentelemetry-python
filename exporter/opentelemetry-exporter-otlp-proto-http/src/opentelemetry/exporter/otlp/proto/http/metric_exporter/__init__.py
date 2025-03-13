@@ -207,8 +207,10 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             resp = self._export(serialized_data.SerializeToString())
             # pylint: disable=no-else-return
             if resp.ok:
+                resp.close()
                 return MetricExportResult.SUCCESS
             elif self._retryable(resp):
+                resp.close()
                 _logger.warning(
                     "Transient error %s encountered while exporting metric batch, retrying in %ss.",
                     resp.reason,
@@ -217,6 +219,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                 sleep(delay)
                 continue
             else:
+                resp.close()
                 _logger.error(
                     "Failed to export batch code: %s, reason: %s",
                     resp.status_code,
