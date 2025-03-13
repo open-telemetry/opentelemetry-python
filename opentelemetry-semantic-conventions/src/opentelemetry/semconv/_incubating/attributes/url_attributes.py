@@ -61,7 +61,7 @@ Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.url_at
 URL_REGISTERED_DOMAIN: Final = "url.registered_domain"
 """
 The highest registered url domain, stripped of the subdomain.
-Note: This value can be determined precisely with the [public suffix list](http://publicsuffix.org). For example, the registered domain for `foo.example.com` is `example.com`. Trying to approximate this by simply taking the last two labels will not work well for TLDs such as `co.uk`.
+Note: This value can be determined precisely with the [public suffix list](https://publicsuffix.org/). For example, the registered domain for `foo.example.com` is `example.com`. Trying to approximate this by simply taking the last two labels will not work well for TLDs such as `co.uk`.
 """
 
 URL_SCHEME: Final = "url.scheme"
@@ -83,5 +83,5 @@ The low-cardinality template of an [absolute path reference](https://www.rfc-edi
 URL_TOP_LEVEL_DOMAIN: Final = "url.top_level_domain"
 """
 The effective top level domain (eTLD), also known as the domain suffix, is the last part of the domain name. For example, the top level domain for example.com is `com`.
-Note: This value can be determined precisely with the [public suffix list](http://publicsuffix.org).
+Note: This value can be determined precisely with the [public suffix list](https://publicsuffix.org/).
 """

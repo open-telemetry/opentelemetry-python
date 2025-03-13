@@ -17,7 +17,7 @@ from typing import Final
 
 RPC_CONNECT_RPC_ERROR_CODE: Final = "rpc.connect_rpc.error_code"
 """
-The [error codes](https://connect.build/docs/protocol/#error-codes) of the Connect request. Error codes are always string values.
+The [error codes](https://connectrpc.com//docs/protocol/#error-codes) of the Connect request. Error codes are always string values.
 """
 
 RPC_CONNECT_RPC_REQUEST_METADATA_TEMPLATE: Final = (

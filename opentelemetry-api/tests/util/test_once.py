@@ -24,12 +24,12 @@ class TestOnce(ConcurrencyTestBase):
         self.assertEqual(once_func.call_count, 0)
 
         # first call should run
-        called = once.do_once(once_func)
+        called = once.do_once(once_func)  # type: ignore[reportArgumentType]
         self.assertTrue(called)
         self.assertEqual(once_func.call_count, 1)
 
         # subsequent calls do nothing
-        called = once.do_once(once_func)
+        called = once.do_once(once_func)  # type: ignore[reportArgumentType]
         self.assertFalse(called)
         self.assertEqual(once_func.call_count, 1)
 
@@ -38,7 +38,7 @@ class TestOnce(ConcurrencyTestBase):
         once = Once()
 
         def run_concurrently() -> bool:
-            return once.do_once(once_func)
+            return once.do_once(once_func)  # type: ignore[reportArgumentType]
 
         results = self.run_with_many_threads(run_concurrently, num_threads=100)
 

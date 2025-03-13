@@ -31,7 +31,7 @@ The source code file name that identifies the code unit as uniquely as possible 
 
 CODE_FILEPATH: Final = "code.filepath"
 """
-Deprecated, use `code.file.path` instead.
+Deprecated: Replaced by `code.file.path`.
 """
 
 CODE_FUNCTION: Final = "code.function"
@@ -41,7 +41,22 @@ Deprecated: Replaced by `code.function.name`.
 
 CODE_FUNCTION_NAME: Final = "code.function.name"
 """
-The method or function name, or equivalent (usually rightmost part of the code unit's name).
+The method or function fully-qualified name without arguments. The value should fit the natural representation of the language runtime, which is also likely the same used within `code.stacktrace` attribute value.
+Note: Values and format depends on each language runtime, thus it is impossible to provide an exhaustive list of examples.
+The values are usually the same (or prefixes of) the ones found in native stack trace representation stored in
+`code.stacktrace` without information on arguments.
+
+Examples:
+
+* Java method: `com.example.MyHttpService.serveRequest`
+* Java anonymous class method: `com.mycompany.Main$1.myMethod`
+* Java lambda method: `com.mycompany.Main$$Lambda/0x0000748ae4149c00.myMethod`
+* PHP function: `GuzzleHttp\\Client::transfer
+* Go function: `github.com/my/repo/pkg.foo.func5`
+* Elixir: `OpenTelemetry.Ctx.new`
+* Erlang: `opentelemetry_ctx:new`
+* Rust: `playground::my_module::my_cool_func`
+* C function: `fopen`.
 """
 
 CODE_LINE_NUMBER: Final = "code.line.number"
@@ -56,10 +71,10 @@ Deprecated: Replaced by `code.line.number`.
 
 CODE_NAMESPACE: Final = "code.namespace"
 """
-The "namespace" within which `code.function.name` is defined. Usually the qualified class or module name, such that `code.namespace` + some separator + `code.function.name` form a unique identifier for the code unit.
+Deprecated: Value should be included in `code.function.name` which is expected to be a fully-qualified name.
 """
 
 CODE_STACKTRACE: Final = "code.stacktrace"
 """
-A stacktrace as a string in the natural representation for the language runtime. The representation is to be determined and documented by each language SIG.
+A stacktrace as a string in the natural representation for the language runtime. The representation is identical to [`exception.stacktrace`](/docs/exceptions/exceptions-spans.md#stacktrace-representation).
 """

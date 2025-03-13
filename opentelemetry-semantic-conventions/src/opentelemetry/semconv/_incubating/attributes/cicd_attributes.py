@@ -35,6 +35,11 @@ CICD_PIPELINE_RUN_STATE: Final = "cicd.pipeline.run.state"
 The pipeline run goes through these states during its lifecycle.
 """
 
+CICD_PIPELINE_RUN_URL_FULL: Final = "cicd.pipeline.run.url.full"
+"""
+The [URL](https://wikipedia.org/wiki/URL) of the pipeline run, providing the complete address in order to locate and identify the pipeline run.
+"""
+
 CICD_PIPELINE_TASK_NAME: Final = "cicd.pipeline.task.name"
 """
 The human readable name of a task within a pipeline. Task here most closely aligns with a [computing process](https://wikipedia.org/wiki/Pipeline_(computing)) in a pipeline. Other terms for tasks include commands, steps, and procedures.
@@ -47,7 +52,7 @@ The unique identifier of a task run within a pipeline.
 
 CICD_PIPELINE_TASK_RUN_URL_FULL: Final = "cicd.pipeline.task.run.url.full"
 """
-The [URL](https://wikipedia.org/wiki/URL) of the pipeline run providing the complete address in order to locate and identify the pipeline run.
+The [URL](https://wikipedia.org/wiki/URL) of the pipeline task run, providing the complete address in order to locate and identify the pipeline task run.
 """
 
 CICD_PIPELINE_TASK_TYPE: Final = "cicd.pipeline.task.type"

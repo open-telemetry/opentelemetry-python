@@ -45,7 +45,7 @@ some aspects of development, including testing against multiple Python versions.
 To install `tox`, run:
 
 ```console
-$ pip install tox
+pip install tox
 ```
 
 You can run `tox` with the following arguments:
@@ -60,18 +60,39 @@ You can run `tox` with the following arguments:
 - `tox -e lint-some-package` to run lint checks on `some-package`
 - `tox -e generate-workflows` to run creation of new CI workflows if tox environments have been updated
 - `tox -e ruff` to run ruff linter and formatter checks against the entire codebase
+- `tox -e typecheck` to run pyright against entire code base.
+- `tox -e public-symbols-check` to run public_symbols_checker.py.
+- `tox -e docker-tests-{otlpexporter,opencensus}` to run tests in both or either one location.
+- `tox -e tracecontext` to run integration tests for tracecontext.
+- `tox -e precommit` to run all `pre-commit` actions
 
 `ruff check` and `ruff format` are executed when `tox -e ruff` is run. We strongly recommend you to configure [pre-commit](https://pre-commit.com/) locally to run `ruff` automatically before each commit by installing it as git hooks. You just need to [install pre-commit](https://pre-commit.com/#install) in your environment:
 
 ```console
-$ pip install pre-commit -c dev-requirements.txt
+pip install pre-commit -c dev-requirements.txt
 ```
 
 and run this command inside the git repository:
 
 ```console
-$ pre-commit install
+pre-commit install
 ```
+
+### Virtual Environment
+
+You can also create a single virtual environment to make it easier to run local tests.
+
+For that, you'll need to install [`uv`](https://docs.astral.sh/uv/getting-started/installation/).
+
+After installing `uv`, you can run the following command:
+
+```sh
+uv sync
+```
+
+This will create a virtual environment in the `.venv` directory and install all the necessary dependencies.
+
+### Public Symbols
 
 We try to keep the amount of _public symbols_ in our code minimal. A public symbol is any Python identifier that does not start with an underscore.
 Every public symbol is something that has to be kept in order to maintain backwards compatibility, so we try to have as few as possible.
@@ -107,7 +128,7 @@ See
 [`tox.ini`](https://github.com/open-telemetry/opentelemetry-python/blob/main/tox.ini)
 for more detail on available tox commands.
 
-#### Contrib repo
+### Contrib repo
 
 Some of the `tox` targets install packages from the [OpenTelemetry Python Contrib Repository](https://github.com/open-telemetry/opentelemetry-python.git) via
 pip. The version of the packages installed defaults to the `main` branch in that repository when `tox` is run locally. It is possible to install packages tagged
@@ -153,31 +174,45 @@ pull requests (PRs).
 To create a new PR, fork the project in GitHub and clone the upstream repo:
 
 ```console
-$ git clone https://github.com/open-telemetry/opentelemetry-python.git
-$ cd opentelemetry-python
+git clone https://github.com/open-telemetry/opentelemetry-python.git
+cd opentelemetry-python
 ```
 
 Add your fork as an origin:
 
 ```console
-$ git remote add fork https://github.com/YOUR_GITHUB_USERNAME/opentelemetry-python.git
+git remote add fork https://github.com/YOUR_GITHUB_USERNAME/opentelemetry-python.git
 ```
 
-Run tests:
+Make sure you have all supported versions of Python installed, install tox only for the first time:
 
 ```sh
-# make sure you have all supported versions of Python installed
-$ pip install tox  # only first time.
-$ tox  # execute in the root of the repository
+pip install tox
+```
+
+Run tests in the root of the repository (this will run all tox environments and may take some time):
+
+```sh
+tox
 ```
 
 Check out a new branch, make modifications and push the branch to your fork:
 
 ```sh
-$ git checkout -b feature
-# edit files
-$ git commit
-$ git push fork feature
+git checkout -b feature
+```
+
+After you edit the files, stage changes in the current directory:
+
+```sh
+git add .
+```
+
+Then run the following to commit the changes:
+
+```sh
+git commit
+git push fork feature
 ```
 
 Open a pull request against the main `opentelemetry-python` repo.

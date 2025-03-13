@@ -98,12 +98,12 @@ String indicating the protocol being tunneled. Per the values in the [IANA regis
 
 TLS_PROTOCOL_NAME: Final = "tls.protocol.name"
 """
-Normalized lowercase protocol name parsed from original string of the negotiated [SSL/TLS protocol version](https://www.openssl.org/docs/man1.1.1/man3/SSL_get_version.html#RETURN-VALUES).
+Normalized lowercase protocol name parsed from original string of the negotiated [SSL/TLS protocol version](https://docs.openssl.org/1.1.1/man3/SSL_get_version/#return-values).
 """
 
 TLS_PROTOCOL_VERSION: Final = "tls.protocol.version"
 """
-Numeric part of the version parsed from the original string of the negotiated [SSL/TLS protocol version](https://www.openssl.org/docs/man1.1.1/man3/SSL_get_version.html#RETURN-VALUES).
+Numeric part of the version parsed from the original string of the negotiated [SSL/TLS protocol version](https://docs.openssl.org/1.1.1/man3/SSL_get_version/#return-values).
 """
 
 TLS_RESUMED: Final = "tls.resumed"

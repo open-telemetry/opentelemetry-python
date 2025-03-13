@@ -32,6 +32,7 @@ from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
     DEFAULT_TIMEOUT,
     OTLPMetricExporter,
 )
+from opentelemetry.exporter.otlp.proto.http.version import __version__
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
@@ -124,6 +125,15 @@ class TestOTLPMetricExporter(TestCase):
         self.assertIs(exporter._compression, DEFAULT_COMPRESSION)
         self.assertEqual(exporter._headers, {})
         self.assertIsInstance(exporter._session, Session)
+        self.assertIn("User-Agent", exporter._session.headers)
+        self.assertEqual(
+            exporter._session.headers.get("Content-Type"),
+            "application/x-protobuf",
+        )
+        self.assertEqual(
+            exporter._session.headers.get("User-Agent"),
+            "OTel-OTLP-Exporter-Python/" + __version__,
+        )
 
     @patch.dict(
         "os.environ",

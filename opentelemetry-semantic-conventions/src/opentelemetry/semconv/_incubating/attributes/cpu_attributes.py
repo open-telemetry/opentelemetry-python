@@ -15,6 +15,11 @@
 from enum import Enum
 from typing import Final
 
+CPU_LOGICAL_NUMBER: Final = "cpu.logical_number"
+"""
+The logical CPU number [0..n-1].
+"""
+
 CPU_MODE: Final = "cpu.mode"
 """
 The mode of the CPU.

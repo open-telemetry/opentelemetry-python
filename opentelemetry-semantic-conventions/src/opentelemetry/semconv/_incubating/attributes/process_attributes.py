@@ -79,7 +79,7 @@ Deprecated: Replaced by `process.executable.build_id.htlhash`.
 
 PROCESS_EXECUTABLE_NAME: Final = "process.executable.name"
 """
-The name of the process executable. On Linux based systems, can be set to the `Name` in `proc/[pid]/status`. On Windows, can be set to the base name of `GetProcessImageFileNameW`.
+The name of the process executable. On Linux based systems, this SHOULD be set to the base name of the target of `/proc/[pid]/exe`. On Windows, this SHOULD be set to the base name of `GetProcessImageFileNameW`.
 """
 
 PROCESS_EXECUTABLE_PATH: Final = "process.executable.path"
