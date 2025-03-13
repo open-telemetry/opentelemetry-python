@@ -133,6 +133,18 @@ class TestUseTracer(unittest.TestCase):
 
         self.assertEqual(test_span.recorded_exception, exception)
 
+    def test_use_span_base_exception(self):
+        class TestUseSpanBaseException(BaseException):
+            pass
+
+        test_span = SpanTest(trace.INVALID_SPAN_CONTEXT)
+        exception = TestUseSpanBaseException("test exception")
+        with self.assertRaises(TestUseSpanBaseException):
+            with trace.use_span(test_span):
+                raise exception
+
+        self.assertEqual(test_span.recorded_exception, exception)
+
     def test_use_span_set_status(self):
         class TestUseSpanException(Exception):
             pass
@@ -143,9 +155,10 @@ class TestUseTracer(unittest.TestCase):
                 raise TestUseSpanException("test error")
 
         self.assertEqual(
-            test_span.recorded_status.status_code, StatusCode.ERROR
+            test_span.recorded_status.status_code,  # type: ignore[reportAttributeAccessIssue]
+            StatusCode.ERROR,
         )
         self.assertEqual(
-            test_span.recorded_status.description,
+            test_span.recorded_status.description,  # type: ignore[reportAttributeAccessIssue]
             "TestUseSpanException: test error",
         )

@@ -469,7 +469,6 @@ class NoOpTracer(Tracer):
         record_exception: bool = True,
         set_status_on_exception: bool = True,
     ) -> "Span":
-        # pylint: disable=unused-argument,no-self-use
         return INVALID_SPAN
 
     @_agnosticcontextmanager
@@ -485,7 +484,6 @@ class NoOpTracer(Tracer):
         set_status_on_exception: bool = True,
         end_on_exit: bool = True,
     ) -> Iterator["Span"]:
-        # pylint: disable=unused-argument,no-self-use
         yield INVALID_SPAN
 
 
@@ -590,7 +588,7 @@ def use_span(
         finally:
             context_api.detach(token)
 
-    except Exception as exc:  # pylint: disable=broad-exception-caught
+    except BaseException as exc:  # pylint: disable=broad-exception-caught
         if isinstance(span, Span) and span.is_recording():
             # Record the exception as an event
             if record_exception:

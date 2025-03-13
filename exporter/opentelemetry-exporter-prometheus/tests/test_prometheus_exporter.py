@@ -638,3 +638,59 @@ class TestPrometheusMetricReader(TestCase):
                 """
             ),
         )
+
+    def test_multiple_data_points_with_different_label_sets(self):
+        hist_point_1 = HistogramDataPoint(
+            attributes={"http_target": "/foobar", "net_host_port": 8080},
+            start_time_unix_nano=1641946016139533244,
+            time_unix_nano=1641946016139533244,
+            count=6,
+            sum=579.0,
+            bucket_counts=[1, 3, 2],
+            explicit_bounds=[123.0, 456.0],
+            min=1,
+            max=457,
+        )
+        hist_point_2 = HistogramDataPoint(
+            attributes={"net_host_port": 8080},
+            start_time_unix_nano=1641946016139533245,
+            time_unix_nano=1641946016139533245,
+            count=7,
+            sum=579.0,
+            bucket_counts=[1, 3, 3],
+            explicit_bounds=[123.0, 456.0],
+            min=1,
+            max=457,
+        )
+
+        metric = Metric(
+            name="http.server.request.duration",
+            description="test multiple label sets",
+            unit="s",
+            data=Histogram(
+                data_points=[hist_point_1, hist_point_2],
+                aggregation_temporality=AggregationTemporality.CUMULATIVE,
+            ),
+        )
+
+        self.verify_text_format(
+            metric,
+            dedent(
+                """\
+                # HELP http_server_request_duration_seconds test multiple label sets
+                # TYPE http_server_request_duration_seconds histogram
+                http_server_request_duration_seconds_bucket{http_target="/foobar",le="123.0",net_host_port="8080"} 1.0
+                http_server_request_duration_seconds_bucket{http_target="/foobar",le="456.0",net_host_port="8080"} 4.0
+                http_server_request_duration_seconds_bucket{http_target="/foobar",le="+Inf",net_host_port="8080"} 6.0
+                http_server_request_duration_seconds_count{http_target="/foobar",net_host_port="8080"} 6.0
+                http_server_request_duration_seconds_sum{http_target="/foobar",net_host_port="8080"} 579.0
+                # HELP http_server_request_duration_seconds test multiple label sets
+                # TYPE http_server_request_duration_seconds histogram
+                http_server_request_duration_seconds_bucket{le="123.0",net_host_port="8080"} 1.0
+                http_server_request_duration_seconds_bucket{le="456.0",net_host_port="8080"} 4.0
+                http_server_request_duration_seconds_bucket{le="+Inf",net_host_port="8080"} 7.0
+                http_server_request_duration_seconds_count{net_host_port="8080"} 7.0
+                http_server_request_duration_seconds_sum{net_host_port="8080"} 579.0
+                """
+            ),
+        )
