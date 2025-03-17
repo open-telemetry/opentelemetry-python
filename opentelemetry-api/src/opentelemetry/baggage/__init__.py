@@ -15,7 +15,7 @@
 from logging import getLogger
 from re import compile
 from types import MappingProxyType
-from typing import Mapping, Optional
+from typing import Dict, Mapping, Optional
 
 from opentelemetry.context import create_key, get_value, set_value
 from opentelemetry.context.context import Context
@@ -44,10 +44,7 @@ def get_all(
     Returns:
         The name/value pairs in the Baggage
     """
-    baggage = get_value(_BAGGAGE_KEY, context=context)
-    if isinstance(baggage, dict):
-        return MappingProxyType(baggage)
-    return MappingProxyType({})
+    return MappingProxyType(_get_baggage_value(context=context))
 
 
 def get_baggage(
@@ -64,7 +61,7 @@ def get_baggage(
         The value associated with the given name, or null if the given name is
         not present.
     """
-    return get_all(context=context).get(name)
+    return _get_baggage_value(context=context).get(name)
 
 
 def set_baggage(
@@ -80,7 +77,7 @@ def set_baggage(
     Returns:
         A Context with the value updated
     """
-    baggage = dict(get_all(context=context))
+    baggage = _get_baggage_value(context=context).copy()
     baggage[name] = value
     return set_value(_BAGGAGE_KEY, baggage, context=context)
 
@@ -95,7 +92,7 @@ def remove_baggage(name: str, context: Optional[Context] = None) -> Context:
     Returns:
         A Context with the name/value removed
     """
-    baggage = dict(get_all(context=context))
+    baggage = _get_baggage_value(context=context).copy()
     baggage.pop(name, None)
 
     return set_value(_BAGGAGE_KEY, baggage, context=context)
@@ -111,6 +108,13 @@ def clear(context: Optional[Context] = None) -> Context:
         A Context with all baggage entries removed
     """
     return set_value(_BAGGAGE_KEY, {}, context=context)
+
+
+def _get_baggage_value(context: Optional[Context] = None) -> Dict[str, object]:
+    baggage = get_value(_BAGGAGE_KEY, context=context)
+    if isinstance(baggage, dict):
+        return baggage
+    return {}
 
 
 def _is_valid_key(name: str) -> bool:
