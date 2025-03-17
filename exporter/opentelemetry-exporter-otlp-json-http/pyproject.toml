@@ -1,0 +1,60 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "opentelemetry-exporter-otlp-json-http"
+dynamic = ["version"]
+description = "OpenTelemetry Collector JSON over HTTP Exporter"
+readme = "README.rst"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.8"
+authors = [
+  { name = "OpenTelemetry Authors", email = "cncf-opentelemetry-contributors@lists.cncf.io" },
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Framework :: OpenTelemetry",
+  "Framework :: OpenTelemetry :: Exporters",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+  "opentelemetry-api",
+  "opentelemetry-sdk",
+  "opentelemetry-exporter-otlp-json-common",
+  "requests ~= 2.7",
+]
+
+[project.entry-points.opentelemetry_traces_exporter]
+otlp_json_http = "opentelemetry.exporter.otlp.json.http.trace_exporter:OTLPSpanExporter"
+
+[project.entry-points.opentelemetry_metrics_exporter]
+otlp_json_http = "opentelemetry.exporter.otlp.json.http.metric_exporter:OTLPMetricExporter"
+
+[project.entry-points.opentelemetry_logs_exporter]
+otlp_json_http = "opentelemetry.exporter.otlp.json.http._log_exporter:OTLPLogExporter"
+
+[project.urls]
+Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/exporter/opentelemetry-exporter-otlp-json-http"
+Repository = "https://github.com/open-telemetry/opentelemetry-python"
+
+[tool.hatch.version]
+path = "src/opentelemetry/exporter/otlp/json/http/version/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "/src",
+  "/tests",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/opentelemetry"]
