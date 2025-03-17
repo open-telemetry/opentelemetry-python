@@ -22,7 +22,7 @@ This does not apply to classes which are not intended to be overridden by the us
 and PeriodicExportingMetricReader concrete class. Those may freely be modified in a
 backward-compatible way for *callers*.
 
-Ideally, we could use mypy for this as well, but SDK is not type checked atm.
+Ideally, we could use pyright for this as well, but SDK is not type checked atm.
 """
 
 from typing import Iterable, Sequence
