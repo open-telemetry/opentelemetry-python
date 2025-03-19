@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+- api: Revert record `BaseException` change in `trace_api.use_span()`
+  ([#4494](https://github.com/open-telemetry/opentelemetry-python/pull/4494))
+
 ## Version 1.31.0/0.52b0 (2025-03-12)
 
 - semantic-conventions: Bump to 1.31.0
@@ -12,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add type annotations to context's attach & detach
   ([#4346](https://github.com/open-telemetry/opentelemetry-python/pull/4346))
 - Fix OTLP encoders missing instrumentation scope schema url and attributes
-  ([#4359](https://github.com/open-telemetry/opentelemetry-python/pull/4359))  
+  ([#4359](https://github.com/open-telemetry/opentelemetry-python/pull/4359))
 - prometheus-exporter: fix labels out of place for data points with different
   attribute sets
   ([#4413](https://github.com/open-telemetry/opentelemetry-python/pull/4413))
