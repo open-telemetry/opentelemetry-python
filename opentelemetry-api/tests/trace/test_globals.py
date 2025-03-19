@@ -191,3 +191,4 @@ class TestUseTracer(unittest.TestCase):
                     StatusCode.UNSET,
                 )
                 self.assertIsNone(test_span.recorded_status.description)
+                self.assertIsNone(test_span.recorded_exception)
