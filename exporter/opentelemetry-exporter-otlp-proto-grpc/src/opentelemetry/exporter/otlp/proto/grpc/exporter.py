@@ -356,9 +356,10 @@ class OTLPExporterMixin(
         if self._shutdown:
             logger.warning("Exporter already shutdown, ignoring call")
             return
+        # set shutdown flag to prevent new exports
+        self._shutdown = True
         # wait for the last export if any
         self._export_lock.acquire(timeout=timeout_millis / 1e3)
-        self._shutdown = True
         self._channel.close()
         self._export_lock.release()
 
