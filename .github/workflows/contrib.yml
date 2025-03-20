@@ -11,4 +11,4 @@ jobs:
     uses: open-telemetry/opentelemetry-python-contrib/.github/workflows/core_contrib_test_0.yml@main
     with:
       CORE_REPO_SHA: ${{ github.sha }}
-      CONTRIB_REPO_SHA: opentelemetrybot/prepare-release-1.31.0-0.52b0
+      CONTRIB_REPO_SHA: release/v1.31.x-0.52bx
