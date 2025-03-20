@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4491](https://github.com/open-telemetry/opentelemetry-python/pull/4491))
 - api: Revert record `BaseException` change in `trace_api.use_span()`
   ([#4494](https://github.com/open-telemetry/opentelemetry-python/pull/4494))
+- Improve CI by cancelling stale runs and setting timeouts
+  ([#4498](https://github.com/open-telemetry/opentelemetry-python/pull/4498))
 
 ## Version 1.31.0/0.52b0 (2025-03-12)
 
