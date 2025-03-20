@@ -159,8 +159,10 @@ class OTLPSpanExporter(SpanExporter):
             resp = self._export(serialized_data)
             # pylint: disable=no-else-return
             if resp.ok:
+                resp.close()
                 return SpanExportResult.SUCCESS
             elif self._retryable(resp):
+                resp.close()
                 _logger.warning(
                     "Transient error %s encountered while exporting span batch, retrying in %ss.",
                     resp.reason,
@@ -169,6 +171,7 @@ class OTLPSpanExporter(SpanExporter):
                 sleep(delay)
                 continue
             else:
+                resp.close()
                 _logger.error(
                     "Failed to export batch code: %s, reason: %s",
                     resp.status_code,
