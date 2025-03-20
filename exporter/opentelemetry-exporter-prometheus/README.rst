@@ -18,6 +18,6 @@ Installation
 References
 ----------
 
-* `OpenTelemetry Prometheus Exporter <https://opentelemetry-python.readthedocs.io/en/latest/exporter/prometheus/prometheus.html>`_
+* `OpenTelemetry Prometheus Exporter <https://opentelemetry.io/docs/instrumentation/python/exporters/#prometheus>`_
 * `Prometheus <https://prometheus.io/>`_
 * `OpenTelemetry Project <https://opentelemetry.io/>`_
