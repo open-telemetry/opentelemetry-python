@@ -1,3 +1,17 @@
+# Copyright The OpenTelemetry Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import unittest
 from unittest.mock import Mock, patch
 
@@ -13,7 +27,12 @@ class SpanTest(trace.NonRecordingSpan):
     recorded_status = Status(status_code=StatusCode.UNSET)
 
     def set_status(self, status, description=None):
-        self.recorded_status = status
+        if isinstance(status, Status):
+            self.recorded_status = status
+        else:
+            self.recorded_status = Status(
+                status_code=status, description=description
+            )
 
     def end(self, end_time=None):
         self.has_ended = True
@@ -133,18 +152,6 @@ class TestUseTracer(unittest.TestCase):
 
         self.assertEqual(test_span.recorded_exception, exception)
 
-    def test_use_span_base_exception(self):
-        class TestUseSpanBaseException(BaseException):
-            pass
-
-        test_span = SpanTest(trace.INVALID_SPAN_CONTEXT)
-        exception = TestUseSpanBaseException("test exception")
-        with self.assertRaises(TestUseSpanBaseException):
-            with trace.use_span(test_span):
-                raise exception
-
-        self.assertEqual(test_span.recorded_exception, exception)
-
     def test_use_span_set_status(self):
         class TestUseSpanException(Exception):
             pass
@@ -155,10 +162,33 @@ class TestUseTracer(unittest.TestCase):
                 raise TestUseSpanException("test error")
 
         self.assertEqual(
-            test_span.recorded_status.status_code,  # type: ignore[reportAttributeAccessIssue]
+            test_span.recorded_status.status_code,
             StatusCode.ERROR,
         )
         self.assertEqual(
-            test_span.recorded_status.description,  # type: ignore[reportAttributeAccessIssue]
+            test_span.recorded_status.description,
             "TestUseSpanException: test error",
         )
+
+    def test_use_span_base_exceptions(self):
+        base_exception_classes = [
+            BaseException,
+            GeneratorExit,
+            SystemExit,
+            KeyboardInterrupt,
+        ]
+
+        for exc_cls in base_exception_classes:
+            with self.subTest(exc=exc_cls.__name__):
+                test_span = SpanTest(trace.INVALID_SPAN_CONTEXT)
+
+                with self.assertRaises(exc_cls):
+                    with trace.use_span(test_span):
+                        raise exc_cls()
+
+                self.assertEqual(
+                    test_span.recorded_status.status_code,
+                    StatusCode.UNSET,
+                )
+                self.assertIsNone(test_span.recorded_status.description)
+                self.assertIsNone(test_span.recorded_exception)
