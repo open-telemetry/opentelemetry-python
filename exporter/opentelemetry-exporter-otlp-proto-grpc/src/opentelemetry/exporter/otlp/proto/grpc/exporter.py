@@ -289,11 +289,11 @@ class OTLPExporterMixin(
         # expo returns a generator that yields delay values which grow
         # exponentially. Once delay is greater than max_value, the yielded
         # value will remain constant.
-        for delay in _create_exp_backoff_generator(max_value=max_value):
-            if delay == max_value or self._shutdown:
-                return self._result.FAILURE
+        with self._export_lock:
+            for delay in _create_exp_backoff_generator(max_value=max_value):
+                if delay == max_value or self._shutdown:
+                    return self._result.FAILURE
 
-            with self._export_lock:
                 try:
                     self._client.Export(
                         request=self._translate_data(data),
@@ -352,7 +352,7 @@ class OTLPExporterMixin(
 
         return self._result.FAILURE
 
-    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
+    def shutdown(self, timeout_millis: float = 30_000) -> None:
         if self._shutdown:
             logger.warning("Exporter already shutdown, ignoring call")
             return
@@ -360,7 +360,6 @@ class OTLPExporterMixin(
         self._export_lock.acquire(timeout=timeout_millis / 1e3)
         self._shutdown = True
         self._channel.close()
-        self._export_lock.release()
 
     @property
     @abstractmethod
