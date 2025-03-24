@@ -15,6 +15,23 @@
 from enum import Enum
 from typing import Final
 
+from deprecated import deprecated
+
+GEN_AI_AGENT_DESCRIPTION: Final = "gen_ai.agent.description"
+"""
+Free-form description of the GenAI agent provided by the application.
+"""
+
+GEN_AI_AGENT_ID: Final = "gen_ai.agent.id"
+"""
+The unique identifier of the GenAI agent.
+"""
+
+GEN_AI_AGENT_NAME: Final = "gen_ai.agent.name"
+"""
+Human-readable name of the GenAI agent provided by the application.
+"""
+
 GEN_AI_COMPLETION: Final = "gen_ai.completion"
 """
 Deprecated: Removed, no replacement at this time.
@@ -24,7 +41,7 @@ GEN_AI_OPENAI_REQUEST_RESPONSE_FORMAT: Final = (
     "gen_ai.openai.request.response_format"
 )
 """
-The response format that is requested.
+Deprecated: Replaced by `gen_ai.output.type`.
 """
 
 GEN_AI_OPENAI_REQUEST_SEED: Final = "gen_ai.openai.request.seed"
@@ -59,9 +76,22 @@ The name of the operation being performed.
 Note: If one of the predefined values applies, but specific system uses a different name it's RECOMMENDED to document it in the semantic conventions for specific GenAI system and use system-specific name in the instrumentation. If a different name is not documented, instrumentation libraries SHOULD use applicable predefined value.
 """
 
+GEN_AI_OUTPUT_TYPE: Final = "gen_ai.output.type"
+"""
+Represents the content type requested by the client.
+Note: This attribute SHOULD be used when the client requests output of a specific type. The model may return zero or more outputs of this type.
+This attribute specifies the output modality and not the actual output format. For example, if an image is requested, the actual output could be a URL pointing to an image file.
+Additional output format details may be recorded in the future in the `gen_ai.output.{type}.*` attributes.
+"""
+
 GEN_AI_PROMPT: Final = "gen_ai.prompt"
 """
 Deprecated: Removed, no replacement at this time.
+"""
+
+GEN_AI_REQUEST_CHOICE_COUNT: Final = "gen_ai.request.choice.count"
+"""
+The target number of candidate completions to return.
 """
 
 GEN_AI_REQUEST_ENCODING_FORMATS: Final = "gen_ai.request.encoding_formats"
@@ -151,6 +181,26 @@ GEN_AI_TOKEN_TYPE: Final = "gen_ai.token.type"
 The type of token being counted.
 """
 
+GEN_AI_TOOL_CALL_ID: Final = "gen_ai.tool.call.id"
+"""
+The tool call identifier.
+"""
+
+GEN_AI_TOOL_NAME: Final = "gen_ai.tool.name"
+"""
+Name of the tool utilized by the agent.
+"""
+
+GEN_AI_TOOL_TYPE: Final = "gen_ai.tool.type"
+"""
+Type of the tool utilized by the agent.
+Note: Extension: A tool executed on the agent-side to directly call external APIs, bridging the gap between the agent and real-world systems.
+  Agent-side operations involve actions that are performed by the agent on the server or within the agent's controlled environment.
+Function: A tool executed on the client-side, where the agent generates parameters for a predefined function, and the client executes the logic.
+  Client-side operations are actions taken on the user's end or within the client application.
+Datastore: A tool used by the agent to access and query structured or unstructured external data for retrieval-augmented tasks or knowledge updates.
+"""
+
 GEN_AI_USAGE_COMPLETION_TOKENS: Final = "gen_ai.usage.completion_tokens"
 """
 Deprecated: Replaced by `gen_ai.usage.output_tokens` attribute.
@@ -172,6 +222,9 @@ Deprecated: Replaced by `gen_ai.usage.input_tokens` attribute.
 """
 
 
+@deprecated(
+    reason="The attribute gen_ai.openai.request.response_format is deprecated - Replaced by `gen_ai.output.type`"
+)  # type: ignore
 class GenAiOpenaiRequestResponseFormatValues(Enum):
     TEXT = "text"
     """Text response format."""
@@ -195,6 +248,21 @@ class GenAiOperationNameValues(Enum):
     """Text completions operation such as [OpenAI Completions API (Legacy)](https://platform.openai.com/docs/api-reference/completions)."""
     EMBEDDINGS = "embeddings"
     """Embeddings operation such as [OpenAI Create embeddings API](https://platform.openai.com/docs/api-reference/embeddings/create)."""
+    CREATE_AGENT = "create_agent"
+    """Create GenAI agent."""
+    EXECUTE_TOOL = "execute_tool"
+    """Execute a tool."""
+
+
+class GenAiOutputTypeValues(Enum):
+    TEXT = "text"
+    """Plain text."""
+    JSON = "json"
+    """JSON object with known or unknown schema."""
+    IMAGE = "image"
+    """Image."""
+    SPEECH = "speech"
+    """Speech."""
 
 
 class GenAiSystemValues(Enum):
@@ -232,4 +300,6 @@ class GenAiTokenTypeValues(Enum):
     INPUT = "input"
     """Input tokens (prompt, input, etc.)."""
     COMPLETION = "output"
+    """Deprecated: Replaced by `output`."""
+    OUTPUT = "output"
     """Output tokens (completion, response, etc.)."""

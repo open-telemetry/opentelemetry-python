@@ -88,8 +88,8 @@ jobs:
       - name: Run tests
         run: tox -e mypyinstalled
 
-  pyright:
-    name: pyright
+  typecheck:
+    name: typecheck
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -104,7 +104,7 @@ jobs:
         run: pip install tox
 
       - name: Run tests
-        run: tox -e pyright
+        run: tox -e typecheck
 
   docs:
     name: docs
@@ -236,8 +236,8 @@ jobs:
       - name: Check github workflows are up to date
         run: git diff --exit-code || (echo 'Generated workflows are out of date, run "tox -e generate-workflows" and commit the changes in this PR.' && exit 1)
 
-  ruff:
-    name: ruff
+  precommit:
+    name: precommit
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -252,4 +252,4 @@ jobs:
         run: pip install tox
 
       - name: Run tests
-        run: tox -e ruff
+        run: tox -e precommit

@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
+
 import logging
 from os import environ
 from typing import Dict, List
@@ -66,8 +68,9 @@ _logger = logging.getLogger(__name__)
 class OTLPMetricExporterMixin:
     def _common_configuration(
         self,
-        preferred_temporality: Dict[type, AggregationTemporality] = None,
-        preferred_aggregation: Dict[type, Aggregation] = None,
+        preferred_temporality: dict[type, AggregationTemporality]
+        | None = None,
+        preferred_aggregation: dict[type, Aggregation] | None = None,
     ) -> None:
         MetricExporter.__init__(
             self,

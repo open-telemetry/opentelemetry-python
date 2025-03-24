@@ -26,6 +26,18 @@ USER_AGENT_ORIGINAL: Final = "user_agent.original"
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.user_agent_attributes.USER_AGENT_ORIGINAL`.
 """
 
+USER_AGENT_OS_NAME: Final = "user_agent.os.name"
+"""
+Human readable operating system name.
+Note: For mapping user agent strings to OS names, libraries such as [ua-parser](https://github.com/ua-parser) can be utilized.
+"""
+
+USER_AGENT_OS_VERSION: Final = "user_agent.os.version"
+"""
+The version string of the operating system as defined in [Version Attributes](/docs/resource/README.md#version-attributes).
+Note: For mapping user agent strings to OS versions, libraries such as [ua-parser](https://github.com/ua-parser) can be utilized.
+"""
+
 USER_AGENT_SYNTHETIC_TYPE: Final = "user_agent.synthetic.type"
 """
 Specifies the category of synthetic traffic, such as tests or bots.
