@@ -77,6 +77,10 @@ select = [
   "PLC", # pylint convention
   "PLE", # pylint error
   "Q",   # flake8-quotes
+  "A",   # flake8-builtins
+  "B",   # flake8-bugbear
+  "N",   # pep8-naming
+  "RUF", # Ruff-specific rules
 ]
 
 ignore = [
