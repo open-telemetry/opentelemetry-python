@@ -2,7 +2,7 @@ click==8.1.7
 Flask==2.3.3
 googleapis-common-protos==1.52.0
 grpcio==1.56.2
-gunicorn==22.0.0
+gunicorn==23.0.0
 itsdangerous==2.1.2
 Jinja2==3.1.6
 MarkupSafe==2.1.3
