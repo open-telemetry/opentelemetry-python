@@ -12,11 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import gc
 import multiprocessing
 import os
 import threading
 import time
 import unittest
+import weakref
 from concurrent.futures import ThreadPoolExecutor
 from logging import WARNING
 from platform import python_implementation, system
@@ -583,6 +585,23 @@ class TestBatchSpanProcessor(ConcurrencyTestBase):
             None,
             max_queue_size=256,
             max_export_batch_size=512,
+        )
+
+    def test_batch_span_processor_gc(self):
+        # Given a BatchSpanProcessor
+        exporter = MySpanExporter(destination=[])
+        processor = export.BatchSpanProcessor(exporter)
+        weak_ref = weakref.ref(processor)
+        processor.shutdown()
+
+        # When the processor is garbage collected
+        del processor
+        gc.collect()
+
+        # Then the reference to the processor should no longer exist
+        self.assertIsNone(
+            weak_ref(),
+            "The BatchSpanProcessor object created by this test wasn't garbage collected",
         )
 
 
