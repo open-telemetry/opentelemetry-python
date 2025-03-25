@@ -588,7 +588,10 @@ def use_span(
         finally:
             context_api.detach(token)
 
-    except BaseException as exc:  # pylint: disable=broad-exception-caught
+    # Record only exceptions that inherit Exception class but not BaseException, because
+    # classes that directly inherit BaseException are not technically errors, e.g. GeneratorExit.
+    # See https://github.com/open-telemetry/opentelemetry-python/issues/4484
+    except Exception as exc:  # pylint: disable=broad-exception-caught
         if isinstance(span, Span) and span.is_recording():
             # Record the exception as an event
             if record_exception:

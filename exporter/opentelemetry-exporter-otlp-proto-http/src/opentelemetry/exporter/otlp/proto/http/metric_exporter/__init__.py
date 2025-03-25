@@ -40,7 +40,10 @@ from opentelemetry.exporter.otlp.proto.common._internal.metrics_encoder import (
 from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
     encode_metrics,
 )
-from opentelemetry.exporter.otlp.proto.http import Compression
+from opentelemetry.exporter.otlp.proto.http import (
+    _OTLP_HTTP_HEADERS,
+    Compression,
+)
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (  # noqa: F401
     ExportMetricsServiceRequest,
 )
@@ -152,9 +155,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         self._compression = compression or _compression_from_env()
         self._session = session or requests.Session()
         self._session.headers.update(self._headers)
-        self._session.headers.update(
-            {"Content-Type": "application/x-protobuf"}
-        )
+        self._session.headers.update(_OTLP_HTTP_HEADERS)
         if self._compression is not Compression.NoCompression:
             self._session.headers.update(
                 {"Content-Encoding": self._compression.value}
