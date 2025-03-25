@@ -167,10 +167,12 @@ class OTLPLogExporter(LogExporter):
             resp = self._export(serialized_data)
             # pylint: disable=no-else-return
             if resp.ok:
-                resp.close()
+                if resp.raw != None:
+                    resp.close()
                 return LogExportResult.SUCCESS
             elif self._retryable(resp):
-                resp.close()
+                if resp.raw != None:
+                    resp.close()
                 _logger.warning(
                     "Transient error %s encountered while exporting logs batch, retrying in %ss.",
                     resp.reason,
@@ -179,7 +181,8 @@ class OTLPLogExporter(LogExporter):
                 sleep(delay)
                 continue
             else:
-                resp.close()
+                if resp.raw != None:
+                    resp.close()
                 _logger.error(
                     "Failed to export logs batch code: %s, reason: %s",
                     resp.status_code,
