@@ -56,9 +56,9 @@ Default: "info"
 
 OTEL_PYTHON_LOG_FORMAT = "OTEL_PYTHON_LOG_FORMAT"
 """
-.. envvar:: OTEL_LOG_LEVEL
+.. envvar:: OTEL_PYTHON_LOG_FORMAT
 
-The :envvar:`OTEL_LOG_LEVEL` environment variable sets the log level used by the SDK logger
+The :envvar:`OTEL_PYTHON_LOG_FORMAT` environment variable sets the log format for the OpenTelemetry LoggingHandler's Formatter
 Default: "logging.BASIC_FORMAT"
 """
 
