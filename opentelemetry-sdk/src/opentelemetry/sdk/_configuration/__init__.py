@@ -280,7 +280,7 @@ def _init_logging(
         if OTEL_PYTHON_LOG_FORMAT in environ:
             log_format = environ.get(OTEL_PYTHON_LOG_FORMAT, logging.BASIC_FORMAT)
             handler.setFormatter(logging.Formatter(log_format))
-        root_logger.addHandler(handler)  
+        root_logger.addHandler(handler)
 
 
 def _import_exporters(
