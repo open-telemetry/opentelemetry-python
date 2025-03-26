@@ -7,7 +7,7 @@ OpenTelemetry Prometheus Exporter
     :show-inheritance:
 
 Installation
------------
+------------
 
 The OpenTelemetry Prometheus Exporter package is available on PyPI::
 
