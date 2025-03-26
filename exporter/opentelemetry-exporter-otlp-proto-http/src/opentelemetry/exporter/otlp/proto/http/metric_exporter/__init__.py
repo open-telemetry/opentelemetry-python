@@ -176,6 +176,10 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         elif self._compression == Compression.Deflate:
             data = zlib.compress(serialized_data)
 
+        # By default, keep-alive is enabled in Session's request
+        # headers. Backends may choose to close the connection
+        # while a post happens which causes an unhandled
+        # exception. This try/except will retry the post on such exceptions
         try:
             resp = self._session.post(
                 url=self._endpoint,
@@ -185,10 +189,6 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                 cert=self._client_cert,
             )
         except ConnectionError:
-            # By default, keep-alive is set in Session's request
-            # headers. Backends may choose to close the connection
-            # while a post happens which causes an unhandled
-            # exception. This try/except will retry the post on such exceptions
             resp = self._session.post(
                 url=self._endpoint,
                 data=data,
