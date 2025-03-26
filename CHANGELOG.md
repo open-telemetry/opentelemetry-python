@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-- Fix broken documentation link in Prometheus exporter README and add missing Prometheus exporter documentation (#4399)
+- Add missing Prometheus exporter documentation (#4399)
 - Fix user agent in OTLP HTTP metrics exporter
   ([#4475](https://github.com/open-telemetry/opentelemetry-python/pull/4475))
 - Improve performance of baggage operations
