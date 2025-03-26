@@ -9,6 +9,10 @@ on:
     - 'release/*'
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 env:
   CORE_REPO_SHA: main
   CONTRIB_REPO_SHA: main
@@ -19,6 +23,7 @@ jobs:
   lint-opentelemetry-api:
     name: opentelemetry-api
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -37,6 +42,7 @@ jobs:
   lint-opentelemetry-proto-protobuf5:
     name: opentelemetry-proto-protobuf5
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -55,6 +61,7 @@ jobs:
   lint-opentelemetry-sdk:
     name: opentelemetry-sdk
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -73,6 +80,7 @@ jobs:
   lint-opentelemetry-semantic-conventions:
     name: opentelemetry-semantic-conventions
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -91,6 +99,7 @@ jobs:
   lint-opentelemetry-getting-started:
     name: opentelemetry-getting-started
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -109,6 +118,7 @@ jobs:
   lint-opentelemetry-opentracing-shim:
     name: opentelemetry-opentracing-shim
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -127,6 +137,7 @@ jobs:
   lint-opentelemetry-opencensus-shim:
     name: opentelemetry-opencensus-shim
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -145,6 +156,7 @@ jobs:
   lint-opentelemetry-exporter-opencensus:
     name: opentelemetry-exporter-opencensus
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -163,6 +175,7 @@ jobs:
   lint-opentelemetry-exporter-otlp-proto-common:
     name: opentelemetry-exporter-otlp-proto-common
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -181,6 +194,7 @@ jobs:
   lint-opentelemetry-exporter-otlp-combined:
     name: opentelemetry-exporter-otlp-combined
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -199,6 +213,7 @@ jobs:
   lint-opentelemetry-exporter-otlp-proto-grpc:
     name: opentelemetry-exporter-otlp-proto-grpc
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -217,6 +232,7 @@ jobs:
   lint-opentelemetry-exporter-otlp-proto-http:
     name: opentelemetry-exporter-otlp-proto-http
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -235,6 +251,7 @@ jobs:
   lint-opentelemetry-exporter-prometheus:
     name: opentelemetry-exporter-prometheus
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -253,6 +270,7 @@ jobs:
   lint-opentelemetry-exporter-zipkin-combined:
     name: opentelemetry-exporter-zipkin-combined
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -271,6 +289,7 @@ jobs:
   lint-opentelemetry-exporter-zipkin-proto-http:
     name: opentelemetry-exporter-zipkin-proto-http
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -289,6 +308,7 @@ jobs:
   lint-opentelemetry-exporter-zipkin-json:
     name: opentelemetry-exporter-zipkin-json
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -307,6 +327,7 @@ jobs:
   lint-opentelemetry-propagator-b3:
     name: opentelemetry-propagator-b3
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -325,6 +346,7 @@ jobs:
   lint-opentelemetry-propagator-jaeger:
     name: opentelemetry-propagator-jaeger
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -343,6 +365,7 @@ jobs:
   lint-opentelemetry-test-utils:
     name: opentelemetry-test-utils
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
