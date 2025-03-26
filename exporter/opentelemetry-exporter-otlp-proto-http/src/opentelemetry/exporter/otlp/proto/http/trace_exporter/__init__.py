@@ -157,14 +157,12 @@ class OTLPSpanExporter(SpanExporter):
                 return SpanExportResult.FAILURE
 
             resp = self._export(serialized_data)
+            if resp.raw is not None:
+                resp.close()
             # pylint: disable=no-else-return
             if resp.ok:
-                if resp.raw is not None:
-                    resp.close()
                 return SpanExportResult.SUCCESS
             elif self._retryable(resp):
-                if resp.raw is not None:
-                    resp.close()
                 _logger.warning(
                     "Transient error %s encountered while exporting span batch, retrying in %ss.",
                     resp.reason,
@@ -173,8 +171,6 @@ class OTLPSpanExporter(SpanExporter):
                 sleep(delay)
                 continue
             else:
-                if resp.raw is not None:
-                    resp.close()
                 _logger.error(
                     "Failed to export batch code: %s, reason: %s",
                     resp.status_code,
