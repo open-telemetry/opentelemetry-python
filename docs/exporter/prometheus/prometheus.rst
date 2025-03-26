@@ -40,7 +40,7 @@ Prometheus text format on request::
     metrics.set_meter_provider(provider)
 
 Configuration
-------------
+-------------
 
 The following environment variables are supported:
 
