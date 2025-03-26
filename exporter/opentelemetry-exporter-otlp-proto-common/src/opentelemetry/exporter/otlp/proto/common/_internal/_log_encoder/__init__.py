@@ -55,7 +55,7 @@ def _encode_log(log_data: LogData) -> PB2LogRecord:
         span_id=span_id,
         trace_id=trace_id,
         flags=int(log_data.log_record.trace_flags),
-        body=_encode_value(body, allow_null=True),
+        body=_encode_value(body, allow_null=True, fallback=str),
         severity_text=log_data.log_record.severity_text,
         attributes=_encode_attributes(log_data.log_record.attributes),
         dropped_attributes_count=log_data.log_record.dropped_attributes,

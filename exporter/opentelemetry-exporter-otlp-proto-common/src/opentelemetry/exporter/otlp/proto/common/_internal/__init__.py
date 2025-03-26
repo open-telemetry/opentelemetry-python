@@ -70,7 +70,9 @@ def _encode_resource(resource: Resource) -> PB2Resource:
 
 
 def _encode_value(
-    value: Any, allow_null: bool = False
+    value: Any,
+    allow_null: bool = False,
+    fallback: Optional[Callable[[Any], Any]] = None,
 ) -> Optional[PB2AnyValue]:
     if allow_null is True and value is None:
         return None
@@ -99,6 +101,8 @@ def _encode_value(
                 ]
             )
         )
+    elif fallback is not None:
+        return _encode_value(fallback(value), allow_null)
     raise Exception(f"Invalid type {type(value)} of value {value}")
 
 
