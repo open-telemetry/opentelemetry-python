@@ -173,7 +173,7 @@ def _get_credentials(
 class OTLPExporterMixin(
     ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResultT]
 ):
-    """OTLP span exporter
+    """OTLP exporter Mixin class.
 
     Args:
         endpoint: OpenTelemetry Collector receiver endpoint
@@ -271,7 +271,7 @@ class OTLPExporterMixin(
     ) -> ExportResultT:
         # After the call to shutdown, subsequent calls to Export are
         # not allowed and should return a Failure result.
-        if self._shutdown:
+        if self._shutdown_occuring.is_set():
             logger.warning("Exporter already shutdown, ignoring batch")
             return self._result.FAILURE
 
@@ -288,6 +288,7 @@ class OTLPExporterMixin(
             if self._shutdown_occuring.is_set():
                 return self._result.FAILURE
             try:
+                print("started exporting!")
                 self._export_not_occuring.clear()
                 self._client.Export(
                     request=self._translate_data(data),
@@ -295,10 +296,12 @@ class OTLPExporterMixin(
                     timeout=self._timeout,
                 )
                 self._export_not_occuring.set()
+                print("finished exporting!")
 
                 return self._result.SUCCESS
 
             except RpcError as error:
+                self._export_not_occuring.set()
                 if error.code() in [
                     StatusCode.CANCELLED,
                     StatusCode.DEADLINE_EXCEEDED,
