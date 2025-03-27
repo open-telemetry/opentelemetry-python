@@ -288,7 +288,6 @@ class OTLPExporterMixin(
             if self._shutdown_occuring.is_set():
                 return self._result.FAILURE
             try:
-                print("started exporting!")
                 self._export_not_occuring.clear()
                 self._client.Export(
                     request=self._translate_data(data),
@@ -296,7 +295,6 @@ class OTLPExporterMixin(
                     timeout=self._timeout,
                 )
                 self._export_not_occuring.set()
-                print("finished exporting!")
 
                 return self._result.SUCCESS
 
