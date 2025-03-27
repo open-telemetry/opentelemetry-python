@@ -130,7 +130,7 @@ class OTLPSpanExporter(SpanExporter):
             data = gzip_data.getvalue()
         elif self._compression == Compression.Deflate:
             data = zlib.compress(serialized_data)
-        
+
         # By default, keep-alive is enabled in Session's request
         # headers. Backends may choose to close the connection
         # while a post happens which causes an unhandled
