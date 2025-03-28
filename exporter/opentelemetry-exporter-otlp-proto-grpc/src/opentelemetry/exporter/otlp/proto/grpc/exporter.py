@@ -299,6 +299,7 @@ class OTLPExporterMixin(
                 return self._result.SUCCESS
 
             except RpcError as error:
+                # Important to set it here, b/c if Export fails the set() call above is not teached.
                 self._export_not_occuring.set()
                 if error.code() in [
                     StatusCode.CANCELLED,

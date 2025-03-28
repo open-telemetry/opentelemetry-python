@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 from logging import WARNING
@@ -27,6 +26,9 @@ from google.rpc.error_details_pb2 import (  # pylint: disable=no-name-in-module
 )
 from grpc import Compression, server
 
+from opentelemetry.exporter.otlp.proto.common._internal import (
+    ThreadWithReturnValue,
+)
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (
     InvalidCompressionValueException,
     StatusCode,
@@ -87,27 +89,6 @@ class TraceServiceServicerWithExportParams(TraceServiceServicer):
         context.set_code(self.export_result)
 
         return ExportTraceServiceResponse()
-
-
-class ThreadWithReturnValue(threading.Thread):
-    def __init__(
-        self,
-        group=None,
-        target=None,
-        name=None,
-        args=(),
-        kwargs=None,
-    ):
-        threading.Thread.__init__(self, group, target, name, args, kwargs)
-        self._return = None
-
-    def run(self):
-        if self._target is not None:  # type: ignore
-            self._return = self._target(*self._args, **self._kwargs)  # type: ignore
-
-    def join(self, *args):  # type: ignore
-        threading.Thread.join(self, *args)
-        return self._return
 
 
 class TestOTLPExporterMixin(TestCase):
@@ -243,8 +224,7 @@ class TestOTLPExporterMixin(TestCase):
         export_result = export_thread.join()
         end_wait = time.time_ns()
         self.assertEqual(export_result, SpanExportResult.FAILURE)
-        # Less than a second for export to finish, even though a 20 second sleep was requested.
-        print("TIME SPENT SLEEPING: {}".format(end_wait - begin_wait))
+        # Less than a second for export to finish, because the 20 second sleep is interurpted by shutdown event.
         self.assertTrue((end_wait - begin_wait) <  1e9)
 
     def test_export_over_closed_grpc_channel(self):
