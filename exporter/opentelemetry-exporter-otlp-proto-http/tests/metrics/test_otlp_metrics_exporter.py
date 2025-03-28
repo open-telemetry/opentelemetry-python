@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import time
 from logging import WARNING
 from os import environ
 from unittest import TestCase
@@ -21,6 +22,9 @@ from requests import Session
 from requests.models import Response
 from responses import POST, activate, add
 
+from opentelemetry.exporter.otlp.proto.common._internal import (
+    ThreadWithReturnValue,
+)
 from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
     encode_metrics,
 )
@@ -297,6 +301,35 @@ class TestOTLPMetricExporter(TestCase):
         )
 
     @patch.object(Session, "post")
+    def test_shutdown_doesnot_wait_last_export(self, mock_post):
+        resp = Response()
+        resp.status_code = 401
+
+        def fake_post(**kwargs):
+            time.sleep(35)
+            return resp
+
+        mock_post.side_effect = fake_post
+        exporter = OTLPMetricExporter()
+
+        export_thread = ThreadWithReturnValue(
+            target=exporter.export, args=(self.metrics["sum_int"],)
+        )
+        export_thread.start()
+        # Wait a sec for exporter to make export call
+        time.sleep(1)
+        # pylint: disable=protected-access
+        self.assertFalse(exporter._export_not_occuring.is_set())
+        # Set to 6 seconds, so the 35 second server-side delay will not be reached.
+        exporter.shutdown(timeout_millis=6000)
+        # pylint: disable=protected-access
+        self.assertFalse(exporter._export_not_occuring.is_set())
+        # pylint: disable=protected-access
+        self.assertTrue(exporter._shutdown_occuring.is_set())
+        export_result = export_thread.join()
+        self.assertEqual(export_result, MetricExportResult.FAILURE)
+
+    @patch.object(Session, "post")
     def test_failure(self, mock_post):
         resp = Response()
         resp.status_code = 401
@@ -332,8 +365,7 @@ class TestOTLPMetricExporter(TestCase):
         )
 
     @activate
-    @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.sleep")
-    def test_exponential_backoff(self, mock_sleep):
+    def test_exponential_backoff(self):
         # return a retryable error
         add(
             POST,
@@ -346,11 +378,11 @@ class TestOTLPMetricExporter(TestCase):
             endpoint="http://metrics.example.com/export"
         )
         metrics_data = self.metrics["sum_int"]
-
-        exporter.export(metrics_data)
-        mock_sleep.assert_has_calls(
-            [call(1), call(2), call(4), call(8), call(16), call(32)]
-        )
+        with patch.object(exporter._shutdown_occuring, "wait") as wait_mock:
+            exporter.export(metrics_data)
+            wait_mock.assert_has_calls(
+                [call(1), call(2), call(4), call(8), call(16)]
+            )
 
     def test_aggregation_temporality(self):
         otlp_metric_exporter = OTLPMetricExporter()

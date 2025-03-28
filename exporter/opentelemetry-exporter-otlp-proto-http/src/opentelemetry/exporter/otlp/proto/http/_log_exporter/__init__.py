@@ -14,17 +14,14 @@
 
 import gzip
 import logging
+import threading
 import zlib
 from io import BytesIO
 from os import environ
-from time import sleep
 from typing import Dict, Optional, Sequence
 
 import requests
 
-from opentelemetry.exporter.otlp.proto.common._internal import (
-    _create_exp_backoff_generator,
-)
 from opentelemetry.exporter.otlp.proto.common._log_encoder import encode_logs
 from opentelemetry.exporter.otlp.proto.http import (
     _OTLP_HTTP_HEADERS,
@@ -63,8 +60,6 @@ DEFAULT_TIMEOUT = 10  # in seconds
 
 
 class OTLPLogExporter(LogExporter):
-    _MAX_RETRY_TIMEOUT = 64
-
     def __init__(
         self,
         endpoint: Optional[str] = None,
@@ -121,7 +116,9 @@ class OTLPLogExporter(LogExporter):
             self._session.headers.update(
                 {"Content-Encoding": self._compression.value}
             )
-        self._shutdown = False
+        self._export_not_occuring = threading.Event()
+        self._export_not_occuring.set()
+        self._shutdown_occuring = threading.Event()
 
     def _export(self, serialized_data: bytes):
         data = serialized_data
@@ -150,31 +147,26 @@ class OTLPLogExporter(LogExporter):
         return False
 
     def export(self, batch: Sequence[LogData]) -> LogExportResult:
-        # After the call to Shutdown subsequent calls to Export are
-        # not allowed and should return a Failure result.
-        if self._shutdown:
-            _logger.warning("Exporter already shutdown, ignoring batch")
-            return LogExportResult.FAILURE
-
         serialized_data = encode_logs(batch).SerializeToString()
-
-        for delay in _create_exp_backoff_generator(
-            max_value=self._MAX_RETRY_TIMEOUT
-        ):
-            if delay == self._MAX_RETRY_TIMEOUT:
+        for delay in [1, 2, 4, 8, 16, 32]:
+            if self._shutdown_occuring.is_set():
+                _logger.warning("Exporter already shutdown, ignoring batch")
                 return LogExportResult.FAILURE
-
+            self._export_not_occuring.clear()
             resp = self._export(serialized_data)
+            self._export_not_occuring.set()
             # pylint: disable=no-else-return
             if resp.ok:
                 return LogExportResult.SUCCESS
             elif self._retryable(resp):
+                if delay == 32:
+                    return LogExportResult.FAILURE
                 _logger.warning(
                     "Transient error %s encountered while exporting logs batch, retrying in %ss.",
                     resp.reason,
                     delay,
                 )
-                sleep(delay)
+                self._shutdown_occuring.wait(delay)
                 continue
             else:
                 _logger.error(
@@ -189,12 +181,14 @@ class OTLPLogExporter(LogExporter):
         """Nothing is buffered in this exporter, so this method does nothing."""
         return True
 
-    def shutdown(self):
-        if self._shutdown:
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs):
+        if self._shutdown_occuring.is_set():
             _logger.warning("Exporter already shutdown, ignoring call")
             return
+        # wait for the last export if any
+        self._export_not_occuring.wait(timeout=timeout_millis / 1e3)
+        self._shutdown_occuring.set()
         self._session.close()
-        self._shutdown = True
 
 
 def _compression_from_env() -> Compression:

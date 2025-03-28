@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import logging
+import threading
 from collections.abc import Sequence
 from itertools import count
 from typing import (
@@ -149,6 +150,27 @@ def _encode_attributes(
     else:
         pb2_attributes = None
     return pb2_attributes
+
+
+class ThreadWithReturnValue(threading.Thread):
+    def __init__(
+        self,
+        group=None,
+        target=None,
+        name=None,
+        args=(),
+        kwargs=None,
+    ):
+        threading.Thread.__init__(self, group, target, name, args, kwargs)
+        self._return = None
+
+    def run(self):
+        if self._target is not None:  # type: ignore
+            self._return = self._target(*self._args, **self._kwargs)  # type: ignore
+
+    def join(self, *args):  # type: ignore
+        threading.Thread.join(self, *args)
+        return self._return
 
 
 def _get_resource_data(

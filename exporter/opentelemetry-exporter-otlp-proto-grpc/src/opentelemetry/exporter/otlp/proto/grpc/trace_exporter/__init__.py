@@ -142,8 +142,8 @@ class OTLPSpanExporter(
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
         return self._export(spans)
 
-    def shutdown(self) -> None:
-        OTLPExporterMixin.shutdown(self)
+    def shutdown(self, timeout_millis: int = 30000) -> None:
+        OTLPExporterMixin.shutdown(self, timeout_millis)
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         """Nothing is buffered in this exporter, so this method does nothing."""

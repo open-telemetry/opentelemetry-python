@@ -14,17 +14,14 @@
 
 import gzip
 import logging
+import threading
 import zlib
 from io import BytesIO
 from os import environ
-from time import sleep
 from typing import Dict, Optional
 
 import requests
 
-from opentelemetry.exporter.otlp.proto.common._internal import (
-    _create_exp_backoff_generator,
-)
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
 )
@@ -118,7 +115,9 @@ class OTLPSpanExporter(SpanExporter):
             self._session.headers.update(
                 {"Content-Encoding": self._compression.value}
             )
-        self._shutdown = False
+        self._export_not_occuring = threading.Event()
+        self._export_not_occuring.set()
+        self._shutdown_occuring = threading.Event()
 
     def _export(self, serialized_data: bytes):
         data = serialized_data
@@ -149,24 +148,27 @@ class OTLPSpanExporter(SpanExporter):
     def _serialize_spans(self, spans):
         return encode_spans(spans).SerializePartialToString()
 
-    def _export_serialized_spans(self, serialized_data):
-        for delay in _create_exp_backoff_generator(
-            max_value=self._MAX_RETRY_TIMEOUT
-        ):
-            if delay == self._MAX_RETRY_TIMEOUT:
+    def export(self, spans) -> SpanExportResult:
+        serialized_data = self._serialize_spans(spans)
+        for delay in [1, 2, 4, 8, 16, 32]:
+            if self._shutdown_occuring.is_set():
+                _logger.warning("Exporter already shutdown, ignoring batch")
                 return SpanExportResult.FAILURE
-
+            self._export_not_occuring.clear()
             resp = self._export(serialized_data)
+            self._export_not_occuring.set()
             # pylint: disable=no-else-return
             if resp.ok:
                 return SpanExportResult.SUCCESS
             elif self._retryable(resp):
+                if delay == 32:
+                    return SpanExportResult.FAILURE
                 _logger.warning(
                     "Transient error %s encountered while exporting span batch, retrying in %ss.",
                     resp.reason,
                     delay,
                 )
-                sleep(delay)
+                self._shutdown_occuring.wait(delay)
                 continue
             else:
                 _logger.error(
@@ -177,23 +179,14 @@ class OTLPSpanExporter(SpanExporter):
                 return SpanExportResult.FAILURE
         return SpanExportResult.FAILURE
 
-    def export(self, spans) -> SpanExportResult:
-        # After the call to Shutdown subsequent calls to Export are
-        # not allowed and should return a Failure result.
-        if self._shutdown:
-            _logger.warning("Exporter already shutdown, ignoring batch")
-            return SpanExportResult.FAILURE
-
-        serialized_data = self._serialize_spans(spans)
-
-        return self._export_serialized_spans(serialized_data)
-
-    def shutdown(self):
-        if self._shutdown:
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs):
+        if self._shutdown_occuring.is_set():
             _logger.warning("Exporter already shutdown, ignoring call")
             return
+        # wait for the last export if any
+        self._export_not_occuring.wait(timeout=timeout_millis / 1e3)
+        self._shutdown_occuring.set()
         self._session.close()
-        self._shutdown = True
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         """Nothing is buffered in this exporter, so this method does nothing."""
