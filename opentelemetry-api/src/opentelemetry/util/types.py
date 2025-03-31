@@ -56,4 +56,4 @@ AttributesAsKey = Tuple[
     ...,
 ]
 
-LogAttributes = Mapping[str, "AnyValue"]
+ExtendedAttributes = Mapping[str, "AnyValue"]
