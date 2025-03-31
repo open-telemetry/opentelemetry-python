@@ -16,6 +16,7 @@ import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 from logging import WARNING
+from typing import Any, Optional, Sequence
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
@@ -27,29 +28,82 @@ from google.rpc.error_details_pb2 import (  # pylint: disable=no-name-in-module
 )
 from grpc import Compression, server
 
-from opentelemetry.exporter.otlp.proto.grpc.exporter import (
+from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
+    encode_spans,
+)
+from opentelemetry.exporter.otlp.proto.grpc.exporter import (  # noqa: F401
     InvalidCompressionValueException,
+    OTLPExporterMixin,
     StatusCode,
     environ_to_compression,
 )
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
-    OTLPSpanExporter,
-)
 from opentelemetry.exporter.otlp.proto.grpc.version import __version__
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
+    ExportTraceServiceRequest,
     ExportTraceServiceResponse,
 )
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2_grpc import (
     TraceServiceServicer,
+    TraceServiceStub,
     add_TraceServiceServicer_to_server,
 )
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_COMPRESSION,
 )
-from opentelemetry.sdk.trace import _Span
+from opentelemetry.sdk.trace import ReadableSpan, _Span
 from opentelemetry.sdk.trace.export import (
+    SpanExporter,
     SpanExportResult,
 )
+
+
+# The below tests use this test SpanExporter and Spans, but are testing the
+# underlying behavior in the mixin. A MetricExporter or LogExporter could
+# just as easily be used.
+# pylint: disable=no-member
+class OTLPSpanExporterForTesting(
+    SpanExporter,
+    OTLPExporterMixin[
+        ReadableSpan, ExportTraceServiceRequest, SpanExportResult
+    ],
+):
+    # pylint: disable=unsubscriptable-object
+    """OTLP span exporter
+
+    Args:
+        endpoint: OpenTelemetry Collector receiver endpoint
+        insecure: Connection type
+        credentials: Credentials object for server authentication
+        headers: Headers to send when exporting
+        timeout: Backend request timeout in seconds
+        compression: gRPC compression method to use
+    """
+
+    _result = SpanExportResult
+    _stub = TraceServiceStub
+
+    def __init__(self, insecure=None, endpoint=None):
+        super().__init__(
+            **{
+                "insecure": insecure,
+                "endpoint": endpoint,
+            }
+        )
+
+    def _translate_data(
+        self, data: Sequence[ReadableSpan]
+    ) -> ExportTraceServiceRequest:
+        return encode_spans(data)
+
+    def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
+        return self._export(spans)
+
+    def shutdown(self, timeout_millis: float = 30_000) -> None:
+        OTLPExporterMixin.shutdown(self, timeout_millis)
+
+    @property
+    def _exporting(self):
+        return "traces"
 
 
 class TraceServiceServicerWithExportParams(TraceServiceServicer):
@@ -96,22 +150,23 @@ class TraceServiceServicerWithExportParams(TraceServiceServicer):
 class ThreadWithReturnValue(threading.Thread):
     def __init__(
         self,
-        group=None,
         target=None,
-        name=None,
         args=(),
-        kwargs=None,
     ):
-        threading.Thread.__init__(self, group, target, name, args, kwargs)
+        super().__init__(None, target, None, args, None)
         self._return = None
 
     def run(self):
-        if self._target is not None:  # type: ignore
-            self._return = self._target(*self._args, **self._kwargs)  # type: ignore
+        try:
+            if self._target is not None:  # type: ignore
+                self._target(*self._args, **self._kwargs)  # type: ignore
+        finally:
+            # Avoid a refcycle if the thread is running a function with
+            # an argument that has a member that points to the thread.
+            del self._target, self._args, self._kwargs  # type: ignore
 
-    def join(self, *args):  # type: ignore
-        threading.Thread.join(self, *args)
-        return self._return
+    def join(self, timeout: Optional[float] = None) -> Any:
+        super().join(timeout=timeout)
 
 
 class TestOTLPExporterMixin(TestCase):
@@ -121,10 +176,7 @@ class TestOTLPExporterMixin(TestCase):
         self.server.add_insecure_port("127.0.0.1:4317")
 
         self.server.start()
-        # The below tests use the SpanExporter and Spans, but are testing the
-        # underlying behavior in the mixin. A MetricExporter or LogExporter could
-        # just as easily be used.
-        self.exporter = OTLPSpanExporter(insecure=True)
+        self.exporter = OTLPSpanExporterForTesting(insecure=True)
         self.span = _Span(
             "a",
             context=Mock(
@@ -139,8 +191,7 @@ class TestOTLPExporterMixin(TestCase):
     def tearDown(self):
         self.server.stop(None)
 
-
-   # pylint: disable=no-self-use
+    # pylint: disable=no-self-use
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel")
     def test_otlp_exporter_endpoint(self, mock_secure, mock_insecure):
@@ -193,7 +244,7 @@ class TestOTLPExporterMixin(TestCase):
             ),
         ]
         for endpoint, insecure, mock_method in endpoints:
-            OTLPSpanExporter(endpoint=endpoint, insecure=insecure)
+            OTLPSpanExporterForTesting(endpoint=endpoint, insecure=insecure)
             self.assertEqual(
                 1,
                 mock_method.call_count,
@@ -205,7 +256,6 @@ class TestOTLPExporterMixin(TestCase):
                 f"expected {expected_endpoint} got {mock_method.call_args[0][0]} {endpoint}",
             )
             mock_method.reset_mock()
-
 
     def test_environ_to_compression(self):
         with patch.dict(
@@ -238,7 +288,7 @@ class TestOTLPExporterMixin(TestCase):
         self, mock_insecure_channel
     ):
         """No env or kwarg should be NoCompression"""
-        OTLPSpanExporter(insecure=True)
+        OTLPSpanExporterForTesting(insecure=True)
         mock_insecure_channel.assert_called_once_with(
             "localhost:4317", compression=Compression.NoCompression
         )
@@ -250,7 +300,7 @@ class TestOTLPExporterMixin(TestCase):
         self, mock_insecure_channel
     ):
         """Just OTEL_EXPORTER_OTLP_COMPRESSION should work"""
-        OTLPSpanExporter(insecure=True)
+        OTLPSpanExporterForTesting(insecure=True)
         mock_insecure_channel.assert_called_once_with(
             "localhost:4317", compression=Compression.Gzip
         )
@@ -293,7 +343,7 @@ class TestOTLPExporterMixin(TestCase):
         # pylint: disable=protected-access
         self.assertTrue(self.exporter._shutdown)
         export_result = export_thread.join()
-        self.assertEqual(export_result, SpanExportResult.SUCCESS)
+        self.assertEqual(export_result, None)
 
     def test_shutdown_doesnot_wait_last_export(self):
         add_TraceServiceServicer_to_server(
@@ -314,7 +364,7 @@ class TestOTLPExporterMixin(TestCase):
         # pylint: disable=protected-access
         self.assertTrue(self.exporter._shutdown)
         export_result = export_thread.join()
-        self.assertEqual(export_result, SpanExportResult.FAILURE)
+        self.assertEqual(export_result, None)
 
     def test_export_over_closed_grpc_channel(self):
         # pylint: disable=protected-access
