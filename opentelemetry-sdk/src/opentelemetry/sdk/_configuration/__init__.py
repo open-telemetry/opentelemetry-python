@@ -271,8 +271,7 @@ def _patch_basic_config():
             root.handlers[0], LoggingHandler
         )
         if has_only_otel:
-            otel_handler = root.handlers[0]
-            root.handlers = []
+            otel_handler = root.handlers.pop()
             original_basic_config(*args, **kwargs)
             root.addHandler(otel_handler)
         else:
