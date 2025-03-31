@@ -19,7 +19,7 @@ import unittest
 import opentelemetry._logs._internal as _logs_internal
 from opentelemetry import _logs
 from opentelemetry.test.globals_test import LoggingGlobalsTest
-from opentelemetry.util.types import LogAttributes
+from opentelemetry.util.types import ExtendedAttributes
 
 
 class TestProvider(_logs.NoOpLoggerProvider):
@@ -28,7 +28,7 @@ class TestProvider(_logs.NoOpLoggerProvider):
         name: str,
         version: typing.Optional[str] = None,
         schema_url: typing.Optional[str] = None,
-        attributes: typing.Optional[LogAttributes] = None,
+        attributes: typing.Optional[ExtendedAttributes] = None,
     ) -> _logs.Logger:
         return LoggerTest(name)
 
