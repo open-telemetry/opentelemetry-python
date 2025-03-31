@@ -342,8 +342,7 @@ class TestOTLPExporterMixin(TestCase):
         self.exporter.shutdown()
         # pylint: disable=protected-access
         self.assertTrue(self.exporter._shutdown)
-        export_result = export_thread.join()
-        self.assertEqual(export_result, None)
+        self.assertEqual(export_thread.join(), None)
 
     def test_shutdown_doesnot_wait_last_export(self):
         add_TraceServiceServicer_to_server(
@@ -363,8 +362,7 @@ class TestOTLPExporterMixin(TestCase):
         self.exporter.shutdown(timeout_millis=6000)
         # pylint: disable=protected-access
         self.assertTrue(self.exporter._shutdown)
-        export_result = export_thread.join()
-        self.assertEqual(export_result, None)
+        self.assertEqual(export_thread.join(), None)
 
     def test_export_over_closed_grpc_channel(self):
         # pylint: disable=protected-access
