@@ -111,17 +111,17 @@ class TraceServiceServicerWithExportParams(TraceServiceServicer):
         self,
         export_result,
         optional_export_sleep=None,
-        optional_export_retry=None,
+        optional_export_retry_millis=None,
     ):
         self.export_result = export_result
         self.optional_export_sleep = optional_export_sleep
-        self.optional_export_retry = optional_export_retry
+        self.optional_export_retry_millis = optional_export_retry_millis
 
     # pylint: disable=invalid-name,unused-argument,no-self-use
     def Export(self, request, context):
         if self.optional_export_sleep:
             time.sleep(self.optional_export_sleep)
-        if self.optional_export_retry:
+        if self.optional_export_retry_millis:
             context.send_initial_metadata(
                 (
                     (
@@ -136,7 +136,7 @@ class TraceServiceServicerWithExportParams(TraceServiceServicer):
                         "google.rpc.retryinfo-bin",
                         RetryInfo(
                             retry_delay=Duration(
-                                nanos=int(self.optional_export_retry)
+                                nanos=int(self.optional_export_retry_millis)
                             )
                         ).SerializeToString(),
                     ),
@@ -159,7 +159,7 @@ class ThreadWithReturnValue(threading.Thread):
     def run(self):
         try:
             if self._target is not None:  # type: ignore
-                self._target(*self._args, **self._kwargs)  # type: ignore
+                self._return = self._target(*self._args, **self._kwargs)  # type: ignore
         finally:
             # Avoid a refcycle if the thread is running a function with
             # an argument that has a member that points to the thread.
@@ -167,6 +167,7 @@ class ThreadWithReturnValue(threading.Thread):
 
     def join(self, timeout: Optional[float] = None) -> Any:
         super().join(timeout=timeout)
+        return self._return
 
 
 class TestOTLPExporterMixin(TestCase):
@@ -324,10 +325,10 @@ class TestOTLPExporterMixin(TestCase):
             )
 
     def test_shutdown_wait_last_export(self):
-        # Shutdown waits 30 seconds for a pending Export call to finish.
-        # A 5 second delay is added, so it's expected that export will finish.
         add_TraceServiceServicer_to_server(
-            TraceServiceServicerWithExportParams(StatusCode.OK, 5),
+            TraceServiceServicerWithExportParams(
+                StatusCode.OK, optional_export_sleep=1
+            ),
             self.server,
         )
 
@@ -335,18 +336,20 @@ class TestOTLPExporterMixin(TestCase):
             target=self.exporter.export, args=([self.span],)
         )
         export_thread.start()
-        # Wait a sec for exporter to get lock and make export call.
-        time.sleep(1)
+        # Wait a bit for exporter to get lock and make export call.
+        time.sleep(0.25)
         # pylint: disable=protected-access
         self.assertTrue(self.exporter._export_lock.locked())
-        self.exporter.shutdown()
+        self.exporter.shutdown(timeout_millis=3000)
         # pylint: disable=protected-access
         self.assertTrue(self.exporter._shutdown)
-        self.assertEqual(export_thread.join(), None)
+        self.assertEqual(export_thread.join(), SpanExportResult.SUCCESS)
 
     def test_shutdown_doesnot_wait_last_export(self):
         add_TraceServiceServicer_to_server(
-            TraceServiceServicerWithExportParams(StatusCode.OK, 35),
+            TraceServiceServicerWithExportParams(
+                StatusCode.OK, optional_export_sleep=3
+            ),
             self.server,
         )
 
@@ -354,12 +357,12 @@ class TestOTLPExporterMixin(TestCase):
             target=self.exporter.export, args=([self.span],)
         )
         export_thread.start()
-        # Wait a sec for exporter to get lock and make export call.
-        time.sleep(1)
+        # Wait for exporter to get lock and make export call.
+        time.sleep(0.25)
         # pylint: disable=protected-access
         self.assertTrue(self.exporter._export_lock.locked())
-        # Set to 6 seconds, so the 35 second server-side delay will not be reached.
-        self.exporter.shutdown(timeout_millis=6000)
+        # Set to 1 seconds, so the 3 second server-side delay will not be reached.
+        self.exporter.shutdown(timeout_millis=1000)
         # pylint: disable=protected-access
         self.assertTrue(self.exporter._shutdown)
         self.assertEqual(export_thread.join(), None)
@@ -399,7 +402,9 @@ class TestOTLPExporterMixin(TestCase):
     def test_unavailable_delay(self, mock_sleep):
         add_TraceServiceServicer_to_server(
             TraceServiceServicerWithExportParams(
-                StatusCode.UNAVAILABLE, None, 1e7
+                StatusCode.UNAVAILABLE,
+                optional_export_sleep=None,
+                optional_export_retry_millis=1e7,
             ),
             self.server,
         )
