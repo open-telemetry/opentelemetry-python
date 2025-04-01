@@ -151,7 +151,7 @@ class B3MultiFormat(TextMapPropagator):
         setter.set(carrier, self.SAMPLED_KEY, "1" if sampled else "0")
 
     @property
-    def fields(self) -> typing.Set[str]:
+    def fields(self) -> set[str]:
         return {
             self.TRACE_ID_KEY,
             self.SPAN_ID_KEY,
@@ -189,7 +189,7 @@ class B3SingleFormat(B3MultiFormat):
         setter.set(carrier, self.SINGLE_HEADER_KEY, "-".join(fields))
 
     @property
-    def fields(self) -> typing.Set[str]:
+    def fields(self) -> set[str]:
         return {self.SINGLE_HEADER_KEY}
 
 

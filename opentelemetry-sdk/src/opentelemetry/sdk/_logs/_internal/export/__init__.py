@@ -20,9 +20,10 @@ import logging
 import os
 import sys
 import threading
+from collections.abc import Sequence
 from os import environ, linesep
 from time import time_ns
-from typing import IO, Callable, Deque, List, Optional, Sequence
+from typing import IO, Callable, Deque
 
 from opentelemetry.context import (
     _SUPPRESS_INSTRUMENTATION_KEY,
@@ -167,7 +168,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
 
     _queue: Deque[LogData]
     _flush_request: _FlushRequest | None
-    _log_records: List[LogData | None]
+    _log_records: list[LogData | None]
 
     def __init__(
         self,
@@ -232,7 +233,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
 
     def worker(self):
         timeout = self._schedule_delay_millis / 1e3
-        flush_request: Optional[_FlushRequest] = None
+        flush_request: _FlushRequest | None = None
         while not self._shutdown:
             with self._condition:
                 if self._shutdown:
@@ -275,7 +276,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
         self._notify_flush_request_finished(flush_request)
         self._notify_flush_request_finished(shutdown_flush_request)
 
-    def _export(self, flush_request: Optional[_FlushRequest] = None):
+    def _export(self, flush_request: _FlushRequest | None = None):
         """Exports logs considering the given flush_request.
 
         If flush_request is not None then logs are exported in batches
@@ -323,7 +324,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
         while self._queue:
             self._export_batch()
 
-    def _get_and_unset_flush_request(self) -> Optional[_FlushRequest]:
+    def _get_and_unset_flush_request(self) -> _FlushRequest | None:
         flush_request = self._flush_request
         self._flush_request = None
         if flush_request is not None:
@@ -332,7 +333,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
 
     @staticmethod
     def _notify_flush_request_finished(
-        flush_request: Optional[_FlushRequest] = None,
+        flush_request: _FlushRequest | None = None,
     ):
         if flush_request is not None:
             flush_request.event.set()
@@ -363,7 +364,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
         self._worker_thread.join()
         self._exporter.shutdown()
 
-    def force_flush(self, timeout_millis: Optional[int] = None) -> bool:
+    def force_flush(self, timeout_millis: int | None = None) -> bool:
         if timeout_millis is None:
             timeout_millis = self._export_timeout_millis
         if self._shutdown:

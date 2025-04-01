@@ -21,10 +21,6 @@ from time import sleep
 from typing import (  # noqa: F401
     Any,
     Callable,
-    Dict,
-    List,
-    Mapping,
-    Sequence,
 )
 
 import requests
@@ -242,10 +238,10 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
     reason="Use one of the encoders from opentelemetry-exporter-otlp-proto-common instead",
 )
 def get_resource_data(
-    sdk_resource_scope_data: Dict[SDKResource, Any],  # ResourceDataT?
+    sdk_resource_scope_data: dict[SDKResource, Any],  # ResourceDataT?
     resource_class: Callable[..., PB2Resource],
     name: str,
-) -> List[PB2Resource]:
+) -> list[PB2Resource]:
     return _get_resource_data(sdk_resource_scope_data, resource_class, name)
 
 

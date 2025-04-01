@@ -15,7 +15,6 @@
 # pylint: disable=protected-access
 
 import unittest
-from typing import List
 from unittest.mock import MagicMock, Mock, call, patch
 
 import requests
@@ -287,7 +286,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         )
 
     @staticmethod
-    def _get_sdk_log_data() -> List[LogData]:
+    def _get_sdk_log_data() -> list[LogData]:
         log1 = LogData(
             log_record=SDKLogRecord(
                 timestamp=1644650195189786880,

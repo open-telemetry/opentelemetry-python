@@ -15,7 +15,8 @@
 import asyncio
 import contextlib
 import functools
-from typing import TYPE_CHECKING, Callable, Generic, Iterator, TypeVar
+from collections.abc import Iterator
+from typing import TYPE_CHECKING, Callable, Generic, TypeVar
 
 V = TypeVar("V")
 R = TypeVar("R")  # Return type

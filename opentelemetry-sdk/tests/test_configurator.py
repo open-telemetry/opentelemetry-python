@@ -15,9 +15,9 @@
 # pylint: skip-file
 from __future__ import annotations
 
+from collections.abc import Iterable, Sequence
 from logging import WARNING, getLogger
 from os import environ
-from typing import Iterable, Optional, Sequence
 from unittest import TestCase, mock
 from unittest.mock import Mock, patch
 
@@ -223,14 +223,14 @@ class CustomSampler(Sampler):
 
     def should_sample(
         self,
-        parent_context: Optional["Context"],
+        parent_context: Context | None,
         trace_id: int,
         name: str,
         kind: SpanKind = None,
         attributes: Attributes = None,
         links: Sequence[Link] = None,
         trace_state: TraceState = None,
-    ) -> "SamplingResult":
+    ) -> SamplingResult:
         return SamplingResult(
             Decision.RECORD_AND_SAMPLE,
             None,
@@ -252,14 +252,14 @@ class CustomRatioSampler(TraceIdRatioBased):
 
     def should_sample(
         self,
-        parent_context: "Context" | None,
+        parent_context: Context | None,
         trace_id: int,
         name: str,
         kind: SpanKind | None = None,
         attributes: Attributes = None,
         links: Sequence[Link] | None = None,
         trace_state: TraceState | None = None,
-    ) -> "SamplingResult":
+    ) -> SamplingResult:
         return SamplingResult(
             Decision.RECORD_AND_SAMPLE,
             None,

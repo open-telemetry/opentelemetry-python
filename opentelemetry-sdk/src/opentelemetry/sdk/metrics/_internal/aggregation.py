@@ -16,6 +16,7 @@
 
 from abc import ABC, abstractmethod
 from bisect import bisect_left
+from collections.abc import Sequence
 from enum import IntEnum
 from functools import partial
 from logging import getLogger
@@ -24,10 +25,7 @@ from threading import Lock
 from typing import (
     Callable,
     Generic,
-    List,
     Optional,
-    Sequence,
-    Type,
     TypeVar,
 )
 
@@ -504,7 +502,7 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
         self._previous_collection_start_nano = self._start_time_unix_nano
 
-    def _get_empty_bucket_counts(self) -> List[int]:
+    def _get_empty_bucket_counts(self) -> list[int]:
         return [0] * (len(self._boundaries) + 1)
 
     def aggregate(
@@ -1203,7 +1201,7 @@ class Aggregation(ABC):
         instrument: Instrument,
         attributes: Attributes,
         reservoir_factory: Callable[
-            [Type[_Aggregation]], ExemplarReservoirBuilder
+            [type[_Aggregation]], ExemplarReservoirBuilder
         ],
         start_time_unix_nano: int,
     ) -> _Aggregation:
@@ -1234,7 +1232,7 @@ class DefaultAggregation(Aggregation):
         instrument: Instrument,
         attributes: Attributes,
         reservoir_factory: Callable[
-            [Type[_Aggregation]], ExemplarReservoirBuilder
+            [type[_Aggregation]], ExemplarReservoirBuilder
         ],
         start_time_unix_nano: int,
     ) -> _Aggregation:
@@ -1326,7 +1324,7 @@ class ExponentialBucketHistogramAggregation(Aggregation):
         instrument: Instrument,
         attributes: Attributes,
         reservoir_factory: Callable[
-            [Type[_Aggregation]], ExemplarReservoirBuilder
+            [type[_Aggregation]], ExemplarReservoirBuilder
         ],
         start_time_unix_nano: int,
     ) -> _Aggregation:
@@ -1375,7 +1373,7 @@ class ExplicitBucketHistogramAggregation(Aggregation):
         instrument: Instrument,
         attributes: Attributes,
         reservoir_factory: Callable[
-            [Type[_Aggregation]], ExemplarReservoirBuilder
+            [type[_Aggregation]], ExemplarReservoirBuilder
         ],
         start_time_unix_nano: int,
     ) -> _Aggregation:
@@ -1414,7 +1412,7 @@ class SumAggregation(Aggregation):
         instrument: Instrument,
         attributes: Attributes,
         reservoir_factory: Callable[
-            [Type[_Aggregation]], ExemplarReservoirBuilder
+            [type[_Aggregation]], ExemplarReservoirBuilder
         ],
         start_time_unix_nano: int,
     ) -> _Aggregation:
@@ -1448,7 +1446,7 @@ class LastValueAggregation(Aggregation):
         instrument: Instrument,
         attributes: Attributes,
         reservoir_factory: Callable[
-            [Type[_Aggregation]], ExemplarReservoirBuilder
+            [type[_Aggregation]], ExemplarReservoirBuilder
         ],
         start_time_unix_nano: int,
     ) -> _Aggregation:
@@ -1466,7 +1464,7 @@ class DropAggregation(Aggregation):
         instrument: Instrument,
         attributes: Attributes,
         reservoir_factory: Callable[
-            [Type[_Aggregation]], ExemplarReservoirBuilder
+            [type[_Aggregation]], ExemplarReservoirBuilder
         ],
         start_time_unix_nano: int,
     ) -> _Aggregation:

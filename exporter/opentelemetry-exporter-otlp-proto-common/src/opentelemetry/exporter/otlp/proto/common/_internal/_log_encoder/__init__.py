@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from collections import defaultdict
-from typing import List, Sequence
+from collections.abc import Sequence
 
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _encode_attributes,
@@ -63,7 +63,7 @@ def _encode_log(log_data: LogData) -> PB2LogRecord:
     )
 
 
-def _encode_resource_logs(batch: Sequence[LogData]) -> List[ResourceLogs]:
+def _encode_resource_logs(batch: Sequence[LogData]) -> list[ResourceLogs]:
     sdk_resource_logs = defaultdict(lambda: defaultdict(list))
 
     for sdk_log in batch:

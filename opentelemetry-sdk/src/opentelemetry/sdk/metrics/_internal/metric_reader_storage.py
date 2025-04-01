@@ -15,7 +15,7 @@
 from logging import getLogger
 from threading import RLock
 from time import time_ns
-from typing import Dict, List, Optional
+from typing import Optional
 
 from opentelemetry.metrics import (
     Asynchronous,
@@ -64,20 +64,20 @@ class MetricReaderStorage:
     def __init__(
         self,
         sdk_config: SdkConfiguration,
-        instrument_class_temporality: Dict[type, AggregationTemporality],
-        instrument_class_aggregation: Dict[type, Aggregation],
+        instrument_class_temporality: dict[type, AggregationTemporality],
+        instrument_class_aggregation: dict[type, Aggregation],
     ) -> None:
         self._lock = RLock()
         self._sdk_config = sdk_config
-        self._instrument_view_instrument_matches: Dict[
-            Instrument, List[_ViewInstrumentMatch]
+        self._instrument_view_instrument_matches: dict[
+            Instrument, list[_ViewInstrumentMatch]
         ] = {}
         self._instrument_class_temporality = instrument_class_temporality
         self._instrument_class_aggregation = instrument_class_aggregation
 
     def _get_or_init_view_instrument_match(
         self, instrument: Instrument
-    ) -> List[_ViewInstrumentMatch]:
+    ) -> list[_ViewInstrumentMatch]:
         # Optimistically get the relevant views for the given instrument. Once set for a given
         # instrument, the mapping will never change
 
@@ -139,7 +139,7 @@ class MetricReaderStorage:
         collection_start_nanos = time_ns()
 
         with self._lock:
-            instrumentation_scope_scope_metrics: Dict[
+            instrumentation_scope_scope_metrics: dict[
                 InstrumentationScope, ScopeMetrics
             ] = {}
 
@@ -151,7 +151,7 @@ class MetricReaderStorage:
                     instrument.__class__
                 ]
 
-                metrics: List[Metric] = []
+                metrics: list[Metric] = []
 
                 for view_instrument_match in view_instrument_matches:
                     data_points = view_instrument_match.collect(
@@ -250,7 +250,7 @@ class MetricReaderStorage:
     def _handle_view_instrument_match(
         self,
         instrument: Instrument,
-        view_instrument_matches: List["_ViewInstrumentMatch"],
+        view_instrument_matches: list["_ViewInstrumentMatch"],
     ) -> None:
         for view in self._sdk_config.views:
             # pylint: disable=protected-access

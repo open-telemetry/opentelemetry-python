@@ -35,7 +35,7 @@ if _version_not_supported:
     )
 
 
-class TraceServiceStub(object):
+class TraceServiceStub:
     """Service that can be used to push spans between one Application instrumented with
     OpenTelemetry and a collector, or between a collector and a central collector (in this
     case spans are sent/received to/from multiple Applications).
@@ -55,7 +55,7 @@ class TraceServiceStub(object):
         )
 
 
-class TraceServiceServicer(object):
+class TraceServiceServicer:
     """Service that can be used to push spans between one Application instrumented with
     OpenTelemetry and a collector, or between a collector and a central collector (in this
     case spans are sent/received to/from multiple Applications).
@@ -86,7 +86,7 @@ def add_TraceServiceServicer_to_server(servicer, server):
 
 
 # This class is part of an EXPERIMENTAL API.
-class TraceService(object):
+class TraceService:
     """Service that can be used to push spans between one Application instrumented with
     OpenTelemetry and a collector, or between a collector and a central collector (in this
     case spans are sent/received to/from multiple Applications).

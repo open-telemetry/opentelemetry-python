@@ -13,11 +13,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
+from collections.abc import Sequence as TypingSequence
 from dataclasses import replace
 from logging import getLogger
 from os import environ
-from typing import Iterable, List, Tuple, Union
-from typing import Sequence as TypingSequence
 
 from grpc import ChannelCredentials, Compression
 from opentelemetry.exporter.otlp.proto.common._internal.metrics_encoder import (
@@ -97,7 +97,9 @@ class OTLPMetricExporter(
         endpoint: str | None = None,
         insecure: bool | None = None,
         credentials: ChannelCredentials | None = None,
-        headers: Union[TypingSequence[Tuple[str, str]], dict[str, str], str]
+        headers: TypingSequence[tuple[str, str]]
+        | dict[str, str]
+        | str
         | None = None,
         timeout: int | None = None,
         compression: Compression | None = None,
@@ -180,10 +182,10 @@ class OTLPMetricExporter(
         metrics_data: MetricsData,
     ) -> Iterable[MetricsData]:
         batch_size: int = 0
-        split_resource_metrics: List[ResourceMetrics] = []
+        split_resource_metrics: list[ResourceMetrics] = []
 
         for resource_metrics in metrics_data.resource_metrics:
-            split_scope_metrics: List[ScopeMetrics] = []
+            split_scope_metrics: list[ScopeMetrics] = []
             split_resource_metrics.append(
                 replace(
                     resource_metrics,
@@ -191,7 +193,7 @@ class OTLPMetricExporter(
                 )
             )
             for scope_metrics in resource_metrics.scope_metrics:
-                split_metrics: List[Metric] = []
+                split_metrics: list[Metric] = []
                 split_scope_metrics.append(
                     replace(
                         scope_metrics,
@@ -199,7 +201,7 @@ class OTLPMetricExporter(
                     )
                 )
                 for metric in scope_metrics.metrics:
-                    split_data_points: List[DataPointT] = []
+                    split_data_points: list[DataPointT] = []
                     split_metrics.append(
                         replace(
                             metric,

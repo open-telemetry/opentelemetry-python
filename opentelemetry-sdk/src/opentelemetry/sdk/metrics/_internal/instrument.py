@@ -15,9 +15,9 @@
 # pylint: disable=too-many-ancestors, unused-import
 from __future__ import annotations
 
+from collections.abc import Generator, Iterable, Sequence
 from logging import getLogger
 from time import time_ns
-from typing import Generator, Iterable, List, Sequence, Union
 
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics
@@ -52,7 +52,7 @@ class _Synchronous:
         self,
         name: str,
         instrumentation_scope: InstrumentationScope,
-        measurement_consumer: "opentelemetry.sdk.metrics.MeasurementConsumer",
+        measurement_consumer: opentelemetry.sdk.metrics.MeasurementConsumer,
         unit: str = "",
         description: str = "",
     ):
@@ -84,7 +84,7 @@ class _Asynchronous:
         self,
         name: str,
         instrumentation_scope: InstrumentationScope,
-        measurement_consumer: "opentelemetry.sdk.metrics.MeasurementConsumer",
+        measurement_consumer: opentelemetry.sdk.metrics.MeasurementConsumer,
         callbacks: Iterable[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
@@ -111,7 +111,7 @@ class _Asynchronous:
         self._measurement_consumer = measurement_consumer
         super().__init__(name, callbacks, unit=unit, description=description)
 
-        self._callbacks: List[CallbackT] = []
+        self._callbacks: list[CallbackT] = []
 
         if callbacks is not None:
             for callback in callbacks:
@@ -159,7 +159,7 @@ class Counter(_Synchronous, APICounter):
 
     def add(
         self,
-        amount: Union[int, float],
+        amount: int | float,
         attributes: dict[str, str] | None = None,
         context: Context | None = None,
     ):
@@ -188,7 +188,7 @@ class UpDownCounter(_Synchronous, APIUpDownCounter):
 
     def add(
         self,
-        amount: Union[int, float],
+        amount: int | float,
         attributes: dict[str, str] | None = None,
         context: Context | None = None,
     ):
@@ -227,7 +227,7 @@ class Histogram(_Synchronous, APIHistogram):
         self,
         name: str,
         instrumentation_scope: InstrumentationScope,
-        measurement_consumer: "opentelemetry.sdk.metrics.MeasurementConsumer",
+        measurement_consumer: opentelemetry.sdk.metrics.MeasurementConsumer,
         unit: str = "",
         description: str = "",
         explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
@@ -250,7 +250,7 @@ class Histogram(_Synchronous, APIHistogram):
 
     def record(
         self,
-        amount: Union[int, float],
+        amount: int | float,
         attributes: dict[str, str] | None = None,
         context: Context | None = None,
     ):
@@ -280,7 +280,7 @@ class Gauge(_Synchronous, APIGauge):
 
     def set(
         self,
-        amount: Union[int, float],
+        amount: int | float,
         attributes: dict[str, str] | None = None,
         context: Context | None = None,
     ):

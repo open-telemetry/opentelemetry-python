@@ -15,7 +15,7 @@
 """OpenCensus Span Exporter."""
 
 import logging
-from typing import Sequence
+from collections.abc import Sequence
 
 import grpc
 from opencensus.proto.agent.trace.v1 import (

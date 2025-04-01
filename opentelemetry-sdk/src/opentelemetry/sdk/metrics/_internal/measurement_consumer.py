@@ -15,9 +15,10 @@
 # pylint: disable=unused-import
 
 from abc import ABC, abstractmethod
+from collections.abc import Iterable, Mapping
 from threading import Lock
 from time import time_ns
-from typing import Iterable, List, Mapping, Optional
+from typing import Optional
 
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics
@@ -73,7 +74,7 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
             )
             for reader in sdk_config.metric_readers
         }
-        self._async_instruments: List[
+        self._async_instruments: list[
             "opentelemetry.sdk.metrics._internal.instrument._Asynchronous"
         ] = []
 

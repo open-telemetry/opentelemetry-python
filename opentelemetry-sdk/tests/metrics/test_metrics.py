@@ -15,9 +15,9 @@
 # pylint: disable=protected-access,no-self-use
 
 import weakref
+from collections.abc import Iterable, Sequence
 from logging import WARNING
 from time import sleep
-from typing import Iterable, Sequence
 from unittest.mock import MagicMock, Mock, patch
 
 from opentelemetry.attributes import BoundedAttributes

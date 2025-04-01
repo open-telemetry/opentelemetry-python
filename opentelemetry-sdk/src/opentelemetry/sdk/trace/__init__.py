@@ -21,21 +21,14 @@ import logging
 import threading
 import traceback
 import typing
+from collections.abc import Iterator, Mapping, MutableMapping, Sequence
 from os import environ
 from time import time_ns
 from types import MappingProxyType, TracebackType
 from typing import (
     Any,
     Callable,
-    Dict,
-    Iterator,
-    List,
-    Mapping,
-    MutableMapping,
     Optional,
-    Sequence,
-    Tuple,
-    Type,
     Union,
 )
 from warnings import filterwarnings
@@ -149,7 +142,7 @@ class SynchronousMultiSpanProcessor(SpanProcessor):
     added.
     """
 
-    _span_processors: Tuple[SpanProcessor, ...]
+    _span_processors: tuple[SpanProcessor, ...]
 
     def __init__(self):
         # use a tuple to avoid race conditions when adding a new span and
@@ -221,7 +214,7 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
     def __init__(self, num_threads: int = 2):
         # use a tuple to avoid race conditions when adding a new span and
         # iterating through it on "on_start" and "on_end".
-        self._span_processors = ()  # type: Tuple[SpanProcessor, ...]
+        self._span_processors = ()  # type: tuple[SpanProcessor, ...]
         self._lock = threading.Lock()
         self._executor = concurrent.futures.ThreadPoolExecutor(
             max_workers=num_threads
@@ -521,7 +514,7 @@ class ReadableSpan:
         return json.dumps(f_span, indent=indent)
 
     @staticmethod
-    def _format_context(context: SpanContext) -> Dict[str, str]:
+    def _format_context(context: SpanContext) -> dict[str, str]:
         return {
             "trace_id": f"0x{trace_api.format_trace_id(context.trace_id)}",
             "span_id": f"0x{trace_api.format_span_id(context.span_id)}",
@@ -531,13 +524,13 @@ class ReadableSpan:
     @staticmethod
     def _format_attributes(
         attributes: types.Attributes,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         if attributes is not None and not isinstance(attributes, dict):
             return dict(attributes)
         return attributes
 
     @staticmethod
-    def _format_events(events: Sequence[Event]) -> List[Dict[str, Any]]:
+    def _format_events(events: Sequence[Event]) -> list[dict[str, Any]]:
         return [
             {
                 "name": event.name,
@@ -550,7 +543,7 @@ class ReadableSpan:
         ]
 
     @staticmethod
-    def _format_links(links: Sequence[trace_api.Link]) -> List[Dict[str, Any]]:
+    def _format_links(links: Sequence[trace_api.Link]) -> list[dict[str, Any]]:
         return [
             {
                 "context": Span._format_context(  # pylint: disable=protected-access
@@ -986,7 +979,7 @@ class Span(trace_api.Span, ReadableSpan):
 
     def __exit__(
         self,
-        exc_type: Optional[Type[BaseException]],
+        exc_type: Optional[type[BaseException]],
         exc_val: Optional[BaseException],
         exc_tb: Optional[TracebackType],
     ) -> None:

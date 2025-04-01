@@ -14,11 +14,12 @@
 
 import weakref
 from atexit import register, unregister
+from collections.abc import Sequence
 from logging import getLogger
 from os import environ
 from threading import Lock
 from time import time_ns
-from typing import Optional, Sequence
+from typing import Optional
 
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics
@@ -543,11 +544,9 @@ class MeterProvider(APIMeterProvider):
 
             # pylint: disable=broad-exception-raised
             raise Exception(
-                (
-                    "MeterProvider.shutdown failed because the following "
-                    "metric readers failed during shutdown:\n"
-                    f"{metric_reader_error_string}"
-                )
+                "MeterProvider.shutdown failed because the following "
+                "metric readers failed during shutdown:\n"
+                f"{metric_reader_error_string}"
             )
 
     def get_meter(

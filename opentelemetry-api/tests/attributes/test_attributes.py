@@ -15,7 +15,7 @@
 # type: ignore
 
 import unittest
-from typing import MutableSequence
+from collections.abc import MutableSequence
 
 from opentelemetry.attributes import BoundedAttributes, _clean_attribute
 

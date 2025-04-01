@@ -35,7 +35,7 @@ if _version_not_supported:
     )
 
 
-class MetricsServiceStub(object):
+class MetricsServiceStub:
     """Service that can be used to push metrics between one Application
     instrumented with OpenTelemetry and a collector, or between a collector and a
     central collector.
@@ -55,7 +55,7 @@ class MetricsServiceStub(object):
         )
 
 
-class MetricsServiceServicer(object):
+class MetricsServiceServicer:
     """Service that can be used to push metrics between one Application
     instrumented with OpenTelemetry and a collector, or between a collector and a
     central collector.
@@ -86,7 +86,7 @@ def add_MetricsServiceServicer_to_server(servicer, server):
 
 
 # This class is part of an EXPERIMENTAL API.
-class MetricsService(object):
+class MetricsService:
     """Service that can be used to push metrics between one Application
     instrumented with OpenTelemetry and a collector, or between a collector and a
     central collector.

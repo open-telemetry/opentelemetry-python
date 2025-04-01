@@ -15,7 +15,7 @@
 import gc
 import time
 import weakref
-from typing import Sequence
+from collections.abc import Sequence
 from unittest import TestCase
 
 from opentelemetry.sdk.metrics import MeterProvider

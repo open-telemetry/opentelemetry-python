@@ -13,13 +13,11 @@
 # limitations under the License.
 
 
+from collections.abc import Generator, Iterable, Sequence
 from typing import (
     Callable,
     Final,
-    Generator,
-    Iterable,
     Optional,
-    Sequence,
     Union,
 )
 

@@ -15,7 +15,7 @@
 # metrics.py
 # This is still work in progress as the metrics SDK is being implemented
 
-from typing import Iterable
+from collections.abc import Iterable
 
 from opentelemetry.metrics import (
     CallbackOptions,

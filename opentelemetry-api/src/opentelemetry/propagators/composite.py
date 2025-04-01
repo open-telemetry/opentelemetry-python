@@ -69,7 +69,7 @@ class CompositePropagator(textmap.TextMapPropagator):
             propagator.inject(carrier, context, setter=setter)
 
     @property
-    def fields(self) -> typing.Set[str]:
+    def fields(self) -> set[str]:
         """Returns a set with the fields set in `inject`.
 
         See

@@ -14,7 +14,7 @@
 # type: ignore
 
 import io
-from typing import Generator, Iterable, List
+from collections.abc import Generator, Iterable
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
@@ -52,7 +52,7 @@ softirq 1644603067 0 166540056 208 309152755 8936439 0 1354908 935642970 13 2229
     @staticmethod
     def create_measurements_expected(
         instrument: Instrument,
-    ) -> List[Measurement]:
+    ) -> list[Measurement]:
         return [
             Measurement(
                 6150.29,

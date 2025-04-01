@@ -64,10 +64,11 @@ import platform
 import socket
 import sys
 import typing
+from collections.abc import MutableMapping
 from json import dumps
 from os import environ
 from types import ModuleType
-from typing import List, MutableMapping, Optional, cast
+from typing import Optional, cast
 from urllib import parse
 
 from opentelemetry.attributes import BoundedAttributes
@@ -199,7 +200,7 @@ class Resource:
             }
         )
 
-        resource_detectors: List[ResourceDetector] = []
+        resource_detectors: list[ResourceDetector] = []
 
         resource_detector: str
         for resource_detector in otel_experimental_resource_detectors:
@@ -387,9 +388,8 @@ class ProcessResourceDetector(ResourceDetector):
             PROCESS_COMMAND_LINE: _process_command_line,
             PROCESS_COMMAND_ARGS: _process_command_args,
         }
-        if hasattr(os, "getppid"):
-            # pypy3 does not have getppid()
-            resource_info[PROCESS_PARENT_PID] = os.getppid()
+
+        resource_info[PROCESS_PARENT_PID] = os.getppid()
 
         if psutil is not None:
             process: psutil_module.Process = psutil.Process()
@@ -498,7 +498,7 @@ class _HostResourceDetector(ResourceDetector):
 
 
 def get_aggregated_resources(
-    detectors: typing.List["ResourceDetector"],
+    detectors: list["ResourceDetector"],
     initial_resource: typing.Optional[Resource] = None,
     timeout: int = 5,
 ) -> "Resource":

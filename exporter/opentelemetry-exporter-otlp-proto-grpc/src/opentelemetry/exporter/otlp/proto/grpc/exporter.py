@@ -17,21 +17,18 @@
 import threading
 from abc import ABC, abstractmethod
 from collections.abc import Sequence  # noqa: F401
+from collections.abc import Sequence as TypingSequence
 from logging import getLogger
 from os import environ
 from time import sleep
 from typing import (  # noqa: F401
     Any,
     Callable,
-    Dict,
     Generic,
-    List,
     Optional,
-    Tuple,
     TypeVar,
     Union,
 )
-from typing import Sequence as TypingSequence
 from urllib.parse import urlparse
 
 from deprecated import deprecated
@@ -112,10 +109,10 @@ def environ_to_compression(environ_key: str) -> Optional[Compression]:
     reason="Use one of the encoders from opentelemetry-exporter-otlp-proto-common instead",
 )
 def get_resource_data(
-    sdk_resource_scope_data: Dict[SDKResource, ResourceDataT],
+    sdk_resource_scope_data: dict[SDKResource, ResourceDataT],
     resource_class: Callable[..., TypingResourceT],
     name: str,
-) -> List[TypingResourceT]:
+) -> list[TypingResourceT]:
     return _get_resource_data(sdk_resource_scope_data, resource_class, name)
 
 
@@ -192,7 +189,7 @@ class OTLPExporterMixin(
         insecure: Optional[bool] = None,
         credentials: Optional[ChannelCredentials] = None,
         headers: Optional[
-            Union[TypingSequence[Tuple[str, str]], Dict[str, str], str]
+            Union[TypingSequence[tuple[str, str]], dict[str, str], str]
         ] = None,
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,

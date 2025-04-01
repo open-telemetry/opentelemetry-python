@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections.abc import Mapping
 from logging import getLogger
 from re import compile
 from types import MappingProxyType
-from typing import Dict, Mapping, Optional
+from typing import Optional
 
 from opentelemetry.context import create_key, get_value, set_value
 from opentelemetry.context.context import Context
@@ -110,7 +111,7 @@ def clear(context: Optional[Context] = None) -> Context:
     return set_value(_BAGGAGE_KEY, {}, context=context)
 
 
-def _get_baggage_value(context: Optional[Context] = None) -> Dict[str, object]:
+def _get_baggage_value(context: Optional[Context] = None) -> dict[str, object]:
     baggage = get_value(_BAGGAGE_KEY, context=context)
     if isinstance(baggage, dict):
         return baggage

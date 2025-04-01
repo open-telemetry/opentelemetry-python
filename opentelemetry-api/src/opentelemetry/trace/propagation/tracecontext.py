@@ -109,7 +109,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
             )
 
     @property
-    def fields(self) -> typing.Set[str]:
+    def fields(self) -> set[str]:
         """Returns a set with the fields set in `inject`.
 
         See

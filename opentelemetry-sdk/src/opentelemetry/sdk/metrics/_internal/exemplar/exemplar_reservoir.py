@@ -14,15 +14,12 @@
 
 from abc import ABC, abstractmethod
 from collections import defaultdict
+from collections.abc import Mapping, Sequence
 from random import randrange
 from typing import (
     Any,
     Callable,
-    Dict,
-    List,
-    Mapping,
     Optional,
-    Sequence,
     Union,
 )
 
@@ -65,7 +62,7 @@ class ExemplarReservoir(ABC):
         raise NotImplementedError("ExemplarReservoir.offer is not implemented")
 
     @abstractmethod
-    def collect(self, point_attributes: Attributes) -> List[Exemplar]:
+    def collect(self, point_attributes: Attributes) -> list[Exemplar]:
         """Returns accumulated Exemplars and also resets the reservoir for the next
         sampling period
 
@@ -169,7 +166,7 @@ class FixedSizeExemplarReservoirABC(ExemplarReservoir):
             ExemplarBucket
         )
 
-    def collect(self, point_attributes: Attributes) -> List[Exemplar]:
+    def collect(self, point_attributes: Attributes) -> list[Exemplar]:
         """Returns accumulated Exemplars and also resets the reservoir for the next
         sampling period
 
@@ -324,7 +321,7 @@ class AlignedHistogramBucketExemplarReservoir(FixedSizeExemplarReservoirABC):
         return len(self._boundaries)
 
 
-ExemplarReservoirBuilder = Callable[[Dict[str, Any]], ExemplarReservoir]
+ExemplarReservoirBuilder = Callable[[dict[str, Any]], ExemplarReservoir]
 ExemplarReservoirBuilder.__doc__ = """ExemplarReservoir builder.
 
 It may receive the Aggregation parameters it is bounded to; e.g.
