@@ -15,7 +15,7 @@
 from enum import Enum
 from typing import Final
 
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 DB_CASSANDRA_CONSISTENCY_LEVEL: Final = "db.cassandra.consistency_level"
 """
@@ -304,8 +304,8 @@ Deprecated: No replacement at this time.
 
 
 @deprecated(
-    reason="The attribute db.cassandra.consistency_level is deprecated - Replaced by `cassandra.consistency.level`"
-)  # type: ignore
+    "The attribute db.cassandra.consistency_level is deprecated - Replaced by `cassandra.consistency.level`"
+)
 class DbCassandraConsistencyLevelValues(Enum):
     ALL = "all"
     """all."""
@@ -339,8 +339,8 @@ class DbClientConnectionStateValues(Enum):
 
 
 @deprecated(
-    reason="The attribute db.client.connections.state is deprecated - Replaced by `db.client.connection.state`"
-)  # type: ignore
+    "The attribute db.client.connections.state is deprecated - Replaced by `db.client.connection.state`"
+)
 class DbClientConnectionsStateValues(Enum):
     IDLE = "idle"
     """idle."""
@@ -349,8 +349,8 @@ class DbClientConnectionsStateValues(Enum):
 
 
 @deprecated(
-    reason="The attribute db.cosmosdb.connection_mode is deprecated - Replaced by `azure.cosmosdb.connection.mode`"
-)  # type: ignore
+    "The attribute db.cosmosdb.connection_mode is deprecated - Replaced by `azure.cosmosdb.connection.mode`"
+)
 class DbCosmosdbConnectionModeValues(Enum):
     GATEWAY = "gateway"
     """Gateway (HTTP) connection."""
@@ -359,8 +359,8 @@ class DbCosmosdbConnectionModeValues(Enum):
 
 
 @deprecated(
-    reason="The attribute db.cosmosdb.consistency_level is deprecated - Replaced by `azure.cosmosdb.consistency.level`"
-)  # type: ignore
+    "The attribute db.cosmosdb.consistency_level is deprecated - Replaced by `azure.cosmosdb.consistency.level`"
+)
 class DbCosmosdbConsistencyLevelValues(Enum):
     STRONG = "Strong"
     """strong."""
@@ -375,8 +375,8 @@ class DbCosmosdbConsistencyLevelValues(Enum):
 
 
 @deprecated(
-    reason="The attribute db.cosmosdb.operation_type is deprecated - No replacement at this time"
-)  # type: ignore
+    "The attribute db.cosmosdb.operation_type is deprecated - No replacement at this time"
+)
 class DbCosmosdbOperationTypeValues(Enum):
     BATCH = "batch"
     """batch."""
@@ -411,8 +411,8 @@ class DbCosmosdbOperationTypeValues(Enum):
 
 
 @deprecated(
-    reason="The attribute db.system is deprecated - Replaced by `db.system.name`"
-)  # type: ignore
+    "The attribute db.system is deprecated - Replaced by `db.system.name`"
+)
 class DbSystemValues(Enum):
     OTHER_SQL = "other_sql"
     """Some other SQL database. Fallback only. See notes."""

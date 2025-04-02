@@ -1,5 +1,4 @@
 asgiref==3.7.2
-Deprecated==1.2.14
 importlib-metadata==8.5.0 ; python_version < "3.9"
 importlib-metadata==8.6.1 ; python_version >= "3.9"
 iniconfig==2.0.0
