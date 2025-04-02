@@ -157,9 +157,10 @@ def _clean_extended_attribute_value(
 
             element_type = type(element)
             if element_type not in _VALID_ATTR_VALUE_TYPES:
-                return _clean_extended_attribute_value(
+                element = _clean_extended_attribute_value(
                     element, max_len=max_len
                 )
+                element_type = type(element)
 
             # The type of the sequence must be homogeneous. The first non-None
             # element determines the type of the sequence
