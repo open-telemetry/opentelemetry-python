@@ -181,10 +181,9 @@ def _clean_extended_attribute_value(
         return tuple(cleaned_seq)
 
     raise TypeError(
-        "Invalid type %s for attribute value. Expected one of %s or a "
+        f"Invalid type {type(value).__name__} for attribute value. "
+        f"Expected one of {[valid_type.__name__ for valid_type in _VALID_ANY_VALUE_TYPES]} or a "
         "sequence of those types",
-        type(value).__name__,
-        [valid_type.__name__ for valid_type in _VALID_ANY_VALUE_TYPES],
     )
 
 
@@ -207,7 +206,7 @@ def _clean_extended_attribute(
     try:
         return _clean_extended_attribute_value(value, max_len=max_len)
     except TypeError as exception:
-        _logger.warning(f"Attribute {key}: {exception}")
+        _logger.warning("Attribute %s: %s", key, exception)
         return None
 
 
