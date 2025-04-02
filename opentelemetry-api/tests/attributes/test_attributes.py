@@ -139,6 +139,8 @@ class TestExtendedAttributes(unittest.TestCase):
         # mappings
         self.assertValid({})
         self.assertValid({"k": "v"})
+        # mappings in sequences
+        self.assertValid([{"k": "v"}])
 
         # test keys
         self.assertValid("value", "key")
