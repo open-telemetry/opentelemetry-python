@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4494](https://github.com/open-telemetry/opentelemetry-python/pull/4494))
 - Improve CI by cancelling stale runs and setting timeouts
   ([#4498](https://github.com/open-telemetry/opentelemetry-python/pull/4498))
+- Fix intermittent `Connection aborted` error when using otlp/http exporters
+  ([#4477](https://github.com/open-telemetry/opentelemetry-python/pull/4477))
 
 ## Version 1.31.0/0.52b0 (2025-03-12)
 
