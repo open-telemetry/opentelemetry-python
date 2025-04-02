@@ -164,3 +164,47 @@ class TestHistogramAdvisory(TestCase):
         self.assertEqual(
             metric.data.data_points[0].explicit_bounds, (1.0, 2.0, 3.0)
         )
+
+    def test_explicit_aggregation_multiple_histograms(self):
+        reader = InMemoryMetricReader(
+            preferred_aggregation={
+                Histogram: ExplicitBucketHistogramAggregation()
+            }
+        )
+        meter_provider = MeterProvider(
+            metric_readers=[reader],
+        )
+        meter = meter_provider.get_meter("testmeter")
+
+        histogram1 = meter.create_histogram(
+            "testhistogram1",
+            explicit_bucket_boundaries_advisory=[1.0, 2.0, 3.0],
+        )
+        histogram1.record(1, {"label": "value"})
+        histogram1.record(2, {"label": "value"})
+        histogram1.record(3, {"label": "value"})
+
+        histogram2 = meter.create_histogram(
+            "testhistogram2",
+            explicit_bucket_boundaries_advisory=[4.0, 5.0, 6.0],
+        )
+        histogram2.record(4, {"label": "value"})
+        histogram2.record(5, {"label": "value"})
+        histogram2.record(6, {"label": "value"})
+
+        metrics = reader.get_metrics_data()
+        self.assertEqual(len(metrics.resource_metrics), 1)
+        self.assertEqual(len(metrics.resource_metrics[0].scope_metrics), 1)
+        self.assertEqual(
+            len(metrics.resource_metrics[0].scope_metrics[0].metrics), 2
+        )
+        metric1 = metrics.resource_metrics[0].scope_metrics[0].metrics[0]
+        self.assertEqual(metric1.name, "testhistogram1")
+        self.assertEqual(
+            metric1.data.data_points[0].explicit_bounds, (1.0, 2.0, 3.0)
+        )
+        metric2 = metrics.resource_metrics[0].scope_metrics[0].metrics[1]
+        self.assertEqual(metric2.name, "testhistogram2")
+        self.assertEqual(
+            metric2.data.data_points[0].explicit_bounds, (4.0, 5.0, 6.0)
+        )
