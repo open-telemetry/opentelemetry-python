@@ -145,7 +145,7 @@ def _clean_extended_attribute_value(
 
     if isinstance(value, Sequence):
         sequence_first_valid_type = None
-        cleaned_seq = []
+        cleaned_seq: list[types.AnyValue] = []
 
         for element in value:
             if element is None:
