@@ -82,14 +82,6 @@ class OTLPSpanExporterForTesting(
     _result = SpanExportResult
     _stub = TraceServiceStub
 
-    def __init__(self, insecure=None, endpoint=None):
-        super().__init__(
-            **{
-                "insecure": insecure,
-                "endpoint": endpoint,
-            }
-        )
-
     def _translate_data(
         self, data: Sequence[ReadableSpan]
     ) -> ExportTraceServiceRequest:
@@ -153,7 +145,7 @@ class ThreadWithReturnValue(threading.Thread):
         target=None,
         args=(),
     ):
-        super().__init__(None, target, None, args, None)
+        super().__init__(target=target, args=args)
         self._return = None
 
     def run(self):
