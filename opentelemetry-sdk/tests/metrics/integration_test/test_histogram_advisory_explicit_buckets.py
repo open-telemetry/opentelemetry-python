@@ -223,12 +223,12 @@ class TestHistogramAdvisory(TestCase):
         )
         meter = meter_provider.get_meter("testmeter")
 
-        histogram1 = meter.create_histogram(
+        histogram = meter.create_histogram(
             "testhistogram",
         )
-        histogram1.record(1, {"label": "value"})
-        histogram1.record(2, {"label": "value"})
-        histogram1.record(3, {"label": "value"})
+        histogram.record(1, {"label": "value"})
+        histogram.record(2, {"label": "value"})
+        histogram.record(3, {"label": "value"})
 
         metrics = reader.get_metrics_data()
         self.assertEqual(len(metrics.resource_metrics), 1)
