@@ -24,12 +24,12 @@ jobs:
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v1
+        uses: github/codeql-action/init@231aa2c8a89117b126725a0e11897209b7118144 # v1 on 2025-04-02, TODO: consider using a release
         with:
           languages: python
 
       - name: Autobuild
-        uses: github/codeql-action/autobuild@v1
+        uses: github/codeql-action/autobuild@231aa2c8a89117b126725a0e11897209b7118144 # v1 on 2025-04-02, TODO: consider using a release
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v1
+        uses: github/codeql-action/analyze@231aa2c8a89117b126725a0e11897209b7118144 # v1 on 2025-04-02, TODO: consider using a release
