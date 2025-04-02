@@ -76,9 +76,10 @@ either implicit or explicit context propagation consistently throughout.
 import os
 import typing
 from abc import ABC, abstractmethod
+from collections.abc import Iterator, Sequence
 from enum import Enum
 from logging import getLogger
-from typing import Iterator, Optional, Sequence, cast
+from typing import Optional, cast
 
 from deprecated import deprecated
 

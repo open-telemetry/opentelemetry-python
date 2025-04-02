@@ -25,7 +25,7 @@ backward-compatible way for *callers*.
 Ideally, we could use pyright for this as well, but SDK is not type checked atm.
 """
 
-from typing import Iterable, Sequence
+from collections.abc import Iterable, Sequence
 
 from opentelemetry.metrics import CallbackOptions, Observation
 from opentelemetry.sdk.metrics import MeterProvider

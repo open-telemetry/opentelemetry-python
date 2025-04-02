@@ -73,8 +73,9 @@ API
 """
 
 import logging
+from collections.abc import Sequence
 from os import environ
-from typing import Optional, Sequence
+from typing import Optional
 
 import requests
 

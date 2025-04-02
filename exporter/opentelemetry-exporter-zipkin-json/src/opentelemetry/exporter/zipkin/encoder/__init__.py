@@ -20,8 +20,9 @@ Base module and abstract class for concrete transport encoders to extend.
 import abc
 import json
 import logging
+from collections.abc import Sequence
 from enum import Enum
-from typing import Any, Dict, List, Optional, Sequence, TypeVar
+from typing import Any, Optional, TypeVar
 
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry.sdk.trace import Event
@@ -124,8 +125,8 @@ class Encoder(abc.ABC):
         return parent_id
 
     def _extract_tags_from_dict(
-        self, tags_dict: Optional[Dict]
-    ) -> Dict[str, str]:
+        self, tags_dict: Optional[dict]
+    ) -> dict[str, str]:
         tags = {}
         if not tags_dict:
             return tags
@@ -194,7 +195,7 @@ class Encoder(abc.ABC):
 
         return json.dumps(tag_value_elements, separators=(",", ":"))
 
-    def _extract_tags_from_span(self, span: Span) -> Dict[str, str]:
+    def _extract_tags_from_span(self, span: Span) -> dict[str, str]:
         tags = self._extract_tags_from_dict(span.attributes)
         if span.resource:
             tags.update(self._extract_tags_from_dict(span.resource.attributes))
@@ -228,8 +229,8 @@ class Encoder(abc.ABC):
         return tags
 
     def _extract_annotations_from_events(
-        self, events: Optional[List[Event]]
-    ) -> Optional[List[Dict]]:
+        self, events: Optional[list[Event]]
+    ) -> Optional[list[dict]]:
         if not events:
             return None
 
@@ -280,7 +281,7 @@ class JsonEncoder(Encoder):
         return json.dumps(encoded_spans)
 
     @staticmethod
-    def _encode_local_endpoint(local_endpoint: NodeEndpoint) -> Dict:
+    def _encode_local_endpoint(local_endpoint: NodeEndpoint) -> dict:
         encoded_local_endpoint = {"serviceName": local_endpoint.service_name}
         if local_endpoint.ipv4 is not None:
             encoded_local_endpoint["ipv4"] = str(local_endpoint.ipv4)

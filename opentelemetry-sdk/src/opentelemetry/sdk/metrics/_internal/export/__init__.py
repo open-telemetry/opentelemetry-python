@@ -17,13 +17,14 @@ import math
 import os
 import weakref
 from abc import ABC, abstractmethod
+from collections.abc import Iterable
 from enum import Enum
 from logging import getLogger
 from os import environ, linesep
 from sys import stdout
 from threading import Event, Lock, RLock, Thread
 from time import time_ns
-from typing import IO, Callable, Iterable, Optional
+from typing import IO, Callable
 
 from typing_extensions import final
 
@@ -95,7 +96,7 @@ class MetricExporter(ABC):
         preferred_temporality: dict[type, AggregationTemporality]
         | None = None,
         preferred_aggregation: dict[
-            type, "opentelemetry.sdk.metrics.view.Aggregation"
+            type, opentelemetry.sdk.metrics.view.Aggregation
         ]
         | None = None,
     ) -> None:
@@ -145,12 +146,12 @@ class ConsoleMetricExporter(MetricExporter):
         self,
         out: IO = stdout,
         formatter: Callable[
-            ["opentelemetry.sdk.metrics.export.MetricsData"], str
+            [opentelemetry.sdk.metrics.export.MetricsData], str
         ] = lambda metrics_data: metrics_data.to_json() + linesep,
         preferred_temporality: dict[type, AggregationTemporality]
         | None = None,
         preferred_aggregation: dict[
-            type, "opentelemetry.sdk.metrics.view.Aggregation"
+            type, opentelemetry.sdk.metrics.view.Aggregation
         ]
         | None = None,
     ):
@@ -217,16 +218,16 @@ class MetricReader(ABC):
         preferred_temporality: dict[type, AggregationTemporality]
         | None = None,
         preferred_aggregation: dict[
-            type, "opentelemetry.sdk.metrics.view.Aggregation"
+            type, opentelemetry.sdk.metrics.view.Aggregation
         ]
         | None = None,
     ) -> None:
         self._collect: Callable[
             [
-                "opentelemetry.sdk.metrics.export.MetricReader",
+                opentelemetry.sdk.metrics.export.MetricReader,
                 AggregationTemporality,
             ],
-            Iterable["opentelemetry.sdk.metrics.export.Metric"],
+            Iterable[opentelemetry.sdk.metrics.export.Metric],
         ] = None
 
         self._instrument_class_temporality = {
@@ -350,10 +351,10 @@ class MetricReader(ABC):
         self,
         func: Callable[
             [
-                "opentelemetry.sdk.metrics.export.MetricReader",
+                opentelemetry.sdk.metrics.export.MetricReader,
                 AggregationTemporality,
             ],
-            Iterable["opentelemetry.sdk.metrics.export.Metric"],
+            Iterable[opentelemetry.sdk.metrics.export.Metric],
         ],
     ) -> None:
         """This function is internal to the SDK. It should not be called or overridden by users"""
@@ -362,7 +363,7 @@ class MetricReader(ABC):
     @abstractmethod
     def _receive_metrics(
         self,
-        metrics_data: "opentelemetry.sdk.metrics.export.MetricsData",
+        metrics_data: opentelemetry.sdk.metrics.export.MetricsData,
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> None:
@@ -397,7 +398,7 @@ class InMemoryMetricReader(MetricReader):
         preferred_temporality: dict[type, AggregationTemporality]
         | None = None,
         preferred_aggregation: dict[
-            type, "opentelemetry.sdk.metrics.view.Aggregation"
+            type, opentelemetry.sdk.metrics.view.Aggregation
         ]
         | None = None,
     ) -> None:
@@ -406,13 +407,11 @@ class InMemoryMetricReader(MetricReader):
             preferred_aggregation=preferred_aggregation,
         )
         self._lock = RLock()
-        self._metrics_data: "opentelemetry.sdk.metrics.export.MetricsData" = (
-            None
-        )
+        self._metrics_data: opentelemetry.sdk.metrics.export.MetricsData = None
 
     def get_metrics_data(
         self,
-    ) -> Optional["opentelemetry.sdk.metrics.export.MetricsData"]:
+    ) -> opentelemetry.sdk.metrics.export.MetricsData | None:
         """Reads and returns current metrics from the SDK"""
         with self._lock:
             self.collect()
@@ -422,7 +421,7 @@ class InMemoryMetricReader(MetricReader):
 
     def _receive_metrics(
         self,
-        metrics_data: "opentelemetry.sdk.metrics.export.MetricsData",
+        metrics_data: opentelemetry.sdk.metrics.export.MetricsData,
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> None:
@@ -446,8 +445,8 @@ class PeriodicExportingMetricReader(MetricReader):
     def __init__(
         self,
         exporter: MetricExporter,
-        export_interval_millis: Optional[float] = None,
-        export_timeout_millis: Optional[float] = None,
+        export_interval_millis: float | None = None,
+        export_timeout_millis: float | None = None,
     ) -> None:
         # PeriodicExportingMetricReader defers to exporter for configuration
         super().__init__(

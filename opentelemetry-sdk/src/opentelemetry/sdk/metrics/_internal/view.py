@@ -15,7 +15,7 @@
 
 from fnmatch import fnmatch
 from logging import getLogger
-from typing import Callable, Optional, Set, Type
+from typing import Callable, Optional
 
 from opentelemetry.metrics import Instrument
 from opentelemetry.sdk.metrics._internal.aggregation import (
@@ -35,7 +35,7 @@ _logger = getLogger(__name__)
 
 
 def _default_reservoir_factory(
-    aggregation_type: Type[_Aggregation],
+    aggregation_type: type[_Aggregation],
 ) -> ExemplarReservoirBuilder:
     """Default reservoir factory per aggregation."""
     if issubclass(aggregation_type, _ExplicitBucketHistogramAggregation):
@@ -105,17 +105,17 @@ class View:
 
     def __init__(
         self,
-        instrument_type: Optional[Type[Instrument]] = None,
+        instrument_type: Optional[type[Instrument]] = None,
         instrument_name: Optional[str] = None,
         meter_name: Optional[str] = None,
         meter_version: Optional[str] = None,
         meter_schema_url: Optional[str] = None,
         name: Optional[str] = None,
         description: Optional[str] = None,
-        attribute_keys: Optional[Set[str]] = None,
+        attribute_keys: Optional[set[str]] = None,
         aggregation: Optional[Aggregation] = None,
         exemplar_reservoir_factory: Optional[
-            Callable[[Type[_Aggregation]], ExemplarReservoirBuilder]
+            Callable[[type[_Aggregation]], ExemplarReservoirBuilder]
         ] = None,
         instrument_unit: Optional[str] = None,
     ):

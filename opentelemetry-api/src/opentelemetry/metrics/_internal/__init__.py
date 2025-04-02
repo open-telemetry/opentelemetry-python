@@ -42,11 +42,12 @@ The following code shows how to obtain a meter using the global :class:`.MeterPr
 
 import warnings
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from dataclasses import dataclass
 from logging import getLogger
 from os import environ
 from threading import Lock
-from typing import Dict, List, Optional, Sequence, Union, cast
+from typing import Optional, Union, cast
 
 from opentelemetry.environment_variables import OTEL_PYTHON_METER_PROVIDER
 from opentelemetry.metrics._internal.instrument import (
@@ -154,7 +155,7 @@ class NoOpMeterProvider(MeterProvider):
 class _ProxyMeterProvider(MeterProvider):
     def __init__(self) -> None:
         self._lock = Lock()
-        self._meters: List[_ProxyMeter] = []
+        self._meters: list[_ProxyMeter] = []
         self._real_meter_provider: Optional[MeterProvider] = None
 
     def get_meter(
@@ -206,7 +207,7 @@ class Meter(ABC):
         self._name = name
         self._version = version
         self._schema_url = schema_url
-        self._instrument_ids: Dict[
+        self._instrument_ids: dict[
             str, Optional[_MetricsHistogramAdvisory]
         ] = {}
         self._instrument_ids_lock = Lock()
@@ -508,7 +509,7 @@ class _ProxyMeter(Meter):
     ) -> None:
         super().__init__(name, version=version, schema_url=schema_url)
         self._lock = Lock()
-        self._instruments: List[_ProxyInstrumentT] = []
+        self._instruments: list[_ProxyInstrumentT] = []
         self._real_meter: Optional[Meter] = None
 
     def on_set_meter_provider(self, meter_provider: MeterProvider) -> None:

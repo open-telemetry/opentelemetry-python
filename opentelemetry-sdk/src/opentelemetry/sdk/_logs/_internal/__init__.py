@@ -24,7 +24,7 @@ import warnings
 from os import environ
 from threading import Lock
 from time import time_ns
-from typing import Any, Callable, Tuple, Union  # noqa
+from typing import Any, Callable, Union  # noqa
 
 from opentelemetry._logs import Logger as APILogger
 from opentelemetry._logs import LoggerProvider as APILoggerProvider
@@ -310,7 +310,7 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
     def __init__(self):
         # use a tuple to avoid race conditions when adding a new log and
         # iterating through it on "emit".
-        self._log_record_processors = ()  # type: Tuple[LogRecordProcessor, ...]
+        self._log_record_processors = ()  # type: tuple[LogRecordProcessor, ...]
         self._lock = threading.Lock()
 
     def add_log_record_processor(
@@ -369,7 +369,7 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
     def __init__(self, max_workers: int = 2):
         # use a tuple to avoid race conditions when adding a new log and
         # iterating through it on "emit".
-        self._log_record_processors = ()  # type: Tuple[LogRecordProcessor, ...]
+        self._log_record_processors = ()  # type: tuple[LogRecordProcessor, ...]
         self._lock = threading.Lock()
         self._executor = concurrent.futures.ThreadPoolExecutor(
             max_workers=max_workers
@@ -572,10 +572,10 @@ class Logger(APILogger):
     def __init__(
         self,
         resource: Resource,
-        multi_log_record_processor: Union[
-            SynchronousMultiLogRecordProcessor,
-            ConcurrentMultiLogRecordProcessor,
-        ],
+        multi_log_record_processor: (
+            SynchronousMultiLogRecordProcessor
+            | ConcurrentMultiLogRecordProcessor
+        ),
         instrumentation_scope: InstrumentationScope,
     ):
         super().__init__(

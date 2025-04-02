@@ -22,8 +22,9 @@ from __future__ import annotations
 import logging
 import os
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from os import environ
-from typing import Callable, Sequence, Type, Union
+from typing import Callable
 
 from typing_extensions import Literal
 
@@ -192,7 +193,7 @@ def _get_exporter_names(
 
 
 def _init_tracing(
-    exporters: dict[str, Type[SpanExporter]],
+    exporters: dict[str, type[SpanExporter]],
     id_generator: IdGenerator | None = None,
     sampler: Sampler | None = None,
     resource: Resource | None = None,
@@ -212,9 +213,7 @@ def _init_tracing(
 
 
 def _init_metrics(
-    exporters_or_readers: dict[
-        str, Union[Type[MetricExporter], Type[MetricReader]]
-    ],
+    exporters_or_readers: dict[str, type[MetricExporter] | type[MetricReader]],
     resource: Resource | None = None,
 ):
     metric_readers = []
@@ -236,7 +235,7 @@ def _init_metrics(
 
 
 def _init_logging(
-    exporters: dict[str, Type[LogExporter]],
+    exporters: dict[str, type[LogExporter]],
     resource: Resource | None = None,
     setup_logging_handler: bool = True,
 ):
@@ -264,9 +263,9 @@ def _import_exporters(
     metric_exporter_names: Sequence[str],
     log_exporter_names: Sequence[str],
 ) -> tuple[
-    dict[str, Type[SpanExporter]],
-    dict[str, Union[Type[MetricExporter], Type[MetricReader]]],
-    dict[str, Type[LogExporter]],
+    dict[str, type[SpanExporter]],
+    dict[str, type[MetricExporter] | type[MetricReader]],
+    dict[str, type[LogExporter]],
 ]:
     trace_exporters = {}
     metric_exporters = {}

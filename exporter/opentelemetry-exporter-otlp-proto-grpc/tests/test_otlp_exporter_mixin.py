@@ -13,10 +13,10 @@
 # limitations under the License.
 
 import threading
+from collections.abc import Sequence
 from logging import WARNING
 from time import time_ns
 from types import MethodType
-from typing import Sequence
 from unittest import TestCase
 from unittest.mock import Mock, patch
 

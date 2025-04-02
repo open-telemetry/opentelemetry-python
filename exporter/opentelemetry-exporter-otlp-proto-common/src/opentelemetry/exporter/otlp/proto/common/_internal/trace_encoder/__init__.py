@@ -14,7 +14,8 @@
 
 import logging
 from collections import defaultdict
-from typing import List, Optional, Sequence
+from collections.abc import Sequence
+from typing import Optional
 
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _encode_attributes,
@@ -59,7 +60,7 @@ def encode_spans(
 
 def _encode_resource_spans(
     sdk_spans: Sequence[ReadableSpan],
-) -> List[PB2ResourceSpans]:
+) -> list[PB2ResourceSpans]:
     # We need to inspect the spans and group + structure them as:
     #
     #   Resource
@@ -136,7 +137,7 @@ def _encode_span(sdk_span: ReadableSpan) -> PB2SPan:
 
 def _encode_events(
     events: Sequence[Event],
-) -> Optional[List[PB2SPan.Event]]:
+) -> Optional[list[PB2SPan.Event]]:
     pb2_events = None
     if events:
         pb2_events = []

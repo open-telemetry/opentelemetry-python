@@ -14,9 +14,10 @@
 """OTLP Span Exporter"""
 
 import logging
+from collections.abc import Sequence
+from collections.abc import Sequence as TypingSequence
 from os import environ
-from typing import Dict, Optional, Sequence, Tuple, Union
-from typing import Sequence as TypingSequence
+from typing import Optional, Union
 
 from grpc import ChannelCredentials, Compression
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
@@ -89,7 +90,7 @@ class OTLPSpanExporter(
         insecure: Optional[bool] = None,
         credentials: Optional[ChannelCredentials] = None,
         headers: Optional[
-            Union[TypingSequence[Tuple[str, str]], Dict[str, str], str]
+            Union[TypingSequence[tuple[str, str]], dict[str, str], str]
         ] = None,
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,

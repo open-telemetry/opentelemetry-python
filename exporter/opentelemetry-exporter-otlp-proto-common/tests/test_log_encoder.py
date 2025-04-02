@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import unittest
-from typing import List, Tuple
 
 from opentelemetry._logs import SeverityNumber
 from opentelemetry.exporter.otlp.proto.common._internal import (
@@ -83,7 +82,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
         )
 
     @staticmethod
-    def _get_sdk_log_data() -> List[LogData]:
+    def _get_sdk_log_data() -> list[LogData]:
         log1 = LogData(
             log_record=SDKLogRecord(
                 timestamp=1644650195189786880,
@@ -229,7 +228,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
 
     def get_test_logs(
         self,
-    ) -> Tuple[List[SDKLogRecord], ExportLogsServiceRequest]:
+    ) -> tuple[list[SDKLogRecord], ExportLogsServiceRequest]:
         sdk_logs = self._get_sdk_log_data()
 
         pb2_service_request = ExportLogsServiceRequest(
@@ -479,7 +478,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
         return sdk_logs, pb2_service_request
 
     @staticmethod
-    def _get_test_logs_dropped_attributes() -> List[LogData]:
+    def _get_test_logs_dropped_attributes() -> list[LogData]:
         log1 = LogData(
             log_record=SDKLogRecord(
                 timestamp=1644650195189786880,

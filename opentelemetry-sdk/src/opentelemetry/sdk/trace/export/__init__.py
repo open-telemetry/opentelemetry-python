@@ -65,9 +65,7 @@ class SpanExporter:
     `SimpleSpanProcessor` or a `BatchSpanProcessor`.
     """
 
-    def export(
-        self, spans: typing.Sequence[ReadableSpan]
-    ) -> "SpanExportResult":
+    def export(self, spans: typing.Sequence[ReadableSpan]) -> SpanExportResult:
         """Exports a batch of telemetry data.
 
         Args:
@@ -101,7 +99,7 @@ class SimpleSpanProcessor(SpanProcessor):
         self.span_exporter = span_exporter
 
     def on_start(
-        self, span: Span, parent_context: typing.Optional[Context] = None
+        self, span: Span, parent_context: Context | None = None
     ) -> None:
         pass
 
@@ -197,7 +195,7 @@ class BatchSpanProcessor(SpanProcessor):
         # flag that indicates that spans are being dropped
         self._spans_dropped = False
         # precallocated list to send spans to exporter
-        self.spans_list = [None] * self.max_export_batch_size  # type: typing.List[typing.Optional[Span]]
+        self.spans_list = [None] * self.max_export_batch_size  # type: list[Span]
         self.worker_thread.start()
         if hasattr(os, "register_at_fork"):
             os.register_at_fork(after_in_child=self._at_fork_reinit)  # pylint: disable=protected-access
@@ -287,7 +285,7 @@ class BatchSpanProcessor(SpanProcessor):
 
     def _get_and_unset_flush_request(
         self,
-    ) -> typing.Optional[_FlushRequest]:
+    ) -> _FlushRequest | None:
         """Returns the current flush request and makes it invisible to the
         worker thread for subsequent calls.
         """
@@ -299,7 +297,7 @@ class BatchSpanProcessor(SpanProcessor):
 
     @staticmethod
     def _notify_flush_request_finished(
-        flush_request: typing.Optional[_FlushRequest],
+        flush_request: _FlushRequest | None,
     ):
         """Notifies the flush initiator(s) waiting on the given request/event
         that the flush operation was finished.
@@ -322,7 +320,7 @@ class BatchSpanProcessor(SpanProcessor):
             self._flush_request = _FlushRequest()
         return self._flush_request
 
-    def _export(self, flush_request: typing.Optional[_FlushRequest]):
+    def _export(self, flush_request: _FlushRequest | None):
         """Exports spans considering the given flush_request.
 
         In case of a given flush_requests spans are exported in batches until

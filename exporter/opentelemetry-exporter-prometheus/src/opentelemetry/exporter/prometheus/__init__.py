@@ -63,11 +63,12 @@ API
 """
 
 from collections import deque
+from collections.abc import Iterable, Sequence
 from itertools import chain
 from json import dumps
 from logging import getLogger
 from os import environ
-from typing import Deque, Dict, Iterable, Sequence, Tuple, Union
+from typing import Deque, Union
 
 from prometheus_client import start_http_server
 from prometheus_client.core import (
@@ -115,7 +116,7 @@ _TARGET_INFO_DESCRIPTION = "Target metadata"
 
 def _convert_buckets(
     bucket_counts: Sequence[int], explicit_bounds: Sequence[float]
-) -> Sequence[Tuple[str, int]]:
+) -> Sequence[tuple[str, int]]:
     buckets = []
     total_count = 0
     for upper_bound, count in zip(
@@ -214,7 +215,7 @@ class _CustomCollector:
     def _translate_to_prometheus(
         self,
         metrics_data: MetricsData,
-        metric_family_id_metric_family: Dict[str, PrometheusMetric],
+        metric_family_id_metric_family: dict[str, PrometheusMetric],
     ):
         metrics = []
 
@@ -371,7 +372,7 @@ class _CustomCollector:
         return str(value)
 
     def _create_info_metric(
-        self, name: str, description: str, attributes: Dict[str, str]
+        self, name: str, description: str, attributes: dict[str, str]
     ) -> InfoMetricFamily:
         """Create an Info Metric Family with list of attributes"""
         # sanitize the attribute names according to Prometheus rule

@@ -18,7 +18,7 @@ import zlib
 from io import BytesIO
 from os import environ
 from time import sleep
-from typing import Dict, Optional
+from typing import Optional
 
 import requests
 
@@ -69,7 +69,7 @@ class OTLPSpanExporter(SpanExporter):
         certificate_file: Optional[str] = None,
         client_key_file: Optional[str] = None,
         client_certificate_file: Optional[str] = None,
-        headers: Optional[Dict[str, str]] = None,
+        headers: Optional[dict[str, str]] = None,
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
         session: Optional[requests.Session] = None,

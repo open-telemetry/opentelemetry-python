@@ -135,9 +135,10 @@ above sampler, set ``OTEL_TRACES_SAMPLER=custom_sampler_name`` and ``OTEL_TRACES
 import abc
 import enum
 import os
+from collections.abc import Sequence
 from logging import getLogger
 from types import MappingProxyType
-from typing import Optional, Sequence
+from typing import Optional
 
 # pylint: disable=unused-import
 from opentelemetry.context import Context

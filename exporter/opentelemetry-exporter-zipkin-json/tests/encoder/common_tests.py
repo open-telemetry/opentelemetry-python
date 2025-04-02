@@ -13,7 +13,6 @@
 # limitations under the License.
 import abc
 import unittest
-from typing import Dict, List
 
 from opentelemetry import trace as trace_api
 from opentelemetry.exporter.zipkin.encoder import (
@@ -165,7 +164,7 @@ class CommonEncoderTestCases:
         @staticmethod
         def get_data_for_max_tag_length_test(
             max_tag_length: int,
-        ) -> (trace._Span, Dict):
+        ) -> (trace._Span, dict):
             start_time = 683647322 * 10**9  # in ns
             duration = 50 * 10**6
             end_time = start_time + duration
@@ -327,7 +326,7 @@ class CommonEncoderTestCases:
             return span, expected_outputs[max_tag_length]
 
         @staticmethod
-        def get_exhaustive_otel_span_list() -> List[trace._Span]:
+        def get_exhaustive_otel_span_list() -> list[trace._Span]:
             trace_id = 0x6E0C63257DE34C926F9EFCD03927272E
 
             base_time = 683647322 * 10**9  # in ns

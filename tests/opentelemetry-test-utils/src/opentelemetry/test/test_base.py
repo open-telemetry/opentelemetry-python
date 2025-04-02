@@ -14,8 +14,9 @@
 
 import logging
 import unittest
+from collections.abc import Sequence
 from contextlib import contextmanager
-from typing import Optional, Sequence, Tuple
+from typing import Optional
 
 from opentelemetry import metrics as metrics_api
 from opentelemetry import trace as trace_api
@@ -115,7 +116,7 @@ class TestBase(unittest.TestCase):
         return tracer_provider, memory_exporter
 
     @staticmethod
-    def create_meter_provider(**kwargs) -> Tuple[MeterProvider, MetricReader]:
+    def create_meter_provider(**kwargs) -> tuple[MeterProvider, MetricReader]:
         """Helper to create a configured meter provider
         Creates a `MeterProvider` and an `InMemoryMetricReader`.
         Returns:

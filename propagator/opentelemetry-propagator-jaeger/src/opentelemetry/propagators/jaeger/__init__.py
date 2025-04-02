@@ -109,7 +109,7 @@ class JaegerPropagator(TextMapPropagator):
             setter.set(carrier, baggage_key, urllib.parse.quote(str(value)))
 
     @property
-    def fields(self) -> typing.Set[str]:
+    def fields(self) -> set[str]:
         return {self.TRACE_ID_KEY}
 
     def _extract_baggage(self, getter, carrier, context):
@@ -142,7 +142,7 @@ def _extract_first_element(
 
 def _parse_trace_id_header(
     items: typing.Iterable[CarrierT],
-) -> typing.Tuple[int]:
+) -> tuple[int]:
     invalid_header_result = (trace.INVALID_TRACE_ID, trace.INVALID_SPAN_ID, 0)
 
     header = _extract_first_element(items)

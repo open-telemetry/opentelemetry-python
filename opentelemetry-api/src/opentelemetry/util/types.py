@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Mapping, Optional, Sequence, Tuple, Union
+from collections.abc import Mapping, Sequence
+from typing import Optional, Union
 
 # This is the implementation of the "Any" type as specified by the specifications of OpenTelemetry data model for logs.
 # For more details, refer to the OTel specification:
@@ -39,18 +40,18 @@ AttributeValue = Union[
     Sequence[float],
 ]
 Attributes = Optional[Mapping[str, AttributeValue]]
-AttributesAsKey = Tuple[
-    Tuple[
+AttributesAsKey = tuple[
+    tuple[
         str,
         Union[
             str,
             bool,
             int,
             float,
-            Tuple[Optional[str], ...],
-            Tuple[Optional[bool], ...],
-            Tuple[Optional[int], ...],
-            Tuple[Optional[float], ...],
+            tuple[Optional[str], ...],
+            tuple[Optional[bool], ...],
+            tuple[Optional[int], ...],
+            tuple[Optional[float], ...],
         ],
     ],
     ...,

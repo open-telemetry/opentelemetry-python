@@ -130,24 +130,4 @@ jobs:
       - name: Run tests
         run: tox -e py313-test-opentelemetry-test-utils -- -ra
 
-  pypy3-test-opentelemetry-test-utils_windows-latest:
-    name: opentelemetry-test-utils pypy-3.8 Windows
-    runs-on: windows-latest
-    timeout-minutes: 30
-    steps:
-      - name: Checkout repo @ SHA - ${{ github.sha }}
-        uses: actions/checkout@v4
 
-      - name: Set up Python pypy-3.8
-        uses: actions/setup-python@v5
-        with:
-          python-version: "pypy-3.8"
-
-      - name: Install tox
-        run: pip install tox
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
-
-      - name: Run tests
-        run: tox -e pypy3-test-opentelemetry-test-utils -- -ra

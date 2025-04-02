@@ -15,9 +15,10 @@
 # pylint: disable=protected-access,invalid-name,no-self-use
 
 import math
+from collections.abc import Sequence
 from logging import WARNING
 from time import sleep, time_ns
-from typing import Optional, Sequence
+from typing import Optional
 from unittest.mock import Mock
 
 from flaky import flaky

@@ -16,17 +16,14 @@
 
 
 from abc import ABC, abstractmethod
+from collections.abc import Generator, Iterable, Sequence
 from dataclasses import dataclass
 from logging import getLogger
 from re import compile as re_compile
 from typing import (
     Callable,
-    Dict,
-    Generator,
     Generic,
-    Iterable,
     Optional,
-    Sequence,
     TypeVar,
     Union,
 )
@@ -85,7 +82,7 @@ class Instrument(ABC):
     @staticmethod
     def _check_name_unit_description(
         name: str, unit: str, description: str
-    ) -> Dict[str, Optional[str]]:
+    ) -> dict[str, Optional[str]]:
         """
         Checks the following instrument name, unit and description for
         compliance with the spec.
@@ -96,7 +93,7 @@ class Instrument(ABC):
         original values.
         """
 
-        result: Dict[str, Optional[str]] = {}
+        result: dict[str, Optional[str]] = {}
 
         if _name_regex.fullmatch(name) is not None:
             result["name"] = name

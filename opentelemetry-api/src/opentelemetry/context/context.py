@@ -14,12 +14,11 @@
 
 from __future__ import annotations
 
-import typing
 from abc import ABC, abstractmethod
 from contextvars import Token
 
 
-class Context(typing.Dict[str, object]):
+class Context(dict[str, object]):
     def __setitem__(self, key: str, value: object) -> None:
         raise ValueError
 
