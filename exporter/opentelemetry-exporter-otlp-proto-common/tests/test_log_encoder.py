@@ -69,6 +69,21 @@ class TestOTLPLogEncoder(unittest.TestCase):
 
         self.assertEqual(encode_logs(sdk_logs), expected_encoding)
 
+    def test_encode_stringifiable(self):
+        class Stringifiable:
+            def __init__(self, data):
+                self.data = data
+            def __str__(self):
+                return self.data
+
+        sdk_logs, expected_encoding = self.get_test_logs()
+        for log in sdk_logs:
+            body = log.log_record.body
+            if isinstance(body, str):
+                log.log_record.body = Stringifiable(body)
+
+        self.assertEqual(encode_logs(sdk_logs), expected_encoding)
+
     def test_dropped_attributes_count(self):
         sdk_logs = self._get_test_logs_dropped_attributes()
         encoded_logs = encode_logs(sdk_logs)
