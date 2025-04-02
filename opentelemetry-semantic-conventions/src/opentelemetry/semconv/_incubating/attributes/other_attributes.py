@@ -15,7 +15,7 @@
 from enum import Enum
 from typing import Final
 
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 STATE: Final = "state"
 """
@@ -24,8 +24,8 @@ Deprecated: Replaced by `db.client.connection.state`.
 
 
 @deprecated(
-    reason="The attribute state is deprecated - Replaced by `db.client.connection.state`"
-)  # type: ignore
+    "The attribute state is deprecated - Replaced by `db.client.connection.state`"
+)
 class StateValues(Enum):
     IDLE = "idle"
     """idle."""

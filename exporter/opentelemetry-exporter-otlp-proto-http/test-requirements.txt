@@ -1,7 +1,6 @@
 asgiref==3.7.2
 certifi==2024.7.4
 charset-normalizer==3.3.2
-Deprecated==1.2.14
 googleapis-common-protos==1.63.2
 idna==3.7
 importlib-metadata==6.11.0
