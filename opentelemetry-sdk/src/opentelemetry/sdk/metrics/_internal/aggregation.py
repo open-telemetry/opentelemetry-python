@@ -1387,7 +1387,7 @@ class ExplicitBucketHistogramAggregation(Aggregation):
                 AggregationTemporality.CUMULATIVE
             )
 
-        if self._boundaries:
+        if self._boundaries is not None:
             boundaries = self._boundaries
         else:
             boundaries = instrument._advisory.explicit_bucket_boundaries
