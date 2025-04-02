@@ -291,6 +291,7 @@ class TestBoundedAttributes(unittest.TestCase):
         for num in range(100):
             self.assertEqual(bdict[str(num)], num)
 
+    # pylint: disable=no-self-use
     def test_extended_attributes(self):
         bdict = BoundedAttributes(extended_attributes=True, immutable=False)
         with unittest.mock.patch(
