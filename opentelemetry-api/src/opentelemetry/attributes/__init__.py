@@ -120,7 +120,7 @@ def _clean_attribute(
 
 def _clean_extended_attribute_value(
     value: types.AttributeValue, max_len: Optional[int]
-) -> Optional[Union[types.AttributeValue, Tuple[Union[str, int, float], ...]]]:
+) -> types.AnyValue:
     # for primitive types just return the value and eventually shorten the string length
     if value is None or isinstance(value, _VALID_ATTR_VALUE_TYPES):
         if max_len is not None and isinstance(value, str):
@@ -128,7 +128,7 @@ def _clean_extended_attribute_value(
         return value
 
     if isinstance(value, Mapping):
-        cleaned_dict = {}
+        cleaned_dict: dict[str, types.AnyValue] = {}
         for key, element in value.items():
             # skip invalid keys
             if not (key and isinstance(key, str)):
@@ -157,7 +157,9 @@ def _clean_extended_attribute_value(
 
             element_type = type(element)
             if element_type not in _VALID_ATTR_VALUE_TYPES:
-                return _clean_extended_attribute(element, max_len=max_len)
+                return _clean_extended_attribute_value(
+                    element, max_len=max_len
+                )
 
             # The type of the sequence must be homogeneous. The first non-None
             # element determines the type of the sequence
@@ -187,7 +189,7 @@ def _clean_extended_attribute_value(
 
 def _clean_extended_attribute(
     key: str, value: types.AttributeValue, max_len: Optional[int]
-) -> Optional[Union[types.AttributeValue, Tuple[Union[str, int, float], ...]]]:
+) -> types.AnyValue:
     """Checks if attribute value is valid and cleans it if required.
 
     The function returns the cleaned value or None if the value is not valid.
