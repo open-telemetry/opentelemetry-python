@@ -14,10 +14,10 @@ from __future__ import annotations
 
 import gzip
 import logging
+import threading
 import zlib
 from io import BytesIO
 from os import environ
-from time import sleep
 from typing import (  # noqa: F401
     Any,
     Callable,
@@ -31,7 +31,6 @@ import requests
 from deprecated import deprecated
 
 from opentelemetry.exporter.otlp.proto.common._internal import (
-    _create_exp_backoff_generator,
     _get_resource_data,
 )
 from opentelemetry.exporter.otlp.proto.common._internal.metrics_encoder import (
@@ -100,8 +99,6 @@ DEFAULT_TIMEOUT = 10  # in seconds
 
 
 class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
-    _MAX_RETRY_TIMEOUT = 64
-
     def __init__(
         self,
         endpoint: str | None = None,
@@ -164,6 +161,9 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         self._common_configuration(
             preferred_temporality, preferred_aggregation
         )
+        self._export_not_occuring = threading.Event()
+        self._export_not_occuring.set()
+        self._shutdown_occuring = threading.Event()
 
     def _export(self, serialized_data: bytes):
         data = serialized_data
@@ -197,24 +197,26 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> MetricExportResult:
-        serialized_data = encode_metrics(metrics_data)
-        for delay in _create_exp_backoff_generator(
-            max_value=self._MAX_RETRY_TIMEOUT
-        ):
-            if delay == self._MAX_RETRY_TIMEOUT:
+        serialized_data = encode_metrics(metrics_data).SerializeToString()
+        for delay in [1, 2, 4, 8, 16, 32]:
+            if self._shutdown_occuring.is_set():
+                _logger.warning("Exporter already shutdown, ignoring batch")
                 return MetricExportResult.FAILURE
-
-            resp = self._export(serialized_data.SerializeToString())
+            self._export_not_occuring.clear()
+            resp = self._export(serialized_data)
+            self._export_not_occuring.set()
             # pylint: disable=no-else-return
             if resp.ok:
                 return MetricExportResult.SUCCESS
             elif self._retryable(resp):
+                if delay == 32:
+                    return MetricExportResult.FAILURE
                 _logger.warning(
                     "Transient error %s encountered while exporting metric batch, retrying in %ss.",
                     resp.reason,
                     delay,
                 )
-                sleep(delay)
+                self._shutdown_occuring.wait(delay)
                 continue
             else:
                 _logger.error(
@@ -225,8 +227,14 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                 return MetricExportResult.FAILURE
         return MetricExportResult.FAILURE
 
-    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
-        pass
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs):
+        if self._shutdown_occuring.is_set():
+            _logger.warning("Exporter already shutdown, ignoring call")
+            return
+        # wait for the last export if any
+        self._export_not_occuring.wait(timeout=timeout_millis / 1e3)
+        self._shutdown_occuring.set()
+        self._session.close()
 
     @property
     def _exporting(self) -> str:
