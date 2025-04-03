@@ -184,7 +184,6 @@ class TestOTLPExporterMixin(TestCase):
     def tearDown(self):
         self.server.stop(None)
 
-    # pylint: disable=no-self-use
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel")
     def test_otlp_exporter_endpoint(self, mock_secure, mock_insecure):
