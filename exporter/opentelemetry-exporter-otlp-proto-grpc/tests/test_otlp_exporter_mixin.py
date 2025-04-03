@@ -26,7 +26,7 @@ from google.protobuf.duration_pb2 import (  # pylint: disable=no-name-in-module
 from google.rpc.error_details_pb2 import (  # pylint: disable=no-name-in-module
     RetryInfo,
 )
-from grpc import Compression, server
+from grpc import Compression, StatusCode, server
 
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
@@ -34,7 +34,6 @@ from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (  # noqa: F401
     InvalidCompressionValueException,
     OTLPExporterMixin,
-    StatusCode,
     environ_to_compression,
 )
 from opentelemetry.exporter.otlp.proto.grpc.version import __version__
@@ -81,19 +80,22 @@ class OTLPSpanExporterForTesting(
     def _exporting(self):
         return "traces"
 
+    def shutdown(self, timeout_millis=30_000):
+        return OTLPExporterMixin.shutdown(self, timeout_millis)
+
 
 class TraceServiceServicerWithExportParams(TraceServiceServicer):
     def __init__(
         self,
-        export_result,
-        optional_export_sleep=None,
-        optional_export_retry_millis=None,
+        export_result: StatusCode,
+        optional_export_sleep: Optional[float] = None,
+        optional_export_retry_millis: Optional[float] = None,
     ):
         self.export_result = export_result
         self.optional_export_sleep = optional_export_sleep
         self.optional_export_retry_millis = optional_export_retry_millis
 
-    # pylint: disable=invalid-name,unused-argument,no-self-use
+    # pylint: disable=invalid-name,unused-argument
     def Export(self, request, context):
         if self.optional_export_sleep:
             time.sleep(self.optional_export_sleep)
