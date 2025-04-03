@@ -60,25 +60,12 @@ from opentelemetry.sdk.trace.export import (
 # The below tests use this test SpanExporter and Spans, but are testing the
 # underlying behavior in the mixin. A MetricExporter or LogExporter could
 # just as easily be used.
-# pylint: disable=no-member
 class OTLPSpanExporterForTesting(
     SpanExporter,
     OTLPExporterMixin[
         ReadableSpan, ExportTraceServiceRequest, SpanExportResult
     ],
 ):
-    # pylint: disable=unsubscriptable-object
-    """OTLP span exporter
-
-    Args:
-        endpoint: OpenTelemetry Collector receiver endpoint
-        insecure: Connection type
-        credentials: Credentials object for server authentication
-        headers: Headers to send when exporting
-        timeout: Backend request timeout in seconds
-        compression: gRPC compression method to use
-    """
-
     _result = SpanExportResult
     _stub = TraceServiceStub
 
