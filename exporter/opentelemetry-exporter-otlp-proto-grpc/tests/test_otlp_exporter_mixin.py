@@ -90,9 +90,6 @@ class OTLPSpanExporterForTesting(
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
         return self._export(spans)
 
-    def shutdown(self, timeout_millis: float = 30_000) -> None:
-        OTLPExporterMixin.shutdown(self, timeout_millis)
-
     @property
     def _exporting(self):
         return "traces"
