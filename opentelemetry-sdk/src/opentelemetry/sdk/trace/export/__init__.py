@@ -19,6 +19,7 @@ import os
 import sys
 import threading
 import typing
+import weakref
 from enum import Enum
 from os import environ, linesep
 from time import time_ns
@@ -200,7 +201,8 @@ class BatchSpanProcessor(SpanProcessor):
         self.spans_list = [None] * self.max_export_batch_size  # type: typing.List[typing.Optional[Span]]
         self.worker_thread.start()
         if hasattr(os, "register_at_fork"):
-            os.register_at_fork(after_in_child=self._at_fork_reinit)  # pylint: disable=protected-access
+            weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
+            os.register_at_fork(after_in_child=lambda: weak_reinit()())  # pylint: disable=unnecessary-lambda
         self._pid = os.getpid()
 
     def on_start(
