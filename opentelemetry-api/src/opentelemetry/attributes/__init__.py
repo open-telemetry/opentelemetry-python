@@ -16,13 +16,24 @@ import logging
 import threading
 from collections import OrderedDict
 from collections.abc import MutableMapping
-from typing import Optional, Sequence, Tuple, Union
+from typing import Mapping, Optional, Sequence, Tuple, Union
 
 from opentelemetry.util import types
 
 # bytes are accepted as a user supplied value for attributes but
 # decoded to strings internally.
 _VALID_ATTR_VALUE_TYPES = (bool, str, bytes, int, float)
+# AnyValue possible values
+_VALID_ANY_VALUE_TYPES = (
+    type(None),
+    bool,
+    bytes,
+    int,
+    float,
+    str,
+    Sequence,
+    Mapping,
+)
 
 
 _logger = logging.getLogger(__name__)

@@ -36,7 +36,7 @@ from opentelemetry._logs import (
     get_logger_provider,
     std_to_otel,
 )
-from opentelemetry.attributes import BoundedAttributes
+from opentelemetry.attributes import _VALID_ANY_VALUE_TYPES, BoundedAttributes
 from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_COUNT_LIMIT,
     OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
@@ -523,8 +523,11 @@ class LoggingHandler(logging.Handler):
             # itself instead of its string representation.
             # For more background, see: https://github.com/open-telemetry/opentelemetry-python/pull/4216
             if not record.args and not isinstance(record.msg, str):
-                # no args are provided so it's *mostly* safe to use the message template as the body
-                body = record.msg
+                #  if record.msg is not a value we can export, cast it to string
+                if not isinstance(record.msg, _VALID_ANY_VALUE_TYPES):
+                    body = str(record.msg)
+                else:
+                    body = record.msg
             else:
                 body = record.getMessage()
 

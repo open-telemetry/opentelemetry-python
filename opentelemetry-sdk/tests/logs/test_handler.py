@@ -153,6 +153,7 @@ class TestLoggingHandler(unittest.TestCase):
         log_record = processor.get_log_record(0)
 
         self.assertIsNotNone(log_record)
+        self.assertTrue(isinstance(log_record.body, str))
         self.assertEqual(log_record.body, "Zero Division Error")
         self.assertEqual(
             log_record.attributes[SpanAttributes.EXCEPTION_TYPE],
@@ -225,6 +226,47 @@ class TestLoggingHandler(unittest.TestCase):
         self.assertNotIn(
             SpanAttributes.EXCEPTION_STACKTRACE, log_record.attributes
         )
+
+    def test_log_record_exception_with_object_payload(self):
+        processor, logger = set_up_test_logging(logging.ERROR)
+
+        class CustomObject:
+            pass
+
+        class CustomException(Exception):
+            def __init__(self, data):
+                self.data = data
+
+            def __str__(self):
+                return "CustomException stringified"
+
+        try:
+            raise CustomException(CustomObject())
+        except CustomException as exception:
+            with self.assertLogs(level=logging.ERROR):
+                logger.exception(exception)
+
+        log_record = processor.get_log_record(0)
+
+        self.assertIsNotNone(log_record)
+        self.assertTrue(isinstance(log_record.body, str))
+        self.assertEqual(log_record.body, "CustomException stringified")
+        self.assertEqual(
+            log_record.attributes[SpanAttributes.EXCEPTION_TYPE],
+            CustomException.__name__,
+        )
+        self.assertTrue(
+            "<tests.logs.test_handler.TestLoggingHandler.test_log_record_exception_with_object_payload.<locals>.CustomObject"
+            in log_record.attributes[SpanAttributes.EXCEPTION_MESSAGE]
+        )
+        stack_trace = log_record.attributes[
+            SpanAttributes.EXCEPTION_STACKTRACE
+        ]
+        self.assertIsInstance(stack_trace, str)
+        self.assertTrue("Traceback" in stack_trace)
+        self.assertTrue("CustomException" in stack_trace)
+        self.assertTrue("CustomObject" in stack_trace)
+        self.assertTrue(__file__ in stack_trace)
 
     def test_log_record_trace_correlation(self):
         processor, logger = set_up_test_logging(logging.WARNING)
