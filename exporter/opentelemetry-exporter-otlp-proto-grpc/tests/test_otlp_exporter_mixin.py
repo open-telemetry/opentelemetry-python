@@ -271,6 +271,18 @@ class TestOTLPExporterMixin(TestCase):
             "localhost:4317", compression=Compression.NoCompression
         )
 
+    # pylint: disable=no-self-use, disable=unused-argument
+    @patch(
+        "opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"
+    )
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel")
+    @patch.dict("os.environ", {})
+    def test_no_credentials_ssl_channel_called(
+        self, secure_channel, mock_ssl_channel
+    ):
+        OTLPSpanExporterForTesting(insecure=False)
+        self.assertTrue(mock_ssl_channel.called)
+
     # pylint: disable=no-self-use
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
     @patch.dict("os.environ", {OTEL_EXPORTER_OTLP_COMPRESSION: "gzip"})
