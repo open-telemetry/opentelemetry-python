@@ -125,8 +125,8 @@ def _is_valid_value(value: object) -> bool:
     parts = str(value).split(";")
     is_valid_value = _VALUE_PATTERN.fullmatch(parts[0]) is not None
     if len(parts) > 1:  # one or more properties metadata
-        for property in parts[1:]:
-            if _PROPERT_PATTERN.fullmatch(property) is None:
+        for prop in parts[1:]:
+            if _PROPERT_PATTERN.fullmatch(prop) is None:
                 is_valid_value = False
                 break
     return is_valid_value
