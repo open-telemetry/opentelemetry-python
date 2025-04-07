@@ -43,7 +43,10 @@ class Event(LogRecord):
         attributes: Optional[ExtendedAttributes] = None,
     ):
         attributes = attributes or {}
-        event_attributes = {**attributes, "event.name": name}
+        event_attributes: ExtendedAttributes = {
+            **attributes,
+            "event.name": name,
+        }
         super().__init__(
             timestamp=timestamp,
             trace_id=trace_id,
