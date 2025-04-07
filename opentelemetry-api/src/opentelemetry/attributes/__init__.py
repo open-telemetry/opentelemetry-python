@@ -119,7 +119,7 @@ def _clean_attribute(
 
 
 def _clean_extended_attribute_value(
-    value: types.AttributeValue, max_len: Optional[int]
+    value: types.AnyValue, max_len: Optional[int]
 ) -> types.AnyValue:
     # for primitive types just return the value and eventually shorten the string length
     if value is None or isinstance(value, _VALID_ATTR_VALUE_TYPES):
@@ -188,7 +188,7 @@ def _clean_extended_attribute_value(
 
 
 def _clean_extended_attribute(
-    key: str, value: types.AttributeValue, max_len: Optional[int]
+    key: str, value: types.AnyValue, max_len: Optional[int]
 ) -> types.AnyValue:
     """Checks if attribute value is valid and cleans it if required.
 
@@ -255,8 +255,8 @@ class BoundedAttributes(MutableMapping):  # type: ignore
         # OrderedDict is not used until the maxlen is reached for efficiency.
 
         self._dict: Union[
-            MutableMapping[str, types.AttributeValue],
-            OrderedDict[str, types.AttributeValue],
+            MutableMapping[str, types.AnyValue],
+            OrderedDict[str, types.AnyValue],
         ] = {}
         self._lock = threading.RLock()
         if attributes:
@@ -267,10 +267,10 @@ class BoundedAttributes(MutableMapping):  # type: ignore
     def __repr__(self) -> str:
         return f"{dict(self._dict)}"
 
-    def __getitem__(self, key: str) -> types.AttributeValue:
+    def __getitem__(self, key: str) -> types.AnyValue:
         return self._dict[key]
 
-    def __setitem__(self, key: str, value: types.AttributeValue) -> None:
+    def __setitem__(self, key: str, value: types.AnyValue) -> None:
         if getattr(self, "_immutable", False):  # type: ignore
             raise TypeError
         with self._lock:
