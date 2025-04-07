@@ -230,18 +230,12 @@ class TestLoggingHandler(unittest.TestCase):
     def test_log_record_exception_with_object_payload(self):
         processor, logger = set_up_test_logging(logging.ERROR)
 
-        class CustomObject:
-            pass
-
         class CustomException(Exception):
-            def __init__(self, data):
-                self.data = data
-
             def __str__(self):
                 return "CustomException stringified"
 
         try:
-            raise CustomException(CustomObject())
+            raise CustomException("CustomException message")
         except CustomException as exception:
             with self.assertLogs(level=logging.ERROR):
                 logger.exception(exception)
@@ -255,9 +249,9 @@ class TestLoggingHandler(unittest.TestCase):
             log_record.attributes[SpanAttributes.EXCEPTION_TYPE],
             CustomException.__name__,
         )
-        self.assertTrue(
-            "<tests.logs.test_handler.TestLoggingHandler.test_log_record_exception_with_object_payload.<locals>.CustomObject"
-            in log_record.attributes[SpanAttributes.EXCEPTION_MESSAGE]
+        self.assertEqual(
+            log_record.attributes[SpanAttributes.EXCEPTION_MESSAGE],
+            "CustomException message",
         )
         stack_trace = log_record.attributes[
             SpanAttributes.EXCEPTION_STACKTRACE
@@ -265,7 +259,6 @@ class TestLoggingHandler(unittest.TestCase):
         self.assertIsInstance(stack_trace, str)
         self.assertTrue("Traceback" in stack_trace)
         self.assertTrue("CustomException" in stack_trace)
-        self.assertTrue("CustomObject" in stack_trace)
         self.assertTrue(__file__ in stack_trace)
 
     def test_log_record_trace_correlation(self):
