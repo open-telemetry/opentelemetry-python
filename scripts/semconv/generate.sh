@@ -7,7 +7,7 @@ ROOT_DIR="${SCRIPT_DIR}/../.."
 # freeze the spec version to make SemanticAttributes generation reproducible
 SEMCONV_VERSION=1.31.0
 SEMCONV_VERSION_TAG=v$SEMCONV_VERSION
-OTEL_WEAVER_IMG_VERSION=v0.12.0
+OTEL_WEAVER_IMG_VERSION=v0.13.2
 INCUBATING_DIR=_incubating
 cd ${SCRIPT_DIR}
 
