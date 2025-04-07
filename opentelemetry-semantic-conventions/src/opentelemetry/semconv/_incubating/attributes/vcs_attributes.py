@@ -37,6 +37,16 @@ VCS_LINE_CHANGE_TYPE: Final = "vcs.line_change.type"
 The type of line change being measured on a branch or change.
 """
 
+VCS_OWNER_NAME: Final = "vcs.owner.name"
+"""
+The group owner within the version control system.
+"""
+
+VCS_PROVIDER_NAME: Final = "vcs.provider.name"
+"""
+The name of the version control system provider.
+"""
+
 VCS_REF_BASE_NAME: Final = "vcs.ref.base.name"
 """
 The name of the [reference](https://git-scm.com/docs/gitglossary#def_ref) such as **branch** or **tag** in the repository.
@@ -168,6 +178,17 @@ class VcsLineChangeTypeValues(Enum):
     """How many lines were added."""
     REMOVED = "removed"
     """How many lines were removed."""
+
+
+class VcsProviderNameValues(Enum):
+    GITHUB = "github"
+    """[GitHub](https://github.com)."""
+    GITLAB = "gitlab"
+    """[GitLab](https://gitlab.com)."""
+    GITTEA = "gittea"
+    """[Gitea](https://gitea.io)."""
+    BITBUCKET = "bitbucket"
+    """[Bitbucket](https://bitbucket.org)."""
 
 
 class VcsRefBaseTypeValues(Enum):
