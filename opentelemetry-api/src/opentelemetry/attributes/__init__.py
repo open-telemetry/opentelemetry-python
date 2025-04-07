@@ -160,7 +160,7 @@ def _clean_extended_attribute_value(
                 element = _clean_extended_attribute_value(
                     element, max_len=max_len
                 )
-                element_type = type(element)
+                element_type = type(element)  # type: ignore
 
             # The type of the sequence must be homogeneous. The first non-None
             # element determines the type of the sequence
@@ -281,7 +281,7 @@ class BoundedAttributes(MutableMapping):  # type: ignore
             if self._extended_attributes:
                 value = _clean_extended_attribute(
                     key, value, self.max_value_len
-                )  # type: ignore
+                )
             else:
                 value = _clean_attribute(key, value, self.max_value_len)  # type: ignore
                 if value is None:
