@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4498](https://github.com/open-telemetry/opentelemetry-python/pull/4498))
 - Patch logging.basicConfig so OTel logs don't cause console logs to disappear
   ([#4436](https://github.com/open-telemetry/opentelemetry-python/pull/4436))
+- Bump semantic conventions to 1.32.0
+  ([#4530](https://github.com/open-telemetry/opentelemetry-python/pull/4530))
 - Fix ExplicitBucketHistogramAggregation to handle multiple explicit bucket boundaries advisories
  ([#4521](https://github.com/open-telemetry/opentelemetry-python/pull/4521))
 
