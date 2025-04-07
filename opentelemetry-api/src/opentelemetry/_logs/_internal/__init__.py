@@ -40,6 +40,7 @@ from time import time_ns
 from typing import Optional, cast
 
 from opentelemetry._logs.severity import SeverityNumber
+from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.environment_variables import _OTEL_PYTHON_LOGGER_PROVIDER
 from opentelemetry.trace.span import TraceFlags
 from opentelemetry.util._once import Once
@@ -67,7 +68,7 @@ class LogRecord(ABC):
         severity_text: Optional[str] = None,
         severity_number: Optional[SeverityNumber] = None,
         body: AnyValue = None,
-        attributes: Optional[ExtendedAttributes] = None,
+        attributes: Optional[BoundedAttributes] = None,
     ):
         self.timestamp = timestamp
         if observed_timestamp is None:
@@ -79,7 +80,7 @@ class LogRecord(ABC):
         self.severity_text = severity_text
         self.severity_number = severity_number
         self.body = body
-        self.attributes = attributes
+        self.attributes: Optional[BoundedAttributes] = attributes
 
 
 class Logger(ABC):
