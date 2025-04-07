@@ -15,7 +15,7 @@
 from abc import ABC, abstractmethod
 from logging import getLogger
 from os import environ
-from typing import Any, Optional, cast
+from typing import Optional, cast
 
 from opentelemetry._logs import LogRecord
 from opentelemetry._logs.severity import SeverityNumber
@@ -25,7 +25,7 @@ from opentelemetry.environment_variables import (
 from opentelemetry.trace.span import TraceFlags
 from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
-from opentelemetry.util.types import ExtendedAttributes
+from opentelemetry.util.types import AnyValue, ExtendedAttributes
 
 _logger = getLogger(__name__)
 
@@ -38,12 +38,12 @@ class Event(LogRecord):
         trace_id: Optional[int] = None,
         span_id: Optional[int] = None,
         trace_flags: Optional["TraceFlags"] = None,
-        body: Optional[Any] = None,
+        body: Optional[AnyValue] = None,
         severity_number: Optional[SeverityNumber] = None,
         attributes: Optional[ExtendedAttributes] = None,
     ):
         attributes = attributes or {}
-        event_attributes: ExtendedAttributes = {
+        event_attributes = {
             **attributes,
             "event.name": name,
         }
@@ -52,9 +52,9 @@ class Event(LogRecord):
             trace_id=trace_id,
             span_id=span_id,
             trace_flags=trace_flags,
-            body=body,  # type: ignore
+            body=body,
             severity_number=severity_number,
-            attributes=event_attributes,
+            attributes=event_attributes,  # type: ignore
         )
         self.name = name
 
