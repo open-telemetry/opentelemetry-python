@@ -54,7 +54,7 @@ class Event(LogRecord):
             trace_flags=trace_flags,
             body=body,
             severity_number=severity_number,
-            attributes=event_attributes,  # type: ignore
+            attributes=event_attributes,
         )
         self.name = name
 

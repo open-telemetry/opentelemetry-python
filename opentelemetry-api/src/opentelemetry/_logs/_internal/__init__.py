@@ -37,7 +37,7 @@ from abc import ABC, abstractmethod
 from logging import getLogger
 from os import environ
 from time import time_ns
-from typing import Optional, cast
+from typing import Optional, Union, cast
 
 from opentelemetry._logs.severity import SeverityNumber
 from opentelemetry.attributes import BoundedAttributes
@@ -68,7 +68,9 @@ class LogRecord(ABC):
         severity_text: Optional[str] = None,
         severity_number: Optional[SeverityNumber] = None,
         body: AnyValue = None,
-        attributes: Optional[BoundedAttributes] = None,
+        attributes: Optional[
+            Union[BoundedAttributes, ExtendedAttributes]
+        ] = None,
     ):
         self.timestamp = timestamp
         if observed_timestamp is None:
@@ -80,7 +82,7 @@ class LogRecord(ABC):
         self.severity_text = severity_text
         self.severity_number = severity_number
         self.body = body
-        self.attributes: Optional[BoundedAttributes] = attributes
+        self.attributes = attributes
 
 
 class Logger(ABC):
