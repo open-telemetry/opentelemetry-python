@@ -24,7 +24,7 @@ import warnings
 from os import environ
 from threading import Lock
 from time import time_ns
-from typing import Any, Callable, Tuple, Union  # noqa
+from typing import Any, Callable, Tuple, Union, cast  # noqa
 
 from opentelemetry._logs import Logger as APILogger
 from opentelemetry._logs import LoggerProvider as APILoggerProvider
@@ -251,8 +251,11 @@ class LogRecord(APILogRecord):
 
     @property
     def dropped_attributes(self) -> int:
-        if self.attributes:
-            return self.attributes.dropped
+        attributes: BoundedAttributes = cast(
+            BoundedAttributes, self.attributes
+        )
+        if attributes:
+            return attributes.dropped
         return 0
 
 
