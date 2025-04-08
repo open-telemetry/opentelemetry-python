@@ -21,7 +21,7 @@ Value of the garbage collector collection generation.
 """
 
 
-class CpythonGcGenerationValues(Enum):
+class CPythonGCGenerationValues(Enum):
     GENERATION_0 = 0
     """Generation 0."""
     GENERATION_1 = 1

@@ -58,7 +58,7 @@ from typing import Final
 {{prefix}}{{doc_string}}
 {% endfor %}
 
-{% for attribute in enum_attributes %}{%- set class_name = attribute.name | pascal_case ~ "Values" -%}
+{% for attribute in enum_attributes %}{%- set class_name = attribute.name | map_text("py_enum_attribute_to_class_name", attribute.name | pascal_case ~ "Values") -%}
 {%- if attribute is deprecated %}
 @deprecated(reason="The attribute {{attribute.name}} is deprecated - {{ c.comment_with_prefix(attribute.deprecated.note, "") }}")  # type: ignore
     {%- elif attribute.stability == "stable" and ctx.filter == "any" %}
