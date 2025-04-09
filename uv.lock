@@ -449,7 +449,7 @@ dependencies = [
 requires-dist = [
     { name = "opentelemetry-api", editable = "opentelemetry-api" },
     { name = "opentelemetry-semantic-conventions", editable = "opentelemetry-semantic-conventions" },
-    { name = "typing-extensions", specifier = ">=3.7.4" },
+    { name = "typing-extensions", specifier = ">=4.5.0" },
 ]
 
 [[package]]
