@@ -233,9 +233,9 @@ softirq 1644603067 0 166540056 208 309152755 8936439 0 1354908 935642970 13 2229
         )
 
     def test_cpu_time_generator(self):
-        def cpu_time_generator() -> Generator[
-            Iterable[Observation], None, None
-        ]:
+        def cpu_time_generator() -> (
+            Generator[Iterable[Observation], None, None]
+        ):
             options = yield
             while True:
                 self.assertIsInstance(options, CallbackOptions)

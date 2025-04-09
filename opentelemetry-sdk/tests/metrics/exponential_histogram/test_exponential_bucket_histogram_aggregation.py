@@ -1194,9 +1194,9 @@ class TestExponentialBucketHistogramAggregation(TestCase):
                     # pylint: disable=chained-comparison
                     if value > lower_bound and value <= upper_bound:
                         matches += 1
-                assert matches == count, (
-                    f"index: {index}, count: {count}, scale: {scale}, lower_bound: {lower_bound}, upper_bound: {upper_bound}, matches: {matches}"
-                )
+                assert (
+                    matches == count
+                ), f"index: {index}, count: {count}, scale: {scale}, lower_bound: {lower_bound}, upper_bound: {upper_bound}, matches: {matches}"
 
             assert sum(buckets) + result.zero_count == len(values)
             assert result.sum == sum(values)
