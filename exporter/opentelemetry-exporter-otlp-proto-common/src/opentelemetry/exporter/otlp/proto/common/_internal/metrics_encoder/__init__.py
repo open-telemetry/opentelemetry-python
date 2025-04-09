@@ -118,7 +118,8 @@ class OTLPMetricExporterMixin:
                     "Unrecognized OTEL_EXPORTER_METRICS_TEMPORALITY_PREFERENCE"
                     " value found: "
                     "%s, "
-                    "using CUMULATIVE", otel_exporter_otlp_metrics_temporality_preference
+                    "using CUMULATIVE",
+                    otel_exporter_otlp_metrics_temporality_preference,
                 )
             instrument_class_temporality = {
                 Counter: AggregationTemporality.CUMULATIVE,
