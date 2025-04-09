@@ -197,6 +197,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
                 BatchLogRecordProcessor._default_max_export_batch_size()
             )
         # Not used. No way currently to pass timeout to export.
+        # Not used. No way currently to pass timeout to export.
         if export_timeout_millis is None:
             export_timeout_millis = (
                 BatchLogRecordProcessor._default_export_timeout_millis()
@@ -208,10 +209,13 @@ class BatchLogRecordProcessor(LogRecordProcessor):
         self._exporter = exporter
         self._max_queue_size = max_queue_size
         self._schedule_delay = schedule_delay_millis / 1e3
+        self._schedule_delay = schedule_delay_millis / 1e3
         self._max_export_batch_size = max_export_batch_size
         # Not used. No way currently to pass timeout to export.
         # TODO(https://github.com/open-telemetry/opentelemetry-python/issues/4555): figure out what this should do.
+        # Not used. No way currently to pass timeout to export.
         self._export_timeout_millis = export_timeout_millis
+        # Deque is thread safe.
         # Deque is thread safe.
         self._queue = collections.deque([], max_queue_size)
         self._worker_thread = threading.Thread(
@@ -219,10 +223,9 @@ class BatchLogRecordProcessor(LogRecordProcessor):
             target=self.worker,
             daemon=True,
         )
-
         self._shutdown = False
         self._export_lock = threading.Lock()
-        self._worker_awaken = threading.Event()
+        self._worker_sleep = threading.Event()
         self._worker_thread.start()
         if hasattr(os, "register_at_fork"):
             weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
@@ -237,15 +240,15 @@ class BatchLogRecordProcessor(LogRecordProcessor):
         # Always continue to export while queue length exceeds max batch size.
         if len(self._queue) >= self._max_export_batch_size:
             return True
-        if batch_strategy is BatchLogExportStrategy.EXPORT_ALL:
+        if batch_strategy == BatchLogExportStrategy.EXPORT_ALL:
             return True
-        if batch_strategy is BatchLogExportStrategy.EXPORT_AT_LEAST_ONE_BATCH:
+        if batch_strategy == BatchLogExportStrategy.EXPORT_AT_LEAST_ONE_BATCH:
             return num_iterations == 0
         return False
 
     def _at_fork_reinit(self):
         self._export_lock = threading.Lock()
-        self._worker_awaken = threading.Event()
+        self._worker_sleep = threading.Event()
         self._queue.clear()
         self._worker_thread = threading.Thread(
             name="OtelBatchLogRecordProcessor",
@@ -260,7 +263,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
             # Lots of strategies in the spec for setting next timeout.
             # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/sdk.md#batching-processor.
             # Shutdown will interrupt this sleep. Emit will interrupt this sleep only if the queue is bigger then threshold.
-            sleep_interrupted = self._worker_awaken.wait(self._schedule_delay)
+            sleep_interrupted = self._worker_sleep.wait(self._schedule_delay)
             if self._shutdown:
                 break
             self._export(
@@ -268,9 +271,33 @@ class BatchLogRecordProcessor(LogRecordProcessor):
                 if sleep_interrupted
                 else BatchLogExportStrategy.EXPORT_AT_LEAST_ONE_BATCH
             )
-            self._worker_awaken.clear()
+            self._worker_sleep.clear()
         self._export(BatchLogExportStrategy.EXPORT_ALL)
 
+    def _export(self, batch_strategy: BatchLogExportStrategy) -> None:
+        with self._export_lock:
+            iteration = 0
+            # We could see concurrent export calls from worker and force_flush. We call _should_export_batch
+            # once the lock is obtained to see if we still need to make the requested export.
+            while self._should_export_batch(batch_strategy, iteration):
+                iteration += 1
+                token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
+                try:
+                    self._exporter.export(
+                        [
+                            # Oldest records are at the back, so pop from there.
+                            self._queue.pop()
+                            for _ in range(
+                                min(
+                                    self._max_export_batch_size,
+                                    len(self._queue),
+                                )
+                            )
+                        ]
+                    )
+                except Exception:  # pylint: disable=broad-exception-caught
+                    _logger.exception("Exception while exporting logs.")
+                detach(token)
     def _export(self, batch_strategy: BatchLogExportStrategy) -> None:
         with self._export_lock:
             iteration = 0
@@ -298,30 +325,38 @@ class BatchLogRecordProcessor(LogRecordProcessor):
 
     def emit(self, log_data: LogData) -> None:
         if self._shutdown:
-            _logger.info("Shutdown called, ignoring log.")
+            _logger.warning("Shutdown called, ignoring log.")
             return
         if self._pid != os.getpid():
             _BSP_RESET_ONCE.do_once(self._at_fork_reinit)
 
         if len(self._queue) == self._max_queue_size:
             _logger.warning("Queue full, dropping log.")
+        if len(self._queue) == self._max_queue_size:
+            _logger.warning("Queue full, dropping log.")
         self._queue.appendleft(log_data)
         if len(self._queue) >= self._max_export_batch_size:
-            self._worker_awaken.set()
+            self._worker_sleep.set()
 
     def shutdown(self):
         if self._shutdown:
             return
         # Prevents emit and force_flush from further calling export.
+        if self._shutdown:
+            return
+        # Prevents emit and force_flush from further calling export.
         self._shutdown = True
         # Interrupts sleep in the worker, if it's sleeping.
-        self._worker_awaken.set()
+        self._worker_sleep.set()
         # Main worker loop should exit after one final export call with flush all strategy.
         self._worker_thread.join()
         self._exporter.shutdown()
 
     def force_flush(self, timeout_millis: Optional[int] = None) -> bool:
         if self._shutdown:
+            return
+        # Blocking call to export.
+        self._export(BatchLogExportStrategy.EXPORT_ALL)
             return
         # Blocking call to export.
         self._export(BatchLogExportStrategy.EXPORT_ALL)
