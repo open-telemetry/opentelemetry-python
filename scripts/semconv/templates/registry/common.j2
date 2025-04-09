@@ -32,3 +32,7 @@
 from deprecated import deprecated
     {%- endif -%}
 {%- endmacro-%}
+
+{%- macro deprecated_note_or_empty(attribute) -%}
+{% if attribute is deprecated %}{{ attribute.deprecated.note }}{% else %}{{""}}{% endif %}
+{%- endmacro %}
