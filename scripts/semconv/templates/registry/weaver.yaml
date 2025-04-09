@@ -49,4 +49,6 @@ text_maps:
     histogram: Histogram
     updowncounter: UpDownCounter
     gauge: ObservableGauge
-
+  # remember the Values suffix!
+  py_enum_attribute_to_class_name:
+    cpython.gc.generation: CPythonGCGenerationValues
