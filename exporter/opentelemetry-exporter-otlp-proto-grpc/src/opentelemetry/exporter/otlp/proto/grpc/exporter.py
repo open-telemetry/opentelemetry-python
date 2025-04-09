@@ -125,7 +125,8 @@ def _read_file(file_path: str) -> Optional[bytes]:
             return file.read()
     except FileNotFoundError as e:
         logger.exception(
-            f"Failed to read file: {e.filename}. Please check if the file exists and is accessible."
+            "Failed to read file: %s. Please check if the file exists and is accessible.",
+            e.filename,
         )
         return None
 
