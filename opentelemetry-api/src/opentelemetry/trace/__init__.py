@@ -80,7 +80,7 @@ from enum import Enum
 from logging import getLogger
 from typing import Iterator, Optional, Sequence, cast
 
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 from opentelemetry import context as context_api
 from opentelemetry.attributes import BoundedAttributes
@@ -244,7 +244,9 @@ class NoOpTracerProvider(TracerProvider):
         return NoOpTracer()
 
 
-@deprecated(version="1.9.0", reason="You should use NoOpTracerProvider")  # type: ignore
+@deprecated(
+    "You should use NoOpTracerProvider. Deprecated since version 1.9.0."
+)
 class _DefaultTracerProvider(NoOpTracerProvider):
     """The default TracerProvider, used when no implementation is available.
 
@@ -487,7 +489,7 @@ class NoOpTracer(Tracer):
         yield INVALID_SPAN
 
 
-@deprecated(version="1.9.0", reason="You should use NoOpTracer")  # type: ignore
+@deprecated("You should use NoOpTracer. Deprecated since version 1.9.0.")
 class _DefaultTracer(NoOpTracer):
     """The default Tracer, used when no Tracer implementation is available.
 

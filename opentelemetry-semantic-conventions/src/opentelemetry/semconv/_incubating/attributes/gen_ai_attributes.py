@@ -15,7 +15,7 @@
 from enum import Enum
 from typing import Final
 
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 GEN_AI_AGENT_DESCRIPTION: Final = "gen_ai.agent.description"
 """
@@ -223,8 +223,8 @@ Deprecated: Replaced by `gen_ai.usage.input_tokens` attribute.
 
 
 @deprecated(
-    reason="The attribute gen_ai.openai.request.response_format is deprecated - Replaced by `gen_ai.output.type`"
-)  # type: ignore
+    "The attribute gen_ai.openai.request.response_format is deprecated - Replaced by `gen_ai.output.type`"
+)
 class GenAiOpenaiRequestResponseFormatValues(Enum):
     TEXT = "text"
     """Text response format."""
