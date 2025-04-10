@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   contrib_0:
-    uses: open-telemetry/opentelemetry-python-contrib/.github/workflows/core_contrib_test_0.yml@main
+    uses: open-telemetry/opentelemetry-python-contrib/.github/workflows/core_contrib_test_0.yml@d637cee39832cceada45c2933e99b6dec9897ad0
     with:
       CORE_REPO_SHA: ${{ github.sha }}
       CONTRIB_REPO_SHA: main
