@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## Version 1.32.0/0.53b0 (2025-04-10)
+
 - Fix user agent in OTLP HTTP metrics exporter
   ([#4475](https://github.com/open-telemetry/opentelemetry-python/pull/4475))
 - Improve performance of baggage operations
