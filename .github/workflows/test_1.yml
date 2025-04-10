@@ -15,7 +15,7 @@ concurrency:
 
 env:
   CORE_REPO_SHA: main
-  CONTRIB_REPO_SHA: main
+  CONTRIB_REPO_SHA: opentelemetrybot/update-version-to-1.33.0.dev-0.54b0.dev
   PIP_EXISTS_ACTION: w
 
 jobs:
