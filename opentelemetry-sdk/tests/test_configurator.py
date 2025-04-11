@@ -15,6 +15,7 @@
 # pylint: skip-file
 from __future__ import annotations
 
+import logging
 from logging import WARNING, getLogger
 from os import environ
 from typing import Iterable, Optional, Sequence
@@ -44,6 +45,7 @@ from opentelemetry.sdk._configuration import (
     _OTelSDKConfigurator,
 )
 from opentelemetry.sdk._logs import LoggingHandler
+from opentelemetry.sdk._logs._internal.export import LogExporter
 from opentelemetry.sdk._logs.export import ConsoleLogExporter
 from opentelemetry.sdk.environment_variables import (
     OTEL_TRACES_SAMPLER,
@@ -203,7 +205,7 @@ class OTLPSpanExporter:
     pass
 
 
-class DummyOTLPLogExporter:
+class DummyOTLPLogExporter(LogExporter):
     def __init__(self, *args, **kwargs):
         self.export_called = False
 
@@ -841,6 +843,60 @@ class TestLoggingInit(TestCase):
             True,
         )
 
+    def test_basicConfig_works_with_otel_handler(self):
+        with ClearLoggingHandlers():
+            _init_logging(
+                {"otlp": DummyOTLPLogExporter},
+                Resource.create({}),
+                setup_logging_handler=True,
+            )
+
+            logging.basicConfig(level=logging.INFO)
+
+            root_logger = logging.getLogger()
+            stream_handlers = [
+                h
+                for h in root_logger.handlers
+                if isinstance(h, logging.StreamHandler)
+            ]
+            self.assertEqual(
+                len(stream_handlers),
+                1,
+                "basicConfig should add a StreamHandler even when OTel handler exists",
+            )
+
+    def test_basicConfig_preserves_otel_handler(self):
+        with ClearLoggingHandlers():
+            _init_logging(
+                {"otlp": DummyOTLPLogExporter},
+                Resource.create({}),
+                setup_logging_handler=True,
+            )
+
+            root_logger = logging.getLogger()
+            self.assertEqual(
+                len(root_logger.handlers),
+                1,
+                "Should be exactly one OpenTelemetry LoggingHandler",
+            )
+            handler = root_logger.handlers[0]
+            self.assertIsInstance(handler, LoggingHandler)
+
+            logging.basicConfig()
+
+            self.assertGreater(len(root_logger.handlers), 1)
+
+            logging_handlers = [
+                h
+                for h in root_logger.handlers
+                if isinstance(h, LoggingHandler)
+            ]
+            self.assertEqual(
+                len(logging_handlers),
+                1,
+                "Should still have exactly one OpenTelemetry LoggingHandler",
+            )
+
 
 class TestMetricsInit(TestCase):
     def setUp(self):
@@ -1076,3 +1132,40 @@ class TestConfigurator(TestCase):
             "sampler": "TEST_SAMPLER",
         }
         mock_init_comp.assert_called_once_with(**kwargs)
+
+
+class ClearLoggingHandlers:
+    def __init__(self):
+        self.root_logger = getLogger()
+        self.original_handlers = None
+
+    def __enter__(self):
+        self.original_handlers = self.root_logger.handlers[:]
+        self.root_logger.handlers = []
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.root_logger.handlers = []
+        for handler in self.original_handlers:
+            self.root_logger.addHandler(handler)
+
+
+class TestClearLoggingHandlers(TestCase):
+    def test_preserves_handlers(self):
+        root_logger = getLogger()
+        initial_handlers = root_logger.handlers[:]
+
+        test_handler = logging.StreamHandler()
+        root_logger.addHandler(test_handler)
+        expected_handlers = initial_handlers + [test_handler]
+
+        with ClearLoggingHandlers():
+            self.assertEqual(len(root_logger.handlers), 0)
+            temp_handler = logging.StreamHandler()
+            root_logger.addHandler(temp_handler)
+
+        self.assertEqual(len(root_logger.handlers), len(expected_handlers))
+        for h1, h2 in zip(root_logger.handlers, expected_handlers):
+            self.assertIs(h1, h2)
+
+        root_logger.removeHandler(test_handler)

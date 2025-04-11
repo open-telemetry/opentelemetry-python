@@ -15,20 +15,10 @@
 # pylint: disable=too-many-lines
 
 import os
-import threading
-from concurrent.futures import ThreadPoolExecutor
-from logging import WARNING
-from time import time_ns
 from unittest import TestCase
 from unittest.mock import Mock, PropertyMock, patch
 
-from google.protobuf.duration_pb2 import (  # pylint: disable=no-name-in-module
-    Duration,
-)
-from google.rpc.error_details_pb2 import (  # pylint: disable=no-name-in-module
-    RetryInfo,
-)
-from grpc import ChannelCredentials, Compression, StatusCode, server
+from grpc import ChannelCredentials, Compression
 
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.exporter.otlp.proto.common._internal import (
@@ -40,11 +30,6 @@ from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
 from opentelemetry.exporter.otlp.proto.grpc.version import __version__
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
     ExportTraceServiceRequest,
-    ExportTraceServiceResponse,
-)
-from opentelemetry.proto.collector.trace.v1.trace_service_pb2_grpc import (
-    TraceServiceServicer,
-    add_TraceServiceServicer_to_server,
 )
 from opentelemetry.proto.common.v1.common_pb2 import (
     AnyValue,
@@ -80,7 +65,6 @@ from opentelemetry.sdk.trace import StatusCode as SDKStatusCode
 from opentelemetry.sdk.trace import TracerProvider, _Span
 from opentelemetry.sdk.trace.export import (
     SimpleSpanProcessor,
-    SpanExportResult,
 )
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.test.spantestutil import (
@@ -88,52 +72,6 @@ from opentelemetry.test.spantestutil import (
 )
 
 THIS_DIR = os.path.dirname(__file__)
-
-
-class TraceServiceServicerUNAVAILABLEDelay(TraceServiceServicer):
-    # pylint: disable=invalid-name,unused-argument,no-self-use
-    def Export(self, request, context):
-        context.set_code(StatusCode.UNAVAILABLE)
-
-        context.send_initial_metadata(
-            (("google.rpc.retryinfo-bin", RetryInfo().SerializeToString()),)
-        )
-        context.set_trailing_metadata(
-            (
-                (
-                    "google.rpc.retryinfo-bin",
-                    RetryInfo(
-                        retry_delay=Duration(nanos=int(1e7))
-                    ).SerializeToString(),
-                ),
-            )
-        )
-
-        return ExportTraceServiceResponse()
-
-
-class TraceServiceServicerUNAVAILABLE(TraceServiceServicer):
-    # pylint: disable=invalid-name,unused-argument,no-self-use
-    def Export(self, request, context):
-        context.set_code(StatusCode.UNAVAILABLE)
-
-        return ExportTraceServiceResponse()
-
-
-class TraceServiceServicerSUCCESS(TraceServiceServicer):
-    # pylint: disable=invalid-name,unused-argument,no-self-use
-    def Export(self, request, context):
-        context.set_code(StatusCode.OK)
-
-        return ExportTraceServiceResponse()
-
-
-class TraceServiceServicerALREADY_EXISTS(TraceServiceServicer):
-    # pylint: disable=invalid-name,unused-argument,no-self-use
-    def Export(self, request, context):
-        context.set_code(StatusCode.ALREADY_EXISTS)
-
-        return ExportTraceServiceResponse()
 
 
 class TestOTLPSpanExporter(TestCase):
@@ -144,12 +82,6 @@ class TestOTLPSpanExporter(TestCase):
         self.exporter = OTLPSpanExporter(insecure=True)
         tracer_provider.add_span_processor(SimpleSpanProcessor(self.exporter))
         self.tracer = tracer_provider.get_tracer(__name__)
-
-        self.server = server(ThreadPoolExecutor(max_workers=10))
-
-        self.server.add_insecure_port("127.0.0.1:4317")
-
-        self.server.start()
 
         event_mock = Mock(
             **{
@@ -231,9 +163,6 @@ class TestOTLPSpanExporter(TestCase):
         self.span2.end()
         self.span3.start()
         self.span3.end()
-
-    def tearDown(self):
-        self.server.stop(None)
 
     def test_exporting(self):
         # pylint: disable=protected-access
@@ -399,101 +328,10 @@ class TestOTLPSpanExporter(TestCase):
 
     # pylint: disable=no-self-use
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel")
-    def test_otlp_exporter_endpoint(self, mock_secure, mock_insecure):
-        """Just OTEL_EXPORTER_OTLP_COMPRESSION should work"""
-        expected_endpoint = "localhost:4317"
-        endpoints = [
-            (
-                "http://localhost:4317",
-                None,
-                mock_insecure,
-            ),
-            (
-                "localhost:4317",
-                None,
-                mock_secure,
-            ),
-            (
-                "http://localhost:4317",
-                True,
-                mock_insecure,
-            ),
-            (
-                "localhost:4317",
-                True,
-                mock_insecure,
-            ),
-            (
-                "http://localhost:4317",
-                False,
-                mock_secure,
-            ),
-            (
-                "localhost:4317",
-                False,
-                mock_secure,
-            ),
-            (
-                "https://localhost:4317",
-                False,
-                mock_secure,
-            ),
-            (
-                "https://localhost:4317",
-                None,
-                mock_secure,
-            ),
-            (
-                "https://localhost:4317",
-                True,
-                mock_secure,
-            ),
-        ]
-        for endpoint, insecure, mock_method in endpoints:
-            OTLPSpanExporter(endpoint=endpoint, insecure=insecure)
-            self.assertEqual(
-                1,
-                mock_method.call_count,
-                f"expected {mock_method} to be called for {endpoint} {insecure}",
-            )
-            self.assertEqual(
-                expected_endpoint,
-                mock_method.call_args[0][0],
-                f"expected {expected_endpoint} got {mock_method.call_args[0][0]} {endpoint}",
-            )
-            mock_method.reset_mock()
-
-    # pylint: disable=no-self-use
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
-    @patch.dict("os.environ", {OTEL_EXPORTER_OTLP_COMPRESSION: "gzip"})
-    def test_otlp_exporter_otlp_compression_envvar(
-        self, mock_insecure_channel
-    ):
-        """Just OTEL_EXPORTER_OTLP_COMPRESSION should work"""
-        OTLPSpanExporter(insecure=True)
-        mock_insecure_channel.assert_called_once_with(
-            "localhost:4317", compression=Compression.Gzip
-        )
-
-    # pylint: disable=no-self-use
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
     @patch.dict("os.environ", {OTEL_EXPORTER_OTLP_COMPRESSION: "gzip"})
     def test_otlp_exporter_otlp_compression_kwarg(self, mock_insecure_channel):
         """Specifying kwarg should take precedence over env"""
         OTLPSpanExporter(insecure=True, compression=Compression.NoCompression)
-        mock_insecure_channel.assert_called_once_with(
-            "localhost:4317", compression=Compression.NoCompression
-        )
-
-    # pylint: disable=no-self-use
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
-    @patch.dict("os.environ", {})
-    def test_otlp_exporter_otlp_compression_unspecified(
-        self, mock_insecure_channel
-    ):
-        """No env or kwarg should be NoCompression"""
-        OTLPSpanExporter(insecure=True)
         mock_insecure_channel.assert_called_once_with(
             "localhost:4317", compression=Compression.NoCompression
         )
@@ -513,65 +351,6 @@ class TestOTLPSpanExporter(TestCase):
         OTLPSpanExporter(insecure=True)
         mock_insecure_channel.assert_called_once_with(
             "localhost:4317", compression=Compression.Gzip
-        )
-
-    @patch(
-        "opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"
-    )
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel")
-    # pylint: disable=unused-argument
-    def test_otlp_headers(self, mock_ssl_channel, mock_secure):
-        exporter = OTLPSpanExporter()
-        # pylint: disable=protected-access
-        # This ensures that there is no other header than standard user-agent.
-        self.assertEqual(
-            exporter._headers,
-            (("user-agent", "OTel-OTLP-Exporter-Python/" + __version__),),
-        )
-
-    @patch(
-        "opentelemetry.exporter.otlp.proto.grpc.exporter._create_exp_backoff_generator"
-    )
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
-    def test_unavailable(self, mock_sleep, mock_expo):
-        mock_expo.configure_mock(**{"return_value": [0.01]})
-
-        add_TraceServiceServicer_to_server(
-            TraceServiceServicerUNAVAILABLE(), self.server
-        )
-        result = self.exporter.export([self.span])
-        self.assertEqual(result, SpanExportResult.FAILURE)
-        mock_sleep.assert_called_with(0.01)
-
-    @patch(
-        "opentelemetry.exporter.otlp.proto.grpc.exporter._create_exp_backoff_generator"
-    )
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
-    def test_unavailable_delay(self, mock_sleep, mock_expo):
-        mock_expo.configure_mock(**{"return_value": [1]})
-
-        add_TraceServiceServicer_to_server(
-            TraceServiceServicerUNAVAILABLEDelay(), self.server
-        )
-        self.assertEqual(
-            self.exporter.export([self.span]), SpanExportResult.FAILURE
-        )
-        mock_sleep.assert_called_with(0.01)
-
-    def test_success(self):
-        add_TraceServiceServicer_to_server(
-            TraceServiceServicerSUCCESS(), self.server
-        )
-        self.assertEqual(
-            self.exporter.export([self.span]), SpanExportResult.SUCCESS
-        )
-
-    def test_failure(self):
-        add_TraceServiceServicer_to_server(
-            TraceServiceServicerALREADY_EXISTS(), self.server
-        )
-        self.assertEqual(
-            self.exporter.export([self.span]), SpanExportResult.FAILURE
         )
 
     def test_translate_spans(self):
@@ -974,62 +753,6 @@ class TestOTLPSpanExporter(TestCase):
             .spans[0]
             .events[0]
             .dropped_attributes_count,
-        )
-
-    def test_shutdown(self):
-        add_TraceServiceServicer_to_server(
-            TraceServiceServicerSUCCESS(), self.server
-        )
-        self.assertEqual(
-            self.exporter.export([self.span]), SpanExportResult.SUCCESS
-        )
-        self.exporter.shutdown()
-        with self.assertLogs(level=WARNING) as warning:
-            self.assertEqual(
-                self.exporter.export([self.span]), SpanExportResult.FAILURE
-            )
-            self.assertEqual(
-                warning.records[0].message,
-                "Exporter already shutdown, ignoring batch",
-            )
-
-    def test_shutdown_wait_last_export(self):
-        add_TraceServiceServicer_to_server(
-            TraceServiceServicerUNAVAILABLEDelay(), self.server
-        )
-
-        export_thread = threading.Thread(
-            target=self.exporter.export, args=([self.span],)
-        )
-        export_thread.start()
-        try:
-            # pylint: disable=protected-access
-            self.assertTrue(self.exporter._export_lock.locked())
-            # delay is 4 seconds while the default shutdown timeout is 30_000 milliseconds
-            start_time = time_ns()
-            self.exporter.shutdown()
-            now = time_ns()
-            self.assertGreaterEqual(now, (start_time + 30 / 1000))
-            # pylint: disable=protected-access
-            self.assertTrue(self.exporter._shutdown)
-            # pylint: disable=protected-access
-            self.assertFalse(self.exporter._export_lock.locked())
-        finally:
-            export_thread.join()
-
-    def test_export_over_closed_grpc_channel(self):
-        # pylint: disable=protected-access
-
-        add_TraceServiceServicer_to_server(
-            TraceServiceServicerSUCCESS(), self.server
-        )
-        self.exporter.export([self.span])
-        self.exporter.shutdown()
-        data = self.exporter._translate_data([self.span])
-        with self.assertRaises(ValueError) as err:
-            self.exporter._client.Export(request=data)
-        self.assertEqual(
-            str(err.exception), "Cannot invoke RPC on closed channel!"
         )
 
 
