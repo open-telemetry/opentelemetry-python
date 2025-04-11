@@ -13,6 +13,7 @@
 # limitations under the License.
 from __future__ import annotations
 
+import collections
 import math
 import os
 import weakref
@@ -21,7 +22,7 @@ from enum import Enum
 from logging import getLogger
 from os import environ, linesep
 from sys import stdout
-from threading import Event, Lock, RLock, Thread
+from threading import Condition, Event, Lock, RLock, Thread
 from time import time_ns
 from typing import IO, Callable, Iterable, Optional
 
@@ -574,3 +575,198 @@ class PeriodicExportingMetricReader(MetricReader):
         super().force_flush(timeout_millis=timeout_millis)
         self._exporter.force_flush(timeout_millis=timeout_millis)
         return True
+
+
+class SynchronousExportingMetricReader(MetricReader):
+    """Implementation of `MetricReader` that exports metrics in batches.
+
+    Metrics are collected when `collect()` is called, then added to a queue until
+    the configured batch size is reached or until `force_flush` is called. The
+    metrics are then exported in batches to the configured exporter.
+
+    Unlike the `PeriodicExportingMetricReader`, this reader doesn't automatically
+    collect metrics on a schedule - collection must be triggered by calling
+    `collect()` or systems built on top of this reader.
+
+    `SynchronousExportingMetricReader` is configurable with the following parameters:
+
+    - `max_queue_size`: Maximum number of metric batches to store in memory
+    - `max_export_batch_size`: Maximum number of metric batches to export at once
+    - `export_timeout_millis`: Timeout for export operations in milliseconds
+    """
+
+    def __init__(
+        self,
+        exporter: MetricExporter,
+        max_export_batch_size: int = 512,
+        export_timeout_millis: float = 30000,
+        max_queue_size: int = 2048,
+    ) -> None:
+        # BatchExportingMetricReader defers to exporter for configuration
+        super().__init__(
+            preferred_temporality=exporter._preferred_temporality,
+            preferred_aggregation=exporter._preferred_aggregation,
+        )
+
+        self._validate_arguments(max_queue_size, max_export_batch_size)
+
+        self._exporter = exporter
+        self._max_queue_size = max_queue_size
+        self._max_export_batch_size = max_export_batch_size
+        self._export_timeout_millis = export_timeout_millis
+
+        # This lock is held whenever calling self._exporter.export() to prevent concurrent
+        # execution of MetricExporter.export()
+        self._export_lock = Lock()
+
+        # Queue to store metrics
+        self._queue = collections.deque([], max_queue_size)
+
+        # Thread handling and synchronization
+        self._condition = Condition(Lock())
+        self._shutdown = False
+        self._flush_event = Event()
+        self._shutdown_once = Once()
+
+        # Process fork handling
+        if hasattr(os, "register_at_fork"):
+            weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
+            os.register_at_fork(
+                after_in_child=lambda: weak_reinit()()  # pylint: disable=unnecessary-lambda
+            )
+        self._pid = os.getpid()
+
+    def _at_fork_reinit(self):
+        """Reinitialize the reader after fork."""
+        self._condition = Condition(Lock())
+        self._queue.clear()
+        self._pid = os.getpid()
+
+    def _export_batch(self) -> int:
+        """Exports at most max_export_batch_size metrics and returns the number of exported metrics."""
+        idx = 0
+        pending_metrics = []
+
+        with self._condition:
+            while idx < self._max_export_batch_size and self._queue:
+                metrics_data = self._queue.pop()
+                pending_metrics.append(metrics_data)
+                idx += 1
+
+        if pending_metrics:
+            token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
+            try:
+                with self._export_lock:
+                    for metrics_data in pending_metrics:
+                        self._exporter.export(
+                            metrics_data,
+                            timeout_millis=self._export_timeout_millis,
+                        )
+            except Exception:  # pylint: disable=broad-exception-caught
+                _logger.exception("Exception while exporting metrics.")
+            finally:
+                detach(token)
+
+        return idx
+
+    def _drain_queue(self):
+        """Export all elements until queue is empty."""
+        while self._queue:
+            self._export_batch()
+
+    def _receive_metrics(
+        self,
+        metrics_data: MetricsData,
+        timeout_millis: float = 10_000,
+        **kwargs,
+    ) -> None:
+        """Add metrics to the queue for batched export."""
+        if self._shutdown:
+            return
+
+        # Handle fork
+        if self._pid != os.getpid():
+            self._at_fork_reinit()
+
+        # Add metrics to queue
+        with self._condition:
+            self._queue.appendleft(metrics_data)
+            if len(self._queue) >= self._max_export_batch_size:
+                self._condition.notify()
+                self._flush_event.set()
+
+        # If queue has reached batch size, export immediately
+        if len(self._queue) >= self._max_export_batch_size:
+            self._export_batch()
+
+    def force_flush(self, timeout_millis: float = 10_000) -> bool:
+        """Forces flush of metrics to the exporter
+
+        Args:
+            timeout_millis: The maximum amount of time to wait for the flush
+                to complete, in milliseconds.
+
+        Returns:
+            True if the flush was successful, False otherwise.
+        """
+        if timeout_millis is None:
+            timeout_millis = self._export_timeout_millis
+
+        if self._shutdown:
+            return True
+
+        # Collect any pending metrics first (this will trigger _receive_metrics)
+        super().force_flush(timeout_millis=timeout_millis)
+
+        # Export all batches in queue
+        try:
+            with self._condition:
+                if not self._queue:
+                    return True
+
+            self._drain_queue()
+            return self._exporter.force_flush(timeout_millis=timeout_millis)
+        except Exception:  # pylint: disable=broad-exception-caught
+            _logger.exception("Exception during force_flush")
+            return False
+
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
+        """Shuts down the metric reader and exporter.
+
+        Args:
+            timeout_millis: The maximum amount of time to wait for the exporter
+                to shutdown, in milliseconds.
+        """
+        deadline_ns = time_ns() + timeout_millis * 10**6
+
+        def _shutdown():
+            self._shutdown = True
+
+        did_set = self._shutdown_once.do_once(_shutdown)
+        if not did_set:
+            _logger.warning("Can't shutdown multiple times")
+            return
+
+        # Export any metrics still in the queue
+        self._drain_queue()
+
+        # Shutdown the exporter
+        self._exporter.shutdown(
+            timeout=(deadline_ns - time_ns()) / 10**6, **kwargs
+        )
+
+    @staticmethod
+    def _validate_arguments(max_queue_size, max_export_batch_size):
+        """Validate constructor arguments."""
+        if max_queue_size <= 0:
+            raise ValueError("max_queue_size must be a positive integer.")
+
+        if max_export_batch_size <= 0:
+            raise ValueError(
+                "max_export_batch_size must be a positive integer."
+            )
+
+        if max_export_batch_size > max_queue_size:
+            raise ValueError(
+                "max_export_batch_size must be less than or equal to max_queue_size."
+            )
