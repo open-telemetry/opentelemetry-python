@@ -1,0 +1,3 @@
+# https://docs.astral.sh/uv/reference/settings/#pip_no-sources
+[pip]
+no-sources = true
