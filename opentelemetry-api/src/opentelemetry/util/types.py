@@ -55,3 +55,5 @@ AttributesAsKey = Tuple[
     ],
     ...,
 ]
+
+ExtendedAttributes = Mapping[str, "AnyValue"]
