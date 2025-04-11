@@ -21,6 +21,7 @@ from opentelemetry.sdk.metrics._internal.export import (
     MetricExportResult,
     MetricReader,
     PeriodicExportingMetricReader,
+    SynchronousExportingMetricReader,
 )
 
 # The point module is not in the export directory to avoid a circular import.
@@ -63,4 +64,5 @@ __all__ = [
     "ResourceMetrics",
     "ScopeMetrics",
     "Sum",
+    "SynchronousExportingMetricReader",
 ]
