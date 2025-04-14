@@ -149,18 +149,19 @@ class TestSynchronousExportingMetricReader(ConcurrencyTestBase):
         ):
             self.reader.shutdown()
 
-    def _create_metric(self, i, value=None):
+    @staticmethod
+    def _create_metric(index, value=None):
         """Helper to create a test metric with a gauge data point
 
         Args:
-            i: Index/identifier for the metric
-            value: Optional specific value, defaults to i
+            index: Index/identifier for the metric
+            value: Optional specific value, defaults to index
 
         Returns:
             MetricsData: A fully formed metrics data object
         """
         if value is None:
-            value = i
+            value = index
 
         data_point = NumberDataPoint(
             attributes={},
@@ -174,13 +175,17 @@ class TestSynchronousExportingMetricReader(ConcurrencyTestBase):
         return MetricsData(
             resource_metrics=[
                 ResourceMetrics(
-                    resource=Resource.create({"service.name": f"test-{i}"}),
+                    resource=Resource.create(
+                        {"service.name": f"test-{index}"}
+                    ),
                     scope_metrics=[
                         ScopeMetrics(
-                            scope=InstrumentationScope(name=f"test-scope-{i}"),
+                            scope=InstrumentationScope(
+                                name=f"test-scope-{index}"
+                            ),
                             metrics=[
                                 {
-                                    "name": f"metric-{i}",
+                                    "name": f"metric-{index}",
                                     "description": "Test metric",
                                     "unit": "1",
                                     "data": gauge,
@@ -264,12 +269,12 @@ class TestSynchronousExportingMetricReader(ConcurrencyTestBase):
     def test_export_batch(self):
         """Test that metrics are properly batched and exported"""
         # Create 10 simple metrics
-        for i in range(10):
+        for metric_idx in range(10):
             # Add metrics to the reader
-            self.reader._receive_metrics(self._create_metric(i))
+            self.reader._receive_metrics(self._create_metric(metric_idx))
 
             # After 5 metrics, the batch should be exported
-            if i == 4:
+            if metric_idx == 4:
                 self.assertEqual(len(self.exporter.get_exported_metrics()), 1)
                 # The batch should contain 5 resource metrics
                 self.assertEqual(
@@ -281,21 +286,21 @@ class TestSynchronousExportingMetricReader(ConcurrencyTestBase):
                     5,
                 )
                 # Verify content of exported metrics
-                for j in range(5):
+                for batch_idx in range(5):
                     exported_metric = self.exporter.get_exported_metrics()[
                         0
-                    ].resource_metrics[j]
+                    ].resource_metrics[batch_idx]
                     self.assertEqual(
                         exported_metric.resource.attributes["service.name"],
-                        f"test-{j}",
+                        f"test-{batch_idx}",
                     )
                     self.assertEqual(
                         exported_metric.scope_metrics[0].scope.name,
-                        f"test-scope-{j}",
+                        f"test-scope-{batch_idx}",
                     )
                     self.assertEqual(
                         exported_metric.scope_metrics[0].metrics[0]["name"],
-                        f"metric-{j}",
+                        f"metric-{batch_idx}",
                     )
 
         # After all 10 metrics, we should have 2 batches
@@ -307,21 +312,21 @@ class TestSynchronousExportingMetricReader(ConcurrencyTestBase):
         )
 
         # Verify content of second batch
-        for j in range(5, 10):
-            idx = j - 5
+        for batch_idx in range(5, 10):
+            idx = batch_idx - 5
             exported_metric = self.exporter.get_exported_metrics()[
                 1
             ].resource_metrics[idx]
             self.assertEqual(
                 exported_metric.resource.attributes["service.name"],
-                f"test-{j}",
+                f"test-{batch_idx}",
             )
 
     def test_export_batch_boundary_conditions(self):
         """Test batching behavior at boundary conditions"""
         # Test with exactly one batch size
-        for i in range(5):
-            self.reader._receive_metrics(self._create_metric(i))
+        for metric_idx in range(5):
+            self.reader._receive_metrics(self._create_metric(metric_idx))
 
         # Should have exactly one batch
         self.assertEqual(len(self.exporter.get_exported_metrics()), 1)
@@ -336,8 +341,8 @@ class TestSynchronousExportingMetricReader(ConcurrencyTestBase):
         self.assertEqual(len(self.exporter.get_exported_metrics()), 0)
 
         # Test with batch size + 1
-        for i in range(6):
-            self.reader._receive_metrics(self._create_metric(i))
+        for metric_idx in range(6):
+            self.reader._receive_metrics(self._create_metric(metric_idx))
 
         # Force export of any remaining metrics
         self.reader.force_flush()
@@ -353,8 +358,8 @@ class TestSynchronousExportingMetricReader(ConcurrencyTestBase):
     def test_shutdown(self):
         """Test that shutdown exports queued metrics and shuts down the exporter"""
         # Add 3 metrics (not enough for automatic batch export)
-        for i in range(3):
-            self.reader._receive_metrics(self._create_metric(i))
+        for metric_idx in range(3):
+            self.reader._receive_metrics(self._create_metric(metric_idx))
 
         # No exports should have happened yet (batch size not reached)
         self.assertEqual(len(self.exporter.get_exported_metrics()), 0)
@@ -377,8 +382,8 @@ class TestSynchronousExportingMetricReader(ConcurrencyTestBase):
     def test_force_flush(self):
         """Test that force_flush exports queued metrics"""
         # Add 3 metrics (not enough for automatic batch export)
-        for i in range(3):
-            self.reader._receive_metrics(self._create_metric(i))
+        for metric_idx in range(3):
+            self.reader._receive_metrics(self._create_metric(metric_idx))
 
         # No exports should have happened yet (batch size not reached)
         self.assertEqual(len(self.exporter.get_exported_metrics()), 0)
@@ -413,9 +418,9 @@ class TestSynchronousExportingMetricReader(ConcurrencyTestBase):
         gauge = meter.create_gauge("test_gauge", description="Test gauge")
 
         # Record some metrics
-        for i in range(10):
+        for metric_idx in range(10):
             counter.add(1)
-            gauge.set(i)
+            gauge.set(metric_idx)
 
             # Manually collect after each recording
             # This simulates the behavior in synchronous_read.py example
@@ -474,9 +479,9 @@ class TestSynchronousExportingMetricReader(ConcurrencyTestBase):
         # Run multiple threads concurrently recording metrics
         with ThreadPoolExecutor(max_workers=10) as executor:
             futures = []
-            for i in range(10):
+            for thread_idx in range(10):
                 future = executor.submit(
-                    record_and_collect, (i + 1) * 5
+                    record_and_collect, (thread_idx + 1) * 5
                 )  # 5, 10, 15, ... 50 metrics
                 futures.append(future)
 
@@ -512,8 +517,8 @@ class TestSynchronousExportingMetricReader(ConcurrencyTestBase):
         )
 
         # Add metrics to the reader
-        for i in range(10):
-            reader._receive_metrics(self._create_metric(i))
+        for metric_idx in range(10):
+            reader._receive_metrics(self._create_metric(metric_idx))
 
         # Exporter should have been called at least once
         self.assertGreaterEqual(failing_exporter.export_call_count, 1)
@@ -536,17 +541,18 @@ class TestSynchronousExportingMetricReader(ConcurrencyTestBase):
 
         # Add metrics to the reader - this should not propagate exceptions
         try:
-            for i in range(10):
-                reader._receive_metrics(self._create_metric(i))
+            for metric_idx in range(10):
+                reader._receive_metrics(self._create_metric(metric_idx))
             reader.force_flush()
             reader.shutdown()
-        except Exception as e:
-            self.fail(f"Exception should be caught: {str(e)}")
+        except RuntimeError as runtime_err:
+            self.fail(f"RuntimeError should be caught: {str(runtime_err)}")
 
         # Exporter should have been called
         self.assertGreaterEqual(exception_exporter.export_call_count, 1)
 
-    def test_garbage_collection(self):
+    @staticmethod
+    def test_garbage_collection():
         """Test that the reader can be garbage collected"""
         exporter = InMemoryMetricExporter()
         reader = SynchronousExportingMetricReader(exporter)
@@ -559,10 +565,9 @@ class TestSynchronousExportingMetricReader(ConcurrencyTestBase):
         del reader
         gc.collect()
 
-        self.assertIsNone(
-            weak_ref(),
-            "The SynchronousExportingMetricReader object wasn't garbage collected",
-        )
+        assert (
+            weak_ref() is None
+        ), "The SynchronousExportingMetricReader object wasn't garbage collected"
 
     def test_at_fork_reinit(self):
         """Test that the _at_fork_reinit method properly resets internal state"""
@@ -675,9 +680,9 @@ class TestSynchronousExportingMetricReader(ConcurrencyTestBase):
                     "export_count": len(metrics),
                 }
                 pipe_conn.send(result)
-            except Exception as e:
+            except (RuntimeError, OSError, IOError) as process_err:
                 # Send exception info back to parent
-                pipe_conn.send({"error": str(e)})
+                pipe_conn.send({"error": str(process_err)})
             finally:
                 pipe_conn.close()
 
