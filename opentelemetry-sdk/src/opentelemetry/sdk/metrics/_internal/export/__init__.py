@@ -657,11 +657,19 @@ class SynchronousExportingMetricReader(MetricReader):
             token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
             try:
                 with self._export_lock:
+                    # Create a combined metrics data object with all resource_metrics from the batch
+                    batch = []
                     for metrics_data in pending_metrics:
-                        self._exporter.export(
-                            metrics_data,
-                            timeout_millis=self._export_timeout_millis,
-                        )
+                        batch.extend(metrics_data.resource_metrics)
+
+                    # Create a single MetricsData object with all resource_metrics
+                    combined_metrics_data = MetricsData(resource_metrics=batch)
+
+                    # Export the combined batch
+                    self._exporter.export(
+                        combined_metrics_data,
+                        timeout_millis=self._export_timeout_millis,
+                    )
             except Exception:  # pylint: disable=broad-exception-caught
                 _logger.exception("Exception while exporting metrics.")
             finally:
