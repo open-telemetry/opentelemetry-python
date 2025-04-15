@@ -15,7 +15,7 @@ concurrency:
 
 env:
   CORE_REPO_SHA: main
-  CONTRIB_REPO_SHA: opentelemetrybot/prepare-release-1.32.0-0.53b0
+  CONTRIB_REPO_SHA: release/v1.32.x-0.53bx
   PIP_EXISTS_ACTION: w
 
 jobs:
