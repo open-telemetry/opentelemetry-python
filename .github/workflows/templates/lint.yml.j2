@@ -15,7 +15,11 @@ concurrency:
 
 env:
   CORE_REPO_SHA: main
-  CONTRIB_REPO_SHA: main
+  CONTRIB_REPO_SHA: {% raw %}${{ github.event_name == 'pull_request' && (
+       contains(github.event.pull_request.labels.*.name, 'release') && github.event.pull_request.head.ref ||
+       contains(github.event.pull_request.labels.*.name, 'patch-release') && github.event.pull_request.base.ref ||
+       'main'
+    ) || 'main' }}{% endraw %}
   PIP_EXISTS_ACTION: w
 
 jobs:
