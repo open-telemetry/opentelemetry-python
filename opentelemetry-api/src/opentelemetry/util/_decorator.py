@@ -32,7 +32,7 @@ if TYPE_CHECKING:
 
 
 class _AgnosticContextManager(
-    contextlib._GeneratorContextManager,  # type: ignore  # FIXME use contextlib._GeneratorContextManager[R] when we drop the python 3.8 support
+    contextlib._GeneratorContextManager[R],
     Generic[R],
 ):  # pylint: disable=protected-access
     """Context manager that can decorate both async and sync functions.
