@@ -49,9 +49,7 @@ class TestPropagators(TestCase):
 
         reload(opentelemetry.propagate)
 
-    @patch.dict(
-        environ, {OTEL_PROPAGATORS: "None"}
-    )
+    @patch.dict(environ, {OTEL_PROPAGATORS: "None"})
     @patch("opentelemetry.propagators.composite.CompositePropagator")
     def test_none_propogators(self, mock_compositehttppropagator):
         def test_propagators(propagators):
@@ -72,11 +70,11 @@ class TestPropagators(TestCase):
 
         reload(opentelemetry.propagate)
 
-    @patch.dict(
-        environ, {OTEL_PROPAGATORS: "tracecontext, None"}
-    )
+    @patch.dict(environ, {OTEL_PROPAGATORS: "tracecontext, None"})
     @patch("opentelemetry.propagators.composite.CompositePropagator")
-    def test_multiple_propogators_with_none(self, mock_compositehttppropagator):
+    def test_multiple_propogators_with_none(
+        self, mock_compositehttppropagator
+    ):
         def test_propagators(propagators):
             propagators = {propagator.__class__ for propagator in propagators}
 

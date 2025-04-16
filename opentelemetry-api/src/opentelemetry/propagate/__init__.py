@@ -133,7 +133,9 @@ environ_propagators = environ.get(
 for propagator in environ_propagators.split(","):
     propagator = propagator.strip()
     if propagator.lower() == "none":
-        logger.debug(f"OTEL_PROPAGATORS environment variable contains none, removing all propagators")
+        logger.debug(
+            "OTEL_PROPAGATORS environment variable contains none, removing all propagators"
+        )
         propagators = []
         break
     try:
