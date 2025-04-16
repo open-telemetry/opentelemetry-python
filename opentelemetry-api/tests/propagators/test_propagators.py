@@ -49,6 +49,50 @@ class TestPropagators(TestCase):
 
         reload(opentelemetry.propagate)
 
+    @patch.dict(environ, {OTEL_PROPAGATORS: "None"})
+    @patch("opentelemetry.propagators.composite.CompositePropagator")
+    def test_none_propogators(self, mock_compositehttppropagator):
+        def test_propagators(propagators):
+            propagators = {propagator.__class__ for propagator in propagators}
+
+            self.assertEqual(len(propagators), 0)
+            self.assertEqual(
+                propagators,
+                set(),
+            )
+
+        mock_compositehttppropagator.configure_mock(
+            **{"side_effect": test_propagators}
+        )
+
+        # pylint: disable=import-outside-toplevel
+        import opentelemetry.propagate
+
+        reload(opentelemetry.propagate)
+
+    @patch.dict(environ, {OTEL_PROPAGATORS: "tracecontext, None"})
+    @patch("opentelemetry.propagators.composite.CompositePropagator")
+    def test_multiple_propogators_with_none(
+        self, mock_compositehttppropagator
+    ):
+        def test_propagators(propagators):
+            propagators = {propagator.__class__ for propagator in propagators}
+
+            self.assertEqual(len(propagators), 0)
+            self.assertEqual(
+                propagators,
+                set(),
+            )
+
+        mock_compositehttppropagator.configure_mock(
+            **{"side_effect": test_propagators}
+        )
+
+        # pylint: disable=import-outside-toplevel
+        import opentelemetry.propagate
+
+        reload(opentelemetry.propagate)
+
     @patch.dict(environ, {OTEL_PROPAGATORS: "a,  b,   c  "})
     @patch("opentelemetry.propagators.composite.CompositePropagator")
     @patch("opentelemetry.util._importlib_metadata.entry_points")
