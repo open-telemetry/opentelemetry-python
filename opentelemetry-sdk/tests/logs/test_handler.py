@@ -251,15 +251,15 @@ class TestLoggingHandler(unittest.TestCase):
         self.assertTrue(isinstance(log_record.body, str))
         self.assertEqual(log_record.body, "CustomException stringified")
         self.assertEqual(
-            log_record.attributes[SpanAttributes.EXCEPTION_TYPE],
+            log_record.attributes[exception_attributes.EXCEPTION_TYPE],
             CustomException.__name__,
         )
         self.assertEqual(
-            log_record.attributes[SpanAttributes.EXCEPTION_MESSAGE],
+            log_record.attributes[exception_attributes.EXCEPTION_MESSAGE],
             "CustomException message",
         )
         stack_trace = log_record.attributes[
-            SpanAttributes.EXCEPTION_STACKTRACE
+            exception_attributes.EXCEPTION_STACKTRACE
         ]
         self.assertIsInstance(stack_trace, str)
         self.assertTrue("Traceback" in stack_trace)
