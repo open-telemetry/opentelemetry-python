@@ -499,7 +499,7 @@ class LoggingHandler(logging.Handler):
                     value.args[0]
                 )
             if tb is not None:
-                # https://github.com/open-telemetry/opentelemetry-specification/blob/9fa7c656b26647b27e485a6af7e38dc716eba98a/specification/trace/semantic_conventions/exceptions.md#stacktrace-representation
+                # https://opentelemetry.io/docs/specs/semconv/exceptions/exceptions-spans/#stacktrace-representation
                 attributes[exception_attributes.EXCEPTION_STACKTRACE] = (
                     "".join(traceback.format_exception(*record.exc_info))
                 )

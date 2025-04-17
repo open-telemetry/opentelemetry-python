@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4494](https://github.com/open-telemetry/opentelemetry-python/pull/4494))
 - Improve CI by cancelling stale runs and setting timeouts
   ([#4498](https://github.com/open-telemetry/opentelemetry-python/pull/4498))
-- opentelemetry-sdk: use release candidate code attributes
+- opentelemetry-sdk: use stable code attributes: `code.function` -> `code.function.name`, `code.lineno` -> `code.line.number`, `code.filepath` -> `code.file.path`
   ([#4508](https://github.com/open-telemetry/opentelemetry-python/pull/4508))
 
 ## Version 1.31.0/0.52b0 (2025-03-12)
