@@ -36,7 +36,7 @@ exporter = ConsoleMetricExporter()
 reader = SynchronousExportingMetricReader(
     exporter,
     max_export_batch_size=5,  # Export after every 5 metrics
-    max_queue_size=1000,  # Queue up to 100 metrics
+    max_queue_size=100,  # Queue up to 100 metrics
 )
 # Create a meter provider with our reader
 meter_provider = MeterProvider(resource=resource, metric_readers=[reader])
