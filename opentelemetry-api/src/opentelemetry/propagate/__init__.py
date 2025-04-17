@@ -121,7 +121,7 @@ def inject(
     get_global_textmap().inject(carrier, context=context, setter=setter)
 
 
-propagators = []
+propagators = [] # type: ignore
 
 # Single use variable here to hack black and make lint pass
 environ_propagators = environ.get(
@@ -136,7 +136,7 @@ for propagator in environ_propagators.split(","):
         logger.debug(
             "OTEL_PROPAGATORS environment variable contains none, removing all propagators"
         )
-        propagators = []
+        propagators = [] 
         break
     try:
         propagators.append(  # type: ignore
