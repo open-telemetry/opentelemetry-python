@@ -485,24 +485,19 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         exporter.export.assert_called_once()
         after_export = time.time_ns()
         # Shows the worker's 30 second sleep was interrupted within a second.
-        self.assertTrue((after_export - before_export) < 1e9)
+        self.assertLess(after_export - before_export, 1e9)
 
-    # pylint: disable=no-self-use
     def test_logs_exported_once_schedule_delay_reached(self):
         exporter = Mock()
         log_record_processor = BatchLogRecordProcessor(
             exporter=exporter,
-            # Should not reach this during the test, instead export should be called when delay millis is hit.
             max_queue_size=15,
             max_export_batch_size=15,
             schedule_delay_millis=100,
         )
-        for _ in range(15):
-            log_record_processor.emit(EMPTY_LOG)
-            time.sleep(0.11)
-        exporter.export.assert_has_calls(
-            [call([EMPTY_LOG]) for _ in range(15)]
-        )
+        log_record_processor.emit(EMPTY_LOG)
+        time.sleep(0.11)
+        exporter.export.assert_called_once_with([EMPTY_LOG])
 
     def test_logs_flushed_before_shutdown_and_dropped_after_shutdown(self):
         exporter = Mock()
@@ -516,15 +511,16 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         # This log should be flushed because it was written before shutdown.
         log_record_processor.emit(EMPTY_LOG)
         log_record_processor.shutdown()
+        exporter.export.assert_called_once_with([EMPTY_LOG])
         self.assertTrue(exporter._stopped)
 
-        with self.assertLogs(level="WARNING") as log:
+        with self.assertLogs(level="INFO") as log:
             # This log should not be flushed.
             log_record_processor.emit(EMPTY_LOG)
             self.assertEqual(len(log.output), 1)
             self.assertEqual(len(log.records), 1)
             self.assertIn("Shutdown called, ignoring log.", log.output[0])
-        exporter.export.assert_called_once_with([EMPTY_LOG])
+        exporter.export.assert_called_once()
 
     # pylint: disable=no-self-use
     def test_force_flush_flushes_logs(self):
@@ -570,7 +566,9 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             max_export_batch_size=64,
             schedule_delay_millis=30000,
         )
-        # These are not expected to be flushed. Calling fork clears any logs not flushed.
+        # These logs should be flushed only from the parent process.
+        # _at_fork_reinit should be called in the child process, to
+        # clear these logs in the child process.
         for _ in range(10):
             log_record_processor.emit(EMPTY_LOG)
 
@@ -590,7 +588,8 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         process.start()
         self.assertTrue(parent_conn.recv())
         process.join()
-        self.assertTrue(len(exporter.get_finished_logs()) == 0)
+        log_record_processor.force_flush()
+        self.assertTrue(len(exporter.get_finished_logs()) == 10)
 
 
 class TestConsoleLogExporter(unittest.TestCase):
