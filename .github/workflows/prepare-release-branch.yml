@@ -103,7 +103,8 @@ jobs:
           gh pr create --title "[$RELEASE_BRANCH_NAME] $message" \
                        --body "$message." \
                        --head $branch \
-                       --base $RELEASE_BRANCH_NAME
+                       --base $RELEASE_BRANCH_NAME \
+                       --label release
 
   create-pull-request-against-main:
     runs-on: ubuntu-latest
@@ -183,4 +184,5 @@ jobs:
           gh pr create --title "$message" \
                        --body "$body" \
                        --head $branch \
-                       --base main
+                       --base main \
+                       --label release

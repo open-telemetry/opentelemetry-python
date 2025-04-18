@@ -77,4 +77,5 @@ jobs:
           gh pr create --title "[$GITHUB_REF_NAME] $message" \
                        --body "$message." \
                        --head $branch \
-                       --base $GITHUB_REF_NAME
+                       --base $GITHUB_REF_NAME \
+                       --label release
