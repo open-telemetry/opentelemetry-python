@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add SynchronousExportingMetricReader for on-demand batch metric export without background threads
   ([#4542](https://github.com/open-telemetry/opentelemetry-python/pull/4542))
+- Fix serialization of extended attributes for logs signal
+  ([#4342](https://github.com/open-telemetry/opentelemetry-python/pull/4342))
 
 ## Version 1.32.0/0.53b0 (2025-04-10)
 
