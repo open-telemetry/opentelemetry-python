@@ -19,7 +19,7 @@ import os
 import time
 import unittest
 from concurrent.futures import ThreadPoolExecutor
-from unittest.mock import Mock, call, patch
+from unittest.mock import Mock, patch
 
 from opentelemetry._logs import SeverityNumber
 from opentelemetry.sdk import trace
@@ -44,7 +44,6 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
-
 from opentelemetry.trace import TraceFlags
 from opentelemetry.trace.span import INVALID_SPAN_CONTEXT
 
@@ -487,6 +486,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         # Shows the worker's 30 second sleep was interrupted within a second.
         self.assertLess(after_export - before_export, 1e9)
 
+    # pylint: disable=no-self-use
     def test_logs_exported_once_schedule_delay_reached(self):
         exporter = Mock()
         log_record_processor = BatchLogRecordProcessor(
