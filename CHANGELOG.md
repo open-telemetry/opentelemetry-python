@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Fix serialization of extended attributes for logs signal
+  ([#4342](https://github.com/open-telemetry/opentelemetry-python/pull/4342))
 - Handle OTEL_PROPAGATORS contains None
   ([#4143](https://github.com/open-telemetry/opentelemetry-python/pull/4553))
 
