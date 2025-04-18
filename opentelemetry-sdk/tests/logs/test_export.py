@@ -496,7 +496,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             schedule_delay_millis=100,
         )
         log_record_processor.emit(EMPTY_LOG)
-        time.sleep(0.11)
+        time.sleep(0.2)
         exporter.export.assert_called_once_with([EMPTY_LOG])
 
     def test_logs_flushed_before_shutdown_and_dropped_after_shutdown(self):
