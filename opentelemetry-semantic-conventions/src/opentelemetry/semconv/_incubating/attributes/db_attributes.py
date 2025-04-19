@@ -77,13 +77,14 @@ Deprecated: Replaced by `db.client.connection.state`.
 DB_COLLECTION_NAME: Final = "db.collection.name"
 """
 The name of a collection (table, container) within the database.
-Note: It is RECOMMENDED to capture the value as provided by the application without attempting to do any case normalization.
+Note: It is RECOMMENDED to capture the value as provided by the application
+without attempting to do any case normalization.
 
 The collection name SHOULD NOT be extracted from `db.query.text`,
-unless the query format is known to only ever have a single collection name present.
+when the database system supports cross-table queries in non-batch operations.
 
-For batch operations, if the individual operations are known to have the same collection name
-then that collection name SHOULD be used.
+For batch operations, if the individual operations are known to have the same
+collection name then that collection name SHOULD be used.
 """
 
 DB_CONNECTION_STRING: Final = "db.connection_string"
@@ -209,7 +210,10 @@ Note: It is RECOMMENDED to capture the value as provided by the application
 without attempting to do any case normalization.
 
 The operation name SHOULD NOT be extracted from `db.query.text`,
-unless the query format is known to only ever have a single operation name present.
+when the database system supports cross-table queries in non-batch operations.
+
+If spaces can occur in the operation name, multiple consecutive spaces
+SHOULD be normalized to a single space.
 
 For batch operations, if the individual operations are known to have the same operation name
 then that operation name SHOULD be used prepended by `BATCH `,
@@ -222,6 +226,7 @@ DB_OPERATION_PARAMETER_TEMPLATE: Final = "db.operation.parameter"
 A database operation parameter, with `<key>` being the parameter name, and the attribute value being a string representation of the parameter value.
 Note: If a parameter has no name and instead is referenced only by index, then `<key>` SHOULD be the 0-based index.
 If `db.query.text` is also captured, then `db.operation.parameter.<key>` SHOULD match up with the parameterized placeholders present in `db.query.text`.
+`db.operation.parameter.<key>` SHOULD NOT be captured on batch operations.
 """
 
 DB_QUERY_PARAMETER_TEMPLATE: Final = "db.query.parameter"
@@ -233,13 +238,13 @@ DB_QUERY_SUMMARY: Final = "db.query.summary"
 """
 Low cardinality representation of a database query text.
 Note: `db.query.summary` provides static summary of the query text. It describes a class of database queries and is useful as a grouping key, especially when analyzing telemetry for database calls involving complex queries.
-Summary may be available to the instrumentation through instrumentation hooks or other means. If it is not available, instrumentations that support query parsing SHOULD generate a summary following [Generating query summary](../../docs/database/database-spans.md#generating-a-summary-of-the-query-text) section.
+Summary may be available to the instrumentation through instrumentation hooks or other means. If it is not available, instrumentations that support query parsing SHOULD generate a summary following [Generating query summary](../database/database-spans.md#generating-a-summary-of-the-query-text) section.
 """
 
 DB_QUERY_TEXT: Final = "db.query.text"
 """
 The database query being executed.
-Note: For sanitization see [Sanitization of `db.query.text`](../../docs/database/database-spans.md#sanitization-of-dbquerytext).
+Note: For sanitization see [Sanitization of `db.query.text`](../database/database-spans.md#sanitization-of-dbquerytext).
 For batch operations, if the individual operations are known to have the same query text then that query text SHOULD be used, otherwise all of the individual query texts SHOULD be concatenated with separator `; ` or some other database system specific separator if more applicable.
 Even though parameterized query text can potentially have sensitive data, by using a parameterized query the user is giving a strong signal that any sensitive data will be passed as parameter values, and the benefit to observability of capturing the static part of the query text by default outweighs the risk.
 """
@@ -263,12 +268,22 @@ Semantic conventions for individual database systems SHOULD document what `db.re
 
 DB_SQL_TABLE: Final = "db.sql.table"
 """
-Deprecated: Replaced by `db.collection.name`.
+Deprecated: Replaced by `db.collection.name`, but only if not extracting the value from `db.query.text`.
 """
 
 DB_STATEMENT: Final = "db.statement"
 """
 Deprecated: Replaced by `db.query.text`.
+"""
+
+DB_STORED_PROCEDURE_NAME: Final = "db.stored_procedure.name"
+"""
+The name of a stored procedure within the database.
+Note: It is RECOMMENDED to capture the value as provided by the application
+without attempting to do any case normalization.
+
+For batch operations, if the individual operations are known to have the same
+stored procedure name then that stored procedure name SHOULD be used.
 """
 
 DB_SYSTEM: Final = "db.system"

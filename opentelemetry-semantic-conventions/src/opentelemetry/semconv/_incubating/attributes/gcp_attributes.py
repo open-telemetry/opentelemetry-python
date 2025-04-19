@@ -12,7 +12,65 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from enum import Enum
 from typing import Final
+
+GCP_APPHUB_APPLICATION_CONTAINER: Final = "gcp.apphub.application.container"
+"""
+The container within GCP where the AppHub application is defined.
+"""
+
+GCP_APPHUB_APPLICATION_ID: Final = "gcp.apphub.application.id"
+"""
+The name of the application as configured in AppHub.
+"""
+
+GCP_APPHUB_APPLICATION_LOCATION: Final = "gcp.apphub.application.location"
+"""
+The GCP zone or region where the application is defined.
+"""
+
+GCP_APPHUB_SERVICE_CRITICALITY_TYPE: Final = (
+    "gcp.apphub.service.criticality_type"
+)
+"""
+Criticality of a service indicates its importance to the business.
+Note: [See AppHub type enum](https://cloud.google.com/app-hub/docs/reference/rest/v1/Attributes#type).
+"""
+
+GCP_APPHUB_SERVICE_ENVIRONMENT_TYPE: Final = (
+    "gcp.apphub.service.environment_type"
+)
+"""
+Environment of a service is the stage of a software lifecycle.
+Note: [See AppHub environment type](https://cloud.google.com/app-hub/docs/reference/rest/v1/Attributes#type_1).
+"""
+
+GCP_APPHUB_SERVICE_ID: Final = "gcp.apphub.service.id"
+"""
+The name of the service as configured in AppHub.
+"""
+
+GCP_APPHUB_WORKLOAD_CRITICALITY_TYPE: Final = (
+    "gcp.apphub.workload.criticality_type"
+)
+"""
+Criticality of a workload indicates its importance to the business.
+Note: [See AppHub type enum](https://cloud.google.com/app-hub/docs/reference/rest/v1/Attributes#type).
+"""
+
+GCP_APPHUB_WORKLOAD_ENVIRONMENT_TYPE: Final = (
+    "gcp.apphub.workload.environment_type"
+)
+"""
+Environment of a workload is the stage of a software lifecycle.
+Note: [See AppHub environment type](https://cloud.google.com/app-hub/docs/reference/rest/v1/Attributes#type_1).
+"""
+
+GCP_APPHUB_WORKLOAD_ID: Final = "gcp.apphub.workload.id"
+"""
+The name of the workload as configured in AppHub.
+"""
 
 GCP_CLIENT_SERVICE: Final = "gcp.client.service"
 """
@@ -39,3 +97,47 @@ GCP_GCE_INSTANCE_NAME: Final = "gcp.gce.instance.name"
 """
 The instance name of a GCE instance. This is the value provided by `host.name`, the visible name of the instance in the Cloud Console UI, and the prefix for the default hostname of the instance as defined by the [default internal DNS name](https://cloud.google.com/compute/docs/internal-dns#instance-fully-qualified-domain-names).
 """
+
+
+class GcpApphubServiceCriticalityTypeValues(Enum):
+    MISSION_CRITICAL = "MISSION_CRITICAL"
+    """Mission critical service."""
+    HIGH = "HIGH"
+    """High impact."""
+    MEDIUM = "MEDIUM"
+    """Medium impact."""
+    LOW = "LOW"
+    """Low impact."""
+
+
+class GcpApphubServiceEnvironmentTypeValues(Enum):
+    PRODUCTION = "PRODUCTION"
+    """Production environment."""
+    STAGING = "STAGING"
+    """Staging environment."""
+    TEST = "TEST"
+    """Test environment."""
+    DEVELOPMENT = "DEVELOPMENT"
+    """Development environment."""
+
+
+class GcpApphubWorkloadCriticalityTypeValues(Enum):
+    MISSION_CRITICAL = "MISSION_CRITICAL"
+    """Mission critical service."""
+    HIGH = "HIGH"
+    """High impact."""
+    MEDIUM = "MEDIUM"
+    """Medium impact."""
+    LOW = "LOW"
+    """Low impact."""
+
+
+class GcpApphubWorkloadEnvironmentTypeValues(Enum):
+    PRODUCTION = "PRODUCTION"
+    """Production environment."""
+    STAGING = "STAGING"
+    """Staging environment."""
+    TEST = "TEST"
+    """Test environment."""
+    DEVELOPMENT = "DEVELOPMENT"
+    """Development environment."""

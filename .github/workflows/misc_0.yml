@@ -9,6 +9,10 @@ on:
     - 'release/*'
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 env:
   CORE_REPO_SHA: main
   CONTRIB_REPO_SHA: main
@@ -19,6 +23,7 @@ jobs:
   spellcheck:
     name: spellcheck
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -37,6 +42,7 @@ jobs:
   tracecontext:
     name: tracecontext
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -55,6 +61,7 @@ jobs:
   mypy:
     name: mypy
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -73,6 +80,7 @@ jobs:
   mypyinstalled:
     name: mypyinstalled
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -88,9 +96,10 @@ jobs:
       - name: Run tests
         run: tox -e mypyinstalled
 
-  pyright:
-    name: pyright
+  typecheck:
+    name: typecheck
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -104,11 +113,12 @@ jobs:
         run: pip install tox
 
       - name: Run tests
-        run: tox -e pyright
+        run: tox -e typecheck
 
   docs:
     name: docs
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     if: |
       github.event.pull_request.user.login != 'opentelemetrybot' && github.event_name == 'pull_request'
     steps:
@@ -129,6 +139,7 @@ jobs:
   docker-tests-otlpexporter:
     name: docker-tests-otlpexporter
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -147,6 +158,7 @@ jobs:
   docker-tests-opencensus:
     name: docker-tests-opencensus
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -165,6 +177,7 @@ jobs:
   public-symbols-check:
     name: public-symbols-check
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     if: |
       !contains(github.event.pull_request.labels.*.name, 'Approve Public API check')
       && github.actor != 'opentelemetrybot' && github.event_name == 'pull_request'
@@ -197,6 +210,7 @@ jobs:
   shellcheck:
     name: shellcheck
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -215,6 +229,7 @@ jobs:
   generate-workflows:
     name: generate-workflows
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     if: |
       !contains(github.event.pull_request.labels.*.name, 'Skip generate-workflows')
       && github.event.pull_request.user.login != 'opentelemetrybot' && github.event_name == 'pull_request'
@@ -236,9 +251,10 @@ jobs:
       - name: Check github workflows are up to date
         run: git diff --exit-code || (echo 'Generated workflows are out of date, run "tox -e generate-workflows" and commit the changes in this PR.' && exit 1)
 
-  ruff:
-    name: ruff
+  precommit:
+    name: precommit
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -252,4 +268,4 @@ jobs:
         run: pip install tox
 
       - name: Run tests
-        run: tox -e ruff
+        run: tox -e precommit

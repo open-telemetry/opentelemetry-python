@@ -42,7 +42,7 @@ PROCESS_CONTEXT_SWITCHES: Final = "process.context_switches"
 """
 Number of times the process has been context switched
 Instrument: counter
-Unit: {count}
+Unit: {context_switch}
 """
 
 
@@ -51,7 +51,7 @@ def create_process_context_switches(meter: Meter) -> Counter:
     return meter.create_counter(
         name=PROCESS_CONTEXT_SWITCHES,
         description="Number of times the process has been context switched.",
-        unit="{count}",
+        unit="{context_switch}",
     )
 
 
@@ -166,7 +166,7 @@ PROCESS_OPEN_FILE_DESCRIPTOR_COUNT: Final = (
 """
 Number of file descriptors in use by the process
 Instrument: updowncounter
-Unit: {count}
+Unit: {file_descriptor}
 """
 
 
@@ -175,7 +175,7 @@ def create_process_open_file_descriptor_count(meter: Meter) -> UpDownCounter:
     return meter.create_up_down_counter(
         name=PROCESS_OPEN_FILE_DESCRIPTOR_COUNT,
         description="Number of file descriptors in use by the process.",
-        unit="{count}",
+        unit="{file_descriptor}",
     )
 
 

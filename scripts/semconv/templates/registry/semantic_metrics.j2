@@ -23,7 +23,7 @@
 
 {%- macro write_docstring(metric, const_name, prefix) -%}
     {%- if metric is deprecated %}
-{{prefix}}Deprecated: {{c.comment_with_prefix(metric.deprecated, prefix)}}.
+{{prefix}}Deprecated: {{c.comment_with_prefix(metric.deprecated.note, prefix)}}.
     {%- elif ctx.filter == "any" and metric.stability == "stable" %}
 {{prefix}}Deprecated in favor of stable :py:const:`{{stable_class_ref(const_name, '.')}}`.
     {%- else -%}
@@ -88,7 +88,7 @@ def create_{{ metric_name }}(meter: Meter) -> {{metric.instrument | map_text("py
         {%- if metric.instrument == "gauge" %}
         callbacks=callbacks,
         {%- endif %}
-        description="{{ c.str_or_empty(metric.brief) }}",
+        description="{{ c.str_or_empty(metric.brief|trim) }}",
         unit="{{ metric.unit }}",
     )
     {%- endif -%}

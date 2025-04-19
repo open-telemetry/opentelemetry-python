@@ -94,6 +94,16 @@ K8S_DEPLOYMENT_UID: Final = "k8s.deployment.uid"
 The UID of the Deployment.
 """
 
+K8S_HPA_NAME: Final = "k8s.hpa.name"
+"""
+The name of the horizontal pod autoscaler.
+"""
+
+K8S_HPA_UID: Final = "k8s.hpa.uid"
+"""
+The UID of the horizontal pod autoscaler.
+"""
+
 K8S_JOB_NAME: Final = "k8s.job.name"
 """
 The name of the Job.
@@ -159,6 +169,26 @@ The name of the ReplicaSet.
 K8S_REPLICASET_UID: Final = "k8s.replicaset.uid"
 """
 The UID of the ReplicaSet.
+"""
+
+K8S_REPLICATIONCONTROLLER_NAME: Final = "k8s.replicationcontroller.name"
+"""
+The name of the replication controller.
+"""
+
+K8S_REPLICATIONCONTROLLER_UID: Final = "k8s.replicationcontroller.uid"
+"""
+The UID of the replication controller.
+"""
+
+K8S_RESOURCEQUOTA_NAME: Final = "k8s.resourcequota.name"
+"""
+The name of the resource quota.
+"""
+
+K8S_RESOURCEQUOTA_UID: Final = "k8s.resourcequota.uid"
+"""
+The UID of the resource quota.
 """
 
 K8S_STATEFULSET_NAME: Final = "k8s.statefulset.name"
