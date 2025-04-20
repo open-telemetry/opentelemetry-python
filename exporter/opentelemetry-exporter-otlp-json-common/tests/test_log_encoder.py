@@ -18,6 +18,7 @@ from typing import List
 
 from opentelemetry._logs import SeverityNumber
 from opentelemetry.exporter.otlp.json.common._log_encoder import encode_logs
+from opentelemetry.exporter.otlp.json.common.encoding import IdEncoding
 from opentelemetry.sdk._logs import LogData, LogLimits
 from opentelemetry.sdk._logs import LogRecord as SDKLogRecord
 from opentelemetry.sdk.resources import Resource as SDKResource
@@ -29,6 +30,14 @@ class TestLogEncoder(unittest.TestCase):
     def test_encode(self):
         # Create test log data
         sdk_logs = self._get_sdk_log_data()
+
+        # Encode logs to JSON with hex ids
+        json_logs = encode_logs(sdk_logs, IdEncoding.HEX)
+
+        # Check ids in hex format
+        self.assertEqual(
+            json_logs["resourceLogs"][0]["scopeLogs"][0]["logRecords"][0]["traceId"],
+            "436184c1a9210ea4a4b9f1a51f8dbe94")
 
         # Encode logs to JSON
         json_logs = encode_logs(sdk_logs)
