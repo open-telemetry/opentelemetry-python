@@ -21,6 +21,7 @@ from opentelemetry.exporter.otlp.json.common._internal.trace_encoder import (
     _get_span_kind_value,
 )
 from opentelemetry.exporter.otlp.json.common.trace_encoder import encode_spans
+from opentelemetry.exporter.otlp.json.common.encoding import IdEncoding
 from opentelemetry.sdk.trace import Event as SDKEvent
 from opentelemetry.sdk.trace import Resource as SDKResource
 from opentelemetry.sdk.trace import SpanContext as SDKSpanContext
@@ -39,6 +40,14 @@ class TestTraceEncoder(unittest.TestCase):
     def test_encode_spans(self):
         # Create test spans
         otel_spans = self.get_test_span_list()
+
+        # Encode spans to JSON with hex ids
+        json_spans = encode_spans(otel_spans, IdEncoding.HEX)
+
+         # Check ids in hex format
+        self.assertEqual(
+            json_spans["resourceSpans"][0]["scopeSpans"][0]["spans"][0]["spanId"],
+            "34bf92deefc58c92")
 
         # Encode spans to JSON
         json_spans = encode_spans(otel_spans)
