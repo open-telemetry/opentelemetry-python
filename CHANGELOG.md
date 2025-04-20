@@ -7,10 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Fix serialization of extended attributes for logs signal
+  ([#4342](https://github.com/open-telemetry/opentelemetry-python/pull/4342))
+
+## Version 1.32.0/0.53b0 (2025-04-10)
+
+- Fix user agent in OTLP HTTP metrics exporter
+  ([#4475](https://github.com/open-telemetry/opentelemetry-python/pull/4475))
+- Improve performance of baggage operations
+  ([#4466](https://github.com/open-telemetry/opentelemetry-python/pull/4466))
+- sdk: remove duplicated constant definitions for `environment_variables`
+  ([#4491](https://github.com/open-telemetry/opentelemetry-python/pull/4491))
+- api: Revert record `BaseException` change in `trace_api.use_span()`
+  ([#4494](https://github.com/open-telemetry/opentelemetry-python/pull/4494))
+- Improve CI by cancelling stale runs and setting timeouts
+  ([#4498](https://github.com/open-telemetry/opentelemetry-python/pull/4498))
+- Patch logging.basicConfig so OTel logs don't cause console logs to disappear
+  ([#4436](https://github.com/open-telemetry/opentelemetry-python/pull/4436))
+- Bump semantic conventions to 1.32.0
+  ([#4530](https://github.com/open-telemetry/opentelemetry-python/pull/4530))
+- Fix ExplicitBucketHistogramAggregation to handle multiple explicit bucket boundaries advisories
+  ([#4521](https://github.com/open-telemetry/opentelemetry-python/pull/4521))
+- opentelemetry-sdk: Fix serialization of objects in log handler
+  ([#4528](https://github.com/open-telemetry/opentelemetry-python/pull/4528))
+
+## Version 1.31.0/0.52b0 (2025-03-12)
+
+- semantic-conventions: Bump to 1.31.0
+  ([#4471](https://github.com/open-telemetry/opentelemetry-python/pull/4471))
 - Add type annotations to context's attach & detach
   ([#4346](https://github.com/open-telemetry/opentelemetry-python/pull/4346))
 - Fix OTLP encoders missing instrumentation scope schema url and attributes
-  ([#4359](https://github.com/open-telemetry/opentelemetry-python/pull/4359))  
+  ([#4359](https://github.com/open-telemetry/opentelemetry-python/pull/4359))
 - prometheus-exporter: fix labels out of place for data points with different
   attribute sets
   ([#4413](https://github.com/open-telemetry/opentelemetry-python/pull/4413))
@@ -32,6 +60,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4406](https://github.com/open-telemetry/opentelemetry-python/pull/4406))
 - Fix env var error message for TraceLimits/SpanLimits
   ([#4458](https://github.com/open-telemetry/opentelemetry-python/pull/4458))
+- pylint-ci updated python version to 3.13
+  ([#4450](https://github.com/open-telemetry/opentelemetry-python/pull/4450))
+- Fix memory leak in Log & Trace exporter
+  ([#4449](https://github.com/open-telemetry/opentelemetry-python/pull/4449))
 
 ## Version 1.30.0/0.51b0 (2025-02-03)
 

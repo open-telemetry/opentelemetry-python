@@ -9,6 +9,10 @@ on:
     - 'release/*'
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 env:
   CORE_REPO_SHA: main
   CONTRIB_REPO_SHA: main
@@ -607,6 +611,7 @@ jobs:
   py39-test-opentelemetry-test-utils_windows-latest:
     name: opentelemetry-test-utils 3.9 Windows
     runs-on: windows-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -628,6 +633,7 @@ jobs:
   py310-test-opentelemetry-test-utils_windows-latest:
     name: opentelemetry-test-utils 3.10 Windows
     runs-on: windows-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -649,6 +655,7 @@ jobs:
   py311-test-opentelemetry-test-utils_windows-latest:
     name: opentelemetry-test-utils 3.11 Windows
     runs-on: windows-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -670,6 +677,7 @@ jobs:
   py312-test-opentelemetry-test-utils_windows-latest:
     name: opentelemetry-test-utils 3.12 Windows
     runs-on: windows-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -691,6 +699,7 @@ jobs:
   py313-test-opentelemetry-test-utils_windows-latest:
     name: opentelemetry-test-utils 3.13 Windows
     runs-on: windows-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -712,6 +721,7 @@ jobs:
   pypy3-test-opentelemetry-test-utils_windows-latest:
     name: opentelemetry-test-utils pypy-3.8 Windows
     runs-on: windows-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4

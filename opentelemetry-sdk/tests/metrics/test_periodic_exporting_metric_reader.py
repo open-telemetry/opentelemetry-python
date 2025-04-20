@@ -14,7 +14,9 @@
 
 # pylint: disable=protected-access,invalid-name,no-self-use
 
+import gc
 import math
+import weakref
 from logging import WARNING
 from time import sleep, time_ns
 from typing import Optional, Sequence
@@ -257,3 +259,24 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         sleep(0.1)
         self.assertTrue(pmr._daemon_thread.is_alive())
         pmr.shutdown()
+
+    def test_metric_exporer_gc(self):
+        # Given a PeriodicExportingMetricReader
+        exporter = FakeMetricsExporter(
+            preferred_aggregation={
+                Counter: LastValueAggregation(),
+            },
+        )
+        processor = PeriodicExportingMetricReader(exporter)
+        weak_ref = weakref.ref(processor)
+        processor.shutdown()
+
+        # When we garbage collect the reader
+        del processor
+        gc.collect()
+
+        # Then the reference to the reader should no longer exist
+        self.assertIsNone(
+            weak_ref(),
+            "The PeriodicExportingMetricReader object created by this test wasn't garbage collected",
+        )
