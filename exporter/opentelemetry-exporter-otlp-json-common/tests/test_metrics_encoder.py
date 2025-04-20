@@ -18,6 +18,7 @@ import unittest
 from opentelemetry.exporter.otlp.json.common.metrics_encoder import (
     encode_metrics,
 )
+from opentelemetry.exporter.otlp.json.common.encoding import IdEncoding
 from opentelemetry.sdk.metrics import Exemplar
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
@@ -172,6 +173,20 @@ class TestMetricsEncoder(unittest.TestCase):
                 )
             ]
         )
+
+        # Encode metrics to JSON with hex ids
+        json_metrics = encode_metrics(metrics_data, IdEncoding.HEX)
+
+        # Check ids in hex format
+        self.assertEqual(
+            json_metrics
+                ["resourceMetrics"][0]
+                ["scopeMetrics"][0]
+                ["metrics"][0]
+                ["histogram"]["dataPoints"][0]
+                ["exemplars"][0]
+                ["spanId"],
+            "6e0c63257de34c92")
 
         json_metrics = encode_metrics(metrics_data)
 

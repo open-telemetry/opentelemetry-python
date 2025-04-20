@@ -21,15 +21,20 @@ from opentelemetry import trace
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import Event, ReadableSpan, Status, StatusCode
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
+from opentelemetry.exporter.otlp.json.common._internal.encoder_utils import encode_id
+from opentelemetry.exporter.otlp.json.common.encoding import IdEncoding
 
-
-def encode_spans(spans: Sequence[ReadableSpan]) -> Dict[str, Any]:
+def encode_spans(
+        spans: Sequence[ReadableSpan],
+        id_encoding: Optional[IdEncoding] = None) -> Dict[str, Any]:
     """Encodes spans in the OTLP JSON format.
 
     Returns:
         A dict representing the spans in OTLP JSON format as specified in the
         OpenTelemetry Protocol and ProtoJSON format.
     """
+    id_encoding = id_encoding or IdEncoding.BASE64
+
     resource_spans = {}  # Key is resource hashcode
     for span in spans:
         if span.resource.attributes or not resource_spans:
@@ -69,7 +74,7 @@ def encode_spans(spans: Sequence[ReadableSpan]) -> Dict[str, Any]:
             }
 
         scope_spans[instrumentation_scope_hashcode]["spans"].append(
-            _encode_span(span)
+            _encode_span(span, id_encoding)
         )
 
     # Transform resource_spans dict to list for proper JSON output
@@ -128,26 +133,23 @@ def _encode_instrumentation_scope(
     }
 
 
-def _encode_span(span: ReadableSpan) -> Dict[str, Any]:
+def _encode_span(span: ReadableSpan, id_encoding: IdEncoding) -> Dict[str, Any]:
     """Encodes a span into OTLP JSON format."""
+
     # Convert trace_id and span_id to base64
-    trace_id_bytes = span.context.trace_id.to_bytes(16, "big")
-    span_id_bytes = span.context.span_id.to_bytes(8, "big")
+    trace_id = encode_id(id_encoding, span.context.trace_id, 16)
+    span_id = encode_id(id_encoding, span.context.span_id, 8)
 
     parent_id = ""
     # Handle different span implementations that might not have parent_span_id
     if hasattr(span, "parent_span_id") and span.parent_span_id:
-        parent_id = base64.b64encode(
-            span.parent_span_id.to_bytes(8, "big")
-        ).decode("ascii")
+        parent_id = encode_id(id_encoding, span.parent_span_id, 8)
     elif (
         hasattr(span, "parent")
         and span.parent
         and hasattr(span.parent, "span_id")
     ):
-        parent_id = base64.b64encode(
-            span.parent.span_id.to_bytes(8, "big")
-        ).decode("ascii")
+        parent_id = encode_id(id_encoding, span.parent.span_id, 8)
 
     # Convert timestamps to nanoseconds
     start_time_ns = _timestamp_to_ns(span.start_time)
@@ -155,8 +157,8 @@ def _encode_span(span: ReadableSpan) -> Dict[str, Any]:
 
     # Format span according to ProtoJSON
     result = {
-        "traceId": base64.b64encode(trace_id_bytes).decode("ascii"),
-        "spanId": base64.b64encode(span_id_bytes).decode("ascii"),
+        "traceId": trace_id,
+        "spanId": span_id,
         "parentSpanId": parent_id,
         "name": span.name,
         "kind": _get_span_kind_value(span.kind),
@@ -166,7 +168,7 @@ def _encode_span(span: ReadableSpan) -> Dict[str, Any]:
         "droppedAttributesCount": span.dropped_attributes,
         "events": _encode_events(span.events),
         "droppedEventsCount": span.dropped_events,
-        "links": _encode_links(span.links),
+        "links": _encode_links(span.links, id_encoding),
         "droppedLinksCount": span.dropped_links,
         "status": _encode_status(span.status),
     }
@@ -268,19 +270,19 @@ def _encode_events(
     return event_list
 
 
-def _encode_links(links: Sequence[trace.Link]) -> List[Dict[str, Any]]:
+def _encode_links(links: Sequence[trace.Link], id_encoding: IdEncoding) -> List[Dict[str, Any]]:
     """Encodes span links into OTLP JSON format."""
     if not links:
         return []
 
     link_list = []
     for link in links:
-        trace_id_bytes = link.context.trace_id.to_bytes(16, "big")
-        span_id_bytes = link.context.span_id.to_bytes(8, "big")
+        trace_id = encode_id(id_encoding, link.context.trace_id, 16)
+        span_id = encode_id(id_encoding, link.context.span_id, 8)
 
         link_data = {
-            "traceId": base64.b64encode(trace_id_bytes).decode("ascii"),
-            "spanId": base64.b64encode(span_id_bytes).decode("ascii"),
+            "traceId": trace_id,
+            "spanId": span_id,
             "attributes": _encode_attributes(link.attributes),
             "droppedAttributesCount": 0,  # Not tracking dropped link attributes yet
         }

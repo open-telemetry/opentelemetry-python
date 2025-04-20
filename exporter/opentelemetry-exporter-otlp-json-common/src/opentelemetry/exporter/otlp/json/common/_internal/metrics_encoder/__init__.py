@@ -51,6 +51,8 @@ from opentelemetry.sdk.metrics.view import (
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
+from opentelemetry.exporter.otlp.json.common._internal.encoder_utils import encode_id
+from opentelemetry.exporter.otlp.json.common.encoding import IdEncoding
 
 _logger = logging.getLogger(__name__)
 
@@ -164,20 +166,25 @@ class OTLPMetricExporterMixin:
         return instrument_class_aggregation
 
 
-def encode_metrics(metrics_data: MetricsData) -> Dict[str, Any]:
+def encode_metrics(
+        metrics_data: MetricsData,
+        id_encoding: Optional[IdEncoding] = None) -> Dict[str, Any]:
     """Encodes metrics in the OTLP JSON format.
 
     Returns:
         A dict representing the metrics in OTLP JSON format as specified in the
         OpenTelemetry Protocol and ProtoJSON format.
     """
+    id_encoding = id_encoding or IdEncoding.BASE64
+
     resource_metrics_list = []
 
     for resource_metrics in metrics_data.resource_metrics:
         resource_metrics_dict = {
             "resource": _encode_resource(resource_metrics.resource),
             "scopeMetrics": _encode_scope_metrics(
-                resource_metrics.scope_metrics
+                resource_metrics.scope_metrics,
+                id_encoding,
             ),
             "schemaUrl": resource_metrics.schema_url or "",
         }
@@ -199,6 +206,7 @@ def _encode_resource(resource: Resource) -> Dict[str, Any]:
 
 def _encode_scope_metrics(
     scope_metrics_list: Sequence[ScopeMetrics],
+    id_encoding: IdEncoding,
 ) -> List[Dict[str, Any]]:
     """Encodes a list of scope metrics into OTLP JSON format."""
     if not scope_metrics_list:
@@ -209,7 +217,7 @@ def _encode_scope_metrics(
         result.append(
             {
                 "scope": _encode_instrumentation_scope(scope_metrics.scope),
-                "metrics": _encode_metrics_list(scope_metrics.metrics),
+                "metrics": _encode_metrics_list(scope_metrics.metrics, id_encoding),
                 "schemaUrl": scope_metrics.schema_url or "",
             }
         )
@@ -232,7 +240,7 @@ def _encode_instrumentation_scope(
     }
 
 
-def _encode_metrics_list(metrics: Sequence[Metric]) -> List[Dict[str, Any]]:
+def _encode_metrics_list(metrics: Sequence[Metric], id_encoding: IdEncoding) -> List[Dict[str, Any]]:
     """Encodes a list of metrics into OTLP JSON format."""
     if not metrics:
         return []
@@ -247,14 +255,14 @@ def _encode_metrics_list(metrics: Sequence[Metric]) -> List[Dict[str, Any]]:
 
         # Add data based on metric type
         if isinstance(metric.data, Sum):
-            metric_dict["sum"] = _encode_sum(metric.data)
+            metric_dict["sum"] = _encode_sum(metric.data, id_encoding)
         elif isinstance(metric.data, Gauge):
-            metric_dict["gauge"] = _encode_gauge(metric.data)
+            metric_dict["gauge"] = _encode_gauge(metric.data, id_encoding)
         elif isinstance(metric.data, HistogramType):
-            metric_dict["histogram"] = _encode_histogram(metric.data)
+            metric_dict["histogram"] = _encode_histogram(metric.data, id_encoding)
         elif isinstance(metric.data, ExponentialHistogram):
             metric_dict["exponentialHistogram"] = (
-                _encode_exponential_histogram(metric.data)
+                _encode_exponential_histogram(metric.data, id_encoding)
             )
         # Add other metric types as needed
 
@@ -263,10 +271,10 @@ def _encode_metrics_list(metrics: Sequence[Metric]) -> List[Dict[str, Any]]:
     return result
 
 
-def _encode_sum(sum_data: Sum) -> Dict[str, Any]:
+def _encode_sum(sum_data: Sum, id_encoding: IdEncoding) -> Dict[str, Any]:
     """Encodes a Sum metric into OTLP JSON format."""
     result = {
-        "dataPoints": _encode_number_data_points(sum_data.data_points),
+        "dataPoints": _encode_number_data_points(sum_data.data_points, id_encoding),
         "aggregationTemporality": _get_aggregation_temporality(
             sum_data.aggregation_temporality
         ),
@@ -276,14 +284,14 @@ def _encode_sum(sum_data: Sum) -> Dict[str, Any]:
     return result
 
 
-def _encode_gauge(gauge_data: Gauge) -> Dict[str, Any]:
+def _encode_gauge(gauge_data: Gauge, id_encoding: IdEncoding) -> Dict[str, Any]:
     """Encodes a Gauge metric into OTLP JSON format."""
     return {
-        "dataPoints": _encode_number_data_points(gauge_data.data_points),
+        "dataPoints": _encode_number_data_points(gauge_data.data_points, id_encoding),
     }
 
 
-def _encode_histogram(histogram_data: HistogramType) -> Dict[str, Any]:
+def _encode_histogram(histogram_data: HistogramType, id_encoding: IdEncoding) -> Dict[str, Any]:
     """Encodes a Histogram metric into OTLP JSON format."""
     data_points = []
 
@@ -307,7 +315,7 @@ def _encode_histogram(histogram_data: HistogramType) -> Dict[str, Any]:
 
         # Optional exemplars field
         if hasattr(point, "exemplars") and point.exemplars:
-            point_dict["exemplars"] = _encode_exemplars(point.exemplars)
+            point_dict["exemplars"] = _encode_exemplars(point.exemplars, id_encoding)
 
         data_points.append(point_dict)
 
@@ -321,6 +329,7 @@ def _encode_histogram(histogram_data: HistogramType) -> Dict[str, Any]:
 
 def _encode_exponential_histogram(
     histogram_data: ExponentialHistogram,
+    id_encoding: IdEncoding,
 ) -> Dict[str, Any]:
     """Encodes an ExponentialHistogram metric into OTLP JSON format."""
     data_points = []
@@ -367,7 +376,7 @@ def _encode_exponential_histogram(
 
         # Add exemplars if available
         if hasattr(point, "exemplars") and point.exemplars:
-            point_dict["exemplars"] = _encode_exemplars(point.exemplars)
+            point_dict["exemplars"] = _encode_exemplars(point.exemplars, id_encoding)
 
         data_points.append(point_dict)
 
@@ -381,6 +390,7 @@ def _encode_exponential_histogram(
 
 def _encode_number_data_points(
     data_points: Sequence[Any],
+    id_encoding: IdEncoding
 ) -> List[Dict[str, Any]]:
     """Encodes number data points into OTLP JSON format."""
     result = []
@@ -402,14 +412,14 @@ def _encode_number_data_points(
 
         # Optional exemplars field
         if hasattr(point, "exemplars") and point.exemplars:
-            point_dict["exemplars"] = _encode_exemplars(point.exemplars)
+            point_dict["exemplars"] = _encode_exemplars(point.exemplars, id_encoding)
 
         result.append(point_dict)
 
     return result
 
 
-def _encode_exemplars(exemplars: Sequence[Any]) -> List[Dict[str, Any]]:
+def _encode_exemplars(exemplars: Sequence[Any], id_encoding: IdEncoding) -> List[Dict[str, Any]]:
     """Encodes metric exemplars into OTLP JSON format."""
     result = []
 
@@ -423,16 +433,12 @@ def _encode_exemplars(exemplars: Sequence[Any]) -> List[Dict[str, Any]]:
 
         # Add trace info if available
         if hasattr(exemplar, "trace_id") and exemplar.trace_id:
-            trace_id_bytes = exemplar.trace_id.to_bytes(16, "big")
-            exemplar_dict["traceId"] = base64.b64encode(trace_id_bytes).decode(
-                "ascii"
-            )
+            trace_id = encode_id(id_encoding, exemplar.trace_id, 16)
+            exemplar_dict["traceId"] = trace_id
 
         if hasattr(exemplar, "span_id") and exemplar.span_id:
-            span_id_bytes = exemplar.span_id.to_bytes(8, "big")
-            exemplar_dict["spanId"] = base64.b64encode(span_id_bytes).decode(
-                "ascii"
-            )
+            span_id = encode_id(id_encoding, exemplar.span_id, 8)
+            exemplar_dict["spanId"] = span_id
 
         # Add value based on type
         if hasattr(exemplar, "value") and isinstance(exemplar.value, int):

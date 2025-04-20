@@ -21,15 +21,20 @@ from opentelemetry._logs import SeverityNumber
 from opentelemetry.sdk._logs import LogData
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
+from opentelemetry.exporter.otlp.json.common._internal.encoder_utils import encode_id
+from opentelemetry.exporter.otlp.json.common.encoding import IdEncoding
 
-
-def encode_logs(logs_data: Sequence[LogData]) -> Dict[str, Any]:
+def encode_logs(
+        logs_data: Sequence[LogData],
+        id_encoding: Optional[IdEncoding] = None) -> Dict[str, Any]:
     """Encodes logs in the OTLP JSON format.
 
     Returns:
         A dict representing the logs in OTLP JSON format as specified in the
         OpenTelemetry Protocol and ProtoJSON format.
     """
+    id_encoding = id_encoding or IdEncoding.BASE64
+
     # Group logs by resource
     resource_logs = {}
     for log_data in logs_data:
@@ -65,7 +70,7 @@ def encode_logs(logs_data: Sequence[LogData]) -> Dict[str, Any]:
 
         # Add log record to the appropriate scope
         scope_logs[scope_key]["logRecords"].append(
-            _encode_log_record(log_data)
+            _encode_log_record(log_data, id_encoding)
         )
 
     # Convert dictionaries to lists for JSON output
@@ -124,7 +129,9 @@ def _encode_instrumentation_scope(
     }
 
 
-def _encode_log_record(log_data: LogData) -> Dict[str, Any]:
+def _encode_log_record(
+        log_data: LogData,
+        id_encoding: IdEncoding) -> Dict[str, Any]:
     """Encodes a log record into OTLP JSON format."""
     log_record = log_data.log_record
 
@@ -147,12 +154,10 @@ def _encode_log_record(log_data: LogData) -> Dict[str, Any]:
 
     # Handle trace context if present
     if log_record.trace_id:
-        trace_id_bytes = log_record.trace_id.to_bytes(16, "big")
-        result["traceId"] = base64.b64encode(trace_id_bytes).decode("ascii")
+        result["traceId"] = encode_id(id_encoding, log_record.trace_id, 16)
 
     if log_record.span_id:
-        span_id_bytes = log_record.span_id.to_bytes(8, "big")
-        result["spanId"] = base64.b64encode(span_id_bytes).decode("ascii")
+        result["spanId"] = encode_id(id_encoding, log_record.span_id, 8)
 
     if (
         hasattr(log_record, "trace_flags")
