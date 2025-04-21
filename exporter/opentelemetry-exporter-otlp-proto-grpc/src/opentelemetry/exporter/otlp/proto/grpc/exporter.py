@@ -220,7 +220,12 @@ class OTLPExporterMixin(
 
         if parsed_url.netloc:
             self._endpoint = parsed_url.netloc
-
+            if parsed_url.path:
+                logger.warning(
+                    f"Endpoint set to {self._endpoint}, which differs from the "
+                    f"provided endpoint {endpoint}. If you're trying to configure "
+                    f"an HTTP endpoint, please ensure you're using the correct exporter."
+                )
         self._headers = headers or environ.get(OTEL_EXPORTER_OTLP_HEADERS)
         if isinstance(self._headers, str):
             temp_headers = parse_env_headers(self._headers, liberal=True)
