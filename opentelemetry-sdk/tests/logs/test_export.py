@@ -44,6 +44,7 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
+from opentelemetry.test.concurrency_test import ConcurrencyTestBase
 from opentelemetry.trace import TraceFlags
 from opentelemetry.trace.span import INVALID_SPAN_CONTEXT
 
@@ -559,7 +560,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         hasattr(os, "fork"),
         "needs *nix",
     )
-    def test_batch_log_record_processor_fork(self):
+    def test_batch_log_record_processor_fork_clears_logs_from_child(self):
         exporter = InMemoryLogExporter()
         log_record_processor = BatchLogRecordProcessor(
             exporter,
@@ -572,15 +573,13 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         for _ in range(10):
             log_record_processor.emit(EMPTY_LOG)
 
+        # The below test also needs this, but it can only be set once.
         multiprocessing.set_start_method("fork")
 
         def child(conn):
-            for _ in range(100):
-                log_record_processor.emit(EMPTY_LOG)
             log_record_processor.force_flush()
-
             logs = exporter.get_finished_logs()
-            conn.send(len(logs) == 100)
+            conn.send(len(logs) == 0)
             conn.close()
 
         parent_conn, child_conn = multiprocessing.Pipe()
@@ -590,6 +589,34 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         process.join()
         log_record_processor.force_flush()
         self.assertTrue(len(exporter.get_finished_logs()) == 10)
+
+    @unittest.skipUnless(
+        hasattr(os, "fork"),
+        "needs *nix",
+    )
+    def test_batch_log_record_processor_fork_doesnot_deadlock(self):
+        exporter = InMemoryLogExporter()
+        log_record_processor = BatchLogRecordProcessor(
+            exporter,
+            max_export_batch_size=64,
+            schedule_delay_millis=30000,
+        )
+
+        def child(conn):
+            def _target():
+                log_record_processor.emit(EMPTY_LOG)
+
+            ConcurrencyTestBase.run_with_many_threads(_target, 100)
+            log_record_processor.force_flush()
+            logs = exporter.get_finished_logs()
+            conn.send(len(logs) == 100)
+            conn.close()
+
+        parent_conn, child_conn = multiprocessing.Pipe()
+        process = multiprocessing.Process(target=child, args=(child_conn,))
+        process.start()
+        self.assertTrue(parent_conn.recv())
+        process.join()
 
 
 class TestConsoleLogExporter(unittest.TestCase):
