@@ -333,7 +333,7 @@ OTEL_EXPORTER_OTLP_TIMEOUT = "OTEL_EXPORTER_OTLP_TIMEOUT"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_TIMEOUT
 
-The :envvar:`OTEL_EXPORTER_OTLP_TIMEOUT` is the maximum time the OTLP exporter will wait for each batch export.
+The :envvar:`OTEL_EXPORTER_OTLP_TIMEOUT` is the maximum number of seconds the OTLP exporter will wait for each batch export.
 Default: 10
 """
 
@@ -535,7 +535,7 @@ OTEL_EXPORTER_OTLP_TRACES_TIMEOUT = "OTEL_EXPORTER_OTLP_TRACES_TIMEOUT"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_TRACES_TIMEOUT
 
-The :envvar:`OTEL_EXPORTER_OTLP_TRACES_TIMEOUT` is the maximum time the OTLP exporter will
+The :envvar:`OTEL_EXPORTER_OTLP_TRACES_TIMEOUT` is the maximum number of seconds the OTLP exporter will
 wait for each batch export for spans.
 """
 
@@ -543,7 +543,7 @@ OTEL_EXPORTER_OTLP_METRICS_TIMEOUT = "OTEL_EXPORTER_OTLP_METRICS_TIMEOUT"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_METRICS_TIMEOUT
 
-The :envvar:`OTEL_EXPORTER_OTLP_METRICS_TIMEOUT` is the maximum time the OTLP exporter will
+The :envvar:`OTEL_EXPORTER_OTLP_METRICS_TIMEOUT` is the maximum number of seconds the OTLP exporter will
 wait for each batch export for metrics.
 """
 
@@ -577,7 +577,7 @@ OTEL_EXPORTER_OTLP_LOGS_TIMEOUT = "OTEL_EXPORTER_OTLP_LOGS_TIMEOUT"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_LOGS_TIMEOUT
 
-The :envvar:`OTEL_EXPORTER_OTLP_LOGS_TIMEOUT` is the maximum time the OTLP exporter will
+The :envvar:`OTEL_EXPORTER_OTLP_LOGS_TIMEOUT` is the maximum number of seconds the OTLP exporter will
 wait for each batch export for logs.
 """
 
