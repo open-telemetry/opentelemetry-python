@@ -17,13 +17,14 @@ import logging
 import zlib
 from io import BytesIO
 from os import environ
-from time import sleep
+from time import sleep, time
 from typing import (  # noqa: F401
     Any,
     Callable,
     Dict,
     List,
     Mapping,
+    Optional,
     Sequence,
 )
 
@@ -32,7 +33,6 @@ from deprecated import deprecated
 from requests.exceptions import ConnectionError
 
 from opentelemetry.exporter.otlp.proto.common._internal import (
-    _create_exp_backoff_generator,
     _get_resource_data,
 )
 from opentelemetry.exporter.otlp.proto.common._internal.metrics_encoder import (
@@ -101,8 +101,6 @@ DEFAULT_TIMEOUT = 10  # in seconds
 
 
 class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
-    _MAX_RETRY_TIMEOUT = 64
-
     def __init__(
         self,
         endpoint: str | None = None,
@@ -110,7 +108,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         client_key_file: str | None = None,
         client_certificate_file: str | None = None,
         headers: dict[str, str] | None = None,
-        timeout: int | None = None,
+        timeout: float | None = None,
         compression: Compression | None = None,
         session: requests.Session | None = None,
         preferred_temporality: dict[type, AggregationTemporality]
@@ -147,7 +145,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         self._headers = headers or parse_env_headers(
             headers_string, liberal=True
         )
-        self._timeout = timeout or int(
+        self._timeout = timeout or float(
             environ.get(
                 OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
                 environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, DEFAULT_TIMEOUT),
@@ -166,7 +164,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             preferred_temporality, preferred_aggregation
         )
 
-    def _export(self, serialized_data: bytes):
+    def _export(self, serialized_data: bytes, timeout_sec: float):
         data = serialized_data
         if self._compression == Compression.Gzip:
             gzip_data = BytesIO()
@@ -185,7 +183,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                 url=self._endpoint,
                 data=data,
                 verify=self._certificate_file,
-                timeout=self._timeout,
+                timeout=timeout_sec,
                 cert=self._client_cert,
             )
         except ConnectionError:
@@ -193,7 +191,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                 url=self._endpoint,
                 data=data,
                 verify=self._certificate_file,
-                timeout=self._timeout,
+                timeout=timeout_sec,
                 cert=self._client_cert,
             )
         return resp
@@ -209,21 +207,26 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
     def export(
         self,
         metrics_data: MetricsData,
-        timeout_millis: float = 10_000,
+        timeout_millis: Optional[float] = None,
         **kwargs,
     ) -> MetricExportResult:
         serialized_data = encode_metrics(metrics_data)
-        for delay in _create_exp_backoff_generator(
-            max_value=self._MAX_RETRY_TIMEOUT
-        ):
-            if delay == self._MAX_RETRY_TIMEOUT:
+        deadline_sec = time() + (
+            timeout_millis / 1e3 if timeout_millis else self._timeout
+        )
+        for delay in [1, 2, 4, 8, 16, 32]:
+            remaining_time_sec = deadline_sec - time()
+            if remaining_time_sec < 1e-09:
                 return MetricExportResult.FAILURE
-
-            resp = self._export(serialized_data.SerializeToString())
+            resp = self._export(
+                serialized_data.SerializeToString(), remaining_time_sec
+            )
             # pylint: disable=no-else-return
             if resp.ok:
                 return MetricExportResult.SUCCESS
             elif self._retryable(resp):
+                if delay > (deadline_sec - time()):
+                    return MetricExportResult.FAILURE
                 _logger.warning(
                     "Transient error %s encountered while exporting metric batch, retrying in %ss.",
                     resp.reason,

@@ -16,7 +16,7 @@
 
 import os
 from unittest import TestCase
-from unittest.mock import Mock, PropertyMock, patch
+from unittest.mock import Mock, PropertyMock, patch, ANY
 
 from grpc import ChannelCredentials, Compression
 
@@ -333,7 +333,9 @@ class TestOTLPSpanExporter(TestCase):
         """Specifying kwarg should take precedence over env"""
         OTLPSpanExporter(insecure=True, compression=Compression.NoCompression)
         mock_insecure_channel.assert_called_once_with(
-            "localhost:4317", compression=Compression.NoCompression
+            "localhost:4317",
+            compression=Compression.NoCompression,
+            options=ANY,
         )
 
     # pylint: disable=no-self-use
@@ -350,7 +352,9 @@ class TestOTLPSpanExporter(TestCase):
         """
         OTLPSpanExporter(insecure=True)
         mock_insecure_channel.assert_called_once_with(
-            "localhost:4317", compression=Compression.Gzip
+            "localhost:4317",
+            compression=Compression.Gzip,
+            options=ANY,
         )
 
     def test_translate_spans(self):

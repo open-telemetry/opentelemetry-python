@@ -13,10 +13,12 @@
 # limitations under the License.
 
 import unittest
-from unittest.mock import MagicMock, Mock, call, patch
+from logging import WARNING
+from unittest.mock import MagicMock, Mock, patch
 
 import requests
-import responses
+from requests import Session
+from requests.models import Response
 
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
@@ -52,6 +54,16 @@ OS_ENV_CLIENT_CERTIFICATE = "os/env/client-cert.pem"
 OS_ENV_CLIENT_KEY = "os/env/client-key.pem"
 OS_ENV_HEADERS = "envHeader1=val1,envHeader2=val2"
 OS_ENV_TIMEOUT = "30"
+BASIC_SPAN = _Span(
+    "abc",
+    context=Mock(
+        **{
+            "trace_state": {"a": "b", "c": "d"},
+            "span_id": 10217189687419569865,
+            "trace_id": 67545097771067222548457157018666467027,
+        }
+    ),
+)
 
 
 # pylint: disable=protected-access
@@ -227,37 +239,6 @@ class TestOTLPSpanExporter(unittest.TestCase):
                 ),
             )
 
-    # pylint: disable=no-self-use
-    @responses.activate
-    @patch("opentelemetry.exporter.otlp.proto.http.trace_exporter.sleep")
-    def test_exponential_backoff(self, mock_sleep):
-        # return a retryable error
-        responses.add(
-            responses.POST,
-            "http://traces.example.com/export",
-            json={"error": "something exploded"},
-            status=500,
-        )
-
-        exporter = OTLPSpanExporter(
-            endpoint="http://traces.example.com/export"
-        )
-        span = _Span(
-            "abc",
-            context=Mock(
-                **{
-                    "trace_state": {"a": "b", "c": "d"},
-                    "span_id": 10217189687419569865,
-                    "trace_id": 67545097771067222548457157018666467027,
-                }
-            ),
-        )
-
-        exporter.export([span])
-        mock_sleep.assert_has_calls(
-            [call(1), call(2), call(4), call(8), call(16), call(32)]
-        )
-
     @patch.object(OTLPSpanExporter, "_export", return_value=Mock(ok=True))
     def test_2xx_status_code(self, mock_otlp_metric_exporter):
         """
@@ -267,3 +248,46 @@ class TestOTLPSpanExporter(unittest.TestCase):
         self.assertEqual(
             OTLPSpanExporter().export(MagicMock()), SpanExportResult.SUCCESS
         )
+
+    @patch.object(Session, "post")
+    def test_retry_timeout(self, mock_post):
+        exporter = OTLPSpanExporter(timeout=3.5)
+
+        resp = Response()
+        resp.status_code = 503
+        resp.reason = "UNAVAILABLE"
+        mock_post.return_value = resp
+        with self.assertLogs(level=WARNING) as warning:
+            # Set timeout to 1.5 seconds
+            self.assertEqual(
+                exporter.export([BASIC_SPAN], 1500),
+                SpanExportResult.FAILURE,
+            )
+            # Code should return failure after retrying once.
+            self.assertEqual(len(warning.records), 1)
+            self.assertEqual(
+                "Transient error UNAVAILABLE encountered while exporting span batch, retrying in 1s.",
+                warning.records[0].message,
+            )
+        with self.assertLogs(level=WARNING) as warning:
+            # This time don't pass in a timeout, so it will fallback to 3.5 second set on class.
+            self.assertEqual(
+                exporter.export([BASIC_SPAN]),
+                SpanExportResult.FAILURE,
+            )
+            # 2 retrys (after 1s, 3s).
+            self.assertEqual(len(warning.records), 2)
+
+    @patch.object(Session, "post")
+    def test_timeout_set_correctly(self, mock_post):
+        resp = Response()
+        resp.status_code = 200
+
+        def export_side_effect(*args, **kwargs):
+            # Timeout should be set to something slightly less than 400 milliseconds depending on how much time has passed.
+            self.assertTrue(0.4 - kwargs["timeout"] < 0.0005)
+            return resp
+
+        mock_post.side_effect = export_side_effect
+        exporter = OTLPSpanExporter()
+        exporter.export([BASIC_SPAN], 400)

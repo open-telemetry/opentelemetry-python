@@ -91,7 +91,7 @@ class OTLPSpanExporter(
         headers: Optional[
             Union[TypingSequence[Tuple[str, str]], Dict[str, str], str]
         ] = None,
-        timeout: Optional[int] = None,
+        timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
     ):
         if insecure is None:
@@ -112,7 +112,7 @@ class OTLPSpanExporter(
 
         environ_timeout = environ.get(OTEL_EXPORTER_OTLP_TRACES_TIMEOUT)
         environ_timeout = (
-            int(environ_timeout) if environ_timeout is not None else None
+            float(environ_timeout) if environ_timeout is not None else None
         )
 
         compression = (
@@ -139,8 +139,14 @@ class OTLPSpanExporter(
     ) -> ExportTraceServiceRequest:
         return encode_spans(data)
 
-    def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
-        return self._export(spans)
+    def export(
+        self,
+        spans: Sequence[ReadableSpan],
+        timeout_millis: Optional[float] = None,
+    ) -> SpanExportResult:
+        return self._export(
+            spans, timeout_millis / 1e3 if timeout_millis else None
+        )
 
     def shutdown(self) -> None:
         OTLPExporterMixin.shutdown(self)
