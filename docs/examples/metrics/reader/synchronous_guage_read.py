@@ -60,7 +60,7 @@ meter = get_meter_provider().get_meter("synchronous_read", "0.1.2")
 
 guage = meter.create_observable_gauge(
     name="synchronous_gauge_temperature",
-    description="Gauage value captured synchronously",
+    description="Gauge value captured synchronously",
     callbacks=[read_temperature],
 )
 
@@ -76,7 +76,7 @@ reader.collect()
 # Invoking `collect` will read all measurements assigned to the reader
 guage2 = meter.create_observable_gauge(
     name="synchronous_gauge_humidity",
-    description="Gauage value captured synchronously",
+    description="Gauge value captured synchronously",
     callbacks=[read_humidity],
 )
 print("--- Multiple Measurments ---", flush=True)
