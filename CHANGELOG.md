@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- docs: updated and added to the metrics and log examples
+  ([#4559](https://github.com/open-telemetry/opentelemetry-python/pull/4559))
+
 ## Version 1.32.0/0.53b0 (2025-04-10)
 
 - Fix user agent in OTLP HTTP metrics exporter
