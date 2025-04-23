@@ -21,6 +21,7 @@ from time import sleep, time
 from typing import Dict, Optional, Sequence
 
 import requests
+from requests.exceptions import ConnectionError
 
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
@@ -126,13 +127,27 @@ class OTLPSpanExporter(SpanExporter):
         elif self._compression == Compression.Deflate:
             data = zlib.compress(serialized_data)
 
-        return self._session.post(
-            url=self._endpoint,
-            data=data,
-            verify=self._certificate_file,
-            timeout=timeout_sec,
-            cert=self._client_cert,
-        )
+        # By default, keep-alive is enabled in Session's request
+        # headers. Backends may choose to close the connection
+        # while a post happens which causes an unhandled
+        # exception. This try/except will retry the post on such exceptions
+        try:
+            resp = self._session.post(
+                url=self._endpoint,
+                data=data,
+                verify=self._certificate_file,
+                timeout=timeout_sec,
+                cert=self._client_cert,
+            )
+        except ConnectionError:
+            resp = self._session.post(
+                url=self._endpoint,
+                data=data,
+                verify=self._certificate_file,
+                timeout=timeout_sec,
+                cert=self._client_cert,
+            )
+        return resp
 
     @staticmethod
     def _retryable(resp: requests.Response) -> bool:
