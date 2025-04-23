@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- opentelemetry-sdk: use stable code attributes: `code.function` -> `code.function.name`, `code.lineno` -> `code.line.number`, `code.filepath` -> `code.file.path`
+  ([#4508](https://github.com/open-telemetry/opentelemetry-python/pull/4508))
 - Fix serialization of extended attributes for logs signal
   ([#4342](https://github.com/open-telemetry/opentelemetry-python/pull/4342))
 - docs: updated and added to the metrics and log examples
