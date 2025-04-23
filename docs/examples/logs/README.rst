@@ -52,37 +52,70 @@ The resulting logs will appear in the output from the collector and look similar
 
 .. code-block:: sh
 
-        Resource SchemaURL: 
-        Resource labels:
-            -> telemetry.sdk.language: STRING(python)
-            -> telemetry.sdk.name: STRING(opentelemetry)
-            -> telemetry.sdk.version: STRING(1.8.0)
-            -> service.name: STRING(shoppingcart)
-            -> service.instance.id: STRING(instance-12)
-        InstrumentationLibraryLogs #0
-        InstrumentationLibraryMetrics SchemaURL: 
-        InstrumentationLibrary __main__ 0.1
-        LogRecord #0
-        Timestamp: 2022-01-13 20:37:03.998733056 +0000 UTC
-        Severity: WARNING
-        ShortName: 
-        Body: Jail zesty vixen who grabbed pay from quack.
-        Trace ID: 
-        Span ID: 
-        Flags: 0
-        LogRecord #1
-        Timestamp: 2022-01-13 20:37:04.082757888 +0000 UTC
-        Severity: ERROR
-        ShortName: 
-        Body: The five boxing wizards jump quickly.
-        Trace ID: 
-        Span ID: 
-        Flags: 0
-        LogRecord #2
-        Timestamp: 2022-01-13 20:37:04.082979072 +0000 UTC
-        Severity: ERROR
-        ShortName: 
-        Body: Hyderabad, we have a major problem.
-        Trace ID: 63491217958f126f727622e41d4460f3
-        Span ID: d90c57d6e1ca4f6c
-        Flags: 1
+    ResourceLog #0
+    Resource SchemaURL: 
+    Resource attributes:
+        -> telemetry.sdk.language: Str(python)
+        -> telemetry.sdk.name: Str(opentelemetry)
+        -> telemetry.sdk.version: Str(1.33.0.dev0)
+        -> service.name: Str(shoppingcart)
+        -> service.instance.id: Str(instance-12)
+    ScopeLogs #0
+    ScopeLogs SchemaURL: 
+    InstrumentationScope myapp.area2 
+    LogRecord #0
+    ObservedTimestamp: 2025-04-22 12:16:57.315179 +0000 UTC
+    Timestamp: 2025-04-22 12:16:57.315152896 +0000 UTC
+    SeverityText: WARN
+    SeverityNumber: Warn(13)
+    Body: Str(Jail zesty vixen who grabbed pay from quack.)
+    Attributes:
+        -> code.filepath: Str(/Users/jayclifford/Repos/opentelemetry-python/docs/examples/logs/example.py)
+        -> code.function: Str(<module>)
+        -> code.lineno: Int(47)
+    Trace ID: 
+    Span ID: 
+    Flags: 0
+    LogRecord #1
+    ObservedTimestamp: 2025-04-22 12:16:57.31522 +0000 UTC
+    Timestamp: 2025-04-22 12:16:57.315213056 +0000 UTC
+    SeverityText: ERROR
+    SeverityNumber: Error(17)
+    Body: Str(The five boxing wizards jump quickly.)
+    Attributes:
+        -> code.filepath: Str(/Users/jayclifford/Repos/opentelemetry-python/docs/examples/logs/example.py)
+        -> code.function: Str(<module>)
+        -> code.lineno: Int(48)
+    Trace ID: 
+    Span ID: 
+    Flags: 0
+    LogRecord #2
+    ObservedTimestamp: 2025-04-22 12:16:57.315445 +0000 UTC
+    Timestamp: 2025-04-22 12:16:57.31543808 +0000 UTC
+    SeverityText: ERROR
+    SeverityNumber: Error(17)
+    Body: Str(Hyderabad, we have a major problem.)
+    Attributes:
+        -> code.filepath: Str(/Users/jayclifford/Repos/opentelemetry-python/docs/examples/logs/example.py)
+        -> code.function: Str(<module>)
+        -> code.lineno: Int(61)
+    Trace ID: 8a6739fffce895e694700944e2faf23e
+    Span ID: a45337020100cb63
+    Flags: 1
+    ScopeLogs #1
+    ScopeLogs SchemaURL: 
+    InstrumentationScope myapp.area1 
+    LogRecord #0
+    ObservedTimestamp: 2025-04-22 12:16:57.315242 +0000 UTC
+    Timestamp: 2025-04-22 12:16:57.315234048 +0000 UTC
+    SeverityText: ERROR
+    SeverityNumber: Error(17)
+    Body: Str(I have custom attributes.)
+    Attributes:
+        -> user_id: Str(user-123)
+        -> code.filepath: Str(/Users/jayclifford/Repos/opentelemetry-python/docs/examples/logs/example.py)
+        -> code.function: Str(<module>)
+        -> code.lineno: Int(53)
+    Trace ID: 
+    Span ID: 
+    Flags: 0
