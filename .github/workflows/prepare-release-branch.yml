@@ -104,7 +104,7 @@ jobs:
                        --body "$message." \
                        --head $branch \
                        --base $RELEASE_BRANCH_NAME \
-                       --label release
+                       --label prepare-release
 
   create-pull-request-against-main:
     runs-on: ubuntu-latest
@@ -185,4 +185,4 @@ jobs:
                        --body "$body" \
                        --head $branch \
                        --base main \
-                       --label release
+                       --label prepare-release

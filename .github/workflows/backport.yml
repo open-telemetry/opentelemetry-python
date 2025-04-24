@@ -41,4 +41,4 @@ jobs:
                        --body "Clean cherry-pick of #$NUMBER to the \`$GITHUB_REF_NAME\` branch." \
                        --head $branch \
                        --base $GITHUB_REF_NAME \
-                       --label patch-release
+                       --label backport

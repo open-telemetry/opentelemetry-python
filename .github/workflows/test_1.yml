@@ -15,9 +15,13 @@ concurrency:
 
 env:
   CORE_REPO_SHA: main
+  # Set the SHA to the branch name if the PR has a label 'prepare-release' or 'backport' otherwise, set it to 'main'
+  # For PRs you can change the inner fallback ('main')
+  # For pushes you change the outer fallback ('main')
+  # The logic below is used during releases and depends on having an equivalent branch name in the contrib repo.
   CONTRIB_REPO_SHA: ${{ github.event_name == 'pull_request' && (
-       contains(github.event.pull_request.labels.*.name, 'release') && github.event.pull_request.head.ref ||
-       contains(github.event.pull_request.labels.*.name, 'patch-release') && github.event.pull_request.base.ref ||
+       contains(github.event.pull_request.labels.*.name, 'prepare-release') && github.event.pull_request.head.ref ||
+       contains(github.event.pull_request.labels.*.name, 'backport') && github.event.pull_request.base.ref ||
        'main'
     ) || 'main' }}
   PIP_EXISTS_ACTION: w

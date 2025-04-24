@@ -78,4 +78,4 @@ jobs:
                        --body "$message." \
                        --head $branch \
                        --base $GITHUB_REF_NAME \
-                       --label release
+                       --label prepare-release
