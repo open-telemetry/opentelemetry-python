@@ -39,6 +39,7 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.trace import ReadableSpan, Span, SpanProcessor
 from opentelemetry.util._once import Once
+from opentelemetry.metrics import Meter
 
 _DEFAULT_SCHEDULE_DELAY_MILLIS = 5000
 _DEFAULT_MAX_EXPORT_BATCH_SIZE = 512
@@ -197,6 +198,7 @@ class BatchSpanProcessor(SpanProcessor):
         self.done = False
         # flag that indicates that spans are being dropped
         self._spans_dropped = False
+        self._dropped_spans_counter = None
         # precallocated list to send spans to exporter
         self.spans_list = [None] * self.max_export_batch_size  # type: typing.List[typing.Optional[Span]]
         self.worker_thread.start()
@@ -223,7 +225,10 @@ class BatchSpanProcessor(SpanProcessor):
             if not self._spans_dropped:
                 logger.warning("Queue is full, likely spans will be dropped.")
                 self._spans_dropped = True
-
+                self._dropped_spans_counter = Meter.create_counter(
+                    name="dropped_spans_counter", description="Dropped Spans counter"
+                )
+            self._dropped_spans_counter.add(1)
         self.queue.appendleft(span)
 
         if len(self.queue) >= self.max_export_batch_size:
