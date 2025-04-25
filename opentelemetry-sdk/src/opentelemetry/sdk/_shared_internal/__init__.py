@@ -63,6 +63,7 @@ class BatchProcessor(ABC):
         self._bsp_reset_once = Once()
         self._exporter = exporter
         self._max_queue_size = max_queue_size
+        self._schedule_delay_millis = schedule_delay_millis
         self._schedule_delay = schedule_delay_millis / 1e3
         self._max_export_batch_size = max_export_batch_size
         # Not used. No way currently to pass timeout to export.
