@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import abc
+from __future__ import annotations
+
 import collections
 import enum
 import logging
@@ -20,10 +21,10 @@ import os
 import threading
 from abc import ABC
 from typing import (
+    TYPE_CHECKING,
     Deque,
     Optional,
     Union,
-    Sequence
 )
 
 from opentelemetry.context import (
@@ -32,48 +33,14 @@ from opentelemetry.context import (
     detach,
     set_value,
 )
-from opentelemetry.sdk._logs import LogRecord
-from opentelemetry.sdk._logs.export import LogExporter
-from opentelemetry.sdk.trace import Span
-from opentelemetry.sdk.trace.export import SpanExporter
 from opentelemetry.util._once import Once
 
-from opentelemetry.context import (
-    _SUPPRESS_INSTRUMENTATION_KEY,
-    attach,
-    detach,
-    set_value,
-)
-from opentelemetry.sdk._logs import LogData,
+if TYPE_CHECKING:
+    from opentelemetry.sdk._logs import LogRecord
+    from opentelemetry.sdk._logs.export import LogExporter
+    from opentelemetry.sdk.trace import Span
+    from opentelemetry.sdk.trace.export import SpanExporter
 
-
-class LogExporter(abc.ABC):
-    """Interface for exporting logs.
-
-    Interface to be implemented by services that want to export logs received
-    in their own format.
-
-    To export data this MUST be registered to the :class`opentelemetry.sdk._logs.Logger` using a
-    log processor.
-    """
-
-    @abc.abstractmethod
-    def export(self, batch: Sequence[LogData]):
-        """Exports a batch of logs.
-
-        Args:
-            batch: The list of `LogData` objects to be exported
-
-        Returns:
-            The result of the export
-        """
-
-    @abc.abstractmethod
-    def shutdown(self):
-        """Shuts down the exporter.
-
-        Called when the SDK is shut down.
-        """
 
 class BatchExportStrategy(enum.Enum):
     EXPORT_ALL = 0
@@ -82,11 +49,11 @@ class BatchExportStrategy(enum.Enum):
 
 
 class BatchProcessor(ABC):
-    _queue: Deque[Union[LogRecord | Span]]
+    _queue: Deque[Union["LogRecord" | "Span"]]
 
     def __init__(
         self,
-        exporter: Union[LogExporter | SpanExporter],
+        exporter: Union["LogExporter" | "SpanExporter"],
         schedule_delay_millis: float,
         max_export_batch_size: int,
         export_timeout_millis: float,
@@ -188,7 +155,7 @@ class BatchProcessor(ABC):
                     )
                 detach(token)
 
-    def emit(self, data: Union[LogRecord | Span]) -> None:
+    def emit(self, data: Union["LogRecord" | "Span"]) -> None:
         if self._shutdown:
             self._logger.info(
                 "Shutdown called, ignoring {}.".format(self._exporting)

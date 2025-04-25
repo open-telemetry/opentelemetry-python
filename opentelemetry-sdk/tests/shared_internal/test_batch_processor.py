@@ -25,7 +25,6 @@ from opentelemetry.sdk._logs import (
     LogRecord,
 )
 from opentelemetry.sdk._logs.export import (
-    BatchLogRecordProcessor,
     InMemoryLogExporter,
 )
 from opentelemetry.sdk._shared_internal import BatchProcessor
@@ -46,7 +45,7 @@ class TestBatchProcessor(unittest.TestCase):
             max_export_batch_size=15,
             # Will not reach this during the test, this sleep should be interrupted when batch size is reached.
             schedule_delay_millis=30000,
-            exporting="Logs",
+            exporting="Log",
             export_timeout_millis=500,
         )
         before_export = time.time_ns()
@@ -62,12 +61,12 @@ class TestBatchProcessor(unittest.TestCase):
     # pylint: disable=no-self-use
     def test_logs_exported_once_schedule_delay_reached(self):
         exporter = Mock()
-        log_record_processor = BatchLogRecordProcessor(
+        log_record_processor = BatchProcessor(
             exporter=exporter,
             max_queue_size=15,
             max_export_batch_size=15,
             schedule_delay_millis=100,
-            exporting="Logs",
+            exporting="Log",
             export_timeout_millis=500,
         )
         log_record_processor.emit(EMPTY_LOG)
@@ -76,13 +75,13 @@ class TestBatchProcessor(unittest.TestCase):
 
     def test_logs_flushed_before_shutdown_and_dropped_after_shutdown(self):
         exporter = Mock()
-        log_record_processor = BatchLogRecordProcessor(
+        log_record_processor = BatchProcessor(
             exporter=exporter,
             # Neither of these thresholds should be hit before test ends.
             max_queue_size=15,
             max_export_batch_size=15,
             schedule_delay_millis=30000,
-            exporting="Logs",
+            exporting="Log",
             export_timeout_millis=500,
         )
         # This log should be flushed because it was written before shutdown.
@@ -102,13 +101,13 @@ class TestBatchProcessor(unittest.TestCase):
     # pylint: disable=no-self-use
     def test_force_flush_flushes_logs(self):
         exporter = Mock()
-        log_record_processor = BatchLogRecordProcessor(
+        log_record_processor = BatchProcessor(
             exporter=exporter,
             # Neither of these thresholds should be hit before test ends.
             max_queue_size=15,
             max_export_batch_size=15,
             schedule_delay_millis=30000,
-            exporting="Logs",
+            exporting="Log",
             export_timeout_millis=500,
         )
         for _ in range(10):
@@ -118,12 +117,12 @@ class TestBatchProcessor(unittest.TestCase):
 
     def test_with_multiple_threads(self):
         exporter = InMemoryLogExporter()
-        log_record_processor = BatchLogRecordProcessor(
+        log_record_processor = BatchProcessor(
             exporter=exporter,
-            max_queue_size=15,
-            max_export_batch_size=15,
+            max_queue_size=3000,
+            max_export_batch_size=1000,
             schedule_delay_millis=30000,
-            exporting="Logs",
+            exporting="Log",
             export_timeout_millis=500,
         )
 
@@ -147,12 +146,12 @@ class TestBatchProcessor(unittest.TestCase):
     )
     def test_batch_log_record_processor_fork(self):
         exporter = InMemoryLogExporter()
-        log_record_processor = BatchLogRecordProcessor(
+        log_record_processor = BatchProcessor(
             exporter,
             max_queue_size=100,
             max_export_batch_size=64,
             schedule_delay_millis=30000,
-            exporting="Logs",
+            exporting="Log",
             export_timeout_millis=500,
         )
         # These logs should be flushed only from the parent process.

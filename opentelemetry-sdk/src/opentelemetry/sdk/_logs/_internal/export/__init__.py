@@ -13,6 +13,7 @@
 # limitations under the License.
 from __future__ import annotations
 
+import abc
 import enum
 import logging
 import sys
@@ -30,7 +31,7 @@ from opentelemetry.context import (
     set_value,
 )
 from opentelemetry.sdk._logs import LogData, LogRecord, LogRecordProcessor
-from opentelemetry.sdk._shared_internal import BatchProcessor, LogExporter
+from opentelemetry.sdk._shared_internal import BatchProcessor
 from opentelemetry.sdk.environment_variables import (
     OTEL_BLRP_EXPORT_TIMEOUT,
     OTEL_BLRP_MAX_EXPORT_BATCH_SIZE,
@@ -54,7 +55,29 @@ class LogExportResult(enum.Enum):
 
 
 
+class LogExporter(abc.ABC):
+    """Interface for exporting logs.
+    Interface to be implemented by services that want to export logs received
+    in their own format.
+    To export data this MUST be registered to the :class`opentelemetry.sdk._logs.Logger` using a
+    log processor.
+    """
 
+    @abc.abstractmethod
+    def export(self, batch: Sequence[LogData]):
+        """Exports a batch of logs.
+        Args:
+            batch: The list of `LogData` objects to be exported
+        Returns:
+            The result of the export
+        """
+
+    @abc.abstractmethod
+    def shutdown(self):
+        """Shuts down the exporter.
+
+        Called when the SDK is shut down.
+        """
 
 class ConsoleLogExporter(LogExporter):
     """Implementation of :class:`LogExporter` that prints log records to the
