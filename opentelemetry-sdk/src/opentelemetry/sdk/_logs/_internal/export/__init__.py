@@ -54,7 +54,6 @@ class LogExportResult(enum.Enum):
     FAILURE = 1
 
 
-
 class LogExporter(abc.ABC):
     """Interface for exporting logs.
     Interface to be implemented by services that want to export logs received
@@ -78,6 +77,7 @@ class LogExporter(abc.ABC):
 
         Called when the SDK is shut down.
         """
+
 
 class ConsoleLogExporter(LogExporter):
     """Implementation of :class:`LogExporter` that prints log records to the

@@ -13,7 +13,6 @@
 # limitations under the License.
 
 # pylint: disable=protected-access
-import gc
 import logging
 import os
 import time
@@ -43,7 +42,6 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
-from opentelemetry.test.concurrency_test import ConcurrencyTestBase
 from opentelemetry.trace import TraceFlags
 from opentelemetry.trace.span import INVALID_SPAN_CONTEXT
 
@@ -466,6 +464,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             max_queue_size=100,
             max_export_batch_size=101,
         )
+
 
 class TestConsoleLogExporter(unittest.TestCase):
     def test_export(self):  # pylint: disable=no-self-use

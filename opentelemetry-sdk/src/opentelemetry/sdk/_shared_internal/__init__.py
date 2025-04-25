@@ -71,7 +71,7 @@ class BatchProcessor(ABC):
         # Deque is thread safe.
         self._queue = collections.deque([], max_queue_size)
         self._worker_thread = threading.Thread(
-            name="OtelBatch{}RecordProcessor".format(exporting),
+            name=f"OtelBatch{exporting}RecordProcessor",
             target=self.worker,
             daemon=True,
         )
@@ -105,7 +105,7 @@ class BatchProcessor(ABC):
         self._worker_awaken = threading.Event()
         self._queue.clear()
         self._worker_thread = threading.Thread(
-            name="OtelBatch{}RecordProcessor".format(self._exporting),
+            name=f"OtelBatch{self._exporting}RecordProcessor",
             target=self.worker,
             daemon=True,
         )
@@ -151,23 +151,19 @@ class BatchProcessor(ABC):
                     )
                 except Exception:  # pylint: disable=broad-exception-caught
                     self._logger.exception(
-                        "Exception while exporting {}.".format(self._exporting)
+                        "Exception while exporting %s.", self._exporting
                     )
                 detach(token)
 
     def emit(self, data: Union["LogRecord" | "Span"]) -> None:
         if self._shutdown:
-            self._logger.info(
-                "Shutdown called, ignoring {}.".format(self._exporting)
-            )
+            self._logger.info("Shutdown called, ignoring %s.", self._exporting)
             return
         if self._pid != os.getpid():
-            self.bsp_reset_once.do_once(self._at_fork_reinit)
+            self._bsp_reset_once.do_once(self._at_fork_reinit)
 
         if len(self._queue) == self._max_queue_size:
-            self._logger.warning(
-                "Queue full, dropping {}.".format(self._exporting)
-            )
+            self._logger.warning("Queue full, dropping %s.", self._exporting)
         self._queue.appendleft(data)
         if len(self._queue) >= self._max_export_batch_size:
             self._worker_awaken.set()
