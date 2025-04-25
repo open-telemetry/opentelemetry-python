@@ -17,6 +17,44 @@ from typing import Final
 
 from opentelemetry.metrics import Counter, Meter, UpDownCounter
 
+OTEL_SDK_EXPORTER_LOG_EXPORTED: Final = "otel.sdk.exporter.log.exported"
+"""
+The number of log records for which the export has finished, either successful or failed
+Instrument: counter
+Unit: {log_record}
+Note: For successful exports, `error.type` MUST NOT be set. For failed exports, `error.type` must contain the failure cause.
+For exporters with partial success semantics (e.g. OTLP with `rejected_log_records`), rejected log records must count as failed and only non-rejected log records count as success.
+If no rejection reason is available, `rejected` SHOULD be used as value for `error.type`.
+"""
+
+
+def create_otel_sdk_exporter_log_exported(meter: Meter) -> Counter:
+    """The number of log records for which the export has finished, either successful or failed"""
+    return meter.create_counter(
+        name=OTEL_SDK_EXPORTER_LOG_EXPORTED,
+        description="The number of log records for which the export has finished, either successful or failed",
+        unit="{log_record}",
+    )
+
+
+OTEL_SDK_EXPORTER_LOG_INFLIGHT: Final = "otel.sdk.exporter.log.inflight"
+"""
+The number of log records which were passed to the exporter, but that have not been exported yet (neither successful, nor failed)
+Instrument: updowncounter
+Unit: {log_record}
+Note: For successful exports, `error.type` MUST NOT be set. For failed exports, `error.type` must contain the failure cause.
+"""
+
+
+def create_otel_sdk_exporter_log_inflight(meter: Meter) -> UpDownCounter:
+    """The number of log records which were passed to the exporter, but that have not been exported yet (neither successful, nor failed)"""
+    return meter.create_up_down_counter(
+        name=OTEL_SDK_EXPORTER_LOG_INFLIGHT,
+        description="The number of log records which were passed to the exporter, but that have not been exported yet (neither successful, nor failed)",
+        unit="{log_record}",
+    )
+
+
 OTEL_SDK_EXPORTER_SPAN_EXPORTED_COUNT: Final = (
     "otel.sdk.exporter.span.exported.count"
 )
@@ -58,6 +96,83 @@ def create_otel_sdk_exporter_span_inflight_count(
         name=OTEL_SDK_EXPORTER_SPAN_INFLIGHT_COUNT,
         description="The number of spans which were passed to the exporter, but that have not been exported yet (neither successful, nor failed)",
         unit="{span}",
+    )
+
+
+OTEL_SDK_LOG_CREATED: Final = "otel.sdk.log.created"
+"""
+The number of logs submitted to enabled SDK Loggers
+Instrument: counter
+Unit: {log_record}
+"""
+
+
+def create_otel_sdk_log_created(meter: Meter) -> Counter:
+    """The number of logs submitted to enabled SDK Loggers"""
+    return meter.create_counter(
+        name=OTEL_SDK_LOG_CREATED,
+        description="The number of logs submitted to enabled SDK Loggers",
+        unit="{log_record}",
+    )
+
+
+OTEL_SDK_PROCESSOR_LOG_PROCESSED: Final = "otel.sdk.processor.log.processed"
+"""
+The number of log records for which the processing has finished, either successful or failed
+Instrument: counter
+Unit: {log_record}
+Note: For successful processing, `error.type` MUST NOT be set. For failed processing, `error.type` must contain the failure cause.
+For the SDK Simple and Batching Log Record Processor a log record is considered to be processed already when it has been submitted to the exporter,
+not when the corresponding export call has finished.
+"""
+
+
+def create_otel_sdk_processor_log_processed(meter: Meter) -> Counter:
+    """The number of log records for which the processing has finished, either successful or failed"""
+    return meter.create_counter(
+        name=OTEL_SDK_PROCESSOR_LOG_PROCESSED,
+        description="The number of log records for which the processing has finished, either successful or failed",
+        unit="{log_record}",
+    )
+
+
+OTEL_SDK_PROCESSOR_LOG_QUEUE_CAPACITY: Final = (
+    "otel.sdk.processor.log.queue.capacity"
+)
+"""
+The maximum number of log records the queue of a given instance of an SDK Log Record processor can hold
+Instrument: updowncounter
+Unit: {log_record}
+Note: Only applies to Log Record processors which use a queue, e.g. the SDK Batching Log Record Processor.
+"""
+
+
+def create_otel_sdk_processor_log_queue_capacity(
+    meter: Meter,
+) -> UpDownCounter:
+    """The maximum number of log records the queue of a given instance of an SDK Log Record processor can hold"""
+    return meter.create_up_down_counter(
+        name=OTEL_SDK_PROCESSOR_LOG_QUEUE_CAPACITY,
+        description="The maximum number of log records the queue of a given instance of an SDK Log Record processor can hold",
+        unit="{log_record}",
+    )
+
+
+OTEL_SDK_PROCESSOR_LOG_QUEUE_SIZE: Final = "otel.sdk.processor.log.queue.size"
+"""
+The number of log records in the queue of a given instance of an SDK log processor
+Instrument: updowncounter
+Unit: {log_record}
+Note: Only applies to log record processors which use a queue, e.g. the SDK Batching Log Record Processor.
+"""
+
+
+def create_otel_sdk_processor_log_queue_size(meter: Meter) -> UpDownCounter:
+    """The number of log records in the queue of a given instance of an SDK log processor"""
+    return meter.create_up_down_counter(
+        name=OTEL_SDK_PROCESSOR_LOG_QUEUE_SIZE,
+        description="The number of log records in the queue of a given instance of an SDK log processor",
+        unit="{log_record}",
     )
 
 

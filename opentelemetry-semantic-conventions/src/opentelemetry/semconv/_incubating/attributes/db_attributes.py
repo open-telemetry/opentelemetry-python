@@ -212,6 +212,9 @@ without attempting to do any case normalization.
 The operation name SHOULD NOT be extracted from `db.query.text`,
 when the database system supports cross-table queries in non-batch operations.
 
+If spaces can occur in the operation name, multiple consecutive spaces
+SHOULD be normalized to a single space.
+
 For batch operations, if the individual operations are known to have the same operation name
 then that operation name SHOULD be used prepended by `BATCH `,
 otherwise `db.operation.name` SHOULD be `BATCH` or some other database
@@ -223,6 +226,7 @@ DB_OPERATION_PARAMETER_TEMPLATE: Final = "db.operation.parameter"
 A database operation parameter, with `<key>` being the parameter name, and the attribute value being a string representation of the parameter value.
 Note: If a parameter has no name and instead is referenced only by index, then `<key>` SHOULD be the 0-based index.
 If `db.query.text` is also captured, then `db.operation.parameter.<key>` SHOULD match up with the parameterized placeholders present in `db.query.text`.
+`db.operation.parameter.<key>` SHOULD NOT be captured on batch operations.
 """
 
 DB_QUERY_PARAMETER_TEMPLATE: Final = "db.query.parameter"
@@ -264,12 +268,22 @@ Semantic conventions for individual database systems SHOULD document what `db.re
 
 DB_SQL_TABLE: Final = "db.sql.table"
 """
-Deprecated: Replaced by `db.collection.name`.
+Deprecated: Replaced by `db.collection.name`, but only if not extracting the value from `db.query.text`.
 """
 
 DB_STATEMENT: Final = "db.statement"
 """
 Deprecated: Replaced by `db.query.text`.
+"""
+
+DB_STORED_PROCEDURE_NAME: Final = "db.stored_procedure.name"
+"""
+The name of a stored procedure within the database.
+Note: It is RECOMMENDED to capture the value as provided by the application
+without attempting to do any case normalization.
+
+For batch operations, if the individual operations are known to have the same
+stored procedure name then that stored procedure name SHOULD be used.
 """
 
 DB_SYSTEM: Final = "db.system"

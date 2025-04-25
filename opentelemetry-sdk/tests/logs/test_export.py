@@ -13,6 +13,7 @@
 # limitations under the License.
 
 # pylint: disable=protected-access
+import gc
 import logging
 import os
 import time
@@ -42,6 +43,7 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
+from opentelemetry.test.concurrency_test import ConcurrencyTestBase
 from opentelemetry.trace import TraceFlags
 from opentelemetry.trace.span import INVALID_SPAN_CONTEXT
 
