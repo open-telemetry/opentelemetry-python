@@ -16,7 +16,7 @@
 
 import os
 from unittest import TestCase
-from unittest.mock import Mock, PropertyMock, patch, ANY
+from unittest.mock import ANY, Mock, PropertyMock, patch
 
 from grpc import ChannelCredentials, Compression
 
