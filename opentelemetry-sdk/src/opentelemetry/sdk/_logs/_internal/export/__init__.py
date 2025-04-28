@@ -182,7 +182,7 @@ class BatchLogRecordProcessor(BatchProcessor, LogRecordProcessor):
         BatchLogRecordProcessor._validate_arguments(
             max_queue_size, schedule_delay_millis, max_export_batch_size
         )
-        # Inititalizes BatchProcessor
+        # Initializes BatchProcessor
         super().__init__(
             exporter,
             schedule_delay_millis,
