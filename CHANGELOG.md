@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Fix intermittent `Connection aborted` error when using otlp/http exporters
+  ([#4477](https://github.com/open-telemetry/opentelemetry-python/pull/4477))
+- opentelemetry-sdk: use stable code attributes: `code.function` -> `code.function.name`, `code.lineno` -> `code.line.number`, `code.filepath` -> `code.file.path`
+  ([#4508](https://github.com/open-telemetry/opentelemetry-python/pull/4508))
+- Fix serialization of extended attributes for logs signal
+  ([#4342](https://github.com/open-telemetry/opentelemetry-python/pull/4342))
+- docs: updated and added to the metrics and log examples
+  ([#4559](https://github.com/open-telemetry/opentelemetry-python/pull/4559))
+
+## Version 1.32.0/0.53b0 (2025-04-10)
+
 - Fix user agent in OTLP HTTP metrics exporter
   ([#4475](https://github.com/open-telemetry/opentelemetry-python/pull/4475))
 - Improve performance of baggage operations
