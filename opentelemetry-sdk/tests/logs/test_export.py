@@ -353,7 +353,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         )
         self.assertEqual(log_record_processor._exporter, exporter)
         self.assertEqual(log_record_processor._max_queue_size, 1024)
-        self.assertEqual(log_record_processor._schedule_delay_millis, 2500)
+        self.assertEqual(log_record_processor._schedule_delay, 2.5)
         self.assertEqual(log_record_processor._max_export_batch_size, 256)
         self.assertEqual(log_record_processor._export_timeout_millis, 15000)
 
@@ -371,7 +371,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         log_record_processor = BatchLogRecordProcessor(exporter)
         self.assertEqual(log_record_processor._exporter, exporter)
         self.assertEqual(log_record_processor._max_queue_size, 1024)
-        self.assertEqual(log_record_processor._schedule_delay_millis, 2500)
+        self.assertEqual(log_record_processor._schedule_delay, 2.5)
         self.assertEqual(log_record_processor._max_export_batch_size, 256)
         self.assertEqual(log_record_processor._export_timeout_millis, 15000)
 
@@ -380,7 +380,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         log_record_processor = BatchLogRecordProcessor(exporter)
         self.assertEqual(log_record_processor._exporter, exporter)
         self.assertEqual(log_record_processor._max_queue_size, 2048)
-        self.assertEqual(log_record_processor._schedule_delay_millis, 5000)
+        self.assertEqual(log_record_processor._schedule_delay, 5)
         self.assertEqual(log_record_processor._max_export_batch_size, 512)
         self.assertEqual(log_record_processor._export_timeout_millis, 30000)
 
@@ -400,7 +400,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         _logger.disabled = False
         self.assertEqual(log_record_processor._exporter, exporter)
         self.assertEqual(log_record_processor._max_queue_size, 2048)
-        self.assertEqual(log_record_processor._schedule_delay_millis, 5000)
+        self.assertEqual(log_record_processor._schedule_delay, 5)
         self.assertEqual(log_record_processor._max_export_batch_size, 512)
         self.assertEqual(log_record_processor._export_timeout_millis, 30000)
 
@@ -415,7 +415,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         )
         self.assertEqual(log_record_processor._exporter, exporter)
         self.assertEqual(log_record_processor._max_queue_size, 2048)
-        self.assertEqual(log_record_processor._schedule_delay_millis, 5000)
+        self.assertEqual(log_record_processor._schedule_delay, 5)
         self.assertEqual(log_record_processor._max_export_batch_size, 512)
         self.assertEqual(log_record_processor._export_timeout_millis, 30000)
 
@@ -464,7 +464,6 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             max_queue_size=100,
             max_export_batch_size=101,
         )
-
 
 class TestConsoleLogExporter(unittest.TestCase):
     def test_export(self):  # pylint: disable=no-self-use

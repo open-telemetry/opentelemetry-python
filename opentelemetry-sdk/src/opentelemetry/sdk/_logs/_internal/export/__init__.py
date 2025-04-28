@@ -18,11 +18,8 @@ import enum
 import logging
 import sys
 from os import environ, linesep
-from typing import (
-    IO,
-    Callable,
-    Sequence,
-)
+from typing import IO, Callable, Deque, Optional, Sequence
+
 
 from opentelemetry.context import (
     _SUPPRESS_INSTRUMENTATION_KEY,
@@ -52,6 +49,12 @@ _logger = logging.getLogger(__name__)
 class LogExportResult(enum.Enum):
     SUCCESS = 0
     FAILURE = 1
+
+
+class BatchLogExportStrategy(enum.Enum):
+    EXPORT_ALL = 0
+    EXPORT_WHILE_BATCH_EXCEEDS_THRESHOLD = 1
+    EXPORT_AT_LEAST_ONE_BATCH = 2
 
 
 class LogExporter(abc.ABC):
@@ -150,6 +153,7 @@ class BatchLogRecordProcessor(BatchProcessor, LogRecordProcessor):
 
     All the logic for emitting logs, shutting down etc. resides in the BatchProcessor class.
     """
+
 
     def __init__(
         self,
