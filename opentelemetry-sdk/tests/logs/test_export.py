@@ -465,6 +465,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             max_export_batch_size=101,
         )
 
+
 class TestConsoleLogExporter(unittest.TestCase):
     def test_export(self):  # pylint: disable=no-self-use
         """Check that the console exporter prints log records."""

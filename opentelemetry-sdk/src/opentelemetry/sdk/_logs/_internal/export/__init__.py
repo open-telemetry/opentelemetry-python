@@ -18,8 +18,7 @@ import enum
 import logging
 import sys
 from os import environ, linesep
-from typing import IO, Callable, Deque, Optional, Sequence
-
+from typing import IO, Callable, Sequence
 
 from opentelemetry.context import (
     _SUPPRESS_INSTRUMENTATION_KEY,
@@ -153,7 +152,6 @@ class BatchLogRecordProcessor(BatchProcessor, LogRecordProcessor):
 
     All the logic for emitting logs, shutting down etc. resides in the BatchProcessor class.
     """
-
 
     def __init__(
         self,
