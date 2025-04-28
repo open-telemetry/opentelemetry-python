@@ -36,7 +36,7 @@ from opentelemetry.context import (
 from opentelemetry.util._once import Once
 
 if TYPE_CHECKING:
-    from opentelemetry.sdk._logs import LogRecord
+    from opentelemetry.sdk._logs import LogData
     from opentelemetry.sdk._logs.export import LogExporter
     from opentelemetry.sdk.trace import Span
     from opentelemetry.sdk.trace.export import SpanExporter
@@ -49,11 +49,11 @@ class BatchExportStrategy(enum.Enum):
 
 
 class BatchProcessor(ABC):
-    _queue: Deque[Union["LogRecord" | "Span"]]
+    _queue: Deque["Union[LogData, Span]"]
 
     def __init__(
         self,
-        exporter: Union["LogExporter" | "SpanExporter"],
+        exporter: "Union[LogExporter, SpanExporter]",
         schedule_delay_millis: float,
         max_export_batch_size: int,
         export_timeout_millis: float,
@@ -139,7 +139,7 @@ class BatchProcessor(ABC):
                 token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
                 try:
                     self._exporter.export(
-                        [
+                        [  # pyright: ignore [reportArgumentType]
                             # Oldest records are at the back, so pop from there.
                             self._queue.pop()
                             for _ in range(
@@ -156,7 +156,7 @@ class BatchProcessor(ABC):
                     )
                 detach(token)
 
-    def emit(self, data: Union["LogRecord" | "Span"]) -> None:
+    def emit(self, data: "Union[LogData, Span]") -> None:
         if self._shutdown:
             self._logger.info("Shutdown called, ignoring %s.", self._exporting)
             return
@@ -180,7 +180,7 @@ class BatchProcessor(ABC):
         self._worker_thread.join()
         self._exporter.shutdown()
 
-    def force_flush(self, timeout_millis: Optional[int] = None) -> bool:
+    def force_flush(self, timeout_millis: Optional[int] = None):
         if self._shutdown:
             return
         # Blocking call to export.
