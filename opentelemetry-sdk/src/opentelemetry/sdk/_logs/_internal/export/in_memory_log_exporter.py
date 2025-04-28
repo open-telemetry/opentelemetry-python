@@ -40,6 +40,7 @@ class InMemoryLogExporter(LogExporter):
         with self._lock:
             return tuple(self._logs)
 
+    # pylint: disable=arguments-differ
     def export(self, batch: typing.Sequence[LogData]) -> LogExportResult:
         if self._stopped:
             return LogExportResult.FAILURE
