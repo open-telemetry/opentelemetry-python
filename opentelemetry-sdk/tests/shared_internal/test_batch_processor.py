@@ -20,14 +20,15 @@ import unittest
 from concurrent.futures import ThreadPoolExecutor
 from unittest.mock import Mock
 
+import pytest
+
 from opentelemetry.sdk._logs import (
     LogData,
     LogRecord,
 )
 from opentelemetry.sdk._logs.export import (
-    InMemoryLogExporter,
+    BatchLogRecordProcessor,
 )
-from opentelemetry.sdk._shared_internal import BatchProcessor
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
 EMPTY_LOG = LogData(
@@ -36,145 +37,152 @@ EMPTY_LOG = LogData(
 )
 
 
-class TestBatchProcessor(unittest.TestCase):
-    def test_logs_exported_once_batch_size_reached(self):
+# BatchLogRecodpRocessor initializes / uses BatchProcessor.
+@pytest.mark.parametrize(
+    "batch_processor_class,telemetry", [(BatchLogRecordProcessor, EMPTY_LOG)]
+)
+class TestBatchProcessor:
+    def test_telemetry_exported_once_batch_size_reached(
+        self, batch_processor_class, telemetry
+    ):
         exporter = Mock()
-        log_record_processor = BatchProcessor(
+        batch_processor = batch_processor_class(
             exporter=exporter,
             max_queue_size=15,
             max_export_batch_size=15,
             # Will not reach this during the test, this sleep should be interrupted when batch size is reached.
             schedule_delay_millis=30000,
-            exporting="Log",
             export_timeout_millis=500,
         )
         before_export = time.time_ns()
         for _ in range(15):
-            log_record_processor.emit(EMPTY_LOG)
+            batch_processor.emit(telemetry)
         # Wait a bit for the worker thread to wake up and call export.
         time.sleep(0.1)
         exporter.export.assert_called_once()
         after_export = time.time_ns()
         # Shows the worker's 30 second sleep was interrupted within a second.
-        self.assertLess(after_export - before_export, 1e9)
+        assert after_export - before_export < 1e9
 
     # pylint: disable=no-self-use
-    def test_logs_exported_once_schedule_delay_reached(self):
+    def test_telemetry_exported_once_schedule_delay_reached(
+        self, batch_processor_class, telemetry
+    ):
         exporter = Mock()
-        log_record_processor = BatchProcessor(
+        batch_processor = batch_processor_class(
             exporter=exporter,
             max_queue_size=15,
             max_export_batch_size=15,
             schedule_delay_millis=100,
-            exporting="Log",
             export_timeout_millis=500,
         )
-        log_record_processor.emit(EMPTY_LOG)
+        batch_processor.emit(telemetry)
         time.sleep(0.2)
-        exporter.export.assert_called_once_with([EMPTY_LOG])
+        exporter.export.assert_called_once_with([telemetry])
 
-    def test_logs_flushed_before_shutdown_and_dropped_after_shutdown(self):
+    def test_telemetry_flushed_before_shutdown_and_dropped_after_shutdown(
+        self, batch_processor_class, telemetry, caplog
+    ):
         exporter = Mock()
-        log_record_processor = BatchProcessor(
+        batch_processor = batch_processor_class(
             exporter=exporter,
             # Neither of these thresholds should be hit before test ends.
             max_queue_size=15,
             max_export_batch_size=15,
             schedule_delay_millis=30000,
-            exporting="Log",
             export_timeout_millis=500,
         )
         # This log should be flushed because it was written before shutdown.
-        log_record_processor.emit(EMPTY_LOG)
-        log_record_processor.shutdown()
-        exporter.export.assert_called_once_with([EMPTY_LOG])
-        self.assertTrue(exporter._stopped)
+        batch_processor.emit(telemetry)
+        batch_processor.shutdown()
+        exporter.export.assert_called_once_with([telemetry])
+        assert batch_processor._shutdown is True
 
-        with self.assertLogs(level="INFO") as log:
-            # This log should not be flushed.
-            log_record_processor.emit(EMPTY_LOG)
-            self.assertEqual(len(log.output), 1)
-            self.assertEqual(len(log.records), 1)
-            self.assertIn("Shutdown called, ignoring Log.", log.output[0])
+        # This should not be flushed.
+        batch_processor.emit(telemetry)
+        assert len(caplog.records) == 1
+        assert "Shutdown called, ignoring" in caplog.text
         exporter.export.assert_called_once()
 
     # pylint: disable=no-self-use
-    def test_force_flush_flushes_logs(self):
+    def test_force_flush_flushes_telemetry(
+        self, batch_processor_class, telemetry
+    ):
         exporter = Mock()
-        log_record_processor = BatchProcessor(
+        batch_processor = batch_processor_class(
             exporter=exporter,
             # Neither of these thresholds should be hit before test ends.
             max_queue_size=15,
             max_export_batch_size=15,
             schedule_delay_millis=30000,
-            exporting="Log",
             export_timeout_millis=500,
         )
         for _ in range(10):
-            log_record_processor.emit(EMPTY_LOG)
-        log_record_processor.force_flush()
-        exporter.export.assert_called_once_with([EMPTY_LOG for _ in range(10)])
+            batch_processor.emit(telemetry)
+        batch_processor.force_flush()
+        exporter.export.assert_called_once_with([telemetry for _ in range(10)])
 
-    def test_with_multiple_threads(self):
-        exporter = InMemoryLogExporter()
-        log_record_processor = BatchProcessor(
+    def test_with_multiple_threads(self, batch_processor_class, telemetry):
+        exporter = Mock()
+        batch_processor = batch_processor_class(
             exporter=exporter,
             max_queue_size=3000,
             max_export_batch_size=1000,
             schedule_delay_millis=30000,
-            exporting="Log",
             export_timeout_millis=500,
         )
 
-        def bulk_log_and_flush(num_logs):
-            for _ in range(num_logs):
-                log_record_processor.emit(EMPTY_LOG)
-            log_record_processor.force_flush()
+        def bulk_emit_and_flush(num_emit):
+            for _ in range(num_emit):
+                batch_processor.emit(telemetry)
+            batch_processor.force_flush()
 
         with ThreadPoolExecutor(max_workers=69) as executor:
             for idx in range(69):
-                executor.submit(bulk_log_and_flush, idx + 1)
+                executor.submit(bulk_emit_and_flush, idx + 1)
 
             executor.shutdown()
 
-        finished_logs = exporter.get_finished_logs()
-        self.assertEqual(len(finished_logs), 2415)
+        # 69 force flush calls, should result in 69 export calls.
+        assert exporter.export.call_count == 69
 
     @unittest.skipUnless(
         hasattr(os, "fork"),
         "needs *nix",
     )
-    def test_batch_log_record_processor_fork(self):
-        exporter = InMemoryLogExporter()
-        log_record_processor = BatchProcessor(
+    def test_batch_telemetry_record_processor_fork(
+        self, batch_processor_class, telemetry
+    ):
+        exporter = Mock()
+        batch_processor = batch_processor_class(
             exporter,
-            max_queue_size=100,
-            max_export_batch_size=64,
+            max_queue_size=200,
+            max_export_batch_size=10,
             schedule_delay_millis=30000,
-            exporting="Log",
             export_timeout_millis=500,
         )
-        # These logs should be flushed only from the parent process.
+        # This telemetry should be flushed only from the parent process.
         # _at_fork_reinit should be called in the child process, to
-        # clear these logs in the child process.
-        for _ in range(10):
-            log_record_processor.emit(EMPTY_LOG)
+        # clear the logs/spans in the child process.
+        for _ in range(9):
+            batch_processor.emit(telemetry)
 
         multiprocessing.set_start_method("fork")
 
         def child(conn):
             for _ in range(100):
-                log_record_processor.emit(EMPTY_LOG)
-            log_record_processor.force_flush()
+                batch_processor.emit(telemetry)
+            batch_processor.force_flush()
 
-            logs = exporter.get_finished_logs()
-            conn.send(len(logs) == 100)
+            # Expect force flush to export 10 batches of max export batch size (10)
+            conn.send(exporter.export.call_count == 10)
             conn.close()
 
         parent_conn, child_conn = multiprocessing.Pipe()
         process = multiprocessing.Process(target=child, args=(child_conn,))
         process.start()
-        self.assertTrue(parent_conn.recv())
+        assert parent_conn.recv() is True
         process.join()
-        log_record_processor.force_flush()
-        self.assertTrue(len(exporter.get_finished_logs()) == 10)
+        batch_processor.force_flush()
+        # Single export for the telemetry we emitted at the start of the test.
+        assert exporter.export.call_count == 1
