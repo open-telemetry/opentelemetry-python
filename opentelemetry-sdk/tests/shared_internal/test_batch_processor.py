@@ -42,6 +42,7 @@ EMPTY_LOG = LogData(
     "batch_processor_class,telemetry", [(BatchLogRecordProcessor, EMPTY_LOG)]
 )
 class TestBatchProcessor:
+    # pylint: disable=no-self-use
     def test_telemetry_exported_once_batch_size_reached(
         self, batch_processor_class, telemetry
     ):
@@ -140,7 +141,7 @@ class TestBatchProcessor:
         with ThreadPoolExecutor(max_workers=69) as executor:
             for idx in range(69):
                 executor.submit(bulk_emit_and_flush, idx + 1)
-            time.sleep(.5)
+            time.sleep(0.5)
 
             executor.shutdown()
 
