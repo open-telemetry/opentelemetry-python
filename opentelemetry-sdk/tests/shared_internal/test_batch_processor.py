@@ -140,6 +140,7 @@ class TestBatchProcessor:
         with ThreadPoolExecutor(max_workers=69) as executor:
             for idx in range(69):
                 executor.submit(bulk_emit_and_flush, idx + 1)
+            time.sleep(.5)
 
             executor.shutdown()
 
