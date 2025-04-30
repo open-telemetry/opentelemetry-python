@@ -28,6 +28,7 @@ from opentelemetry.sdk._logs import (
 )
 from opentelemetry.sdk._logs.export import (
     BatchLogRecordProcessor,
+    InMemoryLogExporter,
 )
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
@@ -39,12 +40,13 @@ EMPTY_LOG = LogData(
 
 # BatchLogRecodpRocessor initializes / uses BatchProcessor.
 @pytest.mark.parametrize(
-    "batch_processor_class,telemetry", [(BatchLogRecordProcessor, EMPTY_LOG)]
+    "batch_processor_class,telemetry,in_memory_exporter",
+    [(BatchLogRecordProcessor, EMPTY_LOG, InMemoryLogExporter)],
 )
 class TestBatchProcessor:
     # pylint: disable=no-self-use
     def test_telemetry_exported_once_batch_size_reached(
-        self, batch_processor_class, telemetry
+        self, batch_processor_class, telemetry, in_memory_exporter
     ):
         exporter = Mock()
         batch_processor = batch_processor_class(
@@ -67,7 +69,7 @@ class TestBatchProcessor:
 
     # pylint: disable=no-self-use
     def test_telemetry_exported_once_schedule_delay_reached(
-        self, batch_processor_class, telemetry
+        self, batch_processor_class, telemetry, in_memory_exporter
     ):
         exporter = Mock()
         batch_processor = batch_processor_class(
@@ -82,7 +84,7 @@ class TestBatchProcessor:
         exporter.export.assert_called_once_with([telemetry])
 
     def test_telemetry_flushed_before_shutdown_and_dropped_after_shutdown(
-        self, batch_processor_class, telemetry, caplog
+        self, batch_processor_class, telemetry, in_memory_exporter, caplog
     ):
         exporter = Mock()
         batch_processor = batch_processor_class(
@@ -107,7 +109,7 @@ class TestBatchProcessor:
 
     # pylint: disable=no-self-use
     def test_force_flush_flushes_telemetry(
-        self, batch_processor_class, telemetry
+        self, batch_processor_class, telemetry, in_memory_exporter
     ):
         exporter = Mock()
         batch_processor = batch_processor_class(
@@ -123,8 +125,10 @@ class TestBatchProcessor:
         batch_processor.force_flush()
         exporter.export.assert_called_once_with([telemetry for _ in range(10)])
 
-    def test_with_multiple_threads(self, batch_processor_class, telemetry):
-        exporter = Mock()
+    def test_with_multiple_threads(
+        self, batch_processor_class, telemetry, in_memory_exporter
+    ):
+        exporter = in_memory_exporter()
         batch_processor = batch_processor_class(
             exporter=exporter,
             max_queue_size=3000,
@@ -141,19 +145,16 @@ class TestBatchProcessor:
         with ThreadPoolExecutor(max_workers=69) as executor:
             for idx in range(69):
                 executor.submit(bulk_emit_and_flush, idx + 1)
-            time.sleep(2)
 
             executor.shutdown()
-
-        # 69 force flush calls, should result in 69 export calls.
-        assert exporter.export.call_count == 69
+        assert len(exporter.get_finished_logs()) == 2415
 
     @unittest.skipUnless(
         hasattr(os, "fork"),
         "needs *nix",
     )
     def test_batch_telemetry_record_processor_fork(
-        self, batch_processor_class, telemetry
+        self, batch_processor_class, telemetry, in_memory_exporter
     ):
         exporter = Mock()
         batch_processor = batch_processor_class(
