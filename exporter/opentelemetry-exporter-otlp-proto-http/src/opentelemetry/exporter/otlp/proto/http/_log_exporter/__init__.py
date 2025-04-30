@@ -138,7 +138,7 @@ class OTLPLogExporter(LogExporter):
                 url=self._endpoint,
                 data=data,
                 verify=self._certificate_file,
-                timeout=timeout_sec
+                timeout=timeout_sec,
                 cert=self._client_cert,
             )
         except ConnectionError:
@@ -146,7 +146,7 @@ class OTLPLogExporter(LogExporter):
                 url=self._endpoint,
                 data=data,
                 verify=self._certificate_file,
-                timeout=timeout_sec
+                timeout=timeout_sec,
                 cert=self._client_cert,
             )
         return resp

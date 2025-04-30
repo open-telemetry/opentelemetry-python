@@ -92,13 +92,6 @@ class LogExporter(abc.ABC):
         Called when the SDK is shut down.
         """
 
-    @abc.abstractmethod
-    def force_flush(self, timeout_millis: int = 30000) -> bool:
-        """Hint to ensure that the export of any spans the exporter has received
-        prior to the call to ForceFlush SHOULD be completed as soon as possible, preferably
-        before returning from this method.
-        """
-
 
 class ConsoleLogExporter(LogExporter):
     """Implementation of :class:`LogExporter` that prints log records to the
@@ -126,7 +119,6 @@ class ConsoleLogExporter(LogExporter):
 
     def shutdown(self):
         pass
-
 
 class SimpleLogRecordProcessor(LogRecordProcessor):
     """This is an implementation of LogRecordProcessor which passes

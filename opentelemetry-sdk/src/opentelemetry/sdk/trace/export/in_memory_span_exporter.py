@@ -42,6 +42,7 @@ class InMemorySpanExporter(SpanExporter):
         with self._lock:
             return tuple(self._finished_spans)
 
+    # pylint: disable=arguments-differ
     def export(self, spans: typing.Sequence[ReadableSpan]) -> SpanExportResult:
         """Stores a list of spans in memory."""
         if self._stopped:

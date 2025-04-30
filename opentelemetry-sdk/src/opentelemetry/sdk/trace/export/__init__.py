@@ -57,7 +57,6 @@ class SpanExportResult(Enum):
     FAILURE = 1
 
 
-
 class SpanExporter(abc.ABC):
     """Interface for exporting spans.
 
@@ -91,7 +90,6 @@ class SpanExporter(abc.ABC):
         Called when the SDK is shut down.
         """
 
-    @abc.abstractmethod
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         """Hint to ensure that the export of any spans the exporter has received
         prior to the call to ForceFlush SHOULD be completed as soon as possible, preferably
@@ -517,11 +515,15 @@ class ConsoleSpanExporter(SpanExporter):
         self.formatter = formatter
         self.service_name = service_name
 
+    # pylint: disable=arguments-differ
     def export(self, spans: typing.Sequence[ReadableSpan]) -> SpanExportResult:
         for span in spans:
             self.out.write(self.formatter(span))
         self.out.flush()
         return SpanExportResult.SUCCESS
 
-    def force_flush(self, timeout_millis: int = 30000) -> bool:
+    def force_flush(self, timeout_millis: int = 30000):
         return True
+
+    def shutdown(self):
+        pass
