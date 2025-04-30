@@ -13,6 +13,7 @@
 # limitations under the License.
 from __future__ import annotations
 
+import abc
 import collections
 import logging
 import os
@@ -56,7 +57,8 @@ class SpanExportResult(Enum):
     FAILURE = 1
 
 
-class SpanExporter:
+
+class SpanExporter(abc.ABC):
     """Interface for exporting spans.
 
     Interface to be implemented by services that want to export spans recorded
@@ -66,24 +68,30 @@ class SpanExporter:
     `SimpleSpanProcessor` or a `BatchSpanProcessor`.
     """
 
+    @abc.abstractmethod
     def export(
-        self, spans: typing.Sequence[ReadableSpan]
+        self,
+        spans: typing.Sequence[ReadableSpan],
+        timeout_millis: typing.Optional[int] = None,
     ) -> "SpanExportResult":
         """Exports a batch of telemetry data.
 
         Args:
             spans: The list of `opentelemetry.trace.Span` objects to be exported
+            timeout_millis: Optional milliseconds until Export should timeout if it hasn't succeded.
 
         Returns:
             The result of the export
         """
 
+    @abc.abstractmethod
     def shutdown(self) -> None:
         """Shuts down the exporter.
 
         Called when the SDK is shut down.
         """
 
+    @abc.abstractmethod
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         """Hint to ensure that the export of any spans the exporter has received
         prior to the call to ForceFlush SHOULD be completed as soon as possible, preferably
