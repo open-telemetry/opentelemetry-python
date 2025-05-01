@@ -50,12 +50,6 @@ class LogExportResult(enum.Enum):
     FAILURE = 1
 
 
-class BatchLogExportStrategy(enum.Enum):
-    EXPORT_ALL = 0
-    EXPORT_WHILE_BATCH_EXCEEDS_THRESHOLD = 1
-    EXPORT_AT_LEAST_ONE_BATCH = 2
-
-
 class LogExporter(abc.ABC):
     """Interface for exporting logs.
     Interface to be implemented by services that want to export logs received

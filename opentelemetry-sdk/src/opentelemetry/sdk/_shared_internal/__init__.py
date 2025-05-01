@@ -19,6 +19,7 @@ import enum
 import logging
 import os
 import threading
+import weakref
 from abc import ABC
 from typing import (
     TYPE_CHECKING,
@@ -38,7 +39,7 @@ from opentelemetry.util._once import Once
 if TYPE_CHECKING:
     from opentelemetry.sdk._logs import LogData
     from opentelemetry.sdk._logs.export import LogExporter
-    from opentelemetry.sdk.trace import Span
+    from opentelemetry.sdk.trace import ReadableSpan
     from opentelemetry.sdk.trace.export import SpanExporter
 
 
@@ -49,7 +50,7 @@ class BatchExportStrategy(enum.Enum):
 
 
 class BatchProcessor(ABC):
-    _queue: Deque["Union[LogData, Span]"]
+    _queue: Deque["Union[LogData, ReadableSpan]"]
 
     def __init__(
         self,
@@ -84,7 +85,8 @@ class BatchProcessor(ABC):
         self._worker_awaken = threading.Event()
         self._worker_thread.start()
         if hasattr(os, "register_at_fork"):
-            os.register_at_fork(after_in_child=self._at_fork_reinit)  # pylint: disable=protected-access
+            weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
+            os.register_at_fork(after_in_child=lambda: weak_reinit()())  # pyright: ignore[reportOptionalCall] pylint: disable=unnecessary-lambda
         self._pid = os.getpid()
 
     def _should_export_batch(
@@ -156,7 +158,7 @@ class BatchProcessor(ABC):
                     )
                 detach(token)
 
-    def emit(self, data: "Union[LogData, Span]") -> None:
+    def emit(self, data: "Union[LogData, ReadableSpan]") -> None:
         if self._shutdown:
             self._logger.info("Shutdown called, ignoring %s.", self._exporting)
             return

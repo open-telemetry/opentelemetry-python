@@ -13,10 +13,12 @@
 # limitations under the License.
 
 # pylint: disable=protected-access
+import gc
 import multiprocessing
 import os
 import time
 import unittest
+import weakref
 from concurrent.futures import ThreadPoolExecutor
 from platform import system
 from sys import version_info
@@ -194,3 +196,18 @@ class TestBatchProcessor:
         batch_processor.force_flush()
         # Single export for the telemetry we emitted at the start of the test.
         assert exporter.export.call_count == 1
+
+    def test_record_processor_is_garbage_collected(
+        self, batch_processor_class, telemetry
+    ):
+        exporter = Mock()
+        processor = batch_processor_class(exporter)
+        weak_ref = weakref.ref(processor)
+        processor.shutdown()
+
+        # When the processor is garbage collected
+        del processor
+        gc.collect()
+
+        # Then the reference to the processor should no longer exist
+        assert weak_ref() is None
