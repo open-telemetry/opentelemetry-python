@@ -18,7 +18,7 @@ import os
 import time
 import unittest
 from concurrent.futures import ThreadPoolExecutor
-from platform import python_implementation, system
+from platform import python_implementation
 from sys import version_info
 from unittest.mock import Mock
 
@@ -128,10 +128,8 @@ class TestBatchProcessor:
         exporter.export.assert_called_once_with([telemetry for _ in range(10)])
 
     @mark.skipif(
-        python_implementation() == "PyPy"
-        and (system() == "Windows" or system() == "Ubuntu")
-        and version_info < (3, 9),
-        reason="This test randomly fails with on PyPy3.8 Windows/Ubuntu.",
+        python_implementation() == "PyPy" and version_info < (3, 9),
+        reason="This test randomly fails with on PyPy3.8.",
     )
     def test_with_multiple_threads(self, batch_processor_class, telemetry):
         exporter = Mock()
