@@ -1533,8 +1533,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Serialize tuple type values by coercing them into a string, since Jaeger does not
   support tuple types.
   ([#865](https://github.com/open-telemetry/opentelemetry-python/pull/865))
-- Validate span attribute types in SDK
-  ([#678](https://github.com/open-telemetry/opentelemetry-python/pull/678))
 - Specify to_json indent from arguments
   ([#718](https://github.com/open-telemetry/opentelemetry-python/pull/718))
 - Span.resource will now default to an empty resource
