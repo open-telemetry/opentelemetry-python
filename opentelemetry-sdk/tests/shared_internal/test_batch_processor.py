@@ -129,7 +129,7 @@ class TestBatchProcessor:
 
     @mark.skipif(
         python_implementation() == "PyPy"
-        and (system() == "Windows" or system() == "ubuntu")
+        and (system() == "Windows" or system() == "Ubuntu")
         and version_info < (3, 9),
         reason="This test randomly fails with on PyPy3.8 Windows/Ubuntu.",
     )
