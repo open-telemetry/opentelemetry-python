@@ -77,13 +77,12 @@ class SpanExporter(abc.ABC):
 
         Args:
             spans: The list of `opentelemetry.trace.Span` objects to be exported
-            timeout_millis: Optional milliseconds until Export should timeout if it hasn't succeded.
+            timeout_millis: Optional milliseconds until Export should timeout if it hasn't succeeded.
 
         Returns:
             The result of the export
         """
 
-    @abc.abstractmethod
     def shutdown(self) -> None:
         """Shuts down the exporter.
 
@@ -522,8 +521,5 @@ class ConsoleSpanExporter(SpanExporter):
         self.out.flush()
         return SpanExportResult.SUCCESS
 
-    def force_flush(self, timeout_millis: int = 30000):
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
         return True
-
-    def shutdown(self):
-        pass

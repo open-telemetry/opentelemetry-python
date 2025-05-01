@@ -57,6 +57,3 @@ class InMemorySpanExporter(SpanExporter):
         Calls to export after the exporter has been shut down will fail.
         """
         self._stopped = True
-
-    def force_flush(self, timeout_millis: int = 30000) -> bool:
-        return True

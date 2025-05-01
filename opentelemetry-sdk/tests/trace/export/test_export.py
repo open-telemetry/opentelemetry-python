@@ -76,9 +76,6 @@ class MySpanExporter(export.SpanExporter):
     def shutdown(self):
         self.is_shutdown = True
 
-    def force_flush(self, timeout_millis: int = 30000) -> bool:
-        return True
-
 
 class TestSimpleSpanProcessor(unittest.TestCase):
     def test_simple_span_processor(self):

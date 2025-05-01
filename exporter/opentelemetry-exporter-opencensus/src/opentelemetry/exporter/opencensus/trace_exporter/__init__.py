@@ -69,6 +69,7 @@ class OpenCensusSpanExporter(SpanExporter):
         self.host_name = host_name
         self.node = utils.get_node(service_name, host_name)
 
+    # pylint: disable=arguments-differ
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
         # Populate service_name from first span
         # We restrict any SpanProcessor to be only associated with a single

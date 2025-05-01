@@ -79,7 +79,7 @@ class LogExporter(abc.ABC):
 
         Args:
             batch: The list of `LogData` objects to be exported.
-            timeout_millis: Optional milliseconds until Export should timeout if it hasn't succeded.
+            timeout_millis: Optional milliseconds until Export should timeout if it hasn't succeeded.
 
         Returns:
             The result of the export
@@ -119,6 +119,7 @@ class ConsoleLogExporter(LogExporter):
 
     def shutdown(self):
         pass
+
 
 class SimpleLogRecordProcessor(LogRecordProcessor):
     """This is an implementation of LogRecordProcessor which passes

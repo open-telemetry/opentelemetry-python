@@ -20,7 +20,12 @@ from typing import Any, Optional, Sequence
 from unittest import TestCase
 from unittest.mock import ANY, Mock, patch
 
-from google.rpc import code_pb2, status_pb2
+from google.rpc.code_pb2 import (  # pylint: disable=no-name-in-module
+    ALREADY_EXISTS,
+    OK,
+    UNAVAILABLE,
+)
+from google.rpc.status_pb2 import Status  # pylint: disable=no-name-in-module
 from grpc import Compression, server
 from grpc_status import rpc_status
 
@@ -91,7 +96,7 @@ class OTLPSpanExporterForTesting(
 class TraceServiceServicerWithExportParams(TraceServiceServicer):
     def __init__(
         self,
-        export_result: code_pb2,
+        export_result: int,
         optional_export_sleep: Optional[float] = None,
     ):
         self.export_result = export_result
@@ -99,13 +104,13 @@ class TraceServiceServicerWithExportParams(TraceServiceServicer):
 
     # pylint: disable=invalid-name,unused-argument
     def Export(self, request, context):
-        logger.warning("Export Request Recieved")
+        logger.warning("Export Request Received")
         if self.optional_export_sleep:
             time.sleep(self.optional_export_sleep)
-        if self.export_result != code_pb2.OK:
+        if self.export_result != OK:
             context.abort_with_status(
                 rpc_status.to_status(
-                    status_pb2.Status(
+                    Status(
                         code=self.export_result,
                     )
                 )
@@ -288,7 +293,7 @@ class TestOTLPExporterMixin(TestCase):
 
     def test_shutdown(self):
         add_TraceServiceServicer_to_server(
-            TraceServiceServicerWithExportParams(code_pb2.OK),
+            TraceServiceServicerWithExportParams(OK),
             self.server,
         )
         self.assertEqual(
@@ -306,9 +311,7 @@ class TestOTLPExporterMixin(TestCase):
 
     def test_shutdown_wait_last_export(self):
         add_TraceServiceServicer_to_server(
-            TraceServiceServicerWithExportParams(
-                code_pb2.OK, optional_export_sleep=1
-            ),
+            TraceServiceServicerWithExportParams(OK, optional_export_sleep=1),
             self.server,
         )
 
@@ -327,9 +330,7 @@ class TestOTLPExporterMixin(TestCase):
 
     def test_shutdown_doesnot_wait_last_export(self):
         add_TraceServiceServicer_to_server(
-            TraceServiceServicerWithExportParams(
-                code_pb2.OK, optional_export_sleep=3
-            ),
+            TraceServiceServicerWithExportParams(OK, optional_export_sleep=3),
             self.server,
         )
 
@@ -351,7 +352,7 @@ class TestOTLPExporterMixin(TestCase):
         # pylint: disable=protected-access
 
         add_TraceServiceServicer_to_server(
-            TraceServiceServicerWithExportParams(code_pb2.OK),
+            TraceServiceServicerWithExportParams(OK),
             self.server,
         )
         self.exporter.export([self.span])
@@ -365,7 +366,7 @@ class TestOTLPExporterMixin(TestCase):
 
     def test_retry_timeout(self):
         add_TraceServiceServicer_to_server(
-            TraceServiceServicerWithExportParams(code_pb2.UNAVAILABLE),
+            TraceServiceServicerWithExportParams(UNAVAILABLE),
             self.server,
         )
         with self.assertLogs(level=WARNING) as warning:
@@ -381,7 +382,7 @@ class TestOTLPExporterMixin(TestCase):
             for idx, log in enumerate(warning.records):
                 if idx != 2:
                     self.assertEqual(
-                        "Export Request Recieved",
+                        "Export Request Received",
                         log.message,
                     )
                 else:
@@ -405,7 +406,7 @@ class TestOTLPExporterMixin(TestCase):
             for idx, log in enumerate(warning.records):
                 if idx != 3:
                     self.assertEqual(
-                        "Export Request Recieved",
+                        "Export Request Received",
                         log.message,
                     )
                 else:
@@ -417,7 +418,7 @@ class TestOTLPExporterMixin(TestCase):
     def test_timeout_set_correctly(self):
         add_TraceServiceServicer_to_server(
             TraceServiceServicerWithExportParams(
-                code_pb2.OK, optional_export_sleep=0.5
+                OK, optional_export_sleep=0.5
             ),
             self.server,
         )
@@ -449,7 +450,7 @@ class TestOTLPExporterMixin(TestCase):
     def test_permanent_failure(self):
         with self.assertLogs(level=WARNING) as warning:
             add_TraceServiceServicer_to_server(
-                TraceServiceServicerWithExportParams(code_pb2.ALREADY_EXISTS),
+                TraceServiceServicerWithExportParams(ALREADY_EXISTS),
                 self.server,
             )
             self.assertEqual(

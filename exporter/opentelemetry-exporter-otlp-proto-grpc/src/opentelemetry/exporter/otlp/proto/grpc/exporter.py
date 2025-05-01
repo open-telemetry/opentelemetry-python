@@ -72,7 +72,7 @@ from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.util.re import parse_env_headers
 
-json_config = json.dumps(
+_JSON_CONFIG = json.dumps(
     {
         "methodConfig": [
             {
@@ -269,7 +269,7 @@ class OTLPExporterMixin(
                 self._endpoint,
                 compression=compression,
                 options=[
-                    ("grpc.service_config", json_config),
+                    ("grpc.service_config", _JSON_CONFIG),
                 ],
             )
         else:
@@ -284,7 +284,7 @@ class OTLPExporterMixin(
                 credentials,
                 compression=compression,
                 options=[
-                    ("grpc.service_config", json_config),
+                    ("grpc.service_config", _JSON_CONFIG),
                 ],
             )
         self._client = self._stub(self._channel)
