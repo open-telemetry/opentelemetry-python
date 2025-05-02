@@ -159,9 +159,7 @@ class OTLPLogExporter(LogExporter):
             return True
         return False
 
-    def export(
-        self, batch: Sequence[LogData], timeout_millis: Optional[float] = None
-    ) -> LogExportResult:
+    def export(self, batch: Sequence[LogData]) -> LogExportResult:
         # After the call to Shutdown subsequent calls to Export are
         # not allowed and should return a Failure result.
         if self._shutdown:
@@ -169,9 +167,7 @@ class OTLPLogExporter(LogExporter):
             return LogExportResult.FAILURE
 
         serialized_data = encode_logs(batch).SerializeToString()
-        deadline_sec = time() + (
-            timeout_millis / 1e3 if timeout_millis else self._timeout
-        )
+        deadline_sec = time() + self._timeout
         for delay in [1, 2, 4, 8, 16, 32]:
             remaining_time_sec = deadline_sec - time()
             if remaining_time_sec < 1e-09:

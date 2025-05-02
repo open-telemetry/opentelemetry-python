@@ -301,7 +301,6 @@ class OTLPExporterMixin(
     def _export(
         self,
         data: Union[TypingSequence[ReadableSpan], MetricsData],
-        timeout_sec: Optional[float] = None,
     ) -> ExportResultT:
         if self._shutdown:
             logger.warning("Exporter already shutdown, ignoring batch")
@@ -315,7 +314,7 @@ class OTLPExporterMixin(
                 self._client.Export(
                     request=self._translate_data(data),
                     metadata=self._headers,
-                    timeout=(timeout_sec or self._timeout),
+                    timeout=self._timeout,
                 )
                 return self._result.SUCCESS
             except RpcError as error:

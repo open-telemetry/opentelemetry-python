@@ -251,16 +251,15 @@ class TestOTLPSpanExporter(unittest.TestCase):
 
     @patch.object(Session, "post")
     def test_retry_timeout(self, mock_post):
-        exporter = OTLPSpanExporter(timeout=3.5)
+        exporter = OTLPSpanExporter(timeout=1.5)
 
         resp = Response()
         resp.status_code = 503
         resp.reason = "UNAVAILABLE"
         mock_post.return_value = resp
         with self.assertLogs(level=WARNING) as warning:
-            # Set timeout to 1.5 seconds
             self.assertEqual(
-                exporter.export([BASIC_SPAN], 1500),
+                exporter.export([BASIC_SPAN]),
                 SpanExportResult.FAILURE,
             )
             # Code should return failure after retrying once.
@@ -269,8 +268,8 @@ class TestOTLPSpanExporter(unittest.TestCase):
                 "Transient error UNAVAILABLE encountered while exporting span batch, retrying in 1s.",
                 warning.records[0].message,
             )
+        exporter = OTLPSpanExporter(timeout=3.5)
         with self.assertLogs(level=WARNING) as warning:
-            # This time don't pass in a timeout, so it will fallback to 3.5 second set on class.
             self.assertEqual(
                 exporter.export([BASIC_SPAN]),
                 SpanExportResult.FAILURE,
@@ -289,5 +288,5 @@ class TestOTLPSpanExporter(unittest.TestCase):
             return resp
 
         mock_post.side_effect = export_side_effect
-        exporter = OTLPSpanExporter()
-        exporter.export([BASIC_SPAN], 400)
+        exporter = OTLPSpanExporter(timeout=0.4)
+        exporter.export([BASIC_SPAN])

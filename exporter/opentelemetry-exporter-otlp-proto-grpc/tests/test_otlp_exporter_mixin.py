@@ -76,14 +76,8 @@ class OTLPSpanExporterForTesting(
     ) -> ExportTraceServiceRequest:
         return encode_spans(data)
 
-    def export(
-        self,
-        spans: Sequence[ReadableSpan],
-        timeout_millis: Optional[float] = None,
-    ) -> SpanExportResult:
-        return self._export(
-            spans, timeout_millis / 1e3 if timeout_millis else None
-        )
+    def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
+        return self._export(spans)
 
     @property
     def _exporting(self):
@@ -369,10 +363,11 @@ class TestOTLPExporterMixin(TestCase):
             TraceServiceServicerWithExportParams(UNAVAILABLE),
             self.server,
         )
+        # Set timeout to 1.5 seconds.
+        exporter = OTLPSpanExporterForTesting(insecure=True, timeout=1.5)
         with self.assertLogs(level=WARNING) as warning:
-            # Set timeout to 1.5 seconds
             self.assertEqual(
-                self.exporter.export([self.span], 1500),
+                exporter.export([self.span]),
                 SpanExportResult.FAILURE,
             )
             # Our GRPC retry policy starts with a 1 second backoff then doubles.
@@ -392,8 +387,6 @@ class TestOTLPExporterMixin(TestCase):
                     )
         with self.assertLogs(level=WARNING) as warning:
             exporter = OTLPSpanExporterForTesting(insecure=True, timeout=3.5)
-            # This time don't pass in a timeout to export, so it should fallback to the timeout
-            # passed to the exporter class.
             # pylint: disable=protected-access
             self.assertEqual(exporter._timeout, 3.5)
             self.assertEqual(
@@ -422,20 +415,21 @@ class TestOTLPExporterMixin(TestCase):
             ),
             self.server,
         )
+        exporter = OTLPSpanExporterForTesting(insecure=True, timeout=0.4)
         # Should timeout. Deadline should be set to now + timeout.
         # That is 400 millis from now, and export sleeps for 500 millis.
         with self.assertLogs(level=WARNING) as warning:
             self.assertEqual(
-                self.exporter.export([self.span], 400),
+                exporter.export([self.span]),
                 SpanExportResult.FAILURE,
             )
             self.assertEqual(
                 "Failed to export traces to localhost:4317, error code: StatusCode.DEADLINE_EXCEEDED",
                 warning.records[-1].message,
             )
-
+        exporter = OTLPSpanExporterForTesting(insecure=True, timeout=0.6)
         self.assertEqual(
-            self.exporter.export([self.span], 600),
+            exporter.export([self.span]),
             SpanExportResult.SUCCESS,
         )
 

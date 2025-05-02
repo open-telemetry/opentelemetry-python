@@ -60,7 +60,6 @@ class MySpanExporter(export.SpanExporter):
         self.export_timeout = export_timeout_millis / 1e3
         self.export_event = export_event
 
-    # pylint: disable=arguments-differ
     def export(self, spans: trace.Span) -> export.SpanExportResult:
         if (
             self.max_export_batch_size is not None

@@ -351,16 +351,15 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
 
     @patch.object(Session, "post")
     def test_retry_timeout(self, mock_post):
-        exporter = OTLPLogExporter(timeout=3.5)
+        exporter = OTLPLogExporter(timeout=1.5)
 
         resp = Response()
         resp.status_code = 503
         resp.reason = "UNAVAILABLE"
         mock_post.return_value = resp
         with self.assertLogs(level=WARNING) as warning:
-            # Set timeout to 1.5 seconds
             self.assertEqual(
-                exporter.export(self._get_sdk_log_data(), 1500),
+                exporter.export(self._get_sdk_log_data()),
                 LogExportResult.FAILURE,
             )
             # Code should return failure after retrying once.
@@ -369,8 +368,8 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                 "Transient error UNAVAILABLE encountered while exporting logs batch, retrying in 1s.",
                 warning.records[0].message,
             )
+        exporter = OTLPLogExporter(timeout=3.5)
         with self.assertLogs(level=WARNING) as warning:
-            # This time don't pass in a timeout, so it will fallback to 3.5 second set on class.
             self.assertEqual(
                 exporter.export(self._get_sdk_log_data()),
                 LogExportResult.FAILURE,
@@ -389,5 +388,5 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             return resp
 
         mock_post.side_effect = export_side_effect
-        exporter = OTLPLogExporter()
-        exporter.export(self._get_sdk_log_data(), 400)
+        exporter = OTLPLogExporter(timeout=0.4)
+        exporter.export(self._get_sdk_log_data())

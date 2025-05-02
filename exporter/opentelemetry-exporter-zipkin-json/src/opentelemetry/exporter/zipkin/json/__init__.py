@@ -149,7 +149,6 @@ class ZipkinExporter(SpanExporter):
             environ.get(OTEL_EXPORTER_ZIPKIN_TIMEOUT, 10)
         )
 
-    # pylint: disable=arguments-differ
     def export(self, spans: Sequence[Span]) -> SpanExportResult:
         # After the call to Shutdown subsequent calls to Export are
         # not allowed and should return a Failure result

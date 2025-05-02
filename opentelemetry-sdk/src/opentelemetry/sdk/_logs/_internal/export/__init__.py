@@ -72,14 +72,11 @@ class LogExporter(abc.ABC):
     """
 
     @abc.abstractmethod
-    def export(
-        self, batch: Sequence[LogData], timeout_millis: Optional[int] = None
-    ):
+    def export(self, batch: Sequence[LogData]):
         """Exports a batch of logs.
 
         Args:
             batch: The list of `LogData` objects to be exported.
-            timeout_millis: Optional milliseconds until Export should timeout if it hasn't succeeded.
 
         Returns:
             The result of the export
@@ -110,7 +107,6 @@ class ConsoleLogExporter(LogExporter):
         self.out = out
         self.formatter = formatter
 
-    # pylint: disable=arguments-differ
     def export(self, batch: Sequence[LogData]):
         for data in batch:
             self.out.write(self.formatter(data.log_record))
@@ -314,7 +310,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
         self._worker_thread.join()
         self._exporter.shutdown()
 
-    def force_flush(self, timeout_millis: Optional[int] = None):
+    def force_flush(self, timeout_millis: Optional[int] = None) -> bool:
         if self._shutdown:
             return
         # Blocking call to export.

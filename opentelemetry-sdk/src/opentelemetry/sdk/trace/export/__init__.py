@@ -13,7 +13,6 @@
 # limitations under the License.
 from __future__ import annotations
 
-import abc
 import collections
 import logging
 import os
@@ -57,7 +56,7 @@ class SpanExportResult(Enum):
     FAILURE = 1
 
 
-class SpanExporter(abc.ABC):
+class SpanExporter:
     """Interface for exporting spans.
 
     Interface to be implemented by services that want to export spans recorded
@@ -67,17 +66,13 @@ class SpanExporter(abc.ABC):
     `SimpleSpanProcessor` or a `BatchSpanProcessor`.
     """
 
-    @abc.abstractmethod
     def export(
-        self,
-        spans: typing.Sequence[ReadableSpan],
-        timeout_millis: typing.Optional[int] = None,
+        self, spans: typing.Sequence[ReadableSpan]
     ) -> "SpanExportResult":
         """Exports a batch of telemetry data.
 
         Args:
             spans: The list of `opentelemetry.trace.Span` objects to be exported
-            timeout_millis: Optional milliseconds until Export should timeout if it hasn't succeeded.
 
         Returns:
             The result of the export
@@ -514,7 +509,6 @@ class ConsoleSpanExporter(SpanExporter):
         self.formatter = formatter
         self.service_name = service_name
 
-    # pylint: disable=arguments-differ
     def export(self, spans: typing.Sequence[ReadableSpan]) -> SpanExportResult:
         for span in spans:
             self.out.write(self.formatter(span))

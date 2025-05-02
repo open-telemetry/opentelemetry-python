@@ -157,11 +157,7 @@ class OTLPSpanExporter(SpanExporter):
             return True
         return False
 
-    def export(
-        self,
-        spans: Sequence[ReadableSpan],
-        timeout_millis: Optional[float] = None,
-    ) -> SpanExportResult:
+    def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
         # After the call to Shutdown subsequent calls to Export are
         # not allowed and should return a Failure result.
         if self._shutdown:
@@ -169,9 +165,7 @@ class OTLPSpanExporter(SpanExporter):
             return SpanExportResult.FAILURE
 
         serialized_data = encode_spans(spans).SerializePartialToString()
-        deadline_sec = time() + (
-            timeout_millis / 1e3 if timeout_millis else self._timeout
-        )
+        deadline_sec = time() + self._timeout
         for delay in [1, 2, 4, 8, 16, 32]:
             remaining_time_sec = deadline_sec - time()
             if remaining_time_sec < 1e-09:
