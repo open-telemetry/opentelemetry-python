@@ -87,6 +87,7 @@ OTEL_BLRP_EXPORT_TIMEOUT = "OTEL_BLRP_EXPORT_TIMEOUT"
 .. envvar:: OTEL_BLRP_EXPORT_TIMEOUT
 
 The :envvar:`OTEL_BLRP_EXPORT_TIMEOUT` represents the maximum allowed time to export data from the BatchLogRecordProcessor.
+This environment variable currently does nothing, see https://github.com/open-telemetry/opentelemetry-python/issues/4555.
 Default: 30000
 """
 

@@ -253,10 +253,31 @@ def _init_logging(
     set_event_logger_provider(event_logger_provider)
 
     if setup_logging_handler:
+        _patch_basic_config()
+
+        # Add OTel handler
         handler = LoggingHandler(
             level=logging.NOTSET, logger_provider=provider
         )
         logging.getLogger().addHandler(handler)
+
+
+def _patch_basic_config():
+    original_basic_config = logging.basicConfig
+
+    def patched_basic_config(*args, **kwargs):
+        root = logging.getLogger()
+        has_only_otel = len(root.handlers) == 1 and isinstance(
+            root.handlers[0], LoggingHandler
+        )
+        if has_only_otel:
+            otel_handler = root.handlers.pop()
+            original_basic_config(*args, **kwargs)
+            root.addHandler(otel_handler)
+        else:
+            original_basic_config(*args, **kwargs)
+
+    logging.basicConfig = patched_basic_config
 
 
 def _import_exporters(
