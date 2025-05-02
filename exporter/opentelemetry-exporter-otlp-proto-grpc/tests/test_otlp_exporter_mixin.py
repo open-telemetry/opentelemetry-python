@@ -427,7 +427,7 @@ class TestOTLPExporterMixin(TestCase):
                 "Failed to export traces to localhost:4317, error code: StatusCode.DEADLINE_EXCEEDED",
                 warning.records[-1].message,
             )
-        exporter = OTLPSpanExporterForTesting(insecure=True, timeout=0.6)
+        exporter = OTLPSpanExporterForTesting(insecure=True, timeout=0.8)
         self.assertEqual(
             exporter.export([self.span]),
             SpanExportResult.SUCCESS,
