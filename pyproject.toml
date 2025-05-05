@@ -119,6 +119,7 @@ exclude = [
   "opentelemetry-sdk/src/opentelemetry/sdk/trace",
   "opentelemetry-sdk/src/opentelemetry/sdk/util",
   "opentelemetry-sdk/benchmarks",
+  "exporter/opentelemetry-exporter-otlp-proto-grpc/tests",
 ]
 
 # When packages are correct typed add them to the strict list
