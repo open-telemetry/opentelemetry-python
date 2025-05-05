@@ -105,6 +105,7 @@ include = [
   "opentelemetry-semantic-conventions",
   "opentelemetry-api",
   "opentelemetry-sdk",
+  "exporter/opentelemetry-exporter-otlp-proto-grpc",
 ]
 
 exclude = [

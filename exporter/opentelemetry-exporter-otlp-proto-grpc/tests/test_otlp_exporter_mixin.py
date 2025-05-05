@@ -62,11 +62,14 @@ from opentelemetry.sdk.trace.export import (
 class OTLPSpanExporterForTesting(
     SpanExporter,
     OTLPExporterMixin[
-        ReadableSpan, ExportTraceServiceRequest, SpanExportResult
+        ReadableSpan,
+        ExportTraceServiceRequest,
+        SpanExportResult,
+        TraceServiceStub,
     ],
 ):
-    _result = SpanExportResult
-    _stub = TraceServiceStub
+    def __init__(self, **kwargs):
+        super().__init__(TraceServiceStub, SpanExportResult, **kwargs)
 
     def _translate_data(
         self, data: Sequence[ReadableSpan]
