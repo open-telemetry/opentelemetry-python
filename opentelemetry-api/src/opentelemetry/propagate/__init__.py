@@ -70,7 +70,7 @@ Example::
 
 from logging import getLogger
 from os import environ
-from typing import Optional
+from typing import List, Optional
 
 from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import OTEL_PROPAGATORS
@@ -121,7 +121,7 @@ def inject(
     get_global_textmap().inject(carrier, context=context, setter=setter)
 
 
-propagators = []
+propagators: List[textmap.TextMapPropagator] = []
 
 # Single use variable here to hack black and make lint pass
 environ_propagators = environ.get(
@@ -132,12 +132,17 @@ environ_propagators = environ.get(
 
 for propagator in environ_propagators.split(","):
     propagator = propagator.strip()
-
+    if propagator.lower() == "none":
+        logger.debug(
+            "OTEL_PROPAGATORS environment variable contains none, removing all propagators"
+        )
+        propagators = []
+        break
     try:
-        propagators.append(  # type: ignore
+        propagators.append(
             next(  # type: ignore
                 iter(  # type: ignore
-                    entry_points(  # type: ignore
+                    entry_points(  # type: ignore[misc]
                         group="opentelemetry_propagator",
                         name=propagator,
                     )
@@ -153,7 +158,9 @@ for propagator in environ_propagators.split(","):
         raise
 
 
-_HTTP_TEXT_FORMAT = composite.CompositePropagator(propagators)  # type: ignore
+_HTTP_TEXT_FORMAT: textmap.TextMapPropagator = composite.CompositePropagator(
+    propagators
+)
 
 
 def get_global_textmap() -> textmap.TextMapPropagator:
@@ -164,4 +171,4 @@ def set_global_textmap(
     http_text_format: textmap.TextMapPropagator,
 ) -> None:
     global _HTTP_TEXT_FORMAT  # pylint:disable=global-statement
-    _HTTP_TEXT_FORMAT = http_text_format  # type: ignore
+    _HTTP_TEXT_FORMAT = http_text_format
