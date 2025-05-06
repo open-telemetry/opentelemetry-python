@@ -19,7 +19,6 @@ from typing import MutableSequence
 
 from opentelemetry.attributes import (
     BoundedAttributes,
-    _clean_attribute,
     _clean_extended_attribute,
 )
 
@@ -30,10 +29,14 @@ class TestAttributes(unittest.TestCase):
         expected = value
         if isinstance(value, MutableSequence):
             expected = tuple(value)
-        self.assertEqual(_clean_attribute(key, value, None), expected)
+        (cleaned, is_valid) = _clean_extended_attribute(key, value, None)
+        self.assertEqual(cleaned, expected)
+        self.assertTrue(is_valid)
 
     def assertInvalid(self, value, key="k"):
-        self.assertIsNone(_clean_attribute(key, value, None))
+        (cleaned, is_valid) = _clean_extended_attribute(key, value, None)
+        self.assertIsNone(cleaned)
+        self.assertFalse(is_valid)
 
     def test_attribute_key_validation(self):
         # only non-empty strings are valid keys
@@ -46,12 +49,12 @@ class TestAttributes(unittest.TestCase):
         self.assertValid(1, "1")
 
     def test_clean_attribute(self):
-        self.assertInvalid([1, 2, 3.4, "ss", 4])
-        self.assertInvalid([{}, 1, 2, 3.4, 4])
-        self.assertInvalid(["sw", "lf", 3.4, "ss"])
-        self.assertInvalid([1, 2, 3.4, 5])
-        self.assertInvalid({})
-        self.assertInvalid([1, True])
+        self.assertValid([1, 2, 3.4, "ss", 4])
+        self.assertValid([{}, 1, 2, 3.4, 4])
+        self.assertValid(["sw", "lf", 3.4, "ss"])
+        self.assertValid([1, 2, 3.4, 5])
+        self.assertValid({})
+        self.assertValid([1, True])
         self.assertValid(True)
         self.assertValid("hi")
         self.assertValid(3.4)
@@ -65,8 +68,8 @@ class TestAttributes(unittest.TestCase):
         self.assertValid(["A", None, None])
         self.assertValid(["A", None, None, "B"])
         self.assertValid([None, None])
-        self.assertInvalid(["A", None, 1])
-        self.assertInvalid([None, "A", None, 1])
+        self.assertValid(["A", None, 1])
+        self.assertValid([None, "A", None, 1])
 
         # test keys
         self.assertValid("value", "key")
@@ -85,12 +88,12 @@ class TestAttributes(unittest.TestCase):
             None,
             "Content-Disposition",
             "Content-Type",
-            None,
+            b"\x81",
             "Keep-Alive",
         ]
-        self.assertEqual(
-            _clean_attribute("headers", seq, None), tuple(expected)
-        )
+        (cleaned, is_valid) = _clean_extended_attribute("headers", seq, None)
+        self.assertEqual(cleaned, tuple(expected))
+        self.assertTrue(is_valid)
 
 
 class TestExtendedAttributes(unittest.TestCase):
@@ -99,10 +102,15 @@ class TestExtendedAttributes(unittest.TestCase):
         expected = value
         if isinstance(value, MutableSequence):
             expected = tuple(value)
-        self.assertEqual(_clean_extended_attribute(key, value, None), expected)
+
+        (cleaned, is_valid) = _clean_extended_attribute(key, value, None)
+        self.assertEqual(cleaned, expected)
+        self.assertTrue(is_valid)
 
     def assertInvalid(self, value, key="k"):
-        self.assertIsNone(_clean_extended_attribute(key, value, None))
+        (cleaned, is_valid) = _clean_extended_attribute(key, value, None)
+        self.assertIsNone(cleaned)
+        self.assertFalse(is_valid)
 
     def test_attribute_key_validation(self):
         # only non-empty strings are valid keys
@@ -115,11 +123,11 @@ class TestExtendedAttributes(unittest.TestCase):
         self.assertValid(1, "1")
 
     def test_clean_extended_attribute(self):
-        self.assertInvalid([1, 2, 3.4, "ss", 4])
-        self.assertInvalid([{}, 1, 2, 3.4, 4])
-        self.assertInvalid(["sw", "lf", 3.4, "ss"])
-        self.assertInvalid([1, 2, 3.4, 5])
-        self.assertInvalid([1, True])
+        self.assertValid([1, 2, 3.4, "ss", 4])
+        self.assertValid([{}, 1, 2, 3.4, 4])
+        self.assertValid(["sw", "lf", 3.4, "ss"])
+        self.assertValid([1, 2, 3.4, 5])
+        self.assertValid([1, True])
         self.assertValid(None)
         self.assertValid(True)
         self.assertValid("hi")
@@ -134,8 +142,8 @@ class TestExtendedAttributes(unittest.TestCase):
         self.assertValid(["A", None, None])
         self.assertValid(["A", None, None, "B"])
         self.assertValid([None, None])
-        self.assertInvalid(["A", None, 1])
-        self.assertInvalid([None, "A", None, 1])
+        self.assertValid(["A", None, 1])
+        self.assertValid([None, "A", None, 1])
         # mappings
         self.assertValid({})
         self.assertValid({"k": "v"})
@@ -155,9 +163,17 @@ class TestExtendedAttributes(unittest.TestCase):
             b"\x81",
             b"Keep-Alive",
         ]
-        self.assertEqual(
-            _clean_extended_attribute("headers", seq, None), tuple(seq)
-        )
+        expected = [
+            None,
+            "Content-Disposition",
+            "Content-Type",
+            b"\x81",
+            "Keep-Alive",
+        ]
+
+        (cleaned, is_valid) = _clean_extended_attribute("headers", seq, None)
+        self.assertEqual(cleaned, tuple(expected))
+        self.assertTrue(is_valid)
 
     def test_mapping(self):
         mapping = {
@@ -166,7 +182,7 @@ class TestExtendedAttributes(unittest.TestCase):
             "none": {"": "invalid"},
             "valid_primitive": "str",
             "valid_sequence": ["str"],
-            "invalid_sequence": ["str", 1],
+            "heterogeneous_sequence": ["str", 1],
             "valid_mapping": {"str": 1},
             "invalid_mapping": {"": 1},
         }
@@ -174,13 +190,14 @@ class TestExtendedAttributes(unittest.TestCase):
             "none": {},
             "valid_primitive": "str",
             "valid_sequence": ("str",),
-            "invalid_sequence": None,
+            "heterogeneous_sequence": ("str", 1),
             "valid_mapping": {"str": 1},
             "invalid_mapping": {},
         }
-        self.assertEqual(
-            _clean_extended_attribute("headers", mapping, None), expected
-        )
+
+        cleaned, is_valid = _clean_extended_attribute("headers", mapping, None)
+        self.assertEqual(cleaned, expected)
+        self.assertTrue(is_valid)
 
 
 class TestBoundedAttributes(unittest.TestCase):
@@ -200,7 +217,6 @@ class TestBoundedAttributes(unittest.TestCase):
         dic_len = len(self.base)
         base_copy = self.base.copy()
         bdict = BoundedAttributes(dic_len, base_copy)
-
         self.assertEqual(len(bdict), dic_len)
 
         # modify base_copy and test that bdict is not changed
@@ -250,7 +266,9 @@ class TestBoundedAttributes(unittest.TestCase):
         self.assertEqual(len(bdict), dic_len)
         self.assertEqual(bdict.dropped, dic_len)
         # Invalid values shouldn't be considered for `dropped`
-        bdict["invalid-seq"] = [None, 1, "2"]
+        bdict[""] = [None, 1, "2"]
+        bdict["foo"] = self
+        self.assertEqual(len(bdict), dic_len)
         self.assertEqual(bdict.dropped, dic_len)
 
         # test that elements in the dict are the new ones
@@ -291,13 +309,3 @@ class TestBoundedAttributes(unittest.TestCase):
         for num in range(100):
             self.assertEqual(bdict[str(num)], num)
 
-    # pylint: disable=no-self-use
-    def test_extended_attributes(self):
-        bdict = BoundedAttributes(extended_attributes=True, immutable=False)
-        with unittest.mock.patch(
-            "opentelemetry.attributes._clean_extended_attribute",
-            return_value="mock_value",
-        ) as clean_extended_attribute_mock:
-            bdict["key"] = "value"
-
-        clean_extended_attribute_mock.assert_called_once()

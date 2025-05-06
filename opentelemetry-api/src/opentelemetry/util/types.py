@@ -28,17 +28,10 @@ AnyValue = Union[
     None,
 ]
 
-AttributeValue = Union[
-    str,
-    bool,
-    int,
-    float,
-    Sequence[str],
-    Sequence[bool],
-    Sequence[int],
-    Sequence[float],
-]
-Attributes = Optional[Mapping[str, AttributeValue]]
+
+AttributeValue = AnyValue
+Attributes = Optional[Mapping[str, AnyValue]]
+
 AttributesAsKey = Tuple[
     Tuple[
         str,
@@ -55,5 +48,3 @@ AttributesAsKey = Tuple[
     ],
     ...,
 ]
-
-_ExtendedAttributes = Mapping[str, "AnyValue"]

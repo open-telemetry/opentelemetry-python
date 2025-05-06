@@ -16,7 +16,7 @@
 from logging import getLogger
 from threading import Lock
 from time import time_ns
-from typing import Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 from opentelemetry.metrics import Instrument
 from opentelemetry.sdk.metrics._internal.aggregation import (
@@ -29,8 +29,20 @@ from opentelemetry.sdk.metrics._internal.export import AggregationTemporality
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.point import DataPointT
 from opentelemetry.sdk.metrics._internal.view import View
+from opentelemetry.util.types import AnyValue
 
 _logger = getLogger(__name__)
+
+
+def _to_hashable(value: AnyValue) -> Any:
+    if isinstance(value, (str, int, float, bool)):
+        return value
+    elif isinstance(value, Sequence):
+        # can optimize further
+        return tuple(_to_hashable(v) for v in value)
+    elif isinstance(value, Mapping):
+        return tuple([(k, _to_hashable(v)) for k, v in sorted(value.items())])
+    return None
 
 
 class _ViewInstrumentMatch:
@@ -42,7 +54,7 @@ class _ViewInstrumentMatch:
     ):
         self._view = view
         self._instrument = instrument
-        self._attributes_aggregation: Dict[frozenset, _Aggregation] = {}
+        self._attributes_aggregation: Dict[Any, _Aggregation] = {}
         self._lock = Lock()
         self._instrument_class_aggregation = instrument_class_aggregation
         self._name = self._view._name or self._instrument.name
@@ -102,7 +114,7 @@ class _ViewInstrumentMatch:
         else:
             attributes = {}
 
-        aggr_key = frozenset(attributes.items())
+        aggr_key = _to_hashable(attributes)
 
         if aggr_key not in self._attributes_aggregation:
             with self._lock:

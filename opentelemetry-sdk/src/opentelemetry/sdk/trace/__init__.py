@@ -842,9 +842,7 @@ class Span(trace_api.Span, ReadableSpan):
     def get_span_context(self):
         return self._context
 
-    def set_attributes(
-        self, attributes: Mapping[str, types.AttributeValue]
-    ) -> None:
+    def set_attributes(self, attributes: Mapping[str, types.AnyValue]) -> None:
         with self._lock:
             if self._end_time is not None:
                 logger.warning("Setting attribute on ended span.")
@@ -853,7 +851,7 @@ class Span(trace_api.Span, ReadableSpan):
             for key, value in attributes.items():
                 self._attributes[key] = value
 
-    def set_attribute(self, key: str, value: types.AttributeValue) -> None:
+    def set_attribute(self, key: str, value: types.AnyValue) -> None:
         return self.set_attributes({key: value})
 
     @_check_span_ended

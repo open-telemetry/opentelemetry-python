@@ -25,6 +25,7 @@ from time import time_ns
 from typing import Optional
 from unittest import mock
 from unittest.mock import Mock, patch
+from uuid import uuid4
 
 from opentelemetry import trace as trace_api
 from opentelemetry.attributes import BoundedAttributes
@@ -143,7 +144,7 @@ tracer_provider.add_span_processor(mock_processor)
 
         # test default shutdown_on_exit (True)
         out = run_general_code(True, False)
-        self.assertTrue(out.startswith(b"1"))
+        self.assertTrue(out.startswith(b"1"), out)
 
         # test that shutdown is called only once even if Tracer.shutdown is
         # called explicitly
@@ -709,6 +710,12 @@ class TestSpan(unittest.TestCase):
             root.set_attribute("http.response.status_code", 200)
             root.set_attribute("http.status_text", "OK")
             root.set_attribute("misc.pi", 3.14)
+            root.set_attribute("mapping-key", {"key": "value"})
+            root.set_attribute("array-key", [1, 2, 3])
+            root.set_attribute(
+                "complex-key",
+                [{"key1": "value1"}, {"key2": 42}, "key3", [1, 2, 3]],
+            )
 
             # Setting an attribute with the same key as an existing attribute
             # SHOULD overwrite the existing attribute's value.
@@ -721,7 +728,7 @@ class TestSpan(unittest.TestCase):
             list_of_numerics = [123, 314, 0]
             root.set_attribute("list-of-numerics", list_of_numerics)
 
-            self.assertEqual(len(root.attributes), 9)
+            self.assertEqual(len(root.attributes), 12)
             self.assertEqual(root.attributes["http.request.method"], "GET")
             self.assertEqual(
                 root.attributes["url.full"],
@@ -746,64 +753,73 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(
                 root.attributes["list-of-numerics"], (123, 314, 0)
             )
+            self.assertEqual(root.attributes["mapping-key"], {"key": "value"})
+            self.assertEqual(root.attributes["array-key"], (1, 2, 3))
+            self.assertEqual(
+                root.attributes["complex-key"],
+                (
+                    {"key1": "value1"},
+                    {"key2": 42},
+                    "key3",
+                    (1, 2, 3),
+                ),
+            )
 
         attributes = {
             "attr-key": "val",
             "attr-key2": "val2",
             "attr-in-both": "span-attr",
+            "mapping-key": {"key": "value"},
+            "array-key": [1, 2, 3],
+            "complex-key": [
+                {"key1": "value1"},
+                {"key2": 42},
+                "key3",
+                [1, 2, 3],
+            ],
         }
         with self.tracer.start_as_current_span(
             "root2", attributes=attributes
         ) as root:
-            self.assertEqual(len(root.attributes), 3)
+            self.assertEqual(len(root.attributes), 6)
             self.assertEqual(root.attributes["attr-key"], "val")
             self.assertEqual(root.attributes["attr-key2"], "val2")
             self.assertEqual(root.attributes["attr-in-both"], "span-attr")
+            self.assertEqual(root.attributes["mapping-key"], {"key": "value"})
+            self.assertEqual(root.attributes["array-key"], (1, 2, 3))
+            self.assertEqual(
+                root.attributes["complex-key"],
+                (
+                    {"key1": "value1"},
+                    {"key2": 42},
+                    "key3",
+                    (1, 2, 3),
+                ),
+            )
 
     def test_invalid_attribute_values(self):
         with self.tracer.start_as_current_span("root") as root:
             with self.assertLogs(level=WARNING):
-                root.set_attributes(
-                    {"correct-value": "foo", "non-primitive-data-type": {}}
-                )
-
-            with self.assertLogs(level=WARNING):
-                root.set_attribute("non-primitive-data-type", {})
-            with self.assertLogs(level=WARNING):
-                root.set_attribute(
-                    "list-of-mixed-data-types-numeric-first",
-                    [123, False, "string"],
-                )
-            with self.assertLogs(level=WARNING):
-                root.set_attribute(
-                    "list-of-mixed-data-types-non-numeric-first",
-                    [False, 123, "string"],
-                )
-            with self.assertLogs(level=WARNING):
-                root.set_attribute(
-                    "list-with-non-primitive-data-type", [{}, 123]
-                )
-            with self.assertLogs(level=WARNING):
-                root.set_attribute("list-with-numeric-and-bool", [1, True])
-
+                root.set_attributes({"correct-value": "foo", "": 42})
             with self.assertLogs(level=WARNING):
                 root.set_attribute("", 123)
             with self.assertLogs(level=WARNING):
                 root.set_attribute(None, 123)
+            with self.assertLogs(level=WARNING):
+                root.set_attribute(42, "foo")
+            with self.assertLogs(level=WARNING):
+                root.set_attribute("foo", uuid4())
 
             self.assertEqual(len(root.attributes), 1)
             self.assertEqual(root.attributes["correct-value"], "foo")
 
     def test_byte_type_attribute_value(self):
         with self.tracer.start_as_current_span("root") as root:
-            with self.assertLogs(level=WARNING):
-                root.set_attribute(
-                    "invalid-byte-type-attribute",
-                    b"\xd8\xe1\xb7\xeb\xa8\xe5 \xd2\xb7\xe1",
-                )
-                self.assertFalse(
-                    "invalid-byte-type-attribute" in root.attributes
-                )
+            root.set_attribute(
+                "bytes-type-attribute",
+                b"\xd8\xe1\xb7\xeb\xa8\xe5 \xd2\xb7\xe1",
+            )
+            self.assertTrue("bytes-type-attribute" in root.attributes)
 
             root.set_attribute("valid-byte-type-attribute", b"valid byte")
             self.assertTrue(
@@ -907,20 +923,27 @@ class TestSpan(unittest.TestCase):
         with self.tracer.start_as_current_span("root") as root:
             with self.assertLogs(level=WARNING):
                 root.add_event(
-                    "event0", {"attr1": True, "attr2": ["hi", False]}
+                    "event0", {"attr1": True, "attr2": ["hi", False], "": 42}
                 )
             with self.assertLogs(level=WARNING):
-                root.add_event("event0", {"attr1": {}})
+                root.add_event("event0", {"attr1": {}, "attr3": uuid4()})
             with self.assertLogs(level=WARNING):
-                root.add_event("event0", {"attr1": [[True]]})
+                root.add_event("event0", {"attr1": [[True]], "": 42})
             with self.assertLogs(level=WARNING):
-                root.add_event("event0", {"attr1": [{}], "attr2": [1, 2]})
+                root.add_event(
+                    "event0", {"attr1": [{}], "attr2": [1, 2], "": 42}
+                )
 
             self.assertEqual(len(root.events), 4)
-            self.assertEqual(root.events[0].attributes, {"attr1": True})
-            self.assertEqual(root.events[1].attributes, {})
-            self.assertEqual(root.events[2].attributes, {})
-            self.assertEqual(root.events[3].attributes, {"attr2": (1, 2)})
+            self.assertEqual(
+                root.events[0].attributes,
+                {"attr1": True, "attr2": ("hi", False)},
+            )
+            self.assertEqual(root.events[1].attributes, {"attr1": {}})
+            self.assertEqual(root.events[2].attributes, {"attr1": ([True],)})
+            self.assertEqual(
+                root.events[3].attributes, {"attr1": ({},), "attr2": (1, 2)}
+            )
 
     def test_links(self):
         id_generator = RandomIdGenerator()

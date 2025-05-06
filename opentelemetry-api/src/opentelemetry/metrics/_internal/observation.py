@@ -12,10 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional, Union
+from typing import Mapping, Optional, Sequence, Union
 
 from opentelemetry.context import Context
-from opentelemetry.util.types import Attributes
+
+_MetricAttributes = Optional[
+    Mapping[
+        str,
+        Union[
+            str,
+            bool,
+            int,
+            float,
+            bytes,
+            Sequence[str],
+            Sequence[bool],
+            Sequence[int],
+            Sequence[float],
+        ],
+    ]
+]
 
 
 class Observation:
@@ -32,7 +48,7 @@ class Observation:
     def __init__(
         self,
         value: Union[int, float],
-        attributes: Attributes = None,
+        attributes: _MetricAttributes = None,
         context: Optional[Context] = None,
     ) -> None:
         self._value = value
@@ -44,7 +60,7 @@ class Observation:
         return self._value
 
     @property
-    def attributes(self) -> Attributes:
+    def attributes(self) -> _MetricAttributes:
         return self._attributes
 
     @property

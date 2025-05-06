@@ -50,25 +50,26 @@ class TestLogRecord(unittest.TestCase):
                     "schema_url": "",
                 },
             },
-            indent=4,
+            indent=None,
         )
+        attr = {
+            "mapping": {"key": "value"},
+            "none": None,
+            "sequence": [1, 2],
+            "str": "string",
+        }
         actual = LogRecord(
             timestamp=0,
             observed_timestamp=0,
             body="a log line",
             resource=Resource({"service.name": "foo"}),
-            attributes={
-                "mapping": {"key": "value"},
-                "none": None,
-                "sequence": [1, 2],
-                "str": "string",
-            },
+            attributes=attr,
         )
 
-        self.assertEqual(expected, actual.to_json(indent=4))
+        self.maxDiff = None
         self.assertEqual(
             actual.to_json(indent=None),
-            '{"body": "a log line", "severity_number": null, "severity_text": null, "attributes": {"mapping": {"key": "value"}, "none": null, "sequence": [1, 2], "str": "string"}, "dropped_attributes": 0, "timestamp": "1970-01-01T00:00:00.000000Z", "observed_timestamp": "1970-01-01T00:00:00.000000Z", "trace_id": "", "span_id": "", "trace_flags": null, "resource": {"attributes": {"service.name": "foo"}, "schema_url": ""}}',
+            expected,
         )
 
     def test_log_record_to_json_serializes_severity_number_as_int(self):

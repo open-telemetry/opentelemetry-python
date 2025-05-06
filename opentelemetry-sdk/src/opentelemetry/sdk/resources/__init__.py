@@ -67,7 +67,7 @@ import typing
 from json import dumps
 from os import environ
 from types import ModuleType
-from typing import List, MutableMapping, Optional, cast
+from typing import List, MutableMapping, Optional, Sequence, Union, cast
 from urllib import parse
 
 from opentelemetry.attributes import BoundedAttributes
@@ -78,6 +78,7 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.semconv.resource import ResourceAttributes
 from opentelemetry.util._importlib_metadata import entry_points, version
+from opentelemetry.util.types import Attributes as AllAttributes
 from opentelemetry.util.types import AttributeValue
 
 psutil: Optional[ModuleType] = None
@@ -89,7 +90,16 @@ try:
 except ImportError:
     pass
 
-LabelValue = AttributeValue
+LabelValue = Union[
+    str,
+    bool,
+    int,
+    float,
+    Sequence[str],
+    Sequence[bool],
+    Sequence[int],
+    Sequence[float],
+]
 Attributes = typing.Mapping[str, LabelValue]
 logger = logging.getLogger(__name__)
 
@@ -162,7 +172,9 @@ class Resource:
     _schema_url: str
 
     def __init__(
-        self, attributes: Attributes, schema_url: typing.Optional[str] = None
+        self,
+        attributes: AllAttributes,
+        schema_url: typing.Optional[str] = None,
     ):
         self._attributes = BoundedAttributes(attributes=attributes)
         if schema_url is None:
@@ -171,7 +183,7 @@ class Resource:
 
     @staticmethod
     def create(
-        attributes: typing.Optional[Attributes] = None,
+        attributes: typing.Optional[AllAttributes] = None,
         schema_url: typing.Optional[str] = None,
     ) -> "Resource":
         """Creates a new `Resource` from attributes.
@@ -242,7 +254,7 @@ class Resource:
         return _EMPTY_RESOURCE
 
     @property
-    def attributes(self) -> Attributes:
+    def attributes(self) -> AllAttributes:
         return self._attributes
 
     @property
