@@ -186,6 +186,8 @@ class VcsProviderNameValues(Enum):
     GITLAB = "gitlab"
     """[GitLab](https://gitlab.com)."""
     GITTEA = "gittea"
+    """Deprecated: Replaced by `gitea`."""
+    GITEA = "gitea"
     """[Gitea](https://gitea.io)."""
     BITBUCKET = "bitbucket"
     """[Bitbucket](https://bitbucket.org)."""

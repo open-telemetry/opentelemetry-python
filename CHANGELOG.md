@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4553](https://github.com/open-telemetry/opentelemetry-python/pull/4553))
 - docs: updated and added to the metrics and log examples
   ([#4559](https://github.com/open-telemetry/opentelemetry-python/pull/4559))
+- Bump semantic conventions to 1.33.0
+  ([#4567](https://github.com/open-telemetry/opentelemetry-python/pull/4567))
 
 ## Version 1.32.0/0.53b0 (2025-04-10)
 

@@ -64,6 +64,28 @@ K8S_CONTAINER_STATUS_LAST_TERMINATED_REASON: Final = (
 Last terminated reason of the Container.
 """
 
+K8S_CRONJOB_ANNOTATION_TEMPLATE: Final = "k8s.cronjob.annotation"
+"""
+The cronjob annotation placed on the CronJob, the `<key>` being the annotation name, the value being the annotation value.
+Note: Examples:
+
+- An annotation `retries` with value `4` SHOULD be recorded as the
+  `k8s.cronjob.annotation.retries` attribute with value `"4"`.
+- An annotation `data` with empty string value SHOULD be recorded as
+  the `k8s.cronjob.annotation.data` attribute with value `""`.
+"""
+
+K8S_CRONJOB_LABEL_TEMPLATE: Final = "k8s.cronjob.label"
+"""
+The label placed on the CronJob, the `<key>` being the label name, the value being the label value.
+Note: Examples:
+
+- A label `type` with value `weekly` SHOULD be recorded as the
+  `k8s.cronjob.label.type` attribute with value `"weekly"`.
+- A label `automated` with empty string value SHOULD be recorded as
+  the `k8s.cronjob.label.automated` attribute with value `""`.
+"""
+
 K8S_CRONJOB_NAME: Final = "k8s.cronjob.name"
 """
 The name of the CronJob.
@@ -74,6 +96,18 @@ K8S_CRONJOB_UID: Final = "k8s.cronjob.uid"
 The UID of the CronJob.
 """
 
+K8S_DAEMONSET_ANNOTATION_TEMPLATE: Final = "k8s.daemonset.annotation"
+"""
+The annotation key-value pairs placed on the DaemonSet.
+Note: The `<key>` being the annotation name, the value being the annotation value, even if the value is empty.
+"""
+
+K8S_DAEMONSET_LABEL_TEMPLATE: Final = "k8s.daemonset.label"
+"""
+The label key-value pairs placed on the DaemonSet.
+Note: The `<key>` being the label name, the value being the label value, even if the value is empty.
+"""
+
 K8S_DAEMONSET_NAME: Final = "k8s.daemonset.name"
 """
 The name of the DaemonSet.
@@ -82,6 +116,18 @@ The name of the DaemonSet.
 K8S_DAEMONSET_UID: Final = "k8s.daemonset.uid"
 """
 The UID of the DaemonSet.
+"""
+
+K8S_DEPLOYMENT_ANNOTATION_TEMPLATE: Final = "k8s.deployment.annotation"
+"""
+The annotation key-value pairs placed on the Deployment.
+Note: The `<key>` being the annotation name, the value being the annotation value, even if the value is empty.
+"""
+
+K8S_DEPLOYMENT_LABEL_TEMPLATE: Final = "k8s.deployment.label"
+"""
+The label key-value pairs placed on the Deployment.
+Note: The `<key>` being the label name, the value being the label value, even if the value is empty.
 """
 
 K8S_DEPLOYMENT_NAME: Final = "k8s.deployment.name"
@@ -104,6 +150,18 @@ K8S_HPA_UID: Final = "k8s.hpa.uid"
 The UID of the horizontal pod autoscaler.
 """
 
+K8S_JOB_ANNOTATION_TEMPLATE: Final = "k8s.job.annotation"
+"""
+The annotation key-value pairs placed on the Job.
+Note: The `<key>` being the annotation name, the value being the annotation value, even if the value is empty.
+"""
+
+K8S_JOB_LABEL_TEMPLATE: Final = "k8s.job.label"
+"""
+The label key-value pairs placed on the Job.
+Note: The `<key>` being the label name, the value being the label value, even if the value is empty.
+"""
+
 K8S_JOB_NAME: Final = "k8s.job.name"
 """
 The name of the Job.
@@ -112,6 +170,18 @@ The name of the Job.
 K8S_JOB_UID: Final = "k8s.job.uid"
 """
 The UID of the Job.
+"""
+
+K8S_NAMESPACE_ANNOTATION_TEMPLATE: Final = "k8s.namespace.annotation"
+"""
+The annotation key-value pairs placed on the Namespace.
+Note: The `<key>` being the annotation name, the value being the annotation value, even if the value is empty.
+"""
+
+K8S_NAMESPACE_LABEL_TEMPLATE: Final = "k8s.namespace.label"
+"""
+The label key-value pairs placed on the Namespace.
+Note: The `<key>` being the label name, the value being the label value, even if the value is empty.
 """
 
 K8S_NAMESPACE_NAME: Final = "k8s.namespace.name"
@@ -126,6 +196,28 @@ Note: This attribute aligns with the `phase` field of the
 [K8s NamespaceStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#namespacestatus-v1-core).
 """
 
+K8S_NODE_ANNOTATION_TEMPLATE: Final = "k8s.node.annotation"
+"""
+The annotation placed on the Node, the `<key>` being the annotation name, the value being the annotation value, even if the value is empty.
+Note: Examples:
+
+- An annotation `node.alpha.kubernetes.io/ttl` with value `0` SHOULD be recorded as
+  the `k8s.node.annotation.node.alpha.kubernetes.io/ttl` attribute with value `"0"`.
+- An annotation `data` with empty string value SHOULD be recorded as
+  the `k8s.node.annotation.data` attribute with value `""`.
+"""
+
+K8S_NODE_LABEL_TEMPLATE: Final = "k8s.node.label"
+"""
+The label placed on the Node, the `<key>` being the label name, the value being the label value, even if the value is empty.
+Note: Examples:
+
+- A label `kubernetes.io/arch` with value `arm64` SHOULD be recorded
+  as the `k8s.node.label.kubernetes.io/arch` attribute with value `"arm64"`.
+- A label `data` with empty string value SHOULD be recorded as
+  the `k8s.node.label.data` attribute with value `""`.
+"""
+
 K8S_NODE_NAME: Final = "k8s.node.name"
 """
 The name of the Node.
@@ -138,12 +230,28 @@ The UID of the Node.
 
 K8S_POD_ANNOTATION_TEMPLATE: Final = "k8s.pod.annotation"
 """
-The annotation key-value pairs placed on the Pod, the `<key>` being the annotation name, the value being the annotation value.
+The annotation placed on the Pod, the `<key>` being the annotation name, the value being the annotation value.
+Note: Examples:
+
+- An annotation `kubernetes.io/enforce-mountable-secrets` with value `true` SHOULD be recorded as
+  the `k8s.pod.annotation.kubernetes.io/enforce-mountable-secrets` attribute with value `"true"`.
+- An annotation `mycompany.io/arch` with value `x64` SHOULD be recorded as
+  the `k8s.pod.annotation.mycompany.io/arch` attribute with value `"x64"`.
+- An annotation `data` with empty string value SHOULD be recorded as
+  the `k8s.pod.annotation.data` attribute with value `""`.
 """
 
 K8S_POD_LABEL_TEMPLATE: Final = "k8s.pod.label"
 """
-The label key-value pairs placed on the Pod, the `<key>` being the label name, the value being the label value.
+The label placed on the Pod, the `<key>` being the label name, the value being the label value.
+Note: Examples:
+
+- A label `app` with value `my-app` SHOULD be recorded as
+  the `k8s.pod.label.app` attribute with value `"my-app"`.
+- A label `mycompany.io/arch` with value `x64` SHOULD be recorded as
+  the `k8s.pod.label.mycompany.io/arch` attribute with value `"x64"`.
+- A label `data` with empty string value SHOULD be recorded as
+  the `k8s.pod.label.data` attribute with value `""`.
 """
 
 K8S_POD_LABELS_TEMPLATE: Final = "k8s.pod.labels"
@@ -159,6 +267,18 @@ The name of the Pod.
 K8S_POD_UID: Final = "k8s.pod.uid"
 """
 The UID of the Pod.
+"""
+
+K8S_REPLICASET_ANNOTATION_TEMPLATE: Final = "k8s.replicaset.annotation"
+"""
+The annotation key-value pairs placed on the ReplicaSet.
+Note: The `<key>` being the annotation name, the value being the annotation value, even if the value is empty.
+"""
+
+K8S_REPLICASET_LABEL_TEMPLATE: Final = "k8s.replicaset.label"
+"""
+The label key-value pairs placed on the ReplicaSet.
+Note: The `<key>` being the label name, the value being the label value, even if the value is empty.
 """
 
 K8S_REPLICASET_NAME: Final = "k8s.replicaset.name"
@@ -189,6 +309,18 @@ The name of the resource quota.
 K8S_RESOURCEQUOTA_UID: Final = "k8s.resourcequota.uid"
 """
 The UID of the resource quota.
+"""
+
+K8S_STATEFULSET_ANNOTATION_TEMPLATE: Final = "k8s.statefulset.annotation"
+"""
+The annotation key-value pairs placed on the StatefulSet.
+Note: The `<key>` being the annotation name, the value being the annotation value, even if the value is empty.
+"""
+
+K8S_STATEFULSET_LABEL_TEMPLATE: Final = "k8s.statefulset.label"
+"""
+The label key-value pairs placed on the StatefulSet.
+Note: The `<key>` being the label name, the value being the label value, even if the value is empty.
 """
 
 K8S_STATEFULSET_NAME: Final = "k8s.statefulset.name"
