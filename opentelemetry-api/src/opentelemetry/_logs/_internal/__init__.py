@@ -162,29 +162,30 @@ class LoggerProvider(ABC):
     ) -> Logger:
         """Returns a `Logger` for use by the given instrumentation library.
 
-        For any two calls it is undefined whether the same or different
-        `Logger` instances are returned, even for different library names.
+        For any two calls with identical parameters, it is undefined whether the same
+        or different `Logger` instances are returned.
 
         This function may return different `Logger` types (e.g. a no-op logger
         vs. a functional logger).
 
         Args:
-            name: The name of the instrumenting module.
-                ``__name__`` may not be used as this can result in
-                different logger names if the loggers are in different files.
-                It is better to use a fixed string that can be imported where
-                needed and used consistently as the name of the logger.
-
-                This should *not* be the name of the module that is
-                instrumented but the name of the module doing the instrumentation.
+            name: The name of the instrumenting module, package or class.
+                This should *not* be the name of the module, package or class that is
+                instrumented but the name of the code doing the instrumentation.
                 E.g., instead of ``"requests"``, use
                 ``"opentelemetry.instrumentation.requests"``.
+
+                For log sources which define a logger name (e.g. logging.Logger.name)
+                the Logger Name should be recorded as the instrumentation scope name.
 
             version: Optional. The version string of the
                 instrumenting library.  Usually this should be the same as
                 ``importlib.metadata.version(instrumenting_library_name)``.
 
             schema_url: Optional. Specifies the Schema URL of the emitted telemetry.
+
+            attributes: Optional. Specifies the instrumentation scope attributes to
+                associate with emitted telemetry.
         """
 
 
