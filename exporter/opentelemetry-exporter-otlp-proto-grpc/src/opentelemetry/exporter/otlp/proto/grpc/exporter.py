@@ -26,8 +26,11 @@ from typing import (  # noqa: F401
     Dict,
     Generic,
     List,
+    Literal,
+    NewType,
     Optional,
     Tuple,
+    Type,
     TypeVar,
     Union,
 )
@@ -53,12 +56,32 @@ from opentelemetry.exporter.otlp.proto.common._internal import (
 from opentelemetry.exporter.otlp.proto.grpc import (
     _OTLP_GRPC_HEADERS,
 )
+from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
+    ExportLogsServiceRequest,
+)
+from opentelemetry.proto.collector.logs.v1.logs_service_pb2_grpc import (
+    LogsServiceStub,
+)
+from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
+    ExportMetricsServiceRequest,
+)
+from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2_grpc import (
+    MetricsServiceStub,
+)
+from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
+    ExportTraceServiceRequest,
+)
+from opentelemetry.proto.collector.trace.v1.trace_service_pb2_grpc import (
+    TraceServiceStub,
+)
 from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401
     AnyValue,
     ArrayValue,
     KeyValue,
 )
 from opentelemetry.proto.resource.v1.resource_pb2 import Resource  # noqa: F401
+from opentelemetry.sdk._logs import LogData
+from opentelemetry.sdk._logs.export import LogExportResult
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
@@ -69,17 +92,36 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_INSECURE,
     OTEL_EXPORTER_OTLP_TIMEOUT,
 )
-from opentelemetry.sdk.metrics.export import MetricsData
+from opentelemetry.sdk.metrics.export import MetricExportResult, MetricsData
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.trace import ReadableSpan
+from opentelemetry.sdk.trace.export import SpanExportResult
 from opentelemetry.util.re import parse_env_headers
 
 logger = getLogger(__name__)
-SDKDataT = TypeVar("SDKDataT")
+SDKDataT = TypeVar(
+    "SDKDataT",
+    TypingSequence[LogData],
+    MetricsData,
+    TypingSequence[ReadableSpan],
+)
 ResourceDataT = TypeVar("ResourceDataT")
 TypingResourceT = TypeVar("TypingResourceT")
-ExportServiceRequestT = TypeVar("ExportServiceRequestT")
-ExportResultT = TypeVar("ExportResultT")
+ExportServiceRequestT = TypeVar(
+    "ExportServiceRequestT",
+    ExportTraceServiceRequest,
+    ExportMetricsServiceRequest,
+    ExportLogsServiceRequest,
+)
+ExportResultT = TypeVar(
+    "ExportResultT",
+    LogExportResult,
+    MetricExportResult,
+    SpanExportResult,
+)
+ExportStubT = TypeVar(
+    "ExportStubT", TraceServiceStub, MetricsServiceStub, LogsServiceStub
+)
 
 _ENVIRON_TO_COMPRESSION = {
     None: None,
@@ -102,7 +144,10 @@ def environ_to_compression(environ_key: str) -> Optional[Compression]:
         if environ_key in environ
         else None
     )
-    if environ_value not in _ENVIRON_TO_COMPRESSION:
+    if (
+        environ_value not in _ENVIRON_TO_COMPRESSION
+        and environ_value is not None
+    ):
         raise InvalidCompressionValueException(environ_key, environ_value)
     return _ENVIRON_TO_COMPRESSION[environ_value]
 
@@ -135,7 +180,7 @@ def _load_credentials(
     certificate_file: Optional[str],
     client_key_file: Optional[str],
     client_certificate_file: Optional[str],
-) -> Optional[ChannelCredentials]:
+) -> ChannelCredentials:
     root_certificates = (
         _read_file(certificate_file) if certificate_file else None
     )
@@ -174,7 +219,7 @@ def _get_credentials(
 
 # pylint: disable=no-member
 class OTLPExporterMixin(
-    ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResultT]
+    ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResultT, ExportStubT]
 ):
     """OTLP span exporter
 
@@ -189,6 +234,8 @@ class OTLPExporterMixin(
 
     def __init__(
         self,
+        stub: ExportStubT,
+        result: ExportResultT,
         endpoint: Optional[str] = None,
         insecure: Optional[bool] = None,
         credentials: Optional[ChannelCredentials] = None,
@@ -199,7 +246,8 @@ class OTLPExporterMixin(
         compression: Optional[Compression] = None,
     ):
         super().__init__()
-
+        self._result = result
+        self._stub = stub
         self._endpoint = endpoint or environ.get(
             OTEL_EXPORTER_OTLP_ENDPOINT, "http://localhost:4317"
         )
@@ -208,15 +256,12 @@ class OTLPExporterMixin(
 
         if parsed_url.scheme == "https":
             insecure = False
+        insecure_exporter = environ.get(OTEL_EXPORTER_OTLP_INSECURE)
         if insecure is None:
-            insecure = environ.get(OTEL_EXPORTER_OTLP_INSECURE)
-            if insecure is not None:
-                insecure = insecure.lower() == "true"
+            if insecure_exporter is not None:
+                insecure = insecure_exporter.lower() == "true"
             else:
-                if parsed_url.scheme == "http":
-                    insecure = True
-                else:
-                    insecure = False
+                insecure = parsed_url.scheme == "http"
 
         if parsed_url.netloc:
             self._endpoint = parsed_url.netloc
@@ -257,25 +302,27 @@ class OTLPExporterMixin(
             self._channel = secure_channel(
                 self._endpoint, credentials, compression=compression
             )
-        self._client = self._stub(self._channel)
+        self._client = self._stub(self._channel)  # pyright: ignore [reportCallIssue]
 
         self._export_lock = threading.Lock()
         self._shutdown = False
 
     @abstractmethod
     def _translate_data(
-        self, data: TypingSequence[SDKDataT]
+        self,
+        data: SDKDataT,
     ) -> ExportServiceRequestT:
         pass
 
     def _export(
-        self, data: Union[TypingSequence[ReadableSpan], MetricsData]
+        self,
+        data: SDKDataT,
     ) -> ExportResultT:
         # After the call to shutdown, subsequent calls to Export are
         # not allowed and should return a Failure result.
         if self._shutdown:
             logger.warning("Exporter already shutdown, ignoring batch")
-            return self._result.FAILURE
+            return self._result.FAILURE  # pyright: ignore [reportReturnType]
 
         # FIXME remove this check if the export type for traces
         # gets updated to a class that represents the proto
@@ -292,7 +339,7 @@ class OTLPExporterMixin(
         # value will remain constant.
         for delay in _create_exp_backoff_generator(max_value=max_value):
             if delay == max_value or self._shutdown:
-                return self._result.FAILURE
+                return self._result.FAILURE  # pyright: ignore [reportReturnType]
 
             with self._export_lock:
                 try:
@@ -302,10 +349,11 @@ class OTLPExporterMixin(
                         timeout=self._timeout,
                     )
 
-                    return self._result.SUCCESS
+                    return self._result.SUCCESS  # pyright: ignore [reportReturnType]
 
                 except RpcError as error:
-                    if error.code() in [
+                    code = error.code()  # pyright: ignore [reportAttributeAccessIssue]
+                    if code in [
                         StatusCode.CANCELLED,
                         StatusCode.DEADLINE_EXCEEDED,
                         StatusCode.RESOURCE_EXHAUSTED,
@@ -314,7 +362,7 @@ class OTLPExporterMixin(
                         StatusCode.UNAVAILABLE,
                         StatusCode.DATA_LOSS,
                     ]:
-                        retry_info_bin = dict(error.trailing_metadata()).get(
+                        retry_info_bin = dict(error.trailing_metadata()).get(  # pyright: ignore [reportAttributeAccessIssue]
                             "google.rpc.retryinfo-bin"
                         )
                         if retry_info_bin is not None:
@@ -330,7 +378,7 @@ class OTLPExporterMixin(
                                 "Transient error %s encountered while exporting "
                                 "%s to %s, retrying in %ss."
                             ),
-                            error.code(),
+                            code,
                             self._exporting,
                             self._endpoint,
                             delay,
@@ -342,16 +390,16 @@ class OTLPExporterMixin(
                             "Failed to export %s to %s, error code: %s",
                             self._exporting,
                             self._endpoint,
-                            error.code(),
-                            exc_info=error.code() == StatusCode.UNKNOWN,
+                            code,
+                            exc_info=code == StatusCode.UNKNOWN,
                         )
 
-                    if error.code() == StatusCode.OK:
-                        return self._result.SUCCESS
+                    if code == StatusCode.OK:
+                        return self._result.SUCCESS  # pyright: ignore [reportReturnType]
 
-                    return self._result.FAILURE
+                    return self._result.FAILURE  # pyright: ignore [reportReturnType]
 
-        return self._result.FAILURE
+        return self._result.FAILURE  # pyright: ignore [reportReturnType]
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         if self._shutdown:
