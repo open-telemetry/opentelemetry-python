@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Add configurable `max_export_batch_size` to OTLP HTTP metrics exporter
+  ([#4576](https://github.com/open-telemetry/opentelemetry-python/pull/4576))
+
 ## Version 1.33.0/0.54b0 (2025-05-09)
 
 - Fix intermittent `Connection aborted` error when using otlp/http exporters
