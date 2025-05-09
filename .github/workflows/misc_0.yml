@@ -42,7 +42,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e spellcheck
@@ -61,7 +61,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e tracecontext
@@ -80,7 +80,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e mypy
@@ -99,7 +99,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e mypyinstalled
@@ -118,7 +118,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e typecheck
@@ -139,7 +139,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e docs
@@ -158,7 +158,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e docker-tests-otlpexporter
@@ -177,7 +177,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e docker-tests-opencensus
@@ -210,7 +210,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e public-symbols-check
@@ -229,7 +229,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e shellcheck
@@ -251,7 +251,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e generate-workflows
@@ -273,7 +273,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e precommit
