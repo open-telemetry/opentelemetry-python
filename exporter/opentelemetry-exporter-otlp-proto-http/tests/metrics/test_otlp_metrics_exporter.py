@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=too-many-lines
 from logging import WARNING
 from os import environ
 from typing import List
@@ -34,12 +35,14 @@ from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
     OTLPMetricExporter,
 )
 from opentelemetry.exporter.otlp.proto.http.version import __version__
-from opentelemetry.proto.metrics.v1 import metrics_pb2 as pb2
 from opentelemetry.proto.common.v1.common_pb2 import (
     InstrumentationScope,
     KeyValue,
 )
-from opentelemetry.proto.resource.v1.resource_pb2 import Resource as Pb2Resource
+from opentelemetry.proto.metrics.v1 import metrics_pb2 as pb2
+from opentelemetry.proto.resource.v1.resource_pb2 import (
+    Resource as Pb2Resource,
+)
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
@@ -617,7 +620,9 @@ class TestOTLPMetricExporter(TestCase):
                 "schema_url": "http://foo-bar",
                 "scope_metrics": [
                     {
-                        "scope": InstrumentationScope(name="foo-scope", version="1.0.0"),
+                        "scope": InstrumentationScope(
+                            name="foo-scope", version="1.0.0"
+                        ),
                         "schema_url": "http://foo-baz",
                         "metrics": [
                             {
@@ -630,7 +635,12 @@ class TestOTLPMetricExporter(TestCase):
                                     "data_points": [
                                         pb2.NumberDataPoint(
                                             attributes=[
-                                                KeyValue(key="dp_key", value={"string_value": "dp_value"})
+                                                KeyValue(
+                                                    key="dp_key",
+                                                    value={
+                                                        "string_value": "dp_value"
+                                                    },
+                                                )
                                             ],
                                             start_time_unix_nano=12345,
                                             time_unix_nano=12350,
@@ -645,26 +655,36 @@ class TestOTLPMetricExporter(TestCase):
             }
         ]
 
-        result = OTLPMetricExporter()._get_split_resource_metrics_pb2(split_resource_metrics)
+        result = OTLPMetricExporter()._get_split_resource_metrics_pb2(
+            split_resource_metrics
+        )
         self.assertEqual(len(result), 1)
         self.assertIsInstance(result[0], pb2.ResourceMetrics)
         self.assertEqual(result[0].schema_url, "http://foo-bar")
         self.assertEqual(len(result[0].scope_metrics), 1)
         self.assertEqual(result[0].scope_metrics[0].scope.name, "foo-scope")
         self.assertEqual(len(result[0].scope_metrics[0].metrics), 1)
-        self.assertEqual(result[0].scope_metrics[0].metrics[0].name, "foo-metric")
-        self.assertEqual(result[0].scope_metrics[0].metrics[0].sum.is_monotonic, True)
+        self.assertEqual(
+            result[0].scope_metrics[0].metrics[0].name, "foo-metric"
+        )
+        self.assertEqual(
+            result[0].scope_metrics[0].metrics[0].sum.is_monotonic, True
+        )
 
     def test_get_split_resource_metrics_pb2_multiples(self):
         split_resource_metrics = [
             {
                 "resource": Pb2Resource(
-                    attributes=[KeyValue(key="foo1", value={"string_value": "bar2"})],
+                    attributes=[
+                        KeyValue(key="foo1", value={"string_value": "bar2"})
+                    ],
                 ),
                 "schema_url": "http://foo-bar-1",
                 "scope_metrics": [
                     {
-                        "scope": InstrumentationScope(name="foo-scope-1", version="1.0.0"),
+                        "scope": InstrumentationScope(
+                            name="foo-scope-1", version="1.0.0"
+                        ),
                         "schema_url": "http://foo-baz-1",
                         "metrics": [
                             {
@@ -675,7 +695,12 @@ class TestOTLPMetricExporter(TestCase):
                                     "data_points": [
                                         pb2.NumberDataPoint(
                                             attributes=[
-                                                KeyValue(key="dp_key", value={"string_value": "dp_value"})
+                                                KeyValue(
+                                                    key="dp_key",
+                                                    value={
+                                                        "string_value": "dp_value"
+                                                    },
+                                                )
                                             ],
                                             start_time_unix_nano=12345,
                                             time_unix_nano=12350,
@@ -690,12 +715,16 @@ class TestOTLPMetricExporter(TestCase):
             },
             {
                 "resource": Pb2Resource(
-                    attributes=[KeyValue(key="foo2", value={"string_value": "bar2"})],
+                    attributes=[
+                        KeyValue(key="foo2", value={"string_value": "bar2"})
+                    ],
                 ),
                 "schema_url": "http://foo-bar-2",
                 "scope_metrics": [
                     {
-                        "scope": InstrumentationScope(name="foo-scope-2", version="2.0.0"),
+                        "scope": InstrumentationScope(
+                            name="foo-scope-2", version="2.0.0"
+                        ),
                         "schema_url": "http://foo-baz-2",
                         "metrics": [
                             {
@@ -706,7 +735,14 @@ class TestOTLPMetricExporter(TestCase):
                                     "aggregation_temporality": 2,
                                     "data_points": [
                                         pb2.HistogramDataPoint(
-                                            attributes=[KeyValue(key="dp_key", value={"string_value": "dp_value"})],
+                                            attributes=[
+                                                KeyValue(
+                                                    key="dp_key",
+                                                    value={
+                                                        "string_value": "dp_value"
+                                                    },
+                                                )
+                                            ],
                                             start_time_unix_nano=12345,
                                             time_unix_nano=12350,
                                         )
@@ -719,7 +755,9 @@ class TestOTLPMetricExporter(TestCase):
             },
         ]
 
-        result = OTLPMetricExporter()._get_split_resource_metrics_pb2(split_resource_metrics)
+        result = OTLPMetricExporter()._get_split_resource_metrics_pb2(
+            split_resource_metrics
+        )
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0].schema_url, "http://foo-bar-1")
         self.assertEqual(result[1].schema_url, "http://foo-bar-2")
@@ -727,19 +765,27 @@ class TestOTLPMetricExporter(TestCase):
         self.assertEqual(len(result[1].scope_metrics), 1)
         self.assertEqual(result[0].scope_metrics[0].scope.name, "foo-scope-1")
         self.assertEqual(result[1].scope_metrics[0].scope.name, "foo-scope-2")
-        self.assertEqual(result[0].scope_metrics[0].metrics[0].name, "foo-metric-1")
-        self.assertEqual(result[1].scope_metrics[0].metrics[0].name, "foo-metric-2")
+        self.assertEqual(
+            result[0].scope_metrics[0].metrics[0].name, "foo-metric-1"
+        )
+        self.assertEqual(
+            result[1].scope_metrics[0].metrics[0].name, "foo-metric-2"
+        )
 
     def test_get_split_resource_metrics_pb2_unsupported_metric_type(self):
         split_resource_metrics = [
             {
                 "resource": Pb2Resource(
-                    attributes=[KeyValue(key="foo", value={"string_value": "bar"})],
+                    attributes=[
+                        KeyValue(key="foo", value={"string_value": "bar"})
+                    ],
                 ),
                 "schema_url": "http://foo-bar",
                 "scope_metrics": [
                     {
-                        "scope": InstrumentationScope(name="foo", version="1.0.0"),
+                        "scope": InstrumentationScope(
+                            name="foo", version="1.0.0"
+                        ),
                         "schema_url": "http://foo-baz",
                         "metrics": [
                             {
@@ -755,9 +801,14 @@ class TestOTLPMetricExporter(TestCase):
         ]
 
         with self.assertLogs(level="WARNING") as log:
-            result = OTLPMetricExporter()._get_split_resource_metrics_pb2(split_resource_metrics)
+            result = OTLPMetricExporter()._get_split_resource_metrics_pb2(
+                split_resource_metrics
+            )
         self.assertEqual(len(result), 1)
-        self.assertIn("Tried to split and export an unsupported metric type", log.output[0])
+        self.assertIn(
+            "Tried to split and export an unsupported metric type",
+            log.output[0],
+        )
 
     @activate
     @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.sleep")
@@ -953,15 +1004,12 @@ class TestOTLPMetricExporter(TestCase):
         )
 
 
-
 def _resource_metrics(
     index: int, scope_metrics: List[pb2.ScopeMetrics]
 ) -> pb2.ResourceMetrics:
     return pb2.ResourceMetrics(
         resource={
-            "attributes": [
-                KeyValue(key="a", value={"int_value": index})
-            ],
+            "attributes": [KeyValue(key="a", value={"int_value": index})],
         },
         schema_url=f"resource_url_{index}",
         scope_metrics=scope_metrics,
@@ -981,9 +1029,7 @@ def _gauge(index: int, data_points: List[pb2.NumberDataPoint]) -> pb2.Metric:
         name=f"gauge_{index}",
         description="description",
         unit="unit",
-        gauge=pb2.Gauge(
-            data_points=data_points
-        ),
+        gauge=pb2.Gauge(data_points=data_points),
     )
 
 

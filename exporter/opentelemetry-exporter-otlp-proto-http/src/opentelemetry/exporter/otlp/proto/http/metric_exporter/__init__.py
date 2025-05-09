@@ -22,6 +22,7 @@ from typing import (  # noqa: F401
     Any,
     Callable,
     Dict,
+    Iterable,
     List,
     Mapping,
     Sequence,
@@ -262,11 +263,13 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                         resp.text,
                     )
                     return MetricExportResult.FAILURE
-            
+
             # Else, attempt export in batches for this retry
             else:
                 export_result = MetricExportResult.SUCCESS
-                for split_metrics_data in self._split_metrics_data(serialized_data):
+                for split_metrics_data in self._split_metrics_data(
+                    serialized_data
+                ):
                     split_resp = self._export(
                         split_metrics_data.SerializeToString()
                     )
@@ -288,17 +291,17 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                             split_resp.text,
                         )
                         export_result = MetricExportResult.FAILURE
-                
+
                 # Return result after all batches are attempted
                 return export_result
-    
+
         return MetricExportResult.FAILURE
 
     def _split_metrics_data(
         self,
         metrics_data: pb2.MetricsData,
     ) -> Iterable[pb2.MetricsData]:
-        """Splits metrics data into several MetricsData (copies protobuf originals), 
+        """Splits metrics data into several MetricsData (copies protobuf originals),
         based on configured data point max export batch size.
 
         Args:
@@ -350,7 +353,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                                     "aggregation_temporality": metric.sum.aggregation_temporality,
                                     "is_monotonic": metric.sum.is_monotonic,
                                     "data_points": split_data_points,
-                                }
+                                },
                             }
                         )
                         current_data_points = metric.sum.data_points
@@ -363,7 +366,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                                 "histogram": {
                                     "aggregation_temporality": metric.histogram.aggregation_temporality,
                                     "data_points": split_data_points,
-                                }
+                                },
                             }
                         )
                         current_data_points = metric.histogram.data_points
@@ -376,10 +379,12 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                                 "exponential_histogram": {
                                     "aggregation_temporality": metric.exponential_histogram.aggregation_temporality,
                                     "data_points": split_data_points,
-                                }
+                                },
                             }
                         )
-                        current_data_points = metric.exponential_histogram.data_points
+                        current_data_points = (
+                            metric.exponential_histogram.data_points
+                        )
                     elif metric.HasField("gauge"):
                         split_metrics.append(
                             {
@@ -388,7 +393,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                                 "unit": metric.unit,
                                 "gauge": {
                                     "data_points": split_data_points,
-                                }
+                                },
                             }
                         )
                         current_data_points = metric.gauge.data_points
@@ -400,11 +405,13 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                                 "unit": metric.unit,
                                 "summary": {
                                     "data_points": split_data_points,
-                                }
+                                },
                             }
                         )
                     else:
-                        _logger.warning("Tried to split and export an unsupported metric type. Skipping.")
+                        _logger.warning(
+                            "Tried to split and export an unsupported metric type. Skipping."
+                        )
                         continue
 
                     for data_point in current_data_points:
@@ -413,7 +420,9 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
 
                         if batch_size >= self._max_export_batch_size:
                             yield pb2.MetricsData(
-                                resource_metrics=self._get_split_resource_metrics_pb2(split_resource_metrics)
+                                resource_metrics=self._get_split_resource_metrics_pb2(
+                                    split_resource_metrics
+                                )
                             )
 
                             # Reset all the reference variables with current metrics_data position
@@ -432,7 +441,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                                             "aggregation_temporality": metric.sum.aggregation_temporality,
                                             "is_monotonic": metric.sum.is_monotonic,
                                             "data_points": split_data_points,
-                                        }
+                                        },
                                     }
                                 ]
                             elif metric.HasField("histogram"):
@@ -444,7 +453,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                                         "histogram": {
                                             "aggregation_temporality": metric.histogram.aggregation_temporality,
                                             "data_points": split_data_points,
-                                        }
+                                        },
                                     }
                                 ]
                             elif metric.HasField("exponential_histogram"):
@@ -456,7 +465,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                                         "exponential_histogram": {
                                             "aggregation_temporality": metric.exponential_histogram.aggregation_temporality,
                                             "data_points": split_data_points,
-                                        }
+                                        },
                                     }
                                 ]
                             elif metric.HasField("gauge"):
@@ -467,7 +476,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                                         "unit": metric.unit,
                                         "gauge": {
                                             "data_points": split_data_points,
-                                        }
+                                        },
                                     }
                                 ]
                             elif metric.HasField("summary"):
@@ -478,7 +487,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                                         "unit": metric.unit,
                                         "summary": {
                                             "data_points": split_data_points,
-                                        }
+                                        },
                                     }
                                 ]
 
@@ -511,7 +520,9 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
 
         if batch_size > 0:
             yield pb2.MetricsData(
-                resource_metrics=self._get_split_resource_metrics_pb2(split_resource_metrics)
+                resource_metrics=self._get_split_resource_metrics_pb2(
+                    split_resource_metrics
+                )
             )
 
     def _get_split_resource_metrics_pb2(
@@ -568,16 +579,16 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         split_resource_metrics_pb = []
         for resource_metrics in split_resource_metrics:
             new_resource_metrics = pb2.ResourceMetrics(
-                    resource=resource_metrics.get("resource"),
-                    scope_metrics=[],
-                    schema_url=resource_metrics.get("schema_url"),
-                )
+                resource=resource_metrics.get("resource"),
+                scope_metrics=[],
+                schema_url=resource_metrics.get("schema_url"),
+            )
             for scope_metrics in resource_metrics.get("scope_metrics", []):
                 new_scope_metrics = pb2.ScopeMetrics(
-                        scope=scope_metrics.get("scope"),
-                        metrics=[],
-                        schema_url=scope_metrics.get("schema_url"),
-                    )
+                    scope=scope_metrics.get("scope"),
+                    metrics=[],
+                    schema_url=scope_metrics.get("schema_url"),
+                )
 
                 for metric in scope_metrics.get("metrics", []):
                     new_metric = None
@@ -590,9 +601,13 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                             unit=metric.get("unit"),
                             sum=pb2.Sum(
                                 data_points=[],
-                                aggregation_temporality=metric.get("sum").get("aggregation_temporality"),
-                                is_monotonic=metric.get("sum").get("is_monotonic"),
-                            )
+                                aggregation_temporality=metric.get("sum").get(
+                                    "aggregation_temporality"
+                                ),
+                                is_monotonic=metric.get("sum").get(
+                                    "is_monotonic"
+                                ),
+                            ),
                         )
                         data_points = metric.get("sum").get("data_points")
                     elif "histogram" in metric:
@@ -602,10 +617,14 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                             unit=metric.get("unit"),
                             histogram=pb2.Histogram(
                                 data_points=[],
-                                aggregation_temporality=metric.get("histogram").get("aggregation_temporality"),
+                                aggregation_temporality=metric.get(
+                                    "histogram"
+                                ).get("aggregation_temporality"),
                             ),
                         )
-                        data_points = metric.get("histogram").get("data_points")
+                        data_points = metric.get("histogram").get(
+                            "data_points"
+                        )
                     elif "exponential_histogram" in metric:
                         new_metric = pb2.Metric(
                             name=metric.get("name"),
@@ -613,10 +632,14 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                             unit=metric.get("unit"),
                             exponential_histogram=pb2.ExponentialHistogram(
                                 data_points=[],
-                                aggregation_temporality=metric.get("exponential_histogram").get("aggregation_temporality"),
+                                aggregation_temporality=metric.get(
+                                    "exponential_histogram"
+                                ).get("aggregation_temporality"),
                             ),
                         )
-                        data_points = metric.get("exponential_histogram").get("data_points")
+                        data_points = metric.get("exponential_histogram").get(
+                            "data_points"
+                        )
                     elif "gauge" in metric:
                         new_metric = pb2.Metric(
                             name=metric.get("name"),
@@ -624,7 +647,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                             unit=metric.get("unit"),
                             gauge=pb2.Gauge(
                                 data_points=[],
-                            )
+                            ),
                         )
                         data_points = metric.get("gauge").get("data_points")
                     elif "summary" in metric:
@@ -634,11 +657,13 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                             unit=metric.get("unit"),
                             summary=pb2.Summary(
                                 data_points=[],
-                            )
+                            ),
                         )
                         data_points = metric.get("summary").get("data_points")
                     else:
-                        _logger.warning("Tried to split and export an unsupported metric type. Skipping.")
+                        _logger.warning(
+                            "Tried to split and export an unsupported metric type. Skipping."
+                        )
                         continue
 
                     for data_point in data_points:
@@ -647,15 +672,17 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                         elif "histogram" in metric:
                             new_metric.histogram.data_points.append(data_point)
                         elif "exponential_histogram" in metric:
-                            new_metric.exponential_histogram.data_points.append(data_point)
+                            new_metric.exponential_histogram.data_points.append(
+                                data_point
+                            )
                         elif "gauge" in metric:
                             new_metric.gauge.data_points.append(data_point)
                         elif "summary" in metric:
                             new_metric.summary.data_points.append(data_point)
-                    
+
                     new_scope_metrics.metrics.append(new_metric)
                 new_resource_metrics.scope_metrics.append(new_scope_metrics)
-            split_resource_metrics_pb.append(new_resource_metrics)        
+            split_resource_metrics_pb.append(new_resource_metrics)
         return split_resource_metrics_pb
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
