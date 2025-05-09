@@ -20,12 +20,8 @@ import logging
 import os
 import threading
 import weakref
-from abc import ABC
 from typing import (
-    TYPE_CHECKING,
-    Deque,
     Optional,
-    Union,
 )
 
 from opentelemetry.context import (
@@ -34,13 +30,8 @@ from opentelemetry.context import (
     detach,
     set_value,
 )
+from typing import TypeVar, Generic
 from opentelemetry.util._once import Once
-
-if TYPE_CHECKING:
-    from opentelemetry.sdk._logs import LogData
-    from opentelemetry.sdk._logs.export import LogExporter
-    from opentelemetry.sdk.trace import ReadableSpan
-    from opentelemetry.sdk.trace.export import SpanExporter
 
 
 class BatchExportStrategy(enum.Enum):
@@ -49,12 +40,14 @@ class BatchExportStrategy(enum.Enum):
     EXPORT_AT_LEAST_ONE_BATCH = 2
 
 
-class BatchProcessor(ABC):
-    _queue: Deque["Union[LogData, ReadableSpan]"]
+Telemetry = TypeVar("Telemetry")
+Exporter = TypeVar("Exporter")
 
+
+class BatchProcessor(Generic[Telemetry, Exporter]):
     def __init__(
         self,
-        exporter: "Union[LogExporter, SpanExporter]",
+        exporter: Exporter,
         schedule_delay_millis: float,
         max_export_batch_size: int,
         export_timeout_millis: float,
@@ -140,8 +133,8 @@ class BatchProcessor(ABC):
                 iteration += 1
                 token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
                 try:
-                    self._exporter.export(
-                        [  # pyright: ignore [reportArgumentType]
+                    self._exporter.export(  # pyright: ignore [reportAttributeAccessIssue]
+                        [
                             # Oldest records are at the back, so pop from there.
                             self._queue.pop()
                             for _ in range(
@@ -158,7 +151,7 @@ class BatchProcessor(ABC):
                     )
                 detach(token)
 
-    def emit(self, data: "Union[LogData, ReadableSpan]") -> None:
+    def emit(self, data: Telemetry) -> None:
         if self._shutdown:
             self._logger.info("Shutdown called, ignoring %s.", self._exporting)
             return
@@ -180,7 +173,7 @@ class BatchProcessor(ABC):
         self._worker_awaken.set()
         # Main worker loop should exit after one final export call with flush all strategy.
         self._worker_thread.join()
-        self._exporter.shutdown()
+        self._exporter.shutdown()  # pyright: ignore [reportAttributeAccessIssue]
 
     def force_flush(self, timeout_millis: Optional[int] = None):
         if self._shutdown:
