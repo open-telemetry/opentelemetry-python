@@ -53,7 +53,8 @@ class RandomIdGenerator(IdGenerator):
             It is recommended to use a fresh `Random()` instead of the default
             to avoid potential conflicts with the global random instance
             (duplicate ids across multiple processes when a constant global
-            random seed is set).
+            random seed is set). In case of a custom implementation, it should
+            be uniform, as some samplers rely on this randomness to make sampling decisions.
     """
 
     def __init__(self, rng: Optional[Random] = None) -> None:
