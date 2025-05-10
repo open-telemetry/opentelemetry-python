@@ -21,7 +21,7 @@ from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
 )
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
-from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
@@ -48,7 +48,7 @@ def post_fork(server, worker):
 
     resource = Resource.create(
         attributes={
-            "service.name": "api-service",
+            SERVICE_NAME: "api-service",
             # If workers are not distinguished within attributes, traces and
             # metrics exported from each worker will be indistinguishable. While
             # not necessarily an issue for traces, it is confusing for almost

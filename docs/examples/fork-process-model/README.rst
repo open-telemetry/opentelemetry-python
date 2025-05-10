@@ -17,7 +17,7 @@ Gunicorn post_fork hook
 
     from opentelemetry import trace
     from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-    from opentelemetry.sdk.resources import Resource
+    from opentelemetry.sdk.resources import SERVICE_NAME, Resource
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
@@ -26,7 +26,7 @@ Gunicorn post_fork hook
         server.log.info("Worker spawned (pid: %s)", worker.pid)
 
         resource = Resource.create(attributes={
-            "service.name": "api-service"
+            SERVICE_NAME: "api-service"
         })
 
         trace.set_tracer_provider(TracerProvider(resource=resource))
@@ -45,7 +45,7 @@ uWSGI postfork decorator
 
     from opentelemetry import trace
     from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-    from opentelemetry.sdk.resources import Resource
+    from opentelemetry.sdk.resources import SERVICE_NAME, Resource
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
@@ -53,7 +53,7 @@ uWSGI postfork decorator
     @postfork
     def init_tracing():
         resource = Resource.create(attributes={
-            "service.name": "api-service"
+            SERVICE_NAME: "api-service"
         })
 
         trace.set_tracer_provider(TracerProvider(resource=resource))
