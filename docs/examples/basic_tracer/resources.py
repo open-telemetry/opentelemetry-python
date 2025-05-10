@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from opentelemetry import trace
-from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     BatchSpanProcessor,
@@ -21,7 +21,7 @@ from opentelemetry.sdk.trace.export import (
 )
 
 # Use Resource.create() instead of constructor directly
-resource = Resource.create({"service.name": "basic_service"})
+resource = Resource.create({SERVICE_NAME: "basic_service"})
 
 trace.set_tracer_provider(TracerProvider(resource=resource))
 
