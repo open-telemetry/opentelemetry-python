@@ -21,7 +21,9 @@ import os
 import threading
 import weakref
 from typing import (
+    Generic,
     Optional,
+    TypeVar,
 )
 
 from opentelemetry.context import (
@@ -30,7 +32,6 @@ from opentelemetry.context import (
     detach,
     set_value,
 )
-from typing import TypeVar, Generic
 from opentelemetry.util._once import Once
 
 
