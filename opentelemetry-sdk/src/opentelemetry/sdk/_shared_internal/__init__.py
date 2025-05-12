@@ -48,7 +48,7 @@ Telemetry = TypeVar("Telemetry")
 
 class Exporter(Protocol[Telemetry]):
     @abstractmethod
-    def export(self, data: list[Telemetry]):
+    def export(self, batch: list[Telemetry]):
         raise NotImplementedError
 
     @abstractmethod
@@ -57,9 +57,13 @@ class Exporter(Protocol[Telemetry]):
 
 
 class BatchProcessor(Generic[Telemetry]):
+    """This class can be used with exporter's that implement the above
+    Exporter interface to buffer and send telemetry in batch through
+     the exporter."""
+
     def __init__(
         self,
-        exporter: Exporter,
+        exporter: Exporter[Telemetry],
         schedule_delay_millis: float,
         max_export_batch_size: int,
         export_timeout_millis: float,
