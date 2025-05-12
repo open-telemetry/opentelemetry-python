@@ -14,9 +14,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version 1.33.0/0.54b0 (2025-05-09)
 
-- Refactor `BatchLogRecordProcessor` to simplify code and make the control flow more
-  clear ([#4562](https://github.com/open-telemetry/opentelemetry-python/pull/4562/)
-  and [#4535](https://github.com/open-telemetry/opentelemetry-python/pull/4535)).
 - Fix intermittent `Connection aborted` error when using otlp/http exporters
   ([#4477](https://github.com/open-telemetry/opentelemetry-python/pull/4477))
 - opentelemetry-sdk: use stable code attributes: `code.function` -> `code.function.name`, `code.lineno` -> `code.line.number`, `code.filepath` -> `code.file.path`
