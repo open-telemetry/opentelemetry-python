@@ -53,6 +53,19 @@ PROCESS_CREATION_TIME: Final = "process.creation.time"
 The date and time the process was created, in ISO 8601 format.
 """
 
+PROCESS_ENVIRONMENT_VARIABLE_TEMPLATE: Final = "process.environment_variable"
+"""
+Process environment variables, <key> being the environment variable name, the value being the environment variable value.
+Note: Examples:
+
+- an environment variable `USER` with value `"ubuntu"` SHOULD be recorded
+as the `process.environment_variable.USER` attribute with value `"ubuntu"`.
+
+- an environment variable `PATH` with value `"/usr/local/bin:/usr/bin"`
+SHOULD be recorded as the `process.environment_variable.PATH` attribute
+with value `"/usr/local/bin:/usr/bin"`.
+"""
+
 PROCESS_EXECUTABLE_BUILD_ID_GNU: Final = "process.executable.build_id.gnu"
 """
 The GNU build ID as found in the `.note.gnu.build-id` ELF section (hex string).

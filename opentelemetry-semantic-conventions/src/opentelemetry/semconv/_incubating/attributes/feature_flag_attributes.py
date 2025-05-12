@@ -26,7 +26,7 @@ FEATURE_FLAG_EVALUATION_ERROR_MESSAGE: Final = (
     "feature_flag.evaluation.error.message"
 )
 """
-A message explaining the nature of an error occurring during flag evaluation.
+Deprecated: Replaced by `error.message`.
 """
 
 FEATURE_FLAG_EVALUATION_REASON: Final = "feature_flag.evaluation.reason"
@@ -39,7 +39,7 @@ FEATURE_FLAG_KEY: Final = "feature_flag.key"
 The lookup key of the feature flag.
 """
 
-FEATURE_FLAG_PROVIDER_NAME: Final = "feature_flag.provider_name"
+FEATURE_FLAG_PROVIDER_NAME: Final = "feature_flag.provider.name"
 """
 Identifies the feature flag provider.
 """

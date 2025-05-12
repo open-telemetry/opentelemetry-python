@@ -35,3 +35,25 @@ For Android, examples of `app.installation.id` implementations include:
 
 More information about Android identifier best practices can be found [here](https://developer.android.com/training/articles/user-data-ids).
 """
+
+APP_SCREEN_COORDINATE_X: Final = "app.screen.coordinate.x"
+"""
+The x (horizontal) coordinate of a screen coordinate, in screen pixels.
+"""
+
+APP_SCREEN_COORDINATE_Y: Final = "app.screen.coordinate.y"
+"""
+The y (vertical) component of a screen coordinate, in screen pixels.
+"""
+
+APP_WIDGET_ID: Final = "app.widget.id"
+"""
+An identifier that uniquely differentiates this widget from other widgets in the same application.
+Note: A widget is an application component, typically an on-screen visual GUI element.
+"""
+
+APP_WIDGET_NAME: Final = "app.widget.name"
+"""
+The name of an application widget.
+Note: A widget is an application component, typically an on-screen visual GUI element.
+"""
