@@ -187,6 +187,8 @@ class OTLPExporterMixin(
         compression: gRPC compression method to use
     """
 
+    _MAX_RETRY_TIMEOUT = 64
+
     def __init__(
         self,
         endpoint: Optional[str] = None,
@@ -286,12 +288,13 @@ class OTLPExporterMixin(
         #     data.__class__.__name__,
         #     delay,
         # )
-        max_value = 64
         # expo returns a generator that yields delay values which grow
         # exponentially. Once delay is greater than max_value, the yielded
         # value will remain constant.
-        for delay in _create_exp_backoff_generator(max_value=max_value):
-            if delay == max_value or self._shutdown:
+        for delay in _create_exp_backoff_generator(
+            max_value=self._MAX_RETRY_TIMEOUT
+        ):
+            if delay == self._MAX_RETRY_TIMEOUT or self._shutdown:
                 return self._result.FAILURE
 
             with self._export_lock:
