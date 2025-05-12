@@ -15,6 +15,8 @@
 from enum import Enum
 from typing import Final
 
+from deprecated import deprecated
+
 FEATURE_FLAG_CONTEXT_ID: Final = "feature_flag.context.id"
 """
 The unique identifier for the flag evaluation context. For example, the targeting key.
@@ -24,12 +26,12 @@ FEATURE_FLAG_EVALUATION_ERROR_MESSAGE: Final = (
     "feature_flag.evaluation.error.message"
 )
 """
-A message explaining the nature of an error occurring during flag evaluation.
+Deprecated: Replaced by `error.message`.
 """
 
 FEATURE_FLAG_EVALUATION_REASON: Final = "feature_flag.evaluation.reason"
 """
-The reason code which shows how a feature flag value was determined.
+Deprecated: Replaced by `feature_flag.result.reason`.
 """
 
 FEATURE_FLAG_KEY: Final = "feature_flag.key"
@@ -37,9 +39,23 @@ FEATURE_FLAG_KEY: Final = "feature_flag.key"
 The lookup key of the feature flag.
 """
 
-FEATURE_FLAG_PROVIDER_NAME: Final = "feature_flag.provider_name"
+FEATURE_FLAG_PROVIDER_NAME: Final = "feature_flag.provider.name"
 """
 Identifies the feature flag provider.
+"""
+
+FEATURE_FLAG_RESULT_REASON: Final = "feature_flag.result.reason"
+"""
+The reason code which shows how a feature flag value was determined.
+"""
+
+FEATURE_FLAG_RESULT_VARIANT: Final = "feature_flag.result.variant"
+"""
+A semantic identifier for an evaluated flag value.
+Note: A semantic identifier, commonly referred to as a variant, provides a means
+for referring to a value without including the value itself. This can
+provide additional context for understanding the meaning behind a value.
+For example, the variant `red` maybe be used for the value `#c05543`.
 """
 
 FEATURE_FLAG_SET_ID: Final = "feature_flag.set.id"
@@ -49,11 +65,7 @@ The identifier of the [flag set](https://openfeature.dev/specification/glossary/
 
 FEATURE_FLAG_VARIANT: Final = "feature_flag.variant"
 """
-A semantic identifier for an evaluated flag value.
-Note: A semantic identifier, commonly referred to as a variant, provides a means
-for referring to a value without including the value itself. This can
-provide additional context for understanding the meaning behind a value.
-For example, the variant `red` maybe be used for the value `#c05543`.
+Deprecated: Replaced by `feature_flag.result.variant`.
 """
 
 FEATURE_FLAG_VERSION: Final = "feature_flag.version"
@@ -62,7 +74,31 @@ The version of the ruleset used during the evaluation. This may be any stable va
 """
 
 
+@deprecated(
+    reason="The attribute feature_flag.evaluation.reason is deprecated - Replaced by `feature_flag.result.reason`"
+)  # type: ignore
 class FeatureFlagEvaluationReasonValues(Enum):
+    STATIC = "static"
+    """The resolved value is static (no dynamic evaluation)."""
+    DEFAULT = "default"
+    """The resolved value fell back to a pre-configured value (no dynamic evaluation occurred or dynamic evaluation yielded no result)."""
+    TARGETING_MATCH = "targeting_match"
+    """The resolved value was the result of a dynamic evaluation, such as a rule or specific user-targeting."""
+    SPLIT = "split"
+    """The resolved value was the result of pseudorandom assignment."""
+    CACHED = "cached"
+    """The resolved value was retrieved from cache."""
+    DISABLED = "disabled"
+    """The resolved value was the result of the flag being disabled in the management system."""
+    UNKNOWN = "unknown"
+    """The reason for the resolved value could not be determined."""
+    STALE = "stale"
+    """The resolved value is non-authoritative or possibly out of date."""
+    ERROR = "error"
+    """The resolved value was the result of an error."""
+
+
+class FeatureFlagResultReasonValues(Enum):
     STATIC = "static"
     """The resolved value is static (no dynamic evaluation)."""
     DEFAULT = "default"

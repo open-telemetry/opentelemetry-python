@@ -77,6 +77,7 @@ select = [
   "PLC", # pylint convention
   "PLE", # pylint error
   "Q",   # flake8-quotes
+  "G",   # https://docs.astral.sh/ruff/rules/#flake8-logging-format-g
 ]
 
 ignore = [
@@ -103,9 +104,24 @@ pythonVersion = "3.8"
 include = [
   "opentelemetry-semantic-conventions",
   "opentelemetry-api",
+  "opentelemetry-sdk",
+]
+
+exclude = [
+  "opentelemetry-sdk/tests",
+  "opentelemetry-sdk/src/opentelemetry/sdk/_configuration",
+  "opentelemetry-sdk/src/opentelemetry/sdk/_events",
+  "opentelemetry-sdk/src/opentelemetry/sdk/_logs",
+  "opentelemetry-sdk/src/opentelemetry/sdk/error_handler",
+  "opentelemetry-sdk/src/opentelemetry/sdk/resources",
+  "opentelemetry-sdk/src/opentelemetry/sdk/metrics",
+  "opentelemetry-sdk/src/opentelemetry/sdk/trace",
+  "opentelemetry-sdk/src/opentelemetry/sdk/util",
+  "opentelemetry-sdk/benchmarks",
 ]
 
 # When packages are correct typed add them to the strict list
 strict = [
   "opentelemetry-semantic-conventions",
+  "opentelemetry-sdk/src/opentelemetry/sdk/environment_variables",
 ]

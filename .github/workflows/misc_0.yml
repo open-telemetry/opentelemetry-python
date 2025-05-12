@@ -9,9 +9,21 @@ on:
     - 'release/*'
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 env:
   CORE_REPO_SHA: main
-  CONTRIB_REPO_SHA: main
+  # Set the SHA to the branch name if the PR has a label 'prepare-release' or 'backport' otherwise, set it to 'main'
+  # For PRs you can change the inner fallback ('main')
+  # For pushes you change the outer fallback ('main')
+  # The logic below is used during releases and depends on having an equivalent branch name in the contrib repo.
+  CONTRIB_REPO_SHA: ${{ github.event_name == 'pull_request' && (
+       contains(github.event.pull_request.labels.*.name, 'prepare-release') && github.event.pull_request.head.ref ||
+       contains(github.event.pull_request.labels.*.name, 'backport') && github.event.pull_request.base.ref ||
+       'main'
+    ) || 'main' }}
   PIP_EXISTS_ACTION: w
 
 jobs:
@@ -19,6 +31,7 @@ jobs:
   spellcheck:
     name: spellcheck
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -37,6 +50,7 @@ jobs:
   tracecontext:
     name: tracecontext
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -55,6 +69,7 @@ jobs:
   mypy:
     name: mypy
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -73,6 +88,7 @@ jobs:
   mypyinstalled:
     name: mypyinstalled
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -91,6 +107,7 @@ jobs:
   typecheck:
     name: typecheck
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -109,6 +126,7 @@ jobs:
   docs:
     name: docs
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     if: |
       github.event.pull_request.user.login != 'opentelemetrybot' && github.event_name == 'pull_request'
     steps:
@@ -129,6 +147,7 @@ jobs:
   docker-tests-otlpexporter:
     name: docker-tests-otlpexporter
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -147,6 +166,7 @@ jobs:
   docker-tests-opencensus:
     name: docker-tests-opencensus
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -165,6 +185,7 @@ jobs:
   public-symbols-check:
     name: public-symbols-check
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     if: |
       !contains(github.event.pull_request.labels.*.name, 'Approve Public API check')
       && github.actor != 'opentelemetrybot' && github.event_name == 'pull_request'
@@ -197,6 +218,7 @@ jobs:
   shellcheck:
     name: shellcheck
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -215,6 +237,7 @@ jobs:
   generate-workflows:
     name: generate-workflows
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     if: |
       !contains(github.event.pull_request.labels.*.name, 'Skip generate-workflows')
       && github.event.pull_request.user.login != 'opentelemetrybot' && github.event_name == 'pull_request'
@@ -239,6 +262,7 @@ jobs:
   precommit:
     name: precommit
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4

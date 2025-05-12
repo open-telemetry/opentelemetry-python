@@ -7,8 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## Version 1.33.0/0.54b0 (2025-05-09)
+
+- Fix intermittent `Connection aborted` error when using otlp/http exporters
+  ([#4477](https://github.com/open-telemetry/opentelemetry-python/pull/4477))
+- opentelemetry-sdk: use stable code attributes: `code.function` -> `code.function.name`, `code.lineno` -> `code.line.number`, `code.filepath` -> `code.file.path`
+  ([#4508](https://github.com/open-telemetry/opentelemetry-python/pull/4508))
+- Fix serialization of extended attributes for logs signal
+  ([#4342](https://github.com/open-telemetry/opentelemetry-python/pull/4342))
+- Handle OTEL_PROPAGATORS contains None
+  ([#4553](https://github.com/open-telemetry/opentelemetry-python/pull/4553))
+- docs: updated and added to the metrics and log examples
+  ([#4559](https://github.com/open-telemetry/opentelemetry-python/pull/4559))
+- Bump semantic conventions to 1.33.0
+  ([#4567](https://github.com/open-telemetry/opentelemetry-python/pull/4567))
+
+## Version 1.32.0/0.53b0 (2025-04-10)
+
 - Fix user agent in OTLP HTTP metrics exporter
   ([#4475](https://github.com/open-telemetry/opentelemetry-python/pull/4475))
+- Improve performance of baggage operations
+  ([#4466](https://github.com/open-telemetry/opentelemetry-python/pull/4466))
+- sdk: remove duplicated constant definitions for `environment_variables`
+  ([#4491](https://github.com/open-telemetry/opentelemetry-python/pull/4491))
+- api: Revert record `BaseException` change in `trace_api.use_span()`
+  ([#4494](https://github.com/open-telemetry/opentelemetry-python/pull/4494))
+- Improve CI by cancelling stale runs and setting timeouts
+  ([#4498](https://github.com/open-telemetry/opentelemetry-python/pull/4498))
+- Patch logging.basicConfig so OTel logs don't cause console logs to disappear
+  ([#4436](https://github.com/open-telemetry/opentelemetry-python/pull/4436))
+- Bump semantic conventions to 1.32.0
+  ([#4530](https://github.com/open-telemetry/opentelemetry-python/pull/4530))
+- Fix ExplicitBucketHistogramAggregation to handle multiple explicit bucket boundaries advisories
+  ([#4521](https://github.com/open-telemetry/opentelemetry-python/pull/4521))
+- opentelemetry-sdk: Fix serialization of objects in log handler
+  ([#4528](https://github.com/open-telemetry/opentelemetry-python/pull/4528))
 
 ## Version 1.31.0/0.52b0 (2025-03-12)
 
@@ -17,7 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add type annotations to context's attach & detach
   ([#4346](https://github.com/open-telemetry/opentelemetry-python/pull/4346))
 - Fix OTLP encoders missing instrumentation scope schema url and attributes
-  ([#4359](https://github.com/open-telemetry/opentelemetry-python/pull/4359))  
+  ([#4359](https://github.com/open-telemetry/opentelemetry-python/pull/4359))
 - prometheus-exporter: fix labels out of place for data points with different
   attribute sets
   ([#4413](https://github.com/open-telemetry/opentelemetry-python/pull/4413))
@@ -41,6 +74,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4458](https://github.com/open-telemetry/opentelemetry-python/pull/4458))
 - pylint-ci updated python version to 3.13
   ([#4450](https://github.com/open-telemetry/opentelemetry-python/pull/4450))
+- Fix memory leak in Log & Trace exporter
+  ([#4449](https://github.com/open-telemetry/opentelemetry-python/pull/4449))
 
 ## Version 1.30.0/0.51b0 (2025-02-03)
 
@@ -1504,8 +1539,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Serialize tuple type values by coercing them into a string, since Jaeger does not
   support tuple types.
   ([#865](https://github.com/open-telemetry/opentelemetry-python/pull/865))
-- Validate span attribute types in SDK
-  ([#678](https://github.com/open-telemetry/opentelemetry-python/pull/678))
 - Specify to_json indent from arguments
   ([#718](https://github.com/open-telemetry/opentelemetry-python/pull/718))
 - Span.resource will now default to an empty resource

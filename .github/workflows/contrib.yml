@@ -6,9 +6,17 @@ on:
     - 'release/*'
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   contrib_0:
     uses: open-telemetry/opentelemetry-python-contrib/.github/workflows/core_contrib_test_0.yml@main
     with:
       CORE_REPO_SHA: ${{ github.sha }}
-      CONTRIB_REPO_SHA: main
+      CONTRIB_REPO_SHA: ${{ github.event_name == 'pull_request' && (
+          contains(github.event.pull_request.labels.*.name, 'prepare-release') && github.event.pull_request.head.ref ||
+          contains(github.event.pull_request.labels.*.name, 'backport') && github.event.pull_request.base.ref ||
+          'main'
+        ) || 'main' }}

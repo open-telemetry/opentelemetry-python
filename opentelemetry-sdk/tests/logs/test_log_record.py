@@ -33,7 +33,12 @@ class TestLogRecord(unittest.TestCase):
                 "body": "a log line",
                 "severity_number": None,
                 "severity_text": None,
-                "attributes": None,
+                "attributes": {
+                    "mapping": {"key": "value"},
+                    "none": None,
+                    "sequence": [1, 2],
+                    "str": "string",
+                },
                 "dropped_attributes": 0,
                 "timestamp": "1970-01-01T00:00:00.000000Z",
                 "observed_timestamp": "1970-01-01T00:00:00.000000Z",
@@ -52,12 +57,18 @@ class TestLogRecord(unittest.TestCase):
             observed_timestamp=0,
             body="a log line",
             resource=Resource({"service.name": "foo"}),
+            attributes={
+                "mapping": {"key": "value"},
+                "none": None,
+                "sequence": [1, 2],
+                "str": "string",
+            },
         )
 
         self.assertEqual(expected, actual.to_json(indent=4))
         self.assertEqual(
             actual.to_json(indent=None),
-            '{"body": "a log line", "severity_number": null, "severity_text": null, "attributes": null, "dropped_attributes": 0, "timestamp": "1970-01-01T00:00:00.000000Z", "observed_timestamp": "1970-01-01T00:00:00.000000Z", "trace_id": "", "span_id": "", "trace_flags": null, "resource": {"attributes": {"service.name": "foo"}, "schema_url": ""}}',
+            '{"body": "a log line", "severity_number": null, "severity_text": null, "attributes": {"mapping": {"key": "value"}, "none": null, "sequence": [1, 2], "str": "string"}, "dropped_attributes": 0, "timestamp": "1970-01-01T00:00:00.000000Z", "observed_timestamp": "1970-01-01T00:00:00.000000Z", "trace_id": "", "span_id": "", "trace_flags": null, "resource": {"attributes": {"service.name": "foo"}, "schema_url": ""}}',
         )
 
     def test_log_record_to_json_serializes_severity_number_as_int(self):

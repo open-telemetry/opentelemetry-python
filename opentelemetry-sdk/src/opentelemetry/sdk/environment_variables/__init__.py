@@ -87,6 +87,7 @@ OTEL_BLRP_EXPORT_TIMEOUT = "OTEL_BLRP_EXPORT_TIMEOUT"
 .. envvar:: OTEL_BLRP_EXPORT_TIMEOUT
 
 The :envvar:`OTEL_BLRP_EXPORT_TIMEOUT` represents the maximum allowed time to export data from the BatchLogRecordProcessor.
+This environment variable currently does nothing, see https://github.com/open-telemetry/opentelemetry-python/issues/4555.
 Default: 30000
 """
 
@@ -565,25 +566,6 @@ for gRPC requests for logs. A scheme of https takes precedence over the this con
 Default: False
 """
 
-OTEL_EXPORTER_OTLP_METRICS_ENDPOINT = "OTEL_EXPORTER_OTLP_METRICS_ENDPOINT"
-"""
-.. envvar:: OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
-
-The :envvar:`OTEL_EXPORTER_OTLP_METRICS_ENDPOINT` target to which the metric exporter is going to send spans.
-The endpoint MUST be a valid URL host, and MAY contain a scheme (http or https), port and path.
-A scheme of https indicates a secure connection and takes precedence over this configuration setting.
-"""
-
-OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE = (
-    "OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE"
-)
-"""
-.. envvar:: OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE
-
-The :envvar:`OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE` stores the path to the certificate file for
-TLS credentials of gRPC client for metrics. Should only be used for a secure connection for metrics.
-"""
-
 OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE = "OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE
@@ -592,38 +574,12 @@ The :envvar:`OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE` stores the path to the certifi
 TLS credentials of gRPC client for logs. Should only be used for a secure connection for logs.
 """
 
-OTEL_EXPORTER_OTLP_METRICS_HEADERS = "OTEL_EXPORTER_OTLP_METRICS_HEADERS"
-"""
-.. envvar:: OTEL_EXPORTER_OTLP_METRICS_HEADERS
-
-The :envvar:`OTEL_EXPORTER_OTLP_METRICS_HEADERS` contains the key-value pairs to be used as headers for metrics
-associated with gRPC or HTTP requests.
-"""
-
-OTEL_EXPORTER_OTLP_METRICS_TIMEOUT = "OTEL_EXPORTER_OTLP_METRICS_TIMEOUT"
-"""
-.. envvar:: OTEL_EXPORTER_OTLP_METRICS_TIMEOUT
-
-The :envvar:`OTEL_EXPORTER_OTLP_METRICS_TIMEOUT` is the maximum time the OTLP exporter will
-wait for each batch export for metrics.
-"""
-
 OTEL_EXPORTER_OTLP_LOGS_TIMEOUT = "OTEL_EXPORTER_OTLP_LOGS_TIMEOUT"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_LOGS_TIMEOUT
 
 The :envvar:`OTEL_EXPORTER_OTLP_LOGS_TIMEOUT` is the maximum time the OTLP exporter will
 wait for each batch export for logs.
-"""
-
-OTEL_EXPORTER_OTLP_METRICS_COMPRESSION = (
-    "OTEL_EXPORTER_OTLP_METRICS_COMPRESSION"
-)
-"""
-.. envvar:: OTEL_EXPORTER_OTLP_METRICS_COMPRESSION
-
-Same as :envvar:`OTEL_EXPORTER_OTLP_COMPRESSION` but only for the metric
-exporter. If both are present, this takes higher precedence.
 """
 
 OTEL_EXPORTER_JAEGER_CERTIFICATE = "OTEL_EXPORTER_JAEGER_CERTIFICATE"
@@ -714,13 +670,6 @@ OTEL_METRIC_EXPORT_TIMEOUT = "OTEL_METRIC_EXPORT_TIMEOUT"
 The :envvar:`OTEL_METRIC_EXPORT_TIMEOUT` is the maximum allowed time (in milliseconds) to export data.
 """
 
-OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY = "OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY"
-"""
-.. envvar:: OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY
-
-The :envvar:`OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY` is the clients private key to use in mTLS communication in PEM format.
-"""
-
 OTEL_METRICS_EXEMPLAR_FILTER = "OTEL_METRICS_EXEMPLAR_FILTER"
 """
 .. envvar:: OTEL_METRICS_EXEMPLAR_FILTER
@@ -735,15 +684,6 @@ OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION = (
 .. envvar:: OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION
 
 The :envvar:`OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION` is the default aggregation to use for histogram instruments.
-"""
-
-OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE = (
-    "OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE"
-)
-"""
-.. envvar:: OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE
-
-The :envvar:`OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE` is the client certificate/chain trust for clients private key to use in mTLS communication in PEM format.
 """
 
 OTEL_EXPERIMENTAL_RESOURCE_DETECTORS = "OTEL_EXPERIMENTAL_RESOURCE_DETECTORS"

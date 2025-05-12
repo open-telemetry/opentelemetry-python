@@ -130,8 +130,7 @@ class GlobalErrorHandler:
                 # pylint: disable=broad-exception-caught
                 except Exception as error_handling_error:
                     logger.exception(
-                        "%s error while handling error"
-                        " %s by error handler %s",
+                        "%s error while handling error %s by error handler %s",
                         error_handling_error.__class__.__name__,
                         exc_value.__class__.__name__,
                         error_handler_class.__name__,

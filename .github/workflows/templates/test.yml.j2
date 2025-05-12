@@ -9,9 +9,21 @@ on:
     - 'release/*'
   pull_request:
 
+concurrency:
+  group: ${% raw %}{{ github.workflow }}-${{ github.head_ref || github.run_id }}{% endraw %}
+  cancel-in-progress: true
+
 env:
   CORE_REPO_SHA: main
-  CONTRIB_REPO_SHA: main
+  # Set the SHA to the branch name if the PR has a label 'prepare-release' or 'backport' otherwise, set it to 'main'
+  # For PRs you can change the inner fallback ('main')
+  # For pushes you change the outer fallback ('main')
+  # The logic below is used during releases and depends on having an equivalent branch name in the contrib repo.
+  CONTRIB_REPO_SHA: {% raw %}${{ github.event_name == 'pull_request' && (
+       contains(github.event.pull_request.labels.*.name, 'prepare-release') && github.event.pull_request.head.ref ||
+       contains(github.event.pull_request.labels.*.name, 'backport') && github.event.pull_request.base.ref ||
+       'main'
+    ) || 'main' }}{% endraw %}
   PIP_EXISTS_ACTION: w
 
 jobs:
@@ -20,6 +32,7 @@ jobs:
   {{ job_data.name }}:
     name: {{ job_data.ui_name }}
     runs-on: {{ job_data.os }}
+    timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${% raw %}{{ github.sha }}{% endraw %}
         uses: actions/checkout@v4
