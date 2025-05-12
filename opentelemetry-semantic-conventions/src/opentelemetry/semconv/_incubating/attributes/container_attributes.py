@@ -82,6 +82,7 @@ Container image tags. An example can be found in [Docker Image Inspect](https://
 CONTAINER_LABEL_TEMPLATE: Final = "container.label"
 """
 Container labels, `<key>` being the label name, the value being the label value.
+Note: For example, a docker container label `app` with value `nginx` SHOULD be recorded as the `container.label.app` attribute with value `"nginx"`.
 """
 
 CONTAINER_LABELS_TEMPLATE: Final = "container.labels"
