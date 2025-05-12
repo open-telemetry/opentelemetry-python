@@ -96,7 +96,6 @@ from opentelemetry.trace import Link, SpanKind
 from opentelemetry.trace.span import TraceState
 from opentelemetry.util.types import Attributes
 
-
 CUSTOM_LOG_FORMAT = "CUSTOM FORMAT %(levelname)s:%(name)s:%(message)s"
 
 
