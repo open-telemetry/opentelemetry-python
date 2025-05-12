@@ -46,8 +46,7 @@ class BatchExportStrategy(enum.Enum):
 Telemetry = TypeVar("Telemetry")
 
 
-# TODO: Switch this to Exporter[Telemetry](Protocol) once only python 3.12+ is supported.
-class Exporter(Protocol):
+class Exporter(Protocol[Telemetry]):
     @abstractmethod
     def export(self, data: list[Telemetry]):
         raise NotImplementedError
