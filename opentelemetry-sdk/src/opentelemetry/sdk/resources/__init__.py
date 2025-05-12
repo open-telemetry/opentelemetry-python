@@ -303,7 +303,7 @@ class Resource:
     def to_json(self, indent: Optional[int] = 4) -> str:
         return dumps(
             {
-                "attributes": dict(self._attributes),
+                "attributes": dict(self.attributes),
                 "schema_url": self._schema_url,
             },
             indent=indent,
