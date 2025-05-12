@@ -831,6 +831,108 @@ class TestOTLPMetricExporter(TestCase):
             [call(1), call(2), call(4), call(8), call(16), call(32)]
         )
 
+    @patch.object(OTLPMetricExporter, "_export")
+    @patch(
+        "opentelemetry.exporter.otlp.proto.http.metric_exporter._create_exp_backoff_generator"
+    )
+    @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.sleep")
+    @patch(
+        "opentelemetry.exporter.otlp.proto.http.metric_exporter.encode_metrics"
+    )
+    def test_export_retries_with_batching(
+        self,
+        mock_encode_metrics,
+        mock_sleep,
+        mock_backoff_generator,
+        mock_export,
+    ):
+        mock_backoff_generator.return_value = iter([1, 2, 4])
+        mock_export.side_effect = [
+            # Non-retryable
+            MagicMock(ok=False, status_code=400, reason="bad request"),
+            # Retryable
+            MagicMock(
+                ok=False, status_code=500, reason="internal server error"
+            ),
+            # Success
+            MagicMock(ok=True),
+        ]
+        mock_encode_metrics.return_value = pb2.MetricsData(
+            resource_metrics=[
+                _resource_metrics(
+                    index=1,
+                    scope_metrics=[
+                        _scope_metrics(
+                            index=1,
+                            metrics=[
+                                _gauge(
+                                    index=1,
+                                    data_points=[
+                                        _number_data_point(11),
+                                        _number_data_point(12),
+                                        _number_data_point(13),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
+        batch_1 = pb2.MetricsData(
+            resource_metrics=[
+                _resource_metrics(
+                    index=1,
+                    scope_metrics=[
+                        _scope_metrics(
+                            index=1,
+                            metrics=[
+                                _gauge(
+                                    index=1,
+                                    data_points=[
+                                        _number_data_point(11),
+                                        _number_data_point(12),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
+        batch_2 = pb2.MetricsData(
+            resource_metrics=[
+                _resource_metrics(
+                    index=1,
+                    scope_metrics=[
+                        _scope_metrics(
+                            index=1,
+                            metrics=[
+                                _gauge(
+                                    index=1,
+                                    data_points=[
+                                        _number_data_point(13),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
+
+        exporter = OTLPMetricExporter(max_export_batch_size=2)
+        result = exporter.export("foo")
+        self.assertEqual(result, MetricExportResult.SUCCESS)
+        self.assertEqual(mock_export.call_count, 3)
+        mock_export.assert_has_calls(
+            [
+                call(batch_1.SerializeToString()),
+                call(batch_2.SerializeToString()),
+                call(batch_2.SerializeToString()),
+            ]
+        )
+
     def test_aggregation_temporality(self):
         otlp_metric_exporter = OTLPMetricExporter()
 

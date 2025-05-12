@@ -237,13 +237,14 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         **kwargs,
     ) -> MetricExportResult:
         serialized_data = encode_metrics(metrics_data)
-        for delay in _create_exp_backoff_generator(
-            max_value=self._MAX_RETRY_TIMEOUT
-        ):
-            if delay == self._MAX_RETRY_TIMEOUT:
-                return MetricExportResult.FAILURE
 
-            if self._max_export_batch_size is None:
+        if self._max_export_batch_size is None:
+            for delay in _create_exp_backoff_generator(
+                max_value=self._MAX_RETRY_TIMEOUT
+            ):
+                if delay == self._MAX_RETRY_TIMEOUT:
+                    return MetricExportResult.FAILURE
+
                 resp = self._export(serialized_data.SerializeToString())
                 # pylint: disable=no-else-return
                 if resp.ok:
@@ -264,38 +265,47 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                     )
                     return MetricExportResult.FAILURE
 
-            # Else, attempt export in batches for this retry
-            else:
-                export_result = MetricExportResult.SUCCESS
-                for split_metrics_data in self._split_metrics_data(
-                    serialized_data
-                ):
-                    split_resp = self._export(
-                        split_metrics_data.SerializeToString()
+            return MetricExportResult.FAILURE
+
+        # Else, attempt export in batches
+        split_metrics_batches = list(self._split_metrics_data(serialized_data))
+        export_result = MetricExportResult.SUCCESS
+
+        for split_metrics_data in split_metrics_batches:
+            # Export current batch until success, non-transient error, or timeout reached
+            for delay in _create_exp_backoff_generator(
+                max_value=self._MAX_RETRY_TIMEOUT
+            ):
+                if delay == self._MAX_RETRY_TIMEOUT:
+                    export_result = MetricExportResult.FAILURE
+                    break
+
+                split_resp = self._export(
+                    split_metrics_data.SerializeToString()
+                )
+                # pylint: disable=no-else-return
+                if split_resp.ok:
+                    export_result = MetricExportResult.SUCCESS
+                    break
+                elif self._retryable(split_resp):
+                    _logger.warning(
+                        "Transient error %s encountered while exporting metric batch, retrying in %ss.",
+                        split_resp.reason,
+                        delay,
                     )
+                    sleep(delay)
+                    continue
+                else:
+                    _logger.error(
+                        "Failed to export batch code: %s, reason: %s",
+                        split_resp.status_code,
+                        split_resp.text,
+                    )
+                    export_result = MetricExportResult.FAILURE
+                    break
 
-                    if split_resp.ok:
-                        export_result = MetricExportResult.SUCCESS
-                    elif self._retryable(split_resp):
-                        _logger.warning(
-                            "Transient error %s encountered while exporting metric batch, retrying in %ss.",
-                            split_resp.reason,
-                            delay,
-                        )
-                        sleep(delay)
-                        continue
-                    else:
-                        _logger.error(
-                            "Failed to export batch code: %s, reason: %s",
-                            split_resp.status_code,
-                            split_resp.text,
-                        )
-                        export_result = MetricExportResult.FAILURE
-
-                # Return result after all batches are attempted
-                return export_result
-
-        return MetricExportResult.FAILURE
+        # Return last result after all batches are attempted
+        return export_result
 
     def _split_metrics_data(
         self,
