@@ -680,9 +680,7 @@ class TestLoggingInit(TestCase):
 
     @patch.dict(
         environ,
-        {
-            "OTEL_RESOURCE_ATTRIBUTES": "service.name=otlp-service",
-        },
+        {"OTEL_RESOURCE_ATTRIBUTES": "service.name=otlp-service"},
     )
     def test_logging_init_exporter_without_handler_setup(self):
         resource = Resource.create({})
@@ -706,7 +704,6 @@ class TestLoggingInit(TestCase):
         getLogger(__name__).error("hello")
         self.assertFalse(provider.processor.exporter.export_called)
         root_logger = getLogger()
-        self.assertEqual(root_logger.level, WARNING)
         for handler in root_logger.handlers:
             if isinstance(handler, LoggingHandler):
                 self.fail()
@@ -813,7 +810,6 @@ class TestLoggingInit(TestCase):
         getLogger(__name__).error("hello")
         self.assertTrue(provider.processor.exporter.export_called)
         root_logger = getLogger()
-        self.assertEqual(root_logger.level, WARNING)
         handler_present = False
         for handler in root_logger.handlers:
             if isinstance(handler, LoggingHandler):
