@@ -20,9 +20,11 @@ import logging
 import os
 import threading
 import weakref
+from abc import abstractmethod
 from typing import (
     Generic,
     Optional,
+    Protocol,
     TypeVar,
 )
 
@@ -42,10 +44,20 @@ class BatchExportStrategy(enum.Enum):
 
 
 Telemetry = TypeVar("Telemetry")
-Exporter = TypeVar("Exporter")
 
 
-class BatchProcessor(Generic[Telemetry, Exporter]):
+# TODO: Switch this to Exporter[Telemetry](Protocol) once only python 3.12+ is supported.
+class Exporter(Protocol):
+    @abstractmethod
+    def export(self, data: list[Telemetry]):
+        raise NotImplementedError
+
+    @abstractmethod
+    def shutdown(self):
+        raise NotImplementedError
+
+
+class BatchProcessor(Generic[Telemetry]):
     def __init__(
         self,
         exporter: Exporter,
@@ -134,7 +146,7 @@ class BatchProcessor(Generic[Telemetry, Exporter]):
                 iteration += 1
                 token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
                 try:
-                    self._exporter.export(  # pyright: ignore [reportAttributeAccessIssue]
+                    self._exporter.export(
                         [
                             # Oldest records are at the back, so pop from there.
                             self._queue.pop()
@@ -174,7 +186,7 @@ class BatchProcessor(Generic[Telemetry, Exporter]):
         self._worker_awaken.set()
         # Main worker loop should exit after one final export call with flush all strategy.
         self._worker_thread.join()
-        self._exporter.shutdown()  # pyright: ignore [reportAttributeAccessIssue]
+        self._exporter.shutdown()
 
     def force_flush(self, timeout_millis: Optional[int] = None):
         if self._shutdown:
