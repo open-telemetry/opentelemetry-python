@@ -16,7 +16,14 @@
 from __future__ import annotations
 
 import logging
-from logging import WARNING, getLogger
+from logging import (
+    DEBUG,
+    ERROR,
+    INFO,
+    NOTSET,
+    WARNING,
+    getLogger,
+)
 from os import environ
 from typing import Iterable, Optional, Sequence
 from unittest import TestCase, mock
@@ -33,6 +40,7 @@ from opentelemetry.sdk._configuration import (
     _EXPORTER_OTLP_PROTO_HTTP,
     _get_exporter_names,
     _get_id_generator,
+    _get_log_level,
     _get_sampler,
     _import_config_components,
     _import_exporters,
@@ -74,6 +82,9 @@ from opentelemetry.sdk.trace.sampling import (
 from opentelemetry.trace import Link, SpanKind
 from opentelemetry.trace.span import TraceState
 from opentelemetry.util.types import Attributes
+
+
+CUSTOM_LOG_FORMAT = "CUSTOM FORMAT %(levelname)s:%(name)s:%(message)s"
 
 
 class Provider:
@@ -669,7 +680,119 @@ class TestLoggingInit(TestCase):
 
     @patch.dict(
         environ,
-        {"OTEL_RESOURCE_ATTRIBUTES": "service.name=otlp-service"},
+        {
+            "OTEL_RESOURCE_ATTRIBUTES": "service.name=otlp-service",
+            "OTEL_PYTHON_LOG_LEVEL": "CUSTOM_LOG_LEVEL",
+        },
+        clear=True,
+    )
+    @patch("opentelemetry.sdk._configuration._get_log_level", return_value=39)
+    def test_logging_init_exporter_level_under(self, log_level_mock):
+        resource = Resource.create({})
+        _init_logging(
+            {"otlp": DummyOTLPLogExporter},
+            resource=resource,
+        )
+        self.assertEqual(self.set_provider_mock.call_count, 1)
+        provider = self.set_provider_mock.call_args[0][0]
+        self.assertIsInstance(provider, DummyLoggerProvider)
+        self.assertIsInstance(provider.resource, Resource)
+        self.assertEqual(
+            provider.resource.attributes.get("service.name"),
+            "otlp-service",
+        )
+        self.assertIsInstance(provider.processor, DummyLogRecordProcessor)
+        self.assertIsInstance(
+            provider.processor.exporter, DummyOTLPLogExporter
+        )
+        getLogger(__name__).error("hello")
+        self.assertTrue(provider.processor.exporter.export_called)
+        root_logger = getLogger()
+        handler_present = False
+        for handler in root_logger.handlers:
+            if isinstance(handler, LoggingHandler):
+                handler_present = True
+                self.assertEqual(handler.level, 39)
+        self.assertTrue(handler_present)
+
+    @patch.dict(
+        environ,
+        {
+            "OTEL_RESOURCE_ATTRIBUTES": "service.name=otlp-service",
+            "OTEL_PYTHON_LOG_LEVEL": "CUSTOM_LOG_LEVEL",
+        },
+        clear=True,
+    )
+    @patch("opentelemetry.sdk._configuration._get_log_level", return_value=41)
+    def test_logging_init_exporter_level_over(self, log_level_mock):
+        resource = Resource.create({})
+        _init_logging(
+            {"otlp": DummyOTLPLogExporter},
+            resource=resource,
+        )
+        self.assertEqual(self.set_provider_mock.call_count, 1)
+        provider = self.set_provider_mock.call_args[0][0]
+        self.assertIsInstance(provider, DummyLoggerProvider)
+        self.assertIsInstance(provider.resource, Resource)
+        self.assertEqual(
+            provider.resource.attributes.get("service.name"),
+            "otlp-service",
+        )
+        self.assertIsInstance(provider.processor, DummyLogRecordProcessor)
+        self.assertIsInstance(
+            provider.processor.exporter, DummyOTLPLogExporter
+        )
+        getLogger(__name__).error("hello")
+        self.assertFalse(provider.processor.exporter.export_called)
+        root_logger = getLogger()
+        handler_present = False
+        for handler in root_logger.handlers:
+            if isinstance(handler, LoggingHandler):
+                handler_present = True
+                self.assertEqual(handler.level, 41)
+        self.assertTrue(handler_present)
+
+    @patch.dict(
+        environ,
+        {
+            "OTEL_RESOURCE_ATTRIBUTES": "service.name=otlp-service",
+            "OTEL_PYTHON_LOG_FORMAT": CUSTOM_LOG_FORMAT,
+        },
+    )
+    def test_logging_init_exporter_format(self):
+        resource = Resource.create({})
+        _init_logging(
+            {"otlp": DummyOTLPLogExporter},
+            resource=resource,
+        )
+        self.assertEqual(self.set_provider_mock.call_count, 1)
+        provider = self.set_provider_mock.call_args[0][0]
+        self.assertIsInstance(provider, DummyLoggerProvider)
+        self.assertIsInstance(provider.resource, Resource)
+        self.assertEqual(
+            provider.resource.attributes.get("service.name"),
+            "otlp-service",
+        )
+        self.assertIsInstance(provider.processor, DummyLogRecordProcessor)
+        self.assertIsInstance(
+            provider.processor.exporter, DummyOTLPLogExporter
+        )
+        getLogger(__name__).error("hello")
+        self.assertTrue(provider.processor.exporter.export_called)
+        root_logger = getLogger()
+        self.assertEqual(root_logger.level, WARNING)
+        handler_present = False
+        for handler in root_logger.handlers:
+            if isinstance(handler, LoggingHandler):
+                self.assertEqual(handler.formatter._fmt, CUSTOM_LOG_FORMAT)
+                handler_present = True
+        self.assertTrue(handler_present)
+
+    @patch.dict(
+        environ,
+        {
+            "OTEL_RESOURCE_ATTRIBUTES": "service.name=otlp-service",
+        },
     )
     def test_logging_init_exporter_without_handler_setup(self):
         resource = Resource.create({})
@@ -692,6 +815,43 @@ class TestLoggingInit(TestCase):
         )
         getLogger(__name__).error("hello")
         self.assertFalse(provider.processor.exporter.export_called)
+        root_logger = getLogger()
+        self.assertEqual(root_logger.level, WARNING)
+        for handler in root_logger.handlers:
+            if isinstance(handler, LoggingHandler):
+                self.fail()
+
+    @patch.dict(environ, {}, clear=True)
+    def test_OTEL_PYTHON_LOG_LEVEL_by_name_default(self):
+        self.assertEqual(_get_log_level(), NOTSET)
+
+    @patch.dict(environ, {"OTEL_PYTHON_LOG_LEVEL": "NOTSET "}, clear=True)
+    def test_OTEL_PYTHON_LOG_LEVEL_by_name_notset(self):
+        self.assertEqual(_get_log_level(), NOTSET)
+
+    @patch.dict(environ, {"OTEL_PYTHON_LOG_LEVEL": " DeBug "}, clear=True)
+    def test_OTEL_PYTHON_LOG_LEVEL_by_name_debug(self):
+        self.assertEqual(_get_log_level(), DEBUG)
+
+    @patch.dict(environ, {"OTEL_PYTHON_LOG_LEVEL": " info "}, clear=True)
+    def test_OTEL_PYTHON_LOG_LEVEL_by_name_info(self):
+        self.assertEqual(_get_log_level(), INFO)
+
+    @patch.dict(environ, {"OTEL_PYTHON_LOG_LEVEL": " warn"}, clear=True)
+    def test_OTEL_PYTHON_LOG_LEVEL_by_name_warn(self):
+        self.assertEqual(_get_log_level(), WARNING)
+
+    @patch.dict(environ, {"OTEL_PYTHON_LOG_LEVEL": " warnING "}, clear=True)
+    def test_OTEL_PYTHON_LOG_LEVEL_by_name_warning(self):
+        self.assertEqual(_get_log_level(), WARNING)
+
+    @patch.dict(environ, {"OTEL_PYTHON_LOG_LEVEL": " eRroR"}, clear=True)
+    def test_OTEL_PYTHON_LOG_LEVEL_by_name_error(self):
+        self.assertEqual(_get_log_level(), ERROR)
+
+    @patch.dict(environ, {"OTEL_PYTHON_LOG_LEVEL": "foobar"}, clear=True)
+    def test_OTEL_PYTHON_LOG_LEVEL_by_name_invalid(self):
+        self.assertEqual(_get_log_level(), NOTSET)
 
     @patch.dict(
         environ,
@@ -896,6 +1056,101 @@ class TestLoggingInit(TestCase):
                 1,
                 "Should still have exactly one OpenTelemetry LoggingHandler",
             )
+ 
+    @patch.dict(
+        environ,
+        {
+            "OTEL_TRACES_EXPORTER": _EXPORTER_OTLP,
+            "OTEL_METRICS_EXPORTER": _EXPORTER_OTLP_PROTO_GRPC,
+            "OTEL_LOGS_EXPORTER": _EXPORTER_OTLP_PROTO_HTTP,
+        },
+    )
+    @patch.dict(
+        environ,
+        {
+            "OTEL_RESOURCE_ATTRIBUTES": "service.name=otlp-service, custom.key.1=env-value",
+            "OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED": "False",
+        },
+    )
+    @patch("opentelemetry.sdk._configuration.Resource")
+    @patch("opentelemetry.sdk._configuration._import_exporters")
+    @patch("opentelemetry.sdk._configuration._get_exporter_names")
+    @patch("opentelemetry.sdk._configuration._init_tracing")
+    @patch("opentelemetry.sdk._configuration._init_logging")
+    @patch("opentelemetry.sdk._configuration._init_metrics")
+    def test_initialize_components_kwargs_disable_logging_handler(
+        self,
+        metrics_mock,
+        logging_mock,
+        tracing_mock,
+        exporter_names_mock,
+        import_exporters_mock,
+        resource_mock,
+    ):
+        exporter_names_mock.return_value = [
+            "env_var_exporter_1",
+            "env_var_exporter_2",
+        ]
+        import_exporters_mock.return_value = (
+            "TEST_SPAN_EXPORTERS_DICT",
+            "TEST_METRICS_EXPORTERS_DICT",
+            "TEST_LOG_EXPORTERS_DICT",
+        )
+        resource_mock.create.return_value = "TEST_RESOURCE"
+        kwargs = {
+            "auto_instrumentation_version": "auto-version",
+            "trace_exporter_names": ["custom_span_exporter"],
+            "metric_exporter_names": ["custom_metric_exporter"],
+            "log_exporter_names": ["custom_log_exporter"],
+            "sampler": "TEST_SAMPLER",
+            "resource_attributes": {
+                "custom.key.1": "pass-in-value-1",
+                "custom.key.2": "pass-in-value-2",
+            },
+            "id_generator": "TEST_GENERATOR",
+        }
+        _initialize_components(**kwargs)
+
+        import_exporters_mock.assert_called_once_with(
+            [
+                "custom_span_exporter",
+                "env_var_exporter_1",
+                "env_var_exporter_2",
+            ],
+            [
+                "custom_metric_exporter",
+                "env_var_exporter_1",
+                "env_var_exporter_2",
+            ],
+            [
+                "custom_log_exporter",
+                "env_var_exporter_1",
+                "env_var_exporter_2",
+            ],
+        )
+        resource_mock.create.assert_called_once_with(
+            {
+                "telemetry.auto.version": "auto-version",
+                "custom.key.1": "pass-in-value-1",
+                "custom.key.2": "pass-in-value-2",
+            }
+        )
+        # Resource is checked separates
+        tracing_mock.assert_called_once_with(
+            exporters="TEST_SPAN_EXPORTERS_DICT",
+            id_generator="TEST_GENERATOR",
+            sampler="TEST_SAMPLER",
+            resource="TEST_RESOURCE",
+        )
+        metrics_mock.assert_called_once_with(
+            "TEST_METRICS_EXPORTERS_DICT",
+            "TEST_RESOURCE",
+        )
+        logging_mock.assert_called_once_with(
+            "TEST_LOG_EXPORTERS_DICT",
+            "TEST_RESOURCE",
+            False,
+        )
 
 
 class TestMetricsInit(TestCase):
