@@ -834,7 +834,6 @@ class TestLoggingInit(TestCase):
             "OTEL_RESOURCE_ATTRIBUTES": "service.name=otlp-service",
             "OTEL_PYTHON_LOG_LEVEL": "CUSTOM_LOG_LEVEL",
         },
-        clear=True,
     )
     @patch("opentelemetry.sdk._configuration._get_log_level", return_value=39)
     def test_logging_init_exporter_level_under(self, log_level_mock):
@@ -842,6 +841,7 @@ class TestLoggingInit(TestCase):
         _init_logging(
             {"otlp": DummyOTLPLogExporter},
             resource=resource,
+            setup_logging_handler=False,
         )
         self.assertEqual(self.set_provider_mock.call_count, 1)
         provider = self.set_provider_mock.call_args[0][0]
@@ -856,8 +856,9 @@ class TestLoggingInit(TestCase):
             provider.processor.exporter, DummyOTLPLogExporter
         )
         getLogger(__name__).error("hello")
-        self.assertTrue(provider.processor.exporter.export_called)
+        self.assertFalse(provider.processor.exporter.export_called)
         root_logger = getLogger()
+        self.assertEqual(root_logger.level, WARNING)
         handler_present = False
         for handler in root_logger.handlers:
             if isinstance(handler, LoggingHandler):
@@ -873,8 +874,8 @@ class TestLoggingInit(TestCase):
         },
         clear=True,
     )
-    @patch("opentelemetry.sdk._configuration._get_log_level", return_value=41)
-    def test_logging_init_exporter_level_over(self, log_level_mock):
+    @patch("opentelemetry.sdk._configuration._get_log_level", return_value=39)
+    def test_logging_init_exporter_level_under(self, log_level_mock):
         resource = Resource.create({})
         _init_logging(
             {"otlp": DummyOTLPLogExporter},
@@ -899,7 +900,7 @@ class TestLoggingInit(TestCase):
         for handler in root_logger.handlers:
             if isinstance(handler, LoggingHandler):
                 handler_present = True
-                self.assertEqual(handler.level, 41)
+                self.assertEqual(handler.level, 39)
         self.assertTrue(handler_present)
 
     @patch.dict(
@@ -928,7 +929,7 @@ class TestLoggingInit(TestCase):
             provider.processor.exporter, DummyOTLPLogExporter
         )
         getLogger(__name__).error("hello")
-        self.assertTrue(provider.processor.exporter.export_called)
+        self.assertFalse(provider.processor.exporter.export_called)
         root_logger = getLogger()
         self.assertEqual(root_logger.level, WARNING)
         handler_present = False
@@ -942,6 +943,7 @@ class TestLoggingInit(TestCase):
         environ,
         {
             "OTEL_RESOURCE_ATTRIBUTES": "service.name=otlp-service",
+            "OTEL_PYTHON_LOG_FORMAT": CUSTOM_LOG_FORMAT,
         },
     )
     def test_logging_init_exporter_without_handler_setup(self):
@@ -968,9 +970,12 @@ class TestLoggingInit(TestCase):
         self.assertFalse(provider.processors[0].exporter.export_called)
         root_logger = getLogger()
         self.assertEqual(root_logger.level, WARNING)
+        handler_present = False
         for handler in root_logger.handlers:
             if isinstance(handler, LoggingHandler):
-                self.fail()
+                self.assertEqual(handler.formatter._fmt, CUSTOM_LOG_FORMAT)
+                handler_present = True
+        self.assertTrue(handler_present)
 
     @patch.dict(environ, {}, clear=True)
     def test_OTEL_PYTHON_LOG_LEVEL_by_name_default(self):
