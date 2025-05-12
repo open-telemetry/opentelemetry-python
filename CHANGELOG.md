@@ -195,6 +195,11 @@ can cause a deadlock to occur over `logging._lock` in some cases ([#4636](https:
 
 - typecheck: add sdk/resources and drop mypy
   ([#4578](https://github.com/open-telemetry/opentelemetry-python/pull/4578))
+- Refactor `BatchLogRecordProcessor` to simplify code and make the control flow more
+  clear ([#4562](https://github.com/open-telemetry/opentelemetry-python/pull/4562/)
+  and [#4535](https://github.com/open-telemetry/opentelemetry-python/pull/4535)).
+- Enable configuration of logging format and level in auto-instrumentation
+  ([#4203](https://github.com/open-telemetry/opentelemetry-python/pull/4203))
 - Use PEP702 for marking deprecations
   ([#4522](https://github.com/open-telemetry/opentelemetry-python/pull/4522))
 - Refactor `BatchLogRecordProcessor` and `BatchSpanProcessor` to simplify code
