@@ -1337,6 +1337,60 @@ class TestLoggingInit(TestCase):
                 "Should still have exactly one OpenTelemetry LoggingHandler",
             )
 
+    def test_basicConfig_works_with_otel_handler(self):
+        with ClearLoggingHandlers():
+            _init_logging(
+                {"otlp": DummyOTLPLogExporter},
+                Resource.create({}),
+                setup_logging_handler=True,
+            )
+
+            logging.basicConfig(level=logging.INFO)
+
+            root_logger = logging.getLogger()
+            stream_handlers = [
+                h
+                for h in root_logger.handlers
+                if isinstance(h, logging.StreamHandler)
+            ]
+            self.assertEqual(
+                len(stream_handlers),
+                1,
+                "basicConfig should add a StreamHandler even when OTel handler exists",
+            )
+
+    def test_basicConfig_preserves_otel_handler(self):
+        with ClearLoggingHandlers():
+            _init_logging(
+                {"otlp": DummyOTLPLogExporter},
+                Resource.create({}),
+                setup_logging_handler=True,
+            )
+
+            root_logger = logging.getLogger()
+            self.assertEqual(
+                len(root_logger.handlers),
+                1,
+                "Should be exactly one OpenTelemetry LoggingHandler",
+            )
+            handler = root_logger.handlers[0]
+            self.assertIsInstance(handler, LoggingHandler)
+
+            logging.basicConfig()
+
+            self.assertGreater(len(root_logger.handlers), 1)
+
+            logging_handlers = [
+                h
+                for h in root_logger.handlers
+                if isinstance(h, LoggingHandler)
+            ]
+            self.assertEqual(
+                len(logging_handlers),
+                1,
+                "Should still have exactly one OpenTelemetry LoggingHandler",
+            )
+
 
 class TestMetricsInit(TestCase):
     def setUp(self):
