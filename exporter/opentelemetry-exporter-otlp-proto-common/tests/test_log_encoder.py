@@ -225,7 +225,28 @@ class TestOTLPLogEncoder(unittest.TestCase):
             ),
         )
 
-        return [log1, log2, log3, log4, log5, log6, log7]
+        log8 = LogData(
+            log_record=SDKLogRecord(
+                timestamp=1644650584292683044,
+                observed_timestamp=1644650584292683044,
+                trace_id=212592107417388365804938480559624925566,
+                span_id=6077757853989569466,
+                trace_flags=TraceFlags(0x01),
+                severity_text="INFO",
+                severity_number=SeverityNumber.INFO,
+                body="Test export of extended attributes",
+                resource=SDKResource({}),
+                attributes={
+                    "extended": {
+                        "sequence": [{"inner": "mapping", "none": None}]
+                    }
+                },
+            ),
+            instrumentation_scope=InstrumentationScope(
+                "extended_name", "extended_version"
+            ),
+        )
+        return [log1, log2, log3, log4, log5, log6, log7, log8]
 
     def get_test_logs(
         self,
@@ -265,7 +286,8 @@ class TestOTLPLogEncoder(unittest.TestCase):
                                         "Do not go gentle into that good night. Rage, rage against the dying of the light"
                                     ),
                                     attributes=_encode_attributes(
-                                        {"a": 1, "b": "c"}
+                                        {"a": 1, "b": "c"},
+                                        allow_null=True,
                                     ),
                                 )
                             ],
@@ -295,7 +317,8 @@ class TestOTLPLogEncoder(unittest.TestCase):
                                         {
                                             "filename": "model.py",
                                             "func_name": "run_method",
-                                        }
+                                        },
+                                        allow_null=True,
                                     ),
                                 )
                             ],
@@ -326,7 +349,8 @@ class TestOTLPLogEncoder(unittest.TestCase):
                                         {
                                             "filename": "model.py",
                                             "func_name": "run_method",
-                                        }
+                                        },
+                                        allow_null=True,
                                     ),
                                 )
                             ],
@@ -336,7 +360,8 @@ class TestOTLPLogEncoder(unittest.TestCase):
                                 name="scope_with_attributes",
                                 version="scope_with_attributes_version",
                                 attributes=_encode_attributes(
-                                    {"one": 1, "two": "2"}
+                                    {"one": 1, "two": "2"},
+                                    allow_null=True,
                                 ),
                             ),
                             schema_url="instrumentation_schema_url",
@@ -360,7 +385,8 @@ class TestOTLPLogEncoder(unittest.TestCase):
                                         {
                                             "filename": "model.py",
                                             "func_name": "run_method",
-                                        }
+                                        },
+                                        allow_null=True,
                                     ),
                                 )
                             ],
@@ -416,7 +442,8 @@ class TestOTLPLogEncoder(unittest.TestCase):
                                     severity_number=SeverityNumber.DEBUG.value,
                                     body=_encode_value("To our galaxy"),
                                     attributes=_encode_attributes(
-                                        {"a": 1, "b": "c"}
+                                        {"a": 1, "b": "c"},
+                                        allow_null=True,
                                     ),
                                 ),
                             ],
@@ -468,6 +495,43 @@ class TestOTLPLogEncoder(unittest.TestCase):
                                         )
                                     ),
                                     attributes={},
+                                ),
+                            ],
+                        ),
+                        PB2ScopeLogs(
+                            scope=PB2InstrumentationScope(
+                                name="extended_name",
+                                version="extended_version",
+                            ),
+                            log_records=[
+                                PB2LogRecord(
+                                    time_unix_nano=1644650584292683044,
+                                    observed_time_unix_nano=1644650584292683044,
+                                    trace_id=_encode_trace_id(
+                                        212592107417388365804938480559624925566
+                                    ),
+                                    span_id=_encode_span_id(
+                                        6077757853989569466,
+                                    ),
+                                    flags=int(TraceFlags(0x01)),
+                                    severity_text="INFO",
+                                    severity_number=SeverityNumber.INFO.value,
+                                    body=_encode_value(
+                                        "Test export of extended attributes"
+                                    ),
+                                    attributes=_encode_attributes(
+                                        {
+                                            "extended": {
+                                                "sequence": [
+                                                    {
+                                                        "inner": "mapping",
+                                                        "none": None,
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        allow_null=True,
+                                    ),
                                 ),
                             ],
                         ),

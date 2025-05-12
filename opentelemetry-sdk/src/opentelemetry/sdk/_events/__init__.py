@@ -21,7 +21,7 @@ from opentelemetry._events import EventLogger as APIEventLogger
 from opentelemetry._events import EventLoggerProvider as APIEventLoggerProvider
 from opentelemetry._logs import NoOpLogger, SeverityNumber, get_logger_provider
 from opentelemetry.sdk._logs import Logger, LoggerProvider, LogRecord
-from opentelemetry.util.types import Attributes
+from opentelemetry.util.types import _ExtendedAttributes
 
 _logger = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ class EventLogger(APIEventLogger):
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
-        attributes: Optional[Attributes] = None,
+        attributes: Optional[_ExtendedAttributes] = None,
     ):
         super().__init__(
             name=name,
@@ -74,7 +74,7 @@ class EventLoggerProvider(APIEventLoggerProvider):
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
-        attributes: Optional[Attributes] = None,
+        attributes: Optional[_ExtendedAttributes] = None,
     ) -> EventLogger:
         if not name:
             _logger.warning("EventLogger created with invalid name: %s", name)

@@ -23,7 +23,7 @@
 
 {%- macro write_docstring(metric, const_name, prefix) -%}
     {%- if metric is deprecated %}
-{{prefix}}Deprecated: {{c.comment_with_prefix(metric.deprecated, prefix)}}.
+{{prefix}}Deprecated: {{c.comment_with_prefix(metric.deprecated.note, prefix)}}.
     {%- elif ctx.filter == "any" and metric.stability == "stable" %}
 {{prefix}}Deprecated in favor of stable :py:const:`{{stable_class_ref(const_name, '.')}}`.
     {%- else -%}
