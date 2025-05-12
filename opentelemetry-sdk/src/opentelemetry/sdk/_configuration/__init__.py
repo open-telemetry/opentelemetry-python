@@ -45,10 +45,10 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_PROTOCOL,
     OTEL_EXPORTER_OTLP_PROTOCOL,
     OTEL_EXPORTER_OTLP_TRACES_PROTOCOL,
-    OTEL_TRACES_SAMPLER,
-    OTEL_TRACES_SAMPLER_ARG,
     OTEL_PYTHON_LOG_LEVEL,
     OTEL_PYTHON_LOG_FORMAT,
+    OTEL_TRACES_SAMPLER,
+    OTEL_TRACES_SAMPLER_ARG,
 )
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import (

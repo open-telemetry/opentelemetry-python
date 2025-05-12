@@ -998,7 +998,7 @@ class TestLoggingInit(TestCase):
             "TEST_RESOURCE",
             True,
         )
- 
+
     @patch.dict(
         environ,
         {
