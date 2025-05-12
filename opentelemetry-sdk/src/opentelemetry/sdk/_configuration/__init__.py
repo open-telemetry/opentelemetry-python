@@ -45,8 +45,8 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_PROTOCOL,
     OTEL_EXPORTER_OTLP_PROTOCOL,
     OTEL_EXPORTER_OTLP_TRACES_PROTOCOL,
-    OTEL_PYTHON_LOG_LEVEL,
     OTEL_PYTHON_LOG_FORMAT,
+    OTEL_PYTHON_LOG_LEVEL,
     OTEL_TRACES_SAMPLER,
     OTEL_TRACES_SAMPLER_ARG,
 )
@@ -143,8 +143,12 @@ def _get_sampler() -> str | None:
 def _get_id_generator() -> str:
     return environ.get(OTEL_PYTHON_ID_GENERATOR, _DEFAULT_ID_GENERATOR)
 
+
 def _get_log_level() -> int:
-    return _OTEL_PYTHON_LOG_LEVEL_BY_NAME.get(environ.get(OTEL_PYTHON_LOG_LEVEL, "notset").lower().strip(), logging.NOTSET)
+    return _OTEL_PYTHON_LOG_LEVEL_BY_NAME.get(
+        environ.get(OTEL_PYTHON_LOG_LEVEL, "notset").lower().strip(),
+        logging.NOTSET,
+    )
 
 
 def _get_exporter_entry_point(
@@ -271,15 +275,15 @@ def _init_logging(
 
         # Log Handler
         root_logger = logging.getLogger()
-        handler = LoggingHandler(
-            logger_provider=provider
-        )
+        handler = LoggingHandler(logger_provider=provider)
         # Log level
         if OTEL_PYTHON_LOG_LEVEL in environ:
             handler.setLevel(_get_log_level())
         # Log format
         if OTEL_PYTHON_LOG_FORMAT in environ:
-            log_format = environ.get(OTEL_PYTHON_LOG_FORMAT, logging.BASIC_FORMAT)
+            log_format = environ.get(
+                OTEL_PYTHON_LOG_FORMAT, logging.BASIC_FORMAT
+            )
             handler.setFormatter(logging.Formatter(log_format))
         root_logger.addHandler(handler)
 
