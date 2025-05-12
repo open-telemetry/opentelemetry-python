@@ -12,4 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = "0.55b0.dev"
+
+from typing import Final
+
+DB_CLIENT_OPERATION_DURATION: Final = "db.client.operation.duration"
+"""
+Duration of database client operations
+Instrument: histogram
+Unit: s
+Note: Batch operations SHOULD be recorded as a single operation.
+"""

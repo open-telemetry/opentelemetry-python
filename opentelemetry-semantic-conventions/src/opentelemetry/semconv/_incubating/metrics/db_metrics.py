@@ -353,10 +353,7 @@ def create_db_client_cosmosdb_operation_request_charge(
 
 DB_CLIENT_OPERATION_DURATION: Final = "db.client.operation.duration"
 """
-Duration of database client operations
-Instrument: histogram
-Unit: s
-Note: Batch operations SHOULD be recorded as a single operation.
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.metrics.db_metrics.DB_CLIENT_OPERATION_DURATION`.
 """
 
 

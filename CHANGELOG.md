@@ -7,14 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## Version 1.33.0/0.54b0 (2025-05-09)
+
 - Fix intermittent `Connection aborted` error when using otlp/http exporters
   ([#4477](https://github.com/open-telemetry/opentelemetry-python/pull/4477))
 - opentelemetry-sdk: use stable code attributes: `code.function` -> `code.function.name`, `code.lineno` -> `code.line.number`, `code.filepath` -> `code.file.path`
   ([#4508](https://github.com/open-telemetry/opentelemetry-python/pull/4508))
 - Fix serialization of extended attributes for logs signal
   ([#4342](https://github.com/open-telemetry/opentelemetry-python/pull/4342))
+- Handle OTEL_PROPAGATORS contains None
+  ([#4553](https://github.com/open-telemetry/opentelemetry-python/pull/4553))
 - docs: updated and added to the metrics and log examples
   ([#4559](https://github.com/open-telemetry/opentelemetry-python/pull/4559))
+- Bump semantic conventions to 1.33.0
+  ([#4567](https://github.com/open-telemetry/opentelemetry-python/pull/4567))
 
 ## Version 1.32.0/0.53b0 (2025-04-10)
 
@@ -81,6 +87,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4353](https://github.com/open-telemetry/opentelemetry-python/pull/4353))
 - sdk: don't log or print warnings when the SDK has been disabled
   ([#4371](https://github.com/open-telemetry/opentelemetry-python/pull/4371))
+- Configurable max retry timeout for grpc exporter
+  ([#4333](https://github.com/open-telemetry/opentelemetry-python/pull/4333))
 - Fix span context manager typing by using ParamSpec from typing_extensions
   ([#4389](https://github.com/open-telemetry/opentelemetry-python/pull/4389))
 - Fix serialization of None values in logs body to match 1.31.0+ data model
@@ -1531,8 +1539,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Serialize tuple type values by coercing them into a string, since Jaeger does not
   support tuple types.
   ([#865](https://github.com/open-telemetry/opentelemetry-python/pull/865))
-- Validate span attribute types in SDK
-  ([#678](https://github.com/open-telemetry/opentelemetry-python/pull/678))
 - Specify to_json indent from arguments
   ([#718](https://github.com/open-telemetry/opentelemetry-python/pull/718))
 - Span.resource will now default to an empty resource
