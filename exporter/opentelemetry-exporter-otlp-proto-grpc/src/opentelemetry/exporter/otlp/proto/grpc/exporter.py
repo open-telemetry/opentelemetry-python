@@ -213,6 +213,8 @@ class OTLPExporterMixin(
         compression: gRPC compression method to use
     """
 
+    _MAX_RETRY_TIMEOUT = 64
+
     def __init__(
         self,
         endpoint: Optional[str] = None,
