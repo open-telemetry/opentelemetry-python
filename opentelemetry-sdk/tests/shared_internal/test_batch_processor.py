@@ -103,7 +103,7 @@ class TestBatchProcessor:
         batch_processor.emit(telemetry)
         batch_processor.shutdown()
         exporter.export.assert_called_once_with([telemetry])
-        assert batch_processor._shutdown is True
+        assert batch_processor._batch_processor._shutdown is True
 
         # This should not be flushed.
         batch_processor.emit(telemetry)

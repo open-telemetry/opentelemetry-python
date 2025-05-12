@@ -18,7 +18,7 @@ import enum
 import logging
 import sys
 from os import environ, linesep
-from typing import IO, Callable, Sequence
+from typing import IO, Callable, Optional, Sequence
 
 from opentelemetry.context import (
     _SUPPRESS_INSTRUMENTATION_KEY,
@@ -131,7 +131,7 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
         return True
 
 
-class BatchLogRecordProcessor(BatchProcessor, LogRecordProcessor):
+class BatchLogRecordProcessor(LogRecordProcessor):
     """This is an implementation of LogRecordProcessor which creates batches of
     received logs in the export-friendly LogData representation and
     send to the configured LogExporter, as soon as they are emitted.
@@ -177,7 +177,7 @@ class BatchLogRecordProcessor(BatchProcessor, LogRecordProcessor):
             max_queue_size, schedule_delay_millis, max_export_batch_size
         )
         # Initializes BatchProcessor
-        super().__init__(
+        self._batch_processor = BatchProcessor(
             exporter,
             schedule_delay_millis,
             max_export_batch_size,
@@ -185,6 +185,15 @@ class BatchLogRecordProcessor(BatchProcessor, LogRecordProcessor):
             max_queue_size,
             "Log",
         )
+
+    def emit(self, log_data: LogData) -> None:
+        return self._batch_processor.emit(log_data)
+
+    def shutdown(self):
+        return self._batch_processor.shutdown()
+
+    def force_flush(self, timeout_millis: Optional[int] = None):
+        return self._batch_processor.force_flush(timeout_millis)
 
     @staticmethod
     def _default_max_queue_size():

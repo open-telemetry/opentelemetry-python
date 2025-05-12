@@ -351,11 +351,11 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             max_export_batch_size=256,
             export_timeout_millis=15000,
         )
-        self.assertEqual(log_record_processor._exporter, exporter)
-        self.assertEqual(log_record_processor._max_queue_size, 1024)
-        self.assertEqual(log_record_processor._schedule_delay, 2.5)
-        self.assertEqual(log_record_processor._max_export_batch_size, 256)
-        self.assertEqual(log_record_processor._export_timeout_millis, 15000)
+        self.assertEqual(log_record_processor._batch_processor._exporter, exporter)
+        self.assertEqual(log_record_processor._batch_processor._max_queue_size, 1024)
+        self.assertEqual(log_record_processor._batch_processor._schedule_delay, 2.5)
+        self.assertEqual(log_record_processor._batch_processor._max_export_batch_size, 256)
+        self.assertEqual(log_record_processor._batch_processor._export_timeout_millis, 15000)
 
     @patch.dict(
         "os.environ",
@@ -369,20 +369,20 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
     def test_env_vars(self):
         exporter = InMemoryLogExporter()
         log_record_processor = BatchLogRecordProcessor(exporter)
-        self.assertEqual(log_record_processor._exporter, exporter)
-        self.assertEqual(log_record_processor._max_queue_size, 1024)
-        self.assertEqual(log_record_processor._schedule_delay, 2.5)
-        self.assertEqual(log_record_processor._max_export_batch_size, 256)
-        self.assertEqual(log_record_processor._export_timeout_millis, 15000)
+        self.assertEqual(log_record_processor._batch_processor._exporter, exporter)
+        self.assertEqual(log_record_processor._batch_processor._max_queue_size, 1024)
+        self.assertEqual(log_record_processor._batch_processor._schedule_delay, 2.5)
+        self.assertEqual(log_record_processor._batch_processor._max_export_batch_size, 256)
+        self.assertEqual(log_record_processor._batch_processor._export_timeout_millis, 15000)
 
     def test_args_defaults(self):
         exporter = InMemoryLogExporter()
         log_record_processor = BatchLogRecordProcessor(exporter)
-        self.assertEqual(log_record_processor._exporter, exporter)
-        self.assertEqual(log_record_processor._max_queue_size, 2048)
-        self.assertEqual(log_record_processor._schedule_delay, 5)
-        self.assertEqual(log_record_processor._max_export_batch_size, 512)
-        self.assertEqual(log_record_processor._export_timeout_millis, 30000)
+        self.assertEqual(log_record_processor._batch_processor._exporter, exporter)
+        self.assertEqual(log_record_processor._batch_processor._max_queue_size, 2048)
+        self.assertEqual(log_record_processor._batch_processor._schedule_delay, 5)
+        self.assertEqual(log_record_processor._batch_processor._max_export_batch_size, 512)
+        self.assertEqual(log_record_processor._batch_processor._export_timeout_millis, 30000)
 
     @patch.dict(
         "os.environ",
@@ -398,11 +398,11 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         _logger.disabled = True
         log_record_processor = BatchLogRecordProcessor(exporter)
         _logger.disabled = False
-        self.assertEqual(log_record_processor._exporter, exporter)
-        self.assertEqual(log_record_processor._max_queue_size, 2048)
-        self.assertEqual(log_record_processor._schedule_delay, 5)
-        self.assertEqual(log_record_processor._max_export_batch_size, 512)
-        self.assertEqual(log_record_processor._export_timeout_millis, 30000)
+        self.assertEqual(log_record_processor._batch_processor._exporter, exporter)
+        self.assertEqual(log_record_processor._batch_processor._max_queue_size, 2048)
+        self.assertEqual(log_record_processor._batch_processor._schedule_delay, 5)
+        self.assertEqual(log_record_processor._batch_processor._max_export_batch_size, 512)
+        self.assertEqual(log_record_processor._batch_processor._export_timeout_millis, 30000)
 
     def test_args_none_defaults(self):
         exporter = InMemoryLogExporter()
@@ -413,11 +413,11 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             max_export_batch_size=None,
             export_timeout_millis=None,
         )
-        self.assertEqual(log_record_processor._exporter, exporter)
-        self.assertEqual(log_record_processor._max_queue_size, 2048)
-        self.assertEqual(log_record_processor._schedule_delay, 5)
-        self.assertEqual(log_record_processor._max_export_batch_size, 512)
-        self.assertEqual(log_record_processor._export_timeout_millis, 30000)
+        self.assertEqual(log_record_processor._batch_processor._exporter, exporter)
+        self.assertEqual(log_record_processor._batch_processor._max_queue_size, 2048)
+        self.assertEqual(log_record_processor._batch_processor._schedule_delay, 5)
+        self.assertEqual(log_record_processor._batch_processor._max_export_batch_size, 512)
+        self.assertEqual(log_record_processor._batch_processor._export_timeout_millis, 30000)
 
     def test_validation_negative_max_queue_size(self):
         exporter = InMemoryLogExporter()
