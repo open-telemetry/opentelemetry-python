@@ -48,7 +48,8 @@ BASIC_SPAN = ReadableSpan(
     instrumentation_scope=InstrumentationScope("example", "example"),
 )
 
-multiprocessing.set_start_method("fork")
+if system() != "Windows":
+    multiprocessing.set_start_method("fork")
 
 
 # BatchLogRecodProcessor/BatchSpanProcessor initialize and use BatchProcessor.
