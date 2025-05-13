@@ -17,12 +17,10 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Sequence
-from itertools import count
 from typing import (
     Any,
     Callable,
     Dict,
-    Iterator,
     List,
     Mapping,
     Optional,
