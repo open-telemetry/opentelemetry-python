@@ -82,7 +82,7 @@ _JSON_CONFIG = json.dumps(
                     # This policy results in backoffs of 1s, 2s, 4s, and then 8s after the initial failed attempt.
                     # Timeout set on the RPC call encompasses the retry backoffs AND time spent waiting
                     # for a response. DEADLINE_EXCEEDED is returned if all the attempts cannot complete within the
-                    # timeout. See https://grpc.io/docs/guides/retry/ for more details.
+                    # timeout, and all fail. See https://grpc.io/docs/guides/retry/ for more details.
                     "maxAttempts": 5,
                     "initialBackoff": "1s",
                     "maxBackoff": "9s",
