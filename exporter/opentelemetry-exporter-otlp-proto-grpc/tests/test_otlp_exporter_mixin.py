@@ -386,9 +386,9 @@ class TestOTLPExporterMixin(TestCase):
                         log.message,
                     )
         with self.assertLogs(level=WARNING) as warning:
-            exporter = OTLPSpanExporterForTesting(insecure=True, timeout=3.5)
+            exporter = OTLPSpanExporterForTesting(insecure=True, timeout=5)
             # pylint: disable=protected-access
-            self.assertEqual(exporter._timeout, 3.5)
+            self.assertEqual(exporter._timeout, 5)
             self.assertEqual(
                 exporter.export([self.span]),
                 SpanExportResult.FAILURE,
