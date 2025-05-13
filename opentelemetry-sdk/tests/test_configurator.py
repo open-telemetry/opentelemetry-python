@@ -620,6 +620,8 @@ class TestLoggingInit(TestCase):
             self.set_event_logger_provider_patch.start()
         )
 
+        getLogger().handlers.clear()
+
     def tearDown(self):
         self.processor_patch.stop()
         self.set_provider_patch.stop()
