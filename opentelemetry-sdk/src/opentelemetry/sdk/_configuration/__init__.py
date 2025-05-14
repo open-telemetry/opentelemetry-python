@@ -54,7 +54,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TRACES_PROTOCOL,
     OTEL_PYTHON_TRACER_CONFIGURATOR,
     OTEL_PYTHON_LOG_FORMAT,
-    OTEL_PYTHON_LOG_LEVEL,
+    OTEL_PYTHON_LOG_HANDLER_LEVEL,
     OTEL_TRACES_SAMPLER,
     OTEL_TRACES_SAMPLER_ARG,
     OTEL_PYTHON_LOG_LEVEL,
@@ -105,7 +105,7 @@ _DEFAULT_ID_GENERATOR = _RANDOM_ID_GENERATOR
 
 _OTEL_SAMPLER_ENTRY_POINT_GROUP = "opentelemetry_traces_sampler"
 
-_OTEL_PYTHON_LOG_LEVEL_BY_NAME = {
+_OTEL_PYTHON_LOG_HANDLER_LEVEL_BY_NAME = {
     "notset": logging.NOTSET,
     "debug": logging.DEBUG,
     "info": logging.INFO,
@@ -180,11 +180,14 @@ def _get_id_generator() -> str:
     return environ.get(OTEL_PYTHON_ID_GENERATOR, _DEFAULT_ID_GENERATOR)
 
 def _get_log_level() -> int:
-    return _OTEL_PYTHON_LOG_LEVEL_BY_NAME.get(environ.get(OTEL_PYTHON_LOG_LEVEL, "notset").lower().strip(), logging.NOTSET)
-
+    return _OTEL_PYTHON_LOG_HANDLER_LEVEL_BY_NAME.get(
+        environ.get(OTEL_PYTHON_LOG_HANDLER_LEVEL, "notset").lower().strip(),
+        logging.NOTSET,
+    )
 
 def _get_tracer_configurator() -> str | None:
     return environ.get(OTEL_PYTHON_TRACER_CONFIGURATOR, None)
+
 
 
 def _get_exporter_entry_point(
@@ -347,7 +350,7 @@ def _init_logging(
             level=logging.NOTSET, logger_provider=provider
         )
         # Log level
-        if OTEL_PYTHON_LOG_LEVEL in environ:
+        if OTEL_PYTHON_LOG_HANDLER_LEVEL in environ:
             handler.setLevel(_get_log_level())
         # Log format
         if OTEL_PYTHON_LOG_FORMAT in environ:
