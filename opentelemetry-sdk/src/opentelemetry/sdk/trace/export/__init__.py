@@ -169,7 +169,7 @@ class BatchSpanProcessor(SpanProcessor):
         )
 
         self._batch_processor = BatchProcessor(
-            span_exporter,
+            span_exporter,  # type: ignore [reportArgumentType]
             schedule_delay_millis,
             max_export_batch_size,
             export_timeout_millis,
@@ -190,7 +190,7 @@ class BatchSpanProcessor(SpanProcessor):
     def shutdown(self):
         return self._batch_processor.shutdown()
 
-    def force_flush(self, timeout_millis: typing.Optional[int] = None):
+    def force_flush(self, timeout_millis: typing.Optional[int] = None) -> bool:
         return self._batch_processor.force_flush(timeout_millis)
 
     @staticmethod
