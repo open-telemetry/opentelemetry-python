@@ -65,6 +65,7 @@ jobs:
         run: .github/scripts/use-cla-approved-github-bot.sh
 
       - name: Create pull request
+        id: create_pr
         env:
           # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
           GITHUB_TOKEN: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}
@@ -74,7 +75,15 @@ jobs:
 
           git commit -a -m "$message"
           git push origin HEAD:$branch
-          gh pr create --title "[$GITHUB_REF_NAME] $message" \
+          pr_url=$(gh pr create --title "[$GITHUB_REF_NAME] $message" \
                        --body "$message." \
                        --head $branch \
-                       --base $GITHUB_REF_NAME
+                       --base $GITHUB_REF_NAME)
+
+          echo "pr_url=$pr_url" >> $GITHUB_OUTPUT
+      - name: Add prepare-release label to PR
+        if: steps.create_pr.outputs.pr_url != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr edit ${{ steps.create_pr.outputs.pr_url }}  --add-label "prepare-release"

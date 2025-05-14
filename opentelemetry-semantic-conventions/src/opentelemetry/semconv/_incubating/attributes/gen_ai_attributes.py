@@ -186,6 +186,11 @@ GEN_AI_TOOL_CALL_ID: Final = "gen_ai.tool.call.id"
 The tool call identifier.
 """
 
+GEN_AI_TOOL_DESCRIPTION: Final = "gen_ai.tool.description"
+"""
+The tool description.
+"""
+
 GEN_AI_TOOL_NAME: Final = "gen_ai.tool.name"
 """
 Name of the tool utilized by the agent.
@@ -244,12 +249,16 @@ class GenAiOpenaiRequestServiceTierValues(Enum):
 class GenAiOperationNameValues(Enum):
     CHAT = "chat"
     """Chat completion operation such as [OpenAI Chat API](https://platform.openai.com/docs/api-reference/chat)."""
+    GENERATE_CONTENT = "generate_content"
+    """Multimodal content generation operation such as [Gemini Generate Content](https://ai.google.dev/api/generate-content)."""
     TEXT_COMPLETION = "text_completion"
     """Text completions operation such as [OpenAI Completions API (Legacy)](https://platform.openai.com/docs/api-reference/completions)."""
     EMBEDDINGS = "embeddings"
     """Embeddings operation such as [OpenAI Create embeddings API](https://platform.openai.com/docs/api-reference/embeddings/create)."""
     CREATE_AGENT = "create_agent"
     """Create GenAI agent."""
+    INVOKE_AGENT = "invoke_agent"
+    """Invoke GenAI agent."""
     EXECUTE_TOOL = "execute_tool"
     """Execute a tool."""
 
@@ -268,10 +277,16 @@ class GenAiOutputTypeValues(Enum):
 class GenAiSystemValues(Enum):
     OPENAI = "openai"
     """OpenAI."""
-    VERTEX_AI = "vertex_ai"
+    GCP_GEN_AI = "gcp.gen_ai"
+    """Any Google generative AI endpoint."""
+    GCP_VERTEX_AI = "gcp.vertex_ai"
     """Vertex AI."""
-    GEMINI = "gemini"
+    GCP_GEMINI = "gcp.gemini"
     """Gemini."""
+    VERTEX_AI = "vertex_ai"
+    """Deprecated: Use 'gcp.vertex_ai' instead."""
+    GEMINI = "gemini"
+    """Deprecated: Use 'gcp.gemini' instead."""
     ANTHROPIC = "anthropic"
     """Anthropic."""
     COHERE = "cohere"
