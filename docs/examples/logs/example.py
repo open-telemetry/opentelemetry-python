@@ -7,16 +7,13 @@ from opentelemetry.exporter.otlp.proto.grpc._log_exporter import (
 )
 from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
 from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
-from opentelemetry.sdk.resources import (
-    SERVICE_INSTANCE_ID,
-    SERVICE_NAME,
-    Resource,
-)
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     BatchSpanProcessor,
     ConsoleSpanExporter,
 )
+from opentelemetry.semconv.resource import ResourceAttributes
 
 trace.set_tracer_provider(TracerProvider())
 trace.get_tracer_provider().add_span_processor(
@@ -26,8 +23,8 @@ trace.get_tracer_provider().add_span_processor(
 logger_provider = LoggerProvider(
     resource=Resource.create(
         {
-            SERVICE_NAME: "shoppingcart",
-            SERVICE_INSTANCE_ID: "instance-12",
+            ResourceAttributes.SERVICE_NAME: "shoppingcart",
+            ResourceAttributes.SERVICE_INSTANCE_ID: "instance-12",
         }
     ),
 )
