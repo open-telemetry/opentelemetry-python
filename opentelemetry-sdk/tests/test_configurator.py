@@ -713,7 +713,7 @@ class TestLoggingInit(TestCase):
         environ,
         {
             "OTEL_RESOURCE_ATTRIBUTES": "service.name=otlp-service",
-            "OTEL_PYTHON_LOG_HANDLER_LEVEL": "CUSTOM_LOG_LEVEL",
+            "OTEL_PYTHON_LOG_LEVEL": "CUSTOM_LOG_LEVEL",
         },
         clear=True,
     )
@@ -750,7 +750,7 @@ class TestLoggingInit(TestCase):
         environ,
         {
             "OTEL_RESOURCE_ATTRIBUTES": "service.name=otlp-service",
-            "OTEL_PYTHON_LOG_HANDLER_LEVEL": "CUSTOM_LOG_LEVEL",
+            "OTEL_PYTHON_LOG_LEVEL": "CUSTOM_LOG_LEVEL",
         },
         clear=True,
     )
@@ -822,45 +822,31 @@ class TestLoggingInit(TestCase):
     def test_otel_log_level_by_name_default(self):
         self.assertEqual(_get_log_level(), NOTSET)
 
-    @patch.dict(
-        environ, {"OTEL_PYTHON_LOG_HANDLER_LEVEL": "NOTSET "}, clear=True
-    )
+    @patch.dict(environ, {"OTEL_PYTHON_LOG_LEVEL": "NOTSET "}, clear=True)
     def test_otel_log_level_by_name_notset(self):
         self.assertEqual(_get_log_level(), NOTSET)
 
-    @patch.dict(
-        environ, {"OTEL_PYTHON_LOG_HANDLER_LEVEL": " DeBug "}, clear=True
-    )
+    @patch.dict(environ, {"OTEL_PYTHON_LOG_LEVEL": " DeBug "}, clear=True)
     def test_otel_log_level_by_name_debug(self):
         self.assertEqual(_get_log_level(), DEBUG)
 
-    @patch.dict(
-        environ, {"OTEL_PYTHON_LOG_HANDLER_LEVEL": " info "}, clear=True
-    )
+    @patch.dict(environ, {"OTEL_PYTHON_LOG_LEVEL": " info "}, clear=True)
     def test_otel_log_level_by_name_info(self):
         self.assertEqual(_get_log_level(), INFO)
 
-    @patch.dict(
-        environ, {"OTEL_PYTHON_LOG_HANDLER_LEVEL": " warn"}, clear=True
-    )
+    @patch.dict(environ, {"OTEL_PYTHON_LOG_LEVEL": " warn"}, clear=True)
     def test_otel_log_level_by_name_warn(self):
         self.assertEqual(_get_log_level(), WARNING)
 
-    @patch.dict(
-        environ, {"OTEL_PYTHON_LOG_HANDLER_LEVEL": " warnING "}, clear=True
-    )
+    @patch.dict(environ, {"OTEL_PYTHON_LOG_LEVEL": " warnING "}, clear=True)
     def test_otel_log_level_by_name_warning(self):
         self.assertEqual(_get_log_level(), WARNING)
 
-    @patch.dict(
-        environ, {"OTEL_PYTHON_LOG_HANDLER_LEVEL": " eRroR"}, clear=True
-    )
+    @patch.dict(environ, {"OTEL_PYTHON_LOG_LEVEL": " eRroR"}, clear=True)
     def test_otel_log_level_by_name_error(self):
         self.assertEqual(_get_log_level(), ERROR)
 
-    @patch.dict(
-        environ, {"OTEL_PYTHON_LOG_HANDLER_LEVEL": "foobar"}, clear=True
-    )
+    @patch.dict(environ, {"OTEL_PYTHON_LOG_LEVEL": "foobar"}, clear=True)
     def test_otel_log_level_by_name_invalid(self):
         self.assertEqual(_get_log_level(), NOTSET)
 
