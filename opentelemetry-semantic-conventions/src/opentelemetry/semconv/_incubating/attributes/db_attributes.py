@@ -504,8 +504,8 @@ class DbSystemValues(Enum):
 
 
 @deprecated(
-    reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.db_attributes.DbSystemNameValues`."
-)  # type: ignore
+    "Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.db_attributes.DbSystemNameValues`."
+)
 class DbSystemNameValues(Enum):
     OTHER_SQL = "other_sql"
     """Some other SQL database. Fallback only."""
