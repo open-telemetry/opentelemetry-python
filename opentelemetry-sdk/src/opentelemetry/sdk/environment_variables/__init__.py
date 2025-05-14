@@ -62,11 +62,11 @@ The :envvar:`OTEL_PYTHON_LOG_FORMAT` environment variable sets the log format fo
 Default: "logging.BASIC_FORMAT"
 """
 
-OTEL_PYTHON_LOG_HANDLER_LEVEL = "OTEL_PYTHON_LOG_HANDLER_LEVEL"
+OTEL_PYTHON_LOG_LEVEL = "OTEL_PYTHON_LOG_LEVEL"
 """
-.. envvar:: OTEL_PYTHON_LOG_HANDLER_LEVEL
+.. envvar:: OTEL_PYTHON_LOG_LEVEL
 
-The :envvar:`OTEL_PYTHON_LOG_HANDLER_LEVEL` environment variable sets the log level for the OpenTelemetry LoggingHandler
+The :envvar:`OTEL_PYTHON_LOG_LEVEL` environment variable sets the log level for the OpenTelemetry LoggingHandler
 Default: "logging.NOTSET"
 """
 
