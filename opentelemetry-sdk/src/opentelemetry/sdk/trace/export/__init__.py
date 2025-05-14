@@ -134,7 +134,7 @@ class BatchSpanProcessor(SpanProcessor):
     - :envvar:`OTEL_BSP_MAX_EXPORT_BATCH_SIZE`
     - :envvar:`OTEL_BSP_EXPORT_TIMEOUT`
 
-    All the logic for emitting spans, shutting down etc. resides in the BatchProcessor class.
+    All the logic for emitting spans, shutting down etc. resides in the `BatchProcessor` class.
     """
 
     def __init__(
