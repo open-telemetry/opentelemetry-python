@@ -109,7 +109,7 @@ class OTLPLogExporter(
     ) -> ExportLogsServiceRequest:
         return encode_logs(data)
 
-    def export(  # pyright: ignore [reportIncompatibleMethodOverride]
+    def export(  # type: ignore [reportIncompatibleMethodOverride]
         self,
         batch: Sequence[LogData],
     ) -> Literal[LogExportResult.SUCCESS, LogExportResult.FAILURE]:

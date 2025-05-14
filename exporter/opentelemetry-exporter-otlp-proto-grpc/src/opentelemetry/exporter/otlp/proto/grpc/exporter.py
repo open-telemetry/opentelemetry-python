@@ -304,7 +304,7 @@ class OTLPExporterMixin(
             self._channel = secure_channel(
                 self._endpoint, credentials, compression=compression
             )
-        self._client = self._stub(self._channel)  # pyright: ignore [reportCallIssue]
+        self._client = self._stub(self._channel)  # type: ignore [reportCallIssue]
 
         self._export_lock = threading.Lock()
         self._shutdown = False
@@ -324,7 +324,7 @@ class OTLPExporterMixin(
         # not allowed and should return a Failure result.
         if self._shutdown:
             logger.warning("Exporter already shutdown, ignoring batch")
-            return self._result.FAILURE  # pyright: ignore [reportReturnType]
+            return self._result.FAILURE  # type: ignore [reportReturnType]
 
         # FIXME remove this check if the export type for traces
         # gets updated to a class that represents the proto
@@ -342,7 +342,7 @@ class OTLPExporterMixin(
             max_value=self._MAX_RETRY_TIMEOUT
         ):
             if delay == self._MAX_RETRY_TIMEOUT or self._shutdown:
-                return self._result.FAILURE  # pyright: ignore [reportReturnType]
+                return self._result.FAILURE  # type: ignore [reportReturnType]
 
             with self._export_lock:
                 try:
@@ -352,10 +352,10 @@ class OTLPExporterMixin(
                         timeout=self._timeout,
                     )
 
-                    return self._result.SUCCESS  # pyright: ignore [reportReturnType]
+                    return self._result.SUCCESS  # type: ignore [reportReturnType]
 
                 except RpcError as error:
-                    code = error.code()  # pyright: ignore [reportAttributeAccessIssue]
+                    code = error.code()  # type: ignore [reportAttributeAccessIssue]
                     if code in [
                         StatusCode.CANCELLED,
                         StatusCode.DEADLINE_EXCEEDED,
@@ -365,7 +365,7 @@ class OTLPExporterMixin(
                         StatusCode.UNAVAILABLE,
                         StatusCode.DATA_LOSS,
                     ]:
-                        retry_info_bin = dict(error.trailing_metadata()).get(  # pyright: ignore [reportAttributeAccessIssue]
+                        retry_info_bin = dict(error.trailing_metadata()).get(  # type: ignore [reportAttributeAccessIssue]
                             "google.rpc.retryinfo-bin"
                         )
                         if retry_info_bin is not None:
@@ -398,11 +398,11 @@ class OTLPExporterMixin(
                         )
 
                     if code == StatusCode.OK:
-                        return self._result.SUCCESS  # pyright: ignore [reportReturnType]
+                        return self._result.SUCCESS  # type: ignore [reportReturnType]
 
-                    return self._result.FAILURE  # pyright: ignore [reportReturnType]
+                    return self._result.FAILURE  # type: ignore [reportReturnType]
 
-        return self._result.FAILURE  # pyright: ignore [reportReturnType]
+        return self._result.FAILURE  # type: ignore [reportReturnType]
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         if self._shutdown:

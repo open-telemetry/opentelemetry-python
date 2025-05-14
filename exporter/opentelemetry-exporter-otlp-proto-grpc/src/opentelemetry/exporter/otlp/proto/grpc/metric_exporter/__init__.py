@@ -153,7 +153,7 @@ class OTLPMetricExporter(
 
         self._max_export_batch_size: int | None = max_export_batch_size
 
-    def _translate_data(  # pyright: ignore [reportIncompatibleMethodOverride]
+    def _translate_data(  # type: ignore [reportIncompatibleMethodOverride]
         self, data: MetricsData
     ) -> ExportMetricsServiceRequest:
         return encode_metrics(data)
