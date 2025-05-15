@@ -24,7 +24,7 @@ import warnings
 from os import environ
 from threading import Lock
 from time import time_ns
-from typing import Any, Callable, Tuple, Union, cast  # noqa
+from typing import Any, Callable, Optional, Tuple, Union, cast  # noqa
 
 from opentelemetry._logs import Logger as APILogger
 from opentelemetry._logs import LoggerProvider as APILoggerProvider
@@ -52,7 +52,7 @@ from opentelemetry.trace import (
     format_trace_id,
     get_current_span,
 )
-from opentelemetry.trace.span import TraceFlags
+from opentelemetry.trace.span import SpanContext
 from opentelemetry.util.types import AnyValue, _ExtendedAttributes
 
 _logger = logging.getLogger(__name__)
@@ -176,9 +176,7 @@ class LogRecord(APILogRecord):
         self,
         timestamp: int | None = None,
         observed_timestamp: int | None = None,
-        trace_id: int | None = None,
-        span_id: int | None = None,
-        trace_flags: TraceFlags | None = None,
+        span_context: Optional[SpanContext] = None,
         severity_text: str | None = None,
         severity_number: SeverityNumber | None = None,
         body: AnyValue | None = None,
@@ -190,9 +188,7 @@ class LogRecord(APILogRecord):
             **{
                 "timestamp": timestamp,
                 "observed_timestamp": observed_timestamp,
-                "trace_id": trace_id,
-                "span_id": span_id,
-                "trace_flags": trace_flags,
+                "span_context": span_context,
                 "severity_text": severity_text,
                 "severity_number": severity_number,
                 "body": body,
@@ -548,9 +544,7 @@ class LoggingHandler(logging.Handler):
         return LogRecord(
             timestamp=timestamp,
             observed_timestamp=observered_timestamp,
-            trace_id=span_context.trace_id,
-            span_id=span_context.span_id,
-            trace_flags=span_context.trace_flags,
+            span_context=span_context,
             severity_text=level_name,
             severity_number=severity_number,
             body=body,

@@ -23,6 +23,8 @@ from opentelemetry.sdk._events import EventLoggerProvider
 from opentelemetry.sdk._logs import LoggerProvider
 from opentelemetry.sdk._logs._internal import Logger, NoOpLogger
 from opentelemetry.sdk.environment_variables import OTEL_SDK_DISABLED
+from opentelemetry.trace import TraceFlags
+from opentelemetry.trace.span import SpanContext
 
 
 class TestEventLoggerProvider(unittest.TestCase):
@@ -123,15 +125,17 @@ class TestEventLoggerProvider(unittest.TestCase):
             "name", "version", "schema_url", {"key": "value"}
         )
         now = Mock()
-        trace_id = Mock()
-        span_id = Mock()
-        trace_flags = Mock()
+        trace_flags = TraceFlags(0x01)
+        span_context = SpanContext(
+            2604504634922341076776623263868986797,
+            5213367945872657620,
+            True,
+            trace_flags,
+        )
         event = Event(
             name="test_event",
             timestamp=now,
-            trace_id=trace_id,
-            span_id=span_id,
-            trace_flags=trace_flags,
+            span_context=span_context,
             body="test body",
             severity_number=SeverityNumber.ERROR,
             attributes={
@@ -146,9 +150,7 @@ class TestEventLoggerProvider(unittest.TestCase):
         log_record_mock.assert_called_once_with(
             timestamp=now,
             observed_timestamp=None,
-            trace_id=trace_id,
-            span_id=span_id,
-            trace_flags=trace_flags,
+            span_context=span_context,
             severity_text=None,
             severity_number=SeverityNumber.ERROR,
             body="test body",
@@ -179,15 +181,16 @@ class TestEventLoggerProvider(unittest.TestCase):
             "name", "version", "schema_url", {"key": "value"}
         )
         now = Mock()
-        trace_id = Mock()
-        span_id = Mock()
-        trace_flags = Mock()
+        span_context = SpanContext(
+            2604504634922341076776623263868986797,
+            5213367945872657620,
+            True,
+            Mock(),
+        )
         event = Event(
             name="test_event",
             timestamp=now,
-            trace_id=trace_id,
-            span_id=span_id,
-            trace_flags=trace_flags,
+            span_context=span_context,
             body="test body",
             severity_number=SeverityNumber.ERROR,
             attributes={
