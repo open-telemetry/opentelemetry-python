@@ -65,7 +65,10 @@ logger = logging.getLogger(__name__)
 class OTLPSpanExporter(
     SpanExporter,
     OTLPExporterMixin[
-        ReadableSpan, ExportTraceServiceRequest, SpanExportResult
+        Sequence[ReadableSpan],
+        ExportTraceServiceRequest,
+        SpanExportResult,
+        TraceServiceStub,
     ],
 ):
     # pylint: disable=unsubscriptable-object
@@ -80,9 +83,6 @@ class OTLPSpanExporter(
         compression: gRPC compression method to use
     """
 
-    _result = SpanExportResult
-    _stub = TraceServiceStub
-
     def __init__(
         self,
         endpoint: Optional[str] = None,
@@ -94,10 +94,9 @@ class OTLPSpanExporter(
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
     ):
-        if insecure is None:
-            insecure = environ.get(OTEL_EXPORTER_OTLP_TRACES_INSECURE)
-            if insecure is not None:
-                insecure = insecure.lower() == "true"
+        insecure_spans = environ.get(OTEL_EXPORTER_OTLP_TRACES_INSECURE)
+        if insecure is None and insecure_spans is not None:
+            insecure = insecure_spans.lower() == "true"
 
         if (
             not insecure
@@ -123,6 +122,8 @@ class OTLPSpanExporter(
 
         super().__init__(
             **{
+                "stub": TraceServiceStub,
+                "result": SpanExportResult,
                 "endpoint": endpoint
                 or environ.get(OTEL_EXPORTER_OTLP_TRACES_ENDPOINT),
                 "insecure": insecure,
@@ -142,8 +143,8 @@ class OTLPSpanExporter(
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
         return self._export(spans)
 
-    def shutdown(self) -> None:
-        OTLPExporterMixin.shutdown(self)
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
+        OTLPExporterMixin.shutdown(self, timeout_millis=timeout_millis)
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         """Nothing is buffered in this exporter, so this method does nothing."""
