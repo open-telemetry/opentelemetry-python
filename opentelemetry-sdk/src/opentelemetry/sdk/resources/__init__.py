@@ -90,17 +90,8 @@ try:
 except ImportError:
     pass
 
-LabelValue = Union[
-    str,
-    bool,
-    int,
-    float,
-    Sequence[str],
-    Sequence[bool],
-    Sequence[int],
-    Sequence[float],
-]
-Attributes = typing.Mapping[str, LabelValue]
+LabelValue = AttributeValue
+Attributes = AllAttributes
 logger = logging.getLogger(__name__)
 
 CLOUD_PROVIDER = ResourceAttributes.CLOUD_PROVIDER
@@ -173,7 +164,7 @@ class Resource:
 
     def __init__(
         self,
-        attributes: AllAttributes,
+        attributes: Attributes,
         schema_url: typing.Optional[str] = None,
     ):
         self._attributes = BoundedAttributes(attributes=attributes)
@@ -183,7 +174,7 @@ class Resource:
 
     @staticmethod
     def create(
-        attributes: typing.Optional[AllAttributes] = None,
+        attributes: typing.Optional[Attributes] = None,
         schema_url: typing.Optional[str] = None,
     ) -> "Resource":
         """Creates a new `Resource` from attributes.
@@ -254,7 +245,7 @@ class Resource:
         return _EMPTY_RESOURCE
 
     @property
-    def attributes(self) -> AllAttributes:
+    def attributes(self) -> Attributes:
         return self._attributes
 
     @property

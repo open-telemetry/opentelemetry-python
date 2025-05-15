@@ -28,7 +28,6 @@ AnyValue = Union[
     None,
 ]
 
-
 AttributeValue = AnyValue
 Attributes = Optional[Mapping[str, AnyValue]]
 
