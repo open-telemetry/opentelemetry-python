@@ -53,7 +53,7 @@ from opentelemetry.trace import (
     get_current_span,
 )
 from opentelemetry.trace.span import TraceFlags
-from opentelemetry.util.types import AnyValue, _ExtendedAttributes
+from opentelemetry.util.types import AnyValue, Attributes, _ExtendedAttributes
 
 _logger = logging.getLogger(__name__)
 
@@ -197,10 +197,14 @@ class LogRecord(APILogRecord):
                 "severity_number": severity_number,
                 "body": body,
                 "attributes": BoundedAttributes(
-                    maxlen=limits.max_attributes,
+                    maxlen=limits.max_attributes
+                    if limits
+                    else LogLimits.UNSET,
                     attributes=attributes if bool(attributes) else None,
                     immutable=False,
-                    max_value_len=limits.max_attribute_length,
+                    max_value_len=limits.max_attribute_length
+                    if limits
+                    else LogLimits.UNSET,
                     extended_attributes=True,
                 ),
             }
@@ -232,7 +236,9 @@ class LogRecord(APILogRecord):
                     dict(self.attributes) if bool(self.attributes) else None
                 ),
                 "dropped_attributes": self.dropped_attributes,
-                "timestamp": ns_to_iso_str(self.timestamp),
+                "timestamp": ns_to_iso_str(self.timestamp)
+                if self.timestamp is not None
+                else None,
                 "observed_timestamp": ns_to_iso_str(self.observed_timestamp),
                 "trace_id": (
                     f"0x{format_trace_id(self.trace_id)}"
@@ -289,7 +295,7 @@ class LogRecordProcessor(abc.ABC):
         """Called when a :class:`opentelemetry.sdk._logs.Logger` is shutdown"""
 
     @abc.abstractmethod
-    def force_flush(self, timeout_millis: int = 30000):
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
         """Export all the received logs to the configured Exporter that have not yet
         been exported.
 
@@ -554,7 +560,7 @@ class LoggingHandler(logging.Handler):
             severity_text=level_name,
             severity_number=severity_number,
             body=body,
-            resource=logger.resource,
+            resource=logger.resource,  # type: ignore [reportAttributeAccessIssue]
             attributes=attributes,
         )
 
@@ -573,9 +579,9 @@ class LoggingHandler(logging.Handler):
         Flushes the logging output. Skip flushing if logging_provider has no force_flush method.
         """
         if hasattr(self._logger_provider, "force_flush") and callable(
-            self._logger_provider.force_flush
+            self._logger_provider.force_flush  # type: ignore [#reportAttributeAccessIssue]
         ):
-            self._logger_provider.force_flush()
+            self._logger_provider.force_flush()  # type: ignore [#reportAttributeAccessIssue]
 
 
 class Logger(APILogger):
@@ -602,7 +608,7 @@ class Logger(APILogger):
     def resource(self):
         return self._resource
 
-    def emit(self, record: LogRecord):
+    def emit(self, record: LogRecord):  # type: ignore [#reportIncompatibleMethodOverride]
         """Emits the :class:`LogData` by associating :class:`LogRecord`
         and instrumentation info.
         """
@@ -643,7 +649,7 @@ class LoggerProvider(APILoggerProvider):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes | None = None,
     ) -> Logger:
         return Logger(
             self._resource,
@@ -677,8 +683,8 @@ class LoggerProvider(APILoggerProvider):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: _ExtendedAttributes | None = None,
-    ) -> Logger:
+        attributes: Attributes | None = None,
+    ) -> Union[Logger, APILogger]:
         if self._disabled:
             return NoOpLogger(
                 name,

@@ -59,7 +59,7 @@ class LogExporter(abc.ABC):
     """
 
     @abc.abstractmethod
-    def export(self, batch: Sequence[LogData]):
+    def export(self, batch: Sequence[LogData]) -> LogExportResult:
         """Exports a batch of logs.
         Args:
             batch: The list of `LogData` objects to be exported
@@ -192,7 +192,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
     def shutdown(self):
         return self._batch_processor.shutdown()
 
-    def force_flush(self, timeout_millis: Optional[int] = None):
+    def force_flush(self, timeout_millis: Optional[int] = None):  # type: ignore [#reportIncompatibleMethodOverride]
         return self._batch_processor.force_flush(timeout_millis)
 
     @staticmethod
