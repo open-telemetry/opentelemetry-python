@@ -28,8 +28,8 @@ from typing import (  # noqa: F401
 )
 
 import requests
-from typing_extensions import deprecated
 from requests.exceptions import ConnectionError
+from typing_extensions import deprecated
 
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _create_exp_backoff_generator,
