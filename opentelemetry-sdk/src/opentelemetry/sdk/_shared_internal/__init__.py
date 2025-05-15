@@ -167,15 +167,14 @@ class BatchProcessor(Generic[Telemetry]):
                     )
                 detach(token)
 
+    # Do not add any logging.log statements to this function, they can be being routed back to this `emit` function,
+    # resulting in endless recursive calls that crash the program.
     def emit(self, data: Telemetry) -> None:
         if self._shutdown:
-            self._logger.info("Shutdown called, ignoring %s.", self._exporting)
             return
         if self._pid != os.getpid():
             self._bsp_reset_once.do_once(self._at_fork_reinit)
-
-        if len(self._queue) == self._max_queue_size:
-            self._logger.warning("Queue full, dropping %s.", self._exporting)
+        # This will drop a log from the right side if the queue is at _max_queue_length.
         self._queue.appendleft(data)
         if len(self._queue) >= self._max_export_batch_size:
             self._worker_awaken.set()
