@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Refactor `BatchLogRecordProcessor` to simplify code and make the control flow more
   clear ([#4562](https://github.com/open-telemetry/opentelemetry-python/pull/4562/)
   and [#4535](https://github.com/open-telemetry/opentelemetry-python/pull/4535)).
+- Remove log messages from `BatchLogRecordProcessor.emit`, this caused the program
+  to crash at shutdown with a max recursion error ([#4586](https://github.com/open-telemetry/opentelemetry-python/pull/4586)).
 
 ## Version 1.33.0/0.54b0 (2025-05-09)
 
