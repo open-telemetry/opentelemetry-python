@@ -113,7 +113,6 @@ exclude = [
   "opentelemetry-sdk/src/opentelemetry/sdk/_events",
   "opentelemetry-sdk/src/opentelemetry/sdk/_logs",
   "opentelemetry-sdk/src/opentelemetry/sdk/error_handler",
-  "opentelemetry-sdk/src/opentelemetry/sdk/resources",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics",
   "opentelemetry-sdk/src/opentelemetry/sdk/trace",
   "opentelemetry-sdk/src/opentelemetry/sdk/util",
@@ -124,4 +123,5 @@ exclude = [
 strict = [
   "opentelemetry-semantic-conventions",
   "opentelemetry-sdk/src/opentelemetry/sdk/environment_variables",
+  "opentelemetry-sdk/src/opentelemetry/sdk/resources",
 ]
