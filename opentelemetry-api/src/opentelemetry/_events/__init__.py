@@ -22,7 +22,7 @@ from opentelemetry._logs.severity import SeverityNumber
 from opentelemetry.environment_variables import (
     _OTEL_PYTHON_EVENT_LOGGER_PROVIDER,
 )
-from opentelemetry.trace.span import TraceFlags
+from opentelemetry.trace.span import SpanContext
 from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
 from opentelemetry.util.types import AnyValue, _ExtendedAttributes
@@ -35,9 +35,7 @@ class Event(LogRecord):
         self,
         name: str,
         timestamp: Optional[int] = None,
-        trace_id: Optional[int] = None,
-        span_id: Optional[int] = None,
-        trace_flags: Optional["TraceFlags"] = None,
+        span_context: Optional[SpanContext] = None,
         body: Optional[AnyValue] = None,
         severity_number: Optional[SeverityNumber] = None,
         attributes: Optional[_ExtendedAttributes] = None,
@@ -49,9 +47,7 @@ class Event(LogRecord):
         }
         super().__init__(
             timestamp=timestamp,
-            trace_id=trace_id,
-            span_id=span_id,
-            trace_flags=trace_flags,
+            span_context=span_context,
             body=body,
             severity_number=severity_number,
             attributes=event_attributes,

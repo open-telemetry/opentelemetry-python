@@ -43,7 +43,10 @@ from opentelemetry.sdk.environment_variables import (
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace import TraceFlags
-from opentelemetry.trace.span import INVALID_SPAN_CONTEXT
+from opentelemetry.trace.span import (
+    INVALID_SPAN_CONTEXT,
+    SpanContext,
+)
 
 EMPTY_LOG = LogData(
     log_record=LogRecord(),
@@ -522,9 +525,12 @@ class TestConsoleLogExporter(unittest.TestCase):
         log_data = LogData(
             log_record=LogRecord(
                 timestamp=int(time.time() * 1e9),
-                trace_id=2604504634922341076776623263868986797,
-                span_id=5213367945872657620,
-                trace_flags=TraceFlags(0x01),
+                span_context=SpanContext(
+                    2604504634922341076776623263868986797,
+                    5213367945872657620,
+                    True,
+                    TraceFlags(0x01),
+                ),
                 severity_text="WARN",
                 severity_number=SeverityNumber.WARN,
                 body="Zhengzhou, We have a heaviest rains in 1000 years",

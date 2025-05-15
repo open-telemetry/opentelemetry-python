@@ -41,7 +41,7 @@ from typing import Optional, cast
 
 from opentelemetry._logs.severity import SeverityNumber
 from opentelemetry.environment_variables import _OTEL_PYTHON_LOGGER_PROVIDER
-from opentelemetry.trace.span import TraceFlags
+from opentelemetry.trace.span import SpanContext
 from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
 from opentelemetry.util.types import AnyValue, _ExtendedAttributes
@@ -61,9 +61,7 @@ class LogRecord(ABC):
         self,
         timestamp: Optional[int] = None,
         observed_timestamp: Optional[int] = None,
-        trace_id: Optional[int] = None,
-        span_id: Optional[int] = None,
-        trace_flags: Optional["TraceFlags"] = None,
+        span_context: Optional[SpanContext] = None,
         severity_text: Optional[str] = None,
         severity_number: Optional[SeverityNumber] = None,
         body: AnyValue = None,
@@ -73,9 +71,12 @@ class LogRecord(ABC):
         if observed_timestamp is None:
             observed_timestamp = time_ns()
         self.observed_timestamp = observed_timestamp
-        self.trace_id = trace_id
-        self.span_id = span_id
-        self.trace_flags = trace_flags
+        self.span_context = span_context
+        self.trace_id = self.span_id = self.trace_flags = None
+        if span_context:
+            self.trace_id = span_context.trace_id
+            self.span_id = span_context.span_id
+            self.trace_flags = span_context.trace_flags
         self.severity_text = severity_text
         self.severity_number = severity_number
         self.body = body

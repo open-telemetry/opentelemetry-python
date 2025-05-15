@@ -53,9 +53,7 @@ class EventLogger(APIEventLogger):
         log_record = LogRecord(
             timestamp=event.timestamp or time_ns(),
             observed_timestamp=None,
-            trace_id=event.trace_id or span_context.trace_id,
-            span_id=event.span_id or span_context.span_id,
-            trace_flags=event.trace_flags or span_context.trace_flags,
+            span_context=event.span_context or span_context,
             severity_text=None,
             severity_number=event.severity_number or SeverityNumber.INFO,
             body=event.body,
