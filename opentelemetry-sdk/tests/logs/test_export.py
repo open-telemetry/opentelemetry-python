@@ -20,8 +20,6 @@ import unittest
 from unittest.mock import Mock, patch
 
 from opentelemetry._logs import SeverityNumber
-from opentelemetry._logs import set_logger_provider
-
 from opentelemetry.sdk import trace
 from opentelemetry.sdk._logs import (
     LogData,
@@ -42,11 +40,11 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_BLRP_MAX_QUEUE_SIZE,
     OTEL_BLRP_SCHEDULE_DELAY,
 )
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace import TraceFlags
 from opentelemetry.trace.span import INVALID_SPAN_CONTEXT
-from opentelemetry.sdk.resources import Resource
 
 EMPTY_LOG = LogData(
     log_record=LogRecord(),

@@ -34,7 +34,6 @@ from opentelemetry.sdk._logs import (
 from opentelemetry.sdk._logs.export import (
     BatchLogRecordProcessor,
 )
-from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
 EMPTY_LOG = LogData(
