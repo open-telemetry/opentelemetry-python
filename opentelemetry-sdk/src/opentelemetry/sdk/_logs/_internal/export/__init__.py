@@ -109,9 +109,7 @@ class ConsoleLogExporter(LogExporter):
 
     def export(self, batch: Sequence[LogData]):
         for data in batch:
-            self.out.write(
-                self.formatter(data.log_record)
-            )  #  + "oh, we forgot to add " + str(data.instrumentation_scope)
+            self.out.write(self.formatter(data.log_record))
         self.out.flush()
         return LogExportResult.SUCCESS
 

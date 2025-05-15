@@ -308,4 +308,3 @@ class TestBoundedAttributes(unittest.TestCase):
 
         for num in range(100):
             self.assertEqual(bdict[str(num)], num)
-

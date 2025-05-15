@@ -80,6 +80,7 @@ def test_histogram_record_10(benchmark, num_labels):
 
     benchmark(benchmark_histogram_record_10)
 
+
 @pytest.mark.parametrize("num_labels", [1, 3])
 def test_histogram_record_10_small_mapping_attrs(benchmark, num_labels):
     labels = {}
@@ -90,6 +91,7 @@ def test_histogram_record_10_small_mapping_attrs(benchmark, num_labels):
         hist10.record(random.random() * MAX_BOUND_VALUE, attributes=labels)
 
     benchmark(test_histogram_record_10_complex_attrs)
+
 
 @pytest.mark.parametrize("num_labels", [1, 3])
 def test_histogram_record_10_complex_attrs(benchmark, num_labels):
@@ -122,7 +124,10 @@ def test_histogram_record_10_json_string_attrs(benchmark, num_labels):
         labels[f"Key{i}"] = {"k1": "v1", "k2": {"k3": "v3", "k4": [1, 2, 3]}}
 
     def test_histogram_record_10_json_string_attrs():
-        hist10.record(random.random() * MAX_BOUND_VALUE, attributes={k: json.dumps(v) for k, v in labels.items()})
+        hist10.record(
+            random.random() * MAX_BOUND_VALUE,
+            attributes={k: json.dumps(v) for k, v in labels.items()},
+        )
 
     benchmark(test_histogram_record_10_json_string_attrs)
 
