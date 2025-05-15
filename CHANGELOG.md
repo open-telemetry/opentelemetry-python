@@ -9,9 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - typecheck: add sdk/resources and drop mypy
   ([#4578](https://github.com/open-telemetry/opentelemetry-python/pull/4578))
-- Refactor `BatchLogRecordProcessor` to simplify code and make the control flow more
-  clear ([#4562](https://github.com/open-telemetry/opentelemetry-python/pull/4562/)
-  and [#4535](https://github.com/open-telemetry/opentelemetry-python/pull/4535)).
+- Refactor `BatchLogRecordProcessor` and `BatchSpanProcessor` to simplify code
+  and make the control flow more clear ([#4562](https://github.com/open-telemetry/opentelemetry-python/pull/4562/)
+  [#4535](https://github.com/open-telemetry/opentelemetry-python/pull/4535), and
+  [#4580](https://github.com/open-telemetry/opentelemetry-python/pull/4580)).
 
 ## Version 1.33.0/0.54b0 (2025-05-09)
 
