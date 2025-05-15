@@ -15,7 +15,7 @@
 from enum import Enum
 from typing import Final
 
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 FEATURE_FLAG_CONTEXT_ID: Final = "feature_flag.context.id"
 """
@@ -75,8 +75,8 @@ The version of the ruleset used during the evaluation. This may be any stable va
 
 
 @deprecated(
-    reason="The attribute feature_flag.evaluation.reason is deprecated - Replaced by `feature_flag.result.reason`"
-)  # type: ignore
+    "The attribute feature_flag.evaluation.reason is deprecated - Replaced by `feature_flag.result.reason`"
+)
 class FeatureFlagEvaluationReasonValues(Enum):
     STATIC = "static"
     """The resolved value is static (no dynamic evaluation)."""

@@ -15,7 +15,7 @@
 from enum import Enum
 from typing import Final
 
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 VCS_CHANGE_ID: Final = "vcs.change.id"
 """
@@ -215,8 +215,8 @@ class VcsRefTypeValues(Enum):
 
 
 @deprecated(
-    reason="The attribute vcs.repository.ref.type is deprecated - Deprecated, use `vcs.ref.head.type` instead"
-)  # type: ignore
+    "The attribute vcs.repository.ref.type is deprecated - Deprecated, use `vcs.ref.head.type` instead"
+)
 class VcsRepositoryRefTypeValues(Enum):
     BRANCH = "branch"
     """[branch](https://git-scm.com/docs/gitglossary#Documentation/gitglossary.txt-aiddefbranchabranch)."""

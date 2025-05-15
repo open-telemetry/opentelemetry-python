@@ -15,7 +15,7 @@
 import typing
 from re import compile as re_compile
 
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 from opentelemetry import trace
 from opentelemetry.context import Context
@@ -195,8 +195,7 @@ class B3SingleFormat(B3MultiFormat):
 
 class B3Format(B3MultiFormat):
     @deprecated(
-        version="1.2.0",
-        reason="B3Format is deprecated in favor of B3MultiFormat",
+        "B3Format is deprecated in favor of B3MultiFormat. Deprecated since version 1.2.0.",
     )
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

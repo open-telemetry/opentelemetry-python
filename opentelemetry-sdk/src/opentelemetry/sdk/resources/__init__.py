@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# type: ignore[reportDeprecated]  # ResourceAttributes is deprecated
+
 """
 This package implements `OpenTelemetry Resources
 <https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/sdk.md#resource-sdk>`_:

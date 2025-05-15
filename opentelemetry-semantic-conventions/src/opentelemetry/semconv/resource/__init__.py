@@ -16,13 +16,12 @@
 
 from enum import Enum
 
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 
 @deprecated(
-    version="1.25.0",
-    reason="Use attributes defined in the :py:const:`opentelemetry.semconv.attributes` and :py:const:`opentelemetry.semconv._incubating.attributes` modules instead.",
-)  # type: ignore
+    "Use attributes defined in the :py:const:`opentelemetry.semconv.attributes` and :py:const:`opentelemetry.semconv._incubating.attributes` modules instead. Deprecated since version 1.25.0.",
+)
 class ResourceAttributes:
     SCHEMA_URL = "https://opentelemetry.io/schemas/1.21.0"
     """
@@ -657,9 +656,8 @@ class ResourceAttributes:
 
 
 @deprecated(
-    version="1.25.0",
-    reason="Use :py:const:`opentelemetry.semconv._incubating.attributes.CloudProviderValues` instead.",
-)  # type: ignore
+    "Use :py:const:`opentelemetry.semconv._incubating.attributes.CloudProviderValues` instead. Deprecated since version 1.25.0.",
+)
 class CloudProviderValues(Enum):
     ALIBABA_CLOUD = "alibaba_cloud"
     """Alibaba Cloud."""
@@ -684,9 +682,8 @@ class CloudProviderValues(Enum):
 
 
 @deprecated(
-    version="1.25.0",
-    reason="Use :py:const:`opentelemetry.semconv._incubating.attributes.CloudPlatformValues` instead.",
-)  # type: ignore
+    "Use :py:const:`opentelemetry.semconv._incubating.attributes.CloudPlatformValues` instead. Deprecated since version 1.25.0.",
+)
 class CloudPlatformValues(Enum):
     ALIBABA_CLOUD_ECS = "alibaba_cloud_ecs"
     """Alibaba Cloud Elastic Compute Service."""
@@ -771,9 +768,8 @@ class CloudPlatformValues(Enum):
 
 
 @deprecated(
-    version="1.25.0",
-    reason="Use :py:const:`opentelemetry.semconv._incubating.attributes.AwsEcsLaunchtypeValues` instead.",
-)  # type: ignore
+    "Use :py:const:`opentelemetry.semconv._incubating.attributes.AwsEcsLaunchtypeValues` instead. Deprecated since version 1.25.0.",
+)
 class AwsEcsLaunchtypeValues(Enum):
     EC2 = "ec2"
     """ec2."""
@@ -783,9 +779,8 @@ class AwsEcsLaunchtypeValues(Enum):
 
 
 @deprecated(
-    version="1.25.0",
-    reason="Use :py:const:`opentelemetry.semconv._incubating.attributes.HostArchValues` instead.",
-)  # type: ignore
+    "Use :py:const:`opentelemetry.semconv._incubating.attributes.HostArchValues` instead. Deprecated since version 1.25.0.",
+)
 class HostArchValues(Enum):
     AMD64 = "amd64"
     """AMD64."""
@@ -813,9 +808,8 @@ class HostArchValues(Enum):
 
 
 @deprecated(
-    version="1.25.0",
-    reason="Use :py:const:`opentelemetry.semconv._incubating.attributes.OsTypeValues` instead.",
-)  # type: ignore
+    "Use :py:const:`opentelemetry.semconv._incubating.attributes.OsTypeValues` instead. Deprecated since version 1.25.0.",
+)
 class OsTypeValues(Enum):
     WINDOWS = "windows"
     """Microsoft Windows."""
@@ -852,9 +846,8 @@ class OsTypeValues(Enum):
 
 
 @deprecated(
-    version="1.25.0",
-    reason="Use :py:const:`opentelemetry.semconv.attributes.TelemetrySdkLanguageValues` instead.",
-)  # type: ignore
+    "Use :py:const:`opentelemetry.semconv.attributes.TelemetrySdkLanguageValues` instead. Deprecated since version 1.25.0.",
+)
 class TelemetrySdkLanguageValues(Enum):
     CPP = "cpp"
     """cpp."""

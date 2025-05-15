@@ -15,7 +15,7 @@
 from enum import Enum
 from typing import Final
 
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 PROCESS_ARGS_COUNT: Final = "process.args_count"
 """
@@ -222,8 +222,8 @@ class ProcessContextSwitchTypeValues(Enum):
 
 
 @deprecated(
-    reason="The attribute process.cpu.state is deprecated - Replaced by `cpu.mode`"
-)  # type: ignore
+    "The attribute process.cpu.state is deprecated - Replaced by `cpu.mode`"
+)
 class ProcessCpuStateValues(Enum):
     SYSTEM = "system"
     """system."""
