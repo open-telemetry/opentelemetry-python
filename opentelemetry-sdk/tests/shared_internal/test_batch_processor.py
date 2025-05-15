@@ -14,7 +14,6 @@
 
 # pylint: disable=protected-access
 import gc
-import logging
 import multiprocessing
 import os
 import time
@@ -28,11 +27,8 @@ from unittest.mock import Mock
 import pytest
 from pytest import mark
 
-from opentelemetry._logs import set_logger_provider
 from opentelemetry.sdk._logs import (
     LogData,
-    LoggerProvider,
-    LoggingHandler,
     LogRecord,
 )
 from opentelemetry.sdk._logs.export import (
@@ -214,29 +210,3 @@ class TestBatchProcessor:
 
         # Then the reference to the processor should no longer exist
         assert weak_ref() is None
-
-    def test_logging_lib_not_invoked_in_emit(
-        self, batch_processor_class, telemetry
-    ):
-        exporter = Mock()
-        processor = batch_processor_class(exporter)
-        processor._batch_processor.emit(telemetry)
-        logger_provider = LoggerProvider(
-            resource=Resource.create(
-                {
-                    "service.name": "shoppingcart",
-                    "service.instance.id": "instance-12",
-                }
-            ),
-        )
-        set_logger_provider(logger_provider)
-        logger_provider.add_log_record_processor(processor)
-        handler = LoggingHandler(
-            level=logging.INFO, logger_provider=logger_provider
-        )
-        # Attach OTLP handler to root logger
-        logging.getLogger().addHandler(handler)
-        # If `emit` calls logging.log then this test will throw a maximum recursion depth exceeded exception and fail.
-        processor.emit(telemetry)
-        processor.shutdown()
-        processor.emit(telemetry)

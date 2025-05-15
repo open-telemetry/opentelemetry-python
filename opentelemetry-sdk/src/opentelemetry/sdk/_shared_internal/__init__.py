@@ -172,6 +172,7 @@ class BatchProcessor(Generic[Telemetry]):
     # See https://github.com/open-telemetry/opentelemetry-python/issues/4261
     def emit(self, data: Telemetry) -> None:
         if self._shutdown:
+            self._logger.info("shutdowing")
             return
         if self._pid != os.getpid():
             self._bsp_reset_once.do_once(self._at_fork_reinit)

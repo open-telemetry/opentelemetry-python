@@ -20,6 +20,8 @@ import unittest
 from unittest.mock import Mock, patch
 
 from opentelemetry._logs import SeverityNumber
+from opentelemetry._logs import set_logger_provider
+
 from opentelemetry.sdk import trace
 from opentelemetry.sdk._logs import (
     LogData,
@@ -44,6 +46,7 @@ from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace import TraceFlags
 from opentelemetry.trace.span import INVALID_SPAN_CONTEXT
+from opentelemetry.sdk.resources import Resource
 
 EMPTY_LOG = LogData(
     log_record=LogRecord(),
@@ -341,6 +344,27 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
 
         logger.error("error")
         self.assertEqual(log_record_processor.emit.call_count, 1)
+
+    def test_logging_lib_not_invoked_in_batch_log_record_emit(self):
+        exporter = Mock()
+        processor = BatchLogRecordProcessor(exporter)
+        logger_provider = LoggerProvider(
+            resource=Resource.create(
+                {
+                    "service.name": "shoppingcart",
+                    "service.instance.id": "instance-12",
+                }
+            ),
+        )
+        logger_provider.add_log_record_processor(processor)
+        # Attach OTLP handler to root logger
+        logging.getLogger().addHandler(
+            LoggingHandler(level=logging.INFO, logger_provider=logger_provider)
+        )
+        # If `emit` calls logging.log then this test will throw a maximum recursion depth exceeded exception and fail.
+        processor.emit(EMPTY_LOG)
+        processor.shutdown()
+        processor.emit(EMPTY_LOG)
 
     def test_args(self):
         exporter = InMemoryLogExporter()
