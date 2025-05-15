@@ -40,7 +40,6 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_BLRP_MAX_QUEUE_SIZE,
     OTEL_BLRP_SCHEDULE_DELAY,
 )
-from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace import TraceFlags
@@ -343,11 +342,11 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         logger.error("error")
         self.assertEqual(log_record_processor.emit.call_count, 1)
 
-    def test_logging_lib_not_invoked_in_batch_log_record_emit(self):
+    def test_logging_lib_not_invoked_in_batch_log_record_emit(self):  # pylint: disable=no-self-use
         exporter = Mock()
         processor = BatchLogRecordProcessor(exporter)
         logger_provider = LoggerProvider(
-            resource=Resource.create(
+            resource=SDKResource.create(
                 {
                     "service.name": "shoppingcart",
                     "service.instance.id": "instance-12",
@@ -355,14 +354,16 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             ),
         )
         logger_provider.add_log_record_processor(processor)
-        # Attach OTLP handler to root logger
-        logging.getLogger().addHandler(
-            LoggingHandler(level=logging.INFO, logger_provider=logger_provider)
+        handler = LoggingHandler(
+            level=logging.INFO, logger_provider=logger_provider
         )
+        # Attach OTLP handler to SDK logger
+        logging.getLogger("opentelemetry.sdk").addHandler(handler)
         # If `emit` calls logging.log then this test will throw a maximum recursion depth exceeded exception and fail.
         processor.emit(EMPTY_LOG)
         processor.shutdown()
         processor.emit(EMPTY_LOG)
+        logging.getLogger("opentelemetry.sdk").removeHandler(handler)
 
     def test_args(self):
         exporter = InMemoryLogExporter()
