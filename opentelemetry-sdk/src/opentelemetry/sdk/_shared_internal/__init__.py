@@ -169,6 +169,7 @@ class BatchProcessor(Generic[Telemetry]):
 
     # Do not add any logging.log statements to this function, they can be being routed back to this `emit` function,
     # resulting in endless recursive calls that crash the program.
+    # See https://github.com/open-telemetry/opentelemetry-python/issues/4261 
     def emit(self, data: Telemetry) -> None:
         if self._shutdown:
             return
