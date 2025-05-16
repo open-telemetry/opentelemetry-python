@@ -14,15 +14,11 @@
 from __future__ import annotations
 
 import abc
-import collections
 import enum
 import logging
-import os
 import sys
-import threading
-import weakref
 from os import environ, linesep
-from typing import IO, Callable, Deque, Optional, Sequence
+from typing import IO, Callable, Optional, Sequence
 
 from opentelemetry.context import (
     _SUPPRESS_INSTRUMENTATION_KEY,
@@ -31,13 +27,13 @@ from opentelemetry.context import (
     set_value,
 )
 from opentelemetry.sdk._logs import LogData, LogRecord, LogRecordProcessor
+from opentelemetry.sdk._shared_internal import BatchProcessor
 from opentelemetry.sdk.environment_variables import (
     OTEL_BLRP_EXPORT_TIMEOUT,
     OTEL_BLRP_MAX_EXPORT_BATCH_SIZE,
     OTEL_BLRP_MAX_QUEUE_SIZE,
     OTEL_BLRP_SCHEDULE_DELAY,
 )
-from opentelemetry.util._once import Once
 
 _DEFAULT_SCHEDULE_DELAY_MILLIS = 5000
 _DEFAULT_MAX_EXPORT_BATCH_SIZE = 512
@@ -46,7 +42,6 @@ _DEFAULT_MAX_QUEUE_SIZE = 2048
 _ENV_VAR_INT_VALUE_ERROR_MESSAGE = (
     "Unable to parse value for %s as integer. Defaulting to %s."
 )
-
 _logger = logging.getLogger(__name__)
 
 
@@ -55,18 +50,10 @@ class LogExportResult(enum.Enum):
     FAILURE = 1
 
 
-class BatchLogExportStrategy(enum.Enum):
-    EXPORT_ALL = 0
-    EXPORT_WHILE_BATCH_EXCEEDS_THRESHOLD = 1
-    EXPORT_AT_LEAST_ONE_BATCH = 2
-
-
 class LogExporter(abc.ABC):
     """Interface for exporting logs.
-
     Interface to be implemented by services that want to export logs received
     in their own format.
-
     To export data this MUST be registered to the :class`opentelemetry.sdk._logs.Logger` using a
     log processor.
     """
@@ -74,10 +61,8 @@ class LogExporter(abc.ABC):
     @abc.abstractmethod
     def export(self, batch: Sequence[LogData]):
         """Exports a batch of logs.
-
         Args:
             batch: The list of `LogData` objects to be exported
-
         Returns:
             The result of the export
         """
@@ -146,9 +131,6 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
         return True
 
 
-_BSP_RESET_ONCE = Once()
-
-
 class BatchLogRecordProcessor(LogRecordProcessor):
     """This is an implementation of LogRecordProcessor which creates batches of
     received logs in the export-friendly LogData representation and
@@ -161,9 +143,9 @@ class BatchLogRecordProcessor(LogRecordProcessor):
     - :envvar:`OTEL_BLRP_MAX_QUEUE_SIZE`
     - :envvar:`OTEL_BLRP_MAX_EXPORT_BATCH_SIZE`
     - :envvar:`OTEL_BLRP_EXPORT_TIMEOUT`
-    """
 
-    _queue: Deque[LogData]
+    All the logic for emitting logs, shutting down etc. resides in the BatchProcessor class.
+    """
 
     def __init__(
         self,
@@ -194,127 +176,24 @@ class BatchLogRecordProcessor(LogRecordProcessor):
         BatchLogRecordProcessor._validate_arguments(
             max_queue_size, schedule_delay_millis, max_export_batch_size
         )
-
-        self._exporter = exporter
-        self._max_queue_size = max_queue_size
-        self._schedule_delay = schedule_delay_millis / 1e3
-        self._max_export_batch_size = max_export_batch_size
-        # Not used. No way currently to pass timeout to export.
-        # TODO(https://github.com/open-telemetry/opentelemetry-python/issues/4555): figure out what this should do.
-        self._export_timeout_millis = export_timeout_millis
-        # Deque is thread safe.
-        self._queue = collections.deque([], max_queue_size)
-        self._worker_thread = threading.Thread(
-            name="OtelBatchLogRecordProcessor",
-            target=self.worker,
-            daemon=True,
+        # Initializes BatchProcessor
+        self._batch_processor = BatchProcessor(
+            exporter,
+            schedule_delay_millis,
+            max_export_batch_size,
+            export_timeout_millis,
+            max_queue_size,
+            "Log",
         )
-
-        self._shutdown = False
-        self._export_lock = threading.Lock()
-        self._worker_awaken = threading.Event()
-        self._worker_thread.start()
-        if hasattr(os, "register_at_fork"):
-            weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
-            os.register_at_fork(after_in_child=lambda: weak_reinit()())  # pylint: disable=unnecessary-lambda
-        self._pid = os.getpid()
-
-    def _should_export_batch(
-        self, batch_strategy: BatchLogExportStrategy, num_iterations: int
-    ) -> bool:
-        if not self._queue:
-            return False
-        # Always continue to export while queue length exceeds max batch size.
-        if len(self._queue) >= self._max_export_batch_size:
-            return True
-        if batch_strategy is BatchLogExportStrategy.EXPORT_ALL:
-            return True
-        if batch_strategy is BatchLogExportStrategy.EXPORT_AT_LEAST_ONE_BATCH:
-            return num_iterations == 0
-        return False
-
-    def _at_fork_reinit(self):
-        self._export_lock = threading.Lock()
-        self._worker_awaken = threading.Event()
-        self._queue.clear()
-        self._worker_thread = threading.Thread(
-            name="OtelBatchLogRecordProcessor",
-            target=self.worker,
-            daemon=True,
-        )
-        self._worker_thread.start()
-        self._pid = os.getpid()
-
-    def worker(self):
-        while not self._shutdown:
-            # Lots of strategies in the spec for setting next timeout.
-            # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/sdk.md#batching-processor.
-            # Shutdown will interrupt this sleep. Emit will interrupt this sleep only if the queue is bigger then threshold.
-            sleep_interrupted = self._worker_awaken.wait(self._schedule_delay)
-            if self._shutdown:
-                break
-            self._export(
-                BatchLogExportStrategy.EXPORT_WHILE_BATCH_EXCEEDS_THRESHOLD
-                if sleep_interrupted
-                else BatchLogExportStrategy.EXPORT_AT_LEAST_ONE_BATCH
-            )
-            self._worker_awaken.clear()
-        self._export(BatchLogExportStrategy.EXPORT_ALL)
-
-    def _export(self, batch_strategy: BatchLogExportStrategy) -> None:
-        with self._export_lock:
-            iteration = 0
-            # We could see concurrent export calls from worker and force_flush. We call _should_export_batch
-            # once the lock is obtained to see if we still need to make the requested export.
-            while self._should_export_batch(batch_strategy, iteration):
-                iteration += 1
-                token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
-                try:
-                    self._exporter.export(
-                        [
-                            # Oldest records are at the back, so pop from there.
-                            self._queue.pop()
-                            for _ in range(
-                                min(
-                                    self._max_export_batch_size,
-                                    len(self._queue),
-                                )
-                            )
-                        ]
-                    )
-                except Exception:  # pylint: disable=broad-exception-caught
-                    _logger.exception("Exception while exporting logs.")
-                detach(token)
 
     def emit(self, log_data: LogData) -> None:
-        if self._shutdown:
-            _logger.info("Shutdown called, ignoring log.")
-            return
-        if self._pid != os.getpid():
-            _BSP_RESET_ONCE.do_once(self._at_fork_reinit)
-
-        if len(self._queue) == self._max_queue_size:
-            _logger.warning("Queue full, dropping log.")
-        self._queue.appendleft(log_data)
-        if len(self._queue) >= self._max_export_batch_size:
-            self._worker_awaken.set()
+        return self._batch_processor.emit(log_data)
 
     def shutdown(self):
-        if self._shutdown:
-            return
-        # Prevents emit and force_flush from further calling export.
-        self._shutdown = True
-        # Interrupts sleep in the worker, if it's sleeping.
-        self._worker_awaken.set()
-        # Main worker loop should exit after one final export call with flush all strategy.
-        self._worker_thread.join()
-        self._exporter.shutdown()
+        return self._batch_processor.shutdown()
 
-    def force_flush(self, timeout_millis: Optional[int] = None) -> bool:
-        if self._shutdown:
-            return
-        # Blocking call to export.
-        self._export(BatchLogExportStrategy.EXPORT_ALL)
+    def force_flush(self, timeout_millis: Optional[int] = None):
+        return self._batch_processor.force_flush(timeout_millis)
 
     @staticmethod
     def _default_max_queue_size():
