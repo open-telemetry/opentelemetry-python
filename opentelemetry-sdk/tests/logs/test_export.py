@@ -21,7 +21,10 @@ import time
 import unittest
 import weakref
 from concurrent.futures import ThreadPoolExecutor
+from sys import version_info
 from unittest.mock import Mock, patch
+
+from pytest import mark
 
 from opentelemetry._logs import SeverityNumber
 from opentelemetry.sdk import trace
@@ -347,6 +350,39 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         logger.error("error")
         self.assertEqual(log_record_processor.emit.call_count, 1)
 
+    @mark.skipif(
+        version_info < (3, 10),
+        reason="assertNoLogs only exists in python 3.10+.",
+    )
+    def test_logging_lib_not_invoked_in_batch_log_record_emit(self):  # pylint: disable=no-self-use
+        # See https://github.com/open-telemetry/opentelemetry-python/issues/4261
+        exporter = Mock()
+        processor = BatchLogRecordProcessor(exporter)
+        logger_provider = LoggerProvider(
+            resource=SDKResource.create(
+                {
+                    "service.name": "shoppingcart",
+                    "service.instance.id": "instance-12",
+                }
+            ),
+        )
+        logger_provider.add_log_record_processor(processor)
+        handler = LoggingHandler(
+            level=logging.INFO, logger_provider=logger_provider
+        )
+        sdk_logger = logging.getLogger("opentelemetry.sdk")
+        # Attach OTLP handler to SDK logger
+        sdk_logger.addHandler(handler)
+        # If `emit` calls logging.log then this test will throw a maximum recursion depth exceeded exception and fail.
+        try:
+            with self.assertNoLogs(sdk_logger, logging.NOTSET):
+                processor.emit(EMPTY_LOG)
+            processor.shutdown()
+            with self.assertNoLogs(sdk_logger, logging.NOTSET):
+                processor.emit(EMPTY_LOG)
+        finally:
+            sdk_logger.removeHandler(handler)
+
     def test_args(self):
         exporter = InMemoryLogExporter()
         log_record_processor = BatchLogRecordProcessor(
@@ -517,12 +553,6 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         exporter.export.assert_called_once_with([EMPTY_LOG])
         self.assertTrue(exporter._stopped)
 
-        with self.assertLogs(level="INFO") as log:
-            # This log should not be flushed.
-            log_record_processor.emit(EMPTY_LOG)
-            self.assertEqual(len(log.output), 1)
-            self.assertEqual(len(log.records), 1)
-            self.assertIn("Shutdown called, ignoring log.", log.output[0])
         exporter.export.assert_called_once()
 
     # pylint: disable=no-self-use
