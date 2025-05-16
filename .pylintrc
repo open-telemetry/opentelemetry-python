@@ -45,7 +45,7 @@ suggestion-mode=yes
 unsafe-load-any-extension=no
 
 # Run python dependant checks considering the baseline version
-py-version=3.8
+py-version=3.9
 
 
 [MESSAGES CONTROL]

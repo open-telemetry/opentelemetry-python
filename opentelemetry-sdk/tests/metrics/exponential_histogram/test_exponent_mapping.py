@@ -14,11 +14,9 @@
 
 # pylint: disable=protected-access
 
-from math import inf
-from sys import float_info, version_info
+from math import inf, nextafter
+from sys import float_info
 from unittest.mock import patch
-
-from pytest import mark
 
 from opentelemetry.sdk.metrics._internal.exponential_histogram.mapping.errors import (
     MappingUnderflowError,
@@ -33,9 +31,6 @@ from opentelemetry.sdk.metrics._internal.exponential_histogram.mapping.ieee_754 
     MIN_NORMAL_VALUE,
 )
 from opentelemetry.test import TestCase
-
-if version_info >= (3, 9):
-    from math import nextafter
 
 
 def right_boundary(scale: int, index: int) -> float:
@@ -322,10 +317,6 @@ class TestExponentMapping(TestCase):
             with self.assertRaises(Exception):
                 exponent_mapping.get_lower_boundary(index + 1)
 
-    @mark.skipif(
-        version_info < (3, 9),
-        reason="math.nextafter is only available for Python >= 3.9",
-    )
     def test_exponent_index_min(self):
         for scale in range(
             ExponentMapping._min_scale, ExponentMapping._max_scale + 1
