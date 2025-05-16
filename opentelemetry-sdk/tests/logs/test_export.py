@@ -20,6 +20,8 @@ import unittest
 from unittest.mock import Mock, patch
 
 from opentelemetry._logs import SeverityNumber
+from sys import version_info
+from pytest import mark
 from opentelemetry.sdk import trace
 from opentelemetry.sdk._logs import (
     LogData,
@@ -342,6 +344,10 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         logger.error("error")
         self.assertEqual(log_record_processor.emit.call_count, 1)
 
+    @mark.skipif(
+        version_info < (3, 10),
+        reason="assertNoLogs only exists in python 3.10+.",
+    )
     def test_logging_lib_not_invoked_in_batch_log_record_emit(self):  # pylint: disable=no-self-use
         exporter = Mock()
         processor = BatchLogRecordProcessor(exporter)
