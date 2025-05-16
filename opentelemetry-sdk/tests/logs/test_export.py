@@ -357,13 +357,20 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         handler = LoggingHandler(
             level=logging.INFO, logger_provider=logger_provider
         )
+        sdk_logger = logging.getLogger("opentelemetry.sdk")
         # Attach OTLP handler to SDK logger
-        logging.getLogger("opentelemetry.sdk").addHandler(handler)
+        sdk_logger.addHandler(handler)
         # If `emit` calls logging.log then this test will throw a maximum recursion depth exceeded exception and fail.
-        processor.emit(EMPTY_LOG)
-        processor.shutdown()
-        processor.emit(EMPTY_LOG)
-        logging.getLogger("opentelemetry.sdk").removeHandler(handler)
+        try:
+            with self.assertNoLogs(sdk_logger, logging.NOTSET):
+                processor.emit(EMPTY_LOG)
+            processor.shutdown()
+            with self.assertNoLogs(sdk_logger, logging.NOTSET):
+                processor.emit(EMPTY_LOG)
+            sdk_logger.removeHandler(handler)
+        except Exception as exc:
+            sdk_logger.removeHandler(handler)
+            raise exc
 
     def test_args(self):
         exporter = InMemoryLogExporter()
