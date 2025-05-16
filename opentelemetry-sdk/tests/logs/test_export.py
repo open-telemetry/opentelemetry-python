@@ -17,11 +17,12 @@ import logging
 import os
 import time
 import unittest
+from sys import version_info
 from unittest.mock import Mock, patch
 
-from opentelemetry._logs import SeverityNumber
-from sys import version_info
 from pytest import mark
+
+from opentelemetry._logs import SeverityNumber
 from opentelemetry.sdk import trace
 from opentelemetry.sdk._logs import (
     LogData,
