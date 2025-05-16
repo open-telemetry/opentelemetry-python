@@ -29,8 +29,8 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
-  "opentelemetry-exporter-otlp-proto-grpc == 1.33.0",
-  "opentelemetry-exporter-otlp-proto-http == 1.33.0",
+  "opentelemetry-exporter-otlp-proto-grpc == 1.33.1",
+  "opentelemetry-exporter-otlp-proto-http == 1.33.1",
 ]
 
 [project.entry-points.opentelemetry_logs_exporter]

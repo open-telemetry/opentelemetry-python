@@ -30,7 +30,7 @@ classifiers = [
 dependencies = [
   "opentelemetry-api ~= 1.12",
   # DONOTMERGE: confirm that this will becomes ~= 1.21 in the next release
-  "opentelemetry-sdk ~= 1.33.0",
+  "opentelemetry-sdk ~= 1.33.1",
   "prometheus_client >= 0.5.0, < 1.0.0",
 ]
 

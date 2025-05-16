@@ -33,9 +33,9 @@ dependencies = [
   "grpcio >= 1.63.2, < 2.0.0; python_version < '3.13'",
   "grpcio >= 1.66.2, < 2.0.0; python_version >= '3.13'",
   "opentelemetry-api ~= 1.15",
-  "opentelemetry-proto == 1.33.0",
-  "opentelemetry-sdk ~= 1.33.0",
-  "opentelemetry-exporter-otlp-proto-common == 1.33.0",
+  "opentelemetry-proto == 1.33.1",
+  "opentelemetry-sdk ~= 1.33.1",
+  "opentelemetry-exporter-otlp-proto-common == 1.33.1",
 ]
 
 [project.entry-points.opentelemetry_logs_exporter]
