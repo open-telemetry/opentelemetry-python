@@ -48,7 +48,7 @@ Telemetry = TypeVar("Telemetry")
 
 class Exporter(Protocol[Telemetry]):
     @abstractmethod
-    def export(self, batch: list[Telemetry]):
+    def export(self, batch: list[Telemetry], /):
         raise NotImplementedError
 
     @abstractmethod

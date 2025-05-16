@@ -169,7 +169,7 @@ class BatchSpanProcessor(SpanProcessor):
         )
 
         self._batch_processor = BatchProcessor(
-            span_exporter,  # type: ignore [reportArgumentType]
+            span_exporter,
             schedule_delay_millis,
             max_export_batch_size,
             export_timeout_millis,
