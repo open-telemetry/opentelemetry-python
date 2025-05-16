@@ -375,7 +375,6 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             processor.shutdown()
             with self.assertNoLogs(sdk_logger, logging.NOTSET):
                 processor.emit(EMPTY_LOG)
-            sdk_logger.removeHandler(handler)
         finally:
             sdk_logger.removeHandler(handler)
 
