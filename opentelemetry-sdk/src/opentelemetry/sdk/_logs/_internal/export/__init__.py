@@ -286,15 +286,16 @@ class BatchLogRecordProcessor(LogRecordProcessor):
                     _logger.exception("Exception while exporting logs.")
                 detach(token)
 
+    # Do not add any logging.log statements to this function, they can be being routed back to this `emit` function,
+    # resulting in endless recursive calls that crash the program.
+    # See https://github.com/open-telemetry/opentelemetry-python/issues/4261
     def emit(self, log_data: LogData) -> None:
         if self._shutdown:
-            _logger.info("Shutdown called, ignoring log.")
             return
         if self._pid != os.getpid():
             _BSP_RESET_ONCE.do_once(self._at_fork_reinit)
 
-        if len(self._queue) == self._max_queue_size:
-            _logger.warning("Queue full, dropping log.")
+        # This will drop a log from the right side if the queue is at _max_queue_length.
         self._queue.appendleft(log_data)
         if len(self._queue) >= self._max_export_batch_size:
             self._worker_awaken.set()
