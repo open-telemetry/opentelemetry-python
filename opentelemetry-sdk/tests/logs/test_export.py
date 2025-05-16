@@ -350,6 +350,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         reason="assertNoLogs only exists in python 3.10+.",
     )
     def test_logging_lib_not_invoked_in_batch_log_record_emit(self):  # pylint: disable=no-self-use
+        # See https://github.com/open-telemetry/opentelemetry-python/issues/4261
         exporter = Mock()
         processor = BatchLogRecordProcessor(exporter)
         logger_provider = LoggerProvider(
@@ -375,9 +376,8 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             with self.assertNoLogs(sdk_logger, logging.NOTSET):
                 processor.emit(EMPTY_LOG)
             sdk_logger.removeHandler(handler)
-        except Exception as exc:
+        finally:
             sdk_logger.removeHandler(handler)
-            raise exc
 
     def test_args(self):
         exporter = InMemoryLogExporter()
