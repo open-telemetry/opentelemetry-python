@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and make the control flow more clear ([#4562](https://github.com/open-telemetry/opentelemetry-python/pull/4562/)
   [#4535](https://github.com/open-telemetry/opentelemetry-python/pull/4535), and
   [#4580](https://github.com/open-telemetry/opentelemetry-python/pull/4580)).
+- Remove log messages from `BatchLogRecordProcessor.emit`, this caused the program
+  to crash at shutdown with a max recursion error ([#4586](https://github.com/open-telemetry/opentelemetry-python/pull/4586)).
+- Configurable max retry timeout for grpc exporter
+  ([#4333](https://github.com/open-telemetry/opentelemetry-python/pull/4333))
+- opentelemetry-api: allow importlib-metadata 8.7.0
+  ([#4593](https://github.com/open-telemetry/opentelemetry-python/pull/4593))
 
 ## Version 1.33.0/0.54b0 (2025-05-09)
 
@@ -94,8 +100,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4353](https://github.com/open-telemetry/opentelemetry-python/pull/4353))
 - sdk: don't log or print warnings when the SDK has been disabled
   ([#4371](https://github.com/open-telemetry/opentelemetry-python/pull/4371))
-- Configurable max retry timeout for grpc exporter
-  ([#4333](https://github.com/open-telemetry/opentelemetry-python/pull/4333))
 - Fix span context manager typing by using ParamSpec from typing_extensions
   ([#4389](https://github.com/open-telemetry/opentelemetry-python/pull/4389))
 - Fix serialization of None values in logs body to match 1.31.0+ data model

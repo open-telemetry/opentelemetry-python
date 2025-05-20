@@ -98,7 +98,7 @@ class TestBatchProcessor:
         exporter.export.assert_called_once_with([telemetry])
 
     def test_telemetry_flushed_before_shutdown_and_dropped_after_shutdown(
-        self, batch_processor_class, telemetry, caplog
+        self, batch_processor_class, telemetry
     ):
         exporter = Mock()
         batch_processor = batch_processor_class(
@@ -116,9 +116,7 @@ class TestBatchProcessor:
         assert batch_processor._batch_processor._shutdown is True
 
         # This should not be flushed.
-        batch_processor._batch_processor.emit(telemetry)
-        assert len(caplog.records) == 1
-        assert "Shutdown called, ignoring" in caplog.text
+        batch_processor.emit(telemetry)
         exporter.export.assert_called_once()
 
     # pylint: disable=no-self-use
