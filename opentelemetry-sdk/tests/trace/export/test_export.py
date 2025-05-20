@@ -145,6 +145,8 @@ class TestSimpleSpanProcessor(unittest.TestCase):
 
 
 class TestBatchSpanProcessor(unittest.TestCase):
+    # Many more test cases for the BatchSpanProcessor exist under
+    # opentelemetry-sdk/tests/shared_internal/test_batch_processor.py.
     @mock.patch.dict(
         "os.environ",
         {
