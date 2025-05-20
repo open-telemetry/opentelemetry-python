@@ -258,8 +258,8 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "importlib-metadata", specifier = ">=6.0,<8.7.0" },
     { name = "typing-extensions", specifier = ">=4.5.0" },
+    { name = "importlib-metadata", specifier = ">=6.0,<8.8.0" },
 ]
 
 [[package]]
