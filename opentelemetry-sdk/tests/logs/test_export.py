@@ -332,6 +332,8 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
 
 
 class TestBatchLogRecordProcessor(unittest.TestCase):
+    # Many more test cases for the BatchLogRecordProcessor exist under
+    # opentelemetry-sdk/tests/shared_internal/test_batch_processor.py.
     def test_emit_call_log_record(self):
         exporter = InMemoryLogExporter()
         log_record_processor = Mock(wraps=BatchLogRecordProcessor(exporter))
