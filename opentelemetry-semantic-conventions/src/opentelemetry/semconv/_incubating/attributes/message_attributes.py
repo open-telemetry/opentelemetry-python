@@ -15,7 +15,7 @@
 from enum import Enum
 from typing import Final
 
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 MESSAGE_COMPRESSED_SIZE: Final = "message.compressed_size"
 """
@@ -39,8 +39,8 @@ Deprecated: Replaced by `rpc.message.uncompressed_size`.
 
 
 @deprecated(
-    reason="The attribute message.type is deprecated - Replaced by `rpc.message.type`"
-)  # type: ignore
+    "The attribute message.type is deprecated - Replaced by `rpc.message.type`"
+)
 class MessageTypeValues(Enum):
     SENT = "SENT"
     """sent."""

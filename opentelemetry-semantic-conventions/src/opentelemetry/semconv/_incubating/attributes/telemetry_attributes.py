@@ -15,7 +15,7 @@
 from enum import Enum
 from typing import Final
 
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 TELEMETRY_DISTRO_NAME: Final = "telemetry.distro.name"
 """
@@ -46,8 +46,8 @@ Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.teleme
 
 
 @deprecated(
-    reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TelemetrySdkLanguageValues`."
-)  # type: ignore
+    "Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TelemetrySdkLanguageValues`."
+)
 class TelemetrySdkLanguageValues(Enum):
     CPP = "cpp"
     """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TelemetrySdkLanguageValues.CPP`."""
