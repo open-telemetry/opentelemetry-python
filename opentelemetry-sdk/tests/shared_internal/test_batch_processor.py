@@ -116,7 +116,7 @@ class TestBatchProcessor:
         assert batch_processor._batch_processor._shutdown is True
 
         # This should not be flushed.
-        batch_processor.emit(telemetry)
+        batch_processor._batch_processor.emit(telemetry)
         exporter.export.assert_called_once()
 
     # pylint: disable=no-self-use
