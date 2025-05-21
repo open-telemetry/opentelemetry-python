@@ -14,7 +14,7 @@
 import logging
 import typing
 
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 from opentelemetry.context.context import Context
 from opentelemetry.propagators import textmap
@@ -84,7 +84,9 @@ class CompositePropagator(textmap.TextMapPropagator):
         return composite_fields
 
 
-@deprecated(version="1.2.0", reason="You should use CompositePropagator")  # type: ignore
+@deprecated(
+    "You should use CompositePropagator. Deprecated since version 1.2.0."
+)
 class CompositeHTTPPropagator(CompositePropagator):
     """CompositeHTTPPropagator provides a mechanism for combining multiple
     propagators into a single one.

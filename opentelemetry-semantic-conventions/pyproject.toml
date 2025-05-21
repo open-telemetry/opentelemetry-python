@@ -29,7 +29,7 @@ classifiers = [
 
 dependencies = [
   "opentelemetry-api == 1.34.0.dev",
-  "Deprecated >= 1.2.6",
+  "typing-extensions >= 4.5.0",
 ]
 
 [project.urls]
