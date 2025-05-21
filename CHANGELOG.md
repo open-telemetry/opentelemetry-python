@@ -12,6 +12,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Refactor `BatchLogRecordProcessor` to simplify code and make the control flow more
   clear ([#4562](https://github.com/open-telemetry/opentelemetry-python/pull/4562/)
   and [#4535](https://github.com/open-telemetry/opentelemetry-python/pull/4535)).
+- Use PEP702 for marking deprecations
+  ([#4522](https://github.com/open-telemetry/opentelemetry-python/pull/4522))
+- Refactor `BatchLogRecordProcessor` and `BatchSpanProcessor` to simplify code
+  and make the control flow more clear ([#4562](https://github.com/open-telemetry/opentelemetry-python/pull/4562/)
+  [#4535](https://github.com/open-telemetry/opentelemetry-python/pull/4535), and
+  [#4580](https://github.com/open-telemetry/opentelemetry-python/pull/4580)).
+- Remove log messages from `BatchLogRecordProcessor.emit`, this caused the program
+  to crash at shutdown with a max recursion error ([#4586](https://github.com/open-telemetry/opentelemetry-python/pull/4586)).
+- Configurable max retry timeout for grpc exporter
+  ([#4333](https://github.com/open-telemetry/opentelemetry-python/pull/4333))
+- opentelemetry-api: allow importlib-metadata 8.7.0
+  ([#4593](https://github.com/open-telemetry/opentelemetry-python/pull/4593))
+- opentelemetry-test-utils: assert explicit bucket boundaries in histogram metrics
+  ([#4595](https://github.com/open-telemetry/opentelemetry-python/pull/4595))
 - Logging API and Events API accept SpanContext instead of trace_id, span_id, trace_flags
   ([#4584](https://github.com/open-telemetry/opentelemetry-python/pull/4584))
 
@@ -95,8 +109,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4353](https://github.com/open-telemetry/opentelemetry-python/pull/4353))
 - sdk: don't log or print warnings when the SDK has been disabled
   ([#4371](https://github.com/open-telemetry/opentelemetry-python/pull/4371))
-- Configurable max retry timeout for grpc exporter
-  ([#4333](https://github.com/open-telemetry/opentelemetry-python/pull/4333))
 - Fix span context manager typing by using ParamSpec from typing_extensions
   ([#4389](https://github.com/open-telemetry/opentelemetry-python/pull/4389))
 - Fix serialization of None values in logs body to match 1.31.0+ data model

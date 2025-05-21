@@ -90,7 +90,6 @@ import logging
 from types import TracebackType
 from typing import Type, TypeVar
 
-from deprecated import deprecated
 from opentracing import (
     Format,
     Scope,
@@ -100,6 +99,7 @@ from opentracing import (
     Tracer,
     UnsupportedFormatException,
 )
+from typing_extensions import deprecated
 
 from opentelemetry.baggage import get_baggage, set_baggage
 from opentelemetry.context import (
@@ -286,11 +286,11 @@ class SpanShim(Span):
         self._otel_span.add_event(event_name, key_values, event_timestamp)
         return self
 
-    @deprecated(reason="This method is deprecated in favor of log_kv")
+    @deprecated("This method is deprecated in favor of log_kv")
     def log(self, **kwargs):
         super().log(**kwargs)
 
-    @deprecated(reason="This method is deprecated in favor of log_kv")
+    @deprecated("This method is deprecated in favor of log_kv")
     def log_event(self, event, payload=None):
         super().log_event(event, payload=payload)
 

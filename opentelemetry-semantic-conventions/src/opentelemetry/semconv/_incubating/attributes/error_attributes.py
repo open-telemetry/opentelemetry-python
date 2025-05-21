@@ -15,7 +15,7 @@
 from enum import Enum
 from typing import Final
 
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 ERROR_MESSAGE: Final = "error.message"
 """
@@ -34,8 +34,8 @@ Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.error_
 
 
 @deprecated(
-    reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.error_attributes.ErrorTypeValues`."
-)  # type: ignore
+    "Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.error_attributes.ErrorTypeValues`."
+)
 class ErrorTypeValues(Enum):
     OTHER = "_OTHER"
     """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.error_attributes.ErrorTypeValues.OTHER`."""
