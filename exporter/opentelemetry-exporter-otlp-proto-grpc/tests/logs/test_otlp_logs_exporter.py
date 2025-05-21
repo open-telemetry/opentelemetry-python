@@ -52,6 +52,7 @@ from opentelemetry.sdk.environment_variables import (
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace import TraceFlags
+from opentelemetry.trace.span import SpanContext
 
 THIS_DIR = dirname(__file__)
 
@@ -62,9 +63,12 @@ class TestOTLPLogExporter(TestCase):
         self.log_data_1 = LogData(
             log_record=LogRecord(
                 timestamp=int(time.time() * 1e9),
-                trace_id=2604504634922341076776623263868986797,
-                span_id=5213367945872657620,
-                trace_flags=TraceFlags(0x01),
+                span_context=SpanContext(
+                    2604504634922341076776623263868986797,
+                    5213367945872657620,
+                    True,
+                    TraceFlags(0x01),
+                ),
                 severity_text="WARNING",
                 severity_number=SeverityNumber.WARN,
                 body="Zhengzhou, We have a heaviest rains in 1000 years",
@@ -78,9 +82,12 @@ class TestOTLPLogExporter(TestCase):
         self.log_data_2 = LogData(
             log_record=LogRecord(
                 timestamp=int(time.time() * 1e9),
-                trace_id=2604504634922341076776623263868986799,
-                span_id=5213367945872657623,
-                trace_flags=TraceFlags(0x01),
+                span_context=SpanContext(
+                    2604504634922341076776623263868986799,
+                    5213367945872657623,
+                    True,
+                    TraceFlags(0x01),
+                ),
                 severity_text="INFO",
                 severity_number=SeverityNumber.INFO2,
                 body="Sydney, Opera House is closed",
@@ -94,9 +101,12 @@ class TestOTLPLogExporter(TestCase):
         self.log_data_3 = LogData(
             log_record=LogRecord(
                 timestamp=int(time.time() * 1e9),
-                trace_id=2604504634922341076776623263868986800,
-                span_id=5213367945872657628,
-                trace_flags=TraceFlags(0x01),
+                span_context=SpanContext(
+                    2604504634922341076776623263868986800,
+                    5213367945872657628,
+                    True,
+                    TraceFlags(0x01),
+                ),
                 severity_text="ERROR",
                 severity_number=SeverityNumber.WARN,
                 body="Mumbai, Boil water before drinking",
@@ -109,9 +119,12 @@ class TestOTLPLogExporter(TestCase):
         self.log_data_4 = LogData(
             log_record=LogRecord(
                 timestamp=int(time.time() * 1e9),
-                trace_id=0,
-                span_id=5213367945872657629,
-                trace_flags=TraceFlags(0x01),
+                span_context=SpanContext(
+                    0,
+                    213367945872657629,
+                    True,
+                    TraceFlags(0x01),
+                ),
                 severity_text="ERROR",
                 severity_number=SeverityNumber.WARN,
                 body="Invalid trace id check",
@@ -124,9 +137,12 @@ class TestOTLPLogExporter(TestCase):
         self.log_data_5 = LogData(
             log_record=LogRecord(
                 timestamp=int(time.time() * 1e9),
-                trace_id=2604504634922341076776623263868986801,
-                span_id=0,
-                trace_flags=TraceFlags(0x01),
+                span_context=SpanContext(
+                    2604504634922341076776623263868986801,
+                    0,
+                    True,
+                    TraceFlags(0x01),
+                ),
                 severity_text="ERROR",
                 severity_number=SeverityNumber.WARN,
                 body="Invalid span id check",
