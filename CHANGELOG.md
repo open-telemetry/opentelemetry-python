@@ -9,9 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - typecheck: add sdk/resources and drop mypy
   ([#4578](https://github.com/open-telemetry/opentelemetry-python/pull/4578))
-- Refactor `BatchLogRecordProcessor` to simplify code and make the control flow more
-  clear ([#4562](https://github.com/open-telemetry/opentelemetry-python/pull/4562/)
-  and [#4535](https://github.com/open-telemetry/opentelemetry-python/pull/4535)).
+- Update OTLP gRPC/HTTP exporters: the export timeout is now inclusive of all retries and backoffs,
+  and an unnecessary 32 second sleep that occurred after all retries had completed/failed was removed.
+  Update gRPC OTLP Exporters to use official gRPC retry policy config. The `RetryInfo` proto in the error
+  response will now be ignored, and server's should now use the gRPC supported header `grpc-retry-pushback-ms`.
+  ([#4564](https://github.com/open-telemetry/opentelemetry-python/pull/4564)).
 - Use PEP702 for marking deprecations
   ([#4522](https://github.com/open-telemetry/opentelemetry-python/pull/4522))
 - Refactor `BatchLogRecordProcessor` and `BatchSpanProcessor` to simplify code
