@@ -37,6 +37,7 @@ from opentelemetry._logs import (
     std_to_otel,
 )
 from opentelemetry.attributes import _VALID_ANY_VALUE_TYPES, BoundedAttributes
+from opentelemetry.context.context import Context
 from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_COUNT_LIMIT,
     OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
@@ -176,6 +177,7 @@ class LogRecord(APILogRecord):
         self,
         timestamp: int | None = None,
         observed_timestamp: int | None = None,
+        context: Context | None = None,
         trace_id: int | None = None,
         span_id: int | None = None,
         trace_flags: TraceFlags | None = None,
@@ -190,6 +192,7 @@ class LogRecord(APILogRecord):
             **{
                 "timestamp": timestamp,
                 "observed_timestamp": observed_timestamp,
+                "context": context,
                 "trace_id": trace_id,
                 "span_id": span_id,
                 "trace_flags": trace_flags,
@@ -234,6 +237,9 @@ class LogRecord(APILogRecord):
                 "dropped_attributes": self.dropped_attributes,
                 "timestamp": ns_to_iso_str(self.timestamp),
                 "observed_timestamp": ns_to_iso_str(self.observed_timestamp),
+                "context": (
+                    dict(self.context) if self.context is not None else ""
+                ),
                 "trace_id": (
                     f"0x{format_trace_id(self.trace_id)}"
                     if self.trace_id is not None
