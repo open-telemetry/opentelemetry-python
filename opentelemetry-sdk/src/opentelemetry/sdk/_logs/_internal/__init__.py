@@ -37,6 +37,7 @@ from opentelemetry._logs import (
     std_to_otel,
 )
 from opentelemetry.attributes import _VALID_ANY_VALUE_TYPES, BoundedAttributes
+from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
 from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_COUNT_LIMIT,
@@ -554,6 +555,7 @@ class LoggingHandler(logging.Handler):
         return LogRecord(
             timestamp=timestamp,
             observed_timestamp=observered_timestamp,
+            context=get_current(),
             trace_id=span_context.trace_id,
             span_id=span_context.span_id,
             trace_flags=span_context.trace_flags,
