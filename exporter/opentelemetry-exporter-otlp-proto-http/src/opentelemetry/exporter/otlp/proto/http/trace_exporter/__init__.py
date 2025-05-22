@@ -14,6 +14,7 @@
 
 import gzip
 import logging
+import random
 import zlib
 from io import BytesIO
 from os import environ
@@ -23,6 +24,9 @@ from typing import Dict, Optional, Sequence
 import requests
 from requests.exceptions import ConnectionError
 
+from opentelemetry.exporter.otlp.proto.common._internal import (
+    _is_retryable,
+)
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
 )
@@ -57,6 +61,7 @@ DEFAULT_COMPRESSION = Compression.NoCompression
 DEFAULT_ENDPOINT = "http://localhost:4318/"
 DEFAULT_TRACES_EXPORT_PATH = "v1/traces"
 DEFAULT_TIMEOUT = 10  # in seconds
+_MAX_RETRYS = 6
 
 
 class OTLPSpanExporter(SpanExporter):
@@ -149,48 +154,37 @@ class OTLPSpanExporter(SpanExporter):
             )
         return resp
 
-    @staticmethod
-    def _retryable(resp: requests.Response) -> bool:
-        if resp.status_code == 408:
-            return True
-        if resp.status_code >= 500 and resp.status_code <= 599:
-            return True
-        return False
-
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
-        # After the call to Shutdown subsequent calls to Export are
-        # not allowed and should return a Failure result.
         if self._shutdown:
             _logger.warning("Exporter already shutdown, ignoring batch")
             return SpanExportResult.FAILURE
 
         serialized_data = encode_spans(spans).SerializePartialToString()
         deadline_sec = time() + self._timeout
-        for delay in [1, 2, 4, 8, 16, 32]:
-            remaining_time_sec = deadline_sec - time()
-            if remaining_time_sec < 1e-09:
-                return SpanExportResult.FAILURE
-            resp = self._export(serialized_data, remaining_time_sec)
-            # pylint: disable=no-else-return
+        backoff_seconds = 1 * random.uniform(0.8, 1.2)
+        for retry_num in range(1, _MAX_RETRYS + 1):
+            resp = self._export(serialized_data, deadline_sec - time())
             if resp.ok:
                 return SpanExportResult.SUCCESS
-            elif self._retryable(resp):
-                if delay > (deadline_sec - time()):
-                    return SpanExportResult.FAILURE
-                _logger.warning(
-                    "Transient error %s encountered while exporting span batch, retrying in %ss.",
-                    resp.reason,
-                    delay,
-                )
-                sleep(delay)
-                continue
-            else:
+            if (
+                not _is_retryable(resp)
+                or retry_num == _MAX_RETRYS
+                or backoff_seconds > (deadline_sec - time())
+            ):
                 _logger.error(
-                    "Failed to export batch code: %s, reason: %s",
+                    "Failed to export span batch code: %s, reason: %s",
                     resp.status_code,
                     resp.text,
                 )
                 return SpanExportResult.FAILURE
+            _logger.warning(
+                "Transient error %s encountered while exporting span batch, retrying in %.2fs.",
+                resp.reason,
+                backoff_seconds,
+            )
+            sleep(backoff_seconds)
+            backoff_seconds *= 2 * random.uniform(0.8, 1.2)
+        # Not possible to reach here but the linter is complaining.
         return SpanExportResult.FAILURE
 
     def shutdown(self):

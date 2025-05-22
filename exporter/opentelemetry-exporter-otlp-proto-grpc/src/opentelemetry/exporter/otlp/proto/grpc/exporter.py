@@ -72,17 +72,18 @@ from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.util.re import parse_env_headers
 
-_JSON_CONFIG = json.dumps(
+# 5 is the maximum allowable attempts allowed by grpc retry policy.
+# This policy results in backoffs of 1s, 2s, 4s, and then 8s after the initial failed attempt,
+# plus or minus a 20% jitter. Timeout set on the RPC call encompasses the retry backoffs AND time spent waiting
+# for a response. DEADLINE_EXCEEDED is returned if all the attempts cannot complete within the
+# timeout, and all fail. A header `grpc-retry-pushback-ms` when set by the server will override
+# and take precedence over this backoff. See https://grpc.io/docs/guides/retry/ for more details.
+_GRPC_RETRY_POLICY = json.dumps(
     {
         "methodConfig": [
             {
                 "name": [dict()],
                 "retryPolicy": {
-                    # 5 is the maximum allowable attempts allowed by grpc retry policy.
-                    # This policy results in backoffs of 1s, 2s, 4s, and then 8s after the initial failed attempt.
-                    # Timeout set on the RPC call encompasses the retry backoffs AND time spent waiting
-                    # for a response. DEADLINE_EXCEEDED is returned if all the attempts cannot complete within the
-                    # timeout, and all fail. See https://grpc.io/docs/guides/retry/ for more details.
                     "maxAttempts": 5,
                     "initialBackoff": "1s",
                     "maxBackoff": "9s",
@@ -213,8 +214,6 @@ class OTLPExporterMixin(
         compression: gRPC compression method to use
     """
 
-    _MAX_RETRY_TIMEOUT = 64
-
     def __init__(
         self,
         endpoint: Optional[str] = None,
@@ -276,7 +275,7 @@ class OTLPExporterMixin(
                 self._endpoint,
                 compression=compression,
                 options=[
-                    ("grpc.service_config", _JSON_CONFIG),
+                    ("grpc.service_config", _GRPC_RETRY_POLICY),
                 ],
             )
         else:
@@ -291,7 +290,7 @@ class OTLPExporterMixin(
                 credentials,
                 compression=compression,
                 options=[
-                    ("grpc.service_config", _JSON_CONFIG),
+                    ("grpc.service_config", _GRPC_RETRY_POLICY),
                 ],
             )
         self._client = self._stub(self._channel)

@@ -293,10 +293,14 @@ name = "opentelemetry-exporter-otlp-proto-common"
 source = { editable = "exporter/opentelemetry-exporter-otlp-proto-common" }
 dependencies = [
     { name = "opentelemetry-proto" },
+    { name = "requests" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "opentelemetry-proto", editable = "opentelemetry-proto" }]
+requires-dist = [
+    { name = "opentelemetry-proto", editable = "opentelemetry-proto" },
+    { name = "requests", specifier = "~=2.7" },
+]
 
 [[package]]
 name = "opentelemetry-exporter-otlp-proto-grpc"

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import time
 import unittest
 from logging import WARNING
 from unittest.mock import MagicMock, Mock, patch
@@ -258,24 +259,21 @@ class TestOTLPSpanExporter(unittest.TestCase):
         resp.reason = "UNAVAILABLE"
         mock_post.return_value = resp
         with self.assertLogs(level=WARNING) as warning:
+            before = time.time()
+            # Set timeout to 1.5 seconds
             self.assertEqual(
                 exporter.export([BASIC_SPAN]),
                 SpanExportResult.FAILURE,
             )
-            # Code should return failure after retrying once.
-            self.assertEqual(len(warning.records), 1)
-            self.assertEqual(
-                "Transient error UNAVAILABLE encountered while exporting span batch, retrying in 1s.",
+            after = time.time()
+            # First call at time 0, second at time 1, then an early return before the second backoff sleep b/c it would exceed timeout.
+            self.assertEqual(mock_post.call_count, 2)
+            # There's a +/-20% jitter on each backoff.
+            self.assertTrue(after - before < 1.3)
+            self.assertIn(
+                "Transient error UNAVAILABLE encountered while exporting span batch, retrying in",
                 warning.records[0].message,
             )
-        exporter = OTLPSpanExporter(timeout=3.5)
-        with self.assertLogs(level=WARNING) as warning:
-            self.assertEqual(
-                exporter.export([BASIC_SPAN]),
-                SpanExportResult.FAILURE,
-            )
-            # 2 retrys (after 1s, 3s).
-            self.assertEqual(len(warning.records), 2)
 
     @patch.object(Session, "post")
     def test_timeout_set_correctly(self, mock_post):

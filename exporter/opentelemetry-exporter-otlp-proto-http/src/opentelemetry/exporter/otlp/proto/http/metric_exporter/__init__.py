@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import gzip
 import logging
+import random
 import zlib
 from io import BytesIO
 from os import environ
@@ -34,6 +35,7 @@ from requests.exceptions import ConnectionError
 
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _get_resource_data,
+    _is_retryable,
 )
 from opentelemetry.exporter.otlp.proto.common._internal.metrics_encoder import (
     OTLPMetricExporterMixin,
@@ -48,7 +50,7 @@ from opentelemetry.exporter.otlp.proto.http import (
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (  # noqa: F401
     ExportMetricsServiceRequest,
 )
-from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401  # noqa: F401
+from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401
     AnyValue,
     ArrayValue,
     InstrumentationScope,
@@ -98,6 +100,7 @@ DEFAULT_COMPRESSION = Compression.NoCompression
 DEFAULT_ENDPOINT = "http://localhost:4318/"
 DEFAULT_METRICS_EXPORT_PATH = "v1/metrics"
 DEFAULT_TIMEOUT = 10  # in seconds
+_MAX_RETRYS = 6
 
 
 class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
@@ -163,6 +166,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         self._common_configuration(
             preferred_temporality, preferred_aggregation
         )
+        self._shutdown = False
 
     def _export(self, serialized_data: bytes, timeout_sec: float):
         data = serialized_data
@@ -196,55 +200,51 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             )
         return resp
 
-    @staticmethod
-    def _retryable(resp: requests.Response) -> bool:
-        if resp.status_code == 408:
-            return True
-        if resp.status_code >= 500 and resp.status_code <= 599:
-            return True
-        return False
-
     def export(
         self,
         metrics_data: MetricsData,
         timeout_millis: Optional[float] = None,
         **kwargs,
     ) -> MetricExportResult:
-        serialized_data = encode_metrics(metrics_data)
+        if self._shutdown:
+            _logger.warning("Exporter already shutdown, ignoring batch")
+            return MetricExportResult.FAILURE
+        serialized_data = encode_metrics(metrics_data).SerializeToString()
         deadline_sec = time() + (
             timeout_millis / 1e3 if timeout_millis else self._timeout
         )
-        for delay in [1, 2, 4, 8, 16, 32]:
-            remaining_time_sec = deadline_sec - time()
-            if remaining_time_sec < 1e-09:
-                return MetricExportResult.FAILURE
-            resp = self._export(
-                serialized_data.SerializeToString(), remaining_time_sec
-            )
-            # pylint: disable=no-else-return
+        backoff_seconds = 1 * random.uniform(0.8, 1.2)
+        for retry_num in range(1, _MAX_RETRYS + 1):
+            resp = self._export(serialized_data, deadline_sec - time())
             if resp.ok:
                 return MetricExportResult.SUCCESS
-            elif self._retryable(resp):
-                if delay > (deadline_sec - time()):
-                    return MetricExportResult.FAILURE
-                _logger.warning(
-                    "Transient error %s encountered while exporting metric batch, retrying in %ss.",
-                    resp.reason,
-                    delay,
-                )
-                sleep(delay)
-                continue
-            else:
+            if (
+                not _is_retryable(resp)
+                or retry_num == _MAX_RETRYS
+                or backoff_seconds > (deadline_sec - time())
+            ):
                 _logger.error(
-                    "Failed to export batch code: %s, reason: %s",
+                    "Failed to export metrics batch code: %s, reason: %s",
                     resp.status_code,
                     resp.text,
                 )
                 return MetricExportResult.FAILURE
+            _logger.warning(
+                "Transient error %s encountered while exporting metrics batch, retrying in %.2fs.",
+                resp.reason,
+                backoff_seconds,
+            )
+            sleep(backoff_seconds)
+            backoff_seconds *= 2 * random.uniform(0.8, 1.2)
+        # Not possible to reach here but the linter is complaining.
         return MetricExportResult.FAILURE
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
-        pass
+        if self._shutdown:
+            _logger.warning("Exporter already shutdown, ignoring call")
+            return
+        self._session.close()
+        self._shutdown = True
 
     @property
     def _exporting(self) -> str:

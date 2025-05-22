@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import time
 from logging import WARNING
 from os import environ
 from unittest import TestCase
@@ -511,26 +512,39 @@ class TestOTLPMetricExporter(TestCase):
         resp.reason = "UNAVAILABLE"
         mock_post.return_value = resp
         with self.assertLogs(level=WARNING) as warning:
-            # Set timeout to 1.5 seconds
+            before = time.time()
+            # Set timeout to 1.5 seconds, takes precedence over the 3.5 second class timeout.
             self.assertEqual(
                 exporter.export(self.metrics["sum_int"], 1500),
                 MetricExportResult.FAILURE,
             )
-            # Code should return failure before the final retry which would exceed timeout.
-            # Code should return failure after retrying once.
-            self.assertEqual(len(warning.records), 1)
-            self.assertEqual(
-                "Transient error UNAVAILABLE encountered while exporting metric batch, retrying in 1s.",
+            after = time.time()
+
+            # First call at time 0, second at time 1, then an early return before the second backoff sleep b/c it would exceed timeout.
+            self.assertEqual(mock_post.call_count, 2)
+            # There's a +/-20% jitter on each backoff.
+            self.assertTrue(after - before < 1.3)
+            self.assertIn(
+                "Transient error UNAVAILABLE encountered while exporting metrics batch, retrying in",
                 warning.records[0].message,
             )
-        with self.assertLogs(level=WARNING) as warning:
-            # This time don't pass in a timeout, so it will fallback to 3.5 second set on class.
-            self.assertEqual(
-                exporter.export(self.metrics["sum_int"]),
-                MetricExportResult.FAILURE,
-            )
-            # 2 retrys (after 1s, 3s).
-            self.assertEqual(len(warning.records), 2)
+        mock_post.reset_mock()
+        before = time.time()
+        # This time the class level 3.5s timeout should be used.
+        self.assertEqual(
+            exporter.export(self.metrics["sum_int"]),
+            MetricExportResult.FAILURE,
+        )
+        after = time.time()
+
+        # First call at time 0, second at time 1, third at time 3.
+        self.assertEqual(mock_post.call_count, 3)
+        # There's a +/-20% jitter on each backoff.
+        self.assertTrue(after - before < 3.7)
+        self.assertIn(
+            "Transient error UNAVAILABLE encountered while exporting metrics batch, retrying in",
+            warning.records[0].message,
+        )
 
     @patch.object(Session, "post")
     def test_timeout_set_correctly(self, mock_post):
