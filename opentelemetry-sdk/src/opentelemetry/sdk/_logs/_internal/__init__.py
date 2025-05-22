@@ -189,6 +189,17 @@ class LogRecord(APILogRecord):
         attributes: _ExtendedAttributes | None = None,
         limits: LogLimits | None = _UnsetLogLimits,
     ):
+        # Prioritizes context over trace_id / span_id / trace_flags.
+        # If context provided and its current span valid, then uses that span info.
+        # Otherwise, uses provided trace_id etc for backwards compatibility.
+        if context is not None:
+            span = get_current_span(context)
+            span_context = span.get_span_context()
+            if span_context.is_valid:
+                trace_id = span_context.trace_id
+                span_id = span_context.span_id
+                trace_flags = span_context.trace_flags
+
         super().__init__(
             **{
                 "timestamp": timestamp,
