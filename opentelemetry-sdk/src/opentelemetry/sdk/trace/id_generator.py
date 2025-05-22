@@ -14,6 +14,8 @@
 
 import abc
 import random
+from random import Random
+from typing import Optional
 
 from opentelemetry import trace
 
@@ -45,16 +47,29 @@ class IdGenerator(abc.ABC):
 class RandomIdGenerator(IdGenerator):
     """The default ID generator for TracerProvider which randomly generates all
     bits when generating IDs.
+
+    Args:
+        rng: A random number generator. Defaults to the global random instance.
+            It is recommended to use a fresh `Random()` instead of the default
+            to avoid potential conflicts with the global random instance
+            (duplicate ids across multiple processes when a constant global
+            random seed is set). In case of a custom implementation, it should
+            be uniform, as some samplers rely on this randomness to make sampling decisions.
     """
 
+    def __init__(self, rng: Optional[Random] = None) -> None:
+        if rng is None:
+            rng = random  # Just a hack to preserve backward compatibility, otherwise it does not quite match the type hint.
+        self._rng = rng
+
     def generate_span_id(self) -> int:
-        span_id = random.getrandbits(64)
+        span_id = self._rng.getrandbits(64)
         while span_id == trace.INVALID_SPAN_ID:
-            span_id = random.getrandbits(64)
+            span_id = self._rng.getrandbits(64)
         return span_id
 
     def generate_trace_id(self) -> int:
-        trace_id = random.getrandbits(128)
+        trace_id = self._rng.getrandbits(128)
         while trace_id == trace.INVALID_TRACE_ID:
-            trace_id = random.getrandbits(128)
+            trace_id = self._rng.getrandbits(128)
         return trace_id
