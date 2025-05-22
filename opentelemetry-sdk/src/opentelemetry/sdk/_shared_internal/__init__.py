@@ -48,7 +48,7 @@ Telemetry = TypeVar("Telemetry")
 
 class Exporter(Protocol[Telemetry]):
     @abstractmethod
-    def export(self, batch: list[Telemetry]):
+    def export(self, batch: list[Telemetry], /):
         raise NotImplementedError
 
     @abstractmethod
@@ -191,8 +191,10 @@ class BatchProcessor(Generic[Telemetry]):
         self._worker_thread.join()
         self._exporter.shutdown()
 
-    def force_flush(self, timeout_millis: Optional[int] = None):
+    # TODO: Fix force flush so the timeout is used https://github.com/open-telemetry/opentelemetry-python/issues/4568.
+    def force_flush(self, timeout_millis: Optional[int] = None) -> bool:
         if self._shutdown:
-            return
+            return False
         # Blocking call to export.
         self._export(BatchExportStrategy.EXPORT_ALL)
+        return True

@@ -15,7 +15,7 @@
 from enum import Enum
 from typing import Final
 
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 NET_HOST_IP: Final = "net.host.ip"
 """
@@ -94,8 +94,8 @@ Deprecated: Replaced by `network.transport`.
 
 
 @deprecated(
-    reason="The attribute net.sock.family is deprecated - Split to `network.transport` and `network.type`"
-)  # type: ignore
+    "The attribute net.sock.family is deprecated - Split to `network.transport` and `network.type`"
+)
 class NetSockFamilyValues(Enum):
     INET = "inet"
     """IPv4 address."""
@@ -106,8 +106,8 @@ class NetSockFamilyValues(Enum):
 
 
 @deprecated(
-    reason="The attribute net.transport is deprecated - Replaced by `network.transport`"
-)  # type: ignore
+    "The attribute net.transport is deprecated - Replaced by `network.transport`"
+)
 class NetTransportValues(Enum):
     IP_TCP = "ip_tcp"
     """ip_tcp."""

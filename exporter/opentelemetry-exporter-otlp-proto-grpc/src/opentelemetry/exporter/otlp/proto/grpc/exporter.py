@@ -34,7 +34,7 @@ from typing import (  # noqa: F401
 from typing import Sequence as TypingSequence
 from urllib.parse import urlparse
 
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 from grpc import (
     ChannelCredentials,
@@ -135,8 +135,7 @@ def environ_to_compression(environ_key: str) -> Optional[Compression]:
 
 
 @deprecated(
-    version="1.18.0",
-    reason="Use one of the encoders from opentelemetry-exporter-otlp-proto-common instead",
+    "Use one of the encoders from opentelemetry-exporter-otlp-proto-common instead. Deprecated since version 1.18.0.",
 )
 def get_resource_data(
     sdk_resource_scope_data: Dict[SDKResource, ResourceDataT],

@@ -1,6 +1,5 @@
-Deprecated==1.2.13
 opentelemetry-api==1.12.0
 opentelemetry-sdk==1.12.0
 opentelemetry-semantic-conventions==0.33b0
-typing_extensions==4.3.0
+typing_extensions==4.5.0
 wrapt==1.14.1

@@ -15,7 +15,7 @@
 from enum import Enum
 from typing import Final
 
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 HTTP_CLIENT_IP: Final = "http.client_ip"
 """
@@ -160,8 +160,8 @@ class HttpConnectionStateValues(Enum):
 
 
 @deprecated(
-    reason="The attribute http.flavor is deprecated - Replaced by `network.protocol.name`"
-)  # type: ignore
+    "The attribute http.flavor is deprecated - Replaced by `network.protocol.name`"
+)
 class HttpFlavorValues(Enum):
     HTTP_1_0 = "1.0"
     """HTTP/1.0."""
@@ -178,8 +178,8 @@ class HttpFlavorValues(Enum):
 
 
 @deprecated(
-    reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.http_attributes.HttpRequestMethodValues`."
-)  # type: ignore
+    "Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.http_attributes.HttpRequestMethodValues`."
+)
 class HttpRequestMethodValues(Enum):
     CONNECT = "CONNECT"
     """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.http_attributes.HttpRequestMethodValues.CONNECT`."""
