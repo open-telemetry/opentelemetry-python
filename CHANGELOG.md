@@ -26,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4593](https://github.com/open-telemetry/opentelemetry-python/pull/4593))
 - opentelemetry-test-utils: assert explicit bucket boundaries in histogram metrics
   ([#4595](https://github.com/open-telemetry/opentelemetry-python/pull/4595))
+- Logging API accepts optional SpanContext
+  ([#4597](https://github.com/open-telemetry/opentelemetry-python/pull/4597))
 
 ## Version 1.33.0/0.54b0 (2025-05-09)
 
