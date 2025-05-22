@@ -271,7 +271,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "deprecated", specifier = ">=1.2.6" },
-    { name = "importlib-metadata", specifier = ">=6.0,<8.7.0" },
+    { name = "importlib-metadata", specifier = ">=6.0,<8.8.0" },
 ]
 
 [[package]]
