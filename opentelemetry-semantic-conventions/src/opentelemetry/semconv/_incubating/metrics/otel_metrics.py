@@ -147,7 +147,7 @@ OTEL_SDK_EXPORTER_SPAN_EXPORTED_COUNT: Final = (
     "otel.sdk.exporter.span.exported.count"
 )
 """
-Deprecated: Renamed to `otel.sdk.exporter.span.exported`.
+Deprecated: Replaced by `otel.sdk.exporter.span.exported`.
 """
 
 
@@ -184,7 +184,7 @@ OTEL_SDK_EXPORTER_SPAN_INFLIGHT_COUNT: Final = (
     "otel.sdk.exporter.span.inflight.count"
 )
 """
-Deprecated: Renamed to `otel.sdk.exporter.span.inflight`.
+Deprecated: Replaced by `otel.sdk.exporter.span.inflight`.
 """
 
 
@@ -322,7 +322,7 @@ OTEL_SDK_PROCESSOR_SPAN_PROCESSED_COUNT: Final = (
     "otel.sdk.processor.span.processed.count"
 )
 """
-Deprecated: Renamed to `otel.sdk.processor.span.processed`.
+Deprecated: Replaced by `otel.sdk.processor.span.processed`.
 """
 
 
@@ -400,7 +400,7 @@ def create_otel_sdk_span_ended(meter: Meter) -> Counter:
 
 OTEL_SDK_SPAN_ENDED_COUNT: Final = "otel.sdk.span.ended.count"
 """
-Deprecated: Renamed to `otel.sdk.span.ended`.
+Deprecated: Replaced by `otel.sdk.span.ended`.
 """
 
 
@@ -434,7 +434,7 @@ def create_otel_sdk_span_live(meter: Meter) -> UpDownCounter:
 
 OTEL_SDK_SPAN_LIVE_COUNT: Final = "otel.sdk.span.live.count"
 """
-Deprecated: Renamed to `otel.sdk.span.live`.
+Deprecated: Replaced by `otel.sdk.span.live`.
 """
 
 

@@ -15,6 +15,16 @@
 from enum import Enum
 from typing import Final
 
+AWS_BEDROCK_GUARDRAIL_ID: Final = "aws.bedrock.guardrail.id"
+"""
+The unique identifier of the AWS Bedrock Guardrail. A [guardrail](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html) helps safeguard and prevent unwanted behavior from model responses or user messages.
+"""
+
+AWS_BEDROCK_KNOWLEDGE_BASE_ID: Final = "aws.bedrock.knowledge_base.id"
+"""
+The unique identifier of the AWS Bedrock Knowledge base. A [knowledge base](https://docs.aws.amazon.com/bedrock/latest/userguide/knowledge-base.html) is a bank of information that can be queried by models to generate more relevant responses and augment prompts.
+"""
+
 AWS_DYNAMODB_ATTRIBUTE_DEFINITIONS: Final = (
     "aws.dynamodb.attribute_definitions"
 )
@@ -186,10 +196,20 @@ AWS_EXTENDED_REQUEST_ID: Final = "aws.extended_request_id"
 The AWS extended request ID as returned in the response header `x-amz-id-2`.
 """
 
+AWS_KINESIS_STREAM_NAME: Final = "aws.kinesis.stream_name"
+"""
+The name of the AWS Kinesis [stream](https://docs.aws.amazon.com/streams/latest/dev/introduction.html) the request refers to. Corresponds to the `--stream-name` parameter of the Kinesis [describe-stream](https://docs.aws.amazon.com/cli/latest/reference/kinesis/describe-stream.html) operation.
+"""
+
 AWS_LAMBDA_INVOKED_ARN: Final = "aws.lambda.invoked_arn"
 """
 The full invoked ARN as provided on the `Context` passed to the function (`Lambda-Runtime-Invoked-Function-Arn` header on the `/runtime/invocation/next` applicable).
 Note: This may be different from `cloud.resource_id` if an alias is involved.
+"""
+
+AWS_LAMBDA_RESOURCE_MAPPING_ID: Final = "aws.lambda.resource_mapping.id"
+"""
+The UUID of the [AWS Lambda EvenSource Mapping](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-lambda-eventsourcemapping.html). An event source is mapped to a lambda function. It's contents are read by Lambda and used to trigger a function. This isn't available in the lambda execution context or the lambda runtime environtment. This is going to be populated by the AWS SDK for each language when that UUID is present. Some of these operations are Create/Delete/Get/List/Update EventSourceMapping.
 """
 
 AWS_LOG_GROUP_ARNS: Final = "aws.log.group.arns"
@@ -288,6 +308,33 @@ This applies in particular to the following operations:
 - [list-parts](https://docs.aws.amazon.com/cli/latest/reference/s3api/list-parts.html)
 - [upload-part](https://docs.aws.amazon.com/cli/latest/reference/s3api/upload-part.html)
 - [upload-part-copy](https://docs.aws.amazon.com/cli/latest/reference/s3api/upload-part-copy.html).
+"""
+
+AWS_SECRETSMANAGER_SECRET_ARN: Final = "aws.secretsmanager.secret.arn"
+"""
+The ARN of the Secret stored in the Secrets Mangger.
+"""
+
+AWS_SNS_TOPIC_ARN: Final = "aws.sns.topic.arn"
+"""
+The ARN of the AWS SNS Topic. An Amazon SNS [topic](https://docs.aws.amazon.com/sns/latest/dg/sns-create-topic.html) is a logical access point that acts as a communication channel.
+"""
+
+AWS_SQS_QUEUE_URL: Final = "aws.sqs.queue.url"
+"""
+The URL of the AWS SQS Queue. It's a unique identifier for a queue in Amazon Simple Queue Service (SQS) and is used to access the queue and perform actions on it.
+"""
+
+AWS_STEP_FUNCTIONS_ACTIVITY_ARN: Final = "aws.step_functions.activity.arn"
+"""
+The ARN of the AWS Step Functions Activity.
+"""
+
+AWS_STEP_FUNCTIONS_STATE_MACHINE_ARN: Final = (
+    "aws.step_functions.state_machine.arn"
+)
+"""
+The ARN of the AWS Step Functions State Machine.
 """
 
 

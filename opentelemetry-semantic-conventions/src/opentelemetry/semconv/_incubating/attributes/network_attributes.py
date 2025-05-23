@@ -207,7 +207,7 @@ class NetworkTransportValues(Enum):
     UNIX = "unix"
     """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTransportValues.UNIX`."""
     QUIC = "quic"
-    """QUIC."""
+    """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTransportValues.QUIC`."""
 
 
 @deprecated(

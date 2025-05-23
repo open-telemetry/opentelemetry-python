@@ -34,10 +34,10 @@ Note: Pseudonymous identifier of an end user.
 
 ENDUSER_ROLE: Final = "enduser.role"
 """
-Deprecated: Replaced by `user.roles` attribute.
+Deprecated: Use `user.roles` attribute instead.
 """
 
 ENDUSER_SCOPE: Final = "enduser.scope"
 """
-Deprecated: Removed.
+Deprecated: Removed, no replacement at this time.
 """

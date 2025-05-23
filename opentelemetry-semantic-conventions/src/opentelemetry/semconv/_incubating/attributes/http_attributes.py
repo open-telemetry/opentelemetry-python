@@ -74,7 +74,7 @@ The total size of the request in bytes. This should be the total number of bytes
 
 HTTP_REQUEST_CONTENT_LENGTH: Final = "http.request_content_length"
 """
-Deprecated: Replaced by `http.request.header.<key>`.
+Deprecated: Replaced by `http.request.header.content-length`.
 """
 
 HTTP_REQUEST_CONTENT_LENGTH_UNCOMPRESSED: Final = (
@@ -106,14 +106,14 @@ Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.http_a
 
 HTTP_RESPONSE_CONTENT_LENGTH: Final = "http.response_content_length"
 """
-Deprecated: Replaced by `http.response.header.<key>`.
+Deprecated: hp.response.header.content-length.
 """
 
 HTTP_RESPONSE_CONTENT_LENGTH_UNCOMPRESSED: Final = (
     "http.response_content_length_uncompressed"
 )
 """
-Deprecated: Replace by `http.response.body.size`.
+Deprecated: Replaced by `http.response.body.size`.
 """
 
 HTTP_ROUTE: Final = "http.route"
@@ -123,7 +123,7 @@ Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.http_a
 
 HTTP_SCHEME: Final = "http.scheme"
 """
-Deprecated: Replaced by `url.scheme` instead.
+Deprecated: Replaced by `url.scheme`.
 """
 
 HTTP_SERVER_NAME: Final = "http.server_name"
@@ -138,7 +138,7 @@ Deprecated: Replaced by `http.response.status_code`.
 
 HTTP_TARGET: Final = "http.target"
 """
-Deprecated: Split to `url.path` and `url.query.
+Deprecated: Split to `url.path` and `url.query`.
 """
 
 HTTP_URL: Final = "http.url"
