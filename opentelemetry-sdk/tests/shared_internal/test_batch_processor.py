@@ -19,13 +19,10 @@ import os
 import time
 import unittest
 import weakref
-from concurrent.futures import ThreadPoolExecutor
 from platform import system
-from sys import version_info
 from unittest.mock import Mock
 
 import pytest
-from pytest import mark
 
 from opentelemetry.sdk._logs import (
     LogData,
@@ -53,6 +50,8 @@ if system() != "Windows":
 
 
 # BatchLogRecodProcessor/BatchSpanProcessor initialize and use BatchProcessor.
+# Important: make sure to call .shutdown() before the end of the test,
+# otherwise the worker thread will continue to run after the end of the test.
 @pytest.mark.parametrize(
     "batch_processor_class,telemetry",
     [(BatchLogRecordProcessor, EMPTY_LOG), (BatchSpanProcessor, BASIC_SPAN)],
@@ -80,6 +79,7 @@ class TestBatchProcessor:
         after_export = time.time_ns()
         # Shows the worker's 30 second sleep was interrupted within a second.
         assert after_export - before_export < 1e9
+        batch_processor.shutdown()
 
     # pylint: disable=no-self-use
     def test_telemetry_exported_once_schedule_delay_reached(
@@ -96,6 +96,7 @@ class TestBatchProcessor:
         batch_processor._batch_processor.emit(telemetry)
         time.sleep(0.2)
         exporter.export.assert_called_once_with([telemetry])
+        batch_processor.shutdown()
 
     def test_telemetry_flushed_before_shutdown_and_dropped_after_shutdown(
         self, batch_processor_class, telemetry
@@ -136,33 +137,7 @@ class TestBatchProcessor:
             batch_processor._batch_processor.emit(telemetry)
         batch_processor.force_flush()
         exporter.export.assert_called_once_with([telemetry for _ in range(10)])
-
-    @mark.skipif(
-        system() == "Windows" or version_info < (3, 9),
-        reason="This test randomly fails on windows and python 3.8.",
-    )
-    def test_with_multiple_threads(self, batch_processor_class, telemetry):
-        exporter = Mock()
-        batch_processor = batch_processor_class(
-            exporter,
-            max_queue_size=3000,
-            max_export_batch_size=1000,
-            schedule_delay_millis=30000,
-            export_timeout_millis=500,
-        )
-
-        def bulk_emit_and_flush(num_emit):
-            for _ in range(num_emit):
-                batch_processor._batch_processor.emit(telemetry)
-            batch_processor.force_flush()
-
-        with ThreadPoolExecutor(max_workers=69) as executor:
-            for idx in range(69):
-                executor.submit(bulk_emit_and_flush, idx + 1)
-
-            executor.shutdown()
-        # 69 calls to force flush.
-        assert exporter.export.call_count == 69
+        batch_processor.shutdown()
 
     @unittest.skipUnless(
         hasattr(os, "fork"),
@@ -202,6 +177,7 @@ class TestBatchProcessor:
         batch_processor.force_flush()
         # Single export for the telemetry we emitted at the start of the test.
         assert exporter.export.call_count == 1
+        batch_processor.shutdown()
 
     def test_record_processor_is_garbage_collected(
         self, batch_processor_class, telemetry

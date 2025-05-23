@@ -17,6 +17,7 @@ import logging
 import os
 import time
 import unittest
+from concurrent.futures import ThreadPoolExecutor
 from sys import version_info
 from unittest.mock import Mock, patch
 
@@ -331,9 +332,12 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         self.assertEqual(expected, emitted)
 
 
+# Many more test cases for the BatchLogRecordProcessor exist under
+# opentelemetry-sdk/tests/shared_internal/test_batch_processor.py.
+# Important: make sure to call .shutdown() on the BatchLogRecordProcessor
+# before the end of the test, otherwise the worker thread will continue
+# to run after the end of the test.
 class TestBatchLogRecordProcessor(unittest.TestCase):
-    # Many more test cases for the BatchLogRecordProcessor exist under
-    # opentelemetry-sdk/tests/shared_internal/test_batch_processor.py.
     def test_emit_call_log_record(self):
         exporter = InMemoryLogExporter()
         log_record_processor = Mock(wraps=BatchLogRecordProcessor(exporter))
@@ -346,6 +350,34 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
 
         logger.error("error")
         self.assertEqual(log_record_processor.emit.call_count, 1)
+        log_record_processor.shutdown()
+
+    def test_with_multiple_threads(self):  # pylint: disable=no-self-use
+        exporter = InMemoryLogExporter()
+        batch_processor = BatchLogRecordProcessor(
+            exporter,
+            max_queue_size=3000,
+            max_export_batch_size=50,
+            schedule_delay_millis=30000,
+            export_timeout_millis=500,
+        )
+
+        def bulk_emit(num_emit):
+            for _ in range(num_emit):
+                batch_processor.emit(EMPTY_LOG)
+
+        total_expected_logs = 0
+        with ThreadPoolExecutor(max_workers=69) as executor:
+            for num_logs_to_emit in range(1, 70):
+                executor.submit(bulk_emit, num_logs_to_emit)
+                total_expected_logs += num_logs_to_emit
+
+            executor.shutdown()
+
+        batch_processor.shutdown()
+        # Wait a bit for logs to flush.
+        time.sleep(2)
+        assert len(exporter.get_finished_logs()) == total_expected_logs
 
     @mark.skipif(
         version_info < (3, 10),
@@ -404,6 +436,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         self.assertEqual(
             log_record_processor._batch_processor._export_timeout_millis, 15000
         )
+        log_record_processor.shutdown()
 
     @patch.dict(
         "os.environ",
@@ -432,6 +465,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         self.assertEqual(
             log_record_processor._batch_processor._export_timeout_millis, 15000
         )
+        log_record_processor.shutdown()
 
     def test_args_defaults(self):
         exporter = InMemoryLogExporter()
@@ -451,6 +485,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         self.assertEqual(
             log_record_processor._batch_processor._export_timeout_millis, 30000
         )
+        log_record_processor.shutdown()
 
     @patch.dict(
         "os.environ",
@@ -481,6 +516,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         self.assertEqual(
             log_record_processor._batch_processor._export_timeout_millis, 30000
         )
+        log_record_processor.shutdown()
 
     def test_args_none_defaults(self):
         exporter = InMemoryLogExporter()
@@ -506,6 +542,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         self.assertEqual(
             log_record_processor._batch_processor._export_timeout_millis, 30000
         )
+        log_record_processor.shutdown()
 
     def test_validation_negative_max_queue_size(self):
         exporter = InMemoryLogExporter()

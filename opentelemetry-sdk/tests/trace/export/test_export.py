@@ -144,9 +144,12 @@ class TestSimpleSpanProcessor(unittest.TestCase):
         self.assertListEqual([], spans_names_list)
 
 
+# Many more test cases for the BatchSpanProcessor exist under
+# opentelemetry-sdk/tests/shared_internal/test_batch_processor.py.
+# Important: make sure to call .shutdown() on the BatchSpanProcessor
+# before the end of the test, otherwise the worker thread will continue
+# to run after the end of the test.
 class TestBatchSpanProcessor(unittest.TestCase):
-    # Many more test cases for the BatchSpanProcessor exist under
-    # opentelemetry-sdk/tests/shared_internal/test_batch_processor.py.
     @mock.patch.dict(
         "os.environ",
         {
@@ -173,6 +176,7 @@ class TestBatchSpanProcessor(unittest.TestCase):
         self.assertEqual(
             batch_span_processor._batch_processor._export_timeout_millis, 4
         )
+        batch_span_processor.shutdown()
 
     def test_args_env_var_defaults(self):
         batch_span_processor = export.BatchSpanProcessor(
@@ -191,6 +195,7 @@ class TestBatchSpanProcessor(unittest.TestCase):
         self.assertEqual(
             batch_span_processor._batch_processor._export_timeout_millis, 30000
         )
+        batch_span_processor.shutdown()
 
     @mock.patch.dict(
         "os.environ",
@@ -220,6 +225,7 @@ class TestBatchSpanProcessor(unittest.TestCase):
         self.assertEqual(
             batch_span_processor._batch_processor._export_timeout_millis, 30000
         )
+        batch_span_processor.shutdown()
 
     def test_on_start_accepts_parent_context(self):
         # pylint: disable=no-self-use
