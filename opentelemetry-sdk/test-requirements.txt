@@ -6,6 +6,7 @@ packaging==24.0
 pluggy==1.5.0
 psutil==5.9.6; sys_platform != 'win32'
 py-cpuinfo==9.0.0
+requests==2.32.3
 pytest==7.4.4
 tomli==2.0.1
 typing_extensions==4.10.0
@@ -15,3 +16,6 @@ zipp==3.19.2
 -e opentelemetry-api
 -e opentelemetry-semantic-conventions
 -e opentelemetry-sdk
+-e exporter/opentelemetry-exporter-otlp-proto-http
+-e exporter/opentelemetry-exporter-otlp-proto-common
+-e opentelemetry-proto
