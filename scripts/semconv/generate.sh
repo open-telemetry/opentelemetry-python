@@ -5,7 +5,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ROOT_DIR="${SCRIPT_DIR}/../.."
 
 # freeze the spec version to make SemanticAttributes generation reproducible
-SEMCONV_VERSION=1.33.0
+SEMCONV_VERSION=1.34.0
 SEMCONV_VERSION_TAG=v$SEMCONV_VERSION
 OTEL_WEAVER_IMG_VERSION=v0.15.0
 INCUBATING_DIR=_incubating

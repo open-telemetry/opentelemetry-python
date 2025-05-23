@@ -36,7 +36,7 @@ Deprecated: Replaced by `code.file.path`.
 
 CODE_FUNCTION: Final = "code.function"
 """
-Deprecated: Replaced by `code.function.name`.
+Deprecated: Value should be included in `code.function.name` which is expected to be a fully-qualified name.
 """
 
 CODE_FUNCTION_NAME: Final = "code.function.name"
