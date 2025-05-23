@@ -40,6 +40,32 @@ from opentelemetry.trace import (
 
 
 class TestLogRecord(unittest.TestCase):
+    def test_serialized_context_none(self):
+        record = LogRecord(context=None)
+        self.assertEqual(None, record.serialized_context())
+
+    def test_serialized_context_serializable(self):
+        context = {
+            "test-string": "value",
+            "test-number": 42,
+            "test-list": [1, 2, 3],
+            "test-dict": {"key": "value"},
+            "test-null": None,
+            "test-bool": True,
+        }
+        record = LogRecord(context=context)
+        self.assertEqual(context, record.serialized_context())
+
+    def test_serialized_context_non_serializable(self):
+        class MyTestObject:
+            def __str__(self):
+                return "foo-bar"
+
+        context = {"test-string": "value", "test-object": MyTestObject()}
+        record = LogRecord(context=context)
+        expected = {"test-string": "value", "test-object": "foo-bar"}
+        self.assertEqual(expected, record.serialized_context())
+
     def test_log_record_to_json(self):
         expected = json.dumps(
             {
