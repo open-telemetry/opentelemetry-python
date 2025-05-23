@@ -20,18 +20,10 @@ import time
 import unittest
 import weakref
 from platform import system
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
-from requests import Session
-from requests.models import Response
 
-from opentelemetry.exporter.otlp.proto.http._log_exporter import (
-    OTLPLogExporter,
-)
-from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
-    OTLPSpanExporter,
-)
 from opentelemetry.sdk._logs import (
     LogData,
     LogRecord,
@@ -51,13 +43,6 @@ EMPTY_LOG = LogData(
 BASIC_SPAN = ReadableSpan(
     "MySpan",
     instrumentation_scope=InstrumentationScope("example", "example"),
-    context=Mock(
-        **{
-            "trace_state": {"a": "b", "c": "d"},
-            "span_id": 10217189687419569865,
-            "trace_id": 67545097771067222548457157018666467027,
-        }
-    ),
 )
 
 if system() != "Windows":
