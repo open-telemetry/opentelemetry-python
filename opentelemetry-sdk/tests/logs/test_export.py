@@ -352,7 +352,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         self.assertEqual(log_record_processor.emit.call_count, 1)
         log_record_processor.shutdown()
 
-    def test_with_multiple_threads(self):
+    def test_with_multiple_threads(self):  # pylint: disable=no-self-use
         exporter = InMemoryLogExporter()
         batch_processor = BatchLogRecordProcessor(
             exporter,
