@@ -111,6 +111,7 @@ class TestLogRecord(unittest.TestCase):
             '{"body": "a log line", "severity_number": null, "severity_text": null, "attributes": {"mapping": {"key": "value"}, "none": null, "sequence": [1, 2], "str": "string"}, "dropped_attributes": 0, "timestamp": "1970-01-01T00:00:00.000000Z", "observed_timestamp": "1970-01-01T00:00:00.000000Z", "context": null, "trace_id": "", "span_id": "", "trace_flags": null, "resource": {"attributes": {"service.name": "foo"}, "schema_url": ""}}',
         )
 
+    # pylint: disable=too-many-locals
     @patch("opentelemetry.sdk._logs._internal.get_current_span")
     @patch("opentelemetry.trace.propagation.set_value")
     @patch("opentelemetry.sdk.trace.RandomIdGenerator.generate_span_id")

@@ -246,7 +246,7 @@ class LogRecord(APILogRecord):
                 except TypeError:
                     # If not JSON-serializable, use string representation
                     context_dict[key] = str(value)
-            return context_dict
+        return context_dict
 
     def to_json(self, indent: int | None = 4) -> str:
         return json.dumps(
