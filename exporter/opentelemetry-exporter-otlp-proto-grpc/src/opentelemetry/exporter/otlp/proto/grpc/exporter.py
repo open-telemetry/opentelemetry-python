@@ -34,8 +34,8 @@ from typing import (  # noqa: F401
 from typing import Sequence as TypingSequence
 from urllib.parse import urlparse
 
-from deprecated import deprecated
 from google.rpc.error_details_pb2 import RetryInfo
+from typing_extensions import deprecated
 
 from grpc import (
     ChannelCredentials,
@@ -108,8 +108,7 @@ def environ_to_compression(environ_key: str) -> Optional[Compression]:
 
 
 @deprecated(
-    version="1.18.0",
-    reason="Use one of the encoders from opentelemetry-exporter-otlp-proto-common instead",
+    "Use one of the encoders from opentelemetry-exporter-otlp-proto-common instead. Deprecated since version 1.18.0.",
 )
 def get_resource_data(
     sdk_resource_scope_data: Dict[SDKResource, ResourceDataT],
@@ -186,6 +185,8 @@ class OTLPExporterMixin(
         timeout: Backend request timeout in seconds
         compression: gRPC compression method to use
     """
+
+    _MAX_RETRY_TIMEOUT = 64
 
     def __init__(
         self,
@@ -286,12 +287,13 @@ class OTLPExporterMixin(
         #     data.__class__.__name__,
         #     delay,
         # )
-        max_value = 64
         # expo returns a generator that yields delay values which grow
         # exponentially. Once delay is greater than max_value, the yielded
         # value will remain constant.
-        for delay in _create_exp_backoff_generator(max_value=max_value):
-            if delay == max_value or self._shutdown:
+        for delay in _create_exp_backoff_generator(
+            max_value=self._MAX_RETRY_TIMEOUT
+        ):
+            if delay == self._MAX_RETRY_TIMEOUT or self._shutdown:
                 return self._result.FAILURE
 
             with self._export_lock:

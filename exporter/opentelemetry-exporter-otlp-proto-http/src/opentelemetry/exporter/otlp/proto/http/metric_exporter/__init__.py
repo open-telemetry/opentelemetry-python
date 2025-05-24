@@ -28,8 +28,8 @@ from typing import (  # noqa: F401
 )
 
 import requests
-from deprecated import deprecated
 from requests.exceptions import ConnectionError
+from typing_extensions import deprecated
 
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _create_exp_backoff_generator,
@@ -253,8 +253,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
 
 
 @deprecated(
-    version="1.18.0",
-    reason="Use one of the encoders from opentelemetry-exporter-otlp-proto-common instead",
+    "Use one of the encoders from opentelemetry-exporter-otlp-proto-common instead. Deprecated since version 1.18.0.",
 )
 def get_resource_data(
     sdk_resource_scope_data: Dict[SDKResource, Any],  # ResourceDataT?

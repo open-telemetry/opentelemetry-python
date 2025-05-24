@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- typecheck: add sdk/resources and drop mypy
+  ([#4578](https://github.com/open-telemetry/opentelemetry-python/pull/4578))
+- Refactor `BatchLogRecordProcessor` to simplify code and make the control flow more
+  clear ([#4562](https://github.com/open-telemetry/opentelemetry-python/pull/4562/)
+  and [#4535](https://github.com/open-telemetry/opentelemetry-python/pull/4535)).
+- Use PEP702 for marking deprecations
+  ([#4522](https://github.com/open-telemetry/opentelemetry-python/pull/4522))
+- Refactor `BatchLogRecordProcessor` and `BatchSpanProcessor` to simplify code
+  and make the control flow more clear ([#4562](https://github.com/open-telemetry/opentelemetry-python/pull/4562/)
+  [#4535](https://github.com/open-telemetry/opentelemetry-python/pull/4535), and
+  [#4580](https://github.com/open-telemetry/opentelemetry-python/pull/4580)).
+- Remove log messages from `BatchLogRecordProcessor.emit`, this caused the program
+  to crash at shutdown with a max recursion error ([#4586](https://github.com/open-telemetry/opentelemetry-python/pull/4586)).
+- Configurable max retry timeout for grpc exporter
+  ([#4333](https://github.com/open-telemetry/opentelemetry-python/pull/4333))
+- opentelemetry-api: allow importlib-metadata 8.7.0
+  ([#4593](https://github.com/open-telemetry/opentelemetry-python/pull/4593))
+- opentelemetry-test-utils: assert explicit bucket boundaries in histogram metrics
+  ([#4595](https://github.com/open-telemetry/opentelemetry-python/pull/4595))
+
+## Version 1.33.0/0.54b0 (2025-05-09)
+
 - Fix intermittent `Connection aborted` error when using otlp/http exporters
   ([#4477](https://github.com/open-telemetry/opentelemetry-python/pull/4477))
 - opentelemetry-sdk: use stable code attributes: `code.function` -> `code.function.name`, `code.lineno` -> `code.line.number`, `code.filepath` -> `code.file.path`
