@@ -42,7 +42,7 @@ from opentelemetry.trace import (
 class TestLogRecord(unittest.TestCase):
     def test_serialized_context_none(self):
         record = LogRecord(context=None)
-        self.assertEqual(None, record.serialized_context())
+        self.assertEqual({}, record.serialized_context())
 
     def test_serialized_context_serializable(self):
         context = {
@@ -81,7 +81,7 @@ class TestLogRecord(unittest.TestCase):
                 "dropped_attributes": 0,
                 "timestamp": "1970-01-01T00:00:00.000000Z",
                 "observed_timestamp": "1970-01-01T00:00:00.000000Z",
-                "context": None,
+                "context": {},
                 "trace_id": "",
                 "span_id": "",
                 "trace_flags": None,
@@ -108,7 +108,7 @@ class TestLogRecord(unittest.TestCase):
         self.assertEqual(expected, actual.to_json(indent=4))
         self.assertEqual(
             actual.to_json(indent=None),
-            '{"body": "a log line", "severity_number": null, "severity_text": null, "attributes": {"mapping": {"key": "value"}, "none": null, "sequence": [1, 2], "str": "string"}, "dropped_attributes": 0, "timestamp": "1970-01-01T00:00:00.000000Z", "observed_timestamp": "1970-01-01T00:00:00.000000Z", "context": null, "trace_id": "", "span_id": "", "trace_flags": null, "resource": {"attributes": {"service.name": "foo"}, "schema_url": ""}}',
+            '{"body": "a log line", "severity_number": null, "severity_text": null, "attributes": {"mapping": {"key": "value"}, "none": null, "sequence": [1, 2], "str": "string"}, "dropped_attributes": 0, "timestamp": "1970-01-01T00:00:00.000000Z", "observed_timestamp": "1970-01-01T00:00:00.000000Z", "context": {}, "trace_id": "", "span_id": "", "trace_flags": null, "resource": {"attributes": {"service.name": "foo"}, "schema_url": ""}}',
         )
 
     # pylint: disable=too-many-locals
