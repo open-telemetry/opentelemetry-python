@@ -37,6 +37,8 @@ from opentelemetry._logs import (
     std_to_otel,
 )
 from opentelemetry.attributes import _VALID_ANY_VALUE_TYPES, BoundedAttributes
+from opentelemetry.context import get_current
+from opentelemetry.context.context import Context
 from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_COUNT_LIMIT,
     OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
@@ -176,6 +178,7 @@ class LogRecord(APILogRecord):
         self,
         timestamp: int | None = None,
         observed_timestamp: int | None = None,
+        context: Context | None = None,
         trace_id: int | None = None,
         span_id: int | None = None,
         trace_flags: TraceFlags | None = None,
@@ -186,10 +189,22 @@ class LogRecord(APILogRecord):
         attributes: _ExtendedAttributes | None = None,
         limits: LogLimits | None = _UnsetLogLimits,
     ):
+        # Prioritizes context over trace_id / span_id / trace_flags.
+        # If context provided and its current span valid, then uses that span info.
+        # Otherwise, uses provided trace_id etc for backwards compatibility.
+        if context is not None:
+            span = get_current_span(context)
+            span_context = span.get_span_context()
+            if span_context.is_valid:
+                trace_id = span_context.trace_id
+                span_id = span_context.span_id
+                trace_flags = span_context.trace_flags
+
         super().__init__(
             **{
                 "timestamp": timestamp,
                 "observed_timestamp": observed_timestamp,
+                "context": context,
                 "trace_id": trace_id,
                 "span_id": span_id,
                 "trace_flags": trace_flags,
@@ -220,6 +235,19 @@ class LogRecord(APILogRecord):
             return NotImplemented
         return self.__dict__ == other.__dict__
 
+    def serialized_context(self) -> dict:
+        """Returns JSON-serializable copy of stored Context"""
+        context_dict = {}
+        if self.context is not None:
+            for key, value in self.context.items():
+                try:
+                    json.dumps(value)
+                    context_dict[key] = value
+                except TypeError:
+                    # If not JSON-serializable, use string representation
+                    context_dict[key] = str(value)
+        return context_dict
+
     def to_json(self, indent: int | None = 4) -> str:
         return json.dumps(
             {
@@ -234,6 +262,7 @@ class LogRecord(APILogRecord):
                 "dropped_attributes": self.dropped_attributes,
                 "timestamp": ns_to_iso_str(self.timestamp),
                 "observed_timestamp": ns_to_iso_str(self.observed_timestamp),
+                "context": self.serialized_context(),
                 "trace_id": (
                     f"0x{format_trace_id(self.trace_id)}"
                     if self.trace_id is not None
@@ -548,6 +577,7 @@ class LoggingHandler(logging.Handler):
         return LogRecord(
             timestamp=timestamp,
             observed_timestamp=observered_timestamp,
+            context=get_current(),
             trace_id=span_context.trace_id,
             span_id=span_context.span_id,
             trace_flags=span_context.trace_flags,
