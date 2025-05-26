@@ -85,11 +85,11 @@ class TestOTLPLogEncoder(unittest.TestCase):
     def test_encode_object_body(self):
         expected_log_bodies = self._get_test_logs_object_bodies()
         encoded_logs = encode_logs(self._get_test_logs_object_body())
-        for i, body_value in enumerate(expected_log_bodies):
+        for index, body_value in enumerate(expected_log_bodies):
             self.assertEqual(
                 encoded_logs.resource_logs[0]
                 .scope_logs[0]
-                .log_records[i]
+                .log_records[index]
                 .body,
                 body_value,
             )
@@ -646,7 +646,8 @@ class TestOTLPLogEncoder(unittest.TestCase):
 
         return [log1, log2, log3]
 
-    def _get_test_logs_object_bodies(self) -> List[PB2AnyValue]:
+    @staticmethod
+    def _get_test_logs_object_bodies() -> List[PB2AnyValue]:
         return [
             PB2AnyValue(
                 string_value="This is an exception message"
@@ -660,11 +661,11 @@ class TestOTLPLogEncoder(unittest.TestCase):
         ]
 
 class LogBodyStr():
-        def __init__(self):
-            pass
+    def __init__(self):
+        pass
 
-        def __str__(self):
-            return "This is a string from a class __str__ method"
+    def __str__(self):
+        return "This is a string from a class __str__ method"
 
 class LogBodyRepr():
     def __init__(self):
