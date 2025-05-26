@@ -82,6 +82,18 @@ class TestOTLPLogEncoder(unittest.TestCase):
             2,
         )
 
+    def test_encode_object_body(self):
+        expected_log_bodies = self._get_test_logs_object_bodies()
+        encoded_logs = encode_logs(self._get_test_logs_object_body())
+        for i, body_value in enumerate(expected_log_bodies):
+            self.assertEqual(
+                encoded_logs.resource_logs[0]
+                .scope_logs[0]
+                .log_records[i]
+                .body,
+                body_value,
+            )
+
     @staticmethod
     def _get_sdk_log_data() -> List[LogData]:
         log1 = LogData(
@@ -246,6 +258,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
                 "extended_name", "extended_version"
             ),
         )
+
         return [log1, log2, log3, log4, log5, log6, log7, log8]
 
     def get_test_logs(
@@ -580,3 +593,82 @@ class TestOTLPLogEncoder(unittest.TestCase):
         )
 
         return [log1, log2]
+
+    @staticmethod
+    def _get_test_logs_object_body() -> List[LogData]:
+        log1 = LogData(
+            log_record=SDKLogRecord(
+                timestamp=1644650584292683009,
+                observed_timestamp=1644650584292683010,
+                trace_id=212592107417388365804938480559624925555,
+                span_id=6077757853989569445,
+                trace_flags=TraceFlags(0x01),
+                severity_text="INFO",
+                severity_number=SeverityNumber.INFO,
+                body=Exception("This is an exception message"),
+                resource=SDKResource({}),
+                attributes={},
+            ),
+            instrumentation_scope=None,
+        )
+
+        log2 = LogData(
+            log_record=SDKLogRecord(
+                timestamp=1644650584292683009,
+                observed_timestamp=1644650584292683010,
+                trace_id=212592107417388365804938480559624925555,
+                span_id=6077757853989569445,
+                trace_flags=TraceFlags(0x01),
+                severity_text="INFO",
+                severity_number=SeverityNumber.INFO,
+                body=LogBodyStr(),
+                resource=SDKResource({}),
+                attributes={},
+            ),
+            instrumentation_scope=None,
+        )
+
+        log3 = LogData(
+            log_record=SDKLogRecord(
+                timestamp=1644650584292683009,
+                observed_timestamp=1644650584292683010,
+                trace_id=212592107417388365804938480559624925555,
+                span_id=6077757853989569445,
+                trace_flags=TraceFlags(0x01),
+                severity_text="INFO",
+                severity_number=SeverityNumber.INFO,
+                body=LogBodyRepr(),
+                resource=SDKResource({}),
+                attributes={},
+            ),
+            instrumentation_scope=None,
+        )
+
+        return [log1, log2, log3]
+
+    def _get_test_logs_object_bodies(self) -> List[PB2AnyValue]:
+        return [
+            PB2AnyValue(
+                string_value="This is an exception message"
+            ),
+            PB2AnyValue(
+                string_value="This is a string from a class __str__ method"
+            ),
+            PB2AnyValue(
+                string_value="This is a string from a class __repr__ method"
+            ),
+        ]
+
+class LogBodyStr():
+        def __init__(self):
+            pass
+
+        def __str__(self):
+            return "This is a string from a class __str__ method"
+
+class LogBodyRepr():
+    def __init__(self):
+        pass
+
+    def __repr__(self):
+        return "This is a string from a class __repr__ method"

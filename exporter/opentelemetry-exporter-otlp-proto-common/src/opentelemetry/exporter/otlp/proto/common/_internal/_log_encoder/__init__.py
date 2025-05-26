@@ -17,10 +17,10 @@ from typing import List, Sequence
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _encode_attributes,
     _encode_instrumentation_scope,
+    _encode_log_body,
     _encode_resource,
     _encode_span_id,
     _encode_trace_id,
-    _encode_value,
 )
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
     ExportLogsServiceRequest,
@@ -55,7 +55,7 @@ def _encode_log(log_data: LogData) -> PB2LogRecord:
         span_id=span_id,
         trace_id=trace_id,
         flags=int(log_data.log_record.trace_flags),
-        body=_encode_value(body, allow_null=True),
+        body=_encode_log_body(body),
         severity_text=log_data.log_record.severity_text,
         attributes=_encode_attributes(
             log_data.log_record.attributes, allow_null=True

@@ -135,6 +135,15 @@ def _encode_trace_id(trace_id: int) -> bytes:
     return trace_id.to_bytes(length=16, byteorder="big", signed=False)
 
 
+def _encode_log_body(
+    value: Any
+) -> Optional[PB2AnyValue]:
+    try:
+        return _encode_value(value, allow_null=True)
+    except Exception:
+        return _encode_value(str(value))
+
+
 def _encode_attributes(
     attributes: _ExtendedAttributes,
     allow_null: bool = False,
