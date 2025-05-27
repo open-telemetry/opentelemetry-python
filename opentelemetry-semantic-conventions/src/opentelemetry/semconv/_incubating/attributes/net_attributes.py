@@ -79,7 +79,7 @@ Deprecated: Replaced by `network.peer.address`.
 
 NET_SOCK_PEER_NAME: Final = "net.sock.peer.name"
 """
-Deprecated: Removed.
+Deprecated: Removed. No replacement at this time.
 """
 
 NET_SOCK_PEER_PORT: Final = "net.sock.peer.port"
