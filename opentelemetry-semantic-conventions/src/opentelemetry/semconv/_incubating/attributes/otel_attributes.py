@@ -44,12 +44,12 @@ E.g. for Java the fully qualified classname SHOULD be used in this case.
 
 OTEL_LIBRARY_NAME: Final = "otel.library.name"
 """
-Deprecated: Use the `otel.scope.name` attribute.
+Deprecated: Replaced by `otel.scope.name`.
 """
 
 OTEL_LIBRARY_VERSION: Final = "otel.library.version"
 """
-Deprecated: Use the `otel.scope.version` attribute.
+Deprecated: Replaced by `otel.scope.version`.
 """
 
 OTEL_SCOPE_NAME: Final = "otel.scope.name"

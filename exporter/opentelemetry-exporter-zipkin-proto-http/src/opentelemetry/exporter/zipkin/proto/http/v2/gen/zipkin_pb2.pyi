@@ -37,9 +37,6 @@ builtin___bytes = bytes
 builtin___float = float
 builtin___int = int
 builtin___str = str
-if sys.version_info < (3,):
-    builtin___buffer = buffer
-    builtin___unicode = unicode
 
 
 DESCRIPTOR: google___protobuf___descriptor___FileDescriptor = ...

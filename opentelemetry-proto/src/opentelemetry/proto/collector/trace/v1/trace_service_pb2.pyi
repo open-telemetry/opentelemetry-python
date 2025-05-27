@@ -24,10 +24,7 @@ import google.protobuf.message
 import opentelemetry.proto.trace.v1.trace_pb2
 import sys
 
-if sys.version_info >= (3, 8):
-    import typing as typing_extensions
-else:
-    import typing_extensions
+import typing as typing_extensions
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
 

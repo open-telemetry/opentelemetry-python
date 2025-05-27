@@ -74,14 +74,14 @@ MESSAGING_DESTINATION_PUBLISH_ANONYMOUS: Final = (
     "messaging.destination_publish.anonymous"
 )
 """
-Deprecated: No replacement at this time.
+Deprecated: Removed. No replacement at this time.
 """
 
 MESSAGING_DESTINATION_PUBLISH_NAME: Final = (
     "messaging.destination_publish.name"
 )
 """
-Deprecated: No replacement at this time.
+Deprecated: Removed. No replacement at this time.
 """
 
 MESSAGING_EVENTHUBS_CONSUMER_GROUP: Final = (
