@@ -592,7 +592,7 @@ def format_trace_id(trace_id: int) -> str:
         trace_id: Trace ID int
 
     Returns:
-        The trace ID as 32-byte hexadecimal string
+        The trace ID (16 bytes) cast to a 32-character hexadecimal string
     """
     return format(trace_id, "032x")
 
@@ -603,6 +603,6 @@ def format_span_id(span_id: int) -> str:
         span_id: Span ID int
 
     Returns:
-        The span ID as 16-byte hexadecimal string
+        The span ID (8 bytes) cast to a 16-character hexadecimal string
     """
     return format(span_id, "016x")
