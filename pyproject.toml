@@ -1,7 +1,7 @@
 [project]
 name = "opentelemetry-python"
 version = "0.0.0" # This is not used.
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
   "opentelemetry-api",
   "opentelemetry-sdk",
@@ -99,7 +99,7 @@ known-first-party = ["opentelemetry", "opentelemetry_example_app"]
 
 [tool.pyright]
 typeCheckingMode = "standard"
-pythonVersion = "3.8"
+pythonVersion = "3.9"
 
 include = [
   "opentelemetry-semantic-conventions",

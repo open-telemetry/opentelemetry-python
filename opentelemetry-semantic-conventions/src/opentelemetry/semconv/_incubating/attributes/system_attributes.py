@@ -59,7 +59,7 @@ The memory state.
 
 SYSTEM_NETWORK_STATE: Final = "system.network.state"
 """
-Deprecated: Removed, report network connection state with `network.connection.state` attribute.
+Deprecated: Replaced by `network.connection.state`.
 """
 
 SYSTEM_PAGING_DIRECTION: Final = "system.paging.direction"
@@ -146,7 +146,7 @@ class SystemMemoryStateValues(Enum):
 
 
 @deprecated(
-    "The attribute system.network.state is deprecated - Removed, report network connection state with `network.connection.state` attribute"
+    "The attribute system.network.state is deprecated - Replaced by `network.connection.state`"
 )
 class SystemNetworkStateValues(Enum):
     CLOSE = "close"

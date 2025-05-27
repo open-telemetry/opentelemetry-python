@@ -19,7 +19,7 @@ body:
         Please describe any aspect of your environment relevant to the problem, including your Python version, [platform](https://docs.python.org/3/library/platform.html), version numbers of installed dependencies, information about your cloud hosting provider, etc. If you're reporting a problem with a specific version of a library in this repo, please check whether the problem has been fixed on main.
       value: |
         OS: (e.g, Ubuntu)
-        Python version: (e.g., Python 3.8.10)
+        Python version: (e.g., Python 3.9.10)
         SDK version: (e.g., 1.25.0)
         API version: (e.g., 1.25.0)
   

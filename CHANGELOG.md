@@ -26,6 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4593](https://github.com/open-telemetry/opentelemetry-python/pull/4593))
 - opentelemetry-test-utils: assert explicit bucket boundaries in histogram metrics
   ([#4595](https://github.com/open-telemetry/opentelemetry-python/pull/4595))
+- Bump semantic conventions to 1.34.0
+  ([#4599](https://github.com/open-telemetry/opentelemetry-python/pull/4599))
+- Drop support for Python 3.8
+  ([#4520](https://github.com/open-telemetry/opentelemetry-python/pull/4520))
 - Logging API accepts optional Context with precedence over `trace_id`, `span_id`,
   `trace_flags` if provided with valid span. LoggingHandler passes current Context.
   ([#4597](https://github.com/open-telemetry/opentelemetry-python/pull/4597))
