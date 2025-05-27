@@ -17,7 +17,7 @@ from typing import Final
 
 DEPLOYMENT_ENVIRONMENT: Final = "deployment.environment"
 """
-Deprecated: Deprecated, use `deployment.environment.name` instead.
+Deprecated: Replaced by `deployment.environment.name`.
 """
 
 DEPLOYMENT_ENVIRONMENT_NAME: Final = "deployment.environment.name"

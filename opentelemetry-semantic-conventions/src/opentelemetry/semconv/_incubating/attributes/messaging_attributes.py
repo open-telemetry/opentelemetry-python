@@ -26,9 +26,6 @@ MESSAGING_CLIENT_ID: Final = "messaging.client.id"
 A unique identifier for the client that consumes or produces a message.
 """
 
-# MESSAGING_CLIENT_ID: Final = "messaging.client_id"
-# Deprecated: Replaced by `messaging.client.id`.
-
 MESSAGING_CONSUMER_GROUP_NAME: Final = "messaging.consumer.group.name"
 """
 The name of the consumer group with which a consumer is associated.
@@ -77,14 +74,14 @@ MESSAGING_DESTINATION_PUBLISH_ANONYMOUS: Final = (
     "messaging.destination_publish.anonymous"
 )
 """
-Deprecated: No replacement at this time.
+Deprecated: Removed. No replacement at this time.
 """
 
 MESSAGING_DESTINATION_PUBLISH_NAME: Final = (
     "messaging.destination_publish.name"
 )
 """
-Deprecated: No replacement at this time.
+Deprecated: Removed. No replacement at this time.
 """
 
 MESSAGING_EVENTHUBS_CONSUMER_GROUP: Final = (

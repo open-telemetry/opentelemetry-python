@@ -15,7 +15,7 @@
 from enum import Enum
 from typing import Final
 
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 CONTAINER_COMMAND: Final = "container.command"
 """
@@ -82,6 +82,7 @@ Container image tags. An example can be found in [Docker Image Inspect](https://
 CONTAINER_LABEL_TEMPLATE: Final = "container.label"
 """
 Container labels, `<key>` being the label name, the value being the label value.
+Note: For example, a docker container label `app` with value `nginx` SHOULD be recorded as the `container.label.app` attribute with value `"nginx"`.
 """
 
 CONTAINER_LABELS_TEMPLATE: Final = "container.labels"
@@ -101,8 +102,8 @@ The container runtime managing this container.
 
 
 @deprecated(
-    reason="The attribute container.cpu.state is deprecated - Replaced by `cpu.mode`"
-)  # type: ignore
+    "The attribute container.cpu.state is deprecated - Replaced by `cpu.mode`"
+)
 class ContainerCpuStateValues(Enum):
     USER = "user"
     """When tasks of the cgroup are in user mode (Linux). When all container processes are in user mode (Windows)."""

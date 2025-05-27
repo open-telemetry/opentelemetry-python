@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# type: ignore[reportDeprecated]  # ResourceAttributes is deprecated
+
 """
 This package implements `OpenTelemetry Resources
 <https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/sdk.md#resource-sdk>`_:
@@ -67,7 +69,7 @@ import typing
 from json import dumps
 from os import environ
 from types import ModuleType
-from typing import List, MutableMapping, Optional, cast
+from typing import List, Optional, cast
 from urllib import parse
 
 from opentelemetry.attributes import BoundedAttributes
@@ -77,7 +79,10 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_SERVICE_NAME,
 )
 from opentelemetry.semconv.resource import ResourceAttributes
-from opentelemetry.util._importlib_metadata import entry_points, version
+from opentelemetry.util._importlib_metadata import (
+    entry_points,  # type: ignore[reportUnknownVariableType]
+    version,
+)
 from opentelemetry.util.types import AttributeValue
 
 psutil: Optional[ModuleType] = None
@@ -210,7 +215,7 @@ class Resource:
                             entry_points(
                                 group="opentelemetry_resource_detector",
                                 name=resource_detector.strip(),
-                            )  # type: ignore
+                            )  # type: ignore[reportUnknownArgumentType]
                         )
                     ).load()()
                 )
@@ -266,8 +271,8 @@ class Resource:
         Returns:
             The newly-created Resource.
         """
-        merged_attributes = self.attributes.copy()  # type: ignore
-        merged_attributes.update(other.attributes)  # type: ignore
+        merged_attributes = dict(self.attributes).copy()
+        merged_attributes.update(other.attributes)
 
         if self.schema_url == "":
             schema_url = other.schema_url
@@ -282,7 +287,7 @@ class Resource:
                 other.schema_url,
             )
             return self
-        return Resource(merged_attributes, schema_url)  # type: ignore
+        return Resource(merged_attributes, schema_url)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Resource):
@@ -294,16 +299,13 @@ class Resource:
 
     def __hash__(self) -> int:
         return hash(
-            f"{dumps(self._attributes.copy(), sort_keys=True)}|{self._schema_url}"  # type: ignore
+            f"{dumps(self._attributes.copy(), sort_keys=True)}|{self._schema_url}"
         )
 
     def to_json(self, indent: Optional[int] = 4) -> str:
-        attributes: MutableMapping[str, AttributeValue] = dict(
-            self._attributes
-        )
         return dumps(
             {
-                "attributes": attributes,  # type: ignore
+                "attributes": dict(self.attributes),
                 "schema_url": self._schema_url,
             },
             indent=indent,
@@ -334,7 +336,7 @@ class OTELResourceDetector(ResourceDetector):
     # pylint: disable=no-self-use
     def detect(self) -> "Resource":
         env_resources_items = environ.get(OTEL_RESOURCE_ATTRIBUTES)
-        env_resource_map = {}
+        env_resource_map: dict[str, AttributeValue] = {}
 
         if env_resources_items:
             for item in env_resources_items.split(","):
@@ -392,7 +394,7 @@ class ProcessResourceDetector(ResourceDetector):
             resource_info[PROCESS_PARENT_PID] = os.getppid()
 
         if psutil is not None:
-            process: psutil_module.Process = psutil.Process()
+            process = psutil.Process()
             username = process.username()
             resource_info[PROCESS_OWNER] = username
 
@@ -483,7 +485,7 @@ class OsResourceDetector(ResourceDetector):
         )
 
 
-class _HostResourceDetector(ResourceDetector):
+class _HostResourceDetector(ResourceDetector):  # type: ignore[reportUnusedClass]
     """
     The HostResourceDetector detects the hostname and architecture attributes.
     """

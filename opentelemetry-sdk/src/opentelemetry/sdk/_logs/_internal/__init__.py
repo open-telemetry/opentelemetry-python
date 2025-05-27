@@ -24,7 +24,7 @@ import warnings
 from os import environ
 from threading import Lock
 from time import time_ns
-from typing import Any, Callable, Tuple, Union  # noqa
+from typing import Any, Callable, Tuple, Union, cast  # noqa
 
 from opentelemetry._logs import Logger as APILogger
 from opentelemetry._logs import LoggerProvider as APILoggerProvider
@@ -45,14 +45,15 @@ from opentelemetry.sdk.environment_variables import (
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
-from opentelemetry.semconv.trace import SpanAttributes
+from opentelemetry.semconv._incubating.attributes import code_attributes
+from opentelemetry.semconv.attributes import exception_attributes
 from opentelemetry.trace import (
     format_span_id,
     format_trace_id,
     get_current_span,
 )
 from opentelemetry.trace.span import TraceFlags
-from opentelemetry.util.types import AnyValue, Attributes
+from opentelemetry.util.types import AnyValue, _ExtendedAttributes
 
 _logger = logging.getLogger(__name__)
 
@@ -182,7 +183,7 @@ class LogRecord(APILogRecord):
         severity_number: SeverityNumber | None = None,
         body: AnyValue | None = None,
         resource: Resource | None = None,
-        attributes: Attributes | None = None,
+        attributes: _ExtendedAttributes | None = None,
         limits: LogLimits | None = _UnsetLogLimits,
     ):
         super().__init__(
@@ -200,6 +201,7 @@ class LogRecord(APILogRecord):
                     attributes=attributes if bool(attributes) else None,
                     immutable=False,
                     max_value_len=limits.max_attribute_length,
+                    extended_attributes=True,
                 ),
             }
         )
@@ -250,8 +252,11 @@ class LogRecord(APILogRecord):
 
     @property
     def dropped_attributes(self) -> int:
-        if self.attributes:
-            return self.attributes.dropped
+        attributes: BoundedAttributes = cast(
+            BoundedAttributes, self.attributes
+        )
+        if attributes:
+            return attributes.dropped
         return 0
 
 
@@ -477,28 +482,30 @@ class LoggingHandler(logging.Handler):
         self._logger_provider = logger_provider or get_logger_provider()
 
     @staticmethod
-    def _get_attributes(record: logging.LogRecord) -> Attributes:
+    def _get_attributes(record: logging.LogRecord) -> _ExtendedAttributes:
         attributes = {
             k: v for k, v in vars(record).items() if k not in _RESERVED_ATTRS
         }
 
         # Add standard code attributes for logs.
-        attributes[SpanAttributes.CODE_FILEPATH] = record.pathname
-        attributes[SpanAttributes.CODE_FUNCTION] = record.funcName
-        attributes[SpanAttributes.CODE_LINENO] = record.lineno
+        attributes[code_attributes.CODE_FILE_PATH] = record.pathname
+        attributes[code_attributes.CODE_FUNCTION_NAME] = record.funcName
+        attributes[code_attributes.CODE_LINE_NUMBER] = record.lineno
 
         if record.exc_info:
             exctype, value, tb = record.exc_info
             if exctype is not None:
-                attributes[SpanAttributes.EXCEPTION_TYPE] = exctype.__name__
+                attributes[exception_attributes.EXCEPTION_TYPE] = (
+                    exctype.__name__
+                )
             if value is not None and value.args:
-                attributes[SpanAttributes.EXCEPTION_MESSAGE] = str(
+                attributes[exception_attributes.EXCEPTION_MESSAGE] = str(
                     value.args[0]
                 )
             if tb is not None:
-                # https://github.com/open-telemetry/opentelemetry-specification/blob/9fa7c656b26647b27e485a6af7e38dc716eba98a/specification/trace/semantic_conventions/exceptions.md#stacktrace-representation
-                attributes[SpanAttributes.EXCEPTION_STACKTRACE] = "".join(
-                    traceback.format_exception(*record.exc_info)
+                # https://opentelemetry.io/docs/specs/semconv/exceptions/exceptions-spans/#stacktrace-representation
+                attributes[exception_attributes.EXCEPTION_STACKTRACE] = (
+                    "".join(traceback.format_exception(*record.exc_info))
                 )
         return attributes
 
@@ -636,7 +643,7 @@ class LoggerProvider(APILoggerProvider):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: Attributes | None = None,
+        attributes: _ExtendedAttributes | None = None,
     ) -> Logger:
         return Logger(
             self._resource,
@@ -670,7 +677,7 @@ class LoggerProvider(APILoggerProvider):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: Attributes | None = None,
+        attributes: _ExtendedAttributes | None = None,
     ) -> Logger:
         if self._disabled:
             return NoOpLogger(

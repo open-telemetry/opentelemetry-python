@@ -15,7 +15,7 @@
 from enum import Enum
 from typing import Final
 
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 SYSTEM_CPU_LOGICAL_NUMBER: Final = "system.cpu.logical_number"
 """
@@ -59,7 +59,7 @@ The memory state.
 
 SYSTEM_NETWORK_STATE: Final = "system.network.state"
 """
-Deprecated: Removed, report network connection state with `network.connection.state` attribute.
+Deprecated: Replaced by `network.connection.state`.
 """
 
 SYSTEM_PAGING_DIRECTION: Final = "system.paging.direction"
@@ -89,8 +89,8 @@ Deprecated: Replaced by `system.process.status`.
 
 
 @deprecated(
-    reason="The attribute system.cpu.state is deprecated - Replaced by `cpu.mode`"
-)  # type: ignore
+    "The attribute system.cpu.state is deprecated - Replaced by `cpu.mode`"
+)
 class SystemCpuStateValues(Enum):
     USER = "user"
     """user."""
@@ -146,8 +146,8 @@ class SystemMemoryStateValues(Enum):
 
 
 @deprecated(
-    reason="The attribute system.network.state is deprecated - Removed, report network connection state with `network.connection.state` attribute"
-)  # type: ignore
+    "The attribute system.network.state is deprecated - Replaced by `network.connection.state`"
+)
 class SystemNetworkStateValues(Enum):
     CLOSE = "close"
     """close."""
@@ -208,8 +208,8 @@ class SystemProcessStatusValues(Enum):
 
 
 @deprecated(
-    reason="The attribute system.processes.status is deprecated - Replaced by `system.process.status`"
-)  # type: ignore
+    "The attribute system.processes.status is deprecated - Replaced by `system.process.status`"
+)
 class SystemProcessesStatusValues(Enum):
     RUNNING = "running"
     """running."""

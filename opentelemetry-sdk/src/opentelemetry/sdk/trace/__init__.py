@@ -40,7 +40,7 @@ from typing import (
 )
 from warnings import filterwarnings
 
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 from opentelemetry import context as context_api
 from opentelemetry import trace as trace_api
@@ -474,7 +474,7 @@ class ReadableSpan:
 
     @property
     @deprecated(
-        version="1.11.1", reason="You should use instrumentation_scope"
+        "You should use instrumentation_scope. Deprecated since version 1.11.1."
     )
     def instrumentation_info(self) -> Optional[InstrumentationInfo]:
         return self._instrumentation_info
@@ -1239,8 +1239,7 @@ class TracerProvider(trace_api.TracerProvider):
         filterwarnings(
             "ignore",
             message=(
-                r"Call to deprecated method __init__. \(You should use "
-                r"InstrumentationScope\) -- Deprecated since version 1.11.1."
+                r"You should use InstrumentationScope. Deprecated since version 1.11.1."
             ),
             category=DeprecationWarning,
             module="opentelemetry.sdk.trace",

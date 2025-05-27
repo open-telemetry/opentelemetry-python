@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- typecheck: add sdk/resources and drop mypy
+  ([#4578](https://github.com/open-telemetry/opentelemetry-python/pull/4578))
+- Refactor `BatchLogRecordProcessor` to simplify code and make the control flow more
+  clear ([#4562](https://github.com/open-telemetry/opentelemetry-python/pull/4562/)
+  and [#4535](https://github.com/open-telemetry/opentelemetry-python/pull/4535)).
+- Use PEP702 for marking deprecations
+  ([#4522](https://github.com/open-telemetry/opentelemetry-python/pull/4522))
+- Refactor `BatchLogRecordProcessor` and `BatchSpanProcessor` to simplify code
+  and make the control flow more clear ([#4562](https://github.com/open-telemetry/opentelemetry-python/pull/4562/)
+  [#4535](https://github.com/open-telemetry/opentelemetry-python/pull/4535), and
+  [#4580](https://github.com/open-telemetry/opentelemetry-python/pull/4580)).
+- Remove log messages from `BatchLogRecordProcessor.emit`, this caused the program
+  to crash at shutdown with a max recursion error ([#4586](https://github.com/open-telemetry/opentelemetry-python/pull/4586)).
+- Configurable max retry timeout for grpc exporter
+  ([#4333](https://github.com/open-telemetry/opentelemetry-python/pull/4333))
+- opentelemetry-api: allow importlib-metadata 8.7.0
+  ([#4593](https://github.com/open-telemetry/opentelemetry-python/pull/4593))
+- opentelemetry-test-utils: assert explicit bucket boundaries in histogram metrics
+  ([#4595](https://github.com/open-telemetry/opentelemetry-python/pull/4595))
+- Bump semantic conventions to 1.34.0
+  ([#4599](https://github.com/open-telemetry/opentelemetry-python/pull/4599))
+
+## Version 1.33.0/0.54b0 (2025-05-09)
+
+- Fix intermittent `Connection aborted` error when using otlp/http exporters
+  ([#4477](https://github.com/open-telemetry/opentelemetry-python/pull/4477))
+- opentelemetry-sdk: use stable code attributes: `code.function` -> `code.function.name`, `code.lineno` -> `code.line.number`, `code.filepath` -> `code.file.path`
+  ([#4508](https://github.com/open-telemetry/opentelemetry-python/pull/4508))
+- Fix serialization of extended attributes for logs signal
+  ([#4342](https://github.com/open-telemetry/opentelemetry-python/pull/4342))
+- Handle OTEL_PROPAGATORS contains None
+  ([#4553](https://github.com/open-telemetry/opentelemetry-python/pull/4553))
+- docs: updated and added to the metrics and log examples
+  ([#4559](https://github.com/open-telemetry/opentelemetry-python/pull/4559))
+- Bump semantic conventions to 1.33.0
+  ([#4567](https://github.com/open-telemetry/opentelemetry-python/pull/4567))
+
 ## Version 1.32.0/0.53b0 (2025-04-10)
 
 - Fix user agent in OTLP HTTP metrics exporter
@@ -1522,8 +1559,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Serialize tuple type values by coercing them into a string, since Jaeger does not
   support tuple types.
   ([#865](https://github.com/open-telemetry/opentelemetry-python/pull/865))
-- Validate span attribute types in SDK
-  ([#678](https://github.com/open-telemetry/opentelemetry-python/pull/678))
 - Specify to_json indent from arguments
   ([#718](https://github.com/open-telemetry/opentelemetry-python/pull/718))
 - Span.resource will now default to an empty resource

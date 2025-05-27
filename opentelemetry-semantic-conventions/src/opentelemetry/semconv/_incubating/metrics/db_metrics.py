@@ -176,7 +176,7 @@ def create_db_client_connection_wait_time(meter: Meter) -> Histogram:
 
 DB_CLIENT_CONNECTIONS_CREATE_TIME: Final = "db.client.connections.create_time"
 """
-Deprecated: Replaced by `db.client.connection.create_time`. Note: the unit also changed from `ms` to `s`.
+Deprecated: Replaced by `db.client.connection.create_time` with unit `s`.
 """
 
 
@@ -285,7 +285,7 @@ def create_db_client_connections_usage(meter: Meter) -> UpDownCounter:
 
 DB_CLIENT_CONNECTIONS_USE_TIME: Final = "db.client.connections.use_time"
 """
-Deprecated: Replaced by `db.client.connection.use_time`. Note: the unit also changed from `ms` to `s`.
+Deprecated: Replaced by `db.client.connection.use_time` with unit `s`.
 """
 
 
@@ -300,7 +300,7 @@ def create_db_client_connections_use_time(meter: Meter) -> Histogram:
 
 DB_CLIENT_CONNECTIONS_WAIT_TIME: Final = "db.client.connections.wait_time"
 """
-Deprecated: Replaced by `db.client.connection.wait_time`. Note: the unit also changed from `ms` to `s`.
+Deprecated: Replaced by `db.client.connection.wait_time` with unit `s`.
 """
 
 
@@ -353,10 +353,7 @@ def create_db_client_cosmosdb_operation_request_charge(
 
 DB_CLIENT_OPERATION_DURATION: Final = "db.client.operation.duration"
 """
-Duration of database client operations
-Instrument: histogram
-Unit: s
-Note: Batch operations SHOULD be recorded as a single operation.
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.metrics.db_metrics.DB_CLIENT_OPERATION_DURATION`.
 """
 
 

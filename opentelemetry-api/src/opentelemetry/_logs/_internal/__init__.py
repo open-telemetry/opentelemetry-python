@@ -37,14 +37,14 @@ from abc import ABC, abstractmethod
 from logging import getLogger
 from os import environ
 from time import time_ns
-from typing import Any, Optional, cast
+from typing import Optional, cast
 
 from opentelemetry._logs.severity import SeverityNumber
 from opentelemetry.environment_variables import _OTEL_PYTHON_LOGGER_PROVIDER
 from opentelemetry.trace.span import TraceFlags
 from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
-from opentelemetry.util.types import Attributes
+from opentelemetry.util.types import AnyValue, _ExtendedAttributes
 
 _logger = getLogger(__name__)
 
@@ -66,8 +66,8 @@ class LogRecord(ABC):
         trace_flags: Optional["TraceFlags"] = None,
         severity_text: Optional[str] = None,
         severity_number: Optional[SeverityNumber] = None,
-        body: Optional[Any] = None,
-        attributes: Optional["Attributes"] = None,
+        body: AnyValue = None,
+        attributes: Optional[_ExtendedAttributes] = None,
     ):
         self.timestamp = timestamp
         if observed_timestamp is None:
@@ -78,7 +78,7 @@ class LogRecord(ABC):
         self.trace_flags = trace_flags
         self.severity_text = severity_text
         self.severity_number = severity_number
-        self.body = body  # type: ignore
+        self.body = body
         self.attributes = attributes
 
 
@@ -90,7 +90,7 @@ class Logger(ABC):
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
-        attributes: Optional[Attributes] = None,
+        attributes: Optional[_ExtendedAttributes] = None,
     ) -> None:
         super().__init__()
         self._name = name
@@ -119,7 +119,7 @@ class ProxyLogger(Logger):
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
-        attributes: Optional[Attributes] = None,
+        attributes: Optional[_ExtendedAttributes] = None,
     ):
         self._name = name
         self._version = version
@@ -158,33 +158,34 @@ class LoggerProvider(ABC):
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
-        attributes: Optional[Attributes] = None,
+        attributes: Optional[_ExtendedAttributes] = None,
     ) -> Logger:
         """Returns a `Logger` for use by the given instrumentation library.
 
-        For any two calls it is undefined whether the same or different
-        `Logger` instances are returned, even for different library names.
+        For any two calls with identical parameters, it is undefined whether the same
+        or different `Logger` instances are returned.
 
         This function may return different `Logger` types (e.g. a no-op logger
         vs. a functional logger).
 
         Args:
-            name: The name of the instrumenting module.
-                ``__name__`` may not be used as this can result in
-                different logger names if the loggers are in different files.
-                It is better to use a fixed string that can be imported where
-                needed and used consistently as the name of the logger.
-
-                This should *not* be the name of the module that is
-                instrumented but the name of the module doing the instrumentation.
+            name: The name of the instrumenting module, package or class.
+                This should *not* be the name of the module, package or class that is
+                instrumented but the name of the code doing the instrumentation.
                 E.g., instead of ``"requests"``, use
                 ``"opentelemetry.instrumentation.requests"``.
+
+                For log sources which define a logger name (e.g. logging.Logger.name)
+                the Logger Name should be recorded as the instrumentation scope name.
 
             version: Optional. The version string of the
                 instrumenting library.  Usually this should be the same as
                 ``importlib.metadata.version(instrumenting_library_name)``.
 
             schema_url: Optional. Specifies the Schema URL of the emitted telemetry.
+
+            attributes: Optional. Specifies the instrumentation scope attributes to
+                associate with emitted telemetry.
         """
 
 
@@ -196,7 +197,7 @@ class NoOpLoggerProvider(LoggerProvider):
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
-        attributes: Optional[Attributes] = None,
+        attributes: Optional[_ExtendedAttributes] = None,
     ) -> Logger:
         """Returns a NoOpLogger."""
         return NoOpLogger(
@@ -210,7 +211,7 @@ class ProxyLoggerProvider(LoggerProvider):
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
-        attributes: Optional[Attributes] = None,
+        attributes: Optional[_ExtendedAttributes] = None,
     ) -> Logger:
         if _LOGGER_PROVIDER:
             return _LOGGER_PROVIDER.get_logger(
@@ -273,7 +274,7 @@ def get_logger(
     instrumenting_library_version: str = "",
     logger_provider: Optional[LoggerProvider] = None,
     schema_url: Optional[str] = None,
-    attributes: Optional[Attributes] = None,
+    attributes: Optional[_ExtendedAttributes] = None,
 ) -> "Logger":
     """Returns a `Logger` for use within a python process.
 
