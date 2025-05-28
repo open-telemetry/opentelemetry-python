@@ -15,7 +15,7 @@
 from enum import Enum
 from typing import Final
 
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 NETWORK_CARRIER_ICC: Final = "network.carrier.icc"
 """
@@ -195,8 +195,8 @@ class NetworkIoDirectionValues(Enum):
 
 
 @deprecated(
-    reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTransportValues`."
-)  # type: ignore
+    "Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTransportValues`."
+)
 class NetworkTransportValues(Enum):
     TCP = "tcp"
     """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTransportValues.TCP`."""
@@ -207,12 +207,12 @@ class NetworkTransportValues(Enum):
     UNIX = "unix"
     """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTransportValues.UNIX`."""
     QUIC = "quic"
-    """QUIC."""
+    """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTransportValues.QUIC`."""
 
 
 @deprecated(
-    reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTypeValues`."
-)  # type: ignore
+    "Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTypeValues`."
+)
 class NetworkTypeValues(Enum):
     IPV4 = "ipv4"
     """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NetworkTypeValues.IPV4`."""

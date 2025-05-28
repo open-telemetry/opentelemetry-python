@@ -15,7 +15,7 @@
 from enum import Enum
 from typing import Final
 
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 VCS_CHANGE_ID: Final = "vcs.change.id"
 """
@@ -118,12 +118,12 @@ The type of the [reference](https://git-scm.com/docs/gitglossary#def_ref) in the
 
 VCS_REPOSITORY_CHANGE_ID: Final = "vcs.repository.change.id"
 """
-Deprecated: Deprecated, use `vcs.change.id` instead.
+Deprecated: Replaced by `vcs.change.id`.
 """
 
 VCS_REPOSITORY_CHANGE_TITLE: Final = "vcs.repository.change.title"
 """
-Deprecated: Deprecated, use `vcs.change.title` instead.
+Deprecated: Replaced by `vcs.change.title`.
 """
 
 VCS_REPOSITORY_NAME: Final = "vcs.repository.name"
@@ -136,17 +136,17 @@ the same backends.
 
 VCS_REPOSITORY_REF_NAME: Final = "vcs.repository.ref.name"
 """
-Deprecated: Deprecated, use `vcs.ref.head.name` instead.
+Deprecated: Replaced by `vcs.ref.head.name`.
 """
 
 VCS_REPOSITORY_REF_REVISION: Final = "vcs.repository.ref.revision"
 """
-Deprecated: Deprecated, use `vcs.ref.head.revision` instead.
+Deprecated: Replaced by `vcs.ref.head.revision`.
 """
 
 VCS_REPOSITORY_REF_TYPE: Final = "vcs.repository.ref.type"
 """
-Deprecated: Deprecated, use `vcs.ref.head.type` instead.
+Deprecated: Replaced by `vcs.ref.head.type`.
 """
 
 VCS_REPOSITORY_URL_FULL: Final = "vcs.repository.url.full"
@@ -215,8 +215,8 @@ class VcsRefTypeValues(Enum):
 
 
 @deprecated(
-    reason="The attribute vcs.repository.ref.type is deprecated - Deprecated, use `vcs.ref.head.type` instead"
-)  # type: ignore
+    "The attribute vcs.repository.ref.type is deprecated - Replaced by `vcs.ref.head.type`"
+)
 class VcsRepositoryRefTypeValues(Enum):
     BRANCH = "branch"
     """[branch](https://git-scm.com/docs/gitglossary#Documentation/gitglossary.txt-aiddefbranchabranch)."""

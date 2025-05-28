@@ -15,7 +15,7 @@
 from enum import Enum
 from typing import Final
 
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 OTEL_COMPONENT_NAME: Final = "otel.component.name"
 """
@@ -44,12 +44,12 @@ E.g. for Java the fully qualified classname SHOULD be used in this case.
 
 OTEL_LIBRARY_NAME: Final = "otel.library.name"
 """
-Deprecated: Use the `otel.scope.name` attribute.
+Deprecated: Replaced by `otel.scope.name`.
 """
 
 OTEL_LIBRARY_VERSION: Final = "otel.library.version"
 """
-Deprecated: Use the `otel.scope.version` attribute.
+Deprecated: Replaced by `otel.scope.version`.
 """
 
 OTEL_SCOPE_NAME: Final = "otel.scope.name"
@@ -119,8 +119,8 @@ class OtelSpanSamplingResultValues(Enum):
 
 
 @deprecated(
-    reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.otel_attributes.OtelStatusCodeValues`."
-)  # type: ignore
+    "Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.otel_attributes.OtelStatusCodeValues`."
+)
 class OtelStatusCodeValues(Enum):
     OK = "OK"
     """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.otel_attributes.OtelStatusCodeValues.OK`."""

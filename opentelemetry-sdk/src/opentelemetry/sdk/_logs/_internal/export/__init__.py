@@ -192,7 +192,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
     def shutdown(self):
         return self._batch_processor.shutdown()
 
-    def force_flush(self, timeout_millis: Optional[int] = None):
+    def force_flush(self, timeout_millis: Optional[int] = None) -> bool:
         return self._batch_processor.force_flush(timeout_millis)
 
     @staticmethod

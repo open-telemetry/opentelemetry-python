@@ -15,7 +15,7 @@
 from enum import Enum
 from typing import Final
 
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 PROCESS_ARGS_COUNT: Final = "process.args_count"
 """
@@ -30,12 +30,12 @@ The command used to launch the process (i.e. the command name). On Linux based s
 
 PROCESS_COMMAND_ARGS: Final = "process.command_args"
 """
-All the command arguments (including the command/executable itself) as received by the process. On Linux-based systems (and some other Unixoid systems supporting procfs), can be set according to the list of null-delimited strings extracted from `proc/[pid]/cmdline`. For libc-based executables, this would be the full argv vector passed to `main`.
+All the command arguments (including the command/executable itself) as received by the process. On Linux-based systems (and some other Unixoid systems supporting procfs), can be set according to the list of null-delimited strings extracted from `proc/[pid]/cmdline`. For libc-based executables, this would be the full argv vector passed to `main`. SHOULD NOT be collected by default unless there is sanitization that excludes sensitive data.
 """
 
 PROCESS_COMMAND_LINE: Final = "process.command_line"
 """
-The full command used to launch the process as a single string representing the full command. On Windows, can be set to the result of `GetCommandLineW`. Do not set this if you have to assemble it just for monitoring; use `process.command_args` instead.
+The full command used to launch the process as a single string representing the full command. On Windows, can be set to the result of `GetCommandLineW`. Do not set this if you have to assemble it just for monitoring; use `process.command_args` instead. SHOULD NOT be collected by default unless there is sanitization that excludes sensitive data.
 """
 
 PROCESS_CONTEXT_SWITCH_TYPE: Final = "process.context_switch_type"
@@ -222,8 +222,8 @@ class ProcessContextSwitchTypeValues(Enum):
 
 
 @deprecated(
-    reason="The attribute process.cpu.state is deprecated - Replaced by `cpu.mode`"
-)  # type: ignore
+    "The attribute process.cpu.state is deprecated - Replaced by `cpu.mode`"
+)
 class ProcessCpuStateValues(Enum):
     SYSTEM = "system"
     """system."""

@@ -48,7 +48,7 @@ Telemetry = TypeVar("Telemetry")
 
 class Exporter(Protocol[Telemetry]):
     @abstractmethod
-    def export(self, batch: list[Telemetry]):
+    def export(self, batch: list[Telemetry], /):
         raise NotImplementedError
 
     @abstractmethod
@@ -167,15 +167,15 @@ class BatchProcessor(Generic[Telemetry]):
                     )
                 detach(token)
 
+    # Do not add any logging.log statements to this function, they can be being routed back to this `emit` function,
+    # resulting in endless recursive calls that crash the program.
+    # See https://github.com/open-telemetry/opentelemetry-python/issues/4261
     def emit(self, data: Telemetry) -> None:
         if self._shutdown:
-            self._logger.info("Shutdown called, ignoring %s.", self._exporting)
             return
         if self._pid != os.getpid():
             self._bsp_reset_once.do_once(self._at_fork_reinit)
-
-        if len(self._queue) == self._max_queue_size:
-            self._logger.warning("Queue full, dropping %s.", self._exporting)
+        # This will drop a log from the right side if the queue is at _max_queue_length.
         self._queue.appendleft(data)
         if len(self._queue) >= self._max_export_batch_size:
             self._worker_awaken.set()
@@ -191,8 +191,10 @@ class BatchProcessor(Generic[Telemetry]):
         self._worker_thread.join()
         self._exporter.shutdown()
 
-    def force_flush(self, timeout_millis: Optional[int] = None):
+    # TODO: Fix force flush so the timeout is used https://github.com/open-telemetry/opentelemetry-python/issues/4568.
+    def force_flush(self, timeout_millis: Optional[int] = None) -> bool:
         if self._shutdown:
-            return
+            return False
         # Blocking call to export.
         self._export(BatchExportStrategy.EXPORT_ALL)
+        return True

@@ -15,7 +15,7 @@
 from enum import Enum
 from typing import Final
 
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 GEN_AI_AGENT_DESCRIPTION: Final = "gen_ai.agent.description"
 """
@@ -37,6 +37,17 @@ GEN_AI_COMPLETION: Final = "gen_ai.completion"
 Deprecated: Removed, no replacement at this time.
 """
 
+GEN_AI_CONVERSATION_ID: Final = "gen_ai.conversation.id"
+"""
+The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation.
+"""
+
+GEN_AI_DATA_SOURCE_ID: Final = "gen_ai.data_source.id"
+"""
+The data source identifier.
+Note: Data sources are used by AI agents and RAG applications to store grounding data. A data source may be an external database, object store, document collection, website, or any other storage system used by the GenAI agent or application. The `gen_ai.data_source.id` SHOULD match the identifier used by the GenAI system rather than a name specific to the external storage, such as a database or object store. Semantic conventions referencing `gen_ai.data_source.id` MAY also leverage additional attributes, such as `db.*`, to further identify and describe the data source.
+"""
+
 GEN_AI_OPENAI_REQUEST_RESPONSE_FORMAT: Final = (
     "gen_ai.openai.request.response_format"
 )
@@ -46,7 +57,7 @@ Deprecated: Replaced by `gen_ai.output.type`.
 
 GEN_AI_OPENAI_REQUEST_SEED: Final = "gen_ai.openai.request.seed"
 """
-Deprecated: Replaced by `gen_ai.request.seed` attribute.
+Deprecated: Replaced by `gen_ai.request.seed`.
 """
 
 GEN_AI_OPENAI_REQUEST_SERVICE_TIER: Final = (
@@ -208,7 +219,7 @@ Datastore: A tool used by the agent to access and query structured or unstructur
 
 GEN_AI_USAGE_COMPLETION_TOKENS: Final = "gen_ai.usage.completion_tokens"
 """
-Deprecated: Replaced by `gen_ai.usage.output_tokens` attribute.
+Deprecated: Replaced by `gen_ai.usage.output_tokens`.
 """
 
 GEN_AI_USAGE_INPUT_TOKENS: Final = "gen_ai.usage.input_tokens"
@@ -223,13 +234,13 @@ The number of tokens used in the GenAI response (completion).
 
 GEN_AI_USAGE_PROMPT_TOKENS: Final = "gen_ai.usage.prompt_tokens"
 """
-Deprecated: Replaced by `gen_ai.usage.input_tokens` attribute.
+Deprecated: Replaced by `gen_ai.usage.input_tokens`.
 """
 
 
 @deprecated(
-    reason="The attribute gen_ai.openai.request.response_format is deprecated - Replaced by `gen_ai.output.type`"
-)  # type: ignore
+    "The attribute gen_ai.openai.request.response_format is deprecated - Replaced by `gen_ai.output.type`"
+)
 class GenAiOpenaiRequestResponseFormatValues(Enum):
     TEXT = "text"
     """Text response format."""
