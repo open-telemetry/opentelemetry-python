@@ -95,26 +95,17 @@ class TestLoggingHandler(unittest.TestCase):
 
     def test_log_record_no_span_context(self):
         processor, logger = set_up_test_logging(logging.WARNING)
-        mock_context = Context()
+        with self.assertLogs(level=logging.WARNING):
+            logger.warning("Warning message")
 
-        with patch(
-            "opentelemetry.sdk._logs._internal.get_current",
-            return_value=mock_context,
-        ):
-            # Assert emit gets called for warning message
-            with self.assertLogs(level=logging.WARNING):
-                logger.warning("Warning message")
+        log_record = processor.get_log_record(0)
 
-            log_record = processor.get_log_record(0)
-
-            self.assertIsNotNone(log_record)
-            self.assertEqual(
-                log_record.trace_id, INVALID_SPAN_CONTEXT.trace_id
-            )
-            self.assertEqual(log_record.span_id, INVALID_SPAN_CONTEXT.span_id)
-            self.assertEqual(
-                log_record.trace_flags, INVALID_SPAN_CONTEXT.trace_flags
-            )
+        self.assertIsNotNone(log_record)
+        self.assertEqual(log_record.trace_id, INVALID_SPAN_CONTEXT.trace_id)
+        self.assertEqual(log_record.span_id, INVALID_SPAN_CONTEXT.span_id)
+        self.assertEqual(
+            log_record.trace_flags, INVALID_SPAN_CONTEXT.trace_flags
+        )
 
     def test_log_record_observed_timestamp(self):
         processor, logger = set_up_test_logging(logging.WARNING)
