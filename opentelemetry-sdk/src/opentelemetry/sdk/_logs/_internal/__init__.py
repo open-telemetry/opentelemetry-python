@@ -235,19 +235,6 @@ class LogRecord(APILogRecord):
             return NotImplemented
         return self.__dict__ == other.__dict__
 
-    def serialized_context(self) -> dict:
-        """Returns JSON-serializable copy of stored Context"""
-        context_dict = {}
-        if self.context is not None:
-            for key, value in self.context.items():
-                try:
-                    json.dumps(value)
-                    context_dict[key] = value
-                except TypeError:
-                    # If not JSON-serializable, use string representation
-                    context_dict[key] = str(value)
-        return context_dict
-
     def to_json(self, indent: int | None = 4) -> str:
         return json.dumps(
             {
@@ -262,7 +249,6 @@ class LogRecord(APILogRecord):
                 "dropped_attributes": self.dropped_attributes,
                 "timestamp": ns_to_iso_str(self.timestamp),
                 "observed_timestamp": ns_to_iso_str(self.observed_timestamp),
-                "context": self.serialized_context(),
                 "trace_id": (
                     f"0x{format_trace_id(self.trace_id)}"
                     if self.trace_id is not None
