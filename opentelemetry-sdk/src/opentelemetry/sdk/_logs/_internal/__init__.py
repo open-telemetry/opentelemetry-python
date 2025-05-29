@@ -21,10 +21,11 @@ import logging
 import threading
 import traceback
 import warnings
+from functools import wraps
 from os import environ
 from threading import Lock
 from time import time_ns
-from typing import Any, Callable, Tuple, Union, cast  # noqa
+from typing import Any, Callable, Tuple, Union, cast, overload  # noqa
 
 from opentelemetry._logs import Logger as APILogger
 from opentelemetry._logs import LoggerProvider as APILoggerProvider
@@ -166,6 +167,19 @@ _UnsetLogLimits = LogLimits(
 )
 
 
+def deprecated(message):
+    # Custom "deprecated" decorator compatible with Python < 3.13
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            warnings.warn(message, DeprecationWarning, stacklevel=2)
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
 class LogRecord(APILogRecord):
     """A LogRecord instance represents an event being logged.
 
@@ -173,6 +187,39 @@ class LogRecord(APILogRecord):
     every time something is logged. They contain all the information
     pertinent to the event being logged.
     """
+
+    @overload
+    def __init__(
+        self,
+        timestamp: int | None = None,
+        observed_timestamp: int | None = None,
+        context: Context | None = None,
+        severity_text: str | None = None,
+        severity_number: SeverityNumber | None = None,
+        body: AnyValue | None = None,
+        resource: Resource | None = None,
+        attributes: _ExtendedAttributes | None = None,
+        limits: LogLimits | None = _UnsetLogLimits,
+    ): ...
+
+    @overload
+    @deprecated(
+        "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated. Use `context` instead."
+    )
+    def __init__(
+        self,
+        timestamp: int | None = None,
+        observed_timestamp: int | None = None,
+        trace_id: int | None = None,
+        span_id: int | None = None,
+        trace_flags: TraceFlags | None = None,
+        severity_text: str | None = None,
+        severity_number: SeverityNumber | None = None,
+        body: AnyValue | None = None,
+        resource: Resource | None = None,
+        attributes: _ExtendedAttributes | None = None,
+        limits: LogLimits | None = _UnsetLogLimits,
+    ): ...
 
     def __init__(
         self,
@@ -189,9 +236,9 @@ class LogRecord(APILogRecord):
         attributes: _ExtendedAttributes | None = None,
         limits: LogLimits | None = _UnsetLogLimits,
     ):
-        # Prioritizes context over trace_id / span_id / trace_flags.
-        # If context provided and its current span valid, then uses that span info.
-        # Otherwise, uses provided trace_id etc for backwards compatibility.
+        if not context:
+            context = get_current()
+
         if context is not None:
             span = get_current_span(context)
             span_context = span.get_span_context()
@@ -563,7 +610,6 @@ class LoggingHandler(logging.Handler):
         return LogRecord(
             timestamp=timestamp,
             observed_timestamp=observered_timestamp,
-            context=get_current(),
             trace_id=span_context.trace_id,
             span_id=span_context.span_id,
             trace_flags=span_context.trace_flags,
