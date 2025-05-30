@@ -21,11 +21,12 @@ import logging
 import threading
 import traceback
 import warnings
-from functools import wraps
 from os import environ
 from threading import Lock
 from time import time_ns
 from typing import Any, Callable, Tuple, Union, cast, overload  # noqa
+
+from typing_extensions import deprecated
 
 from opentelemetry._logs import Logger as APILogger
 from opentelemetry._logs import LoggerProvider as APILoggerProvider
@@ -165,19 +166,6 @@ _UnsetLogLimits = LogLimits(
     max_attributes=LogLimits.UNSET,
     max_attribute_length=LogLimits.UNSET,
 )
-
-
-def deprecated(message):
-    # Custom "deprecated" decorator compatible with Python < 3.13
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            warnings.warn(message, DeprecationWarning, stacklevel=2)
-            return func(*args, **kwargs)
-
-        return wrapper
-
-    return decorator
 
 
 class LogRecord(APILogRecord):
