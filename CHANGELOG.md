@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Update ConsoleLogExporter.export to handle LogRecord's containing bytes type
+  in the body ([#4614](https://github.com/open-telemetry/opentelemetry-python/pull/4614/)).
+  
 ## Version 1.34.0/0.55b0 (2025-06-04)
 
 - typecheck: add sdk/resources and drop mypy
