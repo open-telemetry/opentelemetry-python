@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Update ConsoleLogExporter.export to handle LogRecord's containing bytes type
+  in the body ([#4614](https://github.com/open-telemetry/opentelemetry-python/pull/4614/)).
 - typecheck: add sdk/resources and drop mypy
   ([#4578](https://github.com/open-telemetry/opentelemetry-python/pull/4578))
 - Refactor `BatchLogRecordProcessor` to simplify code and make the control flow more
