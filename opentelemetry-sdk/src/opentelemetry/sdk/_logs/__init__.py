@@ -14,7 +14,6 @@
 
 
 from opentelemetry.sdk._logs._internal import (
-    BytesEncoder,
     LogData,
     LogDroppedAttributesWarning,
     Logger,
@@ -26,7 +25,6 @@ from opentelemetry.sdk._logs._internal import (
 )
 
 __all__ = [
-    "BytesEncoder",
     "LogData",
     "Logger",
     "LoggerProvider",
