@@ -22,6 +22,7 @@ from opentelemetry.sdk._logs import (
     LogDroppedAttributesWarning,
     LogLimits,
     LogRecord,
+    BytesEncoder,
 )
 from opentelemetry.sdk.resources import Resource
 
@@ -30,7 +31,7 @@ class TestLogRecord(unittest.TestCase):
     def test_log_record_to_json(self):
         expected = json.dumps(
             {
-                "body": "a log line",
+                "body": {'key': 'logLine', 'bytes': b'123'},
                 "severity_number": None,
                 "severity_text": None,
                 "attributes": {
@@ -51,11 +52,12 @@ class TestLogRecord(unittest.TestCase):
                 },
             },
             indent=4,
+            cls=BytesEncoder,
         )
         actual = LogRecord(
             timestamp=0,
             observed_timestamp=0,
-            body="a log line",
+            body={'key': 'logLine', 'bytes': b'123'},
             resource=Resource({"service.name": "foo"}),
             attributes={
                 "mapping": {"key": "value"},
