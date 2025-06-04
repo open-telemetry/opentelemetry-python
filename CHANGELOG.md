@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## Version 1.34.0/0.55b0 (2025-06-04)
+
 - typecheck: add sdk/resources and drop mypy
   ([#4578](https://github.com/open-telemetry/opentelemetry-python/pull/4578))
 - Refactor `BatchLogRecordProcessor` to simplify code and make the control flow more
