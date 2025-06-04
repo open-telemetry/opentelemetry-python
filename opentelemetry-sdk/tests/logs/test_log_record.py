@@ -19,10 +19,10 @@ import warnings
 from opentelemetry._logs.severity import SeverityNumber
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk._logs import (
+    BytesEncoder,
     LogDroppedAttributesWarning,
     LogLimits,
     LogRecord,
-    BytesEncoder,
 )
 from opentelemetry.sdk.resources import Resource
 
@@ -31,7 +31,7 @@ class TestLogRecord(unittest.TestCase):
     def test_log_record_to_json(self):
         expected = json.dumps(
             {
-                "body": {'key': 'logLine', 'bytes': b'123'},
+                "body": {"key": "logLine", "bytes": b"123"},
                 "severity_number": None,
                 "severity_text": None,
                 "attributes": {
@@ -57,7 +57,7 @@ class TestLogRecord(unittest.TestCase):
         actual = LogRecord(
             timestamp=0,
             observed_timestamp=0,
-            body={'key': 'logLine', 'bytes': b'123'},
+            body={"key": "logLine", "bytes": b"123"},
             resource=Resource({"service.name": "foo"}),
             attributes={
                 "mapping": {"key": "value"},
@@ -70,7 +70,7 @@ class TestLogRecord(unittest.TestCase):
         self.assertEqual(expected, actual.to_json(indent=4))
         self.assertEqual(
             actual.to_json(indent=None),
-            '{"body": "a log line", "severity_number": null, "severity_text": null, "attributes": {"mapping": {"key": "value"}, "none": null, "sequence": [1, 2], "str": "string"}, "dropped_attributes": 0, "timestamp": "1970-01-01T00:00:00.000000Z", "observed_timestamp": "1970-01-01T00:00:00.000000Z", "trace_id": "", "span_id": "", "trace_flags": null, "resource": {"attributes": {"service.name": "foo"}, "schema_url": ""}}',
+            '{"body": {"key": "logLine", "bytes": "MTIz"}, "severity_number": null, "severity_text": null, "attributes": {"mapping": {"key": "value"}, "none": null, "sequence": [1, 2], "str": "string"}, "dropped_attributes": 0, "timestamp": "1970-01-01T00:00:00.000000Z", "observed_timestamp": "1970-01-01T00:00:00.000000Z", "trace_id": "", "span_id": "", "trace_flags": null, "resource": {"attributes": {"service.name": "foo"}, "schema_url": ""}}',
         )
 
     def test_log_record_to_json_serializes_severity_number_as_int(self):

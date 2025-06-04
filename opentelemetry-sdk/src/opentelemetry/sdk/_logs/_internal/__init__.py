@@ -15,12 +15,12 @@ from __future__ import annotations
 
 import abc
 import atexit
+import base64
 import concurrent.futures
 import json
 import logging
 import threading
 import traceback
-import base64
 import warnings
 from os import environ
 from threading import Lock
@@ -60,6 +60,7 @@ _logger = logging.getLogger(__name__)
 
 _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
 _ENV_VALUE_UNSET = ""
+
 
 class BytesEncoder(json.JSONEncoder):
     def default(self, o):
