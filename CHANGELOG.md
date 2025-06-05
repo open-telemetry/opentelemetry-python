@@ -7,14 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-## Version 1.34.0/0.55b0 (2025-06-04)
-
-- typecheck: add sdk/resources and drop mypy
-  ([#4578](https://github.com/open-telemetry/opentelemetry-python/pull/4578))
 - Update OTLP gRPC/HTTP exporters: the export timeout is now inclusive of all retries and backoffs.
   A +/-20% jitter was added to all backoffs. A pointless 32 second sleep that occurred after all retries
   had completed/failed was removed.
   ([#4564](https://github.com/open-telemetry/opentelemetry-python/pull/4564)).
+
+## Version 1.34.0/0.55b0 (2025-06-04)
+
+- typecheck: add sdk/resources and drop mypy
+  ([#4578](https://github.com/open-telemetry/opentelemetry-python/pull/4578))
 - Use PEP702 for marking deprecations
   ([#4522](https://github.com/open-telemetry/opentelemetry-python/pull/4522))
 - Refactor `BatchLogRecordProcessor` and `BatchSpanProcessor` to simplify code
