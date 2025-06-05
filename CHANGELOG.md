@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- opentelemetry-sdk: Fix invalid `type: ignore` that causes mypy to ignore the whole file
+  ([#4618](https://github.com/open-telemetry/opentelemetry-python/pull/4618))
+
 ## Version 1.34.0/0.55b0 (2025-06-04)
 
 - typecheck: add sdk/resources and drop mypy
