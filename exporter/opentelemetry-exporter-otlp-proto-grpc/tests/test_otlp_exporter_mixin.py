@@ -15,7 +15,7 @@
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
-from logging import WARNING
+from logging import WARNING, getLogger
 from typing import Any, Optional, Sequence
 from unittest import TestCase
 from unittest.mock import Mock, patch
@@ -55,6 +55,8 @@ from opentelemetry.sdk.trace.export import (
     SpanExportResult,
 )
 
+logger = getLogger(__name__)
+
 
 # The below tests use this test SpanExporter and Spans, but are testing the
 # underlying behavior in the mixin. A MetricExporter or LogExporter could
@@ -88,38 +90,33 @@ class TraceServiceServicerWithExportParams(TraceServiceServicer):
     def __init__(
         self,
         export_result: StatusCode,
+        optional_retry_millis: Optional[int] = None,
         optional_export_sleep: Optional[float] = None,
-        optional_export_retry_millis: Optional[float] = None,
     ):
         self.export_result = export_result
         self.optional_export_sleep = optional_export_sleep
-        self.optional_export_retry_millis = optional_export_retry_millis
+        self.optional_retry_millis = optional_retry_millis
+        self.num_requests = 0
 
     # pylint: disable=invalid-name,unused-argument
     def Export(self, request, context):
+        self.num_requests += 1
         if self.optional_export_sleep:
             time.sleep(self.optional_export_sleep)
-        if self.optional_export_retry_millis:
-            context.send_initial_metadata(
-                (
+        if self.export_result != StatusCode.OK:
+            if self.optional_retry_millis:
+                context.set_trailing_metadata(
                     (
-                        "google.rpc.retryinfo-bin",
-                        RetryInfo().SerializeToString(),
-                    ),
+                        (
+                            "google.rpc.retryinfo-bin",
+                            RetryInfo(
+                                retry_delay=Duration(
+                                    nanos=self.optional_retry_millis
+                                )
+                            ).SerializeToString(),
+                        ),
+                    )
                 )
-            )
-            context.set_trailing_metadata(
-                (
-                    (
-                        "google.rpc.retryinfo-bin",
-                        RetryInfo(
-                            retry_delay=Duration(
-                                nanos=int(self.optional_export_retry_millis)
-                            )
-                        ).SerializeToString(),
-                    ),
-                )
-            )
         context.set_code(self.export_result)
 
         return ExportTraceServiceResponse()
@@ -268,7 +265,8 @@ class TestOTLPExporterMixin(TestCase):
         """No env or kwarg should be NoCompression"""
         OTLPSpanExporterForTesting(insecure=True)
         mock_insecure_channel.assert_called_once_with(
-            "localhost:4317", compression=Compression.NoCompression
+            "localhost:4317",
+            compression=Compression.NoCompression,
         )
 
     # pylint: disable=no-self-use, disable=unused-argument
@@ -372,52 +370,71 @@ class TestOTLPExporterMixin(TestCase):
             str(err.exception), "Cannot invoke RPC on closed channel!"
         )
 
-    @patch(
-        "opentelemetry.exporter.otlp.proto.grpc.exporter._create_exp_backoff_generator"
-    )
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
-    def test_unavailable(self, mock_sleep, mock_expo):
-        mock_expo.configure_mock(**{"return_value": [0.01]})
-
+    def test_retry_info_is_respected(self):
+        mock_trace_service = TraceServiceServicerWithExportParams(
+            StatusCode.UNAVAILABLE, optional_retry_millis=200
+        )
         add_TraceServiceServicer_to_server(
-            TraceServiceServicerWithExportParams(StatusCode.UNAVAILABLE),
+            mock_trace_service,
             self.server,
         )
-        result = self.exporter.export([self.span])
-        self.assertEqual(result, SpanExportResult.FAILURE)
-        mock_sleep.assert_called_with(0.01)
+        exporter = OTLPSpanExporterForTesting(insecure=True, timeout=10)
+        before = time.time()
+        self.assertEqual(
+            exporter.export([self.span]),
+            SpanExportResult.FAILURE,
+        )
+        after = time.time()
+        self.assertEqual(mock_trace_service.num_requests, 6)
+        # 200 * 5 = 1 second, plus some wiggle room so the test passes consistently.
+        self.assertTrue(after - before < 1.1)
 
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
-    def test_unavailable_delay(self, mock_sleep):
+    def test_retry_not_made_if_would_exceed_timeout(self):
+        mock_trace_service = TraceServiceServicerWithExportParams(
+            StatusCode.UNAVAILABLE
+        )
         add_TraceServiceServicer_to_server(
-            TraceServiceServicerWithExportParams(
-                StatusCode.UNAVAILABLE,
-                optional_export_sleep=None,
-                optional_export_retry_millis=1e7,
-            ),
+            mock_trace_service,
             self.server,
         )
+        exporter = OTLPSpanExporterForTesting(insecure=True, timeout=4)
+        before = time.time()
+        self.assertEqual(
+            exporter.export([self.span]),
+            SpanExportResult.FAILURE,
+        )
+        after = time.time()
+        # Our retry starts with a 1 second backoff then doubles.
+        # First call at time 0, second at time 1, third at time 3, fourth would exceed timeout.
+        self.assertEqual(mock_trace_service.num_requests, 3)
+        # There's a +/-20% jitter on each backoff.
+        self.assertTrue(after - before < 3.7)
+
+    def test_timeout_set_correctly(self):
+        mock_trace_service = TraceServiceServicerWithExportParams(
+            StatusCode.OK, optional_export_sleep=0.5
+        )
+        add_TraceServiceServicer_to_server(
+            mock_trace_service,
+            self.server,
+        )
+        exporter = OTLPSpanExporterForTesting(insecure=True, timeout=0.4)
+        # Should timeout. Deadline should be set to now + timeout.
+        # That is 400 millis from now, and export sleeps for 500 millis.
         with self.assertLogs(level=WARNING) as warning:
             self.assertEqual(
-                self.exporter.export([self.span]), SpanExportResult.FAILURE
+                exporter.export([self.span]),
+                SpanExportResult.FAILURE,
             )
-            mock_sleep.assert_called_with(0.01)
-
             self.assertEqual(
-                warning.records[0].message,
-                (
-                    "Transient error StatusCode.UNAVAILABLE encountered "
-                    "while exporting traces to localhost:4317, retrying in 0.01s."
-                ),
+                "Failed to export traces to localhost:4317, error code: StatusCode.DEADLINE_EXCEEDED",
+                warning.records[-1].message,
             )
-
-    def test_success(self):
-        add_TraceServiceServicer_to_server(
-            TraceServiceServicerWithExportParams(StatusCode.OK),
-            self.server,
-        )
+            self.assertEqual(mock_trace_service.num_requests, 1)
+        exporter = OTLPSpanExporterForTesting(insecure=True, timeout=0.8)
         self.assertEqual(
-            self.exporter.export([self.span]), SpanExportResult.SUCCESS
+            exporter.export([self.span]),
+            SpanExportResult.SUCCESS,
         )
 
     def test_otlp_headers_from_env(self):
@@ -440,6 +457,6 @@ class TestOTLPExporterMixin(TestCase):
                 self.exporter.export([self.span]), SpanExportResult.FAILURE
             )
             self.assertEqual(
-                warning.records[0].message,
+                warning.records[-1].message,
                 "Failed to export traces to localhost:4317, error code: StatusCode.ALREADY_EXISTS",
             )
