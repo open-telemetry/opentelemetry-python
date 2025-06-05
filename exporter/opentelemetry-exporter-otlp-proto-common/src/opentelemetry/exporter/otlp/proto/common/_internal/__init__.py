@@ -27,8 +27,6 @@ from typing import (
     TypeVar,
 )
 
-import requests
-
 from opentelemetry.proto.common.v1.common_pb2 import AnyValue as PB2AnyValue
 from opentelemetry.proto.common.v1.common_pb2 import (
     ArrayValue as PB2ArrayValue,
@@ -108,14 +106,6 @@ def _encode_key_value(
     return PB2KeyValue(
         key=key, value=_encode_value(value, allow_null=allow_null)
     )
-
-
-def _is_retryable(resp: requests.Response) -> bool:
-    if resp.status_code == 408:
-        return True
-    if resp.status_code >= 500 and resp.status_code <= 599:
-        return True
-    return False
 
 
 def _encode_array(

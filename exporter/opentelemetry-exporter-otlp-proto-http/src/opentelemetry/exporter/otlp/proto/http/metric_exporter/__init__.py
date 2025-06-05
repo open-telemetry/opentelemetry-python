@@ -35,7 +35,6 @@ from typing_extensions import deprecated
 
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _get_resource_data,
-    _is_retryable,
 )
 from opentelemetry.exporter.otlp.proto.common._internal.metrics_encoder import (
     OTLPMetricExporterMixin,
@@ -46,6 +45,9 @@ from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
 from opentelemetry.exporter.otlp.proto.http import (
     _OTLP_HTTP_HEADERS,
     Compression,
+)
+from opentelemetry.exporter.otlp.proto.http._common import (
+    _is_retryable,
 )
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (  # noqa: F401
     ExportMetricsServiceRequest,

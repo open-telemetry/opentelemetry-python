@@ -28,7 +28,6 @@ classifiers = [
 ]
 dependencies = [
   "opentelemetry-proto == 1.35.0.dev",
-  "requests ~= 2.7",
 ]
 
 [project.urls]

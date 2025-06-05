@@ -24,15 +24,15 @@ from typing import Dict, Optional, Sequence
 import requests
 from requests.exceptions import ConnectionError
 
-from opentelemetry.exporter.otlp.proto.common._internal import (
-    _is_retryable,
-)
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
 )
 from opentelemetry.exporter.otlp.proto.http import (
     _OTLP_HTTP_HEADERS,
     Compression,
+)
+from opentelemetry.exporter.otlp.proto.http._common import (
+    _is_retryable,
 )
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
