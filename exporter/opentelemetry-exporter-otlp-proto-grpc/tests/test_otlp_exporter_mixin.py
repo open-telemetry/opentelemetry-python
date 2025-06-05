@@ -90,14 +90,12 @@ class TraceServiceServicerWithExportParams(TraceServiceServicer):
     def __init__(
         self,
         export_result: StatusCode,
-        optional_first_time_retry_millis: Optional[int] = None,
+        optional_retry_millis: Optional[int] = None,
         optional_export_sleep: Optional[float] = None,
     ):
         self.export_result = export_result
         self.optional_export_sleep = optional_export_sleep
-        self.optional_first_time_retry_millis = (
-            optional_first_time_retry_millis
-        )
+        self.optional_retry_millis = optional_retry_millis
         self.num_requests = 0
 
     # pylint: disable=invalid-name,unused-argument
@@ -106,17 +104,14 @@ class TraceServiceServicerWithExportParams(TraceServiceServicer):
         if self.optional_export_sleep:
             time.sleep(self.optional_export_sleep)
         if self.export_result != StatusCode.OK:
-            if (
-                self.optional_first_time_retry_millis
-                and self.num_requests == 1
-            ):
+            if self.optional_retry_millis and self.num_requests == 1:
                 context.set_trailing_metadata(
                     (
                         (
                             "google.rpc.retryinfo-bin",
                             RetryInfo(
                                 retry_delay=Duration(
-                                    nanos=self.optional_first_time_retry_millis
+                                    nanos=self.optional_retry_millis
                                 )
                             ).SerializeToString(),
                         ),
@@ -377,7 +372,7 @@ class TestOTLPExporterMixin(TestCase):
 
     def test_retry_info_is_respected(self):
         mock_trace_service = TraceServiceServicerWithExportParams(
-            StatusCode.UNAVAILABLE, optional_first_time_retry_millis=200
+            StatusCode.UNAVAILABLE, optional_retry_millis=200
         )
         add_TraceServiceServicer_to_server(
             mock_trace_service,
@@ -390,13 +385,9 @@ class TestOTLPExporterMixin(TestCase):
             SpanExportResult.FAILURE,
         )
         after = time.time()
-        # We set the `grpc-retry-pushback-ms` header to 200 millis on the first server response only,
-        # and then we do exponential backoff using that first value.
-        # So we expect the first request at time 0, second at time 0.2,
-        # third at .6, fourth at 1.4, fifth at 3, and final one at 6.2.
         self.assertEqual(mock_trace_service.num_requests, 6)
-        # The backoffs have a jitter +- 20%, so we have to put a higher bound than 6.2.
-        self.assertTrue(after - before < 7.5)
+        # 200 * 5 = 1 second, plus some wiggle room so the test passes consistently.
+        self.assertTrue(after - before < 1.1)
 
     def test_retry_not_made_if_would_exceed_timeout(self):
         mock_trace_service = TraceServiceServicerWithExportParams(

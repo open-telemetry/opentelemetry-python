@@ -185,7 +185,7 @@ class OTLPLogExporter(LogExporter):
                 backoff_seconds,
             )
             sleep(backoff_seconds)
-            backoff_seconds *= 2 * random.uniform(0.8, 1.2)
+            backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
         # Not possible to reach here but the linter is complaining.
         return LogExportResult.FAILURE
 
