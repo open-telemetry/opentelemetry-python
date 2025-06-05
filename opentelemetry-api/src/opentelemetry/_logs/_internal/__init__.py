@@ -63,6 +63,7 @@ class LogRecord(ABC):
     @overload
     def __init__(
         self,
+        *,
         timestamp: Optional[int] = None,
         observed_timestamp: Optional[int] = None,
         context: Optional[Context] = None,
@@ -70,7 +71,7 @@ class LogRecord(ABC):
         severity_number: Optional[SeverityNumber] = None,
         body: AnyValue = None,
         attributes: Optional[_ExtendedAttributes] = None,
-    ): ...
+    ) -> None: ...
 
     @overload
     @deprecated(
@@ -78,6 +79,7 @@ class LogRecord(ABC):
     )
     def __init__(
         self,
+        *,
         timestamp: Optional[int] = None,
         observed_timestamp: Optional[int] = None,
         trace_id: Optional[int] = None,
@@ -87,10 +89,11 @@ class LogRecord(ABC):
         severity_number: Optional[SeverityNumber] = None,
         body: AnyValue = None,
         attributes: Optional[_ExtendedAttributes] = None,
-    ): ...
+    ) -> None: ...
 
     def __init__(
         self,
+        *,
         timestamp: Optional[int] = None,
         observed_timestamp: Optional[int] = None,
         context: Optional[Context] = None,
@@ -101,7 +104,7 @@ class LogRecord(ABC):
         severity_number: Optional[SeverityNumber] = None,
         body: AnyValue = None,
         attributes: Optional[_ExtendedAttributes] = None,
-    ):
+    ) -> None:
         self.timestamp = timestamp
         if observed_timestamp is None:
             observed_timestamp = time_ns()
