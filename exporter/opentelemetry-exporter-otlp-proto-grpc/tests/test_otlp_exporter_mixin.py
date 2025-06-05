@@ -104,7 +104,7 @@ class TraceServiceServicerWithExportParams(TraceServiceServicer):
         if self.optional_export_sleep:
             time.sleep(self.optional_export_sleep)
         if self.export_result != StatusCode.OK:
-            if self.optional_retry_millis and self.num_requests == 1:
+            if self.optional_retry_millis:
                 context.set_trailing_metadata(
                     (
                         (
