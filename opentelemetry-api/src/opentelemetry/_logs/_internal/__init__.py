@@ -37,7 +37,9 @@ from abc import ABC, abstractmethod
 from logging import getLogger
 from os import environ
 from time import time_ns
-from typing import Optional, cast
+from typing import Optional, cast, overload
+
+from typing_extensions import deprecated
 
 from opentelemetry._logs.severity import SeverityNumber
 from opentelemetry.context.context import Context
@@ -57,6 +59,35 @@ class LogRecord(ABC):
     every time something is logged. They contain all the information
     pertinent to the event being logged.
     """
+
+    @overload
+    def __init__(
+        self,
+        timestamp: Optional[int] = None,
+        observed_timestamp: Optional[int] = None,
+        context: Optional[Context] = None,
+        severity_text: Optional[str] = None,
+        severity_number: Optional[SeverityNumber] = None,
+        body: AnyValue = None,
+        attributes: Optional[_ExtendedAttributes] = None,
+    ): ...
+
+    @overload
+    @deprecated(
+        "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated. Use `context` instead."
+    )
+    def __init__(
+        self,
+        timestamp: Optional[int] = None,
+        observed_timestamp: Optional[int] = None,
+        trace_id: Optional[int] = None,
+        span_id: Optional[int] = None,
+        trace_flags: Optional["TraceFlags"] = None,
+        severity_text: Optional[str] = None,
+        severity_number: Optional[SeverityNumber] = None,
+        body: AnyValue = None,
+        attributes: Optional[_ExtendedAttributes] = None,
+    ): ...
 
     def __init__(
         self,

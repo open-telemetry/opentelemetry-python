@@ -20,7 +20,6 @@ from unittest.mock import Mock, patch
 from opentelemetry._logs import NoOpLoggerProvider, SeverityNumber
 from opentelemetry._logs import get_logger as APIGetLogger
 from opentelemetry.attributes import BoundedAttributes
-from opentelemetry.context.context import Context
 from opentelemetry.sdk import trace
 from opentelemetry.sdk._logs import (
     LogData,
@@ -95,6 +94,8 @@ class TestLoggingHandler(unittest.TestCase):
 
     def test_log_record_no_span_context(self):
         processor, logger = set_up_test_logging(logging.WARNING)
+
+        # Assert emit gets called for warning message
         with self.assertLogs(level=logging.WARNING):
             logger.warning("Warning message")
 
@@ -299,35 +300,23 @@ class TestLoggingHandler(unittest.TestCase):
                     log_record.trace_flags, span_context.trace_flags
                 )
 
-    def test_log_record_trace_correlation_backwards_compatibility(self):
+    def test_log_record_trace_correlation_deprecated(self):
         processor, logger = set_up_test_logging(logging.WARNING)
-        mock_context = Context()  # no span in context
 
         tracer = trace.TracerProvider().get_tracer(__name__)
         with tracer.start_as_current_span("test") as span:
-            with patch(
-                "opentelemetry.sdk._logs._internal.get_current",
-                return_value=mock_context,
-            ):
-                with self.assertLogs(level=logging.CRITICAL):
-                    logger.critical("Critical message within span")
+            with self.assertLogs(level=logging.CRITICAL):
+                logger.critical("Critical message within span")
 
-                log_record = processor.get_log_record(0)
+            log_record = processor.get_log_record(0)
 
-                self.assertEqual(
-                    log_record.body, "Critical message within span"
-                )
-                self.assertEqual(log_record.severity_text, "CRITICAL")
-                self.assertEqual(
-                    log_record.severity_number, SeverityNumber.FATAL
-                )
-                self.assertEqual(log_record.context, mock_context)
-                span_context = span.get_span_context()
-                self.assertEqual(log_record.trace_id, span_context.trace_id)
-                self.assertEqual(log_record.span_id, span_context.span_id)
-                self.assertEqual(
-                    log_record.trace_flags, span_context.trace_flags
-                )
+            self.assertEqual(log_record.body, "Critical message within span")
+            self.assertEqual(log_record.severity_text, "CRITICAL")
+            self.assertEqual(log_record.severity_number, SeverityNumber.FATAL)
+            span_context = span.get_span_context()
+            self.assertEqual(log_record.trace_id, span_context.trace_id)
+            self.assertEqual(log_record.span_id, span_context.span_id)
+            self.assertEqual(log_record.trace_flags, span_context.trace_flags)
 
     def test_warning_without_formatter(self):
         processor, logger = set_up_test_logging(logging.WARNING)
