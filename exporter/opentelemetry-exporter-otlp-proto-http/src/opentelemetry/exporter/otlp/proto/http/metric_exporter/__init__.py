@@ -213,8 +213,8 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         deadline_sec = time() + (
             timeout_millis / 1e3 if timeout_millis else self._timeout
         )
-        backoff_seconds = 1 * random.uniform(0.8, 1.2)
         for retry_num in range(1, _MAX_RETRYS + 1):
+            backoff_seconds = 2 ** (retry_num - 1) * random.uniform(0.8, 1.2)
             resp = self._export(serialized_data, deadline_sec - time())
             if resp.ok:
                 return MetricExportResult.SUCCESS
@@ -235,7 +235,6 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                 backoff_seconds,
             )
             sleep(backoff_seconds)
-            backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
         # Not possible to reach here but the linter is complaining.
         return MetricExportResult.FAILURE
 

@@ -296,8 +296,10 @@ class OTLPExporterMixin(
         retry_info = RetryInfo()
         with self._export_lock:
             deadline_sec = time() + self._timeout
-            backoff_seconds = 1 * random.uniform(0.8, 1.2)
             for retry_num in range(1, _MAX_RETRYS + 1):
+                backoff_seconds = 2 ** (retry_num - 1) * random.uniform(
+                    0.8, 1.2
+                )
                 try:
                     self._client.Export(
                         request=self._translate_data(data),
@@ -334,7 +336,6 @@ class OTLPExporterMixin(
                         backoff_seconds,
                     )
                     sleep(backoff_seconds)
-                    backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
         # Not possible to reach here but the linter is complaining.
         return self._result.FAILURE
 
