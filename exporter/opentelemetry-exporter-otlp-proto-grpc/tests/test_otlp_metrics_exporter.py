@@ -18,7 +18,7 @@ from os import environ
 from os.path import dirname
 from typing import List
 from unittest import TestCase
-from unittest.mock import ANY, patch
+from unittest.mock import patch
 
 from grpc import ChannelCredentials, Compression
 
@@ -299,7 +299,6 @@ class TestOTLPMetricExporter(TestCase):
         mock_insecure_channel.assert_called_once_with(
             "localhost:4317",
             compression=Compression.NoCompression,
-            options=ANY,
         )
 
     def test_split_metrics_data_many_data_points(self):

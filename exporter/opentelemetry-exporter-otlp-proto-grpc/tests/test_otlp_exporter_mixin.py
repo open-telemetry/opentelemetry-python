@@ -18,8 +18,14 @@ from concurrent.futures import ThreadPoolExecutor
 from logging import WARNING, getLogger
 from typing import Any, Optional, Sequence
 from unittest import TestCase
-from unittest.mock import ANY, Mock, patch
+from unittest.mock import Mock, patch
 
+from google.protobuf.duration_pb2 import (  # pylint: disable=no-name-in-module
+    Duration,
+)
+from google.rpc.error_details_pb2 import (  # pylint: disable=no-name-in-module
+    RetryInfo,
+)
 from grpc import Compression, StatusCode, server
 
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
@@ -84,17 +90,15 @@ class TraceServiceServicerWithExportParams(TraceServiceServicer):
     def __init__(
         self,
         export_result: StatusCode,
-        optional_export_sleep: Optional[float] = None,
         optional_first_time_retry_millis: Optional[int] = None,
+        optional_export_sleep: Optional[float] = None,
     ):
         self.export_result = export_result
         self.optional_export_sleep = optional_export_sleep
         self.optional_first_time_retry_millis = (
             optional_first_time_retry_millis
         )
-        self.first_attempt = True
         self.num_requests = 0
-        self.now = time.time()
 
     # pylint: disable=invalid-name,unused-argument
     def Export(self, request, context):
@@ -102,17 +106,23 @@ class TraceServiceServicerWithExportParams(TraceServiceServicer):
         if self.optional_export_sleep:
             time.sleep(self.optional_export_sleep)
         if self.export_result != StatusCode.OK:
-            if self.optional_first_time_retry_millis and self.first_attempt:
-                self.first_attempt = False
+            if (
+                self.optional_first_time_retry_millis
+                and self.num_requests == 1
+            ):
                 context.set_trailing_metadata(
                     (
                         (
-                            "grpc-retry-pushback-ms",
-                            str(self.optional_first_time_retry_millis),
+                            "google.rpc.retryinfo-bin",
+                            RetryInfo(
+                                retry_delay=Duration(
+                                    nanos=self.optional_first_time_retry_millis
+                                )
+                            ).SerializeToString(),
                         ),
                     )
                 )
-            context.abort(self.export_result, "")
+        context.set_code(self.export_result)
 
         return ExportTraceServiceResponse()
 
@@ -262,7 +272,6 @@ class TestOTLPExporterMixin(TestCase):
         mock_insecure_channel.assert_called_once_with(
             "localhost:4317",
             compression=Compression.NoCompression,
-            options=ANY,
         )
 
     # pylint: disable=no-self-use, disable=unused-argument
@@ -286,7 +295,7 @@ class TestOTLPExporterMixin(TestCase):
         """Just OTEL_EXPORTER_OTLP_COMPRESSION should work"""
         OTLPSpanExporterForTesting(insecure=True)
         mock_insecure_channel.assert_called_once_with(
-            "localhost:4317", compression=Compression.Gzip, options=ANY
+            "localhost:4317", compression=Compression.Gzip
         )
 
     def test_shutdown(self):
@@ -366,7 +375,7 @@ class TestOTLPExporterMixin(TestCase):
             str(err.exception), "Cannot invoke RPC on closed channel!"
         )
 
-    def test_retry_with_server_pushback(self):
+    def test_retry_info_is_respected(self):
         mock_trace_service = TraceServiceServicerWithExportParams(
             StatusCode.UNAVAILABLE, optional_first_time_retry_millis=200
         )
@@ -381,14 +390,15 @@ class TestOTLPExporterMixin(TestCase):
             SpanExportResult.FAILURE,
         )
         after = time.time()
-        # We set the `grpc-retry-pushback-ms` header to 200 millis on the first server response.
+        # We set the `grpc-retry-pushback-ms` header to 200 millis on the first server response only,
+        # and then we do exponential backoff using that first value.
         # So we expect the first request at time 0, second at time 0.2,
-        # third at 1.2 (start of backoff policy), fourth at time 3.2, last at time 7.2.
-        self.assertEqual(mock_trace_service.num_requests, 5)
-        # The backoffs have a jitter +- 20%, so we have to put a higher bound than 7.2.
-        self.assertTrue(after - before < 8.8)
+        # third at .6, fourth at 1.4, fifth at 3, and final one at 6.2.
+        self.assertEqual(mock_trace_service.num_requests, 6)
+        # The backoffs have a jitter +- 20%, so we have to put a higher bound than 6.2.
+        self.assertTrue(after - before < 7.5)
 
-    def test_retry_timeout(self):
+    def test_retry_not_made_if_would_exceed_timeout(self):
         mock_trace_service = TraceServiceServicerWithExportParams(
             StatusCode.UNAVAILABLE
         )
@@ -396,8 +406,7 @@ class TestOTLPExporterMixin(TestCase):
             mock_trace_service,
             self.server,
         )
-        # Set timeout to 1.5 seconds.
-        exporter = OTLPSpanExporterForTesting(insecure=True, timeout=1.5)
+        exporter = OTLPSpanExporterForTesting(insecure=True, timeout=4)
         before = time.time()
         self.assertEqual(
             exporter.export([self.span]),
@@ -405,10 +414,10 @@ class TestOTLPExporterMixin(TestCase):
         )
         after = time.time()
         # Our retry starts with a 1 second backoff then doubles.
-        # So we expect just two calls: one at time 0, one at time 1.
-        self.assertEqual(mock_trace_service.num_requests, 2)
-        # gRPC retry config waits for the timeout (1.5) before cancelling the request.
-        self.assertTrue(after - before < 1.6)
+        # First call at time 0, second at time 1, third at time 3, fourth would exceed timeout.
+        self.assertEqual(mock_trace_service.num_requests, 3)
+        # There's a +/-20% jitter on each backoff.
+        self.assertTrue(after - before < 3.7)
 
     def test_timeout_set_correctly(self):
         mock_trace_service = TraceServiceServicerWithExportParams(

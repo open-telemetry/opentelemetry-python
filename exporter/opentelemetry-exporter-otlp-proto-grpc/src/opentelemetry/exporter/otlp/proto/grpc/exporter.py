@@ -14,12 +14,13 @@
 
 """OTLP Exporter"""
 
-import json
+import random
 import threading
 from abc import ABC, abstractmethod
 from collections.abc import Sequence  # noqa: F401
 from logging import getLogger
 from os import environ
+from time import sleep, time
 from typing import (  # noqa: F401
     Any,
     Callable,
@@ -34,6 +35,7 @@ from typing import (  # noqa: F401
 from typing import Sequence as TypingSequence
 from urllib.parse import urlparse
 
+from google.rpc.error_details_pb2 import RetryInfo
 from typing_extensions import deprecated
 
 from grpc import (
@@ -72,35 +74,18 @@ from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.util.re import parse_env_headers
 
-# 5 is the maximum allowable attempts allowed by grpc retry policy.
-# This policy results in backoffs of 1s, 2s, 4s, and then 8s after the initial failed attempt,
-# plus or minus a 20% jitter. Timeout set on the RPC call encompasses the retry backoffs AND time spent waiting
-# for a response. DEADLINE_EXCEEDED is returned if all the attempts cannot complete within the
-# timeout, and all fail. A header `grpc-retry-pushback-ms` when set by the server will override
-# and take precedence over this backoff. See https://grpc.io/docs/guides/retry/ for more details.
-_GRPC_RETRY_POLICY = json.dumps(
-    {
-        "methodConfig": [
-            {
-                "name": [dict()],
-                "retryPolicy": {
-                    "maxAttempts": 5,
-                    "initialBackoff": "1s",
-                    "maxBackoff": "9s",
-                    "backoffMultiplier": 2,
-                    "retryableStatusCodes": [
-                        "UNAVAILABLE",
-                        "CANCELLED",
-                        "RESOURCE_EXHAUSTED",
-                        "ABORTED",
-                        "OUT_OF_RANGE",
-                        "DATA_LOSS",
-                    ],
-                },
-            }
-        ]
-    }
+_RETRYABLE_ERROR_CODES = frozenset(
+    [
+        StatusCode.CANCELLED,
+        StatusCode.DEADLINE_EXCEEDED,
+        StatusCode.RESOURCE_EXHAUSTED,
+        StatusCode.ABORTED,
+        StatusCode.OUT_OF_RANGE,
+        StatusCode.UNAVAILABLE,
+        StatusCode.DATA_LOSS,
+    ]
 )
+_MAX_RETRYS = 6
 logger = getLogger(__name__)
 SDKDataT = TypeVar("SDKDataT")
 ResourceDataT = TypeVar("ResourceDataT")
@@ -273,9 +258,6 @@ class OTLPExporterMixin(
             self._channel = insecure_channel(
                 self._endpoint,
                 compression=compression,
-                options=[
-                    ("grpc.service_config", _GRPC_RETRY_POLICY),
-                ],
             )
         else:
             credentials = _get_credentials(
@@ -288,9 +270,6 @@ class OTLPExporterMixin(
                 self._endpoint,
                 credentials,
                 compression=compression,
-                options=[
-                    ("grpc.service_config", _GRPC_RETRY_POLICY),
-                ],
             )
         self._client = self._stub(self._channel)
 
@@ -314,23 +293,50 @@ class OTLPExporterMixin(
         # FIXME remove this check if the export type for traces
         # gets updated to a class that represents the proto
         # TracesData and use the code below instead.
+        retry_info = RetryInfo()
         with self._export_lock:
-            try:
-                self._client.Export(
-                    request=self._translate_data(data),
-                    metadata=self._headers,
-                    timeout=self._timeout,
-                )
-                return self._result.SUCCESS
-            except RpcError as error:
-                logger.error(
-                    "Failed to export %s to %s, error code: %s",
-                    self._exporting,
-                    self._endpoint,
-                    error.code(),
-                    exc_info=error.code() == StatusCode.UNKNOWN,
-                )
-                return self._result.FAILURE
+            deadline_sec = time() + self._timeout
+            backoff_seconds = 1 * random.uniform(0.8, 1.2)
+            for retry_num in range(1, _MAX_RETRYS + 1):
+                try:
+                    self._client.Export(
+                        request=self._translate_data(data),
+                        metadata=self._headers,
+                        timeout=self._timeout,
+                    )
+                    return self._result.SUCCESS
+                except RpcError as error:
+                    retry_info_bin = dict(error.trailing_metadata()).get(
+                        "google.rpc.retryinfo-bin"
+                    )
+                    if retry_info_bin is not None:
+                        retry_info.ParseFromString(retry_info_bin)
+                        backoff_seconds = (
+                            retry_info.retry_delay.seconds
+                            + retry_info.retry_delay.nanos / 1.0e9
+                        )
+                    if (
+                        error.code() not in _RETRYABLE_ERROR_CODES
+                        or retry_num == _MAX_RETRYS
+                        or backoff_seconds > (deadline_sec - time())
+                    ):
+                        logger.error(
+                            "Failed to export %s to %s, error code: %s",
+                            self._exporting,
+                            self._endpoint,
+                            error.code(),
+                            exc_info=error.code() == StatusCode.UNKNOWN,
+                        )
+                        return self._result.FAILURE
+                    logger.warning(
+                        "Transient error %s encountered while exporting logs batch, retrying in %.2fs.",
+                        error.code(),
+                        backoff_seconds,
+                    )
+                    sleep(backoff_seconds)
+                    backoff_seconds *= 2 * random.uniform(0.8, 1.2)
+        # Not possible to reach here but the linter is complaining.
+        return self._result.FAILURE
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         if self._shutdown:
