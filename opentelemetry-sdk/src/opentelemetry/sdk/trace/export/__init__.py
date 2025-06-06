@@ -180,7 +180,7 @@ class BatchSpanProcessor(SpanProcessor):
     # Added for backward compatibility. Not recommended to directly access/use underlying exporter.
     @property
     def span_exporter(self):
-        return self._batch_processor._exporter #pylint: disable=protected-access
+        return self._batch_processor._exporter  # pylint: disable=protected-access
 
     def on_start(
         self, span: Span, parent_context: Context | None = None
