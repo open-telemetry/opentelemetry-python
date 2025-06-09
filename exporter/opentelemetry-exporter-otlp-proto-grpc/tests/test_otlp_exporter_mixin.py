@@ -371,7 +371,10 @@ class TestOTLPExporterMixin(TestCase):
             str(err.exception), "Cannot invoke RPC on closed channel!"
         )
 
-    @unittest.skipIf(system() == "Windows", "Does not work in Windows")
+    @unittest.skipIf(
+        system() == "Windows",
+        "For gRPC + windows there's some added delay in the RPCs which breaks the assertion over amount of time passed.",
+    )
     def test_retry_info_is_respected(self):
         mock_trace_service = TraceServiceServicerWithExportParams(
             StatusCode.UNAVAILABLE,
@@ -392,7 +395,10 @@ class TestOTLPExporterMixin(TestCase):
         # 1 second plus wiggle room so the test passes consistently.
         self.assertAlmostEqual(after - before, 1, 1)
 
-    @unittest.skipIf(system() == "Windows", "Does not work in Windows")
+    @unittest.skipIf(
+        system() == "Windows",
+        "For gRPC + windows there's some added delay in the RPCs which breaks the assertion over amount of time passed.",
+    )
     def test_retry_not_made_if_would_exceed_timeout(self):
         mock_trace_service = TraceServiceServicerWithExportParams(
             StatusCode.UNAVAILABLE
@@ -414,7 +420,10 @@ class TestOTLPExporterMixin(TestCase):
         # There's a +/-20% jitter on each backoff.
         self.assertTrue(2.35 < after - before < 3.65)
 
-    @unittest.skipIf(system() == "Windows", "Does not work in Windows")
+    @unittest.skipIf(
+        system() == "Windows",
+        "For gRPC + windows there's some added delay in the RPCs which breaks the assertion over amount of time passed.",
+    )
     def test_timeout_set_correctly(self):
         mock_trace_service = TraceServiceServicerWithExportParams(
             StatusCode.UNAVAILABLE, optional_export_sleep=0.25
