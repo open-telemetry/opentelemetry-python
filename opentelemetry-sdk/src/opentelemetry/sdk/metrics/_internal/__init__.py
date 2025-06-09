@@ -15,7 +15,7 @@
 import weakref
 from atexit import register, unregister
 from logging import getLogger
-from os import environ
+from os import environ, register_at_fork
 from threading import Lock
 from time import time_ns
 from typing import Optional, Sequence
@@ -88,6 +88,11 @@ class Meter(APIMeter):
         self._measurement_consumer = measurement_consumer
         self._instrument_id_instrument = {}
         self._instrument_id_instrument_lock = Lock()
+        weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
+        register_at_fork(after_in_child=lambda: weak_reinit()())
+
+    def _at_fork_reinit(self):
+        self._instrument_id_instrument_lock._at_fork_reinit()
 
     def create_counter(self, name, unit="", description="") -> APICounter:
         status = self._register_instrument(name, _Counter, unit, description)
@@ -421,6 +426,8 @@ class MeterProvider(APIMeterProvider):
     ):
         self._lock = Lock()
         self._meter_lock = Lock()
+        weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
+        register_at_fork(after_in_child=lambda: weak_reinit()())
         self._atexit_handler = None
         if resource is None:
             resource = Resource.create({})
@@ -462,6 +469,14 @@ class MeterProvider(APIMeterProvider):
             metric_reader._set_collect_callback(
                 self._measurement_consumer.collect
             )
+
+    def _at_fork_reinit(self):
+        self._lock._at_fork_reinit()
+        self._meter_lock._at_fork_reinit()
+
+    @classmethod
+    def _register_fork_handlers(cls):
+        register_at_fork(after_in_child=cls._all_metric_readers_lock._at_fork_reinit)
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
         deadline_ns = time_ns() + timeout_millis * 10**6
@@ -580,3 +595,6 @@ class MeterProvider(APIMeterProvider):
                     self._measurement_consumer,
                 )
             return self._meters[info]
+
+# Call the method after the class is fully defined
+MeterProvider._register_fork_handlers()

@@ -14,9 +14,11 @@
 
 import logging
 import threading
+import weakref
 from collections import OrderedDict
 from collections.abc import MutableMapping
 from typing import Mapping, Optional, Sequence, Tuple, Union
+from os import register_at_fork
 
 from opentelemetry.util import types
 
@@ -263,6 +265,11 @@ class BoundedAttributes(MutableMapping):  # type: ignore
             for key, value in attributes.items():
                 self[key] = value
         self._immutable = immutable
+        weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
+        register_at_fork(after_in_child=lambda: weak_reinit()())
+
+    def _at_fork_reinit(self):
+        self._lock._at_fork_reinit()
 
     def __repr__(self) -> str:
         return f"{dict(self._dict)}"

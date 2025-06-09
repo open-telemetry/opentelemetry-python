@@ -14,6 +14,8 @@
 
 import threading
 import typing
+import weakref
+from os import register_at_fork
 
 from opentelemetry.sdk._logs import LogData
 from opentelemetry.sdk._logs.export import LogExporter, LogExportResult
@@ -30,7 +32,12 @@ class InMemoryLogExporter(LogExporter):
     def __init__(self):
         self._logs = []
         self._lock = threading.Lock()
+        weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
+        register_at_fork(after_in_child=lambda: weak_reinit()())
         self._stopped = False
+
+    def _at_fork_reinit(self):
+        self._lock._at_fork_reinit()
 
     def clear(self) -> None:
         with self._lock:

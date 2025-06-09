@@ -14,8 +14,10 @@
 
 import datetime
 import threading
+import weakref
 from collections import deque
 from collections.abc import MutableMapping, Sequence
+from os import register_at_fork
 from typing import Optional
 
 from typing_extensions import deprecated
@@ -54,6 +56,11 @@ class BoundedList(Sequence):
         self.dropped = 0
         self._dq = deque(maxlen=maxlen)  # type: deque
         self._lock = threading.Lock()
+        weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
+        register_at_fork(after_in_child=lambda: weak_reinit()())
+
+    def _at_fork_reinit(self):
+        self._lock._at_fork_reinit()
 
     def __repr__(self):
         return f"{type(self).__name__}({list(self._dq)}, maxlen={self._dq.maxlen})"
@@ -111,6 +118,11 @@ class BoundedDict(MutableMapping):
         self.dropped = 0
         self._dict = {}  # type: dict
         self._lock = threading.Lock()  # type: threading.Lock
+        weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
+        register_at_fork(after_in_child=lambda: weak_reinit()())
+
+    def _at_fork_reinit(self):
+        self._lock._at_fork_reinit()
 
     def __repr__(self):
         return (

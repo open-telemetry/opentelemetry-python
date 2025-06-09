@@ -14,7 +14,9 @@
 
 # pylint: disable=unused-import
 
+import weakref
 from abc import ABC, abstractmethod
+from os import register_at_fork
 from threading import Lock
 from time import time_ns
 from typing import Iterable, List, Mapping, Optional
@@ -61,6 +63,8 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
         sdk_config: "opentelemetry.sdk.metrics._internal.SdkConfiguration",
     ) -> None:
         self._lock = Lock()
+        weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
+        register_at_fork(after_in_child=lambda: weak_reinit()())
         self._sdk_config = sdk_config
         # should never be mutated
         self._reader_storages: Mapping[
@@ -76,6 +80,9 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
         self._async_instruments: List[
             "opentelemetry.sdk.metrics._internal.instrument._Asynchronous"
         ] = []
+
+    def _at_fork_reinit(self):
+        self._lock._at_fork_reinit()
 
     def consume_measurement(self, measurement: Measurement) -> None:
         should_sample_exemplar = (

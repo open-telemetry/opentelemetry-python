@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import weakref
+from os import register_at_fork
 from threading import Lock
 from typing import Callable
 
@@ -25,6 +27,11 @@ class Once:
     def __init__(self) -> None:
         self._lock = Lock()
         self._done = False
+        weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
+        register_at_fork(after_in_child=lambda: weak_reinit()())
+
+    def _at_fork_reinit(self):
+        self._lock._at_fork_reinit()
 
     def do_once(self, func: Callable[[], None]) -> bool:
         """Execute ``func`` if it hasn't been executed or return.

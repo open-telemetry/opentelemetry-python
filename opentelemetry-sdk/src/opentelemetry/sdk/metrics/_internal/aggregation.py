@@ -14,12 +14,14 @@
 
 # pylint: disable=too-many-lines
 
+import weakref
 from abc import ABC, abstractmethod
 from bisect import bisect_left
 from enum import IntEnum
 from functools import partial
 from logging import getLogger
 from math import inf
+from os import register_at_fork
 from threading import Lock
 from typing import (
     Callable,
@@ -98,8 +100,13 @@ class _Aggregation(ABC, Generic[_DataPointVarT]):
     ):
         self._lock = Lock()
         self._attributes = attributes
+        weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
+        register_at_fork(after_in_child=lambda: weak_reinit()())
         self._reservoir = reservoir_builder()
         self._previous_point = None
+
+    def _at_fork_reinit(self):
+        self._lock._at_fork_reinit()
 
     @abstractmethod
     def aggregate(

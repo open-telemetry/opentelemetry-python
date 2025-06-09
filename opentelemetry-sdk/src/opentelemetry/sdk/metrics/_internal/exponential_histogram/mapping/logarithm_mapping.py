@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from math import exp, floor, ldexp, log
+from os import register_at_fork
 from threading import Lock
 
 from opentelemetry.sdk.metrics._internal.exponential_histogram.mapping import (
@@ -40,6 +41,11 @@ class LogarithmMapping(Mapping):
 
     _min_scale = 1
     _max_scale = 20
+
+    # Add a class method for initialization that includes fork handler registration
+    @classmethod
+    def _register_fork_handlers(cls):
+        register_at_fork(after_in_child=cls._mappings_lock._at_fork_reinit)
 
     def _get_min_scale(self):
         # _min_scale ensures that ExponentMapping is used for zero and negative
@@ -136,3 +142,6 @@ class LogarithmMapping(Mapping):
     @property
     def scale(self) -> int:
         return self._scale
+
+# Call the method after the class is fully defined
+LogarithmMapping._register_fork_handlers()

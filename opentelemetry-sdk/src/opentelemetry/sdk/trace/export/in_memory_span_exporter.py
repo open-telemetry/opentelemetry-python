@@ -14,6 +14,8 @@
 
 import threading
 import typing
+import weakref
+from os import register_at_fork
 
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
@@ -31,6 +33,11 @@ class InMemorySpanExporter(SpanExporter):
         self._finished_spans: typing.List[ReadableSpan] = []
         self._stopped = False
         self._lock = threading.Lock()
+        weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
+        register_at_fork(after_in_child=lambda: weak_reinit()())
+
+    def _at_fork_reinit(self):
+        self._lock._at_fork_reinit()
 
     def clear(self) -> None:
         """Clear list of collected spans."""
