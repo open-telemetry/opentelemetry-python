@@ -14,8 +14,10 @@
 
 import threading
 import time
+import unittest
 from concurrent.futures import ThreadPoolExecutor
 from logging import WARNING, getLogger
+from platform import system
 from typing import Any, Optional, Sequence
 from unittest import TestCase
 from unittest.mock import Mock, patch
@@ -369,6 +371,7 @@ class TestOTLPExporterMixin(TestCase):
             str(err.exception), "Cannot invoke RPC on closed channel!"
         )
 
+    @unittest.skipIf(system() == "Windows", "Does not work in Windows")
     def test_retry_info_is_respected(self):
         mock_trace_service = TraceServiceServicerWithExportParams(
             StatusCode.UNAVAILABLE,
@@ -389,6 +392,7 @@ class TestOTLPExporterMixin(TestCase):
         # 1 second plus wiggle room so the test passes consistently.
         self.assertAlmostEqual(after - before, 1, 1)
 
+    @unittest.skipIf(system() == "Windows", "Does not work in Windows")
     def test_retry_not_made_if_would_exceed_timeout(self):
         mock_trace_service = TraceServiceServicerWithExportParams(
             StatusCode.UNAVAILABLE
@@ -410,6 +414,7 @@ class TestOTLPExporterMixin(TestCase):
         # There's a +/-20% jitter on each backoff.
         self.assertTrue(2.35 < after - before < 3.65)
 
+    @unittest.skipIf(system() == "Windows", "Does not work in Windows")
     def test_timeout_set_correctly(self):
         mock_trace_service = TraceServiceServicerWithExportParams(
             StatusCode.UNAVAILABLE, optional_export_sleep=0.25
@@ -431,6 +436,10 @@ class TestOTLPExporterMixin(TestCase):
                     SpanExportResult.FAILURE,
                 )
             after = time.time()
+            self.assertEqual(
+                "Failed to export traces to localhost:4317, error code: StatusCode.DEADLINE_EXCEEDED",
+                warning.records[-1].message,
+            )
             self.assertEqual(mock_trace_service.num_requests, 2)
             self.assertAlmostEqual(after - before, 1.4, 1)
 
