@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - docs: Added sqlcommenter example
   ([#4734](https://github.com/open-telemetry/opentelemetry-python/pull/4734))
+- opentelemetry-sdk: `Measurement`s `Attributes` are now copied when instantiating a `Measurement`. This stops the accidental modification of `Attibutes` after the `Measurement` is created.
+  ([#4627](https://github.com/open-telemetry/opentelemetry-python/pull/4627))
 
 ## Version 1.38.0/0.59b0 (2025-10-16)
 

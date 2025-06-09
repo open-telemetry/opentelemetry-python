@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from copy import deepcopy
 from dataclasses import dataclass
 from typing import Union
 
@@ -43,3 +43,10 @@ class Measurement:
     instrument: Instrument
     context: Context
     attributes: Attributes = None
+
+    def __post_init__(self) -> None:
+        if self.attributes is not None:
+            super().__setattr__(
+                "attributes",
+                deepcopy(self.attributes),
+            )
