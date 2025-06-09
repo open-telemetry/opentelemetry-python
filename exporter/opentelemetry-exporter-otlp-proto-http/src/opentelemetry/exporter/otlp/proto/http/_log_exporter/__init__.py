@@ -14,6 +14,7 @@
 
 import gzip
 import logging
+import threading
 import random
 import zlib
 from io import BytesIO
@@ -77,6 +78,7 @@ class OTLPLogExporter(LogExporter):
         compression: Optional[Compression] = None,
         session: Optional[requests.Session] = None,
     ):
+        self._shutdown_is_occuring = threading.Event()
         self._endpoint = endpoint or environ.get(
             OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
             _append_logs_path(
@@ -164,14 +166,15 @@ class OTLPLogExporter(LogExporter):
         serialized_data = encode_logs(batch).SerializeToString()
         deadline_sec = time() + self._timeout
         for retry_num in range(1, _MAX_RETRYS + 1):
-            backoff_seconds = 2 ** (retry_num - 1) * random.uniform(0.8, 1.2)
             resp = self._export(serialized_data, deadline_sec - time())
             if resp.ok:
                 return LogExportResult.SUCCESS
+            backoff_seconds = 2 ** (retry_num - 1) * random.uniform(0.8, 1.2)
             if (
                 not _is_retryable(resp)
                 or retry_num == _MAX_RETRYS
                 or backoff_seconds > (deadline_sec - time())
+                or self._shutdown
             ):
                 _logger.error(
                     "Failed to export logs batch code: %s, reason: %s",
@@ -184,8 +187,10 @@ class OTLPLogExporter(LogExporter):
                 resp.reason,
                 backoff_seconds,
             )
-            sleep(backoff_seconds)
-        # Not possible to reach here but the linter is complaining.
+            shutdown = self._shutdown_is_occuring.wait(backoff_seconds)
+            if shutdown:
+                _logger.warning("Shutdown in progress, aborting retry.")
+                break
         return LogExportResult.FAILURE
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
@@ -196,6 +201,7 @@ class OTLPLogExporter(LogExporter):
         if self._shutdown:
             _logger.warning("Exporter already shutdown, ignoring call")
             return
+        self._shutdown_is_occuring.set()
         self._session.close()
         self._shutdown = True
 

@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import gzip
 import logging
+import threading
 import random
 import zlib
 from io import BytesIO
@@ -120,6 +121,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         | None = None,
         preferred_aggregation: dict[type, Aggregation] | None = None,
     ):
+        self._shutdown_is_occuring = threading.Event()
         self._endpoint = endpoint or environ.get(
             OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
             _append_metrics_path(
@@ -224,6 +226,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                 not _is_retryable(resp)
                 or retry_num == _MAX_RETRYS
                 or backoff_seconds > (deadline_sec - time())
+                or self._shutdown
             ):
                 _logger.error(
                     "Failed to export metrics batch code: %s, reason: %s",
@@ -236,14 +239,17 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                 resp.reason,
                 backoff_seconds,
             )
-            sleep(backoff_seconds)
-        # Not possible to reach here but the linter is complaining.
+            shutdown = self._shutdown_is_occuring.wait(backoff_seconds)
+            if shutdown:
+                _logger.warning("Shutdown in progress, aborting retry.")
+                break
         return MetricExportResult.FAILURE
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         if self._shutdown:
             _logger.warning("Exporter already shutdown, ignoring call")
             return
+        self._shutdown_is_occuring.set()
         self._session.close()
         self._shutdown = True
 

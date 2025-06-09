@@ -16,9 +16,11 @@ from __future__ import annotations
 
 import collections
 import enum
+import inspect
 import logging
 import os
 import threading
+import time
 import weakref
 from abc import abstractmethod
 from typing import (
@@ -90,6 +92,7 @@ class BatchProcessor(Generic[Telemetry]):
         self._exporting = exporting
 
         self._shutdown = False
+        self._shutdown_timeout_exceeded = False
         self._export_lock = threading.Lock()
         self._worker_awaken = threading.Event()
         self._worker_thread.start()
@@ -101,7 +104,7 @@ class BatchProcessor(Generic[Telemetry]):
     def _should_export_batch(
         self, batch_strategy: BatchExportStrategy, num_iterations: int
     ) -> bool:
-        if not self._queue:
+        if not self._queue or self._shutdown_timeout_exceeded:
             return False
         # Always continue to export while queue length exceeds max batch size.
         if len(self._queue) >= self._max_export_batch_size:
@@ -180,16 +183,34 @@ class BatchProcessor(Generic[Telemetry]):
         if len(self._queue) >= self._max_export_batch_size:
             self._worker_awaken.set()
 
-    def shutdown(self):
+    def shutdown(self, timeout_millis: int = 30000):
         if self._shutdown:
             return
-        # Prevents emit and force_flush from further calling export.
+        # Causes emit to reject telemetry and makes force_flush a no-op.
         self._shutdown = True
-        # Interrupts sleep in the worker, if it's sleeping.
+        # Interrupts sleep in the worker if it's sleeping.
         self._worker_awaken.set()
-        # Main worker loop should exit after one final export call with flush all strategy.
+        # Wait a tiny bit for the worker thread to wake and call export for a final time.
+        time.sleep(0.1)
+        num_sleeps = 10
+        for _ in range(num_sleeps):
+            # If export is not being called, we can shutdown.
+            if not self._export_lock.locked():
+                break
+            time.sleep(timeout_millis / 1000 / num_sleeps)
+        # Stops worker thread from calling export again if queue is still not empty.
+        self._shutdown_timeout_exceeded = True
+        # We want to shutdown immediately because we already waited `timeout_millis`.
+        # Some exporter's shutdown support a timeout param.
+        if (
+            "timeout_millis"
+            in inspect.getfullargspec(self._exporter.shutdown).args
+        ):
+            self._exporter.shutdown(timeout_millis=0)  # type: ignore
+        else:
+            self._exporter.shutdown()
+        # Worker thread should be finished at this point and return instantly.
         self._worker_thread.join()
-        self._exporter.shutdown()
 
     # TODO: Fix force flush so the timeout is used https://github.com/open-telemetry/opentelemetry-python/issues/4568.
     def force_flush(self, timeout_millis: Optional[int] = None) -> bool:

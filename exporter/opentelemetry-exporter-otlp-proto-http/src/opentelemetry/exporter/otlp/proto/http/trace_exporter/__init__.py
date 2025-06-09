@@ -16,6 +16,7 @@ import gzip
 import logging
 import random
 import zlib
+import threading
 from io import BytesIO
 from os import environ
 from time import sleep, time
@@ -76,6 +77,7 @@ class OTLPSpanExporter(SpanExporter):
         compression: Optional[Compression] = None,
         session: Optional[requests.Session] = None,
     ):
+        self._shutdown_is_occuring = threading.Event()
         self._endpoint = endpoint or environ.get(
             OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
             _append_trace_path(
@@ -162,14 +164,15 @@ class OTLPSpanExporter(SpanExporter):
         serialized_data = encode_spans(spans).SerializePartialToString()
         deadline_sec = time() + self._timeout
         for retry_num in range(1, _MAX_RETRYS + 1):
-            backoff_seconds = 2 ** (retry_num - 1) * random.uniform(0.8, 1.2)
             resp = self._export(serialized_data, deadline_sec - time())
             if resp.ok:
                 return SpanExportResult.SUCCESS
+            backoff_seconds = 2 ** (retry_num - 1) * random.uniform(0.8, 1.2)
             if (
                 not _is_retryable(resp)
                 or retry_num == _MAX_RETRYS
                 or backoff_seconds > (deadline_sec - time())
+                or self._shutdown
             ):
                 _logger.error(
                     "Failed to export span batch code: %s, reason: %s",
@@ -182,14 +185,17 @@ class OTLPSpanExporter(SpanExporter):
                 resp.reason,
                 backoff_seconds,
             )
-            sleep(backoff_seconds)
-        # Not possible to reach here but the linter is complaining.
+            shutdown = self._shutdown_is_occuring.wait(backoff_seconds)
+            if shutdown:
+                _logger.warning("Shutdown in progress, aborting retry.")
+                break
         return SpanExportResult.FAILURE
 
     def shutdown(self):
         if self._shutdown:
             _logger.warning("Exporter already shutdown, ignoring call")
             return
+        self._shutdown_is_occuring.set()
         self._session.close()
         self._shutdown = True
 
