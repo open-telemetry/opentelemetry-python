@@ -220,7 +220,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             if resp.ok:
                 return MetricExportResult.SUCCESS
             # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
-            backoff_seconds = 2 ** retry_num * random.uniform(0.8, 1.2)
+            backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
             if (
                 not _is_retryable(resp)
                 or retry_num + 1 == _MAX_RETRYS

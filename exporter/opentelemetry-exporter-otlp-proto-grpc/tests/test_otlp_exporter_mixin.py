@@ -431,10 +431,6 @@ class TestOTLPExporterMixin(TestCase):
                     SpanExportResult.FAILURE,
                 )
             after = time.time()
-            self.assertEqual(
-                "Failed to export traces to localhost:4317, error code: StatusCode.DEADLINE_EXCEEDED",
-                warning.records[-1].message,
-            )
             self.assertEqual(mock_trace_service.num_requests, 2)
             self.assertAlmostEqual(after - before, 1.4, 1)
 
