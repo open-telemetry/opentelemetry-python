@@ -34,9 +34,9 @@ class Measurement:
     """
 
     # TODO Fix doc - if using valid Google `Attributes:` key, the attributes are duplicated
-    # one will come from napoleon extension and the other from autodoc extension. This
-    # will raise an sphinx error of duplicated object description
-    # See https://github.com/sphinx-doc/sphinx/issues/8664
+    #  one will come from napoleon extension and the other from autodoc extension. This
+    #  will raise an sphinx error of duplicated object description
+    #  See https://github.com/sphinx-doc/sphinx/issues/8664
 
     value: Union[int, float]
     time_unix_nano: int
