@@ -269,7 +269,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
             # First call at time 0, second at time 1, then an early return before the second backoff sleep b/c it would exceed timeout.
             self.assertEqual(mock_post.call_count, 2)
             # There's a +/-20% jitter on each backoff.
-            self.assertTrue(after - before < 1.3)
+            self.assertTrue(0.75 < after - before < 1.25)
             self.assertIn(
                 "Transient error UNAVAILABLE encountered while exporting span batch, retrying in",
                 warning.records[0].message,
@@ -282,7 +282,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
 
         def export_side_effect(*args, **kwargs):
             # Timeout should be set to something slightly less than 400 milliseconds depending on how much time has passed.
-            self.assertTrue(0.4 - kwargs["timeout"] < 0.0005)
+            self.assertAlmostEqual(0.4, kwargs["timeout"], 2)
             return resp
 
         mock_post.side_effect = export_side_effect

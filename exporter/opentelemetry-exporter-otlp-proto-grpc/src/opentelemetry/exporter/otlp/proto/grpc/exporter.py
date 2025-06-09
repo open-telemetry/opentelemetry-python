@@ -293,25 +293,24 @@ class OTLPExporterMixin(
         # FIXME remove this check if the export type for traces
         # gets updated to a class that represents the proto
         # TracesData and use the code below instead.
-        retry_info = RetryInfo()
         with self._export_lock:
             deadline_sec = time() + self._timeout
-            for retry_num in range(1, _MAX_RETRYS + 1):
-                backoff_seconds = 2 ** (retry_num - 1) * random.uniform(
-                    0.8, 1.2
-                )
+            for retry_num in range(_MAX_RETRYS):
                 try:
                     self._client.Export(
                         request=self._translate_data(data),
                         metadata=self._headers,
-                        timeout=self._timeout,
+                        timeout=deadline_sec - time(),
                     )
                     return self._result.SUCCESS
                 except RpcError as error:
                     retry_info_bin = dict(error.trailing_metadata()).get(
                         "google.rpc.retryinfo-bin"
                     )
+                    # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
+                    backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
                     if retry_info_bin is not None:
+                        retry_info = RetryInfo()
                         retry_info.ParseFromString(retry_info_bin)
                         backoff_seconds = (
                             retry_info.retry_delay.seconds
@@ -319,7 +318,7 @@ class OTLPExporterMixin(
                         )
                     if (
                         error.code() not in _RETRYABLE_ERROR_CODES
-                        or retry_num == _MAX_RETRYS
+                        or retry_num + 1 == _MAX_RETRYS
                         or backoff_seconds > (deadline_sec - time())
                     ):
                         logger.error(

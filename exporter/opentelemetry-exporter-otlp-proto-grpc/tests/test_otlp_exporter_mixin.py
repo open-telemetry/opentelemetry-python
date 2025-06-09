@@ -90,12 +90,12 @@ class TraceServiceServicerWithExportParams(TraceServiceServicer):
     def __init__(
         self,
         export_result: StatusCode,
-        optional_retry_millis: Optional[int] = None,
+        optional_retry_nanos: Optional[int] = None,
         optional_export_sleep: Optional[float] = None,
     ):
         self.export_result = export_result
         self.optional_export_sleep = optional_export_sleep
-        self.optional_retry_millis = optional_retry_millis
+        self.optional_retry_nanos = optional_retry_nanos
         self.num_requests = 0
 
     # pylint: disable=invalid-name,unused-argument
@@ -103,20 +103,19 @@ class TraceServiceServicerWithExportParams(TraceServiceServicer):
         self.num_requests += 1
         if self.optional_export_sleep:
             time.sleep(self.optional_export_sleep)
-        if self.export_result != StatusCode.OK:
-            if self.optional_retry_millis:
-                context.set_trailing_metadata(
+        if self.export_result != StatusCode.OK and self.optional_retry_nanos:
+            context.set_trailing_metadata(
+                (
                     (
-                        (
-                            "google.rpc.retryinfo-bin",
-                            RetryInfo(
-                                retry_delay=Duration(
-                                    nanos=self.optional_retry_millis
-                                )
-                            ).SerializeToString(),
-                        ),
-                    )
+                        "google.rpc.retryinfo-bin",
+                        RetryInfo(
+                            retry_delay=Duration(
+                                nanos=self.optional_retry_nanos
+                            )
+                        ).SerializeToString(),
+                    ),
                 )
+            )
         context.set_code(self.export_result)
 
         return ExportTraceServiceResponse()
@@ -372,7 +371,8 @@ class TestOTLPExporterMixin(TestCase):
 
     def test_retry_info_is_respected(self):
         mock_trace_service = TraceServiceServicerWithExportParams(
-            StatusCode.UNAVAILABLE, optional_retry_millis=200
+            StatusCode.UNAVAILABLE,
+            optional_retry_nanos=200000000,  # .2 seconds
         )
         add_TraceServiceServicer_to_server(
             mock_trace_service,
@@ -386,8 +386,8 @@ class TestOTLPExporterMixin(TestCase):
         )
         after = time.time()
         self.assertEqual(mock_trace_service.num_requests, 6)
-        # 200 * 5 = 1 second, plus some wiggle room so the test passes consistently.
-        self.assertTrue(after - before < 1.1)
+        # 1 second plus wiggle room so the test passes consistently.
+        self.assertAlmostEqual(after - before, 1, 1)
 
     def test_retry_not_made_if_would_exceed_timeout(self):
         mock_trace_service = TraceServiceServicerWithExportParams(
@@ -408,34 +408,35 @@ class TestOTLPExporterMixin(TestCase):
         # First call at time 0, second at time 1, third at time 3, fourth would exceed timeout.
         self.assertEqual(mock_trace_service.num_requests, 3)
         # There's a +/-20% jitter on each backoff.
-        self.assertTrue(after - before < 3.7)
+        self.assertTrue(2.35 < after - before < 3.65)
 
     def test_timeout_set_correctly(self):
         mock_trace_service = TraceServiceServicerWithExportParams(
-            StatusCode.OK, optional_export_sleep=0.5
+            StatusCode.UNAVAILABLE, optional_export_sleep=0.25
         )
         add_TraceServiceServicer_to_server(
             mock_trace_service,
             self.server,
         )
-        exporter = OTLPSpanExporterForTesting(insecure=True, timeout=0.4)
-        # Should timeout. Deadline should be set to now + timeout.
-        # That is 400 millis from now, and export sleeps for 500 millis.
+        exporter = OTLPSpanExporterForTesting(insecure=True, timeout=1.4)
+        # Should timeout after 1.4 seconds. First attempt takes .25 seconds
+        # Then a 1 second sleep, then deadline exceeded after .15 seconds,
+        # mid way through second call.
         with self.assertLogs(level=WARNING) as warning:
-            self.assertEqual(
-                exporter.export([self.span]),
-                SpanExportResult.FAILURE,
-            )
+            before = time.time()
+            # Eliminate the jitter.
+            with patch("random.uniform", return_value=1):
+                self.assertEqual(
+                    exporter.export([self.span]),
+                    SpanExportResult.FAILURE,
+                )
+            after = time.time()
             self.assertEqual(
                 "Failed to export traces to localhost:4317, error code: StatusCode.DEADLINE_EXCEEDED",
                 warning.records[-1].message,
             )
-            self.assertEqual(mock_trace_service.num_requests, 1)
-        exporter = OTLPSpanExporterForTesting(insecure=True, timeout=0.8)
-        self.assertEqual(
-            exporter.export([self.span]),
-            SpanExportResult.SUCCESS,
-        )
+            self.assertEqual(mock_trace_service.num_requests, 2)
+            self.assertAlmostEqual(after - before, 1.4, 1)
 
     def test_otlp_headers_from_env(self):
         # pylint: disable=protected-access
