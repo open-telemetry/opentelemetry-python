@@ -249,9 +249,9 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         if self._shutdown:
             _logger.warning("Exporter already shutdown, ignoring call")
             return
+        self._shutdown = True
         self._shutdown_is_occuring.set()
         self._session.close()
-        self._shutdown = True
 
     @property
     def _exporting(self) -> str:

@@ -345,8 +345,8 @@ class OTLPExporterMixin(
         if self._shutdown:
             logger.warning("Exporter already shutdown, ignoring call")
             return
-        self._shutdown_is_occuring.set()
         self._shutdown = True
+        self._shutdown_is_occuring.set()
         self._channel.close()
 
     @property

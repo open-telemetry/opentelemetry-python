@@ -201,10 +201,9 @@ class OTLPLogExporter(LogExporter):
         if self._shutdown:
             _logger.warning("Exporter already shutdown, ignoring call")
             return
+        self._shutdown = True
         self._shutdown_is_occuring.set()
         self._session.close()
-        self._shutdown = True
-
 
 def _compression_from_env() -> Compression:
     compression = (

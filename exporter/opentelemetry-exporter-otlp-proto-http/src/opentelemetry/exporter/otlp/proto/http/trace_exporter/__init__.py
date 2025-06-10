@@ -195,9 +195,9 @@ class OTLPSpanExporter(SpanExporter):
         if self._shutdown:
             _logger.warning("Exporter already shutdown, ignoring call")
             return
+        self._shutdown = True
         self._shutdown_is_occuring.set()
         self._session.close()
-        self._shutdown = True
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         """Nothing is buffered in this exporter, so this method does nothing."""
