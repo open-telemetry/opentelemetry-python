@@ -29,9 +29,9 @@ classifiers = [
 dependencies = [
   "googleapis-common-protos ~= 1.52",
   "opentelemetry-api ~= 1.15",
-  "opentelemetry-proto == 1.34.0",
-  "opentelemetry-sdk ~= 1.34.0",
-  "opentelemetry-exporter-otlp-proto-common == 1.34.0",
+  "opentelemetry-proto == 1.34.1",
+  "opentelemetry-sdk ~= 1.34.1",
+  "opentelemetry-exporter-otlp-proto-common == 1.34.1",
   "requests ~= 2.7",
   "typing-extensions >= 4.5.0",
 ]
