@@ -205,16 +205,14 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
     def export(
         self,
         metrics_data: MetricsData,
-        timeout_millis: Optional[float] = None,
+        timeout_millis: Optional[float] = 10000,
         **kwargs,
     ) -> MetricExportResult:
         if self._shutdown:
             _logger.warning("Exporter already shutdown, ignoring batch")
             return MetricExportResult.FAILURE
         serialized_data = encode_metrics(metrics_data).SerializeToString()
-        deadline_sec = time() + (
-            timeout_millis / 1e3 if timeout_millis else self._timeout
-        )
+        deadline_sec = time() + self._timeout
         for retry_num in range(_MAX_RETRYS):
             resp = self._export(serialized_data, deadline_sec - time())
             if resp.ok:
