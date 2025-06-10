@@ -330,8 +330,10 @@ class OTLPExporterMixin(
                         )
                         return self._result.FAILURE
                     logger.warning(
-                        "Transient error %s encountered while exporting logs batch, retrying in %.2fs.",
+                        "Transient error %s encountered while exporting %s to %s, retrying in %.2fs.",
                         error.code(),
+                        self._exporting,
+                        self._endpoint,
                         backoff_seconds,
                     )
                     sleep(backoff_seconds)
