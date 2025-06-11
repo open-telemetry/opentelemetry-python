@@ -77,6 +77,18 @@ class LogDroppedAttributesWarning(UserWarning):
 warnings.simplefilter("once", LogDroppedAttributesWarning)
 
 
+class LogDeprecatedInitWarning(UserWarning):
+    """Custom warning to indicate deprecated LogRecord init was used.
+
+    This class is used to filter and handle these specific warnings separately
+    from other warnings, ensuring that they are only shown once without
+    interfering with default user warnings.
+    """
+
+
+warnings.simplefilter("once", LogDeprecatedInitWarning)
+
+
 class LogLimits:
     """This class is based on a SpanLimits class in the Tracing module.
 
@@ -224,6 +236,13 @@ class LogRecord(APILogRecord):
         attributes: _ExtendedAttributes | None = None,
         limits: LogLimits | None = _UnsetLogLimits,
     ):
+        if trace_id or span_id or trace_flags:
+            warnings.warn(
+                "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated. Use `context` instead.",
+                LogDeprecatedInitWarning,
+                stacklevel=2,
+            )
+
         if not context:
             context = get_current()
 
