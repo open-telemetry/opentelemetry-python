@@ -26,8 +26,6 @@ from threading import Lock
 from time import time_ns
 from typing import Any, Callable, Tuple, Union, cast, overload  # noqa
 
-from typing_extensions import deprecated
-
 from opentelemetry._logs import Logger as APILogger
 from opentelemetry._logs import LoggerProvider as APILoggerProvider
 from opentelemetry._logs import LogRecord as APILogRecord
@@ -203,9 +201,6 @@ class LogRecord(APILogRecord):
     ): ...
 
     @overload
-    @deprecated(
-        "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated. Use `context` instead."
-    )
     def __init__(
         self,
         timestamp: int | None = None,
