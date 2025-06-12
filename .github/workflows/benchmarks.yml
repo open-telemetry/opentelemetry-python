@@ -6,7 +6,7 @@ on:
 
 jobs:
   sdk-benchmarks:
-    runs-on: self-hosted
+    runs-on: equinix-bare-metal
     steps:
     - name: Checkout Core Repo @ SHA - ${{ github.sha }}
       uses: actions/checkout@v4
