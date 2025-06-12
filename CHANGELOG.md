@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Permit to override default HTTP OTLP exporters headers
+  ([#4634](https://github.com/open-telemetry/opentelemetry-python/pull/4634))
+
 ## Version 1.36.0/0.57b0 (2025-07-29)
 
 - Add missing Prometheus exporter documentation
