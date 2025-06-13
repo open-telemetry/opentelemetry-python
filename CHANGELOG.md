@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4618](https://github.com/open-telemetry/opentelemetry-python/pull/4618))
 - Add `span_exporter` property back to `BatchSpanProcessor` class
   ([#4621](https://github.com/open-telemetry/opentelemetry-python/pull/4621))
+- Logging API accepts optional `context`; deprecates `trace_id`, `span_id`, `trace_flags`.
+  ([#4597](https://github.com/open-telemetry/opentelemetry-python/pull/4597))
 
 ## Version 1.34.0/0.55b0 (2025-06-04)
 
@@ -37,8 +39,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4599](https://github.com/open-telemetry/opentelemetry-python/pull/4599))
 - Drop support for Python 3.8
   ([#4520](https://github.com/open-telemetry/opentelemetry-python/pull/4520))
-- Logging API accepts optional `context`; deprecates `trace_id`, `span_id`, `trace_flags`.
-  ([#4597](https://github.com/open-telemetry/opentelemetry-python/pull/4597))
 
 ## Version 1.33.0/0.54b0 (2025-05-09)
 
