@@ -99,7 +99,7 @@ class OTLPMetricExporter(
         credentials: ChannelCredentials | None = None,
         headers: Union[TypingSequence[Tuple[str, str]], dict[str, str], str]
         | None = None,
-        timeout: int | None = None,
+        timeout: float | None = None,
         compression: Compression | None = None,
         preferred_temporality: dict[type, AggregationTemporality]
         | None = None,
@@ -124,7 +124,7 @@ class OTLPMetricExporter(
 
         environ_timeout = environ.get(OTEL_EXPORTER_OTLP_METRICS_TIMEOUT)
         environ_timeout = (
-            int(environ_timeout) if environ_timeout is not None else None
+            float(environ_timeout) if environ_timeout is not None else None
         )
 
         compression = (
@@ -172,7 +172,6 @@ class OTLPMetricExporter(
 
             if split_export_result is MetricExportResult.FAILURE:
                 export_result = MetricExportResult.FAILURE
-
         return export_result
 
     def _split_metrics_data(

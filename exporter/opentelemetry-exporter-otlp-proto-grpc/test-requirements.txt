@@ -1,5 +1,4 @@
 asgiref==3.7.2
-googleapis-common-protos==1.63.2
 grpcio==1.66.2
 importlib-metadata==6.11.0
 iniconfig==2.0.0
@@ -12,6 +11,7 @@ tomli==2.0.1
 typing_extensions==4.10.0
 wrapt==1.16.0
 zipp==3.19.2
+googleapis-common-protos==1.63.2
 -e opentelemetry-api
 -e tests/opentelemetry-test-utils
 -e exporter/opentelemetry-exporter-otlp-proto-common
