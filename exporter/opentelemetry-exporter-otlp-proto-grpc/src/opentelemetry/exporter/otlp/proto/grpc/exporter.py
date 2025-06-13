@@ -235,13 +235,17 @@ class OTLPExporterMixin(
         self._headers = headers or environ.get(OTEL_EXPORTER_OTLP_HEADERS)
         if isinstance(self._headers, str):
             temp_headers = parse_env_headers(self._headers, liberal=True)
-            self._headers = tuple(temp_headers.items())
-        elif isinstance(self._headers, dict):
-            self._headers = tuple(self._headers.items())
+            self._headers = temp_headers
+        elif isinstance(self._headers, tuple):
+            self._headers = dict(self._headers)
+
         if self._headers is None:
             self._headers = tuple(_OTLP_GRPC_HEADERS)
         else:
-            self._headers = tuple(self._headers) + tuple(_OTLP_GRPC_HEADERS)
+            # let users override our defaults
+            self._headers = tuple(
+                {**dict(_OTLP_GRPC_HEADERS), **self._headers}.items()
+            )
 
         self._timeout = timeout or float(
             environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, 10)

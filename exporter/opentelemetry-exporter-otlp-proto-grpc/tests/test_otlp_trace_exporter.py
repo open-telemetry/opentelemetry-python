@@ -267,7 +267,9 @@ class TestOTLPSpanExporter(TestCase):
 
     @patch.dict(
         "os.environ",
-        {OTEL_EXPORTER_OTLP_TRACES_HEADERS: " key1=value1,KEY2 = VALUE=2 "},
+        {
+            OTEL_EXPORTER_OTLP_TRACES_HEADERS: " key1=value1,KEY2 = VALUE=2 ,User-agent=GrpcTraceExporter"
+        },
     )
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"
@@ -280,9 +282,9 @@ class TestOTLPSpanExporter(TestCase):
         self.assertEqual(
             exporter._headers,
             (
+                ("user-agent", "GrpcTraceExporter"),
                 ("key1", "value1"),
                 ("key2", "VALUE=2"),
-                ("user-agent", "OTel-OTLP-Exporter-Python/" + __version__),
             ),
         )
         exporter = OTLPSpanExporter(
@@ -292,21 +294,25 @@ class TestOTLPSpanExporter(TestCase):
         self.assertEqual(
             exporter._headers,
             (
+                ("user-agent", "OTel-OTLP-Exporter-Python/" + __version__),
                 ("key3", "value3"),
                 ("key4", "value4"),
-                ("user-agent", "OTel-OTLP-Exporter-Python/" + __version__),
             ),
         )
         exporter = OTLPSpanExporter(
-            headers={"key5": "value5", "key6": "value6"}
+            headers={
+                "key5": "value5",
+                "key6": "value6",
+                "user-agent": "ParameterExporter",
+            }
         )
         # pylint: disable=protected-access
         self.assertEqual(
             exporter._headers,
             (
+                ("user-agent", "ParameterExporter"),
                 ("key5", "value5"),
                 ("key6", "value6"),
-                ("user-agent", "OTel-OTLP-Exporter-Python/" + __version__),
             ),
         )
 
