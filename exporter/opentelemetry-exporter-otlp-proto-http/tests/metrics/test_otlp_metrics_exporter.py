@@ -505,7 +505,7 @@ class TestOTLPMetricExporter(TestCase):
 
     @patch.object(Session, "post")
     def test_retry_timeout(self, mock_post):
-        exporter = OTLPMetricExporter(timeout=3.5)
+        exporter = OTLPMetricExporter(timeout=1.5)
 
         resp = Response()
         resp.status_code = 503
@@ -513,9 +513,8 @@ class TestOTLPMetricExporter(TestCase):
         mock_post.return_value = resp
         with self.assertLogs(level=WARNING) as warning:
             before = time.time()
-            # Set timeout to 1.5 seconds, takes precedence over the 3.5 second class timeout.
             self.assertEqual(
-                exporter.export(self.metrics["sum_int"], 1500),
+                exporter.export(self.metrics["sum_int"]),
                 MetricExportResult.FAILURE,
             )
             after = time.time()
@@ -523,28 +522,11 @@ class TestOTLPMetricExporter(TestCase):
             # First call at time 0, second at time 1, then an early return before the second backoff sleep b/c it would exceed timeout.
             self.assertEqual(mock_post.call_count, 2)
             # There's a +/-20% jitter on each backoff.
-            self.assertTrue(after - before < 1.3)
+            self.assertTrue(0.75 < after - before < 1.25)
             self.assertIn(
                 "Transient error UNAVAILABLE encountered while exporting metrics batch, retrying in",
                 warning.records[0].message,
             )
-        mock_post.reset_mock()
-        before = time.time()
-        # This time the class level 3.5s timeout should be used.
-        self.assertEqual(
-            exporter.export(self.metrics["sum_int"]),
-            MetricExportResult.FAILURE,
-        )
-        after = time.time()
-
-        # First call at time 0, second at time 1, third at time 3.
-        self.assertEqual(mock_post.call_count, 3)
-        # There's a +/-20% jitter on each backoff.
-        self.assertTrue(after - before < 3.7)
-        self.assertIn(
-            "Transient error UNAVAILABLE encountered while exporting metrics batch, retrying in",
-            warning.records[0].message,
-        )
 
     @patch.object(Session, "post")
     def test_timeout_set_correctly(self, mock_post):
@@ -553,9 +535,9 @@ class TestOTLPMetricExporter(TestCase):
 
         def export_side_effect(*args, **kwargs):
             # Timeout should be set to something slightly less than 400 milliseconds depending on how much time has passed.
-            self.assertTrue(0.4 - kwargs["timeout"] < 0.0005)
+            self.assertAlmostEqual(0.4, kwargs["timeout"], 2)
             return resp
 
         mock_post.side_effect = export_side_effect
-        exporter = OTLPMetricExporter()
-        exporter.export(self.metrics["sum_int"], 400)
+        exporter = OTLPMetricExporter(timeout=0.4)
+        exporter.export(self.metrics["sum_int"])

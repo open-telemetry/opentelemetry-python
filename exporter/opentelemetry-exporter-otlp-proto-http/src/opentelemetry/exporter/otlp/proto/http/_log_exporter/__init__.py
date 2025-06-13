@@ -14,7 +14,6 @@
 
 import gzip
 import logging
-import threading
 import random
 import zlib
 from io import BytesIO
@@ -165,16 +164,17 @@ class OTLPLogExporter(LogExporter):
 
         serialized_data = encode_logs(batch).SerializeToString()
         deadline_sec = time() + self._timeout
-        for retry_num in range(1, _MAX_RETRYS + 1):
+        for retry_num in range(_MAX_RETRYS):
             resp = self._export(serialized_data, deadline_sec - time())
             if resp.ok:
                 return LogExportResult.SUCCESS
-            backoff_seconds = 2 ** (retry_num - 1) * random.uniform(0.8, 1.2)
+            # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
+            backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
             if (
                 not _is_retryable(resp)
-                or retry_num == _MAX_RETRYS
+                or retry_num + 1 == _MAX_RETRYS
                 or backoff_seconds > (deadline_sec - time())
-                or self._shutdown
+                 or self._shutdown
             ):
                 _logger.error(
                     "Failed to export logs batch code: %s, reason: %s",
