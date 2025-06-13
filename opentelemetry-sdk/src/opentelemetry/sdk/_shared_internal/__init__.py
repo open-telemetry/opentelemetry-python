@@ -182,7 +182,7 @@ class BatchProcessor(Generic[Telemetry]):
         self._queue.appendleft(data)
         if len(self._queue) >= self._max_export_batch_size:
             self._worker_awaken.set()
-
+ 
     def shutdown(self, timeout_millis: int = 30000):
         if self._shutdown:
             return
@@ -209,8 +209,10 @@ class BatchProcessor(Generic[Telemetry]):
             self._exporter.shutdown(timeout_millis=0)  # type: ignore
         else:
             self._exporter.shutdown()
-        # Worker thread should be finished at this point and return instantly.
-        self._worker_thread.join()
+        # Worker thread **should** be finished at this point, because we called shutdown on the exporter,
+        # and set shutdown_is_occuring to prevent further export calls. It's possible that a single export
+        # call is ongoing and the thread isn't finished. In this case we will return instead of waiting on
+        # the thread to finish.
 
     # TODO: Fix force flush so the timeout is used https://github.com/open-telemetry/opentelemetry-python/issues/4568.
     def force_flush(self, timeout_millis: Optional[int] = None) -> bool:

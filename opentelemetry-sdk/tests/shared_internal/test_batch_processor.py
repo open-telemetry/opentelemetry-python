@@ -239,6 +239,7 @@ class TestBatchProcessor:
 
     def test_shutdown_allows_1_export_to_finish(self, batch_processor_class, telemetry, caplog):
         # This exporter throws an exception if it's export sleep cannot finish.
+        dir(caplog)
         exporter = MockExporterForTesting(export_sleep=2)
         processor = batch_processor_class(
             exporter,
@@ -246,7 +247,7 @@ class TestBatchProcessor:
             max_export_batch_size=1,
             schedule_delay_millis=30000,
         )
-        # Max export batch size is 1, so 3 emit calls requires 3 separate calls to Export to clear the queue.
+        # Max export batch size is 1, so 3 emit calls requires 3 separate calls (each block for 2 seconds) to Export to clear the queue.
         processor._batch_processor.emit(telemetry)
         processor._batch_processor.emit(telemetry)
         processor._batch_processor.emit(telemetry)
