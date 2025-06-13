@@ -14,13 +14,16 @@
 
 # pylint: disable=protected-access
 
+import time
 import unittest
+from logging import WARNING
 from typing import List
-from unittest.mock import MagicMock, Mock, call, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import requests
-import responses
 from google.protobuf.json_format import MessageToDict
+from requests import Session
+from requests.models import Response
 
 from opentelemetry._logs import SeverityNumber
 from opentelemetry.exporter.otlp.proto.http import Compression
@@ -267,25 +270,6 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         else:
             self.fail("No log records found")
 
-    @responses.activate
-    @patch("opentelemetry.exporter.otlp.proto.http._log_exporter.sleep")
-    def test_exponential_backoff(self, mock_sleep):
-        # return a retryable error
-        responses.add(
-            responses.POST,
-            "http://logs.example.com/export",
-            json={"error": "something exploded"},
-            status=500,
-        )
-
-        exporter = OTLPLogExporter(endpoint="http://logs.example.com/export")
-        logs = self._get_sdk_log_data()
-
-        exporter.export(logs)
-        mock_sleep.assert_has_calls(
-            [call(1), call(2), call(4), call(8), call(16), call(32)]
-        )
-
     @staticmethod
     def _get_sdk_log_data() -> List[LogData]:
         log1 = LogData(
@@ -365,3 +349,42 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         self.assertEqual(
             OTLPLogExporter().export(MagicMock()), LogExportResult.SUCCESS
         )
+
+    @patch.object(Session, "post")
+    def test_retry_timeout(self, mock_post):
+        exporter = OTLPLogExporter(timeout=1.5)
+
+        resp = Response()
+        resp.status_code = 503
+        resp.reason = "UNAVAILABLE"
+        mock_post.return_value = resp
+        with self.assertLogs(level=WARNING) as warning:
+            before = time.time()
+            # Set timeout to 1.5 seconds
+            self.assertEqual(
+                exporter.export(self._get_sdk_log_data()),
+                LogExportResult.FAILURE,
+            )
+            after = time.time()
+            # First call at time 0, second at time 1, then an early return before the second backoff sleep b/c it would exceed timeout.
+            self.assertEqual(mock_post.call_count, 2)
+            # There's a +/-20% jitter on each backoff.
+            self.assertTrue(0.75 < after - before < 1.25)
+            self.assertIn(
+                "Transient error UNAVAILABLE encountered while exporting logs batch, retrying in",
+                warning.records[0].message,
+            )
+
+    @patch.object(Session, "post")
+    def test_timeout_set_correctly(self, mock_post):
+        resp = Response()
+        resp.status_code = 200
+
+        def export_side_effect(*args, **kwargs):
+            # Timeout should be set to something slightly less than 400 milliseconds depending on how much time has passed.
+            self.assertAlmostEqual(0.4, kwargs["timeout"], 2)
+            return resp
+
+        mock_post.side_effect = export_side_effect
+        exporter = OTLPLogExporter(timeout=0.4)
+        exporter.export(self._get_sdk_log_data())
