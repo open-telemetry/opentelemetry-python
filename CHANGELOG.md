@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4618](https://github.com/open-telemetry/opentelemetry-python/pull/4618))
 - Add `span_exporter` property back to `BatchSpanProcessor` class
   ([#4621](https://github.com/open-telemetry/opentelemetry-python/pull/4621))
+- Fix license field in pyproject.toml files
+  ([#4625](https://github.com/open-telemetry/opentelemetry-python/pull/4625))
 
 ## Version 1.34.0/0.55b0 (2025-06-04)
 
