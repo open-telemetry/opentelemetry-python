@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import weakref
 from logging import getLogger
+from os import register_at_fork
 from threading import RLock
 from time import time_ns
 from typing import Dict, List, Optional
@@ -74,6 +76,11 @@ class MetricReaderStorage:
         ] = {}
         self._instrument_class_temporality = instrument_class_temporality
         self._instrument_class_aggregation = instrument_class_aggregation
+        weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
+        register_at_fork(after_in_child=lambda: weak_reinit()())
+
+    def _at_fork_reinit(self):
+        self._lock._at_fork_reinit()
 
     def _get_or_init_view_instrument_match(
         self, instrument: Instrument

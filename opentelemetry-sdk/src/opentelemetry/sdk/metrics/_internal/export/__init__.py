@@ -19,7 +19,7 @@ import weakref
 from abc import ABC, abstractmethod
 from enum import Enum
 from logging import getLogger
-from os import environ, linesep
+from os import environ, linesep, register_at_fork
 from sys import stdout
 from threading import Event, Lock, RLock, Thread
 from time import time_ns
@@ -409,6 +409,11 @@ class InMemoryMetricReader(MetricReader):
         self._metrics_data: "opentelemetry.sdk.metrics.export.MetricsData" = (
             None
         )
+        weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
+        register_at_fork(after_in_child=lambda: weak_reinit()())
+
+    def _at_fork_reinit(self):
+        self._lock._at_fork_reinit()
 
     def get_metrics_data(
         self,
@@ -510,6 +515,7 @@ class PeriodicExportingMetricReader(MetricReader):
             )
 
     def _at_fork_reinit(self):
+        self._export_lock._at_fork_reinit()
         self._daemon_thread = Thread(
             name="OtelPeriodicExportingMetricReader",
             target=self._ticker,

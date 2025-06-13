@@ -21,7 +21,8 @@ import logging
 import threading
 import traceback
 import typing
-from os import environ
+import weakref
+from os import environ, register_at_fork
 from time import time_ns
 from types import MappingProxyType, TracebackType
 from typing import (
@@ -156,6 +157,11 @@ class SynchronousMultiSpanProcessor(SpanProcessor):
         # iterating through it on "on_start" and "on_end".
         self._span_processors = ()
         self._lock = threading.Lock()
+        weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
+        register_at_fork(after_in_child=lambda: weak_reinit()())
+
+    def _at_fork_reinit(self):
+        self._lock._at_fork_reinit()
 
     def add_span_processor(self, span_processor: SpanProcessor) -> None:
         """Adds a SpanProcessor to the list handled by this instance."""
@@ -226,6 +232,11 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
         self._executor = concurrent.futures.ThreadPoolExecutor(
             max_workers=num_threads
         )
+        weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
+        register_at_fork(after_in_child=lambda: weak_reinit()())
+
+    def _at_fork_reinit(self):
+        self._lock._at_fork_reinit()
 
     def add_span_processor(self, span_processor: SpanProcessor) -> None:
         """Adds a SpanProcessor to the list handled by this instance."""
@@ -815,6 +826,11 @@ class Span(trace_api.Span, ReadableSpan):
                 self._events.append(event)
 
         self._links = self._new_links(links)
+        weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
+        register_at_fork(after_in_child=lambda: weak_reinit()())
+
+    def _at_fork_reinit(self):
+        self._lock._at_fork_reinit()
 
     def __repr__(self):
         return f'{type(self).__name__}(name="{self._name}", context={self._context})'

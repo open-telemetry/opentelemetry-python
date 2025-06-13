@@ -22,7 +22,8 @@ import logging
 import threading
 import traceback
 import warnings
-from os import environ
+import weakref
+from os import environ, register_at_fork
 from threading import Lock
 from time import time_ns
 from typing import Any, Callable, Tuple, Union, cast  # noqa
@@ -326,6 +327,11 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
         # iterating through it on "emit".
         self._log_record_processors = ()  # type: Tuple[LogRecordProcessor, ...]
         self._lock = threading.Lock()
+        weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
+        register_at_fork(after_in_child=lambda: weak_reinit()())
+
+    def _at_fork_reinit(self):
+        self._lock._at_fork_reinit()
 
     def add_log_record_processor(
         self, log_record_processor: LogRecordProcessor
@@ -388,6 +394,11 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
         self._executor = concurrent.futures.ThreadPoolExecutor(
             max_workers=max_workers
         )
+        weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
+        register_at_fork(after_in_child=lambda: weak_reinit()())
+
+    def _at_fork_reinit(self):
+        self._lock._at_fork_reinit()
 
     def add_log_record_processor(
         self, log_record_processor: LogRecordProcessor
@@ -642,6 +653,11 @@ class LoggerProvider(APILoggerProvider):
             self._at_exit_handler = atexit.register(self.shutdown)
         self._logger_cache = {}
         self._logger_cache_lock = Lock()
+        weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
+        register_at_fork(after_in_child=lambda: weak_reinit()())
+
+    def _at_fork_reinit(self):
+        self._logger_cache_lock._at_fork_reinit()
 
     @property
     def resource(self):

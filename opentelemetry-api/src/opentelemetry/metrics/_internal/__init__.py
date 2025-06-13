@@ -41,10 +41,11 @@ The following code shows how to obtain a meter using the global :class:`.MeterPr
 """
 
 import warnings
+import weakref
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from logging import getLogger
-from os import environ
+from os import environ, register_at_fork
 from threading import Lock
 from typing import Dict, List, Optional, Sequence, Union, cast
 
@@ -156,6 +157,11 @@ class _ProxyMeterProvider(MeterProvider):
         self._lock = Lock()
         self._meters: List[_ProxyMeter] = []
         self._real_meter_provider: Optional[MeterProvider] = None
+        weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
+        register_at_fork(after_in_child=lambda: weak_reinit()())
+
+    def _at_fork_reinit(self):
+        self._lock._at_fork_reinit()
 
     def get_meter(
         self,
@@ -510,6 +516,11 @@ class _ProxyMeter(Meter):
         self._lock = Lock()
         self._instruments: List[_ProxyInstrumentT] = []
         self._real_meter: Optional[Meter] = None
+        weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
+        register_at_fork(after_in_child=lambda: weak_reinit()())
+
+    def _at_fork_reinit(self):
+        self._lock._at_fork_reinit()
 
     def on_set_meter_provider(self, meter_provider: MeterProvider) -> None:
         """Called when a real meter provider is set on the creating _ProxyMeterProvider

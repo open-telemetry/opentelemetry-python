@@ -13,7 +13,9 @@
 # limitations under the License.
 
 
+import weakref
 from logging import getLogger
+from os import register_at_fork
 from threading import Lock
 from time import time_ns
 from typing import Dict, List, Optional, Sequence
@@ -44,6 +46,8 @@ class _ViewInstrumentMatch:
         self._instrument = instrument
         self._attributes_aggregation: Dict[frozenset, _Aggregation] = {}
         self._lock = Lock()
+        weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
+        register_at_fork(after_in_child=lambda: weak_reinit()())
         self._instrument_class_aggregation = instrument_class_aggregation
         self._name = self._view._name or self._instrument.name
         self._description = (
@@ -65,6 +69,9 @@ class _ViewInstrumentMatch:
                 self._view._exemplar_reservoir_factory,
                 0,
             )
+
+    def _at_fork_reinit(self):
+        self._lock._at_fork_reinit()
 
     def conflicts(self, other: "_ViewInstrumentMatch") -> bool:
         # pylint: disable=protected-access

@@ -15,10 +15,11 @@
 """OTLP Exporter"""
 
 import threading
+import weakref
 from abc import ABC, abstractmethod
 from collections.abc import Sequence  # noqa: F401
 from logging import getLogger
-from os import environ
+from os import environ, register_at_fork
 from time import sleep
 from typing import (  # noqa: F401
     Any,
@@ -261,7 +262,12 @@ class OTLPExporterMixin(
         self._client = self._stub(self._channel)
 
         self._export_lock = threading.Lock()
+        weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
+        register_at_fork(after_in_child=lambda: weak_reinit()())
         self._shutdown = False
+
+    def _at_fork_reinit(self):
+        self._export_lock._at_fork_reinit()
 
     @abstractmethod
     def _translate_data(
