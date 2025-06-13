@@ -17,7 +17,6 @@ import logging
 import os
 import time
 import unittest
-import warnings
 from concurrent.futures import ThreadPoolExecutor
 from sys import version_info
 from unittest.mock import Mock, patch
@@ -194,8 +193,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         )
         exporter.clear()
         logger_provider.shutdown()
-        with warnings.catch_warnings(record=True):
-            logger.warning("Log after shutdown")
+        logger.warning("Log after shutdown")
         finished_logs = exporter.get_finished_logs()
         self.assertEqual(len(finished_logs), 0)
 
