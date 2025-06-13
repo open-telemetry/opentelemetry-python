@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import abc
 import atexit
+import base64
 import concurrent.futures
 import json
 import logging
@@ -59,6 +60,13 @@ _logger = logging.getLogger(__name__)
 
 _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
 _ENV_VALUE_UNSET = ""
+
+
+class BytesEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, bytes):
+            return base64.b64encode(o).decode()
+        return super().default(o)
 
 
 class LogDroppedAttributesWarning(UserWarning):
@@ -248,6 +256,7 @@ class LogRecord(APILogRecord):
                 "resource": json.loads(self.resource.to_json()),
             },
             indent=indent,
+            cls=BytesEncoder,
         )
 
     @property
