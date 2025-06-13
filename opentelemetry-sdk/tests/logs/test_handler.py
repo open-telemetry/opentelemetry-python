@@ -25,7 +25,7 @@ from opentelemetry.sdk._logs import (
     LogData,
     LoggerProvider,
     LoggingHandler,
-    LogRecordProcessor
+    LogRecordProcessor,
 )
 from opentelemetry.semconv._incubating.attributes import code_attributes
 from opentelemetry.semconv.attributes import exception_attributes
@@ -324,7 +324,6 @@ class TestLoggingHandler(unittest.TestCase):
 
     def test_handler_calling_flush_does_not_cause_deadlock(self):
         class LogProcessorThatAccessesLockOnFlush(LogRecordProcessor):
-
             def emit(self, log_data: LogData):
                 pass
 
@@ -332,7 +331,7 @@ class TestLoggingHandler(unittest.TestCase):
                 pass
 
             def force_flush(self, timeout_millis: int = 30000):
-                #Deadlock will happen here IF `flush` starts a new thread
+                # Deadlock will happen here IF `flush` starts a new thread
                 # and then blocks.
                 logging._lock.acquire()
                 # assert logging._lock.acquire(False) is True
@@ -343,7 +342,7 @@ class TestLoggingHandler(unittest.TestCase):
         logger_provider.add_log_record_processor(processor)
         handler = LoggingHandler(logger_provider=logger_provider)
         logging.getLogger().addHandler(handler)
-        # This 
+        # This
         with logging._lock:
             for handler in logging.getLogger().handlers:
                 handler.flush()
@@ -391,5 +390,6 @@ class FakeProcessor(LogRecordProcessor):
 
     def get_log_record(self, i):
         return self.log_data_emitted[i].log_record
+
 
 # unittest.main(__name__)
