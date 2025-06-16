@@ -312,6 +312,10 @@ class TestOTLPExporterMixin(TestCase):
                 "Exporter already shutdown, ignoring batch",
             )
 
+    @unittest.skipIf(
+        system() == "Windows",
+        "For gRPC + windows there's some added delay in the RPCs which breaks the assertion over amount of time passed.",
+    )
     def test_shutdown_interrupts_export_retry_backoff(self):
         add_TraceServiceServicer_to_server(
             TraceServiceServicerWithExportParams(
@@ -327,7 +331,7 @@ class TestOTLPExporterMixin(TestCase):
             begin_wait = time.time()
             export_thread.start()
             # Wait a bit for export to fail and the backoff sleep to start
-            time.sleep(0.1)
+            time.sleep(0.05)
             # The code should now be in a 1 second backoff.
             # pylint: disable=protected-access
             self.assertFalse(self.exporter._shutdown_is_occuring.is_set())
@@ -337,7 +341,7 @@ class TestOTLPExporterMixin(TestCase):
             end_wait = time.time()
             self.assertEqual(export_result, SpanExportResult.FAILURE)
             # Shutdown should have interrupted the sleep.
-            self.assertTrue(end_wait - begin_wait < 0.3)
+            self.assertTrue(end_wait - begin_wait < 0.2)
             self.assertEqual(
                 warning.records[1].message,
                 "Shutdown in progress, aborting retry.",
