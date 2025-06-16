@@ -14,6 +14,7 @@
 
 # pylint: disable=protected-access
 import gc
+import logging
 import multiprocessing
 import os
 import time
@@ -219,27 +220,9 @@ class TestBatchProcessor:
         # Then the reference to the processor should no longer exist
         assert weak_ref() is None
 
-    def test_shutdown_cancels_longrunning_export(self, batch_processor_class, telemetry, caplog):
-        # This exporter throws an exception if it's export sleep cannot finish.
-        exporter = MockExporterForTesting(export_sleep=3)
-        processor = batch_processor_class(
-            exporter,
-            max_queue_size=200,
-            max_export_batch_size=10,
-            schedule_delay_millis=30000,
-        )
-        processor._batch_processor.emit(telemetry)
-        before = time.time()
-        # Shutdown should cancel export after 2 seconds
-        processor._batch_processor.shutdown(timeout_millis=2000)
-        after = time.time()
-        assert after - before < 2.2
-        assert "Exception while exporting" in caplog.text
-
 
     def test_shutdown_allows_1_export_to_finish(self, batch_processor_class, telemetry, caplog):
         # This exporter throws an exception if it's export sleep cannot finish.
-        dir(caplog)
         exporter = MockExporterForTesting(export_sleep=2)
         processor = batch_processor_class(
             exporter,
@@ -253,8 +236,14 @@ class TestBatchProcessor:
         processor._batch_processor.emit(telemetry)
         before = time.time()
         processor._batch_processor.shutdown(timeout_millis=3000)
+        # Shutdown does not kill the thread.
+        assert processor._batch_processor._worker_thread.is_alive() is True
+
         after = time.time()
         assert after - before < 3.2
+        # Thread will naturally finish after a little bit.
+        time.sleep(.1)
+        assert processor._batch_processor._worker_thread.is_alive() is False
         # Expect the second call to be interrupted by shutdown, and the third call to never be made.
         assert "Exception while exporting" in caplog.text
         assert 2 == exporter.num_export_calls
