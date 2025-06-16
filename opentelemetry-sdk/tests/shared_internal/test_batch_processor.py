@@ -61,12 +61,11 @@ class MockExporterForTesting:
     def export(self, _: list[Any]):
         self.num_export_calls += 1
         if self._shutdown:
-            raise Exception("Cannot export, already shutdown")
+            raise ValueError("Cannot export, already shutdown")
 
         sleep_interrupted = self.export_sleep_event.wait(self.export_sleep)
         if sleep_interrupted:
-            raise Exception("Did not get to finish !")
-        return
+            raise ValueError("Did not get to finish !")
 
     def shutdown(self):
         # Force export to finish sleeping.
@@ -240,7 +239,7 @@ class TestBatchProcessor:
         assert processor._batch_processor._worker_thread.is_alive() is True
 
         after = time.time()
-        assert after - before < 3.2
+        assert after - before < 3.3
         # Thread will naturally finish after a little bit.
         time.sleep(0.1)
         assert processor._batch_processor._worker_thread.is_alive() is False

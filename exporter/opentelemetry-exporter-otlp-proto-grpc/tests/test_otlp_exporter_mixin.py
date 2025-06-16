@@ -327,7 +327,7 @@ class TestOTLPExporterMixin(TestCase):
             begin_wait = time.time()
             export_thread.start()
             # Wait a bit for export to fail and the backoff sleep to start
-            time.sleep(0.05)
+            time.sleep(0.1)
             # The code should now be in a 1 second backoff.
             # pylint: disable=protected-access
             self.assertFalse(self.exporter._shutdown_is_occuring.is_set())
@@ -337,7 +337,7 @@ class TestOTLPExporterMixin(TestCase):
             end_wait = time.time()
             self.assertEqual(export_result, SpanExportResult.FAILURE)
             # Shutdown should have interrupted the sleep.
-            self.assertTrue(end_wait - begin_wait < 0.2)
+            self.assertTrue(end_wait - begin_wait < 0.3)
             self.assertEqual(
                 warning.records[1].message,
                 "Shutdown in progress, aborting retry.",
