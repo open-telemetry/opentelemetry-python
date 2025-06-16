@@ -7,11 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-- Update OTLP gRPC/HTTP exporters: the export timeout is now inclusive of all retries and backoffs.
-  A +/-20% jitter was added to all backoffs. A pointless 32 second sleep that occurred after all retries
-  had completed/failed was removed.
-  ([#4564](https://github.com/open-telemetry/opentelemetry-python/pull/4564)).
 
+- Update OTLP gRPC/HTTP exporters: calling shutdown will now interrupt exporters that are sleeping
+  before a retry attempt, and cause them to return failure immediately.
+  Update BatchSpan/LogRecodProcessors: shutdown will now complete after 30 seconds of trying to finish
+  exporting any buffered telemetry, instead of continuing to export until all telemetry was exported.
+  ([#4564](https://github.com/open-telemetry/opentelemetry-python/pull/4564)).
 - Update OTLP gRPC/HTTP exporters: the export timeout is now inclusive of all retries and backoffs.
   A +/-20% jitter was added to all backoffs. A pointless 32 second sleep that occurred after all retries
   had completed/failed was removed.

@@ -312,11 +312,10 @@ class TestOTLPExporterMixin(TestCase):
                 "Exporter already shutdown, ignoring batch",
             )
 
-    def test_shutdown_interrupts_export_sleep(self):
-        # Returns unavailable and asks for a 20 second sleep before retry.
+    def test_shutdown_interrupts_export_retry_backoff(self):
         add_TraceServiceServicer_to_server(
             TraceServiceServicerWithExportParams(
-                StatusCode.UNAVAILABLE
+                StatusCode.UNAVAILABLE,
             ),
             self.server,
         )
@@ -325,24 +324,23 @@ class TestOTLPExporterMixin(TestCase):
             target=self.exporter.export, args=([self.span],)
         )
         with self.assertLogs(level=WARNING) as warning:
+            begin_wait = time.time()
             export_thread.start()
             # Wait a bit for export to fail and the backoff sleep to start
-            time.sleep(.1)
-            # The code should now be in a sleep that's between .8 and 1.2 seconds.
-            begin_wait = time.time_ns()
+            time.sleep(0.05)
+            # The code should now be in a 1 second backoff.
             # pylint: disable=protected-access
             self.assertFalse(self.exporter._shutdown_is_occuring.is_set())
             self.exporter.shutdown()
             self.assertTrue(self.exporter._shutdown_is_occuring.is_set())
             export_result = export_thread.join()
-            end_wait = time.time_ns()
+            end_wait = time.time()
             self.assertEqual(export_result, SpanExportResult.FAILURE)
             # Shutdown should have interrupted the sleep.
-            self.assertTrue((end_wait - begin_wait) / 1e9 <  .1)
-            print(warning.records)
+            self.assertTrue(end_wait - begin_wait < 0.2)
             self.assertEqual(
                 warning.records[1].message,
-                "Shutdown in progress, aborting retry."
+                "Shutdown in progress, aborting retry.",
             )
 
     def test_export_over_closed_grpc_channel(self):

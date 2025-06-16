@@ -15,10 +15,11 @@ from __future__ import annotations
 import gzip
 import logging
 import random
+import threading
 import zlib
 from io import BytesIO
 from os import environ
-from time import sleep, time
+from time import time
 from typing import (  # noqa: F401
     Any,
     Callable,

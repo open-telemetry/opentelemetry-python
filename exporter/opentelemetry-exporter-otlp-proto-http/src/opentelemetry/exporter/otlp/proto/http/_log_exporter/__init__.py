@@ -15,10 +15,11 @@
 import gzip
 import logging
 import random
+import threading
 import zlib
 from io import BytesIO
 from os import environ
-from time import sleep, time
+from time import time
 from typing import Dict, Optional, Sequence
 
 import requests
@@ -174,7 +175,7 @@ class OTLPLogExporter(LogExporter):
                 not _is_retryable(resp)
                 or retry_num + 1 == _MAX_RETRYS
                 or backoff_seconds > (deadline_sec - time())
-                 or self._shutdown
+                or self._shutdown
             ):
                 _logger.error(
                     "Failed to export logs batch code: %s, reason: %s",
@@ -204,6 +205,7 @@ class OTLPLogExporter(LogExporter):
         self._shutdown = True
         self._shutdown_is_occuring.set()
         self._session.close()
+
 
 def _compression_from_env() -> Compression:
     compression = (

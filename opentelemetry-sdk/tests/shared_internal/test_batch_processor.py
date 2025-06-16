@@ -14,12 +14,11 @@
 
 # pylint: disable=protected-access
 import gc
-import logging
 import multiprocessing
 import os
+import threading
 import time
 import unittest
-import threading
 import weakref
 from platform import system
 from typing import Any
@@ -52,13 +51,13 @@ if system() != "Windows":
     multiprocessing.set_start_method("fork")
 
 
-class MockExporterForTesting():
+class MockExporterForTesting:
     def __init__(self, export_sleep: int):
         self.num_export_calls = 0
         self.export_sleep = export_sleep
         self._shutdown = False
         self.export_sleep_event = threading.Event()
-    
+
     def export(self, _: list[Any]):
         self.num_export_calls += 1
         if self._shutdown:
@@ -73,7 +72,7 @@ class MockExporterForTesting():
         # Force export to finish sleeping.
         self._shutdown = True
         self.export_sleep_event.set()
-        
+
 
 # BatchLogRecodProcessor/BatchSpanProcessor initialize and use BatchProcessor.
 # Important: make sure to call .shutdown() before the end of the test,
@@ -220,8 +219,9 @@ class TestBatchProcessor:
         # Then the reference to the processor should no longer exist
         assert weak_ref() is None
 
-
-    def test_shutdown_allows_1_export_to_finish(self, batch_processor_class, telemetry, caplog):
+    def test_shutdown_allows_1_export_to_finish(
+        self, batch_processor_class, telemetry, caplog
+    ):
         # This exporter throws an exception if it's export sleep cannot finish.
         exporter = MockExporterForTesting(export_sleep=2)
         processor = batch_processor_class(
@@ -242,7 +242,7 @@ class TestBatchProcessor:
         after = time.time()
         assert after - before < 3.2
         # Thread will naturally finish after a little bit.
-        time.sleep(.1)
+        time.sleep(0.1)
         assert processor._batch_processor._worker_thread.is_alive() is False
         # Expect the second call to be interrupted by shutdown, and the third call to never be made.
         assert "Exception while exporting" in caplog.text

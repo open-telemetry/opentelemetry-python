@@ -182,7 +182,7 @@ class BatchProcessor(Generic[Telemetry]):
         self._queue.appendleft(data)
         if len(self._queue) >= self._max_export_batch_size:
             self._worker_awaken.set()
- 
+
     def shutdown(self, timeout_millis: int = 30000):
         if self._shutdown:
             return

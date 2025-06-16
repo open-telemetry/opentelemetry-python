@@ -15,11 +15,11 @@
 import gzip
 import logging
 import random
-import zlib
 import threading
+import zlib
 from io import BytesIO
 from os import environ
-from time import sleep, time
+from time import time
 from typing import Dict, Optional, Sequence
 
 import requests
@@ -31,9 +31,6 @@ from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
 from opentelemetry.exporter.otlp.proto.http import (
     _OTLP_HTTP_HEADERS,
     Compression,
-)
-from opentelemetry.exporter.otlp.proto.http._common import (
-    _is_retryable,
 )
 from opentelemetry.exporter.otlp.proto.http._common import (
     _is_retryable,
