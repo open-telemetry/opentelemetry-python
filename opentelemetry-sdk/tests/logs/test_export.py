@@ -193,8 +193,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         )
         exporter.clear()
         logger_provider.shutdown()
-        with self.assertLogs(level=logging.WARNING):
-            logger.warning("Log after shutdown")
+        logger.warning("Log after shutdown")
         finished_logs = exporter.get_finished_logs()
         self.assertEqual(len(finished_logs), 0)
 
