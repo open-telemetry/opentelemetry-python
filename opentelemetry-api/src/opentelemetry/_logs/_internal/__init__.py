@@ -37,9 +37,10 @@ from abc import ABC, abstractmethod
 from logging import getLogger
 from os import environ
 from time import time_ns
-from typing import Optional, cast
+from typing import Optional, cast, overload
 
 from opentelemetry._logs.severity import SeverityNumber
+from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import _OTEL_PYTHON_LOGGER_PROVIDER
 from opentelemetry.trace.span import TraceFlags
 from opentelemetry.util._once import Once
@@ -57,8 +58,23 @@ class LogRecord(ABC):
     pertinent to the event being logged.
     """
 
+    @overload
     def __init__(
         self,
+        *,
+        timestamp: Optional[int] = None,
+        observed_timestamp: Optional[int] = None,
+        context: Optional[Context] = None,
+        severity_text: Optional[str] = None,
+        severity_number: Optional[SeverityNumber] = None,
+        body: AnyValue = None,
+        attributes: Optional[_ExtendedAttributes] = None,
+    ) -> None: ...
+
+    @overload
+    def __init__(
+        self,
+        *,
         timestamp: Optional[int] = None,
         observed_timestamp: Optional[int] = None,
         trace_id: Optional[int] = None,
@@ -68,11 +84,27 @@ class LogRecord(ABC):
         severity_number: Optional[SeverityNumber] = None,
         body: AnyValue = None,
         attributes: Optional[_ExtendedAttributes] = None,
-    ):
+    ) -> None: ...
+
+    def __init__(
+        self,
+        *,
+        timestamp: Optional[int] = None,
+        observed_timestamp: Optional[int] = None,
+        context: Optional[Context] = None,
+        trace_id: Optional[int] = None,
+        span_id: Optional[int] = None,
+        trace_flags: Optional["TraceFlags"] = None,
+        severity_text: Optional[str] = None,
+        severity_number: Optional[SeverityNumber] = None,
+        body: AnyValue = None,
+        attributes: Optional[_ExtendedAttributes] = None,
+    ) -> None:
         self.timestamp = timestamp
         if observed_timestamp is None:
             observed_timestamp = time_ns()
         self.observed_timestamp = observed_timestamp
+        self.context = context
         self.trace_id = trace_id
         self.span_id = span_id
         self.trace_flags = trace_flags
