@@ -58,6 +58,10 @@ from opentelemetry.sdk.metrics._internal.measurement_consumer import (
     MeasurementConsumer,
     SynchronousMeasurementConsumer,
 )
+from opentelemetry.sdk.metrics._internal.measurement_processor import (
+    MeasurementProcessor,
+    MeasurementProcessorChain,
+)
 from opentelemetry.sdk.metrics._internal.sdk_configuration import (
     SdkConfiguration,
 )
@@ -418,12 +422,19 @@ class MeterProvider(APIMeterProvider):
         exemplar_filter: Optional[ExemplarFilter] = None,
         shutdown_on_exit: bool = True,
         views: Sequence["opentelemetry.sdk.metrics.view.View"] = (),
+        measurement_processors: Sequence[MeasurementProcessor] = (),
     ):
         self._lock = Lock()
         self._meter_lock = Lock()
         self._atexit_handler = None
         if resource is None:
             resource = Resource.create({})
+        measurement_processor_chain = None
+        if measurement_processors:
+            measurement_processor_chain = MeasurementProcessorChain(
+                list(measurement_processors)
+            )
+
         self._sdk_config = SdkConfiguration(
             exemplar_filter=(
                 exemplar_filter
@@ -434,6 +445,7 @@ class MeterProvider(APIMeterProvider):
             resource=resource,
             metric_readers=metric_readers,
             views=views,
+            measurement_processor_chain=measurement_processor_chain,
         )
         self._measurement_consumer = SynchronousMeasurementConsumer(
             sdk_config=self._sdk_config
