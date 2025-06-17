@@ -47,8 +47,8 @@ jobs:
       - name: Run tests
         run: tox -e lint-opentelemetry-api
 
-  lint-opentelemetry-proto-protobuf5:
-    name: opentelemetry-proto-protobuf5
+  lint-opentelemetry-proto-protobuf6:
+    name: opentelemetry-proto-protobuf6
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -64,7 +64,7 @@ jobs:
         run: pip install tox
 
       - name: Run tests
-        run: tox -e lint-opentelemetry-proto-protobuf5
+        run: tox -e lint-opentelemetry-proto-protobuf6
 
   lint-opentelemetry-sdk:
     name: opentelemetry-sdk

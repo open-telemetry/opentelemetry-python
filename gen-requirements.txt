@@ -1,5 +1,5 @@
 # Use caution when bumping this version to ensure compatibility with the currently supported protobuf version.
 # Pinning this to the oldest grpcio version that supports protobuf 5 helps avoid RuntimeWarning messages
 # from the generated protobuf code and ensures continued stability for newer grpcio versions.
-grpcio-tools==1.63.2
-mypy-protobuf~=3.5.0
+grpcio-tools==1.73.0
+mypy-protobuf==3.6.0

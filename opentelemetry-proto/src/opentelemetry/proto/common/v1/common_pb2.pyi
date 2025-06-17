@@ -21,13 +21,11 @@ import collections.abc
 import google.protobuf.descriptor
 import google.protobuf.internal.containers
 import google.protobuf.message
-import sys
-
-import typing as typing_extensions
+import typing
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
 
-@typing_extensions.final
+@typing.final
 class AnyValue(google.protobuf.message.Message):
     """AnyValue is used to represent any type of attribute value. AnyValue may contain a
     primitive value such as a string or integer or it may contain an arbitrary nested
@@ -47,11 +45,11 @@ class AnyValue(google.protobuf.message.Message):
     bool_value: builtins.bool
     int_value: builtins.int
     double_value: builtins.float
+    bytes_value: builtins.bytes
     @property
     def array_value(self) -> global___ArrayValue: ...
     @property
     def kvlist_value(self) -> global___KeyValueList: ...
-    bytes_value: builtins.bytes
     def __init__(
         self,
         *,
@@ -63,66 +61,13 @@ class AnyValue(google.protobuf.message.Message):
         kvlist_value: global___KeyValueList | None = ...,
         bytes_value: builtins.bytes = ...,
     ) -> None: ...
-    def HasField(
-        self,
-        field_name: typing_extensions.Literal[
-            "array_value",
-            b"array_value",
-            "bool_value",
-            b"bool_value",
-            "bytes_value",
-            b"bytes_value",
-            "double_value",
-            b"double_value",
-            "int_value",
-            b"int_value",
-            "kvlist_value",
-            b"kvlist_value",
-            "string_value",
-            b"string_value",
-            "value",
-            b"value",
-        ],
-    ) -> builtins.bool: ...
-    def ClearField(
-        self,
-        field_name: typing_extensions.Literal[
-            "array_value",
-            b"array_value",
-            "bool_value",
-            b"bool_value",
-            "bytes_value",
-            b"bytes_value",
-            "double_value",
-            b"double_value",
-            "int_value",
-            b"int_value",
-            "kvlist_value",
-            b"kvlist_value",
-            "string_value",
-            b"string_value",
-            "value",
-            b"value",
-        ],
-    ) -> None: ...
-    def WhichOneof(
-        self, oneof_group: typing_extensions.Literal["value", b"value"]
-    ) -> (
-        typing_extensions.Literal[
-            "string_value",
-            "bool_value",
-            "int_value",
-            "double_value",
-            "array_value",
-            "kvlist_value",
-            "bytes_value",
-        ]
-        | None
-    ): ...
+    def HasField(self, field_name: typing.Literal["array_value", b"array_value", "bool_value", b"bool_value", "bytes_value", b"bytes_value", "double_value", b"double_value", "int_value", b"int_value", "kvlist_value", b"kvlist_value", "string_value", b"string_value", "value", b"value"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing.Literal["array_value", b"array_value", "bool_value", b"bool_value", "bytes_value", b"bytes_value", "double_value", b"double_value", "int_value", b"int_value", "kvlist_value", b"kvlist_value", "string_value", b"string_value", "value", b"value"]) -> None: ...
+    def WhichOneof(self, oneof_group: typing.Literal["value", b"value"]) -> typing.Literal["string_value", "bool_value", "int_value", "double_value", "array_value", "kvlist_value", "bytes_value"] | None: ...
 
 global___AnyValue = AnyValue
 
-@typing_extensions.final
+@typing.final
 class ArrayValue(google.protobuf.message.Message):
     """ArrayValue is a list of AnyValue messages. We need ArrayValue as a message
     since oneof in AnyValue does not allow repeated fields.
@@ -132,11 +77,7 @@ class ArrayValue(google.protobuf.message.Message):
 
     VALUES_FIELD_NUMBER: builtins.int
     @property
-    def values(
-        self,
-    ) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[
-        global___AnyValue
-    ]:
+    def values(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___AnyValue]:
         """Array of values. The array may be empty (contain 0 elements)."""
 
     def __init__(
@@ -144,13 +85,11 @@ class ArrayValue(google.protobuf.message.Message):
         *,
         values: collections.abc.Iterable[global___AnyValue] | None = ...,
     ) -> None: ...
-    def ClearField(
-        self, field_name: typing_extensions.Literal["values", b"values"]
-    ) -> None: ...
+    def ClearField(self, field_name: typing.Literal["values", b"values"]) -> None: ...
 
 global___ArrayValue = ArrayValue
 
-@typing_extensions.final
+@typing.final
 class KeyValueList(google.protobuf.message.Message):
     """KeyValueList is a list of KeyValue messages. We need KeyValueList as a message
     since `oneof` in AnyValue does not allow repeated fields. Everywhere else where we need
@@ -163,11 +102,7 @@ class KeyValueList(google.protobuf.message.Message):
 
     VALUES_FIELD_NUMBER: builtins.int
     @property
-    def values(
-        self,
-    ) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[
-        global___KeyValue
-    ]:
+    def values(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___KeyValue]:
         """A collection of key/value pairs of key-value pairs. The list may be empty (may
         contain 0 elements).
         The keys MUST be unique (it is not allowed to have more than one
@@ -179,13 +114,11 @@ class KeyValueList(google.protobuf.message.Message):
         *,
         values: collections.abc.Iterable[global___KeyValue] | None = ...,
     ) -> None: ...
-    def ClearField(
-        self, field_name: typing_extensions.Literal["values", b"values"]
-    ) -> None: ...
+    def ClearField(self, field_name: typing.Literal["values", b"values"]) -> None: ...
 
 global___KeyValueList = KeyValueList
 
-@typing_extensions.final
+@typing.final
 class KeyValue(google.protobuf.message.Message):
     """KeyValue is a key-value pair that is used to store Span attributes, Link
     attributes, etc.
@@ -204,19 +137,12 @@ class KeyValue(google.protobuf.message.Message):
         key: builtins.str = ...,
         value: global___AnyValue | None = ...,
     ) -> None: ...
-    def HasField(
-        self, field_name: typing_extensions.Literal["value", b"value"]
-    ) -> builtins.bool: ...
-    def ClearField(
-        self,
-        field_name: typing_extensions.Literal[
-            "key", b"key", "value", b"value"
-        ],
-    ) -> None: ...
+    def HasField(self, field_name: typing.Literal["value", b"value"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing.Literal["key", b"key", "value", b"value"]) -> None: ...
 
 global___KeyValue = KeyValue
 
-@typing_extensions.final
+@typing.final
 class InstrumentationScope(google.protobuf.message.Message):
     """InstrumentationScope is a message representing the instrumentation scope information
     such as the fully qualified name and version.
@@ -231,17 +157,14 @@ class InstrumentationScope(google.protobuf.message.Message):
     name: builtins.str
     """An empty instrumentation scope name means the name is unknown."""
     version: builtins.str
+    dropped_attributes_count: builtins.int
     @property
-    def attributes(
-        self,
-    ) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[
-        global___KeyValue
-    ]:
+    def attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___KeyValue]:
         """Additional attributes that describe the scope. [Optional].
         Attribute keys MUST be unique (it is not allowed to have more than one
         attribute with the same key).
         """
-    dropped_attributes_count: builtins.int
+
     def __init__(
         self,
         *,
@@ -250,18 +173,6 @@ class InstrumentationScope(google.protobuf.message.Message):
         attributes: collections.abc.Iterable[global___KeyValue] | None = ...,
         dropped_attributes_count: builtins.int = ...,
     ) -> None: ...
-    def ClearField(
-        self,
-        field_name: typing_extensions.Literal[
-            "attributes",
-            b"attributes",
-            "dropped_attributes_count",
-            b"dropped_attributes_count",
-            "name",
-            b"name",
-            "version",
-            b"version",
-        ],
-    ) -> None: ...
+    def ClearField(self, field_name: typing.Literal["attributes", b"attributes", "dropped_attributes_count", b"dropped_attributes_count", "name", b"name", "version", b"version"]) -> None: ...
 
 global___InstrumentationScope = InstrumentationScope

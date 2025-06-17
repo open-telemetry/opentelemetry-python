@@ -22,13 +22,11 @@ import google.protobuf.descriptor
 import google.protobuf.internal.containers
 import google.protobuf.message
 import opentelemetry.proto.common.v1.common_pb2
-import sys
-
-import typing as typing_extensions
+import typing
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
 
-@typing_extensions.final
+@typing.final
 class Resource(google.protobuf.message.Message):
     """Resource information."""
 
@@ -36,39 +34,23 @@ class Resource(google.protobuf.message.Message):
 
     ATTRIBUTES_FIELD_NUMBER: builtins.int
     DROPPED_ATTRIBUTES_COUNT_FIELD_NUMBER: builtins.int
-    @property
-    def attributes(
-        self,
-    ) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[
-        opentelemetry.proto.common.v1.common_pb2.KeyValue
-    ]:
-        """Set of attributes that describe the resource.
-        Attribute keys MUST be unique (it is not allowed to have more than one
-        attribute with the same key).
-        """
     dropped_attributes_count: builtins.int
     """dropped_attributes_count is the number of dropped attributes. If the value is 0, then
     no attributes were dropped.
     """
+    @property
+    def attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.KeyValue]:
+        """Set of attributes that describe the resource.
+        Attribute keys MUST be unique (it is not allowed to have more than one
+        attribute with the same key).
+        """
+
     def __init__(
         self,
         *,
-        attributes: (
-            collections.abc.Iterable[
-                opentelemetry.proto.common.v1.common_pb2.KeyValue
-            ]
-            | None
-        ) = ...,
+        attributes: collections.abc.Iterable[opentelemetry.proto.common.v1.common_pb2.KeyValue] | None = ...,
         dropped_attributes_count: builtins.int = ...,
     ) -> None: ...
-    def ClearField(
-        self,
-        field_name: typing_extensions.Literal[
-            "attributes",
-            b"attributes",
-            "dropped_attributes_count",
-            b"dropped_attributes_count",
-        ],
-    ) -> None: ...
+    def ClearField(self, field_name: typing.Literal["attributes", b"attributes", "dropped_attributes_count", b"dropped_attributes_count"]) -> None: ...
 
 global___Resource = Resource

@@ -11,31 +11,23 @@
 # Optional envars:
 #   PROTO_REPO_DIR - the path to an existing checkout of the opentelemetry-proto repo
 
+set -euo pipefail
+
 # Pinned commit/branch/tag for the current version used in opentelemetry-proto python package.
 PROTO_REPO_BRANCH_OR_COMMIT="v1.2.0"
-
-set -e
-
-PROTO_REPO_DIR=${PROTO_REPO_DIR:-"/tmp/opentelemetry-proto"}
+PROTO_REPO_DIR=${PROTO_REPO_DIR:-"$(mktemp -d)/opentelemetry-proto"}
 # root of opentelemetry-python repo
-repo_root="$(git rev-parse --show-toplevel)"
-venv_dir="/tmp/proto_codegen_venv"
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+OUT_DIR="$REPO_ROOT/opentelemetry-proto/src"
+#CLEAN_DIR="${OUT_DIR}/opentelemetry"
+PYTHON_VERSION=3.13
+PROTOC="uv run -p $PYTHON_VERSION \
+        --no-project \
+        --with-requirements $REPO_ROOT/gen-requirements.txt \
+        python -m grpc_tools.protoc"
 
-# run on exit even if crash
-cleanup() {
-    echo "Deleting $venv_dir"
-    rm -rf $venv_dir
-}
-trap cleanup EXIT
-
-echo "Creating temporary virtualenv at $venv_dir using $(python3 --version)"
-python3 -m venv $venv_dir
-source $venv_dir/bin/activate
-python -m pip install \
-    -c $repo_root/gen-requirements.txt \
-    grpcio-tools mypy-protobuf
-echo 'python -m grpc_tools.protoc --version'
-python -m grpc_tools.protoc --version
+echo 'protoc --version'
+$PROTOC --version
 
 # Clone the proto repo if it doesn't exist
 if [ ! -d "$PROTO_REPO_DIR" ]; then
@@ -51,27 +43,25 @@ fi
     git symbolic-ref -q HEAD && git pull --ff-only || true
 )
 
-cd $repo_root/opentelemetry-proto/src
-
 # clean up old generated code
-find opentelemetry/ -regex ".*_pb2.*\.pyi?" -exec rm {} +
+find $OUT_DIR -regex ".*_pb2.*\.pyi?" -exec rm {} +
 
 # generate proto code for all protos
 all_protos=$(find $PROTO_REPO_DIR/ -iname "*.proto")
-python -m grpc_tools.protoc \
+$PROTOC \
     -I $PROTO_REPO_DIR \
-    --python_out=. \
-    --mypy_out=. \
+    --python_out=$OUT_DIR \
+    --mypy_out=$OUT_DIR \
     $all_protos
 
 # generate grpc output only for protos with service definitions
 service_protos=$(grep -REl "service \w+ {" $PROTO_REPO_DIR/opentelemetry/)
 
-python -m grpc_tools.protoc \
+$PROTOC \
     -I $PROTO_REPO_DIR \
-    --python_out=. \
-    --mypy_out=. \
-    --grpc_python_out=. \
+    --python_out=$OUT_DIR \
+    --mypy_out=$OUT_DIR \
+    --grpc_python_out=$OUT_DIR \
     $service_protos
 
 echo "Please update ./opentelemetry-proto/README.rst to include the updated version."

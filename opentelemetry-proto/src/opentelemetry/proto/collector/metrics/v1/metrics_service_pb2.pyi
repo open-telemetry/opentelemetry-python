@@ -22,23 +22,17 @@ import google.protobuf.descriptor
 import google.protobuf.internal.containers
 import google.protobuf.message
 import opentelemetry.proto.metrics.v1.metrics_pb2
-import sys
-
-import typing as typing_extensions
+import typing
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
 
-@typing_extensions.final
+@typing.final
 class ExportMetricsServiceRequest(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
     RESOURCE_METRICS_FIELD_NUMBER: builtins.int
     @property
-    def resource_metrics(
-        self,
-    ) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[
-        opentelemetry.proto.metrics.v1.metrics_pb2.ResourceMetrics
-    ]:
+    def resource_metrics(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.metrics.v1.metrics_pb2.ResourceMetrics]:
         """An array of ResourceMetrics.
         For data coming from a single resource this array will typically contain one
         element. Intermediary nodes (such as OpenTelemetry Collector) that receive
@@ -49,23 +43,13 @@ class ExportMetricsServiceRequest(google.protobuf.message.Message):
     def __init__(
         self,
         *,
-        resource_metrics: (
-            collections.abc.Iterable[
-                opentelemetry.proto.metrics.v1.metrics_pb2.ResourceMetrics
-            ]
-            | None
-        ) = ...,
+        resource_metrics: collections.abc.Iterable[opentelemetry.proto.metrics.v1.metrics_pb2.ResourceMetrics] | None = ...,
     ) -> None: ...
-    def ClearField(
-        self,
-        field_name: typing_extensions.Literal[
-            "resource_metrics", b"resource_metrics"
-        ],
-    ) -> None: ...
+    def ClearField(self, field_name: typing.Literal["resource_metrics", b"resource_metrics"]) -> None: ...
 
 global___ExportMetricsServiceRequest = ExportMetricsServiceRequest
 
-@typing_extensions.final
+@typing.final
 class ExportMetricsServiceResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -94,22 +78,12 @@ class ExportMetricsServiceResponse(google.protobuf.message.Message):
         *,
         partial_success: global___ExportMetricsPartialSuccess | None = ...,
     ) -> None: ...
-    def HasField(
-        self,
-        field_name: typing_extensions.Literal[
-            "partial_success", b"partial_success"
-        ],
-    ) -> builtins.bool: ...
-    def ClearField(
-        self,
-        field_name: typing_extensions.Literal[
-            "partial_success", b"partial_success"
-        ],
-    ) -> None: ...
+    def HasField(self, field_name: typing.Literal["partial_success", b"partial_success"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing.Literal["partial_success", b"partial_success"]) -> None: ...
 
 global___ExportMetricsServiceResponse = ExportMetricsServiceResponse
 
-@typing_extensions.final
+@typing.final
 class ExportMetricsPartialSuccess(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -136,14 +110,6 @@ class ExportMetricsPartialSuccess(google.protobuf.message.Message):
         rejected_data_points: builtins.int = ...,
         error_message: builtins.str = ...,
     ) -> None: ...
-    def ClearField(
-        self,
-        field_name: typing_extensions.Literal[
-            "error_message",
-            b"error_message",
-            "rejected_data_points",
-            b"rejected_data_points",
-        ],
-    ) -> None: ...
+    def ClearField(self, field_name: typing.Literal["error_message", b"error_message", "rejected_data_points", b"rejected_data_points"]) -> None: ...
 
 global___ExportMetricsPartialSuccess = ExportMetricsPartialSuccess

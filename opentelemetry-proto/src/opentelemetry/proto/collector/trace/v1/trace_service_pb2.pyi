@@ -22,23 +22,17 @@ import google.protobuf.descriptor
 import google.protobuf.internal.containers
 import google.protobuf.message
 import opentelemetry.proto.trace.v1.trace_pb2
-import sys
-
-import typing as typing_extensions
+import typing
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
 
-@typing_extensions.final
+@typing.final
 class ExportTraceServiceRequest(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
     RESOURCE_SPANS_FIELD_NUMBER: builtins.int
     @property
-    def resource_spans(
-        self,
-    ) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[
-        opentelemetry.proto.trace.v1.trace_pb2.ResourceSpans
-    ]:
+    def resource_spans(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.trace.v1.trace_pb2.ResourceSpans]:
         """An array of ResourceSpans.
         For data coming from a single resource this array will typically contain one
         element. Intermediary nodes (such as OpenTelemetry Collector) that receive
@@ -49,23 +43,13 @@ class ExportTraceServiceRequest(google.protobuf.message.Message):
     def __init__(
         self,
         *,
-        resource_spans: (
-            collections.abc.Iterable[
-                opentelemetry.proto.trace.v1.trace_pb2.ResourceSpans
-            ]
-            | None
-        ) = ...,
+        resource_spans: collections.abc.Iterable[opentelemetry.proto.trace.v1.trace_pb2.ResourceSpans] | None = ...,
     ) -> None: ...
-    def ClearField(
-        self,
-        field_name: typing_extensions.Literal[
-            "resource_spans", b"resource_spans"
-        ],
-    ) -> None: ...
+    def ClearField(self, field_name: typing.Literal["resource_spans", b"resource_spans"]) -> None: ...
 
 global___ExportTraceServiceRequest = ExportTraceServiceRequest
 
-@typing_extensions.final
+@typing.final
 class ExportTraceServiceResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -94,22 +78,12 @@ class ExportTraceServiceResponse(google.protobuf.message.Message):
         *,
         partial_success: global___ExportTracePartialSuccess | None = ...,
     ) -> None: ...
-    def HasField(
-        self,
-        field_name: typing_extensions.Literal[
-            "partial_success", b"partial_success"
-        ],
-    ) -> builtins.bool: ...
-    def ClearField(
-        self,
-        field_name: typing_extensions.Literal[
-            "partial_success", b"partial_success"
-        ],
-    ) -> None: ...
+    def HasField(self, field_name: typing.Literal["partial_success", b"partial_success"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing.Literal["partial_success", b"partial_success"]) -> None: ...
 
 global___ExportTraceServiceResponse = ExportTraceServiceResponse
 
-@typing_extensions.final
+@typing.final
 class ExportTracePartialSuccess(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -136,14 +110,6 @@ class ExportTracePartialSuccess(google.protobuf.message.Message):
         rejected_spans: builtins.int = ...,
         error_message: builtins.str = ...,
     ) -> None: ...
-    def ClearField(
-        self,
-        field_name: typing_extensions.Literal[
-            "error_message",
-            b"error_message",
-            "rejected_spans",
-            b"rejected_spans",
-        ],
-    ) -> None: ...
+    def ClearField(self, field_name: typing.Literal["error_message", b"error_message", "rejected_spans", b"rejected_spans"]) -> None: ...
 
 global___ExportTracePartialSuccess = ExportTracePartialSuccess

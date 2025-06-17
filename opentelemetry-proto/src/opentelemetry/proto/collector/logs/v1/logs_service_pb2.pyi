@@ -22,23 +22,17 @@ import google.protobuf.descriptor
 import google.protobuf.internal.containers
 import google.protobuf.message
 import opentelemetry.proto.logs.v1.logs_pb2
-import sys
-
-import typing as typing_extensions
+import typing
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
 
-@typing_extensions.final
+@typing.final
 class ExportLogsServiceRequest(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
     RESOURCE_LOGS_FIELD_NUMBER: builtins.int
     @property
-    def resource_logs(
-        self,
-    ) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[
-        opentelemetry.proto.logs.v1.logs_pb2.ResourceLogs
-    ]:
+    def resource_logs(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.logs.v1.logs_pb2.ResourceLogs]:
         """An array of ResourceLogs.
         For data coming from a single resource this array will typically contain one
         element. Intermediary nodes (such as OpenTelemetry Collector) that receive
@@ -49,23 +43,13 @@ class ExportLogsServiceRequest(google.protobuf.message.Message):
     def __init__(
         self,
         *,
-        resource_logs: (
-            collections.abc.Iterable[
-                opentelemetry.proto.logs.v1.logs_pb2.ResourceLogs
-            ]
-            | None
-        ) = ...,
+        resource_logs: collections.abc.Iterable[opentelemetry.proto.logs.v1.logs_pb2.ResourceLogs] | None = ...,
     ) -> None: ...
-    def ClearField(
-        self,
-        field_name: typing_extensions.Literal[
-            "resource_logs", b"resource_logs"
-        ],
-    ) -> None: ...
+    def ClearField(self, field_name: typing.Literal["resource_logs", b"resource_logs"]) -> None: ...
 
 global___ExportLogsServiceRequest = ExportLogsServiceRequest
 
-@typing_extensions.final
+@typing.final
 class ExportLogsServiceResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -94,22 +78,12 @@ class ExportLogsServiceResponse(google.protobuf.message.Message):
         *,
         partial_success: global___ExportLogsPartialSuccess | None = ...,
     ) -> None: ...
-    def HasField(
-        self,
-        field_name: typing_extensions.Literal[
-            "partial_success", b"partial_success"
-        ],
-    ) -> builtins.bool: ...
-    def ClearField(
-        self,
-        field_name: typing_extensions.Literal[
-            "partial_success", b"partial_success"
-        ],
-    ) -> None: ...
+    def HasField(self, field_name: typing.Literal["partial_success", b"partial_success"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing.Literal["partial_success", b"partial_success"]) -> None: ...
 
 global___ExportLogsServiceResponse = ExportLogsServiceResponse
 
-@typing_extensions.final
+@typing.final
 class ExportLogsPartialSuccess(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -136,14 +110,6 @@ class ExportLogsPartialSuccess(google.protobuf.message.Message):
         rejected_log_records: builtins.int = ...,
         error_message: builtins.str = ...,
     ) -> None: ...
-    def ClearField(
-        self,
-        field_name: typing_extensions.Literal[
-            "error_message",
-            b"error_message",
-            "rejected_log_records",
-            b"rejected_log_records",
-        ],
-    ) -> None: ...
+    def ClearField(self, field_name: typing.Literal["error_message", b"error_message", "rejected_log_records", b"rejected_log_records"]) -> None: ...
 
 global___ExportLogsPartialSuccess = ExportLogsPartialSuccess

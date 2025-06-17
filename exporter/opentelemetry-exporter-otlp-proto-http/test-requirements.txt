@@ -1,13 +1,13 @@
 asgiref==3.7.2
 certifi==2024.7.4
 charset-normalizer==3.3.2
-googleapis-common-protos==1.63.2
+googleapis-common-protos==1.70.0
 idna==3.7
 importlib-metadata==6.11.0
 iniconfig==2.0.0
 packaging==24.0
 pluggy==1.5.0
-protobuf==5.26.1
+protobuf==6.31.1
 py-cpuinfo==9.0.0
 pytest==7.4.4
 PyYAML==6.0.1

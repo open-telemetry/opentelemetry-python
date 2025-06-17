@@ -38,12 +38,7 @@ class _SpanFlags:
     ValueType = typing.NewType("ValueType", builtins.int)
     V: typing_extensions.TypeAlias = ValueType
 
-class _SpanFlagsEnumTypeWrapper(
-    google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[
-        _SpanFlags.ValueType
-    ],
-    builtins.type,
-):
+class _SpanFlagsEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_SpanFlags.ValueType], builtins.type):
     DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
     SPAN_FLAGS_DO_NOT_USE: _SpanFlags.ValueType  # 0
     """The zero value for the enum. Should not be used for comparisons.
@@ -89,7 +84,7 @@ Bit 9 (`IS_REMOTE`) indicates whether the span or link is remote.
 SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK: SpanFlags.ValueType  # 512
 global___SpanFlags = SpanFlags
 
-@typing_extensions.final
+@typing.final
 class TracesData(google.protobuf.message.Message):
     """TracesData represents the traces data that can be stored in a persistent storage,
     OR can be embedded by other protocols that transfer OTLP traces data but do
@@ -107,11 +102,7 @@ class TracesData(google.protobuf.message.Message):
 
     RESOURCE_SPANS_FIELD_NUMBER: builtins.int
     @property
-    def resource_spans(
-        self,
-    ) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[
-        global___ResourceSpans
-    ]:
+    def resource_spans(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___ResourceSpans]:
         """An array of ResourceSpans.
         For data coming from a single resource this array will typically contain
         one element. Intermediary nodes that receive data from multiple origins
@@ -122,20 +113,13 @@ class TracesData(google.protobuf.message.Message):
     def __init__(
         self,
         *,
-        resource_spans: (
-            collections.abc.Iterable[global___ResourceSpans] | None
-        ) = ...,
+        resource_spans: collections.abc.Iterable[global___ResourceSpans] | None = ...,
     ) -> None: ...
-    def ClearField(
-        self,
-        field_name: typing_extensions.Literal[
-            "resource_spans", b"resource_spans"
-        ],
-    ) -> None: ...
+    def ClearField(self, field_name: typing.Literal["resource_spans", b"resource_spans"]) -> None: ...
 
 global___TracesData = TracesData
 
-@typing_extensions.final
+@typing.final
 class ResourceSpans(google.protobuf.message.Message):
     """A collection of ScopeSpans from a Resource."""
 
@@ -144,21 +128,6 @@ class ResourceSpans(google.protobuf.message.Message):
     RESOURCE_FIELD_NUMBER: builtins.int
     SCOPE_SPANS_FIELD_NUMBER: builtins.int
     SCHEMA_URL_FIELD_NUMBER: builtins.int
-    @property
-    def resource(
-        self,
-    ) -> opentelemetry.proto.resource.v1.resource_pb2.Resource:
-        """The resource for the spans in this message.
-        If this field is not set then no resource info is known.
-        """
-
-    @property
-    def scope_spans(
-        self,
-    ) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[
-        global___ScopeSpans
-    ]:
-        """A list of ScopeSpans that originate from a resource."""
     schema_url: builtins.str
     """The Schema URL, if known. This is the identifier of the Schema that the resource data
     is recorded in. To learn more about Schema URL see
@@ -166,35 +135,29 @@ class ResourceSpans(google.protobuf.message.Message):
     This schema_url applies to the data in the "resource" field. It does not apply
     to the data in the "scope_spans" field which have their own schema_url field.
     """
+    @property
+    def resource(self) -> opentelemetry.proto.resource.v1.resource_pb2.Resource:
+        """The resource for the spans in this message.
+        If this field is not set then no resource info is known.
+        """
+
+    @property
+    def scope_spans(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___ScopeSpans]:
+        """A list of ScopeSpans that originate from a resource."""
+
     def __init__(
         self,
         *,
-        resource: (
-            opentelemetry.proto.resource.v1.resource_pb2.Resource | None
-        ) = ...,
-        scope_spans: (
-            collections.abc.Iterable[global___ScopeSpans] | None
-        ) = ...,
+        resource: opentelemetry.proto.resource.v1.resource_pb2.Resource | None = ...,
+        scope_spans: collections.abc.Iterable[global___ScopeSpans] | None = ...,
         schema_url: builtins.str = ...,
     ) -> None: ...
-    def HasField(
-        self, field_name: typing_extensions.Literal["resource", b"resource"]
-    ) -> builtins.bool: ...
-    def ClearField(
-        self,
-        field_name: typing_extensions.Literal[
-            "resource",
-            b"resource",
-            "schema_url",
-            b"schema_url",
-            "scope_spans",
-            b"scope_spans",
-        ],
-    ) -> None: ...
+    def HasField(self, field_name: typing.Literal["resource", b"resource"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing.Literal["resource", b"resource", "schema_url", b"schema_url", "scope_spans", b"scope_spans"]) -> None: ...
 
 global___ResourceSpans = ResourceSpans
 
-@typing_extensions.final
+@typing.final
 class ScopeSpans(google.protobuf.message.Message):
     """A collection of Spans produced by an InstrumentationScope."""
 
@@ -203,51 +166,36 @@ class ScopeSpans(google.protobuf.message.Message):
     SCOPE_FIELD_NUMBER: builtins.int
     SPANS_FIELD_NUMBER: builtins.int
     SCHEMA_URL_FIELD_NUMBER: builtins.int
-    @property
-    def scope(
-        self,
-    ) -> opentelemetry.proto.common.v1.common_pb2.InstrumentationScope:
-        """The instrumentation scope information for the spans in this message.
-        Semantically when InstrumentationScope isn't set, it is equivalent with
-        an empty instrumentation scope name (unknown).
-        """
-
-    @property
-    def spans(
-        self,
-    ) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[
-        global___Span
-    ]:
-        """A list of Spans that originate from an instrumentation scope."""
     schema_url: builtins.str
     """The Schema URL, if known. This is the identifier of the Schema that the span data
     is recorded in. To learn more about Schema URL see
     https://opentelemetry.io/docs/specs/otel/schemas/#schema-url
     This schema_url applies to all spans and span events in the "spans" field.
     """
+    @property
+    def scope(self) -> opentelemetry.proto.common.v1.common_pb2.InstrumentationScope:
+        """The instrumentation scope information for the spans in this message.
+        Semantically when InstrumentationScope isn't set, it is equivalent with
+        an empty instrumentation scope name (unknown).
+        """
+
+    @property
+    def spans(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___Span]:
+        """A list of Spans that originate from an instrumentation scope."""
+
     def __init__(
         self,
         *,
-        scope: (
-            opentelemetry.proto.common.v1.common_pb2.InstrumentationScope
-            | None
-        ) = ...,
+        scope: opentelemetry.proto.common.v1.common_pb2.InstrumentationScope | None = ...,
         spans: collections.abc.Iterable[global___Span] | None = ...,
         schema_url: builtins.str = ...,
     ) -> None: ...
-    def HasField(
-        self, field_name: typing_extensions.Literal["scope", b"scope"]
-    ) -> builtins.bool: ...
-    def ClearField(
-        self,
-        field_name: typing_extensions.Literal[
-            "schema_url", b"schema_url", "scope", b"scope", "spans", b"spans"
-        ],
-    ) -> None: ...
+    def HasField(self, field_name: typing.Literal["scope", b"scope"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing.Literal["schema_url", b"schema_url", "scope", b"scope", "spans", b"spans"]) -> None: ...
 
 global___ScopeSpans = ScopeSpans
 
-@typing_extensions.final
+@typing.final
 class Span(google.protobuf.message.Message):
     """A Span represents a single operation performed by a single component of the system.
 
@@ -260,12 +208,7 @@ class Span(google.protobuf.message.Message):
         ValueType = typing.NewType("ValueType", builtins.int)
         V: typing_extensions.TypeAlias = ValueType
 
-    class _SpanKindEnumTypeWrapper(
-        google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[
-            Span._SpanKind.ValueType
-        ],
-        builtins.type,
-    ):
+    class _SpanKindEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[Span._SpanKind.ValueType], builtins.type):
         DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
         SPAN_KIND_UNSPECIFIED: Span._SpanKind.ValueType  # 0
         """Unspecified. Do NOT use as default.
@@ -324,7 +267,7 @@ class Span(google.protobuf.message.Message):
     between producer and consumer spans.
     """
 
-    @typing_extensions.final
+    @typing.final
     class Event(google.protobuf.message.Message):
         """Event is a time-stamped annotation of the span, consisting of user-supplied
         text description and key-value pairs.
@@ -342,48 +285,28 @@ class Span(google.protobuf.message.Message):
         """name of the event.
         This field is semantically required to be set to non-empty string.
         """
-        @property
-        def attributes(
-            self,
-        ) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[
-            opentelemetry.proto.common.v1.common_pb2.KeyValue
-        ]:
-            """attributes is a collection of attribute key/value pairs on the event.
-            Attribute keys MUST be unique (it is not allowed to have more than one
-            attribute with the same key).
-            """
         dropped_attributes_count: builtins.int
         """dropped_attributes_count is the number of dropped attributes. If the value is 0,
         then no attributes were dropped.
         """
+        @property
+        def attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.KeyValue]:
+            """attributes is a collection of attribute key/value pairs on the event.
+            Attribute keys MUST be unique (it is not allowed to have more than one
+            attribute with the same key).
+            """
+
         def __init__(
             self,
             *,
             time_unix_nano: builtins.int = ...,
             name: builtins.str = ...,
-            attributes: (
-                collections.abc.Iterable[
-                    opentelemetry.proto.common.v1.common_pb2.KeyValue
-                ]
-                | None
-            ) = ...,
+            attributes: collections.abc.Iterable[opentelemetry.proto.common.v1.common_pb2.KeyValue] | None = ...,
             dropped_attributes_count: builtins.int = ...,
         ) -> None: ...
-        def ClearField(
-            self,
-            field_name: typing_extensions.Literal[
-                "attributes",
-                b"attributes",
-                "dropped_attributes_count",
-                b"dropped_attributes_count",
-                "name",
-                b"name",
-                "time_unix_nano",
-                b"time_unix_nano",
-            ],
-        ) -> None: ...
+        def ClearField(self, field_name: typing.Literal["attributes", b"attributes", "dropped_attributes_count", b"dropped_attributes_count", "name", b"name", "time_unix_nano", b"time_unix_nano"]) -> None: ...
 
-    @typing_extensions.final
+    @typing.final
     class Link(google.protobuf.message.Message):
         """A pointer from the current span to another span in the same trace or in a
         different trace. For example, this can be used in batching operations,
@@ -407,16 +330,6 @@ class Span(google.protobuf.message.Message):
         """A unique identifier for the linked span. The ID is an 8-byte array."""
         trace_state: builtins.str
         """The trace_state associated with the link."""
-        @property
-        def attributes(
-            self,
-        ) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[
-            opentelemetry.proto.common.v1.common_pb2.KeyValue
-        ]:
-            """attributes is a collection of attribute key/value pairs on the link.
-            Attribute keys MUST be unique (it is not allowed to have more than one
-            attribute with the same key).
-            """
         dropped_attributes_count: builtins.int
         """dropped_attributes_count is the number of dropped attributes. If the value is 0,
         then no attributes were dropped.
@@ -440,38 +353,24 @@ class Span(google.protobuf.message.Message):
 
         [Optional].
         """
+        @property
+        def attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.KeyValue]:
+            """attributes is a collection of attribute key/value pairs on the link.
+            Attribute keys MUST be unique (it is not allowed to have more than one
+            attribute with the same key).
+            """
+
         def __init__(
             self,
             *,
             trace_id: builtins.bytes = ...,
             span_id: builtins.bytes = ...,
             trace_state: builtins.str = ...,
-            attributes: (
-                collections.abc.Iterable[
-                    opentelemetry.proto.common.v1.common_pb2.KeyValue
-                ]
-                | None
-            ) = ...,
+            attributes: collections.abc.Iterable[opentelemetry.proto.common.v1.common_pb2.KeyValue] | None = ...,
             dropped_attributes_count: builtins.int = ...,
             flags: builtins.int = ...,
         ) -> None: ...
-        def ClearField(
-            self,
-            field_name: typing_extensions.Literal[
-                "attributes",
-                b"attributes",
-                "dropped_attributes_count",
-                b"dropped_attributes_count",
-                "flags",
-                b"flags",
-                "span_id",
-                b"span_id",
-                "trace_id",
-                b"trace_id",
-                "trace_state",
-                b"trace_state",
-            ],
-        ) -> None: ...
+        def ClearField(self, field_name: typing.Literal["attributes", b"attributes", "dropped_attributes_count", b"dropped_attributes_count", "flags", b"flags", "span_id", b"span_id", "trace_id", b"trace_id", "trace_state", b"trace_state"]) -> None: ...
 
     TRACE_ID_FIELD_NUMBER: builtins.int
     SPAN_ID_FIELD_NUMBER: builtins.int
@@ -571,12 +470,21 @@ class Span(google.protobuf.message.Message):
 
     This field is semantically required and it is expected that end_time >= start_time.
     """
+    dropped_attributes_count: builtins.int
+    """dropped_attributes_count is the number of attributes that were discarded. Attributes
+    can be discarded because their keys are too long or because there are too many
+    attributes. If this value is 0, then no attributes were dropped.
+    """
+    dropped_events_count: builtins.int
+    """dropped_events_count is the number of dropped events. If the value is 0, then no
+    events were dropped.
+    """
+    dropped_links_count: builtins.int
+    """dropped_links_count is the number of dropped links after the maximum size was
+    enforced. If this value is 0, then no links were dropped.
+    """
     @property
-    def attributes(
-        self,
-    ) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[
-        opentelemetry.proto.common.v1.common_pb2.KeyValue
-    ]:
+    def attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.KeyValue]:
         """attributes is a collection of key/value pairs. Note, global attributes
         like server name can be set using the resource API. Examples of attributes:
 
@@ -590,35 +498,17 @@ class Span(google.protobuf.message.Message):
         Attribute keys MUST be unique (it is not allowed to have more than one
         attribute with the same key).
         """
-    dropped_attributes_count: builtins.int
-    """dropped_attributes_count is the number of attributes that were discarded. Attributes
-    can be discarded because their keys are too long or because there are too many
-    attributes. If this value is 0, then no attributes were dropped.
-    """
+
     @property
-    def events(
-        self,
-    ) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[
-        global___Span.Event
-    ]:
+    def events(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___Span.Event]:
         """events is a collection of Event items."""
-    dropped_events_count: builtins.int
-    """dropped_events_count is the number of dropped events. If the value is 0, then no
-    events were dropped.
-    """
+
     @property
-    def links(
-        self,
-    ) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[
-        global___Span.Link
-    ]:
+    def links(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___Span.Link]:
         """links is a collection of Links, which are references from this span to a span
         in the same or different trace.
         """
-    dropped_links_count: builtins.int
-    """dropped_links_count is the number of dropped links after the maximum size was
-    enforced. If this value is 0, then no links were dropped.
-    """
+
     @property
     def status(self) -> global___Status:
         """An optional final status for this span. Semantically when Status isn't set, it means
@@ -637,12 +527,7 @@ class Span(google.protobuf.message.Message):
         kind: global___Span.SpanKind.ValueType = ...,
         start_time_unix_nano: builtins.int = ...,
         end_time_unix_nano: builtins.int = ...,
-        attributes: (
-            collections.abc.Iterable[
-                opentelemetry.proto.common.v1.common_pb2.KeyValue
-            ]
-            | None
-        ) = ...,
+        attributes: collections.abc.Iterable[opentelemetry.proto.common.v1.common_pb2.KeyValue] | None = ...,
         dropped_attributes_count: builtins.int = ...,
         events: collections.abc.Iterable[global___Span.Event] | None = ...,
         dropped_events_count: builtins.int = ...,
@@ -650,50 +535,12 @@ class Span(google.protobuf.message.Message):
         dropped_links_count: builtins.int = ...,
         status: global___Status | None = ...,
     ) -> None: ...
-    def HasField(
-        self, field_name: typing_extensions.Literal["status", b"status"]
-    ) -> builtins.bool: ...
-    def ClearField(
-        self,
-        field_name: typing_extensions.Literal[
-            "attributes",
-            b"attributes",
-            "dropped_attributes_count",
-            b"dropped_attributes_count",
-            "dropped_events_count",
-            b"dropped_events_count",
-            "dropped_links_count",
-            b"dropped_links_count",
-            "end_time_unix_nano",
-            b"end_time_unix_nano",
-            "events",
-            b"events",
-            "flags",
-            b"flags",
-            "kind",
-            b"kind",
-            "links",
-            b"links",
-            "name",
-            b"name",
-            "parent_span_id",
-            b"parent_span_id",
-            "span_id",
-            b"span_id",
-            "start_time_unix_nano",
-            b"start_time_unix_nano",
-            "status",
-            b"status",
-            "trace_id",
-            b"trace_id",
-            "trace_state",
-            b"trace_state",
-        ],
-    ) -> None: ...
+    def HasField(self, field_name: typing.Literal["status", b"status"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing.Literal["attributes", b"attributes", "dropped_attributes_count", b"dropped_attributes_count", "dropped_events_count", b"dropped_events_count", "dropped_links_count", b"dropped_links_count", "end_time_unix_nano", b"end_time_unix_nano", "events", b"events", "flags", b"flags", "kind", b"kind", "links", b"links", "name", b"name", "parent_span_id", b"parent_span_id", "span_id", b"span_id", "start_time_unix_nano", b"start_time_unix_nano", "status", b"status", "trace_id", b"trace_id", "trace_state", b"trace_state"]) -> None: ...
 
 global___Span = Span
 
-@typing_extensions.final
+@typing.final
 class Status(google.protobuf.message.Message):
     """The Status type defines a logical error model that is suitable for different
     programming environments, including REST APIs and RPC APIs.
@@ -705,12 +552,7 @@ class Status(google.protobuf.message.Message):
         ValueType = typing.NewType("ValueType", builtins.int)
         V: typing_extensions.TypeAlias = ValueType
 
-    class _StatusCodeEnumTypeWrapper(
-        google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[
-            Status._StatusCode.ValueType
-        ],
-        builtins.type,
-    ):
+    class _StatusCodeEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[Status._StatusCode.ValueType], builtins.type):
         DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
         STATUS_CODE_UNSET: Status._StatusCode.ValueType  # 0
         """The default status."""
@@ -747,11 +589,6 @@ class Status(google.protobuf.message.Message):
         message: builtins.str = ...,
         code: global___Status.StatusCode.ValueType = ...,
     ) -> None: ...
-    def ClearField(
-        self,
-        field_name: typing_extensions.Literal[
-            "code", b"code", "message", b"message"
-        ],
-    ) -> None: ...
+    def ClearField(self, field_name: typing.Literal["code", b"code", "message", b"message"]) -> None: ...
 
 global___Status = Status
