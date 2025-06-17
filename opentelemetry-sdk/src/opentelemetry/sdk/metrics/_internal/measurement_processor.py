@@ -42,13 +42,6 @@ class MeasurementProcessor(ABC):
     ) -> None:
         """Process a measurement and optionally call the next processor in the chain.
 
-        This method receives a measurement and a callable that represents the next
-        step in the processing chain. The processor can:
-        1. Modify the measurement before passing it to next_processor
-        2. Drop the measurement by not calling next_processor
-        3. Pass the measurement unchanged by calling next_processor(measurement)
-        4. Create multiple measurements by calling next_processor multiple times
-
         Args:
             measurement: The measurement to process
             next_processor: Callable to invoke the next processor in the chain.
