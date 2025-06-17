@@ -57,18 +57,6 @@ class MeasurementProcessor(ABC):
         """
 
 
-class NoOpMeasurementProcessor(MeasurementProcessor):
-    """A no-op implementation that passes measurements through unchanged."""
-
-    def process(
-        self,
-        measurement: Measurement,
-        next_processor: Callable[[Measurement], None],
-    ) -> None:
-        """Pass the measurement to the next processor unchanged."""
-        next_processor(measurement)
-
-
 class MeasurementProcessorChain:
     """Manages a chain of MeasurementProcessors.
 
@@ -86,8 +74,6 @@ class MeasurementProcessorChain:
                        If None or empty, uses NoOpMeasurementProcessor.
         """
         self._processors: List[MeasurementProcessor] = processors or []
-        if not self._processors:
-            self._processors = [NoOpMeasurementProcessor()]
 
     def process(
         self,
