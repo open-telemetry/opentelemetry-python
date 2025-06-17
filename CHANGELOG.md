@@ -19,8 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4621](https://github.com/open-telemetry/opentelemetry-python/pull/4621))
 - Fix license field in pyproject.toml files
   ([#4625](https://github.com/open-telemetry/opentelemetry-python/pull/4625))
-  - Update logger level to NOTSET in logs example
+- Update logger level to NOTSET in logs example
   ([#4637](https://github.com/open-telemetry/opentelemetry-python/pull/4637))
+- Logging API accepts optional `context`; deprecates `trace_id`, `span_id`, `trace_flags`.
+  ([#4597](https://github.com/open-telemetry/opentelemetry-python/pull/4597))
 
 ## Version 1.34.0/0.55b0 (2025-06-04)
 
