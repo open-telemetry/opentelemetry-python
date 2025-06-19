@@ -61,7 +61,7 @@ logger = getLogger(__name__)
 
 
 # The below tests use this test SpanExporter and Spans, but are testing the
-# underlying behavior in the mixin. A MetricExporter or LogExporter could
+# underlying behavior in the mixin. A MetricExporter or LogRecordExporter could
 # just as easily be used.
 class OTLPSpanExporterForTesting(
     SpanExporter,

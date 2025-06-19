@@ -26,7 +26,7 @@ from opentelemetry.context import (
     detach,
     set_value,
 )
-from opentelemetry.sdk._logs import LogData, LogRecord, LogRecordProcessor
+from opentelemetry.sdk._logs import LogRecordData, LogRecord, LogRecordProcessor
 from opentelemetry.sdk._shared_internal import BatchProcessor
 from opentelemetry.sdk.environment_variables import (
     OTEL_BLRP_EXPORT_TIMEOUT,
@@ -45,12 +45,12 @@ _ENV_VAR_INT_VALUE_ERROR_MESSAGE = (
 _logger = logging.getLogger(__name__)
 
 
-class LogExportResult(enum.Enum):
+class LogRecordExportResult(enum.Enum):
     SUCCESS = 0
     FAILURE = 1
 
 
-class LogExporter(abc.ABC):
+class LogRecordExporter(abc.ABC):
     """Interface for exporting logs.
     Interface to be implemented by services that want to export logs received
     in their own format.
@@ -59,10 +59,10 @@ class LogExporter(abc.ABC):
     """
 
     @abc.abstractmethod
-    def export(self, batch: Sequence[LogData]):
+    def export(self, batch: Sequence[LogRecordData]):
         """Exports a batch of logs.
         Args:
-            batch: The list of `LogData` objects to be exported
+            batch: The list of `LogRecordData` objects to be exported
         Returns:
             The result of the export
         """
@@ -75,8 +75,8 @@ class LogExporter(abc.ABC):
         """
 
 
-class ConsoleLogExporter(LogExporter):
-    """Implementation of :class:`LogExporter` that prints log records to the
+class ConsoleLogRecordExporter(LogRecordExporter):
+    """Implementation of :class:`LogRecordExporter` that prints log records to the
     console.
 
     This class can be used for diagnostic purposes. It prints the exported
@@ -92,11 +92,11 @@ class ConsoleLogExporter(LogExporter):
         self.out = out
         self.formatter = formatter
 
-    def export(self, batch: Sequence[LogData]):
+    def export(self, batch: Sequence[LogRecordData]):
         for data in batch:
             self.out.write(self.formatter(data.log_record))
         self.out.flush()
-        return LogExportResult.SUCCESS
+        return LogRecordExportResult.SUCCESS
 
     def shutdown(self):
         pass
@@ -104,15 +104,15 @@ class ConsoleLogExporter(LogExporter):
 
 class SimpleLogRecordProcessor(LogRecordProcessor):
     """This is an implementation of LogRecordProcessor which passes
-    received logs in the export-friendly LogData representation to the
-    configured LogExporter, as soon as they are emitted.
+    received logs in the export-friendly LogRecordData representation to the
+    configured LogRecordExporter, as soon as they are emitted.
     """
 
-    def __init__(self, exporter: LogExporter):
+    def __init__(self, exporter: LogRecordExporter):
         self._exporter = exporter
         self._shutdown = False
 
-    def emit(self, log_data: LogData):
+    def emit(self, log_data: LogRecordData):
         if self._shutdown:
             _logger.warning("Processor is already shutdown, ignoring call")
             return
@@ -133,8 +133,8 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
 
 class BatchLogRecordProcessor(LogRecordProcessor):
     """This is an implementation of LogRecordProcessor which creates batches of
-    received logs in the export-friendly LogData representation and
-    send to the configured LogExporter, as soon as they are emitted.
+    received logs in the export-friendly LogRecordData representation and
+    send to the configured LogRecordExporter, as soon as they are emitted.
 
     `BatchLogRecordProcessor` is configurable with the following environment
     variables which correspond to constructor parameters:
@@ -149,7 +149,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
 
     def __init__(
         self,
-        exporter: LogExporter,
+        exporter: LogRecordExporter,
         schedule_delay_millis: float | None = None,
         max_export_batch_size: int | None = None,
         export_timeout_millis: float | None = None,
@@ -186,7 +186,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
             "Log",
         )
 
-    def emit(self, log_data: LogData) -> None:
+    def emit(self, log_data: LogRecordData) -> None:
         return self._batch_processor.emit(log_data)
 
     def shutdown(self):

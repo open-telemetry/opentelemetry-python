@@ -45,8 +45,8 @@ from opentelemetry.sdk._configuration import (
     _OTelSDKConfigurator,
 )
 from opentelemetry.sdk._logs import LoggingHandler
-from opentelemetry.sdk._logs._internal.export import LogExporter
-from opentelemetry.sdk._logs.export import ConsoleLogExporter
+from opentelemetry.sdk._logs._internal.export import LogRecordExporter
+from opentelemetry.sdk._logs.export import ConsoleLogRecordExporter
 from opentelemetry.sdk.environment_variables import (
     OTEL_TRACES_SAMPLER,
     OTEL_TRACES_SAMPLER_ARG,
@@ -205,7 +205,7 @@ class OTLPSpanExporter:
     pass
 
 
-class DummyOTLPLogExporter(LogExporter):
+class DummyOTLPLogExporter(LogRecordExporter):
     def __init__(self, *args, **kwargs):
         self.export_called = False
 
@@ -1056,7 +1056,7 @@ class TestImportExporters(TestCase):
             trace_exporters["console"].__class__, ConsoleSpanExporter.__class__
         )
         self.assertEqual(
-            logs_exporters["console"].__class__, ConsoleLogExporter.__class__
+            logs_exporters["console"].__class__, ConsoleLogRecordExporter.__class__
         )
         self.assertEqual(
             metric_exporterts["console"].__class__,

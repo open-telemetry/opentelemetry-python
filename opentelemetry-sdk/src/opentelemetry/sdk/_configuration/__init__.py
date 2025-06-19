@@ -38,7 +38,7 @@ from opentelemetry.environment_variables import (
 from opentelemetry.metrics import set_meter_provider
 from opentelemetry.sdk._events import EventLoggerProvider
 from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
-from opentelemetry.sdk._logs.export import BatchLogRecordProcessor, LogExporter
+from opentelemetry.sdk._logs.export import BatchLogRecordProcessor, LogRecordExporter
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
     OTEL_EXPORTER_OTLP_LOGS_PROTOCOL,
@@ -236,7 +236,7 @@ def _init_metrics(
 
 
 def _init_logging(
-    exporters: dict[str, Type[LogExporter]],
+    exporters: dict[str, Type[LogRecordExporter]],
     resource: Resource | None = None,
     setup_logging_handler: bool = True,
 ):
@@ -287,7 +287,7 @@ def _import_exporters(
 ) -> tuple[
     dict[str, Type[SpanExporter]],
     dict[str, Union[Type[MetricExporter], Type[MetricReader]]],
-    dict[str, Type[LogExporter]],
+    dict[str, Type[LogRecordExporter]],
 ]:
     trace_exporters = {}
     metric_exporters = {}
@@ -323,7 +323,7 @@ def _import_exporters(
     ) in _import_config_components(
         log_exporter_names, "opentelemetry_logs_exporter"
     ):
-        if issubclass(exporter_impl, LogExporter):
+        if issubclass(exporter_impl, LogRecordExporter):
             log_exporters[exporter_name] = exporter_impl
         else:
             raise RuntimeError(f"{exporter_name} is not a log exporter")

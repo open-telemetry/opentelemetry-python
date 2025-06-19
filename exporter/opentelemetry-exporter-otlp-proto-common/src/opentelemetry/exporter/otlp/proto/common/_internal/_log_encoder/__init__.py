@@ -30,14 +30,14 @@ from opentelemetry.proto.logs.v1.logs_pb2 import (
     ResourceLogs,
     ScopeLogs,
 )
-from opentelemetry.sdk._logs import LogData
+from opentelemetry.sdk._logs import LogRecordData
 
 
-def encode_logs(batch: Sequence[LogData]) -> ExportLogsServiceRequest:
+def encode_logs(batch: Sequence[LogRecordData]) -> ExportLogsServiceRequest:
     return ExportLogsServiceRequest(resource_logs=_encode_resource_logs(batch))
 
 
-def _encode_log(log_data: LogData) -> PB2LogRecord:
+def _encode_log(log_data: LogRecordData) -> PB2LogRecord:
     span_id = (
         None
         if log_data.log_record.span_id == 0
@@ -65,7 +65,7 @@ def _encode_log(log_data: LogData) -> PB2LogRecord:
     )
 
 
-def _encode_resource_logs(batch: Sequence[LogData]) -> List[ResourceLogs]:
+def _encode_resource_logs(batch: Sequence[LogRecordData]) -> List[ResourceLogs]:
     sdk_resource_logs = defaultdict(lambda: defaultdict(list))
 
     for sdk_log in batch:

@@ -15,12 +15,12 @@
 import threading
 import typing
 
-from opentelemetry.sdk._logs import LogData
-from opentelemetry.sdk._logs.export import LogExporter, LogExportResult
+from opentelemetry.sdk._logs import LogRecordData
+from opentelemetry.sdk._logs.export import LogRecordExporter, LogRecordExportResult
 
 
-class InMemoryLogExporter(LogExporter):
-    """Implementation of :class:`.LogExporter` that stores logs in memory.
+class InMemoryLogRecordExporter(LogRecordExporter):
+    """Implementation of :class:`.LogRecordExporter` that stores logs in memory.
 
     This class can be used for testing purposes. It stores the exported logs
     in a list in memory that can be retrieved using the
@@ -36,16 +36,16 @@ class InMemoryLogExporter(LogExporter):
         with self._lock:
             self._logs.clear()
 
-    def get_finished_logs(self) -> typing.Tuple[LogData, ...]:
+    def get_finished_logs(self) -> typing.Tuple[LogRecordData, ...]:
         with self._lock:
             return tuple(self._logs)
 
-    def export(self, batch: typing.Sequence[LogData]) -> LogExportResult:
+    def export(self, batch: typing.Sequence[LogRecordData]) -> LogRecordExportResult:
         if self._stopped:
-            return LogExportResult.FAILURE
+            return LogRecordExportResult.FAILURE
         with self._lock:
             self._logs.extend(batch)
-        return LogExportResult.SUCCESS
+        return LogRecordExportResult.SUCCESS
 
     def shutdown(self) -> None:
         self._stopped = True

@@ -45,7 +45,7 @@ from opentelemetry.proto.logs.v1.logs_pb2 import ScopeLogs as PB2ScopeLogs
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as PB2Resource,
 )
-from opentelemetry.sdk._logs import LogData, LogLimits
+from opentelemetry.sdk._logs import LogRecordData, LogRecordLimits
 from opentelemetry.sdk._logs import LogRecord as SDKLogRecord
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
@@ -83,8 +83,8 @@ class TestOTLPLogEncoder(unittest.TestCase):
         )
 
     @staticmethod
-    def _get_sdk_log_data() -> List[LogData]:
-        log1 = LogData(
+    def _get_sdk_log_data() -> List[LogRecordData]:
+        log1 = LogRecordData(
             log_record=SDKLogRecord(
                 timestamp=1644650195189786880,
                 observed_timestamp=1644650195189786881,
@@ -105,7 +105,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
             ),
         )
 
-        log2 = LogData(
+        log2 = LogRecordData(
             log_record=SDKLogRecord(
                 timestamp=1644650249738562048,
                 observed_timestamp=1644650249738562049,
@@ -123,7 +123,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
             ),
         )
 
-        log3 = LogData(
+        log3 = LogRecordData(
             log_record=SDKLogRecord(
                 timestamp=1644650427658989056,
                 observed_timestamp=1644650427658989057,
@@ -139,7 +139,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
             instrumentation_scope=None,
         )
 
-        log4 = LogData(
+        log4 = LogRecordData(
             log_record=SDKLogRecord(
                 timestamp=1644650584292683008,
                 observed_timestamp=1644650584292683009,
@@ -160,7 +160,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
             ),
         )
 
-        log5 = LogData(
+        log5 = LogRecordData(
             log_record=SDKLogRecord(
                 timestamp=1644650584292683009,
                 observed_timestamp=1644650584292683010,
@@ -178,7 +178,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
             ),
         )
 
-        log6 = LogData(
+        log6 = LogRecordData(
             log_record=SDKLogRecord(
                 timestamp=1644650584292683022,
                 observed_timestamp=1644650584292683022,
@@ -201,7 +201,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
             ),
         )
 
-        log7 = LogData(
+        log7 = LogRecordData(
             log_record=SDKLogRecord(
                 timestamp=1644650584292683033,
                 observed_timestamp=1644650584292683033,
@@ -225,7 +225,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
             ),
         )
 
-        log8 = LogData(
+        log8 = LogRecordData(
             log_record=SDKLogRecord(
                 timestamp=1644650584292683044,
                 observed_timestamp=1644650584292683044,
@@ -543,8 +543,8 @@ class TestOTLPLogEncoder(unittest.TestCase):
         return sdk_logs, pb2_service_request
 
     @staticmethod
-    def _get_test_logs_dropped_attributes() -> List[LogData]:
-        log1 = LogData(
+    def _get_test_logs_dropped_attributes() -> List[LogRecordData]:
+        log1 = LogRecordData(
             log_record=SDKLogRecord(
                 timestamp=1644650195189786880,
                 trace_id=89564621134313219400156819398935297684,
@@ -555,14 +555,14 @@ class TestOTLPLogEncoder(unittest.TestCase):
                 body="Do not go gentle into that good night. Rage, rage against the dying of the light",
                 resource=SDKResource({"first_resource": "value"}),
                 attributes={"a": 1, "b": "c", "user_id": "B121092"},
-                limits=LogLimits(max_attributes=1),
+                limits=LogRecordLimits(max_attributes=1),
             ),
             instrumentation_scope=InstrumentationScope(
                 "first_name", "first_version"
             ),
         )
 
-        log2 = LogData(
+        log2 = LogRecordData(
             log_record=SDKLogRecord(
                 timestamp=1644650249738562048,
                 trace_id=0,

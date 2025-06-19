@@ -28,9 +28,9 @@ from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2_grpc import (
     LogsServiceStub,
 )
-from opentelemetry.sdk._logs import LogData
+from opentelemetry.sdk._logs import LogRecordData
 from opentelemetry.sdk._logs import LogRecord as SDKLogRecord
-from opentelemetry.sdk._logs.export import LogExporter, LogExportResult
+from opentelemetry.sdk._logs.export import LogRecordExporter, LogRecordExportResult
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
     OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE,
@@ -44,10 +44,10 @@ from opentelemetry.sdk.environment_variables import (
 
 
 class OTLPLogExporter(
-    LogExporter,
-    OTLPExporterMixin[SDKLogRecord, ExportLogsServiceRequest, LogExportResult],
+    LogRecordExporter,
+    OTLPExporterMixin[SDKLogRecord, ExportLogsServiceRequest, LogRecordExportResult],
 ):
-    _result = LogExportResult
+    _result = LogRecordExportResult
     _stub = LogsServiceStub
 
     def __init__(
@@ -103,11 +103,11 @@ class OTLPLogExporter(
         )
 
     def _translate_data(
-        self, data: Sequence[LogData]
+        self, data: Sequence[LogRecordData]
     ) -> ExportLogsServiceRequest:
         return encode_logs(data)
 
-    def export(self, batch: Sequence[LogData]) -> LogExportResult:
+    def export(self, batch: Sequence[LogRecordData]) -> LogRecordExportResult:
         return self._export(batch)
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:

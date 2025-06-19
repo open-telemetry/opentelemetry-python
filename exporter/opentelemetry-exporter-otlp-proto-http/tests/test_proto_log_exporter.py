@@ -38,9 +38,9 @@ from opentelemetry.exporter.otlp.proto.http.version import __version__
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
     ExportLogsServiceRequest,
 )
-from opentelemetry.sdk._logs import LogData
+from opentelemetry.sdk._logs import LogRecordData
 from opentelemetry.sdk._logs import LogRecord as SDKLogRecord
-from opentelemetry.sdk._logs.export import LogExportResult
+from opentelemetry.sdk._logs.export import LogRecordExportResult
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
@@ -217,7 +217,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             return log_records
 
     def test_exported_log_without_trace_id(self):
-        log = LogData(
+        log = LogRecordData(
             log_record=SDKLogRecord(
                 timestamp=1644650195189786182,
                 trace_id=0,
@@ -244,7 +244,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             self.fail("No log records found")
 
     def test_exported_log_without_span_id(self):
-        log = LogData(
+        log = LogRecordData(
             log_record=SDKLogRecord(
                 timestamp=1644650195189786360,
                 trace_id=89564621134313219400156819398935297696,
@@ -271,8 +271,8 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             self.fail("No log records found")
 
     @staticmethod
-    def _get_sdk_log_data() -> List[LogData]:
-        log1 = LogData(
+    def _get_sdk_log_data() -> List[LogRecordData]:
+        log1 = LogRecordData(
             log_record=SDKLogRecord(
                 timestamp=1644650195189786880,
                 trace_id=89564621134313219400156819398935297684,
@@ -289,7 +289,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             ),
         )
 
-        log2 = LogData(
+        log2 = LogRecordData(
             log_record=SDKLogRecord(
                 timestamp=1644650249738562048,
                 trace_id=0,
@@ -306,7 +306,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             ),
         )
 
-        log3 = LogData(
+        log3 = LogRecordData(
             log_record=SDKLogRecord(
                 timestamp=1644650427658989056,
                 trace_id=271615924622795969659406376515024083555,
@@ -321,7 +321,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             instrumentation_scope=None,
         )
 
-        log4 = LogData(
+        log4 = LogRecordData(
             log_record=SDKLogRecord(
                 timestamp=1644650584292683008,
                 trace_id=212592107417388365804938480559624925555,
@@ -347,7 +347,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         """
 
         self.assertEqual(
-            OTLPLogExporter().export(MagicMock()), LogExportResult.SUCCESS
+            OTLPLogExporter().export(MagicMock()), LogRecordExportResult.SUCCESS
         )
 
     @patch.object(Session, "post")
@@ -363,7 +363,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             # Set timeout to 1.5 seconds
             self.assertEqual(
                 exporter.export(self._get_sdk_log_data()),
-                LogExportResult.FAILURE,
+                LogRecordExportResult.FAILURE,
             )
             after = time.time()
             # First call at time 0, second at time 1, then an early return before the second backoff sleep b/c it would exceed timeout.

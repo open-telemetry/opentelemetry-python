@@ -39,7 +39,7 @@ from opentelemetry.proto.logs.v1.logs_pb2 import ResourceLogs, ScopeLogs
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as OTLPResource,
 )
-from opentelemetry.sdk._logs import LogData, LogRecord
+from opentelemetry.sdk._logs import LogRecordData, LogRecord
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
     OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE,
@@ -59,7 +59,7 @@ THIS_DIR = dirname(__file__)
 class TestOTLPLogExporter(TestCase):
     def setUp(self):
         self.exporter = OTLPLogExporter()
-        self.log_data_1 = LogData(
+        self.log_data_1 = LogRecordData(
             log_record=LogRecord(
                 timestamp=int(time.time() * 1e9),
                 trace_id=2604504634922341076776623263868986797,
@@ -75,7 +75,7 @@ class TestOTLPLogExporter(TestCase):
                 "first_name", "first_version"
             ),
         )
-        self.log_data_2 = LogData(
+        self.log_data_2 = LogRecordData(
             log_record=LogRecord(
                 timestamp=int(time.time() * 1e9),
                 trace_id=2604504634922341076776623263868986799,
@@ -91,7 +91,7 @@ class TestOTLPLogExporter(TestCase):
                 "second_name", "second_version"
             ),
         )
-        self.log_data_3 = LogData(
+        self.log_data_3 = LogRecordData(
             log_record=LogRecord(
                 timestamp=int(time.time() * 1e9),
                 trace_id=2604504634922341076776623263868986800,
@@ -106,7 +106,7 @@ class TestOTLPLogExporter(TestCase):
                 "third_name", "third_version"
             ),
         )
-        self.log_data_4 = LogData(
+        self.log_data_4 = LogRecordData(
             log_record=LogRecord(
                 timestamp=int(time.time() * 1e9),
                 trace_id=0,
@@ -121,7 +121,7 @@ class TestOTLPLogExporter(TestCase):
                 "fourth_name", "fourth_version"
             ),
         )
-        self.log_data_5 = LogData(
+        self.log_data_5 = LogRecordData(
             log_record=LogRecord(
                 timestamp=int(time.time() * 1e9),
                 trace_id=2604504634922341076776623263868986801,
