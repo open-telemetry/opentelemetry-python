@@ -26,10 +26,10 @@ from pytest import mark
 from opentelemetry._logs import SeverityNumber
 from opentelemetry.sdk import trace
 from opentelemetry.sdk._logs import (
-    LogRecordData,
     LoggerProvider,
     LoggingHandler,
     LogRecord,
+    LogRecordData,
 )
 from opentelemetry.sdk._logs._internal.export import _logger
 from opentelemetry.sdk._logs.export import (
@@ -630,7 +630,9 @@ class TestConsoleLogExporter(unittest.TestCase):
             return mock_record_str
 
         mock_stdout = Mock()
-        exporter = ConsoleLogRecordExporter(out=mock_stdout, formatter=formatter)
+        exporter = ConsoleLogRecordExporter(
+            out=mock_stdout, formatter=formatter
+        )
         exporter.export([EMPTY_LOG])
 
         mock_stdout.write.assert_called_once_with(mock_record_str)

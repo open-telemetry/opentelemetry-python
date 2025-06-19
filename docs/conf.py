@@ -133,7 +133,10 @@ nitpick_ignore = [
         "opentelemetry.proto.collector.metrics.v1.metrics_service_pb2.ExportMetricsServiceRequest",
     ),
     ("py:class", "opentelemetry.sdk._logs._internal.export.LogRecordExporter"),
-    ("py:class", "opentelemetry.sdk._logs._internal.export.LogRecordExportResult"),
+    (
+        "py:class",
+        "opentelemetry.sdk._logs._internal.export.LogRecordExportResult",
+    ),
     (
         "py:class",
         "opentelemetry.proto.collector.logs.v1.logs_service_pb2.ExportLogsServiceRequest",

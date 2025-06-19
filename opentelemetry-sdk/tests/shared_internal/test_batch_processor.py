@@ -25,8 +25,8 @@ from unittest.mock import Mock
 import pytest
 
 from opentelemetry.sdk._logs import (
-    LogRecordData,
     LogRecord,
+    LogRecordData,
 )
 from opentelemetry.sdk._logs.export import (
     BatchLogRecordProcessor,

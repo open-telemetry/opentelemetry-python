@@ -65,7 +65,9 @@ def _encode_log(log_data: LogRecordData) -> PB2LogRecord:
     )
 
 
-def _encode_resource_logs(batch: Sequence[LogRecordData]) -> List[ResourceLogs]:
+def _encode_resource_logs(
+    batch: Sequence[LogRecordData],
+) -> List[ResourceLogs]:
     sdk_resource_logs = defaultdict(lambda: defaultdict(list))
 
     for sdk_log in batch:

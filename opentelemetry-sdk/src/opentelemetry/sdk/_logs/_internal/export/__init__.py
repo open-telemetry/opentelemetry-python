@@ -26,7 +26,11 @@ from opentelemetry.context import (
     detach,
     set_value,
 )
-from opentelemetry.sdk._logs import LogRecordData, LogRecord, LogRecordProcessor
+from opentelemetry.sdk._logs import (
+    LogRecord,
+    LogRecordData,
+    LogRecordProcessor,
+)
 from opentelemetry.sdk._shared_internal import BatchProcessor
 from opentelemetry.sdk.environment_variables import (
     OTEL_BLRP_EXPORT_TIMEOUT,

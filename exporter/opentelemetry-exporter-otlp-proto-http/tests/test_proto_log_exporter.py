@@ -38,8 +38,8 @@ from opentelemetry.exporter.otlp.proto.http.version import __version__
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
     ExportLogsServiceRequest,
 )
-from opentelemetry.sdk._logs import LogRecordData
 from opentelemetry.sdk._logs import LogRecord as SDKLogRecord
+from opentelemetry.sdk._logs import LogRecordData
 from opentelemetry.sdk._logs.export import LogRecordExportResult
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
@@ -347,7 +347,8 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         """
 
         self.assertEqual(
-            OTLPLogExporter().export(MagicMock()), LogRecordExportResult.SUCCESS
+            OTLPLogExporter().export(MagicMock()),
+            LogRecordExportResult.SUCCESS,
         )
 
     @patch.object(Session, "post")

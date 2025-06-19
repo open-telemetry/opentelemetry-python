@@ -20,10 +20,10 @@ from opentelemetry._logs.severity import SeverityNumber
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.context import get_current
 from opentelemetry.sdk._logs import (
+    LogRecord,
     LogRecordDeprecatedInitWarning,
     LogRecordDroppedAttributesWarning,
     LogRecordLimits,
-    LogRecord,
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.trace.span import TraceFlags
@@ -131,7 +131,9 @@ class TestLogRecord(unittest.TestCase):
                     limits=limits,
                 )
         self.assertEqual(len(cw), 1)
-        self.assertIsInstance(cw[-1].message, LogRecordDroppedAttributesWarning)
+        self.assertIsInstance(
+            cw[-1].message, LogRecordDroppedAttributesWarning
+        )
         self.assertIn(
             "Log record attributes were dropped due to limits",
             str(cw[-1].message),
@@ -161,7 +163,9 @@ class TestLogRecord(unittest.TestCase):
                         LogRecord(**params)
 
                 self.assertEqual(len(cw), 1)
-                self.assertIsInstance(cw[-1].message, LogRecordDeprecatedInitWarning)
+                self.assertIsInstance(
+                    cw[-1].message, LogRecordDeprecatedInitWarning
+                )
                 self.assertIn(
                     "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated. Use `context` instead.",
                     str(cw[-1].message),

@@ -22,9 +22,9 @@ from opentelemetry._logs import get_logger as APIGetLogger
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk import trace
 from opentelemetry.sdk._logs import (
-    LogRecordData,
     LoggerProvider,
     LoggingHandler,
+    LogRecordData,
     LogRecordProcessor,
 )
 from opentelemetry.semconv._incubating.attributes import code_attributes

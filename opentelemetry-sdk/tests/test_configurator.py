@@ -1056,7 +1056,8 @@ class TestImportExporters(TestCase):
             trace_exporters["console"].__class__, ConsoleSpanExporter.__class__
         )
         self.assertEqual(
-            logs_exporters["console"].__class__, ConsoleLogRecordExporter.__class__
+            logs_exporters["console"].__class__,
+            ConsoleLogRecordExporter.__class__,
         )
         self.assertEqual(
             metric_exporterts["console"].__class__,

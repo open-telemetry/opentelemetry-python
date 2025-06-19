@@ -39,7 +39,7 @@ from opentelemetry.proto.logs.v1.logs_pb2 import ResourceLogs, ScopeLogs
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as OTLPResource,
 )
-from opentelemetry.sdk._logs import LogRecordData, LogRecord
+from opentelemetry.sdk._logs import LogRecord, LogRecordData
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
     OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE,

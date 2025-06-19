@@ -28,9 +28,12 @@ from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2_grpc import (
     LogsServiceStub,
 )
-from opentelemetry.sdk._logs import LogRecordData
 from opentelemetry.sdk._logs import LogRecord as SDKLogRecord
-from opentelemetry.sdk._logs.export import LogRecordExporter, LogRecordExportResult
+from opentelemetry.sdk._logs import LogRecordData
+from opentelemetry.sdk._logs.export import (
+    LogRecordExporter,
+    LogRecordExportResult,
+)
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
     OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE,
@@ -45,7 +48,9 @@ from opentelemetry.sdk.environment_variables import (
 
 class OTLPLogExporter(
     LogRecordExporter,
-    OTLPExporterMixin[SDKLogRecord, ExportLogsServiceRequest, LogRecordExportResult],
+    OTLPExporterMixin[
+        SDKLogRecord, ExportLogsServiceRequest, LogRecordExportResult
+    ],
 ):
     _result = LogRecordExportResult
     _stub = LogsServiceStub

@@ -17,11 +17,11 @@ from opentelemetry.sdk._logs._internal import (
     Logger,
     LoggerProvider,
     LoggingHandler,
+    LogRecord,
     LogRecordData,
     LogRecordDeprecatedInitWarning,
     LogRecordDroppedAttributesWarning,
     LogRecordLimits,
-    LogRecord,
     LogRecordProcessor,
 )
 
