@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Logging API accepts optional `context`; deprecates `trace_id`, `span_id`, `trace_flags`.
   ([#4597](https://github.com/open-telemetry/opentelemetry-python/pull/4597))
 - Logging API hide std_to_otel function to convert python logging severity to otel severity
-  ([#](https://github.com/open-telemetry/opentelemetry-python/pull/))
+  ([#4649](https://github.com/open-telemetry/opentelemetry-python/pull/4649))
 
 ## Version 1.34.0/0.55b0 (2025-06-04)
 
