@@ -187,7 +187,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
         )
 
     def on_emit(self, log_data: LogData) -> None:
-        return self._batch_processor.on_emit(log_data)
+        return self._batch_processor.emit(log_data)
 
     def shutdown(self):
         return self._batch_processor.shutdown()
