@@ -457,8 +457,11 @@ def _initialize_components(
     # config so we can track the difference between current config and a newly provided remote
     # config. The goal is to have configuration updated dynamically while our SDK config is
     # currently static.
-    _init_opamp = _import_opamp()
-    _init_opamp(resource=resource)
+    try:
+        _init_opamp = _import_opamp()
+        _init_opamp(resource=resource)
+    except RuntimeError:
+        _logger.debug("No OpAMP init function found")
 
     _init_tracing(
         exporters=span_exporters,
