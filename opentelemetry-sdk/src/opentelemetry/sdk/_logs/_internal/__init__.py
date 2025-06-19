@@ -680,7 +680,7 @@ class Logger(APILogger):
         and instrumentation info.
         """
         log_data = LogData(record, self._instrumentation_scope)
-        self._multi_log_record_processor.emit(log_data)
+        self._multi_log_record_processor.on_emit(log_data)
 
 
 class LoggerProvider(APILoggerProvider):
