@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Remove `Events` from the API/SDK completely. An `Event` is now simply a `LogRecord` with the `EventName` field set.
 - Update OTLP gRPC/HTTP exporters: the export timeout is now inclusive of all retries and backoffs.
   A +/-20% jitter was added to all backoffs. A pointless 32 second sleep that occurred after all retries
   had completed/failed was removed.
