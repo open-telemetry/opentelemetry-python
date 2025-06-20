@@ -226,7 +226,7 @@ class LogRecord(APILogRecord):
         event_name: str | None = None,
     ): ...
 
-    def __init__(
+    def __init__( # pylint:disable=too-many-locals
         self,
         timestamp: int | None = None,
         observed_timestamp: int | None = None,
