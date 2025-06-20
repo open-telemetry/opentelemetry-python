@@ -33,6 +33,9 @@ exporter = OTLPLogExporter(insecure=True)
 logger_provider.add_log_record_processor(BatchLogRecordProcessor(exporter))
 handler = LoggingHandler(level=logging.NOTSET, logger_provider=logger_provider)
 
+# Set the root logger level to NOTSET to ensure all messages are captured
+logging.getLogger().setLevel(logging.NOTSET)
+
 # Attach OTLP handler to root logger
 logging.getLogger().addHandler(handler)
 
