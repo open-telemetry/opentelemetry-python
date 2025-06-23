@@ -71,7 +71,7 @@ class BytesEncoder(json.JSONEncoder):
         return super().default(o)
 
 
-class LogDroppedAttributesWarning(UserWarning):
+class LogRecordDroppedAttributesWarning(UserWarning):
     """Custom warning to indicate dropped log attributes due to limits.
 
     This class is used to filter and handle these specific warnings separately
@@ -80,10 +80,10 @@ class LogDroppedAttributesWarning(UserWarning):
     """
 
 
-warnings.simplefilter("once", LogDroppedAttributesWarning)
+warnings.simplefilter("once", LogRecordDroppedAttributesWarning)
 
 
-class LogDeprecatedInitWarning(UserWarning):
+class LogRecordDeprecatedInitWarning(UserWarning):
     """Custom warning to indicate deprecated LogRecord init was used.
 
     This class is used to filter and handle these specific warnings separately
@@ -92,10 +92,10 @@ class LogDeprecatedInitWarning(UserWarning):
     """
 
 
-warnings.simplefilter("once", LogDeprecatedInitWarning)
+warnings.simplefilter("once", LogRecordDeprecatedInitWarning)
 
 
-class LogLimits:
+class LogRecordLimits:
     """This class is based on a SpanLimits class in the Tracing module.
 
     This class represents the limits that should be enforced on recorded data such as events, links, attributes etc.
@@ -103,7 +103,7 @@ class LogLimits:
     This class does not enforce any limits itself. It only provides a way to read limits from env,
     default values and from user provided arguments.
 
-    All limit arguments must be either a non-negative integer, ``None`` or ``LogLimits.UNSET``.
+    All limit arguments must be either a non-negative integer, ``None`` or ``LogRecordLimits.UNSET``.
 
     - All limit arguments are optional.
     - If a limit argument is not set, the class will try to read its value from the corresponding
@@ -180,9 +180,9 @@ class LogLimits:
         return value
 
 
-_UnsetLogLimits = LogLimits(
-    max_attributes=LogLimits.UNSET,
-    max_attribute_length=LogLimits.UNSET,
+_UnsetLogLimits = LogRecordLimits(
+    max_attributes=LogRecordLimits.UNSET,
+    max_attribute_length=LogRecordLimits.UNSET,
 )
 
 
@@ -205,7 +205,7 @@ class LogRecord(APILogRecord):
         body: AnyValue | None = None,
         resource: Resource | None = None,
         attributes: _ExtendedAttributes | None = None,
-        limits: LogLimits | None = _UnsetLogLimits,
+        limits: LogRecordLimits | None = _UnsetLogLimits,
     ): ...
 
     @overload
@@ -221,7 +221,7 @@ class LogRecord(APILogRecord):
         body: AnyValue | None = None,
         resource: Resource | None = None,
         attributes: _ExtendedAttributes | None = None,
-        limits: LogLimits | None = _UnsetLogLimits,
+        limits: LogRecordLimits | None = _UnsetLogLimits,
     ): ...
 
     def __init__(
@@ -237,12 +237,12 @@ class LogRecord(APILogRecord):
         body: AnyValue | None = None,
         resource: Resource | None = None,
         attributes: _ExtendedAttributes | None = None,
-        limits: LogLimits | None = _UnsetLogLimits,
+        limits: LogRecordLimits | None = _UnsetLogLimits,
     ):
         if trace_id or span_id or trace_flags:
             warnings.warn(
                 "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated. Use `context` instead.",
-                LogDeprecatedInitWarning,
+                LogRecordDeprecatedInitWarning,
                 stacklevel=2,
             )
 
@@ -283,7 +283,7 @@ class LogRecord(APILogRecord):
         if self.dropped_attributes > 0:
             warnings.warn(
                 "Log record attributes were dropped due to limits",
-                LogDroppedAttributesWarning,
+                LogRecordDroppedAttributesWarning,
                 stacklevel=2,
             )
 
@@ -333,7 +333,7 @@ class LogRecord(APILogRecord):
         return 0
 
 
-class LogData:
+class LogRecordData:
     """Readable LogRecord data plus associated InstrumentationLibrary."""
 
     def __init__(
@@ -354,8 +354,8 @@ class LogRecordProcessor(abc.ABC):
     """
 
     @abc.abstractmethod
-    def emit(self, log_data: LogData):
-        """Emits the `LogData`"""
+    def emit(self, log_data: LogRecordData):
+        """Emits the `LogRecordData`"""
 
     @abc.abstractmethod
     def shutdown(self):
@@ -398,7 +398,7 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
         with self._lock:
             self._log_record_processors += (log_record_processor,)
 
-    def emit(self, log_data: LogData) -> None:
+    def emit(self, log_data: LogRecordData) -> None:
         for lp in self._log_record_processors:
             lp.emit(log_data)
 
@@ -472,7 +472,7 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
         for future in futures:
             future.result()
 
-    def emit(self, log_data: LogData):
+    def emit(self, log_data: LogRecordData):
         self._submit_and_wait(lambda lp: lp.emit, log_data)
 
     def shutdown(self):
@@ -676,10 +676,10 @@ class Logger(APILogger):
         return self._resource
 
     def emit(self, record: LogRecord):
-        """Emits the :class:`LogData` by associating :class:`LogRecord`
+        """Emits the :class:`LogRecordData` by associating :class:`LogRecord`
         and instrumentation info.
         """
-        log_data = LogData(record, self._instrumentation_scope)
+        log_data = LogRecordData(record, self._instrumentation_scope)
         self._multi_log_record_processor.emit(log_data)
 
 
