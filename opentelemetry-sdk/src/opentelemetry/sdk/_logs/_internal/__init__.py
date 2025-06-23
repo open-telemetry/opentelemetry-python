@@ -206,6 +206,7 @@ class LogRecord(APILogRecord):
         resource: Resource | None = None,
         attributes: _ExtendedAttributes | None = None,
         limits: LogLimits | None = _UnsetLogLimits,
+        event_name: str | None = None,
     ): ...
 
     @overload
@@ -222,9 +223,10 @@ class LogRecord(APILogRecord):
         resource: Resource | None = None,
         attributes: _ExtendedAttributes | None = None,
         limits: LogLimits | None = _UnsetLogLimits,
+        event_name: str | None = None,
     ): ...
 
-    def __init__(
+    def __init__(  # pylint:disable=too-many-locals
         self,
         timestamp: int | None = None,
         observed_timestamp: int | None = None,
@@ -238,6 +240,7 @@ class LogRecord(APILogRecord):
         resource: Resource | None = None,
         attributes: _ExtendedAttributes | None = None,
         limits: LogLimits | None = _UnsetLogLimits,
+        event_name: str | None = None,
     ):
         if trace_id or span_id or trace_flags:
             warnings.warn(
@@ -275,6 +278,7 @@ class LogRecord(APILogRecord):
                     max_value_len=limits.max_attribute_length,
                     extended_attributes=True,
                 ),
+                "event_name": event_name,
             }
         )
         self.resource = (
@@ -318,6 +322,7 @@ class LogRecord(APILogRecord):
                 ),
                 "trace_flags": self.trace_flags,
                 "resource": json.loads(self.resource.to_json()),
+                "event_name": self.event_name if self.event_name else "",
             },
             indent=indent,
             cls=BytesEncoder,

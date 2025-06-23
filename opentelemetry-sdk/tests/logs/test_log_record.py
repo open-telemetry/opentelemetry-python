@@ -42,11 +42,12 @@ class TestLogRecord(unittest.TestCase):
                 "sequence": [1, 2],
                 "str": "string",
             },
+            event_name="a.event",
         )
 
         self.assertEqual(
             log_record.to_json(indent=None),
-            '{"body": {"key": "logLine", "bytes": "MTIz"}, "severity_number": null, "severity_text": null, "attributes": {"mapping": {"key": "value"}, "none": null, "sequence": [1, 2], "str": "string"}, "dropped_attributes": 0, "timestamp": "1970-01-01T00:00:00.000000Z", "observed_timestamp": "1970-01-01T00:00:00.000000Z", "trace_id": "", "span_id": "", "trace_flags": null, "resource": {"attributes": {"service.name": "foo"}, "schema_url": ""}}',
+            '{"body": {"key": "logLine", "bytes": "MTIz"}, "severity_number": null, "severity_text": null, "attributes": {"mapping": {"key": "value"}, "none": null, "sequence": [1, 2], "str": "string"}, "dropped_attributes": 0, "timestamp": "1970-01-01T00:00:00.000000Z", "observed_timestamp": "1970-01-01T00:00:00.000000Z", "trace_id": "", "span_id": "", "trace_flags": null, "resource": {"attributes": {"service.name": "foo"}, "schema_url": ""}, "event_name": "a.event"}',
         )
 
     def test_log_record_to_json_serializes_severity_number_as_int(self):
