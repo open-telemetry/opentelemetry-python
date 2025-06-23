@@ -27,7 +27,6 @@ from typing import Callable, Sequence, Type, Union
 
 from typing_extensions import Literal
 
-from opentelemetry._events import set_event_logger_provider
 from opentelemetry._logs import set_logger_provider
 from opentelemetry.environment_variables import (
     OTEL_LOGS_EXPORTER,
@@ -36,7 +35,6 @@ from opentelemetry.environment_variables import (
     OTEL_TRACES_EXPORTER,
 )
 from opentelemetry.metrics import set_meter_provider
-from opentelemetry.sdk._events import EventLoggerProvider
 from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
 from opentelemetry.sdk._logs.export import BatchLogRecordProcessor, LogExporter
 from opentelemetry.sdk.environment_variables import (
@@ -248,9 +246,6 @@ def _init_logging(
         provider.add_log_record_processor(
             BatchLogRecordProcessor(exporter_class(**exporter_args))
         )
-
-    event_logger_provider = EventLoggerProvider(logger_provider=provider)
-    set_event_logger_provider(event_logger_provider)
 
     if setup_logging_handler:
         _patch_basic_config()
