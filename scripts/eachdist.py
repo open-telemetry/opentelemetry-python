@@ -272,21 +272,6 @@ def parse_args(args=None):
         ),
     )
 
-    listparser = subparsers.add_parser(
-        "list",
-        help="List all packages with their relative paths",
-    )
-    listparser.set_defaults(func=list_args)
-    listparser.add_argument(
-        "--mode",
-        "-m",
-        default="DEFAULT",
-        help=cleandoc(
-            """Section of config file to use for target selection configuration.
-        See description of exec for available options."""
-        ),
-    )
-
     return parser.parse_args(args)
 
 
@@ -754,22 +739,6 @@ def version_args(args):
     cfg = ConfigParser()
     cfg.read(str(find_projectroot() / "eachdist.ini"))
     print(cfg[args.mode]["version"])
-
-
-def list_args(args):
-    rootpath = find_projectroot()
-    targets = find_targets(args.mode, rootpath)
-
-    if not targets:
-        sys.exit(f"Error: No targets selected (root: {rootpath})")
-
-    excluded_dirs = ["docs", "scripts"]
-
-    for target in targets:
-        rel_path = target.relative_to(rootpath)
-        if any(excluded in str(rel_path) for excluded in excluded_dirs):
-            continue
-        print(str(rel_path))
 
 
 def main():
