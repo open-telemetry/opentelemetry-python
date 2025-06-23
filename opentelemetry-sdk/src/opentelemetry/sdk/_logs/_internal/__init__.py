@@ -225,7 +225,7 @@ class LogRecord(APILogRecord):
         limits: LogLimits | None = _UnsetLogLimits,
     ): ...
 
-    def __init__(
+    def __init__(  # pylint:disable=too-many-locals
         self,
         timestamp: int | None = None,
         observed_timestamp: int | None = None,
@@ -239,6 +239,7 @@ class LogRecord(APILogRecord):
         resource: Resource | None = None,
         attributes: _ExtendedAttributes | None = None,
         limits: LogLimits | None = _UnsetLogLimits,
+        event_name: str | None = None,
     ):
         if trace_id or span_id or trace_flags:
             warnings.warn(
