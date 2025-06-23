@@ -243,7 +243,7 @@ class LogRecord(APILogRecord):
     ):
         if trace_id or span_id or trace_flags:
             warnings.warn(
-                "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated. Use `context` instead.",
+                "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated and will be removed in next versions. Use `context` instead.",
                 LogDeprecatedInitWarning,
                 stacklevel=2,
             )
@@ -251,22 +251,17 @@ class LogRecord(APILogRecord):
         if not context:
             context = get_current()
 
-        if context is not None:
-            span = get_current_span(context)
-            span_context = span.get_span_context()
-            if span_context.is_valid:
-                trace_id = span_context.trace_id
-                span_id = span_context.span_id
-                trace_flags = span_context.trace_flags
+        span = get_current_span(context)
+        span_context = span.get_span_context()
 
         super().__init__(
             **{
                 "timestamp": timestamp,
                 "observed_timestamp": observed_timestamp,
                 "context": context,
-                "trace_id": trace_id,
-                "span_id": span_id,
-                "trace_flags": trace_flags,
+                "trace_id": trace_id or span_context.trace_id,
+                "span_id": span_id or span_context.span_id,
+                "trace_flags": trace_flags or span_context.trace_flags,
                 "severity_text": severity_text,
                 "severity_number": severity_number,
                 "body": body,
@@ -589,7 +584,6 @@ class LoggingHandler(logging.Handler):
     def _translate(self, record: logging.LogRecord) -> LogRecord:
         timestamp = int(record.created * 1e9)
         observered_timestamp = time_ns()
-        span_context = get_current_span().get_span_context()
         attributes = self._get_attributes(record)
         severity_number = std_to_otel(record.levelno)
         if self.formatter:
@@ -625,9 +619,7 @@ class LoggingHandler(logging.Handler):
         return LogRecord(
             timestamp=timestamp,
             observed_timestamp=observered_timestamp,
-            trace_id=span_context.trace_id,
-            span_id=span_context.span_id,
-            trace_flags=span_context.trace_flags,
+            context=get_current() or None,
             severity_text=level_name,
             severity_number=severity_number,
             body=body,

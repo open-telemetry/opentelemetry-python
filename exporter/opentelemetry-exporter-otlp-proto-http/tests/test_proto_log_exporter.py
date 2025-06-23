@@ -59,7 +59,12 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
-from opentelemetry.trace import TraceFlags
+from opentelemetry.trace import (
+    NonRecordingSpan,
+    SpanContext,
+    TraceFlags,
+    set_span_in_context,
+)
 
 ENV_ENDPOINT = "http://localhost.env:8080/"
 ENV_CERTIFICATE = "/etc/base.crt"
@@ -217,12 +222,20 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             return log_records
 
     def test_exported_log_without_trace_id(self):
+        ctx = set_span_in_context(
+            NonRecordingSpan(
+                SpanContext(
+                    0,
+                    1312458408527513292,
+                    False,
+                    TraceFlags(0x01),
+                )
+            )
+        )
         log = LogData(
             log_record=SDKLogRecord(
                 timestamp=1644650195189786182,
-                trace_id=0,
-                span_id=1312458408527513292,
-                trace_flags=TraceFlags(0x01),
+                context=ctx,
                 severity_text="WARN",
                 severity_number=SeverityNumber.WARN,
                 body="Invalid trace id check",
@@ -244,12 +257,21 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             self.fail("No log records found")
 
     def test_exported_log_without_span_id(self):
+        ctx = set_span_in_context(
+            NonRecordingSpan(
+                SpanContext(
+                    89564621134313219400156819398935297696,
+                    0,
+                    False,
+                    TraceFlags(0x01),
+                )
+            )
+        )
+
         log = LogData(
             log_record=SDKLogRecord(
                 timestamp=1644650195189786360,
-                trace_id=89564621134313219400156819398935297696,
-                span_id=0,
-                trace_flags=TraceFlags(0x01),
+                context=ctx,
                 severity_text="WARN",
                 severity_number=SeverityNumber.WARN,
                 body="Invalid span id check",
@@ -272,12 +294,20 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
 
     @staticmethod
     def _get_sdk_log_data() -> List[LogData]:
+        ctx_log1 = set_span_in_context(
+            NonRecordingSpan(
+                SpanContext(
+                    89564621134313219400156819398935297684,
+                    1312458408527513268,
+                    False,
+                    TraceFlags(0x01),
+                )
+            )
+        )
         log1 = LogData(
             log_record=SDKLogRecord(
                 timestamp=1644650195189786880,
-                trace_id=89564621134313219400156819398935297684,
-                span_id=1312458408527513268,
-                trace_flags=TraceFlags(0x01),
+                context=ctx_log1,
                 severity_text="WARN",
                 severity_number=SeverityNumber.WARN,
                 body="Do not go gentle into that good night. Rage, rage against the dying of the light",
@@ -289,12 +319,19 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             ),
         )
 
+        ctx_log2 = set_span_in_context(
+            NonRecordingSpan(
+                SpanContext(
+                    0,
+                    0,
+                    False,
+                )
+            )
+        )
         log2 = LogData(
             log_record=SDKLogRecord(
                 timestamp=1644650249738562048,
-                trace_id=0,
-                span_id=0,
-                trace_flags=TraceFlags.DEFAULT,
+                context=ctx_log2,
                 severity_text="WARN",
                 severity_number=SeverityNumber.WARN,
                 body="Cooper, this is no time for caution!",
@@ -305,13 +342,20 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                 "second_name", "second_version"
             ),
         )
-
+        ctx_log3 = set_span_in_context(
+            NonRecordingSpan(
+                SpanContext(
+                    271615924622795969659406376515024083555,
+                    4242561578944770265,
+                    False,
+                    TraceFlags(0x01),
+                )
+            )
+        )
         log3 = LogData(
             log_record=SDKLogRecord(
                 timestamp=1644650427658989056,
-                trace_id=271615924622795969659406376515024083555,
-                span_id=4242561578944770265,
-                trace_flags=TraceFlags(0x01),
+                context=ctx_log3,
                 severity_text="DEBUG",
                 severity_number=SeverityNumber.DEBUG,
                 body="To our galaxy",
@@ -320,13 +364,20 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             ),
             instrumentation_scope=None,
         )
-
+        ctx_log4 = set_span_in_context(
+            NonRecordingSpan(
+                SpanContext(
+                    212592107417388365804938480559624925555,
+                    6077757853989569223,
+                    False,
+                    TraceFlags(0x01),
+                )
+            )
+        )
         log4 = LogData(
             log_record=SDKLogRecord(
                 timestamp=1644650584292683008,
-                trace_id=212592107417388365804938480559624925555,
-                span_id=6077757853989569223,
-                trace_flags=TraceFlags(0x01),
+                context=ctx_log4,
                 severity_text="INFO",
                 severity_number=SeverityNumber.INFO,
                 body="Love is the one thing that transcends time and space",
