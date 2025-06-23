@@ -25,4 +25,4 @@ opentracing~=2.2.0
 thrift~=0.10
 wrapt>=1.0.0,<2.0.0
 markupsafe~=2.0
-protobuf==5.26.1
+protobuf==5.29.5
