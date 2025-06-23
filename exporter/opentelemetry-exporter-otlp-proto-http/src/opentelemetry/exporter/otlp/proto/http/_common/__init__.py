@@ -12,27 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import requests
 
-from opentelemetry.sdk._logs._internal import (
-    LogData,
-    LogDeprecatedInitWarning,
-    LogDroppedAttributesWarning,
-    Logger,
-    LoggerProvider,
-    LoggingHandler,
-    LogLimits,
-    LogRecord,
-    LogRecordProcessor,
-)
 
-__all__ = [
-    "LogData",
-    "Logger",
-    "LoggerProvider",
-    "LoggingHandler",
-    "LogLimits",
-    "LogRecord",
-    "LogRecordProcessor",
-    "LogDeprecatedInitWarning",
-    "LogDroppedAttributesWarning",
-]
+def _is_retryable(resp: requests.Response) -> bool:
+    if resp.status_code == 408:
+        return True
+    if resp.status_code >= 500 and resp.status_code <= 599:
+        return True
+    return False

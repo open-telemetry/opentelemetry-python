@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-from opentelemetry.proto.collector.logs.v1 import logs_service_pb2 as opentelemetry_dot_proto_dot_collector_dot_logs_dot_v1_dot_logs__service__pb2
+from opentelemetry.proto.collector.profiles.v1development import profiles_service_pb2 as opentelemetry_dot_proto_dot_collector_dot_profiles_dot_v1development_dot_profiles__service__pb2
 
 GRPC_GENERATED_VERSION = '1.63.2'
 GRPC_VERSION = grpc.__version__
@@ -20,7 +20,7 @@ except ImportError:
 if _version_not_supported:
     warnings.warn(
         f'The grpc package installed is at version {GRPC_VERSION},'
-        + f' but the generated code in opentelemetry/proto/collector/logs/v1/logs_service_pb2_grpc.py depends on'
+        + f' but the generated code in opentelemetry/proto/collector/profiles/v1development/profiles_service_pb2_grpc.py depends on'
         + f' grpcio>={GRPC_GENERATED_VERSION}.'
         + f' Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}'
         + f' or downgrade your generated code using grpcio-tools<={GRPC_VERSION}.'
@@ -30,10 +30,9 @@ if _version_not_supported:
     )
 
 
-class LogsServiceStub(object):
-    """Service that can be used to push logs between one Application instrumented with
-    OpenTelemetry and an collector, or between an collector and a central collector (in this
-    case logs are sent/received to/from multiple Applications).
+class ProfilesServiceStub(object):
+    """Service that can be used to push profiles between one Application instrumented with
+    OpenTelemetry and a collector, or between a collector and a central collector.
     """
 
     def __init__(self, channel):
@@ -43,16 +42,15 @@ class LogsServiceStub(object):
             channel: A grpc.Channel.
         """
         self.Export = channel.unary_unary(
-                '/opentelemetry.proto.collector.logs.v1.LogsService/Export',
-                request_serializer=opentelemetry_dot_proto_dot_collector_dot_logs_dot_v1_dot_logs__service__pb2.ExportLogsServiceRequest.SerializeToString,
-                response_deserializer=opentelemetry_dot_proto_dot_collector_dot_logs_dot_v1_dot_logs__service__pb2.ExportLogsServiceResponse.FromString,
+                '/opentelemetry.proto.collector.profiles.v1development.ProfilesService/Export',
+                request_serializer=opentelemetry_dot_proto_dot_collector_dot_profiles_dot_v1development_dot_profiles__service__pb2.ExportProfilesServiceRequest.SerializeToString,
+                response_deserializer=opentelemetry_dot_proto_dot_collector_dot_profiles_dot_v1development_dot_profiles__service__pb2.ExportProfilesServiceResponse.FromString,
                 _registered_method=True)
 
 
-class LogsServiceServicer(object):
-    """Service that can be used to push logs between one Application instrumented with
-    OpenTelemetry and an collector, or between an collector and a central collector (in this
-    case logs are sent/received to/from multiple Applications).
+class ProfilesServiceServicer(object):
+    """Service that can be used to push profiles between one Application instrumented with
+    OpenTelemetry and a collector, or between a collector and a central collector.
     """
 
     def Export(self, request, context):
@@ -62,24 +60,23 @@ class LogsServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
 
-def add_LogsServiceServicer_to_server(servicer, server):
+def add_ProfilesServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'Export': grpc.unary_unary_rpc_method_handler(
                     servicer.Export,
-                    request_deserializer=opentelemetry_dot_proto_dot_collector_dot_logs_dot_v1_dot_logs__service__pb2.ExportLogsServiceRequest.FromString,
-                    response_serializer=opentelemetry_dot_proto_dot_collector_dot_logs_dot_v1_dot_logs__service__pb2.ExportLogsServiceResponse.SerializeToString,
+                    request_deserializer=opentelemetry_dot_proto_dot_collector_dot_profiles_dot_v1development_dot_profiles__service__pb2.ExportProfilesServiceRequest.FromString,
+                    response_serializer=opentelemetry_dot_proto_dot_collector_dot_profiles_dot_v1development_dot_profiles__service__pb2.ExportProfilesServiceResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'opentelemetry.proto.collector.logs.v1.LogsService', rpc_method_handlers)
+            'opentelemetry.proto.collector.profiles.v1development.ProfilesService', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
  # This class is part of an EXPERIMENTAL API.
-class LogsService(object):
-    """Service that can be used to push logs between one Application instrumented with
-    OpenTelemetry and an collector, or between an collector and a central collector (in this
-    case logs are sent/received to/from multiple Applications).
+class ProfilesService(object):
+    """Service that can be used to push profiles between one Application instrumented with
+    OpenTelemetry and a collector, or between a collector and a central collector.
     """
 
     @staticmethod
@@ -96,9 +93,9 @@ class LogsService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/opentelemetry.proto.collector.logs.v1.LogsService/Export',
-            opentelemetry_dot_proto_dot_collector_dot_logs_dot_v1_dot_logs__service__pb2.ExportLogsServiceRequest.SerializeToString,
-            opentelemetry_dot_proto_dot_collector_dot_logs_dot_v1_dot_logs__service__pb2.ExportLogsServiceResponse.FromString,
+            '/opentelemetry.proto.collector.profiles.v1development.ProfilesService/Export',
+            opentelemetry_dot_proto_dot_collector_dot_profiles_dot_v1development_dot_profiles__service__pb2.ExportProfilesServiceRequest.SerializeToString,
+            opentelemetry_dot_proto_dot_collector_dot_profiles_dot_v1development_dot_profiles__service__pb2.ExportProfilesServiceResponse.FromString,
             options,
             channel_credentials,
             insecure,

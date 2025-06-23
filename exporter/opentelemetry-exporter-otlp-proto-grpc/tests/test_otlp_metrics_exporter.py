@@ -297,7 +297,8 @@ class TestOTLPMetricExporter(TestCase):
             insecure=True, compression=Compression.NoCompression
         )
         mock_insecure_channel.assert_called_once_with(
-            "localhost:4317", compression=Compression.NoCompression
+            "localhost:4317",
+            compression=Compression.NoCompression,
         )
 
     def test_split_metrics_data_many_data_points(self):

@@ -7,18 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Update OTLP proto to v1.7 [#4645](https://github.com/open-telemetry/opentelemetry-python/pull/4645).
+- Update OTLP gRPC/HTTP exporters: the export timeout is now inclusive of all retries and backoffs.
+  A +/-20% jitter was added to all backoffs. A pointless 32 second sleep that occurred after all retries
+  had completed/failed was removed.
+  ([#4564](https://github.com/open-telemetry/opentelemetry-python/pull/4564)).
+- Update ConsoleLogExporter.export to handle LogRecord's containing bytes type
+  in the body ([#4614](https://github.com/open-telemetry/opentelemetry-python/pull/4614/)).
 - opentelemetry-sdk: Fix invalid `type: ignore` that causes mypy to ignore the whole file
   ([#4618](https://github.com/open-telemetry/opentelemetry-python/pull/4618))
 - Add `span_exporter` property back to `BatchSpanProcessor` class
   ([#4621](https://github.com/open-telemetry/opentelemetry-python/pull/4621))
+- Fix license field in pyproject.toml files
+  ([#4625](https://github.com/open-telemetry/opentelemetry-python/pull/4625))
+- Update logger level to NOTSET in logs example
+  ([#4637](https://github.com/open-telemetry/opentelemetry-python/pull/4637))
+- Logging API accepts optional `context`; deprecates `trace_id`, `span_id`, `trace_flags`.
+  ([#4597](https://github.com/open-telemetry/opentelemetry-python/pull/4597))
 
 ## Version 1.34.0/0.55b0 (2025-06-04)
 
 - typecheck: add sdk/resources and drop mypy
   ([#4578](https://github.com/open-telemetry/opentelemetry-python/pull/4578))
-- Refactor `BatchLogRecordProcessor` to simplify code and make the control flow more
-  clear ([#4562](https://github.com/open-telemetry/opentelemetry-python/pull/4562/)
-  and [#4535](https://github.com/open-telemetry/opentelemetry-python/pull/4535)).
 - Use PEP702 for marking deprecations
   ([#4522](https://github.com/open-telemetry/opentelemetry-python/pull/4522))
 - Refactor `BatchLogRecordProcessor` and `BatchSpanProcessor` to simplify code
