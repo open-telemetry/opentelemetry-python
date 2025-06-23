@@ -69,7 +69,6 @@ class LogRecord(ABC):
         severity_number: Optional[SeverityNumber] = None,
         body: AnyValue = None,
         attributes: Optional[_ExtendedAttributes] = None,
-        event_name: Optional[str] = None,
     ) -> None: ...
 
     @overload
@@ -85,7 +84,6 @@ class LogRecord(ABC):
         severity_number: Optional[SeverityNumber] = None,
         body: AnyValue = None,
         attributes: Optional[_ExtendedAttributes] = None,
-        event_name: Optional[str] = None,
     ) -> None: ...
 
     def __init__(
@@ -101,7 +99,6 @@ class LogRecord(ABC):
         severity_number: Optional[SeverityNumber] = None,
         body: AnyValue = None,
         attributes: Optional[_ExtendedAttributes] = None,
-        event_name: Optional[str] = None,
     ) -> None:
         self.timestamp = timestamp
         if observed_timestamp is None:
@@ -115,7 +112,6 @@ class LogRecord(ABC):
         self.severity_number = severity_number
         self.body = body
         self.attributes = attributes
-        self.event_name = event_name
 
 
 class Logger(ABC):
