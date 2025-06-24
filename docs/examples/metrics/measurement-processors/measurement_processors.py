@@ -22,7 +22,6 @@ from opentelemetry.sdk.metrics._internal.measurement_processor import (
     BaggageMeasurementProcessor,
     MeasurementProcessor,
     StaticAttributeMeasurementProcessor,
-    ValueRangeMeasurementProcessor,
 )
 from opentelemetry.sdk.metrics.export import (
     ConsoleMetricExporter,
@@ -61,8 +60,6 @@ def main():
         ),
         # Filter out any potentially sensitive attributes
         AttributeFilterMeasurementProcessor(["password", "secret"]),
-        # Drop measurements with invalid values (negative for this demo)
-        ValueRangeMeasurementProcessor(min_value=0),
         # Add custom processing
         CustomMeasurementProcessor(),
     ]
@@ -94,13 +91,16 @@ def main():
     # Scenario 1: Regular measurement with baggage
     print("1. Recording with baggage context...")
     ctx = baggage.set_baggage("user.id", "12345")
-    ctx = baggage.set_baggage("trace.id", "abc123", context=ctx)
+    ctx = baggage.set_baggage("synthetic_request", "true", context=ctx)
     token = attach(ctx)
 
     try:
-        request_counter.add(1, {"endpoint": "/api/users", "method": "GET"})
+        request_counter.add(
+            1, {"http.route": "/api/users", "http.request.method": "GET"}
+        )
         response_time_histogram.record(
-            0.150, {"endpoint": "/api/users", "status": "200"}
+            0.150,
+            {"http.route": "/api/users", "http.response.status_code": 200},
         )
     finally:
         detach(token)
@@ -110,37 +110,32 @@ def main():
     request_counter.add(
         1,
         {
-            "endpoint": "/api/login",
-            "method": "POST",
+            "http.route": "/api/login",
+            "http.request.method": "POST",
             "password": "should-be-filtered",  # This will be filtered out
             "username": "alice",
         },
     )
 
-    # Scenario 3: Invalid measurement (negative value) - should be dropped
+    # Scenario 3: Valid measurement without baggage
+    print("3. Recording normal measurement...\n")
+    request_counter.add(
+        2, {"http.route": "/api/products", "http.request.method": "GET"}
+    )
+    response_time_histogram.record(
+        0.075,
+        {"http.route": "/api/products", "http.response.status_code": 200},
+    )
+
     print(
-        "3. Recording invalid measurement (negative value - should be dropped)..."
+        "Waiting for metrics to be exported... (Check the console output above for processed measurements)\n"
     )
-    response_time_histogram.record(
-        -1.0, {"endpoint": "/api/error", "status": "500"}
-    )
-
-    # Scenario 4: Valid measurement without baggage
-    print("4. Recording normal measurement...")
-    request_counter.add(2, {"endpoint": "/api/products", "method": "GET"})
-    response_time_histogram.record(
-        0.075, {"endpoint": "/api/products", "status": "200"}
-    )
-
-    print("\nWaiting for metrics to be exported...")
-    print("(Check the console output above for processed measurements)")
 
     # Wait a bit for export
     time.sleep(6)
 
     # Cleanup
     meter_provider.shutdown()
-    print("\nDemo completed!")
 
 
 if __name__ == "__main__":
