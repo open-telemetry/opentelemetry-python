@@ -20,6 +20,7 @@ Unlike existing processors in OpenTelemetry (SpanProcessor, LogRecordProcessor),
 ### High Performance
 
 The implementation is designed for high-performance scenarios:
+
 - Minimal overhead when no processors are configured
 - Efficient processor chaining using closures
 - No unnecessary object creation in the hot path
@@ -31,6 +32,7 @@ Measurement → Processor 1 → Processor 2 → ... → Processor N → Aggregat
 ```
 
 Each processor can:
+
 1. **Pass through unchanged**: `next_processor(measurement)`
 2. **Modify and pass**: `next_processor(modified_measurement)`
 3. **Drop measurement**: Simply don't call `next_processor`
@@ -76,19 +78,7 @@ processor = BaggageMeasurementProcessor()
 processor = BaggageMeasurementProcessor(baggage_keys=["user.id", "trace.id"])
 ```
 
-#### 2. StaticAttributeMeasurementProcessor
-
-Adds static attributes to all measurements.
-
-```python
-processor = StaticAttributeMeasurementProcessor({
-    "environment": "production",
-    "service": "api-server",
-    "version": "1.0.0"
-})
-```
-
-#### 3. AttributeFilterMeasurementProcessor
+#### 2. AttributeFilterMeasurementProcessor
 
 Removes specific attributes from measurements (useful for removing sensitive data).
 
@@ -98,19 +88,16 @@ processor = AttributeFilterMeasurementProcessor([
 ])
 ```
 
-#### 4. ValueRangeMeasurementProcessor
+#### 3. StaticAttributeMeasurementProcessor
 
-Drops measurements outside a specified value range.
+Adds static attributes to all measurements.
 
 ```python
-# Drop negative values and values over 1000
-processor = ValueRangeMeasurementProcessor(min_value=0, max_value=1000)
-
-# Only minimum limit
-processor = ValueRangeMeasurementProcessor(min_value=0)
-
-# Only maximum limit  
-processor = ValueRangeMeasurementProcessor(max_value=100)
+processor = StaticAttributeMeasurementProcessor({
+    "environment": "production",
+    "service": "api-server",
+    "version": "1.0.0"
+})
 ```
 
 ### Custom Processors
@@ -125,14 +112,14 @@ from typing import Callable
 
 class CustomMeasurementProcessor(MeasurementProcessor):
     def process(
-        self, 
-        measurement: Measurement, 
+        self,
+        measurement: Measurement,
         next_processor: Callable[[Measurement], None]
     ) -> None:
         # Example: Add timestamp attribute
         new_attributes = dict(measurement.attributes or {})
         new_attributes["processed_at"] = str(int(time.time()))
-        
+
         modified_measurement = replace(measurement, attributes=new_attributes)
         next_processor(modified_measurement)
 
@@ -146,16 +133,6 @@ class MetersToFeetProcessor(MeasurementProcessor):
             next_processor(new_measurement)
         else:
             next_processor(measurement)
-
-# Sampling processor
-class SamplingProcessor(MeasurementProcessor):
-    def __init__(self, sample_rate: float):
-        self.sample_rate = sample_rate
-        
-    def process(self, measurement: Measurement, next_processor: Callable[[Measurement], None]) -> None:
-        if random.random() < self.sample_rate:
-            next_processor(measurement)
-        # else: drop the measurement
 ```
 
 ## Integration with Existing Metrics SDK
@@ -204,20 +181,17 @@ finally:
 processors = [
     # 1. Add baggage for correlation
     BaggageMeasurementProcessor(baggage_keys=["user.id", "trace.id"]),
-    
+
     # 2. Add environment info
     StaticAttributeMeasurementProcessor({
         "environment": "production",
         "datacenter": "us-west-2"
     }),
-    
+
     # 3. Remove sensitive attributes
     AttributeFilterMeasurementProcessor(["password", "secret", "token"]),
-    
-    # 4. Drop invalid measurements
-    ValueRangeMeasurementProcessor(min_value=0),
-    
-    # 5. Custom processing
+
+    # 4. Custom processing
     CustomTimestampProcessor(),
 ]
 ```
@@ -242,4 +216,4 @@ class SafeProcessor(MeasurementProcessor):
 
 ---
 
-**Note**: This implementation is experimental and the API may change based on community feedback and the final OpenTelemetry specification. 
+**Note**: This implementation is experimental and the API may change based on community feedback and the final OpenTelemetry specification.
