@@ -142,8 +142,8 @@ jobs:
       - name: Run tests
         run: tox -e pypy3-test-opentelemetry-api -- -ra
 
-  py39-test-opentelemetry-proto-protobuf5_ubuntu-latest:
-    name: opentelemetry-proto-protobuf5 3.9 Ubuntu
+  py39-test-opentelemetry-proto-gen-oldest_ubuntu-latest:
+    name: opentelemetry-proto-gen-oldest 3.9 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -159,10 +159,29 @@ jobs:
         run: pip install tox
 
       - name: Run tests
-        run: tox -e py39-test-opentelemetry-proto-protobuf5 -- -ra
+        run: tox -e py39-test-opentelemetry-proto-gen-oldest -- -ra
 
-  py310-test-opentelemetry-proto-protobuf5_ubuntu-latest:
-    name: opentelemetry-proto-protobuf5 3.10 Ubuntu
+  py39-test-opentelemetry-proto-gen-latest_ubuntu-latest:
+    name: opentelemetry-proto-gen-latest 3.9 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Run tests
+        run: tox -e py39-test-opentelemetry-proto-gen-latest -- -ra
+
+  py310-test-opentelemetry-proto-gen-oldest_ubuntu-latest:
+    name: opentelemetry-proto-gen-oldest 3.10 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -178,10 +197,29 @@ jobs:
         run: pip install tox
 
       - name: Run tests
-        run: tox -e py310-test-opentelemetry-proto-protobuf5 -- -ra
+        run: tox -e py310-test-opentelemetry-proto-gen-oldest -- -ra
 
-  py311-test-opentelemetry-proto-protobuf5_ubuntu-latest:
-    name: opentelemetry-proto-protobuf5 3.11 Ubuntu
+  py310-test-opentelemetry-proto-gen-latest_ubuntu-latest:
+    name: opentelemetry-proto-gen-latest 3.10 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Run tests
+        run: tox -e py310-test-opentelemetry-proto-gen-latest -- -ra
+
+  py311-test-opentelemetry-proto-gen-oldest_ubuntu-latest:
+    name: opentelemetry-proto-gen-oldest 3.11 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -197,10 +235,29 @@ jobs:
         run: pip install tox
 
       - name: Run tests
-        run: tox -e py311-test-opentelemetry-proto-protobuf5 -- -ra
+        run: tox -e py311-test-opentelemetry-proto-gen-oldest -- -ra
 
-  py312-test-opentelemetry-proto-protobuf5_ubuntu-latest:
-    name: opentelemetry-proto-protobuf5 3.12 Ubuntu
+  py311-test-opentelemetry-proto-gen-latest_ubuntu-latest:
+    name: opentelemetry-proto-gen-latest 3.11 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Run tests
+        run: tox -e py311-test-opentelemetry-proto-gen-latest -- -ra
+
+  py312-test-opentelemetry-proto-gen-oldest_ubuntu-latest:
+    name: opentelemetry-proto-gen-oldest 3.12 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -216,10 +273,29 @@ jobs:
         run: pip install tox
 
       - name: Run tests
-        run: tox -e py312-test-opentelemetry-proto-protobuf5 -- -ra
+        run: tox -e py312-test-opentelemetry-proto-gen-oldest -- -ra
 
-  py313-test-opentelemetry-proto-protobuf5_ubuntu-latest:
-    name: opentelemetry-proto-protobuf5 3.13 Ubuntu
+  py312-test-opentelemetry-proto-gen-latest_ubuntu-latest:
+    name: opentelemetry-proto-gen-latest 3.12 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Run tests
+        run: tox -e py312-test-opentelemetry-proto-gen-latest -- -ra
+
+  py313-test-opentelemetry-proto-gen-oldest_ubuntu-latest:
+    name: opentelemetry-proto-gen-oldest 3.13 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -235,10 +311,29 @@ jobs:
         run: pip install tox
 
       - name: Run tests
-        run: tox -e py313-test-opentelemetry-proto-protobuf5 -- -ra
+        run: tox -e py313-test-opentelemetry-proto-gen-oldest -- -ra
 
-  pypy3-test-opentelemetry-proto-protobuf5_ubuntu-latest:
-    name: opentelemetry-proto-protobuf5 pypy-3.9 Ubuntu
+  py313-test-opentelemetry-proto-gen-latest_ubuntu-latest:
+    name: opentelemetry-proto-gen-latest 3.13 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Run tests
+        run: tox -e py313-test-opentelemetry-proto-gen-latest -- -ra
+
+  pypy3-test-opentelemetry-proto-gen-oldest_ubuntu-latest:
+    name: opentelemetry-proto-gen-oldest pypy-3.9 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -254,7 +349,26 @@ jobs:
         run: pip install tox
 
       - name: Run tests
-        run: tox -e pypy3-test-opentelemetry-proto-protobuf5 -- -ra
+        run: tox -e pypy3-test-opentelemetry-proto-gen-oldest -- -ra
+
+  pypy3-test-opentelemetry-proto-gen-latest_ubuntu-latest:
+    name: opentelemetry-proto-gen-latest pypy-3.9 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python pypy-3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "pypy-3.9"
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Run tests
+        run: tox -e pypy3-test-opentelemetry-proto-gen-latest -- -ra
 
   py39-test-opentelemetry-sdk_ubuntu-latest:
     name: opentelemetry-sdk 3.9 Ubuntu
@@ -1092,8 +1206,8 @@ jobs:
       - name: Run tests
         run: tox -e py313-test-opentelemetry-exporter-otlp-combined -- -ra
 
-  py39-test-opentelemetry-exporter-otlp-proto-grpc_ubuntu-latest:
-    name: opentelemetry-exporter-otlp-proto-grpc 3.9 Ubuntu
+  py39-test-opentelemetry-exporter-otlp-proto-grpc-oldest_ubuntu-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-oldest 3.9 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -1109,10 +1223,29 @@ jobs:
         run: pip install tox
 
       - name: Run tests
-        run: tox -e py39-test-opentelemetry-exporter-otlp-proto-grpc -- -ra
+        run: tox -e py39-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
 
-  py310-test-opentelemetry-exporter-otlp-proto-grpc_ubuntu-latest:
-    name: opentelemetry-exporter-otlp-proto-grpc 3.10 Ubuntu
+  py39-test-opentelemetry-exporter-otlp-proto-grpc-latest_ubuntu-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-latest 3.9 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Run tests
+        run: tox -e py39-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
+
+  py310-test-opentelemetry-exporter-otlp-proto-grpc-oldest_ubuntu-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-oldest 3.10 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -1128,10 +1261,29 @@ jobs:
         run: pip install tox
 
       - name: Run tests
-        run: tox -e py310-test-opentelemetry-exporter-otlp-proto-grpc -- -ra
+        run: tox -e py310-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
 
-  py311-test-opentelemetry-exporter-otlp-proto-grpc_ubuntu-latest:
-    name: opentelemetry-exporter-otlp-proto-grpc 3.11 Ubuntu
+  py310-test-opentelemetry-exporter-otlp-proto-grpc-latest_ubuntu-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-latest 3.10 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Run tests
+        run: tox -e py310-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
+
+  py311-test-opentelemetry-exporter-otlp-proto-grpc-oldest_ubuntu-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-oldest 3.11 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -1147,10 +1299,29 @@ jobs:
         run: pip install tox
 
       - name: Run tests
-        run: tox -e py311-test-opentelemetry-exporter-otlp-proto-grpc -- -ra
+        run: tox -e py311-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
 
-  py312-test-opentelemetry-exporter-otlp-proto-grpc_ubuntu-latest:
-    name: opentelemetry-exporter-otlp-proto-grpc 3.12 Ubuntu
+  py311-test-opentelemetry-exporter-otlp-proto-grpc-latest_ubuntu-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-latest 3.11 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Run tests
+        run: tox -e py311-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
+
+  py312-test-opentelemetry-exporter-otlp-proto-grpc-oldest_ubuntu-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-oldest 3.12 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -1166,10 +1337,29 @@ jobs:
         run: pip install tox
 
       - name: Run tests
-        run: tox -e py312-test-opentelemetry-exporter-otlp-proto-grpc -- -ra
+        run: tox -e py312-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
 
-  py313-test-opentelemetry-exporter-otlp-proto-grpc_ubuntu-latest:
-    name: opentelemetry-exporter-otlp-proto-grpc 3.13 Ubuntu
+  py312-test-opentelemetry-exporter-otlp-proto-grpc-latest_ubuntu-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-latest 3.12 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Run tests
+        run: tox -e py312-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
+
+  py313-test-opentelemetry-exporter-otlp-proto-grpc-oldest_ubuntu-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-oldest 3.13 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -1185,7 +1375,26 @@ jobs:
         run: pip install tox
 
       - name: Run tests
-        run: tox -e py313-test-opentelemetry-exporter-otlp-proto-grpc -- -ra
+        run: tox -e py313-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
+
+  py313-test-opentelemetry-exporter-otlp-proto-grpc-latest_ubuntu-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-latest 3.13 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Run tests
+        run: tox -e py313-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
 
   py39-test-opentelemetry-exporter-otlp-proto-http_ubuntu-latest:
     name: opentelemetry-exporter-otlp-proto-http 3.9 Ubuntu
@@ -2231,8 +2440,8 @@ jobs:
       - name: Run tests
         run: tox -e pypy3-test-opentelemetry-api -- -ra
 
-  py39-test-opentelemetry-proto-protobuf5_windows-latest:
-    name: opentelemetry-proto-protobuf5 3.9 Windows
+  py39-test-opentelemetry-proto-gen-oldest_windows-latest:
+    name: opentelemetry-proto-gen-oldest 3.9 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -2251,10 +2460,32 @@ jobs:
         run: git config --system core.longpaths true
 
       - name: Run tests
-        run: tox -e py39-test-opentelemetry-proto-protobuf5 -- -ra
+        run: tox -e py39-test-opentelemetry-proto-gen-oldest -- -ra
 
-  py310-test-opentelemetry-proto-protobuf5_windows-latest:
-    name: opentelemetry-proto-protobuf5 3.10 Windows
+  py39-test-opentelemetry-proto-gen-latest_windows-latest:
+    name: opentelemetry-proto-gen-latest 3.9 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+
+      - name: Run tests
+        run: tox -e py39-test-opentelemetry-proto-gen-latest -- -ra
+
+  py310-test-opentelemetry-proto-gen-oldest_windows-latest:
+    name: opentelemetry-proto-gen-oldest 3.10 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -2273,10 +2504,32 @@ jobs:
         run: git config --system core.longpaths true
 
       - name: Run tests
-        run: tox -e py310-test-opentelemetry-proto-protobuf5 -- -ra
+        run: tox -e py310-test-opentelemetry-proto-gen-oldest -- -ra
 
-  py311-test-opentelemetry-proto-protobuf5_windows-latest:
-    name: opentelemetry-proto-protobuf5 3.11 Windows
+  py310-test-opentelemetry-proto-gen-latest_windows-latest:
+    name: opentelemetry-proto-gen-latest 3.10 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+
+      - name: Run tests
+        run: tox -e py310-test-opentelemetry-proto-gen-latest -- -ra
+
+  py311-test-opentelemetry-proto-gen-oldest_windows-latest:
+    name: opentelemetry-proto-gen-oldest 3.11 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -2295,10 +2548,32 @@ jobs:
         run: git config --system core.longpaths true
 
       - name: Run tests
-        run: tox -e py311-test-opentelemetry-proto-protobuf5 -- -ra
+        run: tox -e py311-test-opentelemetry-proto-gen-oldest -- -ra
 
-  py312-test-opentelemetry-proto-protobuf5_windows-latest:
-    name: opentelemetry-proto-protobuf5 3.12 Windows
+  py311-test-opentelemetry-proto-gen-latest_windows-latest:
+    name: opentelemetry-proto-gen-latest 3.11 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+
+      - name: Run tests
+        run: tox -e py311-test-opentelemetry-proto-gen-latest -- -ra
+
+  py312-test-opentelemetry-proto-gen-oldest_windows-latest:
+    name: opentelemetry-proto-gen-oldest 3.12 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -2317,10 +2592,32 @@ jobs:
         run: git config --system core.longpaths true
 
       - name: Run tests
-        run: tox -e py312-test-opentelemetry-proto-protobuf5 -- -ra
+        run: tox -e py312-test-opentelemetry-proto-gen-oldest -- -ra
 
-  py313-test-opentelemetry-proto-protobuf5_windows-latest:
-    name: opentelemetry-proto-protobuf5 3.13 Windows
+  py312-test-opentelemetry-proto-gen-latest_windows-latest:
+    name: opentelemetry-proto-gen-latest 3.12 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+
+      - name: Run tests
+        run: tox -e py312-test-opentelemetry-proto-gen-latest -- -ra
+
+  py313-test-opentelemetry-proto-gen-oldest_windows-latest:
+    name: opentelemetry-proto-gen-oldest 3.13 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -2339,10 +2636,32 @@ jobs:
         run: git config --system core.longpaths true
 
       - name: Run tests
-        run: tox -e py313-test-opentelemetry-proto-protobuf5 -- -ra
+        run: tox -e py313-test-opentelemetry-proto-gen-oldest -- -ra
 
-  pypy3-test-opentelemetry-proto-protobuf5_windows-latest:
-    name: opentelemetry-proto-protobuf5 pypy-3.9 Windows
+  py313-test-opentelemetry-proto-gen-latest_windows-latest:
+    name: opentelemetry-proto-gen-latest 3.13 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+
+      - name: Run tests
+        run: tox -e py313-test-opentelemetry-proto-gen-latest -- -ra
+
+  pypy3-test-opentelemetry-proto-gen-oldest_windows-latest:
+    name: opentelemetry-proto-gen-oldest pypy-3.9 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -2361,7 +2680,29 @@ jobs:
         run: git config --system core.longpaths true
 
       - name: Run tests
-        run: tox -e pypy3-test-opentelemetry-proto-protobuf5 -- -ra
+        run: tox -e pypy3-test-opentelemetry-proto-gen-oldest -- -ra
+
+  pypy3-test-opentelemetry-proto-gen-latest_windows-latest:
+    name: opentelemetry-proto-gen-latest pypy-3.9 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python pypy-3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "pypy-3.9"
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+
+      - name: Run tests
+        run: tox -e pypy3-test-opentelemetry-proto-gen-latest -- -ra
 
   py39-test-opentelemetry-sdk_windows-latest:
     name: opentelemetry-sdk 3.9 Windows
@@ -3331,8 +3672,8 @@ jobs:
       - name: Run tests
         run: tox -e py313-test-opentelemetry-exporter-otlp-combined -- -ra
 
-  py39-test-opentelemetry-exporter-otlp-proto-grpc_windows-latest:
-    name: opentelemetry-exporter-otlp-proto-grpc 3.9 Windows
+  py39-test-opentelemetry-exporter-otlp-proto-grpc-oldest_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-oldest 3.9 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -3351,10 +3692,32 @@ jobs:
         run: git config --system core.longpaths true
 
       - name: Run tests
-        run: tox -e py39-test-opentelemetry-exporter-otlp-proto-grpc -- -ra
+        run: tox -e py39-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
 
-  py310-test-opentelemetry-exporter-otlp-proto-grpc_windows-latest:
-    name: opentelemetry-exporter-otlp-proto-grpc 3.10 Windows
+  py39-test-opentelemetry-exporter-otlp-proto-grpc-latest_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-latest 3.9 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+
+      - name: Run tests
+        run: tox -e py39-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
+
+  py310-test-opentelemetry-exporter-otlp-proto-grpc-oldest_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-oldest 3.10 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -3373,10 +3736,32 @@ jobs:
         run: git config --system core.longpaths true
 
       - name: Run tests
-        run: tox -e py310-test-opentelemetry-exporter-otlp-proto-grpc -- -ra
+        run: tox -e py310-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
 
-  py311-test-opentelemetry-exporter-otlp-proto-grpc_windows-latest:
-    name: opentelemetry-exporter-otlp-proto-grpc 3.11 Windows
+  py310-test-opentelemetry-exporter-otlp-proto-grpc-latest_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-latest 3.10 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+
+      - name: Run tests
+        run: tox -e py310-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
+
+  py311-test-opentelemetry-exporter-otlp-proto-grpc-oldest_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-oldest 3.11 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -3395,10 +3780,32 @@ jobs:
         run: git config --system core.longpaths true
 
       - name: Run tests
-        run: tox -e py311-test-opentelemetry-exporter-otlp-proto-grpc -- -ra
+        run: tox -e py311-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
 
-  py312-test-opentelemetry-exporter-otlp-proto-grpc_windows-latest:
-    name: opentelemetry-exporter-otlp-proto-grpc 3.12 Windows
+  py311-test-opentelemetry-exporter-otlp-proto-grpc-latest_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-latest 3.11 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+
+      - name: Run tests
+        run: tox -e py311-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
+
+  py312-test-opentelemetry-exporter-otlp-proto-grpc-oldest_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-oldest 3.12 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -3417,10 +3824,32 @@ jobs:
         run: git config --system core.longpaths true
 
       - name: Run tests
-        run: tox -e py312-test-opentelemetry-exporter-otlp-proto-grpc -- -ra
+        run: tox -e py312-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
 
-  py313-test-opentelemetry-exporter-otlp-proto-grpc_windows-latest:
-    name: opentelemetry-exporter-otlp-proto-grpc 3.13 Windows
+  py312-test-opentelemetry-exporter-otlp-proto-grpc-latest_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-latest 3.12 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+
+      - name: Run tests
+        run: tox -e py312-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
+
+  py313-test-opentelemetry-exporter-otlp-proto-grpc-oldest_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-oldest 3.13 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -3439,7 +3868,29 @@ jobs:
         run: git config --system core.longpaths true
 
       - name: Run tests
-        run: tox -e py313-test-opentelemetry-exporter-otlp-proto-grpc -- -ra
+        run: tox -e py313-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
+
+  py313-test-opentelemetry-exporter-otlp-proto-grpc-latest_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-latest 3.13 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+
+      - name: Run tests
+        run: tox -e py313-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
 
   py39-test-opentelemetry-exporter-otlp-proto-http_windows-latest:
     name: opentelemetry-exporter-otlp-proto-http 3.9 Windows
