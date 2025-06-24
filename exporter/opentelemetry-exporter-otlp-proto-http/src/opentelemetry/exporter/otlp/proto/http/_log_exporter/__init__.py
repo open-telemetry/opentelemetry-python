@@ -14,22 +14,23 @@
 
 import gzip
 import logging
+import random
 import zlib
 from io import BytesIO
 from os import environ
-from time import sleep
+from time import sleep, time
 from typing import Dict, Optional, Sequence
 
 import requests
 from requests.exceptions import ConnectionError
 
-from opentelemetry.exporter.otlp.proto.common._internal import (
-    _create_exp_backoff_generator,
-)
 from opentelemetry.exporter.otlp.proto.common._log_encoder import encode_logs
 from opentelemetry.exporter.otlp.proto.http import (
     _OTLP_HTTP_HEADERS,
     Compression,
+)
+from opentelemetry.exporter.otlp.proto.http._common import (
+    _is_retryable,
 )
 from opentelemetry.sdk._logs import LogData
 from opentelemetry.sdk._logs.export import (
@@ -61,11 +62,10 @@ DEFAULT_COMPRESSION = Compression.NoCompression
 DEFAULT_ENDPOINT = "http://localhost:4318/"
 DEFAULT_LOGS_EXPORT_PATH = "v1/logs"
 DEFAULT_TIMEOUT = 10  # in seconds
+_MAX_RETRYS = 6
 
 
 class OTLPLogExporter(LogExporter):
-    _MAX_RETRY_TIMEOUT = 64
-
     def __init__(
         self,
         endpoint: Optional[str] = None,
@@ -73,7 +73,7 @@ class OTLPLogExporter(LogExporter):
         client_key_file: Optional[str] = None,
         client_certificate_file: Optional[str] = None,
         headers: Optional[Dict[str, str]] = None,
-        timeout: Optional[int] = None,
+        timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
         session: Optional[requests.Session] = None,
     ):
@@ -108,7 +108,7 @@ class OTLPLogExporter(LogExporter):
         self._headers = headers or parse_env_headers(
             headers_string, liberal=True
         )
-        self._timeout = timeout or int(
+        self._timeout = timeout or float(
             environ.get(
                 OTEL_EXPORTER_OTLP_LOGS_TIMEOUT,
                 environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, DEFAULT_TIMEOUT),
@@ -124,7 +124,7 @@ class OTLPLogExporter(LogExporter):
             )
         self._shutdown = False
 
-    def _export(self, serialized_data: bytes):
+    def _export(self, serialized_data: bytes, timeout_sec: float):
         data = serialized_data
         if self._compression == Compression.Gzip:
             gzip_data = BytesIO()
@@ -143,7 +143,7 @@ class OTLPLogExporter(LogExporter):
                 url=self._endpoint,
                 data=data,
                 verify=self._certificate_file,
-                timeout=self._timeout,
+                timeout=timeout_sec,
                 cert=self._client_cert,
             )
         except ConnectionError:
@@ -151,53 +151,42 @@ class OTLPLogExporter(LogExporter):
                 url=self._endpoint,
                 data=data,
                 verify=self._certificate_file,
-                timeout=self._timeout,
+                timeout=timeout_sec,
                 cert=self._client_cert,
             )
         return resp
 
-    @staticmethod
-    def _retryable(resp: requests.Response) -> bool:
-        if resp.status_code == 408:
-            return True
-        if resp.status_code >= 500 and resp.status_code <= 599:
-            return True
-        return False
-
     def export(self, batch: Sequence[LogData]) -> LogExportResult:
-        # After the call to Shutdown subsequent calls to Export are
-        # not allowed and should return a Failure result.
         if self._shutdown:
             _logger.warning("Exporter already shutdown, ignoring batch")
             return LogExportResult.FAILURE
 
         serialized_data = encode_logs(batch).SerializeToString()
-
-        for delay in _create_exp_backoff_generator(
-            max_value=self._MAX_RETRY_TIMEOUT
-        ):
-            if delay == self._MAX_RETRY_TIMEOUT:
-                return LogExportResult.FAILURE
-
-            resp = self._export(serialized_data)
-            # pylint: disable=no-else-return
+        deadline_sec = time() + self._timeout
+        for retry_num in range(_MAX_RETRYS):
+            resp = self._export(serialized_data, deadline_sec - time())
             if resp.ok:
                 return LogExportResult.SUCCESS
-            elif self._retryable(resp):
-                _logger.warning(
-                    "Transient error %s encountered while exporting logs batch, retrying in %ss.",
-                    resp.reason,
-                    delay,
-                )
-                sleep(delay)
-                continue
-            else:
+            # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
+            backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
+            if (
+                not _is_retryable(resp)
+                or retry_num + 1 == _MAX_RETRYS
+                or backoff_seconds > (deadline_sec - time())
+            ):
                 _logger.error(
                     "Failed to export logs batch code: %s, reason: %s",
                     resp.status_code,
                     resp.text,
                 )
                 return LogExportResult.FAILURE
+            _logger.warning(
+                "Transient error %s encountered while exporting logs batch, retrying in %.2fs.",
+                resp.reason,
+                backoff_seconds,
+            )
+            sleep(backoff_seconds)
+        # Not possible to reach here but the linter is complaining.
         return LogExportResult.FAILURE
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:

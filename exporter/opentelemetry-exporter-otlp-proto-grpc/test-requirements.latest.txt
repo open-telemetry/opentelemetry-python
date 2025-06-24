@@ -49,7 +49,7 @@ iniconfig==2.1.0
     # via
     #   -r exporter/opentelemetry-exporter-otlp-proto-grpc/test-requirements.in
     #   pytest
-packaging==24.2
+packaging==25.0
     # via
     #   -r exporter/opentelemetry-exporter-otlp-proto-grpc/test-requirements.in
     #   pytest
@@ -59,6 +59,7 @@ pluggy==1.6.0
     #   pytest
 protobuf==6.31.1
     # via
+    #   -r exporter/opentelemetry-exporter-otlp-proto-grpc/test-requirements.in
     #   googleapis-common-protos
     #   opentelemetry-proto
 pytest==7.4.4
