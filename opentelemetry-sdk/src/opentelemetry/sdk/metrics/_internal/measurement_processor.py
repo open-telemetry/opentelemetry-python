@@ -185,44 +185,6 @@ class AttributeFilterMeasurementProcessor(MeasurementProcessor):
         next_processor(new_measurement)
 
 
-class ValueRangeMeasurementProcessor(MeasurementProcessor):
-    """Processor that drops measurements outside a specified value range."""
-
-    def __init__(
-        self,
-        min_value: Optional[float] = None,
-        max_value: Optional[float] = None,
-    ):
-        """Initialize the value range processor.
-
-        Args:
-            min_value: Minimum allowed value (inclusive). If None, no minimum.
-            max_value: Maximum allowed value (inclusive). If None, no maximum.
-        """
-        self._min_value = min_value
-        self._max_value = max_value
-
-    def process(
-        self,
-        measurement: Measurement,
-        next_processor: Callable[[Measurement], None],
-    ) -> None:
-        """Drop measurements outside the allowed value range."""
-        value = measurement.value
-
-        # Check if value is within range
-        if self._min_value is not None and value < self._min_value:
-            # Drop measurement by not calling next_processor
-            return
-
-        if self._max_value is not None and value > self._max_value:
-            # Drop measurement by not calling next_processor
-            return
-
-        # Value is within range, pass it through
-        next_processor(measurement)
-
-
 class StaticAttributeMeasurementProcessor(MeasurementProcessor):
     """Processor that adds static attributes to all measurements."""
 
