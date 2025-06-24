@@ -243,7 +243,7 @@ class LogRecord(APILogRecord):
     ):
         if trace_id or span_id or trace_flags:
             warnings.warn(
-                "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated and will be removed in next versions. Use `context` instead.",
+                "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated. Use `context` instead.",
                 LogDeprecatedInitWarning,
                 stacklevel=2,
             )
