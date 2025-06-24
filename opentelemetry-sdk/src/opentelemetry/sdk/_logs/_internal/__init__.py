@@ -25,7 +25,7 @@ import warnings
 from os import environ
 from threading import Lock
 from time import time_ns
-from typing import Any, Callable, Tuple, Union, cast  # noqa
+from typing import Any, Callable, Tuple, Union, cast, overload  # noqa
 
 from opentelemetry._logs import Logger as APILogger
 from opentelemetry._logs import LoggerProvider as APILoggerProvider
@@ -38,6 +38,8 @@ from opentelemetry._logs import (
     std_to_otel,
 )
 from opentelemetry.attributes import _VALID_ANY_VALUE_TYPES, BoundedAttributes
+from opentelemetry.context import get_current
+from opentelemetry.context.context import Context
 from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_COUNT_LIMIT,
     OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
@@ -79,6 +81,18 @@ class LogDroppedAttributesWarning(UserWarning):
 
 
 warnings.simplefilter("once", LogDroppedAttributesWarning)
+
+
+class LogDeprecatedInitWarning(UserWarning):
+    """Custom warning to indicate deprecated LogRecord init was used.
+
+    This class is used to filter and handle these specific warnings separately
+    from other warnings, ensuring that they are only shown once without
+    interfering with default user warnings.
+    """
+
+
+warnings.simplefilter("once", LogDeprecatedInitWarning)
 
 
 class LogLimits:
@@ -180,6 +194,21 @@ class LogRecord(APILogRecord):
     pertinent to the event being logged.
     """
 
+    @overload
+    def __init__(
+        self,
+        timestamp: int | None = None,
+        observed_timestamp: int | None = None,
+        context: Context | None = None,
+        severity_text: str | None = None,
+        severity_number: SeverityNumber | None = None,
+        body: AnyValue | None = None,
+        resource: Resource | None = None,
+        attributes: _ExtendedAttributes | None = None,
+        limits: LogLimits | None = _UnsetLogLimits,
+    ): ...
+
+    @overload
     def __init__(
         self,
         timestamp: int | None = None,
@@ -193,11 +222,46 @@ class LogRecord(APILogRecord):
         resource: Resource | None = None,
         attributes: _ExtendedAttributes | None = None,
         limits: LogLimits | None = _UnsetLogLimits,
+    ): ...
+
+    def __init__(
+        self,
+        timestamp: int | None = None,
+        observed_timestamp: int | None = None,
+        context: Context | None = None,
+        trace_id: int | None = None,
+        span_id: int | None = None,
+        trace_flags: TraceFlags | None = None,
+        severity_text: str | None = None,
+        severity_number: SeverityNumber | None = None,
+        body: AnyValue | None = None,
+        resource: Resource | None = None,
+        attributes: _ExtendedAttributes | None = None,
+        limits: LogLimits | None = _UnsetLogLimits,
     ):
+        if trace_id or span_id or trace_flags:
+            warnings.warn(
+                "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated. Use `context` instead.",
+                LogDeprecatedInitWarning,
+                stacklevel=2,
+            )
+
+        if not context:
+            context = get_current()
+
+        if context is not None:
+            span = get_current_span(context)
+            span_context = span.get_span_context()
+            if span_context.is_valid:
+                trace_id = span_context.trace_id
+                span_id = span_context.span_id
+                trace_flags = span_context.trace_flags
+
         super().__init__(
             **{
                 "timestamp": timestamp,
                 "observed_timestamp": observed_timestamp,
+                "context": context,
                 "trace_id": trace_id,
                 "span_id": span_id,
                 "trace_flags": trace_flags,

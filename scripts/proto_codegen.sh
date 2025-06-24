@@ -12,7 +12,7 @@
 #   PROTO_REPO_DIR - the path to an existing checkout of the opentelemetry-proto repo
 
 # Pinned commit/branch/tag for the current version used in opentelemetry-proto python package.
-PROTO_REPO_BRANCH_OR_COMMIT="v1.2.0"
+PROTO_REPO_BRANCH_OR_COMMIT="v1.7.0"
 
 set -e
 
