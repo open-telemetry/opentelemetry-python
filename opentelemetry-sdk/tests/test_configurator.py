@@ -16,12 +16,14 @@
 from __future__ import annotations
 
 import logging
+import logging.config
 from logging import WARNING, getLogger
 from os import environ
 from typing import Iterable, Optional, Sequence
 from unittest import TestCase, mock
 from unittest.mock import Mock, patch
 
+import pytest
 from pytest import raises
 
 from opentelemetry import trace
@@ -881,7 +883,6 @@ class TestLoggingInit(TestCase):
             )
             handler = root_logger.handlers[0]
             self.assertIsInstance(handler, LoggingHandler)
-
             logging.basicConfig()
 
             self.assertGreater(len(root_logger.handlers), 1)
@@ -890,6 +891,51 @@ class TestLoggingInit(TestCase):
                 h
                 for h in root_logger.handlers
                 if isinstance(h, LoggingHandler)
+            ]
+            self.assertEqual(
+                len(logging_handlers),
+                1,
+                "Should still have exactly one OpenTelemetry LoggingHandler",
+            )
+
+    def test_dictConfig_preserves_otel_handler(self):
+        with ClearLoggingHandlers():
+            _init_logging(
+                {"otlp": DummyOTLPLogExporter},
+                Resource.create({}),
+                setup_logging_handler=True,
+            )
+
+            root = logging.getLogger()
+            self.assertEqual(
+                len(root.handlers),
+                1,
+                "Should be exactly one OpenTelemetry LoggingHandler",
+            )
+            logging.config.dictConfig(
+                {
+                    "version": 1,
+                    "handlers": {
+                        "default": {
+                            "level": "INFO",
+                            "class": "logging.StreamHandler",
+                            "stream": "ext://sys.stdout",
+                        },
+                    },
+                    "loggers": {
+                        "": {  # root logger
+                            "handlers": ["default"],
+                            "level": "WARNING",
+                            "propagate": False,
+                        },
+                    },
+                }
+            )
+            print(root.handlers)
+            self.assertEqual(len(root.handlers), 2)
+
+            logging_handlers = [
+                h for h in root.handlers if isinstance(h, LoggingHandler)
             ]
             self.assertEqual(
                 len(logging_handlers),
@@ -1169,3 +1215,11 @@ class TestClearLoggingHandlers(TestCase):
             self.assertIs(h1, h2)
 
         root_logger.removeHandler(test_handler)
+
+
+pytest.main(
+    [
+        "-x",
+        "/usr/local/google/home/dylanrussell/archivist_backup_250529_133018/reinstate/opentelemetry-python/opentelemetry-sdk/tests/test_configurator.py",
+    ]
+)

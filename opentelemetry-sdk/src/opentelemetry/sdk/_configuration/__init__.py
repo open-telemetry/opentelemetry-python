@@ -20,6 +20,7 @@ OpenTelemetry SDK Configurator for Easy Instrumentation with Distros
 from __future__ import annotations
 
 import logging
+import logging.config
 import os
 from abc import ABC, abstractmethod
 from os import environ
@@ -253,31 +254,31 @@ def _init_logging(
     set_event_logger_provider(event_logger_provider)
 
     if setup_logging_handler:
-        _patch_basic_config()
-
         # Add OTel handler
         handler = LoggingHandler(
             level=logging.NOTSET, logger_provider=provider
         )
         logging.getLogger().addHandler(handler)
+        _overwrite_logging_config_fns(handler)
 
 
-def _patch_basic_config():
-    original_basic_config = logging.basicConfig
+def _overwrite_logging_config_fns(handler):
+    root = logging.getLogger()
 
-    def patched_basic_config(*args, **kwargs):
-        root = logging.getLogger()
-        has_only_otel = len(root.handlers) == 1 and isinstance(
-            root.handlers[0], LoggingHandler
-        )
-        if has_only_otel:
-            otel_handler = root.handlers.pop()
-            original_basic_config(*args, **kwargs)
-            root.addHandler(otel_handler)
-        else:
-            original_basic_config(*args, **kwargs)
+    def wrapper(config_fn):
+        def overwritten_config_fn(*args, **kwargs):
+            # This is needed for basicConfig only. basicConfig when called by
+            # the user's program will be a no-op if the root handler was configured.
+            if len(root.handlers) == 1 and root.handlers[0] == handler:
+                root.handlers.pop()
+            config_fn(*args, **kwargs)
+            if handler not in root.handlers:
+                root.addHandler(handler)
+        return overwritten_config_fn
 
-    logging.basicConfig = patched_basic_config
+    logging.config.fileConfig = wrapper(logging.config.fileConfig)
+    logging.config.dictConfig = wrapper(logging.config.dictConfig)
+    logging.basicConfig = wrapper(logging.basicConfig)
 
 
 def _import_exporters(
