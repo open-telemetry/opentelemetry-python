@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from copy import deepcopy
 from dataclasses import dataclass
 from typing import Union
 
@@ -34,12 +34,19 @@ class Measurement:
     """
 
     # TODO Fix doc - if using valid Google `Attributes:` key, the attributes are duplicated
-    # one will come from napoleon extension and the other from autodoc extension. This
-    # will raise an sphinx error of duplicated object description
-    # See https://github.com/sphinx-doc/sphinx/issues/8664
+    #  one will come from napoleon extension and the other from autodoc extension. This
+    #  will raise an sphinx error of duplicated object description
+    #  See https://github.com/sphinx-doc/sphinx/issues/8664
 
     value: Union[int, float]
     time_unix_nano: int
     instrument: Instrument
     context: Context
     attributes: Attributes = None
+
+    def __post_init__(self) -> None:
+        if self.attributes is not None:
+            super().__setattr__(
+                "attributes",
+                deepcopy(self.attributes),
+            )
