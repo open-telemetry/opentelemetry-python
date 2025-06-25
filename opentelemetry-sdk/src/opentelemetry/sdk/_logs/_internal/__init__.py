@@ -35,7 +35,6 @@ from opentelemetry._logs import (
     SeverityNumber,
     get_logger,
     get_logger_provider,
-    std_to_otel,
 )
 from opentelemetry.attributes import _VALID_ANY_VALUE_TYPES, BoundedAttributes
 from opentelemetry.context import get_current
@@ -206,6 +205,7 @@ class LogRecord(APILogRecord):
         resource: Resource | None = None,
         attributes: _ExtendedAttributes | None = None,
         limits: LogLimits | None = _UnsetLogLimits,
+        event_name: str | None = None,
     ): ...
 
     @overload
@@ -224,7 +224,7 @@ class LogRecord(APILogRecord):
         limits: LogLimits | None = _UnsetLogLimits,
     ): ...
 
-    def __init__(
+    def __init__(  # pylint:disable=too-many-locals
         self,
         timestamp: int | None = None,
         observed_timestamp: int | None = None,
@@ -238,6 +238,7 @@ class LogRecord(APILogRecord):
         resource: Resource | None = None,
         attributes: _ExtendedAttributes | None = None,
         limits: LogLimits | None = _UnsetLogLimits,
+        event_name: str | None = None,
     ):
         if trace_id or span_id or trace_flags:
             warnings.warn(
@@ -275,6 +276,7 @@ class LogRecord(APILogRecord):
                     max_value_len=limits.max_attribute_length,
                     extended_attributes=True,
                 ),
+                "event_name": event_name,
             }
         )
         self.resource = (
@@ -318,6 +320,7 @@ class LogRecord(APILogRecord):
                 ),
                 "trace_flags": self.trace_flags,
                 "resource": json.loads(self.resource.to_json()),
+                "event_name": self.event_name if self.event_name else "",
             },
             indent=indent,
             cls=BytesEncoder,
@@ -793,3 +796,63 @@ class LoggerProvider(APILoggerProvider):
             False otherwise.
         """
         return self._multi_log_record_processor.force_flush(timeout_millis)
+
+
+_STD_TO_OTEL = {
+    10: SeverityNumber.DEBUG,
+    11: SeverityNumber.DEBUG2,
+    12: SeverityNumber.DEBUG3,
+    13: SeverityNumber.DEBUG4,
+    14: SeverityNumber.DEBUG4,
+    15: SeverityNumber.DEBUG4,
+    16: SeverityNumber.DEBUG4,
+    17: SeverityNumber.DEBUG4,
+    18: SeverityNumber.DEBUG4,
+    19: SeverityNumber.DEBUG4,
+    20: SeverityNumber.INFO,
+    21: SeverityNumber.INFO2,
+    22: SeverityNumber.INFO3,
+    23: SeverityNumber.INFO4,
+    24: SeverityNumber.INFO4,
+    25: SeverityNumber.INFO4,
+    26: SeverityNumber.INFO4,
+    27: SeverityNumber.INFO4,
+    28: SeverityNumber.INFO4,
+    29: SeverityNumber.INFO4,
+    30: SeverityNumber.WARN,
+    31: SeverityNumber.WARN2,
+    32: SeverityNumber.WARN3,
+    33: SeverityNumber.WARN4,
+    34: SeverityNumber.WARN4,
+    35: SeverityNumber.WARN4,
+    36: SeverityNumber.WARN4,
+    37: SeverityNumber.WARN4,
+    38: SeverityNumber.WARN4,
+    39: SeverityNumber.WARN4,
+    40: SeverityNumber.ERROR,
+    41: SeverityNumber.ERROR2,
+    42: SeverityNumber.ERROR3,
+    43: SeverityNumber.ERROR4,
+    44: SeverityNumber.ERROR4,
+    45: SeverityNumber.ERROR4,
+    46: SeverityNumber.ERROR4,
+    47: SeverityNumber.ERROR4,
+    48: SeverityNumber.ERROR4,
+    49: SeverityNumber.ERROR4,
+    50: SeverityNumber.FATAL,
+    51: SeverityNumber.FATAL2,
+    52: SeverityNumber.FATAL3,
+    53: SeverityNumber.FATAL4,
+}
+
+
+def std_to_otel(levelno: int) -> SeverityNumber:
+    """
+    Map python log levelno as defined in https://docs.python.org/3/library/logging.html#logging-levels
+    to OTel log severity number as defined here: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/logs/data-model.md#field-severitynumber
+    """
+    if levelno < 10:
+        return SeverityNumber.UNSPECIFIED
+    if levelno > 53:
+        return SeverityNumber.FATAL4
+    return _STD_TO_OTEL[levelno]
