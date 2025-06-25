@@ -299,6 +299,26 @@ class TestOTLPMetricExporter(TestCase):
         mock_insecure_channel.assert_called_once_with(
             "localhost:4317",
             compression=Compression.NoCompression,
+            options=(
+                (
+                    "grpc.primary_user_agent",
+                    "OTel-OTLP-Exporter-Python/" + __version__,
+                ),
+            ),
+        )
+
+    # pylint: disable=no-self-use
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
+    def test_otlp_exporter_otlp_channel_options_kwarg(
+        self, mock_insecure_channel
+    ):
+        OTLPMetricExporter(
+            insecure=True, channel_options=(("some", "options"),)
+        )
+        mock_insecure_channel.assert_called_once_with(
+            "localhost:4317",
+            compression=Compression.NoCompression,
+            options=(("some", "options"),),
         )
 
     def test_split_metrics_data_many_data_points(self):

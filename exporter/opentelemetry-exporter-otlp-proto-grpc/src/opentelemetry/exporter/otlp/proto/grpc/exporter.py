@@ -51,6 +51,7 @@ from opentelemetry.exporter.otlp.proto.common._internal import (
     _get_resource_data,
 )
 from opentelemetry.exporter.otlp.proto.grpc import (
+    _OTLP_GRPC_CHANNEL_OPTIONS,
     _OTLP_GRPC_HEADERS,
 )
 from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401
@@ -196,6 +197,7 @@ class OTLPExporterMixin(
         headers: Headers to send when exporting
         timeout: Backend request timeout in seconds
         compression: gRPC compression method to use
+        channel_options: gRPC channel options
     """
 
     def __init__(
@@ -208,6 +210,7 @@ class OTLPExporterMixin(
         ] = None,
         timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
+        channel_options: Optional[TypingSequence[Tuple[str, str]]] = None,
     ):
         super().__init__()
 
@@ -243,6 +246,10 @@ class OTLPExporterMixin(
         else:
             self._headers = tuple(self._headers) + tuple(_OTLP_GRPC_HEADERS)
 
+        self._channel_options = channel_options or tuple(
+            _OTLP_GRPC_CHANNEL_OPTIONS
+        )
+
         self._timeout = timeout or float(
             environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, 10)
         )
@@ -258,6 +265,7 @@ class OTLPExporterMixin(
             self._channel = insecure_channel(
                 self._endpoint,
                 compression=compression,
+                options=self._channel_options,
             )
         else:
             credentials = _get_credentials(
@@ -270,6 +278,7 @@ class OTLPExporterMixin(
                 self._endpoint,
                 credentials,
                 compression=compression,
+                options=self._channel_options,
             )
         self._client = self._stub(self._channel)
 

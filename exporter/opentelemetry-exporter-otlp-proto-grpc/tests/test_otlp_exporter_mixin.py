@@ -268,6 +268,12 @@ class TestOTLPExporterMixin(TestCase):
         mock_insecure_channel.assert_called_once_with(
             "localhost:4317",
             compression=Compression.NoCompression,
+            options=(
+                (
+                    "grpc.primary_user_agent",
+                    "OTel-OTLP-Exporter-Python/" + __version__,
+                ),
+            ),
         )
 
     # pylint: disable=no-self-use, disable=unused-argument
@@ -291,7 +297,14 @@ class TestOTLPExporterMixin(TestCase):
         """Just OTEL_EXPORTER_OTLP_COMPRESSION should work"""
         OTLPSpanExporterForTesting(insecure=True)
         mock_insecure_channel.assert_called_once_with(
-            "localhost:4317", compression=Compression.Gzip
+            "localhost:4317",
+            compression=Compression.Gzip,
+            options=(
+                (
+                    "grpc.primary_user_agent",
+                    "OTel-OTLP-Exporter-Python/" + __version__,
+                ),
+            ),
         )
 
     def test_shutdown(self):
