@@ -916,11 +916,11 @@ class TestLoggingInit(TestCase):
             logging.config.dictConfig(
                 {
                     "version": 1,
+                    "disable_existing_loggers": False,  # If this is True all loggers are disabled. Many unit tests assert loggers emit logs.
                     "handlers": {
                         "console": {
                             "class": "logging.StreamHandler",
                             "level": "DEBUG",
-                            "formatter": "simple",
                             "stream": "ext://sys.stdout",
                         },
                     },
@@ -1188,9 +1188,6 @@ class ResetGlobalLoggingState:
         self.original_handlers = None
 
     def __enter__(self):
-        print(self.root_logger.handlers)
-        print(self.root_logger.filters)
-        print(self.root_logger.level)
         self.original_handlers = self.root_logger.handlers[:]
         self.root_logger.handlers = []
         return self
@@ -1202,10 +1199,6 @@ class ResetGlobalLoggingState:
         logging.basicConfig = self.original_basic_config
         logging.config.dictConfig = self.original_dict_config
         logging.config.fileConfig = self.original_file_config
-        root = getLogger()
-        print(root.handlers)
-        print(root.filters)
-        print(root.level)
 
 
 class TestClearLoggingHandlers(TestCase):
