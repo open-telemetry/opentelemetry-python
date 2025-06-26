@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 - Update OTLP proto to v1.7 [#4645](https://github.com/open-telemetry/opentelemetry-python/pull/4645).
+- Add `event_name` as a top level field in the `LogRecord`. Events are now simply logs with the
+`event_name` field set, the logs SDK should be used to emit events ([#4652](https://github.com/open-telemetry/opentelemetry-python/pull/4652)).
 - Update OTLP gRPC/HTTP exporters: the export timeout is now inclusive of all retries and backoffs.
   A +/-20% jitter was added to all backoffs. A pointless 32 second sleep that occurred after all retries
   had completed/failed was removed.
@@ -24,6 +26,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4637](https://github.com/open-telemetry/opentelemetry-python/pull/4637))
 - Logging API accepts optional `context`; deprecates `trace_id`, `span_id`, `trace_flags`.
   ([#4597](https://github.com/open-telemetry/opentelemetry-python/pull/4597))
+- sdk: use context instead of trace_id,span_id for initializing LogRecord
+  ([#4653](https://github.com/open-telemetry/opentelemetry-python/pull/4653))
+- Rename LogRecordProcessor.emit to on_emit
+  ([#4648](https://github.com/open-telemetry/opentelemetry-python/pull/4648))
+- Logging API hide std_to_otel function to convert python logging severity to otel severity
+  ([#4649](https://github.com/open-telemetry/opentelemetry-python/pull/4649))
 
 ## Version 1.34.0/0.55b0 (2025-06-04)
 

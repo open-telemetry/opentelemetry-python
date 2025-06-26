@@ -412,7 +412,7 @@ class FakeProcessor(LogRecordProcessor):
     def __init__(self):
         self.log_data_emitted = []
 
-    def emit(self, log_data: LogData):
+    def on_emit(self, log_data: LogData):
         self.log_data_emitted.append(log_data)
 
     def shutdown(self):
