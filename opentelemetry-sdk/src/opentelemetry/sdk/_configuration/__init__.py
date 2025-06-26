@@ -274,6 +274,7 @@ def _overwrite_logging_config_fns(handler):
             config_fn(*args, **kwargs)
             if handler not in root.handlers:
                 root.addHandler(handler)
+
         return overwritten_config_fn
 
     logging.config.fileConfig = wrapper(logging.config.fileConfig)
