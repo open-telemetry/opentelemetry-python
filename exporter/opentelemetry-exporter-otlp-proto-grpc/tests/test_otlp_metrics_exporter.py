@@ -254,9 +254,9 @@ class TestOTLPMetricExporter(TestCase):
         self.assertEqual(
             exporter._headers,
             (
+                ("user-agent", "OTel-OTLP-Exporter-Python/" + __version__),
                 ("key1", "value1"),
                 ("key2", "VALUE=2"),
-                ("user-agent", "OTel-OTLP-Exporter-Python/" + __version__),
             ),
         )
         exporter = OTLPMetricExporter(
@@ -266,10 +266,37 @@ class TestOTLPMetricExporter(TestCase):
         self.assertEqual(
             exporter._headers,
             (
+                ("user-agent", "OTel-OTLP-Exporter-Python/" + __version__),
                 ("key3", "value3"),
                 ("key4", "value4"),
-                ("user-agent", "OTel-OTLP-Exporter-Python/" + __version__),
             ),
+        )
+
+    @patch.dict(
+        "os.environ",
+        {OTEL_EXPORTER_OTLP_METRICS_HEADERS: "User-agent=GrpcMetricsExporter"},
+    )
+    @patch(
+        "opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"
+    )
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel")
+    # pylint: disable=unused-argument
+    def test_otlp_headers_overrides_from_env(
+        self, mock_ssl_channel, mock_secure
+    ):
+        exporter = OTLPMetricExporter()
+        # pylint: disable=protected-access
+        self.assertEqual(
+            exporter._headers,
+            (("user-agent", "GrpcMetricsExporter"),),
+        )
+        exporter = OTLPMetricExporter(
+            headers=(("user-agent", "ParamExporter"),)
+        )
+        # pylint: disable=protected-access
+        self.assertEqual(
+            exporter._headers,
+            (("user-agent", "ParamExporter"),),
         )
 
     @patch.dict(
