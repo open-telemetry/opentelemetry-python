@@ -7,7 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-- Mark the Events API/SDK as deprecated. The Logs API/SDK should be used instead. An event is now a `LogRecord` with the `event_name` field set ([#4654](https://github.com/open-telemetry/opentelemetry-python/pull/4654)).
+- Mark the Events API/SDK as deprecated. The Logs API/SDK should be used instead. An event is now a `LogRecord` with the `event_name` field set
+  ([#4654](https://github.com/open-telemetry/opentelemetry-python/pull/4654)).
 - Update OTLP proto to v1.7 [#4645](https://github.com/open-telemetry/opentelemetry-python/pull/4645).
 - Update OTLP gRPC/HTTP exporters: the export timeout is now inclusive of all retries and backoffs.
   A +/-20% jitter was added to all backoffs. A pointless 32 second sleep that occurred after all retries
