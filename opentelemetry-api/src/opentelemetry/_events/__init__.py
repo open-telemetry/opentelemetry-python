@@ -194,6 +194,9 @@ _EVENT_LOGGER_PROVIDER: Optional[EventLoggerProvider] = None
 _PROXY_EVENT_LOGGER_PROVIDER = ProxyEventLoggerProvider()
 
 
+@deprecated(
+    "You should use `get_logger_provider` instead. Deprecated since version 1.35.0."
+)
 def get_event_logger_provider() -> EventLoggerProvider:
     global _EVENT_LOGGER_PROVIDER  # pylint: disable=global-variable-not-assigned
     if _EVENT_LOGGER_PROVIDER is None:
@@ -209,6 +212,9 @@ def get_event_logger_provider() -> EventLoggerProvider:
     return cast("EventLoggerProvider", _EVENT_LOGGER_PROVIDER)
 
 
+@deprecated(
+    "You should use `_set_logger_provider` instead. Deprecated since version 1.35.0."
+)
 def _set_event_logger_provider(
     event_logger_provider: EventLoggerProvider, log: bool
 ) -> None:
@@ -224,12 +230,18 @@ def _set_event_logger_provider(
         )
 
 
+@deprecated(
+    "You should use `set_logger_provider` instead. Deprecated since version 1.35.0."
+)
 def set_event_logger_provider(
     event_logger_provider: EventLoggerProvider,
 ) -> None:
     _set_event_logger_provider(event_logger_provider, log=True)
 
 
+@deprecated(
+    "You should use `get_logger` instead. Deprecated since version 1.35.0."
+)
 def get_event_logger(
     name: str,
     version: Optional[str] = None,
