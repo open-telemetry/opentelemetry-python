@@ -62,7 +62,7 @@ class TestLoggingHandler(unittest.TestCase):
             logger.critical("No Time For Caution")
         self.assertEqual(processor.emit_count(), 2)
 
-    def test_handler_calling_flush_does_not_cause_deadlock(self):
+    def test_handler_calling_flush_does_not_cause_deadlock(self):  # pylint: disable=no-self-use
         class LogProcessorThatAccessesLockOnFlush(LogRecordProcessor):
             def on_emit(self, log_data: LogData):
                 pass
@@ -74,9 +74,8 @@ class TestLoggingHandler(unittest.TestCase):
                 # Deadlock will happen here IF `flush` starts a new thread
                 # and then blocks, if it just starts a thread and then returns
                 # we don't seem to encounter the issue..
-                logging._lock.acquire()
-                # assert logging._lock.acquire(False) is True
-                logging._lock.release()
+                with logging._lock:  # pylint: disable=protected-access
+                    pass
 
         logger_provider = LoggerProvider()
         processor = LogProcessorThatAccessesLockOnFlush()
@@ -86,7 +85,7 @@ class TestLoggingHandler(unittest.TestCase):
         # The below code is essentially recreating what is causing the problem inside
         # logging.config.dictConfig. Actually calling logging.config.dictConfig will modify
         # global state inside the logging module and break lots of tests.
-        with logging._lock:
+        with logging._lock:  # pylint: disable=protected-access
             for handler in logging.getLogger().handlers:
                 handler.flush()
 
