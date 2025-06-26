@@ -259,14 +259,14 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "googleapis-common-protos", specifier = "~=1.52" },
+    { name = "googleapis-common-protos", specifier = "~=1.57" },
     { name = "grpcio", marker = "python_full_version < '3.13'", specifier = ">=1.63.2,<2.0.0" },
     { name = "grpcio", marker = "python_full_version >= '3.13'", specifier = ">=1.66.2,<2.0.0" },
     { name = "opentelemetry-api", editable = "opentelemetry-api" },
     { name = "opentelemetry-exporter-otlp-proto-common", editable = "exporter/opentelemetry-exporter-otlp-proto-common" },
     { name = "opentelemetry-proto", editable = "opentelemetry-proto" },
     { name = "opentelemetry-sdk", editable = "opentelemetry-sdk" },
-    { name = "typing-extensions", specifier = ">=4.5.0" },
+    { name = "typing-extensions", specifier = ">=4.6.0" },
 ]
 
 [[package]]
@@ -357,7 +357,7 @@ dependencies = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "protobuf", specifier = ">=5.0,<6.0" }]
+requires-dist = [{ name = "protobuf", specifier = ">=5.0,<7.0" }]
 
 [[package]]
 name = "opentelemetry-python"
