@@ -23,7 +23,7 @@ import logging
 import os
 from abc import ABC, abstractmethod
 from os import environ
-from typing import Callable, Sequence, Type, Union
+from typing import Any, Callable, Mapping, Sequence, Type, Union
 
 from typing_extensions import Literal
 
@@ -91,10 +91,20 @@ _OTEL_SAMPLER_ENTRY_POINT_GROUP = "opentelemetry_traces_sampler"
 
 _logger = logging.getLogger(__name__)
 
+ExporterArgsMap = Mapping[
+    Union[
+        Type[SpanExporter],
+        Type[MetricExporter],
+        Type[MetricReader],
+        Type[LogExporter],
+    ],
+    Mapping[str, Any],
+]
+
 
 def _import_config_components(
-    selected_components: list[str], entry_point_name: str
-) -> Sequence[tuple[str, object]]:
+    selected_components: Sequence[str], entry_point_name: str
+) -> list[tuple[str, Type]]:
     component_implementations = []
 
     for selected_component in selected_components:
@@ -179,7 +189,7 @@ def _get_exporter_entry_point(
 
 def _get_exporter_names(
     signal_type: Literal["traces", "metrics", "logs"],
-) -> Sequence[str]:
+) -> list[str]:
     names = environ.get(_EXPORTER_ENV_BY_SIGNAL_TYPE.get(signal_type, ""))
 
     if not names or names.lower().strip() == "none":
@@ -196,6 +206,7 @@ def _init_tracing(
     id_generator: IdGenerator | None = None,
     sampler: Sampler | None = None,
     resource: Resource | None = None,
+    exporter_args_map: ExporterArgsMap | None = None,
 ):
     provider = TracerProvider(
         id_generator=id_generator,
@@ -204,8 +215,9 @@ def _init_tracing(
     )
     set_tracer_provider(provider)
 
+    exporter_args_map = exporter_args_map or {}
     for _, exporter_class in exporters.items():
-        exporter_args = {}
+        exporter_args = exporter_args_map.get(exporter_class, {})
         provider.add_span_processor(
             BatchSpanProcessor(exporter_class(**exporter_args))
         )
@@ -216,12 +228,13 @@ def _init_metrics(
         str, Union[Type[MetricExporter], Type[MetricReader]]
     ],
     resource: Resource | None = None,
+    exporter_args_map: ExporterArgsMap | None = None,
 ):
     metric_readers = []
 
+    exporter_args_map = exporter_args_map or {}
     for _, exporter_or_reader_class in exporters_or_readers.items():
-        exporter_args = {}
-
+        exporter_args = exporter_args_map.get(exporter_or_reader_class, {})
         if issubclass(exporter_or_reader_class, MetricReader):
             metric_readers.append(exporter_or_reader_class(**exporter_args))
         else:
@@ -239,12 +252,14 @@ def _init_logging(
     exporters: dict[str, Type[LogExporter]],
     resource: Resource | None = None,
     setup_logging_handler: bool = True,
+    exporter_args_map: ExporterArgsMap | None = None,
 ):
     provider = LoggerProvider(resource=resource)
     set_logger_provider(provider)
 
+    exporter_args_map = exporter_args_map or {}
     for _, exporter_class in exporters.items():
-        exporter_args = {}
+        exporter_args = exporter_args_map.get(exporter_class, {})
         provider.add_log_record_processor(
             BatchLogRecordProcessor(exporter_class(**exporter_args))
         )
@@ -331,14 +346,16 @@ def _import_exporters(
     return trace_exporters, metric_exporters, log_exporters
 
 
-def _import_sampler_factory(sampler_name: str) -> Callable[[str], Sampler]:
+def _import_sampler_factory(
+    sampler_name: str,
+) -> Callable[[float | str | None], Sampler]:
     _, sampler_impl = _import_config_components(
         [sampler_name.strip()], _OTEL_SAMPLER_ENTRY_POINT_GROUP
     )[0]
     return sampler_impl
 
 
-def _import_sampler(sampler_name: str) -> Sampler | None:
+def _import_sampler(sampler_name: str | None) -> Sampler | None:
     if not sampler_name:
         return None
     try:
@@ -346,7 +363,7 @@ def _import_sampler(sampler_name: str) -> Sampler | None:
         arg = None
         if sampler_name in ("traceidratio", "parentbased_traceidratio"):
             try:
-                rate = float(os.getenv(OTEL_TRACES_SAMPLER_ARG))
+                rate = float(os.getenv(OTEL_TRACES_SAMPLER_ARG, ""))
             except (ValueError, TypeError):
                 _logger.warning(
                     "Could not convert TRACES_SAMPLER_ARG to float. Using default value 1.0."
@@ -391,6 +408,7 @@ def _initialize_components(
     resource_attributes: Attributes | None = None,
     id_generator: IdGenerator | None = None,
     setup_logging_handler: bool | None = None,
+    exporter_args_map: ExporterArgsMap | None = None,
 ):
     if trace_exporter_names is None:
         trace_exporter_names = []
@@ -413,7 +431,7 @@ def _initialize_components(
         resource_attributes = {}
     # populate version if using auto-instrumentation
     if auto_instrumentation_version:
-        resource_attributes[ResourceAttributes.TELEMETRY_AUTO_VERSION] = (
+        resource_attributes[ResourceAttributes.TELEMETRY_AUTO_VERSION] = (  # type: ignore[reportIndexIssue]
             auto_instrumentation_version
         )
     # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
@@ -425,8 +443,11 @@ def _initialize_components(
         id_generator=id_generator,
         sampler=sampler,
         resource=resource,
+        exporter_args_map=exporter_args_map,
     )
-    _init_metrics(metric_exporters, resource)
+    _init_metrics(
+        metric_exporters, resource, exporter_args_map=exporter_args_map
+    )
     if setup_logging_handler is None:
         setup_logging_handler = (
             os.getenv(
@@ -436,7 +457,12 @@ def _initialize_components(
             .lower()
             == "true"
         )
-    _init_logging(log_exporters, resource, setup_logging_handler)
+    _init_logging(
+        log_exporters,
+        resource,
+        setup_logging_handler,
+        exporter_args_map=exporter_args_map,
+    )
 
 
 class _BaseConfigurator(ABC):
