@@ -353,7 +353,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         logger.addHandler(LoggingHandler(logger_provider=provider))
 
         logger.error("error")
-        self.assertEqual(log_record_processor.emit.call_count, 1)
+        self.assertEqual(log_record_processor.on_emit.call_count, 1)
         log_record_processor.shutdown()
 
     def test_with_multiple_threads(self):  # pylint: disable=no-self-use
@@ -368,7 +368,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
 
         def bulk_emit(num_emit):
             for _ in range(num_emit):
-                batch_processor.emit(EMPTY_LOG)
+                batch_processor.on_emit(EMPTY_LOG)
 
         total_expected_logs = 0
         with ThreadPoolExecutor(max_workers=69) as executor:
@@ -409,10 +409,10 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         # If `emit` calls logging.log then this test will throw a maximum recursion depth exceeded exception and fail.
         try:
             with self.assertNoLogs(sdk_logger, logging.NOTSET):
-                processor.emit(EMPTY_LOG)
+                processor.on_emit(EMPTY_LOG)
             processor.shutdown()
             with self.assertNoLogs(sdk_logger, logging.NOTSET):
-                processor.emit(EMPTY_LOG)
+                processor.on_emit(EMPTY_LOG)
         finally:
             sdk_logger.removeHandler(handler)
 
