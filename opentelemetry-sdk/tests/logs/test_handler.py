@@ -64,7 +64,7 @@ class TestLoggingHandler(unittest.TestCase):
 
     def test_handler_calling_flush_does_not_cause_deadlock(self):
         class LogProcessorThatAccessesLockOnFlush(LogRecordProcessor):
-            def emit(self, log_data: LogData):
+            def on_emit(self, log_data: LogData):
                 pass
 
             def shutdown(self):
