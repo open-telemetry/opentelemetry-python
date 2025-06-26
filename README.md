@@ -117,7 +117,7 @@ Emeritus Approvers
 - [Sanket Mehta](https://github.com/sanketmehta28), Cisco
 - [Tahir H. Butt](https://github.com/majorgreys), DataDog
 
-*For more information about the approver role, see the [community repository](https://github.com/open-telemetry/community/blob/main/community-membership.md#approver).*
+*For more information about the approver role, see the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#approver).*
 
 Maintainers ([@open-telemetry/python-maintainers](https://github.com/orgs/open-telemetry/teams/python-maintainers)):
 
@@ -135,7 +135,7 @@ Emeritus Maintainers:
 - [Srikanth Chekuri](https://github.com/srikanthccv), signoz.io
 - [Yusuke Tsutsumi](https://github.com/toumorokoshi), Google
 
-*For more information about the maintainer role, see the [community repository](https://github.com/open-telemetry/community/blob/main/community-membership.md#maintainer).*
+*For more information about the maintainer role, see the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#maintainer).*
 
 ### Thanks to all the people who already contributed!
 
