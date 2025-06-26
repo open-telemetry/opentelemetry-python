@@ -46,7 +46,12 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
-from opentelemetry.trace import TraceFlags
+from opentelemetry.trace import (
+    NonRecordingSpan,
+    SpanContext,
+    TraceFlags,
+    set_span_in_context,
+)
 from opentelemetry.trace.span import INVALID_SPAN_CONTEXT
 
 EMPTY_LOG = LogData(
@@ -593,12 +598,20 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
 class TestConsoleLogExporter(unittest.TestCase):
     def test_export(self):  # pylint: disable=no-self-use
         """Check that the console exporter prints log records."""
+        ctx = set_span_in_context(
+            NonRecordingSpan(
+                SpanContext(
+                    2604504634922341076776623263868986797,
+                    5213367945872657620,
+                    False,
+                    TraceFlags(0x01),
+                )
+            )
+        )
         log_data = LogData(
             log_record=LogRecord(
                 timestamp=int(time.time() * 1e9),
-                trace_id=2604504634922341076776623263868986797,
-                span_id=5213367945872657620,
-                trace_flags=TraceFlags(0x01),
+                context=ctx,
                 severity_text="WARN",
                 severity_number=SeverityNumber.WARN,
                 body="Zhengzhou, We have a heaviest rains in 1000 years",
