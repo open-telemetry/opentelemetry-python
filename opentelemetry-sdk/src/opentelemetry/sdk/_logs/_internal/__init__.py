@@ -551,6 +551,7 @@ class LoggingHandler(logging.Handler):
     ) -> None:
         super().__init__(level=level)
         self._logger_provider = logger_provider or get_logger_provider()
+        # self.flushOnClose = False
 
     @staticmethod
     def _get_attributes(record: logging.LogRecord) -> _ExtendedAttributes:
@@ -643,7 +644,8 @@ class LoggingHandler(logging.Handler):
         if hasattr(self._logger_provider, "force_flush") and callable(
             self._logger_provider.force_flush
         ):
-            self._logger_provider.force_flush()
+            thread = threading.Thread(target=self._logger_provider.force_flush)
+            thread.start()
 
 
 class Logger(APILogger):
