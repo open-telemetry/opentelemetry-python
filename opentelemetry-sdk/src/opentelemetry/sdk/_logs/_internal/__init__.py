@@ -357,7 +357,7 @@ class LogRecordProcessor(abc.ABC):
     """
 
     @abc.abstractmethod
-    def emit(self, log_data: LogData):
+    def on_emit(self, log_data: LogData):
         """Emits the `LogData`"""
 
     @abc.abstractmethod
@@ -401,9 +401,9 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
         with self._lock:
             self._log_record_processors += (log_record_processor,)
 
-    def emit(self, log_data: LogData) -> None:
+    def on_emit(self, log_data: LogData) -> None:
         for lp in self._log_record_processors:
-            lp.emit(log_data)
+            lp.on_emit(log_data)
 
     def shutdown(self) -> None:
         """Shutdown the log processors one by one"""
@@ -475,8 +475,8 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
         for future in futures:
             future.result()
 
-    def emit(self, log_data: LogData):
-        self._submit_and_wait(lambda lp: lp.emit, log_data)
+    def on_emit(self, log_data: LogData):
+        self._submit_and_wait(lambda lp: lp.on_emit, log_data)
 
     def shutdown(self):
         self._submit_and_wait(lambda lp: lp.shutdown)
@@ -683,7 +683,7 @@ class Logger(APILogger):
         and instrumentation info.
         """
         log_data = LogData(record, self._instrumentation_scope)
-        self._multi_log_record_processor.emit(log_data)
+        self._multi_log_record_processor.on_emit(log_data)
 
 
 class LoggerProvider(APILoggerProvider):
