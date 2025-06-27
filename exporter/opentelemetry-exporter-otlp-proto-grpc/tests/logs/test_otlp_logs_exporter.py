@@ -17,7 +17,7 @@
 import time
 from os.path import dirname
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from google.protobuf.json_format import MessageToDict
 from grpc import ChannelCredentials, Compression
@@ -263,6 +263,45 @@ class TestOTLPLogExporter(TestCase):
         self.assertEqual(kwargs["compression"], Compression.Gzip)
         self.assertIsNotNone(kwargs["credentials"])
         self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
+
+        mock_logger_error.assert_not_called()
+
+    @patch.dict(
+        "os.environ",
+        {
+            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "logs:4317",
+            OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE: THIS_DIR
+            + "/../fixtures/test.cert",
+            OTEL_EXPORTER_OTLP_LOGS_HEADERS: " key1=value1,KEY2 = VALUE=2",
+            OTEL_EXPORTER_OTLP_LOGS_TIMEOUT: "10",
+            OTEL_EXPORTER_OTLP_LOGS_COMPRESSION: "gzip",
+        },
+    )
+    @patch(
+        "opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__"
+    )
+    @patch("logging.Logger.error")
+    def test_kwargs_have_precedence_over_env_variables(
+        self, mock_logger_error, mock_exporter_mixin
+    ):
+        credentials_mock = Mock()
+        OTLPLogExporter(
+            endpoint="logs:4318",
+            headers=(("an", "header"),),
+            timeout=20,
+            credentials=credentials_mock,
+            compression=Compression.NoCompression,
+            channel_options=(("some", "options"),),
+        )
+
+        self.assertTrue(len(mock_exporter_mixin.call_args_list) == 1)
+        _, kwargs = mock_exporter_mixin.call_args_list[0]
+        self.assertEqual(kwargs["endpoint"], "logs:4318")
+        self.assertEqual(kwargs["headers"], (("an", "header"),))
+        self.assertEqual(kwargs["timeout"], 20)
+        self.assertEqual(kwargs["compression"], Compression.NoCompression)
+        self.assertEqual(kwargs["credentials"], credentials_mock)
+        self.assertEqual(kwargs["channel_options"], (("some", "options"),))
 
         mock_logger_error.assert_not_called()
 

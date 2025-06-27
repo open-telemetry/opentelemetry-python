@@ -73,4 +73,7 @@ API
 from .version import __version__
 
 _USER_AGENT_HEADER_VALUE = "OTel-OTLP-Exporter-Python/" + __version__
-_OTLP_GRPC_HEADERS = [("user-agent", _USER_AGENT_HEADER_VALUE)]
+_OTLP_GRPC_CHANNEL_OPTIONS = [
+    # this will appear in the http User-Agent header
+    ("grpc.primary_user_agent", _USER_AGENT_HEADER_VALUE)
+]
