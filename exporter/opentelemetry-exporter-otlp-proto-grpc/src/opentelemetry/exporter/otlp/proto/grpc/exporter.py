@@ -52,7 +52,6 @@ from opentelemetry.exporter.otlp.proto.common._internal import (
 )
 from opentelemetry.exporter.otlp.proto.grpc import (
     _OTLP_GRPC_CHANNEL_OPTIONS,
-    _OTLP_GRPC_HEADERS,
 )
 from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401
     AnyValue,
@@ -242,9 +241,7 @@ class OTLPExporterMixin(
         elif isinstance(self._headers, dict):
             self._headers = tuple(self._headers.items())
         if self._headers is None:
-            self._headers = tuple(_OTLP_GRPC_HEADERS)
-        else:
-            self._headers = tuple(self._headers) + tuple(_OTLP_GRPC_HEADERS)
+            self._headers = tuple()
 
         self._channel_options = channel_options or tuple(
             _OTLP_GRPC_CHANNEL_OPTIONS

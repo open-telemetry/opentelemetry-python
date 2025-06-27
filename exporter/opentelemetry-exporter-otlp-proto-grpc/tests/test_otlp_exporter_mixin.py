@@ -470,7 +470,7 @@ class TestOTLPExporterMixin(TestCase):
         # This ensures that there is no other header than standard user-agent.
         self.assertEqual(
             self.exporter._headers,
-            (("user-agent", "OTel-OTLP-Exporter-Python/" + __version__),),
+            (),
         )
 
     def test_permanent_failure(self):
