@@ -59,8 +59,9 @@ class LogRecordExportResult(enum.Enum):
 @deprecated(
     "Use LogRecordExportResult. Since logs are not stable yet this WILL be removed in future releases."
 )
-class LogExportResult(LogRecordExportResult):
-    pass
+class LogExportResult(enum.Enum):
+    SUCCESS = 0
+    FAILURE = 1
 
 
 class LogRecordExporter(abc.ABC):

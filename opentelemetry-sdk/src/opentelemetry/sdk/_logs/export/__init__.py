@@ -14,7 +14,10 @@
 
 from opentelemetry.sdk._logs._internal.export import (
     BatchLogRecordProcessor,
+    ConsoleLogExporter,
     ConsoleLogRecordExporter,
+    LogExporter,
+    LogExportResult,
     LogRecordExporter,
     LogRecordExportResult,
     SimpleLogRecordProcessor,
@@ -22,14 +25,19 @@ from opentelemetry.sdk._logs._internal.export import (
 
 # The point module is not in the export directory to avoid a circular import.
 from opentelemetry.sdk._logs._internal.export.in_memory_log_exporter import (
+    InMemoryLogExporter,
     InMemoryLogRecordExporter,
 )
 
 __all__ = [
     "BatchLogRecordProcessor",
+    "ConsoleLogExporter",
     "ConsoleLogRecordExporter",
+    "LogExporter",
     "LogRecordExporter",
+    "LogExportResult",
     "LogRecordExportResult",
     "SimpleLogRecordProcessor",
+    "InMemoryLogExporter",
     "InMemoryLogRecordExporter",
 ]
