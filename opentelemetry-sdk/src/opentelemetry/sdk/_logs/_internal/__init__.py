@@ -27,6 +27,8 @@ from threading import Lock
 from time import time_ns
 from typing import Any, Callable, Tuple, Union, cast, overload  # noqa
 
+from typing_extensions import deprecated
+
 from opentelemetry._logs import Logger as APILogger
 from opentelemetry._logs import LoggerProvider as APILoggerProvider
 from opentelemetry._logs import LogRecord as APILogRecord
@@ -83,6 +85,13 @@ class LogRecordDroppedAttributesWarning(UserWarning):
 warnings.simplefilter("once", LogRecordDroppedAttributesWarning)
 
 
+@deprecated(
+    "Use LogRecordDroppedAttributesWarning. Since logs are not stable yet this WILL be removed in future releases."
+)
+class LogDroppedAttributesWarning(LogRecordDroppedAttributesWarning):
+    pass
+
+
 class LogRecordDeprecatedInitWarning(UserWarning):
     """Custom warning to indicate deprecated LogRecord init was used.
 
@@ -93,6 +102,13 @@ class LogRecordDeprecatedInitWarning(UserWarning):
 
 
 warnings.simplefilter("once", LogRecordDeprecatedInitWarning)
+
+
+@deprecated(
+    "Use LogRecordDeprecatedInitWarning. Since logs are not stable yet this WILL be removed in future releases."
+)
+class LogDeprecatedInitWarning(LogRecordDeprecatedInitWarning):
+    pass
 
 
 class LogRecordLimits:
@@ -184,6 +200,13 @@ _UnsetLogLimits = LogRecordLimits(
     max_attributes=LogRecordLimits.UNSET,
     max_attribute_length=LogRecordLimits.UNSET,
 )
+
+
+@deprecated(
+    "Use LogRecordLimits. Since logs are not stable yet this WILL be removed in future releases."
+)
+class LogLimits(LogRecordLimits):
+    pass
 
 
 class LogRecord(APILogRecord):
@@ -343,6 +366,13 @@ class LogRecordData:
     ):
         self.log_record = log_record
         self.instrumentation_scope = instrumentation_scope
+
+
+@deprecated(
+    "Use LogRecordData. Since logs are not stable yet this WILL be removed in future releases."
+)
+class LogData(LogRecordData):
+    pass
 
 
 class LogRecordProcessor(abc.ABC):

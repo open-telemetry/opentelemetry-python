@@ -20,6 +20,8 @@ import sys
 from os import environ, linesep
 from typing import IO, Callable, Optional, Sequence
 
+from typing_extensions import deprecated
+
 from opentelemetry.context import (
     _SUPPRESS_INSTRUMENTATION_KEY,
     attach,
@@ -54,6 +56,13 @@ class LogRecordExportResult(enum.Enum):
     FAILURE = 1
 
 
+@deprecated(
+    "Use LogRecordExportResult. Since logs are not stable yet this WILL be removed in future releases."
+)
+class LogExportResult(LogRecordExportResult):
+    pass
+
+
 class LogRecordExporter(abc.ABC):
     """Interface for exporting logs.
     Interface to be implemented by services that want to export logs received
@@ -77,6 +86,13 @@ class LogRecordExporter(abc.ABC):
 
         Called when the SDK is shut down.
         """
+
+
+@deprecated(
+    "Use LogRecordExporter. Since logs are not stable yet this WILL be removed in future releases."
+)
+class LogExporter(LogRecordExporter):
+    pass
 
 
 class ConsoleLogRecordExporter(LogRecordExporter):
@@ -104,6 +120,13 @@ class ConsoleLogRecordExporter(LogRecordExporter):
 
     def shutdown(self):
         pass
+
+
+@deprecated(
+    "Use ConsoleLogRecordExporter. Since logs are not stable yet this WILL be removed in future releases."
+)
+class ConsoleLogExporter(ConsoleLogRecordExporter):
+    pass
 
 
 class SimpleLogRecordProcessor(LogRecordProcessor):
