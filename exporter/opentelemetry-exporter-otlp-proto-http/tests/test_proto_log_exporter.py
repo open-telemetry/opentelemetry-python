@@ -292,7 +292,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             self.fail("No log records found")
 
     @staticmethod
-    def _get_sdk_log_data() -> List[LogData]:
+    def _get_sdk_log_data() -> List[LogRecordData]:
         ctx_log1 = set_span_in_context(
             NonRecordingSpan(
                 SpanContext(
