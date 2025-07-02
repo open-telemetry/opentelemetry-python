@@ -15,6 +15,8 @@ import logging
 from time import time_ns
 from typing import Optional
 
+from typing_extensions import deprecated
+
 from opentelemetry import trace
 from opentelemetry._events import Event
 from opentelemetry._events import EventLogger as APIEventLogger
@@ -26,6 +28,9 @@ from opentelemetry.util.types import _ExtendedAttributes
 _logger = logging.getLogger(__name__)
 
 
+@deprecated(
+    "You should use `Logger` instead. Deprecated since version 1.35.0."
+)
 class EventLogger(APIEventLogger):
     def __init__(
         self,
@@ -65,6 +70,9 @@ class EventLogger(APIEventLogger):
         self._logger.emit(log_record)
 
 
+@deprecated(
+    "You should use `LoggerProvider` instead. Deprecated since version 1.35.0."
+)
 class EventLoggerProvider(APIEventLoggerProvider):
     def __init__(self, logger_provider: Optional[LoggerProvider] = None):
         self._logger_provider = logger_provider or get_logger_provider()
