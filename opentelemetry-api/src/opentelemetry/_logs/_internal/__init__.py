@@ -39,6 +39,8 @@ from os import environ
 from time import time_ns
 from typing import Optional, cast, overload
 
+from typing_extensions import deprecated
+
 from opentelemetry._logs.severity import SeverityNumber
 from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import _OTEL_PYTHON_LOGGER_PROVIDER
@@ -73,6 +75,9 @@ class LogRecord(ABC):
     ) -> None: ...
 
     @overload
+    @deprecated(
+        "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated since 1.35.0. Use `context` instead."
+    )
     def __init__(
         self,
         *,
