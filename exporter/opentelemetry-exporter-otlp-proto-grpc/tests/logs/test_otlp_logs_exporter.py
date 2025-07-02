@@ -27,6 +27,7 @@ from opentelemetry.exporter.otlp.proto.common._internal import _encode_value
 from opentelemetry.exporter.otlp.proto.grpc._log_exporter import (
     OTLPLogExporter,
 )
+from opentelemetry.exporter.otlp.proto.grpc.version import __version__
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
     ExportLogsServiceRequest,
 )
@@ -500,3 +501,37 @@ class TestOTLPLogExporter(TestCase):
                 [self.log_data_1, self.log_data_2, self.log_data_3]
             ),
         )
+
+    @patch(
+        "opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"
+    )
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel")
+    # pylint: disable=unused-argument
+    def test_otlp_headers_overrides_from_env(
+        self, mock_ssl_channel, mock_secure
+    ):
+        exporter = OTLPLogExporter()
+        # pylint: disable=protected-access
+        self.assertEqual(
+            exporter._headers,
+            (("user-agent", "OTel-OTLP-Exporter-Python/" + __version__),),
+        )
+
+        with patch.dict(
+            "os.environ",
+            {OTEL_EXPORTER_OTLP_LOGS_HEADERS: "User-agent=GrpcLogExporter"},
+        ):
+            exporter = OTLPLogExporter()
+            # pylint: disable=protected-access
+            self.assertEqual(
+                exporter._headers,
+                (("user-agent", "GrpcLogExporter"),),
+            )
+            exporter = OTLPLogExporter(
+                headers=(("user-agent", "ParamExporter"),)
+            )
+            # pylint: disable=protected-access
+            self.assertEqual(
+                exporter._headers,
+                (("user-agent", "ParamExporter"),),
+            )
