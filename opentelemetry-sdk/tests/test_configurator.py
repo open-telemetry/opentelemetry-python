@@ -178,8 +178,9 @@ class DummyMetricReaderPullExporter(MetricReader):
 
 
 class DummyOTLPMetricExporter:
-    def __init__(self, *args, **kwargs):
+    def __init__(self, compression: str | None = None, *args, **kwargs):
         self.export_called = False
+        self.compression = compression
 
     def export(self, batch):
         self.export_called = True
@@ -202,12 +203,14 @@ class Exporter:
 
 
 class OTLPSpanExporter:
-    pass
+    def __init__(self, compression: str | None = None, *args, **kwargs):
+        self.compression = compression
 
 
 class DummyOTLPLogExporter(LogExporter):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, compression: str | None = None, *args, **kwargs):
         self.export_called = False
+        self.compression = compression
 
     def export(self, batch):
         self.export_called = True
@@ -373,6 +376,20 @@ class TestTraceInit(TestCase):
             provider.resource.attributes.get("service.name"),
             "my-otlp-test-service",
         )
+
+    def test_trace_init_exporter_uses_exporter_args_map(self):
+        _init_tracing(
+            {"otlp": OTLPSpanExporter},
+            id_generator=RandomIdGenerator(),
+            exporter_args_map={
+                OTLPSpanExporter: {"compression": "gzip"},
+                DummyMetricReaderPullExporter: {"compression": "no"},
+            },
+        )
+
+        provider = self.set_provider_mock.call_args[0][0]
+        exporter = provider.processor.exporter
+        self.assertEqual(exporter.compression, "gzip")
 
     @patch.dict(environ, {OTEL_PYTHON_ID_GENERATOR: "custom_id_generator"})
     @patch("opentelemetry.sdk._configuration.IdGenerator", new=IdGenerator)
@@ -667,6 +684,20 @@ class TestLoggingInit(TestCase):
         getLogger(__name__).error("hello")
         self.assertTrue(provider.processor.exporter.export_called)
 
+    def test_logging_init_exporter_uses_exporter_args_map(self):
+        resource = Resource.create({})
+        _init_logging(
+            {"otlp": DummyOTLPLogExporter},
+            resource=resource,
+            exporter_args_map={
+                DummyOTLPLogExporter: {"compression": "gzip"},
+                DummyOTLPMetricExporter: {"compression": "no"},
+            },
+        )
+        self.assertEqual(self.set_provider_mock.call_count, 1)
+        provider = self.set_provider_mock.call_args[0][0]
+        self.assertEqual(provider.processor.exporter.compression, "gzip")
+
     @patch.dict(
         environ,
         {"OTEL_RESOURCE_ATTRIBUTES": "service.name=otlp-service"},
@@ -702,7 +733,9 @@ class TestLoggingInit(TestCase):
     def test_logging_init_disable_default(self, logging_mock, tracing_mock):
         _initialize_components(auto_instrumentation_version="auto-version")
         self.assertEqual(tracing_mock.call_count, 1)
-        logging_mock.assert_called_once_with(mock.ANY, mock.ANY, False)
+        logging_mock.assert_called_once_with(
+            mock.ANY, mock.ANY, False, exporter_args_map=None
+        )
 
     @patch.dict(
         environ,
@@ -716,7 +749,9 @@ class TestLoggingInit(TestCase):
     def test_logging_init_enable_env(self, logging_mock, tracing_mock):
         with self.assertLogs(level=WARNING):
             _initialize_components(auto_instrumentation_version="auto-version")
-        logging_mock.assert_called_once_with(mock.ANY, mock.ANY, True)
+        logging_mock.assert_called_once_with(
+            mock.ANY, mock.ANY, True, exporter_args_map=None
+        )
         self.assertEqual(tracing_mock.call_count, 1)
 
     @patch.dict(
@@ -799,6 +834,7 @@ class TestLoggingInit(TestCase):
             },
             "id_generator": "TEST_GENERATOR",
             "setup_logging_handler": True,
+            "exporter_args_map": {1: {"compression": "gzip"}},
         }
         _initialize_components(**kwargs)
 
@@ -832,15 +868,18 @@ class TestLoggingInit(TestCase):
             id_generator="TEST_GENERATOR",
             sampler="TEST_SAMPLER",
             resource="TEST_RESOURCE",
+            exporter_args_map={1: {"compression": "gzip"}},
         )
         metrics_mock.assert_called_once_with(
             "TEST_METRICS_EXPORTERS_DICT",
             "TEST_RESOURCE",
+            exporter_args_map={1: {"compression": "gzip"}},
         )
         logging_mock.assert_called_once_with(
             "TEST_LOG_EXPORTERS_DICT",
             "TEST_RESOURCE",
             True,
+            exporter_args_map={1: {"compression": "gzip"}},
         )
 
     def test_basicConfig_works_with_otel_handler(self):
@@ -969,6 +1008,20 @@ class TestMetricsInit(TestCase):
         self.assertIsInstance(provider, DummyMeterProvider)
         reader = provider._sdk_config.metric_readers[0]
         self.assertIsInstance(reader, DummyMetricReaderPullExporter)
+
+    def test_metrics_init_exporter_uses_exporter_args_map(self):
+        resource = Resource.create({})
+        _init_metrics(
+            {"otlp": DummyOTLPMetricExporter},
+            resource=resource,
+            exporter_args_map={
+                DummyOTLPMetricExporter: {"compression": "gzip"},
+                DummyMetricReaderPullExporter: {"compression": "no"},
+            },
+        )
+        provider = self.set_provider_mock.call_args[0][0]
+        reader = provider._sdk_config.metric_readers[0]
+        self.assertEqual(reader.exporter.compression, "gzip")
 
 
 class TestExporterNames(TestCase):

@@ -109,7 +109,6 @@ include = [
 
 exclude = [
   "opentelemetry-sdk/tests",
-  "opentelemetry-sdk/src/opentelemetry/sdk/_configuration",
   "opentelemetry-sdk/src/opentelemetry/sdk/_events",
   "opentelemetry-sdk/src/opentelemetry/sdk/_logs",
   "opentelemetry-sdk/src/opentelemetry/sdk/error_handler",
