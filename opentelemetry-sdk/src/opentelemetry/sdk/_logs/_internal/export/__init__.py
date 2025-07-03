@@ -112,7 +112,7 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
         self._exporter = exporter
         self._shutdown = False
 
-    def emit(self, log_data: LogData):
+    def on_emit(self, log_data: LogData):
         if self._shutdown:
             _logger.warning("Processor is already shutdown, ignoring call")
             return
@@ -186,7 +186,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
             "Log",
         )
 
-    def emit(self, log_data: LogData) -> None:
+    def on_emit(self, log_data: LogData) -> None:
         return self._batch_processor.emit(log_data)
 
     def shutdown(self):

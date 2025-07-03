@@ -7,7 +7,7 @@ name = "opentelemetry-proto"
 dynamic = ["version"]
 description = "OpenTelemetry Python Proto"
 readme = "README.rst"
-license = {text = "Apache-2.0"}
+license = "Apache-2.0"
 requires-python = ">=3.9"
 authors = [
   { name = "OpenTelemetry Authors", email = "cncf-opentelemetry-contributors@lists.cncf.io" },
@@ -16,7 +16,6 @@ classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Framework :: OpenTelemetry",
   "Intended Audience :: Developers",
-  "License :: OSI Approved :: Apache Software License",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.9",
@@ -26,7 +25,7 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
-  "protobuf>=5.0, < 6.0",
+  "protobuf>=5.0, < 7.0",
 ]
 
 [project.urls]

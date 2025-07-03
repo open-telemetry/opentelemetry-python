@@ -13,15 +13,15 @@
 # limitations under the License.
 
 # pylint: disable=too-many-lines
+import time
 from logging import WARNING
 from os import environ
 from typing import List
 from unittest import TestCase
-from unittest.mock import MagicMock, Mock, call, patch
+from unittest.mock import ANY, MagicMock, Mock, call, patch
 
 from requests import Session
 from requests.models import Response
-from responses import POST, activate, add
 
 from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
     encode_metrics,
@@ -338,7 +338,7 @@ class TestOTLPMetricExporter(TestCase):
             url=exporter._endpoint,
             data=serialized_data.SerializeToString(),
             verify=exporter._certificate_file,
-            timeout=exporter._timeout,
+            timeout=ANY,  # Timeout is a float based on real time, can't put an exact value here.
             cert=exporter._client_cert,
         )
 
@@ -810,31 +810,9 @@ class TestOTLPMetricExporter(TestCase):
             log.output[0],
         )
 
-    @activate
-    @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.sleep")
-    def test_exponential_backoff(self, mock_sleep):
-        # return a retryable error
-        add(
-            POST,
-            "http://metrics.example.com/export",
-            json={"error": "something exploded"},
-            status=500,
-        )
-
-        exporter = OTLPMetricExporter(
-            endpoint="http://metrics.example.com/export"
-        )
-        metrics_data = self.metrics["sum_int"]
-
-        exporter.export(metrics_data)
-        mock_sleep.assert_has_calls(
-            [call(1), call(2), call(4), call(8), call(16), call(32)]
-        )
-
     @patch.object(OTLPMetricExporter, "_export")
-    @patch(
-        "opentelemetry.exporter.otlp.proto.http.metric_exporter._create_exp_backoff_generator"
-    )
+    @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.random")
+    @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.time")
     @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.sleep")
     @patch(
         "opentelemetry.exporter.otlp.proto.http.metric_exporter.encode_metrics"
@@ -843,10 +821,12 @@ class TestOTLPMetricExporter(TestCase):
         self,
         mock_encode_metrics,
         mock_sleep,
-        mock_backoff_generator,
+        mock_time,
+        mock_random,
         mock_export,
     ):
-        mock_backoff_generator.return_value = iter([1, 2, 4])
+        mock_time.return_value = 0
+        mock_random.uniform.return_value = 1
         mock_export.side_effect = [
             # Non-retryable
             MagicMock(ok=False, status_code=400, reason="bad request"),
@@ -927,9 +907,9 @@ class TestOTLPMetricExporter(TestCase):
         self.assertEqual(mock_export.call_count, 3)
         mock_export.assert_has_calls(
             [
-                call(batch_1.SerializeToString()),
-                call(batch_2.SerializeToString()),
-                call(batch_2.SerializeToString()),
+                call(batch_1.SerializeToString(), 10),
+                call(batch_2.SerializeToString(), 10),
+                call(batch_2.SerializeToString(), 10),
             ]
         )
 
@@ -1104,6 +1084,45 @@ class TestOTLPMetricExporter(TestCase):
         self.assertEqual(
             exporter._preferred_aggregation[Histogram], histogram_aggregation
         )
+
+    @patch.object(Session, "post")
+    def test_retry_timeout(self, mock_post):
+        exporter = OTLPMetricExporter(timeout=1.5)
+
+        resp = Response()
+        resp.status_code = 503
+        resp.reason = "UNAVAILABLE"
+        mock_post.return_value = resp
+        with self.assertLogs(level=WARNING) as warning:
+            before = time.time()
+            self.assertEqual(
+                exporter.export(self.metrics["sum_int"]),
+                MetricExportResult.FAILURE,
+            )
+            after = time.time()
+
+            # First call at time 0, second at time 1, then an early return before the second backoff sleep b/c it would exceed timeout.
+            self.assertEqual(mock_post.call_count, 2)
+            # There's a +/-20% jitter on each backoff.
+            self.assertTrue(0.75 < after - before < 1.25)
+            self.assertIn(
+                "Transient error UNAVAILABLE encountered while exporting metrics batch, retrying in",
+                warning.records[0].message,
+            )
+
+    @patch.object(Session, "post")
+    def test_timeout_set_correctly(self, mock_post):
+        resp = Response()
+        resp.status_code = 200
+
+        def export_side_effect(*args, **kwargs):
+            # Timeout should be set to something slightly less than 400 milliseconds depending on how much time has passed.
+            self.assertAlmostEqual(0.4, kwargs["timeout"], 2)
+            return resp
+
+        mock_post.side_effect = export_side_effect
+        exporter = OTLPMetricExporter(timeout=0.4)
+        exporter.export(self.metrics["sum_int"])
 
 
 def _resource_metrics(

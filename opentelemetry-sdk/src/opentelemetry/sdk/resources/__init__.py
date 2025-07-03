@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# type: ignore[reportDeprecated]  # ResourceAttributes is deprecated
-
 """
 This package implements `OpenTelemetry Resources
 <https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/sdk.md#resource-sdk>`_:
@@ -57,6 +55,9 @@ Note that the OpenTelemetry project documents certain `"standard attributes"
 that have prescribed semantic meanings, for example ``service.name`` in the
 above example.
 """
+
+# ResourceAttributes is deprecated
+# pyright: reportDeprecated=false
 
 import abc
 import concurrent.futures

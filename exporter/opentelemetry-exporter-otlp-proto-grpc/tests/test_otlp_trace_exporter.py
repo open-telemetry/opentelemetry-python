@@ -333,7 +333,8 @@ class TestOTLPSpanExporter(TestCase):
         """Specifying kwarg should take precedence over env"""
         OTLPSpanExporter(insecure=True, compression=Compression.NoCompression)
         mock_insecure_channel.assert_called_once_with(
-            "localhost:4317", compression=Compression.NoCompression
+            "localhost:4317",
+            compression=Compression.NoCompression,
         )
 
     # pylint: disable=no-self-use
@@ -350,7 +351,8 @@ class TestOTLPSpanExporter(TestCase):
         """
         OTLPSpanExporter(insecure=True)
         mock_insecure_channel.assert_called_once_with(
-            "localhost:4317", compression=Compression.Gzip
+            "localhost:4317",
+            compression=Compression.Gzip,
         )
 
     def test_translate_spans(self):
