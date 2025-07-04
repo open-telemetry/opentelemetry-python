@@ -105,6 +105,7 @@ class OTLPMetricExporter(
         | None = None,
         preferred_aggregation: dict[type, Aggregation] | None = None,
         max_export_batch_size: int | None = None,
+        channel_options: TypingSequence[Tuple[str, str]] | None = None,
     ):
         if insecure is None:
             insecure = environ.get(OTEL_EXPORTER_OTLP_METRICS_INSECURE)
@@ -146,6 +147,7 @@ class OTLPMetricExporter(
             headers=headers or environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS),
             timeout=timeout or environ_timeout,
             compression=compression,
+            channel_options=channel_options,
         )
 
         self._max_export_batch_size: int | None = max_export_batch_size
