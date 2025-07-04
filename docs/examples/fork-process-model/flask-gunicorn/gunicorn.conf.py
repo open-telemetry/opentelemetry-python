@@ -24,6 +24,7 @@ from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.semconv.resource import ResourceAttributes
 
 bind = "127.0.0.1:8000"
 
@@ -48,7 +49,7 @@ def post_fork(server, worker):
 
     resource = Resource.create(
         attributes={
-            "service.name": "api-service",
+            ResourceAttributes.SERVICE_NAME: "api-service",
             # If workers are not distinguished within attributes, traces and
             # metrics exported from each worker will be indistinguishable. While
             # not necessarily an issue for traces, it is confusing for almost
