@@ -373,7 +373,13 @@ class TestOTLPSpanExporter(TestCase):
         mock_insecure_channel.assert_called_once_with(
             "localhost:4317",
             compression=Compression.NoCompression,
-            options=(("some", "options"),),
+            options=(
+                (
+                    "grpc.primary_user_agent",
+                    "OTel-OTLP-Exporter-Python/" + __version__,
+                ),
+                ("some", "options"),
+            ),
         )
 
     def test_translate_spans(self):

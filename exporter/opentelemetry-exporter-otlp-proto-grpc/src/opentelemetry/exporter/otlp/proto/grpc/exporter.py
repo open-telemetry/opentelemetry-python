@@ -243,9 +243,19 @@ class OTLPExporterMixin(
         if self._headers is None:
             self._headers = tuple()
 
-        self._channel_options = channel_options or tuple(
-            _OTLP_GRPC_CHANNEL_OPTIONS
-        )
+        if channel_options:
+            # merge the default channel options with the one passed as parameter
+            overridden_options = {
+                opt_name for (opt_name, _) in channel_options
+            }
+            default_options = [
+                (opt_name, opt_value)
+                for opt_name, opt_value in _OTLP_GRPC_CHANNEL_OPTIONS
+                if opt_name not in overridden_options
+            ]
+            self._channel_options = tuple(default_options) + channel_options
+        else:
+            self._channel_options = tuple(_OTLP_GRPC_CHANNEL_OPTIONS)
 
         self._timeout = timeout or float(
             environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, 10)
