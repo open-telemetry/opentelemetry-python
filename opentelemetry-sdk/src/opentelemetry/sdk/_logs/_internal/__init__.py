@@ -157,7 +157,7 @@ class LogLimits:
         cls, value: int | None, env_var: str, default: int | None = None
     ) -> int | None:
         if value == cls.UNSET:
-            return None
+            value = None # unset value, continue to get value from env
 
         err_msg = "{} must be a non-negative integer but got {}"
 
