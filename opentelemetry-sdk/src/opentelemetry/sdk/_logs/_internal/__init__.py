@@ -27,6 +27,8 @@ from threading import Lock
 from time import time_ns
 from typing import Any, Callable, Tuple, Union, cast, overload  # noqa
 
+from typing_extensions import deprecated
+
 from opentelemetry._logs import Logger as APILogger
 from opentelemetry._logs import LoggerProvider as APILoggerProvider
 from opentelemetry._logs import LogRecord as APILogRecord
@@ -209,6 +211,9 @@ class LogRecord(APILogRecord):
     ): ...
 
     @overload
+    @deprecated(
+        "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated since 1.35.0. Use `context` instead."  # noqa: E501
+    )
     def __init__(
         self,
         timestamp: int | None = None,
@@ -242,7 +247,7 @@ class LogRecord(APILogRecord):
     ):
         if trace_id or span_id or trace_flags:
             warnings.warn(
-                "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated. Use `context` instead.",
+                "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated since 1.35.0. Use `context` instead.",
                 LogDeprecatedInitWarning,
                 stacklevel=2,
             )
@@ -250,22 +255,17 @@ class LogRecord(APILogRecord):
         if not context:
             context = get_current()
 
-        if context is not None:
-            span = get_current_span(context)
-            span_context = span.get_span_context()
-            if span_context.is_valid:
-                trace_id = span_context.trace_id
-                span_id = span_context.span_id
-                trace_flags = span_context.trace_flags
+        span = get_current_span(context)
+        span_context = span.get_span_context()
 
         super().__init__(
             **{
                 "timestamp": timestamp,
                 "observed_timestamp": observed_timestamp,
                 "context": context,
-                "trace_id": trace_id,
-                "span_id": span_id,
-                "trace_flags": trace_flags,
+                "trace_id": trace_id or span_context.trace_id,
+                "span_id": span_id or span_context.span_id,
+                "trace_flags": trace_flags or span_context.trace_flags,
                 "severity_text": severity_text,
                 "severity_number": severity_number,
                 "body": body,
@@ -357,7 +357,7 @@ class LogRecordProcessor(abc.ABC):
     """
 
     @abc.abstractmethod
-    def emit(self, log_data: LogData):
+    def on_emit(self, log_data: LogData):
         """Emits the `LogData`"""
 
     @abc.abstractmethod
@@ -401,9 +401,9 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
         with self._lock:
             self._log_record_processors += (log_record_processor,)
 
-    def emit(self, log_data: LogData) -> None:
+    def on_emit(self, log_data: LogData) -> None:
         for lp in self._log_record_processors:
-            lp.emit(log_data)
+            lp.on_emit(log_data)
 
     def shutdown(self) -> None:
         """Shutdown the log processors one by one"""
@@ -475,8 +475,8 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
         for future in futures:
             future.result()
 
-    def emit(self, log_data: LogData):
-        self._submit_and_wait(lambda lp: lp.emit, log_data)
+    def on_emit(self, log_data: LogData):
+        self._submit_and_wait(lambda lp: lp.on_emit, log_data)
 
     def shutdown(self):
         self._submit_and_wait(lambda lp: lp.shutdown)
@@ -588,7 +588,6 @@ class LoggingHandler(logging.Handler):
     def _translate(self, record: logging.LogRecord) -> LogRecord:
         timestamp = int(record.created * 1e9)
         observered_timestamp = time_ns()
-        span_context = get_current_span().get_span_context()
         attributes = self._get_attributes(record)
         severity_number = std_to_otel(record.levelno)
         if self.formatter:
@@ -624,9 +623,7 @@ class LoggingHandler(logging.Handler):
         return LogRecord(
             timestamp=timestamp,
             observed_timestamp=observered_timestamp,
-            trace_id=span_context.trace_id,
-            span_id=span_context.span_id,
-            trace_flags=span_context.trace_flags,
+            context=get_current() or None,
             severity_text=level_name,
             severity_number=severity_number,
             body=body,
@@ -683,7 +680,7 @@ class Logger(APILogger):
         and instrumentation info.
         """
         log_data = LogData(record, self._instrumentation_scope)
-        self._multi_log_record_processor.emit(log_data)
+        self._multi_log_record_processor.on_emit(log_data)
 
 
 class LoggerProvider(APILoggerProvider):
