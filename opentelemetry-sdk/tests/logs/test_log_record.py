@@ -168,7 +168,7 @@ class TestLogRecord(unittest.TestCase):
                     cw[-1].message, LogRecordDeprecatedInitWarning
                 )
                 self.assertIn(
-                    "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated. Use `context` instead.",
+                    "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated since 1.35.0. Use `context` instead.",
                     str(cw[-1].message),
                 )
 
