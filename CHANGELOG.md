@@ -34,6 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4649](https://github.com/open-telemetry/opentelemetry-python/pull/4649))
 - proto: relax protobuf version requirement to support v6
   ([#4620](https://github.com/open-telemetry/opentelemetry-python/pull/4620))
+- Set expected User-Agent in HTTP headers for grpc OTLP exporter
+  ([#4658](https://github.com/open-telemetry/opentelemetry-python/pull/4658))
 
 ## Version 1.34.0/0.55b0 (2025-06-04)
 
