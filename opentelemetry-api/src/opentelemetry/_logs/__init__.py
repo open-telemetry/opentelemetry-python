@@ -43,7 +43,7 @@ from opentelemetry._logs._internal import (
     get_logger_provider,
     set_logger_provider,
 )
-from opentelemetry._logs.severity import SeverityNumber, std_to_otel
+from opentelemetry._logs.severity import SeverityNumber
 
 __all__ = [
     "Logger",
@@ -55,5 +55,4 @@ __all__ = [
     "get_logger_provider",
     "set_logger_provider",
     "SeverityNumber",
-    "std_to_otel",
 ]
