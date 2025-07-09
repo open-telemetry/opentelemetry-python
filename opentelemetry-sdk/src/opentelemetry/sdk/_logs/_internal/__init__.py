@@ -551,7 +551,6 @@ class LoggingHandler(logging.Handler):
     ) -> None:
         super().__init__(level=level)
         self._logger_provider = logger_provider or get_logger_provider()
-        # self.flushOnClose = False
 
     @staticmethod
     def _get_attributes(record: logging.LogRecord) -> _ExtendedAttributes:
