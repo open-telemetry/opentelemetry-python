@@ -65,7 +65,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
     def test_encode_no_body(self):
         sdk_logs, expected_encoding = self.get_test_logs()
         for log in sdk_logs:
-            log.log_record.body = None
+            log.body = None
 
         for resource_log in expected_encoding.resource_logs:
             for scope_log in resource_log.scope_logs:
@@ -77,7 +77,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
     def test_dropped_attributes_count(self):
         sdk_logs = self._get_test_logs_dropped_attributes()
         encoded_logs = encode_logs(sdk_logs)
-        self.assertTrue(hasattr(sdk_logs[0].log_record, "dropped_attributes"))
+        self.assertTrue(hasattr(sdk_logs[0], "dropped_attributes"))
         self.assertEqual(
             # pylint:disable=no-member
             encoded_logs.resource_logs[0]

@@ -351,9 +351,9 @@ class TestOTLPLogExporter(TestCase):
                             log_records=[
                                 PB2LogRecord(
                                     # pylint: disable=no-member
-                                    time_unix_nano=self.log_data_1.log_record.timestamp,
-                                    observed_time_unix_nano=self.log_data_1.log_record.observed_timestamp,
-                                    severity_number=self.log_data_1.log_record.severity_number.value,
+                                    time_unix_nano=self.log_data_1.timestamp,
+                                    observed_time_unix_nano=self.log_data_1.observed_timestamp,
+                                    severity_number=self.log_data_1.severity_number.value,
                                     severity_text="WARNING",
                                     span_id=int.to_bytes(
                                         5213367945872657620, 8, "big"
@@ -376,9 +376,7 @@ class TestOTLPLogExporter(TestCase):
                                             value=AnyValue(string_value="c"),
                                         ),
                                     ],
-                                    flags=int(
-                                        self.log_data_1.log_record.trace_flags
-                                    ),
+                                    flags=int(self.log_data_1.trace_flags),
                                 )
                             ],
                         )
@@ -411,9 +409,9 @@ class TestOTLPLogExporter(TestCase):
                             log_records=[
                                 PB2LogRecord(
                                     # pylint: disable=no-member
-                                    time_unix_nano=self.log_data_1.log_record.timestamp,
-                                    observed_time_unix_nano=self.log_data_1.log_record.observed_timestamp,
-                                    severity_number=self.log_data_1.log_record.severity_number.value,
+                                    time_unix_nano=self.log_data_1.timestamp,
+                                    observed_time_unix_nano=self.log_data_1.observed_timestamp,
+                                    severity_number=self.log_data_1.severity_number.value,
                                     severity_text="WARNING",
                                     span_id=int.to_bytes(
                                         5213367945872657620, 8, "big"
@@ -436,9 +434,7 @@ class TestOTLPLogExporter(TestCase):
                                             value=AnyValue(string_value="c"),
                                         ),
                                     ],
-                                    flags=int(
-                                        self.log_data_1.log_record.trace_flags
-                                    ),
+                                    flags=int(self.log_data_1.trace_flags),
                                 )
                             ],
                         ),
@@ -449,9 +445,9 @@ class TestOTLPLogExporter(TestCase):
                             log_records=[
                                 PB2LogRecord(
                                     # pylint: disable=no-member
-                                    time_unix_nano=self.log_data_2.log_record.timestamp,
-                                    observed_time_unix_nano=self.log_data_2.log_record.observed_timestamp,
-                                    severity_number=self.log_data_2.log_record.severity_number.value,
+                                    time_unix_nano=self.log_data_2.timestamp,
+                                    observed_time_unix_nano=self.log_data_2.observed_timestamp,
+                                    severity_number=self.log_data_2.severity_number.value,
                                     severity_text="INFO",
                                     span_id=int.to_bytes(
                                         5213367945872657623, 8, "big"
@@ -470,9 +466,7 @@ class TestOTLPLogExporter(TestCase):
                                             value=_encode_value([1, 2, 3]),
                                         ),
                                     ],
-                                    flags=int(
-                                        self.log_data_2.log_record.trace_flags
-                                    ),
+                                    flags=int(self.log_data_2.trace_flags),
                                 )
                             ],
                         ),
@@ -495,9 +489,9 @@ class TestOTLPLogExporter(TestCase):
                             log_records=[
                                 PB2LogRecord(
                                     # pylint: disable=no-member
-                                    time_unix_nano=self.log_data_3.log_record.timestamp,
-                                    observed_time_unix_nano=self.log_data_3.log_record.observed_timestamp,
-                                    severity_number=self.log_data_3.log_record.severity_number.value,
+                                    time_unix_nano=self.log_data_3.timestamp,
+                                    observed_time_unix_nano=self.log_data_3.observed_timestamp,
+                                    severity_number=self.log_data_3.severity_number.value,
                                     severity_text="ERROR",
                                     span_id=int.to_bytes(
                                         5213367945872657628, 8, "big"
@@ -511,9 +505,7 @@ class TestOTLPLogExporter(TestCase):
                                         "Mumbai, Boil water before drinking"
                                     ),
                                     attributes=[],
-                                    flags=int(
-                                        self.log_data_3.log_record.trace_flags
-                                    ),
+                                    flags=int(self.log_data_3.trace_flags),
                                 )
                             ],
                         )

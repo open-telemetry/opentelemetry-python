@@ -57,9 +57,7 @@ def _encode_log(log_record: SDKLogRecord) -> PB2LogRecord:
         flags=int(log_record.trace_flags),
         body=_encode_value(body, allow_null=True),
         severity_text=log_record.severity_text,
-        attributes=_encode_attributes(
-            log_record.attributes, allow_null=True
-        ),
+        attributes=_encode_attributes(log_record.attributes, allow_null=True),
         dropped_attributes_count=log_record.dropped_attributes,
         severity_number=log_record.severity_number.value,
         event_name=log_record.event_name,
