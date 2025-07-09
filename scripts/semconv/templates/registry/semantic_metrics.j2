@@ -88,7 +88,7 @@ def create_{{ metric_name }}(meter: Meter) -> {{metric.instrument | map_text("py
         {%- if metric.instrument == "gauge" %}
         callbacks=callbacks,
         {%- endif %}
-        description="{{ c.str_or_empty(metric.brief|trim)|replace('\n', ' ')|replace('\r', ' ') }}",
+        description="{{ c.str_or_empty(metric.brief|trim)|replace('\n', ' ')}}",
         unit="{{ metric.unit }}",
     )
     {%- endif -%}
