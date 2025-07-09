@@ -65,6 +65,7 @@ class OTLPLogExporter(
         ] = None,
         timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
+        channel_options: Optional[TypingSequence[Tuple[str, str]]] = None,
     ):
         if insecure is None:
             insecure = environ.get(OTEL_EXPORTER_OTLP_LOGS_INSECURE)
@@ -104,6 +105,7 @@ class OTLPLogExporter(
                 "headers": headers,
                 "timeout": timeout or environ_timeout,
                 "compression": compression,
+                "channel_options": channel_options,
             }
         )
 
