@@ -341,8 +341,14 @@ class LogRecord(APILogRecord):
 @deprecated(
     "Use LogRecord. Since logs are not stable yet this WILL be removed in future releases."
 )
-class LogData(LogRecord):
-    pass
+class LogData:
+    def __init__(
+        self,
+        log_record: LogRecord,
+        instrumentation_scope: InstrumentationScope,
+    ):
+        self.log_record = log_record
+        self.instrumentation_scope = instrumentation_scope
 
 
 class LogRecordProcessor(abc.ABC):
@@ -400,7 +406,23 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
 
     def on_emit(self, log_record: LogRecord) -> None:
         for lp in self._log_record_processors:
-            lp.on_emit(log_record)
+            # Handle backward compatibility with processors that might expect LogData
+            import inspect
+
+            sig = inspect.signature(lp.on_emit)
+            param_name = (
+                list(sig.parameters.keys())[0] if sig.parameters else None
+            )
+
+            # Check if the processor expects LogData (backward compatibility)
+            if param_name and "log_data" in param_name.lower():
+                # Create LogData for backward compatibility
+                log_data = LogData(
+                    log_record, log_record.instrumentation_scope
+                )
+                lp.on_emit(log_data)
+            else:
+                lp.on_emit(log_record)
 
     def shutdown(self) -> None:
         """Shutdown the log processors one by one"""
@@ -473,7 +495,26 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
             future.result()
 
     def on_emit(self, log_record: LogRecord):
-        self._submit_and_wait(lambda lp: lp.on_emit, log_record)
+        # Handle backward compatibility with processors that might expect LogData
+        def _emit_with_compat(lp):
+            import inspect
+
+            sig = inspect.signature(lp.on_emit)
+            param_name = (
+                list(sig.parameters.keys())[0] if sig.parameters else None
+            )
+
+            # Check if the processor expects LogData (backward compatibility)
+            if param_name and "log_data" in param_name.lower():
+                # Create LogData for backward compatibility
+                log_data = LogData(
+                    log_record, log_record.instrumentation_scope
+                )
+                return lp.on_emit(log_data)
+            else:
+                return lp.on_emit(log_record)
+
+        self._submit_and_wait(lambda lp: lambda: _emit_with_compat(lp))
 
     def shutdown(self):
         self._submit_and_wait(lambda lp: lp.shutdown)
