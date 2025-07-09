@@ -556,6 +556,7 @@ class LoggingHandler(logging.Handler):
     ) -> None:
         super().__init__(level=level)
         self._logger_provider = logger_provider or get_logger_provider()
+        self._log_limits = LogLimits()
 
     @staticmethod
     def _get_attributes(record: logging.LogRecord) -> _ExtendedAttributes:
@@ -629,6 +630,7 @@ class LoggingHandler(logging.Handler):
             body=body,
             resource=logger.resource,
             attributes=attributes,
+            limits=self._log_limits,
         )
 
     def emit(self, record: logging.LogRecord) -> None:
