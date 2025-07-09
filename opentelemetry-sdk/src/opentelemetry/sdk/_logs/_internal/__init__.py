@@ -244,6 +244,7 @@ class LogRecord(APILogRecord):
         attributes: _ExtendedAttributes | None = None,
         limits: LogLimits | None = _UnsetLogLimits,
         event_name: str | None = None,
+        instrumentation_scope: InstrumentationScope | None = None,
     ):
         if trace_id or span_id or trace_flags:
             warnings.warn(
@@ -282,6 +283,7 @@ class LogRecord(APILogRecord):
         self.resource = (
             resource if isinstance(resource, Resource) else Resource.create({})
         )
+        self.instrumentation_scope = instrumentation_scope
         if self.dropped_attributes > 0:
             warnings.warn(
                 "Log record attributes were dropped due to limits",
@@ -336,16 +338,11 @@ class LogRecord(APILogRecord):
         return 0
 
 
-class LogData:
-    """Readable LogRecord data plus associated InstrumentationLibrary."""
-
-    def __init__(
-        self,
-        log_record: LogRecord,
-        instrumentation_scope: InstrumentationScope,
-    ):
-        self.log_record = log_record
-        self.instrumentation_scope = instrumentation_scope
+@deprecated(
+    "Use LogRecord. Since logs are not stable yet this WILL be removed in future releases."
+)
+class LogData(LogRecord):
+    pass
 
 
 class LogRecordProcessor(abc.ABC):
@@ -357,8 +354,8 @@ class LogRecordProcessor(abc.ABC):
     """
 
     @abc.abstractmethod
-    def on_emit(self, log_data: LogData):
-        """Emits the `LogData`"""
+    def on_emit(self, log_record: LogRecord):
+        """Emits the `LogRecord`"""
 
     @abc.abstractmethod
     def shutdown(self):
@@ -401,9 +398,9 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
         with self._lock:
             self._log_record_processors += (log_record_processor,)
 
-    def on_emit(self, log_data: LogData) -> None:
+    def on_emit(self, log_record: LogRecord) -> None:
         for lp in self._log_record_processors:
-            lp.on_emit(log_data)
+            lp.on_emit(log_record)
 
     def shutdown(self) -> None:
         """Shutdown the log processors one by one"""
@@ -475,8 +472,8 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
         for future in futures:
             future.result()
 
-    def on_emit(self, log_data: LogData):
-        self._submit_and_wait(lambda lp: lp.on_emit, log_data)
+    def on_emit(self, log_record: LogRecord):
+        self._submit_and_wait(lambda lp: lp.on_emit, log_record)
 
     def shutdown(self):
         self._submit_and_wait(lambda lp: lp.shutdown)
@@ -676,11 +673,11 @@ class Logger(APILogger):
         return self._resource
 
     def emit(self, record: LogRecord):
-        """Emits the :class:`LogData` by associating :class:`LogRecord`
-        and instrumentation info.
+        """Emits the :class:`LogRecord` by setting instrumentation scope
+        and forwarding to the processor.
         """
-        log_data = LogData(record, self._instrumentation_scope)
-        self._multi_log_record_processor.on_emit(log_data)
+        record.instrumentation_scope = self._instrumentation_scope
+        self._multi_log_record_processor.on_emit(record)
 
 
 class LoggerProvider(APILoggerProvider):

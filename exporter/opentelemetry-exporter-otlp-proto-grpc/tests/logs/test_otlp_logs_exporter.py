@@ -39,7 +39,7 @@ from opentelemetry.proto.logs.v1.logs_pb2 import ResourceLogs, ScopeLogs
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as OTLPResource,
 )
-from opentelemetry.sdk._logs import LogData, LogRecord
+from opentelemetry.sdk._logs import LogRecord
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
     OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE,
@@ -74,16 +74,14 @@ class TestOTLPLogExporter(TestCase):
                 )
             )
         )
-        self.log_data_1 = LogData(
-            log_record=LogRecord(
-                timestamp=int(time.time() * 1e9),
-                context=ctx_log_data_1,
-                severity_text="WARNING",
-                severity_number=SeverityNumber.WARN,
-                body="Zhengzhou, We have a heaviest rains in 1000 years",
-                resource=SDKResource({"key": "value"}),
-                attributes={"a": 1, "b": "c"},
-            ),
+        self.log_data_1 = LogRecord(
+            timestamp=int(time.time() * 1e9),
+            context=ctx_log_data_1,
+            severity_text="WARNING",
+            severity_number=SeverityNumber.WARN,
+            body="Zhengzhou, We have a heaviest rains in 1000 years",
+            resource=SDKResource({"key": "value"}),
+            attributes={"a": 1, "b": "c"},
             instrumentation_scope=InstrumentationScope(
                 "first_name", "first_version"
             ),
@@ -98,16 +96,14 @@ class TestOTLPLogExporter(TestCase):
                 )
             )
         )
-        self.log_data_2 = LogData(
-            log_record=LogRecord(
-                timestamp=int(time.time() * 1e9),
-                context=ctx_log_data_2,
-                severity_text="INFO",
-                severity_number=SeverityNumber.INFO2,
-                body="Sydney, Opera House is closed",
-                resource=SDKResource({"key": "value"}),
-                attributes={"custom_attr": [1, 2, 3]},
-            ),
+        self.log_data_2 = LogRecord(
+            timestamp=int(time.time() * 1e9),
+            context=ctx_log_data_2,
+            severity_text="INFO",
+            severity_number=SeverityNumber.INFO2,
+            body="Sydney, Opera House is closed",
+            resource=SDKResource({"key": "value"}),
+            attributes={"custom_attr": [1, 2, 3]},
             instrumentation_scope=InstrumentationScope(
                 "second_name", "second_version"
             ),
@@ -122,15 +118,13 @@ class TestOTLPLogExporter(TestCase):
                 )
             )
         )
-        self.log_data_3 = LogData(
-            log_record=LogRecord(
-                timestamp=int(time.time() * 1e9),
-                context=ctx_log_data_3,
-                severity_text="ERROR",
-                severity_number=SeverityNumber.WARN,
-                body="Mumbai, Boil water before drinking",
-                resource=SDKResource({"service": "myapp"}),
-            ),
+        self.log_data_3 = LogRecord(
+            timestamp=int(time.time() * 1e9),
+            context=ctx_log_data_3,
+            severity_text="ERROR",
+            severity_number=SeverityNumber.WARN,
+            body="Mumbai, Boil water before drinking",
+            resource=SDKResource({"service": "myapp"}),
             instrumentation_scope=InstrumentationScope(
                 "third_name", "third_version"
             ),
@@ -140,15 +134,13 @@ class TestOTLPLogExporter(TestCase):
                 SpanContext(0, 5213367945872657629, False, TraceFlags(0x01))
             )
         )
-        self.log_data_4 = LogData(
-            log_record=LogRecord(
-                timestamp=int(time.time() * 1e9),
-                context=ctx_log_data_4,
-                severity_text="ERROR",
-                severity_number=SeverityNumber.WARN,
-                body="Invalid trace id check",
-                resource=SDKResource({"service": "myapp"}),
-            ),
+        self.log_data_4 = LogRecord(
+            timestamp=int(time.time() * 1e9),
+            context=ctx_log_data_4,
+            severity_text="ERROR",
+            severity_number=SeverityNumber.WARN,
+            body="Invalid trace id check",
+            resource=SDKResource({"service": "myapp"}),
             instrumentation_scope=InstrumentationScope(
                 "fourth_name", "fourth_version"
             ),
@@ -163,15 +155,13 @@ class TestOTLPLogExporter(TestCase):
                 )
             )
         )
-        self.log_data_5 = LogData(
-            log_record=LogRecord(
-                timestamp=int(time.time() * 1e9),
-                context=ctx_log_data_5,
-                severity_text="ERROR",
-                severity_number=SeverityNumber.WARN,
-                body="Invalid span id check",
-                resource=SDKResource({"service": "myapp"}),
-            ),
+        self.log_data_5 = LogRecord(
+            timestamp=int(time.time() * 1e9),
+            context=ctx_log_data_5,
+            severity_text="ERROR",
+            severity_number=SeverityNumber.WARN,
+            body="Invalid span id check",
+            resource=SDKResource({"service": "myapp"}),
             instrumentation_scope=InstrumentationScope(
                 "fifth_name", "fifth_version"
             ),

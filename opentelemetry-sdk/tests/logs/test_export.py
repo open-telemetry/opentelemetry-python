@@ -26,7 +26,6 @@ from pytest import mark
 from opentelemetry._logs import SeverityNumber
 from opentelemetry.sdk import trace
 from opentelemetry.sdk._logs import (
-    LogData,
     LoggerProvider,
     LoggingHandler,
     LogRecord,
@@ -54,8 +53,7 @@ from opentelemetry.trace import (
 )
 from opentelemetry.trace.span import INVALID_SPAN_CONTEXT
 
-EMPTY_LOG = LogData(
-    log_record=LogRecord(),
+EMPTY_LOG = LogRecord(
     instrumentation_scope=InstrumentationScope("example", "example"),
 )
 
@@ -76,7 +74,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         logger.warning("Something is wrong")
         finished_logs = exporter.get_finished_logs()
         self.assertEqual(len(finished_logs), 1)
-        warning_log_record = finished_logs[0].log_record
+        warning_log_record = finished_logs[0]
         self.assertEqual(warning_log_record.body, "Something is wrong")
         self.assertEqual(warning_log_record.severity_text, "WARN")
         self.assertEqual(
@@ -106,8 +104,8 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         finished_logs = exporter.get_finished_logs()
         # Make sure only level >= logging.CRITICAL logs are recorded
         self.assertEqual(len(finished_logs), 2)
-        critical_log_record = finished_logs[0].log_record
-        fatal_log_record = finished_logs[1].log_record
+        critical_log_record = finished_logs[0]
+        fatal_log_record = finished_logs[1]
         self.assertEqual(critical_log_record.body, "Error message")
         self.assertEqual(critical_log_record.severity_text, "ERROR")
         self.assertEqual(
@@ -140,7 +138,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         logger.warning("Warning message")
         finished_logs = exporter.get_finished_logs()
         self.assertEqual(len(finished_logs), 1)
-        log_record = finished_logs[0].log_record
+        log_record = finished_logs[0]
         self.assertEqual(log_record.body, "Warning message")
         self.assertEqual(log_record.severity_text, "WARN")
         self.assertEqual(log_record.severity_number, SeverityNumber.WARN)
@@ -159,7 +157,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
             logger.critical("Critical message within span")
 
             finished_logs = exporter.get_finished_logs()
-            log_record = finished_logs[0].log_record
+            log_record = finished_logs[0]
             self.assertEqual(log_record.body, "Critical message within span")
             self.assertEqual(log_record.severity_text, "CRITICAL")
             self.assertEqual(log_record.severity_number, SeverityNumber.FATAL)
@@ -187,7 +185,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         logger.warning("Something is wrong")
         finished_logs = exporter.get_finished_logs()
         self.assertEqual(len(finished_logs), 1)
-        warning_log_record = finished_logs[0].log_record
+        warning_log_record = finished_logs[0]
         self.assertEqual(warning_log_record.body, "Something is wrong")
         self.assertEqual(warning_log_record.severity_text, "WARN")
         self.assertEqual(
@@ -230,10 +228,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
             (["list", "of", "strings"], "WARN"),
             ({"key": "value"}, "ERROR"),
         ]
-        emitted = [
-            (item.log_record.body, item.log_record.severity_text)
-            for item in finished_logs
-        ]
+        emitted = [(item.body, item.severity_text) for item in finished_logs]
         self.assertEqual(expected, emitted)
         for item in finished_logs:
             self.assertEqual(
@@ -283,7 +278,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
             (["a non-string with a percent-s", "%s"]),
         ]
         for emitted, expected in zip(finished_logs, expected):
-            self.assertEqual(emitted.log_record.body, expected)
+            self.assertEqual(emitted.body, expected)
             self.assertEqual(emitted.instrumentation_scope.name, "single_obj")
 
     def test_simple_log_record_processor_different_msg_types_with_formatter(
@@ -329,10 +324,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
             ),
             ("different_msg_types - ERROR - {'key': 'value'}", "ERROR"),
         ]
-        emitted = [
-            (item.log_record.body, item.log_record.severity_text)
-            for item in finished_logs
-        ]
+        emitted = [(item.body, item.severity_text) for item in finished_logs]
         self.assertEqual(expected, emitted)
 
 
@@ -608,16 +600,14 @@ class TestConsoleLogExporter(unittest.TestCase):
                 )
             )
         )
-        log_data = LogData(
-            log_record=LogRecord(
-                timestamp=int(time.time() * 1e9),
-                context=ctx,
-                severity_text="WARN",
-                severity_number=SeverityNumber.WARN,
-                body="Zhengzhou, We have a heaviest rains in 1000 years",
-                resource=SDKResource({"key": "value"}),
-                attributes={"a": 1, "b": "c"},
-            ),
+        log_record = LogRecord(
+            timestamp=int(time.time() * 1e9),
+            context=ctx,
+            severity_text="WARN",
+            severity_number=SeverityNumber.WARN,
+            body="Zhengzhou, We have a heaviest rains in 1000 years",
+            resource=SDKResource({"key": "value"}),
+            attributes={"a": 1, "b": "c"},
             instrumentation_scope=InstrumentationScope(
                 "first_name", "first_version"
             ),
@@ -627,9 +617,9 @@ class TestConsoleLogExporter(unittest.TestCase):
         # the exporter instance instead.
 
         with patch.object(exporter, "out") as mock_stdout:
-            exporter.export([log_data])
+            exporter.export([log_record])
         mock_stdout.write.assert_called_once_with(
-            log_data.log_record.to_json() + os.linesep
+            log_record.to_json() + os.linesep
         )
 
         self.assertEqual(mock_stdout.write.call_count, 1)
