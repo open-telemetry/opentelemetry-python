@@ -27,7 +27,7 @@ from opentelemetry.sdk._logs import (
     LoggingHandler,
     LogRecordProcessor,
 )
-from opentelemetry.sdk._logs._internal import LogLimits, _UnsetLogLimits
+from opentelemetry.sdk._logs._internal import LogLimits
 from opentelemetry.sdk.environment_variables import OTEL_ATTRIBUTE_COUNT_LIMIT
 from opentelemetry.semconv._incubating.attributes import code_attributes
 from opentelemetry.semconv.attributes import exception_attributes
@@ -372,99 +372,78 @@ class TestLoggingHandler(unittest.TestCase):
     @patch.dict(os.environ, {OTEL_ATTRIBUTE_COUNT_LIMIT: "3"})
     def test_otel_attribute_count_limit_respected_in_logging_handler(self):
         """Test that OTEL_ATTRIBUTE_COUNT_LIMIT is properly respected by LoggingHandler."""
-        # Store original values to restore later
-        original_max_attributes = _UnsetLogLimits.max_attributes
-        original_max_attribute_length = _UnsetLogLimits.max_attribute_length
+        # Create a new LoggerProvider within the patched environment
+        # This will create LogLimits() that reads from the environment variable
+        logger_provider = LoggerProvider()
+        processor = FakeProcessor()
+        logger_provider.add_log_record_processor(processor)
+        logger = logging.getLogger("env_test")
+        handler = LoggingHandler(
+            level=logging.WARNING, logger_provider=logger_provider
+        )
+        logger.addHandler(handler)
 
-        try:
-            # Force _UnsetLogLimits to re-read the environment variable
-            _UnsetLogLimits.max_attributes = (
-                _UnsetLogLimits._from_env_if_absent(
-                    LogLimits.UNSET, OTEL_ATTRIBUTE_COUNT_LIMIT
-                )
+        # Create a log record with many extra attributes
+        extra_attrs = {f"custom_attr_{i}": f"value_{i}" for i in range(10)}
+
+        with self.assertLogs(level=logging.WARNING):
+            logger.warning(
+                "Test message with many attributes", extra=extra_attrs
             )
 
-            processor, logger = set_up_test_logging(logging.WARNING)
+        log_record = processor.get_log_record(0)
 
-            # Create a log record with many extra attributes
-            extra_attrs = {f"custom_attr_{i}": f"value_{i}" for i in range(10)}
+        # With OTEL_ATTRIBUTE_COUNT_LIMIT=3, should have exactly 3 attributes
+        total_attrs = len(log_record.attributes)
+        self.assertEqual(
+            total_attrs,
+            3,
+            f"Should have exactly 3 attributes due to limit, got {total_attrs}",
+        )
 
-            with self.assertLogs(level=logging.WARNING):
-                logger.warning(
-                    "Test message with many attributes", extra=extra_attrs
-                )
-
-            log_record = processor.get_log_record(0)
-
-            # With OTEL_ATTRIBUTE_COUNT_LIMIT=3, should have exactly 3 attributes
-            total_attrs = len(log_record.attributes)
-            self.assertEqual(
-                total_attrs,
-                3,
-                f"Should have exactly 3 attributes due to limit, got {total_attrs}",
-            )
-
-            # Should have 10 dropped attributes (10 custom + 3 code - 3 kept = 10 dropped)
-            self.assertEqual(
-                log_record.dropped_attributes,
-                10,
-                f"Should have 10 dropped attributes, got {log_record.dropped_attributes}",
-            )
-        finally:
-            # Restore original values
-            _UnsetLogLimits.max_attributes = original_max_attributes
-            _UnsetLogLimits.max_attribute_length = (
-                original_max_attribute_length
-            )
+        # Should have 10 dropped attributes (10 custom + 3 code - 3 kept = 10 dropped)
+        self.assertEqual(
+            log_record.dropped_attributes,
+            10,
+            f"Should have 10 dropped attributes, got {log_record.dropped_attributes}",
+        )
 
     @patch.dict(os.environ, {OTEL_ATTRIBUTE_COUNT_LIMIT: "5"})
     def test_otel_attribute_count_limit_includes_code_attributes(self):
         """Test that OTEL_ATTRIBUTE_COUNT_LIMIT applies to all attributes including code attributes."""
-        # Import _UnsetLogLimits directly
+        # Create a new LoggerProvider within the patched environment
+        # This will create LogLimits() that reads from the environment variable
+        logger_provider = LoggerProvider()
+        processor = FakeProcessor()
+        logger_provider.add_log_record_processor(processor)
+        logger = logging.getLogger("env_test_2")
+        handler = LoggingHandler(
+            level=logging.WARNING, logger_provider=logger_provider
+        )
+        logger.addHandler(handler)
 
-        # Store original values to restore later
-        original_max_attributes = _UnsetLogLimits.max_attributes
-        original_max_attribute_length = _UnsetLogLimits.max_attribute_length
+        # Create a log record with some extra attributes
+        extra_attrs = {f"user_attr_{i}": f"value_{i}" for i in range(8)}
 
-        try:
-            # Force _UnsetLogLimits to re-read the environment variable
-            _UnsetLogLimits.max_attributes = (
-                _UnsetLogLimits._from_env_if_absent(
-                    LogLimits.UNSET, OTEL_ATTRIBUTE_COUNT_LIMIT
-                )
-            )
+        with self.assertLogs(level=logging.WARNING):
+            logger.warning("Test message", extra=extra_attrs)
 
-            # Now proceed with the test
-            processor, logger = set_up_test_logging(logging.WARNING)
+        log_record = processor.get_log_record(0)
 
-            # Create a log record with some extra attributes
-            extra_attrs = {f"user_attr_{i}": f"value_{i}" for i in range(8)}
+        # With OTEL_ATTRIBUTE_COUNT_LIMIT=5, should have exactly 5 attributes
+        total_attrs = len(log_record.attributes)
+        self.assertEqual(
+            total_attrs,
+            5,
+            f"Should have exactly 5 attributes due to limit, got {total_attrs}",
+        )
 
-            with self.assertLogs(level=logging.WARNING):
-                logger.warning("Test message", extra=extra_attrs)
-
-            log_record = processor.get_log_record(0)
-
-            # With OTEL_ATTRIBUTE_COUNT_LIMIT=5, should have exactly 5 attributes
-            total_attrs = len(log_record.attributes)
-            self.assertEqual(
-                total_attrs,
-                5,
-                f"Should have exactly 5 attributes due to limit, got {total_attrs}",
-            )
-
-            # Should have 6 dropped attributes (8 user + 3 code - 5 kept = 6 dropped)
-            self.assertEqual(
-                log_record.dropped_attributes,
-                6,
-                f"Should have 6 dropped attributes, got {log_record.dropped_attributes}",
-            )
-        finally:
-            # Restore original values
-            _UnsetLogLimits.max_attributes = original_max_attributes
-            _UnsetLogLimits.max_attribute_length = (
-                original_max_attribute_length
-            )
+        # Should have 6 dropped attributes (8 user + 3 code - 5 kept = 6 dropped)
+        self.assertEqual(
+            log_record.dropped_attributes,
+            6,
+            f"Should have 6 dropped attributes, got {log_record.dropped_attributes}",
+        )
 
     def test_logging_handler_without_env_var_uses_default_limit(self):
         """Test that without OTEL_ATTRIBUTE_COUNT_LIMIT, default limit (128) should apply."""
