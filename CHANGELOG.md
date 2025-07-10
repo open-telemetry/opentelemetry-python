@@ -35,6 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4649](https://github.com/open-telemetry/opentelemetry-python/pull/4649))
 - proto: relax protobuf version requirement to support v6
   ([#4620](https://github.com/open-telemetry/opentelemetry-python/pull/4620))
+- Bump semantic-conventions to 1.36.0
+  ([#4669](https://github.com/open-telemetry/opentelemetry-python/pull/4669))
 - Set expected User-Agent in HTTP headers for grpc OTLP exporter
   ([#4658](https://github.com/open-telemetry/opentelemetry-python/pull/4658))
 - Rename several classes from Log to LogRecord

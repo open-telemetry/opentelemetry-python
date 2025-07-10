@@ -14,12 +14,12 @@
 
 from typing import Final
 
-AZ_NAMESPACE: Final = "az.namespace"
+ZOS_SMF_ID: Final = "zos.smf.id"
 """
-Deprecated: Replaced by `azure.resource_provider.namespace`.
+The System Management Facility (SMF) Identifier uniquely identified a z/OS system within a SYSPLEX or mainframe environment and is used for system and performance analysis.
 """
 
-AZ_SERVICE_REQUEST_ID: Final = "az.service_request_id"
+ZOS_SYSPLEX_NAME: Final = "zos.sysplex.name"
 """
-Deprecated: Replaced by `azure.service.request.id`.
+The name of the SYSPLEX to which the z/OS system belongs too.
 """

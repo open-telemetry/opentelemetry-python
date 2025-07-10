@@ -106,7 +106,7 @@ Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.http_a
 
 HTTP_RESPONSE_CONTENT_LENGTH: Final = "http.response_content_length"
 """
-Deprecated: hp.response.header.content-length.
+Deprecated: Replaced by `http.response.header.content-length`.
 """
 
 HTTP_RESPONSE_CONTENT_LENGTH_UNCOMPRESSED: Final = (
