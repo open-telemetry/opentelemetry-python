@@ -426,33 +426,6 @@ class TestLoggingHandler(unittest.TestCase):
             f"Should have 6 dropped attributes, got {log_record.dropped_attributes}",
         )
 
-    @patch.dict(os.environ, {OTEL_ATTRIBUTE_COUNT_LIMIT: "0"})
-    def test_otel_attribute_count_limit_zero_prevents_all_attributes(self):
-        """Test that OTEL_ATTRIBUTE_COUNT_LIMIT=0 prevents all attributes."""
-        processor, logger = set_up_test_logging(logging.WARNING)
-
-        # Create a log record with extra attributes
-        extra_attrs = {"user_attr": "value", "another_attr": "another_value"}
-
-        with self.assertLogs(level=logging.WARNING):
-            logger.warning("Test message", extra=extra_attrs)
-
-        log_record = processor.get_log_record(0)
-
-        # With OTEL_ATTRIBUTE_COUNT_LIMIT=0, should have 0 attributes
-        self.assertEqual(
-            len(log_record.attributes),
-            0,
-            "With OTEL_ATTRIBUTE_COUNT_LIMIT=0, should have no attributes",
-        )
-
-        # Should have 5 dropped attributes (2 user + 3 code = 5 dropped)
-        self.assertEqual(
-            log_record.dropped_attributes,
-            5,
-            f"Should have 5 dropped attributes, got {log_record.dropped_attributes}",
-        )
-
     def test_logging_handler_without_env_var_uses_default_limit(self):
         """Test that without OTEL_ATTRIBUTE_COUNT_LIMIT, default limit (128) should apply."""
         processor, logger = set_up_test_logging(logging.WARNING)

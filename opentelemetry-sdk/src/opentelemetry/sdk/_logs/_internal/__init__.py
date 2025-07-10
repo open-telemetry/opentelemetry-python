@@ -157,7 +157,7 @@ class LogLimits:
         cls, value: int | None, env_var: str, default: int | None = None
     ) -> int | None:
         if value == cls.UNSET:
-            return None
+            value = None  # continue to read the limit from env
 
         err_msg = "{} must be a non-negative integer but got {}"
 
@@ -556,7 +556,6 @@ class LoggingHandler(logging.Handler):
     ) -> None:
         super().__init__(level=level)
         self._logger_provider = logger_provider or get_logger_provider()
-        self._log_limits = LogLimits()
 
     @staticmethod
     def _get_attributes(record: logging.LogRecord) -> _ExtendedAttributes:
@@ -630,7 +629,7 @@ class LoggingHandler(logging.Handler):
             body=body,
             resource=logger.resource,
             attributes=attributes,
-            limits=self._log_limits,
+            limits=self._logger_provider._log_limits,
         )
 
     def emit(self, record: logging.LogRecord) -> None:
@@ -693,6 +692,7 @@ class LoggerProvider(APILoggerProvider):
         multi_log_record_processor: SynchronousMultiLogRecordProcessor
         | ConcurrentMultiLogRecordProcessor
         | None = None,
+        log_limits: LogLimits | None = _UnsetLogLimits,
     ):
         if resource is None:
             self._resource = Resource.create({})
@@ -708,6 +708,7 @@ class LoggerProvider(APILoggerProvider):
             self._at_exit_handler = atexit.register(self.shutdown)
         self._logger_cache = {}
         self._logger_cache_lock = Lock()
+        self._log_limits = log_limits
 
     @property
     def resource(self):
