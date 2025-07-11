@@ -93,6 +93,7 @@ class OTLPSpanExporter(
         ] = None,
         timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
+        channel_options: Optional[TypingSequence[Tuple[str, str]]] = None,
     ):
         if insecure is None:
             insecure = environ.get(OTEL_EXPORTER_OTLP_TRACES_INSECURE)
@@ -131,6 +132,7 @@ class OTLPSpanExporter(
                 or environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS),
                 "timeout": timeout or environ_timeout,
                 "compression": compression,
+                "channel_options": channel_options,
             }
         )
 

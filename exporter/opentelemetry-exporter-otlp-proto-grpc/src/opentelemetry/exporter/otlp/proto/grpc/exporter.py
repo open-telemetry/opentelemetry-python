@@ -51,7 +51,7 @@ from opentelemetry.exporter.otlp.proto.common._internal import (
     _get_resource_data,
 )
 from opentelemetry.exporter.otlp.proto.grpc import (
-    _OTLP_GRPC_HEADERS,
+    _OTLP_GRPC_CHANNEL_OPTIONS,
 )
 from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401
     AnyValue,
@@ -196,6 +196,7 @@ class OTLPExporterMixin(
         headers: Headers to send when exporting
         timeout: Backend request timeout in seconds
         compression: gRPC compression method to use
+        channel_options: gRPC channel options
     """
 
     def __init__(
@@ -208,6 +209,7 @@ class OTLPExporterMixin(
         ] = None,
         timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
+        channel_options: Optional[TypingSequence[Tuple[str, str]]] = None,
     ):
         super().__init__()
 
@@ -239,9 +241,21 @@ class OTLPExporterMixin(
         elif isinstance(self._headers, dict):
             self._headers = tuple(self._headers.items())
         if self._headers is None:
-            self._headers = tuple(_OTLP_GRPC_HEADERS)
+            self._headers = tuple()
+
+        if channel_options:
+            # merge the default channel options with the one passed as parameter
+            overridden_options = {
+                opt_name for (opt_name, _) in channel_options
+            }
+            default_options = [
+                (opt_name, opt_value)
+                for opt_name, opt_value in _OTLP_GRPC_CHANNEL_OPTIONS
+                if opt_name not in overridden_options
+            ]
+            self._channel_options = tuple(default_options) + channel_options
         else:
-            self._headers = tuple(self._headers) + tuple(_OTLP_GRPC_HEADERS)
+            self._channel_options = tuple(_OTLP_GRPC_CHANNEL_OPTIONS)
 
         self._timeout = timeout or float(
             environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, 10)
@@ -258,6 +272,7 @@ class OTLPExporterMixin(
             self._channel = insecure_channel(
                 self._endpoint,
                 compression=compression,
+                options=self._channel_options,
             )
         else:
             credentials = _get_credentials(
@@ -270,6 +285,7 @@ class OTLPExporterMixin(
                 self._endpoint,
                 credentials,
                 compression=compression,
+                options=self._channel_options,
             )
         self._client = self._stub(self._channel)
 

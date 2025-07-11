@@ -40,19 +40,21 @@ CallbackT = Union[
 
 SYSTEM_CPU_FREQUENCY: Final = "system.cpu.frequency"
 """
-Deprecated: Replaced by `cpu.frequency`.
+Operating frequency of the logical CPU in Hertz
+Instrument: gauge
+Unit: Hz
 """
 
 
 def create_system_cpu_frequency(
     meter: Meter, callbacks: Optional[Sequence[CallbackT]]
 ) -> ObservableGauge:
-    """Deprecated. Use `cpu.frequency` instead"""
+    """Operating frequency of the logical CPU in Hertz"""
     return meter.create_observable_gauge(
         name=SYSTEM_CPU_FREQUENCY,
         callbacks=callbacks,
-        description="Deprecated. Use `cpu.frequency` instead.",
-        unit="{Hz}",
+        description="Operating frequency of the logical CPU in Hertz.",
+        unit="Hz",
     )
 
 
@@ -94,33 +96,37 @@ def create_system_cpu_physical_count(meter: Meter) -> UpDownCounter:
 
 SYSTEM_CPU_TIME: Final = "system.cpu.time"
 """
-Deprecated: Replaced by `cpu.time`.
+Seconds each logical CPU spent on each mode
+Instrument: counter
+Unit: s
 """
 
 
 def create_system_cpu_time(meter: Meter) -> Counter:
-    """Deprecated. Use `cpu.time` instead"""
+    """Seconds each logical CPU spent on each mode"""
     return meter.create_counter(
         name=SYSTEM_CPU_TIME,
-        description="Deprecated. Use `cpu.time` instead.",
+        description="Seconds each logical CPU spent on each mode",
         unit="s",
     )
 
 
 SYSTEM_CPU_UTILIZATION: Final = "system.cpu.utilization"
 """
-Deprecated: Replaced by `cpu.utilization`.
+For each logical CPU, the utilization is calculated as the change in cumulative CPU time (cpu.time) over a measurement interval, divided by the elapsed time
+Instrument: gauge
+Unit: 1
 """
 
 
 def create_system_cpu_utilization(
     meter: Meter, callbacks: Optional[Sequence[CallbackT]]
 ) -> ObservableGauge:
-    """Deprecated. Use `cpu.utilization` instead"""
+    """For each logical CPU, the utilization is calculated as the change in cumulative CPU time (cpu.time) over a measurement interval, divided by the elapsed time"""
     return meter.create_observable_gauge(
         name=SYSTEM_CPU_UTILIZATION,
         callbacks=callbacks,
-        description="Deprecated. Use `cpu.utilization` instead.",
+        description="For each logical CPU, the utilization is calculated as the change in cumulative CPU time (cpu.time) over a measurement interval, divided by the elapsed time.",
         unit="1",
     )
 
@@ -401,17 +407,32 @@ def create_system_memory_utilization(
     )
 
 
-SYSTEM_NETWORK_CONNECTIONS: Final = "system.network.connections"
+SYSTEM_NETWORK_CONNECTION_COUNT: Final = "system.network.connection.count"
 """
 Instrument: updowncounter
 Unit: {connection}
 """
 
 
+def create_system_network_connection_count(meter: Meter) -> UpDownCounter:
+    return meter.create_up_down_counter(
+        name=SYSTEM_NETWORK_CONNECTION_COUNT,
+        description="",
+        unit="{connection}",
+    )
+
+
+SYSTEM_NETWORK_CONNECTIONS: Final = "system.network.connections"
+"""
+Deprecated: Replaced by `system.network.connection.count`.
+"""
+
+
 def create_system_network_connections(meter: Meter) -> UpDownCounter:
+    """Deprecated, use `system.network.connection.count` instead"""
     return meter.create_up_down_counter(
         name=SYSTEM_NETWORK_CONNECTIONS,
-        description="",
+        description="Deprecated, use `system.network.connection.count` instead",
         unit="{connection}",
     )
 

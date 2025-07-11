@@ -282,7 +282,6 @@ class TestOTLPSpanExporter(TestCase):
             (
                 ("key1", "value1"),
                 ("key2", "VALUE=2"),
-                ("user-agent", "OTel-OTLP-Exporter-Python/" + __version__),
             ),
         )
         exporter = OTLPSpanExporter(
@@ -294,7 +293,6 @@ class TestOTLPSpanExporter(TestCase):
             (
                 ("key3", "value3"),
                 ("key4", "value4"),
-                ("user-agent", "OTel-OTLP-Exporter-Python/" + __version__),
             ),
         )
         exporter = OTLPSpanExporter(
@@ -306,7 +304,6 @@ class TestOTLPSpanExporter(TestCase):
             (
                 ("key5", "value5"),
                 ("key6", "value6"),
-                ("user-agent", "OTel-OTLP-Exporter-Python/" + __version__),
             ),
         )
 
@@ -335,6 +332,12 @@ class TestOTLPSpanExporter(TestCase):
         mock_insecure_channel.assert_called_once_with(
             "localhost:4317",
             compression=Compression.NoCompression,
+            options=(
+                (
+                    "grpc.primary_user_agent",
+                    "OTel-OTLP-Exporter-Python/" + __version__,
+                ),
+            ),
         )
 
     # pylint: disable=no-self-use
@@ -353,6 +356,30 @@ class TestOTLPSpanExporter(TestCase):
         mock_insecure_channel.assert_called_once_with(
             "localhost:4317",
             compression=Compression.Gzip,
+            options=(
+                (
+                    "grpc.primary_user_agent",
+                    "OTel-OTLP-Exporter-Python/" + __version__,
+                ),
+            ),
+        )
+
+    # pylint: disable=no-self-use
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
+    def test_otlp_exporter_otlp_channel_options_kwarg(
+        self, mock_insecure_channel
+    ):
+        OTLPSpanExporter(insecure=True, channel_options=(("some", "options"),))
+        mock_insecure_channel.assert_called_once_with(
+            "localhost:4317",
+            compression=Compression.NoCompression,
+            options=(
+                (
+                    "grpc.primary_user_agent",
+                    "OTel-OTLP-Exporter-Python/" + __version__,
+                ),
+                ("some", "options"),
+            ),
         )
 
     def test_translate_spans(self):
