@@ -27,7 +27,6 @@ from opentelemetry.sdk._logs import (
     LoggingHandler,
     LogRecordProcessor,
 )
-from opentelemetry.sdk._logs._internal import LogLimits
 from opentelemetry.sdk.environment_variables import OTEL_ATTRIBUTE_COUNT_LIMIT
 from opentelemetry.semconv._incubating.attributes import code_attributes
 from opentelemetry.semconv.attributes import exception_attributes
@@ -472,91 +471,6 @@ class TestLoggingHandler(unittest.TestCase):
             log_record.dropped_attributes,
             25,
             f"Should have 25 dropped attributes, got {log_record.dropped_attributes}",
-        )
-
-    def test_custom_log_limits_from_logger_provider(self):
-        """Test that LoggingHandler uses custom LogLimits from LoggerProvider."""
-        # Create a LoggerProvider with custom LogLimits (max_attributes=4)
-        logger_provider = LoggerProvider(
-            log_limits=LogLimits(max_attributes=4)
-        )
-
-        # Set up logging with this provider
-        processor = FakeProcessor()
-        logger_provider.add_log_record_processor(processor)
-        logger = logging.getLogger("custom_limits_test")
-        handler = LoggingHandler(
-            level=logging.WARNING, logger_provider=logger_provider
-        )
-        logger.addHandler(handler)
-
-        # Create a log record with many extra attributes
-        extra_attrs = {f"custom_attr_{i}": f"value_{i}" for i in range(10)}
-
-        with self.assertLogs(level=logging.WARNING):
-            logger.warning(
-                "Test message with custom limits", extra=extra_attrs
-            )
-
-        log_record = processor.get_log_record(0)
-
-        # With custom max_attributes=4, should have exactly 4 attributes
-        total_attrs = len(log_record.attributes)
-        self.assertEqual(
-            total_attrs,
-            4,
-            f"Should have exactly 4 attributes due to custom limit, got {total_attrs}",
-        )
-
-        # Should have 9 dropped attributes (10 custom + 3 code - 4 kept = 9 dropped)
-        self.assertEqual(
-            log_record.dropped_attributes,
-            9,
-            f"Should have 9 dropped attributes, got {log_record.dropped_attributes}",
-        )
-
-    @patch.dict(os.environ, {OTEL_ATTRIBUTE_COUNT_LIMIT: "10"})
-    def test_custom_log_limits_override_env_vars(self):
-        """Test that custom LogLimits from LoggerProvider override environment variables."""
-        # Create a LoggerProvider with custom LogLimits (max_attributes=3)
-        # This should override the OTEL_ATTRIBUTE_COUNT_LIMIT=10 from the environment
-        logger_provider = LoggerProvider(
-            log_limits=LogLimits(max_attributes=3)
-        )
-
-        # Set up logging with this provider
-        processor = FakeProcessor()
-        logger_provider.add_log_record_processor(processor)
-        logger = logging.getLogger("override_env_test")
-        handler = LoggingHandler(
-            level=logging.WARNING, logger_provider=logger_provider
-        )
-        logger.addHandler(handler)
-
-        # Create a log record with many extra attributes
-        extra_attrs = {f"custom_attr_{i}": f"value_{i}" for i in range(8)}
-
-        with self.assertLogs(level=logging.WARNING):
-            logger.warning(
-                "Test message with custom limits", extra=extra_attrs
-            )
-
-        log_record = processor.get_log_record(0)
-
-        # With custom max_attributes=3, should have exactly 3 attributes
-        # (even though OTEL_ATTRIBUTE_COUNT_LIMIT=10)
-        total_attrs = len(log_record.attributes)
-        self.assertEqual(
-            total_attrs,
-            3,
-            f"Should have exactly 3 attributes due to custom limit, got {total_attrs}",
-        )
-
-        # Should have 8 dropped attributes (8 custom + 3 code - 3 kept = 8 dropped)
-        self.assertEqual(
-            log_record.dropped_attributes,
-            8,
-            f"Should have 8 dropped attributes, got {log_record.dropped_attributes}",
         )
 
 

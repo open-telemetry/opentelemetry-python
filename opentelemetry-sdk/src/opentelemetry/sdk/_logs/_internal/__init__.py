@@ -622,7 +622,6 @@ class LoggingHandler(logging.Handler):
             body=body,
             resource=logger.resource,
             attributes=attributes,
-            limits=self._logger_provider._log_limits,
         )
 
     def emit(self, record: logging.LogRecord) -> None:
@@ -685,7 +684,6 @@ class LoggerProvider(APILoggerProvider):
         multi_log_record_processor: SynchronousMultiLogRecordProcessor
         | ConcurrentMultiLogRecordProcessor
         | None = None,
-        log_limits: LogLimits | None = None,
     ):
         if resource is None:
             self._resource = Resource.create({})
@@ -701,7 +699,6 @@ class LoggerProvider(APILoggerProvider):
             self._at_exit_handler = atexit.register(self.shutdown)
         self._logger_cache = {}
         self._logger_cache_lock = Lock()
-        self._log_limits = log_limits or LogLimits()
 
     @property
     def resource(self):
