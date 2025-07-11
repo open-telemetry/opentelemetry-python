@@ -22,9 +22,9 @@ from opentelemetry._logs import get_logger as APIGetLogger
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk import trace
 from opentelemetry.sdk._logs import (
-    LogData,
     LoggerProvider,
     LoggingHandler,
+    LogRecord,
     LogRecordProcessor,
 )
 from opentelemetry.semconv._incubating.attributes import code_attributes
@@ -384,8 +384,8 @@ class FakeProcessor(LogRecordProcessor):
     def __init__(self):
         self.log_data_emitted = []
 
-    def on_emit(self, log_data: LogData):
-        self.log_data_emitted.append(log_data)
+    def on_emit(self, log_record: LogRecord):
+        self.log_data_emitted.append(log_record)
 
     def shutdown(self):
         pass
@@ -397,4 +397,4 @@ class FakeProcessor(LogRecordProcessor):
         return len(self.log_data_emitted)
 
     def get_log_record(self, i):
-        return self.log_data_emitted[i].log_record
+        return self.log_data_emitted[i]

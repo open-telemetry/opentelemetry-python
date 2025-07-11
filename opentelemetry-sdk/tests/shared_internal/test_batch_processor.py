@@ -25,7 +25,6 @@ from unittest.mock import Mock
 import pytest
 
 from opentelemetry.sdk._logs import (
-    LogData,
     LogRecord,
 )
 from opentelemetry.sdk._logs.export import (
@@ -35,8 +34,7 @@ from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
-EMPTY_LOG = LogData(
-    log_record=LogRecord(),
+EMPTY_LOG = LogRecord(
     instrumentation_scope=InstrumentationScope("example", "example"),
 )
 
