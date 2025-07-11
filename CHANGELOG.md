@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## Version 1.35.0/0.56b0 (2025-07-11)
+
 - Update OTLP proto to v1.7 [#4645](https://github.com/open-telemetry/opentelemetry-python/pull/4645).
 - Add `event_name` as a top level field in the `LogRecord`. Events are now simply logs with the
 `event_name` field set, the logs SDK should be used to emit events ([#4652](https://github.com/open-telemetry/opentelemetry-python/pull/4652)).
