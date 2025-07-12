@@ -118,26 +118,26 @@ For more information about the approver role, see the [community repository](htt
 
 ### Emeritus Maintainers
 
-- [Alex Boten](https://github.com/codeboten), Lightstep
-- [Chris Kleinknecht](https://github.com/c24t), Google
-- [Owais Lone](https://github.com/owais), Splunk
-- [Reiley Yang](https://github.com/reyang), Microsoft
-- [Srikanth Chekuri](https://github.com/srikanthccv), signoz.io
-- [Yusuke Tsutsumi](https://github.com/toumorokoshi), Google
+- [Alex Boten](https://github.com/codeboten)
+- [Chris Kleinknecht](https://github.com/c24t)
+- [Owais Lone](https://github.com/owais)
+- [Reiley Yang](https://github.com/reyang)
+- [Srikanth Chekuri](https://github.com/srikanthccv)
+- [Yusuke Tsutsumi](https://github.com/toumorokoshi)
 
 For more information about the emeritus role, see the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#emeritus-maintainerapprovertriager).
 
 ### Emeritus Approvers
 
-- [Ashutosh Goel](https://github.com/ashu658), Cisco
-- [Carlos Alberto Cortez](https://github.com/carlosalberto), Lightstep
-- [Christian Neumüller](https://github.com/Oberon00), Dynatrace
-- [Héctor Hernández](https://github.com/hectorhdzg), Microsoft
-- [Mauricio Vásquez](https://github.com/mauriciovasquezbernal), Kinvolk
-- [Nathaniel Ruiz Nowell](https://github.com/NathanielRN), AWS
-- [Nikolay Sokolik](https://github.com/oxeye-nikolay), Oxeye
-- [Sanket Mehta](https://github.com/sanketmehta28), Cisco
-- [Tahir H. Butt](https://github.com/majorgreys), DataDog
+- [Ashutosh Goel](https://github.com/ashu658)
+- [Carlos Alberto Cortez](https://github.com/carlosalberto)
+- [Christian Neumüller](https://github.com/Oberon00)
+- [Héctor Hernández](https://github.com/hectorhdzg)
+- [Mauricio Vásquez](https://github.com/mauriciovasquezbernal)
+- [Nathaniel Ruiz Nowell](https://github.com/NathanielRN)
+- [Nikolay Sokolik](https://github.com/oxeye-nikolay)
+- [Sanket Mehta](https://github.com/sanketmehta28)
+- [Tahir H. Butt](https://github.com/majorgreys)
 
 For more information about the emeritus role, see the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#emeritus-maintainerapprovertriager).
 

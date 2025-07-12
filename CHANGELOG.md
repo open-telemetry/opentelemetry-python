@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## Version 1.35.0/0.56b0 (2025-07-11)
+
 - Update OTLP proto to v1.7 [#4645](https://github.com/open-telemetry/opentelemetry-python/pull/4645).
 - Add `event_name` as a top level field in the `LogRecord`. Events are now simply logs with the
 `event_name` field set, the logs SDK should be used to emit events ([#4652](https://github.com/open-telemetry/opentelemetry-python/pull/4652)).
@@ -25,7 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update logger level to NOTSET in logs example
   ([#4637](https://github.com/open-telemetry/opentelemetry-python/pull/4637))
 - Logging API accepts optional `context`; deprecates `trace_id`, `span_id`, `trace_flags`.
-  ([#4597](https://github.com/open-telemetry/opentelemetry-python/pull/4597))
+  ([#4597](https://github.com/open-telemetry/opentelemetry-python/pull/4597)) and 
+  ([#4668](https://github.com/open-telemetry/opentelemetry-python/pull/4668))
 - sdk: use context instead of trace_id,span_id for initializing LogRecord
   ([#4653](https://github.com/open-telemetry/opentelemetry-python/pull/4653))
 - Rename LogRecordProcessor.emit to on_emit
@@ -34,6 +37,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4649](https://github.com/open-telemetry/opentelemetry-python/pull/4649))
 - proto: relax protobuf version requirement to support v6
   ([#4620](https://github.com/open-telemetry/opentelemetry-python/pull/4620))
+- Bump semantic-conventions to 1.36.0
+  ([#4669](https://github.com/open-telemetry/opentelemetry-python/pull/4669))
+- Set expected User-Agent in HTTP headers for grpc OTLP exporter
+  ([#4658](https://github.com/open-telemetry/opentelemetry-python/pull/4658))
 
 ## Version 1.34.0/0.55b0 (2025-06-04)
 
