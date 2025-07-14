@@ -99,7 +99,7 @@ ExporterArgsMap = Mapping[
         Type[SpanExporter],
         Type[MetricExporter],
         Type[MetricReader],
-        Type[LogExporter],
+        Type[LogRecordExporter],
     ],
     Mapping[str, Any],
 ]
