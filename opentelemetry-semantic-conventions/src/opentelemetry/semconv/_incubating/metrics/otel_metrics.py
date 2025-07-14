@@ -381,53 +381,47 @@ def create_otel_sdk_processor_span_queue_size(meter: Meter) -> UpDownCounter:
 
 OTEL_SDK_SPAN_ENDED: Final = "otel.sdk.span.ended"
 """
-The number of created spans for which the end operation was called
-Instrument: counter
-Unit: {span}
-Note: For spans with `recording=true`: Implementations MUST record both `otel.sdk.span.live` and `otel.sdk.span.ended`.
-For spans with `recording=false`: If implementations decide to record this metric, they MUST also record `otel.sdk.span.live`.
+Deprecated: Obsoleted.
 """
 
 
 def create_otel_sdk_span_ended(meter: Meter) -> Counter:
-    """The number of created spans for which the end operation was called"""
+    """Use `otel.sdk.span.started` minus `otel.sdk.span.live` to derive this value"""
     return meter.create_counter(
         name=OTEL_SDK_SPAN_ENDED,
-        description="The number of created spans for which the end operation was called",
+        description="Use `otel.sdk.span.started` minus `otel.sdk.span.live` to derive this value.",
         unit="{span}",
     )
 
 
 OTEL_SDK_SPAN_ENDED_COUNT: Final = "otel.sdk.span.ended.count"
 """
-Deprecated: Replaced by `otel.sdk.span.ended`.
+Deprecated: Obsoleted.
 """
 
 
 def create_otel_sdk_span_ended_count(meter: Meter) -> Counter:
-    """Deprecated, use `otel.sdk.span.ended` instead"""
+    """Use `otel.sdk.span.started` minus `otel.sdk.span.live` to derive this value"""
     return meter.create_counter(
         name=OTEL_SDK_SPAN_ENDED_COUNT,
-        description="Deprecated, use `otel.sdk.span.ended` instead.",
+        description="Use `otel.sdk.span.started` minus `otel.sdk.span.live` to derive this value.",
         unit="{span}",
     )
 
 
 OTEL_SDK_SPAN_LIVE: Final = "otel.sdk.span.live"
 """
-The number of created spans for which the end operation has not been called yet
+The number of created spans with `recording=true` for which the end operation has not been called yet
 Instrument: updowncounter
 Unit: {span}
-Note: For spans with `recording=true`: Implementations MUST record both `otel.sdk.span.live` and `otel.sdk.span.ended`.
-For spans with `recording=false`: If implementations decide to record this metric, they MUST also record `otel.sdk.span.ended`.
 """
 
 
 def create_otel_sdk_span_live(meter: Meter) -> UpDownCounter:
-    """The number of created spans for which the end operation has not been called yet"""
+    """The number of created spans with `recording=true` for which the end operation has not been called yet"""
     return meter.create_up_down_counter(
         name=OTEL_SDK_SPAN_LIVE,
-        description="The number of created spans for which the end operation has not been called yet",
+        description="The number of created spans with `recording=true` for which the end operation has not been called yet",
         unit="{span}",
     )
 
@@ -443,5 +437,23 @@ def create_otel_sdk_span_live_count(meter: Meter) -> UpDownCounter:
     return meter.create_up_down_counter(
         name=OTEL_SDK_SPAN_LIVE_COUNT,
         description="Deprecated, use `otel.sdk.span.live` instead.",
+        unit="{span}",
+    )
+
+
+OTEL_SDK_SPAN_STARTED: Final = "otel.sdk.span.started"
+"""
+The number of created spans
+Instrument: counter
+Unit: {span}
+Note: Implementations MUST record this metric for all spans, even for non-recording ones.
+"""
+
+
+def create_otel_sdk_span_started(meter: Meter) -> Counter:
+    """The number of created spans"""
+    return meter.create_counter(
+        name=OTEL_SDK_SPAN_STARTED,
+        description="The number of created spans",
         unit="{span}",
     )
