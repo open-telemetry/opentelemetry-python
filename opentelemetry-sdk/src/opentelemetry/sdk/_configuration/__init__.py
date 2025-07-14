@@ -267,13 +267,15 @@ def _overwrite_logging_config_fns(handler):
 
     def wrapper(config_fn):
         def overwritten_config_fn(*args, **kwargs):
-            # This is needed for basicConfig only. basicConfig when called by
-            # the user's program will be a no-op if the root handler was configured.
-            if len(root.handlers) == 1 and root.handlers[0] == handler:
-                root.handlers.pop()
+            removedHandler = False
+            # We don't want the OTLP handler to be modified or deleted by the logging config functions.
+            # So we remove it and then add it back after the function call.
+            if handler in root.handlers:
+                removedHandler = True
+                root.handlers.remove(handler)
             config_fn(*args, **kwargs)
-            if handler not in root.handlers:
-                root.addHandler(handler)
+            if removedHandler:
+                root.addHandler(handler)                
 
         return overwritten_config_fn
 
