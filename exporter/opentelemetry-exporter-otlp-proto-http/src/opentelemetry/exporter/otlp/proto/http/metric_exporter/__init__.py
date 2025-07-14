@@ -348,7 +348,8 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                     # with different accessors for data points, etc
                     # We maintain these structures throughout batch calculation
                     current_data_points = []
-                    if metric.HasField("sum"):
+                    field_name = metric.WhichOneof("data")
+                    if field_name == "sum":
                         split_metrics.append(
                             {
                                 "name": metric.name,
@@ -362,7 +363,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                             }
                         )
                         current_data_points = metric.sum.data_points
-                    elif metric.HasField("histogram"):
+                    elif field_name == "histogram":
                         split_metrics.append(
                             {
                                 "name": metric.name,
@@ -375,7 +376,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                             }
                         )
                         current_data_points = metric.histogram.data_points
-                    elif metric.HasField("exponential_histogram"):
+                    elif field_name == "exponential_histogram":
                         split_metrics.append(
                             {
                                 "name": metric.name,
@@ -390,7 +391,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                         current_data_points = (
                             metric.exponential_histogram.data_points
                         )
-                    elif metric.HasField("gauge"):
+                    elif field_name == "gauge":
                         split_metrics.append(
                             {
                                 "name": metric.name,
@@ -402,7 +403,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                             }
                         )
                         current_data_points = metric.gauge.data_points
-                    elif metric.HasField("summary"):
+                    elif field_name == "summary":
                         split_metrics.append(
                             {
                                 "name": metric.name,
@@ -436,7 +437,8 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                             batch_size = 0
                             split_data_points = []
 
-                            if metric.HasField("sum"):
+                            field_name = metric.WhichOneof("data")
+                            if field_name == "sum":
                                 split_metrics = [
                                     {
                                         "name": metric.name,
@@ -449,7 +451,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                                         },
                                     }
                                 ]
-                            elif metric.HasField("histogram"):
+                            elif field_name == "histogram":
                                 split_metrics = [
                                     {
                                         "name": metric.name,
@@ -461,7 +463,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                                         },
                                     }
                                 ]
-                            elif metric.HasField("exponential_histogram"):
+                            elif field_name == "exponential_histogram":
                                 split_metrics = [
                                     {
                                         "name": metric.name,
@@ -473,7 +475,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                                         },
                                     }
                                 ]
-                            elif metric.HasField("gauge"):
+                            elif field_name == "gauge":
                                 split_metrics = [
                                     {
                                         "name": metric.name,
@@ -484,7 +486,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                                         },
                                     }
                                 ]
-                            elif metric.HasField("summary"):
+                            elif field_name == "summary":
                                 split_metrics = [
                                     {
                                         "name": metric.name,
