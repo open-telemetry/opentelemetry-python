@@ -226,6 +226,48 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             )
         return resp
 
+    def _export_with_retries(
+        self,
+        serialized_data: bytes,
+        deadline_sec: float,
+    ) -> MetricExportResult:
+        """Export serialized data with retry logic until success, non-transient error, or exponential backoff maxed out.
+
+        Args:
+            serialized_data: serialized metrics data to export
+            deadline_sec: timestamp deadline for the export
+
+        Returns:
+            MetricExportResult: SUCCESS if export succeeded, FAILURE otherwise
+        """
+        for retry_num in range(_MAX_RETRYS):
+            resp = self._export(serialized_data, deadline_sec - time())
+            if resp.ok:
+                return MetricExportResult.SUCCESS
+
+            # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
+            backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
+            if (
+                not _is_retryable(resp)
+                or retry_num + 1 == _MAX_RETRYS
+                or backoff_seconds > (deadline_sec - time())
+            ):
+                _logger.error(
+                    "Failed to export metrics batch code: %s, reason: %s",
+                    resp.status_code,
+                    resp.text,
+                )
+                return MetricExportResult.FAILURE
+
+            _logger.warning(
+                "Transient error %s encountered while exporting metrics batch, retrying in %.2fs.",
+                resp.reason,
+                backoff_seconds,
+            )
+            sleep(backoff_seconds)
+
+        return MetricExportResult.FAILURE
+
     def export(
         self,
         metrics_data: MetricsData,
@@ -241,71 +283,23 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
 
         # If no batch size configured, export as single batch with retries as configured
         if self._max_export_batch_size is None:
-            for retry_num in range(_MAX_RETRYS):
-                resp = self._export(
-                    serialized_data.SerializeToString(), deadline_sec - time()
-                )
-                if resp.ok:
-                    return MetricExportResult.SUCCESS
-                # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
-                backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
-                if (
-                    not _is_retryable(resp)
-                    or retry_num + 1 == _MAX_RETRYS
-                    or backoff_seconds > (deadline_sec - time())
-                ):
-                    _logger.error(
-                        "Failed to export metrics batch code: %s, reason: %s",
-                        resp.status_code,
-                        resp.text,
-                    )
-                    return MetricExportResult.FAILURE
-                _logger.warning(
-                    "Transient error %s encountered while exporting metrics batch, retrying in %.2fs.",
-                    resp.reason,
-                    backoff_seconds,
-                )
-                sleep(backoff_seconds)
+            return self._export_with_retries(
+                serialized_data.SerializeToString(), deadline_sec
+            )
 
         # Else, export in batches of configured size
         split_metrics_batches = list(self._split_metrics_data(serialized_data))
         export_result = MetricExportResult.SUCCESS
 
         for split_metrics_data in split_metrics_batches:
-            # Export current batch until success, non-transient error, or retries maxed out
-            for retry_num in range(_MAX_RETRYS):
-                split_resp = self._export(
-                    split_metrics_data.SerializeToString(),
-                    deadline_sec - time(),
-                )
-                if split_resp.ok:
-                    export_result = MetricExportResult.SUCCESS
-                    # Move on to next batch
-                    break
+            batch_result = self._export_with_retries(
+                split_metrics_data.SerializeToString(),
+                deadline_sec,
+            )
 
-                # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
-                backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
-                if (
-                    not _is_retryable(split_resp)
-                    or retry_num + 1 == _MAX_RETRYS
-                    or backoff_seconds > (deadline_sec - time())
-                ):
-                    _logger.error(
-                        "Failed to export metrics batch code: %s, reason: %s",
-                        split_resp.status_code,
-                        split_resp.text,
-                    )
-                    export_result = MetricExportResult.FAILURE
-                    # Don't retry; move on to next batch
-                    break
-
-                _logger.warning(
-                    "Transient error %s encountered while exporting metric batch, retrying in %.2fs.",
-                    split_resp.reason,
-                    backoff_seconds,
-                )
-                sleep(backoff_seconds)
-                continue
+            if batch_result == MetricExportResult.FAILURE:
+                export_result = MetricExportResult.FAILURE
+                # Don't retry; move on to next batch
 
         # Return last result after all batches are attempted
         return export_result
