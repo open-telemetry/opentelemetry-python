@@ -25,9 +25,7 @@ from typing import (  # noqa: F401
     Dict,
     Iterable,
     List,
-    Mapping,
     Optional,
-    Sequence,
 )
 
 import requests
