@@ -93,7 +93,6 @@ class BatchProcessor(Generic[Telemetry]):
         self._shutdown = False
         self._shutdown_timeout_exceeded = False
         self._export_lock = threading.Lock()
-        self._final_export_finished = threading.Event()
         self._worker_awaken = threading.Event()
         self._worker_thread.start()
         if hasattr(os, "register_at_fork"):
@@ -118,7 +117,6 @@ class BatchProcessor(Generic[Telemetry]):
     def _at_fork_reinit(self):
         self._export_lock = threading.Lock()
         self._worker_awaken = threading.Event()
-        self._export_event = threading.Event()
         self._queue.clear()
         self._worker_thread = threading.Thread(
             name=f"OtelBatch{self._exporting}RecordProcessor",
@@ -170,9 +168,6 @@ class BatchProcessor(Generic[Telemetry]):
                         "Exception while exporting %s.", self._exporting
                     )
                 detach(token)
-        # This is the final export. Set the signal to shutdown that export is done.
-        if batch_strategy == BatchExportStrategy.EXPORT_ALL and self.shutdown:
-            self._final_export_finished.set()
 
     # Do not add any logging.log statements to this function, they can be being routed back to this `emit` function,
     # resulting in endless recursive calls that crash the program.
@@ -194,7 +189,7 @@ class BatchProcessor(Generic[Telemetry]):
         self._shutdown = True
         # Interrupts sleep in the worker if it's sleeping.
         self._worker_awaken.set()
-        self._final_export_finished.wait(timeout_millis / 1000)
+        self._worker_thread.join(timeout_millis / 1000)
         # Stops worker thread from calling export again if queue is still not empty.
         self._shutdown_timeout_exceeded = True
         # We want to shutdown immediately because we already waited `timeout_millis`.
