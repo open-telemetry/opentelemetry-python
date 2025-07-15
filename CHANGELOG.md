@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Add configurable `max_export_batch_size` to OTLP HTTP metrics exporter
+  ([#4576](https://github.com/open-telemetry/opentelemetry-python/pull/4576))
+
 ## Version 1.35.0/0.56b0 (2025-07-11)
 
 - Update OTLP proto to v1.7 [#4645](https://github.com/open-telemetry/opentelemetry-python/pull/4645).
