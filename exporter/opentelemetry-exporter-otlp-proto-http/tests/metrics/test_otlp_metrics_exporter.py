@@ -34,6 +34,7 @@ from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
     DEFAULT_TIMEOUT,
     OTLPMetricExporter,
     _get_split_resource_metrics_pb2,
+    _split_metrics_data,
 )
 from opentelemetry.exporter.otlp.proto.http.version import __version__
 from opentelemetry.proto.common.v1.common_pb2 import (
@@ -368,8 +369,9 @@ class TestOTLPMetricExporter(TestCase):
         )
         split_metrics_data: List[MetricsData] = list(
             # pylint: disable=protected-access
-            OTLPMetricExporter(max_export_batch_size=2)._split_metrics_data(
+            _split_metrics_data(
                 metrics_data=metrics_data,
+                max_export_batch_size=2,
             )
         )
 
@@ -446,8 +448,9 @@ class TestOTLPMetricExporter(TestCase):
 
         split_metrics_data: List[MetricsData] = list(
             # pylint: disable=protected-access
-            OTLPMetricExporter(max_export_batch_size=3)._split_metrics_data(
+            _split_metrics_data(
                 metrics_data=metrics_data,
+                max_export_batch_size=3,
             )
         )
 
@@ -537,8 +540,9 @@ class TestOTLPMetricExporter(TestCase):
 
         split_metrics_data: List[MetricsData] = list(
             # pylint: disable=protected-access
-            OTLPMetricExporter(max_export_batch_size=2)._split_metrics_data(
+            _split_metrics_data(
                 metrics_data=metrics_data,
+                max_export_batch_size=2,
             )
         )
 
