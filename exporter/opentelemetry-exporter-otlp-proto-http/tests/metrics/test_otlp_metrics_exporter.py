@@ -918,6 +918,8 @@ class TestOTLPMetricExporter(TestCase):
         mock_export.side_effect = [
             # Non-retryable
             MagicMock(ok=False, status_code=400, reason="bad request"),
+            MagicMock(ok=True),
+            MagicMock(ok=True),
         ]
         mock_encode_metrics.return_value = pb2.MetricsData(
             resource_metrics=[
@@ -965,8 +967,8 @@ class TestOTLPMetricExporter(TestCase):
 
         exporter = OTLPMetricExporter(max_export_batch_size=2)
         result = exporter.export("foo")
-        self.assertEqual(result, MetricExportResult.FAILURE)
-        self.assertEqual(mock_export.call_count, 1)
+        self.assertEqual(result, MetricExportResult.SUCCESS)
+        self.assertEqual(mock_export.call_count, 2)
         mock_export.assert_has_calls(
             [
                 call(batch_1.SerializeToString(), 10),

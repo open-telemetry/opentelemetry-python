@@ -290,16 +290,12 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         export_result = MetricExportResult.SUCCESS
 
         for split_metrics_data in split_metrics_batches:
-            batch_result = self._export_with_retries(
+            export_result = self._export_with_retries(
                 split_metrics_data.SerializeToString(),
                 deadline_sec,
             )
 
-            if batch_result == MetricExportResult.FAILURE:
-                # If any batch fails, return failure immediately
-                return MetricExportResult.FAILURE
-
-        # Return SUCCESS only if all batches succeeded
+        # Return export result of the last batch, like gRPC exporter
         return export_result
 
     def _split_metrics_data(
