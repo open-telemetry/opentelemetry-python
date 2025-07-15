@@ -33,6 +33,7 @@ from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
     DEFAULT_METRICS_EXPORT_PATH,
     DEFAULT_TIMEOUT,
     OTLPMetricExporter,
+    _get_split_resource_metrics_pb2,
 )
 from opentelemetry.exporter.otlp.proto.http.version import __version__
 from opentelemetry.proto.common.v1.common_pb2 import (
@@ -655,9 +656,7 @@ class TestOTLPMetricExporter(TestCase):
             }
         ]
 
-        result = OTLPMetricExporter()._get_split_resource_metrics_pb2(
-            split_resource_metrics
-        )
+        result = _get_split_resource_metrics_pb2(split_resource_metrics)
         self.assertEqual(len(result), 1)
         self.assertIsInstance(result[0], pb2.ResourceMetrics)
         self.assertEqual(result[0].schema_url, "http://foo-bar")
@@ -755,9 +754,7 @@ class TestOTLPMetricExporter(TestCase):
             },
         ]
 
-        result = OTLPMetricExporter()._get_split_resource_metrics_pb2(
-            split_resource_metrics
-        )
+        result = _get_split_resource_metrics_pb2(split_resource_metrics)
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0].schema_url, "http://foo-bar-1")
         self.assertEqual(result[1].schema_url, "http://foo-bar-2")
@@ -801,9 +798,7 @@ class TestOTLPMetricExporter(TestCase):
         ]
 
         with self.assertLogs(level="WARNING") as log:
-            result = OTLPMetricExporter()._get_split_resource_metrics_pb2(
-                split_resource_metrics
-            )
+            result = _get_split_resource_metrics_pb2(split_resource_metrics)
         self.assertEqual(len(result), 1)
         self.assertIn(
             "Tried to split and export an unsupported metric type",
@@ -813,14 +808,107 @@ class TestOTLPMetricExporter(TestCase):
     @patch.object(OTLPMetricExporter, "_export")
     @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.random")
     @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.time")
-    @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.sleep")
     @patch(
         "opentelemetry.exporter.otlp.proto.http.metric_exporter.encode_metrics"
     )
-    def test_export_retries_with_batching(
+    def test_export_retries_with_batching_success(
         self,
         mock_encode_metrics,
-        mock_sleep,
+        mock_time,
+        mock_random,
+        mock_export,
+    ):
+        mock_time.return_value = 0
+        mock_random.uniform.return_value = 1
+        mock_export.side_effect = [
+            # Success
+            MagicMock(ok=True),
+            MagicMock(ok=True),
+        ]
+        mock_encode_metrics.return_value = pb2.MetricsData(
+            resource_metrics=[
+                _resource_metrics(
+                    index=1,
+                    scope_metrics=[
+                        _scope_metrics(
+                            index=1,
+                            metrics=[
+                                _gauge(
+                                    index=1,
+                                    data_points=[
+                                        _number_data_point(11),
+                                        _number_data_point(12),
+                                        _number_data_point(13),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
+        batch_1 = pb2.MetricsData(
+            resource_metrics=[
+                _resource_metrics(
+                    index=1,
+                    scope_metrics=[
+                        _scope_metrics(
+                            index=1,
+                            metrics=[
+                                _gauge(
+                                    index=1,
+                                    data_points=[
+                                        _number_data_point(11),
+                                        _number_data_point(12),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
+        batch_2 = pb2.MetricsData(
+            resource_metrics=[
+                _resource_metrics(
+                    index=1,
+                    scope_metrics=[
+                        _scope_metrics(
+                            index=1,
+                            metrics=[
+                                _gauge(
+                                    index=1,
+                                    data_points=[
+                                        _number_data_point(13),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
+
+        exporter = OTLPMetricExporter(max_export_batch_size=2)
+        result = exporter.export("foo")
+        self.assertEqual(result, MetricExportResult.SUCCESS)
+        self.assertEqual(mock_export.call_count, 2)
+        mock_export.assert_has_calls(
+            [
+                call(batch_1.SerializeToString(), 10),
+                call(batch_2.SerializeToString(), 10),
+            ]
+        )
+
+    @patch.object(OTLPMetricExporter, "_export")
+    @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.random")
+    @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.time")
+    @patch(
+        "opentelemetry.exporter.otlp.proto.http.metric_exporter.encode_metrics"
+    )
+    def test_export_retries_with_batching_failure_first(
+        self,
+        mock_encode_metrics,
         mock_time,
         mock_random,
         mock_export,
@@ -830,11 +918,180 @@ class TestOTLPMetricExporter(TestCase):
         mock_export.side_effect = [
             # Non-retryable
             MagicMock(ok=False, status_code=400, reason="bad request"),
+        ]
+        mock_encode_metrics.return_value = pb2.MetricsData(
+            resource_metrics=[
+                _resource_metrics(
+                    index=1,
+                    scope_metrics=[
+                        _scope_metrics(
+                            index=1,
+                            metrics=[
+                                _gauge(
+                                    index=1,
+                                    data_points=[
+                                        _number_data_point(11),
+                                        _number_data_point(12),
+                                        _number_data_point(13),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
+        batch_1 = pb2.MetricsData(
+            resource_metrics=[
+                _resource_metrics(
+                    index=1,
+                    scope_metrics=[
+                        _scope_metrics(
+                            index=1,
+                            metrics=[
+                                _gauge(
+                                    index=1,
+                                    data_points=[
+                                        _number_data_point(11),
+                                        _number_data_point(12),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
+
+        exporter = OTLPMetricExporter(max_export_batch_size=2)
+        result = exporter.export("foo")
+        self.assertEqual(result, MetricExportResult.FAILURE)
+        self.assertEqual(mock_export.call_count, 1)
+        mock_export.assert_has_calls(
+            [
+                call(batch_1.SerializeToString(), 10),
+            ]
+        )
+
+    @patch.object(OTLPMetricExporter, "_export")
+    @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.random")
+    @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.time")
+    @patch(
+        "opentelemetry.exporter.otlp.proto.http.metric_exporter.encode_metrics"
+    )
+    def test_export_retries_with_batching_failure_last(
+        self,
+        mock_encode_metrics,
+        mock_time,
+        mock_random,
+        mock_export,
+    ):
+        mock_time.return_value = 0
+        mock_random.uniform.return_value = 1
+        mock_export.side_effect = [
+            # Success
+            MagicMock(ok=True),
+            # Non-retryable
+            MagicMock(ok=False, status_code=400, reason="bad request"),
+        ]
+        mock_encode_metrics.return_value = pb2.MetricsData(
+            resource_metrics=[
+                _resource_metrics(
+                    index=1,
+                    scope_metrics=[
+                        _scope_metrics(
+                            index=1,
+                            metrics=[
+                                _gauge(
+                                    index=1,
+                                    data_points=[
+                                        _number_data_point(11),
+                                        _number_data_point(12),
+                                        _number_data_point(13),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
+        batch_1 = pb2.MetricsData(
+            resource_metrics=[
+                _resource_metrics(
+                    index=1,
+                    scope_metrics=[
+                        _scope_metrics(
+                            index=1,
+                            metrics=[
+                                _gauge(
+                                    index=1,
+                                    data_points=[
+                                        _number_data_point(11),
+                                        _number_data_point(12),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
+        batch_2 = pb2.MetricsData(
+            resource_metrics=[
+                _resource_metrics(
+                    index=1,
+                    scope_metrics=[
+                        _scope_metrics(
+                            index=1,
+                            metrics=[
+                                _gauge(
+                                    index=1,
+                                    data_points=[
+                                        _number_data_point(13),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
+
+        exporter = OTLPMetricExporter(max_export_batch_size=2)
+        result = exporter.export("foo")
+        self.assertEqual(result, MetricExportResult.FAILURE)
+        self.assertEqual(mock_export.call_count, 2)
+        mock_export.assert_has_calls(
+            [
+                call(batch_1.SerializeToString(), 10),
+                call(batch_2.SerializeToString(), 10),
+            ]
+        )
+
+    @patch.object(OTLPMetricExporter, "_export")
+    @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.random")
+    @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.time")
+    @patch(
+        "opentelemetry.exporter.otlp.proto.http.metric_exporter.encode_metrics"
+    )
+    def test_export_retries_with_batching_failure_retryable(
+        self,
+        mock_encode_metrics,
+        mock_time,
+        mock_random,
+        mock_export,
+    ):
+        mock_time.return_value = 0
+        mock_random.uniform.return_value = 1
+        mock_export.side_effect = [
+            # Success
+            MagicMock(ok=True),
             # Retryable
             MagicMock(
                 ok=False, status_code=500, reason="internal server error"
             ),
-            # Success
+            # Then success
             MagicMock(ok=True),
         ]
         mock_encode_metrics.return_value = pb2.MetricsData(
