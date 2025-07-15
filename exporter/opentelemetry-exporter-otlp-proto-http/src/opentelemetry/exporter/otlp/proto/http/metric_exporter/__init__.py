@@ -296,10 +296,10 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             )
 
             if batch_result == MetricExportResult.FAILURE:
-                export_result = MetricExportResult.FAILURE
-                # Don't retry; move on to next batch
+                # If any batch fails, return failure immediately
+                return MetricExportResult.FAILURE
 
-        # Return last result after all batches are attempted
+        # Return SUCCESS only if all batches succeeded
         return export_result
 
     def _split_metrics_data(
