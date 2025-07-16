@@ -15,12 +15,12 @@
 from __future__ import annotations
 
 import collections
-import time
 import enum
 import inspect
 import logging
 import os
 import threading
+import time
 import weakref
 from abc import abstractmethod
 from typing import (
@@ -205,7 +205,7 @@ class BatchProcessor(Generic[Telemetry]):
             if remaining_time < 0:
                 self._exporter.shutdown(timeout_millis=0)  # type: ignore
             else:
-                self._exporter.shutdown(timeout_millis=remaining_time * 1000) # type: ignore
+                self._exporter.shutdown(timeout_millis=remaining_time * 1000)  # type: ignore
         else:
             self._exporter.shutdown()
         # Worker thread **should** be finished at this point, because we called shutdown on the exporter,
