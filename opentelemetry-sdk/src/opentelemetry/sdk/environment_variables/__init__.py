@@ -394,6 +394,43 @@ The endpoint MUST be a valid URL host, and MAY contain a scheme (http or https),
 A scheme of https indicates a secure connection and takes precedence over this configuration setting.
 """
 
+OTEL_PYTHON_EXPORTER_OTLP_LOGS_CREDENTIAL_PROVIDER = (
+    "OTEL_PYTHON_EXPORTER_OTLP_LOGS_CREDENTIAL_PROVIDER"
+)
+"""
+.. envvar:: OTEL_PYTHON_EXPORTER_OTLP_CREDENTIAL_PROVIDER
+
+The :envvar:`OTEL_PYTHON_EXPORTER_OTLP_LOGS_CREDENTIAL_PROVIDER` provides either ChannelCredentials for grpc OTLP Log exporters,
+or request.Session for HTTP Log exporters.
+"""
+OTEL_PYTHON_EXPORTER_OTLP_CREDENTIAL_PROVIDER = (
+    "OTEL_PYTHON_EXPORTER_OTLP_CREDENTIAL_PROVIDER"
+)
+"""
+.. envvar:: OTEL_PYTHON_EXPORTER_OTLP_CREDENTIAL_PROVIDER
+
+The :envvar:`OTEL_PYTHON_EXPORTER_OTLP_CREDENTIAL_PROVIDER` provides either ChannelCredentials for all grpc OTLP exporters,
+or request.Session for HTTP exporters.
+"""
+OTEL_PYTHON_EXPORTER_OTLP_TRACES_CREDENTIAL_PROVIDER = (
+    "OTEL_PYTHON_EXPORTER_OTLP_TRACES_CREDENTIAL_PROVIDER"
+)
+"""
+.. envvar:: OTEL_PYTHON_EXPORTER_OTLP_CREDENTIAL_PROVIDER
+
+The :envvar:`OTEL_PYTHON_EXPORTER_OTLP_TRACES_CREDENTIAL_PROVIDER` provides either ChannelCredentials for grpc OTLP Span exporters,
+or request.Session for HTTP Span exporters.
+"""
+OTEL_PYTHON_EXPORTER_OTLP_METRICS_CREDENTIAL_PROVIDER = (
+    "OTEL_PYTHON_EXPORTER_OTLP_METRICS_CREDENTIAL_PROVIDER"
+)
+"""
+.. envvar:: OTEL_PYTHON_EXPORTER_OTLP_CREDENTIAL_PROVIDER
+
+The :envvar:`OTEL_PYTHON_EXPORTER_OTLP_METRICS_CREDENTIAL_PROVIDER` provides either ChannelCredentials for grpc OTLP Metric exporters,
+or request.Session for HTTP Metric exporters.
+"""
+
 OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE = "OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE
