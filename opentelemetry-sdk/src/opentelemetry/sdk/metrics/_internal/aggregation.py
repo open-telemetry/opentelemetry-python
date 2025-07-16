@@ -1387,18 +1387,17 @@ class ExplicitBucketHistogramAggregation(Aggregation):
                 AggregationTemporality.CUMULATIVE
             )
 
-        if self._boundaries is None:
-            self._boundaries = (
-                instrument._advisory.explicit_bucket_boundaries
-                or _DEFAULT_EXPLICIT_BUCKET_HISTOGRAM_AGGREGATION_BOUNDARIES
-            )
+        if self._boundaries is not None:
+            boundaries = self._boundaries
+        else:
+            boundaries = instrument._advisory.explicit_bucket_boundaries
 
         return _ExplicitBucketHistogramAggregation(
             attributes,
             instrument_aggregation_temporality,
             start_time_unix_nano,
             reservoir_factory(_ExplicitBucketHistogramAggregation),
-            self._boundaries,
+            boundaries,
             self._record_min_max,
         )
 

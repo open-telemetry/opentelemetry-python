@@ -31,11 +31,11 @@ from typing import Final
 {{ctx.stable_package_name}}.{{ctx.root_namespace}}_attributes{{separator}}{{const_name}}
 {%- endmacro %}
 
-{%- macro write_docstring(name, brief, note, deprecated, stability, multiline) -%}
+{%- macro write_docstring(name, brief, note, deprecated_note, stability, multiline) -%}
 {%- if multiline %}"""
 {% endif %}
-    {%- if c.str_or_empty(deprecated)|length -%}
-{{prefix}}Deprecated: {{c.comment_with_prefix(deprecated, "")}}.
+    {%- if c.str_or_empty(deprecated_note)|length -%}
+{{prefix}}Deprecated: {{c.comment_with_prefix(deprecated_note, "")}}.
     {%- elif ctx.filter == "any" and stability == "stable" -%}
 {{prefix}}Deprecated in favor of stable :py:const:`{{stable_class_ref(name, '.')}}`.
     {%- elif c.str_or_empty(brief)|length -%}
@@ -51,17 +51,18 @@ from typing import Final
 {% for attribute in attributes %}
 {% set attr_name = attribute_name(attribute) %}
 {%- set multiline = attribute.name not in ctx.excluded_attributes -%}
-{%- set doc_string = write_docstring(attr_name, attribute.brief, attribute.note, attribute.deprecated, attribute.stability, multiline)-%}
+{%- set deprecated_note = c.deprecated_note_or_empty(attribute) %}
+{%- set doc_string = write_docstring(attr_name, attribute.brief, attribute.note, deprecated_note, attribute.stability, multiline)-%}
 {%- set prefix = "" if multiline else "# " -%}
 {{prefix}}{{attr_name}}: Final = "{{attribute.name}}"
 {{prefix}}{{doc_string}}
 {% endfor %}
 
-{% for attribute in enum_attributes %}{%- set class_name = attribute.name | pascal_case ~ "Values" -%}
+{% for attribute in enum_attributes %}{%- set class_name = attribute.name | map_text("py_enum_attribute_to_class_name", attribute.name | pascal_case ~ "Values") -%}
 {%- if attribute is deprecated %}
-@deprecated(reason="The attribute {{attribute.name}} is deprecated - {{ c.comment_with_prefix(attribute.deprecated, "") }}")  # type: ignore
+@deprecated("The attribute {{attribute.name}} is deprecated - {{ c.comment_with_prefix(attribute.deprecated.note, "") }}")
     {%- elif attribute.stability == "stable" and ctx.filter == "any" %}
-@deprecated(reason="Deprecated in favor of stable :py:const:`{{stable_class_ref(class_name, '.')}}`.")  # type: ignore
+@deprecated("Deprecated in favor of stable :py:const:`{{stable_class_ref(class_name, '.')}}`.")
     {%- endif %}
 class {{class_name}}(Enum):
     {%- for member in attribute.type.members %}

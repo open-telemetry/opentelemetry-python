@@ -33,6 +33,9 @@ exporter = OTLPLogExporter(insecure=True)
 logger_provider.add_log_record_processor(BatchLogRecordProcessor(exporter))
 handler = LoggingHandler(level=logging.NOTSET, logger_provider=logger_provider)
 
+# Set the root logger level to NOTSET to ensure all messages are captured
+logging.getLogger().setLevel(logging.NOTSET)
+
 # Attach OTLP handler to root logger
 logging.getLogger().addHandler(handler)
 
@@ -47,6 +50,10 @@ logger1.info("How quickly daft jumping zebras vex.")
 logger2.warning("Jail zesty vixen who grabbed pay from quack.")
 logger2.error("The five boxing wizards jump quickly.")
 
+# Log custom attributes
+# Custom attributes are added on a per event basis
+user_id = "user-123"
+logger1.error("I have custom attributes.", extra={"user_id": user_id})
 
 # Trace context correlation
 tracer = trace.get_tracer(__name__)

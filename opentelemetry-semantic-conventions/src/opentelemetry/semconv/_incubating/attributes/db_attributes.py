@@ -15,7 +15,7 @@
 from enum import Enum
 from typing import Final
 
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 DB_CASSANDRA_CONSISTENCY_LEVEL: Final = "db.cassandra.consistency_level"
 """
@@ -76,15 +76,7 @@ Deprecated: Replaced by `db.client.connection.state`.
 
 DB_COLLECTION_NAME: Final = "db.collection.name"
 """
-The name of a collection (table, container) within the database.
-Note: It is RECOMMENDED to capture the value as provided by the application
-without attempting to do any case normalization.
-
-The collection name SHOULD NOT be extracted from `db.query.text`,
-when the database system supports cross-table queries in non-batch operations.
-
-For batch operations, if the individual operations are known to have the same
-collection name then that collection name SHOULD be used.
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.db_attributes.DB_COLLECTION_NAME`.
 """
 
 DB_CONNECTION_STRING: Final = "db.connection_string"
@@ -114,7 +106,7 @@ Deprecated: Replaced by `db.collection.name`.
 
 DB_COSMOSDB_OPERATION_TYPE: Final = "db.cosmosdb.operation_type"
 """
-Deprecated: No replacement at this time.
+Deprecated: Removed, no replacement at this time.
 """
 
 DB_COSMOSDB_REGIONS_CONTACTED: Final = "db.cosmosdb.regions_contacted"
@@ -161,12 +153,12 @@ Deprecated: Replaced by `db.operation.parameter`.
 
 DB_INSTANCE_ID: Final = "db.instance.id"
 """
-Deprecated: Deprecated, no general replacement at this time. For Elasticsearch, use `db.elasticsearch.node.name` instead.
+Deprecated: Removed, no general replacement at this time. For Elasticsearch, use `db.elasticsearch.node.name` instead.
 """
 
 DB_JDBC_DRIVER_CLASSNAME: Final = "db.jdbc.driver_classname"
 """
-Deprecated: Removed as not used.
+Deprecated: Removed, no replacement at this time.
 """
 
 DB_MONGODB_COLLECTION: Final = "db.mongodb.collection"
@@ -176,7 +168,7 @@ Deprecated: Replaced by `db.collection.name`.
 
 DB_MSSQL_INSTANCE_NAME: Final = "db.mssql.instance_name"
 """
-Deprecated: Deprecated, no replacement at this time.
+Deprecated: Removed, no replacement at this time.
 """
 
 DB_NAME: Final = "db.name"
@@ -186,10 +178,7 @@ Deprecated: Replaced by `db.namespace`.
 
 DB_NAMESPACE: Final = "db.namespace"
 """
-The name of the database, fully qualified within the server address and port.
-Note: If a database system has multiple namespace components, they SHOULD be concatenated (potentially using database system specific conventions) from most general to most specific namespace component, and more specific namespaces SHOULD NOT be captured without the more general namespaces, to ensure that "startswith" queries for the more general namespaces will be valid.
-Semantic conventions for individual database systems SHOULD document what `db.namespace` means in the context of that system.
-It is RECOMMENDED to capture the value as provided by the application without attempting to do any case normalization.
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.db_attributes.DB_NAMESPACE`.
 """
 
 DB_OPERATION: Final = "db.operation"
@@ -199,50 +188,52 @@ Deprecated: Replaced by `db.operation.name`.
 
 DB_OPERATION_BATCH_SIZE: Final = "db.operation.batch.size"
 """
-The number of queries included in a batch operation.
-Note: Operations are only considered batches when they contain two or more operations, and so `db.operation.batch.size` SHOULD never be `1`.
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.db_attributes.DB_OPERATION_BATCH_SIZE`.
 """
 
 DB_OPERATION_NAME: Final = "db.operation.name"
 """
-The name of the operation or command being executed.
-Note: It is RECOMMENDED to capture the value as provided by the application
-without attempting to do any case normalization.
-
-The operation name SHOULD NOT be extracted from `db.query.text`,
-when the database system supports cross-table queries in non-batch operations.
-
-For batch operations, if the individual operations are known to have the same operation name
-then that operation name SHOULD be used prepended by `BATCH `,
-otherwise `db.operation.name` SHOULD be `BATCH` or some other database
-system specific term if more applicable.
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.db_attributes.DB_OPERATION_NAME`.
 """
 
 DB_OPERATION_PARAMETER_TEMPLATE: Final = "db.operation.parameter"
 """
 A database operation parameter, with `<key>` being the parameter name, and the attribute value being a string representation of the parameter value.
-Note: If a parameter has no name and instead is referenced only by index, then `<key>` SHOULD be the 0-based index.
-If `db.query.text` is also captured, then `db.operation.parameter.<key>` SHOULD match up with the parameterized placeholders present in `db.query.text`.
+Note: For example, a client-side maximum number of rows to read from the database
+MAY be recorded as the `db.operation.parameter.max_rows` attribute.
+
+`db.query.text` parameters SHOULD be captured using `db.query.parameter.<key>`
+instead of `db.operation.parameter.<key>`.
 """
 
 DB_QUERY_PARAMETER_TEMPLATE: Final = "db.query.parameter"
 """
-Deprecated: Replaced by `db.operation.parameter`.
+A database query parameter, with `<key>` being the parameter name, and the attribute value being a string representation of the parameter value.
+Note: If a query parameter has no name and instead is referenced only by index,
+then `<key>` SHOULD be the 0-based index.
+
+`db.query.parameter.<key>` SHOULD match
+up with the parameterized placeholders present in `db.query.text`.
+
+`db.query.parameter.<key>` SHOULD NOT be captured on batch operations.
+
+Examples:
+
+- For a query `SELECT * FROM users where username =  %s` with the parameter `"jdoe"`,
+  the attribute `db.query.parameter.0` SHOULD be set to `"jdoe"`.
+
+- For a query `"SELECT * FROM users WHERE username = %(username)s;` with parameter
+  `username = "jdoe"`, the attribute `db.query.parameter.username` SHOULD be set to `"jdoe"`.
 """
 
 DB_QUERY_SUMMARY: Final = "db.query.summary"
 """
-Low cardinality representation of a database query text.
-Note: `db.query.summary` provides static summary of the query text. It describes a class of database queries and is useful as a grouping key, especially when analyzing telemetry for database calls involving complex queries.
-Summary may be available to the instrumentation through instrumentation hooks or other means. If it is not available, instrumentations that support query parsing SHOULD generate a summary following [Generating query summary](../database/database-spans.md#generating-a-summary-of-the-query-text) section.
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.db_attributes.DB_QUERY_SUMMARY`.
 """
 
 DB_QUERY_TEXT: Final = "db.query.text"
 """
-The database query being executed.
-Note: For sanitization see [Sanitization of `db.query.text`](../database/database-spans.md#sanitization-of-dbquerytext).
-For batch operations, if the individual operations are known to have the same query text then that query text SHOULD be used, otherwise all of the individual query texts SHOULD be concatenated with separator `; ` or some other database system specific separator if more applicable.
-Even though parameterized query text can potentially have sensitive data, by using a parameterized query the user is giving a strong signal that any sensitive data will be passed as parameter values, and the benefit to observability of capturing the static part of the query text by default outweighs the risk.
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.db_attributes.DB_QUERY_TEXT`.
 """
 
 DB_REDIS_DATABASE_INDEX: Final = "db.redis.database_index"
@@ -257,19 +248,22 @@ Number of rows returned by the operation.
 
 DB_RESPONSE_STATUS_CODE: Final = "db.response.status_code"
 """
-Database response status code.
-Note: The status code returned by the database. Usually it represents an error code, but may also represent partial success, warning, or differentiate between various types of successful outcomes.
-Semantic conventions for individual database systems SHOULD document what `db.response.status_code` means in the context of that system.
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.db_attributes.DB_RESPONSE_STATUS_CODE`.
 """
 
 DB_SQL_TABLE: Final = "db.sql.table"
 """
-Deprecated: Replaced by `db.collection.name`.
+Deprecated: Replaced by `db.collection.name`, but only if not extracting the value from `db.query.text`.
 """
 
 DB_STATEMENT: Final = "db.statement"
 """
 Deprecated: Replaced by `db.query.text`.
+"""
+
+DB_STORED_PROCEDURE_NAME: Final = "db.stored_procedure.name"
+"""
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.db_attributes.DB_STORED_PROCEDURE_NAME`.
 """
 
 DB_SYSTEM: Final = "db.system"
@@ -279,19 +273,18 @@ Deprecated: Replaced by `db.system.name`.
 
 DB_SYSTEM_NAME: Final = "db.system.name"
 """
-The database management system (DBMS) product as identified by the client instrumentation.
-Note: The actual DBMS may differ from the one identified by the client. For example, when using PostgreSQL client libraries to connect to a CockroachDB, the `db.system.name` is set to `postgresql` based on the instrumentation's best knowledge.
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.db_attributes.DB_SYSTEM_NAME`.
 """
 
 DB_USER: Final = "db.user"
 """
-Deprecated: No replacement at this time.
+Deprecated: Removed, no replacement at this time.
 """
 
 
 @deprecated(
-    reason="The attribute db.cassandra.consistency_level is deprecated - Replaced by `cassandra.consistency.level`"
-)  # type: ignore
+    "The attribute db.cassandra.consistency_level is deprecated - Replaced by `cassandra.consistency.level`"
+)
 class DbCassandraConsistencyLevelValues(Enum):
     ALL = "all"
     """all."""
@@ -325,8 +318,8 @@ class DbClientConnectionStateValues(Enum):
 
 
 @deprecated(
-    reason="The attribute db.client.connections.state is deprecated - Replaced by `db.client.connection.state`"
-)  # type: ignore
+    "The attribute db.client.connections.state is deprecated - Replaced by `db.client.connection.state`"
+)
 class DbClientConnectionsStateValues(Enum):
     IDLE = "idle"
     """idle."""
@@ -335,8 +328,8 @@ class DbClientConnectionsStateValues(Enum):
 
 
 @deprecated(
-    reason="The attribute db.cosmosdb.connection_mode is deprecated - Replaced by `azure.cosmosdb.connection.mode`"
-)  # type: ignore
+    "The attribute db.cosmosdb.connection_mode is deprecated - Replaced by `azure.cosmosdb.connection.mode`"
+)
 class DbCosmosdbConnectionModeValues(Enum):
     GATEWAY = "gateway"
     """Gateway (HTTP) connection."""
@@ -345,8 +338,8 @@ class DbCosmosdbConnectionModeValues(Enum):
 
 
 @deprecated(
-    reason="The attribute db.cosmosdb.consistency_level is deprecated - Replaced by `azure.cosmosdb.consistency.level`"
-)  # type: ignore
+    "The attribute db.cosmosdb.consistency_level is deprecated - Replaced by `azure.cosmosdb.consistency.level`"
+)
 class DbCosmosdbConsistencyLevelValues(Enum):
     STRONG = "Strong"
     """strong."""
@@ -361,8 +354,8 @@ class DbCosmosdbConsistencyLevelValues(Enum):
 
 
 @deprecated(
-    reason="The attribute db.cosmosdb.operation_type is deprecated - No replacement at this time"
-)  # type: ignore
+    "The attribute db.cosmosdb.operation_type is deprecated - Removed, no replacement at this time"
+)
 class DbCosmosdbOperationTypeValues(Enum):
     BATCH = "batch"
     """batch."""
@@ -397,8 +390,8 @@ class DbCosmosdbOperationTypeValues(Enum):
 
 
 @deprecated(
-    reason="The attribute db.system is deprecated - Replaced by `db.system.name`"
-)  # type: ignore
+    "The attribute db.system is deprecated - Replaced by `db.system.name`"
+)
 class DbSystemValues(Enum):
     OTHER_SQL = "other_sql"
     """Some other SQL database. Fallback only. See notes."""
@@ -463,7 +456,7 @@ class DbSystemValues(Enum):
     INTERBASE = "interbase"
     """InterBase."""
     MARIADB = "mariadb"
-    """MariaDB (This value has stability level RELEASE CANDIDATE)."""
+    """MariaDB."""
     MAXDB = "maxdb"
     """SAP MaxDB."""
     MEMCACHED = "memcached"
@@ -471,11 +464,11 @@ class DbSystemValues(Enum):
     MONGODB = "mongodb"
     """MongoDB."""
     MSSQL = "mssql"
-    """Microsoft SQL Server (This value has stability level RELEASE CANDIDATE)."""
+    """Microsoft SQL Server."""
     MSSQLCOMPACT = "mssqlcompact"
     """Deprecated: Removed, use `other_sql` instead."""
     MYSQL = "mysql"
-    """MySQL (This value has stability level RELEASE CANDIDATE)."""
+    """MySQL."""
     NEO4J = "neo4j"
     """Neo4j."""
     NETEZZA = "netezza"
@@ -489,7 +482,7 @@ class DbSystemValues(Enum):
     POINTBASE = "pointbase"
     """PointBase."""
     POSTGRESQL = "postgresql"
-    """PostgreSQL (This value has stability level RELEASE CANDIDATE)."""
+    """PostgreSQL."""
     PROGRESS = "progress"
     """Progress Database."""
     REDIS = "redis"
@@ -510,6 +503,9 @@ class DbSystemValues(Enum):
     """Vertica."""
 
 
+@deprecated(
+    "Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.db_attributes.DbSystemNameValues`."
+)
 class DbSystemNameValues(Enum):
     OTHER_SQL = "other_sql"
     """Some other SQL database. Fallback only."""
@@ -564,15 +560,15 @@ class DbSystemNameValues(Enum):
     INSTANTDB = "instantdb"
     """[Instant](https://www.instantdb.com/)."""
     MARIADB = "mariadb"
-    """[MariaDB](https://mariadb.org/)."""
+    """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.db_attributes.DbSystemNameValues.MARIADB`."""
     MEMCACHED = "memcached"
     """[Memcached](https://memcached.org/)."""
     MONGODB = "mongodb"
     """[MongoDB](https://www.mongodb.com/)."""
     MICROSOFT_SQL_SERVER = "microsoft.sql_server"
-    """[Microsoft SQL Server](https://www.microsoft.com/sql-server)."""
+    """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.db_attributes.DbSystemNameValues.MICROSOFT_SQL_SERVER`."""
     MYSQL = "mysql"
-    """[MySQL](https://www.mysql.com/)."""
+    """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.db_attributes.DbSystemNameValues.MYSQL`."""
     NEO4J = "neo4j"
     """[Neo4j](https://neo4j.com/)."""
     OPENSEARCH = "opensearch"
@@ -580,7 +576,7 @@ class DbSystemNameValues(Enum):
     ORACLE_DB = "oracle.db"
     """[Oracle Database](https://www.oracle.com/database/)."""
     POSTGRESQL = "postgresql"
-    """[PostgreSQL](https://www.postgresql.org/)."""
+    """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.db_attributes.DbSystemNameValues.POSTGRESQL`."""
     REDIS = "redis"
     """[Redis](https://redis.io/)."""
     SAP_HANA = "sap.hana"

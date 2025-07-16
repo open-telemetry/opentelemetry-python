@@ -27,8 +27,12 @@ from opentelemetry.sdk._logs import (
     LoggingHandler,
     LogRecordProcessor,
 )
-from opentelemetry.semconv.trace import SpanAttributes
-from opentelemetry.trace import INVALID_SPAN_CONTEXT
+from opentelemetry.semconv._incubating.attributes import code_attributes
+from opentelemetry.semconv.attributes import exception_attributes
+from opentelemetry.trace import (
+    INVALID_SPAN_CONTEXT,
+    set_span_in_context,
+)
 
 
 class TestLoggingHandler(unittest.TestCase):
@@ -127,17 +131,19 @@ class TestLoggingHandler(unittest.TestCase):
         self.assertEqual(len(log_record.attributes), 4)
         self.assertEqual(log_record.attributes["http.status_code"], 200)
         self.assertTrue(
-            log_record.attributes[SpanAttributes.CODE_FILEPATH].endswith(
+            log_record.attributes[code_attributes.CODE_FILE_PATH].endswith(
                 "test_handler.py"
             )
         )
         self.assertEqual(
-            log_record.attributes[SpanAttributes.CODE_FUNCTION],
+            log_record.attributes[code_attributes.CODE_FUNCTION_NAME],
             "test_log_record_user_attributes",
         )
         # The line of the log statement is not a constant (changing tests may change that),
         # so only check that the attribute is present.
-        self.assertTrue(SpanAttributes.CODE_LINENO in log_record.attributes)
+        self.assertTrue(
+            code_attributes.CODE_LINE_NUMBER in log_record.attributes
+        )
         self.assertTrue(isinstance(log_record.attributes, BoundedAttributes))
 
     def test_log_record_exception(self):
@@ -153,17 +159,18 @@ class TestLoggingHandler(unittest.TestCase):
         log_record = processor.get_log_record(0)
 
         self.assertIsNotNone(log_record)
+        self.assertTrue(isinstance(log_record.body, str))
         self.assertEqual(log_record.body, "Zero Division Error")
         self.assertEqual(
-            log_record.attributes[SpanAttributes.EXCEPTION_TYPE],
+            log_record.attributes[exception_attributes.EXCEPTION_TYPE],
             ZeroDivisionError.__name__,
         )
         self.assertEqual(
-            log_record.attributes[SpanAttributes.EXCEPTION_MESSAGE],
+            log_record.attributes[exception_attributes.EXCEPTION_MESSAGE],
             "division by zero",
         )
         stack_trace = log_record.attributes[
-            SpanAttributes.EXCEPTION_STACKTRACE
+            exception_attributes.EXCEPTION_STACKTRACE
         ]
         self.assertIsInstance(stack_trace, str)
         self.assertTrue("Traceback" in stack_trace)
@@ -188,15 +195,15 @@ class TestLoggingHandler(unittest.TestCase):
         self.assertIsNotNone(log_record)
         self.assertEqual(log_record.body, "Zero Division Error")
         self.assertEqual(
-            log_record.attributes[SpanAttributes.EXCEPTION_TYPE],
+            log_record.attributes[exception_attributes.EXCEPTION_TYPE],
             ZeroDivisionError.__name__,
         )
         self.assertEqual(
-            log_record.attributes[SpanAttributes.EXCEPTION_MESSAGE],
+            log_record.attributes[exception_attributes.EXCEPTION_MESSAGE],
             "division by zero",
         )
         stack_trace = log_record.attributes[
-            SpanAttributes.EXCEPTION_STACKTRACE
+            exception_attributes.EXCEPTION_STACKTRACE
         ]
         self.assertIsInstance(stack_trace, str)
         self.assertTrue("Traceback" in stack_trace)
@@ -218,15 +225,82 @@ class TestLoggingHandler(unittest.TestCase):
 
         self.assertIsNotNone(log_record)
         self.assertEqual(log_record.body, "Zero Division Error")
-        self.assertNotIn(SpanAttributes.EXCEPTION_TYPE, log_record.attributes)
         self.assertNotIn(
-            SpanAttributes.EXCEPTION_MESSAGE, log_record.attributes
+            exception_attributes.EXCEPTION_TYPE, log_record.attributes
         )
         self.assertNotIn(
-            SpanAttributes.EXCEPTION_STACKTRACE, log_record.attributes
+            exception_attributes.EXCEPTION_MESSAGE, log_record.attributes
+        )
+        self.assertNotIn(
+            exception_attributes.EXCEPTION_STACKTRACE, log_record.attributes
         )
 
+    def test_log_record_exception_with_object_payload(self):
+        processor, logger = set_up_test_logging(logging.ERROR)
+
+        class CustomException(Exception):
+            def __str__(self):
+                return "CustomException stringified"
+
+        try:
+            raise CustomException("CustomException message")
+        except CustomException as exception:
+            with self.assertLogs(level=logging.ERROR):
+                logger.exception(exception)
+
+        log_record = processor.get_log_record(0)
+
+        self.assertIsNotNone(log_record)
+        self.assertTrue(isinstance(log_record.body, str))
+        self.assertEqual(log_record.body, "CustomException stringified")
+        self.assertEqual(
+            log_record.attributes[exception_attributes.EXCEPTION_TYPE],
+            CustomException.__name__,
+        )
+        self.assertEqual(
+            log_record.attributes[exception_attributes.EXCEPTION_MESSAGE],
+            "CustomException message",
+        )
+        stack_trace = log_record.attributes[
+            exception_attributes.EXCEPTION_STACKTRACE
+        ]
+        self.assertIsInstance(stack_trace, str)
+        self.assertTrue("Traceback" in stack_trace)
+        self.assertTrue("CustomException" in stack_trace)
+        self.assertTrue(__file__ in stack_trace)
+
     def test_log_record_trace_correlation(self):
+        processor, logger = set_up_test_logging(logging.WARNING)
+
+        tracer = trace.TracerProvider().get_tracer(__name__)
+        with tracer.start_as_current_span("test") as span:
+            mock_context = set_span_in_context(span)
+
+            with patch(
+                "opentelemetry.sdk._logs._internal.get_current",
+                return_value=mock_context,
+            ):
+                with self.assertLogs(level=logging.CRITICAL):
+                    logger.critical("Critical message within span")
+
+                log_record = processor.get_log_record(0)
+
+                self.assertEqual(
+                    log_record.body, "Critical message within span"
+                )
+                self.assertEqual(log_record.severity_text, "CRITICAL")
+                self.assertEqual(
+                    log_record.severity_number, SeverityNumber.FATAL
+                )
+                self.assertEqual(log_record.context, mock_context)
+                span_context = span.get_span_context()
+                self.assertEqual(log_record.trace_id, span_context.trace_id)
+                self.assertEqual(log_record.span_id, span_context.span_id)
+                self.assertEqual(
+                    log_record.trace_flags, span_context.trace_flags
+                )
+
+    def test_log_record_trace_correlation_deprecated(self):
         processor, logger = set_up_test_logging(logging.WARNING)
 
         tracer = trace.TracerProvider().get_tracer(__name__)
@@ -310,7 +384,7 @@ class FakeProcessor(LogRecordProcessor):
     def __init__(self):
         self.log_data_emitted = []
 
-    def emit(self, log_data: LogData):
+    def on_emit(self, log_data: LogData):
         self.log_data_emitted.append(log_data)
 
     def shutdown(self):

@@ -17,7 +17,7 @@ from re import compile, split
 from typing import Dict, List, Mapping
 from urllib.parse import unquote
 
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 _logger = getLogger(__name__)
 
@@ -59,7 +59,9 @@ _INVALID_HEADER_ERROR_MESSAGE_LIBERAL_TEMPLATE = (
 # pylint: disable=invalid-name
 
 
-@deprecated(version="1.15.0", reason="You should use parse_env_headers")  # type: ignore
+@deprecated(
+    "You should use parse_env_headers. Deprecated since version 1.15.0."
+)
 def parse_headers(s: str) -> Mapping[str, str]:
     return parse_env_headers(s)
 

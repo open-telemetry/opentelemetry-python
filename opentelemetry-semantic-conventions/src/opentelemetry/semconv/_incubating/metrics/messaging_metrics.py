@@ -143,15 +143,15 @@ def create_messaging_publish_duration(meter: Meter) -> Histogram:
 
 MESSAGING_PUBLISH_MESSAGES: Final = "messaging.publish.messages"
 """
-Deprecated: Replaced by `messaging.client.produced.messages`.
+Deprecated: Replaced by `messaging.client.sent.messages`.
 """
 
 
 def create_messaging_publish_messages(meter: Meter) -> Counter:
-    """Deprecated. Use `messaging.client.produced.messages` instead"""
+    """Deprecated. Use `messaging.client.sent.messages` instead"""
     return meter.create_counter(
         name=MESSAGING_PUBLISH_MESSAGES,
-        description="Deprecated. Use `messaging.client.produced.messages` instead.",
+        description="Deprecated. Use `messaging.client.sent.messages` instead.",
         unit="{message}",
     )
 

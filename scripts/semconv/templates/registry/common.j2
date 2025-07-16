@@ -29,6 +29,10 @@
 
 {%- macro import_deprecated(semconv) -%}
     {%- if (semconv | select("deprecated") | list | count > 0) or (ctx.filter == "any" and semconv | select("stable") | list | count > 0) -%}
-from deprecated import deprecated
+from typing_extensions import deprecated
     {%- endif -%}
 {%- endmacro-%}
+
+{%- macro deprecated_note_or_empty(attribute) -%}
+{% if attribute is deprecated %}{{ attribute.deprecated.note }}{% else %}{{""}}{% endif %}
+{%- endmacro %}

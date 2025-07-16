@@ -38,7 +38,7 @@ class AnotherLogRecordProcessor(LogRecordProcessor):
         self._log_list = logs_list
         self._closed = False
 
-    def emit(self, log_data):
+    def on_emit(self, log_data):
         if self._closed:
             return
         self._log_list.append(
@@ -118,9 +118,9 @@ class MultiLogRecordProcessorTestBase(ABC):
         for mock in mocks:
             multi_log_record_processor.add_log_record_processor(mock)
         record = self.make_record()
-        multi_log_record_processor.emit(record)
+        multi_log_record_processor.on_emit(record)
         for mock in mocks:
-            mock.emit.assert_called_with(record)
+            mock.on_emit.assert_called_with(record)
         multi_log_record_processor.shutdown()
 
     def test_on_shutdown(self):
