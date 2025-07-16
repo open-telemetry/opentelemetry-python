@@ -262,20 +262,22 @@ def _init_logging(
         _overwrite_logging_config_fns(handler)
 
 
-def _overwrite_logging_config_fns(handler):
+def _overwrite_logging_config_fns(handler: LoggingHandler) -> None:
     root = logging.getLogger()
 
-    def wrapper(config_fn):
+    def wrapper(config_fn: Callable) -> Callable:
         def overwritten_config_fn(*args, **kwargs):
-            removedHandler = False
+            removed_handler = False
             # We don't want the OTLP handler to be modified or deleted by the logging config functions.
             # So we remove it and then add it back after the function call.
             if handler in root.handlers:
-                removedHandler = True
+                removed_handler = True
                 root.handlers.remove(handler)
-            config_fn(*args, **kwargs)
-            if removedHandler:
-                root.addHandler(handler)                
+            try:
+                config_fn(*args, **kwargs)
+            finally:
+                if removed_handler:
+                    root.addHandler(handler)
 
         return overwritten_config_fn
 

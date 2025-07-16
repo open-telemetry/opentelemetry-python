@@ -1226,7 +1226,7 @@ class TestClearLoggingHandlers(TestCase):
             print("f")
 
         with ResetGlobalLoggingState():
-            logging.basicConfig = lambda x: print("lambda")
+            logging.basicConfig = f
             logging.config.dictConfig = f
             logging.config.fileConfig = f
         self.assertEqual(logging.config.dictConfig.__name__, "dictConfig")
