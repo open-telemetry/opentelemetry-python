@@ -146,9 +146,6 @@ class TestEventLoggerProvider(unittest.TestCase):
         log_record_mock.assert_called_once_with(
             timestamp=now,
             observed_timestamp=None,
-            trace_id=trace_id,
-            span_id=span_id,
-            trace_flags=trace_flags,
             severity_text=None,
             severity_number=SeverityNumber.ERROR,
             body="test body",
