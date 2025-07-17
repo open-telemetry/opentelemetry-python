@@ -276,6 +276,7 @@ def _overwrite_logging_config_fns(handler: LoggingHandler) -> None:
             try:
                 config_fn(*args, **kwargs)
             finally:
+                # Ensure handler is added back if logging function throws exception.
                 if removed_handler:
                     root.addHandler(handler)
 
