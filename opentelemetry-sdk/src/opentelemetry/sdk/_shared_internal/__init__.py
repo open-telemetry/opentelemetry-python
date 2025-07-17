@@ -183,15 +183,15 @@ class BatchProcessor(Generic[Telemetry]):
         if len(self._queue) >= self._max_export_batch_size:
             self._worker_awaken.set()
 
-    def shutdown(self, timeout_secs: int = 30):
+    def shutdown(self, timeout_millis: int = 30000):
         if self._shutdown:
             return
-        shutdown_should_end = time.time() + timeout_secs
+        shutdown_should_end = time.time() + (timeout_millis / 1000)
         # Causes emit to reject telemetry and makes force_flush a no-op.
         self._shutdown = True
         # Interrupts sleep in the worker if it's sleeping.
         self._worker_awaken.set()
-        self._worker_thread.join(timeout_secs)
+        self._worker_thread.join(timeout_millis / 1000)
         # Stops worker thread from calling export again if queue is still not empty.
         self._shutdown_timeout_exceeded = True
         # We want to shutdown immediately only if we already waited `timeout_secs`.
