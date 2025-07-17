@@ -734,7 +734,7 @@ class TestLoggingInit(TestCase):
         _initialize_components(auto_instrumentation_version="auto-version")
         self.assertEqual(tracing_mock.call_count, 1)
         logging_mock.assert_called_once_with(
-            mock.ANY, mock.ANY, False, exporter_args_map=None
+            mock.ANY, mock.ANY, False, otlp_credential_param=None, exporter_args_map=None
         )
 
     @patch.dict(
@@ -750,7 +750,7 @@ class TestLoggingInit(TestCase):
         with self.assertLogs(level=WARNING):
             _initialize_components(auto_instrumentation_version="auto-version")
         logging_mock.assert_called_once_with(
-            mock.ANY, mock.ANY, True, exporter_args_map=None
+            mock.ANY, mock.ANY, True, otlp_credential_param=None, exporter_args_map=None
         )
         self.assertEqual(tracing_mock.call_count, 1)
 
@@ -868,17 +868,20 @@ class TestLoggingInit(TestCase):
             id_generator="TEST_GENERATOR",
             sampler="TEST_SAMPLER",
             resource="TEST_RESOURCE",
+            otlp_credential_param=None,
             exporter_args_map={1: {"compression": "gzip"}},
         )
         metrics_mock.assert_called_once_with(
             "TEST_METRICS_EXPORTERS_DICT",
             "TEST_RESOURCE",
+            otlp_credential_param=None,
             exporter_args_map={1: {"compression": "gzip"}},
         )
         logging_mock.assert_called_once_with(
             "TEST_LOG_EXPORTERS_DICT",
             "TEST_RESOURCE",
             True,
+            otlp_credential_param=None,
             exporter_args_map={1: {"compression": "gzip"}},
         )
 

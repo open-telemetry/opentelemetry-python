@@ -257,11 +257,11 @@ def _init_exporter(
         ]
     ] = None,
 ) -> Union[SpanExporter, MetricExporter, LogExporter]:
-    otlp_credential_param_for_signal_type = _load_credential_from_envvar(
-        _EXPORTER_CREDENTIAL_BY_SIGNAL_TYPE[signal_type]
-    )
+    # Per signal type envvar should take precedence over all signal type env var.
     otlp_credential_param = (
-        otlp_credential_param_for_signal_type
+        _load_credential_from_envvar(
+            _EXPORTER_CREDENTIAL_BY_SIGNAL_TYPE[signal_type]
+        )
         or otlp_credential_param_for_all_signal_types
     )
     if not otlp_credential_param:
