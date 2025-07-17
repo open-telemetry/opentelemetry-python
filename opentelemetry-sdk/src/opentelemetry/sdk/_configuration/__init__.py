@@ -126,7 +126,7 @@ def _load_credential_from_envvar(
     if credential_env:
         credentials = _import_config_component(
             credential_env, "opentelemetry_otlp_credential_provider"
-        )()
+        )
         if isinstance(credentials, ChannelCredentials):
             return ("credentials", credentials)
         elif isinstance(credentials, Session):
@@ -271,13 +271,13 @@ def _init_exporter(
     if (
         credential_key == "credentials"
         and "credentials" in params
-        and isinstance(credential, params["credentials"].annotation)
+        and "ChannelCredentials" in params["credentials"].annotation
     ):
         return exporter_class(credentials=credential, **exporter_args_map)
     if (
         credential_key == "session"
         and "session" in params
-        and isinstance(credential, params["session"].annotation)
+        and "Session" in params["session"].annotation
     ):
         return exporter_class(session=credential, **exporter_args_map)
     return exporter_class(**exporter_args_map)
