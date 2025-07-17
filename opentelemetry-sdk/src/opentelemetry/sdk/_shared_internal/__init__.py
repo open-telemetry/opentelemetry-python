@@ -183,29 +183,26 @@ class BatchProcessor(Generic[Telemetry]):
         if len(self._queue) >= self._max_export_batch_size:
             self._worker_awaken.set()
 
-    def shutdown(self, timeout_millis: int = 30000):
+    def shutdown(self, timeout_secs: int = 30):
         if self._shutdown:
             return
-        shutdown_should_end = time.time() + timeout_millis / 1000
+        shutdown_should_end = time.time() + timeout_secs
         # Causes emit to reject telemetry and makes force_flush a no-op.
         self._shutdown = True
         # Interrupts sleep in the worker if it's sleeping.
         self._worker_awaken.set()
-        self._worker_thread.join(timeout_millis / 1000)
+        self._worker_thread.join(timeout_secs)
         # Stops worker thread from calling export again if queue is still not empty.
         self._shutdown_timeout_exceeded = True
-        # We want to shutdown immediately only if we already waited `timeout_millis`.
+        # We want to shutdown immediately only if we already waited `timeout_secs`.
         # Otherwise we pass the remaining timeout to the exporter.
         # Some exporter's shutdown support a timeout param.
         if (
             "timeout_millis"
             in inspect.getfullargspec(self._exporter.shutdown).args
         ):
-            remaining_time = shutdown_should_end - time.time()
-            if remaining_time < 0:
-                self._exporter.shutdown(timeout_millis=0)  # type: ignore
-            else:
-                self._exporter.shutdown(timeout_millis=remaining_time * 1000)  # type: ignore
+            remaining_millis = (shutdown_should_end - time.time()) * 1000
+            self._exporter.shutdown(timeout_millis=max(0, remaining_millis))  # type: ignore
         else:
             self._exporter.shutdown()
         # Worker thread **should** be finished at this point, because we called shutdown on the exporter,
