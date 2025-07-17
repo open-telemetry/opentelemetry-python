@@ -688,18 +688,19 @@ class TestLoggingInit(TestCase):
             self.assertTrue(provider.processor.exporter.export_called)
 
     def test_logging_init_exporter_uses_exporter_args_map(self):
-        resource = Resource.create({})
-        _init_logging(
-            {"otlp": DummyOTLPLogExporter},
-            resource=resource,
-            exporter_args_map={
-                DummyOTLPLogExporter: {"compression": "gzip"},
-                DummyOTLPMetricExporter: {"compression": "no"},
-            },
-        )
-        self.assertEqual(self.set_provider_mock.call_count, 1)
-        provider = self.set_provider_mock.call_args[0][0]
-        self.assertEqual(provider.processor.exporter.compression, "gzip")
+        with ResetGlobalLoggingState():
+            resource = Resource.create({})
+            _init_logging(
+                {"otlp": DummyOTLPLogExporter},
+                resource=resource,
+                exporter_args_map={
+                    DummyOTLPLogExporter: {"compression": "gzip"},
+                    DummyOTLPMetricExporter: {"compression": "no"},
+                },
+            )
+            self.assertEqual(self.set_provider_mock.call_count, 1)
+            provider = self.set_provider_mock.call_args[0][0]
+            self.assertEqual(provider.processor.exporter.compression, "gzip")
 
     @patch.dict(
         environ,
@@ -1232,6 +1233,9 @@ class TestConfigurator(TestCase):
         mock_init_comp.assert_called_once_with(**kwargs)
 
 
+# Any test that calls _init_logging with setup_logging_handler=True
+# should call _init_logging within this context manager, to
+# ensure the global logging state is reset after the test.
 class ResetGlobalLoggingState:
     def __init__(self):
         self.original_basic_config = logging.basicConfig
