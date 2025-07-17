@@ -20,10 +20,10 @@ from opentelemetry._logs.severity import SeverityNumber
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.context import get_current
 from opentelemetry.sdk._logs import (
-    LogDeprecatedInitWarning,
-    LogDroppedAttributesWarning,
-    LogLimits,
     LogRecord,
+    LogRecordDeprecatedInitWarning,
+    LogRecordDroppedAttributesWarning,
+    LogRecordLimits,
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.trace.span import TraceFlags
@@ -78,7 +78,7 @@ class TestLogRecord(unittest.TestCase):
 
     def test_log_record_dropped_attributes_set_limits_max_attribute(self):
         attr = {"key": "value", "key2": "value2"}
-        limits = LogLimits(
+        limits = LogRecordLimits(
             max_attributes=1,
         )
 
@@ -92,7 +92,7 @@ class TestLogRecord(unittest.TestCase):
     ):
         attr = {"key": "value", "key2": "value2"}
         expected = {"key": "v", "key2": "v"}
-        limits = LogLimits(
+        limits = LogRecordLimits(
             max_attribute_length=1,
         )
 
@@ -105,7 +105,7 @@ class TestLogRecord(unittest.TestCase):
     def test_log_record_dropped_attributes_set_limits(self):
         attr = {"key": "value", "key2": "value2"}
         expected = {"key2": "v"}
-        limits = LogLimits(
+        limits = LogRecordLimits(
             max_attributes=1,
             max_attribute_length=1,
         )
@@ -118,7 +118,7 @@ class TestLogRecord(unittest.TestCase):
 
     def test_log_record_dropped_attributes_set_limits_warning_once(self):
         attr = {"key1": "value1", "key2": "value2"}
-        limits = LogLimits(
+        limits = LogRecordLimits(
             max_attributes=1,
             max_attribute_length=1,
         )
@@ -132,7 +132,9 @@ class TestLogRecord(unittest.TestCase):
                     limits=limits,
                 )
         self.assertEqual(len(cw), 1)
-        self.assertIsInstance(cw[-1].message, LogDroppedAttributesWarning)
+        self.assertIsInstance(
+            cw[-1].message, LogRecordDroppedAttributesWarning
+        )
         self.assertIn(
             "Log record attributes were dropped due to limits",
             str(cw[-1].message),
@@ -140,7 +142,7 @@ class TestLogRecord(unittest.TestCase):
 
     def test_log_record_dropped_attributes_unset_limits(self):
         attr = {"key": "value", "key2": "value2"}
-        limits = LogLimits()
+        limits = LogRecordLimits()
 
         result = LogRecord(
             timestamp=0, body="a log line", attributes=attr, limits=limits
@@ -162,7 +164,9 @@ class TestLogRecord(unittest.TestCase):
                         LogRecord(**params)
 
                 self.assertEqual(len(cw), 1)
-                self.assertIsInstance(cw[-1].message, LogDeprecatedInitWarning)
+                self.assertIsInstance(
+                    cw[-1].message, LogRecordDeprecatedInitWarning
+                )
                 self.assertIn(
                     "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated since 1.35.0. Use `context` instead.",
                     str(cw[-1].message),
