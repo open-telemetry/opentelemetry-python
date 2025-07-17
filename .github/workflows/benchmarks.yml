@@ -4,8 +4,13 @@ on:
   push:
     branches: [ main ]
 
+permissions:
+  contents: read
+
 jobs:
   sdk-benchmarks:
+    permissions:
+      contents: write # required for pushing to gh-pages
     runs-on: equinix-bare-metal
     steps:
     - name: Checkout Core Repo @ SHA - ${{ github.sha }}
