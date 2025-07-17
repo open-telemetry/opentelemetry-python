@@ -21,11 +21,14 @@ from os import environ
 from typing import Iterable, Optional, Sequence
 from unittest import TestCase, mock
 from unittest.mock import Mock, patch
+from requests import Session
+from grpc import ChannelCredentials
 
 from pytest import raises
 
 from opentelemetry import trace
 from opentelemetry.context import Context
+from opentelemetry.sdk.environment_variables import OTEL_PYTHON_EXPORTER_OTLP_LOGS_CREDENTIAL_PROVIDER
 from opentelemetry.environment_variables import OTEL_PYTHON_ID_GENERATOR
 from opentelemetry.sdk._configuration import (
     _EXPORTER_OTLP,
@@ -39,6 +42,7 @@ from opentelemetry.sdk._configuration import (
     _import_id_generator,
     _import_sampler,
     _init_logging,
+    _init_exporter,
     _init_metrics,
     _init_tracing,
     _initialize_components,
@@ -178,7 +182,7 @@ class DummyMetricReaderPullExporter(MetricReader):
 
 
 class DummyOTLPMetricExporter:
-    def __init__(self, compression: str | None = None, *args, **kwargs):
+    def __init__(self, compression: str | None = None, session: Session | None, *args, **kwargs):
         self.export_called = False
         self.compression = compression
 
@@ -203,7 +207,7 @@ class Exporter:
 
 
 class OTLPSpanExporter:
-    def __init__(self, compression: str | None = None, *args, **kwargs):
+    def __init__(self, compression: str | None = None, credentials: ChannelCredentials | None = None, *args, **kwargs):
         self.compression = compression
 
 
@@ -406,6 +410,17 @@ class TestTraceInit(TestCase):
         _init_tracing({}, id_generator=id_generator)
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsInstance(provider.id_generator, CustomIdGenerator)
+
+
+    @patch.dict(environ, {OTEL_PYTHON_EXPORTER_OTLP_LOGS_CREDENTIAL_PROVIDER: "custom_session"})
+    @patch("opentelemetry.sdk._configuration.entry_points")
+    def check_that_credential_envvar_gets_passed_to_exporter(self, mock_entry_points):
+        mock_entry_points.configure_mock(
+            return_value=[
+                IterEntryPoint("custom_session", Session())
+            ]
+        )
+        exporter = _init_exporter('traces', None, OTLPSpanExporter)
 
     @patch.dict(
         "os.environ", {OTEL_TRACES_SAMPLER: "non_existent_entry_point"}
