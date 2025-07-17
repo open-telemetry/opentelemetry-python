@@ -107,7 +107,7 @@ class TestEventLoggerProvider(unittest.TestCase):
             "name", "version", "schema_url", {"key": "value"}
         )
 
-    @patch("opentelemetry.sdk._events.LogRecord")
+    @patch("opentelemetry.sdk._events.SDKLogRecord")
     @patch("opentelemetry.sdk._logs._internal.LoggerProvider.get_logger")
     def test_event_logger_emit(self, logger_mock, log_record_mock):
         logger_provider = LoggerProvider()
@@ -161,7 +161,7 @@ class TestEventLoggerProvider(unittest.TestCase):
         )
         logger_mock_inst.emit.assert_called_once_with(log_record_mock_inst)
 
-    @patch("opentelemetry.sdk._events.LogRecord")
+    @patch("opentelemetry.sdk._events.SDKLogRecord")
     @patch("opentelemetry.sdk._logs._internal.LoggerProvider.get_logger")
     def test_event_logger_emit_sdk_disabled(
         self, logger_mock, log_record_mock

@@ -27,12 +27,10 @@ from threading import Lock
 from time import time_ns
 from typing import Any, Callable, Tuple, Union, cast, overload  # noqa
 
-from typing_extensions import deprecated
-
 from opentelemetry._logs import Logger as APILogger
 from opentelemetry._logs import LoggerProvider as APILoggerProvider
-from opentelemetry._logs import LogRecord as APILogRecord
 from opentelemetry._logs import (
+    LogRecord,
     NoOpLogger,
     SeverityNumber,
     get_logger,
@@ -56,7 +54,6 @@ from opentelemetry.trace import (
     format_trace_id,
     get_current_span,
 )
-from opentelemetry.trace.span import TraceFlags
 from opentelemetry.util.types import AnyValue, _ExtendedAttributes
 
 _logger = logging.getLogger(__name__)
@@ -82,18 +79,6 @@ class LogDroppedAttributesWarning(UserWarning):
 
 
 warnings.simplefilter("once", LogDroppedAttributesWarning)
-
-
-class LogDeprecatedInitWarning(UserWarning):
-    """Custom warning to indicate deprecated LogRecord init was used.
-
-    This class is used to filter and handle these specific warnings separately
-    from other warnings, ensuring that they are only shown once without
-    interfering with default user warnings.
-    """
-
-
-warnings.simplefilter("once", LogDeprecatedInitWarning)
 
 
 class LogLimits:
@@ -187,10 +172,10 @@ _UnsetLogLimits = LogLimits(
 )
 
 
-class LogRecord(APILogRecord):
-    """A LogRecord instance represents an event being logged.
+class SDKLogRecord(LogRecord):
+    """A SDKLogRecord instance represents an event being logged.
 
-    LogRecord instances are created and emitted via `Logger`
+    SDKLogRecord instances are created and emitted via `Logger`
     every time something is logged. They contain all the information
     pertinent to the event being logged.
     """
@@ -210,33 +195,11 @@ class LogRecord(APILogRecord):
         event_name: str | None = None,
     ): ...
 
-    @overload
-    @deprecated(
-        "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated since 1.35.0. Use `context` instead."  # noqa: E501
-    )
-    def __init__(
-        self,
-        timestamp: int | None = None,
-        observed_timestamp: int | None = None,
-        trace_id: int | None = None,
-        span_id: int | None = None,
-        trace_flags: TraceFlags | None = None,
-        severity_text: str | None = None,
-        severity_number: SeverityNumber | None = None,
-        body: AnyValue | None = None,
-        resource: Resource | None = None,
-        attributes: _ExtendedAttributes | None = None,
-        limits: LogLimits | None = _UnsetLogLimits,
-    ): ...
-
     def __init__(  # pylint:disable=too-many-locals
         self,
         timestamp: int | None = None,
         observed_timestamp: int | None = None,
         context: Context | None = None,
-        trace_id: int | None = None,
-        span_id: int | None = None,
-        trace_flags: TraceFlags | None = None,
         severity_text: str | None = None,
         severity_number: SeverityNumber | None = None,
         body: AnyValue | None = None,
@@ -246,13 +209,6 @@ class LogRecord(APILogRecord):
         event_name: str | None = None,
         instrumentation_scope: InstrumentationScope | None = None,
     ):
-        if trace_id or span_id or trace_flags:
-            warnings.warn(
-                "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated since 1.35.0. Use `context` instead.",
-                LogDeprecatedInitWarning,
-                stacklevel=2,
-            )
-
         if not context:
             context = get_current()
 
@@ -264,9 +220,9 @@ class LogRecord(APILogRecord):
                 "timestamp": timestamp,
                 "observed_timestamp": observed_timestamp,
                 "context": context,
-                "trace_id": trace_id or span_context.trace_id,
-                "span_id": span_id or span_context.span_id,
-                "trace_flags": trace_flags or span_context.trace_flags,
+                "trace_id": span_context.trace_id,
+                "span_id": span_context.span_id,
+                "trace_flags": span_context.trace_flags,
                 "severity_text": severity_text,
                 "severity_number": severity_number,
                 "body": body,
@@ -292,7 +248,7 @@ class LogRecord(APILogRecord):
             )
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, LogRecord):
+        if not isinstance(other, SDKLogRecord):
             return NotImplemented
         return self.__dict__ == other.__dict__
 
@@ -347,8 +303,8 @@ class LogRecordProcessor(abc.ABC):
     """
 
     @abc.abstractmethod
-    def on_emit(self, log_record: LogRecord):
-        """Emits the `LogRecord`"""
+    def on_emit(self, log_record: SDKLogRecord):
+        """Emits the `SDKLogRecord`"""
 
     @abc.abstractmethod
     def shutdown(self):
@@ -391,7 +347,7 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
         with self._lock:
             self._log_record_processors += (log_record_processor,)
 
-    def on_emit(self, log_record: LogRecord) -> None:
+    def on_emit(self, log_record: SDKLogRecord) -> None:
         for lp in self._log_record_processors:
             lp.on_emit(log_record)
 
@@ -465,7 +421,7 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
         for future in futures:
             future.result()
 
-    def on_emit(self, log_record: LogRecord):
+    def on_emit(self, log_record: SDKLogRecord):
         self._submit_and_wait(lambda lp: lp.on_emit, log_record)
 
     def shutdown(self):
@@ -575,7 +531,7 @@ class LoggingHandler(logging.Handler):
                 )
         return attributes
 
-    def _translate(self, record: logging.LogRecord) -> LogRecord:
+    def _translate(self, record: logging.LogRecord) -> SDKLogRecord:
         timestamp = int(record.created * 1e9)
         observered_timestamp = time_ns()
         attributes = self._get_attributes(record)
@@ -610,7 +566,7 @@ class LoggingHandler(logging.Handler):
         )
 
         logger = get_logger(record.name, logger_provider=self._logger_provider)
-        return LogRecord(
+        return SDKLogRecord(
             timestamp=timestamp,
             observed_timestamp=observered_timestamp,
             context=get_current() or None,
@@ -669,11 +625,22 @@ class Logger(APILogger):
         return self._resource
 
     def emit(self, record: LogRecord):
-        """Emits the :class:`LogRecord` by setting instrumentation scope
+        """Emits the :class:`SDKLogRecord` by setting instrumentation scope
         and forwarding to the processor.
         """
-        record.instrumentation_scope = self._instrumentation_scope
-        self._multi_log_record_processor.on_emit(record)
+        sdk_log_record = SDKLogRecord(
+            timestamp=record.timestamp,
+            observed_timestamp=record.observed_timestamp,
+            context=record.context,
+            severity_text=record.severity_text,
+            severity_number=record.severity_number,
+            body=record.body,
+            attributes=record.attributes,
+            event_name=record.event_name,
+            resource=self._resource,
+            instrumentation_scope=self._instrumentation_scope,
+        )
+        self._multi_log_record_processor.on_emit(sdk_log_record)
 
 
 class LoggerProvider(APILoggerProvider):

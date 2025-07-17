@@ -28,7 +28,7 @@ from opentelemetry.sdk import trace
 from opentelemetry.sdk._logs import (
     LoggerProvider,
     LoggingHandler,
-    LogRecord,
+    SDKLogRecord,
 )
 from opentelemetry.sdk._logs._internal.export import _logger
 from opentelemetry.sdk._logs.export import (
@@ -53,7 +53,7 @@ from opentelemetry.trace import (
 )
 from opentelemetry.trace.span import INVALID_SPAN_CONTEXT
 
-EMPTY_LOG = LogRecord(
+EMPTY_LOG = SDKLogRecord(
     instrumentation_scope=InstrumentationScope("example", "example"),
 )
 
@@ -600,7 +600,7 @@ class TestConsoleLogExporter(unittest.TestCase):
                 )
             )
         )
-        log_record = LogRecord(
+        log_record = SDKLogRecord(
             timestamp=int(time.time() * 1e9),
             context=ctx,
             severity_text="WARN",

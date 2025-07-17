@@ -15,12 +15,11 @@ import logging
 from time import time_ns
 from typing import Optional
 
-from opentelemetry import trace
 from opentelemetry._events import Event
 from opentelemetry._events import EventLogger as APIEventLogger
 from opentelemetry._events import EventLoggerProvider as APIEventLoggerProvider
 from opentelemetry._logs import NoOpLogger, SeverityNumber, get_logger_provider
-from opentelemetry.sdk._logs import Logger, LoggerProvider, LogRecord
+from opentelemetry.sdk._logs import Logger, LoggerProvider, SDKLogRecord
 from opentelemetry.util.types import _ExtendedAttributes
 
 _logger = logging.getLogger(__name__)
@@ -49,13 +48,9 @@ class EventLogger(APIEventLogger):
         if isinstance(self._logger, NoOpLogger):
             # Do nothing if SDK is disabled
             return
-        span_context = trace.get_current_span().get_span_context()
-        log_record = LogRecord(
+        log_record = SDKLogRecord(
             timestamp=event.timestamp or time_ns(),
             observed_timestamp=None,
-            trace_id=event.trace_id or span_context.trace_id,
-            span_id=event.span_id or span_context.span_id,
-            trace_flags=event.trace_flags or span_context.trace_flags,
             severity_text=None,
             severity_number=event.severity_number or SeverityNumber.INFO,
             body=event.body,

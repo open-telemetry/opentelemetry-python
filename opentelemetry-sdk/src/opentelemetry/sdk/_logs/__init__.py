@@ -14,14 +14,13 @@
 
 
 from opentelemetry.sdk._logs._internal import (
-    LogDeprecatedInitWarning,
     LogDroppedAttributesWarning,
     Logger,
     LoggerProvider,
     LoggingHandler,
     LogLimits,
-    LogRecord,
     LogRecordProcessor,
+    SDKLogRecord,
 )
 
 __all__ = [
@@ -29,8 +28,7 @@ __all__ = [
     "LoggerProvider",
     "LoggingHandler",
     "LogLimits",
-    "LogRecord",
     "LogRecordProcessor",
-    "LogDeprecatedInitWarning",
     "LogDroppedAttributesWarning",
+    "SDKLogRecord",
 ]

@@ -26,8 +26,8 @@ from opentelemetry.sdk._logs._internal import (
     ConcurrentMultiLogRecordProcessor,
     LoggerProvider,
     LoggingHandler,
-    LogRecord,
     LogRecordProcessor,
+    SDKLogRecord,
     SynchronousMultiLogRecordProcessor,
 )
 
@@ -38,7 +38,7 @@ class AnotherLogRecordProcessor(LogRecordProcessor):
         self._log_list = logs_list
         self._closed = False
 
-    def on_emit(self, log_record: LogRecord):
+    def on_emit(self, log_record: SDKLogRecord):
         if self._closed:
             return
         self._log_list.append((log_record.body, log_record.severity_text))
@@ -103,7 +103,7 @@ class MultiLogRecordProcessorTestBase(ABC):
         pass
 
     def make_record(self):
-        return LogRecord(
+        return SDKLogRecord(
             timestamp=1622300111608942000,
             severity_text="WARN",
             severity_number=SeverityNumber.WARN,

@@ -39,7 +39,7 @@ from opentelemetry.proto.logs.v1.logs_pb2 import ResourceLogs, ScopeLogs
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as OTLPResource,
 )
-from opentelemetry.sdk._logs import LogRecord
+from opentelemetry.sdk._logs import SDKLogRecord
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
     OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE,
@@ -74,7 +74,7 @@ class TestOTLPLogExporter(TestCase):
                 )
             )
         )
-        self.log_data_1 = LogRecord(
+        self.log_data_1 = SDKLogRecord(
             timestamp=int(time.time() * 1e9),
             context=ctx_log_data_1,
             severity_text="WARNING",
@@ -96,7 +96,7 @@ class TestOTLPLogExporter(TestCase):
                 )
             )
         )
-        self.log_data_2 = LogRecord(
+        self.log_data_2 = SDKLogRecord(
             timestamp=int(time.time() * 1e9),
             context=ctx_log_data_2,
             severity_text="INFO",
@@ -118,7 +118,7 @@ class TestOTLPLogExporter(TestCase):
                 )
             )
         )
-        self.log_data_3 = LogRecord(
+        self.log_data_3 = SDKLogRecord(
             timestamp=int(time.time() * 1e9),
             context=ctx_log_data_3,
             severity_text="ERROR",
@@ -134,7 +134,7 @@ class TestOTLPLogExporter(TestCase):
                 SpanContext(0, 5213367945872657629, False, TraceFlags(0x01))
             )
         )
-        self.log_data_4 = LogRecord(
+        self.log_data_4 = SDKLogRecord(
             timestamp=int(time.time() * 1e9),
             context=ctx_log_data_4,
             severity_text="ERROR",
@@ -155,7 +155,7 @@ class TestOTLPLogExporter(TestCase):
                 )
             )
         )
-        self.log_data_5 = LogRecord(
+        self.log_data_5 = SDKLogRecord(
             timestamp=int(time.time() * 1e9),
             context=ctx_log_data_5,
             severity_text="ERROR",
