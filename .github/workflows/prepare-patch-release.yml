@@ -5,6 +5,8 @@ on:
 jobs:
   prepare-patch-release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # required for pushing changes
     steps:
       - uses: actions/checkout@v4
 
