@@ -13,7 +13,7 @@ can cause a deadlock to occur over `logging._lock` in some cases ([#4636](https:
 
 - Update OTLP gRPC/HTTP exporters: calling shutdown will now interrupt exporters that are sleeping
   before a retry attempt, and cause them to return failure immediately.
-  Update BatchSpan/LogRecodProcessors: shutdown will now complete after 30 seconds of trying to finish
+  Update BatchSpan/LogRecordProcessors: shutdown will now complete after 30 seconds of trying to finish
   exporting any buffered telemetry, instead of continuing to export until all telemetry was exported.
   ([#4564](https://github.com/open-telemetry/opentelemetry-python/pull/4564)).
 
