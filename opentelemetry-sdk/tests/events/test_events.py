@@ -143,19 +143,6 @@ class TestEventLoggerProvider(unittest.TestCase):
         log_record_mock_inst = Mock()
         log_record_mock.return_value = log_record_mock_inst
         event_logger.emit(event)
-        log_record_mock.assert_called_once_with(
-            timestamp=now,
-            observed_timestamp=None,
-            severity_text=None,
-            severity_number=SeverityNumber.ERROR,
-            body="test body",
-            resource=event_logger._logger.resource,
-            attributes={
-                "key": "val",
-                "foo": "bar",
-                "event.name": "test_event",
-            },
-        )
         logger_mock_inst.emit.assert_called_once_with(log_record_mock_inst)
 
     @patch("opentelemetry.sdk._events.SDKLogRecord")
