@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Overwrite logging.config.fileConfig and logging.config.dictConfig to ensure
 the OTLP `LogHandler` remains attached to the root logger. Fix a bug that
 can cause a deadlock to occur over `logging._lock` in some cases ([#4636](https://github.com/open-telemetry/opentelemetry-python/pull/4636)).
+- events: use optional `context` for initialiation instead of (`trace_id`, `span_id`, `trace_flag`)
+  ([#4690](https://github.com/open-telemetry/opentelemetry-python/pull/4636))
 
 ## Version 1.35.0/0.56b0 (2025-07-11)
 
@@ -31,7 +33,7 @@ can cause a deadlock to occur over `logging._lock` in some cases ([#4636](https:
 - Update logger level to NOTSET in logs example
   ([#4637](https://github.com/open-telemetry/opentelemetry-python/pull/4637))
 - Logging API accepts optional `context`; deprecates `trace_id`, `span_id`, `trace_flags`.
-  ([#4597](https://github.com/open-telemetry/opentelemetry-python/pull/4597)) and 
+  ([#4597](https://github.com/open-telemetry/opentelemetry-python/pull/4597)) and
   ([#4668](https://github.com/open-telemetry/opentelemetry-python/pull/4668))
 - sdk: use context instead of trace_id,span_id for initializing LogRecord
   ([#4653](https://github.com/open-telemetry/opentelemetry-python/pull/4653))

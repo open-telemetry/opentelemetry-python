@@ -17,11 +17,13 @@
 import unittest
 from unittest.mock import Mock, patch
 
+from opentelemetry import trace as trace_api
 from opentelemetry._events import Event
-from opentelemetry._logs import SeverityNumber, set_logger_provider
+from opentelemetry._logs import NoOpLogger, SeverityNumber, set_logger_provider
+from opentelemetry.context import get_current
 from opentelemetry.sdk._events import EventLoggerProvider
 from opentelemetry.sdk._logs import LoggerProvider
-from opentelemetry.sdk._logs._internal import Logger, NoOpLogger
+from opentelemetry.sdk._logs._internal import Logger
 from opentelemetry.sdk.environment_variables import OTEL_SDK_DISABLED
 
 
@@ -123,15 +125,9 @@ class TestEventLoggerProvider(unittest.TestCase):
             "name", "version", "schema_url", {"key": "value"}
         )
         now = Mock()
-        trace_id = Mock()
-        span_id = Mock()
-        trace_flags = Mock()
         event = Event(
             name="test_event",
             timestamp=now,
-            trace_id=trace_id,
-            span_id=span_id,
-            trace_flags=trace_flags,
             body="test body",
             severity_number=SeverityNumber.ERROR,
             attributes={
@@ -146,9 +142,7 @@ class TestEventLoggerProvider(unittest.TestCase):
         log_record_mock.assert_called_once_with(
             timestamp=now,
             observed_timestamp=None,
-            trace_id=trace_id,
-            span_id=span_id,
-            trace_flags=trace_flags,
+            context=get_current(),
             severity_text=None,
             severity_number=SeverityNumber.ERROR,
             body="test body",
@@ -179,15 +173,9 @@ class TestEventLoggerProvider(unittest.TestCase):
             "name", "version", "schema_url", {"key": "value"}
         )
         now = Mock()
-        trace_id = Mock()
-        span_id = Mock()
-        trace_flags = Mock()
         event = Event(
             name="test_event",
             timestamp=now,
-            trace_id=trace_id,
-            span_id=span_id,
-            trace_flags=trace_flags,
             body="test body",
             severity_number=SeverityNumber.ERROR,
             attributes={
@@ -200,3 +188,92 @@ class TestEventLoggerProvider(unittest.TestCase):
         log_record_mock.return_value = log_record_mock_inst
         event_logger.emit(event)
         logger_mock_inst.emit.assert_not_called()
+
+    @patch("opentelemetry.sdk._events.LogRecord")
+    @patch("opentelemetry.sdk._logs._internal.LoggerProvider.get_logger")
+    def test_event_logger_emit_with_context(
+        self, logger_mock, log_record_mock
+    ):
+        logger_provider = LoggerProvider()
+        logger_mock_inst = Mock()
+        logger_mock.return_value = logger_mock_inst
+        event_logger = EventLoggerProvider(logger_provider).get_event_logger(
+            "name",
+            version="version",
+            schema_url="schema_url",
+            attributes={"key": "value"},
+        )
+        logger_mock.assert_called_once_with(
+            "name", "version", "schema_url", {"key": "value"}
+        )
+
+        span = trace_api.NonRecordingSpan(
+            trace_api.SpanContext(
+                2604504634922341076776623263868986797,
+                5213367945872657620,
+                False,
+                trace_api.TraceFlags(0x01),
+            )
+        )
+        ctx = trace_api.set_span_in_context(span)
+
+        now = Mock()
+        event = Event(
+            name="test_event",
+            timestamp=now,
+            body="test body",
+            severity_number=SeverityNumber.ERROR,
+            attributes={
+                "key": "val",
+                "foo": "bar",
+                "event.name": "not this one",
+            },
+        )
+        log_record_mock_inst = Mock()
+        log_record_mock.return_value = log_record_mock_inst
+        with trace_api.use_span(span):
+            event_logger.emit(event)
+        log_record_mock.assert_called_with(
+            timestamp=now,
+            observed_timestamp=None,
+            context=ctx,
+            severity_text=None,
+            severity_number=SeverityNumber.ERROR,
+            body="test body",
+            resource=event_logger._logger.resource,
+            attributes={
+                "key": "val",
+                "foo": "bar",
+                "event.name": "test_event",
+            },
+        )
+
+        another_event = Event(
+            name="another_event",
+            timestamp=now,
+            context=ctx,
+            body="another body",
+            severity_number=SeverityNumber.ERROR,
+            attributes={
+                "key": "val",
+                "foo": "bar",
+                "event.name": "not this one",
+            },
+        )
+        event_logger.emit(another_event)
+        log_record_mock.assert_called_with(
+            timestamp=now,
+            observed_timestamp=None,
+            context=ctx,
+            severity_text=None,
+            severity_number=SeverityNumber.ERROR,
+            body="another body",
+            resource=event_logger._logger.resource,
+            attributes={
+                "key": "val",
+                "foo": "bar",
+                "event.name": "another_event",
+            },
+        )
+
+        self.assertEqual(log_record_mock.call_count, 2)
