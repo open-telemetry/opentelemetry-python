@@ -121,7 +121,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         | None = None,
         preferred_aggregation: dict[type, Aggregation] | None = None,
     ):
-        self._shutdown_is_occuring = threading.Event()
+        self._shutdown_in_progress = threading.Event()
         self._endpoint = endpoint or environ.get(
             OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
             _append_metrics_path(
@@ -238,7 +238,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                 resp.reason,
                 backoff_seconds,
             )
-            shutdown = self._shutdown_is_occuring.wait(backoff_seconds)
+            shutdown = self._shutdown_in_progress.wait(backoff_seconds)
             if shutdown:
                 _logger.warning("Shutdown in progress, aborting retry.")
                 break
@@ -249,7 +249,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             _logger.warning("Exporter already shutdown, ignoring call")
             return
         self._shutdown = True
-        self._shutdown_is_occuring.set()
+        self._shutdown_in_progress.set()
         self._session.close()
 
     @property

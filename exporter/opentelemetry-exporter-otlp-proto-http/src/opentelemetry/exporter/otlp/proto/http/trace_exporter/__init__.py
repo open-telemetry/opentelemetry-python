@@ -77,7 +77,7 @@ class OTLPSpanExporter(SpanExporter):
         compression: Optional[Compression] = None,
         session: Optional[requests.Session] = None,
     ):
-        self._shutdown_is_occuring = threading.Event()
+        self._shutdown_in_progress = threading.Event()
         self._endpoint = endpoint or environ.get(
             OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
             _append_trace_path(
@@ -186,7 +186,7 @@ class OTLPSpanExporter(SpanExporter):
                 resp.reason,
                 backoff_seconds,
             )
-            shutdown = self._shutdown_is_occuring.wait(backoff_seconds)
+            shutdown = self._shutdown_in_progress.wait(backoff_seconds)
             if shutdown:
                 _logger.warning("Shutdown in progress, aborting retry.")
                 break
@@ -197,7 +197,7 @@ class OTLPSpanExporter(SpanExporter):
             _logger.warning("Exporter already shutdown, ignoring call")
             return
         self._shutdown = True
-        self._shutdown_is_occuring.set()
+        self._shutdown_in_progress.set()
         self._session.close()
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:

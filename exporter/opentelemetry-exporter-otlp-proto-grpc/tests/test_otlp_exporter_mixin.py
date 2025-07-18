@@ -347,9 +347,9 @@ class TestOTLPExporterMixin(TestCase):
             time.sleep(0.05)
             # The code should now be in a 1 second backoff.
             # pylint: disable=protected-access
-            self.assertFalse(self.exporter._shutdown_is_occuring.is_set())
+            self.assertFalse(self.exporter._shutdown_in_progress.is_set())
             self.exporter.shutdown()
-            self.assertTrue(self.exporter._shutdown_is_occuring.is_set())
+            self.assertTrue(self.exporter._shutdown_in_progress.is_set())
             export_result = export_thread.join()
             end_wait = time.time()
             self.assertEqual(export_result, SpanExportResult.FAILURE)
