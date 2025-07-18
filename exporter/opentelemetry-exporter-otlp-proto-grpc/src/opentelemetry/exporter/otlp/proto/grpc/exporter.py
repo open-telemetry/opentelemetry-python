@@ -289,7 +289,7 @@ class OTLPExporterMixin(
             )
         self._client = self._stub(self._channel)
 
-        self._shutdown_is_occuring = threading.Event()
+        self._shutdown_in_progress = threading.Event()
         self._shutdown = False
 
     @abstractmethod
@@ -352,7 +352,7 @@ class OTLPExporterMixin(
                     self._endpoint,
                     backoff_seconds,
                 )
-            shutdown = self._shutdown_is_occuring.wait(backoff_seconds)
+            shutdown = self._shutdown_in_progress.wait(backoff_seconds)
             if shutdown:
                 logger.warning("Shutdown in progress, aborting retry.")
                 break
@@ -364,7 +364,7 @@ class OTLPExporterMixin(
             logger.warning("Exporter already shutdown, ignoring call")
             return
         self._shutdown = True
-        self._shutdown_is_occuring.set()
+        self._shutdown_in_progress.set()
         self._channel.close()
 
     @property
