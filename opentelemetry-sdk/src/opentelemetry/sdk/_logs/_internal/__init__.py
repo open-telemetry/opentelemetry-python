@@ -38,7 +38,6 @@ from opentelemetry._logs import (
 )
 from opentelemetry.attributes import _VALID_ANY_VALUE_TYPES, BoundedAttributes
 from opentelemetry.context import get_current
-from opentelemetry.context.context import Context
 from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_COUNT_LIMIT,
     OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
@@ -52,11 +51,8 @@ from opentelemetry.semconv.attributes import exception_attributes
 from opentelemetry.trace import (
     format_span_id,
     format_trace_id,
-    get_current_span,
 )
-from opentelemetry.util.types import AnyValue, _ExtendedAttributes
-
-_logger = logging.getLogger(__name__)
+from opentelemetry.util.types import _ExtendedAttributes
 
 _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
 _ENV_VALUE_UNSET = ""
@@ -172,7 +168,7 @@ _UnsetLogLimits = LogLimits(
 )
 
 
-class SDKLogRecord(LogRecord):
+class SDKLogRecord:
     """A SDKLogRecord instance represents an event being logged.
 
     SDKLogRecord instances are created and emitted via `Logger`
@@ -183,59 +179,30 @@ class SDKLogRecord(LogRecord):
     @overload
     def __init__(
         self,
-        timestamp: int | None = None,
-        observed_timestamp: int | None = None,
-        context: Context | None = None,
-        severity_text: str | None = None,
-        severity_number: SeverityNumber | None = None,
-        body: AnyValue | None = None,
+        log_record: LogRecord,
         resource: Resource | None = None,
-        attributes: _ExtendedAttributes | None = None,
         limits: LogLimits | None = _UnsetLogLimits,
-        event_name: str | None = None,
     ): ...
 
     def __init__(  # pylint:disable=too-many-locals
         self,
-        timestamp: int | None = None,
-        observed_timestamp: int | None = None,
-        context: Context | None = None,
-        severity_text: str | None = None,
-        severity_number: SeverityNumber | None = None,
-        body: AnyValue | None = None,
+        log_record: LogRecord | None = None,
         resource: Resource | None = None,
-        attributes: _ExtendedAttributes | None = None,
         limits: LogLimits | None = _UnsetLogLimits,
-        event_name: str | None = None,
         instrumentation_scope: InstrumentationScope | None = None,
     ):
-        if not context:
-            context = get_current()
+        self.log_record = log_record
+        if self.log_record is not None:
+            self.log_record.attributes = BoundedAttributes(
+                maxlen=limits.max_attributes,
+                attributes=self.log_record.attributes
+                if bool(self.log_record.attributes)
+                else None,
+                immutable=False,
+                max_value_len=limits.max_attribute_length,
+                extended_attributes=True,
+            )
 
-        span = get_current_span(context)
-        span_context = span.get_span_context()
-
-        super().__init__(
-            **{
-                "timestamp": timestamp,
-                "observed_timestamp": observed_timestamp,
-                "context": context,
-                "trace_id": span_context.trace_id,
-                "span_id": span_context.span_id,
-                "trace_flags": span_context.trace_flags,
-                "severity_text": severity_text,
-                "severity_number": severity_number,
-                "body": body,
-                "attributes": BoundedAttributes(
-                    maxlen=limits.max_attributes,
-                    attributes=attributes if bool(attributes) else None,
-                    immutable=False,
-                    max_value_len=limits.max_attribute_length,
-                    extended_attributes=True,
-                ),
-                "event_name": event_name,
-            }
-        )
         self.resource = (
             resource if isinstance(resource, Resource) else Resource.create({})
         )
@@ -255,30 +222,36 @@ class SDKLogRecord(LogRecord):
     def to_json(self, indent: int | None = 4) -> str:
         return json.dumps(
             {
-                "body": self.body,
-                "severity_number": self.severity_number.value
-                if self.severity_number is not None
+                "body": self.log_record.body,
+                "severity_number": self.log_record.severity_number.value
+                if self.log_record.severity_number is not None
                 else None,
-                "severity_text": self.severity_text,
+                "severity_text": self.log_record.severity_text,
                 "attributes": (
-                    dict(self.attributes) if bool(self.attributes) else None
+                    dict(self.log_record.attributes)
+                    if bool(self.log_record.attributes)
+                    else None
                 ),
                 "dropped_attributes": self.dropped_attributes,
-                "timestamp": ns_to_iso_str(self.timestamp),
-                "observed_timestamp": ns_to_iso_str(self.observed_timestamp),
+                "timestamp": ns_to_iso_str(self.log_record.timestamp),
+                "observed_timestamp": ns_to_iso_str(
+                    self.log_record.observed_timestamp
+                ),
                 "trace_id": (
-                    f"0x{format_trace_id(self.trace_id)}"
-                    if self.trace_id is not None
+                    f"0x{format_trace_id(self.log_record.trace_id)}"
+                    if self.log_record.trace_id is not None
                     else ""
                 ),
                 "span_id": (
-                    f"0x{format_span_id(self.span_id)}"
-                    if self.span_id is not None
+                    f"0x{format_span_id(self.log_record.span_id)}"
+                    if self.log_record.span_id is not None
                     else ""
                 ),
-                "trace_flags": self.trace_flags,
+                "trace_flags": self.log_record.trace_flags,
                 "resource": json.loads(self.resource.to_json()),
-                "event_name": self.event_name if self.event_name else "",
+                "event_name": self.log_record.event_name
+                if self.log_record.event_name
+                else "",
             },
             indent=indent,
             cls=BytesEncoder,
@@ -286,11 +259,10 @@ class SDKLogRecord(LogRecord):
 
     @property
     def dropped_attributes(self) -> int:
-        attributes: BoundedAttributes = cast(
-            BoundedAttributes, self.attributes
-        )
-        if attributes:
-            return attributes.dropped
+        if self.log_record and isinstance(
+            self.log_record.attributes, BoundedAttributes
+        ):
+            return self.log_record.attributes.dropped
         return 0
 
 
@@ -531,7 +503,7 @@ class LoggingHandler(logging.Handler):
                 )
         return attributes
 
-    def _translate(self, record: logging.LogRecord) -> SDKLogRecord:
+    def _translate(self, record: logging.LogRecord) -> LogRecord:
         timestamp = int(record.created * 1e9)
         observered_timestamp = time_ns()
         attributes = self._get_attributes(record)
@@ -565,15 +537,13 @@ class LoggingHandler(logging.Handler):
             "WARN" if record.levelname == "WARNING" else record.levelname
         )
 
-        logger = get_logger(record.name, logger_provider=self._logger_provider)
-        return SDKLogRecord(
+        return LogRecord(
             timestamp=timestamp,
             observed_timestamp=observered_timestamp,
             context=get_current() or None,
             severity_text=level_name,
             severity_number=severity_number,
             body=body,
-            resource=logger.resource,
             attributes=attributes,
         )
 
@@ -629,14 +599,7 @@ class Logger(APILogger):
         and forwarding to the processor.
         """
         sdk_log_record = SDKLogRecord(
-            timestamp=record.timestamp,
-            observed_timestamp=record.observed_timestamp,
-            context=record.context,
-            severity_text=record.severity_text,
-            severity_number=record.severity_number,
-            body=record.body,
-            attributes=record.attributes,
-            event_name=record.event_name,
+            log_record=record,
             resource=self._resource,
             instrumentation_scope=self._instrumentation_scope,
         )

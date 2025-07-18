@@ -99,13 +99,18 @@ class TestLoggingHandler(unittest.TestCase):
         with self.assertLogs(level=logging.WARNING):
             logger.warning("Warning message")
 
-        log_record = processor.get_log_record(0)
+        sdk_log_record = processor.get_log_record(0)
 
-        self.assertIsNotNone(log_record)
-        self.assertEqual(log_record.trace_id, INVALID_SPAN_CONTEXT.trace_id)
-        self.assertEqual(log_record.span_id, INVALID_SPAN_CONTEXT.span_id)
+        self.assertIsNotNone(sdk_log_record)
         self.assertEqual(
-            log_record.trace_flags, INVALID_SPAN_CONTEXT.trace_flags
+            sdk_log_record.log_record.trace_id, INVALID_SPAN_CONTEXT.trace_id
+        )
+        self.assertEqual(
+            sdk_log_record.log_record.span_id, INVALID_SPAN_CONTEXT.span_id
+        )
+        self.assertEqual(
+            sdk_log_record.log_record.trace_flags,
+            INVALID_SPAN_CONTEXT.trace_flags,
         )
 
     def test_log_record_observed_timestamp(self):
@@ -114,8 +119,8 @@ class TestLoggingHandler(unittest.TestCase):
         with self.assertLogs(level=logging.WARNING):
             logger.warning("Warning message")
 
-        log_record = processor.get_log_record(0)
-        self.assertIsNotNone(log_record.observed_timestamp)
+        sdk_log_record = processor.get_log_record(0)
+        self.assertIsNotNone(sdk_log_record.log_record.observed_timestamp)
 
     def test_log_record_user_attributes(self):
         """Attributes can be injected into logs by adding them to the SDKLogRecord"""
@@ -125,26 +130,33 @@ class TestLoggingHandler(unittest.TestCase):
         with self.assertLogs(level=logging.WARNING):
             logger.warning("Warning message", extra={"http.status_code": 200})
 
-        log_record = processor.get_log_record(0)
+        sdk_log_record = processor.get_log_record(0)
 
-        self.assertIsNotNone(log_record)
-        self.assertEqual(len(log_record.attributes), 4)
-        self.assertEqual(log_record.attributes["http.status_code"], 200)
+        self.assertIsNotNone(sdk_log_record)
+        self.assertEqual(len(sdk_log_record.log_record.attributes), 4)
+        self.assertEqual(
+            sdk_log_record.log_record.attributes["http.status_code"], 200
+        )
         self.assertTrue(
-            log_record.attributes[code_attributes.CODE_FILE_PATH].endswith(
-                "test_handler.py"
-            )
+            sdk_log_record.log_record.attributes[
+                code_attributes.CODE_FILE_PATH
+            ].endswith("test_handler.py")
         )
         self.assertEqual(
-            log_record.attributes[code_attributes.CODE_FUNCTION_NAME],
+            sdk_log_record.log_record.attributes[
+                code_attributes.CODE_FUNCTION_NAME
+            ],
             "test_log_record_user_attributes",
         )
         # The line of the log statement is not a constant (changing tests may change that),
         # so only check that the attribute is present.
         self.assertTrue(
-            code_attributes.CODE_LINE_NUMBER in log_record.attributes
+            code_attributes.CODE_LINE_NUMBER
+            in sdk_log_record.log_record.attributes
         )
-        self.assertTrue(isinstance(log_record.attributes, BoundedAttributes))
+        self.assertTrue(
+            isinstance(sdk_log_record.log_record.attributes, BoundedAttributes)
+        )
 
     def test_log_record_exception(self):
         """Exception information will be included in attributes"""
@@ -156,20 +168,24 @@ class TestLoggingHandler(unittest.TestCase):
             with self.assertLogs(level=logging.ERROR):
                 logger.exception("Zero Division Error")
 
-        log_record = processor.get_log_record(0)
+        sdk_log_record = processor.get_log_record(0)
 
-        self.assertIsNotNone(log_record)
-        self.assertTrue(isinstance(log_record.body, str))
-        self.assertEqual(log_record.body, "Zero Division Error")
+        self.assertIsNotNone(sdk_log_record)
+        self.assertTrue(isinstance(sdk_log_record.log_record.body, str))
+        self.assertEqual(sdk_log_record.log_record.body, "Zero Division Error")
         self.assertEqual(
-            log_record.attributes[exception_attributes.EXCEPTION_TYPE],
+            sdk_log_record.log_record.attributes[
+                exception_attributes.EXCEPTION_TYPE
+            ],
             ZeroDivisionError.__name__,
         )
         self.assertEqual(
-            log_record.attributes[exception_attributes.EXCEPTION_MESSAGE],
+            sdk_log_record.log_record.attributes[
+                exception_attributes.EXCEPTION_MESSAGE
+            ],
             "division by zero",
         )
-        stack_trace = log_record.attributes[
+        stack_trace = sdk_log_record.log_record.attributes[
             exception_attributes.EXCEPTION_STACKTRACE
         ]
         self.assertIsInstance(stack_trace, str)
@@ -190,19 +206,23 @@ class TestLoggingHandler(unittest.TestCase):
             with self.assertLogs(level=logging.ERROR):
                 logger.exception("Zero Division Error")
 
-        log_record = processor.get_log_record(0)
+        sdk_log_record = processor.get_log_record(0)
 
-        self.assertIsNotNone(log_record)
-        self.assertEqual(log_record.body, "Zero Division Error")
+        self.assertIsNotNone(sdk_log_record)
+        self.assertEqual(sdk_log_record.log_record.body, "Zero Division Error")
         self.assertEqual(
-            log_record.attributes[exception_attributes.EXCEPTION_TYPE],
+            sdk_log_record.log_record.attributes[
+                exception_attributes.EXCEPTION_TYPE
+            ],
             ZeroDivisionError.__name__,
         )
         self.assertEqual(
-            log_record.attributes[exception_attributes.EXCEPTION_MESSAGE],
+            sdk_log_record.log_record.attributes[
+                exception_attributes.EXCEPTION_MESSAGE
+            ],
             "division by zero",
         )
-        stack_trace = log_record.attributes[
+        stack_trace = sdk_log_record.log_record.attributes[
             exception_attributes.EXCEPTION_STACKTRACE
         ]
         self.assertIsInstance(stack_trace, str)
@@ -221,18 +241,21 @@ class TestLoggingHandler(unittest.TestCase):
             with self.assertLogs(level=logging.ERROR):
                 logger.error("Zero Division Error", exc_info=False)
 
-        log_record = processor.get_log_record(0)
+        sdk_log_record = processor.get_log_record(0)
 
-        self.assertIsNotNone(log_record)
-        self.assertEqual(log_record.body, "Zero Division Error")
+        self.assertIsNotNone(sdk_log_record)
+        self.assertEqual(sdk_log_record.log_record.body, "Zero Division Error")
         self.assertNotIn(
-            exception_attributes.EXCEPTION_TYPE, log_record.attributes
+            exception_attributes.EXCEPTION_TYPE,
+            sdk_log_record.log_record.attributes,
         )
         self.assertNotIn(
-            exception_attributes.EXCEPTION_MESSAGE, log_record.attributes
+            exception_attributes.EXCEPTION_MESSAGE,
+            sdk_log_record.log_record.attributes,
         )
         self.assertNotIn(
-            exception_attributes.EXCEPTION_STACKTRACE, log_record.attributes
+            exception_attributes.EXCEPTION_STACKTRACE,
+            sdk_log_record.log_record.attributes,
         )
 
     def test_log_record_exception_with_object_payload(self):
@@ -248,20 +271,26 @@ class TestLoggingHandler(unittest.TestCase):
             with self.assertLogs(level=logging.ERROR):
                 logger.exception(exception)
 
-        log_record = processor.get_log_record(0)
+        sdk_log_record = processor.get_log_record(0)
 
-        self.assertIsNotNone(log_record)
-        self.assertTrue(isinstance(log_record.body, str))
-        self.assertEqual(log_record.body, "CustomException stringified")
+        self.assertIsNotNone(sdk_log_record)
+        self.assertTrue(isinstance(sdk_log_record.log_record.body, str))
         self.assertEqual(
-            log_record.attributes[exception_attributes.EXCEPTION_TYPE],
+            sdk_log_record.log_record.body, "CustomException stringified"
+        )
+        self.assertEqual(
+            sdk_log_record.log_record.attributes[
+                exception_attributes.EXCEPTION_TYPE
+            ],
             CustomException.__name__,
         )
         self.assertEqual(
-            log_record.attributes[exception_attributes.EXCEPTION_MESSAGE],
+            sdk_log_record.log_record.attributes[
+                exception_attributes.EXCEPTION_MESSAGE
+            ],
             "CustomException message",
         )
-        stack_trace = log_record.attributes[
+        stack_trace = sdk_log_record.log_record.attributes[
             exception_attributes.EXCEPTION_STACKTRACE
         ]
         self.assertIsInstance(stack_trace, str)
@@ -283,21 +312,32 @@ class TestLoggingHandler(unittest.TestCase):
                 with self.assertLogs(level=logging.CRITICAL):
                     logger.critical("Critical message within span")
 
-                log_record = processor.get_log_record(0)
+                sdk_log_record = processor.get_log_record(0)
 
                 self.assertEqual(
-                    log_record.body, "Critical message within span"
+                    sdk_log_record.log_record.body,
+                    "Critical message within span",
                 )
-                self.assertEqual(log_record.severity_text, "CRITICAL")
                 self.assertEqual(
-                    log_record.severity_number, SeverityNumber.FATAL
+                    sdk_log_record.log_record.severity_text, "CRITICAL"
                 )
-                self.assertEqual(log_record.context, mock_context)
+                self.assertEqual(
+                    sdk_log_record.log_record.severity_number,
+                    SeverityNumber.FATAL,
+                )
+                self.assertEqual(
+                    sdk_log_record.log_record.context, mock_context
+                )
                 span_context = span.get_span_context()
-                self.assertEqual(log_record.trace_id, span_context.trace_id)
-                self.assertEqual(log_record.span_id, span_context.span_id)
                 self.assertEqual(
-                    log_record.trace_flags, span_context.trace_flags
+                    sdk_log_record.log_record.trace_id, span_context.trace_id
+                )
+                self.assertEqual(
+                    sdk_log_record.log_record.span_id, span_context.span_id
+                )
+                self.assertEqual(
+                    sdk_log_record.log_record.trace_flags,
+                    span_context.trace_flags,
                 )
 
     def test_log_record_trace_correlation_deprecated(self):
@@ -308,29 +348,41 @@ class TestLoggingHandler(unittest.TestCase):
             with self.assertLogs(level=logging.CRITICAL):
                 logger.critical("Critical message within span")
 
-            log_record = processor.get_log_record(0)
+            sdk_log_record = processor.get_log_record(0)
 
-            self.assertEqual(log_record.body, "Critical message within span")
-            self.assertEqual(log_record.severity_text, "CRITICAL")
-            self.assertEqual(log_record.severity_number, SeverityNumber.FATAL)
+            self.assertEqual(
+                sdk_log_record.log_record.body, "Critical message within span"
+            )
+            self.assertEqual(
+                sdk_log_record.log_record.severity_text, "CRITICAL"
+            )
+            self.assertEqual(
+                sdk_log_record.log_record.severity_number, SeverityNumber.FATAL
+            )
             span_context = span.get_span_context()
-            self.assertEqual(log_record.trace_id, span_context.trace_id)
-            self.assertEqual(log_record.span_id, span_context.span_id)
-            self.assertEqual(log_record.trace_flags, span_context.trace_flags)
+            self.assertEqual(
+                sdk_log_record.log_record.trace_id, span_context.trace_id
+            )
+            self.assertEqual(
+                sdk_log_record.log_record.span_id, span_context.span_id
+            )
+            self.assertEqual(
+                sdk_log_record.log_record.trace_flags, span_context.trace_flags
+            )
 
     def test_warning_without_formatter(self):
         processor, logger = set_up_test_logging(logging.WARNING)
         logger.warning("Test message")
 
-        log_record = processor.get_log_record(0)
-        self.assertEqual(log_record.body, "Test message")
+        sdk_log_record = processor.get_log_record(0)
+        self.assertEqual(sdk_log_record.log_record.body, "Test message")
 
     def test_exception_without_formatter(self):
         processor, logger = set_up_test_logging(logging.WARNING)
         logger.exception("Test exception")
 
-        log_record = processor.get_log_record(0)
-        self.assertEqual(log_record.body, "Test exception")
+        sdk_log_record = processor.get_log_record(0)
+        self.assertEqual(sdk_log_record.log_record.body, "Test exception")
 
     def test_warning_with_formatter(self):
         processor, logger = set_up_test_logging(
@@ -341,8 +393,10 @@ class TestLoggingHandler(unittest.TestCase):
         )
         logger.warning("Test message")
 
-        log_record = processor.get_log_record(0)
-        self.assertEqual(log_record.body, "foo - WARNING - Test message")
+        sdk_log_record = processor.get_log_record(0)
+        self.assertEqual(
+            sdk_log_record.log_record.body, "foo - WARNING - Test message"
+        )
 
     def test_log_body_is_always_string_with_formatter(self):
         processor, logger = set_up_test_logging(
@@ -353,8 +407,8 @@ class TestLoggingHandler(unittest.TestCase):
         )
         logger.warning(["something", "of", "note"])
 
-        log_record = processor.get_log_record(0)
-        self.assertIsInstance(log_record.body, str)
+        sdk_log_record = processor.get_log_record(0)
+        self.assertIsInstance(sdk_log_record.log_record.body, str)
 
     @patch.dict(os.environ, {"OTEL_SDK_DISABLED": "true"})
     def test_handler_root_logger_with_disabled_sdk_does_not_go_into_recursion_error(

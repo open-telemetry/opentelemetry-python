@@ -18,7 +18,12 @@ from typing import Optional
 from opentelemetry._events import Event
 from opentelemetry._events import EventLogger as APIEventLogger
 from opentelemetry._events import EventLoggerProvider as APIEventLoggerProvider
-from opentelemetry._logs import NoOpLogger, SeverityNumber, get_logger_provider
+from opentelemetry._logs import (
+    LogRecord,
+    NoOpLogger,
+    SeverityNumber,
+    get_logger_provider,
+)
 from opentelemetry.sdk._logs import Logger, LoggerProvider, SDKLogRecord
 from opentelemetry.util.types import _ExtendedAttributes
 
@@ -49,13 +54,15 @@ class EventLogger(APIEventLogger):
             # Do nothing if SDK is disabled
             return
         log_record = SDKLogRecord(
-            timestamp=event.timestamp or time_ns(),
-            observed_timestamp=None,
-            severity_text=None,
-            severity_number=event.severity_number or SeverityNumber.INFO,
-            body=event.body,
+            LogRecord(
+                timestamp=event.timestamp or time_ns(),
+                observed_timestamp=None,
+                severity_text=None,
+                severity_number=event.severity_number or SeverityNumber.INFO,
+                body=event.body,
+                attributes=event.attributes,
+            ),
             resource=getattr(self._logger, "resource", None),
-            attributes=event.attributes,
         )
         self._logger.emit(log_record)
 

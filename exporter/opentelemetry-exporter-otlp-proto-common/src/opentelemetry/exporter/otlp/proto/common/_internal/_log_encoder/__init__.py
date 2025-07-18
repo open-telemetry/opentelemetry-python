@@ -37,30 +37,32 @@ def encode_logs(batch: Sequence[SDKLogRecord]) -> ExportLogsServiceRequest:
     return ExportLogsServiceRequest(resource_logs=_encode_resource_logs(batch))
 
 
-def _encode_log(log_record: SDKLogRecord) -> PB2LogRecord:
+def _encode_log(sdk_log_record: SDKLogRecord) -> PB2LogRecord:
     span_id = (
         None
-        if log_record.span_id == 0
-        else _encode_span_id(log_record.span_id)
+        if sdk_log_record.log_record.span_id == 0
+        else _encode_span_id(sdk_log_record.log_record.span_id)
     )
     trace_id = (
         None
-        if log_record.trace_id == 0
-        else _encode_trace_id(log_record.trace_id)
+        if sdk_log_record.log_record.trace_id == 0
+        else _encode_trace_id(sdk_log_record.log_record.trace_id)
     )
-    body = log_record.body
+    body = sdk_log_record.log_record.body
     return PB2LogRecord(
-        time_unix_nano=log_record.timestamp,
-        observed_time_unix_nano=log_record.observed_timestamp,
+        time_unix_nano=sdk_log_record.log_record.timestamp,
+        observed_time_unix_nano=sdk_log_record.log_record.observed_timestamp,
         span_id=span_id,
         trace_id=trace_id,
-        flags=int(log_record.trace_flags),
+        flags=int(sdk_log_record.log_record.trace_flags),
         body=_encode_value(body, allow_null=True),
-        severity_text=log_record.severity_text,
-        attributes=_encode_attributes(log_record.attributes, allow_null=True),
-        dropped_attributes_count=log_record.dropped_attributes,
-        severity_number=log_record.severity_number.value,
-        event_name=log_record.event_name,
+        severity_text=sdk_log_record.log_record.severity_text,
+        attributes=_encode_attributes(
+            sdk_log_record.log_record.attributes, allow_null=True
+        ),
+        dropped_attributes_count=sdk_log_record.dropped_attributes,
+        severity_number=sdk_log_record.log_record.severity_number.value,
+        event_name=sdk_log_record.log_record.event_name,
     )
 
 

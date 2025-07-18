@@ -16,7 +16,7 @@ import json
 import unittest
 import warnings
 
-from opentelemetry._logs.severity import SeverityNumber
+from opentelemetry._logs import LogRecord, SeverityNumber
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk._logs import (
     LogDroppedAttributesWarning,
@@ -29,17 +29,19 @@ from opentelemetry.sdk.resources import Resource
 class TestLogRecord(unittest.TestCase):
     def test_log_record_to_json(self):
         log_record = SDKLogRecord(
-            timestamp=0,
-            observed_timestamp=0,
-            body={"key": "logLine", "bytes": b"123"},
+            LogRecord(
+                timestamp=0,
+                observed_timestamp=0,
+                body={"key": "logLine", "bytes": b"123"},
+                attributes={
+                    "mapping": {"key": "value"},
+                    "none": None,
+                    "sequence": [1, 2],
+                    "str": "string",
+                },
+                event_name="a.event",
+            ),
             resource=Resource({"service.name": "foo"}),
-            attributes={
-                "mapping": {"key": "value"},
-                "none": None,
-                "sequence": [1, 2],
-                "str": "string",
-            },
-            event_name="a.event",
         )
 
         self.assertEqual(
@@ -49,10 +51,12 @@ class TestLogRecord(unittest.TestCase):
 
     def test_log_record_to_json_serializes_severity_number_as_int(self):
         actual = SDKLogRecord(
-            timestamp=0,
-            severity_number=SeverityNumber.WARN,
-            observed_timestamp=0,
-            body="a log line",
+            LogRecord(
+                timestamp=0,
+                severity_number=SeverityNumber.WARN,
+                observed_timestamp=0,
+                body="a log line",
+            ),
             resource=Resource({"service.name": "foo"}),
         )
 
@@ -62,14 +66,20 @@ class TestLogRecord(unittest.TestCase):
     def test_log_record_bounded_attributes(self):
         attr = {"key": "value"}
 
-        result = SDKLogRecord(timestamp=0, body="a log line", attributes=attr)
+        result = SDKLogRecord(
+            LogRecord(timestamp=0, body="a log line", attributes=attr)
+        )
 
-        self.assertTrue(isinstance(result.attributes, BoundedAttributes))
+        self.assertTrue(
+            isinstance(result.log_record.attributes, BoundedAttributes)
+        )
 
     def test_log_record_dropped_attributes_empty_limits(self):
         attr = {"key": "value"}
 
-        result = SDKLogRecord(timestamp=0, body="a log line", attributes=attr)
+        result = SDKLogRecord(
+            LogRecord(timestamp=0, body="a log line", attributes=attr)
+        )
 
         self.assertTrue(result.dropped_attributes == 0)
 
@@ -80,7 +90,8 @@ class TestLogRecord(unittest.TestCase):
         )
 
         result = SDKLogRecord(
-            timestamp=0, body="a log line", attributes=attr, limits=limits
+            LogRecord(timestamp=0, body="a log line", attributes=attr),
+            limits=limits,
         )
         self.assertTrue(result.dropped_attributes == 1)
 
@@ -94,10 +105,15 @@ class TestLogRecord(unittest.TestCase):
         )
 
         result = SDKLogRecord(
-            timestamp=0, body="a log line", attributes=attr, limits=limits
+            LogRecord(
+                timestamp=0,
+                body="a log line",
+                attributes=attr,
+            ),
+            limits=limits,
         )
         self.assertTrue(result.dropped_attributes == 0)
-        self.assertEqual(expected, result.attributes)
+        self.assertEqual(expected, result.log_record.attributes)
 
     def test_log_record_dropped_attributes_set_limits(self):
         attr = {"key": "value", "key2": "value2"}
@@ -108,10 +124,15 @@ class TestLogRecord(unittest.TestCase):
         )
 
         result = SDKLogRecord(
-            timestamp=0, body="a log line", attributes=attr, limits=limits
+            LogRecord(
+                timestamp=0,
+                body="a log line",
+                attributes=attr,
+            ),
+            limits=limits,
         )
         self.assertTrue(result.dropped_attributes == 1)
-        self.assertEqual(expected, result.attributes)
+        self.assertEqual(expected, result.log_record.attributes)
 
     def test_log_record_dropped_attributes_set_limits_warning_once(self):
         attr = {"key1": "value1", "key2": "value2"}
@@ -123,9 +144,11 @@ class TestLogRecord(unittest.TestCase):
         with warnings.catch_warnings(record=True) as cw:
             for _ in range(10):
                 SDKLogRecord(
-                    timestamp=0,
-                    body="a log line",
-                    attributes=attr,
+                    LogRecord(
+                        timestamp=0,
+                        body="a log line",
+                        attributes=attr,
+                    ),
                     limits=limits,
                 )
         self.assertEqual(len(cw), 1)
@@ -140,7 +163,12 @@ class TestLogRecord(unittest.TestCase):
         limits = LogLimits()
 
         result = SDKLogRecord(
-            timestamp=0, body="a log line", attributes=attr, limits=limits
+            LogRecord(
+                timestamp=0,
+                body="a log line",
+                attributes=attr,
+            ),
+            limits=limits,
         )
         self.assertTrue(result.dropped_attributes == 0)
-        self.assertEqual(attr, result.attributes)
+        self.assertEqual(attr, result.log_record.attributes)
