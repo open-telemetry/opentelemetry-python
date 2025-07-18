@@ -127,7 +127,8 @@ def _load_credential_from_envvar(
     if credential_env:
         credentials = _import_config_component(
             credential_env, "opentelemetry_otlp_credential_provider"
-        )
+        )()
+        print(credentials)
         if isinstance(credentials, ChannelCredentials):
             return ("credentials", credentials)
         elif isinstance(credentials, Session):
@@ -265,22 +266,11 @@ def _init_exporter(
         )
         or otlp_credential_param_for_all_signal_types
     )
-    if not otlp_credential_param:
-        return exporter_class(**exporter_args_map)
-    credential_key, credential = otlp_credential_param
-    params = inspect.signature(exporter_class.__init__).parameters
-    if (
-        credential_key == "credentials"
-        and "credentials" in params
-        and "ChannelCredentials" in params["credentials"].annotation
-    ):
-        return exporter_class(credentials=credential, **exporter_args_map)
-    if (
-        credential_key == "session"
-        and "session" in params
-        and "Session" in params["session"].annotation
-    ):
-        return exporter_class(session=credential, **exporter_args_map)
+    if otlp_credential_param:
+        credential_key, credential = otlp_credential_param
+        # We only want to inject credentials into the appropriate OTLP HTTP // GRPC exporters.
+        if credential_key in inspect.signature(exporter_class.__init__).parameters and ("opentelemetry.exporter.otlp.proto.http" in str(exporter_class) or "opentelemetry.exporter.otlp.proto.grpc" in str(exporter_class)):
+            exporter_args_map[credential_key] = credential
     return exporter_class(**exporter_args_map)
 
 
