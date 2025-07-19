@@ -15,7 +15,7 @@
 import unittest
 from typing import List, Tuple
 
-from opentelemetry._logs import SeverityNumber
+from opentelemetry._logs import LogRecord, SeverityNumber
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _encode_attributes,
     _encode_span_id,
@@ -64,7 +64,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
     def test_encode_no_body(self):
         sdk_logs, expected_encoding = self.get_test_logs()
         for log in sdk_logs:
-            log.body = None
+            log.log_record.body = None
 
         for resource_log in expected_encoding.resource_logs:
             for scope_log in resource_log.scope_logs:
@@ -99,30 +99,34 @@ class TestOTLPLogEncoder(unittest.TestCase):
             )
         )
         log1 = SDKLogRecord(
-            timestamp=1644650195189786880,
-            observed_timestamp=1644650195189786881,
-            context=ctx_log1,
-            severity_text="WARN",
-            severity_number=SeverityNumber.WARN,
-            body="Do not go gentle into that good night. Rage, rage against the dying of the light",
+            LogRecord(
+                timestamp=1644650195189786880,
+                observed_timestamp=1644650195189786881,
+                context=ctx_log1,
+                severity_text="WARN",
+                severity_number=SeverityNumber.WARN,
+                body="Do not go gentle into that good night. Rage, rage against the dying of the light",
+                attributes={"a": 1, "b": "c"},
+            ),
             resource=SDKResource(
                 {"first_resource": "value"},
                 "resource_schema_url",
             ),
-            attributes={"a": 1, "b": "c"},
             instrumentation_scope=InstrumentationScope(
                 "first_name", "first_version"
             ),
         )
 
         log2 = SDKLogRecord(
-            timestamp=1644650249738562048,
-            observed_timestamp=1644650249738562049,
-            severity_text="WARN",
-            severity_number=SeverityNumber.WARN,
-            body="Cooper, this is no time for caution!",
+            LogRecord(
+                timestamp=1644650249738562048,
+                observed_timestamp=1644650249738562049,
+                severity_text="WARN",
+                severity_number=SeverityNumber.WARN,
+                body="Cooper, this is no time for caution!",
+                attributes={},
+            ),
             resource=SDKResource({"second_resource": "CASE"}),
-            attributes={},
             instrumentation_scope=InstrumentationScope(
                 "second_name", "second_version"
             ),
@@ -139,14 +143,16 @@ class TestOTLPLogEncoder(unittest.TestCase):
             )
         )
         log3 = SDKLogRecord(
-            timestamp=1644650427658989056,
-            observed_timestamp=1644650427658989057,
-            context=ctx_log3,
-            severity_text="DEBUG",
-            severity_number=SeverityNumber.DEBUG,
-            body="To our galaxy",
+            LogRecord(
+                timestamp=1644650427658989056,
+                observed_timestamp=1644650427658989057,
+                context=ctx_log3,
+                severity_text="DEBUG",
+                severity_number=SeverityNumber.DEBUG,
+                body="To our galaxy",
+                attributes={"a": 1, "b": "c"},
+            ),
             resource=SDKResource({"second_resource": "CASE"}),
-            attributes={"a": 1, "b": "c"},
             instrumentation_scope=None,
         )
 
@@ -161,17 +167,19 @@ class TestOTLPLogEncoder(unittest.TestCase):
             )
         )
         log4 = SDKLogRecord(
-            timestamp=1644650584292683008,
-            observed_timestamp=1644650584292683009,
-            context=ctx_log4,
-            severity_text="INFO",
-            severity_number=SeverityNumber.INFO,
-            body="Love is the one thing that transcends time and space",
+            LogRecord(
+                timestamp=1644650584292683008,
+                observed_timestamp=1644650584292683009,
+                context=ctx_log4,
+                severity_text="INFO",
+                severity_number=SeverityNumber.INFO,
+                body="Love is the one thing that transcends time and space",
+                attributes={"filename": "model.py", "func_name": "run_method"},
+            ),
             resource=SDKResource(
                 {"first_resource": "value"},
                 "resource_schema_url",
             ),
-            attributes={"filename": "model.py", "func_name": "run_method"},
             instrumentation_scope=InstrumentationScope(
                 "another_name", "another_version"
             ),
@@ -188,14 +196,16 @@ class TestOTLPLogEncoder(unittest.TestCase):
             )
         )
         log5 = SDKLogRecord(
-            timestamp=1644650584292683009,
-            observed_timestamp=1644650584292683010,
-            context=ctx_log5,
-            severity_text="INFO",
-            severity_number=SeverityNumber.INFO,
-            body={"error": None, "array_with_nones": [1, None, 2]},
+            LogRecord(
+                timestamp=1644650584292683009,
+                observed_timestamp=1644650584292683010,
+                context=ctx_log5,
+                severity_text="INFO",
+                severity_number=SeverityNumber.INFO,
+                body={"error": None, "array_with_nones": [1, None, 2]},
+                attributes={},
+            ),
             resource=SDKResource({}),
-            attributes={},
             instrumentation_scope=InstrumentationScope(
                 "last_name", "last_version"
             ),
@@ -212,17 +222,19 @@ class TestOTLPLogEncoder(unittest.TestCase):
             )
         )
         log6 = SDKLogRecord(
-            timestamp=1644650584292683022,
-            observed_timestamp=1644650584292683022,
-            context=ctx_log6,
-            severity_text="ERROR",
-            severity_number=SeverityNumber.ERROR,
-            body="This instrumentation scope has a schema url",
+            LogRecord(
+                timestamp=1644650584292683022,
+                observed_timestamp=1644650584292683022,
+                context=ctx_log6,
+                severity_text="ERROR",
+                severity_number=SeverityNumber.ERROR,
+                body="This instrumentation scope has a schema url",
+                attributes={"filename": "model.py", "func_name": "run_method"},
+            ),
             resource=SDKResource(
                 {"first_resource": "value"},
                 "resource_schema_url",
             ),
-            attributes={"filename": "model.py", "func_name": "run_method"},
             instrumentation_scope=InstrumentationScope(
                 "scope_with_url",
                 "scope_with_url_version",
@@ -241,17 +253,19 @@ class TestOTLPLogEncoder(unittest.TestCase):
             )
         )
         log7 = SDKLogRecord(
-            timestamp=1644650584292683033,
-            observed_timestamp=1644650584292683033,
-            context=ctx_log7,
-            severity_text="FATAL",
-            severity_number=SeverityNumber.FATAL,
-            body="This instrumentation scope has a schema url and attributes",
+            LogRecord(
+                timestamp=1644650584292683033,
+                observed_timestamp=1644650584292683033,
+                context=ctx_log7,
+                severity_text="FATAL",
+                severity_number=SeverityNumber.FATAL,
+                body="This instrumentation scope has a schema url and attributes",
+                attributes={"filename": "model.py", "func_name": "run_method"},
+            ),
             resource=SDKResource(
                 {"first_resource": "value"},
                 "resource_schema_url",
             ),
-            attributes={"filename": "model.py", "func_name": "run_method"},
             instrumentation_scope=InstrumentationScope(
                 "scope_with_attributes",
                 "scope_with_attributes_version",
@@ -271,16 +285,20 @@ class TestOTLPLogEncoder(unittest.TestCase):
             )
         )
         log8 = SDKLogRecord(
-            timestamp=1644650584292683044,
-            observed_timestamp=1644650584292683044,
-            context=ctx_log8,
-            severity_text="INFO",
-            severity_number=SeverityNumber.INFO,
-            body="Test export of extended attributes",
+            LogRecord(
+                timestamp=1644650584292683044,
+                observed_timestamp=1644650584292683044,
+                context=ctx_log8,
+                severity_text="INFO",
+                severity_number=SeverityNumber.INFO,
+                body="Test export of extended attributes",
+                attributes={
+                    "extended": {
+                        "sequence": [{"inner": "mapping", "none": None}]
+                    }
+                },
+            ),
             resource=SDKResource({}),
-            attributes={
-                "extended": {"sequence": [{"inner": "mapping", "none": None}]}
-            },
             instrumentation_scope=InstrumentationScope(
                 "extended_name", "extended_version"
             ),
@@ -594,13 +612,15 @@ class TestOTLPLogEncoder(unittest.TestCase):
             )
         )
         log1 = SDKLogRecord(
-            timestamp=1644650195189786880,
-            context=ctx_log1,
-            severity_text="WARN",
-            severity_number=SeverityNumber.WARN,
-            body="Do not go gentle into that good night. Rage, rage against the dying of the light",
+            LogRecord(
+                timestamp=1644650195189786880,
+                context=ctx_log1,
+                severity_text="WARN",
+                severity_number=SeverityNumber.WARN,
+                body="Do not go gentle into that good night. Rage, rage against the dying of the light",
+                attributes={"a": 1, "b": "c", "user_id": "B121092"},
+            ),
             resource=SDKResource({"first_resource": "value"}),
-            attributes={"a": 1, "b": "c", "user_id": "B121092"},
             limits=LogLimits(max_attributes=1),
             instrumentation_scope=InstrumentationScope(
                 "first_name", "first_version"
@@ -610,13 +630,15 @@ class TestOTLPLogEncoder(unittest.TestCase):
             NonRecordingSpan(SpanContext(0, 0, False))
         )
         log2 = SDKLogRecord(
-            timestamp=1644650249738562048,
-            context=ctx_log2,
-            severity_text="WARN",
-            severity_number=SeverityNumber.WARN,
-            body="Cooper, this is no time for caution!",
+            LogRecord(
+                timestamp=1644650249738562048,
+                context=ctx_log2,
+                severity_text="WARN",
+                severity_number=SeverityNumber.WARN,
+                body="Cooper, this is no time for caution!",
+                attributes={},
+            ),
             resource=SDKResource({"second_resource": "CASE"}),
-            attributes={},
             instrumentation_scope=InstrumentationScope(
                 "second_name", "second_version"
             ),
