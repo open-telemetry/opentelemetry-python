@@ -32,6 +32,9 @@ from typing import (  # noqa: F401
     TypeVar,
     Union,
 )
+from opentelemetry.exporter.otlp.proto.common._internal import (
+    DuplicateFilter,
+)
 from typing import Sequence as TypingSequence
 from urllib.parse import urlparse
 
@@ -87,6 +90,8 @@ _RETRYABLE_ERROR_CODES = frozenset(
 )
 _MAX_RETRYS = 6
 logger = getLogger(__name__)
+# This prevents logs generated when a log fails to be written to generate another log which fails to be written etc. etc.
+logger.addFilter(DuplicateFilter())
 SDKDataT = TypeVar("SDKDataT")
 ResourceDataT = TypeVar("ResourceDataT")
 TypingResourceT = TypeVar("TypingResourceT")

@@ -26,6 +26,7 @@ from typing import (
     Optional,
     TypeVar,
 )
+import time
 
 from opentelemetry.proto.common.v1.common_pb2 import AnyValue as PB2AnyValue
 from opentelemetry.proto.common.v1.common_pb2 import (
@@ -49,6 +50,15 @@ _logger = logging.getLogger(__name__)
 
 _TypingResourceT = TypeVar("_TypingResourceT")
 _ResourceDataT = TypeVar("_ResourceDataT")
+
+
+class DuplicateFilter(logging.Filter):
+    def filter(self, record):
+        current_log = (record.module, record.levelno, record.msg, time.time() // 60)
+        if current_log != getattr(self, "last_log", None):
+            self.last_log = current_log
+            return True
+        return False
 
 
 def _encode_instrumentation_scope(
