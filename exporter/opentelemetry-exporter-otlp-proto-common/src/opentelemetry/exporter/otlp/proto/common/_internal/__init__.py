@@ -63,6 +63,7 @@ class DuplicateFilter(logging.Filter):
         if current_log != getattr(self, "last_log", None):
             self.last_log = current_log
             return True
+        # False means python's `logging` module will no longer process this log.
         return False
 
 

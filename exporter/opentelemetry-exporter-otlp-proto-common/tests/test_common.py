@@ -7,7 +7,7 @@ from opentelemetry.exporter.otlp.proto.common._internal import (
 
 
 class TestCommonFuncs(unittest.TestCase):
-    def test_duplicate_logs_filter_Works(self):
+    def test_duplicate_logs_filter_works(self):
         test_logger = logging.getLogger("testLogger")
         test_logger.addFilter(DuplicateFilter())
         with self.assertLogs("testLogger") as cm:
