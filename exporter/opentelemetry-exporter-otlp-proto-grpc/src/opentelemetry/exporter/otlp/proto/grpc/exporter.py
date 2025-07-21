@@ -32,9 +32,6 @@ from typing import (  # noqa: F401
     TypeVar,
     Union,
 )
-from opentelemetry.exporter.otlp.proto.common._internal import (
-    DuplicateFilter,
-)
 from typing import Sequence as TypingSequence
 from urllib.parse import urlparse
 
@@ -51,6 +48,7 @@ from grpc import (
     ssl_channel_credentials,
 )
 from opentelemetry.exporter.otlp.proto.common._internal import (
+    DuplicateFilter,
     _get_resource_data,
 )
 from opentelemetry.exporter.otlp.proto.grpc import (

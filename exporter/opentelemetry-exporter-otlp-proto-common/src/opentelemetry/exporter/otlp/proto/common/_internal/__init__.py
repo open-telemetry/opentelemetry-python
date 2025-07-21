@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from collections.abc import Sequence
 from typing import (
     Any,
@@ -26,7 +27,6 @@ from typing import (
     Optional,
     TypeVar,
 )
-import time
 
 from opentelemetry.proto.common.v1.common_pb2 import AnyValue as PB2AnyValue
 from opentelemetry.proto.common.v1.common_pb2 import (
@@ -54,7 +54,12 @@ _ResourceDataT = TypeVar("_ResourceDataT")
 
 class DuplicateFilter(logging.Filter):
     def filter(self, record):
-        current_log = (record.module, record.levelno, record.msg, time.time() // 60)
+        current_log = (
+            record.module,
+            record.levelno,
+            record.msg,
+            time.time() // 60,
+        )
         if current_log != getattr(self, "last_log", None):
             self.last_log = current_log
             return True

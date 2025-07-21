@@ -24,6 +24,9 @@ from typing import Dict, Optional, Sequence
 import requests
 from requests.exceptions import ConnectionError
 
+from opentelemetry.exporter.otlp.proto.common._internal import (
+    DuplicateFilter,
+)
 from opentelemetry.exporter.otlp.proto.common._log_encoder import encode_logs
 from opentelemetry.exporter.otlp.proto.http import (
     _OTLP_HTTP_HEADERS,
@@ -52,9 +55,6 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_LOGS_HEADERS,
     OTEL_EXPORTER_OTLP_LOGS_TIMEOUT,
     OTEL_EXPORTER_OTLP_TIMEOUT,
-)
-from opentelemetry.exporter.otlp.proto.common._internal import (
-    DuplicateFilter,
 )
 from opentelemetry.util.re import parse_env_headers
 
