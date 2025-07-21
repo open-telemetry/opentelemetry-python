@@ -648,7 +648,10 @@ class LoggingHandler(logging.Handler):
         if hasattr(self._logger_provider, "force_flush") and callable(
             self._logger_provider.force_flush
         ):
-            self._logger_provider.force_flush()
+            # This is done in a separate thread to avoid a potential deadlock, for
+            # details see https://github.com/open-telemetry/opentelemetry-python/pull/4636.
+            thread = threading.Thread(target=self._logger_provider.force_flush)
+            thread.start()
 
 
 class Logger(APILogger):

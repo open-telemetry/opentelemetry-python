@@ -9,7 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add missing Prometheus exporter documentation
   ([#4485](https://github.com/open-telemetry/opentelemetry-python/pull/4485))
-
+- Overwrite logging.config.fileConfig and logging.config.dictConfig to ensure
+the OTLP `LogHandler` remains attached to the root logger. Fix a bug that
+can cause a deadlock to occur over `logging._lock` in some cases ([#4636](https://github.com/open-telemetry/opentelemetry-python/pull/4636)).
 
 ## Version 1.35.0/0.56b0 (2025-07-11)
 
