@@ -247,7 +247,7 @@ def _get_exporter_names(
 
 def _init_exporter(
     signal_type: Literal["traces", "metrics", "logs"],
-    exporter_args_map: Mapping[str, Any],
+    exporter_args: ExporterArgsMap,
     exporter_class: Union[
         Type[SpanExporter], Type[MetricExporter], Type[LogExporter]
     ],
@@ -268,9 +268,14 @@ def _init_exporter(
     if otlp_credential_param:
         credential_key, credential = otlp_credential_param
         # We only want to inject credentials into the appropriate OTLP HTTP // GRPC exporters.
-        if credential_key in inspect.signature(exporter_class.__init__).parameters and ("opentelemetry.exporter.otlp.proto.http" in str(exporter_class) or "opentelemetry.exporter.otlp.proto.grpc" in str(exporter_class)):
-            exporter_args_map[credential_key] = credential
-    return exporter_class(**exporter_args_map)
+        if credential_key in inspect.signature(
+            exporter_class.__init__
+        ).parameters and (
+            "opentelemetry.exporter.otlp.proto.http" in str(exporter_class)
+            or "opentelemetry.exporter.otlp.proto.grpc" in str(exporter_class)
+        ):
+            exporter_args[credential_key] = credential
+    return exporter_class(**exporter_args)
 
 
 def _init_tracing(
