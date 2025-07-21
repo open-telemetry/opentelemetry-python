@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from sys import argv
 
 from requests import get
 
@@ -31,16 +30,13 @@ trace.get_tracer_provider().add_span_processor(
     BatchSpanProcessor(ConsoleSpanExporter())
 )
 
-
-assert len(argv) == 2
-
 with tracer.start_as_current_span("client"):
     with tracer.start_as_current_span("client-server"):
         headers = {}
         inject(headers)
         requested = get(
             "http://localhost:8082/server_request",
-            params={"param": argv[1]},
+            params={"param": "testing"},
             headers=headers,
         )
 
