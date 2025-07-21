@@ -54,6 +54,7 @@ from opentelemetry.trace import (
 from opentelemetry.trace.span import INVALID_SPAN_CONTEXT
 
 EMPTY_LOG = SDKLogRecord(
+    log_record=LogRecord(),
     instrumentation_scope=InstrumentationScope("example", "example"),
 )
 

@@ -184,28 +184,25 @@ class SDKLogRecord:
         limits: LogLimits | None = _UnsetLogLimits,
     ): ...
 
-    def __init__(  # pylint:disable=too-many-locals
+    def __init__(
         self,
-        log_record: LogRecord | None = None,
+        log_record: LogRecord,
         resource: Resource | None = None,
         limits: LogLimits | None = _UnsetLogLimits,
         instrumentation_scope: InstrumentationScope | None = None,
     ):
         self.log_record = log_record
-        if self.log_record is not None:
-            self.log_record.attributes = BoundedAttributes(
-                maxlen=limits.max_attributes,
-                attributes=self.log_record.attributes
-                if bool(self.log_record.attributes)
-                else None,
-                immutable=False,
-                max_value_len=limits.max_attribute_length,
-                extended_attributes=True,
-            )
-
-        self.resource = (
-            resource if isinstance(resource, Resource) else Resource.create({})
+        self.log_record.attributes = BoundedAttributes(
+            maxlen=limits.max_attributes,
+            attributes=self.log_record.attributes
+            if bool(self.log_record.attributes)
+            else None,
+            immutable=False,
+            max_value_len=limits.max_attribute_length,
+            extended_attributes=True,
         )
+
+        self.resource = resource if resource else Resource.create({})
         self.instrumentation_scope = instrumentation_scope
         if self.dropped_attributes > 0:
             warnings.warn(
@@ -249,9 +246,7 @@ class SDKLogRecord:
                 ),
                 "trace_flags": self.log_record.trace_flags,
                 "resource": json.loads(self.resource.to_json()),
-                "event_name": self.log_record.event_name
-                if self.log_record.event_name
-                else "",
+                "event_name": self.log_record.event_name or "",
             },
             indent=indent,
             cls=BytesEncoder,
@@ -259,9 +254,7 @@ class SDKLogRecord:
 
     @property
     def dropped_attributes(self) -> int:
-        if self.log_record and isinstance(
-            self.log_record.attributes, BoundedAttributes
-        ):
+        if isinstance(self.log_record.attributes, BoundedAttributes):
             return self.log_record.attributes.dropped
         return 0
 
