@@ -195,7 +195,7 @@ class SDKLogRecord:
         self.log_record.attributes = BoundedAttributes(
             maxlen=limits.max_attributes,
             attributes=self.log_record.attributes
-            if bool(self.log_record.attributes)
+            if self.log_record.attributes
             else None,
             immutable=False,
             max_value_len=limits.max_attribute_length,
