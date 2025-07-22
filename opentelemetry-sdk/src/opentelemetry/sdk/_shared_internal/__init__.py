@@ -27,15 +27,15 @@ from typing import (
     Protocol,
     TypeVar,
 )
-from opentelemetry.exporter.otlp.proto.common._internal import (
-    DuplicateFilter,
-)
 
 from opentelemetry.context import (
     _SUPPRESS_INSTRUMENTATION_KEY,
     attach,
     detach,
     set_value,
+)
+from opentelemetry.exporter.otlp.proto.common._internal import (
+    DuplicateFilter,
 )
 from opentelemetry.util._once import Once
 

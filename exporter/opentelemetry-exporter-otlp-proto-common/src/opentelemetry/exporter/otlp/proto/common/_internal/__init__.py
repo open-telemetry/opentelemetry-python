@@ -54,6 +54,7 @@ _ResourceDataT = TypeVar("_ResourceDataT")
 
 class DuplicateFilter(logging.Filter):
     """This prevents logs generated when a log fails to be written to generate another log which fails to be written"""
+
     def filter(self, record):
         current_log = (
             record.module,

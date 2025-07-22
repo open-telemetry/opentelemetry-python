@@ -26,6 +26,9 @@ from opentelemetry.context import (
     detach,
     set_value,
 )
+from opentelemetry.exporter.otlp.proto.common._internal import (
+    DuplicateFilter,
+)
 from opentelemetry.sdk._logs import LogData, LogRecord, LogRecordProcessor
 from opentelemetry.sdk._shared_internal import BatchProcessor
 from opentelemetry.sdk.environment_variables import (
@@ -43,6 +46,7 @@ _ENV_VAR_INT_VALUE_ERROR_MESSAGE = (
     "Unable to parse value for %s as integer. Defaulting to %s."
 )
 _logger = logging.getLogger(__name__)
+_logger.addFilter(DuplicateFilter())
 
 
 class LogExportResult(enum.Enum):
