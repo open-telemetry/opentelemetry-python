@@ -27,6 +27,9 @@ from typing import (
     Protocol,
     TypeVar,
 )
+from opentelemetry.exporter.otlp.proto.common._internal import (
+    DuplicateFilter,
+)
 
 from opentelemetry.context import (
     _SUPPRESS_INSTRUMENTATION_KEY,
@@ -87,6 +90,7 @@ class BatchProcessor(Generic[Telemetry]):
             daemon=True,
         )
         self._logger = logging.getLogger(__name__)
+        self._logger.addFilter(DuplicateFilter())
         self._exporting = exporting
 
         self._shutdown = False
