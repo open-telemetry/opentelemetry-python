@@ -15,7 +15,7 @@
 import unittest
 from unittest.mock import patch
 
-from opentelemetry.sdk._logs import LogLimits
+from opentelemetry.sdk._logs import LogRecordLimits
 from opentelemetry.sdk._logs._internal import (
     _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT,
 )
@@ -27,20 +27,20 @@ from opentelemetry.sdk.environment_variables import (
 
 class TestLogLimits(unittest.TestCase):
     def test_log_limits_repr_unset(self):
-        expected = f"LogLimits(max_attributes={_DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT}, max_attribute_length=None)"
-        limits = str(LogLimits())
+        expected = f"LogRecordLimits(max_attributes={_DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT}, max_attribute_length=None)"
+        limits = str(LogRecordLimits())
 
         self.assertEqual(expected, limits)
 
     def test_log_limits_max_attributes(self):
         expected = 1
-        limits = LogLimits(max_attributes=1)
+        limits = LogRecordLimits(max_attributes=1)
 
         self.assertEqual(expected, limits.max_attributes)
 
     def test_log_limits_max_attribute_length(self):
         expected = 1
-        limits = LogLimits(max_attribute_length=1)
+        limits = LogRecordLimits(max_attribute_length=1)
 
         self.assertEqual(expected, limits.max_attribute_length)
 
@@ -62,7 +62,7 @@ class TestLogLimits(unittest.TestCase):
                 with self.assertRaises(ValueError) as error, patch.dict(
                     "os.environ", {env_var: bad_value}, clear=True
                 ):
-                    LogLimits()
+                    LogRecordLimits()
 
                 expected_msg = f"{env_var} must be a non-negative integer but got {bad_value}"
                 self.assertEqual(
