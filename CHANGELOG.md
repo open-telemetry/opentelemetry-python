@@ -12,6 +12,7 @@ the OTLP `LogHandler` remains attached to the root logger. Fix a bug that
 can cause a deadlock to occur over `logging._lock` in some cases ([#4636](https://github.com/open-telemetry/opentelemetry-python/pull/4636)).
 - Filter duplicate logs emitted from the OTLP exporters to avoid endlessly logging when the OTLP logger itself
 is failing to export logs.
+  ([#4695](https://github.com/open-telemetry/opentelemetry-python/pull/4695)).
 
 ## Version 1.35.0/0.56b0 (2025-07-11)
 
