@@ -251,6 +251,7 @@ class TestBatchProcessor:
         assert "Exception while exporting" in caplog.text
         assert 2 == exporter.num_export_calls
 
+
 class TestCommonFuncs(unittest.TestCase):
     def test_duplicate_logs_filter_works(self):
         test_logger = logging.getLogger("testLogger")

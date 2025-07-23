@@ -40,7 +40,10 @@ from opentelemetry.util._once import Once
 
 
 class DuplicateFilter(logging.Filter):
-    """This prevents logs generated when a log fails to be written to generate another log which fails to be written"""
+    """Filter that can be applied to internal `logger`'s.
+
+    Currently applied to `logger`s on the export logs path that could otherwise cause endless logging of errors or a
+    recursion depth exceeded issue in cases where logging itself results in an exception."""
 
     def filter(self, record):
         current_log = (
