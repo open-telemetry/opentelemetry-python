@@ -48,7 +48,6 @@ from grpc import (
     ssl_channel_credentials,
 )
 from opentelemetry.exporter.otlp.proto.common._internal import (
-    DuplicateFilter,
     _get_resource_data,
 )
 from opentelemetry.exporter.otlp.proto.grpc import (
@@ -60,6 +59,7 @@ from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401
     KeyValue,
 )
 from opentelemetry.proto.resource.v1.resource_pb2 import Resource  # noqa: F401
+from opentelemetry.sdk._shared_internal import DuplicateFilter
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,

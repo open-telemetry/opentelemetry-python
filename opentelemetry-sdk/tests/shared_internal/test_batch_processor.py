@@ -14,6 +14,7 @@
 
 # pylint: disable=protected-access
 import gc
+import logging
 import multiprocessing
 import os
 import time
@@ -30,6 +31,9 @@ from opentelemetry.sdk._logs import (
 )
 from opentelemetry.sdk._logs.export import (
     BatchLogRecordProcessor,
+)
+from opentelemetry.sdk._shared_internal import (
+    DuplicateFilter,
 )
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -193,3 +197,13 @@ class TestBatchProcessor:
 
         # Then the reference to the processor should no longer exist
         assert weak_ref() is None
+
+
+class TestCommonFuncs(unittest.TestCase):
+    def test_duplicate_logs_filter_works(self):
+        test_logger = logging.getLogger("testLogger")
+        test_logger.addFilter(DuplicateFilter())
+        with self.assertLogs("testLogger") as cm:
+            test_logger.info("message")
+            test_logger.info("message")
+        self.assertEqual(len(cm.output), 1)

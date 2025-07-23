@@ -19,6 +19,7 @@ import enum
 import logging
 import os
 import threading
+import time
 import weakref
 from abc import abstractmethod
 from typing import (
@@ -34,10 +35,24 @@ from opentelemetry.context import (
     detach,
     set_value,
 )
-from opentelemetry.exporter.otlp.proto.common._internal import (
-    DuplicateFilter,
-)
 from opentelemetry.util._once import Once
+
+
+class DuplicateFilter(logging.Filter):
+    """This prevents logs generated when a log fails to be written to generate another log which fails to be written"""
+
+    def filter(self, record):
+        current_log = (
+            record.module,
+            record.levelno,
+            record.msg,
+            time.time() // 60,
+        )
+        if current_log != getattr(self, "last_log", None):
+            self.last_log = current_log
+            return True
+        # False means python's `logging` module will no longer process this log.
+        return False
 
 
 class BatchExportStrategy(enum.Enum):

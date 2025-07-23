@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 import logging
-import time
 from collections.abc import Sequence
 from typing import (
     Any,
@@ -50,23 +49,6 @@ _logger = logging.getLogger(__name__)
 
 _TypingResourceT = TypeVar("_TypingResourceT")
 _ResourceDataT = TypeVar("_ResourceDataT")
-
-
-class DuplicateFilter(logging.Filter):
-    """This prevents logs generated when a log fails to be written to generate another log which fails to be written"""
-
-    def filter(self, record):
-        current_log = (
-            record.module,
-            record.levelno,
-            record.msg,
-            time.time() // 60,
-        )
-        if current_log != getattr(self, "last_log", None):
-            self.last_log = current_log
-            return True
-        # False means python's `logging` module will no longer process this log.
-        return False
 
 
 def _encode_instrumentation_scope(

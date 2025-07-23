@@ -26,11 +26,8 @@ from opentelemetry.context import (
     detach,
     set_value,
 )
-from opentelemetry.exporter.otlp.proto.common._internal import (
-    DuplicateFilter,
-)
 from opentelemetry.sdk._logs import LogData, LogRecord, LogRecordProcessor
-from opentelemetry.sdk._shared_internal import BatchProcessor
+from opentelemetry.sdk._shared_internal import BatchProcessor, DuplicateFilter
 from opentelemetry.sdk.environment_variables import (
     OTEL_BLRP_EXPORT_TIMEOUT,
     OTEL_BLRP_MAX_EXPORT_BATCH_SIZE,
