@@ -225,7 +225,7 @@ class TestBatchProcessor:
         assert weak_ref() is None
 
     def test_shutdown_allows_1_export_to_finish(
-        self, batch_processor_class, telemetry, caplog
+        self, batch_processor_class, telemetry
     ):
         # This exporter throws an exception if it's export sleep cannot finish.
         exporter = MockExporterForTesting(export_sleep=2)
@@ -250,7 +250,7 @@ class TestBatchProcessor:
         time.sleep(0.1)
         assert processor._batch_processor._worker_thread.is_alive() is False
         # Expect the second call to be interrupted by shutdown, and the third call to never be made.
-        assert exporter.sleep_interrupted == True
+        assert exporter.sleep_interrupted is True
         assert 2 == exporter.num_export_calls
 
 
