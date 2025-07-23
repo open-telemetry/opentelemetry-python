@@ -16,6 +16,12 @@ can cause a deadlock to occur over `logging._lock` in some cases ([#4636](https:
 is failing to export logs.
   ([#4695](https://github.com/open-telemetry/opentelemetry-python/pull/4695)).
 
+- Update OTLP gRPC/HTTP exporters: calling shutdown will now interrupt exporters that are sleeping
+  before a retry attempt, and cause them to return failure immediately.
+  Update BatchSpan/LogRecordProcessors: shutdown will now complete after 30 seconds of trying to finish
+  exporting any buffered telemetry, instead of continuing to export until all telemetry was exported.
+  ([#4638](https://github.com/open-telemetry/opentelemetry-python/pull/4638)).
+
 ## Version 1.35.0/0.56b0 (2025-07-11)
 
 - Update OTLP proto to v1.7 [#4645](https://github.com/open-telemetry/opentelemetry-python/pull/4645).
