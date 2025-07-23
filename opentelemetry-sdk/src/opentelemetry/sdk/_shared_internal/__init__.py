@@ -53,7 +53,7 @@ class DuplicateFilter(logging.Filter):
             time.time() // 60,
         )
         if current_log != getattr(self, "last_log", None):
-            self.last_log = current_log
+            self.last_log = current_log # pylint: disable=attribute-defined-outside-init
             return True
         # False means python's `logging` module will no longer process this log.
         return False
