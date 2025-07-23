@@ -12,8 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Overwrite logging.config.fileConfig and logging.config.dictConfig to ensure
 the OTLP `LogHandler` remains attached to the root logger. Fix a bug that
 can cause a deadlock to occur over `logging._lock` in some cases ([#4636](https://github.com/open-telemetry/opentelemetry-python/pull/4636)).
-- Filter duplicate logs emitted from the OTLP exporters to avoid endlessly logging when the OTLP logger itself
-is failing to export logs.
+- Filter duplicate logs out of some internal `logger`'s logs on the export logs path that might otherwise endlessly log or cause a recursion depth exceeded issue in cases where logging itself results in an exception.
   ([#4695](https://github.com/open-telemetry/opentelemetry-python/pull/4695)).
 
 - Update OTLP gRPC/HTTP exporters: calling shutdown will now interrupt exporters that are sleeping
