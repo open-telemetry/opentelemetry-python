@@ -20,7 +20,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Sequence  # noqa: F401
 from logging import getLogger
 from os import environ
-from time import sleep, time
+from time import time
 from typing import (  # noqa: F401
     Any,
     Callable,
@@ -289,7 +289,7 @@ class OTLPExporterMixin(
             )
         self._client = self._stub(self._channel)
 
-        self._export_lock = threading.Lock()
+        self._shutdown_in_progress = threading.Event()
         self._shutdown = False
 
     @abstractmethod
@@ -309,50 +309,53 @@ class OTLPExporterMixin(
         # FIXME remove this check if the export type for traces
         # gets updated to a class that represents the proto
         # TracesData and use the code below instead.
-        with self._export_lock:
-            deadline_sec = time() + self._timeout
-            for retry_num in range(_MAX_RETRYS):
-                try:
-                    self._client.Export(
-                        request=self._translate_data(data),
-                        metadata=self._headers,
-                        timeout=deadline_sec - time(),
+        deadline_sec = time() + self._timeout
+        for retry_num in range(_MAX_RETRYS):
+            try:
+                self._client.Export(
+                    request=self._translate_data(data),
+                    metadata=self._headers,
+                    timeout=deadline_sec - time(),
+                )
+                return self._result.SUCCESS
+            except RpcError as error:
+                retry_info_bin = dict(error.trailing_metadata()).get(
+                    "google.rpc.retryinfo-bin"
+                )
+                # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
+                backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
+                if retry_info_bin is not None:
+                    retry_info = RetryInfo()
+                    retry_info.ParseFromString(retry_info_bin)
+                    backoff_seconds = (
+                        retry_info.retry_delay.seconds
+                        + retry_info.retry_delay.nanos / 1.0e9
                     )
-                    return self._result.SUCCESS
-                except RpcError as error:
-                    retry_info_bin = dict(error.trailing_metadata()).get(
-                        "google.rpc.retryinfo-bin"
-                    )
-                    # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
-                    backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
-                    if retry_info_bin is not None:
-                        retry_info = RetryInfo()
-                        retry_info.ParseFromString(retry_info_bin)
-                        backoff_seconds = (
-                            retry_info.retry_delay.seconds
-                            + retry_info.retry_delay.nanos / 1.0e9
-                        )
-                    if (
-                        error.code() not in _RETRYABLE_ERROR_CODES
-                        or retry_num + 1 == _MAX_RETRYS
-                        or backoff_seconds > (deadline_sec - time())
-                    ):
-                        logger.error(
-                            "Failed to export %s to %s, error code: %s",
-                            self._exporting,
-                            self._endpoint,
-                            error.code(),
-                            exc_info=error.code() == StatusCode.UNKNOWN,
-                        )
-                        return self._result.FAILURE
-                    logger.warning(
-                        "Transient error %s encountered while exporting %s to %s, retrying in %.2fs.",
-                        error.code(),
+                if (
+                    error.code() not in _RETRYABLE_ERROR_CODES
+                    or retry_num + 1 == _MAX_RETRYS
+                    or backoff_seconds > (deadline_sec - time())
+                    or self._shutdown
+                ):
+                    logger.error(
+                        "Failed to export %s to %s, error code: %s",
                         self._exporting,
                         self._endpoint,
-                        backoff_seconds,
+                        error.code(),
+                        exc_info=error.code() == StatusCode.UNKNOWN,
                     )
-                    sleep(backoff_seconds)
+                    return self._result.FAILURE
+                logger.warning(
+                    "Transient error %s encountered while exporting %s to %s, retrying in %.2fs.",
+                    error.code(),
+                    self._exporting,
+                    self._endpoint,
+                    backoff_seconds,
+                )
+            shutdown = self._shutdown_in_progress.wait(backoff_seconds)
+            if shutdown:
+                logger.warning("Shutdown in progress, aborting retry.")
+                break
         # Not possible to reach here but the linter is complaining.
         return self._result.FAILURE
 
@@ -360,11 +363,9 @@ class OTLPExporterMixin(
         if self._shutdown:
             logger.warning("Exporter already shutdown, ignoring call")
             return
-        # wait for the last export if any
-        self._export_lock.acquire(timeout=timeout_millis / 1e3)
         self._shutdown = True
+        self._shutdown_in_progress.set()
         self._channel.close()
-        self._export_lock.release()
 
     @property
     @abstractmethod

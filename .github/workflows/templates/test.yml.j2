@@ -43,7 +43,7 @@ jobs:
           python-version: "{{ job_data.python_version }}"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
       {%- if job_data.os == "windows-latest" %}
 
       - name: Configure git to support long filenames

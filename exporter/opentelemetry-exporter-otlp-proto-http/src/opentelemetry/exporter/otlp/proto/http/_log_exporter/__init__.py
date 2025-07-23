@@ -15,10 +15,11 @@
 import gzip
 import logging
 import random
+import threading
 import zlib
 from io import BytesIO
 from os import environ
-from time import sleep, time
+from time import time
 from typing import Dict, Optional, Sequence
 
 import requests
@@ -77,6 +78,7 @@ class OTLPLogExporter(LogExporter):
         compression: Optional[Compression] = None,
         session: Optional[requests.Session] = None,
     ):
+        self._shutdown_is_occuring = threading.Event()
         self._endpoint = endpoint or environ.get(
             OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
             _append_logs_path(
@@ -173,6 +175,7 @@ class OTLPLogExporter(LogExporter):
                 not _is_retryable(resp)
                 or retry_num + 1 == _MAX_RETRYS
                 or backoff_seconds > (deadline_sec - time())
+                or self._shutdown
             ):
                 _logger.error(
                     "Failed to export logs batch code: %s, reason: %s",
@@ -185,8 +188,10 @@ class OTLPLogExporter(LogExporter):
                 resp.reason,
                 backoff_seconds,
             )
-            sleep(backoff_seconds)
-        # Not possible to reach here but the linter is complaining.
+            shutdown = self._shutdown_is_occuring.wait(backoff_seconds)
+            if shutdown:
+                _logger.warning("Shutdown in progress, aborting retry.")
+                break
         return LogExportResult.FAILURE
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
@@ -197,8 +202,9 @@ class OTLPLogExporter(LogExporter):
         if self._shutdown:
             _logger.warning("Exporter already shutdown, ignoring call")
             return
-        self._session.close()
         self._shutdown = True
+        self._shutdown_is_occuring.set()
+        self._session.close()
 
 
 def _compression_from_env() -> Compression:
