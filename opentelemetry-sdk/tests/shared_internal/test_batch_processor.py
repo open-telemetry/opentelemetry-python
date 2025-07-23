@@ -60,6 +60,7 @@ class MockExporterForTesting:
         self.num_export_calls = 0
         self.export_sleep = export_sleep
         self._shutdown = False
+        self.sleep_interrupted = False
         self.export_sleep_event = threading.Event()
 
     def export(self, _: list[Any]):
@@ -69,6 +70,7 @@ class MockExporterForTesting:
 
         sleep_interrupted = self.export_sleep_event.wait(self.export_sleep)
         if sleep_interrupted:
+            self.sleep_interrupted = True
             raise ValueError("Did not get to finish !")
 
     def shutdown(self):
@@ -248,7 +250,7 @@ class TestBatchProcessor:
         time.sleep(0.1)
         assert processor._batch_processor._worker_thread.is_alive() is False
         # Expect the second call to be interrupted by shutdown, and the third call to never be made.
-        assert "Exception while exporting" in caplog.text
+        assert exporter.sleep_interrupted == True
         assert 2 == exporter.num_export_calls
 
 
