@@ -20,6 +20,7 @@ OpenTelemetry SDK Configurator for Easy Instrumentation with Distros
 from __future__ import annotations
 
 import logging
+import logging.config
 import os
 from abc import ABC, abstractmethod
 from os import environ
@@ -268,31 +269,37 @@ def _init_logging(
     set_event_logger_provider(event_logger_provider)
 
     if setup_logging_handler:
-        _patch_basic_config()
-
         # Add OTel handler
         handler = LoggingHandler(
             level=logging.NOTSET, logger_provider=provider
         )
         logging.getLogger().addHandler(handler)
+        _overwrite_logging_config_fns(handler)
 
 
-def _patch_basic_config():
-    original_basic_config = logging.basicConfig
+def _overwrite_logging_config_fns(handler: LoggingHandler) -> None:
+    root = logging.getLogger()
 
-    def patched_basic_config(*args, **kwargs):
-        root = logging.getLogger()
-        has_only_otel = len(root.handlers) == 1 and isinstance(
-            root.handlers[0], LoggingHandler
-        )
-        if has_only_otel:
-            otel_handler = root.handlers.pop()
-            original_basic_config(*args, **kwargs)
-            root.addHandler(otel_handler)
-        else:
-            original_basic_config(*args, **kwargs)
+    def wrapper(config_fn: Callable) -> Callable:
+        def overwritten_config_fn(*args, **kwargs):
+            removed_handler = False
+            # We don't want the OTLP handler to be modified or deleted by the logging config functions.
+            # So we remove it and then add it back after the function call.
+            if handler in root.handlers:
+                removed_handler = True
+                root.handlers.remove(handler)
+            try:
+                config_fn(*args, **kwargs)
+            finally:
+                # Ensure handler is added back if logging function throws exception.
+                if removed_handler:
+                    root.addHandler(handler)
 
-    logging.basicConfig = patched_basic_config
+        return overwritten_config_fn
+
+    logging.config.fileConfig = wrapper(logging.config.fileConfig)
+    logging.config.dictConfig = wrapper(logging.config.dictConfig)
+    logging.basicConfig = wrapper(logging.basicConfig)
 
 
 def _import_exporters(

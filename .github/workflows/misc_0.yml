@@ -45,7 +45,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e spellcheck
@@ -64,7 +64,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e tracecontext
@@ -83,7 +83,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e typecheck
@@ -93,7 +93,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     if: |
-      github.event.pull_request.user.login != 'opentelemetrybot' && github.event_name == 'pull_request'
+      github.event.pull_request.user.login != 'otelbot[bot]' && github.event_name == 'pull_request'
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -104,7 +104,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e docs
@@ -123,7 +123,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e docker-tests-otlpexporter
@@ -142,7 +142,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e docker-tests-opencensus
@@ -153,7 +153,7 @@ jobs:
     timeout-minutes: 30
     if: |
       !contains(github.event.pull_request.labels.*.name, 'Approve Public API check')
-      && github.actor != 'opentelemetrybot' && github.event_name == 'pull_request'
+      && github.actor != 'otelbot[bot]' && github.event_name == 'pull_request'
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -175,7 +175,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e public-symbols-check
@@ -194,7 +194,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e shellcheck
@@ -205,7 +205,7 @@ jobs:
     timeout-minutes: 30
     if: |
       !contains(github.event.pull_request.labels.*.name, 'Skip generate-workflows')
-      && github.event.pull_request.user.login != 'opentelemetrybot' && github.event_name == 'pull_request'
+      && github.event.pull_request.user.login != 'otelbot[bot]' && github.event_name == 'pull_request'
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
@@ -216,7 +216,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e generate-workflows
@@ -238,7 +238,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e precommit

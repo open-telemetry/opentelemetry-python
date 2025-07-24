@@ -46,7 +46,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e {{ job_data.tox_env }}

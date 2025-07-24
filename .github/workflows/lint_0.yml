@@ -45,7 +45,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e lint-opentelemetry-api
@@ -64,7 +64,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e lint-opentelemetry-proto-gen-latest
@@ -83,7 +83,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e lint-opentelemetry-sdk
@@ -102,7 +102,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e lint-opentelemetry-semantic-conventions
@@ -121,7 +121,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e lint-opentelemetry-getting-started
@@ -140,7 +140,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e lint-opentelemetry-opentracing-shim
@@ -159,7 +159,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e lint-opentelemetry-opencensus-shim
@@ -178,7 +178,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e lint-opentelemetry-exporter-opencensus
@@ -197,7 +197,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e lint-opentelemetry-exporter-otlp-proto-common
@@ -216,7 +216,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e lint-opentelemetry-exporter-otlp-combined
@@ -235,7 +235,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e lint-opentelemetry-exporter-otlp-proto-grpc-latest
@@ -254,7 +254,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e lint-opentelemetry-exporter-otlp-proto-http
@@ -273,7 +273,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e lint-opentelemetry-exporter-prometheus
@@ -292,7 +292,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e lint-opentelemetry-exporter-zipkin-combined
@@ -311,7 +311,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e lint-opentelemetry-exporter-zipkin-proto-http
@@ -330,7 +330,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e lint-opentelemetry-exporter-zipkin-json
@@ -349,7 +349,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e lint-opentelemetry-propagator-b3
@@ -368,7 +368,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e lint-opentelemetry-propagator-jaeger
@@ -387,7 +387,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e lint-opentelemetry-test-utils
