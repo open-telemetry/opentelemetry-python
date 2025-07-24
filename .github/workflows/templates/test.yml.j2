@@ -9,6 +9,9 @@ on:
     - 'release/*'
   pull_request:
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${% raw %}{{ github.workflow }}-${{ github.head_ref || github.run_id }}{% endraw %}
   cancel-in-progress: true
