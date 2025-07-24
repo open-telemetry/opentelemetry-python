@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       !contains(github.event.pull_request.labels.*.name, 'Skip Changelog')
-      && github.actor != 'opentelemetrybot'
+      && github.actor != 'otelbot[bot]'
 
     steps:
       - uses: actions/checkout@v4
