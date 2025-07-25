@@ -2,8 +2,14 @@ name: Prepare patch release
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   prepare-patch-release:
+    permissions:
+      contents: write  # required for pushing changes
+      pull-requests: write # required for adding labels to PRs
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
