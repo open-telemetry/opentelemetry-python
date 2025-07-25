@@ -14,6 +14,7 @@
 
 import logging
 import os
+import sys
 import unittest
 from unittest.mock import Mock, patch
 
@@ -47,6 +48,20 @@ class TestLoggingHandler(unittest.TestCase):
         with self.assertLogs(level=logging.WARNING):
             logger.warning("Warning message")
         self.assertEqual(processor.emit_count(), 1)
+
+    def test_handler_error_exc_info(self):
+        processor, logger = set_up_test_logging(logging.NOTSET)
+        exc_info_values = [
+            # Don't know what caused it in my context, so I'm relying on mocks to replicate the behavior.
+            # First the `record.exc_info` becomes a string somehow, then `sys.exc_info` brings the tuple.
+            "Stringified exception",
+            (None, None, None),
+        ]
+
+        with patch.object(sys, "exc_info", side_effect=exc_info_values):
+            logger.exception("Exception message")  # Should not raise exception
+
+        assert processor.emit_count() == 1
 
     def test_handler_custom_log_level(self):
         processor, logger = set_up_test_logging(logging.ERROR)

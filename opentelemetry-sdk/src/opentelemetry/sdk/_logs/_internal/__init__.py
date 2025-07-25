@@ -19,6 +19,7 @@ import base64
 import concurrent.futures
 import json
 import logging
+import sys
 import threading
 import traceback
 import warnings
@@ -568,8 +569,12 @@ class LoggingHandler(logging.Handler):
         attributes[code_attributes.CODE_FUNCTION_NAME] = record.funcName
         attributes[code_attributes.CODE_LINE_NUMBER] = record.lineno
 
+        if isinstance(record.exc_info, str):
+            record.exc_info = sys.exc_info()
+
         if record.exc_info:
             exctype, value, tb = record.exc_info
+
             if exctype is not None:
                 attributes[exception_attributes.EXCEPTION_TYPE] = (
                     exctype.__name__
