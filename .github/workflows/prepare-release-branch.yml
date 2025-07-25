@@ -43,6 +43,7 @@ jobs:
 
   create-pull-request-against-release-branch:
     permissions:
+      contents: write  # required for pushing changes
       pull-requests: write # required for adding labels to PRs
     runs-on: ubuntu-latest
     needs: prereqs
@@ -127,6 +128,7 @@ jobs:
 
   create-pull-request-against-main:
     permissions:
+      contents: write  # required for pushing changes
       pull-requests: write # required for adding labels to PRs
     runs-on: ubuntu-latest
     needs: prereqs
