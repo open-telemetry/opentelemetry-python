@@ -574,7 +574,6 @@ class LoggingHandler(logging.Handler):
 
         if record.exc_info:
             exctype, value, tb = record.exc_info
-
             if exctype is not None:
                 attributes[exception_attributes.EXCEPTION_TYPE] = (
                     exctype.__name__
