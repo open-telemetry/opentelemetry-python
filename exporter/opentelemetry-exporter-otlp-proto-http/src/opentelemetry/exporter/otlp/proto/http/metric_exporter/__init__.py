@@ -172,7 +172,9 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         )
         self._shutdown = False
 
-    def _export(self, serialized_data: bytes, timeout_sec: float):
+    def _export(
+        self, serialized_data: bytes, timeout_sec: Optional[float] = None
+    ):
         data = serialized_data
         if self._compression == Compression.Gzip:
             gzip_data = BytesIO()
@@ -181,6 +183,9 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             data = gzip_data.getvalue()
         elif self._compression == Compression.Deflate:
             data = zlib.compress(serialized_data)
+
+        if timeout_sec is None:
+            timeout_sec = self._timeout
 
         # By default, keep-alive is enabled in Session's request
         # headers. Backends may choose to close the connection
