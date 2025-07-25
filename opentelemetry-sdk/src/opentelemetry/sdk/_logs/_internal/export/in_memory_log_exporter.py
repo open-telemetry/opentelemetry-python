@@ -15,7 +15,7 @@
 import threading
 import typing
 
-from opentelemetry.sdk._logs import LogData
+from opentelemetry.sdk._logs import SDKLogRecord
 from opentelemetry.sdk._logs.export import LogExporter, LogExportResult
 
 
@@ -36,11 +36,11 @@ class InMemoryLogExporter(LogExporter):
         with self._lock:
             self._logs.clear()
 
-    def get_finished_logs(self) -> typing.Tuple[LogData, ...]:
+    def get_finished_logs(self) -> typing.Tuple[SDKLogRecord, ...]:
         with self._lock:
             return tuple(self._logs)
 
-    def export(self, batch: typing.Sequence[LogData]) -> LogExportResult:
+    def export(self, batch: typing.Sequence[SDKLogRecord]) -> LogExportResult:
         if self._stopped:
             return LogExportResult.FAILURE
         with self._lock:
