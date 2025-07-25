@@ -255,7 +255,6 @@ def _init_logging(
     setup_logging_handler: bool = True,
     exporter_args_map: ExporterArgsMap | None = None,
 ):
-    print("in init logging")
     provider = LoggerProvider(resource=resource)
     set_logger_provider(provider)
 
@@ -270,7 +269,6 @@ def _init_logging(
     set_event_logger_provider(event_logger_provider)
 
     if setup_logging_handler:
-        print("setting up handler..")
         # Add OTel handler
         handler = LoggingHandler(
             level=logging.NOTSET, logger_provider=provider
@@ -419,7 +417,6 @@ def _initialize_components(
     setup_logging_handler: bool | None = None,
     exporter_args_map: ExporterArgsMap | None = None,
 ):
-    print("initializing components")
     if trace_exporter_names is None:
         trace_exporter_names = []
     if metric_exporter_names is None:
