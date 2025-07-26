@@ -9,6 +9,8 @@ py-cpuinfo==9.0.0
 pytest==7.4.4
 tomli==2.0.1
 typing_extensions==4.10.0
+grpcio==1.66.2
+requests==2.32.3
 wrapt==1.16.0
 zipp==3.19.2
 -e tests/opentelemetry-test-utils

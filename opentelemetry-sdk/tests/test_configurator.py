@@ -23,7 +23,9 @@ from typing import Iterable, Optional, Sequence
 from unittest import TestCase, mock
 from unittest.mock import Mock, patch
 
+from grpc import ChannelCredentials
 from pytest import raises
+from requests import Session
 
 from opentelemetry import trace
 from opentelemetry.context import Context
@@ -39,6 +41,7 @@ from opentelemetry.sdk._configuration import (
     _import_exporters,
     _import_id_generator,
     _import_sampler,
+    _init_exporter,
     _init_logging,
     _init_metrics,
     _init_tracing,
@@ -49,6 +52,8 @@ from opentelemetry.sdk._logs import LoggingHandler
 from opentelemetry.sdk._logs._internal.export import LogExporter
 from opentelemetry.sdk._logs.export import ConsoleLogExporter
 from opentelemetry.sdk.environment_variables import (
+    OTEL_PYTHON_EXPORTER_OTLP_METRICS_CREDENTIAL_PROVIDER,
+    OTEL_PYTHON_EXPORTER_OTLP_TRACES_CREDENTIAL_PROVIDER,
     OTEL_TRACES_SAMPLER,
     OTEL_TRACES_SAMPLER_ARG,
 )
@@ -179,7 +184,14 @@ class DummyMetricReaderPullExporter(MetricReader):
 
 
 class DummyOTLPMetricExporter:
-    def __init__(self, compression: str | None = None, *args, **kwargs):
+    def __init__(
+        self,
+        compression: str | None = None,
+        session: Session | None = None,
+        *args,
+        **kwargs,
+    ):
+        self.session = session
         self.export_called = False
         self.compression = compression
 
@@ -204,8 +216,15 @@ class Exporter:
 
 
 class OTLPSpanExporter:
-    def __init__(self, compression: str | None = None, *args, **kwargs):
+    def __init__(
+        self,
+        compression: str | None = None,
+        credentials: ChannelCredentials | None = None,
+        *args,
+        **kwargs,
+    ):
         self.compression = compression
+        self.credentials = credentials
 
 
 class DummyOTLPLogExporter(LogExporter):
@@ -407,6 +426,59 @@ class TestTraceInit(TestCase):
         _init_tracing({}, id_generator=id_generator)
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsInstance(provider.id_generator, CustomIdGenerator)
+
+    @patch.dict(
+        environ,
+        {
+            OTEL_PYTHON_EXPORTER_OTLP_METRICS_CREDENTIAL_PROVIDER: "custom_session"
+        },
+    )
+    @patch("opentelemetry.sdk._configuration.entry_points")
+    def test_that_session_gets_passed_to_exporter(self, mock_entry_points):
+        # Should not be used, trace specific version should override.
+        session_for_all_signals = Session()
+        session_for_metrics_only = Session()
+        mock_entry_points.configure_mock(
+            return_value=[
+                IterEntryPoint("custom_session", session_for_metrics_only)
+            ]
+        )
+        exporter = _init_exporter(
+            "metrics",
+            {},
+            DummyOTLPMetricExporter,
+            otlp_credential_param_for_all_signal_types=(
+                "session",
+                session_for_all_signals,
+            ),
+        )
+        assert exporter.session is session_for_metrics_only
+        assert exporter.session is not session_for_all_signals
+
+    @patch.dict(
+        environ,
+        {
+            OTEL_PYTHON_EXPORTER_OTLP_TRACES_CREDENTIAL_PROVIDER: "custom_credential"
+        },
+    )
+    @patch("opentelemetry.sdk._configuration.entry_points")
+    def test_that_credential_gets_passed_to_exporter(self, mock_entry_points):
+        # Should not be used, trace specific version should override.
+        credential_for_all_signals = ChannelCredentials(None)
+        credential_for_trace_only = ChannelCredentials(None)
+        mock_entry_points.configure_mock(
+            return_value=[
+                IterEntryPoint("custom_credential", credential_for_trace_only)
+            ]
+        )
+        exporter = _init_exporter(
+            "traces",
+            {},
+            OTLPSpanExporter,
+            otlp_credential_param_for_all_signal_types=credential_for_all_signals,
+        )
+        assert exporter.credentials is credential_for_trace_only
+        assert exporter.credentials is not credential_for_all_signals
 
     @patch.dict(
         "os.environ", {OTEL_TRACES_SAMPLER: "non_existent_entry_point"}
@@ -738,7 +810,11 @@ class TestLoggingInit(TestCase):
         _initialize_components(auto_instrumentation_version="auto-version")
         self.assertEqual(tracing_mock.call_count, 1)
         logging_mock.assert_called_once_with(
-            mock.ANY, mock.ANY, False, exporter_args_map=None
+            mock.ANY,
+            mock.ANY,
+            False,
+            otlp_credential_param=None,
+            exporter_args_map=None,
         )
 
     @patch.dict(
@@ -754,7 +830,11 @@ class TestLoggingInit(TestCase):
         with self.assertLogs(level=WARNING):
             _initialize_components(auto_instrumentation_version="auto-version")
         logging_mock.assert_called_once_with(
-            mock.ANY, mock.ANY, True, exporter_args_map=None
+            mock.ANY,
+            mock.ANY,
+            True,
+            otlp_credential_param=None,
+            exporter_args_map=None,
         )
         self.assertEqual(tracing_mock.call_count, 1)
 
@@ -872,17 +952,20 @@ class TestLoggingInit(TestCase):
             id_generator="TEST_GENERATOR",
             sampler="TEST_SAMPLER",
             resource="TEST_RESOURCE",
+            otlp_credential_param=None,
             exporter_args_map={1: {"compression": "gzip"}},
         )
         metrics_mock.assert_called_once_with(
             "TEST_METRICS_EXPORTERS_DICT",
             "TEST_RESOURCE",
+            otlp_credential_param=None,
             exporter_args_map={1: {"compression": "gzip"}},
         )
         logging_mock.assert_called_once_with(
             "TEST_LOG_EXPORTERS_DICT",
             "TEST_RESOURCE",
             True,
+            otlp_credential_param=None,
             exporter_args_map={1: {"compression": "gzip"}},
         )
 
