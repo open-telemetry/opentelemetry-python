@@ -4,8 +4,13 @@ on:
   push:
     branches: [ main ]
 
+permissions:
+  contents: read
+
 jobs:
   sdk-benchmarks:
+    permissions:
+      contents: write # required for pushing to gh-pages
     runs-on: equinix-bare-metal
     steps:
     - name: Checkout Core Repo @ SHA - ${{ github.sha }}
@@ -16,7 +21,7 @@ jobs:
         python-version: "3.13"
         architecture: 'x64'
     - name: Install tox
-      run: pip install tox
+      run: pip install tox-uv
     - name: Run tox
       run: tox -e benchmark-opentelemetry-sdk -- -k opentelemetry-sdk/benchmarks --benchmark-json=opentelemetry-sdk/output.json
     - name: Report on SDK benchmark results
