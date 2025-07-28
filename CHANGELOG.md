@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 the OTLP `LogHandler` remains attached to the root logger. Fix a bug that
 can cause a deadlock to occur over `logging._lock` in some cases ([#4636](https://github.com/open-telemetry/opentelemetry-python/pull/4636)).
 - otlp-http-exporter: set default value for param `timeout_sec` in `_export` method
-  ([#4690](https://github.com/open-telemetry/opentelemetry-python/pull/4690))
+  ([#4691](https://github.com/open-telemetry/opentelemetry-python/pull/4691))
 
 ## Version 1.35.0/0.56b0 (2025-07-11)
 
