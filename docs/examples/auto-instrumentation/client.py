@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
 
 from requests import get
 
@@ -30,13 +31,15 @@ trace.get_tracer_provider().add_span_processor(
     BatchSpanProcessor(ConsoleSpanExporter())
 )
 
+param_value = sys.argv[1] if len(sys.argv) > 1 else "testing"
+
 with tracer.start_as_current_span("client"):
     with tracer.start_as_current_span("client-server"):
         headers = {}
         inject(headers)
         requested = get(
             "http://localhost:8082/server_request",
-            params={"param": "testing"},
+            params={"param": param_value},
             headers=headers,
         )
 
