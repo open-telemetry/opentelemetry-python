@@ -11,6 +11,8 @@ We are working on stabilizing the Log signal that would require making deprecati
 
 ## Unreleased
 
+## Version 1.36.0/0.57b0 (2025-07-29)
+
 - Add missing Prometheus exporter documentation
   ([#4485](https://github.com/open-telemetry/opentelemetry-python/pull/4485))
 - Overwrite logging.config.fileConfig and logging.config.dictConfig to ensure
