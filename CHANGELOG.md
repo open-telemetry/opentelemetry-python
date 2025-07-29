@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Handle `LoggingHandler.exc_info` occasionally being a string ([#4699](https://github.com/open-telemetry/opentelemetry-python/pull/4699))
 - Add missing Prometheus exporter documentation
   ([#4485](https://github.com/open-telemetry/opentelemetry-python/pull/4485))
 - Overwrite logging.config.fileConfig and logging.config.dictConfig to ensure

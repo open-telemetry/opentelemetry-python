@@ -60,12 +60,13 @@ class TestLoggingHandler(unittest.TestCase):
             raise CustomException("Custom exception")
         except CustomException as exception:
             exc_info = (type(exception), exception, exception.__traceback__)
-            traceback_str = "".join(traceback.format_exception(*exc_info))
+        else:
+            exc_info = "Second stringified exception"
 
         exc_info_values = [
             # Don't know what caused it in my context, so I'm relying on mocks to replicate the behavior.
             # First the `record.exc_info` becomes a string somehow, then `sys.exc_info` brings the tuple.
-            "Stringified exception",
+            "First stringified exception",
             exc_info,
         ]
 
@@ -77,7 +78,10 @@ class TestLoggingHandler(unittest.TestCase):
         attributes = processor.log_data_emitted[0].log_record.attributes._dict
         assert attributes["exception.type"] == "CustomException"
         assert attributes["exception.message"] == str(exc_info[1])
-        assert attributes["exception.stacktrace"] == traceback_str
+        assert isinstance(exc_info, tuple)
+        assert attributes["exception.stacktrace"] == "".join(
+            traceback.format_exception(*exc_info)
+        )
 
     def test_handler_custom_log_level(self):
         processor, logger = set_up_test_logging(logging.ERROR)
