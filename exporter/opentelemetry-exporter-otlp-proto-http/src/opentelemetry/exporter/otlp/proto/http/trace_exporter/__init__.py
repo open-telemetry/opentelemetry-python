@@ -15,10 +15,11 @@
 import gzip
 import logging
 import random
+import threading
 import zlib
 from io import BytesIO
 from os import environ
-from time import sleep, time
+from time import time
 from typing import Dict, Optional, Sequence
 
 import requests
@@ -76,6 +77,7 @@ class OTLPSpanExporter(SpanExporter):
         compression: Optional[Compression] = None,
         session: Optional[requests.Session] = None,
     ):
+        self._shutdown_in_progress = threading.Event()
         self._endpoint = endpoint or environ.get(
             OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
             _append_trace_path(
@@ -122,7 +124,9 @@ class OTLPSpanExporter(SpanExporter):
             )
         self._shutdown = False
 
-    def _export(self, serialized_data: bytes, timeout_sec: float):
+    def _export(
+        self, serialized_data: bytes, timeout_sec: Optional[float] = None
+    ):
         data = serialized_data
         if self._compression == Compression.Gzip:
             gzip_data = BytesIO()
@@ -131,6 +135,9 @@ class OTLPSpanExporter(SpanExporter):
             data = gzip_data.getvalue()
         elif self._compression == Compression.Deflate:
             data = zlib.compress(serialized_data)
+
+        if timeout_sec is None:
+            timeout_sec = self._timeout
 
         # By default, keep-alive is enabled in Session's request
         # headers. Backends may choose to close the connection
@@ -171,6 +178,7 @@ class OTLPSpanExporter(SpanExporter):
                 not _is_retryable(resp)
                 or retry_num + 1 == _MAX_RETRYS
                 or backoff_seconds > (deadline_sec - time())
+                or self._shutdown
             ):
                 _logger.error(
                     "Failed to export span batch code: %s, reason: %s",
@@ -183,16 +191,19 @@ class OTLPSpanExporter(SpanExporter):
                 resp.reason,
                 backoff_seconds,
             )
-            sleep(backoff_seconds)
-        # Not possible to reach here but the linter is complaining.
+            shutdown = self._shutdown_in_progress.wait(backoff_seconds)
+            if shutdown:
+                _logger.warning("Shutdown in progress, aborting retry.")
+                break
         return SpanExportResult.FAILURE
 
     def shutdown(self):
         if self._shutdown:
             _logger.warning("Exporter already shutdown, ignoring call")
             return
-        self._session.close()
         self._shutdown = True
+        self._shutdown_in_progress.set()
+        self._session.close()
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         """Nothing is buffered in this exporter, so this method does nothing."""

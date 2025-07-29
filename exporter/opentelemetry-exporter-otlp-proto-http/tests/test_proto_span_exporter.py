@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import threading
 import time
 import unittest
 from logging import WARNING
@@ -288,3 +289,32 @@ class TestOTLPSpanExporter(unittest.TestCase):
         mock_post.side_effect = export_side_effect
         exporter = OTLPSpanExporter(timeout=0.4)
         exporter.export([BASIC_SPAN])
+
+    @patch.object(Session, "post")
+    def test_shutdown_interrupts_retry_backoff(self, mock_post):
+        exporter = OTLPSpanExporter(timeout=1.5)
+
+        resp = Response()
+        resp.status_code = 503
+        resp.reason = "UNAVAILABLE"
+        mock_post.return_value = resp
+        thread = threading.Thread(target=exporter.export, args=([BASIC_SPAN],))
+        with self.assertLogs(level=WARNING) as warning:
+            before = time.time()
+            thread.start()
+            # Wait for the first attempt to fail, then enter a 1 second backoff.
+            time.sleep(0.05)
+            # Should cause export to wake up and return.
+            exporter.shutdown()
+            thread.join()
+            after = time.time()
+            self.assertIn(
+                "Transient error UNAVAILABLE encountered while exporting span batch, retrying in",
+                warning.records[0].message,
+            )
+            self.assertIn(
+                "Shutdown in progress, aborting retry.",
+                warning.records[1].message,
+            )
+
+            assert after - before < 0.2
