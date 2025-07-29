@@ -14,9 +14,13 @@ See the [OpenTelemetry Instrumentation for Python](https://opentelemetry.io/docs
 | ------- | ------------ | ------- |
 | Traces  | Stable       | N/A     |
 | Metrics | Stable       | N/A     |
-| Logs    | Experimental | N/A     |
+| Logs    | Experimental* | N/A     |
 
 Project versioning information and stability guarantees can be found [here](./rationale.md#versioning-and-releasing).
+
+***Breaking Changes**
+
+We are working on stabilizing the Log signal that would require making deprecations and breaking changes. We will try to reduce the releases that may require an update to your code, especially for instrumentations or for sdk developers.
 
 ## Getting started
 
