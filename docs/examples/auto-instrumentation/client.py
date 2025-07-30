@@ -31,6 +31,7 @@ trace.get_tracer_provider().add_span_processor(
     BatchSpanProcessor(ConsoleSpanExporter())
 )
 
+# Get parameter from command line argument or use default value "testing"
 param_value = sys.argv[1] if len(sys.argv) > 1 else "testing"
 
 with tracer.start_as_current_span("client"):
