@@ -186,7 +186,11 @@ class OTLPLogExporter(LogRecordExporter):
         serialized_data = encode_logs(batch).SerializeToString()
         deadline_sec = time() + self._timeout
         for retry_num in range(_MAX_RETRYS):
-            resp = self._export(serialized_data, deadline_sec - time())
+            try:
+                resp = self._export(serialized_data, deadline_sec - time())
+            except Exception as error:
+                _logger.error("Failed to export logs batch reason: %s", error)
+                return LogExportResult.FAILURE
             if resp.ok:
                 return LogRecordExportResult.SUCCESS
             # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
