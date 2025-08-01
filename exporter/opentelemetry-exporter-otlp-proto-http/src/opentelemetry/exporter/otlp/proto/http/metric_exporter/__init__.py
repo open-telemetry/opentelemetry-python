@@ -231,7 +231,13 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         serialized_data = encode_metrics(metrics_data).SerializeToString()
         deadline_sec = time() + self._timeout
         for retry_num in range(_MAX_RETRYS):
-            resp = self._export(serialized_data, deadline_sec - time())
+            try:
+                resp = self._export(serialized_data, deadline_sec - time())
+            except Exception as error:
+                _logger.error(
+                    "Failed to export metrics batch reason: %s", error
+                )
+                return MetricExportResult.FAILURE
             if resp.ok:
                 return MetricExportResult.SUCCESS
             # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
