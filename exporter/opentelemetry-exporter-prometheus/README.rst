@@ -15,7 +15,7 @@ Installation
 
      pip install opentelemetry-exporter-prometheus
 
-Known Limitations
+Limitations
 -----------------
 
 * No multiprocessing support: The Prometheus exporter is not designed to operate in multiprocessing environments.
