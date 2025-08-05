@@ -325,10 +325,14 @@ class TestOTLPExporterMixin(TestCase):
                 "Exporter already shutdown, ignoring batch",
             )
 
-    def test_shutdown_wait_last_export(self):
+    @unittest.skipIf(
+        system() == "Windows",
+        "For gRPC + windows there's some added delay in the RPCs which breaks the assertion over amount of time passed.",
+    )
+    def test_shutdown_interrupts_export_retry_backoff(self):
         add_TraceServiceServicer_to_server(
             TraceServiceServicerWithExportParams(
-                StatusCode.OK, optional_export_sleep=1
+                StatusCode.UNAVAILABLE,
             ),
             self.server,
         )
@@ -336,37 +340,25 @@ class TestOTLPExporterMixin(TestCase):
         export_thread = ThreadWithReturnValue(
             target=self.exporter.export, args=([self.span],)
         )
-        export_thread.start()
-        # Wait a bit for exporter to get lock and make export call.
-        time.sleep(0.25)
-        # pylint: disable=protected-access
-        self.assertTrue(self.exporter._export_lock.locked())
-        self.exporter.shutdown(timeout_millis=3000)
-        # pylint: disable=protected-access
-        self.assertTrue(self.exporter._shutdown)
-        self.assertEqual(export_thread.join(), SpanExportResult.SUCCESS)
-
-    def test_shutdown_doesnot_wait_last_export(self):
-        add_TraceServiceServicer_to_server(
-            TraceServiceServicerWithExportParams(
-                StatusCode.OK, optional_export_sleep=3
-            ),
-            self.server,
-        )
-
-        export_thread = ThreadWithReturnValue(
-            target=self.exporter.export, args=([self.span],)
-        )
-        export_thread.start()
-        # Wait for exporter to get lock and make export call.
-        time.sleep(0.25)
-        # pylint: disable=protected-access
-        self.assertTrue(self.exporter._export_lock.locked())
-        # Set to 1 seconds, so the 3 second server-side delay will not be reached.
-        self.exporter.shutdown(timeout_millis=1000)
-        # pylint: disable=protected-access
-        self.assertTrue(self.exporter._shutdown)
-        self.assertEqual(export_thread.join(), None)
+        with self.assertLogs(level=WARNING) as warning:
+            begin_wait = time.time()
+            export_thread.start()
+            # Wait a bit for export to fail and the backoff sleep to start
+            time.sleep(0.05)
+            # The code should now be in a 1 second backoff.
+            # pylint: disable=protected-access
+            self.assertFalse(self.exporter._shutdown_in_progress.is_set())
+            self.exporter.shutdown()
+            self.assertTrue(self.exporter._shutdown_in_progress.is_set())
+            export_result = export_thread.join()
+            end_wait = time.time()
+            self.assertEqual(export_result, SpanExportResult.FAILURE)
+            # Shutdown should have interrupted the sleep.
+            self.assertTrue(end_wait - begin_wait < 0.2)
+            self.assertEqual(
+                warning.records[1].message,
+                "Shutdown in progress, aborting retry.",
+            )
 
     def test_export_over_closed_grpc_channel(self):
         # pylint: disable=protected-access

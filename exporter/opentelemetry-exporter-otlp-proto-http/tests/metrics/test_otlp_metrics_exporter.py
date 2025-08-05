@@ -13,6 +13,7 @@
 # limitations under the License.
 
 # pylint: disable=too-many-lines
+import threading
 import time
 from logging import WARNING
 from os import environ
@@ -1386,6 +1387,37 @@ class TestOTLPMetricExporter(TestCase):
         mock_post.side_effect = export_side_effect
         exporter = OTLPMetricExporter(timeout=0.4)
         exporter.export(self.metrics["sum_int"])
+
+    @patch.object(Session, "post")
+    def test_shutdown_interrupts_retry_backoff(self, mock_post):
+        exporter = OTLPMetricExporter(timeout=1.5)
+
+        resp = Response()
+        resp.status_code = 503
+        resp.reason = "UNAVAILABLE"
+        mock_post.return_value = resp
+        thread = threading.Thread(
+            target=exporter.export, args=(self.metrics["sum_int"],)
+        )
+        with self.assertLogs(level=WARNING) as warning:
+            before = time.time()
+            thread.start()
+            # Wait for the first attempt to fail, then enter a 1 second backoff.
+            time.sleep(0.05)
+            # Should cause export to wake up and return.
+            exporter.shutdown()
+            thread.join()
+            after = time.time()
+            self.assertIn(
+                "Transient error UNAVAILABLE encountered while exporting metrics batch, retrying in",
+                warning.records[0].message,
+            )
+            self.assertIn(
+                "Shutdown in progress, aborting retry.",
+                warning.records[1].message,
+            )
+
+            assert after - before < 0.2
 
 
 def _resource_metrics(
