@@ -1,5 +1,4 @@
 import pytest
-from testutil import random_trace_id
 
 from opentelemetry.sdk.trace._sampling_experimental import (
     consistent_probability_based,
@@ -8,6 +7,8 @@ from opentelemetry.sdk.trace._sampling_experimental._trace_state import (
     OtelTraceState,
 )
 from opentelemetry.sdk.trace.sampling import Decision
+
+from .testutil import random_trace_id
 
 
 @pytest.mark.parametrize(

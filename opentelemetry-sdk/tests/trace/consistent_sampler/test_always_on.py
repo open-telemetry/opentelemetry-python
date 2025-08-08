@@ -1,7 +1,7 @@
-from testutil import random_trace_id
-
 from opentelemetry.sdk.trace._sampling_experimental import consistent_always_on
 from opentelemetry.sdk.trace.sampling import Decision
+
+from .testutil import random_trace_id
 
 
 def test_description():
