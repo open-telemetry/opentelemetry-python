@@ -43,15 +43,15 @@ class ConsistentParentBasedSampler(ComposableSampler):
                 threshold=ot_trace_state.threshold,
                 adjusted_count_reliable=True,
             )
-        else:
-            threshold = (
-                MIN_THRESHOLD
-                if parent_span_ctx.trace_flags.sampled
-                else INVALID_THRESHOLD
-            )
-            return SamplingIntent(
-                threshold=threshold, adjusted_count_reliable=False
-            )
+
+        threshold = (
+            MIN_THRESHOLD
+            if parent_span_ctx.trace_flags.sampled
+            else INVALID_THRESHOLD
+        )
+        return SamplingIntent(
+            threshold=threshold, adjusted_count_reliable=False
+        )
 
     def get_description(self) -> str:
         return self._description

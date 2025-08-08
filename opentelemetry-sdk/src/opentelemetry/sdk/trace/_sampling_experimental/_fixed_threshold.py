@@ -45,7 +45,7 @@ def consistent_probability_based(
     sampling_probability: float,
 ) -> ConsistentSampler:
     """Returns a consistent sampler that samples each span with a fixed probability."""
-    if not (0.0 <= sampling_probability <= 1.0):
+    if not 0.0 <= sampling_probability <= 1.0:
         raise ValueError("Sampling probability must be between 0.0 and 1.0")
 
     return ConsistentSampler(

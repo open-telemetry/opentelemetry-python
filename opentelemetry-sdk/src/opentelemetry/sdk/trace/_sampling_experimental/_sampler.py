@@ -51,20 +51,11 @@ class ConsistentSampler(Sampler, ComposableSampler):
         else:
             ot_trace_state.threshold = INVALID_THRESHOLD
 
-        otts = ot_trace_state.serialize()
-        if not trace_state:
-            if otts:
-                new_trace_state = TraceState(((OTEL_TRACE_STATE_KEY, otts),))
-            else:
-                new_trace_state = None
-        else:
-            new_trace_state = intent.update_trace_state(trace_state)
-            if otts:
-                new_trace_state = new_trace_state.update(
-                    OTEL_TRACE_STATE_KEY, otts
-                )
-
-        return SamplingResult(decision, intent.attributes, new_trace_state)
+        return SamplingResult(
+            decision,
+            intent.attributes,
+            _update_trace_state(trace_state, ot_trace_state, intent),
+        )
 
     def sampling_intent(
         self,
@@ -81,3 +72,19 @@ class ConsistentSampler(Sampler, ComposableSampler):
 
     def get_description(self) -> str:
         return self._delegate.get_description()
+
+
+def _update_trace_state(
+    trace_state: Optional[TraceState],
+    ot_trace_state: OtelTraceState,
+    intent: SamplingIntent,
+) -> Optional[TraceState]:
+    otts = ot_trace_state.serialize()
+    if not trace_state:
+        if otts:
+            return TraceState(((OTEL_TRACE_STATE_KEY, otts),))
+        return None
+    new_trace_state = intent.update_trace_state(trace_state)
+    if otts:
+        return new_trace_state.update(OTEL_TRACE_STATE_KEY, otts)
+    return new_trace_state

@@ -31,8 +31,6 @@ class ComposableSampler(Protocol):
         trace_state: Optional[TraceState],
     ) -> SamplingIntent:
         """Returns information to make a consistent sampling decision."""
-        ...
 
     def get_description(self) -> str:
         """Returns a description of the sampler."""
-        ...

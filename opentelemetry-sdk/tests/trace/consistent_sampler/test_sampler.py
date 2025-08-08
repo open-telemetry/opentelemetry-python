@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Optional
 
 import pytest
@@ -29,112 +30,141 @@ TRACE_ID = int("00112233445566778800000000000000", 16)
 SPAN_ID = int("0123456789abcdef", 16)
 
 
+@dataclass
+class Input:
+    sampler: Sampler
+    sampled: bool
+    threshold: Optional[int]
+    random_value: Optional[int]
+
+
+@dataclass
+class Output:
+    sampled: bool
+    threshold: int
+    random_value: int
+
+
 @pytest.mark.parametrize(
-    "sampler,parent_sampled,parent_threshold,parent_random_value,sampled,threshold,random_value",
+    "input,output",
     (
         p(
-            consistent_always_on(),
-            True,
-            None,
-            None,
-            True,
-            0,
-            INVALID_RANDOM_VALUE,
+            Input(
+                sampler=consistent_always_on(),
+                sampled=True,
+                threshold=None,
+                random_value=None,
+            ),
+            Output(
+                sampled=True, threshold=0, random_value=INVALID_RANDOM_VALUE
+            ),
             id="min threshold no parent random value",
         ),
         p(
-            consistent_always_on(),
-            True,
-            None,
-            0x7F99AA40C02744,
-            True,
-            0,
-            0x7F99AA40C02744,
+            Input(
+                sampler=consistent_always_on(),
+                sampled=True,
+                threshold=None,
+                random_value=0x7F99AA40C02744,
+            ),
+            Output(sampled=True, threshold=0, random_value=0x7F99AA40C02744),
             id="min threshold with parent random value",
         ),
         p(
-            consistent_always_off(),
-            True,
-            None,
-            None,
-            False,
-            INVALID_THRESHOLD,
-            INVALID_RANDOM_VALUE,
+            Input(
+                sampler=consistent_always_off(),
+                sampled=True,
+                threshold=None,
+                random_value=None,
+            ),
+            Output(
+                sampled=False,
+                threshold=INVALID_THRESHOLD,
+                random_value=INVALID_RANDOM_VALUE,
+            ),
             id="max threshold",
         ),
         p(
-            consistent_parent_based(consistent_always_on()),
-            False,  # should be ignored
-            0x7F99AA40C02744,
-            0x7F99AA40C02744,
-            True,
-            0x7F99AA40C02744,
-            0x7F99AA40C02744,
+            Input(
+                sampler=consistent_parent_based(consistent_always_on()),
+                sampled=False,
+                threshold=0x7F99AA40C02744,
+                random_value=0x7F99AA40C02744,
+            ),
+            Output(
+                sampled=True,
+                threshold=0x7F99AA40C02744,
+                random_value=0x7F99AA40C02744,
+            ),
             id="parent based in consistent mode",
         ),
         p(
-            consistent_parent_based(consistent_always_on()),
-            True,
-            None,
-            None,
-            True,
-            INVALID_THRESHOLD,
-            INVALID_RANDOM_VALUE,
+            Input(
+                sampler=consistent_parent_based(consistent_always_on()),
+                sampled=True,
+                threshold=None,
+                random_value=None,
+            ),
+            Output(
+                sampled=True,
+                threshold=INVALID_THRESHOLD,
+                random_value=INVALID_RANDOM_VALUE,
+            ),
             id="parent based in legacy mode",
         ),
         p(
-            consistent_probability_based(0.5),
-            True,
-            None,
-            0x7FFFFFFFFFFFFF,
-            False,
-            INVALID_THRESHOLD,
-            0x7FFFFFFFFFFFFF,
+            Input(
+                sampler=consistent_probability_based(0.5),
+                sampled=True,
+                threshold=None,
+                random_value=0x7FFFFFFFFFFFFF,
+            ),
+            Output(
+                sampled=False,
+                threshold=INVALID_THRESHOLD,
+                random_value=0x7FFFFFFFFFFFFF,
+            ),
             id="half threshold not sampled",
         ),
         p(
-            consistent_probability_based(0.5),
-            False,
-            None,
-            0x80000000000000,
-            True,
-            0x80000000000000,
-            0x80000000000000,
+            Input(
+                sampler=consistent_probability_based(0.5),
+                sampled=False,
+                threshold=None,
+                random_value=0x80000000000000,
+            ),
+            Output(
+                sampled=True,
+                threshold=0x80000000000000,
+                random_value=0x80000000000000,
+            ),
             id="half threshold sampled",
         ),
         p(
-            consistent_probability_based(1.0),
-            False,
-            0x80000000000000,
-            0x80000000000000,
-            True,
-            0,
-            0x80000000000000,
+            Input(
+                sampler=consistent_probability_based(1.0),
+                sampled=False,
+                threshold=0x80000000000000,
+                random_value=0x80000000000000,
+            ),
+            Output(sampled=True, threshold=0, random_value=0x80000000000000),
             id="half threshold sampled",
         ),
     ),
 )
-def test_sample(
-    sampler: Sampler,
-    parent_sampled: bool,
-    parent_threshold: Optional[int],
-    parent_random_value: Optional[int],
-    sampled: bool,
-    threshold: float,
-    random_value: float,
-):
+def test_sample(input: Input, output: Output):
     parent_state = OtelTraceState.invalid()
-    if parent_threshold is not None:
-        parent_state.threshold = parent_threshold
-    if parent_random_value is not None:
-        parent_state.random_value = parent_random_value
+    if input.threshold is not None:
+        parent_state.threshold = input.threshold
+    if input.random_value is not None:
+        parent_state.random_value = input.random_value
     parent_state_str = parent_state.serialize()
     parent_trace_state = (
         TraceState((("ot", parent_state_str),)) if parent_state_str else None
     )
     flags = (
         TraceFlags(TraceFlags.SAMPLED)
-        if parent_sampled
+        if input.sampled
         else TraceFlags.get_default()
     )
     parent_span_context = SpanContext(
@@ -143,13 +173,13 @@ def test_sample(
     parent_span = NonRecordingSpan(parent_span_context)
     parent_context = set_span_in_context(parent_span)
 
-    result = sampler.should_sample(
+    result = input.sampler.should_sample(
         parent_context, TRACE_ID, "name", trace_state=parent_trace_state
     )
 
-    decision = Decision.RECORD_AND_SAMPLE if sampled else Decision.DROP
+    decision = Decision.RECORD_AND_SAMPLE if output.sampled else Decision.DROP
     state = OtelTraceState.parse(result.trace_state)
 
     assert result.decision == decision
-    assert state.threshold == threshold
-    assert state.random_value == random_value
+    assert state.threshold == output.threshold
+    assert state.random_value == output.random_value
