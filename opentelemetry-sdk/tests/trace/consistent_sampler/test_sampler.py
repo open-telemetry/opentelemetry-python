@@ -148,7 +148,7 @@ class Output:
                 random_value=0x80000000000000,
             ),
             Output(sampled=True, threshold=0, random_value=0x80000000000000),
-            id="half threshold sampled",
+            id="parent violating invariant",
         ),
     ),
 )
