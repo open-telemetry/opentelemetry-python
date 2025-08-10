@@ -1,0 +1,13 @@
+colorama>=0.4.6
+iniconfig>=2.0.0
+packaging>=24.0
+pluggy>=1.5.0
+protobuf>=5.29.5
+pytest>=7.4.4
+-e opentelemetry-api
+-e tests/opentelemetry-test-utils
+-e exporter/opentelemetry-exporter-otlp-proto-common
+-e opentelemetry-proto
+-e opentelemetry-sdk
+-e opentelemetry-semantic-conventions
+-e exporter/opentelemetry-exporter-otlp-proto-grpc

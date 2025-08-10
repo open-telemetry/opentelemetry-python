@@ -49,7 +49,12 @@ from opentelemetry.sdk._logs import LogData, LogLimits
 from opentelemetry.sdk._logs import LogRecord as SDKLogRecord
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
-from opentelemetry.trace import TraceFlags
+from opentelemetry.trace import (
+    NonRecordingSpan,
+    SpanContext,
+    TraceFlags,
+    set_span_in_context,
+)
 
 
 class TestOTLPLogEncoder(unittest.TestCase):
@@ -84,13 +89,21 @@ class TestOTLPLogEncoder(unittest.TestCase):
 
     @staticmethod
     def _get_sdk_log_data() -> List[LogData]:
+        ctx_log1 = set_span_in_context(
+            NonRecordingSpan(
+                SpanContext(
+                    89564621134313219400156819398935297684,
+                    1312458408527513268,
+                    False,
+                    TraceFlags(0x01),
+                )
+            )
+        )
         log1 = LogData(
             log_record=SDKLogRecord(
                 timestamp=1644650195189786880,
                 observed_timestamp=1644650195189786881,
-                trace_id=89564621134313219400156819398935297684,
-                span_id=1312458408527513268,
-                trace_flags=TraceFlags(0x01),
+                context=ctx_log1,
                 severity_text="WARN",
                 severity_number=SeverityNumber.WARN,
                 body="Do not go gentle into that good night. Rage, rage against the dying of the light",
@@ -109,9 +122,6 @@ class TestOTLPLogEncoder(unittest.TestCase):
             log_record=SDKLogRecord(
                 timestamp=1644650249738562048,
                 observed_timestamp=1644650249738562049,
-                trace_id=0,
-                span_id=0,
-                trace_flags=TraceFlags.DEFAULT,
                 severity_text="WARN",
                 severity_number=SeverityNumber.WARN,
                 body="Cooper, this is no time for caution!",
@@ -123,13 +133,21 @@ class TestOTLPLogEncoder(unittest.TestCase):
             ),
         )
 
+        ctx_log3 = set_span_in_context(
+            NonRecordingSpan(
+                SpanContext(
+                    271615924622795969659406376515024083555,
+                    4242561578944770265,
+                    False,
+                    TraceFlags(0x01),
+                )
+            )
+        )
         log3 = LogData(
             log_record=SDKLogRecord(
                 timestamp=1644650427658989056,
                 observed_timestamp=1644650427658989057,
-                trace_id=271615924622795969659406376515024083555,
-                span_id=4242561578944770265,
-                trace_flags=TraceFlags(0x01),
+                context=ctx_log3,
                 severity_text="DEBUG",
                 severity_number=SeverityNumber.DEBUG,
                 body="To our galaxy",
@@ -139,13 +157,21 @@ class TestOTLPLogEncoder(unittest.TestCase):
             instrumentation_scope=None,
         )
 
+        ctx_log4 = set_span_in_context(
+            NonRecordingSpan(
+                SpanContext(
+                    212592107417388365804938480559624925555,
+                    6077757853989569223,
+                    False,
+                    TraceFlags(0x01),
+                )
+            )
+        )
         log4 = LogData(
             log_record=SDKLogRecord(
                 timestamp=1644650584292683008,
                 observed_timestamp=1644650584292683009,
-                trace_id=212592107417388365804938480559624925555,
-                span_id=6077757853989569223,
-                trace_flags=TraceFlags(0x01),
+                context=ctx_log4,
                 severity_text="INFO",
                 severity_number=SeverityNumber.INFO,
                 body="Love is the one thing that transcends time and space",
@@ -160,13 +186,21 @@ class TestOTLPLogEncoder(unittest.TestCase):
             ),
         )
 
+        ctx_log5 = set_span_in_context(
+            NonRecordingSpan(
+                SpanContext(
+                    212592107417388365804938480559624925555,
+                    6077757853989569445,
+                    False,
+                    TraceFlags(0x01),
+                )
+            )
+        )
         log5 = LogData(
             log_record=SDKLogRecord(
                 timestamp=1644650584292683009,
                 observed_timestamp=1644650584292683010,
-                trace_id=212592107417388365804938480559624925555,
-                span_id=6077757853989569445,
-                trace_flags=TraceFlags(0x01),
+                context=ctx_log5,
                 severity_text="INFO",
                 severity_number=SeverityNumber.INFO,
                 body={"error": None, "array_with_nones": [1, None, 2]},
@@ -178,13 +212,21 @@ class TestOTLPLogEncoder(unittest.TestCase):
             ),
         )
 
+        ctx_log6 = set_span_in_context(
+            NonRecordingSpan(
+                SpanContext(
+                    212592107417388365804938480559624925522,
+                    6077757853989569222,
+                    False,
+                    TraceFlags(0x01),
+                )
+            )
+        )
         log6 = LogData(
             log_record=SDKLogRecord(
                 timestamp=1644650584292683022,
                 observed_timestamp=1644650584292683022,
-                trace_id=212592107417388365804938480559624925522,
-                span_id=6077757853989569222,
-                trace_flags=TraceFlags(0x01),
+                context=ctx_log6,
                 severity_text="ERROR",
                 severity_number=SeverityNumber.ERROR,
                 body="This instrumentation scope has a schema url",
@@ -201,13 +243,21 @@ class TestOTLPLogEncoder(unittest.TestCase):
             ),
         )
 
+        ctx_log7 = set_span_in_context(
+            NonRecordingSpan(
+                SpanContext(
+                    212592107417388365804938480559624925533,
+                    6077757853989569233,
+                    False,
+                    TraceFlags(0x01),
+                )
+            )
+        )
         log7 = LogData(
             log_record=SDKLogRecord(
                 timestamp=1644650584292683033,
                 observed_timestamp=1644650584292683033,
-                trace_id=212592107417388365804938480559624925533,
-                span_id=6077757853989569233,
-                trace_flags=TraceFlags(0x01),
+                context=ctx_log7,
                 severity_text="FATAL",
                 severity_number=SeverityNumber.FATAL,
                 body="This instrumentation scope has a schema url and attributes",
@@ -225,13 +275,21 @@ class TestOTLPLogEncoder(unittest.TestCase):
             ),
         )
 
+        ctx_log8 = set_span_in_context(
+            NonRecordingSpan(
+                SpanContext(
+                    212592107417388365804938480559624925566,
+                    6077757853989569466,
+                    False,
+                    TraceFlags(0x01),
+                )
+            )
+        )
         log8 = LogData(
             log_record=SDKLogRecord(
                 timestamp=1644650584292683044,
                 observed_timestamp=1644650584292683044,
-                trace_id=212592107417388365804938480559624925566,
-                span_id=6077757853989569466,
-                trace_flags=TraceFlags(0x01),
+                context=ctx_log8,
                 severity_text="INFO",
                 severity_number=SeverityNumber.INFO,
                 body="Test export of extended attributes",
@@ -544,12 +602,20 @@ class TestOTLPLogEncoder(unittest.TestCase):
 
     @staticmethod
     def _get_test_logs_dropped_attributes() -> List[LogData]:
+        ctx_log1 = set_span_in_context(
+            NonRecordingSpan(
+                SpanContext(
+                    89564621134313219400156819398935297684,
+                    1312458408527513268,
+                    False,
+                    TraceFlags(0x01),
+                )
+            )
+        )
         log1 = LogData(
             log_record=SDKLogRecord(
                 timestamp=1644650195189786880,
-                trace_id=89564621134313219400156819398935297684,
-                span_id=1312458408527513268,
-                trace_flags=TraceFlags(0x01),
+                context=ctx_log1,
                 severity_text="WARN",
                 severity_number=SeverityNumber.WARN,
                 body="Do not go gentle into that good night. Rage, rage against the dying of the light",
@@ -561,13 +627,13 @@ class TestOTLPLogEncoder(unittest.TestCase):
                 "first_name", "first_version"
             ),
         )
-
+        ctx_log2 = set_span_in_context(
+            NonRecordingSpan(SpanContext(0, 0, False))
+        )
         log2 = LogData(
             log_record=SDKLogRecord(
                 timestamp=1644650249738562048,
-                trace_id=0,
-                span_id=0,
-                trace_flags=TraceFlags.DEFAULT,
+                context=ctx_log2,
                 severity_text="WARN",
                 severity_number=SeverityNumber.WARN,
                 body="Cooper, this is no time for caution!",

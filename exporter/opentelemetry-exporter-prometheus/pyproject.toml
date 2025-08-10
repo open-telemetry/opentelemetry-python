@@ -7,7 +7,7 @@ name = "opentelemetry-exporter-prometheus"
 dynamic = ["version"]
 description = "Prometheus Metric Exporter for OpenTelemetry"
 readme = "README.rst"
-license = {text = "Apache-2.0"}
+license = "Apache-2.0"
 requires-python = ">=3.9"
 authors = [
   { name = "OpenTelemetry Authors", email = "cncf-opentelemetry-contributors@lists.cncf.io" },
@@ -17,7 +17,6 @@ classifiers = [
   "Framework :: OpenTelemetry",
   "Framework :: OpenTelemetry :: Exporters",
   "Intended Audience :: Developers",
-  "License :: OSI Approved :: Apache Software License",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.9",
@@ -29,7 +28,7 @@ classifiers = [
 dependencies = [
   "opentelemetry-api ~= 1.12",
   # DONOTMERGE: confirm that this will becomes ~= 1.21 in the next release
-  "opentelemetry-sdk ~= 1.35.0.dev",
+  "opentelemetry-sdk ~= 1.37.0.dev",
   "prometheus_client >= 0.5.0, < 1.0.0",
 ]
 

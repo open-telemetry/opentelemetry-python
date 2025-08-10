@@ -1,0 +1,6 @@
+colorama>=0.4.6
+iniconfig>=2.0.0
+packaging>=24.0
+protobuf>=5.29.5
+pytest>=7.4.4
+-e opentelemetry-proto

@@ -15,7 +15,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
 import builtins
 import collections.abc
 import google.protobuf.descriptor
@@ -24,7 +23,10 @@ import google.protobuf.message
 import opentelemetry.proto.common.v1.common_pb2
 import sys
 
-import typing as typing_extensions
+if sys.version_info >= (3, 8):
+    import typing as typing_extensions
+else:
+    import typing_extensions
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
 
@@ -36,12 +38,9 @@ class Resource(google.protobuf.message.Message):
 
     ATTRIBUTES_FIELD_NUMBER: builtins.int
     DROPPED_ATTRIBUTES_COUNT_FIELD_NUMBER: builtins.int
+    ENTITY_REFS_FIELD_NUMBER: builtins.int
     @property
-    def attributes(
-        self,
-    ) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[
-        opentelemetry.proto.common.v1.common_pb2.KeyValue
-    ]:
+    def attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.KeyValue]:
         """Set of attributes that describe the resource.
         Attribute keys MUST be unique (it is not allowed to have more than one
         attribute with the same key).
@@ -50,25 +49,21 @@ class Resource(google.protobuf.message.Message):
     """dropped_attributes_count is the number of dropped attributes. If the value is 0, then
     no attributes were dropped.
     """
+    @property
+    def entity_refs(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.EntityRef]:
+        """Set of entities that participate in this Resource.
+
+        Note: keys in the references MUST exist in attributes of this message.
+
+        Status: [Development]
+        """
     def __init__(
         self,
         *,
-        attributes: (
-            collections.abc.Iterable[
-                opentelemetry.proto.common.v1.common_pb2.KeyValue
-            ]
-            | None
-        ) = ...,
+        attributes: collections.abc.Iterable[opentelemetry.proto.common.v1.common_pb2.KeyValue] | None = ...,
         dropped_attributes_count: builtins.int = ...,
+        entity_refs: collections.abc.Iterable[opentelemetry.proto.common.v1.common_pb2.EntityRef] | None = ...,
     ) -> None: ...
-    def ClearField(
-        self,
-        field_name: typing_extensions.Literal[
-            "attributes",
-            b"attributes",
-            "dropped_attributes_count",
-            b"dropped_attributes_count",
-        ],
-    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["attributes", b"attributes", "dropped_attributes_count", b"dropped_attributes_count", "entity_refs", b"entity_refs"]) -> None: ...
 
 global___Resource = Resource

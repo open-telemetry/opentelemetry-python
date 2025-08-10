@@ -17,7 +17,7 @@
 import time
 from os.path import dirname
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from google.protobuf.json_format import MessageToDict
 from grpc import ChannelCredentials, Compression
@@ -51,7 +51,12 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
-from opentelemetry.trace import TraceFlags
+from opentelemetry.trace import (
+    NonRecordingSpan,
+    SpanContext,
+    TraceFlags,
+    set_span_in_context,
+)
 
 THIS_DIR = dirname(__file__)
 
@@ -59,12 +64,20 @@ THIS_DIR = dirname(__file__)
 class TestOTLPLogExporter(TestCase):
     def setUp(self):
         self.exporter = OTLPLogExporter()
+        ctx_log_data_1 = set_span_in_context(
+            NonRecordingSpan(
+                SpanContext(
+                    2604504634922341076776623263868986797,
+                    5213367945872657620,
+                    False,
+                    TraceFlags(0x01),
+                )
+            )
+        )
         self.log_data_1 = LogData(
             log_record=LogRecord(
                 timestamp=int(time.time() * 1e9),
-                trace_id=2604504634922341076776623263868986797,
-                span_id=5213367945872657620,
-                trace_flags=TraceFlags(0x01),
+                context=ctx_log_data_1,
                 severity_text="WARNING",
                 severity_number=SeverityNumber.WARN,
                 body="Zhengzhou, We have a heaviest rains in 1000 years",
@@ -75,12 +88,20 @@ class TestOTLPLogExporter(TestCase):
                 "first_name", "first_version"
             ),
         )
+        ctx_log_data_2 = set_span_in_context(
+            NonRecordingSpan(
+                SpanContext(
+                    2604504634922341076776623263868986799,
+                    5213367945872657623,
+                    False,
+                    TraceFlags(0x01),
+                )
+            )
+        )
         self.log_data_2 = LogData(
             log_record=LogRecord(
                 timestamp=int(time.time() * 1e9),
-                trace_id=2604504634922341076776623263868986799,
-                span_id=5213367945872657623,
-                trace_flags=TraceFlags(0x01),
+                context=ctx_log_data_2,
                 severity_text="INFO",
                 severity_number=SeverityNumber.INFO2,
                 body="Sydney, Opera House is closed",
@@ -91,12 +112,20 @@ class TestOTLPLogExporter(TestCase):
                 "second_name", "second_version"
             ),
         )
+        ctx_log_data_3 = set_span_in_context(
+            NonRecordingSpan(
+                SpanContext(
+                    2604504634922341076776623263868986800,
+                    5213367945872657628,
+                    False,
+                    TraceFlags(0x01),
+                )
+            )
+        )
         self.log_data_3 = LogData(
             log_record=LogRecord(
                 timestamp=int(time.time() * 1e9),
-                trace_id=2604504634922341076776623263868986800,
-                span_id=5213367945872657628,
-                trace_flags=TraceFlags(0x01),
+                context=ctx_log_data_3,
                 severity_text="ERROR",
                 severity_number=SeverityNumber.WARN,
                 body="Mumbai, Boil water before drinking",
@@ -106,12 +135,15 @@ class TestOTLPLogExporter(TestCase):
                 "third_name", "third_version"
             ),
         )
+        ctx_log_data_4 = set_span_in_context(
+            NonRecordingSpan(
+                SpanContext(0, 5213367945872657629, False, TraceFlags(0x01))
+            )
+        )
         self.log_data_4 = LogData(
             log_record=LogRecord(
                 timestamp=int(time.time() * 1e9),
-                trace_id=0,
-                span_id=5213367945872657629,
-                trace_flags=TraceFlags(0x01),
+                context=ctx_log_data_4,
                 severity_text="ERROR",
                 severity_number=SeverityNumber.WARN,
                 body="Invalid trace id check",
@@ -121,12 +153,20 @@ class TestOTLPLogExporter(TestCase):
                 "fourth_name", "fourth_version"
             ),
         )
+        ctx_log_data_5 = set_span_in_context(
+            NonRecordingSpan(
+                SpanContext(
+                    2604504634922341076776623263868986801,
+                    0,
+                    False,
+                    TraceFlags(0x01),
+                )
+            )
+        )
         self.log_data_5 = LogData(
             log_record=LogRecord(
                 timestamp=int(time.time() * 1e9),
-                trace_id=2604504634922341076776623263868986801,
-                span_id=0,
-                trace_flags=TraceFlags(0x01),
+                context=ctx_log_data_5,
                 severity_text="ERROR",
                 severity_number=SeverityNumber.WARN,
                 body="Invalid span id check",
@@ -223,6 +263,45 @@ class TestOTLPLogExporter(TestCase):
         self.assertEqual(kwargs["compression"], Compression.Gzip)
         self.assertIsNotNone(kwargs["credentials"])
         self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
+
+        mock_logger_error.assert_not_called()
+
+    @patch.dict(
+        "os.environ",
+        {
+            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "logs:4317",
+            OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE: THIS_DIR
+            + "/../fixtures/test.cert",
+            OTEL_EXPORTER_OTLP_LOGS_HEADERS: " key1=value1,KEY2 = VALUE=2",
+            OTEL_EXPORTER_OTLP_LOGS_TIMEOUT: "10",
+            OTEL_EXPORTER_OTLP_LOGS_COMPRESSION: "gzip",
+        },
+    )
+    @patch(
+        "opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__"
+    )
+    @patch("logging.Logger.error")
+    def test_kwargs_have_precedence_over_env_variables(
+        self, mock_logger_error, mock_exporter_mixin
+    ):
+        credentials_mock = Mock()
+        OTLPLogExporter(
+            endpoint="logs:4318",
+            headers=(("an", "header"),),
+            timeout=20,
+            credentials=credentials_mock,
+            compression=Compression.NoCompression,
+            channel_options=(("some", "options"),),
+        )
+
+        self.assertTrue(len(mock_exporter_mixin.call_args_list) == 1)
+        _, kwargs = mock_exporter_mixin.call_args_list[0]
+        self.assertEqual(kwargs["endpoint"], "logs:4318")
+        self.assertEqual(kwargs["headers"], (("an", "header"),))
+        self.assertEqual(kwargs["timeout"], 20)
+        self.assertEqual(kwargs["compression"], Compression.NoCompression)
+        self.assertEqual(kwargs["credentials"], credentials_mock)
+        self.assertEqual(kwargs["channel_options"], (("some", "options"),))
 
         mock_logger_error.assert_not_called()
 

@@ -15,7 +15,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
 import builtins
 import collections.abc
 import google.protobuf.descriptor
@@ -24,7 +23,10 @@ import google.protobuf.message
 import opentelemetry.proto.logs.v1.logs_pb2
 import sys
 
-import typing as typing_extensions
+if sys.version_info >= (3, 8):
+    import typing as typing_extensions
+else:
+    import typing_extensions
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
 
@@ -34,34 +36,19 @@ class ExportLogsServiceRequest(google.protobuf.message.Message):
 
     RESOURCE_LOGS_FIELD_NUMBER: builtins.int
     @property
-    def resource_logs(
-        self,
-    ) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[
-        opentelemetry.proto.logs.v1.logs_pb2.ResourceLogs
-    ]:
+    def resource_logs(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.logs.v1.logs_pb2.ResourceLogs]:
         """An array of ResourceLogs.
         For data coming from a single resource this array will typically contain one
         element. Intermediary nodes (such as OpenTelemetry Collector) that receive
         data from multiple origins typically batch the data before forwarding further and
         in that case this array will contain multiple elements.
         """
-
     def __init__(
         self,
         *,
-        resource_logs: (
-            collections.abc.Iterable[
-                opentelemetry.proto.logs.v1.logs_pb2.ResourceLogs
-            ]
-            | None
-        ) = ...,
+        resource_logs: collections.abc.Iterable[opentelemetry.proto.logs.v1.logs_pb2.ResourceLogs] | None = ...,
     ) -> None: ...
-    def ClearField(
-        self,
-        field_name: typing_extensions.Literal[
-            "resource_logs", b"resource_logs"
-        ],
-    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["resource_logs", b"resource_logs"]) -> None: ...
 
 global___ExportLogsServiceRequest = ExportLogsServiceRequest
 
@@ -88,24 +75,13 @@ class ExportLogsServiceResponse(google.protobuf.message.Message):
         `error_message` = "") is equivalent to it not being set/present. Senders
         SHOULD interpret it the same way as in the full success case.
         """
-
     def __init__(
         self,
         *,
         partial_success: global___ExportLogsPartialSuccess | None = ...,
     ) -> None: ...
-    def HasField(
-        self,
-        field_name: typing_extensions.Literal[
-            "partial_success", b"partial_success"
-        ],
-    ) -> builtins.bool: ...
-    def ClearField(
-        self,
-        field_name: typing_extensions.Literal[
-            "partial_success", b"partial_success"
-        ],
-    ) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["partial_success", b"partial_success"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["partial_success", b"partial_success"]) -> None: ...
 
 global___ExportLogsServiceResponse = ExportLogsServiceResponse
 
@@ -136,14 +112,6 @@ class ExportLogsPartialSuccess(google.protobuf.message.Message):
         rejected_log_records: builtins.int = ...,
         error_message: builtins.str = ...,
     ) -> None: ...
-    def ClearField(
-        self,
-        field_name: typing_extensions.Literal[
-            "error_message",
-            b"error_message",
-            "rejected_log_records",
-            b"rejected_log_records",
-        ],
-    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["error_message", b"error_message", "rejected_log_records", b"rejected_log_records"]) -> None: ...
 
 global___ExportLogsPartialSuccess = ExportLogsPartialSuccess

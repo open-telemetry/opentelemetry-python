@@ -58,7 +58,7 @@ The following well-known definitions MUST be used if you set this attribute and 
   with the resolved function version, as the same runtime instance may be invocable with
   multiple different aliases.
 - **GCP:** The [URI of the resource](https://cloud.google.com/iam/docs/full-resource-names)
-- **Azure:** The [Fully Qualified Resource ID](https://docs.microsoft.com/rest/api/resources/resources/get-by-id) of the invoked function,
+- **Azure:** The [Fully Qualified Resource ID](https://learn.microsoft.com/rest/api/resources/resources/get-by-id) of the invoked function,
   *not* the function app, having the form
   `/subscriptions/<SUBSCRIPTION_GUID>/resourceGroups/<RG>/providers/Microsoft.Web/sites/<FUNCAPP>/functions/<FUNC>`.
   This means that a span attribute MUST be used, as an Azure function app can host multiple functions that would usually share
@@ -87,19 +87,19 @@ class CloudPlatformValues(Enum):
     """AWS App Runner."""
     AWS_OPENSHIFT = "aws_openshift"
     """Red Hat OpenShift on AWS (ROSA)."""
-    AZURE_VM = "azure_vm"
+    AZURE_VM = "azure.vm"
     """Azure Virtual Machines."""
-    AZURE_CONTAINER_APPS = "azure_container_apps"
+    AZURE_CONTAINER_APPS = "azure.container_apps"
     """Azure Container Apps."""
-    AZURE_CONTAINER_INSTANCES = "azure_container_instances"
+    AZURE_CONTAINER_INSTANCES = "azure.container_instances"
     """Azure Container Instances."""
-    AZURE_AKS = "azure_aks"
+    AZURE_AKS = "azure.aks"
     """Azure Kubernetes Service."""
-    AZURE_FUNCTIONS = "azure_functions"
+    AZURE_FUNCTIONS = "azure.functions"
     """Azure Functions."""
-    AZURE_APP_SERVICE = "azure_app_service"
+    AZURE_APP_SERVICE = "azure.app_service"
     """Azure App Service."""
-    AZURE_OPENSHIFT = "azure_openshift"
+    AZURE_OPENSHIFT = "azure.openshift"
     """Azure Red Hat OpenShift."""
     GCP_BARE_METAL_SOLUTION = "gcp_bare_metal_solution"
     """Google Bare Metal Solution (BMS)."""

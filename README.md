@@ -95,7 +95,16 @@ We meet weekly on Thursdays at 9AM PST. The meeting is subject to change dependi
 
 Meeting notes are available as a public [Google doc](https://docs.google.com/document/d/1CIMGoIOZ-c3-igzbd6_Pnxx1SjAkjwqoYSUWxPY8XIs/edit).
 
-Approvers ([@open-telemetry/python-approvers](https://github.com/orgs/open-telemetry/teams/python-approvers)):
+### Maintainers
+
+- [Aaron Abbott](https://github.com/aabmass), Google
+- [Diego Hurtado](https://github.com/ocelotl), Lightstep
+- [Leighton Chen](https://github.com/lzchen), Microsoft
+- [Riccardo Magliocchetti](https://github.com/xrmx), Elastic
+
+For more information about the maintainer role, see the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#maintainer).
+
+### Approvers
 
 - [Emídio Neto](https://github.com/emdneto), PicPay
 - [Jeremy Voss](https://github.com/jeremydvoss), Microsoft
@@ -105,40 +114,35 @@ Approvers ([@open-telemetry/python-approvers](https://github.com/orgs/open-telem
 - [Srikanth Chekuri](https://github.com/srikanthccv), signoz.io
 - [Tammy Baylis](https://github.com/tammy-baylis-swi), SolarWinds
 
-Emeritus Approvers
+For more information about the approver role, see the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#approver).
 
-- [Ashutosh Goel](https://github.com/ashu658), Cisco
-- [Carlos Alberto Cortez](https://github.com/carlosalberto), Lightstep
-- [Christian Neumüller](https://github.com/Oberon00), Dynatrace
-- [Héctor Hernández](https://github.com/hectorhdzg), Microsoft
-- [Mauricio Vásquez](https://github.com/mauriciovasquezbernal), Kinvolk
-- [Nathaniel Ruiz Nowell](https://github.com/NathanielRN), AWS
-- [Nikolay Sokolik](https://github.com/oxeye-nikolay), Oxeye
-- [Sanket Mehta](https://github.com/sanketmehta28), Cisco
-- [Tahir H. Butt](https://github.com/majorgreys), DataDog
+### Emeritus Maintainers
 
-*For more information about the approver role, see the [community repository](https://github.com/open-telemetry/community/blob/main/community-membership.md#approver).*
+- [Alex Boten](https://github.com/codeboten)
+- [Chris Kleinknecht](https://github.com/c24t)
+- [Owais Lone](https://github.com/owais)
+- [Reiley Yang](https://github.com/reyang)
+- [Srikanth Chekuri](https://github.com/srikanthccv)
+- [Yusuke Tsutsumi](https://github.com/toumorokoshi)
 
-Maintainers ([@open-telemetry/python-maintainers](https://github.com/orgs/open-telemetry/teams/python-maintainers)):
+For more information about the emeritus role, see the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#emeritus-maintainerapprovertriager).
 
-- [Aaron Abbott](https://github.com/aabmass), Google
-- [Diego Hurtado](https://github.com/ocelotl), Lightstep
-- [Leighton Chen](https://github.com/lzchen), Microsoft
-- [Riccardo Magliocchetti](https://github.com/xrmx), Elastic
+### Emeritus Approvers
 
-Emeritus Maintainers:
+- [Ashutosh Goel](https://github.com/ashu658)
+- [Carlos Alberto Cortez](https://github.com/carlosalberto)
+- [Christian Neumüller](https://github.com/Oberon00)
+- [Héctor Hernández](https://github.com/hectorhdzg)
+- [Mauricio Vásquez](https://github.com/mauriciovasquezbernal)
+- [Nathaniel Ruiz Nowell](https://github.com/NathanielRN)
+- [Nikolay Sokolik](https://github.com/oxeye-nikolay)
+- [Sanket Mehta](https://github.com/sanketmehta28)
+- [Tahir H. Butt](https://github.com/majorgreys)
 
-- [Alex Boten](https://github.com/codeboten), Lightstep
-- [Chris Kleinknecht](https://github.com/c24t), Google
-- [Owais Lone](https://github.com/owais), Splunk
-- [Reiley Yang](https://github.com/reyang), Microsoft
-- [Srikanth Chekuri](https://github.com/srikanthccv), signoz.io
-- [Yusuke Tsutsumi](https://github.com/toumorokoshi), Google
+For more information about the emeritus role, see the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#emeritus-maintainerapprovertriager).
 
-*For more information about the maintainer role, see the [community repository](https://github.com/open-telemetry/community/blob/main/community-membership.md#maintainer).*
-
-### Thanks to all the people who already contributed!
+### Thanks to all of our contributors!
 
 <a href="https://github.com/open-telemetry/opentelemetry-python/graphs/contributors">
-  <img src="https://contributors-img.web.app/image?repo=open-telemetry/opentelemetry-python" />
+  <img alt="Repo contributors" src="https://contrib.rocks/image?repo=open-telemetry/opentelemetry-python" />
 </a>

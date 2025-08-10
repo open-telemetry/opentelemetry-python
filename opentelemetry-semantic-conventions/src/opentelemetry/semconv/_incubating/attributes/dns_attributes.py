@@ -14,6 +14,11 @@
 
 from typing import Final
 
+DNS_ANSWERS: Final = "dns.answers"
+"""
+The list of IPv4 or IPv6 addresses resolved during DNS lookup.
+"""
+
 DNS_QUESTION_NAME: Final = "dns.question.name"
 """
 The name being queried.

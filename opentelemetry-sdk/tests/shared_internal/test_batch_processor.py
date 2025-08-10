@@ -16,10 +16,12 @@
 import gc
 import multiprocessing
 import os
+import threading
 import time
 import unittest
 import weakref
 from platform import system
+from typing import Any
 from unittest.mock import Mock
 
 import pytest
@@ -47,6 +49,28 @@ BASIC_SPAN = ReadableSpan(
 
 if system() != "Windows":
     multiprocessing.set_start_method("fork")
+
+
+class MockExporterForTesting:
+    def __init__(self, export_sleep: int):
+        self.num_export_calls = 0
+        self.export_sleep = export_sleep
+        self._shutdown = False
+        self.export_sleep_event = threading.Event()
+
+    def export(self, _: list[Any]):
+        self.num_export_calls += 1
+        if self._shutdown:
+            raise ValueError("Cannot export, already shutdown")
+
+        sleep_interrupted = self.export_sleep_event.wait(self.export_sleep)
+        if sleep_interrupted:
+            raise ValueError("Did not get to finish !")
+
+    def shutdown(self):
+        # Force export to finish sleeping.
+        self._shutdown = True
+        self.export_sleep_event.set()
 
 
 # BatchLogRecodProcessor/BatchSpanProcessor initialize and use BatchProcessor.
@@ -193,3 +217,32 @@ class TestBatchProcessor:
 
         # Then the reference to the processor should no longer exist
         assert weak_ref() is None
+
+    def test_shutdown_allows_1_export_to_finish(
+        self, batch_processor_class, telemetry, caplog
+    ):
+        # This exporter throws an exception if it's export sleep cannot finish.
+        exporter = MockExporterForTesting(export_sleep=2)
+        processor = batch_processor_class(
+            exporter,
+            max_queue_size=200,
+            max_export_batch_size=1,
+            schedule_delay_millis=30000,
+        )
+        # Max export batch size is 1, so 3 emit calls requires 3 separate calls (each block for 2 seconds) to Export to clear the queue.
+        processor._batch_processor.emit(telemetry)
+        processor._batch_processor.emit(telemetry)
+        processor._batch_processor.emit(telemetry)
+        before = time.time()
+        processor._batch_processor.shutdown(timeout_millis=3000)
+        # Shutdown does not kill the thread.
+        assert processor._batch_processor._worker_thread.is_alive() is True
+
+        after = time.time()
+        assert after - before < 3.3
+        # Thread will naturally finish after a little bit.
+        time.sleep(0.1)
+        assert processor._batch_processor._worker_thread.is_alive() is False
+        # Expect the second call to be interrupted by shutdown, and the third call to never be made.
+        assert "Exception while exporting" in caplog.text
+        assert 2 == exporter.num_export_calls

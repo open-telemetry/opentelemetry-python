@@ -16,6 +16,11 @@ from enum import Enum
 
 
 class Schemas(Enum):
+    V1_21_0 = "https://opentelemetry.io/schemas/1.21.0"
+    """
+    The URL of the OpenTelemetry schema version 1.21.0.
+    """
+
     V1_23_1 = "https://opentelemetry.io/schemas/1.23.1"
     """
     The URL of the OpenTelemetry schema version 1.23.1.
@@ -70,5 +75,10 @@ class Schemas(Enum):
     """
     The URL of the OpenTelemetry schema version 1.34.0.
     """
+    V1_36_0 = "https://opentelemetry.io/schemas/1.36.0"
+    """
+    The URL of the OpenTelemetry schema version 1.36.0.
+    """
+
     # when generating new semantic conventions,
     # make sure to add new versions version here.

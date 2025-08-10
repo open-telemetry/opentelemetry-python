@@ -58,8 +58,9 @@ class OTLPLogExporter(
         headers: Optional[
             Union[TypingSequence[Tuple[str, str]], Dict[str, str], str]
         ] = None,
-        timeout: Optional[int] = None,
+        timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
+        channel_options: Optional[TypingSequence[Tuple[str, str]]] = None,
     ):
         if insecure is None:
             insecure = environ.get(OTEL_EXPORTER_OTLP_LOGS_INSECURE)
@@ -79,7 +80,7 @@ class OTLPLogExporter(
 
         environ_timeout = environ.get(OTEL_EXPORTER_OTLP_LOGS_TIMEOUT)
         environ_timeout = (
-            int(environ_timeout) if environ_timeout is not None else None
+            float(environ_timeout) if environ_timeout is not None else None
         )
 
         compression = (
@@ -99,6 +100,7 @@ class OTLPLogExporter(
                 "headers": headers,
                 "timeout": timeout or environ_timeout,
                 "compression": compression,
+                "channel_options": channel_options,
             }
         )
 

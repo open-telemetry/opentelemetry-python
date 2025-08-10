@@ -63,4 +63,6 @@ class OsTypeValues(Enum):
     SOLARIS = "solaris"
     """SunOS, Oracle Solaris."""
     Z_OS = "z_os"
+    """Deprecated: Replaced by `zos`."""
+    ZOS = "zos"
     """IBM z/OS."""

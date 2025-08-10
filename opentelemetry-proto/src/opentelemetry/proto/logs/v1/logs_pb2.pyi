@@ -15,7 +15,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
 import builtins
 import collections.abc
 import google.protobuf.descriptor
@@ -38,12 +37,7 @@ class _SeverityNumber:
     ValueType = typing.NewType("ValueType", builtins.int)
     V: typing_extensions.TypeAlias = ValueType
 
-class _SeverityNumberEnumTypeWrapper(
-    google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[
-        _SeverityNumber.ValueType
-    ],
-    builtins.type,
-):
+class _SeverityNumberEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_SeverityNumber.ValueType], builtins.type):
     DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
     SEVERITY_NUMBER_UNSPECIFIED: _SeverityNumber.ValueType  # 0
     """UNSPECIFIED is the default SeverityNumber, it MUST NOT be used."""
@@ -72,9 +66,7 @@ class _SeverityNumberEnumTypeWrapper(
     SEVERITY_NUMBER_FATAL3: _SeverityNumber.ValueType  # 23
     SEVERITY_NUMBER_FATAL4: _SeverityNumber.ValueType  # 24
 
-class SeverityNumber(
-    _SeverityNumber, metaclass=_SeverityNumberEnumTypeWrapper
-):
+class SeverityNumber(_SeverityNumber, metaclass=_SeverityNumberEnumTypeWrapper):
     """Possible values for LogRecord.SeverityNumber."""
 
 SEVERITY_NUMBER_UNSPECIFIED: SeverityNumber.ValueType  # 0
@@ -109,12 +101,7 @@ class _LogRecordFlags:
     ValueType = typing.NewType("ValueType", builtins.int)
     V: typing_extensions.TypeAlias = ValueType
 
-class _LogRecordFlagsEnumTypeWrapper(
-    google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[
-        _LogRecordFlags.ValueType
-    ],
-    builtins.type,
-):
+class _LogRecordFlagsEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_LogRecordFlags.ValueType], builtins.type):
     DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
     LOG_RECORD_FLAGS_DO_NOT_USE: _LogRecordFlags.ValueType  # 0
     """The zero value for the enum. Should not be used for comparisons.
@@ -123,9 +110,7 @@ class _LogRecordFlagsEnumTypeWrapper(
     LOG_RECORD_FLAGS_TRACE_FLAGS_MASK: _LogRecordFlags.ValueType  # 255
     """Bits 0-7 are used for trace flags."""
 
-class LogRecordFlags(
-    _LogRecordFlags, metaclass=_LogRecordFlagsEnumTypeWrapper
-):
+class LogRecordFlags(_LogRecordFlags, metaclass=_LogRecordFlagsEnumTypeWrapper):
     """LogRecordFlags represents constants used to interpret the
     LogRecord.flags field, which is protobuf 'fixed32' type and is to
     be used as bit-fields. Each non-zero value defined in this enum is
@@ -161,31 +146,19 @@ class LogsData(google.protobuf.message.Message):
 
     RESOURCE_LOGS_FIELD_NUMBER: builtins.int
     @property
-    def resource_logs(
-        self,
-    ) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[
-        global___ResourceLogs
-    ]:
+    def resource_logs(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___ResourceLogs]:
         """An array of ResourceLogs.
         For data coming from a single resource this array will typically contain
         one element. Intermediary nodes that receive data from multiple origins
         typically batch the data before forwarding further and in that case this
         array will contain multiple elements.
         """
-
     def __init__(
         self,
         *,
-        resource_logs: (
-            collections.abc.Iterable[global___ResourceLogs] | None
-        ) = ...,
+        resource_logs: collections.abc.Iterable[global___ResourceLogs] | None = ...,
     ) -> None: ...
-    def ClearField(
-        self,
-        field_name: typing_extensions.Literal[
-            "resource_logs", b"resource_logs"
-        ],
-    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["resource_logs", b"resource_logs"]) -> None: ...
 
 global___LogsData = LogsData
 
@@ -199,23 +172,17 @@ class ResourceLogs(google.protobuf.message.Message):
     SCOPE_LOGS_FIELD_NUMBER: builtins.int
     SCHEMA_URL_FIELD_NUMBER: builtins.int
     @property
-    def resource(
-        self,
-    ) -> opentelemetry.proto.resource.v1.resource_pb2.Resource:
+    def resource(self) -> opentelemetry.proto.resource.v1.resource_pb2.Resource:
         """The resource for the logs in this message.
         If this field is not set then resource info is unknown.
         """
-
     @property
-    def scope_logs(
-        self,
-    ) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[
-        global___ScopeLogs
-    ]:
+    def scope_logs(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___ScopeLogs]:
         """A list of ScopeLogs that originate from a resource."""
     schema_url: builtins.str
     """The Schema URL, if known. This is the identifier of the Schema that the resource data
-    is recorded in. To learn more about Schema URL see
+    is recorded in. Notably, the last part of the URL path is the version number of the
+    schema: http[s]://server[:port]/path/<version>. To learn more about Schema URL see
     https://opentelemetry.io/docs/specs/otel/schemas/#schema-url
     This schema_url applies to the data in the "resource" field. It does not apply
     to the data in the "scope_logs" field which have their own schema_url field.
@@ -223,26 +190,12 @@ class ResourceLogs(google.protobuf.message.Message):
     def __init__(
         self,
         *,
-        resource: (
-            opentelemetry.proto.resource.v1.resource_pb2.Resource | None
-        ) = ...,
+        resource: opentelemetry.proto.resource.v1.resource_pb2.Resource | None = ...,
         scope_logs: collections.abc.Iterable[global___ScopeLogs] | None = ...,
         schema_url: builtins.str = ...,
     ) -> None: ...
-    def HasField(
-        self, field_name: typing_extensions.Literal["resource", b"resource"]
-    ) -> builtins.bool: ...
-    def ClearField(
-        self,
-        field_name: typing_extensions.Literal[
-            "resource",
-            b"resource",
-            "schema_url",
-            b"schema_url",
-            "scope_logs",
-            b"scope_logs",
-        ],
-    ) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["resource", b"resource"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["resource", b"resource", "schema_url", b"schema_url", "scope_logs", b"scope_logs"]) -> None: ...
 
 global___ResourceLogs = ResourceLogs
 
@@ -256,51 +209,30 @@ class ScopeLogs(google.protobuf.message.Message):
     LOG_RECORDS_FIELD_NUMBER: builtins.int
     SCHEMA_URL_FIELD_NUMBER: builtins.int
     @property
-    def scope(
-        self,
-    ) -> opentelemetry.proto.common.v1.common_pb2.InstrumentationScope:
+    def scope(self) -> opentelemetry.proto.common.v1.common_pb2.InstrumentationScope:
         """The instrumentation scope information for the logs in this message.
         Semantically when InstrumentationScope isn't set, it is equivalent with
         an empty instrumentation scope name (unknown).
         """
-
     @property
-    def log_records(
-        self,
-    ) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[
-        global___LogRecord
-    ]:
+    def log_records(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___LogRecord]:
         """A list of log records."""
     schema_url: builtins.str
     """The Schema URL, if known. This is the identifier of the Schema that the log data
-    is recorded in. To learn more about Schema URL see
+    is recorded in. Notably, the last part of the URL path is the version number of the
+    schema: http[s]://server[:port]/path/<version>. To learn more about Schema URL see
     https://opentelemetry.io/docs/specs/otel/schemas/#schema-url
     This schema_url applies to all logs in the "logs" field.
     """
     def __init__(
         self,
         *,
-        scope: (
-            opentelemetry.proto.common.v1.common_pb2.InstrumentationScope
-            | None
-        ) = ...,
+        scope: opentelemetry.proto.common.v1.common_pb2.InstrumentationScope | None = ...,
         log_records: collections.abc.Iterable[global___LogRecord] | None = ...,
         schema_url: builtins.str = ...,
     ) -> None: ...
-    def HasField(
-        self, field_name: typing_extensions.Literal["scope", b"scope"]
-    ) -> builtins.bool: ...
-    def ClearField(
-        self,
-        field_name: typing_extensions.Literal[
-            "log_records",
-            b"log_records",
-            "schema_url",
-            b"schema_url",
-            "scope",
-            b"scope",
-        ],
-    ) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["scope", b"scope"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["log_records", b"log_records", "schema_url", b"schema_url", "scope", b"scope"]) -> None: ...
 
 global___ScopeLogs = ScopeLogs
 
@@ -322,6 +254,7 @@ class LogRecord(google.protobuf.message.Message):
     FLAGS_FIELD_NUMBER: builtins.int
     TRACE_ID_FIELD_NUMBER: builtins.int
     SPAN_ID_FIELD_NUMBER: builtins.int
+    EVENT_NAME_FIELD_NUMBER: builtins.int
     time_unix_nano: builtins.int
     """time_unix_nano is the time when the event occurred.
     Value is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January 1970.
@@ -358,13 +291,8 @@ class LogRecord(google.protobuf.message.Message):
         string message (including multi-line) describing the event in a free form or it can
         be a structured data composed of arrays and maps of other values. [Optional].
         """
-
     @property
-    def attributes(
-        self,
-    ) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[
-        opentelemetry.proto.common.v1.common_pb2.KeyValue
-    ]:
+    def attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.KeyValue]:
         """Additional attributes that describe the specific event occurrence. [Optional].
         Attribute keys MUST be unique (it is not allowed to have more than one
         attribute with the same key).
@@ -404,6 +332,18 @@ class LogRecord(google.protobuf.message.Message):
       - the field is not present,
       - the field contains an invalid value.
     """
+    event_name: builtins.str
+    """A unique identifier of event category/type.
+    All events with the same event_name are expected to conform to the same
+    schema for both their attributes and their body.
+
+    Recommended to be fully qualified and short (no longer than 256 characters).
+
+    Presence of event_name on the log record identifies this record
+    as an event.
+
+    [Optional].
+    """
     def __init__(
         self,
         *,
@@ -412,44 +352,14 @@ class LogRecord(google.protobuf.message.Message):
         severity_number: global___SeverityNumber.ValueType = ...,
         severity_text: builtins.str = ...,
         body: opentelemetry.proto.common.v1.common_pb2.AnyValue | None = ...,
-        attributes: (
-            collections.abc.Iterable[
-                opentelemetry.proto.common.v1.common_pb2.KeyValue
-            ]
-            | None
-        ) = ...,
+        attributes: collections.abc.Iterable[opentelemetry.proto.common.v1.common_pb2.KeyValue] | None = ...,
         dropped_attributes_count: builtins.int = ...,
         flags: builtins.int = ...,
         trace_id: builtins.bytes = ...,
         span_id: builtins.bytes = ...,
+        event_name: builtins.str = ...,
     ) -> None: ...
-    def HasField(
-        self, field_name: typing_extensions.Literal["body", b"body"]
-    ) -> builtins.bool: ...
-    def ClearField(
-        self,
-        field_name: typing_extensions.Literal[
-            "attributes",
-            b"attributes",
-            "body",
-            b"body",
-            "dropped_attributes_count",
-            b"dropped_attributes_count",
-            "flags",
-            b"flags",
-            "observed_time_unix_nano",
-            b"observed_time_unix_nano",
-            "severity_number",
-            b"severity_number",
-            "severity_text",
-            b"severity_text",
-            "span_id",
-            b"span_id",
-            "time_unix_nano",
-            b"time_unix_nano",
-            "trace_id",
-            b"trace_id",
-        ],
-    ) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["body", b"body"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["attributes", b"attributes", "body", b"body", "dropped_attributes_count", b"dropped_attributes_count", "event_name", b"event_name", "flags", b"flags", "observed_time_unix_nano", b"observed_time_unix_nano", "severity_number", b"severity_number", "severity_text", b"severity_text", "span_id", b"span_id", "time_unix_nano", b"time_unix_nano", "trace_id", b"trace_id"]) -> None: ...
 
 global___LogRecord = LogRecord
