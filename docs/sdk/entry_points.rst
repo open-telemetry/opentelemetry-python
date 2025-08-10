@@ -1,73 +1,72 @@
 Entry Points
 ============
 
-OpenTelemetry Python uses Python's **entry points** mechanism to provide a pluggable architecture. Entry points allow you to register custom components (exporters, samplers, etc.) that can be discovered and loaded at runtime.
+OpenTelemetry Python uses Python's `entry points <https://setuptools.pypa.io/en/stable/userguide/entry_point.html>`_ mechanism to provide a pluggable architecture. Entry points allow you to register custom components (exporters, samplers, etc.) that can be discovered and loaded at runtime.
 
 Configuration
 -------------
 
-Entry points are controlled via environment variables:
+The SDK supports configuring entry points via environment variables by specifying the entry point name. For a complete list of supported environment variables, see :doc:`../api/environment_variables`.
 
-* ``OTEL_TRACES_EXPORTER`` - Trace exporters (e.g., ``console``, ``otlp_proto_grpc``)
-* ``OTEL_METRICS_EXPORTER`` - Metrics exporters (e.g., ``console``, ``prometheus``)  
-* ``OTEL_LOGS_EXPORTER`` - Log exporters (e.g., ``console``, ``otlp_proto_http``)
-* ``OTEL_TRACES_SAMPLER`` - Trace samplers (e.g., ``always_on``, ``traceidratio``)
-* ``OTEL_PROPAGATORS`` - Context propagators (e.g., ``tracecontext,baggage``)
+Entry Point Configuration Reference
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Available Entry Point Groups
-----------------------------
+.. list-table:: 
+   :header-rows: 1
+   :widths: 20 20 40 20
 
-**Exporters** - Send telemetry data to backends:
-
-* ``opentelemetry_traces_exporter`` - Trace exporters
-* ``opentelemetry_metrics_exporter`` - Metrics exporters  
-* ``opentelemetry_logs_exporter`` - Log exporters
-
-**Configuration** - Control telemetry behavior:
-
-* ``opentelemetry_traces_sampler`` - Decide which traces to collect
-* ``opentelemetry_id_generator`` - Generate trace/span IDs
-* ``opentelemetry_resource_detector`` - Detect environment info
-
-**Context** - Manage distributed tracing context:
-
-* ``opentelemetry_propagator`` - Cross-service context propagation
-* ``opentelemetry_context`` - Context storage mechanism
-
-**Providers** - Core telemetry factories:
-
-* ``opentelemetry_tracer_provider`` - Create tracers
-* ``opentelemetry_meter_provider`` - Create meters
-* ``opentelemetry_logger_provider`` - Create loggers
-
-Creating a Custom Exporter
----------------------------
-
-1. **Create your exporter class**:
-
-.. code-block:: python
-
-   from opentelemetry.sdk.trace.export import SpanExporter
-   
-   class MyExporter(SpanExporter):
-       def export(self, spans):
-           # Your export logic here
-           for span in spans:
-               print(f"Exporting: {span.name}")
-
-2. **Register in pyproject.toml**:
-
-.. code-block:: toml
-
-   [project.entry-points.opentelemetry_traces_exporter]
-   my_exporter = "mypackage.exporters:MyExporter"
-
-3. **Use it**:
-
-.. code-block:: bash
-
-   export OTEL_TRACES_EXPORTER=my_exporter
-   python your_app.py
+   * - Environment Variable
+     - Entry Point Group
+     - Available Entrypoint Names
+     - Base Type
+   * - OTEL_LOGS_EXPORTER
+     - opentelemetry_logs_exporter  
+     - ``console``, ``otlp_proto_grpc``, ``otlp_proto_http``
+     - LogExporter
+   * - OTEL_METRICS_EXPORTER
+     - opentelemetry_metrics_exporter
+     - ``console``, ``otlp``, ``otlp_proto_grpc``, 
+       ``otlp_proto_http``, ``prometheus``
+     - :class:`MetricExporter <opentelemetry.sdk.metrics.export.MetricExporter>` or :class:`MetricReader <opentelemetry.sdk.metrics.export.MetricReader>`
+   * - OTEL_PROPAGATORS
+     - opentelemetry_propagator
+     - ``b3``, ``b3multi``, ``baggage``, 
+       ``jaeger``, ``tracecontext``
+     - :class:`TextMapPropagator <opentelemetry.propagators.textmap.TextMapPropagator>`
+   * - OTEL_TRACES_SAMPLER
+     - opentelemetry_traces_sampler
+     - ``always_off``, ``always_on``, ``parentbased_always_off``, 
+       ``parentbased_always_on``, ``parentbased_traceidratio``, ``traceidratio``
+     - :class:`Sampler <opentelemetry.sdk.trace.sampling.Sampler>`
+   * - OTEL_EXPERIMENTAL_RESOURCE_DETECTORS
+     - opentelemetry_resource_detector
+     - ``host``, ``os``, ``otel``, ``process``
+     - :class:`ResourceDetector <opentelemetry.sdk.resources.ResourceDetector>`
+   * - OTEL_PYTHON_ID_GENERATOR
+     - opentelemetry_id_generator
+     - ``random``
+     - :class:`IdGenerator <opentelemetry.sdk.trace.id_generator.IdGenerator>`
+   * - OTEL_TRACES_EXPORTER
+     - opentelemetry_traces_exporter
+     - ``console``, ``otlp``, ``otlp_proto_grpc``, ``otlp_proto_http``, 
+       ``zipkin``, ``zipkin_json``, ``zipkin_proto``
+     - :class:`SpanExporter <opentelemetry.sdk.trace.export.SpanExporter>`
+   * - OTEL_PYTHON_TRACER_PROVIDER
+     - opentelemetry_tracer_provider
+     - ``default_tracer_provider``, ``sdk_tracer_provider``
+     - :class:`TracerProvider <opentelemetry.trace.TracerProvider>`
+   * - OTEL_PYTHON_METER_PROVIDER
+     - opentelemetry_meter_provider
+     - ``default_meter_provider``, ``sdk_meter_provider``
+     - :class:`MeterProvider <opentelemetry.metrics.MeterProvider>`
+   * - OTEL_PYTHON_LOGGER_PROVIDER
+     - opentelemetry_logger_provider
+     - ``default_logger_provider``, ``sdk_logger_provider``
+     - :class:`LoggerProvider <opentelemetry._logs.LoggerProvider>`
+   * - OTEL_PYTHON_EVENT_LOGGER_PROVIDER
+     - opentelemetry_event_logger_provider
+     - ``default_event_logger_provider``
+     - *No implementations available*
 
 See Also
 --------
