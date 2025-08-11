@@ -18,7 +18,7 @@ Installation
 Limitations
 -----------------
 
-* No multiprocessing support: The Prometheus exporter is not designed to operate in multiprocessing environments.
+* No multiprocessing support: The Prometheus exporter is not designed to operate in multiprocessing environments (see `#3747 <https://github.com/open-telemetry/opentelemetry-python/issues/3747>`_).
 
 References
 ----------
