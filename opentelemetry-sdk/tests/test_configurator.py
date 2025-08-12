@@ -435,13 +435,15 @@ class TestTraceInit(TestCase):
     )
     @patch("opentelemetry.sdk._configuration.entry_points")
     def test_that_session_gets_passed_to_exporter(self, mock_entry_points):
-        # Should not be used, trace specific version should override.
-        session_for_all_signals = Session()
+        # Should not be used, metric specific version should override.
         session_for_metrics_only = Session()
+        session_for_all_signals = Session()
+
+        def f():
+            return session_for_metrics_only
+
         mock_entry_points.configure_mock(
-            return_value=[
-                IterEntryPoint("custom_session", session_for_metrics_only)
-            ]
+            return_value=[IterEntryPoint("custom_session", f)]
         )
         exporter = _init_exporter(
             "metrics",
@@ -464,12 +466,14 @@ class TestTraceInit(TestCase):
     @patch("opentelemetry.sdk._configuration.entry_points")
     def test_that_credential_gets_passed_to_exporter(self, mock_entry_points):
         # Should not be used, trace specific version should override.
+        credential_for_traces_only = ChannelCredentials(None)
         credential_for_all_signals = ChannelCredentials(None)
-        credential_for_trace_only = ChannelCredentials(None)
+
+        def f():
+            return credential_for_traces_only
+
         mock_entry_points.configure_mock(
-            return_value=[
-                IterEntryPoint("custom_credential", credential_for_trace_only)
-            ]
+            return_value=[IterEntryPoint("custom_credential", f)]
         )
         exporter = _init_exporter(
             "traces",
@@ -477,7 +481,7 @@ class TestTraceInit(TestCase):
             OTLPSpanExporter,
             otlp_credential_param_for_all_signal_types=credential_for_all_signals,
         )
-        assert exporter.credentials is credential_for_trace_only
+        assert exporter.credentials is credential_for_traces_only
         assert exporter.credentials is not credential_for_all_signals
 
     @patch.dict(

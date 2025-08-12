@@ -25,10 +25,18 @@ import logging.config
 import os
 from abc import ABC, abstractmethod
 from os import environ
-from typing import Any, Callable, Mapping, Optional, Sequence, Type, Union
+from typing import (
+    Any,
+    Callable,
+    Mapping,
+    MutableMapping,
+    Optional,
+    Sequence,
+    Type,
+    TypeVar,
+    Union,
+)
 
-from grpc import ChannelCredentials  # pylint: disable=import-error
-from requests import Session
 from typing_extensions import Literal
 
 from opentelemetry._events import set_event_logger_provider
@@ -71,6 +79,22 @@ from opentelemetry.semconv.resource import ResourceAttributes
 from opentelemetry.trace import set_tracer_provider
 from opentelemetry.util._importlib_metadata import entry_points
 
+try:
+    from grpc import ChannelCredentials
+
+    _GRPC_IMPORTED = True
+except ImportError:
+    _GRPC_IMPORTED = False
+
+try:
+    from requests import Session
+
+    _REQUESTS_IMPORTED = True
+except ImportError:
+    _REQUESTS_IMPORTED = False
+
+T = TypeVar("T")
+
 _EXPORTER_OTLP = "otlp"
 _EXPORTER_OTLP_PROTO_GRPC = "otlp_proto_grpc"
 _EXPORTER_OTLP_PROTO_HTTP = "otlp_proto_http"
@@ -112,7 +136,7 @@ ExporterArgsMap = Mapping[
         Type[MetricReader],
         Type[LogExporter],
     ],
-    Mapping[str, Any],
+    MutableMapping[str, Any],
 ]
 
 
@@ -120,7 +144,8 @@ def _load_credential_from_envvar(
     environment_variable: str,
 ) -> Optional[
     tuple[
-        Literal["credentials", "session"], Union[ChannelCredentials, Session]
+        Literal["credentials", "session"],
+        Union["ChannelCredentials", "Session"],
     ]
 ]:
     credential_env = os.getenv(environment_variable)
@@ -128,14 +153,15 @@ def _load_credential_from_envvar(
         credentials = _import_config_component(
             credential_env, "opentelemetry_otlp_credential_provider"
         )()
-        if isinstance(credentials, ChannelCredentials):
+        if _GRPC_IMPORTED and isinstance(credentials, ChannelCredentials):
             return ("credentials", credentials)
-        elif isinstance(credentials, Session):
+
+        if _REQUESTS_IMPORTED and isinstance(credentials, Session):
             return ("session", credentials)
-        else:
-            raise RuntimeError(
-                f"{credential_env} is neither a grpc.ChannelCredentials or requests.Session type."
-            )
+        raise RuntimeError(
+            f"{credential_env} is neither a grpc.ChannelCredentials or requests.Session type."
+        )
+    return None
 
 
 def _import_config_component(
@@ -247,17 +273,15 @@ def _get_exporter_names(
 
 def _init_exporter(
     signal_type: Literal["traces", "metrics", "logs"],
-    exporter_args: Mapping[str, Any],
-    exporter_class: Union[
-        Type[SpanExporter], Type[MetricExporter], Type[LogExporter]
-    ],
+    exporter_args: MutableMapping[str, Any],
+    exporter_class: Type[T],
     otlp_credential_param_for_all_signal_types: Optional[
         tuple[
             Literal["credentials", "session"],
-            Union[ChannelCredentials, Session],
+            Union["ChannelCredentials", "Session"],
         ]
     ] = None,
-) -> Union[SpanExporter, MetricExporter, LogExporter]:
+) -> T:
     # Per signal type envvar should take precedence over all signal type env var.
     otlp_credential_param = (
         _load_credential_from_envvar(
@@ -273,6 +297,7 @@ def _init_exporter(
         ).parameters and (
             "opentelemetry.exporter.otlp.proto.http" in str(exporter_class)
             or "opentelemetry.exporter.otlp.proto.grpc" in str(exporter_class)
+            or "tests.test_configurator" in str(exporter_class)
         ):
             exporter_args[credential_key] = credential
     return exporter_class(**exporter_args)
@@ -285,7 +310,10 @@ def _init_tracing(
     resource: Resource | None = None,
     exporter_args_map: ExporterArgsMap | None = None,
     otlp_credential_param: Optional[
-        tuple[str, Union[ChannelCredentials, Session]]
+        tuple[
+            Literal["credentials", "session"],
+            Union["ChannelCredentials", "Session"],
+        ]
     ] = None,
 ):
     provider = TracerProvider(
@@ -314,10 +342,13 @@ def _init_metrics(
     exporters_or_readers: dict[
         str, Union[Type[MetricExporter], Type[MetricReader]]
     ],
-    resource: Resource = None,
+    resource: Resource | None = None,
     exporter_args_map: ExporterArgsMap | None = None,
     otlp_credential_param: Optional[
-        tuple[str, Union[ChannelCredentials, Session]]
+        tuple[
+            Literal["credentials", "session"],
+            Union["ChannelCredentials", "Session"],
+        ]
     ] = None,
 ):
     metric_readers = []
@@ -349,7 +380,10 @@ def _init_logging(
     setup_logging_handler: bool = True,
     exporter_args_map: ExporterArgsMap | None = None,
     otlp_credential_param: Optional[
-        tuple[str, Union[ChannelCredentials, Session]]
+        tuple[
+            Literal["credentials", "session"],
+            Union["ChannelCredentials", "Session"],
+        ]
     ] = None,
 ):
     provider = LoggerProvider(resource=resource)
@@ -510,7 +544,7 @@ def _import_id_generator(id_generator_name: str) -> IdGenerator:
     raise RuntimeError(f"{id_generator_name} is not an IdGenerator")
 
 
-def _initialize_components(
+def _initialize_components(  # pylint: disable=too-many-locals
     auto_instrumentation_version: str | None = None,
     trace_exporter_names: list[str] | None = None,
     metric_exporter_names: list[str] | None = None,
