@@ -247,7 +247,7 @@ def _get_exporter_names(
 
 def _init_exporter(
     signal_type: Literal["traces", "metrics", "logs"],
-    exporter_args: ExporterArgsMap,
+    exporter_args: Mapping[str, Any],
     exporter_class: Union[
         Type[SpanExporter], Type[MetricExporter], Type[LogExporter]
     ],
