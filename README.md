@@ -5,6 +5,7 @@
 [![Minimum Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![Release](https://img.shields.io/github/v/release/open-telemetry/opentelemetry-python?include_prereleases&style=)](https://github.com/open-telemetry/opentelemetry-python/releases/)
 [![Read the Docs](https://readthedocs.org/projects/opentelemetry-python/badge/?version=latest)](https://opentelemetry-python.readthedocs.io/en/latest/)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/11060/badge)](https://www.bestpractices.dev/projects/11060)
 
 ## Project Status
 
