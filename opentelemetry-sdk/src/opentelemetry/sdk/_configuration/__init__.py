@@ -153,10 +153,10 @@ def _load_credential_from_envvar(
         credentials = _import_config_component(
             credential_env, "opentelemetry_otlp_credential_provider"
         )()
-        if _GRPC_IMPORTED and isinstance(credentials, ChannelCredentials):
+        if _GRPC_IMPORTED and isinstance(credentials, ChannelCredentials): # type: ignore[reportPossiblyUnboundVariable]
             return ("credentials", credentials)
 
-        if _REQUESTS_IMPORTED and isinstance(credentials, Session):
+        if _REQUESTS_IMPORTED and isinstance(credentials, Session): # type: ignore[reportPossiblyUnboundVariable]
             return ("session", credentials)
         raise RuntimeError(
             f"{credential_env} is neither a grpc.ChannelCredentials or requests.Session type."
