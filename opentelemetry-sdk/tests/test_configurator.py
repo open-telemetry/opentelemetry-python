@@ -485,6 +485,30 @@ class TestTraceInit(TestCase):
         assert exporter.credentials is not credential_for_all_signals
 
     @patch.dict(
+        environ,
+        {
+            OTEL_PYTHON_EXPORTER_OTLP_TRACES_CREDENTIAL_PROVIDER: "custom_credential"
+        },
+    )
+    @patch("opentelemetry.sdk._configuration.entry_points")
+    def test_that_invalid_credential_type_raises_exception(
+        self, mock_entry_points
+    ):
+        def f():
+            # Entry point must return a grpc.ChannelCredential or requests.Session.
+            return 32
+
+        mock_entry_points.configure_mock(
+            return_value=[IterEntryPoint("custom_credential", f)]
+        )
+        with raises(RuntimeError):
+            _init_exporter(
+                "traces",
+                {},
+                OTLPSpanExporter,
+            )
+
+    @patch.dict(
         "os.environ", {OTEL_TRACES_SAMPLER: "non_existent_entry_point"}
     )
     def test_trace_init_custom_sampler_with_env_non_existent_entry_point(self):
