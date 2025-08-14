@@ -1,5 +1,21 @@
+# Copyright The OpenTelemetry Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Optional, Sequence
+from typing import Sequence
 
 from opentelemetry.trace import TraceState
 
@@ -19,6 +35,11 @@ _MAX_VALUE_LENGTH = 14  # 56 bits, 4 bits per hex digit
 
 @dataclass
 class OtelTraceState:
+    """Marshals OpenTelemetry tracestate for sampling parameters.
+
+    https://opentelemetry.io/docs/specs/otel/trace/tracestate-probability-sampling/
+    """
+
     random_value: int
     threshold: int
     rest: Sequence[str]
@@ -28,7 +49,7 @@ class OtelTraceState:
         return OtelTraceState(INVALID_RANDOM_VALUE, INVALID_THRESHOLD, ())
 
     @staticmethod
-    def parse(trace_state: Optional[TraceState]) -> "OtelTraceState":
+    def parse(trace_state: TraceState | None) -> "OtelTraceState":
         if not trace_state:
             return OtelTraceState.invalid()
 
@@ -41,7 +62,7 @@ class OtelTraceState:
         random_value = INVALID_RANDOM_VALUE
 
         members = ot.split(";")
-        rest: Optional[list[str]] = None
+        rest: list[str] | None = None
         for member in members:
             if member.startswith("th:"):
                 threshold = _parse_th(member[len("th:") :], INVALID_THRESHOLD)

@@ -1,14 +1,31 @@
+# Copyright The OpenTelemetry Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Optional
 
 import pytest
 from pytest import param as p
 
 from opentelemetry.sdk.trace._sampling_experimental import (
-    consistent_always_off,
-    consistent_always_on,
-    consistent_parent_based,
-    consistent_probability_based,
+    ComposableSampler,
+    composable_always_off,
+    composable_always_on,
+    composable_parent_threshold,
+    composable_traceid_ratio_based,
+    composite_sampler,
 )
 from opentelemetry.sdk.trace._sampling_experimental._trace_state import (
     OtelTraceState,
@@ -17,7 +34,7 @@ from opentelemetry.sdk.trace._sampling_experimental._util import (
     INVALID_RANDOM_VALUE,
     INVALID_THRESHOLD,
 )
-from opentelemetry.sdk.trace.sampling import Decision, Sampler
+from opentelemetry.sdk.trace.sampling import Decision
 from opentelemetry.trace import (
     NonRecordingSpan,
     SpanContext,
@@ -32,10 +49,10 @@ SPAN_ID = int("0123456789abcdef", 16)
 
 @dataclass
 class Input:
-    sampler: Sampler
+    sampler: ComposableSampler
     sampled: bool
-    threshold: Optional[int]
-    random_value: Optional[int]
+    threshold: int | None
+    random_value: int | None
 
 
 @dataclass
@@ -50,7 +67,7 @@ class Output:
     (
         p(
             Input(
-                sampler=consistent_always_on(),
+                sampler=composable_always_on(),
                 sampled=True,
                 threshold=None,
                 random_value=None,
@@ -62,7 +79,7 @@ class Output:
         ),
         p(
             Input(
-                sampler=consistent_always_on(),
+                sampler=composable_always_on(),
                 sampled=True,
                 threshold=None,
                 random_value=0x7F99AA40C02744,
@@ -72,7 +89,7 @@ class Output:
         ),
         p(
             Input(
-                sampler=consistent_always_off(),
+                sampler=composable_always_off(),
                 sampled=True,
                 threshold=None,
                 random_value=None,
@@ -86,7 +103,7 @@ class Output:
         ),
         p(
             Input(
-                sampler=consistent_parent_based(consistent_always_on()),
+                sampler=composable_parent_threshold(composable_always_on()),
                 sampled=False,
                 threshold=0x7F99AA40C02744,
                 random_value=0x7F99AA40C02744,
@@ -100,7 +117,7 @@ class Output:
         ),
         p(
             Input(
-                sampler=consistent_parent_based(consistent_always_on()),
+                sampler=composable_parent_threshold(composable_always_on()),
                 sampled=True,
                 threshold=None,
                 random_value=None,
@@ -114,7 +131,7 @@ class Output:
         ),
         p(
             Input(
-                sampler=consistent_probability_based(0.5),
+                sampler=composable_traceid_ratio_based(0.5),
                 sampled=True,
                 threshold=None,
                 random_value=0x7FFFFFFFFFFFFF,
@@ -128,7 +145,7 @@ class Output:
         ),
         p(
             Input(
-                sampler=consistent_probability_based(0.5),
+                sampler=composable_traceid_ratio_based(0.5),
                 sampled=False,
                 threshold=None,
                 random_value=0x80000000000000,
@@ -142,7 +159,7 @@ class Output:
         ),
         p(
             Input(
-                sampler=consistent_probability_based(1.0),
+                sampler=composable_traceid_ratio_based(1.0),
                 sampled=False,
                 threshold=0x80000000000000,
                 random_value=0x80000000000000,
@@ -173,7 +190,7 @@ def test_sample(input: Input, output: Output):
     parent_span = NonRecordingSpan(parent_span_context)
     parent_context = set_span_in_context(parent_span)
 
-    result = input.sampler.should_sample(
+    result = composite_sampler(input.sampler).should_sample(
         parent_context, TRACE_ID, "name", trace_state=parent_trace_state
     )
 

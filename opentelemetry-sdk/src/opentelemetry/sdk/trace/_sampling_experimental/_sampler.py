@@ -1,4 +1,20 @@
-from typing import Optional, Sequence
+# Copyright The OpenTelemetry Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+from __future__ import annotations
+
+from typing import Sequence
 
 from opentelemetry.context import Context
 from opentelemetry.sdk.trace.sampling import Decision, Sampler, SamplingResult
@@ -10,21 +26,19 @@ from ._trace_state import OTEL_TRACE_STATE_KEY, OtelTraceState
 from ._util import INVALID_THRESHOLD, is_valid_random_value, is_valid_threshold
 
 
-class ConsistentSampler(Sampler, ComposableSampler):
-    """A sampler that uses a consistent sampling strategy based on a delegate sampler."""
-
+class _CompositeSampler(Sampler):
     def __init__(self, delegate: ComposableSampler):
         self._delegate = delegate
 
     def should_sample(
         self,
-        parent_context: Optional[Context],
+        parent_context: Context | None,
         trace_id: int,
         name: str,
-        kind: Optional[SpanKind] = None,
-        attributes: Attributes = None,
-        links: Optional[Sequence[Link]] = None,
-        trace_state: Optional[TraceState] = None,
+        kind: SpanKind | None = None,
+        attributes: Attributes | None = None,
+        links: Sequence[Link] | None = None,
+        trace_state: TraceState | None = None,
     ) -> SamplingResult:
         ot_trace_state = OtelTraceState.parse(trace_state)
 
@@ -34,7 +48,7 @@ class ConsistentSampler(Sampler, ComposableSampler):
         threshold = intent.threshold
 
         if is_valid_threshold(threshold):
-            adjusted_count_correct = intent.adjusted_count_reliable
+            adjusted_count_correct = intent.threshold_reliable
             if is_valid_random_value(ot_trace_state.random_value):
                 randomness = ot_trace_state.random_value
             else:
@@ -57,28 +71,15 @@ class ConsistentSampler(Sampler, ComposableSampler):
             _update_trace_state(trace_state, ot_trace_state, intent),
         )
 
-    def sampling_intent(
-        self,
-        parent_ctx: Optional[Context],
-        name: str,
-        span_kind: Optional[SpanKind],
-        attributes: Attributes,
-        links: Optional[Sequence[Link]],
-        trace_state: Optional[TraceState],
-    ) -> SamplingIntent:
-        return self._delegate.sampling_intent(
-            parent_ctx, name, span_kind, attributes, links, trace_state
-        )
-
     def get_description(self) -> str:
         return self._delegate.get_description()
 
 
 def _update_trace_state(
-    trace_state: Optional[TraceState],
+    trace_state: TraceState | None,
     ot_trace_state: OtelTraceState,
     intent: SamplingIntent,
-) -> Optional[TraceState]:
+) -> TraceState | None:
     otts = ot_trace_state.serialize()
     if not trace_state:
         if otts:
@@ -88,3 +89,13 @@ def _update_trace_state(
     if otts:
         return new_trace_state.update(OTEL_TRACE_STATE_KEY, otts)
     return new_trace_state
+
+
+def composite_sampler(delegate: ComposableSampler) -> Sampler:
+    """A sampler that uses a a composable sampler to make its decision while
+    handling tracestate.
+
+    Args:
+        delegate: The composable sampler to use for making sampling decisions.
+    """
+    return _CompositeSampler(delegate)
