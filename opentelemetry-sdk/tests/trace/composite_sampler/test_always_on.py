@@ -16,8 +16,8 @@ from opentelemetry.sdk.trace._sampling_experimental import (
     composable_always_on,
     composite_sampler,
 )
-from opentelemetry.sdk.trace.sampling import Decision
 from opentelemetry.sdk.trace.id_generator import RandomIdGenerator
+from opentelemetry.sdk.trace.sampling import Decision
 
 
 def test_description():

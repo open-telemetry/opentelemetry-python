@@ -21,8 +21,8 @@ from opentelemetry.sdk.trace._sampling_experimental import (
 from opentelemetry.sdk.trace._sampling_experimental._trace_state import (
     OtelTraceState,
 )
-from opentelemetry.sdk.trace.sampling import Decision
 from opentelemetry.sdk.trace.id_generator import RandomIdGenerator
+from opentelemetry.sdk.trace.sampling import Decision
 
 
 @pytest.mark.parametrize(
