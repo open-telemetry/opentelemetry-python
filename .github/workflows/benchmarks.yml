@@ -11,7 +11,7 @@ jobs:
   sdk-benchmarks:
     permissions:
       contents: write # required for pushing to gh-pages
-    runs-on: equinix-bare-metal
+    runs-on: oracle-bare-metal-64cpu-512gb-x86-64
     steps:
     - name: Checkout Core Repo @ SHA - ${{ github.sha }}
       uses: actions/checkout@v4
