@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Add new environment variables to the SDK `OTEL_PYTHON_EXPORTER_OTLP_{METRICS/TRACES/LOGS}_CREDENTIAL_PROVIDER` that can be used to
+inject a `requests.Session` or `grpc.ChannelCredentials` object into OTLP exporters created during auto instrumentation [#4689](https://github.com/open-telemetry/opentelemetry-python/pull/4689).
+
 ## Version 1.36.0/0.57b0 (2025-07-29)
 
 - Add missing Prometheus exporter documentation
