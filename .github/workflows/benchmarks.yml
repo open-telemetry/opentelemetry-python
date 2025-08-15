@@ -14,15 +14,12 @@ jobs:
       contents: write # required for pushing to gh-pages
     runs-on: oracle-bare-metal-64cpu-512gb-x86-64
     container:
-      image: ubuntu:24.04@sha256:a08e551cb33850e4740772b38217fc1796a66da2506d312abe51acda354ff061
+      image: python:3.13-slim
     steps:
     - name: Checkout Core Repo @ SHA - ${{ github.sha }}
       uses: actions/checkout@v4
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.13"
-        architecture: 'x64'
+    - name: Install tox
+      run: pip install tox-uv
     - name: Run tox
       run: tox -e benchmark-opentelemetry-sdk -- -k opentelemetry-sdk/benchmarks --benchmark-json=opentelemetry-sdk/output.json
     - name: Report on SDK benchmark results
