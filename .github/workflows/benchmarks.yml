@@ -20,6 +20,8 @@ jobs:
       run: |
         apt-get update
         apt-get install -y git
+    - name: Make repo safe for Git inside container
+      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
     - name: Checkout Core Repo @ SHA - ${{ github.sha }}
       uses: actions/checkout@v4
     - name: Install tox
