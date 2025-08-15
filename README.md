@@ -98,7 +98,6 @@ Meeting notes are available as a public [Google doc](https://docs.google.com/doc
 ### Maintainers
 
 - [Aaron Abbott](https://github.com/aabmass), Google
-- [Diego Hurtado](https://github.com/ocelotl), Lightstep
 - [Leighton Chen](https://github.com/lzchen), Microsoft
 - [Riccardo Magliocchetti](https://github.com/xrmx), Elastic
 
@@ -106,6 +105,7 @@ For more information about the maintainer role, see the [community repository](h
 
 ### Approvers
 
+- [Dylan Russell](https://github.com/dylanrussell), Google
 - [Emídio Neto](https://github.com/emdneto), PicPay
 - [Jeremy Voss](https://github.com/jeremydvoss), Microsoft
 - [Owais Lone](https://github.com/owais), Splunk
@@ -120,6 +120,7 @@ For more information about the approver role, see the [community repository](htt
 
 - [Alex Boten](https://github.com/codeboten)
 - [Chris Kleinknecht](https://github.com/c24t)
+- [Diego Hurtado](https://github.com/ocelotl), Lightstep
 - [Owais Lone](https://github.com/owais)
 - [Reiley Yang](https://github.com/reyang)
 - [Srikanth Chekuri](https://github.com/srikanthccv)
