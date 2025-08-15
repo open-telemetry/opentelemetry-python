@@ -16,12 +16,10 @@ jobs:
     steps:
     - name: Checkout Core Repo @ SHA - ${{ github.sha }}
       uses: actions/checkout@v4
-    - name: Install uv
-      uses: astral-sh/setup-uv@v6
-    - name: Install tox-uv
-      run: uv tool install --python-preference only-managed --python 3.13 tox-uv
-    - name: Set up Python
-      run: uv python install --python-preference only-managed 3.13
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.13.6"
     - name: Run tox
       run: tox -e benchmark-opentelemetry-sdk -- -k opentelemetry-sdk/benchmarks --benchmark-json=opentelemetry-sdk/output.json
     - name: Report on SDK benchmark results
