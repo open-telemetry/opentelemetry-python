@@ -16,14 +16,14 @@ jobs:
     container:
       image: python:3.13-slim
     steps:
-    - name: Checkout Core Repo @ SHA - ${{ github.sha }}
-      uses: actions/checkout@v4
-    - name: Install tox
-      run: pip install tox-uv
     - name: Install Git # since Git isn't available in the container image used above
       run: |
         apt-get update
         apt-get install -y git
+    - name: Checkout Core Repo @ SHA - ${{ github.sha }}
+      uses: actions/checkout@v4
+    - name: Install tox
+      run: pip install tox-uv
     - name: Run tox
       run: tox -e benchmark-opentelemetry-sdk -- -k opentelemetry-sdk/benchmarks --benchmark-json=opentelemetry-sdk/output.json
     - name: Report on SDK benchmark results
