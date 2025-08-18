@@ -20,8 +20,8 @@ Project versioning information and stability guarantees can be found [here](./ra
 
 ***Breaking Changes**
 
-[!IMPORTANT]
-We are working on stabilizing the Log signal which would require making deprecations and breaking changes. We will try to reduce the releases that may require an update to your code, especially for instrumentations or for SDK developers.
+> [!IMPORTANT]
+> We are working on stabilizing the Log signal which would require making deprecations and breaking changes. We will try to reduce the releases that may require an update to your code, especially for instrumentations or for SDK developers.
 
 ## Getting started
 
