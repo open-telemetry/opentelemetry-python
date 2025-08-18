@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Breaking changes ongoing**
 
+[!IMPORTANT]
 We are working on stabilizing the Log signal that would require making deprecations and breaking changes. We will try to reduce the releases that may require an update to your code, especially for instrumentations or for sdk developers.
 
 ## Unreleased
