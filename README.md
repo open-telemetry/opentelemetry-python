@@ -1,10 +1,10 @@
 # OpenTelemetry Python
 [![Slack](https://img.shields.io/badge/slack-@cncf/otel/python-brightgreen.svg?logo=slack)](https://cloud-native.slack.com/archives/C01PD4HUVBL)
 [![Build Status 0](https://github.com/open-telemetry/opentelemetry-python/actions/workflows/test_0.yml/badge.svg?branch=main)](https://github.com/open-telemetry/opentelemetry-python/actions/workflows/test_0.yml)
-[![Build Status 1](https://github.com/open-telemetry/opentelemetry-python/actions/workflows/test_1.yml/badge.svg?branch=main)](https://github.com/open-telemetry/opentelemetry-python/actions/workflows/test_1.yml)
 [![Minimum Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![Release](https://img.shields.io/github/v/release/open-telemetry/opentelemetry-python?include_prereleases&style=)](https://github.com/open-telemetry/opentelemetry-python/releases/)
 [![Read the Docs](https://readthedocs.org/projects/opentelemetry-python/badge/?version=latest)](https://opentelemetry-python.readthedocs.io/en/latest/)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/11060/badge)](https://www.bestpractices.dev/projects/11060)
 
 ## Project Status
 
@@ -103,7 +103,6 @@ Meeting notes are available as a public [Google doc](https://docs.google.com/doc
 ### Maintainers
 
 - [Aaron Abbott](https://github.com/aabmass), Google
-- [Diego Hurtado](https://github.com/ocelotl), Lightstep
 - [Leighton Chen](https://github.com/lzchen), Microsoft
 - [Riccardo Magliocchetti](https://github.com/xrmx), Elastic
 
@@ -111,6 +110,7 @@ For more information about the maintainer role, see the [community repository](h
 
 ### Approvers
 
+- [Dylan Russell](https://github.com/dylanrussell), Google
 - [Emídio Neto](https://github.com/emdneto), PicPay
 - [Jeremy Voss](https://github.com/jeremydvoss), Microsoft
 - [Owais Lone](https://github.com/owais), Splunk
@@ -125,6 +125,7 @@ For more information about the approver role, see the [community repository](htt
 
 - [Alex Boten](https://github.com/codeboten)
 - [Chris Kleinknecht](https://github.com/c24t)
+- [Diego Hurtado](https://github.com/ocelotl), Lightstep
 - [Owais Lone](https://github.com/owais)
 - [Reiley Yang](https://github.com/reyang)
 - [Srikanth Chekuri](https://github.com/srikanthccv)
