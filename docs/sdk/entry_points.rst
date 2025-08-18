@@ -16,7 +16,7 @@ Entry Point Configuration Reference
 :Environment Variable: ``OTEL_LOGS_EXPORTER``
 :Entry Point Group: ``opentelemetry_logs_exporter``
 :Available Names: ``console``, ``otlp_proto_grpc``, ``otlp_proto_http``
-:Base Type: ``LogExporter`` *(experimental)*
+:Base Type: ``LogExporter`` *(development)*
 
 **Metrics Exporter**
 
