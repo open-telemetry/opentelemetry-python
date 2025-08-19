@@ -33,7 +33,7 @@ Execution
     $ python ./prometheus-monitor.py
     $ Server is running at http://localhost:8000
 
-Now you can visit `localhost:8000/metrics <http://localhost:8000/metrics>` to see prometheus metrics. 
+Now you can visit `localhost:8000/metrics <http://localhost:8000/metrics>` to see Prometheus metrics. 
 You should see something like:
 
 .. code-block::
