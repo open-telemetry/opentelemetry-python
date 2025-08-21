@@ -60,4 +60,4 @@ You should see something like:
     # TYPE MyAppPrefix_my_counter_total counter
     MyAppPrefix_my_counter_total 964.0
  
-`MyAppPrefix_my_counter_total` is the custom counter created in the application with the custom prefix `MyAppPrefix`.
+``MyAppPrefix_my_counter_total`` is the custom counter created in the application with the custom prefix ``MyAppPrefix``.
