@@ -117,6 +117,8 @@ def _parse_th(value: str, default: int) -> int:
     except ValueError:
         return default
 
+    # th value is compressed by removing all trailing zeros,
+    # so we restore them to get the real value.
     trailing_zeros = _MAX_VALUE_LENGTH - len(value)
     return parsed << (trailing_zeros * 4)
 
