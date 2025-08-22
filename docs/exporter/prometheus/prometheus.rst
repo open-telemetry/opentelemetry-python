@@ -47,6 +47,11 @@ The following environment variables are supported:
 * ``OTEL_EXPORTER_PROMETHEUS_HOST`` (default: "localhost"): The host to bind to
 * ``OTEL_EXPORTER_PROMETHEUS_PORT`` (default: 9464): The port to bind to
 
+Limitations
+-----------
+
+* No multiprocessing support: The Prometheus exporter is not designed to operate in multiprocessing environments (see `#3747 <https://github.com/open-telemetry/opentelemetry-python/issues/3747>`_).
+
 References
 ----------
 
