@@ -5,10 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+**Breaking changes ongoing**
+
+> [!IMPORTANT]
+> We are working on stabilizing the Log signal that would require making deprecations and breaking changes. We will try to reduce the releases that may require an update to your code, especially for instrumentations or for sdk developers.
+
 ## Unreleased
 
 - Add experimental composite samplers
   ([#4714](https://github.com/open-telemetry/opentelemetry-python/pull/4714))
+- docs: linked the examples with their github source code location and added Prometheus example
+  ([#4728](https://github.com/open-telemetry/opentelemetry-python/pull/4728))
 
 ## Version 1.36.0/0.57b0 (2025-07-29)
 
