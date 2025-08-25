@@ -46,9 +46,20 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
     OTEL_EXPORTER_OTLP_TRACES_HEADERS,
     OTEL_EXPORTER_OTLP_TRACES_TIMEOUT,
+    OTEL_PYTHON_EXPORTER_OTLP_TRACES_CREDENTIAL_PROVIDER,
 )
 from opentelemetry.sdk.trace import _Span
 from opentelemetry.sdk.trace.export import SpanExportResult
+
+
+class IterEntryPoint:
+    def __init__(self, name, class_type):
+        self.name = name
+        self.class_type = class_type
+
+    def load(self):
+        return self.class_type
+
 
 OS_ENV_ENDPOINT = "os.env.base"
 OS_ENV_CERTIFICATE = "os/env/base.crt"
@@ -110,9 +121,19 @@ class TestOTLPSpanExporter(unittest.TestCase):
             OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "https://traces.endpoint.env",
             OTEL_EXPORTER_OTLP_TRACES_HEADERS: "tracesEnv1=val1,tracesEnv2=val2,traceEnv3===val3==",
             OTEL_EXPORTER_OTLP_TRACES_TIMEOUT: "40",
+            OTEL_PYTHON_EXPORTER_OTLP_TRACES_CREDENTIAL_PROVIDER: "credential_provider",
         },
     )
-    def test_exporter_traces_env_take_priority(self):
+    @patch("opentelemetry.exporter.otlp.proto.http._common.entry_points")
+    def test_exporter_traces_env_take_priority(self, mock_entry_point):
+        credential = Session()
+
+        def f(_):
+            return credential
+
+        mock_entry_point.configure_mock(
+            return_value=[IterEntryPoint("custom_credential", f)]
+        )
         exporter = OTLPSpanExporter()
 
         self.assertEqual(exporter._endpoint, "https://traces.endpoint.env")
@@ -131,6 +152,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
                 "traceenv3": "==val3==",
             },
         )
+        self.assertIs(exporter._session, credential)
         self.assertIsInstance(exporter._session, requests.Session)
 
     @patch.dict(

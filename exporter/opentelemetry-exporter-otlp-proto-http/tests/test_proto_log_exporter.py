@@ -57,6 +57,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_LOGS_HEADERS,
     OTEL_EXPORTER_OTLP_LOGS_TIMEOUT,
     OTEL_EXPORTER_OTLP_TIMEOUT,
+    OTEL_PYTHON_EXPORTER_OTLP_LOGS_CREDENTIAL_PROVIDER,
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
@@ -66,6 +67,16 @@ from opentelemetry.trace import (
     TraceFlags,
     set_span_in_context,
 )
+
+
+class IterEntryPoint:
+    def __init__(self, name, class_type):
+        self.name = name
+        self.class_type = class_type
+
+    def load(self):
+        return self.class_type
+
 
 ENV_ENDPOINT = "http://localhost.env:8080/"
 ENV_CERTIFICATE = "/etc/base.crt"
@@ -116,9 +127,19 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "https://logs.endpoint.env",
             OTEL_EXPORTER_OTLP_LOGS_HEADERS: "logsEnv1=val1,logsEnv2=val2,logsEnv3===val3==",
             OTEL_EXPORTER_OTLP_LOGS_TIMEOUT: "40",
+            OTEL_PYTHON_EXPORTER_OTLP_LOGS_CREDENTIAL_PROVIDER: "credential_provider",
         },
     )
-    def test_exporter_metrics_env_take_priority(self):
+    @patch("opentelemetry.exporter.otlp.proto.http._common.entry_points")
+    def test_exporter_logs_env_take_priority(self, mock_entry_points):
+        credential = Session()
+
+        def f(_):
+            return credential
+
+        mock_entry_points.configure_mock(
+            return_value=[IterEntryPoint("custom_credential", f)]
+        )
         exporter = OTLPLogExporter()
 
         self.assertEqual(exporter._endpoint, "https://logs.endpoint.env")
@@ -137,7 +158,18 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                 "logsenv3": "==val3==",
             },
         )
+        self.assertIs(exporter._session, credential)
         self.assertIsInstance(exporter._session, requests.Session)
+
+    @patch.dict(
+        "os.environ",
+        {
+            OTEL_PYTHON_EXPORTER_OTLP_LOGS_CREDENTIAL_PROVIDER: "provider_without_entry_point",
+        },
+    )
+    def test_exception_raised_when_entrypoint_does_not_exist(self):
+        with self.assertRaises(RuntimeError):
+            OTLPLogExporter()
 
     @patch.dict(
         "os.environ",

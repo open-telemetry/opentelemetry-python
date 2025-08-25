@@ -49,6 +49,7 @@ from opentelemetry.exporter.otlp.proto.http import (
 )
 from opentelemetry.exporter.otlp.proto.http._common import (
     _is_retryable,
+    _load_session_from_envvar,
 )
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (  # noqa: F401
     ExportMetricsServiceRequest,
@@ -159,7 +160,11 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             )
         )
         self._compression = compression or _compression_from_env()
-        self._session = session or requests.Session()
+        self._session = (
+            session
+            or _load_session_from_envvar("metrics")
+            or requests.Session()
+        )
         self._session.headers.update(self._headers)
         self._session.headers.update(_OTLP_HTTP_HEADERS)
         if self._compression is not Compression.NoCompression:

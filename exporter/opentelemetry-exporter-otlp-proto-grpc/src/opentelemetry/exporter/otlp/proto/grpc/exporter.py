@@ -68,10 +68,12 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_HEADERS,
     OTEL_EXPORTER_OTLP_INSECURE,
     OTEL_EXPORTER_OTLP_TIMEOUT,
+    OTEL_PYTHON_EXPORTER_OTLP_CREDENTIAL_PROVIDER,
 )
 from opentelemetry.sdk.metrics.export import MetricsData
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.trace import ReadableSpan
+from opentelemetry.util._importlib_metadata import entry_points
 from opentelemetry.util.re import parse_env_headers
 
 _RETRYABLE_ERROR_CODES = frozenset(
@@ -166,12 +168,31 @@ def _load_credentials(
 
 def _get_credentials(
     creds: Optional[ChannelCredentials],
+    credential_entry_point_env_key: str,
     certificate_file_env_key: str,
     client_key_file_env_key: str,
     client_certificate_file_env_key: str,
 ) -> ChannelCredentials:
     if creds is not None:
         return creds
+    credential_env = environ.get(credential_entry_point_env_key)
+    if credential_env:
+        try:
+            maybe_channel_creds = next(
+                iter(
+                    entry_points(
+                        group="opentelemetry_otlp_credential_provider",
+                        name=credential_env,
+                    )
+                )
+            ).load()("GRPC")
+        except StopIteration:
+            raise RuntimeError(
+                f"Requested component '{credential_env}' not found in "
+                f"entry point 'opentelemetry_otlp_credential_provider'"
+            )
+        if isinstance(maybe_channel_creds, ChannelCredentials):
+            return maybe_channel_creds
 
     certificate_file = environ.get(certificate_file_env_key)
     if certificate_file:
@@ -275,15 +296,16 @@ class OTLPExporterMixin(
                 options=self._channel_options,
             )
         else:
-            credentials = _get_credentials(
+            self._credentials = _get_credentials(
                 credentials,
+                OTEL_PYTHON_EXPORTER_OTLP_CREDENTIAL_PROVIDER,
                 OTEL_EXPORTER_OTLP_CERTIFICATE,
                 OTEL_EXPORTER_OTLP_CLIENT_KEY,
                 OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
             )
             self._channel = secure_channel(
                 self._endpoint,
-                credentials,
+                self._credentials,
                 compression=compression,
                 options=self._channel_options,
             )

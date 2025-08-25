@@ -51,6 +51,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
     OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
     OTEL_EXPORTER_OTLP_TIMEOUT,
+    OTEL_PYTHON_EXPORTER_OTLP_METRICS_CREDENTIAL_PROVIDER,
 )
 from opentelemetry.sdk.metrics import (
     Counter,
@@ -83,6 +84,15 @@ OS_ENV_CLIENT_CERTIFICATE = "os/env/client-cert.pem"
 OS_ENV_CLIENT_KEY = "os/env/client-key.pem"
 OS_ENV_HEADERS = "envHeader1=val1,envHeader2=val2"
 OS_ENV_TIMEOUT = "30"
+
+
+class IterEntryPoint:
+    def __init__(self, name, class_type):
+        self.name = name
+        self.class_type = class_type
+
+    def load(self):
+        return self.class_type
 
 
 # pylint: disable=protected-access
@@ -153,9 +163,19 @@ class TestOTLPMetricExporter(TestCase):
             OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: "https://metrics.endpoint.env",
             OTEL_EXPORTER_OTLP_METRICS_HEADERS: "metricsEnv1=val1,metricsEnv2=val2,metricEnv3===val3==",
             OTEL_EXPORTER_OTLP_METRICS_TIMEOUT: "40",
+            OTEL_PYTHON_EXPORTER_OTLP_METRICS_CREDENTIAL_PROVIDER: "credential_provider",
         },
     )
-    def test_exporter_metrics_env_take_priority(self):
+    @patch("opentelemetry.exporter.otlp.proto.http._common.entry_points")
+    def test_exporter_metrics_env_take_priority(self, mock_entry_points):
+        credential = Session()
+
+        def f(_):
+            return credential
+
+        mock_entry_points.configure_mock(
+            return_value=[IterEntryPoint("custom_credential", f)]
+        )
         exporter = OTLPMetricExporter()
 
         self.assertEqual(exporter._endpoint, "https://metrics.endpoint.env")

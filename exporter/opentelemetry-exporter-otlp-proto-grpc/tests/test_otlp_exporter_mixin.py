@@ -28,7 +28,7 @@ from google.protobuf.duration_pb2 import (  # pylint: disable=no-name-in-module
 from google.rpc.error_details_pb2 import (  # pylint: disable=no-name-in-module
     RetryInfo,
 )
-from grpc import Compression, StatusCode, server
+from grpc import ChannelCredentials, Compression, StatusCode, server
 
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
@@ -50,6 +50,7 @@ from opentelemetry.proto.collector.trace.v1.trace_service_pb2_grpc import (
 )
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_COMPRESSION,
+    OTEL_PYTHON_EXPORTER_OTLP_CREDENTIAL_PROVIDER,
 )
 from opentelemetry.sdk.trace import ReadableSpan, _Span
 from opentelemetry.sdk.trace.export import (
@@ -58,6 +59,15 @@ from opentelemetry.sdk.trace.export import (
 )
 
 logger = getLogger(__name__)
+
+
+class IterEntryPoint:
+    def __init__(self, name, class_type):
+        self.name = name
+        self.class_type = class_type
+
+    def load(self):
+        return self.class_type
 
 
 # The below tests use this test SpanExporter and Spans, but are testing the
@@ -275,6 +285,23 @@ class TestOTLPExporterMixin(TestCase):
                 ),
             ),
         )
+
+    @patch.dict(
+        "os.environ",
+        {OTEL_PYTHON_EXPORTER_OTLP_CREDENTIAL_PROVIDER: "credential_provider"},
+    )
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.entry_points")
+    def test_that_credential_gets_passed_to_exporter(self, mock_entry_points):
+        credential = ChannelCredentials(None)
+
+        def f(_):
+            return credential
+
+        mock_entry_points.configure_mock(
+            return_value=[IterEntryPoint("custom_credential", f)]
+        )
+        exporter = OTLPSpanExporterForTesting(insecure=False)
+        assert exporter._credentials is credential
 
     # pylint: disable=no-self-use, disable=unused-argument
     @patch(
