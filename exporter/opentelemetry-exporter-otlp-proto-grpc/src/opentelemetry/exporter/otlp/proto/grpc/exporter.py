@@ -59,6 +59,7 @@ from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401
     KeyValue,
 )
 from opentelemetry.proto.resource.v1.resource_pb2 import Resource  # noqa: F401
+from opentelemetry.sdk._shared_internal import DuplicateFilter
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
@@ -89,6 +90,8 @@ _RETRYABLE_ERROR_CODES = frozenset(
 )
 _MAX_RETRYS = 6
 logger = getLogger(__name__)
+# This prevents logs generated when a log fails to be written to generate another log which fails to be written etc. etc.
+logger.addFilter(DuplicateFilter())
 SDKDataT = TypeVar("SDKDataT")
 ResourceDataT = TypeVar("ResourceDataT")
 TypingResourceT = TypeVar("TypingResourceT")
