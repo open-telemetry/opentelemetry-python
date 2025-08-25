@@ -50,7 +50,10 @@ class DuplicateFilter(logging.Filter):
             record.module,
             record.levelno,
             record.msg,
-            time.time() // 60,
+            # We need to pick a time longer than the OTLP LogExporter timeout
+            # which defaults to 10 seconds, but not pick something so long that
+            # it filters out useful logs.
+            time.time() // 20,
         )
         if current_log != getattr(self, "last_log", None):
             self.last_log = current_log  # pylint: disable=attribute-defined-outside-init
