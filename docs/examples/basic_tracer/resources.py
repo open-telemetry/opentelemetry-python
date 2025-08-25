@@ -19,9 +19,10 @@ from opentelemetry.sdk.trace.export import (
     BatchSpanProcessor,
     ConsoleSpanExporter,
 )
+from opentelemetry.semconv.resource import ResourceAttributes
 
 # Use Resource.create() instead of constructor directly
-resource = Resource.create({"service.name": "basic_service"})
+resource = Resource.create({ResourceAttributes.SERVICE_NAME: "basic_service"})
 
 trace.set_tracer_provider(TracerProvider(resource=resource))
 
