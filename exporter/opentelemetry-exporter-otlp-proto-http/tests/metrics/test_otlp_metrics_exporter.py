@@ -26,6 +26,7 @@ from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
     encode_metrics,
 )
 from opentelemetry.exporter.otlp.proto.http import Compression
+from opentelemetry.exporter.otlp.proto.http._common import IterEntryPoint
 from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
     DEFAULT_COMPRESSION,
     DEFAULT_ENDPOINT,
@@ -51,6 +52,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
     OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
     OTEL_EXPORTER_OTLP_TIMEOUT,
+    OTEL_PYTHON_EXPORTER_OTLP_METRICS_CREDENTIAL_PROVIDER,
 )
 from opentelemetry.sdk.metrics import (
     Counter,
@@ -153,9 +155,19 @@ class TestOTLPMetricExporter(TestCase):
             OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: "https://metrics.endpoint.env",
             OTEL_EXPORTER_OTLP_METRICS_HEADERS: "metricsEnv1=val1,metricsEnv2=val2,metricEnv3===val3==",
             OTEL_EXPORTER_OTLP_METRICS_TIMEOUT: "40",
+            OTEL_PYTHON_EXPORTER_OTLP_METRICS_CREDENTIAL_PROVIDER: "credential_provider",
         },
     )
-    def test_exporter_metrics_env_take_priority(self):
+    @patch("opentelemetry.exporter.otlp.proto.http._common.entry_points")
+    def test_exporter_metrics_env_take_priority(self, mock_entry_points):
+        credential = Session()
+
+        def f(_):
+            return credential
+
+        mock_entry_points.configure_mock(
+            return_value=[IterEntryPoint("custom_credential", f)]
+        )
         exporter = OTLPMetricExporter()
 
         self.assertEqual(exporter._endpoint, "https://metrics.endpoint.env")
