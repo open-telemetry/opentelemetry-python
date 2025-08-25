@@ -65,3 +65,13 @@ def _load_session_from_envvar(
             print("returning session !!")
             return maybe_session
     return None
+
+
+# For testing
+class IterEntryPoint:
+    def __init__(self, name, class_type):
+        self.name = name
+        self.class_type = class_type
+
+    def load(self):
+        return self.class_type

@@ -23,6 +23,7 @@ from requests import Session
 from requests.models import Response
 
 from opentelemetry.exporter.otlp.proto.http import Compression
+from opentelemetry.exporter.otlp.proto.http._common import IterEntryPoint
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     DEFAULT_COMPRESSION,
     DEFAULT_ENDPOINT,
@@ -50,16 +51,6 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.trace import _Span
 from opentelemetry.sdk.trace.export import SpanExportResult
-
-
-class IterEntryPoint:
-    def __init__(self, name, class_type):
-        self.name = name
-        self.class_type = class_type
-
-    def load(self):
-        return self.class_type
-
 
 OS_ENV_ENDPOINT = "os.env.base"
 OS_ENV_CERTIFICATE = "os/env/base.crt"

@@ -26,6 +26,7 @@ from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
     encode_metrics,
 )
 from opentelemetry.exporter.otlp.proto.http import Compression
+from opentelemetry.exporter.otlp.proto.http._common import IterEntryPoint
 from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
     DEFAULT_COMPRESSION,
     DEFAULT_ENDPOINT,
@@ -84,15 +85,6 @@ OS_ENV_CLIENT_CERTIFICATE = "os/env/client-cert.pem"
 OS_ENV_CLIENT_KEY = "os/env/client-key.pem"
 OS_ENV_HEADERS = "envHeader1=val1,envHeader2=val2"
 OS_ENV_TIMEOUT = "30"
-
-
-class IterEntryPoint:
-    def __init__(self, name, class_type):
-        self.name = name
-        self.class_type = class_type
-
-    def load(self):
-        return self.class_type
 
 
 # pylint: disable=protected-access

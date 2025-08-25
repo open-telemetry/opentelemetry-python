@@ -28,6 +28,7 @@ from requests.models import Response
 
 from opentelemetry._logs import SeverityNumber
 from opentelemetry.exporter.otlp.proto.http import Compression
+from opentelemetry.exporter.otlp.proto.http._common import IterEntryPoint
 from opentelemetry.exporter.otlp.proto.http._log_exporter import (
     DEFAULT_COMPRESSION,
     DEFAULT_ENDPOINT,
@@ -67,16 +68,6 @@ from opentelemetry.trace import (
     TraceFlags,
     set_span_in_context,
 )
-
-
-class IterEntryPoint:
-    def __init__(self, name, class_type):
-        self.name = name
-        self.class_type = class_type
-
-    def load(self):
-        return self.class_type
-
 
 ENV_ENDPOINT = "http://localhost.env:8080/"
 ENV_CERTIFICATE = "/etc/base.crt"
