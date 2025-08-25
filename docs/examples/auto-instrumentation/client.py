@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from sys import argv
+import sys
 
 from requests import get
 
@@ -31,8 +31,8 @@ trace.get_tracer_provider().add_span_processor(
     BatchSpanProcessor(ConsoleSpanExporter())
 )
 
-
-assert len(argv) == 2
+# Get parameter from command line argument or use default value "testing"
+param_value = sys.argv[1] if len(sys.argv) > 1 else "testing"
 
 with tracer.start_as_current_span("client"):
     with tracer.start_as_current_span("client-server"):
@@ -40,7 +40,7 @@ with tracer.start_as_current_span("client"):
         inject(headers)
         requested = get(
             "http://localhost:8082/server_request",
-            params={"param": argv[1]},
+            params={"param": param_value},
             headers=headers,
         )
 
