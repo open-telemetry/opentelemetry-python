@@ -97,7 +97,22 @@ Container name used by container runtime.
 
 CONTAINER_RUNTIME: Final = "container.runtime"
 """
+Deprecated: Replaced by `container.runtime.name`.
+"""
+
+CONTAINER_RUNTIME_DESCRIPTION: Final = "container.runtime.description"
+"""
+A description about the runtime which could include, for example details about the CRI/API version being used or other customisations.
+"""
+
+CONTAINER_RUNTIME_NAME: Final = "container.runtime.name"
+"""
 The container runtime managing this container.
+"""
+
+CONTAINER_RUNTIME_VERSION: Final = "container.runtime.version"
+"""
+The version of the runtime of this process, as returned by the runtime without modification.
 """
 
 

@@ -77,12 +77,12 @@ class AzureCosmosdbConnectionModeValues(Enum):
 
 class AzureCosmosdbConsistencyLevelValues(Enum):
     STRONG = "Strong"
-    """strong."""
+    """Strong."""
     BOUNDED_STALENESS = "BoundedStaleness"
-    """bounded_staleness."""
+    """Bounded Staleness."""
     SESSION = "Session"
-    """session."""
+    """Session."""
     EVENTUAL = "Eventual"
-    """eventual."""
+    """Eventual."""
     CONSISTENT_PREFIX = "ConsistentPrefix"
-    """consistent_prefix."""
+    """Consistent Prefix."""
