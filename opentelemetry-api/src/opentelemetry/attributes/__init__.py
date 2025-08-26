@@ -20,10 +20,23 @@ from typing import Mapping, Optional, Sequence, Tuple, Union
 
 from opentelemetry.util import types
 
+
+def _get_wsgi_request_type():
+    """Get WSGIRequest type if Django is available, otherwise return None."""
+    try:
+        # pylint: disable=import-outside-toplevel
+        from django.core.handlers.wsgi import WSGIRequest  # type: ignore
+
+        return WSGIRequest
+    except ImportError:
+        return None
+
+
 # bytes are accepted as a user supplied value for attributes but
 # decoded to strings internally.
 _VALID_ATTR_VALUE_TYPES = (bool, str, bytes, int, float)
 # AnyValue possible values
+_WSGIRequest = _get_wsgi_request_type()
 _VALID_ANY_VALUE_TYPES = (
     type(None),
     bool,
@@ -33,7 +46,7 @@ _VALID_ANY_VALUE_TYPES = (
     str,
     Sequence,
     Mapping,
-)
+) + ((_WSGIRequest,) if _WSGIRequest is not None else ())
 
 
 _logger = logging.getLogger(__name__)
@@ -121,11 +134,24 @@ def _clean_attribute(
 def _clean_extended_attribute_value(
     value: types.AnyValue, max_len: Optional[int]
 ) -> types.AnyValue:
+    # pylint: disable=too-many-branches
     # for primitive types just return the value and eventually shorten the string length
     if value is None or isinstance(value, _VALID_ATTR_VALUE_TYPES):
         if max_len is not None and isinstance(value, str):
             value = value[:max_len]
         return value
+
+    if _WSGIRequest is not None and isinstance(value, _WSGIRequest):
+        wsgi_data = {
+            "method": getattr(value, "method", None),
+            "path": getattr(value, "path", None),
+            "path_info": getattr(value, "path_info", None),
+            "content_type": getattr(value, "content_type", None),
+            "user": str(getattr(value, "user", None))
+            if hasattr(value, "user")
+            else None,
+        }
+        return {k: v for k, v in wsgi_data.items() if v is not None}
 
     if isinstance(value, Mapping):
         cleaned_dict: dict[str, types.AnyValue] = {}

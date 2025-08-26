@@ -14,6 +14,7 @@
 
 # type: ignore
 
+import io
 import unittest
 from typing import MutableSequence
 
@@ -21,7 +22,25 @@ from opentelemetry.attributes import (
     BoundedAttributes,
     _clean_attribute,
     _clean_extended_attribute,
+    _get_wsgi_request_type,
 )
+
+
+def _get_django_settings():
+    """Get Django settings if available, otherwise return None."""
+    try:
+        # pylint: disable=import-outside-toplevel
+        from django.conf import (
+            settings,  # pyright: ignore[reportMissingImports]
+        )
+
+        return settings
+    except ImportError:
+        return None
+
+
+_WSGIRequest = _get_wsgi_request_type()
+_settings = _get_django_settings()
 
 
 class TestAttributes(unittest.TestCase):
@@ -181,6 +200,62 @@ class TestExtendedAttributes(unittest.TestCase):
         self.assertEqual(
             _clean_extended_attribute("headers", mapping, None), expected
         )
+
+    def test_wsgi_request_attribute(self):
+        if _WSGIRequest is None or _settings is None:
+            self.skipTest("Django not available")
+
+        if not _settings.configured:
+            _settings.configure(
+                DEBUG=True,
+                SECRET_KEY="test-secret-key",
+                USE_TZ=True,
+                ROOT_URLCONF=[],
+                MIDDLEWARE=[],
+            )
+
+            # Create a minimal WSGI environ dict
+            environ = {
+                "REQUEST_METHOD": "GET",
+                "PATH_INFO": "/test",
+                "QUERY_STRING": "",
+                "CONTENT_TYPE": "",
+                "CONTENT_LENGTH": "",
+                "HTTP_HOST": "testserver",
+                "wsgi.version": (1, 0),
+                "wsgi.url_scheme": "http",
+                "wsgi.input": io.StringIO(),
+                "wsgi.errors": io.StringIO(),
+                "wsgi.multithread": False,
+                "wsgi.multiprocess": False,
+                "wsgi.run_once": False,
+                "SERVER_NAME": "testserver",
+                "SERVER_PORT": "80",
+            }
+
+            # Create a WSGIRequest object
+            wsgi_request = _WSGIRequest(environ)
+            expected_cleaned = {
+                "method": "GET",
+                "path": "/test",
+                "path_info": "/test",
+                "content_type": "",
+            }
+
+            cleaned_value = _clean_extended_attribute(
+                "request", wsgi_request, None
+            )
+            self.assertEqual(cleaned_value, expected_cleaned)
+
+            cleaned_sequence = _clean_extended_attribute(
+                "requests", [wsgi_request], None
+            )
+            self.assertEqual(cleaned_sequence, (expected_cleaned,))
+
+            cleaned_mapping = _clean_extended_attribute(
+                "data", {"request": wsgi_request}, None
+            )
+            self.assertEqual(cleaned_mapping, {"request": expected_cleaned})
 
 
 class TestBoundedAttributes(unittest.TestCase):

@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4695](https://github.com/open-telemetry/opentelemetry-python/pull/4695)).
 - docs: linked the examples with their github source code location and added Prometheus example
   ([#4728](https://github.com/open-telemetry/opentelemetry-python/pull/4728))
+- opentelemetry-api: Fix for issue #4732 - Invalid type WSGIRequest for attribute 'request' value opentelemetry
+  ([#4733](https://github.com/open-telemetry/opentelemetry-python/pull/4733))
 
 ## Version 1.36.0/0.57b0 (2025-07-29)
 
