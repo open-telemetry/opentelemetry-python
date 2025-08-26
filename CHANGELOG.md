@@ -5,12 +5,91 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+**Breaking changes ongoing**
+
+> [!IMPORTANT]
+> We are working on stabilizing the Log signal that would require making deprecations and breaking changes. We will try to reduce the releases that may require an update to your code, especially for instrumentations or for sdk developers.
+
 ## Unreleased
 
-- Refactor `BatchLogRecordProcessor` to simplify code and make the control flow more
-  clear ([#4562](https://github.com/open-telemetry/opentelemetry-python/pull/4562/)
-  and [#4535](https://github.com/open-telemetry/opentelemetry-python/pull/4535)).
+- Filter duplicate logs out of some internal `logger`'s logs on the export logs path that might otherwise endlessly log or cause a recursion depth exceeded issue in cases where logging itself results in an exception.
+  ([#4695](https://github.com/open-telemetry/opentelemetry-python/pull/4695)).
+- docs: linked the examples with their github source code location and added Prometheus example
+  ([#4728](https://github.com/open-telemetry/opentelemetry-python/pull/4728))
 
+## Version 1.36.0/0.57b0 (2025-07-29)
+
+- Add missing Prometheus exporter documentation
+  ([#4485](https://github.com/open-telemetry/opentelemetry-python/pull/4485))
+- Overwrite logging.config.fileConfig and logging.config.dictConfig to ensure
+the OTLP `LogHandler` remains attached to the root logger. Fix a bug that
+can cause a deadlock to occur over `logging._lock` in some cases ([#4636](https://github.com/open-telemetry/opentelemetry-python/pull/4636)).
+- otlp-http-exporter: set default value for param `timeout_sec` in `_export` method
+  ([#4691](https://github.com/open-telemetry/opentelemetry-python/pull/4691))
+
+- Update OTLP gRPC/HTTP exporters: calling shutdown will now interrupt exporters that are sleeping
+  before a retry attempt, and cause them to return failure immediately.
+  Update BatchSpan/LogRecordProcessors: shutdown will now complete after 30 seconds of trying to finish
+  exporting any buffered telemetry, instead of continuing to export until all telemetry was exported.
+  ([#4638](https://github.com/open-telemetry/opentelemetry-python/pull/4638)).
+
+## Version 1.35.0/0.56b0 (2025-07-11)
+
+- Update OTLP proto to v1.7 [#4645](https://github.com/open-telemetry/opentelemetry-python/pull/4645).
+- Add `event_name` as a top level field in the `LogRecord`. Events are now simply logs with the
+`event_name` field set, the logs SDK should be used to emit events ([#4652](https://github.com/open-telemetry/opentelemetry-python/pull/4652)).
+- Update OTLP gRPC/HTTP exporters: the export timeout is now inclusive of all retries and backoffs.
+  A +/-20% jitter was added to all backoffs. A pointless 32 second sleep that occurred after all retries
+  had completed/failed was removed.
+  ([#4564](https://github.com/open-telemetry/opentelemetry-python/pull/4564)).
+- Update ConsoleLogExporter.export to handle LogRecord's containing bytes type
+  in the body ([#4614](https://github.com/open-telemetry/opentelemetry-python/pull/4614/)).
+- opentelemetry-sdk: Fix invalid `type: ignore` that causes mypy to ignore the whole file
+  ([#4618](https://github.com/open-telemetry/opentelemetry-python/pull/4618))
+- Add `span_exporter` property back to `BatchSpanProcessor` class
+  ([#4621](https://github.com/open-telemetry/opentelemetry-python/pull/4621))
+- Fix license field in pyproject.toml files
+  ([#4625](https://github.com/open-telemetry/opentelemetry-python/pull/4625))
+- Update logger level to NOTSET in logs example
+  ([#4637](https://github.com/open-telemetry/opentelemetry-python/pull/4637))
+- Logging API accepts optional `context`; deprecates `trace_id`, `span_id`, `trace_flags`.
+  ([#4597](https://github.com/open-telemetry/opentelemetry-python/pull/4597)) and
+  ([#4668](https://github.com/open-telemetry/opentelemetry-python/pull/4668))
+- sdk: use context instead of trace_id,span_id for initializing LogRecord
+  ([#4653](https://github.com/open-telemetry/opentelemetry-python/pull/4653))
+- Rename LogRecordProcessor.emit to on_emit
+  ([#4648](https://github.com/open-telemetry/opentelemetry-python/pull/4648))
+- Logging API hide std_to_otel function to convert python logging severity to otel severity
+  ([#4649](https://github.com/open-telemetry/opentelemetry-python/pull/4649))
+- proto: relax protobuf version requirement to support v6
+  ([#4620](https://github.com/open-telemetry/opentelemetry-python/pull/4620))
+- Bump semantic-conventions to 1.36.0
+  ([#4669](https://github.com/open-telemetry/opentelemetry-python/pull/4669))
+- Set expected User-Agent in HTTP headers for grpc OTLP exporter
+  ([#4658](https://github.com/open-telemetry/opentelemetry-python/pull/4658))
+
+## Version 1.34.0/0.55b0 (2025-06-04)
+
+- typecheck: add sdk/resources and drop mypy
+  ([#4578](https://github.com/open-telemetry/opentelemetry-python/pull/4578))
+- Use PEP702 for marking deprecations
+  ([#4522](https://github.com/open-telemetry/opentelemetry-python/pull/4522))
+- Refactor `BatchLogRecordProcessor` and `BatchSpanProcessor` to simplify code
+  and make the control flow more clear ([#4562](https://github.com/open-telemetry/opentelemetry-python/pull/4562/)
+  [#4535](https://github.com/open-telemetry/opentelemetry-python/pull/4535), and
+  [#4580](https://github.com/open-telemetry/opentelemetry-python/pull/4580)).
+- Remove log messages from `BatchLogRecordProcessor.emit`, this caused the program
+  to crash at shutdown with a max recursion error ([#4586](https://github.com/open-telemetry/opentelemetry-python/pull/4586)).
+- Configurable max retry timeout for grpc exporter
+  ([#4333](https://github.com/open-telemetry/opentelemetry-python/pull/4333))
+- opentelemetry-api: allow importlib-metadata 8.7.0
+  ([#4593](https://github.com/open-telemetry/opentelemetry-python/pull/4593))
+- opentelemetry-test-utils: assert explicit bucket boundaries in histogram metrics
+  ([#4595](https://github.com/open-telemetry/opentelemetry-python/pull/4595))
+- Bump semantic conventions to 1.34.0
+  ([#4599](https://github.com/open-telemetry/opentelemetry-python/pull/4599))
+- Drop support for Python 3.8
+  ([#4520](https://github.com/open-telemetry/opentelemetry-python/pull/4520))
 
 ## Version 1.33.0/0.54b0 (2025-05-09)
 
@@ -92,8 +171,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4353](https://github.com/open-telemetry/opentelemetry-python/pull/4353))
 - sdk: don't log or print warnings when the SDK has been disabled
   ([#4371](https://github.com/open-telemetry/opentelemetry-python/pull/4371))
-- Configurable max retry timeout for grpc exporter
-  ([#4333](https://github.com/open-telemetry/opentelemetry-python/pull/4333))
 - Fix span context manager typing by using ParamSpec from typing_extensions
   ([#4389](https://github.com/open-telemetry/opentelemetry-python/pull/4389))
 - Fix serialization of None values in logs body to match 1.31.0+ data model

@@ -32,7 +32,7 @@ More information about Android identifier best practices can be found [here](htt
 > However, it may be appropriate for specific enterprise scenarios, such as kiosk devices or enterprise-managed devices, with appropriate compliance clearance.
 > Any instrumentation providing this identifier MUST implement it as an opt-in feature.
 >
-> See [`app.installation.id`](/docs/attributes-registry/app.md#app-installation-id) for a more privacy-preserving alternative.
+> See [`app.installation.id`](/docs/registry/attributes/app.md#app-installation-id) for a more privacy-preserving alternative.
 """
 
 DEVICE_MANUFACTURER: Final = "device.manufacturer"

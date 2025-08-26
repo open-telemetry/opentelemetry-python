@@ -15,7 +15,7 @@
 from enum import Enum
 from typing import Final
 
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 FEATURE_FLAG_CONTEXT_ID: Final = "feature_flag.context.id"
 """
@@ -49,6 +49,16 @@ FEATURE_FLAG_RESULT_REASON: Final = "feature_flag.result.reason"
 The reason code which shows how a feature flag value was determined.
 """
 
+FEATURE_FLAG_RESULT_VALUE: Final = "feature_flag.result.value"
+"""
+The evaluated value of the feature flag.
+Note: With some feature flag providers, feature flag results can be quite large or contain private or sensitive details.
+Because of this, `feature_flag.result.variant` is often the preferred attribute if it is available.
+
+It may be desirable to redact or otherwise limit the size and scope of `feature_flag.result.value` if possible.
+Because the evaluated flag value is unstructured and may be any type, it is left to the instrumentation author to determine how best to achieve this.
+"""
+
 FEATURE_FLAG_RESULT_VARIANT: Final = "feature_flag.result.variant"
 """
 A semantic identifier for an evaluated flag value.
@@ -75,8 +85,8 @@ The version of the ruleset used during the evaluation. This may be any stable va
 
 
 @deprecated(
-    reason="The attribute feature_flag.evaluation.reason is deprecated - Replaced by `feature_flag.result.reason`"
-)  # type: ignore
+    "The attribute feature_flag.evaluation.reason is deprecated - Replaced by `feature_flag.result.reason`"
+)
 class FeatureFlagEvaluationReasonValues(Enum):
     STATIC = "static"
     """The resolved value is static (no dynamic evaluation)."""

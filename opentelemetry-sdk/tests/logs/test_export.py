@@ -17,7 +17,11 @@ import logging
 import os
 import time
 import unittest
+from concurrent.futures import ThreadPoolExecutor
+from sys import version_info
 from unittest.mock import Mock, patch
+
+from pytest import mark
 
 from opentelemetry._logs import SeverityNumber
 from opentelemetry.sdk import trace
@@ -42,7 +46,12 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
-from opentelemetry.trace import TraceFlags
+from opentelemetry.trace import (
+    NonRecordingSpan,
+    SpanContext,
+    TraceFlags,
+    set_span_in_context,
+)
 from opentelemetry.trace.span import INVALID_SPAN_CONTEXT
 
 EMPTY_LOG = LogData(
@@ -189,8 +198,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         )
         exporter.clear()
         logger_provider.shutdown()
-        with self.assertLogs(level=logging.WARNING):
-            logger.warning("Log after shutdown")
+        logger.warning("Log after shutdown")
         finished_logs = exporter.get_finished_logs()
         self.assertEqual(len(finished_logs), 0)
 
@@ -328,6 +336,11 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         self.assertEqual(expected, emitted)
 
 
+# Many more test cases for the BatchLogRecordProcessor exist under
+# opentelemetry-sdk/tests/shared_internal/test_batch_processor.py.
+# Important: make sure to call .shutdown() on the BatchLogRecordProcessor
+# before the end of the test, otherwise the worker thread will continue
+# to run after the end of the test.
 class TestBatchLogRecordProcessor(unittest.TestCase):
     def test_emit_call_log_record(self):
         exporter = InMemoryLogExporter()
@@ -340,7 +353,68 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         logger.addHandler(LoggingHandler(logger_provider=provider))
 
         logger.error("error")
-        self.assertEqual(log_record_processor.emit.call_count, 1)
+        self.assertEqual(log_record_processor.on_emit.call_count, 1)
+        log_record_processor.shutdown()
+
+    def test_with_multiple_threads(self):  # pylint: disable=no-self-use
+        exporter = InMemoryLogExporter()
+        batch_processor = BatchLogRecordProcessor(
+            exporter,
+            max_queue_size=3000,
+            max_export_batch_size=50,
+            schedule_delay_millis=30000,
+            export_timeout_millis=500,
+        )
+
+        def bulk_emit(num_emit):
+            for _ in range(num_emit):
+                batch_processor.on_emit(EMPTY_LOG)
+
+        total_expected_logs = 0
+        with ThreadPoolExecutor(max_workers=69) as executor:
+            for num_logs_to_emit in range(1, 70):
+                executor.submit(bulk_emit, num_logs_to_emit)
+                total_expected_logs += num_logs_to_emit
+
+            executor.shutdown()
+
+        batch_processor.shutdown()
+        # Wait a bit for logs to flush.
+        time.sleep(2)
+        assert len(exporter.get_finished_logs()) == total_expected_logs
+
+    @mark.skipif(
+        version_info < (3, 10),
+        reason="assertNoLogs only exists in python 3.10+.",
+    )
+    def test_logging_lib_not_invoked_in_batch_log_record_emit(self):  # pylint: disable=no-self-use
+        # See https://github.com/open-telemetry/opentelemetry-python/issues/4261
+        exporter = Mock()
+        processor = BatchLogRecordProcessor(exporter)
+        logger_provider = LoggerProvider(
+            resource=SDKResource.create(
+                {
+                    "service.name": "shoppingcart",
+                    "service.instance.id": "instance-12",
+                }
+            ),
+        )
+        logger_provider.add_log_record_processor(processor)
+        handler = LoggingHandler(
+            level=logging.INFO, logger_provider=logger_provider
+        )
+        sdk_logger = logging.getLogger("opentelemetry.sdk")
+        # Attach OTLP handler to SDK logger
+        sdk_logger.addHandler(handler)
+        # If `emit` calls logging.log then this test will throw a maximum recursion depth exceeded exception and fail.
+        try:
+            with self.assertNoLogs(sdk_logger, logging.NOTSET):
+                processor.on_emit(EMPTY_LOG)
+            processor.shutdown()
+            with self.assertNoLogs(sdk_logger, logging.NOTSET):
+                processor.on_emit(EMPTY_LOG)
+        finally:
+            sdk_logger.removeHandler(handler)
 
     def test_args(self):
         exporter = InMemoryLogExporter()
@@ -366,6 +440,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         self.assertEqual(
             log_record_processor._batch_processor._export_timeout_millis, 15000
         )
+        log_record_processor.shutdown()
 
     @patch.dict(
         "os.environ",
@@ -394,6 +469,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         self.assertEqual(
             log_record_processor._batch_processor._export_timeout_millis, 15000
         )
+        log_record_processor.shutdown()
 
     def test_args_defaults(self):
         exporter = InMemoryLogExporter()
@@ -413,6 +489,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         self.assertEqual(
             log_record_processor._batch_processor._export_timeout_millis, 30000
         )
+        log_record_processor.shutdown()
 
     @patch.dict(
         "os.environ",
@@ -443,6 +520,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         self.assertEqual(
             log_record_processor._batch_processor._export_timeout_millis, 30000
         )
+        log_record_processor.shutdown()
 
     def test_args_none_defaults(self):
         exporter = InMemoryLogExporter()
@@ -468,6 +546,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         self.assertEqual(
             log_record_processor._batch_processor._export_timeout_millis, 30000
         )
+        log_record_processor.shutdown()
 
     def test_validation_negative_max_queue_size(self):
         exporter = InMemoryLogExporter()
@@ -519,12 +598,20 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
 class TestConsoleLogExporter(unittest.TestCase):
     def test_export(self):  # pylint: disable=no-self-use
         """Check that the console exporter prints log records."""
+        ctx = set_span_in_context(
+            NonRecordingSpan(
+                SpanContext(
+                    2604504634922341076776623263868986797,
+                    5213367945872657620,
+                    False,
+                    TraceFlags(0x01),
+                )
+            )
+        )
         log_data = LogData(
             log_record=LogRecord(
                 timestamp=int(time.time() * 1e9),
-                trace_id=2604504634922341076776623263868986797,
-                span_id=5213367945872657620,
-                trace_flags=TraceFlags(0x01),
+                context=ctx,
                 severity_text="WARN",
                 severity_number=SeverityNumber.WARN,
                 body="Zhengzhou, We have a heaviest rains in 1000 years",

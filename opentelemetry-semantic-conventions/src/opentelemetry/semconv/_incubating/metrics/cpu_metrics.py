@@ -39,56 +39,50 @@ CallbackT = Union[
 
 CPU_FREQUENCY: Final = "cpu.frequency"
 """
-Operating frequency of the logical CPU in Hertz
-Instrument: gauge
-Unit: Hz
+Deprecated: Replaced by `system.cpu.frequency`.
 """
 
 
 def create_cpu_frequency(
     meter: Meter, callbacks: Optional[Sequence[CallbackT]]
 ) -> ObservableGauge:
-    """Operating frequency of the logical CPU in Hertz"""
+    """Deprecated. Use `system.cpu.frequency` instead"""
     return meter.create_observable_gauge(
         name=CPU_FREQUENCY,
         callbacks=callbacks,
-        description="Operating frequency of the logical CPU in Hertz.",
-        unit="Hz",
+        description="Deprecated. Use `system.cpu.frequency` instead.",
+        unit="{Hz}",
     )
 
 
 CPU_TIME: Final = "cpu.time"
 """
-Seconds each logical CPU spent on each mode
-Instrument: counter
-Unit: s
+Deprecated: Replaced by `system.cpu.time`.
 """
 
 
 def create_cpu_time(meter: Meter) -> Counter:
-    """Seconds each logical CPU spent on each mode"""
+    """Deprecated. Use `system.cpu.time` instead"""
     return meter.create_counter(
         name=CPU_TIME,
-        description="Seconds each logical CPU spent on each mode",
+        description="Deprecated. Use `system.cpu.time` instead.",
         unit="s",
     )
 
 
 CPU_UTILIZATION: Final = "cpu.utilization"
 """
-For each logical CPU, the utilization is calculated as the change in cumulative CPU time (cpu.time) over a measurement interval, divided by the elapsed time
-Instrument: gauge
-Unit: 1
+Deprecated: Replaced by `system.cpu.utilization`.
 """
 
 
 def create_cpu_utilization(
     meter: Meter, callbacks: Optional[Sequence[CallbackT]]
 ) -> ObservableGauge:
-    """For each logical CPU, the utilization is calculated as the change in cumulative CPU time (cpu.time) over a measurement interval, divided by the elapsed time"""
+    """Deprecated. Use `system.cpu.utilization` instead"""
     return meter.create_observable_gauge(
         name=CPU_UTILIZATION,
         callbacks=callbacks,
-        description="For each logical CPU, the utilization is calculated as the change in cumulative CPU time (cpu.time) over a measurement interval, divided by the elapsed time.",
+        description="Deprecated. Use `system.cpu.utilization` instead.",
         unit="1",
     )

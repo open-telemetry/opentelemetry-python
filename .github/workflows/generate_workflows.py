@@ -14,7 +14,7 @@ _tox_test_env_regex = re_compile(
 )
 _tox_lint_env_regex = re_compile(r"lint-(?P<name>[-\w]+)")
 _tox_contrib_env_regex = re_compile(
-    r"py38-test-(?P<name>[-\w]+\w)-?(?P<contrib_requirements>\d+)?"
+    r"py39-test-(?P<name>[-\w]+\w)-?(?P<contrib_requirements>\d+)?"
 )
 
 
@@ -47,8 +47,7 @@ def get_test_job_datas(tox_envs: list, operating_systems: list) -> list:
     os_alias = {"ubuntu-latest": "Ubuntu", "windows-latest": "Windows"}
 
     python_version_alias = {
-        "pypy3": "pypy-3.8",
-        "py38": "3.8",
+        "pypy3": "pypy-3.9",
         "py39": "3.9",
         "py310": "3.10",
         "py311": "3.11",

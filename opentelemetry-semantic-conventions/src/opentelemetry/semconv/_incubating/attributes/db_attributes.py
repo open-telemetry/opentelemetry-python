@@ -15,7 +15,7 @@
 from enum import Enum
 from typing import Final
 
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 DB_CASSANDRA_CONSISTENCY_LEVEL: Final = "db.cassandra.consistency_level"
 """
@@ -106,7 +106,7 @@ Deprecated: Replaced by `db.collection.name`.
 
 DB_COSMOSDB_OPERATION_TYPE: Final = "db.cosmosdb.operation_type"
 """
-Deprecated: No replacement at this time.
+Deprecated: Removed, no replacement at this time.
 """
 
 DB_COSMOSDB_REGIONS_CONTACTED: Final = "db.cosmosdb.regions_contacted"
@@ -153,12 +153,12 @@ Deprecated: Replaced by `db.operation.parameter`.
 
 DB_INSTANCE_ID: Final = "db.instance.id"
 """
-Deprecated: Deprecated, no general replacement at this time. For Elasticsearch, use `db.elasticsearch.node.name` instead.
+Deprecated: Removed, no general replacement at this time. For Elasticsearch, use `db.elasticsearch.node.name` instead.
 """
 
 DB_JDBC_DRIVER_CLASSNAME: Final = "db.jdbc.driver_classname"
 """
-Deprecated: Removed as not used.
+Deprecated: Removed, no replacement at this time.
 """
 
 DB_MONGODB_COLLECTION: Final = "db.mongodb.collection"
@@ -168,7 +168,7 @@ Deprecated: Replaced by `db.collection.name`.
 
 DB_MSSQL_INSTANCE_NAME: Final = "db.mssql.instance_name"
 """
-Deprecated: Deprecated, no replacement at this time.
+Deprecated: Removed, no replacement at this time.
 """
 
 DB_NAME: Final = "db.name"
@@ -278,13 +278,13 @@ Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.db_att
 
 DB_USER: Final = "db.user"
 """
-Deprecated: No replacement at this time.
+Deprecated: Removed, no replacement at this time.
 """
 
 
 @deprecated(
-    reason="The attribute db.cassandra.consistency_level is deprecated - Replaced by `cassandra.consistency.level`"
-)  # type: ignore
+    "The attribute db.cassandra.consistency_level is deprecated - Replaced by `cassandra.consistency.level`"
+)
 class DbCassandraConsistencyLevelValues(Enum):
     ALL = "all"
     """all."""
@@ -318,8 +318,8 @@ class DbClientConnectionStateValues(Enum):
 
 
 @deprecated(
-    reason="The attribute db.client.connections.state is deprecated - Replaced by `db.client.connection.state`"
-)  # type: ignore
+    "The attribute db.client.connections.state is deprecated - Replaced by `db.client.connection.state`"
+)
 class DbClientConnectionsStateValues(Enum):
     IDLE = "idle"
     """idle."""
@@ -328,8 +328,8 @@ class DbClientConnectionsStateValues(Enum):
 
 
 @deprecated(
-    reason="The attribute db.cosmosdb.connection_mode is deprecated - Replaced by `azure.cosmosdb.connection.mode`"
-)  # type: ignore
+    "The attribute db.cosmosdb.connection_mode is deprecated - Replaced by `azure.cosmosdb.connection.mode`"
+)
 class DbCosmosdbConnectionModeValues(Enum):
     GATEWAY = "gateway"
     """Gateway (HTTP) connection."""
@@ -338,8 +338,8 @@ class DbCosmosdbConnectionModeValues(Enum):
 
 
 @deprecated(
-    reason="The attribute db.cosmosdb.consistency_level is deprecated - Replaced by `azure.cosmosdb.consistency.level`"
-)  # type: ignore
+    "The attribute db.cosmosdb.consistency_level is deprecated - Replaced by `azure.cosmosdb.consistency.level`"
+)
 class DbCosmosdbConsistencyLevelValues(Enum):
     STRONG = "Strong"
     """strong."""
@@ -354,8 +354,8 @@ class DbCosmosdbConsistencyLevelValues(Enum):
 
 
 @deprecated(
-    reason="The attribute db.cosmosdb.operation_type is deprecated - No replacement at this time"
-)  # type: ignore
+    "The attribute db.cosmosdb.operation_type is deprecated - Removed, no replacement at this time"
+)
 class DbCosmosdbOperationTypeValues(Enum):
     BATCH = "batch"
     """batch."""
@@ -390,8 +390,8 @@ class DbCosmosdbOperationTypeValues(Enum):
 
 
 @deprecated(
-    reason="The attribute db.system is deprecated - Replaced by `db.system.name`"
-)  # type: ignore
+    "The attribute db.system is deprecated - Replaced by `db.system.name`"
+)
 class DbSystemValues(Enum):
     OTHER_SQL = "other_sql"
     """Some other SQL database. Fallback only. See notes."""
@@ -504,8 +504,8 @@ class DbSystemValues(Enum):
 
 
 @deprecated(
-    reason="Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.db_attributes.DbSystemNameValues`."
-)  # type: ignore
+    "Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.db_attributes.DbSystemNameValues`."
+)
 class DbSystemNameValues(Enum):
     OTHER_SQL = "other_sql"
     """Some other SQL database. Fallback only."""

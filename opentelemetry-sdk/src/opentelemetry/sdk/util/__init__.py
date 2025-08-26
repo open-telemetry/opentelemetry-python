@@ -18,7 +18,7 @@ from collections import deque
 from collections.abc import MutableMapping, Sequence
 from typing import Optional
 
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 
 def ns_to_iso_str(nanoseconds):
@@ -93,7 +93,7 @@ class BoundedList(Sequence):
         return bounded_list
 
 
-@deprecated(version="1.4.0")  # type: ignore
+@deprecated("Deprecated since version 1.4.0.")
 class BoundedDict(MutableMapping):
     """An ordered dict with a fixed max capacity.
 
