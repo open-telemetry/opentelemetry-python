@@ -14,9 +14,14 @@ See the [OpenTelemetry Instrumentation for Python](https://opentelemetry.io/docs
 | ------- | ------------ | ------- |
 | Traces  | Stable       | N/A     |
 | Metrics | Stable       | N/A     |
-| Logs    | Experimental | N/A     |
+| Logs    | Development* | N/A     |
 
 Project versioning information and stability guarantees can be found [here](./rationale.md#versioning-and-releasing).
+
+***Breaking Changes**
+
+> [!IMPORTANT]
+> We are working on stabilizing the Log signal which would require making deprecations and breaking changes. We will try to reduce the releases that may require an update to your code, especially for instrumentations or for SDK developers.
 
 ## Getting started
 
@@ -98,7 +103,6 @@ Meeting notes are available as a public [Google doc](https://docs.google.com/doc
 ### Maintainers
 
 - [Aaron Abbott](https://github.com/aabmass), Google
-- [Diego Hurtado](https://github.com/ocelotl), Lightstep
 - [Leighton Chen](https://github.com/lzchen), Microsoft
 - [Riccardo Magliocchetti](https://github.com/xrmx), Elastic
 
@@ -106,6 +110,7 @@ For more information about the maintainer role, see the [community repository](h
 
 ### Approvers
 
+- [Dylan Russell](https://github.com/dylanrussell), Google
 - [Emídio Neto](https://github.com/emdneto), PicPay
 - [Jeremy Voss](https://github.com/jeremydvoss), Microsoft
 - [Owais Lone](https://github.com/owais), Splunk
@@ -120,6 +125,7 @@ For more information about the approver role, see the [community repository](htt
 
 - [Alex Boten](https://github.com/codeboten)
 - [Chris Kleinknecht](https://github.com/c24t)
+- [Diego Hurtado](https://github.com/ocelotl), Lightstep
 - [Owais Lone](https://github.com/owais)
 - [Reiley Yang](https://github.com/reyang)
 - [Srikanth Chekuri](https://github.com/srikanthccv)
