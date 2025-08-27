@@ -18,6 +18,7 @@ import subprocess
 import sys
 import unittest
 
+
 class TestOTLPCollector(unittest.TestCase):
     def test_otlpcollector(self):
         """Test that OTLP collector example outputs 'Hello world!'"""
@@ -31,7 +32,6 @@ class TestOTLPCollector(unittest.TestCase):
             stderr=subprocess.PIPE,
             text=True,
         ) as process:
-
             # Wait 2 seconds then kill it (enough time to print "Hello world!")
             try:
                 stdout, _ = process.communicate(timeout=2)
