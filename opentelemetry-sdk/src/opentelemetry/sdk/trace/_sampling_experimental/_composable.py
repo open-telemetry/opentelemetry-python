@@ -54,8 +54,8 @@ class ComposableSampler(Protocol):
         trace_state: TraceState | None,
     ) -> SamplingIntent:
         """Returns information to make a sampling decision."""
-        ... # pylint: disable=unnecessary-ellipsis
+        ...  # pylint: disable=unnecessary-ellipsis
 
     def get_description(self) -> str:
         """Returns a description of the sampler."""
-        ... # pylint: disable=unnecessary-ellipsis
+        ...  # pylint: disable=unnecessary-ellipsis
