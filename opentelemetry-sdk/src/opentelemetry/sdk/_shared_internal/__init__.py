@@ -39,6 +39,29 @@ from opentelemetry.context import (
 from opentelemetry.util._once import Once
 
 
+class DuplicateFilter(logging.Filter):
+    """Filter that can be applied to internal `logger`'s.
+
+    Currently applied to `logger`s on the export logs path that could otherwise cause endless logging of errors or a
+    recursion depth exceeded issue in cases where logging itself results in an exception."""
+
+    def filter(self, record):
+        current_log = (
+            record.module,
+            record.levelno,
+            record.msg,
+            # We need to pick a time longer than the OTLP LogExporter timeout
+            # which defaults to 10 seconds, but not pick something so long that
+            # it filters out useful logs.
+            time.time() // 20,
+        )
+        if current_log != getattr(self, "last_log", None):
+            self.last_log = current_log  # pylint: disable=attribute-defined-outside-init
+            return True
+        # False means python's `logging` module will no longer process this log.
+        return False
+
+
 class BatchExportStrategy(enum.Enum):
     EXPORT_ALL = 0
     EXPORT_WHILE_BATCH_EXCEEDS_THRESHOLD = 1
@@ -89,6 +112,7 @@ class BatchProcessor(Generic[Telemetry]):
             daemon=True,
         )
         self._logger = logging.getLogger(__name__)
+        self._logger.addFilter(DuplicateFilter())
         self._exporting = exporting
 
         self._shutdown = False
