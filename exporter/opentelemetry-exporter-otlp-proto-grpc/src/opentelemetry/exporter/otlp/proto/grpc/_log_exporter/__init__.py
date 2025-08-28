@@ -40,6 +40,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_LOGS_HEADERS,
     OTEL_EXPORTER_OTLP_LOGS_INSECURE,
     OTEL_EXPORTER_OTLP_LOGS_TIMEOUT,
+    OTEL_PYTHON_EXPORTER_OTLP_LOGS_CREDENTIAL_PROVIDER,
 )
 
 
@@ -73,6 +74,7 @@ class OTLPLogExporter(
         ):
             credentials = _get_credentials(
                 credentials,
+                OTEL_PYTHON_EXPORTER_OTLP_LOGS_CREDENTIAL_PROVIDER,
                 OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
                 OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY,
                 OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE,
