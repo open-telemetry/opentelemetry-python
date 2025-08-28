@@ -29,7 +29,10 @@ from opentelemetry.sdk._logs import (
 )
 from opentelemetry.semconv._incubating.attributes import code_attributes
 from opentelemetry.semconv.attributes import exception_attributes
-from opentelemetry.trace import INVALID_SPAN_CONTEXT
+from opentelemetry.trace import (
+    INVALID_SPAN_CONTEXT,
+    set_span_in_context,
+)
 
 
 class TestLoggingHandler(unittest.TestCase):
@@ -271,6 +274,37 @@ class TestLoggingHandler(unittest.TestCase):
 
         tracer = trace.TracerProvider().get_tracer(__name__)
         with tracer.start_as_current_span("test") as span:
+            mock_context = set_span_in_context(span)
+
+            with patch(
+                "opentelemetry.sdk._logs._internal.get_current",
+                return_value=mock_context,
+            ):
+                with self.assertLogs(level=logging.CRITICAL):
+                    logger.critical("Critical message within span")
+
+                log_record = processor.get_log_record(0)
+
+                self.assertEqual(
+                    log_record.body, "Critical message within span"
+                )
+                self.assertEqual(log_record.severity_text, "CRITICAL")
+                self.assertEqual(
+                    log_record.severity_number, SeverityNumber.FATAL
+                )
+                self.assertEqual(log_record.context, mock_context)
+                span_context = span.get_span_context()
+                self.assertEqual(log_record.trace_id, span_context.trace_id)
+                self.assertEqual(log_record.span_id, span_context.span_id)
+                self.assertEqual(
+                    log_record.trace_flags, span_context.trace_flags
+                )
+
+    def test_log_record_trace_correlation_deprecated(self):
+        processor, logger = set_up_test_logging(logging.WARNING)
+
+        tracer = trace.TracerProvider().get_tracer(__name__)
+        with tracer.start_as_current_span("test") as span:
             with self.assertLogs(level=logging.CRITICAL):
                 logger.critical("Critical message within span")
 
@@ -350,7 +384,7 @@ class FakeProcessor(LogRecordProcessor):
     def __init__(self):
         self.log_data_emitted = []
 
-    def emit(self, log_data: LogData):
+    def on_emit(self, log_data: LogData):
         self.log_data_emitted.append(log_data)
 
     def shutdown(self):

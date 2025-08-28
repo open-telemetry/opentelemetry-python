@@ -7,7 +7,7 @@ name = "opentelemetry-sdk"
 dynamic = ["version"]
 description = "OpenTelemetry Python SDK"
 readme = "README.rst"
-license = {text = "Apache-2.0"}
+license = "Apache-2.0"
 requires-python = ">=3.9"
 authors = [
   { name = "OpenTelemetry Authors", email = "cncf-opentelemetry-contributors@lists.cncf.io" },
@@ -16,7 +16,6 @@ classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Framework :: OpenTelemetry",
   "Intended Audience :: Developers",
-  "License :: OSI Approved :: Apache Software License",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.9",
@@ -27,8 +26,8 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
-  "opentelemetry-api == 1.35.0.dev",
-  "opentelemetry-semantic-conventions == 0.56b0.dev",
+  "opentelemetry-api == 1.37.0.dev",
+  "opentelemetry-semantic-conventions == 0.58b0.dev",
   "typing-extensions >= 4.5.0",
 ]
 

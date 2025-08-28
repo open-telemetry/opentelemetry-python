@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import logging
+import logging.config
 from logging import WARNING, getLogger
 from os import environ
 from typing import Iterable, Optional, Sequence
@@ -178,8 +179,9 @@ class DummyMetricReaderPullExporter(MetricReader):
 
 
 class DummyOTLPMetricExporter:
-    def __init__(self, *args, **kwargs):
+    def __init__(self, compression: str | None = None, *args, **kwargs):
         self.export_called = False
+        self.compression = compression
 
     def export(self, batch):
         self.export_called = True
@@ -202,12 +204,14 @@ class Exporter:
 
 
 class OTLPSpanExporter:
-    pass
+    def __init__(self, compression: str | None = None, *args, **kwargs):
+        self.compression = compression
 
 
 class DummyOTLPLogExporter(LogExporter):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, compression: str | None = None, *args, **kwargs):
         self.export_called = False
+        self.compression = compression
 
     def export(self, batch):
         self.export_called = True
@@ -373,6 +377,20 @@ class TestTraceInit(TestCase):
             provider.resource.attributes.get("service.name"),
             "my-otlp-test-service",
         )
+
+    def test_trace_init_exporter_uses_exporter_args_map(self):
+        _init_tracing(
+            {"otlp": OTLPSpanExporter},
+            id_generator=RandomIdGenerator(),
+            exporter_args_map={
+                OTLPSpanExporter: {"compression": "gzip"},
+                DummyMetricReaderPullExporter: {"compression": "no"},
+            },
+        )
+
+        provider = self.set_provider_mock.call_args[0][0]
+        exporter = provider.processor.exporter
+        self.assertEqual(exporter.compression, "gzip")
 
     @patch.dict(environ, {OTEL_PYTHON_ID_GENERATOR: "custom_id_generator"})
     @patch("opentelemetry.sdk._configuration.IdGenerator", new=IdGenerator)
@@ -624,48 +642,65 @@ class TestLoggingInit(TestCase):
         ]
 
     def test_logging_init_empty(self):
-        auto_resource = Resource.create(
-            {
-                "telemetry.auto.version": "auto-version",
-            }
-        )
-        _init_logging({}, resource=auto_resource)
-        self.assertEqual(self.set_provider_mock.call_count, 1)
-        provider = self.set_provider_mock.call_args[0][0]
-        self.assertIsInstance(provider, DummyLoggerProvider)
-        self.assertIsInstance(provider.resource, Resource)
-        self.assertEqual(
-            provider.resource.attributes.get("telemetry.auto.version"),
-            "auto-version",
-        )
-        self.event_logger_provider_mock.assert_called_once_with(
-            logger_provider=provider
-        )
-        self.set_event_logger_provider_mock.assert_called_once_with(
-            self.event_logger_provider_instance_mock
-        )
+        with ResetGlobalLoggingState():
+            auto_resource = Resource.create(
+                {
+                    "telemetry.auto.version": "auto-version",
+                }
+            )
+            _init_logging({}, resource=auto_resource)
+            self.assertEqual(self.set_provider_mock.call_count, 1)
+            provider = self.set_provider_mock.call_args[0][0]
+            self.assertIsInstance(provider, DummyLoggerProvider)
+            self.assertIsInstance(provider.resource, Resource)
+            self.assertEqual(
+                provider.resource.attributes.get("telemetry.auto.version"),
+                "auto-version",
+            )
+            self.event_logger_provider_mock.assert_called_once_with(
+                logger_provider=provider
+            )
+            self.set_event_logger_provider_mock.assert_called_once_with(
+                self.event_logger_provider_instance_mock
+            )
 
     @patch.dict(
         environ,
         {"OTEL_RESOURCE_ATTRIBUTES": "service.name=otlp-service"},
     )
     def test_logging_init_exporter(self):
-        resource = Resource.create({})
-        _init_logging({"otlp": DummyOTLPLogExporter}, resource=resource)
-        self.assertEqual(self.set_provider_mock.call_count, 1)
-        provider = self.set_provider_mock.call_args[0][0]
-        self.assertIsInstance(provider, DummyLoggerProvider)
-        self.assertIsInstance(provider.resource, Resource)
-        self.assertEqual(
-            provider.resource.attributes.get("service.name"),
-            "otlp-service",
-        )
-        self.assertIsInstance(provider.processor, DummyLogRecordProcessor)
-        self.assertIsInstance(
-            provider.processor.exporter, DummyOTLPLogExporter
-        )
-        getLogger(__name__).error("hello")
-        self.assertTrue(provider.processor.exporter.export_called)
+        with ResetGlobalLoggingState():
+            resource = Resource.create({})
+            _init_logging({"otlp": DummyOTLPLogExporter}, resource=resource)
+            self.assertEqual(self.set_provider_mock.call_count, 1)
+            provider = self.set_provider_mock.call_args[0][0]
+            self.assertIsInstance(provider, DummyLoggerProvider)
+            self.assertIsInstance(provider.resource, Resource)
+            self.assertEqual(
+                provider.resource.attributes.get("service.name"),
+                "otlp-service",
+            )
+            self.assertIsInstance(provider.processor, DummyLogRecordProcessor)
+            self.assertIsInstance(
+                provider.processor.exporter, DummyOTLPLogExporter
+            )
+            getLogger(__name__).error("hello")
+            self.assertTrue(provider.processor.exporter.export_called)
+
+    def test_logging_init_exporter_uses_exporter_args_map(self):
+        with ResetGlobalLoggingState():
+            resource = Resource.create({})
+            _init_logging(
+                {"otlp": DummyOTLPLogExporter},
+                resource=resource,
+                exporter_args_map={
+                    DummyOTLPLogExporter: {"compression": "gzip"},
+                    DummyOTLPMetricExporter: {"compression": "no"},
+                },
+            )
+            self.assertEqual(self.set_provider_mock.call_count, 1)
+            provider = self.set_provider_mock.call_args[0][0]
+            self.assertEqual(provider.processor.exporter.compression, "gzip")
 
     @patch.dict(
         environ,
@@ -702,7 +737,9 @@ class TestLoggingInit(TestCase):
     def test_logging_init_disable_default(self, logging_mock, tracing_mock):
         _initialize_components(auto_instrumentation_version="auto-version")
         self.assertEqual(tracing_mock.call_count, 1)
-        logging_mock.assert_called_once_with(mock.ANY, mock.ANY, False)
+        logging_mock.assert_called_once_with(
+            mock.ANY, mock.ANY, False, exporter_args_map=None
+        )
 
     @patch.dict(
         environ,
@@ -716,7 +753,9 @@ class TestLoggingInit(TestCase):
     def test_logging_init_enable_env(self, logging_mock, tracing_mock):
         with self.assertLogs(level=WARNING):
             _initialize_components(auto_instrumentation_version="auto-version")
-        logging_mock.assert_called_once_with(mock.ANY, mock.ANY, True)
+        logging_mock.assert_called_once_with(
+            mock.ANY, mock.ANY, True, exporter_args_map=None
+        )
         self.assertEqual(tracing_mock.call_count, 1)
 
     @patch.dict(
@@ -799,6 +838,7 @@ class TestLoggingInit(TestCase):
             },
             "id_generator": "TEST_GENERATOR",
             "setup_logging_handler": True,
+            "exporter_args_map": {1: {"compression": "gzip"}},
         }
         _initialize_components(**kwargs)
 
@@ -832,19 +872,22 @@ class TestLoggingInit(TestCase):
             id_generator="TEST_GENERATOR",
             sampler="TEST_SAMPLER",
             resource="TEST_RESOURCE",
+            exporter_args_map={1: {"compression": "gzip"}},
         )
         metrics_mock.assert_called_once_with(
             "TEST_METRICS_EXPORTERS_DICT",
             "TEST_RESOURCE",
+            exporter_args_map={1: {"compression": "gzip"}},
         )
         logging_mock.assert_called_once_with(
             "TEST_LOG_EXPORTERS_DICT",
             "TEST_RESOURCE",
             True,
+            exporter_args_map={1: {"compression": "gzip"}},
         )
 
     def test_basicConfig_works_with_otel_handler(self):
-        with ClearLoggingHandlers():
+        with ResetGlobalLoggingState():
             _init_logging(
                 {"otlp": DummyOTLPLogExporter},
                 Resource.create({}),
@@ -866,7 +909,7 @@ class TestLoggingInit(TestCase):
             )
 
     def test_basicConfig_preserves_otel_handler(self):
-        with ClearLoggingHandlers():
+        with ResetGlobalLoggingState():
             _init_logging(
                 {"otlp": DummyOTLPLogExporter},
                 Resource.create({}),
@@ -881,7 +924,6 @@ class TestLoggingInit(TestCase):
             )
             handler = root_logger.handlers[0]
             self.assertIsInstance(handler, LoggingHandler)
-
             logging.basicConfig()
 
             self.assertGreater(len(root_logger.handlers), 1)
@@ -890,6 +932,49 @@ class TestLoggingInit(TestCase):
                 h
                 for h in root_logger.handlers
                 if isinstance(h, LoggingHandler)
+            ]
+            self.assertEqual(
+                len(logging_handlers),
+                1,
+                "Should still have exactly one OpenTelemetry LoggingHandler",
+            )
+
+    def test_dictConfig_preserves_otel_handler(self):
+        with ResetGlobalLoggingState():
+            _init_logging(
+                {"otlp": DummyOTLPLogExporter},
+                Resource.create({}),
+                setup_logging_handler=True,
+            )
+
+            root = logging.getLogger()
+            self.assertEqual(
+                len(root.handlers),
+                1,
+                "Should be exactly one OpenTelemetry LoggingHandler",
+            )
+            logging.config.dictConfig(
+                {
+                    "version": 1,
+                    "disable_existing_loggers": False,  # If this is True all loggers are disabled. Many unit tests assert loggers emit logs.
+                    "handlers": {
+                        "console": {
+                            "class": "logging.StreamHandler",
+                            "level": "DEBUG",
+                            "stream": "ext://sys.stdout",
+                        },
+                    },
+                    "loggers": {
+                        "": {  # root logger
+                            "handlers": ["console"],
+                        },
+                    },
+                }
+            )
+            self.assertEqual(len(root.handlers), 2)
+
+            logging_handlers = [
+                h for h in root.handlers if isinstance(h, LoggingHandler)
             ]
             self.assertEqual(
                 len(logging_handlers),
@@ -969,6 +1054,20 @@ class TestMetricsInit(TestCase):
         self.assertIsInstance(provider, DummyMeterProvider)
         reader = provider._sdk_config.metric_readers[0]
         self.assertIsInstance(reader, DummyMetricReaderPullExporter)
+
+    def test_metrics_init_exporter_uses_exporter_args_map(self):
+        resource = Resource.create({})
+        _init_metrics(
+            {"otlp": DummyOTLPMetricExporter},
+            resource=resource,
+            exporter_args_map={
+                DummyOTLPMetricExporter: {"compression": "gzip"},
+                DummyMetricReaderPullExporter: {"compression": "no"},
+            },
+        )
+        provider = self.set_provider_mock.call_args[0][0]
+        reader = provider._sdk_config.metric_readers[0]
+        self.assertEqual(reader.exporter.compression, "gzip")
 
 
 class TestExporterNames(TestCase):
@@ -1134,8 +1233,14 @@ class TestConfigurator(TestCase):
         mock_init_comp.assert_called_once_with(**kwargs)
 
 
-class ClearLoggingHandlers:
+# Any test that calls _init_logging with setup_logging_handler=True
+# should call _init_logging within this context manager, to
+# ensure the global logging state is reset after the test.
+class ResetGlobalLoggingState:
     def __init__(self):
+        self.original_basic_config = logging.basicConfig
+        self.original_dict_config = logging.config.dictConfig
+        self.original_file_config = logging.config.fileConfig
         self.root_logger = getLogger()
         self.original_handlers = None
 
@@ -1148,6 +1253,9 @@ class ClearLoggingHandlers:
         self.root_logger.handlers = []
         for handler in self.original_handlers:
             self.root_logger.addHandler(handler)
+        logging.basicConfig = self.original_basic_config
+        logging.config.dictConfig = self.original_dict_config
+        logging.config.fileConfig = self.original_file_config
 
 
 class TestClearLoggingHandlers(TestCase):
@@ -1159,7 +1267,7 @@ class TestClearLoggingHandlers(TestCase):
         root_logger.addHandler(test_handler)
         expected_handlers = initial_handlers + [test_handler]
 
-        with ClearLoggingHandlers():
+        with ResetGlobalLoggingState():
             self.assertEqual(len(root_logger.handlers), 0)
             temp_handler = logging.StreamHandler()
             root_logger.addHandler(temp_handler)
@@ -1169,3 +1277,15 @@ class TestClearLoggingHandlers(TestCase):
             self.assertIs(h1, h2)
 
         root_logger.removeHandler(test_handler)
+
+    def test_preserves_original_logging_fns(self):
+        def f(x):
+            print("f")
+
+        with ResetGlobalLoggingState():
+            logging.basicConfig = f
+            logging.config.dictConfig = f
+            logging.config.fileConfig = f
+        self.assertEqual(logging.config.dictConfig.__name__, "dictConfig")
+        self.assertEqual(logging.basicConfig.__name__, "basicConfig")
+        self.assertEqual(logging.config.fileConfig.__name__, "fileConfig")

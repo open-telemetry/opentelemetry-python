@@ -14,16 +14,19 @@ from __future__ import annotations
 
 import gzip
 import logging
+import random
+import threading
 import zlib
 from io import BytesIO
 from os import environ
-from time import sleep
+from time import time
 from typing import (  # noqa: F401
     Any,
     Callable,
     Dict,
     List,
     Mapping,
+    Optional,
     Sequence,
 )
 
@@ -32,7 +35,6 @@ from requests.exceptions import ConnectionError
 from typing_extensions import deprecated
 
 from opentelemetry.exporter.otlp.proto.common._internal import (
-    _create_exp_backoff_generator,
     _get_resource_data,
 )
 from opentelemetry.exporter.otlp.proto.common._internal.metrics_encoder import (
@@ -45,10 +47,13 @@ from opentelemetry.exporter.otlp.proto.http import (
     _OTLP_HTTP_HEADERS,
     Compression,
 )
+from opentelemetry.exporter.otlp.proto.http._common import (
+    _is_retryable,
+)
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (  # noqa: F401
     ExportMetricsServiceRequest,
 )
-from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401  # noqa: F401
+from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401
     AnyValue,
     ArrayValue,
     InstrumentationScope,
@@ -98,11 +103,10 @@ DEFAULT_COMPRESSION = Compression.NoCompression
 DEFAULT_ENDPOINT = "http://localhost:4318/"
 DEFAULT_METRICS_EXPORT_PATH = "v1/metrics"
 DEFAULT_TIMEOUT = 10  # in seconds
+_MAX_RETRYS = 6
 
 
 class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
-    _MAX_RETRY_TIMEOUT = 64
-
     def __init__(
         self,
         endpoint: str | None = None,
@@ -110,13 +114,14 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         client_key_file: str | None = None,
         client_certificate_file: str | None = None,
         headers: dict[str, str] | None = None,
-        timeout: int | None = None,
+        timeout: float | None = None,
         compression: Compression | None = None,
         session: requests.Session | None = None,
         preferred_temporality: dict[type, AggregationTemporality]
         | None = None,
         preferred_aggregation: dict[type, Aggregation] | None = None,
     ):
+        self._shutdown_in_progress = threading.Event()
         self._endpoint = endpoint or environ.get(
             OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
             _append_metrics_path(
@@ -147,7 +152,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         self._headers = headers or parse_env_headers(
             headers_string, liberal=True
         )
-        self._timeout = timeout or int(
+        self._timeout = timeout or float(
             environ.get(
                 OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
                 environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, DEFAULT_TIMEOUT),
@@ -165,8 +170,11 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         self._common_configuration(
             preferred_temporality, preferred_aggregation
         )
+        self._shutdown = False
 
-    def _export(self, serialized_data: bytes):
+    def _export(
+        self, serialized_data: bytes, timeout_sec: Optional[float] = None
+    ):
         data = serialized_data
         if self._compression == Compression.Gzip:
             gzip_data = BytesIO()
@@ -175,6 +183,9 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             data = gzip_data.getvalue()
         elif self._compression == Compression.Deflate:
             data = zlib.compress(serialized_data)
+
+        if timeout_sec is None:
+            timeout_sec = self._timeout
 
         # By default, keep-alive is enabled in Session's request
         # headers. Backends may choose to close the connection
@@ -185,7 +196,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                 url=self._endpoint,
                 data=data,
                 verify=self._certificate_file,
-                timeout=self._timeout,
+                timeout=timeout_sec,
                 cert=self._client_cert,
             )
         except ConnectionError:
@@ -193,55 +204,58 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                 url=self._endpoint,
                 data=data,
                 verify=self._certificate_file,
-                timeout=self._timeout,
+                timeout=timeout_sec,
                 cert=self._client_cert,
             )
         return resp
 
-    @staticmethod
-    def _retryable(resp: requests.Response) -> bool:
-        if resp.status_code == 408:
-            return True
-        if resp.status_code >= 500 and resp.status_code <= 599:
-            return True
-        return False
-
     def export(
         self,
         metrics_data: MetricsData,
-        timeout_millis: float = 10_000,
+        timeout_millis: Optional[float] = 10000,
         **kwargs,
     ) -> MetricExportResult:
-        serialized_data = encode_metrics(metrics_data)
-        for delay in _create_exp_backoff_generator(
-            max_value=self._MAX_RETRY_TIMEOUT
-        ):
-            if delay == self._MAX_RETRY_TIMEOUT:
-                return MetricExportResult.FAILURE
-
-            resp = self._export(serialized_data.SerializeToString())
-            # pylint: disable=no-else-return
+        if self._shutdown:
+            _logger.warning("Exporter already shutdown, ignoring batch")
+            return MetricExportResult.FAILURE
+        serialized_data = encode_metrics(metrics_data).SerializeToString()
+        deadline_sec = time() + self._timeout
+        for retry_num in range(_MAX_RETRYS):
+            resp = self._export(serialized_data, deadline_sec - time())
             if resp.ok:
                 return MetricExportResult.SUCCESS
-            elif self._retryable(resp):
-                _logger.warning(
-                    "Transient error %s encountered while exporting metric batch, retrying in %ss.",
-                    resp.reason,
-                    delay,
-                )
-                sleep(delay)
-                continue
-            else:
+            # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
+            backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
+            if (
+                not _is_retryable(resp)
+                or retry_num + 1 == _MAX_RETRYS
+                or backoff_seconds > (deadline_sec - time())
+                or self._shutdown
+            ):
                 _logger.error(
-                    "Failed to export batch code: %s, reason: %s",
+                    "Failed to export metrics batch code: %s, reason: %s",
                     resp.status_code,
                     resp.text,
                 )
                 return MetricExportResult.FAILURE
+            _logger.warning(
+                "Transient error %s encountered while exporting metrics batch, retrying in %.2fs.",
+                resp.reason,
+                backoff_seconds,
+            )
+            shutdown = self._shutdown_in_progress.wait(backoff_seconds)
+            if shutdown:
+                _logger.warning("Shutdown in progress, aborting retry.")
+                break
         return MetricExportResult.FAILURE
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
-        pass
+        if self._shutdown:
+            _logger.warning("Exporter already shutdown, ignoring call")
+            return
+        self._shutdown = True
+        self._shutdown_in_progress.set()
+        self._session.close()
 
     @property
     def _exporting(self) -> str:
