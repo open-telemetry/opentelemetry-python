@@ -57,6 +57,11 @@ OTEL_SCOPE_NAME: Final = "otel.scope.name"
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.otel_attributes.OTEL_SCOPE_NAME`.
 """
 
+OTEL_SCOPE_SCHEMA_URL: Final = "otel.scope.schema_url"
+"""
+The schema URL of the instrumentation scope.
+"""
+
 OTEL_SCOPE_VERSION: Final = "otel.scope.version"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.otel_attributes.OTEL_SCOPE_VERSION`.
