@@ -15,10 +15,11 @@
 import gzip
 import logging
 import random
+import threading
 import zlib
 from io import BytesIO
 from os import environ
-from time import sleep, time
+from time import time
 from typing import Dict, Optional, Sequence
 
 import requests
@@ -37,6 +38,7 @@ from opentelemetry.sdk._logs.export import (
     LogExporter,
     LogExportResult,
 )
+from opentelemetry.sdk._shared_internal import DuplicateFilter
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
@@ -56,6 +58,8 @@ from opentelemetry.sdk.environment_variables import (
 from opentelemetry.util.re import parse_env_headers
 
 _logger = logging.getLogger(__name__)
+# This prevents logs generated when a log fails to be written to generate another log which fails to be written etc. etc.
+_logger.addFilter(DuplicateFilter())
 
 
 DEFAULT_COMPRESSION = Compression.NoCompression
@@ -77,6 +81,7 @@ class OTLPLogExporter(LogExporter):
         compression: Optional[Compression] = None,
         session: Optional[requests.Session] = None,
     ):
+        self._shutdown_is_occuring = threading.Event()
         self._endpoint = endpoint or environ.get(
             OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
             _append_logs_path(
@@ -116,15 +121,18 @@ class OTLPLogExporter(LogExporter):
         )
         self._compression = compression or _compression_from_env()
         self._session = session or requests.Session()
-        self._session.headers.update(self._headers)
         self._session.headers.update(_OTLP_HTTP_HEADERS)
+        # let users override our defaults
+        self._session.headers.update(self._headers)
         if self._compression is not Compression.NoCompression:
             self._session.headers.update(
                 {"Content-Encoding": self._compression.value}
             )
         self._shutdown = False
 
-    def _export(self, serialized_data: bytes, timeout_sec: float):
+    def _export(
+        self, serialized_data: bytes, timeout_sec: Optional[float] = None
+    ):
         data = serialized_data
         if self._compression == Compression.Gzip:
             gzip_data = BytesIO()
@@ -133,6 +141,9 @@ class OTLPLogExporter(LogExporter):
             data = gzip_data.getvalue()
         elif self._compression == Compression.Deflate:
             data = zlib.compress(serialized_data)
+
+        if timeout_sec is None:
+            timeout_sec = self._timeout
 
         # By default, keep-alive is enabled in Session's request
         # headers. Backends may choose to close the connection
@@ -173,6 +184,7 @@ class OTLPLogExporter(LogExporter):
                 not _is_retryable(resp)
                 or retry_num + 1 == _MAX_RETRYS
                 or backoff_seconds > (deadline_sec - time())
+                or self._shutdown
             ):
                 _logger.error(
                     "Failed to export logs batch code: %s, reason: %s",
@@ -185,8 +197,10 @@ class OTLPLogExporter(LogExporter):
                 resp.reason,
                 backoff_seconds,
             )
-            sleep(backoff_seconds)
-        # Not possible to reach here but the linter is complaining.
+            shutdown = self._shutdown_is_occuring.wait(backoff_seconds)
+            if shutdown:
+                _logger.warning("Shutdown in progress, aborting retry.")
+                break
         return LogExportResult.FAILURE
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
@@ -197,8 +211,9 @@ class OTLPLogExporter(LogExporter):
         if self._shutdown:
             _logger.warning("Exporter already shutdown, ignoring call")
             return
-        self._session.close()
         self._shutdown = True
+        self._shutdown_is_occuring.set()
+        self._session.close()
 
 
 def _compression_from_env() -> Compression:

@@ -5,11 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+**Breaking changes ongoing**
+
+> [!IMPORTANT]
+> We are working on stabilizing the Log signal that would require making deprecations and breaking changes. We will try to reduce the releases that may require an update to your code, especially for instrumentations or for sdk developers.
+
 ## Unreleased
 
+- Add experimental composite samplers
+  ([#4714](https://github.com/open-telemetry/opentelemetry-python/pull/4714))
+- Filter duplicate logs out of some internal `logger`'s logs on the export logs path that might otherwise endlessly log or cause a recursion depth exceeded issue in cases where logging itself results in an exception.
+  ([#4695](https://github.com/open-telemetry/opentelemetry-python/pull/4695)).
+- docs: linked the examples with their github source code location and added Prometheus example
+  ([#4728](https://github.com/open-telemetry/opentelemetry-python/pull/4728))
+- Permit to override default HTTP OTLP exporters headers
+  ([#4634](https://github.com/open-telemetry/opentelemetry-python/pull/4634))
+- semantic-conventions: Bump to 1.37.0
+  ([#4731](https://github.com/open-telemetry/opentelemetry-python/pull/4731))
+
+## Version 1.36.0/0.57b0 (2025-07-29)
+
+- Add missing Prometheus exporter documentation
+  ([#4485](https://github.com/open-telemetry/opentelemetry-python/pull/4485))
 - Overwrite logging.config.fileConfig and logging.config.dictConfig to ensure
 the OTLP `LogHandler` remains attached to the root logger. Fix a bug that
 can cause a deadlock to occur over `logging._lock` in some cases ([#4636](https://github.com/open-telemetry/opentelemetry-python/pull/4636)).
+- otlp-http-exporter: set default value for param `timeout_sec` in `_export` method
+  ([#4691](https://github.com/open-telemetry/opentelemetry-python/pull/4691))
+
+- Update OTLP gRPC/HTTP exporters: calling shutdown will now interrupt exporters that are sleeping
+  before a retry attempt, and cause them to return failure immediately.
+  Update BatchSpan/LogRecordProcessors: shutdown will now complete after 30 seconds of trying to finish
+  exporting any buffered telemetry, instead of continuing to export until all telemetry was exported.
+  ([#4638](https://github.com/open-telemetry/opentelemetry-python/pull/4638)).
 
 ## Version 1.35.0/0.56b0 (2025-07-11)
 
@@ -31,7 +59,7 @@ can cause a deadlock to occur over `logging._lock` in some cases ([#4636](https:
 - Update logger level to NOTSET in logs example
   ([#4637](https://github.com/open-telemetry/opentelemetry-python/pull/4637))
 - Logging API accepts optional `context`; deprecates `trace_id`, `span_id`, `trace_flags`.
-  ([#4597](https://github.com/open-telemetry/opentelemetry-python/pull/4597)) and 
+  ([#4597](https://github.com/open-telemetry/opentelemetry-python/pull/4597)) and
   ([#4668](https://github.com/open-telemetry/opentelemetry-python/pull/4668))
 - sdk: use context instead of trace_id,span_id for initializing LogRecord
   ([#4653](https://github.com/open-telemetry/opentelemetry-python/pull/4653))

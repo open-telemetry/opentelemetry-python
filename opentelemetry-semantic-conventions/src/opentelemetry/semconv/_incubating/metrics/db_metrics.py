@@ -29,7 +29,7 @@ def create_db_client_connection_count(meter: Meter) -> UpDownCounter:
     """The number of connections that are currently in state described by the `state` attribute"""
     return meter.create_up_down_counter(
         name=DB_CLIENT_CONNECTION_COUNT,
-        description="The number of connections that are currently in state described by the `state` attribute",
+        description="The number of connections that are currently in state described by the `state` attribute.",
         unit="{connection}",
     )
 
@@ -46,7 +46,7 @@ def create_db_client_connection_create_time(meter: Meter) -> Histogram:
     """The time it took to create a new connection"""
     return meter.create_histogram(
         name=DB_CLIENT_CONNECTION_CREATE_TIME,
-        description="The time it took to create a new connection",
+        description="The time it took to create a new connection.",
         unit="s",
     )
 
@@ -63,7 +63,7 @@ def create_db_client_connection_idle_max(meter: Meter) -> UpDownCounter:
     """The maximum number of idle open connections allowed"""
     return meter.create_up_down_counter(
         name=DB_CLIENT_CONNECTION_IDLE_MAX,
-        description="The maximum number of idle open connections allowed",
+        description="The maximum number of idle open connections allowed.",
         unit="{connection}",
     )
 
@@ -80,7 +80,7 @@ def create_db_client_connection_idle_min(meter: Meter) -> UpDownCounter:
     """The minimum number of idle open connections allowed"""
     return meter.create_up_down_counter(
         name=DB_CLIENT_CONNECTION_IDLE_MIN,
-        description="The minimum number of idle open connections allowed",
+        description="The minimum number of idle open connections allowed.",
         unit="{connection}",
     )
 
@@ -97,7 +97,7 @@ def create_db_client_connection_max(meter: Meter) -> UpDownCounter:
     """The maximum number of open connections allowed"""
     return meter.create_up_down_counter(
         name=DB_CLIENT_CONNECTION_MAX,
-        description="The maximum number of open connections allowed",
+        description="The maximum number of open connections allowed.",
         unit="{connection}",
     )
 
@@ -118,7 +118,7 @@ def create_db_client_connection_pending_requests(
     """The number of current pending requests for an open connection"""
     return meter.create_up_down_counter(
         name=DB_CLIENT_CONNECTION_PENDING_REQUESTS,
-        description="The number of current pending requests for an open connection",
+        description="The number of current pending requests for an open connection.",
         unit="{request}",
     )
 
@@ -135,7 +135,7 @@ def create_db_client_connection_timeouts(meter: Meter) -> Counter:
     """The number of connection timeouts that have occurred trying to obtain a connection from the pool"""
     return meter.create_counter(
         name=DB_CLIENT_CONNECTION_TIMEOUTS,
-        description="The number of connection timeouts that have occurred trying to obtain a connection from the pool",
+        description="The number of connection timeouts that have occurred trying to obtain a connection from the pool.",
         unit="{timeout}",
     )
 
@@ -152,7 +152,7 @@ def create_db_client_connection_use_time(meter: Meter) -> Histogram:
     """The time between borrowing a connection and returning it to the pool"""
     return meter.create_histogram(
         name=DB_CLIENT_CONNECTION_USE_TIME,
-        description="The time between borrowing a connection and returning it to the pool",
+        description="The time between borrowing a connection and returning it to the pool.",
         unit="s",
     )
 
@@ -169,7 +169,7 @@ def create_db_client_connection_wait_time(meter: Meter) -> Histogram:
     """The time it took to obtain an open connection from the pool"""
     return meter.create_histogram(
         name=DB_CLIENT_CONNECTION_WAIT_TIME,
-        description="The time it took to obtain an open connection from the pool",
+        description="The time it took to obtain an open connection from the pool.",
         unit="s",
     )
 

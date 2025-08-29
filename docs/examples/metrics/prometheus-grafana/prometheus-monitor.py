@@ -18,6 +18,8 @@ meter = get_meter_provider().get_meter("view-name-change", "0.1.2")
 
 my_counter = meter.create_counter("my.counter")
 
+print("Server is running at http://localhost:8000")
+
 while 1:
     my_counter.add(random.randint(1, 10))
     time.sleep(random.random())
