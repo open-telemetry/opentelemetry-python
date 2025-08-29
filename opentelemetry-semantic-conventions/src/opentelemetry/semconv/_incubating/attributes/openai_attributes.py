@@ -15,31 +15,26 @@
 from enum import Enum
 from typing import Final
 
-CPU_LOGICAL_NUMBER: Final = "cpu.logical_number"
+OPENAI_REQUEST_SERVICE_TIER: Final = "openai.request.service_tier"
 """
-The logical CPU number [0..n-1].
-"""
-
-CPU_MODE: Final = "cpu.mode"
-"""
-The mode of the CPU.
+The service tier requested. May be a specific tier, default, or auto.
 """
 
+OPENAI_RESPONSE_SERVICE_TIER: Final = "openai.response.service_tier"
+"""
+The service tier used for the response.
+"""
 
-class CpuModeValues(Enum):
-    USER = "user"
-    """User."""
-    SYSTEM = "system"
-    """System."""
-    NICE = "nice"
-    """Nice."""
-    IDLE = "idle"
-    """Idle."""
-    IOWAIT = "iowait"
-    """IO Wait."""
-    INTERRUPT = "interrupt"
-    """Interrupt."""
-    STEAL = "steal"
-    """Steal."""
-    KERNEL = "kernel"
-    """Kernel."""
+OPENAI_RESPONSE_SYSTEM_FINGERPRINT: Final = (
+    "openai.response.system_fingerprint"
+)
+"""
+A fingerprint to track any eventual change in the Generative AI environment.
+"""
+
+
+class OpenaiRequestServiceTierValues(Enum):
+    AUTO = "auto"
+    """The system will utilize scale tier credits until they are exhausted."""
+    DEFAULT = "default"
+    """The system will utilize the default scale tier."""

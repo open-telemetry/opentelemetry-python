@@ -34,7 +34,9 @@ from typing import Final
 {%- macro write_docstring(name, brief, note, deprecated_note, stability, multiline) -%}
 {%- if multiline %}"""
 {% endif %}
-    {%- if c.str_or_empty(deprecated_note)|length -%}
+    {%- if deprecated_note is mapping -%}
+{{prefix}}Deprecated: {{c.comment_with_prefix(deprecated_note.note, "")}}.
+    {%- elif c.str_or_empty(deprecated_note)|length -%}
 {{prefix}}Deprecated: {{c.comment_with_prefix(deprecated_note, "")}}.
     {%- elif ctx.filter == "any" and stability == "stable" -%}
 {{prefix}}Deprecated in favor of stable :py:const:`{{stable_class_ref(name, '.')}}`.
