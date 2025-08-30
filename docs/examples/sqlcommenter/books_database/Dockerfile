@@ -2,8 +2,6 @@ FROM mysql:8.0
 
 ENV MYSQL_ROOT_PASSWORD=root
 ENV MYSQL_DATABASE=books
-ENV MYSQL_USER=books
-ENV MYSQL_PASSWORD=books123
 
 ADD books.sql /docker-entrypoint-initdb.d/
 
