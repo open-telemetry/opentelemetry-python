@@ -20,7 +20,7 @@ A running MySQL server with general logs enabled will store query statements wit
 
     cd books_database
     docker build -t books-db .
-    docker run -d --name books-db -p 3306:3306 books-db
+    docker run -d --name books-db -p 3366:3306 books-db
     cd ..
 
 Check that the run worked and the general log is available:
