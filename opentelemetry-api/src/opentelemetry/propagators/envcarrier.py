@@ -7,21 +7,12 @@ class EnvironmentGetter(Getter[dict]):
     from environment variables.
     """
     
-    KEY_MAPPING = {
-        "TRACEPARENT": "traceparent",
-        "TRACESTATE": "tracestate",
-        "BAGGAGE": "baggage"
-    }
-    
     def __init__(self):
         self.env_copy = dict(os.environ)
         self.carrier = {}
         
         for env_key, env_value in self.env_copy.items():
-            if env_key in self.KEY_MAPPING:
-                self.carrier[self.KEY_MAPPING[env_key]] = env_value
-            else:
-                self.carrier[env_key] = env_value
+            self.carrier[env_key.lower()] = env_value
     
     def get(self, carrier: dict, key: str) -> typing.Optional[typing.List[str]]:
         """Get a value from the carrier for the given key"""
@@ -40,12 +31,6 @@ class EnvironmentSetter(Setter[dict]):
     """This class decorates Setter to enable setting context and baggage
     to environment variables.
     """
-    
-    KEY_MAPPING = {
-        "TRACEPARENT": "traceparent",
-        "TRACESTATE": "tracestate",
-        "BAGGAGE": "baggage"
-    }
 
     def set(self, carrier: typing.Optional[dict], key: str, value: str) -> None:
         """Set a value in the environment for the given key.
@@ -55,6 +40,6 @@ class EnvironmentSetter(Setter[dict]):
             key: The key to set
             value: The value to set
         """
-        env_key = self.KEY_MAPPING.get(key, key.upper())
+        env_key = key.upper()
         
         os.environ[env_key] = value
