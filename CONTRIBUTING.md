@@ -48,6 +48,12 @@ To install `tox`, run:
 pip install tox
 ```
 
+You can also run tox with `uv` support. By default [tox.ini](./tox.ini) will automatically create a provisioned tox environment with `tox-uv`, but you can install it at host level:
+
+```sh
+pip install tox-uv
+```
+
 You can run `tox` with the following arguments:
 
 - `tox` to run all existing tox commands, including unit tests for all packages
@@ -187,7 +193,7 @@ git remote add fork https://github.com/YOUR_GITHUB_USERNAME/opentelemetry-python
 Make sure you have all supported versions of Python installed, install tox only for the first time:
 
 ```sh
-pip install tox
+pip install tox tox-uv
 ```
 
 Run tests in the root of the repository (this will run all tox environments and may take some time):

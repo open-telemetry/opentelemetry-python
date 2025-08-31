@@ -55,7 +55,7 @@ The date and time the process was created, in ISO 8601 format.
 
 PROCESS_ENVIRONMENT_VARIABLE_TEMPLATE: Final = "process.environment_variable"
 """
-Process environment variables, <key> being the environment variable name, the value being the environment variable value.
+Process environment variables, `<key>` being the environment variable name, the value being the environment variable value.
 Note: Examples:
 
 - an environment variable `USER` with value `"ubuntu"` SHOULD be recorded

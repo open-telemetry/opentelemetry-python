@@ -150,6 +150,11 @@ class TestSimpleSpanProcessor(unittest.TestCase):
 # before the end of the test, otherwise the worker thread will continue
 # to run after the end of the test.
 class TestBatchSpanProcessor(unittest.TestCase):
+    def test_get_span_exporter(self):
+        exporter = MySpanExporter(destination=[])
+        batch_span_processor = export.BatchSpanProcessor(exporter)
+        self.assertEqual(exporter, batch_span_processor.span_exporter)
+
     @mock.patch.dict(
         "os.environ",
         {

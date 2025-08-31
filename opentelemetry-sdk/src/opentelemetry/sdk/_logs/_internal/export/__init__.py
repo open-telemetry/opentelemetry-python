@@ -27,7 +27,7 @@ from opentelemetry.context import (
     set_value,
 )
 from opentelemetry.sdk._logs import LogData, LogRecord, LogRecordProcessor
-from opentelemetry.sdk._shared_internal import BatchProcessor
+from opentelemetry.sdk._shared_internal import BatchProcessor, DuplicateFilter
 from opentelemetry.sdk.environment_variables import (
     OTEL_BLRP_EXPORT_TIMEOUT,
     OTEL_BLRP_MAX_EXPORT_BATCH_SIZE,
@@ -43,6 +43,7 @@ _ENV_VAR_INT_VALUE_ERROR_MESSAGE = (
     "Unable to parse value for %s as integer. Defaulting to %s."
 )
 _logger = logging.getLogger(__name__)
+_logger.addFilter(DuplicateFilter())
 
 
 class LogExportResult(enum.Enum):
@@ -112,7 +113,7 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
         self._exporter = exporter
         self._shutdown = False
 
-    def emit(self, log_data: LogData):
+    def on_emit(self, log_data: LogData):
         if self._shutdown:
             _logger.warning("Processor is already shutdown, ignoring call")
             return
@@ -186,7 +187,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
             "Log",
         )
 
-    def emit(self, log_data: LogData) -> None:
+    def on_emit(self, log_data: LogData) -> None:
         return self._batch_processor.emit(log_data)
 
     def shutdown(self):

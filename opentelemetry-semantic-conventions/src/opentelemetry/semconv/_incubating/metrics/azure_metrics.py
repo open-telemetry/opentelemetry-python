@@ -33,7 +33,7 @@ def create_azure_cosmosdb_client_active_instance_count(
     """Number of active client instances"""
     return meter.create_up_down_counter(
         name=AZURE_COSMOSDB_CLIENT_ACTIVE_INSTANCE_COUNT,
-        description="Number of active client instances",
+        description="Number of active client instances.",
         unit="{instance}",
     )
 
@@ -54,6 +54,6 @@ def create_azure_cosmosdb_client_operation_request_charge(
     """[Request units](https://learn.microsoft.com/azure/cosmos-db/request-units) consumed by the operation"""
     return meter.create_histogram(
         name=AZURE_COSMOSDB_CLIENT_OPERATION_REQUEST_CHARGE,
-        description="[Request units](https://learn.microsoft.com/azure/cosmos-db/request-units) consumed by the operation",
+        description="[Request units](https://learn.microsoft.com/azure/cosmos-db/request-units) consumed by the operation.",
         unit="{request_unit}",
     )

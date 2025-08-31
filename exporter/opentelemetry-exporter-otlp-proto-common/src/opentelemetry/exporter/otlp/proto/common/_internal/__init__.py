@@ -17,12 +17,10 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Sequence
-from itertools import count
 from typing import (
     Any,
     Callable,
     Dict,
-    Iterator,
     List,
     Mapping,
     Optional,
@@ -177,38 +175,3 @@ def _get_resource_data(
             )
         )
     return resource_data
-
-
-def _create_exp_backoff_generator(max_value: int = 0) -> Iterator[int]:
-    """
-    Generates an infinite sequence of exponential backoff values. The sequence starts
-    from 1 (2^0) and doubles each time (2^1, 2^2, 2^3, ...). If a max_value is specified
-    and non-zero, the generated values will not exceed this maximum, capping at max_value
-    instead of growing indefinitely.
-
-    Parameters:
-    - max_value (int, optional): The maximum value to yield. If 0 or not provided, the
-      sequence grows without bound.
-
-    Returns:
-    Iterator[int]: An iterator that yields the exponential backoff values, either uncapped or
-    capped at max_value.
-
-    Example:
-    ```
-    gen = _create_exp_backoff_generator(max_value=10)
-    for _ in range(5):
-        print(next(gen))
-    ```
-    This will print:
-    1
-    2
-    4
-    8
-    10
-
-    Note: this functionality used to be handled by the 'backoff' package.
-    """
-    for i in count(0):
-        out = 2**i
-        yield min(out, max_value) if max_value else out

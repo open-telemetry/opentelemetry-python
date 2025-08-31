@@ -109,12 +109,12 @@ include = [
 
 exclude = [
   "opentelemetry-sdk/tests",
-  "opentelemetry-sdk/src/opentelemetry/sdk/_configuration",
   "opentelemetry-sdk/src/opentelemetry/sdk/_events",
   "opentelemetry-sdk/src/opentelemetry/sdk/_logs",
   "opentelemetry-sdk/src/opentelemetry/sdk/error_handler",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics",
-  "opentelemetry-sdk/src/opentelemetry/sdk/trace",
+  "opentelemetry-sdk/src/opentelemetry/sdk/trace/export",
+  "opentelemetry-sdk/src/opentelemetry/sdk/trace/__init__.py",
   "opentelemetry-sdk/src/opentelemetry/sdk/util",
   "opentelemetry-sdk/benchmarks",
 ]
