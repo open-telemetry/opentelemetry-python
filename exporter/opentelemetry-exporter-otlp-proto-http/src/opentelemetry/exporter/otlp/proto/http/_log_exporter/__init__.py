@@ -38,6 +38,7 @@ from opentelemetry.sdk._logs.export import (
     LogExporter,
     LogExportResult,
 )
+from opentelemetry.sdk._shared_internal import DuplicateFilter
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
@@ -57,6 +58,8 @@ from opentelemetry.sdk.environment_variables import (
 from opentelemetry.util.re import parse_env_headers
 
 _logger = logging.getLogger(__name__)
+# This prevents logs generated when a log fails to be written to generate another log which fails to be written etc. etc.
+_logger.addFilter(DuplicateFilter())
 
 
 DEFAULT_COMPRESSION = Compression.NoCompression
@@ -118,8 +121,9 @@ class OTLPLogExporter(LogExporter):
         )
         self._compression = compression or _compression_from_env()
         self._session = session or requests.Session()
-        self._session.headers.update(self._headers)
         self._session.headers.update(_OTLP_HTTP_HEADERS)
+        # let users override our defaults
+        self._session.headers.update(self._headers)
         if self._compression is not Compression.NoCompression:
             self._session.headers.update(
                 {"Content-Encoding": self._compression.value}
