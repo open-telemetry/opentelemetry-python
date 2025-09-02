@@ -17,7 +17,7 @@ jobs:
             exit 1
           fi
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install toml
         run: pip install toml
@@ -64,12 +64,12 @@ jobs:
 
       # check out main branch to verify there won't be problems with merging the change log
       # at the end of this workflow
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: main
 
         # back to the release branch
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
         # next few steps publish to pypi
       - uses: actions/setup-python@v5
