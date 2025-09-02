@@ -39,13 +39,6 @@ span_processor = BatchSpanProcessor(
 )
 trace.get_tracer_provider().add_span_processor(span_processor)
 
-# Instrument MySQL queries with sqlcommenter enabled
-# and comment-in-span-attribute enabled
-MySQLInstrumentor().instrument(
-    enable_commenter=True,
-    enable_attribute_commenter=True,
-)
-
 cnx = connect(
     host="localhost",
     port=3366,
@@ -54,13 +47,22 @@ cnx = connect(
     database="books",
 )
 
+# Instruments MySQL queries with sqlcommenter enabled
+# and comment-in-span-attribute enabled.
+# Returns wrapped connection to generate traces.
+cnx = MySQLInstrumentor().instrument_connection(
+    connection=cnx,
+    enable_commenter=True,
+    enable_attribute_commenter=True,
+)
+
 cursor = cnx.cursor()
 statement = "SELECT * FROM authors WHERE id = %s"
 
 # Each SELECT query generates one mysql log with sqlcomment
 # and one OTel span with `db.statement` attribute that also
 # includes sqlcomment.
-for cid in range(1, 3):
+for cid in range(1, 4):
     cursor.execute(statement, (cid,))
     rows = cursor.fetchall()
     print(f"Found author: {rows[0]}")
