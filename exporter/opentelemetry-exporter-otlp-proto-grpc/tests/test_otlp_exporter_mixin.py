@@ -301,6 +301,7 @@ class TestOTLPExporterMixin(TestCase):
             return_value=[IterEntryPoint("custom_credential", f)]
         )
         exporter = OTLPSpanExporterForTesting(insecure=False)
+        # pylint: disable=protected-access
         assert exporter._credentials is credential
 
     # pylint: disable=no-self-use, disable=unused-argument

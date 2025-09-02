@@ -62,7 +62,6 @@ def _load_session_from_envvar(
                 f"entry point 'opentelemetry_otlp_credential_provider'"
             )
         if isinstance(maybe_session, requests.Session):
-            print("returning session !!")
             return maybe_session
     return None
 
