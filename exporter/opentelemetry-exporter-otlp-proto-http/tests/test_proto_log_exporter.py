@@ -73,7 +73,7 @@ ENV_ENDPOINT = "http://localhost.env:8080/"
 ENV_CERTIFICATE = "/etc/base.crt"
 ENV_CLIENT_CERTIFICATE = "/etc/client-cert.pem"
 ENV_CLIENT_KEY = "/etc/client-key.pem"
-ENV_HEADERS = "envHeader1=val1,envHeader2=val2"
+ENV_HEADERS = "envHeader1=val1,envHeader2=val2,User-agent=Overridden"
 ENV_TIMEOUT = "30"
 
 
@@ -116,7 +116,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY: "logs/client-key.pem",
             OTEL_EXPORTER_OTLP_LOGS_COMPRESSION: Compression.Deflate.value,
             OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "https://logs.endpoint.env",
-            OTEL_EXPORTER_OTLP_LOGS_HEADERS: "logsEnv1=val1,logsEnv2=val2,logsEnv3===val3==",
+            OTEL_EXPORTER_OTLP_LOGS_HEADERS: "logsEnv1=val1,logsEnv2=val2,logsEnv3===val3==,User-agent=LogsUserAgent",
             OTEL_EXPORTER_OTLP_LOGS_TIMEOUT: "40",
             OTEL_PYTHON_EXPORTER_OTLP_LOGS_CREDENTIAL_PROVIDER: "credential_provider",
         },
@@ -147,10 +147,19 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                 "logsenv1": "val1",
                 "logsenv2": "val2",
                 "logsenv3": "==val3==",
+                "user-agent": "LogsUserAgent",
             },
         )
         self.assertIs(exporter._session, credential)
         self.assertIsInstance(exporter._session, requests.Session)
+        self.assertEqual(
+            exporter._session.headers.get("User-Agent"),
+            "LogsUserAgent",
+        )
+        self.assertEqual(
+            exporter._session.headers.get("Content-Type"),
+            "application/x-protobuf",
+        )
 
     @patch.dict(
         "os.environ",
@@ -225,7 +234,12 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         self.assertEqual(exporter._timeout, int(ENV_TIMEOUT))
         self.assertIs(exporter._compression, Compression.Gzip)
         self.assertEqual(
-            exporter._headers, {"envheader1": "val1", "envheader2": "val2"}
+            exporter._headers,
+            {
+                "envheader1": "val1",
+                "envheader2": "val2",
+                "user-agent": "Overridden",
+            },
         )
         self.assertIsInstance(exporter._session, requests.Session)
 

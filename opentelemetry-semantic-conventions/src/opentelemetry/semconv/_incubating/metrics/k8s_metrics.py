@@ -51,7 +51,7 @@ def create_k8s_container_cpu_limit(meter: Meter) -> UpDownCounter:
     """Maximum CPU resource limit set for the container"""
     return meter.create_up_down_counter(
         name=K8S_CONTAINER_CPU_LIMIT,
-        description="Maximum CPU resource limit set for the container",
+        description="Maximum CPU resource limit set for the container.",
         unit="{cpu}",
     )
 
@@ -69,7 +69,7 @@ def create_k8s_container_cpu_request(meter: Meter) -> UpDownCounter:
     """CPU resource requested for the container"""
     return meter.create_up_down_counter(
         name=K8S_CONTAINER_CPU_REQUEST,
-        description="CPU resource requested for the container",
+        description="CPU resource requested for the container.",
         unit="{cpu}",
     )
 
@@ -91,7 +91,7 @@ def create_k8s_container_ephemeral_storage_limit(
     """Maximum ephemeral storage resource limit set for the container"""
     return meter.create_up_down_counter(
         name=K8S_CONTAINER_EPHEMERAL_STORAGE_LIMIT,
-        description="Maximum ephemeral storage resource limit set for the container",
+        description="Maximum ephemeral storage resource limit set for the container.",
         unit="By",
     )
 
@@ -113,7 +113,7 @@ def create_k8s_container_ephemeral_storage_request(
     """Ephemeral storage resource requested for the container"""
     return meter.create_up_down_counter(
         name=K8S_CONTAINER_EPHEMERAL_STORAGE_REQUEST,
-        description="Ephemeral storage resource requested for the container",
+        description="Ephemeral storage resource requested for the container.",
         unit="By",
     )
 
@@ -131,7 +131,7 @@ def create_k8s_container_memory_limit(meter: Meter) -> UpDownCounter:
     """Maximum memory resource limit set for the container"""
     return meter.create_up_down_counter(
         name=K8S_CONTAINER_MEMORY_LIMIT,
-        description="Maximum memory resource limit set for the container",
+        description="Maximum memory resource limit set for the container.",
         unit="By",
     )
 
@@ -149,7 +149,7 @@ def create_k8s_container_memory_request(meter: Meter) -> UpDownCounter:
     """Memory resource requested for the container"""
     return meter.create_up_down_counter(
         name=K8S_CONTAINER_MEMORY_REQUEST,
-        description="Memory resource requested for the container",
+        description="Memory resource requested for the container.",
         unit="By",
     )
 
@@ -168,7 +168,7 @@ def create_k8s_container_ready(meter: Meter) -> UpDownCounter:
     """Indicates whether the container is currently marked as ready to accept traffic, based on its readiness probe (1 = ready, 0 = not ready)"""
     return meter.create_up_down_counter(
         name=K8S_CONTAINER_READY,
-        description="Indicates whether the container is currently marked as ready to accept traffic, based on its readiness probe (1 = ready, 0 = not ready)",
+        description="Indicates whether the container is currently marked as ready to accept traffic, based on its readiness probe (1 = ready, 0 = not ready).",
         unit="{container}",
     )
 
@@ -190,7 +190,7 @@ def create_k8s_container_restart_count(meter: Meter) -> UpDownCounter:
     """Describes how many times the container has restarted (since the last counter reset)"""
     return meter.create_up_down_counter(
         name=K8S_CONTAINER_RESTART_COUNT,
-        description="Describes how many times the container has restarted (since the last counter reset)",
+        description="Describes how many times the container has restarted (since the last counter reset).",
         unit="{restart}",
     )
 
@@ -209,7 +209,7 @@ def create_k8s_container_status_reason(meter: Meter) -> UpDownCounter:
     """Describes the number of K8s containers that are currently in a state for a given reason"""
     return meter.create_up_down_counter(
         name=K8S_CONTAINER_STATUS_REASON,
-        description="Describes the number of K8s containers that are currently in a state for a given reason",
+        description="Describes the number of K8s containers that are currently in a state for a given reason.",
         unit="{container}",
     )
 
@@ -228,7 +228,7 @@ def create_k8s_container_status_state(meter: Meter) -> UpDownCounter:
     """Describes the number of K8s containers that are currently in a given state"""
     return meter.create_up_down_counter(
         name=K8S_CONTAINER_STATUS_STATE,
-        description="Describes the number of K8s containers that are currently in a given state",
+        description="Describes the number of K8s containers that are currently in a given state.",
         unit="{container}",
     )
 
@@ -246,7 +246,7 @@ def create_k8s_container_storage_limit(meter: Meter) -> UpDownCounter:
     """Maximum storage resource limit set for the container"""
     return meter.create_up_down_counter(
         name=K8S_CONTAINER_STORAGE_LIMIT,
-        description="Maximum storage resource limit set for the container",
+        description="Maximum storage resource limit set for the container.",
         unit="By",
     )
 
@@ -264,7 +264,7 @@ def create_k8s_container_storage_request(meter: Meter) -> UpDownCounter:
     """Storage resource requested for the container"""
     return meter.create_up_down_counter(
         name=K8S_CONTAINER_STORAGE_REQUEST,
-        description="Storage resource requested for the container",
+        description="Storage resource requested for the container.",
         unit="By",
     )
 
@@ -283,7 +283,7 @@ def create_k8s_cronjob_active_jobs(meter: Meter) -> UpDownCounter:
     """The number of actively running jobs for a cronjob"""
     return meter.create_up_down_counter(
         name=K8S_CRONJOB_ACTIVE_JOBS,
-        description="The number of actively running jobs for a cronjob",
+        description="The number of actively running jobs for a cronjob.",
         unit="{job}",
     )
 
@@ -306,7 +306,7 @@ def create_k8s_daemonset_current_scheduled_nodes(
     """Number of nodes that are running at least 1 daemon pod and are supposed to run the daemon pod"""
     return meter.create_up_down_counter(
         name=K8S_DAEMONSET_CURRENT_SCHEDULED_NODES,
-        description="Number of nodes that are running at least 1 daemon pod and are supposed to run the daemon pod",
+        description="Number of nodes that are running at least 1 daemon pod and are supposed to run the daemon pod.",
         unit="{node}",
     )
 
@@ -329,7 +329,7 @@ def create_k8s_daemonset_desired_scheduled_nodes(
     """Number of nodes that should be running the daemon pod (including nodes currently running the daemon pod)"""
     return meter.create_up_down_counter(
         name=K8S_DAEMONSET_DESIRED_SCHEDULED_NODES,
-        description="Number of nodes that should be running the daemon pod (including nodes currently running the daemon pod)",
+        description="Number of nodes that should be running the daemon pod (including nodes currently running the daemon pod).",
         unit="{node}",
     )
 
@@ -348,7 +348,7 @@ def create_k8s_daemonset_misscheduled_nodes(meter: Meter) -> UpDownCounter:
     """Number of nodes that are running the daemon pod, but are not supposed to run the daemon pod"""
     return meter.create_up_down_counter(
         name=K8S_DAEMONSET_MISSCHEDULED_NODES,
-        description="Number of nodes that are running the daemon pod, but are not supposed to run the daemon pod",
+        description="Number of nodes that are running the daemon pod, but are not supposed to run the daemon pod.",
         unit="{node}",
     )
 
@@ -367,7 +367,7 @@ def create_k8s_daemonset_ready_nodes(meter: Meter) -> UpDownCounter:
     """Number of nodes that should be running the daemon pod and have one or more of the daemon pod running and ready"""
     return meter.create_up_down_counter(
         name=K8S_DAEMONSET_READY_NODES,
-        description="Number of nodes that should be running the daemon pod and have one or more of the daemon pod running and ready",
+        description="Number of nodes that should be running the daemon pod and have one or more of the daemon pod running and ready.",
         unit="{node}",
     )
 
@@ -386,7 +386,7 @@ def create_k8s_deployment_available_pods(meter: Meter) -> UpDownCounter:
     """Total number of available replica pods (ready for at least minReadySeconds) targeted by this deployment"""
     return meter.create_up_down_counter(
         name=K8S_DEPLOYMENT_AVAILABLE_PODS,
-        description="Total number of available replica pods (ready for at least minReadySeconds) targeted by this deployment",
+        description="Total number of available replica pods (ready for at least minReadySeconds) targeted by this deployment.",
         unit="{pod}",
     )
 
@@ -405,7 +405,7 @@ def create_k8s_deployment_desired_pods(meter: Meter) -> UpDownCounter:
     """Number of desired replica pods in this deployment"""
     return meter.create_up_down_counter(
         name=K8S_DEPLOYMENT_DESIRED_PODS,
-        description="Number of desired replica pods in this deployment",
+        description="Number of desired replica pods in this deployment.",
         unit="{pod}",
     )
 
@@ -424,7 +424,7 @@ def create_k8s_hpa_current_pods(meter: Meter) -> UpDownCounter:
     """Current number of replica pods managed by this horizontal pod autoscaler, as last seen by the autoscaler"""
     return meter.create_up_down_counter(
         name=K8S_HPA_CURRENT_PODS,
-        description="Current number of replica pods managed by this horizontal pod autoscaler, as last seen by the autoscaler",
+        description="Current number of replica pods managed by this horizontal pod autoscaler, as last seen by the autoscaler.",
         unit="{pod}",
     )
 
@@ -443,7 +443,7 @@ def create_k8s_hpa_desired_pods(meter: Meter) -> UpDownCounter:
     """Desired number of replica pods managed by this horizontal pod autoscaler, as last calculated by the autoscaler"""
     return meter.create_up_down_counter(
         name=K8S_HPA_DESIRED_PODS,
-        description="Desired number of replica pods managed by this horizontal pod autoscaler, as last calculated by the autoscaler",
+        description="Desired number of replica pods managed by this horizontal pod autoscaler, as last calculated by the autoscaler.",
         unit="{pod}",
     )
 
@@ -462,7 +462,7 @@ def create_k8s_hpa_max_pods(meter: Meter) -> UpDownCounter:
     """The upper limit for the number of replica pods to which the autoscaler can scale up"""
     return meter.create_up_down_counter(
         name=K8S_HPA_MAX_PODS,
-        description="The upper limit for the number of replica pods to which the autoscaler can scale up",
+        description="The upper limit for the number of replica pods to which the autoscaler can scale up.",
         unit="{pod}",
     )
 
@@ -557,7 +557,7 @@ def create_k8s_hpa_min_pods(meter: Meter) -> UpDownCounter:
     """The lower limit for the number of replica pods to which the autoscaler can scale down"""
     return meter.create_up_down_counter(
         name=K8S_HPA_MIN_PODS,
-        description="The lower limit for the number of replica pods to which the autoscaler can scale down",
+        description="The lower limit for the number of replica pods to which the autoscaler can scale down.",
         unit="{pod}",
     )
 
@@ -576,7 +576,7 @@ def create_k8s_job_active_pods(meter: Meter) -> UpDownCounter:
     """The number of pending and actively running pods for a job"""
     return meter.create_up_down_counter(
         name=K8S_JOB_ACTIVE_PODS,
-        description="The number of pending and actively running pods for a job",
+        description="The number of pending and actively running pods for a job.",
         unit="{pod}",
     )
 
@@ -595,7 +595,7 @@ def create_k8s_job_desired_successful_pods(meter: Meter) -> UpDownCounter:
     """The desired number of successfully finished pods the job should be run with"""
     return meter.create_up_down_counter(
         name=K8S_JOB_DESIRED_SUCCESSFUL_PODS,
-        description="The desired number of successfully finished pods the job should be run with",
+        description="The desired number of successfully finished pods the job should be run with.",
         unit="{pod}",
     )
 
@@ -614,7 +614,7 @@ def create_k8s_job_failed_pods(meter: Meter) -> UpDownCounter:
     """The number of pods which reached phase Failed for a job"""
     return meter.create_up_down_counter(
         name=K8S_JOB_FAILED_PODS,
-        description="The number of pods which reached phase Failed for a job",
+        description="The number of pods which reached phase Failed for a job.",
         unit="{pod}",
     )
 
@@ -633,7 +633,7 @@ def create_k8s_job_max_parallel_pods(meter: Meter) -> UpDownCounter:
     """The max desired number of pods the job should run at any given time"""
     return meter.create_up_down_counter(
         name=K8S_JOB_MAX_PARALLEL_PODS,
-        description="The max desired number of pods the job should run at any given time",
+        description="The max desired number of pods the job should run at any given time.",
         unit="{pod}",
     )
 
@@ -652,7 +652,7 @@ def create_k8s_job_successful_pods(meter: Meter) -> UpDownCounter:
     """The number of pods which reached phase Succeeded for a job"""
     return meter.create_up_down_counter(
         name=K8S_JOB_SUCCESSFUL_PODS,
-        description="The number of pods which reached phase Succeeded for a job",
+        description="The number of pods which reached phase Succeeded for a job.",
         unit="{pod}",
     )
 
@@ -686,7 +686,7 @@ def create_k8s_node_allocatable_cpu(meter: Meter) -> UpDownCounter:
     """Amount of cpu allocatable on the node"""
     return meter.create_up_down_counter(
         name=K8S_NODE_ALLOCATABLE_CPU,
-        description="Amount of cpu allocatable on the node",
+        description="Amount of cpu allocatable on the node.",
         unit="{cpu}",
     )
 
@@ -707,7 +707,7 @@ def create_k8s_node_allocatable_ephemeral_storage(
     """Amount of ephemeral-storage allocatable on the node"""
     return meter.create_up_down_counter(
         name=K8S_NODE_ALLOCATABLE_EPHEMERAL_STORAGE,
-        description="Amount of ephemeral-storage allocatable on the node",
+        description="Amount of ephemeral-storage allocatable on the node.",
         unit="By",
     )
 
@@ -724,7 +724,7 @@ def create_k8s_node_allocatable_memory(meter: Meter) -> UpDownCounter:
     """Amount of memory allocatable on the node"""
     return meter.create_up_down_counter(
         name=K8S_NODE_ALLOCATABLE_MEMORY,
-        description="Amount of memory allocatable on the node",
+        description="Amount of memory allocatable on the node.",
         unit="By",
     )
 
@@ -741,7 +741,7 @@ def create_k8s_node_allocatable_pods(meter: Meter) -> UpDownCounter:
     """Amount of pods allocatable on the node"""
     return meter.create_up_down_counter(
         name=K8S_NODE_ALLOCATABLE_PODS,
-        description="Amount of pods allocatable on the node",
+        description="Amount of pods allocatable on the node.",
         unit="{pod}",
     )
 
@@ -777,7 +777,7 @@ def create_k8s_node_cpu_time(meter: Meter) -> Counter:
     """Total CPU time consumed"""
     return meter.create_counter(
         name=K8S_NODE_CPU_TIME,
-        description="Total CPU time consumed",
+        description="Total CPU time consumed.",
         unit="s",
     )
 
@@ -798,8 +798,73 @@ def create_k8s_node_cpu_usage(
     return meter.create_observable_gauge(
         name=K8S_NODE_CPU_USAGE,
         callbacks=callbacks,
-        description="Node's CPU usage, measured in cpus. Range from 0 to the number of allocatable CPUs",
+        description="Node's CPU usage, measured in cpus. Range from 0 to the number of allocatable CPUs.",
         unit="{cpu}",
+    )
+
+
+K8S_NODE_FILESYSTEM_AVAILABLE: Final = "k8s.node.filesystem.available"
+"""
+Node filesystem available bytes
+Instrument: updowncounter
+Unit: By
+Note: This metric is derived from the
+[FsStats.AvailableBytes](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#FsStats) field
+of the [NodeStats.Fs](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#NodeStats)
+of the Kubelet's stats API.
+"""
+
+
+def create_k8s_node_filesystem_available(meter: Meter) -> UpDownCounter:
+    """Node filesystem available bytes"""
+    return meter.create_up_down_counter(
+        name=K8S_NODE_FILESYSTEM_AVAILABLE,
+        description="Node filesystem available bytes.",
+        unit="By",
+    )
+
+
+K8S_NODE_FILESYSTEM_CAPACITY: Final = "k8s.node.filesystem.capacity"
+"""
+Node filesystem capacity
+Instrument: updowncounter
+Unit: By
+Note: This metric is derived from the
+[FsStats.CapacityBytes](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#FsStats) field
+of the [NodeStats.Fs](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#NodeStats)
+of the Kubelet's stats API.
+"""
+
+
+def create_k8s_node_filesystem_capacity(meter: Meter) -> UpDownCounter:
+    """Node filesystem capacity"""
+    return meter.create_up_down_counter(
+        name=K8S_NODE_FILESYSTEM_CAPACITY,
+        description="Node filesystem capacity.",
+        unit="By",
+    )
+
+
+K8S_NODE_FILESYSTEM_USAGE: Final = "k8s.node.filesystem.usage"
+"""
+Node filesystem usage
+Instrument: updowncounter
+Unit: By
+Note: This may not equal capacity - available.
+
+This metric is derived from the
+[FsStats.UsedBytes](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#FsStats) field
+of the [NodeStats.Fs](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#NodeStats)
+of the Kubelet's stats API.
+"""
+
+
+def create_k8s_node_filesystem_usage(meter: Meter) -> UpDownCounter:
+    """Node filesystem usage"""
+    return meter.create_up_down_counter(
+        name=K8S_NODE_FILESYSTEM_USAGE,
+        description="Node filesystem usage.",
+        unit="By",
     )
 
 
@@ -819,7 +884,7 @@ def create_k8s_node_memory_usage(
     return meter.create_observable_gauge(
         name=K8S_NODE_MEMORY_USAGE,
         callbacks=callbacks,
-        description="Memory usage of the Node",
+        description="Memory usage of the Node.",
         unit="By",
     )
 
@@ -836,7 +901,7 @@ def create_k8s_node_network_errors(meter: Meter) -> Counter:
     """Node network errors"""
     return meter.create_counter(
         name=K8S_NODE_NETWORK_ERRORS,
-        description="Node network errors",
+        description="Node network errors.",
         unit="{error}",
     )
 
@@ -853,7 +918,7 @@ def create_k8s_node_network_io(meter: Meter) -> Counter:
     """Network bytes for the Node"""
     return meter.create_counter(
         name=K8S_NODE_NETWORK_IO,
-        description="Network bytes for the Node",
+        description="Network bytes for the Node.",
         unit="By",
     )
 
@@ -875,7 +940,7 @@ def create_k8s_node_uptime(
     return meter.create_observable_gauge(
         name=K8S_NODE_UPTIME,
         callbacks=callbacks,
-        description="The time the Node has been running",
+        description="The time the Node has been running.",
         unit="s",
     )
 
@@ -893,7 +958,7 @@ def create_k8s_pod_cpu_time(meter: Meter) -> Counter:
     """Total CPU time consumed"""
     return meter.create_counter(
         name=K8S_POD_CPU_TIME,
-        description="Total CPU time consumed",
+        description="Total CPU time consumed.",
         unit="s",
     )
 
@@ -914,8 +979,73 @@ def create_k8s_pod_cpu_usage(
     return meter.create_observable_gauge(
         name=K8S_POD_CPU_USAGE,
         callbacks=callbacks,
-        description="Pod's CPU usage, measured in cpus. Range from 0 to the number of allocatable CPUs",
+        description="Pod's CPU usage, measured in cpus. Range from 0 to the number of allocatable CPUs.",
         unit="{cpu}",
+    )
+
+
+K8S_POD_FILESYSTEM_AVAILABLE: Final = "k8s.pod.filesystem.available"
+"""
+Pod filesystem available bytes
+Instrument: updowncounter
+Unit: By
+Note: This metric is derived from the
+[FsStats.AvailableBytes](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#FsStats) field
+of the [PodStats.EphemeralStorage](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#PodStats)
+of the Kubelet's stats API.
+"""
+
+
+def create_k8s_pod_filesystem_available(meter: Meter) -> UpDownCounter:
+    """Pod filesystem available bytes"""
+    return meter.create_up_down_counter(
+        name=K8S_POD_FILESYSTEM_AVAILABLE,
+        description="Pod filesystem available bytes.",
+        unit="By",
+    )
+
+
+K8S_POD_FILESYSTEM_CAPACITY: Final = "k8s.pod.filesystem.capacity"
+"""
+Pod filesystem capacity
+Instrument: updowncounter
+Unit: By
+Note: This metric is derived from the
+[FsStats.CapacityBytes](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#FsStats) field
+of the [PodStats.EphemeralStorage](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#PodStats)
+of the Kubelet's stats API.
+"""
+
+
+def create_k8s_pod_filesystem_capacity(meter: Meter) -> UpDownCounter:
+    """Pod filesystem capacity"""
+    return meter.create_up_down_counter(
+        name=K8S_POD_FILESYSTEM_CAPACITY,
+        description="Pod filesystem capacity.",
+        unit="By",
+    )
+
+
+K8S_POD_FILESYSTEM_USAGE: Final = "k8s.pod.filesystem.usage"
+"""
+Pod filesystem usage
+Instrument: updowncounter
+Unit: By
+Note: This may not equal capacity - available.
+
+This metric is derived from the
+[FsStats.UsedBytes](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#FsStats) field
+of the [PodStats.EphemeralStorage](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#PodStats)
+of the Kubelet's stats API.
+"""
+
+
+def create_k8s_pod_filesystem_usage(meter: Meter) -> UpDownCounter:
+    """Pod filesystem usage"""
+    return meter.create_up_down_counter(
+        name=K8S_POD_FILESYSTEM_USAGE,
+        description="Pod filesystem usage.",
+        unit="By",
     )
 
 
@@ -935,7 +1065,7 @@ def create_k8s_pod_memory_usage(
     return meter.create_observable_gauge(
         name=K8S_POD_MEMORY_USAGE,
         callbacks=callbacks,
-        description="Memory usage of the Pod",
+        description="Memory usage of the Pod.",
         unit="By",
     )
 
@@ -952,7 +1082,7 @@ def create_k8s_pod_network_errors(meter: Meter) -> Counter:
     """Pod network errors"""
     return meter.create_counter(
         name=K8S_POD_NETWORK_ERRORS,
-        description="Pod network errors",
+        description="Pod network errors.",
         unit="{error}",
     )
 
@@ -969,7 +1099,7 @@ def create_k8s_pod_network_io(meter: Meter) -> Counter:
     """Network bytes for the Pod"""
     return meter.create_counter(
         name=K8S_POD_NETWORK_IO,
-        description="Network bytes for the Pod",
+        description="Network bytes for the Pod.",
         unit="By",
     )
 
@@ -991,8 +1121,138 @@ def create_k8s_pod_uptime(
     return meter.create_observable_gauge(
         name=K8S_POD_UPTIME,
         callbacks=callbacks,
-        description="The time the Pod has been running",
+        description="The time the Pod has been running.",
         unit="s",
+    )
+
+
+K8S_POD_VOLUME_AVAILABLE: Final = "k8s.pod.volume.available"
+"""
+Pod volume storage space available
+Instrument: updowncounter
+Unit: By
+Note: This metric is derived from the
+[VolumeStats.AvailableBytes](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#VolumeStats) field
+of the [PodStats](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#PodStats) of the
+Kubelet's stats API.
+"""
+
+
+def create_k8s_pod_volume_available(meter: Meter) -> UpDownCounter:
+    """Pod volume storage space available"""
+    return meter.create_up_down_counter(
+        name=K8S_POD_VOLUME_AVAILABLE,
+        description="Pod volume storage space available.",
+        unit="By",
+    )
+
+
+K8S_POD_VOLUME_CAPACITY: Final = "k8s.pod.volume.capacity"
+"""
+Pod volume total capacity
+Instrument: updowncounter
+Unit: By
+Note: This metric is derived from the
+[VolumeStats.CapacityBytes](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#VolumeStats) field
+of the [PodStats](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#PodStats) of the
+Kubelet's stats API.
+"""
+
+
+def create_k8s_pod_volume_capacity(meter: Meter) -> UpDownCounter:
+    """Pod volume total capacity"""
+    return meter.create_up_down_counter(
+        name=K8S_POD_VOLUME_CAPACITY,
+        description="Pod volume total capacity.",
+        unit="By",
+    )
+
+
+K8S_POD_VOLUME_INODE_COUNT: Final = "k8s.pod.volume.inode.count"
+"""
+The total inodes in the filesystem of the Pod's volume
+Instrument: updowncounter
+Unit: {inode}
+Note: This metric is derived from the
+[VolumeStats.Inodes](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#VolumeStats) field
+of the [PodStats](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#PodStats) of the
+Kubelet's stats API.
+"""
+
+
+def create_k8s_pod_volume_inode_count(meter: Meter) -> UpDownCounter:
+    """The total inodes in the filesystem of the Pod's volume"""
+    return meter.create_up_down_counter(
+        name=K8S_POD_VOLUME_INODE_COUNT,
+        description="The total inodes in the filesystem of the Pod's volume.",
+        unit="{inode}",
+    )
+
+
+K8S_POD_VOLUME_INODE_FREE: Final = "k8s.pod.volume.inode.free"
+"""
+The free inodes in the filesystem of the Pod's volume
+Instrument: updowncounter
+Unit: {inode}
+Note: This metric is derived from the
+[VolumeStats.InodesFree](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#VolumeStats) field
+of the [PodStats](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#PodStats) of the
+Kubelet's stats API.
+"""
+
+
+def create_k8s_pod_volume_inode_free(meter: Meter) -> UpDownCounter:
+    """The free inodes in the filesystem of the Pod's volume"""
+    return meter.create_up_down_counter(
+        name=K8S_POD_VOLUME_INODE_FREE,
+        description="The free inodes in the filesystem of the Pod's volume.",
+        unit="{inode}",
+    )
+
+
+K8S_POD_VOLUME_INODE_USED: Final = "k8s.pod.volume.inode.used"
+"""
+The inodes used by the filesystem of the Pod's volume
+Instrument: updowncounter
+Unit: {inode}
+Note: This metric is derived from the
+[VolumeStats.InodesUsed](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#VolumeStats) field
+of the [PodStats](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#PodStats) of the
+Kubelet's stats API.
+
+This may not be equal to `inodes - free` because filesystem may share inodes with other filesystems.
+"""
+
+
+def create_k8s_pod_volume_inode_used(meter: Meter) -> UpDownCounter:
+    """The inodes used by the filesystem of the Pod's volume"""
+    return meter.create_up_down_counter(
+        name=K8S_POD_VOLUME_INODE_USED,
+        description="The inodes used by the filesystem of the Pod's volume.",
+        unit="{inode}",
+    )
+
+
+K8S_POD_VOLUME_USAGE: Final = "k8s.pod.volume.usage"
+"""
+Pod volume usage
+Instrument: updowncounter
+Unit: By
+Note: This may not equal capacity - available.
+
+This metric is derived from the
+[VolumeStats.UsedBytes](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#VolumeStats) field
+of the [PodStats](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#PodStats) of the
+Kubelet's stats API.
+"""
+
+
+def create_k8s_pod_volume_usage(meter: Meter) -> UpDownCounter:
+    """Pod volume usage"""
+    return meter.create_up_down_counter(
+        name=K8S_POD_VOLUME_USAGE,
+        description="Pod volume usage.",
+        unit="By",
     )
 
 
@@ -1010,7 +1270,7 @@ def create_k8s_replicaset_available_pods(meter: Meter) -> UpDownCounter:
     """Total number of available replica pods (ready for at least minReadySeconds) targeted by this replicaset"""
     return meter.create_up_down_counter(
         name=K8S_REPLICASET_AVAILABLE_PODS,
-        description="Total number of available replica pods (ready for at least minReadySeconds) targeted by this replicaset",
+        description="Total number of available replica pods (ready for at least minReadySeconds) targeted by this replicaset.",
         unit="{pod}",
     )
 
@@ -1029,7 +1289,7 @@ def create_k8s_replicaset_desired_pods(meter: Meter) -> UpDownCounter:
     """Number of desired replica pods in this replicaset"""
     return meter.create_up_down_counter(
         name=K8S_REPLICASET_DESIRED_PODS,
-        description="Number of desired replica pods in this replicaset",
+        description="Number of desired replica pods in this replicaset.",
         unit="{pod}",
     )
 
@@ -1090,7 +1350,7 @@ def create_k8s_replicationcontroller_available_pods(
     """Total number of available replica pods (ready for at least minReadySeconds) targeted by this replication controller"""
     return meter.create_up_down_counter(
         name=K8S_REPLICATIONCONTROLLER_AVAILABLE_PODS,
-        description="Total number of available replica pods (ready for at least minReadySeconds) targeted by this replication controller",
+        description="Total number of available replica pods (ready for at least minReadySeconds) targeted by this replication controller.",
         unit="{pod}",
     )
 
@@ -1113,7 +1373,7 @@ def create_k8s_replicationcontroller_desired_pods(
     """Number of desired replica pods in this replication controller"""
     return meter.create_up_down_counter(
         name=K8S_REPLICATIONCONTROLLER_DESIRED_PODS,
-        description="Number of desired replica pods in this replication controller",
+        description="Number of desired replica pods in this replication controller.",
         unit="{pod}",
     )
 
@@ -1624,7 +1884,7 @@ def create_k8s_statefulset_current_pods(meter: Meter) -> UpDownCounter:
     """The number of replica pods created by the statefulset controller from the statefulset version indicated by currentRevision"""
     return meter.create_up_down_counter(
         name=K8S_STATEFULSET_CURRENT_PODS,
-        description="The number of replica pods created by the statefulset controller from the statefulset version indicated by currentRevision",
+        description="The number of replica pods created by the statefulset controller from the statefulset version indicated by currentRevision.",
         unit="{pod}",
     )
 
@@ -1643,7 +1903,7 @@ def create_k8s_statefulset_desired_pods(meter: Meter) -> UpDownCounter:
     """Number of desired replica pods in this statefulset"""
     return meter.create_up_down_counter(
         name=K8S_STATEFULSET_DESIRED_PODS,
-        description="Number of desired replica pods in this statefulset",
+        description="Number of desired replica pods in this statefulset.",
         unit="{pod}",
     )
 
@@ -1662,7 +1922,7 @@ def create_k8s_statefulset_ready_pods(meter: Meter) -> UpDownCounter:
     """The number of replica pods created for this statefulset with a Ready Condition"""
     return meter.create_up_down_counter(
         name=K8S_STATEFULSET_READY_PODS,
-        description="The number of replica pods created for this statefulset with a Ready Condition",
+        description="The number of replica pods created for this statefulset with a Ready Condition.",
         unit="{pod}",
     )
 
@@ -1681,6 +1941,6 @@ def create_k8s_statefulset_updated_pods(meter: Meter) -> UpDownCounter:
     """Number of replica pods created by the statefulset controller from the statefulset version indicated by updateRevision"""
     return meter.create_up_down_counter(
         name=K8S_STATEFULSET_UPDATED_PODS,
-        description="Number of replica pods created by the statefulset controller from the statefulset version indicated by updateRevision",
+        description="Number of replica pods created by the statefulset controller from the statefulset version indicated by updateRevision.",
         unit="{pod}",
     )

@@ -56,7 +56,7 @@ OS_ENV_ENDPOINT = "os.env.base"
 OS_ENV_CERTIFICATE = "os/env/base.crt"
 OS_ENV_CLIENT_CERTIFICATE = "os/env/client-cert.pem"
 OS_ENV_CLIENT_KEY = "os/env/client-key.pem"
-OS_ENV_HEADERS = "envHeader1=val1,envHeader2=val2"
+OS_ENV_HEADERS = "envHeader1=val1,envHeader2=val2,User-agent=Overridden"
 OS_ENV_TIMEOUT = "30"
 BASIC_SPAN = _Span(
     "abc",
@@ -110,7 +110,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
             OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY: "traces/client-key.pem",
             OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: Compression.Deflate.value,
             OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "https://traces.endpoint.env",
-            OTEL_EXPORTER_OTLP_TRACES_HEADERS: "tracesEnv1=val1,tracesEnv2=val2,traceEnv3===val3==",
+            OTEL_EXPORTER_OTLP_TRACES_HEADERS: "tracesEnv1=val1,tracesEnv2=val2,traceEnv3===val3==,User-agent=TraceUserAgent",
             OTEL_EXPORTER_OTLP_TRACES_TIMEOUT: "40",
             OTEL_PYTHON_EXPORTER_OTLP_TRACES_CREDENTIAL_PROVIDER: "credential_provider",
         },
@@ -141,10 +141,19 @@ class TestOTLPSpanExporter(unittest.TestCase):
                 "tracesenv1": "val1",
                 "tracesenv2": "val2",
                 "traceenv3": "==val3==",
+                "user-agent": "TraceUserAgent",
             },
         )
         self.assertIs(exporter._session, credential)
         self.assertIsInstance(exporter._session, requests.Session)
+        self.assertEqual(
+            exporter._session.headers.get("Content-Type"),
+            "application/x-protobuf",
+        )
+        self.assertEqual(
+            exporter._session.headers.get("User-Agent"),
+            "TraceUserAgent",
+        )
 
     @patch.dict(
         "os.environ",
@@ -207,7 +216,12 @@ class TestOTLPSpanExporter(unittest.TestCase):
         self.assertEqual(exporter._timeout, int(OS_ENV_TIMEOUT))
         self.assertIs(exporter._compression, Compression.Gzip)
         self.assertEqual(
-            exporter._headers, {"envheader1": "val1", "envheader2": "val2"}
+            exporter._headers,
+            {
+                "envheader1": "val1",
+                "envheader2": "val2",
+                "user-agent": "Overridden",
+            },
         )
 
     @patch.dict(
