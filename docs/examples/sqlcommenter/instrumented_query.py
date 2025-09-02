@@ -15,27 +15,22 @@
 from mysql.connector import connect
 
 from opentelemetry import trace
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
+    OTLPSpanExporter,
+)
 from opentelemetry.instrumentation.mysql import MySQLInstrumentor
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
-
 
 resource = Resource.create(
     attributes={
         "service.name": "sqlcommenter-example",
     }
 )
-trace.set_tracer_provider(
-    TracerProvider(
-        resource=resource
-    )
-)
+trace.set_tracer_provider(TracerProvider(resource=resource))
 span_processor = BatchSpanProcessor(
-    OTLPSpanExporter(
-        endpoint="http://localhost:4317"
-    )
+    OTLPSpanExporter(endpoint="http://localhost:4317")
 )
 trace.get_tracer_provider().add_span_processor(span_processor)
 
