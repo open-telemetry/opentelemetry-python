@@ -41,29 +41,29 @@ def _load_session_from_envvar(
         OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER,
     ],
 ) -> Optional[requests.Session]:
-    credential_env = environ.get(
+    _credential_env = environ.get(
         OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER
     ) or environ.get(cred_envvar)
-    if credential_env:
+    if _credential_env:
         try:
             maybe_session = next(
                 iter(
                     entry_points(
                         group="opentelemetry_otlp_credential_provider",
-                        name=credential_env,
+                        name=_credential_env,
                     )
                 )
             ).load()()
         except StopIteration:
             raise RuntimeError(
-                f"Requested component '{credential_env}' not found in "
+                f"Requested component '{_credential_env}' not found in "
                 f"entry point 'opentelemetry_otlp_credential_provider'"
             )
         if isinstance(maybe_session, requests.Session):
             return maybe_session
         else:
             raise RuntimeError(
-                f"Requested component '{credential_env}' is of type {type(maybe_session)}"
+                f"Requested component '{_credential_env}' is of type {type(maybe_session)}"
                 f" must be of type `requests.Session`."
             )
     return None

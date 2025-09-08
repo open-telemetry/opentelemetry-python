@@ -178,27 +178,27 @@ def _get_credentials(
 ) -> ChannelCredentials:
     if creds is not None:
         return creds
-    credential_env = environ.get(credential_entry_point_env_key)
-    if credential_env:
+    _credential_env = environ.get(credential_entry_point_env_key)
+    if _credential_env:
         try:
             maybe_channel_creds = next(
                 iter(
                     entry_points(
                         group="opentelemetry_otlp_credential_provider",
-                        name=credential_env,
+                        name=_credential_env,
                     )
                 )
             ).load()()
         except StopIteration:
             raise RuntimeError(
-                f"Requested component '{credential_env}' not found in "
+                f"Requested component '{_credential_env}' not found in "
                 f"entry point 'opentelemetry_otlp_credential_provider'"
             )
         if isinstance(maybe_channel_creds, ChannelCredentials):
             return maybe_channel_creds
         else:
             raise RuntimeError(
-                f"Requested component '{credential_env}' is of type {type(maybe_channel_creds)}"
+                f"Requested component '{_credential_env}' is of type {type(maybe_channel_creds)}"
                 f" must be of type `grpc.ChannelCredentials`."
             )
 
