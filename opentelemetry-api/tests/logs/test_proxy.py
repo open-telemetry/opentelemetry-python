@@ -34,7 +34,19 @@ class TestProvider(_logs.NoOpLoggerProvider):
 
 
 class LoggerTest(_logs.NoOpLogger):
-    def emit(self, record: _logs.LogRecord) -> None:
+    def emit(
+        self,
+        record: typing.Optional[_logs.LogRecord] = None,
+        *,
+        timestamp=None,
+        observed_timestamp=None,
+        context=None,
+        severity_number=None,
+        severity_text=None,
+        body=None,
+        attributes=None,
+        event_name=None,
+    ) -> None:
         pass
 
 
