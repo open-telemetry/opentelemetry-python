@@ -188,7 +188,7 @@ def _get_credentials(
                         name=credential_env,
                     )
                 )
-            ).load()("GRPC")
+            ).load()()
         except StopIteration:
             raise RuntimeError(
                 f"Requested component '{credential_env}' not found in "

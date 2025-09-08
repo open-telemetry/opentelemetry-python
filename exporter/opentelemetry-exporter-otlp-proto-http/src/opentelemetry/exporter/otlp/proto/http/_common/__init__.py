@@ -53,7 +53,7 @@ def _load_session_from_envvar(
                         name=credential_env,
                     )
                 )
-            ).load()("HTTP")
+            ).load()()
         except StopIteration:
             raise RuntimeError(
                 f"Requested component '{credential_env}' not found in "
