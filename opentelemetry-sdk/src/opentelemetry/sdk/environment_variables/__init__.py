@@ -400,8 +400,8 @@ OTEL_PYTHON_EXPORTER_OTLP_LOGS_CREDENTIAL_PROVIDER = (
 """
 .. envvar:: OTEL_PYTHON_EXPORTER_OTLP_LOGS_CREDENTIAL_PROVIDER
 
-The :envvar:`OTEL_PYTHON_EXPORTER_OTLP_LOGS_CREDENTIAL_PROVIDER` provides either ChannelCredentials for grpc OTLP Log exporters,
-or request.Session for HTTP Log exporters.
+The :envvar:`OTEL_PYTHON_EXPORTER_OTLP_LOGS_CREDENTIAL_PROVIDER` provides either `grpc.ChannelCredentials` for grpc OTLP Log exporters,
+or `request.Session` for HTTP Log exporters.
 """
 OTEL_PYTHON_EXPORTER_OTLP_CREDENTIAL_PROVIDER = (
     "OTEL_PYTHON_EXPORTER_OTLP_CREDENTIAL_PROVIDER"
