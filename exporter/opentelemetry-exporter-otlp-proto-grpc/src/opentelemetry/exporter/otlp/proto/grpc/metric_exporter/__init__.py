@@ -51,7 +51,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_HEADERS,
     OTEL_EXPORTER_OTLP_METRICS_INSECURE,
     OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
-    OTEL_PYTHON_EXPORTER_OTLP_GRPC_METRICS_CREDENTIAL_PROVIDER,
+    _OTEL_PYTHON_EXPORTER_OTLP_GRPC_METRICS_CREDENTIAL_PROVIDER,
 )
 from opentelemetry.sdk.metrics._internal.aggregation import Aggregation
 from opentelemetry.sdk.metrics.export import (  # noqa: F401
@@ -119,7 +119,7 @@ class OTLPMetricExporter(
         ):
             credentials = _get_credentials(
                 credentials,
-                OTEL_PYTHON_EXPORTER_OTLP_GRPC_METRICS_CREDENTIAL_PROVIDER,
+                _OTEL_PYTHON_EXPORTER_OTLP_GRPC_METRICS_CREDENTIAL_PROVIDER,
                 OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,
                 OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY,
                 OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE,

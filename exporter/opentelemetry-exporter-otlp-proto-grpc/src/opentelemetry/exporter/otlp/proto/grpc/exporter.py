@@ -61,6 +61,7 @@ from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401
 from opentelemetry.proto.resource.v1.resource_pb2 import Resource  # noqa: F401
 from opentelemetry.sdk._shared_internal import DuplicateFilter
 from opentelemetry.sdk.environment_variables import (
+    _OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_KEY,
@@ -69,7 +70,6 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_HEADERS,
     OTEL_EXPORTER_OTLP_INSECURE,
     OTEL_EXPORTER_OTLP_TIMEOUT,
-    OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER,
 )
 from opentelemetry.sdk.metrics.export import MetricsData
 from opentelemetry.sdk.resources import Resource as SDKResource
@@ -306,7 +306,7 @@ class OTLPExporterMixin(
         else:
             self._credentials = _get_credentials(
                 credentials,
-                OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER,
+                _OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER,
                 OTEL_EXPORTER_OTLP_CERTIFICATE,
                 OTEL_EXPORTER_OTLP_CLIENT_KEY,
                 OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,

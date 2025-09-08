@@ -394,7 +394,7 @@ The endpoint MUST be a valid URL host, and MAY contain a scheme (http or https),
 A scheme of https indicates a secure connection and takes precedence over this configuration setting.
 """
 
-OTEL_PYTHON_EXPORTER_OTLP_GRPC_LOGS_CREDENTIAL_PROVIDER = (
+_OTEL_PYTHON_EXPORTER_OTLP_GRPC_LOGS_CREDENTIAL_PROVIDER = (
     "OTEL_PYTHON_EXPORTER_OTLP_GRPC_LOGS_CREDENTIAL_PROVIDER"
 )
 """
@@ -413,7 +413,7 @@ Entry point providers should implement the following:
 Note: This environment variable is experimental and subject to change.
 """
 
-OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER = (
+_OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER = (
     "OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER"
 )
 """
@@ -431,7 +431,7 @@ Entry point providers should implement the following:
 
 Note: This environment variable is experimental and subject to change.
 """
-OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER = (
+_OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER = (
     "OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER"
 )
 """
@@ -449,7 +449,7 @@ Entry point providers should implement the following:
 
 Note: This environment variable is experimental and subject to change.
 """
-OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER = (
+_OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER = (
     "OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER"
 )
 """
@@ -467,7 +467,7 @@ Entry point providers should implement the following:
 
 Note: This environment variable is experimental and subject to change.
 """
-OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER = (
+_OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER = (
     "OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER"
 )
 """
@@ -485,7 +485,7 @@ Entry point providers should implement the following:
 
 Note: This environment variable is experimental and subject to change.
 """
-OTEL_PYTHON_EXPORTER_OTLP_GRPC_TRACES_CREDENTIAL_PROVIDER = (
+_OTEL_PYTHON_EXPORTER_OTLP_GRPC_TRACES_CREDENTIAL_PROVIDER = (
     "OTEL_PYTHON_EXPORTER_OTLP_GRPC_TRACES_CREDENTIAL_PROVIDER"
 )
 """
@@ -503,7 +503,7 @@ Entry point providers should implement the following:
 
 Note: This environment variable is experimental and subject to change.
 """
-OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER = (
+_OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER = (
     "OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER"
 )
 """
@@ -521,7 +521,7 @@ Entry point providers should implement the following:
 
 Note: This environment variable is experimental and subject to change.
 """
-OTEL_PYTHON_EXPORTER_OTLP_GRPC_METRICS_CREDENTIAL_PROVIDER = (
+_OTEL_PYTHON_EXPORTER_OTLP_GRPC_METRICS_CREDENTIAL_PROVIDER = (
     "OTEL_PYTHON_EXPORTER_OTLP_GRPC_METRICS_CREDENTIAL_PROVIDER"
 )
 """
