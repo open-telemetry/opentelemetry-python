@@ -50,7 +50,7 @@ from opentelemetry.proto.collector.trace.v1.trace_service_pb2_grpc import (
 )
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_COMPRESSION,
-    OTEL_PYTHON_EXPORTER_OTLP_CREDENTIAL_PROVIDER,
+    OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER,
 )
 from opentelemetry.sdk.trace import ReadableSpan, _Span
 from opentelemetry.sdk.trace.export import (
@@ -288,7 +288,9 @@ class TestOTLPExporterMixin(TestCase):
 
     @patch.dict(
         "os.environ",
-        {OTEL_PYTHON_EXPORTER_OTLP_CREDENTIAL_PROVIDER: "credential_provider"},
+        {
+            OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER: "credential_provider"
+        },
     )
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.entry_points")
     def test_that_credential_gets_passed_to_exporter(self, mock_entry_points):
@@ -306,7 +308,9 @@ class TestOTLPExporterMixin(TestCase):
 
     @patch.dict(
         "os.environ",
-        {OTEL_PYTHON_EXPORTER_OTLP_CREDENTIAL_PROVIDER: "credential_provider"},
+        {
+            OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER: "credential_provider"
+        },
     )
     def test_that_missing_entry_point_raises_exception(self):
         with self.assertRaises(RuntimeError):
@@ -314,10 +318,14 @@ class TestOTLPExporterMixin(TestCase):
 
     @patch.dict(
         "os.environ",
-        {OTEL_PYTHON_EXPORTER_OTLP_CREDENTIAL_PROVIDER: "credential_provider"},
+        {
+            OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER: "credential_provider"
+        },
     )
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.entry_points")
-    def test_that_entry_point_returning_bad_type_raises_exception(self, mock_entry_points):
+    def test_that_entry_point_returning_bad_type_raises_exception(
+        self, mock_entry_points
+    ):
         def f():
             return 1
 

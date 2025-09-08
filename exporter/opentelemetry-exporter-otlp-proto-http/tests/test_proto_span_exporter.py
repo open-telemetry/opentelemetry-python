@@ -46,7 +46,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
     OTEL_EXPORTER_OTLP_TRACES_HEADERS,
     OTEL_EXPORTER_OTLP_TRACES_TIMEOUT,
-    OTEL_PYTHON_EXPORTER_OTLP_TRACES_CREDENTIAL_PROVIDER,
+    OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER,
 )
 from opentelemetry.sdk.trace import _Span
 from opentelemetry.sdk.trace.export import SpanExportResult
@@ -113,7 +113,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
             OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "https://traces.endpoint.env",
             OTEL_EXPORTER_OTLP_TRACES_HEADERS: "tracesEnv1=val1,tracesEnv2=val2,traceEnv3===val3==,User-agent=TraceUserAgent",
             OTEL_EXPORTER_OTLP_TRACES_TIMEOUT: "40",
-            OTEL_PYTHON_EXPORTER_OTLP_TRACES_CREDENTIAL_PROVIDER: "credential_provider",
+            OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER: "credential_provider",
         },
     )
     @patch("opentelemetry.exporter.otlp.proto.http._common.entry_points")

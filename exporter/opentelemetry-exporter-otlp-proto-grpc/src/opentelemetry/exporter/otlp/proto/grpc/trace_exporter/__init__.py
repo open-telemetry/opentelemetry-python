@@ -54,7 +54,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TRACES_HEADERS,
     OTEL_EXPORTER_OTLP_TRACES_INSECURE,
     OTEL_EXPORTER_OTLP_TRACES_TIMEOUT,
-    OTEL_PYTHON_EXPORTER_OTLP_TRACES_CREDENTIAL_PROVIDER,
+    OTEL_PYTHON_EXPORTER_OTLP_GRPC_TRACES_CREDENTIAL_PROVIDER,
 )
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
@@ -107,7 +107,7 @@ class OTLPSpanExporter(
         ):
             credentials = _get_credentials(
                 credentials,
-                OTEL_PYTHON_EXPORTER_OTLP_TRACES_CREDENTIAL_PROVIDER,
+                OTEL_PYTHON_EXPORTER_OTLP_GRPC_TRACES_CREDENTIAL_PROVIDER,
                 OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
                 OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
                 OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,

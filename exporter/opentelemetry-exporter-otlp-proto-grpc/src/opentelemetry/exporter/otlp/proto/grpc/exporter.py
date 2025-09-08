@@ -69,7 +69,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_HEADERS,
     OTEL_EXPORTER_OTLP_INSECURE,
     OTEL_EXPORTER_OTLP_TIMEOUT,
-    OTEL_PYTHON_EXPORTER_OTLP_CREDENTIAL_PROVIDER,
+    OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER,
 )
 from opentelemetry.sdk.metrics.export import MetricsData
 from opentelemetry.sdk.resources import Resource as SDKResource
@@ -306,7 +306,7 @@ class OTLPExporterMixin(
         else:
             self._credentials = _get_credentials(
                 credentials,
-                OTEL_PYTHON_EXPORTER_OTLP_CREDENTIAL_PROVIDER,
+                OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER,
                 OTEL_EXPORTER_OTLP_CERTIFICATE,
                 OTEL_EXPORTER_OTLP_CLIENT_KEY,
                 OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
