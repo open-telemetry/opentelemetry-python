@@ -306,7 +306,9 @@ class LogRecord(APILogRecord):
                     dict(self.attributes) if bool(self.attributes) else None
                 ),
                 "dropped_attributes": self.dropped_attributes,
-                "timestamp": ns_to_iso_str(self.timestamp),
+                "timestamp": ns_to_iso_str(self.timestamp)
+                if self.timestamp is not None
+                else None,
                 "observed_timestamp": ns_to_iso_str(self.observed_timestamp),
                 "trace_id": (
                     f"0x{format_trace_id(self.trace_id)}"

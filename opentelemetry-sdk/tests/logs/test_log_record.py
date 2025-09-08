@@ -62,6 +62,16 @@ class TestLogRecord(unittest.TestCase):
         decoded = json.loads(actual.to_json())
         self.assertEqual(SeverityNumber.WARN.value, decoded["severity_number"])
 
+    def test_log_record_to_json_serializes_null_severity_number(self):
+        actual = LogRecord(
+            observed_timestamp=0,
+            body="a log line",
+            resource=Resource({"service.name": "foo"}),
+        )
+
+        decoded = json.loads(actual.to_json())
+        self.assertEqual(None, decoded["timestamp"])
+
     def test_log_record_bounded_attributes(self):
         attr = {"key": "value"}
 
