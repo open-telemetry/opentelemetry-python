@@ -633,16 +633,17 @@ class LoggingHandler(logging.Handler):
             "WARN" if record.levelname == "WARNING" else record.levelname
         )
 
-        logger = get_logger(record.name, logger_provider=self._logger_provider)
-        return LogRecord(
+        # FIXME: what to do with the resource?
+        # logger = get_logger(record.name, logger_provider=self._logger_provider)
+        return dict(
             timestamp=timestamp,
             observed_timestamp=observered_timestamp,
             context=get_current() or None,
             severity_text=level_name,
             severity_number=severity_number,
             body=body,
-            resource=logger.resource,
             attributes=attributes,
+            # resource=logger.resource,
         )
 
     def emit(self, record: logging.LogRecord) -> None:
@@ -653,7 +654,7 @@ class LoggingHandler(logging.Handler):
         """
         logger = get_logger(record.name, logger_provider=self._logger_provider)
         if not isinstance(logger, NoOpLogger):
-            logger.emit(self._translate(record))
+            logger.emit(**self._translate(record))
 
     def flush(self) -> None:
         """
@@ -692,16 +693,42 @@ class Logger(APILogger):
     def resource(self):
         return self._resource
 
-    def emit(self, record: APILogRecord):
+    def emit(
+        self,
+        # record is not on the specs and will be deprecated in a followup release
+        record: APILogRecord | None = None,
+        *,
+        timestamp: int | None = None,
+        observed_timestamp: int | None = None,
+        context: Context | None = None,
+        severity_text: str | None = None,
+        severity_number: SeverityNumber | None = None,
+        body: AnyValue | None = None,
+        attributes: _ExtendedAttributes | None = None,
+        event_name: str | None = None,
+    ):
         """Emits the :class:`LogData` by associating :class:`LogRecord`
         and instrumentation info.
         """
-        if not isinstance(record, LogRecord):
+        if not record:
+            record = LogRecord(
+                timestamp=timestamp,
+                observed_timestamp=observed_timestamp,
+                context=context,
+                severity_text=severity_text,
+                severity_number=severity_number,
+                body=body,
+                attributes=attributes,
+                event_name=event_name,
+            )
+        elif not isinstance(record, LogRecord):
             # pylint:disable=protected-access
             record = LogRecord._from_api_log_record(
                 record=record, resource=self._resource
             )
+
         log_data = LogData(record, self._instrumentation_scope)
+
         self._multi_log_record_processor.on_emit(log_data)
 
 
