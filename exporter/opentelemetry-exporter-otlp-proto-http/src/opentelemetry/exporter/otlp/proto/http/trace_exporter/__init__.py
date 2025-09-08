@@ -51,6 +51,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
     OTEL_EXPORTER_OTLP_TRACES_HEADERS,
     OTEL_EXPORTER_OTLP_TRACES_TIMEOUT,
+    OTEL_PYTHON_EXPORTER_OTLP_TRACES_CREDENTIAL_PROVIDER,
 )
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
@@ -118,7 +119,9 @@ class OTLPSpanExporter(SpanExporter):
         self._compression = compression or _compression_from_env()
         self._session = (
             session
-            or _load_session_from_envvar("traces")
+            or _load_session_from_envvar(
+                OTEL_PYTHON_EXPORTER_OTLP_TRACES_CREDENTIAL_PROVIDER
+            )
             or requests.Session()
         )
         self._session.headers.update(self._headers)

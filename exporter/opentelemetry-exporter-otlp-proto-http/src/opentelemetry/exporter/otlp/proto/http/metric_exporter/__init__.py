@@ -77,6 +77,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY,
     OTEL_EXPORTER_OTLP_METRICS_COMPRESSION,
+    OTEL_PYTHON_EXPORTER_OTLP_METRICS_CREDENTIAL_PROVIDER
     OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
     OTEL_EXPORTER_OTLP_METRICS_HEADERS,
     OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
@@ -162,7 +163,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         self._compression = compression or _compression_from_env()
         self._session = (
             session
-            or _load_session_from_envvar("metrics")
+            or _load_session_from_envvar(OTEL_PYTHON_EXPORTER_OTLP_METRICS_CREDENTIAL_PROVIDER)
             or requests.Session()
         )
         self._session.headers.update(self._headers)
