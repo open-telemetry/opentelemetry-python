@@ -14,6 +14,7 @@
 
 # pylint: disable=protected-access
 
+
 class IterEntryPoint:
     def __init__(self, name, class_type):
         self.name = name
