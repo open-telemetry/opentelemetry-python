@@ -126,7 +126,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
     def test_exporter_logs_env_take_priority(self, mock_entry_points):
         credential = Session()
 
-        def f(_):
+        def f():
             return credential
 
         mock_entry_points.configure_mock(
@@ -161,6 +161,23 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             exporter._session.headers.get("Content-Type"),
             "application/x-protobuf",
         )
+
+
+    @patch.dict(
+        "os.environ",
+        {
+            OTEL_PYTHON_EXPORTER_OTLP_LOGS_CREDENTIAL_PROVIDER: "provider_without_entry_point",
+        },
+    )
+    @patch("opentelemetry.exporter.otlp.proto.http._common.entry_points")
+    def test_exception_raised_when_entrypoint_returns_wrong_type(self, mock_entry_points):
+        def f():
+            return 1
+        mock_entry_points.configure_mock(
+            return_value=[IterEntryPoint("custom_credential", f)]
+        )
+        with self.assertRaises(RuntimeError):
+            OTLPLogExporter()
 
     @patch.dict(
         "os.environ",

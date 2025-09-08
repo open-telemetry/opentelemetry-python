@@ -120,7 +120,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
     def test_exporter_traces_env_take_priority(self, mock_entry_point):
         credential = Session()
 
-        def f(_):
+        def f():
             return credential
 
         mock_entry_point.configure_mock(

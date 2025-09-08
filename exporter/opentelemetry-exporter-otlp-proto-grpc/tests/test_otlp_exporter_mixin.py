@@ -294,7 +294,7 @@ class TestOTLPExporterMixin(TestCase):
     def test_that_credential_gets_passed_to_exporter(self, mock_entry_points):
         credential = ChannelCredentials(None)
 
-        def f(_):
+        def f():
             return credential
 
         mock_entry_points.configure_mock(
@@ -303,6 +303,29 @@ class TestOTLPExporterMixin(TestCase):
         exporter = OTLPSpanExporterForTesting(insecure=False)
         # pylint: disable=protected-access
         assert exporter._credentials is credential
+
+    @patch.dict(
+        "os.environ",
+        {OTEL_PYTHON_EXPORTER_OTLP_CREDENTIAL_PROVIDER: "credential_provider"},
+    )
+    def test_that_missing_entry_point_raises_exception(self):
+        with self.assertRaises(RuntimeError):
+            OTLPSpanExporterForTesting(insecure=False)
+
+    @patch.dict(
+        "os.environ",
+        {OTEL_PYTHON_EXPORTER_OTLP_CREDENTIAL_PROVIDER: "credential_provider"},
+    )
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.entry_points")
+    def test_that_entry_point_returning_bad_type_raises_exception(self, mock_entry_points):
+        def f():
+            return 1
+
+        mock_entry_points.configure_mock(
+            return_value=[IterEntryPoint("custom_credential", f)]
+        )
+        with self.assertRaises(RuntimeError):
+            OTLPSpanExporterForTesting(insecure=False)
 
     # pylint: disable=no-self-use, disable=unused-argument
     @patch(

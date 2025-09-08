@@ -196,6 +196,11 @@ def _get_credentials(
             )
         if isinstance(maybe_channel_creds, ChannelCredentials):
             return maybe_channel_creds
+        else:
+            raise RuntimeError(
+                f"Requested component '{credential_env}' is of type {type(maybe_channel_creds)}"
+                f" must be of type `grpc.ChannelCredentials`."
+            )
 
     certificate_file = environ.get(certificate_file_env_key)
     if certificate_file:

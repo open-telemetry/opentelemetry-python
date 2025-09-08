@@ -61,4 +61,9 @@ def _load_session_from_envvar(
             )
         if isinstance(maybe_session, requests.Session):
             return maybe_session
+        else:
+            raise RuntimeError(
+                f"Requested component '{credential_env}' is of type {type(maybe_session)}"
+                f" must be of type `requests.Session`."
+            )
     return None

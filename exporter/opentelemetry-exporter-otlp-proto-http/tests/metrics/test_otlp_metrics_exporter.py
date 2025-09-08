@@ -163,7 +163,7 @@ class TestOTLPMetricExporter(TestCase):
     def test_exporter_metrics_env_take_priority(self, mock_entry_points):
         credential = Session()
 
-        def f(_):
+        def f():
             return credential
 
         mock_entry_points.configure_mock(
