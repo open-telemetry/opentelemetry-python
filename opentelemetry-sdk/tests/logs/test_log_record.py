@@ -189,6 +189,9 @@ class TestLogRecord(unittest.TestCase):
             timestamp=1,
             observed_timestamp=2,
             context=get_current(),
+            trace_id=123,
+            span_id=456,
+            trace_flags=TraceFlags(0x01),
             severity_text="WARN",
             severity_number=SeverityNumber.WARN,
             body="a log line",
@@ -201,6 +204,9 @@ class TestLogRecord(unittest.TestCase):
         self.assertEqual(record.timestamp, 1)
         self.assertEqual(record.observed_timestamp, 2)
         self.assertEqual(record.context, get_current())
+        self.assertEqual(record.trace_id, 123)
+        self.assertEqual(record.span_id, 456)
+        self.assertEqual(record.trace_flags, TraceFlags(0x01))
         self.assertEqual(record.severity_text, "WARN")
         self.assertEqual(record.severity_number, SeverityNumber.WARN)
         self.assertEqual(record.body, "a log line")
