@@ -42,29 +42,29 @@ def encode_logs(
 def _encode_log(readable_log_record: ReadableLogRecord) -> PB2LogRecord:
     span_id = (
         None
-        if readable_log_record.span_id == 0
-        else _encode_span_id(readable_log_record.span_id)
+        if readable_log_record.log_record.span_id == 0
+        else _encode_span_id(readable_log_record.log_record.span_id)
     )
     trace_id = (
         None
-        if readable_log_record.trace_id == 0
-        else _encode_trace_id(readable_log_record.trace_id)
+        if readable_log_record.log_record.trace_id == 0
+        else _encode_trace_id(readable_log_record.log_record.trace_id)
     )
-    body = readable_log_record.body
+    body = readable_log_record.log_record.body
     return PB2LogRecord(
-        time_unix_nano=readable_log_record.timestamp,
-        observed_time_unix_nano=readable_log_record.observed_timestamp,
+        time_unix_nano=readable_log_record.log_record.timestamp,
+        observed_time_unix_nano=readable_log_record.log_record.observed_timestamp,
         span_id=span_id,
         trace_id=trace_id,
-        flags=int(readable_log_record.trace_flags),
+        flags=int(readable_log_record.log_record.trace_flags),
         body=_encode_value(body, allow_null=True),
-        severity_text=readable_log_record.severity_text,
+        severity_text=readable_log_record.log_record.severity_text,
         attributes=_encode_attributes(
-            readable_log_record.attributes, allow_null=True
+            readable_log_record.log_record.attributes, allow_null=True
         ),
         dropped_attributes_count=readable_log_record.dropped_attributes,
-        severity_number=readable_log_record.severity_number.value,
-        event_name=readable_log_record.event_name,
+        severity_number=readable_log_record.log_record.severity_number.value,
+        event_name=readable_log_record.log_record.event_name,
     )
 
 

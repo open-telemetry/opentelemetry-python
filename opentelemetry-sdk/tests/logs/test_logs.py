@@ -109,13 +109,21 @@ class TestReadableLogRecord(unittest.TestCase):
         """Test that ReadableLogRecord is frozen and cannot be modified."""
         with self.assertRaises((AttributeError, TypeError)):
             self.readable_log_record.log_record = LogRecord(
-                timestamp=999,
-                body="Modified"
+                timestamp=999, body="Modified"
             )
 
     def test_readable_log_record_can_read_attributes(self):
         """Test that ReadableLogRecord provides read access to all fields."""
-        self.assertEqual(self.readable_log_record.log_record.timestamp, 1234567890)
-        self.assertEqual(self.readable_log_record.log_record.body, "Test log message")
-        self.assertEqual(self.readable_log_record.log_record.attributes["key"], "value")
-        self.assertEqual(self.readable_log_record.resource.attributes["service.name"], "test-service")
+        self.assertEqual(
+            self.readable_log_record.log_record.timestamp, 1234567890
+        )
+        self.assertEqual(
+            self.readable_log_record.log_record.body, "Test log message"
+        )
+        self.assertEqual(
+            self.readable_log_record.log_record.attributes["key"], "value"
+        )
+        self.assertEqual(
+            self.readable_log_record.resource.attributes["service.name"],
+            "test-service",
+        )
