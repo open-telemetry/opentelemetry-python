@@ -53,18 +53,10 @@ class EventLogger(APIEventLogger):
         if isinstance(self._logger, NoOpLogger):
             # Do nothing if SDK is disabled
             return
-        # Create an API LogRecord and pass it to the logger. The SDK Logger
-        # will wrap this into a ReadWriteLogRecord and attach resource and
-        # instrumentation scope.
-        api_log_record = LogRecord(
-            timestamp=event.timestamp or time_ns(),
-            observed_timestamp=None,
-            severity_text=None,
-            severity_number=event.severity_number or SeverityNumber.INFO,
-            body=event.body,
-            attributes=event.attributes,
-        )
-        self._logger.emit(api_log_record)
+        # The Event is already an API LogRecord (it holds trace/span
+        # context and the event name). Forward it directly to the SDK
+        # logger so the original trace/span relationship is preserved.
+        self._logger.emit(event)
 
 
 class EventLoggerProvider(APIEventLoggerProvider):
