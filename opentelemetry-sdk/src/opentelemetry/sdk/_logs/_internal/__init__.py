@@ -337,6 +337,19 @@ class LogRecord(APILogRecord):
             return attributes.dropped
         return 0
 
+    @classmethod
+    def from_api_log_record(cls, record: APILogRecord) -> LogRecord:
+        return cls(
+            timestamp=record.timestamp,
+            observed_timestamp=record.observed_timestamp,
+            context=record.context,
+            severity_text=record.severity_text,
+            severity_number=record.severity_number,
+            body=record.body,
+            attributes=record.attributes,
+            event_name=record.event_name,
+        )
+
 
 class LogData:
     """Readable LogRecord data plus associated InstrumentationLibrary."""
@@ -680,10 +693,12 @@ class Logger(APILogger):
     def resource(self):
         return self._resource
 
-    def emit(self, record: LogRecord):
+    def emit(self, record: LogRecord | APILogRecord):
         """Emits the :class:`LogData` by associating :class:`LogRecord`
         and instrumentation info.
         """
+        if isinstance(record, APILogRecord):
+            record = LogRecord.from_api_log_record(record)
         log_data = LogData(record, self._instrumentation_scope)
         self._multi_log_record_processor.on_emit(log_data)
 

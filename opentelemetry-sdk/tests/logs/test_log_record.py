@@ -16,6 +16,7 @@ import json
 import unittest
 import warnings
 
+from opentelemetry._logs import LogRecord as APILogRecord
 from opentelemetry._logs.severity import SeverityNumber
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.context import get_current
@@ -182,3 +183,26 @@ class TestLogRecord(unittest.TestCase):
             for _ in range(10):
                 LogRecord(context=get_current())
         self.assertEqual(len(cw), 0)
+
+    def test_log_record_from_api_log_record(self):
+        api_log_record = APILogRecord(
+            timestamp=1,
+            observed_timestamp=2,
+            context=get_current(),
+            severity_text="WARN",
+            severity_number=SeverityNumber.WARN,
+            body="a log line",
+            attributes={"a": "b"},
+            event_name="an.event",
+        )
+
+        record = LogRecord.from_api_log_record(api_log_record)
+
+        self.assertEqual(record.timestamp, 1)
+        self.assertEqual(record.observed_timestamp, 2)
+        self.assertEqual(record.context, get_current())
+        self.assertEqual(record.severity_text, "WARN")
+        self.assertEqual(record.severity_number, SeverityNumber.WARN)
+        self.assertEqual(record.body, "a log line")
+        self.assertEqual(record.attributes, {"a": "b"})
+        self.assertEqual(record.event_name, "an.event")
