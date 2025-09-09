@@ -26,12 +26,15 @@ from opentelemetry.context import (
     detach,
     set_value,
 )
-from opentelemetry.sdk._logs._internal import (
+from opentelemetry.sdk._shared_internal import BatchProcessor
+from opentelemetry.sdk._logs import (
+    LogData, 
+    LogRecord, 
     LogRecordProcessor,
     ReadableLogRecord,
     ReadWriteLogRecord,
 )
-from opentelemetry.sdk._shared_internal import BatchProcessor
+from opentelemetry.sdk._shared_internal import BatchProcessor, DuplicateFilter
 from opentelemetry.sdk.environment_variables import (
     OTEL_BLRP_EXPORT_TIMEOUT,
     OTEL_BLRP_MAX_EXPORT_BATCH_SIZE,
@@ -47,6 +50,7 @@ _ENV_VAR_INT_VALUE_ERROR_MESSAGE = (
     "Unable to parse value for %s as integer. Defaulting to %s."
 )
 _logger = logging.getLogger(__name__)
+_logger.addFilter(DuplicateFilter())
 
 
 class LogExportResult(enum.Enum):

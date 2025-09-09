@@ -14,6 +14,7 @@
 
 # pylint: disable=protected-access
 import gc
+import logging
 import multiprocessing
 import os
 import threading
@@ -34,6 +35,9 @@ from opentelemetry.sdk._logs import (
 )
 from opentelemetry.sdk._logs.export import (
     BatchLogRecordProcessor,
+)
+from opentelemetry.sdk._shared_internal import (
+    DuplicateFilter,
 )
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -58,6 +62,7 @@ class MockExporterForTesting:
         self.num_export_calls = 0
         self.export_sleep = export_sleep
         self._shutdown = False
+        self.sleep_interrupted = False
         self.export_sleep_event = threading.Event()
 
     def export(self, _: list[Any]):
@@ -67,6 +72,7 @@ class MockExporterForTesting:
 
         sleep_interrupted = self.export_sleep_event.wait(self.export_sleep)
         if sleep_interrupted:
+            self.sleep_interrupted = True
             raise ValueError("Did not get to finish !")
 
     def shutdown(self):
@@ -221,7 +227,7 @@ class TestBatchProcessor:
         assert weak_ref() is None
 
     def test_shutdown_allows_1_export_to_finish(
-        self, batch_processor_class, telemetry, caplog
+        self, batch_processor_class, telemetry
     ):
         # This exporter throws an exception if it's export sleep cannot finish.
         exporter = MockExporterForTesting(export_sleep=2)
@@ -246,5 +252,15 @@ class TestBatchProcessor:
         time.sleep(0.1)
         assert processor._batch_processor._worker_thread.is_alive() is False
         # Expect the second call to be interrupted by shutdown, and the third call to never be made.
-        assert "Exception while exporting" in caplog.text
+        assert exporter.sleep_interrupted is True
         assert 2 == exporter.num_export_calls
+
+
+class TestCommonFuncs(unittest.TestCase):
+    def test_duplicate_logs_filter_works(self):
+        test_logger = logging.getLogger("testLogger")
+        test_logger.addFilter(DuplicateFilter())
+        with self.assertLogs("testLogger") as cm:
+            test_logger.info("message")
+            test_logger.info("message")
+        self.assertEqual(len(cm.output), 1)

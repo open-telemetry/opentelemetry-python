@@ -35,6 +35,7 @@ from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
 )
 from opentelemetry.exporter.otlp.proto.http.version import __version__
 from opentelemetry.sdk.environment_variables import (
+    _OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_KEY,
@@ -77,11 +78,13 @@ from opentelemetry.sdk.util.instrumentation import (
 )
 from opentelemetry.test.metrictestutil import _generate_sum
 
+from .._common import IterEntryPoint
+
 OS_ENV_ENDPOINT = "os.env.base"
 OS_ENV_CERTIFICATE = "os/env/base.crt"
 OS_ENV_CLIENT_CERTIFICATE = "os/env/client-cert.pem"
 OS_ENV_CLIENT_KEY = "os/env/client-key.pem"
-OS_ENV_HEADERS = "envHeader1=val1,envHeader2=val2"
+OS_ENV_HEADERS = "envHeader1=val1,envHeader2=val2,User-agent=Overridden"
 OS_ENV_TIMEOUT = "30"
 
 
@@ -151,11 +154,21 @@ class TestOTLPMetricExporter(TestCase):
             OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY: "metrics/client-key.pem",
             OTEL_EXPORTER_OTLP_METRICS_COMPRESSION: Compression.Deflate.value,
             OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: "https://metrics.endpoint.env",
-            OTEL_EXPORTER_OTLP_METRICS_HEADERS: "metricsEnv1=val1,metricsEnv2=val2,metricEnv3===val3==",
+            OTEL_EXPORTER_OTLP_METRICS_HEADERS: "metricsEnv1=val1,metricsEnv2=val2,metricEnv3===val3==,User-agent=metrics-user-agent",
             OTEL_EXPORTER_OTLP_METRICS_TIMEOUT: "40",
+            _OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER: "credential_provider",
         },
     )
-    def test_exporter_metrics_env_take_priority(self):
+    @patch("opentelemetry.exporter.otlp.proto.http._common.entry_points")
+    def test_exporter_metrics_env_take_priority(self, mock_entry_points):
+        credential = Session()
+
+        def f():
+            return credential
+
+        mock_entry_points.configure_mock(
+            return_value=[IterEntryPoint("custom_credential", f)]
+        )
         exporter = OTLPMetricExporter()
 
         self.assertEqual(exporter._endpoint, "https://metrics.endpoint.env")
@@ -172,9 +185,18 @@ class TestOTLPMetricExporter(TestCase):
                 "metricsenv1": "val1",
                 "metricsenv2": "val2",
                 "metricenv3": "==val3==",
+                "user-agent": "metrics-user-agent",
             },
         )
         self.assertIsInstance(exporter._session, Session)
+        self.assertEqual(
+            exporter._session.headers.get("User-Agent"),
+            "metrics-user-agent",
+        )
+        self.assertEqual(
+            exporter._session.headers.get("Content-Type"),
+            "application/x-protobuf",
+        )
 
     @patch.dict(
         "os.environ",
@@ -237,7 +259,12 @@ class TestOTLPMetricExporter(TestCase):
         self.assertEqual(exporter._timeout, int(OS_ENV_TIMEOUT))
         self.assertIs(exporter._compression, Compression.Gzip)
         self.assertEqual(
-            exporter._headers, {"envheader1": "val1", "envheader2": "val2"}
+            exporter._headers,
+            {
+                "envheader1": "val1",
+                "envheader2": "val2",
+                "user-agent": "Overridden",
+            },
         )
 
     @patch.dict(

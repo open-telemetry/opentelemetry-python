@@ -49,6 +49,7 @@ from opentelemetry.exporter.otlp.proto.http import (
 )
 from opentelemetry.exporter.otlp.proto.http._common import (
     _is_retryable,
+    _load_session_from_envvar,
 )
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (  # noqa: F401
     ExportMetricsServiceRequest,
@@ -66,6 +67,7 @@ from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as PB2Resource,
 )
 from opentelemetry.sdk.environment_variables import (
+    _OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_KEY,
@@ -159,9 +161,17 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             )
         )
         self._compression = compression or _compression_from_env()
-        self._session = session or requests.Session()
+        self._session = (
+            session
+            or _load_session_from_envvar(
+                _OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER
+            )
+            or requests.Session()
+        )
         self._session.headers.update(self._headers)
         self._session.headers.update(_OTLP_HTTP_HEADERS)
+        # let users override our defaults
+        self._session.headers.update(self._headers)
         if self._compression is not Compression.NoCompression:
             self._session.headers.update(
                 {"Content-Encoding": self._compression.value}

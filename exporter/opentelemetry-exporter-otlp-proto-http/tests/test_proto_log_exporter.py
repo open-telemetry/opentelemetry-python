@@ -42,6 +42,7 @@ from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
 from opentelemetry.sdk._logs import ReadWriteLogRecord
 from opentelemetry.sdk._logs.export import LogExportResult
 from opentelemetry.sdk.environment_variables import (
+    _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_KEY,
@@ -66,11 +67,13 @@ from opentelemetry.trace import (
     set_span_in_context,
 )
 
+from ._common import IterEntryPoint
+
 ENV_ENDPOINT = "http://localhost.env:8080/"
 ENV_CERTIFICATE = "/etc/base.crt"
 ENV_CLIENT_CERTIFICATE = "/etc/client-cert.pem"
 ENV_CLIENT_KEY = "/etc/client-key.pem"
-ENV_HEADERS = "envHeader1=val1,envHeader2=val2"
+ENV_HEADERS = "envHeader1=val1,envHeader2=val2,User-agent=Overridden"
 ENV_TIMEOUT = "30"
 
 
@@ -113,11 +116,21 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY: "logs/client-key.pem",
             OTEL_EXPORTER_OTLP_LOGS_COMPRESSION: Compression.Deflate.value,
             OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "https://logs.endpoint.env",
-            OTEL_EXPORTER_OTLP_LOGS_HEADERS: "logsEnv1=val1,logsEnv2=val2,logsEnv3===val3==",
+            OTEL_EXPORTER_OTLP_LOGS_HEADERS: "logsEnv1=val1,logsEnv2=val2,logsEnv3===val3==,User-agent=LogsUserAgent",
             OTEL_EXPORTER_OTLP_LOGS_TIMEOUT: "40",
+            _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER: "credential_provider",
         },
     )
-    def test_exporter_metrics_env_take_priority(self):
+    @patch("opentelemetry.exporter.otlp.proto.http._common.entry_points")
+    def test_exporter_logs_env_take_priority(self, mock_entry_points):
+        credential = Session()
+
+        def f():
+            return credential
+
+        mock_entry_points.configure_mock(
+            return_value=[IterEntryPoint("custom_credential", f)]
+        )
         exporter = OTLPLogExporter()
 
         self.assertEqual(exporter._endpoint, "https://logs.endpoint.env")
@@ -134,9 +147,48 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                 "logsenv1": "val1",
                 "logsenv2": "val2",
                 "logsenv3": "==val3==",
+                "user-agent": "LogsUserAgent",
             },
         )
+        self.assertIs(exporter._session, credential)
         self.assertIsInstance(exporter._session, requests.Session)
+        self.assertEqual(
+            exporter._session.headers.get("User-Agent"),
+            "LogsUserAgent",
+        )
+        self.assertEqual(
+            exporter._session.headers.get("Content-Type"),
+            "application/x-protobuf",
+        )
+
+    @patch.dict(
+        "os.environ",
+        {
+            _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER: "provider_without_entry_point",
+        },
+    )
+    @patch("opentelemetry.exporter.otlp.proto.http._common.entry_points")
+    def test_exception_raised_when_entrypoint_returns_wrong_type(
+        self, mock_entry_points
+    ):
+        def f():
+            return 1
+
+        mock_entry_points.configure_mock(
+            return_value=[IterEntryPoint("custom_credential", f)]
+        )
+        with self.assertRaises(RuntimeError):
+            OTLPLogExporter()
+
+    @patch.dict(
+        "os.environ",
+        {
+            _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER: "provider_without_entry_point",
+        },
+    )
+    def test_exception_raised_when_entrypoint_does_not_exist(self):
+        with self.assertRaises(RuntimeError):
+            OTLPLogExporter()
 
     @patch.dict(
         "os.environ",
@@ -201,7 +253,12 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         self.assertEqual(exporter._timeout, int(ENV_TIMEOUT))
         self.assertIs(exporter._compression, Compression.Gzip)
         self.assertEqual(
-            exporter._headers, {"envheader1": "val1", "envheader2": "val2"}
+            exporter._headers,
+            {
+                "envheader1": "val1",
+                "envheader2": "val2",
+                "user-agent": "Overridden",
+            },
         )
         self.assertIsInstance(exporter._session, requests.Session)
 

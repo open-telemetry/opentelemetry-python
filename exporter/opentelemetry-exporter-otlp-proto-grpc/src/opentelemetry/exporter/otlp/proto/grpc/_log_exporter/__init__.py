@@ -31,6 +31,7 @@ from opentelemetry.proto.collector.logs.v1.logs_service_pb2_grpc import (
 from opentelemetry.sdk._logs import ReadableLogRecord
 from opentelemetry.sdk._logs.export import LogExporter, LogExportResult
 from opentelemetry.sdk.environment_variables import (
+    _OTEL_PYTHON_EXPORTER_OTLP_GRPC_LOGS_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
     OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY,
@@ -74,6 +75,7 @@ class OTLPLogExporter(
         ):
             credentials = _get_credentials(
                 credentials,
+                _OTEL_PYTHON_EXPORTER_OTLP_GRPC_LOGS_CREDENTIAL_PROVIDER,
                 OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
                 OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY,
                 OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE,

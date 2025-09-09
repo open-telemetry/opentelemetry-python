@@ -435,7 +435,7 @@ def _get_from_env_or_default() -> Sampler:
 
     if trace_sampler in ("traceidratio", "parentbased_traceidratio"):
         try:
-            rate = float(os.getenv(OTEL_TRACES_SAMPLER_ARG))
+            rate = float(os.getenv(OTEL_TRACES_SAMPLER_ARG, ""))
         except (ValueError, TypeError):
             _logger.warning("Could not convert TRACES_SAMPLER_ARG to float.")
             rate = 1.0

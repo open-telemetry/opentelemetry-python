@@ -134,7 +134,7 @@ class SystemFilesystemTypeValues(Enum):
 
 class SystemMemoryStateValues(Enum):
     USED = "used"
-    """used."""
+    """Actual used virtual memory in bytes."""
     FREE = "free"
     """free."""
     SHARED = "shared"
