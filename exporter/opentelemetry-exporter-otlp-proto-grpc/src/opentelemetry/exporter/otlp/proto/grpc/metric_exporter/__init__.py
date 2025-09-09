@@ -43,6 +43,7 @@ from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401
 )
 from opentelemetry.proto.metrics.v1 import metrics_pb2 as pb2  # noqa: F401
 from opentelemetry.sdk.environment_variables import (
+    _OTEL_PYTHON_EXPORTER_OTLP_GRPC_METRICS_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,
     OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY,
@@ -118,6 +119,7 @@ class OTLPMetricExporter(
         ):
             credentials = _get_credentials(
                 credentials,
+                _OTEL_PYTHON_EXPORTER_OTLP_GRPC_METRICS_CREDENTIAL_PROVIDER,
                 OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,
                 OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY,
                 OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE,
