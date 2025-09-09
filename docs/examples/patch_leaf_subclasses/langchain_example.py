@@ -1,6 +1,6 @@
 import argparse
 
-from langchain_core.language_models import BaseLLM, BaseChatModel
+from langchain_core.language_models import BaseChatModel, BaseLLM
 from langchain_core.language_models.base import BaseLanguageModel
 
 # important note: if you import these after patching, the patch won't apply!
@@ -14,11 +14,19 @@ from opentelemetry.util._patch import patch_leaf_subclasses
 
 def parse_args():
     parser = argparse.ArgumentParser(description="LangChain model comparison")
-    parser.add_argument("--provider", choices=["ollama", "openai", "huggingface"], default="ollama",
-                        help="Choose model provider (default: ollama)")
+    parser.add_argument(
+        "--provider",
+        choices=["ollama", "openai", "huggingface"],
+        default="ollama",
+        help="Choose model provider (default: ollama)",
+    )
     parser.add_argument("--model", type=str, help="Specify model name")
-    parser.add_argument("--prompt", type=str, default="What is the capital of France?",
-                        help="Input prompt")
+    parser.add_argument(
+        "--prompt",
+        type=str,
+        default="What is the capital of France?",
+        help="Input prompt",
+    )
 
     return parser.parse_args()
 
@@ -26,7 +34,7 @@ def parse_args():
 def chat_with_model(model: BaseLanguageModel, prompt: str) -> str:
     try:
         response = model.invoke(prompt)
-        if hasattr(response, 'content'):
+        if hasattr(response, "content"):
             return response.content
         else:
             return str(response)
@@ -35,24 +43,15 @@ def chat_with_model(model: BaseLanguageModel, prompt: str) -> str:
 
 
 def create_huggingface_model(model: str = "google/flan-t5-small"):
-    return HuggingFaceEndpoint(
-        repo_id=model,
-        temperature=0.7
-    )
+    return HuggingFaceEndpoint(repo_id=model, temperature=0.7)
 
 
 def create_openai_model(model: str = "gpt-3.5-turbo"):
-    return ChatOpenAI(
-        model=model,
-        temperature=0.7
-    )
+    return ChatOpenAI(model=model, temperature=0.7)
 
 
 def create_ollama_model(model: str = "llama2"):
-    return OllamaLLM(
-        model=model,
-        temperature=0.7
-    )
+    return OllamaLLM(model=model, temperature=0.7)
 
 
 def patch_llm():

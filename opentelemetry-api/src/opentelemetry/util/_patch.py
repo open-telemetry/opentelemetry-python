@@ -14,7 +14,9 @@ def patch_leaf_subclasses(base_class, method_name, wrapper):
     for subclass in leaf_subclasses:
         # Patch if the subclass has the method (either defined or inherited)
         # and it's actually callable
-        if hasattr(subclass, method_name) and callable(getattr(subclass, method_name)):
+        if hasattr(subclass, method_name) and callable(
+            getattr(subclass, method_name)
+        ):
             old_method = getattr(subclass, method_name)
             setattr(subclass, method_name, wrapper(old_method))
 

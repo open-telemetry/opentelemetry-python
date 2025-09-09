@@ -19,7 +19,8 @@ class SpanishGreeter(Greeter):
         print("hola")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
+
     def my_wrapper(orig_fcn):
         def wrapped_fcn(self, *args, **kwargs):
             print("wrapper running")
@@ -27,7 +28,6 @@ if __name__ == '__main__':
             return result
 
         return wrapped_fcn
-
 
     patch_leaf_subclasses(Greeter, "greet", my_wrapper)
 
