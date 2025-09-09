@@ -26,10 +26,7 @@ from opentelemetry.context import (
     detach,
     set_value,
 )
-from opentelemetry.sdk._shared_internal import BatchProcessor
 from opentelemetry.sdk._logs import (
-    LogData, 
-    LogRecord, 
     LogRecordProcessor,
     ReadableLogRecord,
     ReadWriteLogRecord,

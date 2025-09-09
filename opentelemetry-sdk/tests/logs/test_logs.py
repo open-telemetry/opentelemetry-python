@@ -17,7 +17,8 @@
 import unittest
 from unittest.mock import Mock, patch
 
-from opentelemetry.sdk._logs import LoggerProvider
+from opentelemetry._logs import LogRecord, SeverityNumber
+from opentelemetry.sdk._logs import LoggerProvider, ReadableLogRecord
 from opentelemetry.sdk._logs._internal import (
     NoOpLogger,
     SynchronousMultiLogRecordProcessor,
@@ -85,3 +86,36 @@ class TestLoggerProvider(unittest.TestCase):
             )
         )
         self.assertIsNotNone(logger_provider._at_exit_handler)
+
+
+class TestReadableLogRecord(unittest.TestCase):
+    def setUp(self):
+        self.log_record = LogRecord(
+            timestamp=1234567890,
+            observed_timestamp=1234567891,
+            body="Test log message",
+            attributes={"key": "value"},
+            severity_number=SeverityNumber.INFO,
+            severity_text="INFO",
+        )
+        self.resource = Resource({"service.name": "test-service"})
+        self.readable_log_record = ReadableLogRecord(
+            log_record=self.log_record,
+            resource=self.resource,
+            instrumentation_scope=None,
+        )
+
+    def test_readable_log_record_is_frozen(self):
+        """Test that ReadableLogRecord is frozen and cannot be modified."""
+        with self.assertRaises((AttributeError, TypeError)):
+            self.readable_log_record.log_record = LogRecord(
+                timestamp=999,
+                body="Modified"
+            )
+
+    def test_readable_log_record_can_read_attributes(self):
+        """Test that ReadableLogRecord provides read access to all fields."""
+        self.assertEqual(self.readable_log_record.log_record.timestamp, 1234567890)
+        self.assertEqual(self.readable_log_record.log_record.body, "Test log message")
+        self.assertEqual(self.readable_log_record.log_record.attributes["key"], "value")
+        self.assertEqual(self.readable_log_record.resource.attributes["service.name"], "test-service")
