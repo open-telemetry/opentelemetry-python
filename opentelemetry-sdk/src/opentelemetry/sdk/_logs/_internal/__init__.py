@@ -177,6 +177,12 @@ class ReadableLogRecord:
     resource: Resource
     instrumentation_scope: InstrumentationScope
 
+    @property
+    def dropped_attributes(self) -> int:
+        if isinstance(self.log_record.attributes, BoundedAttributes):
+            return self.log_record.attributes.dropped
+        return 0
+
 
 @dataclass
 class ReadWriteLogRecord:
@@ -602,12 +608,12 @@ class Logger(APILogger):
         """Emits the :class:`ReadWriteLogRecord` by setting instrumentation scope
         and forwarding to the processor.
         """
-        sdk_log_record = ReadWriteLogRecord(
+        log_record = ReadWriteLogRecord(
             log_record=record,
             resource=self._resource,
             instrumentation_scope=self._instrumentation_scope,
         )
-        self._multi_log_record_processor.on_emit(sdk_log_record)
+        self._multi_log_record_processor.on_emit(log_record)
 
 
 class LoggerProvider(APILoggerProvider):
