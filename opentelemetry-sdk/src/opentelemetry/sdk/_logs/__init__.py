@@ -20,7 +20,8 @@ from opentelemetry.sdk._logs._internal import (
     LoggingHandler,
     LogLimits,
     LogRecordProcessor,
-    SDKLogRecord,
+    ReadableLogRecord,
+    ReadWriteLogRecord,
 )
 
 __all__ = [
@@ -30,5 +31,6 @@ __all__ = [
     "LogLimits",
     "LogRecordProcessor",
     "LogDroppedAttributesWarning",
-    "SDKLogRecord",
+    "ReadableLogRecord",
+    "ReadWriteLogRecord",
 ]

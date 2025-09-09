@@ -30,49 +30,53 @@ from opentelemetry.proto.logs.v1.logs_pb2 import (
     ResourceLogs,
     ScopeLogs,
 )
-from opentelemetry.sdk._logs import SDKLogRecord
+from opentelemetry.sdk._logs import ReadableLogRecord
 
 
-def encode_logs(batch: Sequence[SDKLogRecord]) -> ExportLogsServiceRequest:
+def encode_logs(
+    batch: Sequence[ReadableLogRecord],
+) -> ExportLogsServiceRequest:
     return ExportLogsServiceRequest(resource_logs=_encode_resource_logs(batch))
 
 
-def _encode_log(sdk_log_record: SDKLogRecord) -> PB2LogRecord:
+def _encode_log(readable_log_record: ReadableLogRecord) -> PB2LogRecord:
     span_id = (
         None
-        if sdk_log_record.log_record.span_id == 0
-        else _encode_span_id(sdk_log_record.log_record.span_id)
+        if readable_log_record.span_id == 0
+        else _encode_span_id(readable_log_record.span_id)
     )
     trace_id = (
         None
-        if sdk_log_record.log_record.trace_id == 0
-        else _encode_trace_id(sdk_log_record.log_record.trace_id)
+        if readable_log_record.trace_id == 0
+        else _encode_trace_id(readable_log_record.trace_id)
     )
-    body = sdk_log_record.log_record.body
+    body = readable_log_record.body
     return PB2LogRecord(
-        time_unix_nano=sdk_log_record.log_record.timestamp,
-        observed_time_unix_nano=sdk_log_record.log_record.observed_timestamp,
+        time_unix_nano=readable_log_record.timestamp,
+        observed_time_unix_nano=readable_log_record.observed_timestamp,
         span_id=span_id,
         trace_id=trace_id,
-        flags=int(sdk_log_record.log_record.trace_flags),
+        flags=int(readable_log_record.trace_flags),
         body=_encode_value(body, allow_null=True),
-        severity_text=sdk_log_record.log_record.severity_text,
+        severity_text=readable_log_record.severity_text,
         attributes=_encode_attributes(
-            sdk_log_record.log_record.attributes, allow_null=True
+            readable_log_record.attributes, allow_null=True
         ),
-        dropped_attributes_count=sdk_log_record.dropped_attributes,
-        severity_number=sdk_log_record.log_record.severity_number.value,
-        event_name=sdk_log_record.log_record.event_name,
+        dropped_attributes_count=readable_log_record.dropped_attributes,
+        severity_number=readable_log_record.severity_number.value,
+        event_name=readable_log_record.event_name,
     )
 
 
-def _encode_resource_logs(batch: Sequence[SDKLogRecord]) -> List[ResourceLogs]:
+def _encode_resource_logs(
+    batch: Sequence[ReadableLogRecord],
+) -> List[ResourceLogs]:
     sdk_resource_logs = defaultdict(lambda: defaultdict(list))
 
-    for sdk_log in batch:
-        sdk_resource = sdk_log.resource
-        sdk_instrumentation = sdk_log.instrumentation_scope or None
-        pb2_log = _encode_log(sdk_log)
+    for readable_log in batch:
+        sdk_resource = readable_log.resource
+        sdk_instrumentation = readable_log.instrumentation_scope or None
+        pb2_log = _encode_log(readable_log)
 
         sdk_resource_logs[sdk_resource][sdk_instrumentation].append(pb2_log)
 

@@ -39,7 +39,7 @@ from opentelemetry.exporter.otlp.proto.http.version import __version__
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
     ExportLogsServiceRequest,
 )
-from opentelemetry.sdk._logs import SDKLogRecord
+from opentelemetry.sdk._logs import ReadWriteLogRecord
 from opentelemetry.sdk._logs.export import LogExportResult
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
@@ -232,7 +232,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                 )
             )
         )
-        log = SDKLogRecord(
+        log = ReadWriteLogRecord(
             LogRecord(
                 timestamp=1644650195189786182,
                 context=ctx,
@@ -268,7 +268,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             )
         )
 
-        log = SDKLogRecord(
+        log = ReadWriteLogRecord(
             LogRecord(
                 timestamp=1644650195189786360,
                 context=ctx,
@@ -293,7 +293,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             self.fail("No log records found")
 
     @staticmethod
-    def _get_sdk_log_data() -> List[SDKLogRecord]:
+    def _get_sdk_log_data() -> List[ReadWriteLogRecord]:
         ctx_log1 = set_span_in_context(
             NonRecordingSpan(
                 SpanContext(
@@ -304,7 +304,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                 )
             )
         )
-        log1 = SDKLogRecord(
+        log1 = ReadWriteLogRecord(
             LogRecord(
                 timestamp=1644650195189786880,
                 context=ctx_log1,
@@ -328,7 +328,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                 )
             )
         )
-        log2 = SDKLogRecord(
+        log2 = ReadWriteLogRecord(
             LogRecord(
                 timestamp=1644650249738562048,
                 context=ctx_log2,
@@ -352,7 +352,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                 )
             )
         )
-        log3 = SDKLogRecord(
+        log3 = ReadWriteLogRecord(
             LogRecord(
                 timestamp=1644650427658989056,
                 context=ctx_log3,
@@ -374,7 +374,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                 )
             )
         )
-        log4 = SDKLogRecord(
+        log4 = ReadWriteLogRecord(
             LogRecord(
                 timestamp=1644650584292683008,
                 context=ctx_log4,

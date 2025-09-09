@@ -22,6 +22,7 @@ import logging
 import threading
 import traceback
 import warnings
+from dataclasses import dataclass
 from os import environ
 from threading import Lock
 from time import time_ns
@@ -168,10 +169,20 @@ _UnsetLogLimits = LogLimits(
 )
 
 
-class SDKLogRecord:
-    """A SDKLogRecord instance represents an event being logged.
+@dataclass(frozen=True)
+class ReadableLogRecord:
+    """Readable LogRecord should be kept exactly in-sync with ReadWriteLogRecord, only difference is the frozen=True param."""
 
-    SDKLogRecord instances are created and emitted via `Logger`
+    log_record: LogRecord
+    resource: Resource
+    instrumentation_scope: InstrumentationScope
+
+
+@dataclass
+class ReadWriteLogRecord:
+    """A ReadWriteLogRecord instance represents an event being logged.
+
+    ReadWriteLogRecord instances are created and emitted via `Logger`
     every time something is logged. They contain all the information
     pertinent to the event being logged.
     """
@@ -212,7 +223,7 @@ class SDKLogRecord:
             )
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, SDKLogRecord):
+        if not isinstance(other, ReadWriteLogRecord):
             return NotImplemented
         return self.__dict__ == other.__dict__
 
@@ -268,8 +279,8 @@ class LogRecordProcessor(abc.ABC):
     """
 
     @abc.abstractmethod
-    def on_emit(self, log_record: SDKLogRecord):
-        """Emits the `SDKLogRecord`"""
+    def on_emit(self, log_record: ReadWriteLogRecord):
+        """Emits the `ReadWriteLogRecord`"""
 
     @abc.abstractmethod
     def shutdown(self):
@@ -312,7 +323,7 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
         with self._lock:
             self._log_record_processors += (log_record_processor,)
 
-    def on_emit(self, log_record: SDKLogRecord) -> None:
+    def on_emit(self, log_record: ReadWriteLogRecord) -> None:
         for lp in self._log_record_processors:
             lp.on_emit(log_record)
 
@@ -386,7 +397,7 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
         for future in futures:
             future.result()
 
-    def on_emit(self, log_record: SDKLogRecord):
+    def on_emit(self, log_record: ReadWriteLogRecord):
         self._submit_and_wait(lambda lp: lp.on_emit, log_record)
 
     def shutdown(self):
@@ -588,10 +599,10 @@ class Logger(APILogger):
         return self._resource
 
     def emit(self, record: LogRecord):
-        """Emits the :class:`SDKLogRecord` by setting instrumentation scope
+        """Emits the :class:`ReadWriteLogRecord` by setting instrumentation scope
         and forwarding to the processor.
         """
-        sdk_log_record = SDKLogRecord(
+        sdk_log_record = ReadWriteLogRecord(
             log_record=record,
             resource=self._resource,
             instrumentation_scope=self._instrumentation_scope,

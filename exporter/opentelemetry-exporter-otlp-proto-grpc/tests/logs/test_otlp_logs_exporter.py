@@ -39,7 +39,7 @@ from opentelemetry.proto.logs.v1.logs_pb2 import ResourceLogs, ScopeLogs
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as OTLPResource,
 )
-from opentelemetry.sdk._logs import SDKLogRecord
+from opentelemetry.sdk._logs import ReadWriteLogRecord
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
     OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE,
@@ -74,7 +74,7 @@ class TestOTLPLogExporter(TestCase):
                 )
             )
         )
-        self.log_data_1 = SDKLogRecord(
+        self.log_data_1 = ReadWriteLogRecord(
             LogRecord(
                 timestamp=int(time.time() * 1e9),
                 context=ctx_log_data_1,
@@ -98,7 +98,7 @@ class TestOTLPLogExporter(TestCase):
                 )
             )
         )
-        self.log_data_2 = SDKLogRecord(
+        self.log_data_2 = ReadWriteLogRecord(
             LogRecord(
                 timestamp=int(time.time() * 1e9),
                 context=ctx_log_data_2,
@@ -122,7 +122,7 @@ class TestOTLPLogExporter(TestCase):
                 )
             )
         )
-        self.log_data_3 = SDKLogRecord(
+        self.log_data_3 = ReadWriteLogRecord(
             LogRecord(
                 timestamp=int(time.time() * 1e9),
                 context=ctx_log_data_3,
@@ -140,7 +140,7 @@ class TestOTLPLogExporter(TestCase):
                 SpanContext(0, 5213367945872657629, False, TraceFlags(0x01))
             )
         )
-        self.log_data_4 = SDKLogRecord(
+        self.log_data_4 = ReadWriteLogRecord(
             LogRecord(
                 timestamp=int(time.time() * 1e9),
                 context=ctx_log_data_4,
@@ -163,7 +163,7 @@ class TestOTLPLogExporter(TestCase):
                 )
             )
         )
-        self.log_data_5 = SDKLogRecord(
+        self.log_data_5 = ReadWriteLogRecord(
             LogRecord(
                 timestamp=int(time.time() * 1e9),
                 context=ctx_log_data_5,

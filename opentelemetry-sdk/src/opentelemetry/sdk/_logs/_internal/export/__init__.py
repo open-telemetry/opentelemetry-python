@@ -26,7 +26,11 @@ from opentelemetry.context import (
     detach,
     set_value,
 )
-from opentelemetry.sdk._logs import LogRecordProcessor, SDKLogRecord
+from opentelemetry.sdk._logs._internal import (
+    LogRecordProcessor,
+    ReadableLogRecord,
+    ReadWriteLogRecord,
+)
 from opentelemetry.sdk._shared_internal import BatchProcessor
 from opentelemetry.sdk.environment_variables import (
     OTEL_BLRP_EXPORT_TIMEOUT,
@@ -59,10 +63,10 @@ class LogExporter(abc.ABC):
     """
 
     @abc.abstractmethod
-    def export(self, batch: Sequence[SDKLogRecord]):
+    def export(self, batch: Sequence[ReadableLogRecord]) -> LogExportResult:
         """Exports a batch of logs.
         Args:
-            batch: The list of `SDKLogRecord` objects to be exported
+            batch: The list of `ReadableLogRecord` objects to be exported
         Returns:
             The result of the export
         """
@@ -87,13 +91,13 @@ class ConsoleLogExporter(LogExporter):
         self,
         out: IO = sys.stdout,
         formatter: Callable[
-            [SDKLogRecord], str
+            [ReadableLogRecord], str
         ] = lambda record: record.to_json() + linesep,
     ):
         self.out = out
         self.formatter = formatter
 
-    def export(self, batch: Sequence[SDKLogRecord]):
+    def export(self, batch: Sequence[ReadableLogRecord]):
         for log_record in batch:
             self.out.write(self.formatter(log_record))
         self.out.flush()
@@ -112,7 +116,7 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
         self._exporter = exporter
         self._shutdown = False
 
-    def on_emit(self, log_record: SDKLogRecord):
+    def on_emit(self, log_record: ReadWriteLogRecord):
         if self._shutdown:
             _logger.warning("Processor is already shutdown, ignoring call")
             return
@@ -185,7 +189,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
             "Log",
         )
 
-    def on_emit(self, log_record: SDKLogRecord) -> None:
+    def on_emit(self, log_record: ReadWriteLogRecord) -> None:
         return self._batch_processor.emit(log_record)
 
     def shutdown(self):

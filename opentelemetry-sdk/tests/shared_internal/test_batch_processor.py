@@ -30,7 +30,7 @@ from opentelemetry._logs import (
     LogRecord,
 )
 from opentelemetry.sdk._logs import (
-    SDKLogRecord,
+    ReadWriteLogRecord,
 )
 from opentelemetry.sdk._logs.export import (
     BatchLogRecordProcessor,
@@ -39,7 +39,7 @@ from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
-EMPTY_LOG = SDKLogRecord(
+EMPTY_LOG = ReadWriteLogRecord(
     log_record=LogRecord(),
     instrumentation_scope=InstrumentationScope("example", "example"),
 )

@@ -21,14 +21,14 @@ from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk._logs import (
     LogDroppedAttributesWarning,
     LogLimits,
-    SDKLogRecord,
+    ReadWriteLogRecord,
 )
 from opentelemetry.sdk.resources import Resource
 
 
 class TestLogRecord(unittest.TestCase):
     def test_log_record_to_json(self):
-        log_record = SDKLogRecord(
+        log_record = ReadWriteLogRecord(
             LogRecord(
                 timestamp=0,
                 observed_timestamp=0,
@@ -50,7 +50,7 @@ class TestLogRecord(unittest.TestCase):
         )
 
     def test_log_record_to_json_serializes_severity_number_as_int(self):
-        actual = SDKLogRecord(
+        actual = ReadWriteLogRecord(
             LogRecord(
                 timestamp=0,
                 severity_number=SeverityNumber.WARN,
@@ -66,7 +66,7 @@ class TestLogRecord(unittest.TestCase):
     def test_log_record_bounded_attributes(self):
         attr = {"key": "value"}
 
-        result = SDKLogRecord(
+        result = ReadWriteLogRecord(
             LogRecord(timestamp=0, body="a log line", attributes=attr)
         )
 
@@ -77,7 +77,7 @@ class TestLogRecord(unittest.TestCase):
     def test_log_record_dropped_attributes_empty_limits(self):
         attr = {"key": "value"}
 
-        result = SDKLogRecord(
+        result = ReadWriteLogRecord(
             LogRecord(timestamp=0, body="a log line", attributes=attr)
         )
 
@@ -89,7 +89,7 @@ class TestLogRecord(unittest.TestCase):
             max_attributes=1,
         )
 
-        result = SDKLogRecord(
+        result = ReadWriteLogRecord(
             LogRecord(timestamp=0, body="a log line", attributes=attr),
             limits=limits,
         )
@@ -104,7 +104,7 @@ class TestLogRecord(unittest.TestCase):
             max_attribute_length=1,
         )
 
-        result = SDKLogRecord(
+        result = ReadWriteLogRecord(
             LogRecord(
                 timestamp=0,
                 body="a log line",
@@ -123,7 +123,7 @@ class TestLogRecord(unittest.TestCase):
             max_attribute_length=1,
         )
 
-        result = SDKLogRecord(
+        result = ReadWriteLogRecord(
             LogRecord(
                 timestamp=0,
                 body="a log line",
@@ -143,7 +143,7 @@ class TestLogRecord(unittest.TestCase):
 
         with warnings.catch_warnings(record=True) as cw:
             for _ in range(10):
-                SDKLogRecord(
+                ReadWriteLogRecord(
                     LogRecord(
                         timestamp=0,
                         body="a log line",
@@ -162,7 +162,7 @@ class TestLogRecord(unittest.TestCase):
         attr = {"key": "value", "key2": "value2"}
         limits = LogLimits()
 
-        result = SDKLogRecord(
+        result = ReadWriteLogRecord(
             LogRecord(
                 timestamp=0,
                 body="a log line",

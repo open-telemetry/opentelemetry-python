@@ -25,7 +25,7 @@ from opentelemetry.sdk._logs import (
     LoggerProvider,
     LoggingHandler,
     LogRecordProcessor,
-    SDKLogRecord,
+    ReadableLogRecord,
 )
 from opentelemetry.semconv._incubating.attributes import code_attributes
 from opentelemetry.semconv.attributes import exception_attributes
@@ -123,7 +123,7 @@ class TestLoggingHandler(unittest.TestCase):
         self.assertIsNotNone(sdk_log_record.log_record.observed_timestamp)
 
     def test_log_record_user_attributes(self):
-        """Attributes can be injected into logs by adding them to the SDKLogRecord"""
+        """Attributes can be injected into logs by adding them to the ReadWriteLogRecord"""
         processor, logger = set_up_test_logging(logging.WARNING)
 
         # Assert emit gets called for warning message
@@ -438,7 +438,7 @@ class FakeProcessor(LogRecordProcessor):
     def __init__(self):
         self.log_data_emitted = []
 
-    def on_emit(self, log_record: SDKLogRecord):
+    def on_emit(self, log_record: ReadableLogRecord):
         self.log_data_emitted.append(log_record)
 
     def shutdown(self):
