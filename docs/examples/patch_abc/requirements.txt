@@ -1,0 +1,6 @@
+langchain-core
+langchain-openai
+langchain-ollama
+langchain-huggingface
+huggingface-hub
+opentelemetry-api
