@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from functools import lru_cache
+from functools import cache
 
 # FIXME: Use importlib.metadata (not importlib_metadata)
 # when support for 3.11 is dropped if the rest of
@@ -31,7 +31,7 @@ from importlib_metadata import (
 )
 
 
-@lru_cache()
+@cache
 def _original_entry_points_cached():
     return original_entry_points()
 
