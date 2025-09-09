@@ -64,7 +64,6 @@ class EventLogger(APIEventLogger):
             severity_text=None,
             severity_number=event.severity_number or SeverityNumber.INFO,
             body=event.body,
-            resource=getattr(self._logger, "resource", None),
             attributes=event.attributes,
         )
         self._logger.emit(log_record)
