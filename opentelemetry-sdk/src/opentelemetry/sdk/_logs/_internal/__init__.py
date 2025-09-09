@@ -306,7 +306,9 @@ class LogRecord(APILogRecord):
                     dict(self.attributes) if bool(self.attributes) else None
                 ),
                 "dropped_attributes": self.dropped_attributes,
-                "timestamp": ns_to_iso_str(self.timestamp),
+                "timestamp": ns_to_iso_str(self.timestamp)
+                if self.timestamp is not None
+                else None,
                 "observed_timestamp": ns_to_iso_str(self.observed_timestamp),
                 "trace_id": (
                     f"0x{format_trace_id(self.trace_id)}"
@@ -619,16 +621,17 @@ class LoggingHandler(logging.Handler):
             "WARN" if record.levelname == "WARNING" else record.levelname
         )
 
-        logger = get_logger(record.name, logger_provider=self._logger_provider)
-        return LogRecord(
+        # FIXME: what to do with the resource?
+        # logger = get_logger(record.name, logger_provider=self._logger_provider)
+        return dict(
             timestamp=timestamp,
             observed_timestamp=observered_timestamp,
             context=get_current() or None,
             severity_text=level_name,
             severity_number=severity_number,
             body=body,
-            resource=logger.resource,
             attributes=attributes,
+            # resource=logger.resource,
         )
 
     def emit(self, record: logging.LogRecord) -> None:
@@ -639,7 +642,7 @@ class LoggingHandler(logging.Handler):
         """
         logger = get_logger(record.name, logger_provider=self._logger_provider)
         if not isinstance(logger, NoOpLogger):
-            logger.emit(self._translate(record))
+            logger.emit(**self._translate(record))
 
     def flush(self) -> None:
         """
@@ -678,11 +681,37 @@ class Logger(APILogger):
     def resource(self):
         return self._resource
 
-    def emit(self, record: LogRecord):
+    def emit(
+        self,
+        # record is not on the specs and will be deprecated in a followup release
+        record: LogRecord | None = None,
+        *,
+        timestamp: int | None = None,
+        observed_timestamp: int | None = None,
+        context: Context | None = None,
+        severity_text: str | None = None,
+        severity_number: SeverityNumber | None = None,
+        body: AnyValue | None = None,
+        attributes: _ExtendedAttributes | None = None,
+        event_name: str | None = None,
+    ):
         """Emits the :class:`LogData` by associating :class:`LogRecord`
         and instrumentation info.
         """
+        if not record:
+            record = LogRecord(
+                timestamp=timestamp,
+                observed_timestamp=observed_timestamp,
+                context=context,
+                severity_text=severity_text,
+                severity_number=severity_number,
+                body=body,
+                attributes=attributes,
+                event_name=event_name,
+            )
+
         log_data = LogData(record, self._instrumentation_scope)
+
         self._multi_log_record_processor.on_emit(log_data)
 
 
