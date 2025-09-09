@@ -24,6 +24,8 @@ inject a `requests.Session` or `grpc.ChannelCredentials` object into OTLP export
   ([#4634](https://github.com/open-telemetry/opentelemetry-python/pull/4634))
 - semantic-conventions: Bump to 1.37.0
   ([#4731](https://github.com/open-telemetry/opentelemetry-python/pull/4731))
+- Performance: Cache `importlib_metadata.entry_points`
+  ([#4735](https://github.com/open-telemetry/opentelemetry-python/pull/4735))
 
 ## Version 1.36.0/0.57b0 (2025-07-29)
 
