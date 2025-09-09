@@ -9,7 +9,7 @@ from langchain_huggingface import HuggingFaceEndpoint
 from langchain_ollama import OllamaLLM
 from langchain_openai import ChatOpenAI
 
-from opentelemetry.util._wrap import patch_abc
+from opentelemetry.util._patch import patch_leaf_subclasses
 
 
 def parse_args():
@@ -66,10 +66,10 @@ def patch_llm():
         return wrapped_fcn
 
     # Patch traditional LLM models (Ollama, HuggingFace, etc.)
-    patch_abc(BaseLLM, "_generate", my_wrapper)
+    patch_leaf_subclasses(BaseLLM, "_generate", my_wrapper)
 
     # Patch chat models (OpenAI, Anthropic, Google, etc.)
-    patch_abc(BaseChatModel, "_generate", my_wrapper)
+    patch_leaf_subclasses(BaseChatModel, "_generate", my_wrapper)
 
 
 def main():

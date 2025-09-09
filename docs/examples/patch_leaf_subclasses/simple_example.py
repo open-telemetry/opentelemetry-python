@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from opentelemetry.util._wrap import patch_abc
+from opentelemetry.util._patch import patch_leaf_subclasses
 
 
 class Greeter(ABC):
@@ -29,7 +29,7 @@ if __name__ == '__main__':
         return wrapped_fcn
 
 
-    patch_abc(Greeter, "greet", my_wrapper)
+    patch_leaf_subclasses(Greeter, "greet", my_wrapper)
 
     EngishGreeter().greet()
     SpanishGreeter().greet()
