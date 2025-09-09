@@ -175,7 +175,7 @@ class ReadableLogRecord:
 
     log_record: LogRecord
     resource: Resource
-    instrumentation_scope: InstrumentationScope
+    instrumentation_scope: InstrumentationScope | None = None
 
     @property
     def dropped_attributes(self) -> int:
@@ -293,7 +293,7 @@ class LogRecordProcessor(abc.ABC):
         """Called when a :class:`opentelemetry.sdk._logs.Logger` is shutdown"""
 
     @abc.abstractmethod
-    def force_flush(self, timeout_millis: int = 30000):
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
         """Export all the received logs to the configured Exporter that have not yet
         been exported.
 

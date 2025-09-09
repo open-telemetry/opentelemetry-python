@@ -123,7 +123,13 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
             return
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
-            self._exporter.export((log_record,))
+            # Convert ReadWriteLogRecord to ReadableLogRecord before exporting
+            readable_log_record = ReadableLogRecord(
+                log_record=log_record.log_record,
+                resource=log_record.resource,
+                instrumentation_scope=log_record.instrumentation_scope,
+            )
+            self._exporter.export((readable_log_record,))
         except Exception:  # pylint: disable=broad-exception-caught
             _logger.exception("Exception while exporting logs.")
         detach(token)
@@ -191,7 +197,13 @@ class BatchLogRecordProcessor(LogRecordProcessor):
         )
 
     def on_emit(self, log_record: ReadWriteLogRecord) -> None:
-        return self._batch_processor.emit(log_record)
+        # Convert ReadWriteLogRecord to ReadableLogRecord before passing to BatchProcessor
+        readable_log_record = ReadableLogRecord(
+            log_record=log_record.log_record,
+            resource=log_record.resource,
+            instrumentation_scope=log_record.instrumentation_scope,
+        )
+        return self._batch_processor.emit(readable_log_record)
 
     def shutdown(self):
         return self._batch_processor.shutdown()
