@@ -47,6 +47,7 @@ from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as Pb2Resource,
 )
 from opentelemetry.sdk.environment_variables import (
+    _OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_KEY,
@@ -88,6 +89,8 @@ from opentelemetry.sdk.util.instrumentation import (
     InstrumentationScope as SDKInstrumentationScope,
 )
 from opentelemetry.test.metrictestutil import _generate_sum
+
+from .._common import IterEntryPoint
 
 OS_ENV_ENDPOINT = "os.env.base"
 OS_ENV_CERTIFICATE = "os/env/base.crt"
@@ -166,9 +169,19 @@ class TestOTLPMetricExporter(TestCase):
             OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: "https://metrics.endpoint.env",
             OTEL_EXPORTER_OTLP_METRICS_HEADERS: "metricsEnv1=val1,metricsEnv2=val2,metricEnv3===val3==,User-agent=metrics-user-agent",
             OTEL_EXPORTER_OTLP_METRICS_TIMEOUT: "40",
+            _OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER: "credential_provider",
         },
     )
-    def test_exporter_metrics_env_take_priority(self):
+    @patch("opentelemetry.exporter.otlp.proto.http._common.entry_points")
+    def test_exporter_metrics_env_take_priority(self, mock_entry_points):
+        credential = Session()
+
+        def f():
+            return credential
+
+        mock_entry_points.configure_mock(
+            return_value=[IterEntryPoint("custom_credential", f)]
+        )
         exporter = OTLPMetricExporter()
 
         self.assertEqual(exporter._endpoint, "https://metrics.endpoint.env")

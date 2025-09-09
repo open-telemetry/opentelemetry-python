@@ -34,8 +34,10 @@ from opentelemetry.exporter.otlp.proto.http import (
 )
 from opentelemetry.exporter.otlp.proto.http._common import (
     _is_retryable,
+    _load_session_from_envvar,
 )
 from opentelemetry.sdk.environment_variables import (
+    _OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_KEY,
@@ -115,7 +117,14 @@ class OTLPSpanExporter(SpanExporter):
             )
         )
         self._compression = compression or _compression_from_env()
-        self._session = session or requests.Session()
+        self._session = (
+            session
+            or _load_session_from_envvar(
+                _OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER
+            )
+            or requests.Session()
+        )
+        self._session.headers.update(self._headers)
         self._session.headers.update(_OTLP_HTTP_HEADERS)
         # let users override our defaults
         self._session.headers.update(self._headers)
