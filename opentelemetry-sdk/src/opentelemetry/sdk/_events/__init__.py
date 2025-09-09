@@ -24,7 +24,7 @@ from opentelemetry._logs import (
     SeverityNumber,
     get_logger_provider,
 )
-from opentelemetry.sdk._logs import Logger, LoggerProvider, ReadWriteLogRecord
+from opentelemetry.sdk._logs import Logger, LoggerProvider
 from opentelemetry.util.types import _ExtendedAttributes
 
 _logger = logging.getLogger(__name__)
@@ -53,18 +53,18 @@ class EventLogger(APIEventLogger):
         if isinstance(self._logger, NoOpLogger):
             # Do nothing if SDK is disabled
             return
-        log_record = ReadWriteLogRecord(
-            LogRecord(
-                timestamp=event.timestamp or time_ns(),
-                observed_timestamp=None,
-                severity_text=None,
-                severity_number=event.severity_number or SeverityNumber.INFO,
-                body=event.body,
-                attributes=event.attributes,
-            ),
-            resource=getattr(self._logger, "resource", None),
+        # Create an API LogRecord and pass it to the logger. The SDK Logger
+        # will wrap this into a ReadWriteLogRecord and attach resource and
+        # instrumentation scope.
+        api_log_record = LogRecord(
+            timestamp=event.timestamp or time_ns(),
+            observed_timestamp=None,
+            severity_text=None,
+            severity_number=event.severity_number or SeverityNumber.INFO,
+            body=event.body,
+            attributes=event.attributes,
         )
-        self._logger.emit(log_record)
+        self._logger.emit(api_log_record)
 
 
 class EventLoggerProvider(APIEventLoggerProvider):
