@@ -696,11 +696,11 @@ class Logger(APILogger):
     def resource(self):
         return self._resource
 
-    def emit(self, record: LogRecord | APILogRecord):
+    def emit(self, record: APILogRecord):
         """Emits the :class:`LogData` by associating :class:`LogRecord`
         and instrumentation info.
         """
-        if isinstance(record, APILogRecord):
+        if not isinstance(record, LogRecord):
             record = LogRecord._from_api_log_record(record)
             record.resource = self._resource
         log_data = LogData(record, self._instrumentation_scope)
