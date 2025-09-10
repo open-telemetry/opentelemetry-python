@@ -5,7 +5,7 @@ name: Misc 0
 
 on:
   push:
-    branches-ignore:
+    :
     - 'release/*'
   pull_request:
 

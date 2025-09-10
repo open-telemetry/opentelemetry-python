@@ -6,7 +6,8 @@ name: Test 0
 on:
   push:
     branches-ignore:
-    - 'release/*'
+    - 'release/
+    - 'otelbot/*'*'
   pull_request:
 
 permissions:
