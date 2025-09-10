@@ -338,7 +338,9 @@ class LogRecord(APILogRecord):
         return 0
 
     @classmethod
-    def _from_api_log_record(cls, record: APILogRecord) -> LogRecord:
+    def _from_api_log_record(
+        cls, *, record: APILogRecord, resource: Resource
+    ) -> LogRecord:
         return cls(
             timestamp=record.timestamp,
             observed_timestamp=record.observed_timestamp,
@@ -351,6 +353,7 @@ class LogRecord(APILogRecord):
             body=record.body,
             attributes=record.attributes,
             event_name=record.event_name,
+            resource=resource,
         )
 
 
@@ -701,8 +704,9 @@ class Logger(APILogger):
         and instrumentation info.
         """
         if not isinstance(record, LogRecord):
-            record = LogRecord._from_api_log_record(record)
-            record.resource = self._resource
+            record = LogRecord._from_api_log_record(
+                record=record, resource=self._resource
+            )
         log_data = LogData(record, self._instrumentation_scope)
         self._multi_log_record_processor.on_emit(log_data)
 

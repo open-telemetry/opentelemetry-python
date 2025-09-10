@@ -199,7 +199,10 @@ class TestLogRecord(unittest.TestCase):
             event_name="an.event",
         )
 
-        record = LogRecord._from_api_log_record(api_log_record)
+        resource = Resource.create({})
+        record = LogRecord._from_api_log_record(
+            record=api_log_record, resource=resource
+        )
 
         self.assertEqual(record.timestamp, 1)
         self.assertEqual(record.observed_timestamp, 2)
@@ -212,3 +215,4 @@ class TestLogRecord(unittest.TestCase):
         self.assertEqual(record.body, "a log line")
         self.assertEqual(record.attributes, {"a": "b"})
         self.assertEqual(record.event_name, "an.event")
+        self.assertEqual(record.resource, resource)
