@@ -66,7 +66,6 @@ def _encode_log(readable_log_record: ReadableLogRecord) -> PB2LogRecord:
         severity_number=getattr(
             readable_log_record.log_record.severity_number, "value", None
         ),
-        severity_number=readable_log_record.log_record.severity_number.value,
         event_name=readable_log_record.log_record.event_name,
     )
 

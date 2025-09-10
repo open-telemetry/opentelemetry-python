@@ -18,12 +18,14 @@ import warnings
 
 from opentelemetry._logs import LogRecord, SeverityNumber
 from opentelemetry.attributes import BoundedAttributes
+from opentelemetry.context import get_current
 from opentelemetry.sdk._logs import (
     LogDroppedAttributesWarning,
     LogLimits,
     ReadWriteLogRecord,
 )
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.trace.span import TraceFlags
 
 
 class TestLogRecord(unittest.TestCase):
@@ -64,9 +66,11 @@ class TestLogRecord(unittest.TestCase):
         self.assertEqual(SeverityNumber.WARN.value, decoded["severity_number"])
 
     def test_log_record_to_json_serializes_null_severity_number(self):
-        actual = LogRecord(
-            observed_timestamp=0,
-            body="a log line",
+        actual = ReadWriteLogRecord(
+            LogRecord(
+                observed_timestamp=0,
+                body="a log line",
+            ),
             resource=Resource({"service.name": "foo"}),
         )
 
@@ -183,34 +187,9 @@ class TestLogRecord(unittest.TestCase):
         self.assertTrue(result.dropped_attributes == 0)
         self.assertEqual(attr, result.log_record.attributes)
 
-    def test_log_record_deprecated_init_warning(self):
-        test_cases = [
-            {"trace_id": 123},
-            {"span_id": 123},
-            {"trace_flags": TraceFlags(0x01)},
-        ]
-
-        for params in test_cases:
-            with self.subTest(params=params):
-                with warnings.catch_warnings(record=True) as cw:
-                    for _ in range(10):
-                        LogRecord(**params)
-
-                self.assertEqual(len(cw), 1)
-                self.assertIsInstance(cw[-1].message, LogDeprecatedInitWarning)
-                self.assertIn(
-                    "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated since 1.35.0. Use `context` instead.",
-                    str(cw[-1].message),
-                )
-
-        with warnings.catch_warnings(record=True) as cw:
-            for _ in range(10):
-                LogRecord(context=get_current())
-        self.assertEqual(len(cw), 0)
-
     # pylint:disable=protected-access
     def test_log_record_from_api_log_record(self):
-        api_log_record = APILogRecord(
+        api_log_record = LogRecord(
             timestamp=1,
             observed_timestamp=2,
             context=get_current(),
@@ -225,19 +204,21 @@ class TestLogRecord(unittest.TestCase):
         )
 
         resource = Resource.create({})
-        record = LogRecord._from_api_log_record(
+        record = ReadWriteLogRecord._from_api_log_record(
             record=api_log_record, resource=resource
         )
 
-        self.assertEqual(record.timestamp, 1)
-        self.assertEqual(record.observed_timestamp, 2)
-        self.assertEqual(record.context, get_current())
-        self.assertEqual(record.trace_id, 123)
-        self.assertEqual(record.span_id, 456)
-        self.assertEqual(record.trace_flags, TraceFlags(0x01))
-        self.assertEqual(record.severity_text, "WARN")
-        self.assertEqual(record.severity_number, SeverityNumber.WARN)
-        self.assertEqual(record.body, "a log line")
-        self.assertEqual(record.attributes, {"a": "b"})
-        self.assertEqual(record.event_name, "an.event")
+        self.assertEqual(record.log_record.timestamp, 1)
+        self.assertEqual(record.log_record.observed_timestamp, 2)
+        self.assertEqual(record.log_record.context, get_current())
+        self.assertEqual(record.log_record.trace_id, 123)
+        self.assertEqual(record.log_record.span_id, 456)
+        self.assertEqual(record.log_record.trace_flags, TraceFlags(0x01))
+        self.assertEqual(record.log_record.severity_text, "WARN")
+        self.assertEqual(
+            record.log_record.severity_number, SeverityNumber.WARN
+        )
+        self.assertEqual(record.log_record.body, "a log line")
+        self.assertEqual(record.log_record.attributes, {"a": "b"})
+        self.assertEqual(record.log_record.event_name, "an.event")
         self.assertEqual(record.resource, resource)

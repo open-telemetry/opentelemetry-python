@@ -18,7 +18,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 from opentelemetry._logs import LogRecord, SeverityNumber
-from opentelemetry.sdk._logs import LoggerProvider, ReadableLogRecord
+from opentelemetry.sdk._logs import Logger, LoggerProvider, ReadableLogRecord
 from opentelemetry.sdk._logs._internal import (
     NoOpLogger,
     SynchronousMultiLogRecordProcessor,
@@ -88,6 +88,7 @@ class TestLoggerProvider(unittest.TestCase):
         )
         self.assertIsNotNone(logger_provider._at_exit_handler)
 
+
 class TestReadableLogRecord(unittest.TestCase):
     def setUp(self):
         self.log_record = LogRecord(
@@ -128,6 +129,7 @@ class TestReadableLogRecord(unittest.TestCase):
             "test-service",
         )
 
+
 class TestLogger(unittest.TestCase):
     @staticmethod
     def _get_logger():
@@ -158,7 +160,7 @@ class TestLogger(unittest.TestCase):
 
     def test_can_emit_api_logrecord(self):
         logger, log_record_processor_mock = self._get_logger()
-        api_log_record = APILogRecord(
+        api_log_record = LogRecord(
             observed_timestamp=0,
             body="a log line",
         )
