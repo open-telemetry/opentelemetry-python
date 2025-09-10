@@ -199,7 +199,7 @@ class TestLogRecord(unittest.TestCase):
             event_name="an.event",
         )
 
-        record = LogRecord.from_api_log_record(api_log_record)
+        record = LogRecord._from_api_log_record(api_log_record)
 
         self.assertEqual(record.timestamp, 1)
         self.assertEqual(record.observed_timestamp, 2)
