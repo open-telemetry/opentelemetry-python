@@ -315,13 +315,13 @@ class TestOTLPLogEncoder(unittest.TestCase):
                 )
             )
         )
-        log9 = LogData(
-            log_record=SDKLogRecord(
+        log9 = ReadWriteLogRecord(
+            LogRecord(
                 # these are otherwise set by default
                 observed_timestamp=1644650584292683045,
                 context=ctx_log9,
-                resource=SDKResource({}),
             ),
+            resource=SDKResource({}),
             instrumentation_scope=InstrumentationScope(
                 "empty_log_record_name", "empty_log_record_version"
             ),
