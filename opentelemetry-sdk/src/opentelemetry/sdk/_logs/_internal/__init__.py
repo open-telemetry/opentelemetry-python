@@ -704,6 +704,7 @@ class Logger(APILogger):
         and instrumentation info.
         """
         if not isinstance(record, LogRecord):
+            # pylint:disable=protected-access
             record = LogRecord._from_api_log_record(
                 record=record, resource=self._resource
             )

@@ -184,6 +184,7 @@ class TestLogRecord(unittest.TestCase):
                 LogRecord(context=get_current())
         self.assertEqual(len(cw), 0)
 
+    # pylint:disable=protected-access
     def test_log_record_from_api_log_record(self):
         api_log_record = APILogRecord(
             timestamp=1,
