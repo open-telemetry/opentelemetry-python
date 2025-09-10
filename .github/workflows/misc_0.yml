@@ -5,8 +5,9 @@ name: Misc 0
 
 on:
   push:
-    :
+    branches-ignore:
     - 'release/*'
+    - 'otelbot/*'
   pull_request:
 
 permissions:

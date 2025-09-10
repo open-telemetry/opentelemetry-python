@@ -5,8 +5,9 @@ name: Misc {{ file_number }}
 
 on:
   push:
-    :
+    branches-ignore:
     - 'release/*'
+    - 'otelbot/*'
   pull_request:
 
 permissions:
