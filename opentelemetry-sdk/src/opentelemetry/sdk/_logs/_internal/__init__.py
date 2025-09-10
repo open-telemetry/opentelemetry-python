@@ -306,7 +306,9 @@ class LogRecord(APILogRecord):
                     dict(self.attributes) if bool(self.attributes) else None
                 ),
                 "dropped_attributes": self.dropped_attributes,
-                "timestamp": ns_to_iso_str(self.timestamp),
+                "timestamp": ns_to_iso_str(self.timestamp)
+                if self.timestamp is not None
+                else None,
                 "observed_timestamp": ns_to_iso_str(self.observed_timestamp),
                 "trace_id": (
                     f"0x{format_trace_id(self.trace_id)}"
@@ -334,6 +336,25 @@ class LogRecord(APILogRecord):
         if attributes:
             return attributes.dropped
         return 0
+
+    @classmethod
+    def _from_api_log_record(
+        cls, *, record: APILogRecord, resource: Resource
+    ) -> LogRecord:
+        return cls(
+            timestamp=record.timestamp,
+            observed_timestamp=record.observed_timestamp,
+            context=record.context,
+            trace_id=record.trace_id,
+            span_id=record.span_id,
+            trace_flags=record.trace_flags,
+            severity_text=record.severity_text,
+            severity_number=record.severity_number,
+            body=record.body,
+            attributes=record.attributes,
+            event_name=record.event_name,
+            resource=resource,
+        )
 
 
 class LogData:
@@ -678,10 +699,15 @@ class Logger(APILogger):
     def resource(self):
         return self._resource
 
-    def emit(self, record: LogRecord):
+    def emit(self, record: APILogRecord):
         """Emits the :class:`LogData` by associating :class:`LogRecord`
         and instrumentation info.
         """
+        if not isinstance(record, LogRecord):
+            # pylint:disable=protected-access
+            record = LogRecord._from_api_log_record(
+                record=record, resource=self._resource
+            )
         log_data = LogData(record, self._instrumentation_scope)
         self._multi_log_record_processor.on_emit(log_data)
 

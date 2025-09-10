@@ -16,6 +16,7 @@ import json
 import unittest
 import warnings
 
+from opentelemetry._logs import LogRecord as APILogRecord
 from opentelemetry._logs.severity import SeverityNumber
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.context import get_current
@@ -61,6 +62,16 @@ class TestLogRecord(unittest.TestCase):
 
         decoded = json.loads(actual.to_json())
         self.assertEqual(SeverityNumber.WARN.value, decoded["severity_number"])
+
+    def test_log_record_to_json_serializes_null_severity_number(self):
+        actual = LogRecord(
+            observed_timestamp=0,
+            body="a log line",
+            resource=Resource({"service.name": "foo"}),
+        )
+
+        decoded = json.loads(actual.to_json())
+        self.assertEqual(None, decoded["timestamp"])
 
     def test_log_record_bounded_attributes(self):
         attr = {"key": "value"}
@@ -172,3 +183,37 @@ class TestLogRecord(unittest.TestCase):
             for _ in range(10):
                 LogRecord(context=get_current())
         self.assertEqual(len(cw), 0)
+
+    # pylint:disable=protected-access
+    def test_log_record_from_api_log_record(self):
+        api_log_record = APILogRecord(
+            timestamp=1,
+            observed_timestamp=2,
+            context=get_current(),
+            trace_id=123,
+            span_id=456,
+            trace_flags=TraceFlags(0x01),
+            severity_text="WARN",
+            severity_number=SeverityNumber.WARN,
+            body="a log line",
+            attributes={"a": "b"},
+            event_name="an.event",
+        )
+
+        resource = Resource.create({})
+        record = LogRecord._from_api_log_record(
+            record=api_log_record, resource=resource
+        )
+
+        self.assertEqual(record.timestamp, 1)
+        self.assertEqual(record.observed_timestamp, 2)
+        self.assertEqual(record.context, get_current())
+        self.assertEqual(record.trace_id, 123)
+        self.assertEqual(record.span_id, 456)
+        self.assertEqual(record.trace_flags, TraceFlags(0x01))
+        self.assertEqual(record.severity_text, "WARN")
+        self.assertEqual(record.severity_number, SeverityNumber.WARN)
+        self.assertEqual(record.body, "a log line")
+        self.assertEqual(record.attributes, {"a": "b"})
+        self.assertEqual(record.event_name, "an.event")
+        self.assertEqual(record.resource, resource)
