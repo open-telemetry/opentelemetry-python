@@ -88,6 +88,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
 
     @staticmethod
     def _get_sdk_log_data() -> List[ReadWriteLogRecord]:
+        # pylint:disable=too-many-locals
         ctx_log1 = set_span_in_context(
             NonRecordingSpan(
                 SpanContext(
@@ -303,7 +304,29 @@ class TestOTLPLogEncoder(unittest.TestCase):
                 "extended_name", "extended_version"
             ),
         )
-        return [log1, log2, log3, log4, log5, log6, log7, log8]
+
+        ctx_log9 = set_span_in_context(
+            NonRecordingSpan(
+                SpanContext(
+                    212592107417388365804938480559624925566,
+                    6077757853989569466,
+                    False,
+                    TraceFlags(0x01),
+                )
+            )
+        )
+        log9 = LogData(
+            log_record=SDKLogRecord(
+                # these are otherwise set by default
+                observed_timestamp=1644650584292683045,
+                context=ctx_log9,
+                resource=SDKResource({}),
+            ),
+            instrumentation_scope=InstrumentationScope(
+                "empty_log_record_name", "empty_log_record_version"
+            ),
+        )
+        return [log1, log2, log3, log4, log5, log6, log7, log8, log9]
 
     def get_test_logs(
         self,
@@ -589,6 +612,29 @@ class TestOTLPLogEncoder(unittest.TestCase):
                                         },
                                         allow_null=True,
                                     ),
+                                ),
+                            ],
+                        ),
+                        PB2ScopeLogs(
+                            scope=PB2InstrumentationScope(
+                                name="empty_log_record_name",
+                                version="empty_log_record_version",
+                            ),
+                            log_records=[
+                                PB2LogRecord(
+                                    time_unix_nano=None,
+                                    observed_time_unix_nano=1644650584292683045,
+                                    trace_id=_encode_trace_id(
+                                        212592107417388365804938480559624925566
+                                    ),
+                                    span_id=_encode_span_id(
+                                        6077757853989569466,
+                                    ),
+                                    flags=int(TraceFlags(0x01)),
+                                    severity_text=None,
+                                    severity_number=None,
+                                    body=None,
+                                    attributes=None,
                                 ),
                             ],
                         ),

@@ -25,6 +25,7 @@ from opentelemetry.sdk._logs._internal import (
 )
 from opentelemetry.sdk.environment_variables import OTEL_SDK_DISABLED
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
 
 class TestLoggerProvider(unittest.TestCase):
@@ -87,7 +88,6 @@ class TestLoggerProvider(unittest.TestCase):
         )
         self.assertIsNotNone(logger_provider._at_exit_handler)
 
-
 class TestReadableLogRecord(unittest.TestCase):
     def setUp(self):
         self.log_record = LogRecord(
@@ -127,3 +127,42 @@ class TestReadableLogRecord(unittest.TestCase):
             self.readable_log_record.resource.attributes["service.name"],
             "test-service",
         )
+
+class TestLogger(unittest.TestCase):
+    @staticmethod
+    def _get_logger():
+        log_record_processor_mock = Mock()
+        logger = Logger(
+            resource=Resource.create({}),
+            multi_log_record_processor=log_record_processor_mock,
+            instrumentation_scope=InstrumentationScope(
+                "name",
+                "version",
+                "schema_url",
+                {"an": "attribute"},
+            ),
+        )
+        return logger, log_record_processor_mock
+
+    def test_can_emit_logrecord(self):
+        logger, log_record_processor_mock = self._get_logger()
+        log_record = LogRecord(
+            observed_timestamp=0,
+            body="a log line",
+        )
+
+        logger.emit(log_record)
+        log_record_processor_mock.on_emit.assert_called_once()
+        log_data = log_record_processor_mock.on_emit.call_args.args[0]
+        self.assertTrue(isinstance(log_data.log_record, LogRecord))
+
+    def test_can_emit_api_logrecord(self):
+        logger, log_record_processor_mock = self._get_logger()
+        api_log_record = APILogRecord(
+            observed_timestamp=0,
+            body="a log line",
+        )
+        logger.emit(api_log_record)
+        log_record_processor_mock.on_emit.assert_called_once()
+        log_data = log_record_processor_mock.on_emit.call_args.args[0]
+        self.assertTrue(isinstance(log_data.log_record, LogRecord))

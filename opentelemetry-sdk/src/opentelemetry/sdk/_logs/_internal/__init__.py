@@ -248,6 +248,8 @@ class ReadWriteLogRecord:
                 ),
                 "dropped_attributes": self.dropped_attributes,
                 "timestamp": ns_to_iso_str(self.log_record.timestamp),
+                if self.log_record.timestamp is not None
+                else None,
                 "observed_timestamp": ns_to_iso_str(
                     self.log_record.observed_timestamp
                 ),
@@ -274,6 +276,25 @@ class ReadWriteLogRecord:
         if isinstance(self.log_record.attributes, BoundedAttributes):
             return self.log_record.attributes.dropped
         return 0
+
+    @classmethod
+    def _from_api_log_record(
+        cls, *, record: APILogRecord, resource: Resource
+    ) -> LogRecord:
+        return cls(
+            timestamp=record.timestamp,
+            observed_timestamp=record.observed_timestamp,
+            context=record.context,
+            trace_id=record.trace_id,
+            span_id=record.span_id,
+            trace_flags=record.trace_flags,
+            severity_text=record.severity_text,
+            severity_number=record.severity_number,
+            body=record.body,
+            attributes=record.attributes,
+            event_name=record.event_name,
+            resource=resource,
+        )
 
 
 class LogRecordProcessor(abc.ABC):
@@ -608,6 +629,12 @@ class Logger(APILogger):
         """Emits the :class:`ReadWriteLogRecord` by setting instrumentation scope
         and forwarding to the processor.
         """
+        if not isinstance(record, ReadWriteLogRecord):
+            # pylint:disable=protected-access
+            record = LogRecord._from_api_log_record(
+            record=record, resource=self._resource
+        )
+            
         log_record = ReadWriteLogRecord(
             log_record=record,
             resource=self._resource,
