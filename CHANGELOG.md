@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add experimental composite samplers
   ([#4714](https://github.com/open-telemetry/opentelemetry-python/pull/4714))
+- Add new environment variables to the SDK `OTEL_PYTHON_EXPORTER_OTLP_{HTTP/GRPC}_{METRICS/TRACES/LOGS}_CREDENTIAL_PROVIDER` that can be used to
+inject a `requests.Session` or `grpc.ChannelCredentials` object into OTLP exporters created during auto instrumentation [#4689](https://github.com/open-telemetry/opentelemetry-python/pull/4689).
 - Filter duplicate logs out of some internal `logger`'s logs on the export logs path that might otherwise endlessly log or cause a recursion depth exceeded issue in cases where logging itself results in an exception.
   ([#4695](https://github.com/open-telemetry/opentelemetry-python/pull/4695)).
 - docs: linked the examples with their github source code location and added Prometheus example
@@ -24,6 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4731](https://github.com/open-telemetry/opentelemetry-python/pull/4731))
 - opentelemetry-sdk: fix handling of OTEL_ATTRIBUTE_COUNT_LIMIT in logs
   ([#4677](https://github.com/open-telemetry/opentelemetry-python/pull/4677))
+- Performance: Cache `importlib_metadata.entry_points`
+  ([#4735](https://github.com/open-telemetry/opentelemetry-python/pull/4735))
+- opentelemetry-sdk: fix calling Logger.emit with an API LogRecord instance
+  ([#4741](https://github.com/open-telemetry/opentelemetry-python/pull/4741))
 
 ## Version 1.36.0/0.57b0 (2025-07-29)
 
