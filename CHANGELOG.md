@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4634](https://github.com/open-telemetry/opentelemetry-python/pull/4634))
 - semantic-conventions: Bump to 1.37.0
   ([#4731](https://github.com/open-telemetry/opentelemetry-python/pull/4731))
+- opentelemetry-sdk: fix handling of OTEL_ATTRIBUTE_COUNT_LIMIT in logs
+  ([#4677](https://github.com/open-telemetry/opentelemetry-python/pull/4677))
 
 ## Version 1.36.0/0.57b0 (2025-07-29)
 
