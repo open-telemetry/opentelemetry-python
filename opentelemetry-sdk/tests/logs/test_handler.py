@@ -35,7 +35,7 @@ from opentelemetry.trace import (
     set_span_in_context,
 )
 
-
+# pylint: disable=too-many-public-methods
 class TestLoggingHandler(unittest.TestCase):
     def test_handler_default_log_level(self):
         processor, logger = set_up_test_logging(logging.NOTSET)
