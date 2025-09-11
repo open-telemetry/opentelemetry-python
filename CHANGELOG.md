@@ -24,6 +24,8 @@ inject a `requests.Session` or `grpc.ChannelCredentials` object into OTLP export
   ([#4634](https://github.com/open-telemetry/opentelemetry-python/pull/4634))
 - semantic-conventions: Bump to 1.37.0
   ([#4731](https://github.com/open-telemetry/opentelemetry-python/pull/4731))
+- opentelemetry-sdk: fix handling of OTEL_ATTRIBUTE_COUNT_LIMIT in logs
+  ([#4677](https://github.com/open-telemetry/opentelemetry-python/pull/4677))
 - Performance: Cache `importlib_metadata.entry_points`
   ([#4735](https://github.com/open-telemetry/opentelemetry-python/pull/4735))
 - opentelemetry-sdk: fix calling Logger.emit with an API LogRecord instance
