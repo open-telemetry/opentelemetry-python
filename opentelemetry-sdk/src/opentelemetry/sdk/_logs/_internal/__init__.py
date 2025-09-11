@@ -158,12 +158,6 @@ class LogLimits:
         return value
 
 
-_UnsetLogLimits = LogLimits(
-    max_attributes=LogLimits.UNSET,
-    max_attribute_length=LogLimits.UNSET,
-)
-
-
 @dataclass(frozen=True)
 class ReadableLogRecord:
     """Readable LogRecord should be kept exactly in-sync with ReadWriteLogRecord, only difference is the frozen=True param."""
@@ -188,35 +182,23 @@ class ReadWriteLogRecord:
     pertinent to the event being logged.
     """
 
-    @overload
-    def __init__(
-        self,
-        log_record: LogRecord,
-        resource: Resource | None = None,
+    log_record: LogRecord
+    resource: Resource | None = Resource.create({})
+    instrumentation_scope: InstrumentationScope | None = None
+    limits: LogLimits | None = None
 
-        limits: LogLimits | None = _UnsetLogLimits,
-    ): ...
-
-    def __init__(
-        self,
-        log_record: LogRecord,
-        resource: Resource | None = None,
-        limits: LogLimits | None = _UnsetLogLimits,
-        instrumentation_scope: InstrumentationScope | None = None,
-    ):
-        self.log_record = log_record
+    def __post_init__(self):
+        if self.limits is None:
+            self.limits = LogLimits()
         self.log_record.attributes = BoundedAttributes(
-            maxlen=limits.max_attributes,
+            maxlen=self.limits.max_attributes,
             attributes=self.log_record.attributes
             if self.log_record.attributes
             else None,
             immutable=False,
-            max_value_len=limits.max_attribute_length,
+            max_value_len=self.limits.max_attribute_length,
             extended_attributes=True,
         )
-
-        self.resource = resource if resource else Resource.create({})
-        self.instrumentation_scope = instrumentation_scope
         if self.dropped_attributes > 0:
             warnings.warn(
                 "Log record attributes were dropped due to limits",
@@ -282,11 +264,13 @@ class ReadWriteLogRecord:
         record: LogRecord,
         resource: Resource,
         instrumentation_scope: InstrumentationScope | None = None,
+        limits: LogLimits | None = None,
     ) -> ReadWriteLogRecord:
         return cls(
             log_record=record,
             resource=resource,
             instrumentation_scope=instrumentation_scope,
+            limits=limits,
         )
 
 
