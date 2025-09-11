@@ -86,7 +86,7 @@ class LogLimits:
     This class does not enforce any limits itself. It only provides a way to read limits from env,
     default values and from user provided arguments.
 
-    All limit arguments must be either a non-negative integer, ``None`` or ``LogLimits.UNSET``.
+    All limit arguments must be either a non-negative integer or ``None``.
 
     - All limit arguments are optional.
     - If a limit argument is not set, the class will try to read its value from the corresponding
@@ -107,8 +107,6 @@ class LogLimits:
         max_attribute_length: Maximum length an attribute value can have. Values longer than
             the specified length will be truncated.
     """
-
-    UNSET = -1
 
     def __init__(
         self,
@@ -138,9 +136,6 @@ class LogLimits:
     def _from_env_if_absent(
         cls, value: int | None, env_var: str, default: int | None = None
     ) -> int | None:
-        if value == cls.UNSET:
-            return None
-
         err_msg = "{} must be a non-negative integer but got {}"
 
         # if no value is provided for the limit, try to load it from env
@@ -198,6 +193,7 @@ class ReadWriteLogRecord:
         self,
         log_record: LogRecord,
         resource: Resource | None = None,
+
         limits: LogLimits | None = _UnsetLogLimits,
     ): ...
 

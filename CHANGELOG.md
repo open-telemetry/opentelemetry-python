@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## Version 1.37.0/0.58b0 (2025-09-11)
+
 - Add experimental composite samplers
   ([#4714](https://github.com/open-telemetry/opentelemetry-python/pull/4714))
 - Add new environment variables to the SDK `OTEL_PYTHON_EXPORTER_OTLP_{HTTP/GRPC}_{METRICS/TRACES/LOGS}_CREDENTIAL_PROVIDER` that can be used to
@@ -24,6 +26,8 @@ inject a `requests.Session` or `grpc.ChannelCredentials` object into OTLP export
   ([#4634](https://github.com/open-telemetry/opentelemetry-python/pull/4634))
 - semantic-conventions: Bump to 1.37.0
   ([#4731](https://github.com/open-telemetry/opentelemetry-python/pull/4731))
+- opentelemetry-sdk: fix handling of OTEL_ATTRIBUTE_COUNT_LIMIT in logs
+  ([#4677](https://github.com/open-telemetry/opentelemetry-python/pull/4677))
 - Performance: Cache `importlib_metadata.entry_points`
   ([#4735](https://github.com/open-telemetry/opentelemetry-python/pull/4735))
 - opentelemetry-sdk: fix calling Logger.emit with an API LogRecord instance
