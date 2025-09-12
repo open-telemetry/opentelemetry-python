@@ -116,6 +116,7 @@ class SpanProcessor:
             span: The :class:`opentelemetry.trace.Span` that just started.
             parent_context: The parent context of the span that just started.
         """
+        ...
 
     def _on_ending(self, span: "Span") -> None:
         """Called when a :class:`opentelemetry.trace.Span` is ending.
@@ -136,9 +137,11 @@ class SpanProcessor:
         Args:
             span: The :class:`opentelemetry.trace.Span` that just ended.
         """
+        ...
 
     def shutdown(self) -> None:
         """Called when a :class:`opentelemetry.sdk.trace.TracerProvider` is shutdown."""
+        ...
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         """Export all ended spans to the configured Exporter that have not yet
@@ -151,6 +154,7 @@ class SpanProcessor:
         Returns:
             False if the timeout is exceeded, True otherwise.
         """
+        ...
 
 
 # Temporary fix until https://github.com/PyCQA/pylint/issues/4098 is resolved
