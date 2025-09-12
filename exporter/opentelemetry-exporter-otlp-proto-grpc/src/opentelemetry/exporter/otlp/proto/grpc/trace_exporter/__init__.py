@@ -94,7 +94,7 @@ class OTLPSpanExporter(
         ] = None,
         timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
-        channel_options: Optional[TypingSequence[Tuple[str, str]]] = None,
+        channel_options: Optional[Tuple[Tuple[str, str]]] = None,
     ):
         insecure_spans = environ.get(OTEL_EXPORTER_OTLP_TRACES_INSECURE)
         if insecure is None and insecure_spans is not None:

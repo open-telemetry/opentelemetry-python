@@ -285,7 +285,7 @@ class OTLPExporterMixin(
         ] = None,
         timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
-        channel_options: Optional[list[Tuple[str, str]]] = None,
+        channel_options: Optional[Tuple[Tuple[str, str]]] = None,
     ):
         super().__init__()
         self._result = result
@@ -322,11 +322,11 @@ class OTLPExporterMixin(
             overridden_options = {
                 opt_name for (opt_name, _) in channel_options
             }
-            default_options = [
+            default_options = tuple(
                 (opt_name, opt_value)
                 for opt_name, opt_value in _OTLP_GRPC_CHANNEL_OPTIONS
                 if opt_name not in overridden_options
-            ]
+            )
             self._channel_options = default_options + channel_options
         else:
             self._channel_options = tuple(_OTLP_GRPC_CHANNEL_OPTIONS)
