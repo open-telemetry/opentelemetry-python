@@ -27,8 +27,11 @@ from typing import (  # noqa: F401
     Dict,
     Generic,
     List,
+    Literal,
+    NewType,
     Optional,
     Tuple,
+    Type,
     TypeVar,
     Union,
 )
@@ -53,12 +56,32 @@ from opentelemetry.exporter.otlp.proto.common._internal import (
 from opentelemetry.exporter.otlp.proto.grpc import (
     _OTLP_GRPC_CHANNEL_OPTIONS,
 )
+from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
+    ExportLogsServiceRequest,
+)
+from opentelemetry.proto.collector.logs.v1.logs_service_pb2_grpc import (
+    LogsServiceStub,
+)
+from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
+    ExportMetricsServiceRequest,
+)
+from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2_grpc import (
+    MetricsServiceStub,
+)
+from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
+    ExportTraceServiceRequest,
+)
+from opentelemetry.proto.collector.trace.v1.trace_service_pb2_grpc import (
+    TraceServiceStub,
+)
 from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401
     AnyValue,
     ArrayValue,
     KeyValue,
 )
 from opentelemetry.proto.resource.v1.resource_pb2 import Resource  # noqa: F401
+from opentelemetry.sdk._logs import LogData
+from opentelemetry.sdk._logs.export import LogExportResult
 from opentelemetry.sdk._shared_internal import DuplicateFilter
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER,
@@ -71,9 +94,10 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_INSECURE,
     OTEL_EXPORTER_OTLP_TIMEOUT,
 )
-from opentelemetry.sdk.metrics.export import MetricsData
+from opentelemetry.sdk.metrics.export import MetricExportResult, MetricsData
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.trace import ReadableSpan
+from opentelemetry.sdk.trace.export import SpanExportResult
 from opentelemetry.util._importlib_metadata import entry_points
 from opentelemetry.util.re import parse_env_headers
 
@@ -92,11 +116,29 @@ _MAX_RETRYS = 6
 logger = getLogger(__name__)
 # This prevents logs generated when a log fails to be written to generate another log which fails to be written etc. etc.
 logger.addFilter(DuplicateFilter())
-SDKDataT = TypeVar("SDKDataT")
+SDKDataT = TypeVar(
+    "SDKDataT",
+    TypingSequence[LogData],
+    MetricsData,
+    TypingSequence[ReadableSpan],
+)
 ResourceDataT = TypeVar("ResourceDataT")
 TypingResourceT = TypeVar("TypingResourceT")
-ExportServiceRequestT = TypeVar("ExportServiceRequestT")
-ExportResultT = TypeVar("ExportResultT")
+ExportServiceRequestT = TypeVar(
+    "ExportServiceRequestT",
+    ExportTraceServiceRequest,
+    ExportMetricsServiceRequest,
+    ExportLogsServiceRequest,
+)
+ExportResultT = TypeVar(
+    "ExportResultT",
+    LogExportResult,
+    MetricExportResult,
+    SpanExportResult,
+)
+ExportStubT = TypeVar(
+    "ExportStubT", TraceServiceStub, MetricsServiceStub, LogsServiceStub
+)
 
 _ENVIRON_TO_COMPRESSION = {
     None: None,
@@ -119,7 +161,10 @@ def environ_to_compression(environ_key: str) -> Optional[Compression]:
         if environ_key in environ
         else None
     )
-    if environ_value not in _ENVIRON_TO_COMPRESSION:
+    if (
+        environ_value not in _ENVIRON_TO_COMPRESSION
+        and environ_value is not None
+    ):
         raise InvalidCompressionValueException(environ_key, environ_value)
     return _ENVIRON_TO_COMPRESSION[environ_value]
 
@@ -151,7 +196,7 @@ def _load_credentials(
     certificate_file: Optional[str],
     client_key_file: Optional[str],
     client_certificate_file: Optional[str],
-) -> Optional[ChannelCredentials]:
+) -> ChannelCredentials:
     root_certificates = (
         _read_file(certificate_file) if certificate_file else None
     )
@@ -214,7 +259,7 @@ def _get_credentials(
 
 # pylint: disable=no-member
 class OTLPExporterMixin(
-    ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResultT]
+    ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResultT, ExportStubT]
 ):
     """OTLP span exporter
 
@@ -230,6 +275,8 @@ class OTLPExporterMixin(
 
     def __init__(
         self,
+        stub: ExportStubT,
+        result: ExportResultT,
         endpoint: Optional[str] = None,
         insecure: Optional[bool] = None,
         credentials: Optional[ChannelCredentials] = None,
@@ -238,10 +285,11 @@ class OTLPExporterMixin(
         ] = None,
         timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
-        channel_options: Optional[TypingSequence[Tuple[str, str]]] = None,
+        channel_options: Optional[Tuple[Tuple[str, str]]] = None,
     ):
         super().__init__()
-
+        self._result = result
+        self._stub = stub
         self._endpoint = endpoint or environ.get(
             OTEL_EXPORTER_OTLP_ENDPOINT, "http://localhost:4317"
         )
@@ -250,15 +298,12 @@ class OTLPExporterMixin(
 
         if parsed_url.scheme == "https":
             insecure = False
+        insecure_exporter = environ.get(OTEL_EXPORTER_OTLP_INSECURE)
         if insecure is None:
-            insecure = environ.get(OTEL_EXPORTER_OTLP_INSECURE)
-            if insecure is not None:
-                insecure = insecure.lower() == "true"
+            if insecure_exporter is not None:
+                insecure = insecure_exporter.lower() == "true"
             else:
-                if parsed_url.scheme == "http":
-                    insecure = True
-                else:
-                    insecure = False
+                insecure = parsed_url.scheme == "http"
 
         if parsed_url.netloc:
             self._endpoint = parsed_url.netloc
@@ -277,12 +322,12 @@ class OTLPExporterMixin(
             overridden_options = {
                 opt_name for (opt_name, _) in channel_options
             }
-            default_options = [
+            default_options = tuple(
                 (opt_name, opt_value)
                 for opt_name, opt_value in _OTLP_GRPC_CHANNEL_OPTIONS
                 if opt_name not in overridden_options
-            ]
-            self._channel_options = tuple(default_options) + channel_options
+            )
+            self._channel_options = default_options + channel_options
         else:
             self._channel_options = tuple(_OTLP_GRPC_CHANNEL_OPTIONS)
 
@@ -317,24 +362,25 @@ class OTLPExporterMixin(
                 compression=compression,
                 options=self._channel_options,
             )
-        self._client = self._stub(self._channel)
+        self._client = self._stub(self._channel)  # type: ignore [reportCallIssue]
 
         self._shutdown_in_progress = threading.Event()
         self._shutdown = False
 
     @abstractmethod
     def _translate_data(
-        self, data: TypingSequence[SDKDataT]
+        self,
+        data: SDKDataT,
     ) -> ExportServiceRequestT:
         pass
 
     def _export(
         self,
-        data: Union[TypingSequence[ReadableSpan], MetricsData],
+        data: SDKDataT,
     ) -> ExportResultT:
         if self._shutdown:
             logger.warning("Exporter already shutdown, ignoring batch")
-            return self._result.FAILURE
+            return self._result.FAILURE  # type: ignore [reportReturnType]
 
         # FIXME remove this check if the export type for traces
         # gets updated to a class that represents the proto
@@ -347,10 +393,10 @@ class OTLPExporterMixin(
                     metadata=self._headers,
                     timeout=deadline_sec - time(),
                 )
-                return self._result.SUCCESS
+                return self._result.SUCCESS  # type: ignore [reportReturnType]
             except RpcError as error:
-                retry_info_bin = dict(error.trailing_metadata()).get(
-                    "google.rpc.retryinfo-bin"
+                retry_info_bin = dict(error.trailing_metadata()).get(  # type: ignore [reportAttributeAccessIssue]
+                    "google.rpc.retryinfo-bin"  # type: ignore [reportArgumentType]
                 )
                 # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
                 backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
@@ -362,7 +408,7 @@ class OTLPExporterMixin(
                         + retry_info.retry_delay.nanos / 1.0e9
                     )
                 if (
-                    error.code() not in _RETRYABLE_ERROR_CODES
+                    error.code() not in _RETRYABLE_ERROR_CODES  # type: ignore [reportAttributeAccessIssue]
                     or retry_num + 1 == _MAX_RETRYS
                     or backoff_seconds > (deadline_sec - time())
                     or self._shutdown
@@ -371,13 +417,13 @@ class OTLPExporterMixin(
                         "Failed to export %s to %s, error code: %s",
                         self._exporting,
                         self._endpoint,
-                        error.code(),
-                        exc_info=error.code() == StatusCode.UNKNOWN,
+                        error.code(),  # type: ignore [reportAttributeAccessIssue]
+                        exc_info=error.code() == StatusCode.UNKNOWN,  # type: ignore [reportAttributeAccessIssue]
                     )
-                    return self._result.FAILURE
+                    return self._result.FAILURE  # type: ignore [reportReturnType]
                 logger.warning(
                     "Transient error %s encountered while exporting %s to %s, retrying in %.2fs.",
-                    error.code(),
+                    error.code(),  # type: ignore [reportAttributeAccessIssue]
                     self._exporting,
                     self._endpoint,
                     backoff_seconds,
@@ -387,7 +433,7 @@ class OTLPExporterMixin(
                 logger.warning("Shutdown in progress, aborting retry.")
                 break
         # Not possible to reach here but the linter is complaining.
-        return self._result.FAILURE
+        return self._result.FAILURE  # type: ignore [reportReturnType]
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         if self._shutdown:

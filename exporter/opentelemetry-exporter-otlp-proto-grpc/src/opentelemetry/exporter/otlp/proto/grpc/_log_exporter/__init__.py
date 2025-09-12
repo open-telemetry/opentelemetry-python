@@ -12,7 +12,7 @@
 # limitations under the License.
 
 from os import environ
-from typing import Dict, Optional, Sequence, Tuple, Union
+from typing import Dict, Literal, Optional, Sequence, Tuple, Union
 from typing import Sequence as TypingSequence
 
 from grpc import ChannelCredentials, Compression
@@ -29,7 +29,6 @@ from opentelemetry.proto.collector.logs.v1.logs_service_pb2_grpc import (
     LogsServiceStub,
 )
 from opentelemetry.sdk._logs import LogData
-from opentelemetry.sdk._logs import LogRecord as SDKLogRecord
 from opentelemetry.sdk._logs.export import LogExporter, LogExportResult
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_GRPC_LOGS_CREDENTIAL_PROVIDER,
@@ -46,11 +45,13 @@ from opentelemetry.sdk.environment_variables import (
 
 class OTLPLogExporter(
     LogExporter,
-    OTLPExporterMixin[SDKLogRecord, ExportLogsServiceRequest, LogExportResult],
+    OTLPExporterMixin[
+        Sequence[LogData],
+        ExportLogsServiceRequest,
+        LogExportResult,
+        LogsServiceStub,
+    ],
 ):
-    _result = LogExportResult
-    _stub = LogsServiceStub
-
     def __init__(
         self,
         endpoint: Optional[str] = None,
@@ -61,12 +62,11 @@ class OTLPLogExporter(
         ] = None,
         timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
-        channel_options: Optional[TypingSequence[Tuple[str, str]]] = None,
+        channel_options: Optional[Tuple[Tuple[str, str]]] = None,
     ):
-        if insecure is None:
-            insecure = environ.get(OTEL_EXPORTER_OTLP_LOGS_INSECURE)
-            if insecure is not None:
-                insecure = insecure.lower() == "true"
+        insecure_logs = environ.get(OTEL_EXPORTER_OTLP_LOGS_INSECURE)
+        if insecure is None and insecure_logs is not None:
+            insecure = insecure_logs.lower() == "true"
 
         if (
             not insecure
@@ -102,6 +102,8 @@ class OTLPLogExporter(
                 "headers": headers,
                 "timeout": timeout or environ_timeout,
                 "compression": compression,
+                "stub": LogsServiceStub,
+                "result": LogExportResult,
                 "channel_options": channel_options,
             }
         )
@@ -111,8 +113,11 @@ class OTLPLogExporter(
     ) -> ExportLogsServiceRequest:
         return encode_logs(data)
 
-    def export(self, batch: Sequence[LogData]) -> LogExportResult:
-        return self._export(batch)
+    def export(  # type: ignore [reportIncompatibleMethodOverride]
+        self,
+        batch: Sequence[LogData],
+    ) -> Literal[LogExportResult.SUCCESS, LogExportResult.FAILURE]:
+        return OTLPExporterMixin._export(self, batch)
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         OTLPExporterMixin.shutdown(self, timeout_millis=timeout_millis)
