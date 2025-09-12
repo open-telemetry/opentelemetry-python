@@ -72,18 +72,21 @@ class SpanExporter:
         Returns:
             The result of the export
         """
+        ...
 
     def shutdown(self) -> None:
         """Shuts down the exporter.
 
         Called when the SDK is shut down.
         """
+        ...
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         """Hint to ensure that the export of any spans the exporter has received
         prior to the call to ForceFlush SHOULD be completed as soon as possible, preferably
         before returning from this method.
         """
+        ...
 
 
 class SimpleSpanProcessor(SpanProcessor):
@@ -102,7 +105,7 @@ class SimpleSpanProcessor(SpanProcessor):
         pass
 
     def on_end(self, span: ReadableSpan) -> None:
-        if not span.context.trace_flags.sampled:
+        if span.context and not span.context.trace_flags.sampled:
             return
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
@@ -188,7 +191,7 @@ class BatchSpanProcessor(SpanProcessor):
         pass
 
     def on_end(self, span: ReadableSpan) -> None:
-        if not span.context.trace_flags.sampled:
+        if span.context and not span.context.trace_flags.sampled:
             return
         self._batch_processor.emit(span)
 
