@@ -128,6 +128,7 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
                 log_record=log_record.log_record,
                 resource=log_record.resource,
                 instrumentation_scope=log_record.instrumentation_scope,
+                limits=log_record.limits,
             )
             self._exporter.export((readable_log_record,))
         except Exception:  # pylint: disable=broad-exception-caught
@@ -202,6 +203,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
             log_record=log_record.log_record,
             resource=log_record.resource,
             instrumentation_scope=log_record.instrumentation_scope,
+            limits=log_record.limits,
         )
         return self._batch_processor.emit(readable_log_record)
 

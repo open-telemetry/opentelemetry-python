@@ -22,7 +22,7 @@ import logging
 import threading
 import traceback
 import warnings
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from os import environ
 from threading import Lock
 from time import time_ns
@@ -165,6 +165,7 @@ class ReadableLogRecord:
     log_record: LogRecord
     resource: Resource
     instrumentation_scope: InstrumentationScope | None = None
+    limits: LogLimits | None = None
 
     @property
     def dropped_attributes(self) -> int:
@@ -185,11 +186,9 @@ class ReadWriteLogRecord:
     log_record: LogRecord
     resource: Resource | None = Resource.create({})
     instrumentation_scope: InstrumentationScope | None = None
-    limits: LogLimits | None = None
+    limits: LogLimits = field(default_factory=LogLimits)
 
     def __post_init__(self):
-        if self.limits is None:
-            self.limits = LogLimits()
         self.log_record.attributes = BoundedAttributes(
             maxlen=self.limits.max_attributes,
             attributes=self.log_record.attributes
@@ -264,13 +263,11 @@ class ReadWriteLogRecord:
         record: LogRecord,
         resource: Resource,
         instrumentation_scope: InstrumentationScope | None = None,
-        limits: LogLimits | None = None,
     ) -> ReadWriteLogRecord:
         return cls(
             log_record=record,
             resource=resource,
             instrumentation_scope=instrumentation_scope,
-            limits=limits,
         )
 
 
