@@ -1,6 +1,6 @@
 pylint==3.3.4
 httpretty==1.1.4
-pyright==1.1.400
+pyright==1.1.405
 sphinx==7.1.2
 sphinx-rtd-theme==2.0.0rc4
 sphinx-autodoc-typehints==1.25.2

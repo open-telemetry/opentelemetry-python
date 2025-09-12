@@ -108,7 +108,7 @@ class OTLPMetricExporter(
         | None = None,
         preferred_aggregation: dict[type, Aggregation] | None = None,
         max_export_batch_size: int | None = None,
-        channel_options: TypingSequence[Tuple[str, str]] | None = None,
+        channel_options: list[Tuple[str, str]] | None = None,
     ):
         insecure_metrics = environ.get(OTEL_EXPORTER_OTLP_METRICS_INSECURE)
         if insecure is None and insecure_metrics is not None:

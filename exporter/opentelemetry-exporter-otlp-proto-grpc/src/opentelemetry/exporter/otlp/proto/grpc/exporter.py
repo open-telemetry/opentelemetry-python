@@ -56,9 +56,6 @@ from opentelemetry.exporter.otlp.proto.common._internal import (
 from opentelemetry.exporter.otlp.proto.grpc import (
     _OTLP_GRPC_CHANNEL_OPTIONS,
 )
-from opentelemetry.exporter.otlp.proto.grpc import (
-    _OTLP_GRPC_HEADERS,
-)
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
     ExportLogsServiceRequest,
 )
@@ -288,7 +285,7 @@ class OTLPExporterMixin(
         ] = None,
         timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
-        channel_options: Optional[TypingSequence[Tuple[str, str]]] = None,
+        channel_options: Optional[list[Tuple[str, str]]] = None,
     ):
         super().__init__()
         self._result = result
@@ -330,7 +327,7 @@ class OTLPExporterMixin(
                 for opt_name, opt_value in _OTLP_GRPC_CHANNEL_OPTIONS
                 if opt_name not in overridden_options
             ]
-            self._channel_options = tuple(default_options) + channel_options
+            self._channel_options = default_options + channel_options
         else:
             self._channel_options = tuple(_OTLP_GRPC_CHANNEL_OPTIONS)
 
@@ -396,10 +393,10 @@ class OTLPExporterMixin(
                     metadata=self._headers,
                     timeout=deadline_sec - time(),
                 )
-                return self._result.SUCCESS # type: ignore [reportReturnType]
+                return self._result.SUCCESS  # type: ignore [reportReturnType]
             except RpcError as error:
-                retry_info_bin = dict(error.trailing_metadata()).get(
-                    "google.rpc.retryinfo-bin"
+                retry_info_bin = dict(error.trailing_metadata()).get(  # type: ignore [reportAttributeAccessIssue]
+                    "google.rpc.retryinfo-bin"  # type: ignore [reportArgumentType]
                 )
                 # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
                 backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
@@ -411,7 +408,7 @@ class OTLPExporterMixin(
                         + retry_info.retry_delay.nanos / 1.0e9
                     )
                 if (
-                    error.code() not in _RETRYABLE_ERROR_CODES
+                    error.code() not in _RETRYABLE_ERROR_CODES  # type: ignore [reportAttributeAccessIssue]
                     or retry_num + 1 == _MAX_RETRYS
                     or backoff_seconds > (deadline_sec - time())
                     or self._shutdown
@@ -420,13 +417,13 @@ class OTLPExporterMixin(
                         "Failed to export %s to %s, error code: %s",
                         self._exporting,
                         self._endpoint,
-                        error.code(),
-                        exc_info=error.code() == StatusCode.UNKNOWN,
+                        error.code(),  # type: ignore [reportAttributeAccessIssue]
+                        exc_info=error.code() == StatusCode.UNKNOWN,  # type: ignore [reportAttributeAccessIssue]
                     )
-                    return self._result.FAILURE # type: ignore [reportReturnType]
+                    return self._result.FAILURE  # type: ignore [reportReturnType]
                 logger.warning(
                     "Transient error %s encountered while exporting %s to %s, retrying in %.2fs.",
-                    error.code(),
+                    error.code(),  # type: ignore [reportAttributeAccessIssue]
                     self._exporting,
                     self._endpoint,
                     backoff_seconds,
@@ -436,7 +433,7 @@ class OTLPExporterMixin(
                 logger.warning("Shutdown in progress, aborting retry.")
                 break
         # Not possible to reach here but the linter is complaining.
-        return self._result.FAILURE # type: ignore [reportReturnType]
+        return self._result.FAILURE  # type: ignore [reportReturnType]
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         if self._shutdown:
