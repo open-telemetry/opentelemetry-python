@@ -28,8 +28,7 @@ from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2_grpc import (
     LogsServiceStub,
 )
-from opentelemetry.sdk._logs import LogData
-from opentelemetry.sdk._logs import LogRecord as SDKLogRecord
+from opentelemetry.sdk._logs import ReadableLogRecord
 from opentelemetry.sdk._logs.export import LogExporter, LogExportResult
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_GRPC_LOGS_CREDENTIAL_PROVIDER,
@@ -46,7 +45,9 @@ from opentelemetry.sdk.environment_variables import (
 
 class OTLPLogExporter(
     LogExporter,
-    OTLPExporterMixin[SDKLogRecord, ExportLogsServiceRequest, LogExportResult],
+    OTLPExporterMixin[
+        ReadableLogRecord, ExportLogsServiceRequest, LogExportResult
+    ],
 ):
     _result = LogExportResult
     _stub = LogsServiceStub
@@ -107,11 +108,11 @@ class OTLPLogExporter(
         )
 
     def _translate_data(
-        self, data: Sequence[LogData]
+        self, data: Sequence[ReadableLogRecord]
     ) -> ExportLogsServiceRequest:
         return encode_logs(data)
 
-    def export(self, batch: Sequence[LogData]) -> LogExportResult:
+    def export(self, batch: Sequence[ReadableLogRecord]) -> LogExportResult:
         return self._export(batch)
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
