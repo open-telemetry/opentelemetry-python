@@ -46,6 +46,7 @@ from opentelemetry.proto.trace.v1.trace_pb2 import (  # noqa: F401
     Span as CollectorSpan,
 )
 from opentelemetry.sdk.environment_variables import (
+    _OTEL_PYTHON_EXPORTER_OTLP_GRPC_TRACES_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
     OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
@@ -91,8 +92,9 @@ class OTLPSpanExporter(
         headers: Optional[
             Union[TypingSequence[Tuple[str, str]], Dict[str, str], str]
         ] = None,
-        timeout: Optional[int] = None,
+        timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
+        channel_options: Optional[TypingSequence[Tuple[str, str]]] = None,
     ):
         insecure_spans = environ.get(OTEL_EXPORTER_OTLP_TRACES_INSECURE)
         if insecure is None and insecure_spans is not None:
@@ -104,6 +106,7 @@ class OTLPSpanExporter(
         ):
             credentials = _get_credentials(
                 credentials,
+                _OTEL_PYTHON_EXPORTER_OTLP_GRPC_TRACES_CREDENTIAL_PROVIDER,
                 OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
                 OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
                 OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
@@ -111,7 +114,7 @@ class OTLPSpanExporter(
 
         environ_timeout = environ.get(OTEL_EXPORTER_OTLP_TRACES_TIMEOUT)
         environ_timeout = (
-            int(environ_timeout) if environ_timeout is not None else None
+            float(environ_timeout) if environ_timeout is not None else None
         )
 
         compression = (
@@ -132,6 +135,7 @@ class OTLPSpanExporter(
                 or environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS),
                 "timeout": timeout or environ_timeout,
                 "compression": compression,
+                "channel_options": channel_options,
             }
         )
 

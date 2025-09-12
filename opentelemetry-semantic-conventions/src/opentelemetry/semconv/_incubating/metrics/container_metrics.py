@@ -29,6 +29,7 @@ from opentelemetry.metrics import (
     Meter,
     ObservableGauge,
     Observation,
+    UpDownCounter,
 )
 
 # pylint: disable=invalid-name
@@ -50,7 +51,7 @@ def create_container_cpu_time(meter: Meter) -> Counter:
     """Total CPU time consumed"""
     return meter.create_counter(
         name=CONTAINER_CPU_TIME,
-        description="Total CPU time consumed",
+        description="Total CPU time consumed.",
         unit="s",
     )
 
@@ -71,7 +72,7 @@ def create_container_cpu_usage(
     return meter.create_observable_gauge(
         name=CONTAINER_CPU_USAGE,
         callbacks=callbacks,
-        description="Container's CPU usage, measured in cpus. Range from 0 to the number of allocatable CPUs",
+        description="Container's CPU usage, measured in cpus. Range from 0 to the number of allocatable CPUs.",
         unit="{cpu}",
     )
 
@@ -90,6 +91,71 @@ def create_container_disk_io(meter: Meter) -> Counter:
     return meter.create_counter(
         name=CONTAINER_DISK_IO,
         description="Disk bytes for the container.",
+        unit="By",
+    )
+
+
+CONTAINER_FILESYSTEM_AVAILABLE: Final = "container.filesystem.available"
+"""
+Container filesystem available bytes
+Instrument: updowncounter
+Unit: By
+Note: In K8s, this metric is derived from the
+[FsStats.AvailableBytes](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#FsStats) field
+of the [ContainerStats.Rootfs](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#ContainerStats)
+of the Kubelet's stats API.
+"""
+
+
+def create_container_filesystem_available(meter: Meter) -> UpDownCounter:
+    """Container filesystem available bytes"""
+    return meter.create_up_down_counter(
+        name=CONTAINER_FILESYSTEM_AVAILABLE,
+        description="Container filesystem available bytes.",
+        unit="By",
+    )
+
+
+CONTAINER_FILESYSTEM_CAPACITY: Final = "container.filesystem.capacity"
+"""
+Container filesystem capacity
+Instrument: updowncounter
+Unit: By
+Note: In K8s, this metric is derived from the
+[FsStats.CapacityBytes](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#FsStats) field
+of the [ContainerStats.Rootfs](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#ContainerStats)
+of the Kubelet's stats API.
+"""
+
+
+def create_container_filesystem_capacity(meter: Meter) -> UpDownCounter:
+    """Container filesystem capacity"""
+    return meter.create_up_down_counter(
+        name=CONTAINER_FILESYSTEM_CAPACITY,
+        description="Container filesystem capacity.",
+        unit="By",
+    )
+
+
+CONTAINER_FILESYSTEM_USAGE: Final = "container.filesystem.usage"
+"""
+Container filesystem usage
+Instrument: updowncounter
+Unit: By
+Note: This may not equal capacity - available.
+
+In K8s, this metric is derived from the
+[FsStats.UsedBytes](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#FsStats) field
+of the [ContainerStats.Rootfs](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#ContainerStats)
+of the Kubelet's stats API.
+"""
+
+
+def create_container_filesystem_usage(meter: Meter) -> UpDownCounter:
+    """Container filesystem usage"""
+    return meter.create_up_down_counter(
+        name=CONTAINER_FILESYSTEM_USAGE,
+        description="Container filesystem usage.",
         unit="By",
     )
 
@@ -147,6 +213,6 @@ def create_container_uptime(
     return meter.create_observable_gauge(
         name=CONTAINER_UPTIME,
         callbacks=callbacks,
-        description="The time the container has been running",
+        description="The time the container has been running.",
         unit="s",
     )

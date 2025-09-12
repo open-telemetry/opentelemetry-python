@@ -12,7 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# FIXME: Use importlib.metadata when support for 3.11 is dropped if the rest of
+from functools import cache
+
+# FIXME: Use importlib.metadata (not importlib_metadata)
+# when support for 3.11 is dropped if the rest of
 # the supported versions at that time have the same API.
 from importlib_metadata import (  # type: ignore
     Distribution,
@@ -20,10 +23,25 @@ from importlib_metadata import (  # type: ignore
     EntryPoints,
     PackageNotFoundError,
     distributions,
-    entry_points,
     requires,
     version,
 )
+from importlib_metadata import (
+    entry_points as original_entry_points,
+)
+
+
+@cache
+def _original_entry_points_cached():
+    return original_entry_points()
+
+
+def entry_points(**params):
+    """Replacement for importlib_metadata.entry_points that caches getting all the entry points.
+
+    That part can be very slow, and OTel uses this function many times."""
+    return _original_entry_points_cached().select(**params)
+
 
 __all__ = [
     "entry_points",

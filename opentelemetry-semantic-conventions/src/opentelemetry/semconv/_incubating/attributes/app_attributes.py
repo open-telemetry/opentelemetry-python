@@ -14,6 +14,11 @@
 
 from typing import Final
 
+APP_BUILD_ID: Final = "app.build_id"
+"""
+Unique identifier for a particular build or compilation of the application.
+"""
+
 APP_INSTALLATION_ID: Final = "app.installation.id"
 """
 A unique identifier representing the installation of an application on a specific device.
@@ -33,7 +38,23 @@ For Android, examples of `app.installation.id` implementations include:
 - [App set ID](https://developer.android.com/identity/app-set-id).
 - [`Settings.getString(Settings.Secure.ANDROID_ID)`](https://developer.android.com/reference/android/provider/Settings.Secure#ANDROID_ID).
 
-More information about Android identifier best practices can be found [here](https://developer.android.com/training/articles/user-data-ids).
+More information about Android identifier best practices can be found in the [Android user data IDs guide](https://developer.android.com/training/articles/user-data-ids).
+"""
+
+APP_JANK_FRAME_COUNT: Final = "app.jank.frame_count"
+"""
+A number of frame renders that experienced jank.
+Note: Depending on platform limitations, the value provided MAY be approximation.
+"""
+
+APP_JANK_PERIOD: Final = "app.jank.period"
+"""
+The time period, in seconds, for which this jank is being reported.
+"""
+
+APP_JANK_THRESHOLD: Final = "app.jank.threshold"
+"""
+The minimum rendering threshold for this jank, in seconds.
 """
 
 APP_SCREEN_COORDINATE_X: Final = "app.screen.coordinate.x"

@@ -2,8 +2,13 @@ name: Release
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   release:
+    permissions:
+      contents: write # required for creating GitHub releases
     runs-on: ubuntu-latest
     steps:
       - run: |
