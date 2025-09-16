@@ -32,6 +32,8 @@ inject a `requests.Session` or `grpc.ChannelCredentials` object into OTLP export
   ([#4735](https://github.com/open-telemetry/opentelemetry-python/pull/4735))
 - opentelemetry-sdk: fix calling Logger.emit with an API LogRecord instance
   ([#4741](https://github.com/open-telemetry/opentelemetry-python/pull/4741))
+- docs: Added sqlcommenter example
+  ([#4734](https://github.com/open-telemetry/opentelemetry-python/pull/4734))
 
 ## Version 1.36.0/0.57b0 (2025-07-29)
 
