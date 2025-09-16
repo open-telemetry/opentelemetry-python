@@ -123,20 +123,18 @@ class OTLPSpanExporter(
             else compression
         )
 
-        super().__init__(
-            **{
-                "stub": TraceServiceStub,
-                "result": SpanExportResult,
-                "endpoint": endpoint
-                or environ.get(OTEL_EXPORTER_OTLP_TRACES_ENDPOINT),
-                "insecure": insecure,
-                "credentials": credentials,
-                "headers": headers
-                or environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS),
-                "timeout": timeout or environ_timeout,
-                "compression": compression,
-                "channel_options": channel_options,
-            }
+        OTLPExporterMixin.__init__(
+            self,
+            stub=TraceServiceStub,
+            result=SpanExportResult,
+            endpoint=endpoint
+            or environ.get(OTEL_EXPORTER_OTLP_TRACES_ENDPOINT),
+            insecure=insecure,
+            credentials=credentials,
+            headers=headers or environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS),
+            timeout=timeout or environ_timeout,
+            compression=compression,
+            channel_options=channel_options,
         )
 
     def _translate_data(

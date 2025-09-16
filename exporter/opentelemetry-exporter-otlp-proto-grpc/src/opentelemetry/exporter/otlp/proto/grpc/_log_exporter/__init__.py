@@ -90,22 +90,18 @@ class OTLPLogExporter(
             if compression is None
             else compression
         )
-        endpoint = endpoint or environ.get(OTEL_EXPORTER_OTLP_LOGS_ENDPOINT)
 
-        headers = headers or environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS)
-
-        super().__init__(
-            **{
-                "endpoint": endpoint,
-                "insecure": insecure,
-                "credentials": credentials,
-                "headers": headers,
-                "timeout": timeout or environ_timeout,
-                "compression": compression,
-                "stub": LogsServiceStub,
-                "result": LogExportResult,
-                "channel_options": channel_options,
-            }
+        OTLPExporterMixin.__init__(
+            self,
+            endpoint=endpoint or environ.get(OTEL_EXPORTER_OTLP_LOGS_ENDPOINT),
+            insecure=insecure,
+            credentials=credentials,
+            headers=headers or environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS),
+            timeout=timeout,
+            compression=compression,
+            stub=LogsServiceStub,
+            result=LogExportResult,
+            channel_options=channel_options,
         )
 
     def _translate_data(
