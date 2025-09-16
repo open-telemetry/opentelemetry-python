@@ -17,8 +17,6 @@ Start the Collector locally to see data being exported. Write the following file
     exporters:
         debug:
 
-    processors:
-        batch:
 
     service:
         pipelines:
