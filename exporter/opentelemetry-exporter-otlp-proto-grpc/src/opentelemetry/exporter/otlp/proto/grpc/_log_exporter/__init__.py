@@ -97,7 +97,7 @@ class OTLPLogExporter(
             insecure=insecure,
             credentials=credentials,
             headers=headers or environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS),
-            timeout=timeout,
+            timeout=timeout or environ_timeout,
             compression=compression,
             stub=LogsServiceStub,
             result=LogExportResult,
