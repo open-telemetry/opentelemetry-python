@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Mark the Events API/SDK as deprecated. The Logs API/SDK should be used instead. An event is now a `LogRecord` with the `event_name` field set
+  ([#4654](https://github.com/open-telemetry/opentelemetry-python/pull/4654)).
+
 ## Version 1.37.0/0.58b0 (2025-09-11)
 
 - Add experimental composite samplers
