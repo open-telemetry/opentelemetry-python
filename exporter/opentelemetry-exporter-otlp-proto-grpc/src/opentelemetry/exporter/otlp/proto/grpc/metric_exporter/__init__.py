@@ -43,6 +43,7 @@ from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401
 )
 from opentelemetry.proto.metrics.v1 import metrics_pb2 as pb2  # noqa: F401
 from opentelemetry.sdk.environment_variables import (
+    _OTEL_PYTHON_EXPORTER_OTLP_GRPC_METRICS_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,
     OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY,
@@ -105,6 +106,7 @@ class OTLPMetricExporter(
         | None = None,
         preferred_aggregation: dict[type, Aggregation] | None = None,
         max_export_batch_size: int | None = None,
+        channel_options: TypingSequence[Tuple[str, str]] | None = None,
     ):
         if insecure is None:
             insecure = environ.get(OTEL_EXPORTER_OTLP_METRICS_INSECURE)
@@ -117,6 +119,7 @@ class OTLPMetricExporter(
         ):
             credentials = _get_credentials(
                 credentials,
+                _OTEL_PYTHON_EXPORTER_OTLP_GRPC_METRICS_CREDENTIAL_PROVIDER,
                 OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,
                 OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY,
                 OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE,
@@ -146,6 +149,7 @@ class OTLPMetricExporter(
             headers=headers or environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS),
             timeout=timeout or environ_timeout,
             compression=compression,
+            channel_options=channel_options,
         )
 
         self._max_export_batch_size: int | None = max_export_batch_size

@@ -46,6 +46,7 @@ from opentelemetry.proto.trace.v1.trace_pb2 import (  # noqa: F401
     Span as CollectorSpan,
 )
 from opentelemetry.sdk.environment_variables import (
+    _OTEL_PYTHON_EXPORTER_OTLP_GRPC_TRACES_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
     OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
@@ -93,6 +94,7 @@ class OTLPSpanExporter(
         ] = None,
         timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
+        channel_options: Optional[TypingSequence[Tuple[str, str]]] = None,
     ):
         if insecure is None:
             insecure = environ.get(OTEL_EXPORTER_OTLP_TRACES_INSECURE)
@@ -105,6 +107,7 @@ class OTLPSpanExporter(
         ):
             credentials = _get_credentials(
                 credentials,
+                _OTEL_PYTHON_EXPORTER_OTLP_GRPC_TRACES_CREDENTIAL_PROVIDER,
                 OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
                 OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
                 OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
@@ -131,6 +134,7 @@ class OTLPSpanExporter(
                 or environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS),
                 "timeout": timeout or environ_timeout,
                 "compression": compression,
+                "channel_options": channel_options,
             }
         )
 

@@ -348,6 +348,8 @@ class MessagingServicebusDispositionStatusValues(Enum):
 class MessagingSystemValues(Enum):
     ACTIVEMQ = "activemq"
     """Apache ActiveMQ."""
+    AWS_SNS = "aws.sns"
+    """Amazon Simple Notification Service (SNS)."""
     AWS_SQS = "aws_sqs"
     """Amazon Simple Queue Service (SQS)."""
     EVENTGRID = "eventgrid"

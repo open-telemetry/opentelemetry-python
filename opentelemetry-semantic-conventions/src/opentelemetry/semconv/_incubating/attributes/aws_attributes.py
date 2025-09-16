@@ -340,6 +340,6 @@ The ARN of the AWS Step Functions State Machine.
 
 class AwsEcsLaunchtypeValues(Enum):
     EC2 = "ec2"
-    """ec2."""
+    """Amazon EC2."""
     FARGATE = "fargate"
-    """fargate."""
+    """Amazon Fargate."""

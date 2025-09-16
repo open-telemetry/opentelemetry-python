@@ -32,7 +32,7 @@ def create_otel_sdk_exporter_log_exported(meter: Meter) -> Counter:
     """The number of log records for which the export has finished, either successful or failed"""
     return meter.create_counter(
         name=OTEL_SDK_EXPORTER_LOG_EXPORTED,
-        description="The number of log records for which the export has finished, either successful or failed",
+        description="The number of log records for which the export has finished, either successful or failed.",
         unit="{log_record}",
     )
 
@@ -50,7 +50,7 @@ def create_otel_sdk_exporter_log_inflight(meter: Meter) -> UpDownCounter:
     """The number of log records which were passed to the exporter, but that have not been exported yet (neither successful, nor failed)"""
     return meter.create_up_down_counter(
         name=OTEL_SDK_EXPORTER_LOG_INFLIGHT,
-        description="The number of log records which were passed to the exporter, but that have not been exported yet (neither successful, nor failed)",
+        description="The number of log records which were passed to the exporter, but that have not been exported yet (neither successful, nor failed).",
         unit="{log_record}",
     )
 
@@ -74,7 +74,7 @@ def create_otel_sdk_exporter_metric_data_point_exported(
     """The number of metric data points for which the export has finished, either successful or failed"""
     return meter.create_counter(
         name=OTEL_SDK_EXPORTER_METRIC_DATA_POINT_EXPORTED,
-        description="The number of metric data points for which the export has finished, either successful or failed",
+        description="The number of metric data points for which the export has finished, either successful or failed.",
         unit="{data_point}",
     )
 
@@ -96,7 +96,7 @@ def create_otel_sdk_exporter_metric_data_point_inflight(
     """The number of metric data points which were passed to the exporter, but that have not been exported yet (neither successful, nor failed)"""
     return meter.create_up_down_counter(
         name=OTEL_SDK_EXPORTER_METRIC_DATA_POINT_INFLIGHT,
-        description="The number of metric data points which were passed to the exporter, but that have not been exported yet (neither successful, nor failed)",
+        description="The number of metric data points which were passed to the exporter, but that have not been exported yet (neither successful, nor failed).",
         unit="{data_point}",
     )
 
@@ -138,7 +138,7 @@ def create_otel_sdk_exporter_span_exported(meter: Meter) -> Counter:
     """The number of spans for which the export has finished, either successful or failed"""
     return meter.create_counter(
         name=OTEL_SDK_EXPORTER_SPAN_EXPORTED,
-        description="The number of spans for which the export has finished, either successful or failed",
+        description="The number of spans for which the export has finished, either successful or failed.",
         unit="{span}",
     )
 
@@ -175,7 +175,7 @@ def create_otel_sdk_exporter_span_inflight(meter: Meter) -> UpDownCounter:
     """The number of spans which were passed to the exporter, but that have not been exported yet (neither successful, nor failed)"""
     return meter.create_up_down_counter(
         name=OTEL_SDK_EXPORTER_SPAN_INFLIGHT,
-        description="The number of spans which were passed to the exporter, but that have not been exported yet (neither successful, nor failed)",
+        description="The number of spans which were passed to the exporter, but that have not been exported yet (neither successful, nor failed).",
         unit="{span}",
     )
 
@@ -211,7 +211,7 @@ def create_otel_sdk_log_created(meter: Meter) -> Counter:
     """The number of logs submitted to enabled SDK Loggers"""
     return meter.create_counter(
         name=OTEL_SDK_LOG_CREATED,
-        description="The number of logs submitted to enabled SDK Loggers",
+        description="The number of logs submitted to enabled SDK Loggers.",
         unit="{log_record}",
     )
 
@@ -254,7 +254,7 @@ def create_otel_sdk_processor_log_processed(meter: Meter) -> Counter:
     """The number of log records for which the processing has finished, either successful or failed"""
     return meter.create_counter(
         name=OTEL_SDK_PROCESSOR_LOG_PROCESSED,
-        description="The number of log records for which the processing has finished, either successful or failed",
+        description="The number of log records for which the processing has finished, either successful or failed.",
         unit="{log_record}",
     )
 
@@ -276,7 +276,7 @@ def create_otel_sdk_processor_log_queue_capacity(
     """The maximum number of log records the queue of a given instance of an SDK Log Record processor can hold"""
     return meter.create_up_down_counter(
         name=OTEL_SDK_PROCESSOR_LOG_QUEUE_CAPACITY,
-        description="The maximum number of log records the queue of a given instance of an SDK Log Record processor can hold",
+        description="The maximum number of log records the queue of a given instance of an SDK Log Record processor can hold.",
         unit="{log_record}",
     )
 
@@ -294,7 +294,7 @@ def create_otel_sdk_processor_log_queue_size(meter: Meter) -> UpDownCounter:
     """The number of log records in the queue of a given instance of an SDK log processor"""
     return meter.create_up_down_counter(
         name=OTEL_SDK_PROCESSOR_LOG_QUEUE_SIZE,
-        description="The number of log records in the queue of a given instance of an SDK log processor",
+        description="The number of log records in the queue of a given instance of an SDK log processor.",
         unit="{log_record}",
     )
 
@@ -313,7 +313,7 @@ def create_otel_sdk_processor_span_processed(meter: Meter) -> Counter:
     """The number of spans for which the processing has finished, either successful or failed"""
     return meter.create_counter(
         name=OTEL_SDK_PROCESSOR_SPAN_PROCESSED,
-        description="The number of spans for which the processing has finished, either successful or failed",
+        description="The number of spans for which the processing has finished, either successful or failed.",
         unit="{span}",
     )
 
@@ -354,7 +354,7 @@ def create_otel_sdk_processor_span_queue_capacity(
     """The maximum number of spans the queue of a given instance of an SDK span processor can hold"""
     return meter.create_up_down_counter(
         name=OTEL_SDK_PROCESSOR_SPAN_QUEUE_CAPACITY,
-        description="The maximum number of spans the queue of a given instance of an SDK span processor can hold",
+        description="The maximum number of spans the queue of a given instance of an SDK span processor can hold.",
         unit="{span}",
     )
 
@@ -374,60 +374,54 @@ def create_otel_sdk_processor_span_queue_size(meter: Meter) -> UpDownCounter:
     """The number of spans in the queue of a given instance of an SDK span processor"""
     return meter.create_up_down_counter(
         name=OTEL_SDK_PROCESSOR_SPAN_QUEUE_SIZE,
-        description="The number of spans in the queue of a given instance of an SDK span processor",
+        description="The number of spans in the queue of a given instance of an SDK span processor.",
         unit="{span}",
     )
 
 
 OTEL_SDK_SPAN_ENDED: Final = "otel.sdk.span.ended"
 """
-The number of created spans for which the end operation was called
-Instrument: counter
-Unit: {span}
-Note: For spans with `recording=true`: Implementations MUST record both `otel.sdk.span.live` and `otel.sdk.span.ended`.
-For spans with `recording=false`: If implementations decide to record this metric, they MUST also record `otel.sdk.span.live`.
+Deprecated: Obsoleted.
 """
 
 
 def create_otel_sdk_span_ended(meter: Meter) -> Counter:
-    """The number of created spans for which the end operation was called"""
+    """Use `otel.sdk.span.started` minus `otel.sdk.span.live` to derive this value"""
     return meter.create_counter(
         name=OTEL_SDK_SPAN_ENDED,
-        description="The number of created spans for which the end operation was called",
+        description="Use `otel.sdk.span.started` minus `otel.sdk.span.live` to derive this value.",
         unit="{span}",
     )
 
 
 OTEL_SDK_SPAN_ENDED_COUNT: Final = "otel.sdk.span.ended.count"
 """
-Deprecated: Replaced by `otel.sdk.span.ended`.
+Deprecated: Obsoleted.
 """
 
 
 def create_otel_sdk_span_ended_count(meter: Meter) -> Counter:
-    """Deprecated, use `otel.sdk.span.ended` instead"""
+    """Use `otel.sdk.span.started` minus `otel.sdk.span.live` to derive this value"""
     return meter.create_counter(
         name=OTEL_SDK_SPAN_ENDED_COUNT,
-        description="Deprecated, use `otel.sdk.span.ended` instead.",
+        description="Use `otel.sdk.span.started` minus `otel.sdk.span.live` to derive this value.",
         unit="{span}",
     )
 
 
 OTEL_SDK_SPAN_LIVE: Final = "otel.sdk.span.live"
 """
-The number of created spans for which the end operation has not been called yet
+The number of created spans with `recording=true` for which the end operation has not been called yet
 Instrument: updowncounter
 Unit: {span}
-Note: For spans with `recording=true`: Implementations MUST record both `otel.sdk.span.live` and `otel.sdk.span.ended`.
-For spans with `recording=false`: If implementations decide to record this metric, they MUST also record `otel.sdk.span.ended`.
 """
 
 
 def create_otel_sdk_span_live(meter: Meter) -> UpDownCounter:
-    """The number of created spans for which the end operation has not been called yet"""
+    """The number of created spans with `recording=true` for which the end operation has not been called yet"""
     return meter.create_up_down_counter(
         name=OTEL_SDK_SPAN_LIVE,
-        description="The number of created spans for which the end operation has not been called yet",
+        description="The number of created spans with `recording=true` for which the end operation has not been called yet.",
         unit="{span}",
     )
 
@@ -443,5 +437,23 @@ def create_otel_sdk_span_live_count(meter: Meter) -> UpDownCounter:
     return meter.create_up_down_counter(
         name=OTEL_SDK_SPAN_LIVE_COUNT,
         description="Deprecated, use `otel.sdk.span.live` instead.",
+        unit="{span}",
+    )
+
+
+OTEL_SDK_SPAN_STARTED: Final = "otel.sdk.span.started"
+"""
+The number of created spans
+Instrument: counter
+Unit: {span}
+Note: Implementations MUST record this metric for all spans, even for non-recording ones.
+"""
+
+
+def create_otel_sdk_span_started(meter: Meter) -> Counter:
+    """The number of created spans"""
+    return meter.create_counter(
+        name=OTEL_SDK_SPAN_STARTED,
+        description="The number of created spans.",
         unit="{span}",
     )
