@@ -26,7 +26,11 @@ from opentelemetry.context import (
     detach,
     set_value,
 )
-from opentelemetry.sdk._logs import LogData, LogRecord, LogRecordProcessor
+from opentelemetry.sdk._logs import (
+    LogRecordProcessor,
+    ReadableLogRecord,
+    ReadWriteLogRecord,
+)
 from opentelemetry.sdk._shared_internal import BatchProcessor, DuplicateFilter
 from opentelemetry.sdk.environment_variables import (
     OTEL_BLRP_EXPORT_TIMEOUT,
@@ -60,10 +64,10 @@ class LogExporter(abc.ABC):
     """
 
     @abc.abstractmethod
-    def export(self, batch: Sequence[LogData]):
+    def export(self, batch: Sequence[ReadableLogRecord]) -> LogExportResult:
         """Exports a batch of logs.
         Args:
-            batch: The list of `LogData` objects to be exported
+            batch: The list of `ReadableLogRecord` objects to be exported
         Returns:
             The result of the export
         """
@@ -87,15 +91,16 @@ class ConsoleLogExporter(LogExporter):
     def __init__(
         self,
         out: IO = sys.stdout,
-        formatter: Callable[[LogRecord], str] = lambda record: record.to_json()
-        + linesep,
+        formatter: Callable[
+            [ReadableLogRecord], str
+        ] = lambda record: record.to_json() + linesep,
     ):
         self.out = out
         self.formatter = formatter
 
-    def export(self, batch: Sequence[LogData]):
-        for data in batch:
-            self.out.write(self.formatter(data.log_record))
+    def export(self, batch: Sequence[ReadableLogRecord]):
+        for log_record in batch:
+            self.out.write(self.formatter(log_record))
         self.out.flush()
         return LogExportResult.SUCCESS
 
@@ -105,21 +110,27 @@ class ConsoleLogExporter(LogExporter):
 
 class SimpleLogRecordProcessor(LogRecordProcessor):
     """This is an implementation of LogRecordProcessor which passes
-    received logs in the export-friendly LogData representation to the
-    configured LogExporter, as soon as they are emitted.
+    received logs directly to the configured LogExporter, as soon as they are emitted.
     """
 
     def __init__(self, exporter: LogExporter):
         self._exporter = exporter
         self._shutdown = False
 
-    def on_emit(self, log_data: LogData):
+    def on_emit(self, log_record: ReadWriteLogRecord):
         if self._shutdown:
             _logger.warning("Processor is already shutdown, ignoring call")
             return
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
-            self._exporter.export((log_data,))
+            # Convert ReadWriteLogRecord to ReadableLogRecord before exporting
+            readable_log_record = ReadableLogRecord(
+                log_record=log_record.log_record,
+                resource=log_record.resource,
+                instrumentation_scope=log_record.instrumentation_scope,
+                limits=log_record.limits,
+            )
+            self._exporter.export((readable_log_record,))
         except Exception:  # pylint: disable=broad-exception-caught
             _logger.exception("Exception while exporting logs.")
         detach(token)
@@ -134,8 +145,7 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
 
 class BatchLogRecordProcessor(LogRecordProcessor):
     """This is an implementation of LogRecordProcessor which creates batches of
-    received logs in the export-friendly LogData representation and
-    send to the configured LogExporter, as soon as they are emitted.
+    received logs and sends them to the configured LogExporter.
 
     `BatchLogRecordProcessor` is configurable with the following environment
     variables which correspond to constructor parameters:
@@ -187,8 +197,15 @@ class BatchLogRecordProcessor(LogRecordProcessor):
             "Log",
         )
 
-    def on_emit(self, log_data: LogData) -> None:
-        return self._batch_processor.emit(log_data)
+    def on_emit(self, log_record: ReadWriteLogRecord) -> None:
+        # Convert ReadWriteLogRecord to ReadableLogRecord before passing to BatchProcessor
+        readable_log_record = ReadableLogRecord(
+            log_record=log_record.log_record,
+            resource=log_record.resource,
+            instrumentation_scope=log_record.instrumentation_scope,
+            limits=log_record.limits,
+        )
+        return self._batch_processor.emit(readable_log_record)
 
     def shutdown(self):
         return self._batch_processor.shutdown()
