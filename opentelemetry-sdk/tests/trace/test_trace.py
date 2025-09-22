@@ -2188,7 +2188,7 @@ class TestRandomIdGenerator(unittest.TestCase):
     def test_generate_trace_id_avoids_invalid(self):
         for name, generator in self.generators.items():
             with self.subTest(msg=name), \
-                    patch.object(generator._rng, "getrandbits", side_effect=[trace_api.INVALID_SPAN_ID, 0x00000000DEADBEF0]) as mock_getrandbits:
+                    patch.object(generator._rng, "getrandbits", side_effect=[trace_api.INVALID_TRACE_ID, 0x000000000000000000000000DEADBEEF]) as mock_getrandbits:
                 trace_id = generator.generate_trace_id()
 
                 self.assertNotEqual(trace_id, trace_api.INVALID_TRACE_ID)
