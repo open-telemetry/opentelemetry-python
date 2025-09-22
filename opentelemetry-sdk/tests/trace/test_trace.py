@@ -20,7 +20,7 @@ import subprocess
 import unittest
 from importlib import reload
 from logging import ERROR, WARNING
-from random import randint
+from random import randint, Random
 from time import time_ns
 from typing import Optional
 from unittest import mock
@@ -2168,29 +2168,29 @@ class TestRandomIdGenerator(unittest.TestCase):
     _TRACE_ID_MAX_VALUE = 2**128 - 1
     _SPAN_ID_MAX_VALUE = 2**64 - 1
 
-    @patch(
-        "random.getrandbits",
-        side_effect=[trace_api.INVALID_SPAN_ID, 0x00000000DEADBEF0],
-    )
-    def test_generate_span_id_avoids_invalid(self, mock_getrandbits):
-        generator = RandomIdGenerator()
-        span_id = generator.generate_span_id()
+    def setUp(self):
+        self.generators = {
+            'rng=None': RandomIdGenerator(),
+            'rng=Random()': RandomIdGenerator(rng=Random()),
+            'rng=Random(42)': RandomIdGenerator(rng=Random(x=42))
+        }
 
-        self.assertNotEqual(span_id, trace_api.INVALID_SPAN_ID)
-        mock_getrandbits.assert_any_call(64)
-        self.assertEqual(mock_getrandbits.call_count, 2)
+    def test_generate_span_id_avoids_invalid(self):
+        for msg, generator in self.generators.items():
+            with self.subTest(msg=msg), \
+                    patch.object(generator._rng, "getrandbits", side_effect=[trace_api.INVALID_SPAN_ID, 0x00000000DEADBEF0]) as mock_getrandbits:
+                span_id = generator.generate_span_id()
 
-    @patch(
-        "random.getrandbits",
-        side_effect=[
-            trace_api.INVALID_TRACE_ID,
-            0x000000000000000000000000DEADBEEF,
-        ],
-    )
-    def test_generate_trace_id_avoids_invalid(self, mock_getrandbits):
-        generator = RandomIdGenerator()
-        trace_id = generator.generate_trace_id()
+                self.assertNotEqual(span_id, trace_api.INVALID_SPAN_ID)
+                mock_getrandbits.assert_any_call(64)
+                self.assertEqual(mock_getrandbits.call_count, 2)
 
-        self.assertNotEqual(trace_id, trace_api.INVALID_TRACE_ID)
-        mock_getrandbits.assert_any_call(128)
-        self.assertEqual(mock_getrandbits.call_count, 2)
+    def test_generate_trace_id_avoids_invalid(self):
+        for name, generator in self.generators.items():
+            with self.subTest(msg=name), \
+                    patch.object(generator._rng, "getrandbits", side_effect=[trace_api.INVALID_SPAN_ID, 0x00000000DEADBEF0]) as mock_getrandbits:
+                trace_id = generator.generate_trace_id()
+
+                self.assertNotEqual(trace_id, trace_api.INVALID_TRACE_ID)
+                mock_getrandbits.assert_any_call(128)
+                self.assertEqual(mock_getrandbits.call_count, 2)
