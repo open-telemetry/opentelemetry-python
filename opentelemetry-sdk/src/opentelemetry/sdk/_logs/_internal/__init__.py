@@ -633,8 +633,6 @@ class LoggingHandler(logging.Handler):
             "WARN" if record.levelname == "WARNING" else record.levelname
         )
 
-        # FIXME: what to do with the resource?
-        # logger = get_logger(record.name, logger_provider=self._logger_provider)
         return dict(
             timestamp=timestamp,
             observed_timestamp=observered_timestamp,
@@ -643,7 +641,6 @@ class LoggingHandler(logging.Handler):
             severity_number=severity_number,
             body=body,
             attributes=attributes,
-            # resource=logger.resource,
         )
 
     def emit(self, record: logging.LogRecord) -> None:
@@ -744,6 +741,7 @@ class Logger(APILogger):
                 body=body,
                 attributes=attributes,
                 event_name=event_name,
+                resource=self._resource,
             )
         elif not isinstance(record, LogRecord):
             # pylint:disable=protected-access
