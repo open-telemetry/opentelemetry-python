@@ -599,7 +599,7 @@ class LoggingHandler(logging.Handler):
                 )
         return attributes
 
-    def _translate(self, record: logging.LogRecord) -> LogRecord:
+    def _translate(self, record: logging.LogRecord) -> dict:
         timestamp = int(record.created * 1e9)
         observered_timestamp = time_ns()
         attributes = self._get_attributes(record)
@@ -633,15 +633,15 @@ class LoggingHandler(logging.Handler):
             "WARN" if record.levelname == "WARNING" else record.levelname
         )
 
-        return dict(
-            timestamp=timestamp,
-            observed_timestamp=observered_timestamp,
-            context=get_current() or None,
-            severity_text=level_name,
-            severity_number=severity_number,
-            body=body,
-            attributes=attributes,
-        )
+        return {
+            "timestamp": timestamp,
+            "observed_timestamp": observered_timestamp,
+            "context": get_current() or None,
+            "severity_text": level_name,
+            "severity_number": severity_number,
+            "body": body,
+            "attributes": attributes,
+        }
 
     def emit(self, record: logging.LogRecord) -> None:
         """
@@ -710,7 +710,7 @@ class Logger(APILogger):
     )
     def emit(
         self,
-        record: "LogRecord",
+        record: APILogRecord,
     ) -> None: ...
 
     def emit(
