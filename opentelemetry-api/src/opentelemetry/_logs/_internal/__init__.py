@@ -171,7 +171,7 @@ class Logger(ABC):
     @abstractmethod
     def emit(
         self,
-        record: "LogRecord | None" = None,
+        record: LogRecord | None = None,
         *,
         timestamp: int | None = None,
         observed_timestamp: int | None = None,
@@ -216,7 +216,7 @@ class NoOpLogger(Logger):
 
     def emit(
         self,
-        record: "LogRecord | None" = None,
+        record: LogRecord | None = None,
         *,
         timestamp: int | None = None,
         observed_timestamp: int | None = None,
