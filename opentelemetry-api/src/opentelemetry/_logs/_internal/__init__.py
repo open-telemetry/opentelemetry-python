@@ -214,7 +214,6 @@ class NoOpLogger(Logger):
         record: "LogRecord",
     ) -> None: ...
 
-    @abstractmethod
     def emit(
         self,
         record: "LogRecord | None" = None,
