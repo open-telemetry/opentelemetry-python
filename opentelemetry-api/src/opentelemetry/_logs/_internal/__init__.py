@@ -165,7 +165,7 @@ class Logger(ABC):
     )
     def emit(
         self,
-        record: "LogRecord",
+        record: LogRecord,
     ) -> None: ...
 
     @abstractmethod
@@ -211,7 +211,7 @@ class NoOpLogger(Logger):
     )
     def emit(
         self,
-        record: "LogRecord",
+        record: LogRecord,
     ) -> None: ...
 
     def emit(
@@ -280,7 +280,7 @@ class ProxyLogger(Logger):
     )
     def emit(
         self,
-        record: "LogRecord",
+        record: LogRecord,
     ) -> None: ...
 
     def emit(
