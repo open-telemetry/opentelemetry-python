@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- logs: extend Logger.emit to accept separated keyword arguments
+  ([#4737](https://github.com/open-telemetry/opentelemetry-python/pull/4737))
+
 ## Version 1.37.0/0.58b0 (2025-09-11)
 
 - Add experimental composite samplers

@@ -113,7 +113,19 @@ class DummyLogger:
         self.resource = resource
         self.processor = processor
 
-    def emit(self, record):
+    def emit(
+        self,
+        record=None,
+        *,
+        timestamp=None,
+        observed_timestamp=None,
+        context=None,
+        severity_number=None,
+        severity_text=None,
+        body=None,
+        attributes=None,
+        event_name=None,
+    ):
         self.processor.emit(record)
 
 
