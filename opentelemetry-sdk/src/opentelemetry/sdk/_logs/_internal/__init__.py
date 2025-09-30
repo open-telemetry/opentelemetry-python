@@ -705,9 +705,6 @@ class Logger(APILogger):
     ) -> None: ...
 
     @overload
-    @deprecated(
-        "Logger.emit with record parameter is deprecated since 1.38.0, use the keyword arguments instead."
-    )
     def emit(  # pylint:disable=arguments-differ
         self,
         record: APILogRecord,
@@ -729,7 +726,6 @@ class Logger(APILogger):
         """Emits the :class:`LogData` by associating :class:`LogRecord`
         and instrumentation info.
         """
-        # TODO: add a warning after 1.39.0 for deprecated interface
 
         if not record:
             record = LogRecord(

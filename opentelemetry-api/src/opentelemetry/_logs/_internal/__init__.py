@@ -160,9 +160,6 @@ class Logger(ABC):
     ) -> None: ...
 
     @overload
-    @deprecated(
-        "Logger.emit with record parameter is deprecated since 1.38.0, use the keyword arguments instead."
-    )
     def emit(
         self,
         record: LogRecord,
@@ -206,9 +203,6 @@ class NoOpLogger(Logger):
     ) -> None: ...
 
     @overload
-    @deprecated(
-        "Logger.emit with record parameter is deprecated since 1.38.0, use the keyword arguments instead."
-    )
     def emit(  # pylint:disable=arguments-differ
         self,
         record: LogRecord,
@@ -275,9 +269,6 @@ class ProxyLogger(Logger):
     ) -> None: ...
 
     @overload
-    @deprecated(
-        "Logger.emit with record parameter is deprecated since 1.38.0, use the keyword arguments instead."
-    )
     def emit(  # pylint:disable=arguments-differ
         self,
         record: LogRecord,
