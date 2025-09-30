@@ -43,7 +43,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_TRACES_SAMPLER,
     OTEL_TRACES_SAMPLER_ARG,
 )
-from opentelemetry.sdk.trace import Resource, TracerProvider
+from opentelemetry.sdk.trace import Resource, TracerProvider, _TracerConfig
 from opentelemetry.sdk.trace.id_generator import RandomIdGenerator
 from opentelemetry.sdk.trace.sampling import (
     ALWAYS_OFF,
@@ -64,6 +64,7 @@ from opentelemetry.trace import (
     get_tracer,
     set_tracer_provider,
 )
+from opentelemetry.trace.span import INVALID_SPAN
 
 
 class TestTracer(unittest.TestCase):
@@ -195,6 +196,43 @@ tracer_provider.add_span_processor(mock_processor)
         self.assertIsInstance(
             tracer_provider.get_tracer(Mock()), trace_api.NoOpTracer
         )
+
+    def test_update_tracer_config(self):
+        tracer_provider = trace.TracerProvider()
+        tracer = tracer_provider.get_tracer(
+            "module_name",
+            "library_version",
+            "schema_url",
+            {},
+        )
+
+        self.assertEqual(tracer._is_enabled, True)
+
+        tracer_config = _TracerConfig(is_enabled=False)
+        tracer._update_tracer_config(tracer_config)
+        self.assertEqual(tracer._is_enabled, False)
+
+        tracer_config = _TracerConfig(is_enabled=True)
+        tracer._update_tracer_config(tracer_config)
+        self.assertEqual(tracer._is_enabled, True)
+
+    def test_start_span_returns_invalid_span_if_not_enabled(self):
+        tracer_provider = trace.TracerProvider()
+        tracer = tracer_provider.get_tracer(
+            "module_name",
+            "library_version",
+            "schema_url",
+            {},
+        )
+
+        self.assertEqual(tracer._is_enabled, True)
+
+        tracer_config = _TracerConfig(is_enabled=False)
+        tracer._update_tracer_config(tracer_config)
+        self.assertEqual(tracer._is_enabled, False)
+
+        span = tracer.start_span(name="invalid span")
+        self.assertIs(span, INVALID_SPAN)
 
 
 class TestTracerSampling(unittest.TestCase):
@@ -2182,6 +2220,29 @@ class TestTracerProvider(unittest.TestCase):
         sample_patch.assert_called_once()
         self.assertIsNotNone(tracer_provider._span_limits)
         self.assertIsNotNone(tracer_provider._atexit_handler)
+
+    def test_tracer_configurator(self):
+        tracer_provider = trace.TracerProvider()
+        tracer = tracer_provider.get_tracer(
+            "module_name",
+            "library_version",
+            "schema_url",
+            {},
+        )
+        # pylint: disable=protected-access
+        self.assertEqual(tracer._instrumentation_scope.name, "module_name")
+
+        # pylint: disable=protected-access
+        self.assertEqual(tracer._is_enabled, True)
+
+        tracer_provider._disable_tracers(tracer_names=["different_name"])
+        self.assertEqual(tracer._is_enabled, True)
+
+        tracer_provider._disable_tracers(tracer_names=["module_name"])
+        self.assertEqual(tracer._is_enabled, False)
+
+        tracer_provider._enable_tracers(tracer_names=["module_name"])
+        self.assertEqual(tracer._is_enabled, True)
 
 
 class TestRandomIdGenerator(unittest.TestCase):

@@ -211,6 +211,7 @@ def _init_tracing(
     resource: Resource | None = None,
     exporter_args_map: ExporterArgsMap | None = None,
 ):
+    # FIXME: get configurator from entrypoints / env var
     provider = TracerProvider(
         id_generator=id_generator,
         sampler=sampler,
