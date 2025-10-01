@@ -24,6 +24,7 @@ from opentelemetry.instrumentation.flask import FlaskInstrumentor
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.semconv.resource import ResourceAttributes
 
 application = flask.Flask(__name__)
 
@@ -34,7 +35,9 @@ tracer = trace.get_tracer(__name__)
 
 @postfork
 def init_tracing():
-    resource = Resource.create(attributes={"service.name": "api-service"})
+    resource = Resource.create(
+        attributes={ResourceAttributes.SERVICE_NAME: "api-service"}
+    )
 
     trace.set_tracer_provider(TracerProvider(resource=resource))
     # This uses insecure connection for the purpose of example. Please see the
