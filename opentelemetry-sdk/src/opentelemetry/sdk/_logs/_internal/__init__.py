@@ -234,15 +234,15 @@ class LogRecord(APILogRecord):
         limits: LogLimits | None = None,
         event_name: str | None = None,
     ):
-        if trace_id or span_id or trace_flags:
-            warnings.warn(
-                "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated since 1.35.0. Use `context` instead.",
-                LogDeprecatedInitWarning,
-                stacklevel=2,
-            )
-
         if not context:
             context = get_current()
+
+            if trace_id or span_id or trace_flags:
+                warnings.warn(
+                    "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated since 1.35.0. Use `context` instead.",
+                    LogDeprecatedInitWarning,
+                    stacklevel=2,
+                )
 
         span = get_current_span(context)
         span_context = span.get_span_context()
