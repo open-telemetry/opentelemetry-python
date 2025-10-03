@@ -179,7 +179,11 @@ class OTLPSpanExporter(SpanExporter):
         serialized_data = encode_spans(spans).SerializePartialToString()
         deadline_sec = time() + self._timeout
         for retry_num in range(_MAX_RETRYS):
-            resp = self._export(serialized_data, deadline_sec - time())
+            try:
+                resp = self._export(serialized_data, deadline_sec - time())
+            except Exception as error:
+                _logger.error("Failed to export span batch reason: %s", error)
+                return SpanExportResult.FAILURE
             if resp.ok:
                 return SpanExportResult.SUCCESS
             # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
