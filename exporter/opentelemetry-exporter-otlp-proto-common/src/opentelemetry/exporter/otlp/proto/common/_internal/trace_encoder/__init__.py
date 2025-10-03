@@ -107,12 +107,12 @@ def _encode_resource_spans(
 
 def _span_flags(child_trace_flags: int, parent_span_context: Optional[SpanContext]) -> int:
     # Lower 8 bits: W3C TraceFlags
-    flags = int(child_trace_flags) & int(PB2SpanFlags.SPAN_FLAGS_TRACE_FLAGS_MASK)
+    flags = child_trace_flags & PB2SpanFlags.SPAN_FLAGS_TRACE_FLAGS_MASK
     # Always indicate whether parent remote information is known
-    flags |= int(PB2SpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK)
+    flags |= PB2SpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK
     # Set remote bit when applicable
-    if parent_span_context and getattr(parent_span_context, "is_remote", False):
-        flags |= int(PB2SpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK)
+    if parent_span_context and parent_span_context.is_remote:
+        flags |= PB2SpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK
     return flags
 
 
@@ -134,7 +134,7 @@ def _encode_span(sdk_span: ReadableSpan) -> PB2SPan:
         dropped_attributes_count=sdk_span.dropped_attributes,
         dropped_events_count=sdk_span.dropped_events,
         dropped_links_count=sdk_span.dropped_links,
-        flags=_span_flags(getattr(span_context, "trace_flags", 0), sdk_span.parent),
+        flags=_span_flags(span_context.trace_flags, sdk_span.parent),
     )
 
 
@@ -165,7 +165,7 @@ def _encode_links(links: Sequence[Link]) -> Sequence[PB2SPan.Link]:
                 span_id=_encode_span_id(link.context.span_id),
                 attributes=_encode_attributes(link.attributes),
                 dropped_attributes_count=link.dropped_attributes,
-                flags=_span_flags(getattr(link.context, "trace_flags", 0), link.context),
+                flags=_span_flags(link.context.trace_flags, link.context),
             )
             pb2_links.append(encoded_link)
     return pb2_links
