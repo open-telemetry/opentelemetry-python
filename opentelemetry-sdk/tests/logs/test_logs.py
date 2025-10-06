@@ -74,7 +74,9 @@ class TestLoggerProvider(unittest.TestCase):
         self.assertEqual(
             logger._instrumentation_scope.attributes, {"key": "value"}
         )
-        self.assertEqual(logger._min_severity_level, SeverityNumber.UNSPECIFIED)
+        self.assertEqual(
+            logger._min_severity_level, SeverityNumber.UNSPECIFIED
+        )
         self.assertFalse(logger._trace_based)
 
     @patch.dict("os.environ", {OTEL_SDK_DISABLED: "true"})
@@ -85,7 +87,9 @@ class TestLoggerProvider(unittest.TestCase):
 
     @patch.object(Resource, "create")
     def test_logger_provider_init(self, resource_patch):
-        logger_provider = LoggerProvider(min_severity_level=SeverityNumber.DEBUG4, trace_based=True)
+        logger_provider = LoggerProvider(
+            min_severity_level=SeverityNumber.DEBUG4, trace_based=True
+        )
         resource_patch.assert_called_once()
         self.assertIsNotNone(logger_provider._resource)
         self.assertTrue(
@@ -94,7 +98,9 @@ class TestLoggerProvider(unittest.TestCase):
                 SynchronousMultiLogRecordProcessor,
             )
         )
-        self.assertEqual(logger_provider._min_severity_level, SeverityNumber.DEBUG4)
+        self.assertEqual(
+            logger_provider._min_severity_level, SeverityNumber.DEBUG4
+        )
         self.assertTrue(logger_provider._trace_based)
         self.assertIsNotNone(logger_provider._at_exit_handler)
 
@@ -205,7 +211,9 @@ class TestLogger(unittest.TestCase):
         log_record_processor_mock.on_emit.assert_called_once()
         log_data = log_record_processor_mock.on_emit.call_args.args[0]
         self.assertTrue(isinstance(log_data.log_record, LogRecord))
-        self.assertEqual(log_data.log_record.severity_number, SeverityNumber.ERROR)
+        self.assertEqual(
+            log_data.log_record.severity_number, SeverityNumber.ERROR
+        )
 
     def test_emit_logrecord_with_min_severity_unspecified(self):
         """Test that when min severity is UNSPECIFIED, all logs are emitted"""
@@ -233,7 +241,10 @@ class TestLogger(unittest.TestCase):
 
         mock_context = Mock()
 
-        with patch('opentelemetry.sdk._logs._internal.get_current_span', return_value=mock_span):
+        with patch(
+            "opentelemetry.sdk._logs._internal.get_current_span",
+            return_value=mock_span,
+        ):
             log_record = LogRecord(
                 observed_timestamp=0,
                 body="should be dropped",
@@ -267,7 +278,10 @@ class TestLogger(unittest.TestCase):
 
         mock_context = Mock()
 
-        with patch('opentelemetry.sdk._logs._internal.get_current_span', return_value=mock_span):
+        with patch(
+            "opentelemetry.sdk._logs._internal.get_current_span",
+            return_value=mock_span,
+        ):
             log_record = LogRecord(
                 observed_timestamp=0,
                 body="should be emitted when filtering disabled",
@@ -293,7 +307,10 @@ class TestLogger(unittest.TestCase):
 
         mock_context = Mock()
 
-        with patch('opentelemetry.sdk._logs._internal.get_current_span', return_value=mock_span):
+        with patch(
+            "opentelemetry.sdk._logs._internal.get_current_span",
+            return_value=mock_span,
+        ):
             log_record = LogRecord(
                 observed_timestamp=0,
                 body="invalid but sampled",
@@ -314,7 +331,10 @@ class TestLogger(unittest.TestCase):
         mock_span = Mock()
         mock_span.get_span_context.return_value = mock_span_context
 
-        with patch('opentelemetry.sdk._logs._internal.get_current_span', return_value=mock_span):
+        with patch(
+            "opentelemetry.sdk._logs._internal.get_current_span",
+            return_value=mock_span,
+        ):
             log_record = LogRecord(
                 observed_timestamp=0,
                 body="valid but not sampled",
@@ -341,7 +361,10 @@ class TestLogger(unittest.TestCase):
 
         mock_context = Mock()
 
-        with patch('opentelemetry.sdk._logs._internal.get_current_span', return_value=mock_span):
+        with patch(
+            "opentelemetry.sdk._logs._internal.get_current_span",
+            return_value=mock_span,
+        ):
             log_record_info = LogRecord(
                 observed_timestamp=0,
                 body="info log line",
