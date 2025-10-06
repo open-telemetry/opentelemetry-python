@@ -29,9 +29,6 @@ from opentelemetry.sdk._logs._internal import (
     NoOpLogger,
     SynchronousMultiLogRecordProcessor,
 )
-from opentelemetry._logs import (
-    SeverityNumber,
-)
 from opentelemetry.sdk.environment_variables import OTEL_SDK_DISABLED
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
