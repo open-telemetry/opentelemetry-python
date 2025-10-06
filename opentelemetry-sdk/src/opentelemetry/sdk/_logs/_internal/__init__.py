@@ -948,13 +948,23 @@ def std_to_otel(levelno: int) -> SeverityNumber:
         return SeverityNumber.FATAL4
     return _STD_TO_OTEL[levelno]
 
-def is_less_than_min_severity(record: LogRecord, min_severity: SeverityNumber) -> bool:
+
+def is_less_than_min_severity(
+    record: LogRecord, min_severity: SeverityNumber
+) -> bool:
     if record.severity_number is not None:
-        if min_severity is not None and min_severity != SeverityNumber.UNSPECIFIED and record.severity_number.value < min_severity.value:
+        if (
+            min_severity is not None
+            and min_severity != SeverityNumber.UNSPECIFIED
+            and record.severity_number.value < min_severity.value
+        ):
             return True
     return False
 
-def should_drop_logs_for_trace_based(record: LogRecord, trace_state_enabled: bool) -> bool:
+
+def should_drop_logs_for_trace_based(
+    record: LogRecord, trace_state_enabled: bool
+) -> bool:
     if trace_state_enabled:
         if record.context is not None:
             span = get_current_span(record.context)
