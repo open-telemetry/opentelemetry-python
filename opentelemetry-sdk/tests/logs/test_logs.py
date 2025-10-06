@@ -29,6 +29,9 @@ from opentelemetry.sdk._logs._internal import (
     NoOpLogger,
     SynchronousMultiLogRecordProcessor,
 )
+from opentelemetry._logs import (
+    SeverityNumber,
+)
 from opentelemetry.sdk.environment_variables import OTEL_SDK_DISABLED
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
@@ -74,6 +77,8 @@ class TestLoggerProvider(unittest.TestCase):
         self.assertEqual(
             logger._instrumentation_scope.attributes, {"key": "value"}
         )
+        self.assertEqual(logger._min_severity_level, SeverityNumber.UNSPECIFIED)
+        self.assertFalse(logger._trace_based)
 
     @patch.dict("os.environ", {OTEL_SDK_DISABLED: "true"})
     def test_get_logger_with_sdk_disabled(self):
@@ -83,7 +88,7 @@ class TestLoggerProvider(unittest.TestCase):
 
     @patch.object(Resource, "create")
     def test_logger_provider_init(self, resource_patch):
-        logger_provider = LoggerProvider()
+        logger_provider = LoggerProvider(min_severity_level=SeverityNumber.DEBUG4, trace_based=True)
         resource_patch.assert_called_once()
         self.assertIsNotNone(logger_provider._resource)
         self.assertTrue(
@@ -92,6 +97,8 @@ class TestLoggerProvider(unittest.TestCase):
                 SynchronousMultiLogRecordProcessor,
             )
         )
+        self.assertEqual(logger_provider._min_severity_level, SeverityNumber.DEBUG4)
+        self.assertTrue(logger_provider._trace_based)
         self.assertIsNotNone(logger_provider._at_exit_handler)
 
 
@@ -171,3 +178,193 @@ class TestLogger(unittest.TestCase):
         self.assertEqual(log_record.attributes, {"some": "attributes"})
         self.assertEqual(log_record.event_name, "event_name")
         self.assertEqual(log_record.resource, logger.resource)
+
+    def test_emit_logrecord_with_min_severity_filtering(self):
+        """Test that logs below minimum severity are filtered out"""
+        logger, log_record_processor_mock = self._get_logger()
+        logger._min_severity_level = SeverityNumber.DEBUG4
+
+        log_record_info = LogRecord(
+            observed_timestamp=0,
+            body="info log line",
+            severity_number=SeverityNumber.DEBUG,
+            severity_text="DEBUG",
+        )
+
+        logger.emit(log_record_info)
+        log_record_processor_mock.on_emit.assert_not_called()
+
+        log_record_processor_mock.reset_mock()
+
+        log_record_error = LogRecord(
+            observed_timestamp=0,
+            body="error log line",
+            severity_number=SeverityNumber.ERROR,
+            severity_text="ERROR",
+        )
+
+        logger.emit(log_record_error)
+
+        log_record_processor_mock.on_emit.assert_called_once()
+        log_data = log_record_processor_mock.on_emit.call_args.args[0]
+        self.assertTrue(isinstance(log_data.log_record, LogRecord))
+        self.assertEqual(log_data.log_record.severity_number, SeverityNumber.ERROR)
+
+    def test_emit_logrecord_with_min_severity_unspecified(self):
+        """Test that when min severity is UNSPECIFIED, all logs are emitted"""
+        logger, log_record_processor_mock = self._get_logger()
+        log_record = LogRecord(
+            observed_timestamp=0,
+            body="debug log line",
+            severity_number=SeverityNumber.DEBUG,
+            severity_text="DEBUG",
+        )
+        logger.emit(log_record)
+        log_record_processor_mock.on_emit.assert_called_once()
+
+    def test_emit_logrecord_with_trace_based_filtering(self):
+        """Test that logs are filtered based on trace sampling state"""
+        logger, log_record_processor_mock = self._get_logger()
+        logger._trace_based = True
+
+        mock_span_context = Mock()
+        mock_span_context.is_valid = True
+        mock_span_context.trace_flags.sampled = False
+
+        mock_span = Mock()
+        mock_span.get_span_context.return_value = mock_span_context
+
+        mock_context = Mock()
+
+        with patch('opentelemetry.sdk._logs._internal.get_current_span', return_value=mock_span):
+            log_record = LogRecord(
+                observed_timestamp=0,
+                body="should be dropped",
+                severity_number=SeverityNumber.INFO,
+                severity_text="INFO",
+                context=mock_context,
+            )
+
+            logger.emit(log_record)
+            log_record_processor_mock.on_emit.assert_not_called()
+
+        log_record_processor_mock.reset_mock()
+
+        mock_span_context = Mock()
+        mock_span_context.is_valid = True
+        mock_span_context.trace_flags.sampled = True
+
+        mock_span = Mock()
+        mock_span.get_span_context.return_value = mock_span_context
+
+    def test_emit_logrecord_trace_filtering_disabled(self):
+        """Test that when trace-based filtering is disabled, all logs are emitted"""
+        logger, log_record_processor_mock = self._get_logger()
+
+        mock_span_context = Mock()
+        mock_span_context.is_valid = False
+        mock_span_context.trace_flags.sampled = False
+
+        mock_span = Mock()
+        mock_span.get_span_context.return_value = mock_span_context
+
+        mock_context = Mock()
+
+        with patch('opentelemetry.sdk._logs._internal.get_current_span', return_value=mock_span):
+            log_record = LogRecord(
+                observed_timestamp=0,
+                body="should be emitted when filtering disabled",
+                severity_number=SeverityNumber.INFO,
+                severity_text="INFO",
+                context=mock_context,
+            )
+
+            logger.emit(log_record)
+            log_record_processor_mock.on_emit.assert_called_once()
+
+    def test_emit_logrecord_trace_filtering_edge_cases(self):
+        """Test edge cases for trace-based filtering"""
+        logger, log_record_processor_mock = self._get_logger()
+        logger._trace_based = True
+
+        mock_span_context = Mock()
+        mock_span_context.is_valid = False
+        mock_span_context.trace_flags.sampled = True
+
+        mock_span = Mock()
+        mock_span.get_span_context.return_value = mock_span_context
+
+        mock_context = Mock()
+
+        with patch('opentelemetry.sdk._logs._internal.get_current_span', return_value=mock_span):
+            log_record = LogRecord(
+                observed_timestamp=0,
+                body="invalid but sampled",
+                severity_number=SeverityNumber.INFO,
+                severity_text="INFO",
+                context=mock_context,
+            )
+
+            logger.emit(log_record)
+            log_record_processor_mock.on_emit.assert_called_once()
+
+        log_record_processor_mock.reset_mock()
+
+        mock_span_context = Mock()
+        mock_span_context.is_valid = True
+        mock_span_context.trace_flags.sampled = False
+
+        mock_span = Mock()
+        mock_span.get_span_context.return_value = mock_span_context
+
+        with patch('opentelemetry.sdk._logs._internal.get_current_span', return_value=mock_span):
+            log_record = LogRecord(
+                observed_timestamp=0,
+                body="valid but not sampled",
+                severity_number=SeverityNumber.INFO,
+                severity_text="INFO",
+                context=mock_context,
+            )
+
+            logger.emit(log_record)
+            log_record_processor_mock.on_emit.assert_not_called()
+
+    def test_emit_both_min_severity_and_trace_based_filtering(self):
+        """Test that both min severity and trace-based filtering work together"""
+        logger, log_record_processor_mock = self._get_logger()
+        logger._min_severity_level = SeverityNumber.WARN
+        logger._trace_based = True
+
+        mock_span_context = Mock()
+        mock_span_context.is_valid = True
+        mock_span_context.trace_flags.sampled = True
+
+        mock_span = Mock()
+        mock_span.get_span_context.return_value = mock_span_context
+
+        mock_context = Mock()
+
+        with patch('opentelemetry.sdk._logs._internal.get_current_span', return_value=mock_span):
+            log_record_info = LogRecord(
+                observed_timestamp=0,
+                body="info log line",
+                severity_number=SeverityNumber.INFO,
+                severity_text="INFO",
+                context=mock_context,
+            )
+
+            logger.emit(log_record_info)
+            log_record_processor_mock.on_emit.assert_not_called()
+
+            log_record_processor_mock.reset_mock()
+
+            log_record_error = LogRecord(
+                observed_timestamp=0,
+                body="error log line",
+                severity_number=SeverityNumber.ERROR,
+                severity_text="ERROR",
+                context=mock_context,
+            )
+
+            logger.emit(log_record_error)
+            log_record_processor_mock.on_emit.assert_called_once()
