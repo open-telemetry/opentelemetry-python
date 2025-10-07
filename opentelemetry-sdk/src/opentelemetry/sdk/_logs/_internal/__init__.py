@@ -750,7 +750,7 @@ class Logger(APILogger):
             )
         if is_less_than_min_severity(record, self._min_severity_level):
             return
-        if should_drop_logs_for_trace_based(record, self._trace_based):
+        if should_drop_logs_for_unsampled_traces(record, self._trace_based):
             return
 
         log_data = LogData(record, self._instrumentation_scope)
@@ -939,6 +939,17 @@ def std_to_otel(levelno: int) -> SeverityNumber:
 def is_less_than_min_severity(
     record: LogRecord, min_severity: SeverityNumber
 ) -> bool:
+    """Checks if the log record's severity number is less than the minimum severity level.
+
+    Args:
+        record: The log record to be processed.
+        min_severity: The minimum severity level.
+
+    Returns:
+        True if the log record's severity number is less than the minimum
+        severity level, False otherwise. Log records with an unspecified severity (i.e. `0`)
+        are not affected by this parameter and therefore bypass minimum severity filtering.
+    """
     if record.severity_number is not None:
         if (
             min_severity is not None
@@ -949,10 +960,25 @@ def is_less_than_min_severity(
     return False
 
 
-def should_drop_logs_for_trace_based(
-    record: LogRecord, trace_state_enabled: bool
+def should_drop_logs_for_unsampled_traces(
+    record: LogRecord, trace_based_flag: bool
 ) -> bool:
-    if trace_state_enabled:
+    """Determines whether the logger should drop log records associated with unsampled traces.
+
+    If `trace_based` is `true`, log records associated with unsampled traces are dropped by the `Logger`.
+    A log record is considered associated with an unsampled trace if it has a valid `SpanId` and its
+    `TraceFlags` indicate that the trace is unsampled. A log record that isn't associated with a trace
+    context is not affected by this parameter and therefore bypasses trace-based filtering.
+
+    Args:
+        record: The log record to be processed.
+        trace_based_flag: A boolean flag indicating whether trace-based filtering is enabled. If not explicitly set,
+        the `trace_based` parameter is set to `false`
+
+    Returns:
+        True if the log record should be dropped due to being associated with an unsampled trace.
+    """
+    if trace_based_flag:
         if record.context is not None:
             span = get_current_span(record.context)
             span_context = span.get_span_context()
