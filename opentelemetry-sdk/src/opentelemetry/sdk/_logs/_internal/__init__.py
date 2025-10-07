@@ -763,7 +763,7 @@ class Logger(APILogger):
                 )
         if is_less_than_min_severity(record, self._min_severity_level):
             return
-        if should_drop_logs_for_trace_based(record, self._trace_based):
+        if should_drop_logs_for_unsampled_trace(record, self._trace_based):
             return
 
             log_data = LogData(record, self._instrumentation_scope)
@@ -952,6 +952,11 @@ def std_to_otel(levelno: int) -> SeverityNumber:
 def is_less_than_min_severity(
     record: LogRecord, min_severity: SeverityNumber
 ) -> bool:
+    """
+    Check if the log record's severity number is less than the minimum severity level. If a log record's severity number is
+    specified (i.e. not `0`) and is less than the configured `minimum_severity`, the log record MUST be dropped by the `Logger`.
+    Log records with an unspecified severity (i.e. `0`) are not affected by this parameter and therefore bypass minimum severity filtering.
+    """
     if record.severity_number is not None:
         if (
             min_severity is not None
@@ -962,10 +967,16 @@ def is_less_than_min_severity(
     return False
 
 
-def should_drop_logs_for_trace_based(
-    record: LogRecord, trace_state_enabled: bool
+def should_drop_logs_for_unsampled_trace(
+    record: LogRecord, trace_based: bool
 ) -> bool:
-    if trace_state_enabled:
+    """
+    Determines whether the logger should only process log records associated with sampled traces.
+    If not explicitly set, the `trace_based` parameter is defaulted to `false`. If `trace_based` is `true`, log records associated with unsampled traces MUST
+    be dropped by the `Logger`. A log record is considered associated with an unsampled trace if it has a valid `SpanId` and its `TraceFlags` indicate that the trace is unsampled.
+    Log records that aren't associated with a trace context are not affected by this parameter and therefore bypass trace-based filtering.
+    """
+    if trace_based:
         if record.context is not None:
             span = get_current_span(record.context)
             span_context = span.get_span_context()
