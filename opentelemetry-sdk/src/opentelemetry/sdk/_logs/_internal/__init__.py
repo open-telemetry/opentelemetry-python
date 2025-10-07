@@ -952,17 +952,6 @@ def std_to_otel(levelno: int) -> SeverityNumber:
 def is_less_than_min_severity(
     record: LogRecord, min_severity: SeverityNumber
 ) -> bool:
-    """Check if the log record's severity number is less than the minimum severity level.
-
-    Args:
-        record: The log record to be processed.
-        min_severity: The minimum severity level.
-
-    Returns:
-        True if the log record's severity number is less than the minimum
-        severity level, False otherwise. Log records with an unspecified severity (i.e. `0`)
-        are not affected by this parameter and therefore bypass minimum severity filtering.
-    """
     if record.severity_number is not None:
         if (
             min_severity is not None
