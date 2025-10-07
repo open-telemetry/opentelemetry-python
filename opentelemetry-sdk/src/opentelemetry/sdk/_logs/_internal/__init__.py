@@ -763,7 +763,7 @@ class Logger(APILogger):
                 )
         if is_less_than_min_severity(record, self._min_severity_level):
             return
-        if should_drop_logs_for_unsampled_trace(record, self._trace_based):
+        if should_drop_logs_for_trace_based(record, self._trace_based):
             return
 
             log_data = LogData(record, self._instrumentation_scope)
@@ -962,10 +962,10 @@ def is_less_than_min_severity(
     return False
 
 
-def should_drop_logs_for_unsampled_trace(
-    record: LogRecord, trace_based: bool
+def should_drop_logs_for_trace_based(
+    record: LogRecord, trace_state_enabled: bool
 ) -> bool:
-    if trace_based:
+    if trace_state_enabled:
         if record.context is not None:
             span = get_current_span(record.context)
             span_context = span.get_span_context()
