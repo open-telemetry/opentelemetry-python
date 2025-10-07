@@ -972,9 +972,9 @@ def should_drop_logs_for_unsampled_trace(
 ) -> bool:
     """
     Determines whether the logger should only process log records associated with sampled traces.
-    If not explicitly set, the `trace_based` parameter is set to `false`. If `trace_based` is `true`, log records associated with unsampled traces 
-    are dropped by the `Logger`. A log record is considered associated with an unsampled trace if it has a valid `SpanId` and its `TraceFlags` indicate 
-    that the trace is unsampled. A log record that isn't associated with a trace context is not affected by this parameter and therefore bypasses 
+    If not explicitly set, the `trace_based` parameter is set to `false`. If `trace_based` is `true`, log records associated with unsampled traces
+    are dropped by the `Logger`. A log record is considered associated with an unsampled trace if it has a valid `SpanId` and its `TraceFlags` indicate
+    that the trace is unsampled. A log record that isn't associated with a trace context is not affected by this parameter and therefore bypasses
     trace-based filtering.
     """
     if trace_based:
