@@ -939,10 +939,16 @@ def std_to_otel(levelno: int) -> SeverityNumber:
 def is_less_than_min_severity(
     record: LogRecord, min_severity: SeverityNumber
 ) -> bool:
-    """
-    Check if the log record's severity number is less than the minimum severity level. If a log record's severity number is
-    specified (i.e. not `0`) and is less than the configured `minimum_severity`, the log record MUST be dropped by the `Logger`.
-    Log records with an unspecified severity (i.e. `0`) are not affected by this parameter and therefore bypass minimum severity filtering.
+    """Check if the log record's severity number is less than the minimum severity level.
+
+        Args:
+            record: The log record to be processed.
+            min_severity: The minimum severity level.
+
+        Returns:
+            True if the log record's severity number is less than the minimum
+            severity level, False otherwise. Log records with an unspecified severity (i.e. `0`) are not 
+            affected by this parameter and therefore bypass minimum severity filtering.
     """
     if record.severity_number is not None:
         if (
@@ -957,13 +963,6 @@ def is_less_than_min_severity(
 def should_drop_logs_for_unsampled_trace(
     record: LogRecord, trace_based: bool
 ) -> bool:
-    """
-    Determines whether the logger should only process log records associated with sampled traces.
-    If not explicitly set, the `trace_based` parameter is set to `false`. If `trace_based` is `true`, log records associated with unsampled traces
-    are dropped by the `Logger`. A log record is considered associated with an unsampled trace if it has a valid `SpanId` and its `TraceFlags` indicate
-    that the trace is unsampled. A log record that isn't associated with a trace context is not affected by this parameter and therefore bypasses
-    trace-based filtering.
-    """
     if trace_based:
         if record.context is not None:
             span = get_current_span(record.context)
