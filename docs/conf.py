@@ -117,6 +117,18 @@ nitpick_ignore = [
     ),
     (
         "py:class",
+        "opentelemetry.proto.collector.trace.v1.trace_service_pb2_grpc.TraceServiceStub",
+    ),
+    (
+        "py:class",
+        "opentelemetry.proto.collector.metrics.v1.metrics_service_pb2_grpc.MetricsServiceStub",
+    ),
+    (
+        "py:class",
+        "opentelemetry.proto.collector.logs.v1.logs_service_pb2_grpc.LogsServiceStub",
+    ),
+    (
+        "py:class",
         "opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin",
     ),
     (
