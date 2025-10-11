@@ -46,6 +46,13 @@ from opentelemetry.proto.trace.v1.trace_pb2 import ScopeSpans as PB2ScopeSpans
 from opentelemetry.proto.trace.v1.trace_pb2 import Span as PB2SPan
 from opentelemetry.proto.trace.v1.trace_pb2 import Status as PB2Status
 from opentelemetry.proto.trace.v1.trace_pb2 import SpanFlags as PB2SpanFlags
+
+# Mask for all currently-defined span flag bits (0-9): lower 8 trace flags + has/is remote bits
+ALL_SPAN_FLAGS_MASK = (
+    PB2SpanFlags.SPAN_FLAGS_TRACE_FLAGS_MASK
+    | PB2SpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK
+    | PB2SpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK
+)
 from opentelemetry.sdk.trace import Event as SDKEvent
 from opentelemetry.sdk.trace import Resource as SDKResource
 from opentelemetry.sdk.trace import SpanContext as SDKSpanContext
@@ -508,35 +515,32 @@ class TestOTLPTraceEncoder(unittest.TestCase):
 
 class TestSpanFlagsEncoding(unittest.TestCase):
     def test_span_flags_root_unsampled(self):
-        sc = SDKSpanContext(0x1, 0x2, is_remote=False, trace_flags=0x00)
-        span = SDKSpan(name="root", context=sc, parent=None)
-        span.start(); span.end()
+        span_context = SDKSpanContext(0x1, 0x2, is_remote=False, trace_flags=0x00)
+        span = SDKSpan(name="root", context=span_context, parent=None)
         pb = _encode_span(span)
         assert (pb.flags & PB2SpanFlags.SPAN_FLAGS_TRACE_FLAGS_MASK) == 0x00
         assert (pb.flags & PB2SpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK) != 0
         assert (pb.flags & PB2SpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK) == 0
-        assert (pb.flags & ~0x3FF) == 0
+        assert (pb.flags & ~ALL_SPAN_FLAGS_MASK) == 0
 
     def test_span_flags_root_sampled(self):
-        sc = SDKSpanContext(0x1, 0x2, is_remote=False, trace_flags=0x01)
-        span = SDKSpan(name="root", context=sc, parent=None)
-        span.start(); span.end()
+        span_context = SDKSpanContext(0x1, 0x2, is_remote=False, trace_flags=0x01)
+        span = SDKSpan(name="root", context=span_context, parent=None)
         pb = _encode_span(span)
         assert (pb.flags & PB2SpanFlags.SPAN_FLAGS_TRACE_FLAGS_MASK) == 0x01
         assert (pb.flags & PB2SpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK) != 0
         assert (pb.flags & PB2SpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK) == 0
-        assert (pb.flags & ~0x3FF) == 0
+        assert (pb.flags & ~ALL_SPAN_FLAGS_MASK) == 0
 
     def test_span_flags_remote_parent_sampled(self):
         parent = SDKSpanContext(0x1, 0x9, is_remote=True)
-        sc = SDKSpanContext(0x1, 0x2, is_remote=False, trace_flags=0x01)
-        span = SDKSpan(name="child", context=sc, parent=parent)
-        span.start(); span.end()
+        span_context = SDKSpanContext(0x1, 0x2, is_remote=False, trace_flags=0x01)
+        span = SDKSpan(name="child", context=span_context, parent=parent)
         pb = _encode_span(span)
         assert (pb.flags & PB2SpanFlags.SPAN_FLAGS_TRACE_FLAGS_MASK) == 0x01
         assert (pb.flags & PB2SpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK) != 0
         assert (pb.flags & PB2SpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK) != 0
-        assert (pb.flags & ~0x3FF) == 0
+        assert (pb.flags & ~ALL_SPAN_FLAGS_MASK) == 0
 
     def test_link_flags_local_and_remote(self):
         # local sampled link
@@ -547,8 +551,8 @@ class TestSpanFlagsEncoding(unittest.TestCase):
         assert (pb_links[0].flags & PB2SpanFlags.SPAN_FLAGS_TRACE_FLAGS_MASK) == 0x01
         assert (pb_links[0].flags & PB2SpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK) != 0
         assert (pb_links[0].flags & PB2SpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK) == 0
-        assert (pb_links[0].flags & ~0x3FF) == 0
+        assert (pb_links[0].flags & ~ALL_SPAN_FLAGS_MASK) == 0
         assert (pb_links[1].flags & PB2SpanFlags.SPAN_FLAGS_TRACE_FLAGS_MASK) == 0x01
         assert (pb_links[1].flags & PB2SpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK) != 0
         assert (pb_links[1].flags & PB2SpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK) != 0
-        assert (pb_links[1].flags & ~0x3FF) == 0
+        assert (pb_links[1].flags & ~ALL_SPAN_FLAGS_MASK) == 0
