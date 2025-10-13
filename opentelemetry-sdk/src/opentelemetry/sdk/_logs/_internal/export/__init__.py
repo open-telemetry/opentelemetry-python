@@ -17,6 +17,7 @@ import abc
 import enum
 import logging
 import sys
+import warnings
 from os import environ, linesep
 from typing import IO, Callable, Optional, Sequence
 
@@ -26,7 +27,12 @@ from opentelemetry.context import (
     detach,
     set_value,
 )
-from opentelemetry.sdk._logs import LogData, LogRecord, LogRecordProcessor
+from opentelemetry.sdk._logs import (
+    LogData,
+    LogDeprecatedInitWarning,
+    LogRecord,
+    LogRecordProcessor,
+)
 from opentelemetry.sdk._shared_internal import BatchProcessor, DuplicateFilter
 from opentelemetry.sdk.environment_variables import (
     OTEL_BLRP_EXPORT_TIMEOUT,
@@ -92,6 +98,12 @@ class ConsoleLogExporter(LogExporter):
     ):
         self.out = out
         self.formatter = formatter
+
+        warnings.warn(
+            "ConsoleLogExporter will be deprecated in 1.39.0 and then renamed to ConsoleLogRecordExporter",
+            LogDeprecatedInitWarning,
+            stacklevel=0,
+        )
 
     def export(self, batch: Sequence[LogData]):
         for data in batch:

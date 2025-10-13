@@ -14,8 +14,9 @@
 
 import threading
 import typing
+import warnings
 
-from opentelemetry.sdk._logs import LogData
+from opentelemetry.sdk._logs import LogData, LogDeprecatedInitWarning
 from opentelemetry.sdk._logs.export import LogExporter, LogExportResult
 
 
@@ -31,6 +32,12 @@ class InMemoryLogExporter(LogExporter):
         self._logs = []
         self._lock = threading.Lock()
         self._stopped = False
+
+        warnings.warn(
+            "InMemoryLogExporter will be deprecated in 1.39.0 and then renamed to InMemoryLogRecordExporter",
+            LogDeprecatedInitWarning,
+            stacklevel=0,
+        )
 
     def clear(self) -> None:
         with self._lock:
