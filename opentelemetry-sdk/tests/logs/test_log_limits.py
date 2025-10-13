@@ -77,7 +77,7 @@ class TestLogLimits(unittest.TestCase):
         with warnings.catch_warnings(record=True) as cw:
             warnings.simplefilter("always")
             LogLimits()
-        
+
         self.assertEqual(len(cw), 1)
         self.assertIsInstance(cw[-1].message, LogLimitsInitDeprecatedWarning)
         self.assertIn(
@@ -90,7 +90,7 @@ class TestLogLimits(unittest.TestCase):
         with warnings.catch_warnings(record=True) as cw:
             warnings.simplefilter("always")
             LogLimits(max_attributes=10, max_attribute_length=100)
-        
+
         self.assertEqual(len(cw), 1)
         self.assertIsInstance(cw[-1].message, LogLimitsInitDeprecatedWarning)
         self.assertIn(
@@ -104,7 +104,7 @@ class TestLogLimits(unittest.TestCase):
             # Multiple instantiations should only warn once due to simplefilter("once")
             for _ in range(10):
                 LogLimits()
-        
+
         self.assertEqual(len(cw), 1)
         self.assertIsInstance(cw[-1].message, LogLimitsInitDeprecatedWarning)
         self.assertIn(

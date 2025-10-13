@@ -656,14 +656,19 @@ class TestConsoleLogExporter(unittest.TestCase):
         with warnings.catch_warnings(record=True) as cw:
             warnings.simplefilter("always")
             ConsoleLogExporter()
-        
+
         # Check that at least one ConsoleLogExporterDeprecatedWarning was emitted
         console_warnings = [
-            w for w in cw if isinstance(w.message, ConsoleLogExporterDeprecatedWarning)
+            w
+            for w in cw
+            if isinstance(w.message, ConsoleLogExporterDeprecatedWarning)
         ]
-        self.assertGreater(len(console_warnings), 0, 
-                          "Expected at least one ConsoleLogExporterDeprecatedWarning")
-        
+        self.assertGreater(
+            len(console_warnings),
+            0,
+            "Expected at least one ConsoleLogExporterDeprecatedWarning",
+        )
+
         # Check the message content of the ConsoleLogExporterDeprecatedWarning
         warning_message = str(console_warnings[0].message)
         self.assertIn(
@@ -677,14 +682,19 @@ class TestConsoleLogExporter(unittest.TestCase):
             # Multiple instantiations should only warn once due to simplefilter("once")
             for _ in range(10):
                 ConsoleLogExporter()
-        
+
         # Check that exactly one ConsoleLogExporterDeprecatedWarning was emitted
         console_warnings = [
-            w for w in cw if isinstance(w.message, ConsoleLogExporterDeprecatedWarning)
+            w
+            for w in cw
+            if isinstance(w.message, ConsoleLogExporterDeprecatedWarning)
         ]
-        self.assertEqual(len(console_warnings), 1,
-                        "Expected exactly one ConsoleLogExporterDeprecatedWarning due to simplefilter('once')")
-        
+        self.assertEqual(
+            len(console_warnings),
+            1,
+            "Expected exactly one ConsoleLogExporterDeprecatedWarning due to simplefilter('once')",
+        )
+
         # Check the message content
         warning_message = str(console_warnings[0].message)
         self.assertIn(
@@ -699,14 +709,19 @@ class TestInMemoryLogExporterDeprecation(unittest.TestCase):
         with warnings.catch_warnings(record=True) as cw:
             warnings.simplefilter("always")
             InMemoryLogExporter()
-        
+
         # Check that at least one InMemoryLogExporterDeprecatedWarning was emitted
         in_memory_warnings = [
-            w for w in cw if isinstance(w.message, InMemoryLogExporterDeprecatedWarning)
+            w
+            for w in cw
+            if isinstance(w.message, InMemoryLogExporterDeprecatedWarning)
         ]
-        self.assertGreater(len(in_memory_warnings), 0, 
-                          "Expected at least one InMemoryLogExporterDeprecatedWarning")
-        
+        self.assertGreater(
+            len(in_memory_warnings),
+            0,
+            "Expected at least one InMemoryLogExporterDeprecatedWarning",
+        )
+
         # Check the message content of the InMemoryLogExporterDeprecatedWarning
         warning_message = str(in_memory_warnings[0].message)
         self.assertIn(
@@ -720,14 +735,19 @@ class TestInMemoryLogExporterDeprecation(unittest.TestCase):
             # Multiple instantiations should only warn once due to simplefilter("once")
             for _ in range(10):
                 InMemoryLogExporter()
-        
+
         # Check that exactly one InMemoryLogExporterDeprecatedWarning was emitted
         in_memory_warnings = [
-            w for w in cw if isinstance(w.message, InMemoryLogExporterDeprecatedWarning)
+            w
+            for w in cw
+            if isinstance(w.message, InMemoryLogExporterDeprecatedWarning)
         ]
-        self.assertEqual(len(in_memory_warnings), 1,
-                        "Expected exactly one InMemoryLogExporterDeprecatedWarning due to simplefilter('once')")
-        
+        self.assertEqual(
+            len(in_memory_warnings),
+            1,
+            "Expected exactly one InMemoryLogExporterDeprecatedWarning due to simplefilter('once')",
+        )
+
         # Check the message content
         warning_message = str(in_memory_warnings[0].message)
         self.assertIn(
