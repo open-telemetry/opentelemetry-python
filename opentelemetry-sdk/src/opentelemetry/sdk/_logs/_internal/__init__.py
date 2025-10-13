@@ -84,7 +84,19 @@ class LogDroppedAttributesWarning(UserWarning):
 warnings.simplefilter("once", LogDroppedAttributesWarning)
 
 
-class LogDeprecatedInitWarning(UserWarning):
+class LogLimitsInitDeprecatedWarning(UserWarning):
+    """Custom warning to indicate deprecated LogLimits init was used.
+
+    This class is used to filter and handle these specific warnings separately
+    from other warnings, ensuring that they are only shown once without
+    interfering with default user warnings.
+    """
+
+
+warnings.simplefilter("once", LogLimitsInitDeprecatedWarning)
+
+
+class LogRecordInitDeprecatedWarning(UserWarning):
     """Custom warning to indicate deprecated LogRecord init was used.
 
     This class is used to filter and handle these specific warnings separately
@@ -93,7 +105,55 @@ class LogDeprecatedInitWarning(UserWarning):
     """
 
 
-warnings.simplefilter("once", LogDeprecatedInitWarning)
+warnings.simplefilter("once", LogRecordInitDeprecatedWarning)
+
+
+class LogDataInitDeprecatedWarning(UserWarning):
+    """Custom warning to indicate deprecated LogData init was used.
+
+    This class is used to filter and handle these specific warnings separately
+    from other warnings, ensuring that they are only shown once without
+    interfering with default user warnings.
+    """
+
+
+warnings.simplefilter("once", LogDataInitDeprecatedWarning)
+
+
+class LogRecordContextDeprecatedWarning(UserWarning):
+    """Custom warning to indicate LogRecord was initialized without using context.
+
+    This class is used to filter and handle these specific warnings separately
+    from other warnings, ensuring that they are only shown once without
+    interfering with default user warnings.
+    """
+
+
+warnings.simplefilter("once", LogRecordContextDeprecatedWarning)
+
+
+class InMemoryLogExporterDeprecatedWarning(UserWarning):
+    """Custom warning to indicate InMemoryLogExporter is deprecated.
+
+    This class is used to filter and handle these specific warnings separately
+    from other warnings, ensuring that they are only shown once without
+    interfering with default user warnings.
+    """
+
+
+warnings.simplefilter("once", LogRecordContextDeprecatedWarning)
+
+
+class ConsoleLogExporterDeprecatedWarning(UserWarning):
+    """Custom warning to indicate ConsoleLogExporter is deprecated.
+
+    This class is used to filter and handle these specific warnings separately
+    from other warnings, ensuring that they are only shown once without
+    interfering with default user warnings.
+    """
+
+
+warnings.simplefilter("once", ConsoleLogExporterDeprecatedWarning)
 
 
 class LogLimits:
@@ -149,7 +209,7 @@ class LogLimits:
 
         warnings.warn(
             "LogLimits will be deprecated in 1.39.0 and then renamed to LogRecordLimits",
-            LogDeprecatedInitWarning,
+            LogLimitsInitDeprecatedWarning,
             stacklevel=0,
         )
 
@@ -242,7 +302,7 @@ class LogRecord(APILogRecord):
     ):
         warnings.warn(
             "LogRecord will be substituted in 1.39.0 by ReadWriteLogRecord and ReadableLogRecord",
-            LogDeprecatedInitWarning,
+            LogRecordInitDeprecatedWarning,
             stacklevel=0,
         )
         if not context:
@@ -251,7 +311,7 @@ class LogRecord(APILogRecord):
             if trace_id or span_id or trace_flags:
                 warnings.warn(
                     "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated since 1.35.0. Use `context` instead.",
-                    LogDeprecatedInitWarning,
+                    LogRecordContextDeprecatedWarning,
                     stacklevel=2,
                 )
 
@@ -371,7 +431,7 @@ class LogData:
     ):
         warnings.warn(
             "LogData will be substituted in 1.39.0 by ReadWriteLogRecord and ReadableLogRecord",
-            LogDeprecatedInitWarning,
+            LogDataInitDeprecatedWarning,
             stacklevel=0,
         )
         self.log_record = log_record

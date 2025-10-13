@@ -29,7 +29,7 @@ from opentelemetry.context import (
 )
 from opentelemetry.sdk._logs import (
     LogData,
-    LogDeprecatedInitWarning,
+    ConsoleLogExporterDeprecatedWarning,
     LogRecord,
     LogRecordProcessor,
 )
@@ -101,7 +101,7 @@ class ConsoleLogExporter(LogExporter):
 
         warnings.warn(
             "ConsoleLogExporter will be deprecated in 1.39.0 and then renamed to ConsoleLogRecordExporter",
-            LogDeprecatedInitWarning,
+            ConsoleLogExporterDeprecatedWarning,
             stacklevel=0,
         )
 
