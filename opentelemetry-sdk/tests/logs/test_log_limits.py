@@ -16,7 +16,7 @@ import unittest
 import warnings
 from unittest.mock import patch
 
-from opentelemetry.sdk._logs import LogLimits, LogLimitsInitDeprecatedWarning
+from opentelemetry.sdk._logs import LogDeprecatedInitWarning, LogLimits
 from opentelemetry.sdk._logs._internal import (
     _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT,
 )
@@ -79,7 +79,7 @@ class TestLogLimits(unittest.TestCase):
             LogLimits()
 
         self.assertEqual(len(cw), 1)
-        self.assertIsInstance(cw[-1].message, LogLimitsInitDeprecatedWarning)
+        self.assertIsInstance(cw[-1].message, LogDeprecatedInitWarning)
         self.assertIn(
             "LogLimits will be deprecated in 1.39.0 and then renamed to LogRecordLimits",
             str(cw[-1].message),
@@ -92,7 +92,7 @@ class TestLogLimits(unittest.TestCase):
             LogLimits(max_attributes=10, max_attribute_length=100)
 
         self.assertEqual(len(cw), 1)
-        self.assertIsInstance(cw[-1].message, LogLimitsInitDeprecatedWarning)
+        self.assertIsInstance(cw[-1].message, LogDeprecatedInitWarning)
         self.assertIn(
             "LogLimits will be deprecated in 1.39.0 and then renamed to LogRecordLimits",
             str(cw[-1].message),
@@ -106,7 +106,7 @@ class TestLogLimits(unittest.TestCase):
                 LogLimits()
 
         self.assertEqual(len(cw), 1)
-        self.assertIsInstance(cw[-1].message, LogLimitsInitDeprecatedWarning)
+        self.assertIsInstance(cw[-1].message, LogDeprecatedInitWarning)
         self.assertIn(
             "LogLimits will be deprecated in 1.39.0 and then renamed to LogRecordLimits",
             str(cw[-1].message),

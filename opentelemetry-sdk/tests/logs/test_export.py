@@ -27,9 +27,8 @@ from pytest import mark
 from opentelemetry._logs import SeverityNumber
 from opentelemetry.sdk import trace
 from opentelemetry.sdk._logs import (
-    ConsoleLogExporterDeprecatedWarning,
-    InMemoryLogExporterDeprecatedWarning,
     LogData,
+    LogDeprecatedInitWarning,
     LoggerProvider,
     LoggingHandler,
     LogRecord,
@@ -657,19 +656,17 @@ class TestConsoleLogExporter(unittest.TestCase):
             warnings.simplefilter("always")
             ConsoleLogExporter()
 
-        # Check that at least one ConsoleLogExporterDeprecatedWarning was emitted
+        # Check that at least one LogDeprecatedInitWarning, was emitted
         console_warnings = [
-            w
-            for w in cw
-            if isinstance(w.message, ConsoleLogExporterDeprecatedWarning)
+            w for w in cw if isinstance(w.message, LogDeprecatedInitWarning)
         ]
         self.assertGreater(
             len(console_warnings),
             0,
-            "Expected at least one ConsoleLogExporterDeprecatedWarning",
+            "Expected at least one LogDeprecatedInitWarning",
         )
 
-        # Check the message content of the ConsoleLogExporterDeprecatedWarning
+        # Check the message content of the warning
         warning_message = str(console_warnings[0].message)
         self.assertIn(
             "ConsoleLogExporter will be deprecated in 1.39.0 and then renamed to ConsoleLogRecordExporter",
@@ -683,16 +680,14 @@ class TestConsoleLogExporter(unittest.TestCase):
             for _ in range(10):
                 ConsoleLogExporter()
 
-        # Check that exactly one ConsoleLogExporterDeprecatedWarning was emitted
+        # Check that exactly one LogDeprecatedInitWarning was emitted
         console_warnings = [
-            w
-            for w in cw
-            if isinstance(w.message, ConsoleLogExporterDeprecatedWarning)
+            w for w in cw if isinstance(w.message, LogDeprecatedInitWarning)
         ]
         self.assertEqual(
             len(console_warnings),
             1,
-            "Expected exactly one ConsoleLogExporterDeprecatedWarning due to simplefilter('once')",
+            "Expected exactly one LogDeprecatedInitWarning due to simplefilter('once')",
         )
 
         # Check the message content
@@ -710,19 +705,17 @@ class TestInMemoryLogExporterDeprecation(unittest.TestCase):
             warnings.simplefilter("always")
             InMemoryLogExporter()
 
-        # Check that at least one InMemoryLogExporterDeprecatedWarning was emitted
+        # Check that at least one LogDeprecatedInitWarning was emitted
         in_memory_warnings = [
-            w
-            for w in cw
-            if isinstance(w.message, InMemoryLogExporterDeprecatedWarning)
+            w for w in cw if isinstance(w.message, LogDeprecatedInitWarning)
         ]
         self.assertGreater(
             len(in_memory_warnings),
             0,
-            "Expected at least one InMemoryLogExporterDeprecatedWarning",
+            "Expected at least one LogDeprecatedInitWarning",
         )
 
-        # Check the message content of the InMemoryLogExporterDeprecatedWarning
+        # Check the message content of the warning
         warning_message = str(in_memory_warnings[0].message)
         self.assertIn(
             "InMemoryLogExporter will be deprecated in 1.39.0 and then renamed to InMemoryLogRecordExporter",
@@ -736,16 +729,14 @@ class TestInMemoryLogExporterDeprecation(unittest.TestCase):
             for _ in range(10):
                 InMemoryLogExporter()
 
-        # Check that exactly one InMemoryLogExporterDeprecatedWarning was emitted
+        # Check that exactly one LogDeprecatedInitWarning was emitted
         in_memory_warnings = [
-            w
-            for w in cw
-            if isinstance(w.message, InMemoryLogExporterDeprecatedWarning)
+            w for w in cw if isinstance(w.message, LogDeprecatedInitWarning)
         ]
         self.assertEqual(
             len(in_memory_warnings),
             1,
-            "Expected exactly one InMemoryLogExporterDeprecatedWarning due to simplefilter('once')",
+            "Expected exactly one LogDeprecatedInitWarning due to simplefilter('once')",
         )
 
         # Check the message content

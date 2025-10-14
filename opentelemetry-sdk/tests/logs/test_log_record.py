@@ -21,11 +21,10 @@ from opentelemetry._logs.severity import SeverityNumber
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.context import get_current
 from opentelemetry.sdk._logs import (
+    LogDeprecatedInitWarning,
     LogDroppedAttributesWarning,
     LogLimits,
     LogRecord,
-    LogRecordContextDeprecatedWarning,
-    LogRecordInitDeprecatedWarning,
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.trace.span import TraceFlags
@@ -184,40 +183,43 @@ class TestLogRecord(unittest.TestCase):
                     for _ in range(10):
                         LogRecord(**params)
 
-                # Check that at least one LogRecordContextDeprecatedWarning was emitted
+                # Check that the LogDeprecatedInitWarning was emitted
                 context_deprecated_warnings = [
                     w
                     for w in cw
-                    if isinstance(w.message, LogRecordContextDeprecatedWarning)
+                    if isinstance(w.message, LogDeprecatedInitWarning)
                 ]
-                self.assertEqual(
-                    len(context_deprecated_warnings),
-                    1,
-                    "Expected exactly one LogRecordContextDeprecatedWarning due to simplefilter('once')",
-                )
+                self.assertEqual(len(context_deprecated_warnings), 3)
 
-                # Check the message content of the LogRecordContextDeprecatedWarning
-                warning_message = str(context_deprecated_warnings[0].message)
-                self.assertIn(
-                    "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated since 1.35.0. Use `context` instead.",
-                    warning_message,
-                )
+                # Check we have the expected message once
+                log_record_context_warning = [
+                    w.message
+                    for w in cw
+                    if "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated since 1.35.0. Use `context` instead."
+                    in str(w.message)
+                ]
+
+                self.assertEqual(len(log_record_context_warning), 1)
 
         with warnings.catch_warnings(record=True) as cw:
             for _ in range(10):
                 LogRecord(context=get_current())
 
-        # Check that no LogRecordContextDeprecatedWarning was emitted when using context
+        # Check that no LogDeprecatedInitWarning was emitted when using context
         context_deprecated_warnings = [
-            w
-            for w in cw
-            if isinstance(w.message, LogRecordContextDeprecatedWarning)
+            w for w in cw if isinstance(w.message, LogDeprecatedInitWarning)
         ]
-        self.assertEqual(
-            len(context_deprecated_warnings),
-            0,
-            "Expected no LogRecordContextDeprecatedWarning when using context parameter",
-        )
+        self.assertEqual(len(context_deprecated_warnings), 2)
+
+        # Check we have no message
+        log_record_context_warning = [
+            w.message
+            for w in cw
+            if "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated since 1.35.0. Use `context` instead."
+            in str(w.message)
+        ]
+
+        self.assertEqual(len(log_record_context_warning), 0)
 
     def test_log_record_init_deprecated_warning(self):
         """Test that LogRecord initialization emits a LogRecordInitDeprecatedWarning."""
@@ -225,11 +227,9 @@ class TestLogRecord(unittest.TestCase):
             warnings.simplefilter("always")
             LogRecord()
 
-        # Check that at least one LogRecordInitDeprecatedWarning was emitted
+        # Check that at least one LogDeprecatedInitWarning was emitted
         log_record_init_warnings = [
-            w
-            for w in cw
-            if isinstance(w.message, LogRecordInitDeprecatedWarning)
+            w for w in cw if isinstance(w.message, LogDeprecatedInitWarning)
         ]
         self.assertGreater(
             len(log_record_init_warnings),
