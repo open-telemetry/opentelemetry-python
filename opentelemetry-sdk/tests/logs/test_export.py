@@ -17,7 +17,6 @@ import logging
 import os
 import time
 import unittest
-import warnings
 from concurrent.futures import ThreadPoolExecutor
 from sys import version_info
 from unittest.mock import Mock, patch
@@ -28,7 +27,6 @@ from opentelemetry._logs import SeverityNumber
 from opentelemetry.sdk import trace
 from opentelemetry.sdk._logs import (
     LogData,
-    LogDeprecatedInitWarning,
     LoggerProvider,
     LoggingHandler,
     LogRecord,
@@ -649,99 +647,3 @@ class TestConsoleLogExporter(unittest.TestCase):
         exporter.export([EMPTY_LOG])
 
         mock_stdout.write.assert_called_once_with(mock_record_str)
-
-    def test_console_log_exporter_deprecated_warning(self):
-        """Test that ConsoleLogExporter initialization emits a deprecation warning."""
-        with warnings.catch_warnings(record=True) as cw:
-            warnings.simplefilter("always")
-            ConsoleLogExporter()
-
-        # Check that at least one LogDeprecatedInitWarning, was emitted
-        console_warnings = [
-            w for w in cw if isinstance(w.message, LogDeprecatedInitWarning)
-        ]
-        self.assertGreater(
-            len(console_warnings),
-            0,
-            "Expected at least one LogDeprecatedInitWarning",
-        )
-
-        # Check the message content of the warning
-        warning_message = str(console_warnings[0].message)
-        self.assertIn(
-            "ConsoleLogExporter will be deprecated in 1.39.0 and then renamed to ConsoleLogRecordExporter",
-            warning_message,
-        )
-
-    def test_console_log_exporter_deprecated_warning_once(self):
-        """Test that ConsoleLogExporter deprecation warning is only shown once due to simplefilter('once')."""
-        with warnings.catch_warnings(record=True) as cw:
-            # Multiple instantiations should only warn once due to simplefilter("once")
-            for _ in range(10):
-                ConsoleLogExporter()
-
-        # Check that exactly one LogDeprecatedInitWarning was emitted
-        console_warnings = [
-            w for w in cw if isinstance(w.message, LogDeprecatedInitWarning)
-        ]
-        self.assertEqual(
-            len(console_warnings),
-            1,
-            "Expected exactly one LogDeprecatedInitWarning due to simplefilter('once')",
-        )
-
-        # Check the message content
-        warning_message = str(console_warnings[0].message)
-        self.assertIn(
-            "ConsoleLogExporter will be deprecated in 1.39.0 and then renamed to ConsoleLogRecordExporter",
-            warning_message,
-        )
-
-
-class TestInMemoryLogExporterDeprecation(unittest.TestCase):
-    def test_in_memory_log_exporter_deprecated_warning(self):
-        """Test that InMemoryLogExporter initialization emits a deprecation warning."""
-        with warnings.catch_warnings(record=True) as cw:
-            warnings.simplefilter("always")
-            InMemoryLogExporter()
-
-        # Check that at least one LogDeprecatedInitWarning was emitted
-        in_memory_warnings = [
-            w for w in cw if isinstance(w.message, LogDeprecatedInitWarning)
-        ]
-        self.assertGreater(
-            len(in_memory_warnings),
-            0,
-            "Expected at least one LogDeprecatedInitWarning",
-        )
-
-        # Check the message content of the warning
-        warning_message = str(in_memory_warnings[0].message)
-        self.assertIn(
-            "InMemoryLogExporter will be deprecated in 1.39.0 and then renamed to InMemoryLogRecordExporter",
-            warning_message,
-        )
-
-    def test_in_memory_log_exporter_deprecated_warning_once(self):
-        """Test that InMemoryLogExporter deprecation warning is only shown once due to simplefilter('once')."""
-        with warnings.catch_warnings(record=True) as cw:
-            # Multiple instantiations should only warn once due to simplefilter("once")
-            for _ in range(10):
-                InMemoryLogExporter()
-
-        # Check that exactly one LogDeprecatedInitWarning was emitted
-        in_memory_warnings = [
-            w for w in cw if isinstance(w.message, LogDeprecatedInitWarning)
-        ]
-        self.assertEqual(
-            len(in_memory_warnings),
-            1,
-            "Expected exactly one LogDeprecatedInitWarning due to simplefilter('once')",
-        )
-
-        # Check the message content
-        warning_message = str(in_memory_warnings[0].message)
-        self.assertIn(
-            "InMemoryLogExporter will be deprecated in 1.39.0 and then renamed to InMemoryLogRecordExporter",
-            warning_message,
-        )

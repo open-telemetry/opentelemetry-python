@@ -13,10 +13,9 @@
 # limitations under the License.
 
 import unittest
-import warnings
 from unittest.mock import patch
 
-from opentelemetry.sdk._logs import LogDeprecatedInitWarning, LogLimits
+from opentelemetry.sdk._logs import LogLimits
 from opentelemetry.sdk._logs._internal import (
     _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT,
 )
@@ -71,43 +70,3 @@ class TestLogLimits(unittest.TestCase):
                     str(error.exception),
                     f"Unexpected error message for {env_var}={bad_value}",
                 )
-
-    def test_log_limits_init_deprecated_warning(self):
-        """Test that LogLimits initialization emits a deprecation warning."""
-        with warnings.catch_warnings(record=True) as cw:
-            warnings.simplefilter("always")
-            LogLimits()
-
-        self.assertEqual(len(cw), 1)
-        self.assertIsInstance(cw[-1].message, LogDeprecatedInitWarning)
-        self.assertIn(
-            "LogLimits will be deprecated in 1.39.0 and then renamed to LogRecordLimits",
-            str(cw[-1].message),
-        )
-
-    def test_log_limits_init_deprecated_warning_with_params(self):
-        """Test that LogLimits initialization with parameters still emits a deprecation warning."""
-        with warnings.catch_warnings(record=True) as cw:
-            warnings.simplefilter("always")
-            LogLimits(max_attributes=10, max_attribute_length=100)
-
-        self.assertEqual(len(cw), 1)
-        self.assertIsInstance(cw[-1].message, LogDeprecatedInitWarning)
-        self.assertIn(
-            "LogLimits will be deprecated in 1.39.0 and then renamed to LogRecordLimits",
-            str(cw[-1].message),
-        )
-
-    def test_log_limits_init_deprecated_warning_once(self):
-        """Test that LogLimits deprecation warning is only shown once due to simplefilter('once')."""
-        with warnings.catch_warnings(record=True) as cw:
-            # Multiple instantiations should only warn once due to simplefilter("once")
-            for _ in range(10):
-                LogLimits()
-
-        self.assertEqual(len(cw), 1)
-        self.assertIsInstance(cw[-1].message, LogDeprecatedInitWarning)
-        self.assertIn(
-            "LogLimits will be deprecated in 1.39.0 and then renamed to LogRecordLimits",
-            str(cw[-1].message),
-        )

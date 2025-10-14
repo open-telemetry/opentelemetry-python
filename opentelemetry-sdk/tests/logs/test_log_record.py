@@ -189,7 +189,7 @@ class TestLogRecord(unittest.TestCase):
                     for w in cw
                     if isinstance(w.message, LogDeprecatedInitWarning)
                 ]
-                self.assertEqual(len(context_deprecated_warnings), 3)
+                self.assertEqual(len(context_deprecated_warnings), 2)
 
                 # Check we have the expected message once
                 log_record_context_warning = [
@@ -209,7 +209,7 @@ class TestLogRecord(unittest.TestCase):
         context_deprecated_warnings = [
             w for w in cw if isinstance(w.message, LogDeprecatedInitWarning)
         ]
-        self.assertEqual(len(context_deprecated_warnings), 2)
+        self.assertEqual(len(context_deprecated_warnings), 1)
 
         # Check we have no message
         log_record_context_warning = [

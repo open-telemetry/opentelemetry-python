@@ -147,12 +147,6 @@ class LogLimits:
             OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
         )
 
-        warnings.warn(
-            "LogLimits will be deprecated in 1.39.0 and then renamed to LogRecordLimits",
-            LogDeprecatedInitWarning,
-            stacklevel=0,
-        )
-
     def __repr__(self):
         return f"{type(self).__name__}(max_attributes={self.max_attributes}, max_attribute_length={self.max_attribute_length})"
 
@@ -370,7 +364,7 @@ class LogData:
         instrumentation_scope: InstrumentationScope,
     ):
         warnings.warn(
-            "LogData will be substituted in 1.39.0 by ReadWriteLogRecord and ReadableLogRecord",
+            "LogData will be removed in 1.39.0 and replaced by ReadWriteLogRecord and ReadableLogRecord",
             LogDeprecatedInitWarning,
             stacklevel=0,
         )
