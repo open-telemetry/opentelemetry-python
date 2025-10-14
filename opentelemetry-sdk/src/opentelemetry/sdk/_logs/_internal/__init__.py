@@ -675,6 +675,8 @@ class Logger(APILogger):
             ConcurrentMultiLogRecordProcessor,
         ],
         instrumentation_scope: InstrumentationScope,
+        min_severity_level: SeverityNumber = SeverityNumber.UNSPECIFIED,
+        trace_based: bool = False,
     ):
         super().__init__(
             instrumentation_scope.name,
@@ -685,6 +687,8 @@ class Logger(APILogger):
         self._resource = resource
         self._multi_log_record_processor = multi_log_record_processor
         self._instrumentation_scope = instrumentation_scope
+        self._min_severity_level = min_severity_level
+        self._trace_based = trace_based
 
     @property
     def resource(self):
@@ -744,6 +748,10 @@ class Logger(APILogger):
             record = LogRecord._from_api_log_record(
                 record=record, resource=self._resource
             )
+        if is_less_than_min_severity(record, self._min_severity_level):
+            return
+        if should_drop_logs_for_unsampled_traces(record, self._trace_based):
+            return
 
         log_data = LogData(record, self._instrumentation_scope)
 
@@ -758,6 +766,8 @@ class LoggerProvider(APILoggerProvider):
         multi_log_record_processor: SynchronousMultiLogRecordProcessor
         | ConcurrentMultiLogRecordProcessor
         | None = None,
+        min_severity_level: SeverityNumber = SeverityNumber.UNSPECIFIED,
+        trace_based: bool = False,
     ):
         if resource is None:
             self._resource = Resource.create({})
@@ -773,6 +783,8 @@ class LoggerProvider(APILoggerProvider):
             self._at_exit_handler = atexit.register(self.shutdown)
         self._logger_cache = {}
         self._logger_cache_lock = Lock()
+        self._min_severity_level = min_severity_level
+        self._trace_based = trace_based
 
     @property
     def resource(self):
@@ -794,6 +806,8 @@ class LoggerProvider(APILoggerProvider):
                 schema_url,
                 attributes,
             ),
+            self._min_severity_level,
+            self._trace_based,
         )
 
     def _get_logger_cached(
@@ -920,3 +934,54 @@ def std_to_otel(levelno: int) -> SeverityNumber:
     if levelno > 53:
         return SeverityNumber.FATAL4
     return _STD_TO_OTEL[levelno]
+
+
+def is_less_than_min_severity(
+    record: LogRecord, min_severity: SeverityNumber
+) -> bool:
+    """Checks if the log record's severity number is less than the minimum severity level.
+
+    Args:
+        record: The log record to be processed.
+        min_severity: The minimum severity level.
+
+    Returns:
+        True if the log record's severity number is less than the minimum
+        severity level, False otherwise. Log records with an unspecified severity (i.e. `0`)
+        are not affected by this parameter and therefore bypass minimum severity filtering.
+    """
+    if record.severity_number is not None:
+        if (
+            min_severity is not None
+            and min_severity != SeverityNumber.UNSPECIFIED
+            and record.severity_number.value < min_severity.value
+        ):
+            return True
+    return False
+
+
+def should_drop_logs_for_unsampled_traces(
+    record: LogRecord, trace_based_flag: bool
+) -> bool:
+    """Determines whether the logger should drop log records associated with unsampled traces.
+
+    If `trace_based` is `true`, log records associated with unsampled traces are dropped by the `Logger`.
+    A log record is considered associated with an unsampled trace if it has a valid `SpanId` and its
+    `TraceFlags` indicate that the trace is unsampled. A log record that isn't associated with a trace
+    context is not affected by this parameter and therefore bypasses trace-based filtering.
+
+    Args:
+        record: The log record to be processed.
+        trace_based_flag: A boolean flag indicating whether trace-based filtering is enabled. If not explicitly set,
+        the `trace_based` parameter is set to `false`
+
+    Returns:
+        True if the log record should be dropped due to being associated with an unsampled trace.
+    """
+    if trace_based_flag:
+        if record.context is not None:
+            span = get_current_span(record.context)
+            span_context = span.get_span_context()
+            if span_context.is_valid and not span_context.trace_flags.sampled:
+                return True
+    return False
