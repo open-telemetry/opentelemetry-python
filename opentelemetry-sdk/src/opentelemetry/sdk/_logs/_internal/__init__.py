@@ -235,7 +235,7 @@ class LogRecord(APILogRecord):
         event_name: str | None = None,
     ):
         warnings.warn(
-            "LogRecord will be substituted in 1.39.0 by ReadWriteLogRecord and ReadableLogRecord",
+            "LogRecord will be removed in 1.39.0 and replaced by ReadWriteLogRecord and ReadableLogRecord",
             LogDeprecatedInitWarning,
             stacklevel=0,
         )

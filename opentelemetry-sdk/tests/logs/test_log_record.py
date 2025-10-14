@@ -240,7 +240,7 @@ class TestLogRecord(unittest.TestCase):
         # Check the message content of the LogRecordInitDeprecatedWarning
         warning_message = str(log_record_init_warnings[0].message)
         self.assertIn(
-            "LogRecord will be substituted in 1.39.0 by ReadWriteLogRecord and ReadableLogRecord",
+            "LogRecord will be removed in 1.39.0 and replaced by ReadWriteLogRecord and ReadableLogRecord",
             warning_message,
         )
 
