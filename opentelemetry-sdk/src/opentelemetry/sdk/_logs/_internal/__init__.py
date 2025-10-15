@@ -735,25 +735,28 @@ class Logger(APILogger):
         and instrumentation info.
         """
 
-        if not record:
-            record = LogRecord(
-                timestamp=timestamp,
-                observed_timestamp=observed_timestamp,
-                context=context,
-                severity_text=severity_text,
-                severity_number=severity_number,
-                body=body,
-                attributes=attributes,
-                event_name=event_name,
-                resource=self._resource,
-            )
-        elif not isinstance(record, LogRecord):
-            # pylint:disable=protected-access
-            record = LogRecord._from_api_log_record(
-                record=record, resource=self._resource
-            )
+        # silence deprecation warnings from internal users
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=LogDeprecatedInitWarning)
+            if not record:
+                record = LogRecord(
+                    timestamp=timestamp,
+                    observed_timestamp=observed_timestamp,
+                    context=context,
+                    severity_text=severity_text,
+                    severity_number=severity_number,
+                    body=body,
+                    attributes=attributes,
+                    event_name=event_name,
+                    resource=self._resource,
+                )
+            elif not isinstance(record, LogRecord):
+                # pylint:disable=protected-access
+                record = LogRecord._from_api_log_record(
+                    record=record, resource=self._resource
+                )
 
-        log_data = LogData(record, self._instrumentation_scope)
+            log_data = LogData(record, self._instrumentation_scope)
 
         self._multi_log_record_processor.on_emit(log_data)
 
