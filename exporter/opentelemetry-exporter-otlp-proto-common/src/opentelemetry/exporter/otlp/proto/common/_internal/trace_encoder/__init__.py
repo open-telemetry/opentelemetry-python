@@ -105,7 +105,9 @@ def _encode_resource_spans(
     return pb2_resource_spans
 
 
-def _span_flags(child_trace_flags: int, parent_span_context: Optional[SpanContext]) -> int:
+def _span_flags(
+    child_trace_flags: int, parent_span_context: Optional[SpanContext]
+) -> int:
     # Lower 8 bits: W3C TraceFlags
     flags = child_trace_flags & PB2SpanFlags.SPAN_FLAGS_TRACE_FLAGS_MASK
     # Always indicate whether parent remote information is known
