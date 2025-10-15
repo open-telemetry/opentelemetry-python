@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4755](https://github.com/open-telemetry/opentelemetry-python/pull/4755))
 - logs: extend Logger.emit to accept separated keyword arguments
   ([#4737](https://github.com/open-telemetry/opentelemetry-python/pull/4737))
+- otlp exporters (trace): include W3C TraceFlags (bits 0–7) in OTLP `Span.flags` alongside parent isRemote bits (8–9)
+  ([#4761](https://github.com/open-telemetry/opentelemetry-python/pull/4761))
 
 ## Version 1.37.0/0.58b0 (2025-09-11)
 
