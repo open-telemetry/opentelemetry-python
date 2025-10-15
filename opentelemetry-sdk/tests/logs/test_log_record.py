@@ -21,12 +21,14 @@ from opentelemetry._logs.severity import SeverityNumber
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.context import get_current
 from opentelemetry.sdk._logs import (
+    LogData,
     LogDeprecatedInitWarning,
     LogDroppedAttributesWarning,
     LogLimits,
     LogRecord,
 )
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace.span import TraceFlags
 
 
@@ -222,7 +224,7 @@ class TestLogRecord(unittest.TestCase):
         self.assertEqual(len(log_record_context_warning), 0)
 
     def test_log_record_init_deprecated_warning(self):
-        """Test that LogRecord initialization emits a LogRecordInitDeprecatedWarning."""
+        """Test that LogRecord initialization emits a LogDeprecatedInitWarning."""
         with warnings.catch_warnings(record=True) as cw:
             warnings.simplefilter("always")
             LogRecord()
@@ -234,10 +236,10 @@ class TestLogRecord(unittest.TestCase):
         self.assertGreater(
             len(log_record_init_warnings),
             0,
-            "Expected at least one LogRecordInitDeprecatedWarning",
+            "Expected at least one LogDeprecatedInitWarning",
         )
 
-        # Check the message content of the LogRecordInitDeprecatedWarning
+        # Check the message content of the LogDeprecatedInitWarning
         warning_message = str(log_record_init_warnings[0].message)
         self.assertIn(
             "LogRecord will be removed in 1.39.0 and replaced by ReadWriteLogRecord and ReadableLogRecord",
@@ -277,3 +279,33 @@ class TestLogRecord(unittest.TestCase):
         self.assertEqual(record.attributes, {"a": "b"})
         self.assertEqual(record.event_name, "an.event")
         self.assertEqual(record.resource, resource)
+
+
+class TestLogData(unittest.TestCase):
+    def test_init_deprecated_warning(self):
+        """Test that LogData initialization emits a LogDeprecatedInitWarning."""
+        log_record = LogRecord()
+
+        with warnings.catch_warnings(record=True) as cw:
+            warnings.simplefilter("always")
+            LogData(
+                log_record=log_record,
+                instrumentation_scope=InstrumentationScope("foo", "bar"),
+            )
+
+        # Check that at least one LogDeprecatedInitWarning was emitted
+        init_warnings = [
+            w for w in cw if isinstance(w.message, LogDeprecatedInitWarning)
+        ]
+        self.assertGreater(
+            len(init_warnings),
+            0,
+            "Expected at least one LogDeprecatedInitWarning",
+        )
+
+        # Check the message content of the LogDeprecatedInitWarning
+        warning_message = str(init_warnings[0].message)
+        self.assertIn(
+            "LogData will be removed in 1.39.0 and replaced by ReadWriteLogRecord and ReadableLogRecord",
+            warning_message,
+        )
