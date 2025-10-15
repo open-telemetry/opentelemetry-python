@@ -60,7 +60,7 @@ from opentelemetry.trace.status import Status as SDKStatus
 from opentelemetry.trace.status import StatusCode as SDKStatusCode
 
 # Mask for all currently-defined span flag bits (0-9): lower 8 trace flags + has/is remote bits
-ALL_SPAN_FLAGS_MASK = (
+ALL_SPAN_FLAGS_MASK = (  # pylint: disable=no-member
     PB2SpanFlags.SPAN_FLAGS_TRACE_FLAGS_MASK
     | PB2SpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK
     | PB2SpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK
