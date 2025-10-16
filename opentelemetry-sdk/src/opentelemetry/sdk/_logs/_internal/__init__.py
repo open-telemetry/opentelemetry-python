@@ -237,6 +237,7 @@ class LogRecord(APILogRecord):
         warnings.warn(
             "LogRecord will be removed in 1.39.0 and replaced by ReadWriteLogRecord and ReadableLogRecord",
             LogDeprecatedInitWarning,
+            stacklevel=2,
         )
         if not context:
             context = get_current()
@@ -365,6 +366,7 @@ class LogData:
         warnings.warn(
             "LogData will be removed in 1.39.0 and replaced by ReadWriteLogRecord and ReadableLogRecord",
             LogDeprecatedInitWarning,
+            stacklevel=2,
         )
         self.log_record = log_record
         self.instrumentation_scope = instrumentation_scope
