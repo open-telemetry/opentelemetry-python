@@ -11,7 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import logging
+import warnings
 from time import time_ns
 from typing import Optional
 
@@ -20,7 +22,12 @@ from opentelemetry._events import Event
 from opentelemetry._events import EventLogger as APIEventLogger
 from opentelemetry._events import EventLoggerProvider as APIEventLoggerProvider
 from opentelemetry._logs import NoOpLogger, SeverityNumber, get_logger_provider
-from opentelemetry.sdk._logs import Logger, LoggerProvider, LogRecord
+from opentelemetry.sdk._logs import (
+    LogDeprecatedInitWarning,
+    Logger,
+    LoggerProvider,
+    LogRecord,
+)
 from opentelemetry.util.types import _ExtendedAttributes
 
 _logger = logging.getLogger(__name__)
@@ -50,18 +57,23 @@ class EventLogger(APIEventLogger):
             # Do nothing if SDK is disabled
             return
         span_context = trace.get_current_span().get_span_context()
-        log_record = LogRecord(
-            timestamp=event.timestamp or time_ns(),
-            observed_timestamp=None,
-            trace_id=event.trace_id or span_context.trace_id,
-            span_id=event.span_id or span_context.span_id,
-            trace_flags=event.trace_flags or span_context.trace_flags,
-            severity_text=None,
-            severity_number=event.severity_number or SeverityNumber.INFO,
-            body=event.body,
-            resource=getattr(self._logger, "resource", None),
-            attributes=event.attributes,
-        )
+
+        # silence deprecation warnings from internal users
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=LogDeprecatedInitWarning)
+
+            log_record = LogRecord(
+                timestamp=event.timestamp or time_ns(),
+                observed_timestamp=None,
+                trace_id=event.trace_id or span_context.trace_id,
+                span_id=event.span_id or span_context.span_id,
+                trace_flags=event.trace_flags or span_context.trace_flags,
+                severity_text=None,
+                severity_number=event.severity_number or SeverityNumber.INFO,
+                body=event.body,
+                resource=getattr(self._logger, "resource", None),
+                attributes=event.attributes,
+            )
         self._logger.emit(log_record)
 
 
