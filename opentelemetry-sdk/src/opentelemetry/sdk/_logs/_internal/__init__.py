@@ -85,7 +85,7 @@ warnings.simplefilter("once", LogDroppedAttributesWarning)
 
 
 class LogDeprecatedInitWarning(UserWarning):
-    """Custom warning to indicate deprecated LogRecord init was used.
+    """Custom warning to indicate that deprecated and soon to be deprecated Log classes was used.
 
     This class is used to filter and handle these specific warnings separately
     from other warnings, ensuring that they are only shown once without
@@ -234,6 +234,11 @@ class LogRecord(APILogRecord):
         limits: LogLimits | None = None,
         event_name: str | None = None,
     ):
+        warnings.warn(
+            "LogRecord will be removed in 1.39.0 and replaced by ReadWriteLogRecord and ReadableLogRecord",
+            LogDeprecatedInitWarning,
+            stacklevel=2,
+        )
         if not context:
             context = get_current()
 
@@ -358,6 +363,11 @@ class LogData:
         log_record: LogRecord,
         instrumentation_scope: InstrumentationScope,
     ):
+        warnings.warn(
+            "LogData will be removed in 1.39.0 and replaced by ReadWriteLogRecord and ReadableLogRecord",
+            LogDeprecatedInitWarning,
+            stacklevel=2,
+        )
         self.log_record = log_record
         self.instrumentation_scope = instrumentation_scope
 
@@ -727,25 +737,28 @@ class Logger(APILogger):
         and instrumentation info.
         """
 
-        if not record:
-            record = LogRecord(
-                timestamp=timestamp,
-                observed_timestamp=observed_timestamp,
-                context=context,
-                severity_text=severity_text,
-                severity_number=severity_number,
-                body=body,
-                attributes=attributes,
-                event_name=event_name,
-                resource=self._resource,
-            )
-        elif not isinstance(record, LogRecord):
-            # pylint:disable=protected-access
-            record = LogRecord._from_api_log_record(
-                record=record, resource=self._resource
-            )
+        # silence deprecation warnings from internal users
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=LogDeprecatedInitWarning)
+            if not record:
+                record = LogRecord(
+                    timestamp=timestamp,
+                    observed_timestamp=observed_timestamp,
+                    context=context,
+                    severity_text=severity_text,
+                    severity_number=severity_number,
+                    body=body,
+                    attributes=attributes,
+                    event_name=event_name,
+                    resource=self._resource,
+                )
+            elif not isinstance(record, LogRecord):
+                # pylint:disable=protected-access
+                record = LogRecord._from_api_log_record(
+                    record=record, resource=self._resource
+                )
 
-        log_data = LogData(record, self._instrumentation_scope)
+            log_data = LogData(record, self._instrumentation_scope)
 
         self._multi_log_record_processor.on_emit(log_data)
 
