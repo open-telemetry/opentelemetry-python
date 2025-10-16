@@ -78,6 +78,18 @@ class LogDroppedAttributesWarning(UserWarning):
 warnings.simplefilter("once", LogDroppedAttributesWarning)
 
 
+class LogDeprecatedInitWarning(UserWarning):
+    """Custom warning to indicate that deprecated and soon to be deprecated Log classes was used.
+
+    This class is used to filter and handle these specific warnings separately
+    from other warnings, ensuring that they are only shown once without
+    interfering with default user warnings.
+    """
+
+
+warnings.simplefilter("once", LogDeprecatedInitWarning)
+
+
 class LogLimits:
     """This class is based on a SpanLimits class in the Tracing module.
 
@@ -177,7 +189,6 @@ class ReadableLogRecord:
 @dataclass
 class ReadWriteLogRecord:
     """A ReadWriteLogRecord instance represents an event being logged.
-
     ReadWriteLogRecord instances are created and emitted via `Logger`
     every time something is logged. They contain all the information
     pertinent to the event being logged.
@@ -269,7 +280,6 @@ class ReadWriteLogRecord:
             resource=resource,
             instrumentation_scope=instrumentation_scope,
         )
-
 
 class LogRecordProcessor(abc.ABC):
     """Interface to hook the log record emitting action.
@@ -508,7 +518,7 @@ class LoggingHandler(logging.Handler):
                 )
         return attributes
 
-    def _translate(self, record: logging.LogRecord) -> LogRecord:
+    def _translate(self, record: logging.LogRecord) -> dict:
         timestamp = int(record.created * 1e9)
         observered_timestamp = time_ns()
         attributes = self._get_attributes(record)
@@ -542,15 +552,15 @@ class LoggingHandler(logging.Handler):
             "WARN" if record.levelname == "WARNING" else record.levelname
         )
 
-        return LogRecord(
-            timestamp=timestamp,
-            observed_timestamp=observered_timestamp,
-            context=get_current() or None,
-            severity_text=level_name,
-            severity_number=severity_number,
-            body=body,
-            attributes=attributes,
-        )
+        return {
+            "timestamp": timestamp,
+            "observed_timestamp": observered_timestamp,
+            "context": get_current() or None,
+            "severity_text": level_name,
+            "severity_number": severity_number,
+            "body": body,
+            "attributes": attributes,
+        }
 
     def emit(self, record: logging.LogRecord) -> None:
         """
@@ -560,7 +570,7 @@ class LoggingHandler(logging.Handler):
         """
         logger = get_logger(record.name, logger_provider=self._logger_provider)
         if not isinstance(logger, NoOpLogger):
-            logger.emit(self._translate(record))
+            logger.emit(**self._translate(record))
 
     def flush(self) -> None:
         """

@@ -17,8 +17,14 @@
 import unittest
 from unittest.mock import Mock, patch
 
-from opentelemetry._logs import LogRecord, SeverityNumber
-from opentelemetry.sdk._logs import Logger, LoggerProvider, ReadableLogRecord
+from opentelemetry._logs import LogRecord as APILogRecord
+from opentelemetry._logs import SeverityNumber
+from opentelemetry.context import get_current
+from opentelemetry.sdk._logs import (
+    Logger,
+    LoggerProvider,
+    ReadableLogRecord,
+)
 from opentelemetry.sdk._logs._internal import (
     NoOpLogger,
     SynchronousMultiLogRecordProcessor,
@@ -157,6 +163,7 @@ class TestLogger(unittest.TestCase):
         log_record_processor_mock.on_emit.assert_called_once()
         log_data = log_record_processor_mock.on_emit.call_args.args[0]
         self.assertTrue(isinstance(log_data.log_record, LogRecord))
+        self.assertTrue(log_data.log_record is log_record)
 
     def test_can_emit_api_logrecord(self):
         logger, log_record_processor_mock = self._get_logger()
@@ -167,4 +174,41 @@ class TestLogger(unittest.TestCase):
         logger.emit(api_log_record)
         log_record_processor_mock.on_emit.assert_called_once()
         log_data = log_record_processor_mock.on_emit.call_args.args[0]
-        self.assertTrue(isinstance(log_data.log_record, LogRecord))
+        log_record = log_data.log_record
+        self.assertTrue(isinstance(log_record, LogRecord))
+        self.assertEqual(log_record.timestamp, None)
+        self.assertEqual(log_record.observed_timestamp, 0)
+        self.assertEqual(log_record.context, {})
+        self.assertEqual(log_record.severity_number, None)
+        self.assertEqual(log_record.severity_text, None)
+        self.assertEqual(log_record.body, "a log line")
+        self.assertEqual(log_record.attributes, {})
+        self.assertEqual(log_record.event_name, None)
+        self.assertEqual(log_record.resource, logger.resource)
+
+    def test_can_emit_with_keywords_arguments(self):
+        logger, log_record_processor_mock = self._get_logger()
+
+        logger.emit(
+            timestamp=100,
+            observed_timestamp=101,
+            context=get_current(),
+            severity_number=SeverityNumber.WARN,
+            severity_text="warn",
+            body="a body",
+            attributes={"some": "attributes"},
+            event_name="event_name",
+        )
+        log_record_processor_mock.on_emit.assert_called_once()
+        log_data = log_record_processor_mock.on_emit.call_args.args[0]
+        log_record = log_data.log_record
+        self.assertTrue(isinstance(log_record, LogRecord))
+        self.assertEqual(log_record.timestamp, 100)
+        self.assertEqual(log_record.observed_timestamp, 101)
+        self.assertEqual(log_record.context, {})
+        self.assertEqual(log_record.severity_number, SeverityNumber.WARN)
+        self.assertEqual(log_record.severity_text, "warn")
+        self.assertEqual(log_record.body, "a body")
+        self.assertEqual(log_record.attributes, {"some": "attributes"})
+        self.assertEqual(log_record.event_name, "event_name")
+        self.assertEqual(log_record.resource, logger.resource)

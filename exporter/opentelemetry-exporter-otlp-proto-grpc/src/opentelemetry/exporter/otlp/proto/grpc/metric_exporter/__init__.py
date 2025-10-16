@@ -78,7 +78,12 @@ _logger = getLogger(__name__)
 
 class OTLPMetricExporter(
     MetricExporter,
-    OTLPExporterMixin[Metric, ExportMetricsServiceRequest, MetricExportResult],
+    OTLPExporterMixin[
+        MetricsData,
+        ExportMetricsServiceRequest,
+        MetricExportResult,
+        MetricsServiceStub,
+    ],
     OTLPMetricExporterMixin,
 ):
     """OTLP metric exporter
@@ -89,9 +94,6 @@ class OTLPMetricExporter(
             gRPC's 4MB message size limit. If not set there is no limit to the number of data points in a request.
             If it is set and the number of data points exceeds the max, the request will be split.
     """
-
-    _result = MetricExportResult
-    _stub = MetricsServiceStub
 
     def __init__(
         self,
@@ -106,12 +108,11 @@ class OTLPMetricExporter(
         | None = None,
         preferred_aggregation: dict[type, Aggregation] | None = None,
         max_export_batch_size: int | None = None,
-        channel_options: TypingSequence[Tuple[str, str]] | None = None,
+        channel_options: Tuple[Tuple[str, str]] | None = None,
     ):
-        if insecure is None:
-            insecure = environ.get(OTEL_EXPORTER_OTLP_METRICS_INSECURE)
-            if insecure is not None:
-                insecure = insecure.lower() == "true"
+        insecure_metrics = environ.get(OTEL_EXPORTER_OTLP_METRICS_INSECURE)
+        if insecure is None and insecure_metrics is not None:
+            insecure = insecure_metrics.lower() == "true"
 
         if (
             not insecure
@@ -142,6 +143,8 @@ class OTLPMetricExporter(
 
         OTLPExporterMixin.__init__(
             self,
+            stub=MetricsServiceStub,
+            result=MetricExportResult,
             endpoint=endpoint
             or environ.get(OTEL_EXPORTER_OTLP_METRICS_ENDPOINT),
             insecure=insecure,
@@ -154,7 +157,7 @@ class OTLPMetricExporter(
 
         self._max_export_batch_size: int | None = max_export_batch_size
 
-    def _translate_data(
+    def _translate_data(  # type: ignore [reportIncompatibleMethodOverride]
         self, data: MetricsData
     ) -> ExportMetricsServiceRequest:
         return encode_metrics(data)
@@ -182,6 +185,7 @@ class OTLPMetricExporter(
         self,
         metrics_data: MetricsData,
     ) -> Iterable[MetricsData]:
+        assert self._max_export_batch_size is not None
         batch_size: int = 0
         split_resource_metrics: List[ResourceMetrics] = []
 
