@@ -8,12 +8,9 @@ exporters:
   debug:
     verbosity: detailed
 
-processors:
-  batch:
-
 service:
   pipelines:
     traces:
       receivers: [otlp]
-      processors: [batch]
+      processors: []
       exporters: [debug]
