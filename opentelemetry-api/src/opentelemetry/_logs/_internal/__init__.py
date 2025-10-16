@@ -33,6 +33,8 @@ The following code shows how to obtain a logger using the global :class:`.Logger
 .. versionadded:: 1.15.0
 """
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from logging import getLogger
 from os import environ
@@ -143,8 +145,40 @@ class Logger(ABC):
         self._schema_url = schema_url
         self._attributes = attributes
 
+    @overload
+    def emit(
+        self,
+        *,
+        timestamp: int | None = None,
+        observed_timestamp: int | None = None,
+        context: Context | None = None,
+        severity_number: SeverityNumber | None = None,
+        severity_text: str | None = None,
+        body: AnyValue | None = None,
+        attributes: _ExtendedAttributes | None = None,
+        event_name: str | None = None,
+    ) -> None: ...
+
+    @overload
+    def emit(
+        self,
+        record: LogRecord,
+    ) -> None: ...
+
     @abstractmethod
-    def emit(self, record: "LogRecord") -> None:
+    def emit(
+        self,
+        record: LogRecord | None = None,
+        *,
+        timestamp: int | None = None,
+        observed_timestamp: int | None = None,
+        context: Context | None = None,
+        severity_number: SeverityNumber | None = None,
+        severity_text: str | None = None,
+        body: AnyValue | None = None,
+        attributes: _ExtendedAttributes | None = None,
+        event_name: str | None = None,
+    ) -> None:
         """Emits a :class:`LogRecord` representing a log to the processing pipeline."""
 
 
@@ -154,7 +188,39 @@ class NoOpLogger(Logger):
     All operations are no-op.
     """
 
-    def emit(self, record: "LogRecord") -> None:
+    @overload
+    def emit(
+        self,
+        *,
+        timestamp: int | None = None,
+        observed_timestamp: int | None = None,
+        context: Context | None = None,
+        severity_number: SeverityNumber | None = None,
+        severity_text: str | None = None,
+        body: AnyValue | None = None,
+        attributes: _ExtendedAttributes | None = None,
+        event_name: str | None = None,
+    ) -> None: ...
+
+    @overload
+    def emit(  # pylint:disable=arguments-differ
+        self,
+        record: LogRecord,
+    ) -> None: ...
+
+    def emit(
+        self,
+        record: LogRecord | None = None,
+        *,
+        timestamp: int | None = None,
+        observed_timestamp: int | None = None,
+        context: Context | None = None,
+        severity_number: SeverityNumber | None = None,
+        severity_text: str | None = None,
+        body: AnyValue | None = None,
+        attributes: _ExtendedAttributes | None = None,
+        event_name: str | None = None,
+    ) -> None:
         pass
 
 
@@ -188,8 +254,52 @@ class ProxyLogger(Logger):
             return self._real_logger
         return self._noop_logger
 
-    def emit(self, record: LogRecord) -> None:
-        self._logger.emit(record)
+    @overload
+    def emit(
+        self,
+        *,
+        timestamp: int | None = None,
+        observed_timestamp: int | None = None,
+        context: Context | None = None,
+        severity_number: SeverityNumber | None = None,
+        severity_text: str | None = None,
+        body: AnyValue | None = None,
+        attributes: _ExtendedAttributes | None = None,
+        event_name: str | None = None,
+    ) -> None: ...
+
+    @overload
+    def emit(  # pylint:disable=arguments-differ
+        self,
+        record: LogRecord,
+    ) -> None: ...
+
+    def emit(
+        self,
+        record: LogRecord | None = None,
+        *,
+        timestamp: int | None = None,
+        observed_timestamp: int | None = None,
+        context: Context | None = None,
+        severity_number: SeverityNumber | None = None,
+        severity_text: str | None = None,
+        body: AnyValue | None = None,
+        attributes: _ExtendedAttributes | None = None,
+        event_name: str | None = None,
+    ) -> None:
+        if record:
+            self._logger.emit(record)
+        else:
+            self._logger.emit(
+                timestamp=timestamp,
+                observed_timestamp=observed_timestamp,
+                context=context,
+                severity_number=severity_number,
+                severity_text=severity_text,
+                body=body,
+                attributes=attributes,
+                event_name=event_name,
+            )
 
 
 class LoggerProvider(ABC):

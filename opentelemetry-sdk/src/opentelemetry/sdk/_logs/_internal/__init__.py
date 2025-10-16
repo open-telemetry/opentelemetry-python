@@ -85,7 +85,7 @@ warnings.simplefilter("once", LogDroppedAttributesWarning)
 
 
 class LogDeprecatedInitWarning(UserWarning):
-    """Custom warning to indicate deprecated LogRecord init was used.
+    """Custom warning to indicate that deprecated and soon to be deprecated Log classes was used.
 
     This class is used to filter and handle these specific warnings separately
     from other warnings, ensuring that they are only shown once without
@@ -234,15 +234,20 @@ class LogRecord(APILogRecord):
         limits: LogLimits | None = None,
         event_name: str | None = None,
     ):
-        if trace_id or span_id or trace_flags:
-            warnings.warn(
-                "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated since 1.35.0. Use `context` instead.",
-                LogDeprecatedInitWarning,
-                stacklevel=2,
-            )
-
+        warnings.warn(
+            "LogRecord will be removed in 1.39.0 and replaced by ReadWriteLogRecord and ReadableLogRecord",
+            LogDeprecatedInitWarning,
+            stacklevel=2,
+        )
         if not context:
             context = get_current()
+
+            if trace_id or span_id or trace_flags:
+                warnings.warn(
+                    "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated since 1.35.0. Use `context` instead.",
+                    LogDeprecatedInitWarning,
+                    stacklevel=2,
+                )
 
         span = get_current_span(context)
         span_context = span.get_span_context()
@@ -358,6 +363,11 @@ class LogData:
         log_record: LogRecord,
         instrumentation_scope: InstrumentationScope,
     ):
+        warnings.warn(
+            "LogData will be removed in 1.39.0 and replaced by ReadWriteLogRecord and ReadableLogRecord",
+            LogDeprecatedInitWarning,
+            stacklevel=2,
+        )
         self.log_record = log_record
         self.instrumentation_scope = instrumentation_scope
 
@@ -599,7 +609,7 @@ class LoggingHandler(logging.Handler):
                 )
         return attributes
 
-    def _translate(self, record: logging.LogRecord) -> LogRecord:
+    def _translate(self, record: logging.LogRecord) -> dict:
         timestamp = int(record.created * 1e9)
         observered_timestamp = time_ns()
         attributes = self._get_attributes(record)
@@ -633,17 +643,15 @@ class LoggingHandler(logging.Handler):
             "WARN" if record.levelname == "WARNING" else record.levelname
         )
 
-        logger = get_logger(record.name, logger_provider=self._logger_provider)
-        return LogRecord(
-            timestamp=timestamp,
-            observed_timestamp=observered_timestamp,
-            context=get_current() or None,
-            severity_text=level_name,
-            severity_number=severity_number,
-            body=body,
-            resource=logger.resource,
-            attributes=attributes,
-        )
+        return {
+            "timestamp": timestamp,
+            "observed_timestamp": observered_timestamp,
+            "context": get_current() or None,
+            "severity_text": level_name,
+            "severity_number": severity_number,
+            "body": body,
+            "attributes": attributes,
+        }
 
     def emit(self, record: logging.LogRecord) -> None:
         """
@@ -653,7 +661,7 @@ class LoggingHandler(logging.Handler):
         """
         logger = get_logger(record.name, logger_provider=self._logger_provider)
         if not isinstance(logger, NoOpLogger):
-            logger.emit(self._translate(record))
+            logger.emit(**self._translate(record))
 
     def flush(self) -> None:
         """
@@ -692,16 +700,66 @@ class Logger(APILogger):
     def resource(self):
         return self._resource
 
-    def emit(self, record: APILogRecord):
+    @overload
+    def emit(
+        self,
+        *,
+        timestamp: int | None = None,
+        observed_timestamp: int | None = None,
+        context: Context | None = None,
+        severity_number: SeverityNumber | None = None,
+        severity_text: str | None = None,
+        body: AnyValue | None = None,
+        attributes: _ExtendedAttributes | None = None,
+        event_name: str | None = None,
+    ) -> None: ...
+
+    @overload
+    def emit(  # pylint:disable=arguments-differ
+        self,
+        record: APILogRecord,
+    ) -> None: ...
+
+    def emit(
+        self,
+        record: APILogRecord | None = None,
+        *,
+        timestamp: int | None = None,
+        observed_timestamp: int | None = None,
+        context: Context | None = None,
+        severity_text: str | None = None,
+        severity_number: SeverityNumber | None = None,
+        body: AnyValue | None = None,
+        attributes: _ExtendedAttributes | None = None,
+        event_name: str | None = None,
+    ):
         """Emits the :class:`LogData` by associating :class:`LogRecord`
         and instrumentation info.
         """
-        if not isinstance(record, LogRecord):
-            # pylint:disable=protected-access
-            record = LogRecord._from_api_log_record(
-                record=record, resource=self._resource
-            )
-        log_data = LogData(record, self._instrumentation_scope)
+
+        # silence deprecation warnings from internal users
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=LogDeprecatedInitWarning)
+            if not record:
+                record = LogRecord(
+                    timestamp=timestamp,
+                    observed_timestamp=observed_timestamp,
+                    context=context,
+                    severity_text=severity_text,
+                    severity_number=severity_number,
+                    body=body,
+                    attributes=attributes,
+                    event_name=event_name,
+                    resource=self._resource,
+                )
+            elif not isinstance(record, LogRecord):
+                # pylint:disable=protected-access
+                record = LogRecord._from_api_log_record(
+                    record=record, resource=self._resource
+                )
+
+            log_data = LogData(record, self._instrumentation_scope)
+
         self._multi_log_record_processor.on_emit(log_data)
 
 

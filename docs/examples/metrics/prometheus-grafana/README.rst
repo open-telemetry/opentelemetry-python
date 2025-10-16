@@ -3,7 +3,7 @@ Prometheus Instrumentation
 
 This shows how to use ``opentelemetry-exporter-prometheus`` to automatically generate Prometheus metrics.
 
-The source files of these examples are available :scm_web:`here <docs/examples/prometheus-grafana/>`.
+The source files of these examples are available :scm_web:`here <docs/examples/metrics/prometheus-grafana/>`.
 
 Preparation
 -----------

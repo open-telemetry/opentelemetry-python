@@ -21,12 +21,14 @@ from opentelemetry._logs.severity import SeverityNumber
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.context import get_current
 from opentelemetry.sdk._logs import (
+    LogData,
     LogDeprecatedInitWarning,
     LogDroppedAttributesWarning,
     LogLimits,
     LogRecord,
 )
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace.span import TraceFlags
 
 
@@ -142,11 +144,22 @@ class TestLogRecord(unittest.TestCase):
                     attributes=attr,
                     limits=limits,
                 )
-        self.assertEqual(len(cw), 1)
-        self.assertIsInstance(cw[-1].message, LogDroppedAttributesWarning)
+
+        # Check that at least one LogDroppedAttributesWarning was emitted
+        dropped_attributes_warnings = [
+            w for w in cw if isinstance(w.message, LogDroppedAttributesWarning)
+        ]
+        self.assertEqual(
+            len(dropped_attributes_warnings),
+            1,
+            "Expected exactly one LogDroppedAttributesWarning due to simplefilter('once')",
+        )
+
+        # Check the message content of the LogDroppedAttributesWarning
+        warning_message = str(dropped_attributes_warnings[0].message)
         self.assertIn(
             "Log record attributes were dropped due to limits",
-            str(cw[-1].message),
+            warning_message,
         )
 
     def test_log_record_dropped_attributes_unset_limits(self):
@@ -159,7 +172,7 @@ class TestLogRecord(unittest.TestCase):
         self.assertTrue(result.dropped_attributes == 0)
         self.assertEqual(attr, result.attributes)
 
-    def test_log_record_deprecated_init_warning(self):
+    def test_log_record_context_deprecated_init_warning(self):
         test_cases = [
             {"trace_id": 123},
             {"span_id": 123},
@@ -172,17 +185,66 @@ class TestLogRecord(unittest.TestCase):
                     for _ in range(10):
                         LogRecord(**params)
 
-                self.assertEqual(len(cw), 1)
-                self.assertIsInstance(cw[-1].message, LogDeprecatedInitWarning)
-                self.assertIn(
-                    "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated since 1.35.0. Use `context` instead.",
-                    str(cw[-1].message),
-                )
+                # Check that the LogDeprecatedInitWarning was emitted
+                context_deprecated_warnings = [
+                    w
+                    for w in cw
+                    if isinstance(w.message, LogDeprecatedInitWarning)
+                ]
+                self.assertEqual(len(context_deprecated_warnings), 2)
+
+                # Check we have the expected message once
+                log_record_context_warning = [
+                    w.message
+                    for w in cw
+                    if "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated since 1.35.0. Use `context` instead."
+                    in str(w.message)
+                ]
+
+                self.assertEqual(len(log_record_context_warning), 1)
 
         with warnings.catch_warnings(record=True) as cw:
             for _ in range(10):
                 LogRecord(context=get_current())
-        self.assertEqual(len(cw), 0)
+
+        # Check that no LogDeprecatedInitWarning was emitted when using context
+        context_deprecated_warnings = [
+            w for w in cw if isinstance(w.message, LogDeprecatedInitWarning)
+        ]
+        self.assertEqual(len(context_deprecated_warnings), 1)
+
+        # Check we have no message
+        log_record_context_warning = [
+            w.message
+            for w in cw
+            if "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated since 1.35.0. Use `context` instead."
+            in str(w.message)
+        ]
+
+        self.assertEqual(len(log_record_context_warning), 0)
+
+    def test_log_record_init_deprecated_warning(self):
+        """Test that LogRecord initialization emits a LogDeprecatedInitWarning."""
+        with warnings.catch_warnings(record=True) as cw:
+            warnings.simplefilter("always")
+            LogRecord()
+
+        # Check that at least one LogDeprecatedInitWarning was emitted
+        log_record_init_warnings = [
+            w for w in cw if isinstance(w.message, LogDeprecatedInitWarning)
+        ]
+        self.assertGreater(
+            len(log_record_init_warnings),
+            0,
+            "Expected at least one LogDeprecatedInitWarning",
+        )
+
+        # Check the message content of the LogDeprecatedInitWarning
+        warning_message = str(log_record_init_warnings[0].message)
+        self.assertIn(
+            "LogRecord will be removed in 1.39.0 and replaced by ReadWriteLogRecord and ReadableLogRecord",
+            warning_message,
+        )
 
     # pylint:disable=protected-access
     def test_log_record_from_api_log_record(self):
@@ -217,3 +279,33 @@ class TestLogRecord(unittest.TestCase):
         self.assertEqual(record.attributes, {"a": "b"})
         self.assertEqual(record.event_name, "an.event")
         self.assertEqual(record.resource, resource)
+
+
+class TestLogData(unittest.TestCase):
+    def test_init_deprecated_warning(self):
+        """Test that LogData initialization emits a LogDeprecatedInitWarning."""
+        log_record = LogRecord()
+
+        with warnings.catch_warnings(record=True) as cw:
+            warnings.simplefilter("always")
+            LogData(
+                log_record=log_record,
+                instrumentation_scope=InstrumentationScope("foo", "bar"),
+            )
+
+        # Check that at least one LogDeprecatedInitWarning was emitted
+        init_warnings = [
+            w for w in cw if isinstance(w.message, LogDeprecatedInitWarning)
+        ]
+        self.assertGreater(
+            len(init_warnings),
+            0,
+            "Expected at least one LogDeprecatedInitWarning",
+        )
+
+        # Check the message content of the LogDeprecatedInitWarning
+        warning_message = str(init_warnings[0].message)
+        self.assertIn(
+            "LogData will be removed in 1.39.0 and replaced by ReadWriteLogRecord and ReadableLogRecord",
+            warning_message,
+        )
