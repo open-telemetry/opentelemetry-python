@@ -34,7 +34,7 @@ from opentelemetry.exporter.otlp.proto.http._common import (
     _is_retryable,
     _load_session_from_envvar,
 )
-from opentelemetry.sdk._logs import LogData
+from opentelemetry.sdk._logs import ReadableLogRecord
 from opentelemetry.sdk._logs.export import (
     LogExporter,
     LogExportResult,
@@ -176,7 +176,7 @@ class OTLPLogExporter(LogExporter):
             )
         return resp
 
-    def export(self, batch: Sequence[LogData]) -> LogExportResult:
+    def export(self, batch: Sequence[ReadableLogRecord]) -> LogExportResult:
         if self._shutdown:
             _logger.warning("Exporter already shutdown, ignoring batch")
             return LogExportResult.FAILURE

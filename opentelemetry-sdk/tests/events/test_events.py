@@ -152,7 +152,6 @@ class TestEventLoggerProvider(unittest.TestCase):
             severity_text=None,
             severity_number=SeverityNumber.ERROR,
             body="test body",
-            resource=event_logger._logger.resource,
             attributes={
                 "key": "val",
                 "foo": "bar",

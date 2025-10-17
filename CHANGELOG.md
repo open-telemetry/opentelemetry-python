@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - docs: Added sqlcommenter example
   ([#4734](https://github.com/open-telemetry/opentelemetry-python/pull/4734))
+- [BREAKING] Remove LogData and extend SDK LogRecord to have instrumentation scope
+  ([#4676](https://github.com/open-telemetry/opentelemetry-python/pull/4676))
 
 ## Version 1.38.0/0.59b0 (2025-10-16)
 
