@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
+from opentelemetry._logs import LogRecord
 from opentelemetry.sdk._logs._internal import (
     LogDroppedAttributesWarning,
     Logger,
@@ -25,12 +25,13 @@ from opentelemetry.sdk._logs._internal import (
 )
 
 __all__ = [
+    "LogDroppedAttributesWarning",
     "Logger",
     "LoggerProvider",
     "LoggingHandler",
     "LogLimits",
+    "LogRecord",
     "LogRecordProcessor",
-    "LogDroppedAttributesWarning",
     "ReadableLogRecord",
     "ReadWriteLogRecord",
 ]

@@ -25,7 +25,6 @@ from opentelemetry.sdk._logs import (
     ReadWriteLogRecord,
 )
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace.span import TraceFlags
 
 
@@ -205,9 +204,6 @@ class TestLogRecord(unittest.TestCase):
             timestamp=1,
             observed_timestamp=2,
             context=get_current(),
-            trace_id=123,
-            span_id=456,
-            trace_flags=TraceFlags(0x01),
             severity_text="WARN",
             severity_number=SeverityNumber.WARN,
             body="a log line",
@@ -223,9 +219,10 @@ class TestLogRecord(unittest.TestCase):
         self.assertEqual(record.log_record.timestamp, 1)
         self.assertEqual(record.log_record.observed_timestamp, 2)
         self.assertEqual(record.log_record.context, get_current())
-        self.assertEqual(record.log_record.trace_id, 123)
-        self.assertEqual(record.log_record.span_id, 456)
-        self.assertEqual(record.log_record.trace_flags, TraceFlags(0x01))
+        # trace_id, span_id, and trace_flags come from the context's span
+        self.assertEqual(record.log_record.trace_id, 0)
+        self.assertEqual(record.log_record.span_id, 0)
+        self.assertEqual(record.log_record.trace_flags, TraceFlags(0x00))
         self.assertEqual(record.log_record.severity_text, "WARN")
         self.assertEqual(
             record.log_record.severity_number, SeverityNumber.WARN
@@ -234,33 +231,3 @@ class TestLogRecord(unittest.TestCase):
         self.assertEqual(record.log_record.attributes, {"a": "b"})
         self.assertEqual(record.log_record.event_name, "an.event")
         self.assertEqual(record.resource, resource)
-
-
-class TestLogData(unittest.TestCase):
-    def test_init_deprecated_warning(self):
-        """Test that LogData initialization emits a LogDeprecatedInitWarning."""
-        log_record = LogRecord()
-
-        with warnings.catch_warnings(record=True) as cw:
-            warnings.simplefilter("always")
-            LogData(
-                log_record=log_record,
-                instrumentation_scope=InstrumentationScope("foo", "bar"),
-            )
-
-        # Check that at least one LogDeprecatedInitWarning was emitted
-        init_warnings = [
-            w for w in cw if isinstance(w.message, LogDeprecatedInitWarning)
-        ]
-        self.assertGreater(
-            len(init_warnings),
-            0,
-            "Expected at least one LogDeprecatedInitWarning",
-        )
-
-        # Check the message content of the LogDeprecatedInitWarning
-        warning_message = str(init_warnings[0].message)
-        self.assertIn(
-            "LogData will be removed in 1.39.0 and replaced by ReadWriteLogRecord and ReadableLogRecord",
-            warning_message,
-        )

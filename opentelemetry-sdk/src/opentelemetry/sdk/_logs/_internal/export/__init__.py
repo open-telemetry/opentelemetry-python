@@ -27,7 +27,7 @@ from opentelemetry.context import (
     set_value,
 )
 from opentelemetry.sdk._logs import (
-    LogRecord
+    LogRecord,
     LogRecordProcessor,
     ReadableLogRecord,
     ReadWriteLogRecord,

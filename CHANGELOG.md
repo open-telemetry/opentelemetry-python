@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - docs: Added sqlcommenter example
   ([#4734](https://github.com/open-telemetry/opentelemetry-python/pull/4734))
+- [BREAKING] Remove LogData and extend SDK LogRecord to have instrumentation scope
+  ([#4676](https://github.com/open-telemetry/opentelemetry-python/pull/4676))
 
 ## Version 1.38.0/0.59b0 (2025-10-16)
 
@@ -95,8 +97,6 @@ can cause a deadlock to occur over `logging._lock` in some cases ([#4636](https:
   ([#4669](https://github.com/open-telemetry/opentelemetry-python/pull/4669))
 - Set expected User-Agent in HTTP headers for grpc OTLP exporter
   ([#4658](https://github.com/open-telemetry/opentelemetry-python/pull/4658))
-- Remove LogData and extend SDK LogRecord to have instrumentation scope
-  ([#4676](https://github.com/open-telemetry/opentelemetry-python/pull/4676))
 
 ## Version 1.34.0/0.55b0 (2025-06-04)
 
