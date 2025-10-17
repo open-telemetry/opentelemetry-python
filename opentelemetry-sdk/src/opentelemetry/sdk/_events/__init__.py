@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import logging
-import warnings
 from time import time_ns
 from typing import Optional
 
@@ -21,12 +20,13 @@ from opentelemetry import trace
 from opentelemetry._events import Event
 from opentelemetry._events import EventLogger as APIEventLogger
 from opentelemetry._events import EventLoggerProvider as APIEventLoggerProvider
-from opentelemetry._logs import NoOpLogger, SeverityNumber, get_logger_provider
-from opentelemetry.sdk._logs import (
-    Logger,
-    LoggerProvider,
+from opentelemetry._logs import (
     LogRecord,
+    NoOpLogger,
+    SeverityNumber,
+    get_logger_provider,
 )
+from opentelemetry.sdk._logs import Logger, LoggerProvider
 from opentelemetry.util.types import _ExtendedAttributes
 
 _logger = logging.getLogger(__name__)
