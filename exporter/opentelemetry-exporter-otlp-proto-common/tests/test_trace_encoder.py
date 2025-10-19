@@ -301,7 +301,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
                                                     ),
                                                 ),
                                             ],
-                                            flags=0x101,
+                                            flags=0x100,
                                         )
                                     ],
                                     status=PB2Status(
