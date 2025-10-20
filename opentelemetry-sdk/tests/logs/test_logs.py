@@ -18,8 +18,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 from opentelemetry._logs import LogRecord as APILogRecord
-from opentelemetry._logs import SeverityNumber
-from opentelemetry._logs import NoOpLogger
+from opentelemetry._logs import NoOpLogger, SeverityNumber
 from opentelemetry.context import get_current
 from opentelemetry.sdk._logs import (
     Logger,
@@ -347,8 +346,7 @@ class TestLogger(unittest.TestCase):
     def test_emit_both_min_severity_and_trace_based_filtering(self):
         """Test that both min severity and trace-based filtering work together"""
         config = LoggerConfig(
-            minimum_severity=SeverityNumber.WARN,
-            trace_based=True
+            minimum_severity=SeverityNumber.WARN, trace_based=True
         )
         logger, log_record_processor_mock = self._get_logger(config)
 
@@ -409,7 +407,7 @@ class TestLogger(unittest.TestCase):
         config = LoggerConfig(
             disabled=True,
             minimum_severity=SeverityNumber.WARN,
-            trace_based=True
+            trace_based=True,
         )
         logger, _ = self._get_logger(config)
 
@@ -421,19 +419,25 @@ class TestLogger(unittest.TestCase):
         """Test LoggerConfigurator functionality including custom configurators and dynamic updates"""
 
         logger_configs = {
-            "test.database": LoggerConfig(minimum_severity=SeverityNumber.ERROR),
+            "test.database": LoggerConfig(
+                minimum_severity=SeverityNumber.ERROR
+            ),
             "test.auth": LoggerConfig(disabled=True),
-            "test.performance": LoggerConfig(trace_based=True)
+            "test.performance": LoggerConfig(trace_based=True),
         }
 
-        from opentelemetry.sdk._logs._internal import create_logger_configurator_by_name # pylint:disable=import-outside-toplevel
+        from opentelemetry.sdk._logs._internal import (
+            create_logger_configurator_by_name,  # pylint:disable=import-outside-toplevel
+        )
+
         configurator = create_logger_configurator_by_name(logger_configs)
 
         provider = LoggerProvider(logger_configurator=configurator)
 
-
         db_logger = provider.get_logger("test.database")
-        self.assertEqual(db_logger.config.minimum_severity, SeverityNumber.ERROR)
+        self.assertEqual(
+            db_logger.config.minimum_severity, SeverityNumber.ERROR
+        )
         self.assertFalse(db_logger.config.disabled)
         self.assertFalse(db_logger.config.trace_based)
 
@@ -444,26 +448,35 @@ class TestLogger(unittest.TestCase):
         self.assertTrue(perf_logger.config.trace_based)
 
         other_logger = provider.get_logger("test.other")
-        self.assertEqual(other_logger.config.minimum_severity, SeverityNumber.UNSPECIFIED)
+        self.assertEqual(
+            other_logger.config.minimum_severity, SeverityNumber.UNSPECIFIED
+        )
         self.assertFalse(other_logger.config.disabled)
         self.assertFalse(other_logger.config.trace_based)
 
     def test_logger_configurator_pattern_matching(self):
         """Test LoggerConfigurator with pattern matching"""
-        from opentelemetry.sdk._logs._internal import create_logger_configurator_with_pattern
+        from opentelemetry.sdk._logs._internal import (
+            create_logger_configurator_with_pattern,
+        )
 
         patterns = [
-            ("test.database.*", LoggerConfig(minimum_severity=SeverityNumber.ERROR)),
+            (
+                "test.database.*",
+                LoggerConfig(minimum_severity=SeverityNumber.ERROR),
+            ),
             ("test.*.debug", LoggerConfig(disabled=True)),
             ("test.*", LoggerConfig(trace_based=True)),
-            ("*", LoggerConfig(minimum_severity=SeverityNumber.WARN))
+            ("*", LoggerConfig(minimum_severity=SeverityNumber.WARN)),
         ]
 
         configurator = create_logger_configurator_with_pattern(patterns)
         provider = LoggerProvider(logger_configurator=configurator)
 
         db_logger = provider.get_logger("test.database.connection")
-        self.assertEqual(db_logger.config.minimum_severity, SeverityNumber.ERROR)
+        self.assertEqual(
+            db_logger.config.minimum_severity, SeverityNumber.ERROR
+        )
 
         debug_logger = provider.get_logger("test.module.debug")
         self.assertTrue(debug_logger.config.disabled)
@@ -472,7 +485,9 @@ class TestLogger(unittest.TestCase):
         self.assertTrue(general_logger.config.trace_based)
 
         other_logger = provider.get_logger("other.module")
-        self.assertEqual(other_logger.config.minimum_severity, SeverityNumber.WARN)
+        self.assertEqual(
+            other_logger.config.minimum_severity, SeverityNumber.WARN
+        )
 
     def test_logger_configurator_dynamic_updates(self):
         """Test that LoggerConfigurator updates apply to existing loggers"""
@@ -480,8 +495,13 @@ class TestLogger(unittest.TestCase):
             "test.module": LoggerConfig(minimum_severity=SeverityNumber.INFO)
         }
 
-        from opentelemetry.sdk._logs._internal import create_logger_configurator_by_name # pylint:disable=import-outside-toplevel
-        initial_configurator = create_logger_configurator_by_name(initial_configs)
+        from opentelemetry.sdk._logs._internal import (
+            create_logger_configurator_by_name,  # pylint:disable=import-outside-toplevel
+        )
+
+        initial_configurator = create_logger_configurator_by_name(
+            initial_configs
+        )
 
         provider = LoggerProvider(logger_configurator=initial_configurator)
 
@@ -490,9 +510,13 @@ class TestLogger(unittest.TestCase):
         self.assertFalse(logger.config.disabled)
 
         updated_configs = {
-            "test.module": LoggerConfig(minimum_severity=SeverityNumber.ERROR, disabled=True)
+            "test.module": LoggerConfig(
+                minimum_severity=SeverityNumber.ERROR, disabled=True
+            )
         }
-        updated_configurator = create_logger_configurator_by_name(updated_configs)
+        updated_configurator = create_logger_configurator_by_name(
+            updated_configs
+        )
 
         provider.set_logger_configurator(updated_configurator)
 
@@ -500,18 +524,21 @@ class TestLogger(unittest.TestCase):
         self.assertTrue(logger.config.disabled)
 
         new_logger = provider.get_logger("test.module")
-        self.assertEqual(new_logger.config.minimum_severity, SeverityNumber.ERROR)
+        self.assertEqual(
+            new_logger.config.minimum_severity, SeverityNumber.ERROR
+        )
         self.assertTrue(new_logger.config.disabled)
 
     def test_logger_configurator_returns_none(self):
         """Test LoggerConfigurator that returns None falls back to default"""
+
         def none_configurator(scope):
             return None
 
         provider = LoggerProvider(
             logger_configurator=none_configurator,
             min_severity_level=SeverityNumber.WARN,
-            trace_based=True
+            trace_based=True,
         )
 
         logger = provider.get_logger("test.module")
@@ -522,6 +549,7 @@ class TestLogger(unittest.TestCase):
 
     def test_logger_configurator_with_filtering(self):
         """Test that LoggerConfigurator configs are properly applied during filtering"""
+
         def selective_configurator(scope):
             if scope.name == "disabled.logger":
                 return LoggerConfig(disabled=True)
