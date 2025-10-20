@@ -28,14 +28,12 @@ from opentelemetry.sdk._logs import (
 from opentelemetry.sdk._logs._internal import (
     LoggerConfig,
     SynchronousMultiLogRecordProcessor,
+    create_logger_configurator_by_name,
+    create_logger_configurator_with_pattern,
 )
 from opentelemetry.sdk.environment_variables import OTEL_SDK_DISABLED
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
-from opentelemetry.sdk._logs._internal import (
-    create_logger_configurator_by_name,
-    create_logger_configurator_with_pattern,
-)
 
 
 class TestLoggerProvider(unittest.TestCase):
@@ -552,7 +550,9 @@ class TestLogger(unittest.TestCase):
     def test_logger_configurator_with_filtering(self):
         """Test that LoggerConfigurator configs are properly applied during filtering"""
 
-        provider = LoggerProvider(logger_configurator=self._selective_configurator)
+        provider = LoggerProvider(
+            logger_configurator=self._selective_configurator
+        )
 
         disabled_logger = provider.get_logger("disabled.logger")
         log_record_processor_mock = Mock()
