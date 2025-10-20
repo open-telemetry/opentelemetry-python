@@ -19,6 +19,7 @@ from unittest.mock import Mock, patch
 
 from opentelemetry._logs import LogRecord as APILogRecord
 from opentelemetry._logs import SeverityNumber
+from opentelemetry._logs import NoOpLogger
 from opentelemetry.context import get_current
 from opentelemetry.sdk._logs import (
     Logger,
@@ -26,7 +27,7 @@ from opentelemetry.sdk._logs import (
     LogRecord,
 )
 from opentelemetry.sdk._logs._internal import (
-    NoOpLogger,
+    LoggerConfig,
     SynchronousMultiLogRecordProcessor,
 )
 from opentelemetry.sdk.environment_variables import OTEL_SDK_DISABLED
@@ -74,10 +75,6 @@ class TestLoggerProvider(unittest.TestCase):
         self.assertEqual(
             logger._instrumentation_scope.attributes, {"key": "value"}
         )
-        self.assertEqual(
-            logger._min_severity_level, SeverityNumber.UNSPECIFIED
-        )
-        self.assertFalse(logger._trace_based)
 
     @patch.dict("os.environ", {OTEL_SDK_DISABLED: "true"})
     def test_get_logger_with_sdk_disabled(self):
@@ -107,7 +104,7 @@ class TestLoggerProvider(unittest.TestCase):
 
 class TestLogger(unittest.TestCase):
     @staticmethod
-    def _get_logger():
+    def _get_logger(config=None):
         log_record_processor_mock = Mock()
         logger = Logger(
             resource=Resource.create({}),
@@ -118,6 +115,7 @@ class TestLogger(unittest.TestCase):
                 "schema_url",
                 {"an": "attribute"},
             ),
+            config=config,
         )
         return logger, log_record_processor_mock
 
@@ -184,8 +182,8 @@ class TestLogger(unittest.TestCase):
 
     def test_emit_logrecord_with_min_severity_filtering(self):
         """Test that logs below minimum severity are filtered out"""
-        logger, log_record_processor_mock = self._get_logger()
-        logger._min_severity_level = SeverityNumber.DEBUG4
+        config = LoggerConfig(minimum_severity=SeverityNumber.DEBUG4)
+        logger, log_record_processor_mock = self._get_logger(config)
 
         log_record_info = LogRecord(
             observed_timestamp=0,
@@ -229,8 +227,8 @@ class TestLogger(unittest.TestCase):
 
     def test_emit_logrecord_with_trace_based_filtering(self):
         """Test that logs are filtered based on trace sampling state"""
-        logger, log_record_processor_mock = self._get_logger()
-        logger._trace_based = True
+        config = LoggerConfig(trace_based=True)
+        logger, log_record_processor_mock = self._get_logger(config)
 
         mock_span_context = Mock()
         mock_span_context.is_valid = True
@@ -295,8 +293,8 @@ class TestLogger(unittest.TestCase):
 
     def test_emit_logrecord_trace_filtering_edge_cases(self):
         """Test edge cases for trace-based filtering"""
-        logger, log_record_processor_mock = self._get_logger()
-        logger._trace_based = True
+        config = LoggerConfig(trace_based=True)
+        logger, log_record_processor_mock = self._get_logger(config)
 
         mock_span_context = Mock()
         mock_span_context.is_valid = False
@@ -348,9 +346,11 @@ class TestLogger(unittest.TestCase):
 
     def test_emit_both_min_severity_and_trace_based_filtering(self):
         """Test that both min severity and trace-based filtering work together"""
-        logger, log_record_processor_mock = self._get_logger()
-        logger._min_severity_level = SeverityNumber.WARN
-        logger._trace_based = True
+        config = LoggerConfig(
+            minimum_severity=SeverityNumber.WARN,
+            trace_based=True
+        )
+        logger, log_record_processor_mock = self._get_logger(config)
 
         mock_span_context = Mock()
         mock_span_context.is_valid = True
@@ -388,3 +388,205 @@ class TestLogger(unittest.TestCase):
 
             logger.emit(log_record_error)
             log_record_processor_mock.on_emit.assert_called_once()
+
+    def test_emit_logrecord_with_disabled_logger(self):
+        """Test that disabled loggers don't emit any logs"""
+        config = LoggerConfig(disabled=True)
+        logger, log_record_processor_mock = self._get_logger(config)
+
+        log_record = LogRecord(
+            observed_timestamp=0,
+            body="this should be dropped",
+            severity_number=SeverityNumber.ERROR,
+            severity_text="ERROR",
+        )
+
+        logger.emit(log_record)
+        log_record_processor_mock.on_emit.assert_not_called()
+
+    def test_logger_config_property(self):
+        """Test that logger config property works correctly"""
+        config = LoggerConfig(
+            disabled=True,
+            minimum_severity=SeverityNumber.WARN,
+            trace_based=True
+        )
+        logger, _ = self._get_logger(config)
+
+        self.assertEqual(logger.config.disabled, True)
+        self.assertEqual(logger.config.minimum_severity, SeverityNumber.WARN)
+        self.assertEqual(logger.config.trace_based, True)
+
+    def test_logger_configurator_behavior(self):
+        """Test LoggerConfigurator functionality including custom configurators and dynamic updates"""
+
+        logger_configs = {
+            "test.database": LoggerConfig(minimum_severity=SeverityNumber.ERROR),
+            "test.auth": LoggerConfig(disabled=True),
+            "test.performance": LoggerConfig(trace_based=True)
+        }
+
+        from opentelemetry.sdk._logs._internal import create_logger_configurator_by_name # pylint:disable=import-outside-toplevel
+        configurator = create_logger_configurator_by_name(logger_configs)
+
+        provider = LoggerProvider(logger_configurator=configurator)
+
+
+        db_logger = provider.get_logger("test.database")
+        self.assertEqual(db_logger.config.minimum_severity, SeverityNumber.ERROR)
+        self.assertFalse(db_logger.config.disabled)
+        self.assertFalse(db_logger.config.trace_based)
+
+        auth_logger = provider.get_logger("test.auth")
+        self.assertTrue(auth_logger.config.disabled)
+
+        perf_logger = provider.get_logger("test.performance")
+        self.assertTrue(perf_logger.config.trace_based)
+
+        other_logger = provider.get_logger("test.other")
+        self.assertEqual(other_logger.config.minimum_severity, SeverityNumber.UNSPECIFIED)
+        self.assertFalse(other_logger.config.disabled)
+        self.assertFalse(other_logger.config.trace_based)
+
+    def test_logger_configurator_pattern_matching(self):
+        """Test LoggerConfigurator with pattern matching"""
+        from opentelemetry.sdk._logs._internal import create_logger_configurator_with_pattern
+
+        patterns = [
+            ("test.database.*", LoggerConfig(minimum_severity=SeverityNumber.ERROR)),
+            ("test.*.debug", LoggerConfig(disabled=True)),
+            ("test.*", LoggerConfig(trace_based=True)),
+            ("*", LoggerConfig(minimum_severity=SeverityNumber.WARN))
+        ]
+
+        configurator = create_logger_configurator_with_pattern(patterns)
+        provider = LoggerProvider(logger_configurator=configurator)
+
+        db_logger = provider.get_logger("test.database.connection")
+        self.assertEqual(db_logger.config.minimum_severity, SeverityNumber.ERROR)
+
+        debug_logger = provider.get_logger("test.module.debug")
+        self.assertTrue(debug_logger.config.disabled)
+
+        general_logger = provider.get_logger("test.module")
+        self.assertTrue(general_logger.config.trace_based)
+
+        other_logger = provider.get_logger("other.module")
+        self.assertEqual(other_logger.config.minimum_severity, SeverityNumber.WARN)
+
+    def test_logger_configurator_dynamic_updates(self):
+        """Test that LoggerConfigurator updates apply to existing loggers"""
+        initial_configs = {
+            "test.module": LoggerConfig(minimum_severity=SeverityNumber.INFO)
+        }
+
+        from opentelemetry.sdk._logs._internal import create_logger_configurator_by_name # pylint:disable=import-outside-toplevel
+        initial_configurator = create_logger_configurator_by_name(initial_configs)
+
+        provider = LoggerProvider(logger_configurator=initial_configurator)
+
+        logger = provider.get_logger("test.module")
+        self.assertEqual(logger.config.minimum_severity, SeverityNumber.INFO)
+        self.assertFalse(logger.config.disabled)
+
+        updated_configs = {
+            "test.module": LoggerConfig(minimum_severity=SeverityNumber.ERROR, disabled=True)
+        }
+        updated_configurator = create_logger_configurator_by_name(updated_configs)
+
+        provider.set_logger_configurator(updated_configurator)
+
+        self.assertEqual(logger.config.minimum_severity, SeverityNumber.ERROR)
+        self.assertTrue(logger.config.disabled)
+
+        new_logger = provider.get_logger("test.module")
+        self.assertEqual(new_logger.config.minimum_severity, SeverityNumber.ERROR)
+        self.assertTrue(new_logger.config.disabled)
+
+    def test_logger_configurator_returns_none(self):
+        """Test LoggerConfigurator that returns None falls back to default"""
+        def none_configurator(scope):
+            return None
+
+        provider = LoggerProvider(
+            logger_configurator=none_configurator,
+            min_severity_level=SeverityNumber.WARN,
+            trace_based=True
+        )
+
+        logger = provider.get_logger("test.module")
+
+        self.assertEqual(logger.config.minimum_severity, SeverityNumber.WARN)
+        self.assertTrue(logger.config.trace_based)
+        self.assertFalse(logger.config.disabled)
+
+    def test_logger_configurator_with_filtering(self):
+        """Test that LoggerConfigurator configs are properly applied during filtering"""
+        def selective_configurator(scope):
+            if scope.name == "disabled.logger":
+                return LoggerConfig(disabled=True)
+            if scope.name == "error.logger":
+                return LoggerConfig(minimum_severity=SeverityNumber.ERROR)
+            if scope.name == "trace.logger":
+                return LoggerConfig(trace_based=True)
+            return LoggerConfig()
+
+        provider = LoggerProvider(logger_configurator=selective_configurator)
+
+        disabled_logger = provider.get_logger("disabled.logger")
+        log_record_processor_mock = Mock()
+        disabled_logger._multi_log_record_processor = log_record_processor_mock
+
+        log_record = LogRecord(
+            observed_timestamp=0,
+            body="should not emit",
+            severity_number=SeverityNumber.INFO,
+        )
+        disabled_logger.emit(log_record)
+        log_record_processor_mock.on_emit.assert_not_called()
+
+        error_logger = provider.get_logger("error.logger")
+        log_record_processor_mock = Mock()
+        error_logger._multi_log_record_processor = log_record_processor_mock
+
+        info_record = LogRecord(
+            observed_timestamp=0,
+            body="info message",
+            severity_number=SeverityNumber.INFO,
+        )
+        error_logger.emit(info_record)
+        log_record_processor_mock.on_emit.assert_not_called()
+
+        error_record = LogRecord(
+            observed_timestamp=0,
+            body="error message",
+            severity_number=SeverityNumber.ERROR,
+        )
+        error_logger.emit(error_record)
+        log_record_processor_mock.on_emit.assert_called_once()
+
+        trace_logger = provider.get_logger("trace.logger")
+        log_record_processor_mock = Mock()
+        trace_logger._multi_log_record_processor = log_record_processor_mock
+
+        mock_span_context = Mock()
+        mock_span_context.is_valid = True
+        mock_span_context.trace_flags.sampled = False
+
+        mock_span = Mock()
+        mock_span.get_span_context.return_value = mock_span_context
+
+        mock_context = Mock()
+
+        with patch(
+            "opentelemetry.sdk._logs._internal.get_current_span",
+            return_value=mock_span,
+        ):
+            trace_record = LogRecord(
+                observed_timestamp=0,
+                body="unsampled trace message",
+                severity_number=SeverityNumber.INFO,
+                context=mock_context,
+            )
+            trace_logger.emit(trace_record)
+            log_record_processor_mock.on_emit.assert_not_called()

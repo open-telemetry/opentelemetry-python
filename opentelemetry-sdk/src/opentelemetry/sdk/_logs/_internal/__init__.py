@@ -22,6 +22,7 @@ import logging
 import threading
 import traceback
 import warnings
+import fnmatch
 from os import environ
 from threading import Lock
 from time import time_ns
@@ -61,6 +62,8 @@ from opentelemetry.util.types import AnyValue, _ExtendedAttributes
 
 _logger = logging.getLogger(__name__)
 
+LoggerConfigurator = Callable[[InstrumentationScope], "LoggerConfig | None"]
+
 _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
 _ENV_VALUE_UNSET = ""
 
@@ -94,6 +97,77 @@ class LogDeprecatedInitWarning(UserWarning):
 
 
 warnings.simplefilter("once", LogDeprecatedInitWarning)
+
+
+class LoggerConfig:
+    def __init__(
+        self,
+        disabled: bool = False,
+        minimum_severity: SeverityNumber = SeverityNumber.UNSPECIFIED,
+        trace_based: bool = False,
+    ):
+        """Initialize LoggerConfig with specified parameters.
+        
+        Args:
+            disabled: A boolean indication of whether the logger is enabled.
+                If not explicitly set, defaults to False (i.e. Loggers are enabled by default).
+                If True, the logger behaves equivalently to a No-op Logger.
+            minimum_severity: A SeverityNumber indicating the minimum severity level
+                for log records to be processed. If not explicitly set, defaults to UNSPECIFIED (0).
+                If a log record's SeverityNumber is specified and is less than the configured 
+                minimum_severity, the log record is dropped by the Logger.
+            trace_based: A boolean indication of whether the logger should only 
+                process log records associated with sampled traces. If not explicitly set, 
+                defaults to False. If True, log records associated with unsampled traces 
+                are dropped by the Logger.
+        """
+        self.disabled = disabled
+        self.minimum_severity = minimum_severity
+        self.trace_based = trace_based
+
+    def __repr__(self):
+        return (
+            f"LoggerConfig(disabled={self.disabled}, "
+            f"minimum_severity={self.minimum_severity}, "
+            f"trace_based={self.trace_based})"
+        )
+
+
+def create_logger_configurator_by_name(
+    logger_configs: dict[str, LoggerConfig]
+) -> LoggerConfigurator:
+    """Create a LoggerConfigurator that selects configuration based on logger name.
+
+    Args:
+        logger_configs: A dictionary mapping logger names to LoggerConfig instances.
+                       Loggers not found in this mapping will use the default config.
+    
+    Returns:
+        A LoggerConfigurator function that can be used with LoggerProvider.
+    """
+    def configurator(scope: InstrumentationScope) -> LoggerConfig | None:
+        return logger_configs.get(scope.name)
+    return configurator
+
+
+def create_logger_configurator_with_pattern(
+    patterns: list[tuple[str, LoggerConfig]]
+) -> LoggerConfigurator:
+    """Create a LoggerConfigurator that matches logger names using patterns.
+    
+    Args:
+        patterns: A list of (pattern, config) tuples. Patterns are matched in order,
+                 and the first match is used. Use '*' as a wildcard.
+    
+    Returns:
+        A LoggerConfigurator function that can be used with LoggerProvider.
+    """
+    def configurator(scope: InstrumentationScope) -> LoggerConfig | None:
+        for pattern, config in patterns:
+            if fnmatch.fnmatch(scope.name, pattern):
+                return config
+        return None
+    return configurator
 
 
 class LogLimits:
@@ -685,9 +759,15 @@ class Logger(APILogger):
             ConcurrentMultiLogRecordProcessor,
         ],
         instrumentation_scope: InstrumentationScope,
+        config: LoggerConfig | None = None,
         min_severity_level: SeverityNumber = SeverityNumber.UNSPECIFIED,
         trace_based: bool = False,
     ):
+        if config is not None:
+            self._config = config
+        else:
+            self._config = LoggerConfig()
+
         super().__init__(
             instrumentation_scope.name,
             instrumentation_scope.version,
@@ -703,6 +783,23 @@ class Logger(APILogger):
     @property
     def resource(self):
         return self._resource
+
+    @property
+    def config(self):
+        return self._config
+
+    @property
+    def instrumentation_scope(self):
+        """Get the instrumentation scope for this logger."""
+        return self._instrumentation_scope
+
+    def update_config(self, config: LoggerConfig) -> None:
+        """Update the logger's configuration.
+        
+        Args:
+            config: The new LoggerConfig to use.
+        """
+        self._config = config
 
     @overload
     def emit(
@@ -766,7 +863,16 @@ class Logger(APILogger):
         if should_drop_logs_for_unsampled_traces(record, self._trace_based):
             return
 
-            log_data = LogData(record, self._instrumentation_scope)
+        if self._config.disabled:
+            return
+
+        if is_less_than_min_severity(record, self._config.minimum_severity):
+            return
+
+        if should_drop_logs_for_unsampled_traces(record, self._config.trace_based):
+            return
+
+        log_data = LogData(record, self._instrumentation_scope)
 
         self._multi_log_record_processor.on_emit(log_data)
 
@@ -781,6 +887,7 @@ class LoggerProvider(APILoggerProvider):
         | None = None,
         min_severity_level: SeverityNumber = SeverityNumber.UNSPECIFIED,
         trace_based: bool = False,
+        logger_configurator: LoggerConfigurator | None = None,
     ):
         if resource is None:
             self._resource = Resource.create({})
@@ -799,6 +906,17 @@ class LoggerProvider(APILoggerProvider):
         self._min_severity_level = min_severity_level
         self._trace_based = trace_based
 
+        if logger_configurator is not None:
+            self._logger_configurator = logger_configurator
+        else:
+            def default_configurator(scope: InstrumentationScope) -> LoggerConfig:
+                return LoggerConfig(
+                    disabled=self._disabled,
+                    minimum_severity=self._min_severity_level,
+                    trace_based=self._trace_based,
+                )
+            self._logger_configurator = default_configurator
+
     @property
     def resource(self):
         return self._resource
@@ -810,17 +928,24 @@ class LoggerProvider(APILoggerProvider):
         schema_url: str | None = None,
         attributes: _ExtendedAttributes | None = None,
     ) -> Logger:
+        instrumentation_scope = InstrumentationScope(
+            name,
+            version,
+            schema_url,
+            attributes,
+        )
+        config = self._logger_configurator(instrumentation_scope)
+        if config is None:
+            config = LoggerConfig(
+                disabled=self._disabled,
+                minimum_severity=self._min_severity_level,
+                trace_based=self._trace_based,
+            )
         return Logger(
             self._resource,
             self._multi_log_record_processor,
-            InstrumentationScope(
-                name,
-                version,
-                schema_url,
-                attributes,
-            ),
-            self._min_severity_level,
-            self._trace_based,
+            instrumentation_scope,
+            config=config,
         )
 
     def _get_logger_cached(
@@ -867,6 +992,21 @@ class LoggerProvider(APILoggerProvider):
         self._multi_log_record_processor.add_log_record_processor(
             log_record_processor
         )
+
+    def set_logger_configurator(self, configurator: LoggerConfigurator) -> None:
+        """Update the logger configurator and apply the new configuration to all existing loggers.
+        """
+        with self._logger_cache_lock:
+            self._logger_configurator = configurator
+            for logger in self._logger_cache.values():
+                new_config = configurator(logger.instrumentation_scope)
+                if new_config is None:
+                    new_config = LoggerConfig(
+                        disabled=self._disabled,
+                        minimum_severity=self._min_severity_level,
+                        trace_based=self._trace_based,
+                    )
+                logger.update_config(new_config)
 
     def shutdown(self):
         """Shuts down the log processors."""
