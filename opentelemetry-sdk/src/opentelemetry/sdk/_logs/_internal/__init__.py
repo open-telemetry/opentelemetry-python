@@ -17,12 +17,12 @@ import abc
 import atexit
 import base64
 import concurrent.futures
+import fnmatch
 import json
 import logging
 import threading
 import traceback
 import warnings
-import fnmatch
 from os import environ
 from threading import Lock
 from time import time_ns
@@ -107,18 +107,18 @@ class LoggerConfig:
         trace_based: bool = False,
     ):
         """Initialize LoggerConfig with specified parameters.
-        
+
         Args:
             disabled: A boolean indication of whether the logger is enabled.
                 If not explicitly set, defaults to False (i.e. Loggers are enabled by default).
                 If True, the logger behaves equivalently to a No-op Logger.
             minimum_severity: A SeverityNumber indicating the minimum severity level
                 for log records to be processed. If not explicitly set, defaults to UNSPECIFIED (0).
-                If a log record's SeverityNumber is specified and is less than the configured 
+                If a log record's SeverityNumber is specified and is less than the configured
                 minimum_severity, the log record is dropped by the Logger.
-            trace_based: A boolean indication of whether the logger should only 
-                process log records associated with sampled traces. If not explicitly set, 
-                defaults to False. If True, log records associated with unsampled traces 
+            trace_based: A boolean indication of whether the logger should only
+                process log records associated with sampled traces. If not explicitly set,
+                defaults to False. If True, log records associated with unsampled traces
                 are dropped by the Logger.
         """
         self.disabled = disabled
@@ -134,39 +134,43 @@ class LoggerConfig:
 
 
 def create_logger_configurator_by_name(
-    logger_configs: dict[str, LoggerConfig]
+    logger_configs: dict[str, LoggerConfig],
 ) -> LoggerConfigurator:
     """Create a LoggerConfigurator that selects configuration based on logger name.
 
     Args:
         logger_configs: A dictionary mapping logger names to LoggerConfig instances.
                        Loggers not found in this mapping will use the default config.
-    
+
     Returns:
         A LoggerConfigurator function that can be used with LoggerProvider.
     """
+
     def configurator(scope: InstrumentationScope) -> LoggerConfig | None:
         return logger_configs.get(scope.name)
+
     return configurator
 
 
 def create_logger_configurator_with_pattern(
-    patterns: list[tuple[str, LoggerConfig]]
+    patterns: list[tuple[str, LoggerConfig]],
 ) -> LoggerConfigurator:
     """Create a LoggerConfigurator that matches logger names using patterns.
-    
+
     Args:
         patterns: A list of (pattern, config) tuples. Patterns are matched in order,
                  and the first match is used. Use '*' as a wildcard.
-    
+
     Returns:
         A LoggerConfigurator function that can be used with LoggerProvider.
     """
+
     def configurator(scope: InstrumentationScope) -> LoggerConfig | None:
         for pattern, config in patterns:
             if fnmatch.fnmatch(scope.name, pattern):
                 return config
         return None
+
     return configurator
 
 
@@ -795,7 +799,7 @@ class Logger(APILogger):
 
     def update_config(self, config: LoggerConfig) -> None:
         """Update the logger's configuration.
-        
+
         Args:
             config: The new LoggerConfig to use.
         """
@@ -865,7 +869,9 @@ class Logger(APILogger):
         if is_less_than_min_severity(record, self._config.minimum_severity):
             return
 
-        if should_drop_logs_for_unsampled_traces(record, self._config.trace_based):
+        if should_drop_logs_for_unsampled_traces(
+            record, self._config.trace_based
+        ):
             return
 
         log_data = LogData(record, self._instrumentation_scope)
@@ -905,12 +911,16 @@ class LoggerProvider(APILoggerProvider):
         if logger_configurator is not None:
             self._logger_configurator = logger_configurator
         else:
-            def default_configurator(scope: InstrumentationScope) -> LoggerConfig:
+
+            def default_configurator(
+                scope: InstrumentationScope,
+            ) -> LoggerConfig:
                 return LoggerConfig(
                     disabled=self._disabled,
                     minimum_severity=self._min_severity_level,
                     trace_based=self._trace_based,
                 )
+
             self._logger_configurator = default_configurator
 
     @property
@@ -989,9 +999,10 @@ class LoggerProvider(APILoggerProvider):
             log_record_processor
         )
 
-    def set_logger_configurator(self, configurator: LoggerConfigurator) -> None:
-        """Update the logger configurator and apply the new configuration to all existing loggers.
-        """
+    def set_logger_configurator(
+        self, configurator: LoggerConfigurator
+    ) -> None:
+        """Update the logger configurator and apply the new configuration to all existing loggers."""
         with self._logger_cache_lock:
             self._logger_configurator = configurator
             for logger in self._logger_cache.values():
