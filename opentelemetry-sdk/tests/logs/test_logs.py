@@ -32,6 +32,10 @@ from opentelemetry.sdk._logs._internal import (
 from opentelemetry.sdk.environment_variables import OTEL_SDK_DISABLED
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
+from opentelemetry.sdk._logs._internal import (
+    create_logger_configurator_by_name,
+    create_logger_configurator_with_pattern,
+)
 
 
 class TestLoggerProvider(unittest.TestCase):
@@ -426,10 +430,6 @@ class TestLogger(unittest.TestCase):
             "test.performance": LoggerConfig(trace_based=True),
         }
 
-        from opentelemetry.sdk._logs._internal import (
-            create_logger_configurator_by_name,  # pylint:disable=import-outside-toplevel
-        )
-
         configurator = create_logger_configurator_by_name(logger_configs)
 
         provider = LoggerProvider(logger_configurator=configurator)
@@ -456,10 +456,6 @@ class TestLogger(unittest.TestCase):
 
     def test_logger_configurator_pattern_matching(self):
         """Test LoggerConfigurator with pattern matching"""
-        from opentelemetry.sdk._logs._internal import (
-            create_logger_configurator_with_pattern,
-        )
-
         patterns = [
             (
                 "test.database.*",
@@ -494,10 +490,6 @@ class TestLogger(unittest.TestCase):
         initial_configs = {
             "test.module": LoggerConfig(minimum_severity=SeverityNumber.INFO)
         }
-
-        from opentelemetry.sdk._logs._internal import (
-            create_logger_configurator_by_name,  # pylint:disable=import-outside-toplevel
-        )
 
         initial_configurator = create_logger_configurator_by_name(
             initial_configs
@@ -547,19 +539,20 @@ class TestLogger(unittest.TestCase):
         self.assertTrue(logger.config.trace_based)
         self.assertFalse(logger.config.disabled)
 
+    @staticmethod
+    def _selective_configurator(scope):
+        if scope.name == "disabled.logger":
+            return LoggerConfig(disabled=True)
+        if scope.name == "error.logger":
+            return LoggerConfig(minimum_severity=SeverityNumber.ERROR)
+        if scope.name == "trace.logger":
+            return LoggerConfig(trace_based=True)
+        return LoggerConfig()
+
     def test_logger_configurator_with_filtering(self):
         """Test that LoggerConfigurator configs are properly applied during filtering"""
 
-        def selective_configurator(scope):
-            if scope.name == "disabled.logger":
-                return LoggerConfig(disabled=True)
-            if scope.name == "error.logger":
-                return LoggerConfig(minimum_severity=SeverityNumber.ERROR)
-            if scope.name == "trace.logger":
-                return LoggerConfig(trace_based=True)
-            return LoggerConfig()
-
-        provider = LoggerProvider(logger_configurator=selective_configurator)
+        provider = LoggerProvider(logger_configurator=self._selective_configurator)
 
         disabled_logger = provider.get_logger("disabled.logger")
         log_record_processor_mock = Mock()
