@@ -858,10 +858,6 @@ class Logger(APILogger):
                 record = LogRecord._from_api_log_record(
                     record=record, resource=self._resource
                 )
-        if is_less_than_min_severity(record, self._min_severity_level):
-            return
-        if should_drop_logs_for_unsampled_traces(record, self._trace_based):
-            return
 
         if self._config.disabled:
             return
