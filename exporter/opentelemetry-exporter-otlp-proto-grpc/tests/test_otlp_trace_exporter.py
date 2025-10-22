@@ -466,7 +466,7 @@ class TestOTLPSpanExporter(TestCase):
                                                     ),
                                                 ),
                                             ],
-                                            flags=0x300,
+                                            flags=0x300,  # updated below in more focused tests
                                         )
                                     ],
                                     flags=0x300,
