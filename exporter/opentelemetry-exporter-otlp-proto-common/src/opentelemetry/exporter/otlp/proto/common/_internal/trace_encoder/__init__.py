@@ -111,7 +111,9 @@ def _span_flags(
     # Lower 8 bits: W3C TraceFlags
     # Handle TraceFlags objects, regular ints, and test mocks
     try:
-        flags = int(child_trace_flags) & PB2SpanFlags.SPAN_FLAGS_TRACE_FLAGS_MASK
+        flags = (
+            int(child_trace_flags) & PB2SpanFlags.SPAN_FLAGS_TRACE_FLAGS_MASK
+        )
     except (TypeError, ValueError):
         # If conversion fails (e.g., Mock object), default to 0
         flags = 0
@@ -170,14 +172,17 @@ def _encode_links(links: Sequence[Link]) -> Sequence[PB2SPan.Link]:
             # For links, encode trace_flags and is_remote from the link's context
             # Handle TraceFlags objects, regular ints, and test mocks
             try:
-                flags = int(link.context.trace_flags) & PB2SpanFlags.SPAN_FLAGS_TRACE_FLAGS_MASK
+                flags = (
+                    int(link.context.trace_flags)
+                    & PB2SpanFlags.SPAN_FLAGS_TRACE_FLAGS_MASK
+                )
             except (TypeError, ValueError):
                 # If conversion fails (e.g., Mock object), default to 0
                 flags = 0
             flags |= PB2SpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK
             if link.context.is_remote:
                 flags |= PB2SpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK
-            
+
             encoded_link = PB2SPan.Link(
                 trace_id=_encode_trace_id(link.context.trace_id),
                 span_id=_encode_span_id(link.context.span_id),
