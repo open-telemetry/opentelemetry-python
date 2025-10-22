@@ -6,6 +6,8 @@ OpenTelemetry Logs SDK
    :mod:`opentelemetry.sdk._logs` are subject to change in minor/patch releases and make no
    backward compatibility guarantees at this time.
 
+The source files of these examples are available :scm_web:`here <docs/examples/logs/>`.
+
 Start the Collector locally to see data being exported. Write the following file:
 
 .. code-block:: yaml
@@ -21,18 +23,13 @@ Start the Collector locally to see data being exported. Write the following file
       debug:
         verbosity: detailed
 
-    processors:
-      batch:
-
     service:
         pipelines:
             logs:
                 receivers: [otlp]
-                processors: [batch]
                 exporters: [debug]
             traces:
                 receivers: [otlp]
-                processors: [batch]
                 exporters: [debug]
 
 Then start the Docker container:

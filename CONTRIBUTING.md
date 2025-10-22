@@ -48,6 +48,12 @@ To install `tox`, run:
 pip install tox
 ```
 
+You can also run tox with `uv` support. By default [tox.ini](./tox.ini) will automatically create a provisioned tox environment with `tox-uv`, but you can install it at host level:
+
+```sh
+pip install tox-uv
+```
+
 You can run `tox` with the following arguments:
 
 - `tox` to run all existing tox commands, including unit tests for all packages
@@ -66,7 +72,7 @@ You can run `tox` with the following arguments:
 - `tox -e tracecontext` to run integration tests for tracecontext.
 - `tox -e precommit` to run all `pre-commit` actions
 
-`ruff check` and `ruff format` are executed when `tox -e ruff` is run. We strongly recommend you to configure [pre-commit](https://pre-commit.com/) locally to run `ruff` automatically before each commit by installing it as git hooks. You just need to [install pre-commit](https://pre-commit.com/#install) in your environment:
+`ruff check` and `ruff format` are executed when `tox -e ruff` is run. We strongly recommend you to configure [pre-commit](https://pre-commit.com/) locally to run `ruff` and `rstcheck` automatically before each commit by installing it as git hooks. You just need to [install pre-commit](https://pre-commit.com/#install) in your environment:
 
 ```console
 pip install pre-commit -c dev-requirements.txt
@@ -187,7 +193,7 @@ git remote add fork https://github.com/YOUR_GITHUB_USERNAME/opentelemetry-python
 Make sure you have all supported versions of Python installed, install tox only for the first time:
 
 ```sh
-pip install tox
+pip install tox tox-uv
 ```
 
 Run tests in the root of the repository (this will run all tox environments and may take some time):

@@ -49,7 +49,7 @@ def create_vcs_change_count(meter: Meter) -> UpDownCounter:
     """The number of changes (pull requests/merge requests/changelists) in a repository, categorized by their state (e.g. open or merged)"""
     return meter.create_up_down_counter(
         name=VCS_CHANGE_COUNT,
-        description="The number of changes (pull requests/merge requests/changelists) in a repository, categorized by their state (e.g. open or merged)",
+        description="The number of changes (pull requests/merge requests/changelists) in a repository, categorized by their state (e.g. open or merged).",
         unit="{change}",
     )
 
@@ -129,7 +129,7 @@ def create_vcs_contributor_count(
     return meter.create_observable_gauge(
         name=VCS_CONTRIBUTOR_COUNT,
         callbacks=callbacks,
-        description="The number of unique contributors to a repository",
+        description="The number of unique contributors to a repository.",
         unit="{contributor}",
     )
 
@@ -191,7 +191,7 @@ def create_vcs_ref_revisions_delta(
     return meter.create_observable_gauge(
         name=VCS_REF_REVISIONS_DELTA,
         callbacks=callbacks,
-        description="The number of revisions (commits) a ref (branch) is ahead/behind the branch from the `vcs.ref.base.name` attribute",
+        description="The number of revisions (commits) a ref (branch) is ahead/behind the branch from the `vcs.ref.base.name` attribute.",
         unit="{revision}",
     )
 
@@ -211,7 +211,7 @@ def create_vcs_ref_time(
     return meter.create_observable_gauge(
         name=VCS_REF_TIME,
         callbacks=callbacks,
-        description="Time a ref (branch) created from the default branch (trunk) has existed. The `ref.type` attribute will always be `branch`",
+        description="Time a ref (branch) created from the default branch (trunk) has existed. The `ref.type` attribute will always be `branch`.",
         unit="s",
     )
 

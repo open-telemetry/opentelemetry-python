@@ -394,6 +394,152 @@ The endpoint MUST be a valid URL host, and MAY contain a scheme (http or https),
 A scheme of https indicates a secure connection and takes precedence over this configuration setting.
 """
 
+_OTEL_PYTHON_EXPORTER_OTLP_GRPC_LOGS_CREDENTIAL_PROVIDER = (
+    "OTEL_PYTHON_EXPORTER_OTLP_GRPC_LOGS_CREDENTIAL_PROVIDER"
+)
+"""
+.. envvar:: OTEL_PYTHON_EXPORTER_OTLP_GRPC_LOGS_CREDENTIAL_PROVIDER
+
+The :envvar:`OTEL_PYTHON_EXPORTER_OTLP_GRPC_LOGS_CREDENTIAL_PROVIDER` provides `grpc.ChannelCredentials` to the grpc OTLP Log exporter,
+Entry point providers should implement the following:
+
+.. code-block:: python
+
+    import grpc
+
+    # Add a reference to this function under the `opentelemetry_otlp_credential_provider` entry point.
+    def channel_credential_provider() -> grpc.ChannelCredentials:
+
+Note: This environment variable is experimental and subject to change.
+"""
+
+_OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER = (
+    "OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER"
+)
+"""
+.. envvar:: OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER
+
+The :envvar:`OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER` provides `requests.Session` for the HTTP OTLP Log exporter.
+Entry point providers should implement the following:
+
+.. code-block:: python
+
+    import requests
+
+    # Add a reference to this function under the `opentelemetry_otlp_credential_provider` entry point.
+    def request_session_provder() -> requests.Session:
+
+Note: This environment variable is experimental and subject to change.
+"""
+_OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER = (
+    "OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER"
+)
+"""
+.. envvar:: OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER
+
+The :envvar:`OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER` provides `requests.Session` for all HTTP OTLP exporters.
+Entry point providers should implement the following:
+
+.. code-block:: python
+
+    import requests
+
+    # Add a reference to this function under the `opentelemetry_otlp_credential_provider` entry point.
+    def request_session_provder() -> requests.Session:
+
+Note: This environment variable is experimental and subject to change.
+"""
+_OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER = (
+    "OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER"
+)
+"""
+.. envvar:: OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER
+
+The :envvar:`OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER` provides `grpc.ChannelCredentials` for all GRPC OTLP exporters.
+Entry point providers should implement the following:
+
+.. code-block:: python
+
+    import grpc
+
+    # Add a reference to this function under the `opentelemetry_otlp_credential_provider` entry point.
+    def channel_credential_provider() -> grpc.ChannelCredentials:
+
+Note: This environment variable is experimental and subject to change.
+"""
+_OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER = (
+    "OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER"
+)
+"""
+.. envvar:: OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER
+
+The :envvar:`OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER` provides `requests.Session` to the HTTP OTLP Span exporter.
+Entry point providers should implement the following:
+
+.. code-block:: python
+
+    import requests
+
+    # Add a reference to this function under the `opentelemetry_otlp_credential_provider` entry point.
+    def request_session_provder() -> requests.Session:
+
+Note: This environment variable is experimental and subject to change.
+"""
+_OTEL_PYTHON_EXPORTER_OTLP_GRPC_TRACES_CREDENTIAL_PROVIDER = (
+    "OTEL_PYTHON_EXPORTER_OTLP_GRPC_TRACES_CREDENTIAL_PROVIDER"
+)
+"""
+.. envvar:: OTEL_PYTHON_EXPORTER_OTLP_GRPC_TRACES_CREDENTIAL_PROVIDER
+
+The :envvar:`OTEL_PYTHON_EXPORTER_OTLP_GRPC_TRACES_CREDENTIAL_PROVIDER` provides `grpc.ChannelCredentials` to the GRPC OTLP Span exporter.
+Entry point providers should implement the following:
+
+.. code-block:: python
+
+    import grpc
+
+    # Add a reference to this function under the `opentelemetry_otlp_credential_provider` entry point.
+    def channel_credential_provider() -> grpc.ChannelCredentials:
+
+Note: This environment variable is experimental and subject to change.
+"""
+_OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER = (
+    "OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER"
+)
+"""
+.. envvar:: OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER
+
+The :envvar:`OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER` provides `requests.Session` to the HTTP OTLP Metric exporter.
+Entry point providers should implement the following:
+
+.. code-block:: python
+
+    import requests
+
+    # Add a reference to this function under the `opentelemetry_otlp_credential_provider` entry point.
+    def request_session_provder() -> requests.Session:
+
+Note: This environment variable is experimental and subject to change.
+"""
+_OTEL_PYTHON_EXPORTER_OTLP_GRPC_METRICS_CREDENTIAL_PROVIDER = (
+    "OTEL_PYTHON_EXPORTER_OTLP_GRPC_METRICS_CREDENTIAL_PROVIDER"
+)
+"""
+.. envvar:: OTEL_PYTHON_EXPORTER_OTLP_GRPC_METRICS_CREDENTIAL_PROVIDER
+
+The :envvar:`OTEL_PYTHON_EXPORTER_OTLP_GRPC_METRICS_CREDENTIAL_PROVIDER` provides `grpc.ChannelCredentials` to the GRPC OTLP Metric exporter.
+Entry point providers should implement the following:
+
+.. code-block:: python
+
+    import grpc
+
+    # Add a reference to this function under the `opentelemetry_otlp_credential_provider` entry point.
+    def channel_credential_provider() -> grpc.ChannelCredentials:
+
+Note: This environment variable is experimental and subject to change.
+"""
+
 OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE = "OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE

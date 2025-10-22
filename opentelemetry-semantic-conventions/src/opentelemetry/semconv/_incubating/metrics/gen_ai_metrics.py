@@ -29,24 +29,24 @@ def create_gen_ai_client_operation_duration(meter: Meter) -> Histogram:
     """GenAI operation duration"""
     return meter.create_histogram(
         name=GEN_AI_CLIENT_OPERATION_DURATION,
-        description="GenAI operation duration",
+        description="GenAI operation duration.",
         unit="s",
     )
 
 
 GEN_AI_CLIENT_TOKEN_USAGE: Final = "gen_ai.client.token.usage"
 """
-Measures number of input and output tokens used
+Number of input and output tokens used
 Instrument: histogram
 Unit: {token}
 """
 
 
 def create_gen_ai_client_token_usage(meter: Meter) -> Histogram:
-    """Measures number of input and output tokens used"""
+    """Number of input and output tokens used"""
     return meter.create_histogram(
         name=GEN_AI_CLIENT_TOKEN_USAGE,
-        description="Measures number of input and output tokens used",
+        description="Number of input and output tokens used.",
         unit="{token}",
     )
 
@@ -63,7 +63,7 @@ def create_gen_ai_server_request_duration(meter: Meter) -> Histogram:
     """Generative AI server request duration such as time-to-last byte or last output token"""
     return meter.create_histogram(
         name=GEN_AI_SERVER_REQUEST_DURATION,
-        description="Generative AI server request duration such as time-to-last byte or last output token",
+        description="Generative AI server request duration such as time-to-last byte or last output token.",
         unit="s",
     )
 
@@ -82,7 +82,7 @@ def create_gen_ai_server_time_per_output_token(meter: Meter) -> Histogram:
     """Time per output token generated after the first token for successful responses"""
     return meter.create_histogram(
         name=GEN_AI_SERVER_TIME_PER_OUTPUT_TOKEN,
-        description="Time per output token generated after the first token for successful responses",
+        description="Time per output token generated after the first token for successful responses.",
         unit="s",
     )
 
@@ -99,6 +99,6 @@ def create_gen_ai_server_time_to_first_token(meter: Meter) -> Histogram:
     """Time to generate first token for successful responses"""
     return meter.create_histogram(
         name=GEN_AI_SERVER_TIME_TO_FIRST_TOKEN,
-        description="Time to generate first token for successful responses",
+        description="Time to generate first token for successful responses.",
         unit="s",
     )

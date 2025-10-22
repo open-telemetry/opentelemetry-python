@@ -21,7 +21,7 @@ Note: Its value SHOULD be identical for all apps on a device and it SHOULD NOT c
 However, it might be resettable by the user for all apps on a device.
 Hardware IDs (e.g. vendor-specific serial number, IMEI or MAC address) MAY be used as values.
 
-More information about Android identifier best practices can be found [here](https://developer.android.com/training/articles/user-data-ids).
+More information about Android identifier best practices can be found in the [Android user data IDs guide](https://developer.android.com/training/articles/user-data-ids).
 
 > [!WARNING]
 >
