@@ -179,30 +179,34 @@ class OTLPSpanExporter(SpanExporter):
         serialized_data = encode_spans(spans).SerializePartialToString()
         deadline_sec = time() + self._timeout
         for retry_num in range(_MAX_RETRYS):
-            try:
-                resp = self._export(serialized_data, deadline_sec - time())
-            except Exception as error:
-                _logger.error("Failed to export span batch reason: %s", error)
-                return SpanExportResult.FAILURE
-            if resp.ok:
-                return SpanExportResult.SUCCESS
             # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
             backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
+            try:
+                resp = self._export(serialized_data, deadline_sec - time())
+                if resp.ok:
+                    return SpanExportResult.SUCCESS
+                if not _is_retryable(resp):
+                    _logger.error(
+                        "Failed to export span batch code: %s, reason: %s",
+                        resp.status_code,
+                        resp.text,
+                    )
+                    return SpanExportResult.FAILURE
+            except Exception as error:
+                _logger.error("Failed to export span batch reason: %s", error)
+
             if (
-                not _is_retryable(resp)
-                or retry_num + 1 == _MAX_RETRYS
+                retry_num + 1 == _MAX_RETRYS
                 or backoff_seconds > (deadline_sec - time())
                 or self._shutdown
             ):
                 _logger.error(
-                    "Failed to export span batch code: %s, reason: %s",
-                    resp.status_code,
-                    resp.text,
+                    "Failed to export span batch due to timeout,"
+                    "max retries or shutdown."
                 )
                 return SpanExportResult.FAILURE
             _logger.warning(
-                "Transient error %s encountered while exporting span batch, retrying in %.2fs.",
-                resp.reason,
+                "Transient error encountered while exporting span batch, retrying in %.2fs.",
                 backoff_seconds,
             )
             shutdown = self._shutdown_in_progress.wait(backoff_seconds)
