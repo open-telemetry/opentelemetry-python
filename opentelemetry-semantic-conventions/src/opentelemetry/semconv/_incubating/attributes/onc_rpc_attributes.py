@@ -14,12 +14,6 @@
 
 from typing import Final
 
-
-
-
-
-
-
 ONC_RPC_PROCEDURE_NAME: Final = "onc_rpc.procedure.name"
 """
 ONC/Sun RPC procedure name.
@@ -39,5 +33,3 @@ ONC_RPC_VERSION: Final = "onc_rpc.version"
 """
 ONC/Sun RPC program version.
 """
-
-

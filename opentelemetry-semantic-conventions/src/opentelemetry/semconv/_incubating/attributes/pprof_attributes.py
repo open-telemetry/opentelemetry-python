@@ -14,12 +14,6 @@
 
 from typing import Final
 
-
-
-
-
-
-
 PPROF_LOCATION_IS_FOLDED: Final = "pprof.location.is_folded"
 """
 Provides an indication that multiple symbols map to this location's address, for example due to identical code folding by the linker. In that case the line information represents one of the multiple symbols. This field must be recomputed when the symbolization state of the profile changes.
@@ -49,5 +43,3 @@ PPROF_PROFILE_COMMENT: Final = "pprof.profile.comment"
 """
 Free-form text associated with the profile. This field should not be used to store any machine-readable information, it is only for human-friendly content.
 """
-
-

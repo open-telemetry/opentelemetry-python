@@ -13,13 +13,13 @@
 # limitations under the License.
 
 
-
 from typing import Final
 
-from opentelemetry.metrics import Meter
-from opentelemetry.metrics import UpDownCounter
+from opentelemetry.metrics import Meter, UpDownCounter
 
-OPENSHIFT_CLUSTERQUOTA_CPU_LIMIT_HARD: Final = "openshift.clusterquota.cpu.limit.hard"
+OPENSHIFT_CLUSTERQUOTA_CPU_LIMIT_HARD: Final = (
+    "openshift.clusterquota.cpu.limit.hard"
+)
 """
 The enforced hard limit of the resource across all projects
 Instrument: updowncounter
@@ -31,8 +31,9 @@ of the
 """
 
 
-
-def create_openshift_clusterquota_cpu_limit_hard(meter: Meter) -> UpDownCounter:
+def create_openshift_clusterquota_cpu_limit_hard(
+    meter: Meter,
+) -> UpDownCounter:
     """The enforced hard limit of the resource across all projects"""
     return meter.create_up_down_counter(
         name=OPENSHIFT_CLUSTERQUOTA_CPU_LIMIT_HARD,
@@ -40,7 +41,10 @@ def create_openshift_clusterquota_cpu_limit_hard(meter: Meter) -> UpDownCounter:
         unit="{cpu}",
     )
 
-OPENSHIFT_CLUSTERQUOTA_CPU_LIMIT_USED: Final = "openshift.clusterquota.cpu.limit.used"
+
+OPENSHIFT_CLUSTERQUOTA_CPU_LIMIT_USED: Final = (
+    "openshift.clusterquota.cpu.limit.used"
+)
 """
 The current observed total usage of the resource across all projects
 Instrument: updowncounter
@@ -52,8 +56,9 @@ of the
 """
 
 
-
-def create_openshift_clusterquota_cpu_limit_used(meter: Meter) -> UpDownCounter:
+def create_openshift_clusterquota_cpu_limit_used(
+    meter: Meter,
+) -> UpDownCounter:
     """The current observed total usage of the resource across all projects"""
     return meter.create_up_down_counter(
         name=OPENSHIFT_CLUSTERQUOTA_CPU_LIMIT_USED,
@@ -61,7 +66,10 @@ def create_openshift_clusterquota_cpu_limit_used(meter: Meter) -> UpDownCounter:
         unit="{cpu}",
     )
 
-OPENSHIFT_CLUSTERQUOTA_CPU_REQUEST_HARD: Final = "openshift.clusterquota.cpu.request.hard"
+
+OPENSHIFT_CLUSTERQUOTA_CPU_REQUEST_HARD: Final = (
+    "openshift.clusterquota.cpu.request.hard"
+)
 """
 The enforced hard limit of the resource across all projects
 Instrument: updowncounter
@@ -73,8 +81,9 @@ of the
 """
 
 
-
-def create_openshift_clusterquota_cpu_request_hard(meter: Meter) -> UpDownCounter:
+def create_openshift_clusterquota_cpu_request_hard(
+    meter: Meter,
+) -> UpDownCounter:
     """The enforced hard limit of the resource across all projects"""
     return meter.create_up_down_counter(
         name=OPENSHIFT_CLUSTERQUOTA_CPU_REQUEST_HARD,
@@ -82,7 +91,10 @@ def create_openshift_clusterquota_cpu_request_hard(meter: Meter) -> UpDownCounte
         unit="{cpu}",
     )
 
-OPENSHIFT_CLUSTERQUOTA_CPU_REQUEST_USED: Final = "openshift.clusterquota.cpu.request.used"
+
+OPENSHIFT_CLUSTERQUOTA_CPU_REQUEST_USED: Final = (
+    "openshift.clusterquota.cpu.request.used"
+)
 """
 The current observed total usage of the resource across all projects
 Instrument: updowncounter
@@ -94,8 +106,9 @@ of the
 """
 
 
-
-def create_openshift_clusterquota_cpu_request_used(meter: Meter) -> UpDownCounter:
+def create_openshift_clusterquota_cpu_request_used(
+    meter: Meter,
+) -> UpDownCounter:
     """The current observed total usage of the resource across all projects"""
     return meter.create_up_down_counter(
         name=OPENSHIFT_CLUSTERQUOTA_CPU_REQUEST_USED,
@@ -103,7 +116,10 @@ def create_openshift_clusterquota_cpu_request_used(meter: Meter) -> UpDownCounte
         unit="{cpu}",
     )
 
-OPENSHIFT_CLUSTERQUOTA_EPHEMERAL_STORAGE_LIMIT_HARD: Final = "openshift.clusterquota.ephemeral_storage.limit.hard"
+
+OPENSHIFT_CLUSTERQUOTA_EPHEMERAL_STORAGE_LIMIT_HARD: Final = (
+    "openshift.clusterquota.ephemeral_storage.limit.hard"
+)
 """
 The enforced hard limit of the resource across all projects
 Instrument: updowncounter
@@ -115,8 +131,9 @@ of the
 """
 
 
-
-def create_openshift_clusterquota_ephemeral_storage_limit_hard(meter: Meter) -> UpDownCounter:
+def create_openshift_clusterquota_ephemeral_storage_limit_hard(
+    meter: Meter,
+) -> UpDownCounter:
     """The enforced hard limit of the resource across all projects"""
     return meter.create_up_down_counter(
         name=OPENSHIFT_CLUSTERQUOTA_EPHEMERAL_STORAGE_LIMIT_HARD,
@@ -124,7 +141,10 @@ def create_openshift_clusterquota_ephemeral_storage_limit_hard(meter: Meter) -> 
         unit="By",
     )
 
-OPENSHIFT_CLUSTERQUOTA_EPHEMERAL_STORAGE_LIMIT_USED: Final = "openshift.clusterquota.ephemeral_storage.limit.used"
+
+OPENSHIFT_CLUSTERQUOTA_EPHEMERAL_STORAGE_LIMIT_USED: Final = (
+    "openshift.clusterquota.ephemeral_storage.limit.used"
+)
 """
 The current observed total usage of the resource across all projects
 Instrument: updowncounter
@@ -136,8 +156,9 @@ of the
 """
 
 
-
-def create_openshift_clusterquota_ephemeral_storage_limit_used(meter: Meter) -> UpDownCounter:
+def create_openshift_clusterquota_ephemeral_storage_limit_used(
+    meter: Meter,
+) -> UpDownCounter:
     """The current observed total usage of the resource across all projects"""
     return meter.create_up_down_counter(
         name=OPENSHIFT_CLUSTERQUOTA_EPHEMERAL_STORAGE_LIMIT_USED,
@@ -145,7 +166,10 @@ def create_openshift_clusterquota_ephemeral_storage_limit_used(meter: Meter) -> 
         unit="By",
     )
 
-OPENSHIFT_CLUSTERQUOTA_EPHEMERAL_STORAGE_REQUEST_HARD: Final = "openshift.clusterquota.ephemeral_storage.request.hard"
+
+OPENSHIFT_CLUSTERQUOTA_EPHEMERAL_STORAGE_REQUEST_HARD: Final = (
+    "openshift.clusterquota.ephemeral_storage.request.hard"
+)
 """
 The enforced hard limit of the resource across all projects
 Instrument: updowncounter
@@ -157,8 +181,9 @@ of the
 """
 
 
-
-def create_openshift_clusterquota_ephemeral_storage_request_hard(meter: Meter) -> UpDownCounter:
+def create_openshift_clusterquota_ephemeral_storage_request_hard(
+    meter: Meter,
+) -> UpDownCounter:
     """The enforced hard limit of the resource across all projects"""
     return meter.create_up_down_counter(
         name=OPENSHIFT_CLUSTERQUOTA_EPHEMERAL_STORAGE_REQUEST_HARD,
@@ -166,7 +191,10 @@ def create_openshift_clusterquota_ephemeral_storage_request_hard(meter: Meter) -
         unit="By",
     )
 
-OPENSHIFT_CLUSTERQUOTA_EPHEMERAL_STORAGE_REQUEST_USED: Final = "openshift.clusterquota.ephemeral_storage.request.used"
+
+OPENSHIFT_CLUSTERQUOTA_EPHEMERAL_STORAGE_REQUEST_USED: Final = (
+    "openshift.clusterquota.ephemeral_storage.request.used"
+)
 """
 The current observed total usage of the resource across all projects
 Instrument: updowncounter
@@ -178,8 +206,9 @@ of the
 """
 
 
-
-def create_openshift_clusterquota_ephemeral_storage_request_used(meter: Meter) -> UpDownCounter:
+def create_openshift_clusterquota_ephemeral_storage_request_used(
+    meter: Meter,
+) -> UpDownCounter:
     """The current observed total usage of the resource across all projects"""
     return meter.create_up_down_counter(
         name=OPENSHIFT_CLUSTERQUOTA_EPHEMERAL_STORAGE_REQUEST_USED,
@@ -187,7 +216,10 @@ def create_openshift_clusterquota_ephemeral_storage_request_used(meter: Meter) -
         unit="By",
     )
 
-OPENSHIFT_CLUSTERQUOTA_HUGEPAGE_COUNT_REQUEST_HARD: Final = "openshift.clusterquota.hugepage_count.request.hard"
+
+OPENSHIFT_CLUSTERQUOTA_HUGEPAGE_COUNT_REQUEST_HARD: Final = (
+    "openshift.clusterquota.hugepage_count.request.hard"
+)
 """
 The enforced hard limit of the resource across all projects
 Instrument: updowncounter
@@ -199,8 +231,9 @@ of the
 """
 
 
-
-def create_openshift_clusterquota_hugepage_count_request_hard(meter: Meter) -> UpDownCounter:
+def create_openshift_clusterquota_hugepage_count_request_hard(
+    meter: Meter,
+) -> UpDownCounter:
     """The enforced hard limit of the resource across all projects"""
     return meter.create_up_down_counter(
         name=OPENSHIFT_CLUSTERQUOTA_HUGEPAGE_COUNT_REQUEST_HARD,
@@ -208,7 +241,10 @@ def create_openshift_clusterquota_hugepage_count_request_hard(meter: Meter) -> U
         unit="{hugepage}",
     )
 
-OPENSHIFT_CLUSTERQUOTA_HUGEPAGE_COUNT_REQUEST_USED: Final = "openshift.clusterquota.hugepage_count.request.used"
+
+OPENSHIFT_CLUSTERQUOTA_HUGEPAGE_COUNT_REQUEST_USED: Final = (
+    "openshift.clusterquota.hugepage_count.request.used"
+)
 """
 The current observed total usage of the resource across all projects
 Instrument: updowncounter
@@ -220,8 +256,9 @@ of the
 """
 
 
-
-def create_openshift_clusterquota_hugepage_count_request_used(meter: Meter) -> UpDownCounter:
+def create_openshift_clusterquota_hugepage_count_request_used(
+    meter: Meter,
+) -> UpDownCounter:
     """The current observed total usage of the resource across all projects"""
     return meter.create_up_down_counter(
         name=OPENSHIFT_CLUSTERQUOTA_HUGEPAGE_COUNT_REQUEST_USED,
@@ -229,7 +266,10 @@ def create_openshift_clusterquota_hugepage_count_request_used(meter: Meter) -> U
         unit="{hugepage}",
     )
 
-OPENSHIFT_CLUSTERQUOTA_MEMORY_LIMIT_HARD: Final = "openshift.clusterquota.memory.limit.hard"
+
+OPENSHIFT_CLUSTERQUOTA_MEMORY_LIMIT_HARD: Final = (
+    "openshift.clusterquota.memory.limit.hard"
+)
 """
 The enforced hard limit of the resource across all projects
 Instrument: updowncounter
@@ -241,8 +281,9 @@ of the
 """
 
 
-
-def create_openshift_clusterquota_memory_limit_hard(meter: Meter) -> UpDownCounter:
+def create_openshift_clusterquota_memory_limit_hard(
+    meter: Meter,
+) -> UpDownCounter:
     """The enforced hard limit of the resource across all projects"""
     return meter.create_up_down_counter(
         name=OPENSHIFT_CLUSTERQUOTA_MEMORY_LIMIT_HARD,
@@ -250,7 +291,10 @@ def create_openshift_clusterquota_memory_limit_hard(meter: Meter) -> UpDownCount
         unit="By",
     )
 
-OPENSHIFT_CLUSTERQUOTA_MEMORY_LIMIT_USED: Final = "openshift.clusterquota.memory.limit.used"
+
+OPENSHIFT_CLUSTERQUOTA_MEMORY_LIMIT_USED: Final = (
+    "openshift.clusterquota.memory.limit.used"
+)
 """
 The current observed total usage of the resource across all projects
 Instrument: updowncounter
@@ -262,8 +306,9 @@ of the
 """
 
 
-
-def create_openshift_clusterquota_memory_limit_used(meter: Meter) -> UpDownCounter:
+def create_openshift_clusterquota_memory_limit_used(
+    meter: Meter,
+) -> UpDownCounter:
     """The current observed total usage of the resource across all projects"""
     return meter.create_up_down_counter(
         name=OPENSHIFT_CLUSTERQUOTA_MEMORY_LIMIT_USED,
@@ -271,7 +316,10 @@ def create_openshift_clusterquota_memory_limit_used(meter: Meter) -> UpDownCount
         unit="By",
     )
 
-OPENSHIFT_CLUSTERQUOTA_MEMORY_REQUEST_HARD: Final = "openshift.clusterquota.memory.request.hard"
+
+OPENSHIFT_CLUSTERQUOTA_MEMORY_REQUEST_HARD: Final = (
+    "openshift.clusterquota.memory.request.hard"
+)
 """
 The enforced hard limit of the resource across all projects
 Instrument: updowncounter
@@ -283,8 +331,9 @@ of the
 """
 
 
-
-def create_openshift_clusterquota_memory_request_hard(meter: Meter) -> UpDownCounter:
+def create_openshift_clusterquota_memory_request_hard(
+    meter: Meter,
+) -> UpDownCounter:
     """The enforced hard limit of the resource across all projects"""
     return meter.create_up_down_counter(
         name=OPENSHIFT_CLUSTERQUOTA_MEMORY_REQUEST_HARD,
@@ -292,7 +341,10 @@ def create_openshift_clusterquota_memory_request_hard(meter: Meter) -> UpDownCou
         unit="By",
     )
 
-OPENSHIFT_CLUSTERQUOTA_MEMORY_REQUEST_USED: Final = "openshift.clusterquota.memory.request.used"
+
+OPENSHIFT_CLUSTERQUOTA_MEMORY_REQUEST_USED: Final = (
+    "openshift.clusterquota.memory.request.used"
+)
 """
 The current observed total usage of the resource across all projects
 Instrument: updowncounter
@@ -304,8 +356,9 @@ of the
 """
 
 
-
-def create_openshift_clusterquota_memory_request_used(meter: Meter) -> UpDownCounter:
+def create_openshift_clusterquota_memory_request_used(
+    meter: Meter,
+) -> UpDownCounter:
     """The current observed total usage of the resource across all projects"""
     return meter.create_up_down_counter(
         name=OPENSHIFT_CLUSTERQUOTA_MEMORY_REQUEST_USED,
@@ -313,7 +366,10 @@ def create_openshift_clusterquota_memory_request_used(meter: Meter) -> UpDownCou
         unit="By",
     )
 
-OPENSHIFT_CLUSTERQUOTA_OBJECT_COUNT_HARD: Final = "openshift.clusterquota.object_count.hard"
+
+OPENSHIFT_CLUSTERQUOTA_OBJECT_COUNT_HARD: Final = (
+    "openshift.clusterquota.object_count.hard"
+)
 """
 The enforced hard limit of the resource across all projects
 Instrument: updowncounter
@@ -325,8 +381,9 @@ of the
 """
 
 
-
-def create_openshift_clusterquota_object_count_hard(meter: Meter) -> UpDownCounter:
+def create_openshift_clusterquota_object_count_hard(
+    meter: Meter,
+) -> UpDownCounter:
     """The enforced hard limit of the resource across all projects"""
     return meter.create_up_down_counter(
         name=OPENSHIFT_CLUSTERQUOTA_OBJECT_COUNT_HARD,
@@ -334,7 +391,10 @@ def create_openshift_clusterquota_object_count_hard(meter: Meter) -> UpDownCount
         unit="{object}",
     )
 
-OPENSHIFT_CLUSTERQUOTA_OBJECT_COUNT_USED: Final = "openshift.clusterquota.object_count.used"
+
+OPENSHIFT_CLUSTERQUOTA_OBJECT_COUNT_USED: Final = (
+    "openshift.clusterquota.object_count.used"
+)
 """
 The current observed total usage of the resource across all projects
 Instrument: updowncounter
@@ -346,8 +406,9 @@ of the
 """
 
 
-
-def create_openshift_clusterquota_object_count_used(meter: Meter) -> UpDownCounter:
+def create_openshift_clusterquota_object_count_used(
+    meter: Meter,
+) -> UpDownCounter:
     """The current observed total usage of the resource across all projects"""
     return meter.create_up_down_counter(
         name=OPENSHIFT_CLUSTERQUOTA_OBJECT_COUNT_USED,
@@ -355,7 +416,10 @@ def create_openshift_clusterquota_object_count_used(meter: Meter) -> UpDownCount
         unit="{object}",
     )
 
-OPENSHIFT_CLUSTERQUOTA_PERSISTENTVOLUMECLAIM_COUNT_HARD: Final = "openshift.clusterquota.persistentvolumeclaim_count.hard"
+
+OPENSHIFT_CLUSTERQUOTA_PERSISTENTVOLUMECLAIM_COUNT_HARD: Final = (
+    "openshift.clusterquota.persistentvolumeclaim_count.hard"
+)
 """
 The enforced hard limit of the resource across all projects
 Instrument: updowncounter
@@ -370,8 +434,9 @@ storage class.
 """
 
 
-
-def create_openshift_clusterquota_persistentvolumeclaim_count_hard(meter: Meter) -> UpDownCounter:
+def create_openshift_clusterquota_persistentvolumeclaim_count_hard(
+    meter: Meter,
+) -> UpDownCounter:
     """The enforced hard limit of the resource across all projects"""
     return meter.create_up_down_counter(
         name=OPENSHIFT_CLUSTERQUOTA_PERSISTENTVOLUMECLAIM_COUNT_HARD,
@@ -379,7 +444,10 @@ def create_openshift_clusterquota_persistentvolumeclaim_count_hard(meter: Meter)
         unit="{persistentvolumeclaim}",
     )
 
-OPENSHIFT_CLUSTERQUOTA_PERSISTENTVOLUMECLAIM_COUNT_USED: Final = "openshift.clusterquota.persistentvolumeclaim_count.used"
+
+OPENSHIFT_CLUSTERQUOTA_PERSISTENTVOLUMECLAIM_COUNT_USED: Final = (
+    "openshift.clusterquota.persistentvolumeclaim_count.used"
+)
 """
 The current observed total usage of the resource across all projects
 Instrument: updowncounter
@@ -394,8 +462,9 @@ storage class.
 """
 
 
-
-def create_openshift_clusterquota_persistentvolumeclaim_count_used(meter: Meter) -> UpDownCounter:
+def create_openshift_clusterquota_persistentvolumeclaim_count_used(
+    meter: Meter,
+) -> UpDownCounter:
     """The current observed total usage of the resource across all projects"""
     return meter.create_up_down_counter(
         name=OPENSHIFT_CLUSTERQUOTA_PERSISTENTVOLUMECLAIM_COUNT_USED,
@@ -403,7 +472,10 @@ def create_openshift_clusterquota_persistentvolumeclaim_count_used(meter: Meter)
         unit="{persistentvolumeclaim}",
     )
 
-OPENSHIFT_CLUSTERQUOTA_STORAGE_REQUEST_HARD: Final = "openshift.clusterquota.storage.request.hard"
+
+OPENSHIFT_CLUSTERQUOTA_STORAGE_REQUEST_HARD: Final = (
+    "openshift.clusterquota.storage.request.hard"
+)
 """
 The enforced hard limit of the resource across all projects
 Instrument: updowncounter
@@ -418,8 +490,9 @@ storage class.
 """
 
 
-
-def create_openshift_clusterquota_storage_request_hard(meter: Meter) -> UpDownCounter:
+def create_openshift_clusterquota_storage_request_hard(
+    meter: Meter,
+) -> UpDownCounter:
     """The enforced hard limit of the resource across all projects"""
     return meter.create_up_down_counter(
         name=OPENSHIFT_CLUSTERQUOTA_STORAGE_REQUEST_HARD,
@@ -427,7 +500,10 @@ def create_openshift_clusterquota_storage_request_hard(meter: Meter) -> UpDownCo
         unit="By",
     )
 
-OPENSHIFT_CLUSTERQUOTA_STORAGE_REQUEST_USED: Final = "openshift.clusterquota.storage.request.used"
+
+OPENSHIFT_CLUSTERQUOTA_STORAGE_REQUEST_USED: Final = (
+    "openshift.clusterquota.storage.request.used"
+)
 """
 The current observed total usage of the resource across all projects
 Instrument: updowncounter
@@ -442,8 +518,9 @@ storage class.
 """
 
 
-
-def create_openshift_clusterquota_storage_request_used(meter: Meter) -> UpDownCounter:
+def create_openshift_clusterquota_storage_request_used(
+    meter: Meter,
+) -> UpDownCounter:
     """The current observed total usage of the resource across all projects"""
     return meter.create_up_down_counter(
         name=OPENSHIFT_CLUSTERQUOTA_STORAGE_REQUEST_USED,
