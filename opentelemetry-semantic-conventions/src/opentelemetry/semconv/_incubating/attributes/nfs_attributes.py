@@ -14,11 +14,20 @@
 
 from typing import Final
 
-PEER_SERVICE: Final = "peer.service"
-"""
-The [`service.name`](/docs/resource/README.md#service) of the remote service. SHOULD be equal to the actual `service.name` resource attribute of the remote service if any.
-Note: Examples of `peer.service` that users may specify:
 
-- A Redis cache of auth tokens as `peer.service="AuthTokenCache"`.
-- A gRPC service `rpc.service="io.opentelemetry.AuthService"` may be hosted in both a gateway, `peer.service="ExternalApiService"` and a backend, `peer.service="AuthService"`.
+
+
+
+
+
+NFS_OPERATION_NAME: Final = "nfs.operation.name"
 """
+NFSv4+ operation name.
+"""
+
+NFS_SERVER_REPCACHE_STATUS: Final = "nfs.server.repcache.status"
+"""
+Linux: one of "hit" (NFSD_STATS_RC_HITS), "miss" (NFSD_STATS_RC_MISSES), or "nocache" (NFSD_STATS_RC_NOCACHE -- uncacheable).
+"""
+
+
