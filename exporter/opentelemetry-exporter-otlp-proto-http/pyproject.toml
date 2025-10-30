@@ -50,7 +50,7 @@ Repository = "https://github.com/open-telemetry/opentelemetry-python"
 
 [project.optional-dependencies]
 gcp-auth = [
-  "opentelemetry-exporter-credential-provider-gcp >= 1.38.0",
+  "opentelemetry-exporter-credential-provider-gcp >= 0.59b0",
 ]
 
 [tool.hatch.version]
