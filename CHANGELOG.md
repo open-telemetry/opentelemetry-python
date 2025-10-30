@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4734](https://github.com/open-telemetry/opentelemetry-python/pull/4734))
 - build: bump ruff to 0.14.1
   ([#4782](https://github.com/open-telemetry/opentelemetry-python/pull/4782))
+- Add `opentelemetry-exporter-credential-provider-gcp` as an optional dependency to `opentelemetry-exporter-otlp-proto-grpc` 
+  and `opentelemetry-exporter-otlp-proto-http` ([#4760](https://github.com/open-telemetry/opentelemetry-python/pull/4760)).
 
 ## Version 1.38.0/0.59b0 (2025-10-16)
 
