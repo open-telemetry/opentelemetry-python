@@ -100,6 +100,7 @@ nitpick_ignore = [
     ("py:class", "CarrierT"),
     ("py:obj", "opentelemetry.propagators.textmap.CarrierT"),
     ("py:obj", "Union"),
+    ("py:data", "typing.Union"),
     (
         "py:class",
         "opentelemetry.sdk.metrics._internal.instrument._Synchronous",
