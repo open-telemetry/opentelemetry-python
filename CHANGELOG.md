@@ -14,9 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - docs: Added sqlcommenter example
   ([#4734](https://github.com/open-telemetry/opentelemetry-python/pull/4734))
+- build: bump ruff to 0.14.1
+  ([#4782](https://github.com/open-telemetry/opentelemetry-python/pull/4782))
 - semantic-conventions: Bump to 1.38.0
   ([#4791](https://github.com/open-telemetry/opentelemetry-python/pull/4791))
-
 
 ## Version 1.38.0/0.59b0 (2025-10-16)
 
