@@ -128,7 +128,7 @@ Deprecated: Replaced by `azure.cosmosdb.request.body.size`.
 
 DB_COSMOSDB_STATUS_CODE: Final = "db.cosmosdb.status_code"
 """
-Deprecated: Replaced by `db.response.status_code`.
+Deprecated: Use `db.response.status_code` instead.
 """
 
 DB_COSMOSDB_SUB_STATUS_CODE: Final = "db.cosmosdb.sub_status_code"
@@ -215,6 +215,9 @@ then `<key>` SHOULD be the 0-based index.
 `db.query.parameter.<key>` SHOULD match
 up with the parameterized placeholders present in `db.query.text`.
 
+It is RECOMMENDED to capture the value as provided by the application
+without attempting to do any case normalization.
+
 `db.query.parameter.<key>` SHOULD NOT be captured on batch operations.
 
 Examples:
@@ -222,8 +225,8 @@ Examples:
 - For a query `SELECT * FROM users where username =  %s` with the parameter `"jdoe"`,
   the attribute `db.query.parameter.0` SHOULD be set to `"jdoe"`.
 
-- For a query `"SELECT * FROM users WHERE username = %(username)s;` with parameter
-  `username = "jdoe"`, the attribute `db.query.parameter.username` SHOULD be set to `"jdoe"`.
+- For a query `"SELECT * FROM users WHERE username = %(userName)s;` with parameter
+  `userName = "jdoe"`, the attribute `db.query.parameter.userName` SHOULD be set to `"jdoe"`.
 """
 
 DB_QUERY_SUMMARY: Final = "db.query.summary"
@@ -238,7 +241,7 @@ Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.db_att
 
 DB_REDIS_DATABASE_INDEX: Final = "db.redis.database_index"
 """
-Deprecated: Replaced by `db.namespace`.
+Deprecated: Uncategorized.
 """
 
 DB_RESPONSE_RETURNED_ROWS: Final = "db.response.returned_rows"

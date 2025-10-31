@@ -366,6 +366,16 @@ K8S_POD_NAME: Final = "k8s.pod.name"
 The name of the Pod.
 """
 
+K8S_POD_STATUS_PHASE: Final = "k8s.pod.status.phase"
+"""
+The phase for the pod. Corresponds to the `phase` field of the: [K8s PodStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.33/#podstatus-v1-core).
+"""
+
+K8S_POD_STATUS_REASON: Final = "k8s.pod.status.reason"
+"""
+The reason for the pod state. Corresponds to the `reason` field of the: [K8s PodStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.33/#podstatus-v1-core).
+"""
+
 K8S_POD_UID: Final = "k8s.pod.uid"
 """
 The UID of the Pod.
@@ -421,7 +431,7 @@ The name of the resource quota.
 K8S_RESOURCEQUOTA_RESOURCE_NAME: Final = "k8s.resourcequota.resource_name"
 """
 The name of the K8s resource a resource quota defines.
-Note: The value for this attribute can be either the full `count/<resource>[.<group>]` string (e.g., count/deployments.apps, count/pods), or, for certain core Kubernetes resources, just the resource name (e.g., pods, services, configmaps). Both forms are supported by Kubernetes for object count quotas. See [Kubernetes Resource Quotas documentation](https://kubernetes.io/docs/concepts/policy/resource-quotas/#object-count-quota) for more details.
+Note: The value for this attribute can be either the full `count/<resource>[.<group>]` string (e.g., count/deployments.apps, count/pods), or, for certain core Kubernetes resources, just the resource name (e.g., pods, services, configmaps). Both forms are supported by Kubernetes for object count quotas. See [Kubernetes Resource Quotas documentation](https://kubernetes.io/docs/concepts/policy/resource-quotas/#quota-on-object-count) for more details.
 """
 
 K8S_RESOURCEQUOTA_UID: Final = "k8s.resourcequota.uid"
@@ -534,6 +544,32 @@ class K8sNodeConditionTypeValues(Enum):
     """Pressure exists on the processes—that is, if there are too many processes on the node."""
     NETWORK_UNAVAILABLE = "NetworkUnavailable"
     """The network for the node is not correctly configured."""
+
+
+class K8sPodStatusPhaseValues(Enum):
+    PENDING = "Pending"
+    """The pod has been accepted by the system, but one or more of the containers has not been started. This includes time before being bound to a node, as well as time spent pulling images onto the host."""
+    RUNNING = "Running"
+    """The pod has been bound to a node and all of the containers have been started. At least one container is still running or is in the process of being restarted."""
+    SUCCEEDED = "Succeeded"
+    """All containers in the pod have voluntarily terminated with a container exit code of 0, and the system is not going to restart any of these containers."""
+    FAILED = "Failed"
+    """All containers in the pod have terminated, and at least one container has terminated in a failure (exited with a non-zero exit code or was stopped by the system)."""
+    UNKNOWN = "Unknown"
+    """For some reason the state of the pod could not be obtained, typically due to an error in communicating with the host of the pod."""
+
+
+class K8sPodStatusReasonValues(Enum):
+    EVICTED = "Evicted"
+    """The pod is evicted."""
+    NODE_AFFINITY = "NodeAffinity"
+    """The pod is in a status because of its node affinity."""
+    NODE_LOST = "NodeLost"
+    """The reason on a pod when its state cannot be confirmed as kubelet is unresponsive on the node it is (was) running."""
+    SHUTDOWN = "Shutdown"
+    """The node is shutdown."""
+    UNEXPECTED_ADMISSION_ERROR = "UnexpectedAdmissionError"
+    """The pod was rejected admission to the node because of an error during admission that could not be categorized."""
 
 
 class K8sVolumeTypeValues(Enum):

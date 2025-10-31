@@ -133,17 +133,17 @@ def create_system_cpu_utilization(
 
 SYSTEM_DISK_IO: Final = "system.disk.io"
 """
-TODO
+Disk bytes transferred
 Instrument: counter
 Unit: By
 """
 
 
 def create_system_disk_io(meter: Meter) -> Counter:
-    """TODO"""
+    """Disk bytes transferred"""
     return meter.create_counter(
         name=SYSTEM_DISK_IO,
-        description="TODO.",
+        description="Disk bytes transferred.",
         unit="By",
     )
 
@@ -190,17 +190,17 @@ def create_system_disk_limit(meter: Meter) -> UpDownCounter:
 
 SYSTEM_DISK_MERGED: Final = "system.disk.merged"
 """
-TODO
+The number of disk reads/writes merged into single physical disk access operations
 Instrument: counter
 Unit: {operation}
 """
 
 
 def create_system_disk_merged(meter: Meter) -> Counter:
-    """TODO"""
+    """The number of disk reads/writes merged into single physical disk access operations"""
     return meter.create_counter(
         name=SYSTEM_DISK_MERGED,
-        description="TODO.",
+        description="The number of disk reads/writes merged into single physical disk access operations.",
         unit="{operation}",
     )
 
@@ -228,17 +228,17 @@ def create_system_disk_operation_time(meter: Meter) -> Counter:
 
 SYSTEM_DISK_OPERATIONS: Final = "system.disk.operations"
 """
-TODO
+Disk operations count
 Instrument: counter
 Unit: {operation}
 """
 
 
 def create_system_disk_operations(meter: Meter) -> Counter:
-    """TODO"""
+    """Disk operations count"""
     return meter.create_counter(
         name=SYSTEM_DISK_OPERATIONS,
-        description="TODO.",
+        description="Disk operations count.",
         unit="{operation}",
     )
 
@@ -281,7 +281,7 @@ def create_system_filesystem_usage(meter: Meter) -> UpDownCounter:
 
 SYSTEM_FILESYSTEM_UTILIZATION: Final = "system.filesystem.utilization"
 """
-TODO
+Fraction of filesystem bytes used
 Instrument: gauge
 Unit: 1
 """
@@ -290,11 +290,11 @@ Unit: 1
 def create_system_filesystem_utilization(
     meter: Meter, callbacks: Optional[Sequence[CallbackT]]
 ) -> ObservableGauge:
-    """TODO"""
+    """Fraction of filesystem bytes used"""
     return meter.create_observable_gauge(
         name=SYSTEM_FILESYSTEM_UTILIZATION,
         callbacks=callbacks,
-        description="TODO.",
+        description="Fraction of filesystem bytes used.",
         unit="1",
     )
 
@@ -396,7 +396,7 @@ def create_system_memory_usage(meter: Meter) -> UpDownCounter:
 
 SYSTEM_MEMORY_UTILIZATION: Final = "system.memory.utilization"
 """
-TODO
+Percentage of memory bytes in use
 Instrument: gauge
 Unit: 1
 """
@@ -405,28 +405,28 @@ Unit: 1
 def create_system_memory_utilization(
     meter: Meter, callbacks: Optional[Sequence[CallbackT]]
 ) -> ObservableGauge:
-    """TODO"""
+    """Percentage of memory bytes in use"""
     return meter.create_observable_gauge(
         name=SYSTEM_MEMORY_UTILIZATION,
         callbacks=callbacks,
-        description="TODO.",
+        description="Percentage of memory bytes in use.",
         unit="1",
     )
 
 
 SYSTEM_NETWORK_CONNECTION_COUNT: Final = "system.network.connection.count"
 """
-TODO
+The number of connections
 Instrument: updowncounter
 Unit: {connection}
 """
 
 
 def create_system_network_connection_count(meter: Meter) -> UpDownCounter:
-    """TODO"""
+    """The number of connections"""
     return meter.create_up_down_counter(
         name=SYSTEM_NETWORK_CONNECTION_COUNT,
-        description="TODO.",
+        description="The number of connections.",
         unit="{connection}",
     )
 
@@ -443,6 +443,21 @@ def create_system_network_connections(meter: Meter) -> UpDownCounter:
         name=SYSTEM_NETWORK_CONNECTIONS,
         description="Deprecated, use `system.network.connection.count` instead.",
         unit="{connection}",
+    )
+
+
+SYSTEM_NETWORK_DROPPED: Final = "system.network.dropped"
+"""
+Deprecated: Replaced by `system.network.packet.dropped`.
+"""
+
+
+def create_system_network_dropped(meter: Meter) -> Counter:
+    """Count of packets that are dropped or discarded even though there was no error"""
+    return meter.create_counter(
+        name=SYSTEM_NETWORK_DROPPED,
+        description="Count of packets that are dropped or discarded even though there was no error.",
+        unit="{packet}",
     )
 
 
@@ -470,34 +485,34 @@ def create_system_network_errors(meter: Meter) -> Counter:
 
 SYSTEM_NETWORK_IO: Final = "system.network.io"
 """
-TODO
+The number of bytes transmitted and received
 Instrument: counter
 Unit: By
 """
 
 
 def create_system_network_io(meter: Meter) -> Counter:
-    """TODO"""
+    """The number of bytes transmitted and received"""
     return meter.create_counter(
         name=SYSTEM_NETWORK_IO,
-        description="TODO.",
+        description="The number of bytes transmitted and received.",
         unit="By",
     )
 
 
 SYSTEM_NETWORK_PACKET_COUNT: Final = "system.network.packet.count"
 """
-TODO
+The number of packets transferred
 Instrument: counter
 Unit: {packet}
 """
 
 
 def create_system_network_packet_count(meter: Meter) -> Counter:
-    """TODO"""
+    """The number of packets transferred"""
     return meter.create_counter(
         name=SYSTEM_NETWORK_PACKET_COUNT,
-        description="TODO.",
+        description="The number of packets transferred.",
         unit="{packet}",
     )
 
@@ -524,36 +539,51 @@ def create_system_network_packet_dropped(meter: Meter) -> Counter:
     )
 
 
+SYSTEM_NETWORK_PACKETS: Final = "system.network.packets"
+"""
+Deprecated: Replaced by `system.network.packet.count`.
+"""
+
+
+def create_system_network_packets(meter: Meter) -> Counter:
+    """The number of packets transferred"""
+    return meter.create_counter(
+        name=SYSTEM_NETWORK_PACKETS,
+        description="The number of packets transferred.",
+        unit="{packet}",
+    )
+
+
 SYSTEM_PAGING_FAULTS: Final = "system.paging.faults"
 """
-TODO
+The number of page faults
 Instrument: counter
 Unit: {fault}
 """
 
 
 def create_system_paging_faults(meter: Meter) -> Counter:
-    """TODO"""
+    """The number of page faults"""
     return meter.create_counter(
         name=SYSTEM_PAGING_FAULTS,
-        description="TODO.",
+        description="The number of page faults.",
         unit="{fault}",
     )
 
 
 SYSTEM_PAGING_OPERATIONS: Final = "system.paging.operations"
 """
-TODO
+The number of paging operations
 Instrument: counter
 Unit: {operation}
 """
 
 
 def create_system_paging_operations(meter: Meter) -> Counter:
-    """TODO"""
+    """The number of paging operations"""
     return meter.create_counter(
         name=SYSTEM_PAGING_OPERATIONS,
-        description="TODO.",
+        description="The number of paging operations.",
         unit="{operation}",
     )
 
@@ -577,7 +607,7 @@ def create_system_paging_usage(meter: Meter) -> UpDownCounter:
 
 SYSTEM_PAGING_UTILIZATION: Final = "system.paging.utilization"
 """
-TODO
+Swap (unix) or pagefile (windows) utilization
 Instrument: gauge
 Unit: 1
 """
@@ -586,11 +616,11 @@ Unit: 1
 def create_system_paging_utilization(
     meter: Meter, callbacks: Optional[Sequence[CallbackT]]
 ) -> ObservableGauge:
-    """TODO"""
+    """Swap (unix) or pagefile (windows) utilization"""
     return meter.create_observable_gauge(
         name=SYSTEM_PAGING_UTILIZATION,
         callbacks=callbacks,
-        description="TODO.",
+        description="Swap (unix) or pagefile (windows) utilization.",
         unit="1",
     )
 
