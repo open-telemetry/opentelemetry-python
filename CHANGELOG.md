@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4782](https://github.com/open-telemetry/opentelemetry-python/pull/4782))
 - otlp exporters (trace): include W3C TraceFlags (bits 0–7) in OTLP `Span.flags` alongside parent isRemote bits (8–9)
   ([#4761](https://github.com/open-telemetry/opentelemetry-python/pull/4761))
+- semantic-conventions: Bump to 1.38.0
+  ([#4791](https://github.com/open-telemetry/opentelemetry-python/pull/4791))
 
 ## Version 1.38.0/0.59b0 (2025-10-16)
 

@@ -67,6 +67,18 @@ APP_SCREEN_COORDINATE_Y: Final = "app.screen.coordinate.y"
 The y (vertical) component of a screen coordinate, in screen pixels.
 """
 
+APP_SCREEN_ID: Final = "app.screen.id"
+"""
+An identifier that uniquely differentiates this screen from other screens in the same application.
+Note: A screen represents only the part of the device display drawn by the app. It typically contains multiple widgets or UI components and is larger in scope than individual widgets. Multiple screens can coexist on the same display simultaneously (e.g., split view on tablets).
+"""
+
+APP_SCREEN_NAME: Final = "app.screen.name"
+"""
+The name of an application screen.
+Note: A screen represents only the part of the device display drawn by the app. It typically contains multiple widgets or UI components and is larger in scope than individual widgets. Multiple screens can coexist on the same display simultaneously (e.g., split view on tablets).
+"""
+
 APP_WIDGET_ID: Final = "app.widget.id"
 """
 An identifier that uniquely differentiates this widget from other widgets in the same application.
