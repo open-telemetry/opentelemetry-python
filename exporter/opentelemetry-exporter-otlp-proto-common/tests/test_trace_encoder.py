@@ -520,11 +520,11 @@ class TestSpanFlagsEncoding(unittest.TestCase):
         )
         span = SDKSpan(name="root", context=span_context, parent=None)
         pb = _encode_span(span)
-        assert (pb.flags & PB2SpanFlags.SPAN_FLAGS_TRACE_FLAGS_MASK) == 0x00
+        assert (pb.flags & PB2SpanFlags.SPAN_FLAGS_TRACE_FLAGS_MASK) == 0x00  # pylint: disable=no-member
         assert (
-            pb.flags & PB2SpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK
+            pb.flags & PB2SpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK  # pylint: disable=no-member
         ) != 0
-        assert (pb.flags & PB2SpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK) == 0
+        assert (pb.flags & PB2SpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK) == 0  # pylint: disable=no-member
         assert (pb.flags & ~ALL_SPAN_FLAGS_MASK) == 0
 
     def test_span_flags_root_sampled(self):
@@ -533,11 +533,11 @@ class TestSpanFlagsEncoding(unittest.TestCase):
         )
         span = SDKSpan(name="root", context=span_context, parent=None)
         pb = _encode_span(span)
-        assert (pb.flags & PB2SpanFlags.SPAN_FLAGS_TRACE_FLAGS_MASK) == 0x01
+        assert (pb.flags & PB2SpanFlags.SPAN_FLAGS_TRACE_FLAGS_MASK) == 0x01  # pylint: disable=no-member
         assert (
-            pb.flags & PB2SpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK
+            pb.flags & PB2SpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK  # pylint: disable=no-member
         ) != 0
-        assert (pb.flags & PB2SpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK) == 0
+        assert (pb.flags & PB2SpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK) == 0  # pylint: disable=no-member
         assert (pb.flags & ~ALL_SPAN_FLAGS_MASK) == 0
 
     def test_span_flags_remote_parent_sampled(self):
@@ -547,11 +547,11 @@ class TestSpanFlagsEncoding(unittest.TestCase):
         )
         span = SDKSpan(name="child", context=span_context, parent=parent)
         pb = _encode_span(span)
-        assert (pb.flags & PB2SpanFlags.SPAN_FLAGS_TRACE_FLAGS_MASK) == 0x01
+        assert (pb.flags & PB2SpanFlags.SPAN_FLAGS_TRACE_FLAGS_MASK) == 0x01  # pylint: disable=no-member
         assert (
-            pb.flags & PB2SpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK
+            pb.flags & PB2SpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK  # pylint: disable=no-member
         ) != 0
-        assert (pb.flags & PB2SpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK) != 0
+        assert (pb.flags & PB2SpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK) != 0  # pylint: disable=no-member
         assert (pb.flags & ~ALL_SPAN_FLAGS_MASK) == 0
 
     def test_link_flags_local_and_remote(self):
@@ -565,24 +565,24 @@ class TestSpanFlagsEncoding(unittest.TestCase):
         )
         pb_links = _encode_links([l1, l2])
         assert (
-            pb_links[0].flags & PB2SpanFlags.SPAN_FLAGS_TRACE_FLAGS_MASK
+            pb_links[0].flags & PB2SpanFlags.SPAN_FLAGS_TRACE_FLAGS_MASK  # pylint: disable=no-member
         ) == 0x01
         assert (
             pb_links[0].flags
-            & PB2SpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK
+            & PB2SpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK  # pylint: disable=no-member
         ) != 0
         assert (
-            pb_links[0].flags & PB2SpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK
+            pb_links[0].flags & PB2SpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK  # pylint: disable=no-member
         ) == 0
         assert (pb_links[0].flags & ~ALL_SPAN_FLAGS_MASK) == 0
         assert (
-            pb_links[1].flags & PB2SpanFlags.SPAN_FLAGS_TRACE_FLAGS_MASK
+            pb_links[1].flags & PB2SpanFlags.SPAN_FLAGS_TRACE_FLAGS_MASK  # pylint: disable=no-member
         ) == 0x01
         assert (
             pb_links[1].flags
-            & PB2SpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK
+            & PB2SpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK  # pylint: disable=no-member
         ) != 0
         assert (
-            pb_links[1].flags & PB2SpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK
+            pb_links[1].flags & PB2SpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK  # pylint: disable=no-member
         ) != 0
         assert (pb_links[1].flags & ~ALL_SPAN_FLAGS_MASK) == 0
