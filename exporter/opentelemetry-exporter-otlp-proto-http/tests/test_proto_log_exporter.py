@@ -27,6 +27,9 @@ from requests import Session
 from requests.models import Response
 
 from opentelemetry._logs import SeverityNumber
+from opentelemetry.exporter.otlp.proto.common.utils import (
+    IterEntryPoint,
+)
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http._log_exporter import (
     DEFAULT_COMPRESSION,
@@ -67,8 +70,6 @@ from opentelemetry.trace import (
     TraceFlags,
     set_span_in_context,
 )
-
-from ._common import IterEntryPoint
 
 ENV_ENDPOINT = "http://localhost.env:8080/"
 ENV_CERTIFICATE = "/etc/base.crt"

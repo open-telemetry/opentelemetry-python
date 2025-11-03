@@ -12,13 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=protected-access
 
+from opentelemetry.exporter.otlp.proto.common._internal.utils import (
+    IterEntryPoint,
+)
 
-class IterEntryPoint:
-    def __init__(self, name, class_type):
-        self.name = name
-        self.class_type = class_type
-
-    def load(self):
-        return self.class_type
+__all__ = ["IterEntryPoint"]
