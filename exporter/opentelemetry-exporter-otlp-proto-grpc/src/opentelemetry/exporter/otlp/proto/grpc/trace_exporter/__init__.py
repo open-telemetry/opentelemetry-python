@@ -46,6 +46,7 @@ from opentelemetry.proto.trace.v1.trace_pb2 import (  # noqa: F401
     Span as CollectorSpan,
 )
 from opentelemetry.sdk.environment_variables import (
+    _OTEL_PYTHON_EXPORTER_OTLP_GRPC_TRACES_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
     OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
@@ -65,7 +66,10 @@ logger = logging.getLogger(__name__)
 class OTLPSpanExporter(
     SpanExporter,
     OTLPExporterMixin[
-        ReadableSpan, ExportTraceServiceRequest, SpanExportResult
+        Sequence[ReadableSpan],
+        ExportTraceServiceRequest,
+        SpanExportResult,
+        TraceServiceStub,
     ],
 ):
     # pylint: disable=unsubscriptable-object
@@ -80,9 +84,6 @@ class OTLPSpanExporter(
         compression: gRPC compression method to use
     """
 
-    _result = SpanExportResult
-    _stub = TraceServiceStub
-
     def __init__(
         self,
         endpoint: Optional[str] = None,
@@ -91,13 +92,13 @@ class OTLPSpanExporter(
         headers: Optional[
             Union[TypingSequence[Tuple[str, str]], Dict[str, str], str]
         ] = None,
-        timeout: Optional[int] = None,
+        timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
+        channel_options: Optional[Tuple[Tuple[str, str]]] = None,
     ):
-        if insecure is None:
-            insecure = environ.get(OTEL_EXPORTER_OTLP_TRACES_INSECURE)
-            if insecure is not None:
-                insecure = insecure.lower() == "true"
+        insecure_spans = environ.get(OTEL_EXPORTER_OTLP_TRACES_INSECURE)
+        if insecure is None and insecure_spans is not None:
+            insecure = insecure_spans.lower() == "true"
 
         if (
             not insecure
@@ -105,6 +106,7 @@ class OTLPSpanExporter(
         ):
             credentials = _get_credentials(
                 credentials,
+                _OTEL_PYTHON_EXPORTER_OTLP_GRPC_TRACES_CREDENTIAL_PROVIDER,
                 OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
                 OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
                 OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
@@ -112,7 +114,7 @@ class OTLPSpanExporter(
 
         environ_timeout = environ.get(OTEL_EXPORTER_OTLP_TRACES_TIMEOUT)
         environ_timeout = (
-            int(environ_timeout) if environ_timeout is not None else None
+            float(environ_timeout) if environ_timeout is not None else None
         )
 
         compression = (
@@ -121,17 +123,18 @@ class OTLPSpanExporter(
             else compression
         )
 
-        super().__init__(
-            **{
-                "endpoint": endpoint
-                or environ.get(OTEL_EXPORTER_OTLP_TRACES_ENDPOINT),
-                "insecure": insecure,
-                "credentials": credentials,
-                "headers": headers
-                or environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS),
-                "timeout": timeout or environ_timeout,
-                "compression": compression,
-            }
+        OTLPExporterMixin.__init__(
+            self,
+            stub=TraceServiceStub,
+            result=SpanExportResult,
+            endpoint=endpoint
+            or environ.get(OTEL_EXPORTER_OTLP_TRACES_ENDPOINT),
+            insecure=insecure,
+            credentials=credentials,
+            headers=headers or environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS),
+            timeout=timeout or environ_timeout,
+            compression=compression,
+            channel_options=channel_options,
         )
 
     def _translate_data(
@@ -142,8 +145,8 @@ class OTLPSpanExporter(
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
         return self._export(spans)
 
-    def shutdown(self) -> None:
-        OTLPExporterMixin.shutdown(self)
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
+        OTLPExporterMixin.shutdown(self, timeout_millis=timeout_millis)
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         """Nothing is buffered in this exporter, so this method does nothing."""

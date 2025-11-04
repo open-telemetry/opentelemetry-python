@@ -7,7 +7,7 @@ name = "opentelemetry-exporter-otlp-proto-common"
 dynamic = ["version"]
 description = "OpenTelemetry Protobuf encoding"
 readme = "README.rst"
-license = {text = "Apache-2.0"}
+license = "Apache-2.0"
 requires-python = ">=3.9"
 authors = [
   { name = "OpenTelemetry Authors", email = "cncf-opentelemetry-contributors@lists.cncf.io" },
@@ -17,7 +17,6 @@ classifiers = [
   "Framework :: OpenTelemetry",
   "Framework :: OpenTelemetry :: Exporters",
   "Intended Audience :: Developers",
-  "License :: OSI Approved :: Apache Software License",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.9",
@@ -27,7 +26,7 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
-  "opentelemetry-proto == 1.35.0.dev",
+  "opentelemetry-proto == 1.39.0.dev",
 ]
 
 [project.urls]

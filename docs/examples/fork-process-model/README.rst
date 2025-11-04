@@ -10,6 +10,8 @@ get around this limitation of the span processor.
 Please see http://bugs.python.org/issue6721 for the problems about Python locks in (multi)threaded
 context with fork.
 
+The source code for the examples with Flask app are available :scm_web:`here <docs/examples/fork-process-model/>`.
+
 Gunicorn post_fork hook
 -----------------------
 
@@ -61,6 +63,3 @@ uWSGI postfork decorator
             OTLPSpanExporter(endpoint="http://localhost:4317")
         )
         trace.get_tracer_provider().add_span_processor(span_processor)
-
-
-The source code for the examples with Flask app are available :scm_web:`here <docs/examples/fork-process-model/>`.

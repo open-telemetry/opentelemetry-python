@@ -61,7 +61,10 @@ def _encode_log(log_data: LogData) -> PB2LogRecord:
             log_data.log_record.attributes, allow_null=True
         ),
         dropped_attributes_count=log_data.log_record.dropped_attributes,
-        severity_number=log_data.log_record.severity_number.value,
+        severity_number=getattr(
+            log_data.log_record.severity_number, "value", None
+        ),
+        event_name=log_data.log_record.event_name,
     )
 
 

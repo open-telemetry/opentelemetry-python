@@ -7,9 +7,6 @@ receivers:
 exporters:
     debug:
 
-processors:
-    batch:
-
 service:
     pipelines:
         metrics:

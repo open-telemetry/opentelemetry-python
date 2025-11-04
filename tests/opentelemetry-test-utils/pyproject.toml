@@ -7,7 +7,7 @@ name = "opentelemetry-test-utils"
 dynamic = ["version"]
 description = "Test utilities for OpenTelemetry unit tests"
 readme = "README.rst"
-license = {text = "Apache-2.0"}
+license = "Apache-2.0"
 requires-python = ">=3.9"
 authors = [
   { name = "OpenTelemetry Authors", email = "cncf-opentelemetry-contributors@lists.cncf.io" },
@@ -16,7 +16,6 @@ classifiers = [
   "Development Status :: 4 - Beta",
   "Framework :: OpenTelemetry",
   "Intended Audience :: Developers",
-  "License :: OSI Approved :: Apache Software License",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.9",
@@ -27,8 +26,8 @@ classifiers = [
 ]
 dependencies = [
   "asgiref ~= 3.0",
-  "opentelemetry-api == 1.35.0.dev",
-  "opentelemetry-sdk == 1.35.0.dev",
+  "opentelemetry-api == 1.39.0.dev",
+  "opentelemetry-sdk == 1.39.0.dev",
 ]
 
 [project.urls]
