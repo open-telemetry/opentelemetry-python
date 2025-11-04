@@ -33,9 +33,6 @@ from grpc import ChannelCredentials, Compression, StatusCode, server
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
 )
-from opentelemetry.exporter.otlp.proto.common.utils import (
-    IterEntryPoint,
-)
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (  # noqa: F401
     InvalidCompressionValueException,
     OTLPExporterMixin,
@@ -60,6 +57,7 @@ from opentelemetry.sdk.trace.export import (
     SpanExporter,
     SpanExportResult,
 )
+from opentelemetry.test.mock_test_classes import IterEntryPoint
 
 logger = getLogger(__name__)
 

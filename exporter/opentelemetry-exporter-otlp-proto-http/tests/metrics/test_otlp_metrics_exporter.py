@@ -25,9 +25,6 @@ from requests.models import Response
 from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
     encode_metrics,
 )
-from opentelemetry.exporter.otlp.proto.common.utils import (
-    IterEntryPoint,
-)
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
     DEFAULT_COMPRESSION,
@@ -80,6 +77,7 @@ from opentelemetry.sdk.util.instrumentation import (
     InstrumentationScope as SDKInstrumentationScope,
 )
 from opentelemetry.test.metrictestutil import _generate_sum
+from opentelemetry.test.mock_test_classes import IterEntryPoint
 
 OS_ENV_ENDPOINT = "os.env.base"
 OS_ENV_CERTIFICATE = "os/env/base.crt"

@@ -27,9 +27,6 @@ from requests import Session
 from requests.models import Response
 
 from opentelemetry._logs import SeverityNumber
-from opentelemetry.exporter.otlp.proto.common.utils import (
-    IterEntryPoint,
-)
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http._log_exporter import (
     DEFAULT_COMPRESSION,
@@ -64,6 +61,7 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
+from opentelemetry.test.mock_test_classes import IterEntryPoint
 from opentelemetry.trace import (
     NonRecordingSpan,
     SpanContext,

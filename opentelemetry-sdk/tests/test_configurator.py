@@ -72,6 +72,7 @@ from opentelemetry.sdk.trace.sampling import (
     SamplingResult,
     TraceIdRatioBased,
 )
+from opentelemetry.test.mock_test_classes import IterEntryPoint
 from opentelemetry.trace import Link, SpanKind
 from opentelemetry.trace.span import TraceState
 from opentelemetry.util.types import Attributes
@@ -305,15 +306,6 @@ class CustomIdGenerator(IdGenerator):
 
     def generate_trace_id(self):
         pass
-
-
-class IterEntryPoint:
-    def __init__(self, name, class_type):
-        self.name = name
-        self.class_type = class_type
-
-    def load(self):
-        return self.class_type
 
 
 class TestTraceInit(TestCase):
