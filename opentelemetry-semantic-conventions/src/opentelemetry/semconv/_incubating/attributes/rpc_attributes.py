@@ -112,14 +112,12 @@ Uncompressed size of the message in bytes.
 
 RPC_METHOD: Final = "rpc.method"
 """
-The name of the (logical) method being called, must be equal to the $method part in the span name.
-Note: This is the logical name of the method from the RPC interface perspective, which can be different from the name of any implementing method/function. The `code.function.name` attribute may be used to store the latter (e.g., method actually executing the call on the server side, RPC client stub method on the client side).
+This is the logical name of the method from the RPC interface perspective.
 """
 
 RPC_SERVICE: Final = "rpc.service"
 """
 The full (logical) name of the service being called, including its package name, if applicable.
-Note: This is the logical name of the service from the RPC interface perspective, which can be different from the name of any implementing class. The `code.namespace` attribute may be used to store the latter (despite the attribute name, it may include a class name; e.g., class with method actually executing the call on the server side, RPC client stub class on the client side).
 """
 
 RPC_SYSTEM: Final = "rpc.system"
@@ -218,3 +216,7 @@ class RpcSystemValues(Enum):
     """Apache Dubbo."""
     CONNECT_RPC = "connect_rpc"
     """Connect RPC."""
+    ONC_RPC = "onc_rpc"
+    """[ONC RPC (Sun RPC)](https://datatracker.ietf.org/doc/html/rfc5531)."""
+    JSONRPC = "jsonrpc"
+    """JSON-RPC."""

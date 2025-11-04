@@ -38,7 +38,7 @@ PROCESS_COMMAND_LINE: Final = "process.command_line"
 The full command used to launch the process as a single string representing the full command. On Windows, can be set to the result of `GetCommandLineW`. Do not set this if you have to assemble it just for monitoring; use `process.command_args` instead. SHOULD NOT be collected by default unless there is sanitization that excludes sensitive data.
 """
 
-PROCESS_CONTEXT_SWITCH_TYPE: Final = "process.context_switch_type"
+PROCESS_CONTEXT_SWITCH_TYPE: Final = "process.context_switch.type"
 """
 Specifies whether the context switches for this data point were voluntary or involuntary.
 """
@@ -133,7 +133,7 @@ The username of the user that owns the process.
 
 PROCESS_PAGING_FAULT_TYPE: Final = "process.paging.fault_type"
 """
-The type of page fault for this data point. Type `major` is for major/hard page faults, and `minor` is for minor/soft page faults.
+Deprecated: Replaced by `system.paging.fault.type`.
 """
 
 PROCESS_PARENT_PID: Final = "process.parent_pid"
@@ -186,6 +186,11 @@ PROCESS_SESSION_LEADER_PID: Final = "process.session_leader.pid"
 The PID of the process's session leader. This is also the session ID (SID) of the process.
 """
 
+PROCESS_STATE: Final = "process.state"
+"""
+The process state, e.g., [Linux Process State Codes](https://man7.org/linux/man-pages/man1/ps.1.html#PROCESS_STATE_CODES).
+"""
+
 PROCESS_TITLE: Final = "process.title"
 """
 Process title (proctitle).
@@ -233,8 +238,22 @@ class ProcessCpuStateValues(Enum):
     """wait."""
 
 
+@deprecated(
+    "The attribute process.paging.fault_type is deprecated - Replaced by `system.paging.fault.type`"
+)
 class ProcessPagingFaultTypeValues(Enum):
     MAJOR = "major"
     """major."""
     MINOR = "minor"
     """minor."""
+
+
+class ProcessStateValues(Enum):
+    RUNNING = "running"
+    """running."""
+    SLEEPING = "sleeping"
+    """sleeping."""
+    STOPPED = "stopped"
+    """stopped."""
+    DEFUNCT = "defunct"
+    """defunct."""
