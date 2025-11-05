@@ -348,7 +348,8 @@ class TestLogger(unittest.TestCase):
     def test_emit_both_min_severity_and_trace_based_sampling_filtering(self):
         """Test that both min severity and trace-based filtering work together"""
         config = LoggerConfig(
-            minimum_severity_level=SeverityNumber.WARN, trace_based_sampling=True
+            minimum_severity_level=SeverityNumber.WARN,
+            trace_based_sampling=True,
         )
         logger, log_record_processor_mock = self._get_logger(config)
 
@@ -414,7 +415,9 @@ class TestLogger(unittest.TestCase):
         logger, _ = self._get_logger(config)
 
         self.assertEqual(logger.config.disabled, True)
-        self.assertEqual(logger.config.minimum_severity_level, SeverityNumber.WARN)
+        self.assertEqual(
+            logger.config.minimum_severity_level, SeverityNumber.WARN
+        )
         self.assertEqual(logger.config.trace_based_sampling, True)
 
     def test_logger_configurator_behavior(self):
@@ -447,7 +450,8 @@ class TestLogger(unittest.TestCase):
 
         other_logger = provider.get_logger("test.other")
         self.assertEqual(
-            other_logger.config.minimum_severity_level, SeverityNumber.UNSPECIFIED
+            other_logger.config.minimum_severity_level,
+            SeverityNumber.UNSPECIFIED,
         )
         self.assertFalse(other_logger.config.disabled)
         self.assertFalse(other_logger.config.trace_based_sampling)
@@ -486,7 +490,9 @@ class TestLogger(unittest.TestCase):
     def test_logger_configurator_dynamic_updates(self):
         """Test that LoggerConfigurator updates apply to existing loggers"""
         initial_configs = {
-            "test.module": LoggerConfig(minimum_severity_level=SeverityNumber.INFO)
+            "test.module": LoggerConfig(
+                minimum_severity_level=SeverityNumber.INFO
+            )
         }
 
         initial_configurator = create_logger_configurator_by_name(
@@ -496,7 +502,9 @@ class TestLogger(unittest.TestCase):
         provider = LoggerProvider(logger_configurator=initial_configurator)
 
         logger = provider.get_logger("test.module")
-        self.assertEqual(logger.config.minimum_severity_level, SeverityNumber.INFO)
+        self.assertEqual(
+            logger.config.minimum_severity_level, SeverityNumber.INFO
+        )
         self.assertFalse(logger.config.disabled)
 
         updated_configs = {
@@ -510,7 +518,9 @@ class TestLogger(unittest.TestCase):
 
         provider.set_logger_configurator(updated_configurator)
 
-        self.assertEqual(logger.config.minimum_severity_level, SeverityNumber.ERROR)
+        self.assertEqual(
+            logger.config.minimum_severity_level, SeverityNumber.ERROR
+        )
         self.assertTrue(logger.config.disabled)
 
         new_logger = provider.get_logger("test.module")
@@ -533,7 +543,9 @@ class TestLogger(unittest.TestCase):
 
         logger = provider.get_logger("test.module")
 
-        self.assertEqual(logger.config.minimum_severity_level, SeverityNumber.WARN)
+        self.assertEqual(
+            logger.config.minimum_severity_level, SeverityNumber.WARN
+        )
         self.assertTrue(logger.config.trace_based_sampling)
         self.assertFalse(logger.config.disabled)
 

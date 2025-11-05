@@ -869,7 +869,9 @@ class Logger(APILogger):
         if self._config.disabled:
             return
 
-        if is_less_than_min_severity(record, self._config.minimum_severity_level):
+        if is_less_than_min_severity(
+            record, self._config.minimum_severity_level
+        ):
             return
 
         if should_drop_logs_for_unsampled_traces(
