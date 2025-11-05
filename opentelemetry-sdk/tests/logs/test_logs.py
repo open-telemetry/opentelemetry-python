@@ -86,7 +86,7 @@ class TestLoggerProvider(unittest.TestCase):
     @patch.object(Resource, "create")
     def test_logger_provider_init(self, resource_patch):
         logger_provider = LoggerProvider(
-            min_severity_level=SeverityNumber.DEBUG4, trace_based=True
+            min_severity_level=SeverityNumber.DEBUG4, trace_based_sampling=True
         )
         resource_patch.assert_called_once()
         self.assertIsNotNone(logger_provider._resource)
@@ -99,7 +99,7 @@ class TestLoggerProvider(unittest.TestCase):
         self.assertEqual(
             logger_provider._min_severity_level, SeverityNumber.DEBUG4
         )
-        self.assertTrue(logger_provider._trace_based)
+        self.assertTrue(logger_provider._trace_based_sampling)
         self.assertIsNotNone(logger_provider._at_exit_handler)
 
 
@@ -183,7 +183,7 @@ class TestLogger(unittest.TestCase):
 
     def test_emit_logrecord_with_min_severity_filtering(self):
         """Test that logs below minimum severity are filtered out"""
-        config = LoggerConfig(minimum_severity=SeverityNumber.DEBUG4)
+        config = LoggerConfig(minimum_severity_level=SeverityNumber.DEBUG4)
         logger, log_record_processor_mock = self._get_logger(config)
 
         log_record_info = LogRecord(
@@ -226,9 +226,9 @@ class TestLogger(unittest.TestCase):
         logger.emit(log_record)
         log_record_processor_mock.on_emit.assert_called_once()
 
-    def test_emit_logrecord_with_trace_based_filtering(self):
+    def test_emit_logrecord_with_trace_based_sampling_filtering(self):
         """Test that logs are filtered based on trace sampling state"""
-        config = LoggerConfig(trace_based=True)
+        config = LoggerConfig(trace_based_sampling=True)
         logger, log_record_processor_mock = self._get_logger(config)
 
         mock_span_context = Mock()
@@ -294,7 +294,7 @@ class TestLogger(unittest.TestCase):
 
     def test_emit_logrecord_trace_filtering_edge_cases(self):
         """Test edge cases for trace-based filtering"""
-        config = LoggerConfig(trace_based=True)
+        config = LoggerConfig(trace_based_sampling=True)
         logger, log_record_processor_mock = self._get_logger(config)
 
         mock_span_context = Mock()
@@ -345,10 +345,10 @@ class TestLogger(unittest.TestCase):
             logger.emit(log_record)
             log_record_processor_mock.on_emit.assert_not_called()
 
-    def test_emit_both_min_severity_and_trace_based_filtering(self):
+    def test_emit_both_min_severity_and_trace_based_sampling_filtering(self):
         """Test that both min severity and trace-based filtering work together"""
         config = LoggerConfig(
-            minimum_severity=SeverityNumber.WARN, trace_based=True
+            minimum_severity_level=SeverityNumber.WARN, trace_based_sampling=True
         )
         logger, log_record_processor_mock = self._get_logger(config)
 
@@ -408,24 +408,24 @@ class TestLogger(unittest.TestCase):
         """Test that logger config property works correctly"""
         config = LoggerConfig(
             disabled=True,
-            minimum_severity=SeverityNumber.WARN,
-            trace_based=True,
+            minimum_severity_level=SeverityNumber.WARN,
+            trace_based_sampling=True,
         )
         logger, _ = self._get_logger(config)
 
         self.assertEqual(logger.config.disabled, True)
-        self.assertEqual(logger.config.minimum_severity, SeverityNumber.WARN)
-        self.assertEqual(logger.config.trace_based, True)
+        self.assertEqual(logger.config.minimum_severity_level, SeverityNumber.WARN)
+        self.assertEqual(logger.config.trace_based_sampling, True)
 
     def test_logger_configurator_behavior(self):
         """Test LoggerConfigurator functionality including custom configurators and dynamic updates"""
 
         logger_configs = {
             "test.database": LoggerConfig(
-                minimum_severity=SeverityNumber.ERROR
+                minimum_severity_level=SeverityNumber.ERROR
             ),
             "test.auth": LoggerConfig(disabled=True),
-            "test.performance": LoggerConfig(trace_based=True),
+            "test.performance": LoggerConfig(trace_based_sampling=True),
         }
 
         configurator = create_logger_configurator_by_name(logger_configs)
@@ -434,34 +434,34 @@ class TestLogger(unittest.TestCase):
 
         db_logger = provider.get_logger("test.database")
         self.assertEqual(
-            db_logger.config.minimum_severity, SeverityNumber.ERROR
+            db_logger.config.minimum_severity_level, SeverityNumber.ERROR
         )
         self.assertFalse(db_logger.config.disabled)
-        self.assertFalse(db_logger.config.trace_based)
+        self.assertFalse(db_logger.config.trace_based_sampling)
 
         auth_logger = provider.get_logger("test.auth")
         self.assertTrue(auth_logger.config.disabled)
 
         perf_logger = provider.get_logger("test.performance")
-        self.assertTrue(perf_logger.config.trace_based)
+        self.assertTrue(perf_logger.config.trace_based_sampling)
 
         other_logger = provider.get_logger("test.other")
         self.assertEqual(
-            other_logger.config.minimum_severity, SeverityNumber.UNSPECIFIED
+            other_logger.config.minimum_severity_level, SeverityNumber.UNSPECIFIED
         )
         self.assertFalse(other_logger.config.disabled)
-        self.assertFalse(other_logger.config.trace_based)
+        self.assertFalse(other_logger.config.trace_based_sampling)
 
     def test_logger_configurator_pattern_matching(self):
         """Test LoggerConfigurator with pattern matching"""
         patterns = [
             (
                 "test.database.*",
-                LoggerConfig(minimum_severity=SeverityNumber.ERROR),
+                LoggerConfig(minimum_severity_level=SeverityNumber.ERROR),
             ),
             ("test.*.debug", LoggerConfig(disabled=True)),
-            ("test.*", LoggerConfig(trace_based=True)),
-            ("*", LoggerConfig(minimum_severity=SeverityNumber.WARN)),
+            ("test.*", LoggerConfig(trace_based_sampling=True)),
+            ("*", LoggerConfig(minimum_severity_level=SeverityNumber.WARN)),
         ]
 
         configurator = create_logger_configurator_with_pattern(patterns)
@@ -469,24 +469,24 @@ class TestLogger(unittest.TestCase):
 
         db_logger = provider.get_logger("test.database.connection")
         self.assertEqual(
-            db_logger.config.minimum_severity, SeverityNumber.ERROR
+            db_logger.config.minimum_severity_level, SeverityNumber.ERROR
         )
 
         debug_logger = provider.get_logger("test.module.debug")
         self.assertTrue(debug_logger.config.disabled)
 
         general_logger = provider.get_logger("test.module")
-        self.assertTrue(general_logger.config.trace_based)
+        self.assertTrue(general_logger.config.trace_based_sampling)
 
         other_logger = provider.get_logger("other.module")
         self.assertEqual(
-            other_logger.config.minimum_severity, SeverityNumber.WARN
+            other_logger.config.minimum_severity_level, SeverityNumber.WARN
         )
 
     def test_logger_configurator_dynamic_updates(self):
         """Test that LoggerConfigurator updates apply to existing loggers"""
         initial_configs = {
-            "test.module": LoggerConfig(minimum_severity=SeverityNumber.INFO)
+            "test.module": LoggerConfig(minimum_severity_level=SeverityNumber.INFO)
         }
 
         initial_configurator = create_logger_configurator_by_name(
@@ -496,12 +496,12 @@ class TestLogger(unittest.TestCase):
         provider = LoggerProvider(logger_configurator=initial_configurator)
 
         logger = provider.get_logger("test.module")
-        self.assertEqual(logger.config.minimum_severity, SeverityNumber.INFO)
+        self.assertEqual(logger.config.minimum_severity_level, SeverityNumber.INFO)
         self.assertFalse(logger.config.disabled)
 
         updated_configs = {
             "test.module": LoggerConfig(
-                minimum_severity=SeverityNumber.ERROR, disabled=True
+                minimum_severity_level=SeverityNumber.ERROR, disabled=True
             )
         }
         updated_configurator = create_logger_configurator_by_name(
@@ -510,12 +510,12 @@ class TestLogger(unittest.TestCase):
 
         provider.set_logger_configurator(updated_configurator)
 
-        self.assertEqual(logger.config.minimum_severity, SeverityNumber.ERROR)
+        self.assertEqual(logger.config.minimum_severity_level, SeverityNumber.ERROR)
         self.assertTrue(logger.config.disabled)
 
         new_logger = provider.get_logger("test.module")
         self.assertEqual(
-            new_logger.config.minimum_severity, SeverityNumber.ERROR
+            new_logger.config.minimum_severity_level, SeverityNumber.ERROR
         )
         self.assertTrue(new_logger.config.disabled)
 
@@ -528,13 +528,13 @@ class TestLogger(unittest.TestCase):
         provider = LoggerProvider(
             logger_configurator=none_configurator,
             min_severity_level=SeverityNumber.WARN,
-            trace_based=True,
+            trace_based_sampling=True,
         )
 
         logger = provider.get_logger("test.module")
 
-        self.assertEqual(logger.config.minimum_severity, SeverityNumber.WARN)
-        self.assertTrue(logger.config.trace_based)
+        self.assertEqual(logger.config.minimum_severity_level, SeverityNumber.WARN)
+        self.assertTrue(logger.config.trace_based_sampling)
         self.assertFalse(logger.config.disabled)
 
     @staticmethod
@@ -542,9 +542,9 @@ class TestLogger(unittest.TestCase):
         if scope.name == "disabled.logger":
             return LoggerConfig(disabled=True)
         if scope.name == "error.logger":
-            return LoggerConfig(minimum_severity=SeverityNumber.ERROR)
+            return LoggerConfig(minimum_severity_level=SeverityNumber.ERROR)
         if scope.name == "trace.logger":
-            return LoggerConfig(trace_based=True)
+            return LoggerConfig(trace_based_sampling=True)
         return LoggerConfig()
 
     def test_logger_configurator_with_filtering(self):

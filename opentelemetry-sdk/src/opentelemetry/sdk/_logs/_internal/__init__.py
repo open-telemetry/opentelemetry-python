@@ -106,8 +106,8 @@ class LoggerConfig:
     def __init__(
         self,
         disabled: bool = False,
-        minimum_severity: SeverityNumber = SeverityNumber.UNSPECIFIED,
-        trace_based: bool = False,
+        minimum_severity_level: SeverityNumber = SeverityNumber.UNSPECIFIED,
+        trace_based_sampling: bool = False,
     ):
         """Initialize LoggerConfig with specified parameters.
 
@@ -115,24 +115,24 @@ class LoggerConfig:
             disabled: A boolean indication of whether the logger is enabled.
                 If not explicitly set, defaults to False (i.e. Loggers are enabled by default).
                 If True, the logger behaves equivalently to a No-op Logger.
-            minimum_severity: A SeverityNumber indicating the minimum severity level
+            minimum_severity_level: A SeverityNumber indicating the minimum severity level
                 for log records to be processed. If not explicitly set, defaults to UNSPECIFIED (0).
                 If a log record's SeverityNumber is specified and is less than the configured
-                minimum_severity, the log record is dropped by the Logger.
-            trace_based: A boolean indication of whether the logger should only
+                minimum_severity_level, the log record is dropped by the Logger.
+            trace_based_sampling: A boolean indication of whether the logger should only
                 process log records associated with sampled traces. If not explicitly set,
                 defaults to False. If True, log records associated with unsampled traces
                 are dropped by the Logger.
         """
         self.disabled = disabled
-        self.minimum_severity = minimum_severity
-        self.trace_based = trace_based
+        self.minimum_severity_level = minimum_severity_level
+        self.trace_based_sampling = trace_based_sampling
 
     def __repr__(self):
         return (
             f"LoggerConfig(disabled={self.disabled}, "
-            f"minimum_severity={self.minimum_severity}, "
-            f"trace_based={self.trace_based})"
+            f"minimum_severity_level={self.minimum_severity_level}, "
+            f"trace_based_sampling={self.trace_based_sampling})"
         )
 
 
@@ -768,7 +768,7 @@ class Logger(APILogger):
         instrumentation_scope: InstrumentationScope,
         config: LoggerConfig | None = None,
         min_severity_level: SeverityNumber = SeverityNumber.UNSPECIFIED,
-        trace_based: bool = False,
+        trace_based_sampling: bool = False,
     ):
         if config is not None:
             self._config = config
@@ -785,7 +785,7 @@ class Logger(APILogger):
         self._multi_log_record_processor = multi_log_record_processor
         self._instrumentation_scope = instrumentation_scope
         self._min_severity_level = min_severity_level
-        self._trace_based = trace_based
+        self._trace_based_sampling = trace_based_sampling
 
     @property
     def resource(self):
@@ -869,11 +869,11 @@ class Logger(APILogger):
         if self._config.disabled:
             return
 
-        if is_less_than_min_severity(record, self._config.minimum_severity):
+        if is_less_than_min_severity(record, self._config.minimum_severity_level):
             return
 
         if should_drop_logs_for_unsampled_traces(
-            record, self._config.trace_based
+            record, self._config.trace_based_sampling
         ):
             return
 
@@ -891,7 +891,7 @@ class LoggerProvider(APILoggerProvider):
         | ConcurrentMultiLogRecordProcessor
         | None = None,
         min_severity_level: SeverityNumber = SeverityNumber.UNSPECIFIED,
-        trace_based: bool = False,
+        trace_based_sampling: bool = False,
         logger_configurator: LoggerConfigurator | None = None,
     ):
         if resource is None:
@@ -909,7 +909,7 @@ class LoggerProvider(APILoggerProvider):
         self._logger_cache = {}
         self._logger_cache_lock = Lock()
         self._min_severity_level = min_severity_level
-        self._trace_based = trace_based
+        self._trace_based_sampling = trace_based_sampling
 
         if logger_configurator is not None:
             self._logger_configurator = logger_configurator
@@ -920,8 +920,8 @@ class LoggerProvider(APILoggerProvider):
             ) -> LoggerConfig:
                 return LoggerConfig(
                     disabled=self._disabled,
-                    minimum_severity=self._min_severity_level,
-                    trace_based=self._trace_based,
+                    minimum_severity_level=self._min_severity_level,
+                    trace_based_sampling=self._trace_based_sampling,
                 )
 
             self._logger_configurator = default_configurator
@@ -947,8 +947,8 @@ class LoggerProvider(APILoggerProvider):
         if config is None:
             config = LoggerConfig(
                 disabled=self._disabled,
-                minimum_severity=self._min_severity_level,
-                trace_based=self._trace_based,
+                minimum_severity_level=self._min_severity_level,
+                trace_based_sampling=self._trace_based_sampling,
             )
         return Logger(
             self._resource,
@@ -1013,8 +1013,8 @@ class LoggerProvider(APILoggerProvider):
                 if new_config is None:
                     new_config = LoggerConfig(
                         disabled=self._disabled,
-                        minimum_severity=self._min_severity_level,
-                        trace_based=self._trace_based,
+                        minimum_severity_level=self._min_severity_level,
+                        trace_based_sampling=self._trace_based_sampling,
                     )
                 logger.update_config(new_config)
 
@@ -1124,24 +1124,24 @@ def is_less_than_min_severity(
 
 
 def should_drop_logs_for_unsampled_traces(
-    record: LogRecord, trace_based_flag: bool
+    record: LogRecord, trace_based_sampling_flag: bool
 ) -> bool:
     """Determines whether the logger should drop log records associated with unsampled traces.
 
-    If `trace_based` is `true`, log records associated with unsampled traces are dropped by the `Logger`.
+    If `trace_based_sampling` is `true`, log records associated with unsampled traces are dropped by the `Logger`.
     A log record is considered associated with an unsampled trace if it has a valid `SpanId` and its
     `TraceFlags` indicate that the trace is unsampled. A log record that isn't associated with a trace
     context is not affected by this parameter and therefore bypasses trace-based filtering.
 
     Args:
         record: The log record to be processed.
-        trace_based_flag: A boolean flag indicating whether trace-based filtering is enabled. If not explicitly set,
-        the `trace_based` parameter is set to `false`
+        trace_based_sampling_flag: A boolean flag indicating whether trace-based filtering is enabled. If not explicitly set,
+        the `trace_based_sampling` parameter is set to `false`
 
     Returns:
         True if the log record should be dropped due to being associated with an unsampled trace.
     """
-    if trace_based_flag:
+    if trace_based_sampling_flag:
         if record.context is not None:
             span = get_current_span(record.context)
             span_context = span.get_span_context()

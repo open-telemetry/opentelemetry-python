@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4737](https://github.com/open-telemetry/opentelemetry-python/pull/4737))
 - logs: add warnings for classes that would be deprecated and renamed in 1.39.0
   ([#4771](https://github.com/open-telemetry/opentelemetry-python/pull/4771))
-- Add `minimum_severity` and `trace_based` logger parameters to filter logs
+- Add `minimum_severity level` and `trace_based sampling` logger parameters to filter logs
   ([#4765](https://github.com/open-telemetry/opentelemetry-python/pull/4765))
 
 ## Version 1.37.0/0.58b0 (2025-09-11)
