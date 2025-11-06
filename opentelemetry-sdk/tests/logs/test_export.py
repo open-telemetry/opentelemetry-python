@@ -76,10 +76,10 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         logger_provider.add_log_record_processor(
             SimpleLogRecordProcessor(exporter)
         )
-        logger = logging.getLogger("default_level")
-        logger.addHandler(LoggingHandler(logger_provider=logger_provider))
+        root_logger = logging.getLogger()
+        root_logger.addHandler(LoggingHandler(level=logging.NOTSET,logger_provider=logger_provider))
         # This would cause a max recursion depth exceeded error..
-        logger.warning("Something is wrong")
+        root_logger.warning("Something is wrong")
 
     def test_simple_log_record_processor_default_level(self):
         exporter = InMemoryLogExporter()

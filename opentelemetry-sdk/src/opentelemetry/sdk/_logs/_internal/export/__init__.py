@@ -120,7 +120,11 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
 
     def on_emit(self, log_data: LogData):
         # Prevent entering recursive loop.
-        if any(item[2] == "on_emit" for item in traceback.extract_stack()):
+        if sum(
+            item.name == "on_emit"
+            and item.filename.endswith("export/__init__.py")
+            for item in traceback.extract_stack()
+        ) > 1:
             return
         if self._shutdown:
             _logger.warning("Processor is already shutdown, ignoring call")
