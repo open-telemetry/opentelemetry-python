@@ -192,7 +192,7 @@ class OTLPSpanExporter(SpanExporter):
                         resp.text,
                     )
                     return SpanExportResult.FAILURE
-            except Exception as error:
+            except requests.exceptions.RequestException as error:
                 _logger.error("Failed to export span batch reason: %s", error)
 
             if (
