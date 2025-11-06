@@ -81,6 +81,10 @@ class Exporter(Protocol[Telemetry]):
         raise NotImplementedError
 
 
+_logger = logging.getLogger(__name__)
+_logger.addFilter(DuplicateFilter())
+
+
 class BatchProcessor(Generic[Telemetry]):
     """This class can be used with exporter's that implement the above
     Exporter interface to buffer and send telemetry in batch through
@@ -111,8 +115,6 @@ class BatchProcessor(Generic[Telemetry]):
             target=self.worker,
             daemon=True,
         )
-        self._logger = logging.getLogger(__name__)
-        self._logger.addFilter(DuplicateFilter())
         self._exporting = exporting
 
         self._shutdown = False
@@ -189,7 +191,7 @@ class BatchProcessor(Generic[Telemetry]):
                         ]
                     )
                 except Exception:  # pylint: disable=broad-exception-caught
-                    self._logger.exception(
+                    _logger.exception(
                         "Exception while exporting %s.", self._exporting
                     )
                 detach(token)

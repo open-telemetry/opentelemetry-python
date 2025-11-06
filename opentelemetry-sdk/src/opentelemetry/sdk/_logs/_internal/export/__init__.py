@@ -17,6 +17,7 @@ import abc
 import enum
 import logging
 import sys
+import traceback
 from os import environ, linesep
 from typing import IO, Callable, Optional, Sequence
 
@@ -118,6 +119,9 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
         self._shutdown = False
 
     def on_emit(self, log_data: LogData):
+        # Prevent entering recursive loop.
+        if any(item[2] == "on_emit" for item in traceback.extract_stack()):
+            return
         if self._shutdown:
             _logger.warning("Processor is already shutdown, ignoring call")
             return

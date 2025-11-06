@@ -19,6 +19,7 @@ import time
 import unittest
 from concurrent.futures import ThreadPoolExecutor
 from sys import version_info
+from typing import Sequence
 from unittest.mock import Mock, patch
 
 from pytest import mark
@@ -36,6 +37,7 @@ from opentelemetry.sdk._logs.export import (
     BatchLogRecordProcessor,
     ConsoleLogExporter,
     InMemoryLogExporter,
+    LogExporter,
     SimpleLogRecordProcessor,
 )
 from opentelemetry.sdk.environment_variables import (
@@ -61,6 +63,24 @@ EMPTY_LOG = LogData(
 
 
 class TestSimpleLogRecordProcessor(unittest.TestCase):
+    def test_simple_log_record_processor_doesnt_enter_recursive_loop(self):
+        class Exporter(LogExporter):
+            def shutdown(self):
+                pass
+
+            def export(self, batch: Sequence[LogData]):
+                raise ValueError("Exception raised !")
+
+        exporter = Exporter()
+        logger_provider = LoggerProvider()
+        logger_provider.add_log_record_processor(
+            SimpleLogRecordProcessor(exporter)
+        )
+        logger = logging.getLogger("default_level")
+        logger.addHandler(LoggingHandler(logger_provider=logger_provider))
+        # This would cause a max recursion depth exceeded error..
+        logger.warning("Something is wrong")
+
     def test_simple_log_record_processor_default_level(self):
         exporter = InMemoryLogExporter()
         logger_provider = LoggerProvider()
