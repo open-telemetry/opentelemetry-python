@@ -244,7 +244,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                         resp.text,
                     )
                     return MetricExportResult.FAILURE
-            except Exception as error:
+            except requests.exceptions.RequestException as error:
                 _logger.error(
                     "Failed to export metrics batch reason: %s", error
                 )
