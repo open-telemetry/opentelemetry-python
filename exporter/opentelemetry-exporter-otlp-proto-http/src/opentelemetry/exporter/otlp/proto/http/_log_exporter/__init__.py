@@ -192,15 +192,22 @@ class OTLPLogExporter(LogRecordExporter):
                 resp = self._export(serialized_data, deadline_sec - time())
                 if resp.ok:
                     return LogExportResult.SUCCESS
-                if not _is_retryable(resp):
-                    _logger.error(
-                        "Failed to export logs batch code: %s, reason: %s",
-                        resp.status_code,
-                        resp.text,
-                    )
-                    return LogExportResult.FAILURE
             except requests.exceptions.RequestException as error:
-                _logger.error("Failed to export logs batch reason: %s", error)
+                reason = str(error)
+                retryable = True
+                status_code = None
+            else:
+                reason = resp.reason
+                retryable = _is_retryable(resp)
+                status_code = resp.status_code
+
+            if not retryable:
+                _logger.error(
+                    "Failed to export logs batch code: %s, reason: %s",
+                    status_code,
+                    reason,
+                )
+                return LogExportResult.FAILURE
 
             if (
                 retry_num + 1 == _MAX_RETRYS
@@ -213,7 +220,8 @@ class OTLPLogExporter(LogRecordExporter):
                 )
                 return LogRecordExportResult.FAILURE
             _logger.warning(
-                "Transient error encountered while exporting logs batch, retrying in %.2fs.",
+                "Transient error %s encountered while exporting logs batch, retrying in %.2fs.",
+                reason,
                 backoff_seconds,
             )
             shutdown = self._shutdown_is_occuring.wait(backoff_seconds)

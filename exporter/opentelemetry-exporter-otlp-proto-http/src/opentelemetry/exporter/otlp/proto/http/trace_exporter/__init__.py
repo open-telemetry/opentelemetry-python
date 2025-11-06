@@ -185,15 +185,22 @@ class OTLPSpanExporter(SpanExporter):
                 resp = self._export(serialized_data, deadline_sec - time())
                 if resp.ok:
                     return SpanExportResult.SUCCESS
-                if not _is_retryable(resp):
-                    _logger.error(
-                        "Failed to export span batch code: %s, reason: %s",
-                        resp.status_code,
-                        resp.text,
-                    )
-                    return SpanExportResult.FAILURE
             except requests.exceptions.RequestException as error:
-                _logger.error("Failed to export span batch reason: %s", error)
+                reason = str(error)
+                retryable = True
+                status_code = None
+            else:
+                reason = resp.reason
+                retryable = _is_retryable(resp)
+                status_code = resp.status_code
+
+            if not retryable:
+                _logger.error(
+                    "Failed to export span batch code: %s, reason: %s",
+                    status_code,
+                    reason,
+                )
+                return SpanExportResult.FAILURE
 
             if (
                 retry_num + 1 == _MAX_RETRYS
@@ -206,7 +213,8 @@ class OTLPSpanExporter(SpanExporter):
                 )
                 return SpanExportResult.FAILURE
             _logger.warning(
-                "Transient error encountered while exporting span batch, retrying in %.2fs.",
+                "Transient error %s encountered while exporting span batch, retrying in %.2fs.",
+                reason,
                 backoff_seconds,
             )
             shutdown = self._shutdown_in_progress.wait(backoff_seconds)
