@@ -197,7 +197,7 @@ class OTLPLogExporter(LogExporter):
                         resp.text,
                     )
                     return LogExportResult.FAILURE
-            except Exception as error:
+            except requests.exceptions.RequestException as error:
                 _logger.error("Failed to export logs batch reason: %s", error)
 
             if (
