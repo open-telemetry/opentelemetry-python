@@ -20,9 +20,14 @@ from ..testcase import OpenTelemetryTestCase
 
 
 class TestAsyncio(OpenTelemetryTestCase):
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         self.tracer = MockTracer()
-        self.loop = asyncio.get_event_loop()
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+
+    def tearDown(self):
+        self.loop.close()
+        super().tearDown()
 
     def test_main(self):
         res = self.loop.run_until_complete(self.parent_task("message"))
