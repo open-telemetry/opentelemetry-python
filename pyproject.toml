@@ -127,3 +127,9 @@ strict = [
   "opentelemetry-sdk/src/opentelemetry/sdk/environment_variables",
   "opentelemetry-sdk/src/opentelemetry/sdk/resources",
 ]
+
+[dependency-groups]
+dev = [
+    "tox-uv",
+    "pre-commit",
+]
