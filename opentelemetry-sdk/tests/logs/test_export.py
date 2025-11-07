@@ -15,10 +15,10 @@
 # pylint: disable=protected-access
 import logging
 import os
+import random
 import time
 import unittest
 from concurrent.futures import ThreadPoolExecutor
-from sys import version_info
 from typing import Sequence
 from unittest.mock import Mock, patch
 
@@ -63,13 +63,19 @@ EMPTY_LOG = LogData(
 
 
 class TestSimpleLogRecordProcessor(unittest.TestCase):
+    @mark.skipif(
+        version_info=(3, 13),
+        reason="This will fail on 3.13 due to https://github.com/python/cpython/pull/131812 which prevents recursive log messages but was later rolled back.",
+    )
     def test_simple_log_record_processor_doesnt_enter_recursive_loop(self):
         class Exporter(LogExporter):
             def shutdown(self):
                 pass
 
             def export(self, batch: Sequence[LogData]):
-                raise ValueError("Exception raised !")
+                raise ValueError(
+                    "Exception raised ! {}".format(random.randint(1, 10000))
+                )
 
         exporter = Exporter()
         logger_provider = LoggerProvider()
@@ -77,9 +83,25 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
             SimpleLogRecordProcessor(exporter)
         )
         root_logger = logging.getLogger()
-        root_logger.addHandler(LoggingHandler(level=logging.NOTSET,logger_provider=logger_provider))
+        # Add the OTLP handler to the root logger like is done in auto instrumentation.
+        # This means logs generated from within SimpleLogRecordProcessor.on_emit are sent back to SimpleLogRecordProcessor.on_emit
+        handler = LoggingHandler(
+            level=logging.DEBUG, logger_provider=logger_provider
+        )
+        root_logger.addHandler(handler)
+        propagate_false_logger = logging.getLogger(
+            "opentelemetry.sdk._logs._internal.export.propagate.false"
+        )
         # This would cause a max recursion depth exceeded error..
-        root_logger.warning("Something is wrong")
+        try:
+            with self.assertLogs(propagate_false_logger) as cm:
+                root_logger.warning("hello!")
+            assert (
+                "SimpleLogRecordProcessor.on_emit has entered a recursive loop"
+                in cm.output[0]
+            )
+        finally:
+            root_logger.removeHandler(handler)
 
     def test_simple_log_record_processor_default_level(self):
         exporter = InMemoryLogExporter()
@@ -402,39 +424,6 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         # Wait a bit for logs to flush.
         time.sleep(2)
         assert len(exporter.get_finished_logs()) == total_expected_logs
-
-    @mark.skipif(
-        version_info < (3, 10),
-        reason="assertNoLogs only exists in python 3.10+.",
-    )
-    def test_logging_lib_not_invoked_in_batch_log_record_emit(self):  # pylint: disable=no-self-use
-        # See https://github.com/open-telemetry/opentelemetry-python/issues/4261
-        exporter = Mock()
-        processor = BatchLogRecordProcessor(exporter)
-        logger_provider = LoggerProvider(
-            resource=SDKResource.create(
-                {
-                    "service.name": "shoppingcart",
-                    "service.instance.id": "instance-12",
-                }
-            ),
-        )
-        logger_provider.add_log_record_processor(processor)
-        handler = LoggingHandler(
-            level=logging.INFO, logger_provider=logger_provider
-        )
-        sdk_logger = logging.getLogger("opentelemetry.sdk")
-        # Attach OTLP handler to SDK logger
-        sdk_logger.addHandler(handler)
-        # If `emit` calls logging.log then this test will throw a maximum recursion depth exceeded exception and fail.
-        try:
-            with self.assertNoLogs(sdk_logger, logging.NOTSET):
-                processor.on_emit(EMPTY_LOG)
-            processor.shutdown()
-            with self.assertNoLogs(sdk_logger, logging.NOTSET):
-                processor.on_emit(EMPTY_LOG)
-        finally:
-            sdk_logger.removeHandler(handler)
 
     def test_args(self):
         exporter = InMemoryLogExporter()

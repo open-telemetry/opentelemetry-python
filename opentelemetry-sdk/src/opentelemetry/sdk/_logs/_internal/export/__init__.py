@@ -17,7 +17,7 @@ import abc
 import enum
 import logging
 import sys
-import traceback
+from contextvars import ContextVar
 from os import environ, linesep
 from typing import IO, Callable, Optional, Sequence
 
@@ -49,6 +49,10 @@ _ENV_VAR_INT_VALUE_ERROR_MESSAGE = (
 )
 _logger = logging.getLogger(__name__)
 _logger.addFilter(DuplicateFilter())
+
+_propagate_false_logger = logging.getLogger(__name__ + ".propagate.false")
+_propagate_false_logger.addFilter(DuplicateFilter())
+_propagate_false_logger.propagate = False
 
 
 class LogExportResult(enum.Enum):
@@ -115,26 +119,31 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
     """
 
     def __init__(self, exporter: LogExporter):
+        self._emit_executing = ContextVar("var", default=False)
         self._exporter = exporter
         self._shutdown = False
 
     def on_emit(self, log_data: LogData):
-        # Prevent entering recursive loop.
-        if sum(
-            item.name == "on_emit"
-            and item.filename.endswith("export/__init__.py")
-            for item in traceback.extract_stack()
-        ) > 1:
+        # Prevent entering a recursive loop.
+        if self._emit_executing.get():
+            _propagate_false_logger.warning(
+                "SimpleLogRecordProcessor.on_emit has entered a recursive loop. Dropping log and exiting the loop."
+            )
             return
-        if self._shutdown:
-            _logger.warning("Processor is already shutdown, ignoring call")
-            return
-        token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
+        emit_token = self._emit_executing.set(True)
+        suppress_token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
-            self._exporter.export((log_data,))
-        except Exception:  # pylint: disable=broad-exception-caught
-            _logger.exception("Exception while exporting logs.")
-        detach(token)
+            if self._shutdown:
+                _logger.warning("Processor is already shutdown, ignoring call")
+                return
+
+            try:
+                self._exporter.export((log_data,))
+            except Exception:  # pylint: disable=broad-exception-caught
+                _logger.exception("Exception while exporting logs.")
+        finally:
+            self._emit_executing.reset(emit_token)
+            detach(suppress_token)
 
     def shutdown(self):
         self._shutdown = True
