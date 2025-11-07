@@ -31,6 +31,7 @@ from opentelemetry.sdk._logs import (
     ReadableLogRecord,
     ReadWriteLogRecord,
 )
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk._shared_internal import BatchProcessor, DuplicateFilter
 from opentelemetry.sdk.environment_variables import (
     OTEL_BLRP_EXPORT_TIMEOUT,
@@ -124,9 +125,11 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
             # Convert ReadWriteLogRecord to ReadableLogRecord before exporting
+            # Note: resource should not be None at this point as it's set during Logger.emit()
+            resource = log_record.resource if log_record.resource is not None else Resource.create({})
             readable_log_record = ReadableLogRecord(
                 log_record=log_record.log_record,
-                resource=log_record.resource,
+                resource=resource,
                 instrumentation_scope=log_record.instrumentation_scope,
                 limits=log_record.limits,
             )
@@ -199,9 +202,11 @@ class BatchLogRecordProcessor(LogRecordProcessor):
 
     def on_emit(self, log_record: ReadWriteLogRecord) -> None:
         # Convert ReadWriteLogRecord to ReadableLogRecord before passing to BatchProcessor
+        # Note: resource should not be None at this point as it's set during Logger.emit()
+        resource = log_record.resource if log_record.resource is not None else Resource.create({})
         readable_log_record = ReadableLogRecord(
             log_record=log_record.log_record,
-            resource=log_record.resource,
+            resource=resource,
             instrumentation_scope=log_record.instrumentation_scope,
             limits=log_record.limits,
         )

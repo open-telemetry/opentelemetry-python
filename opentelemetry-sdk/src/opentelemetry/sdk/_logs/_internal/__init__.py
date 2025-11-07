@@ -173,6 +173,46 @@ class ReadableLogRecord:
             return self.log_record.attributes.dropped
         return 0
 
+    def to_json(self, indent: int | None = 4) -> str:
+        return json.dumps(
+            {
+                "body": self.log_record.body,
+                "severity_number": self.log_record.severity_number.value
+                if self.log_record.severity_number is not None
+                else None,
+                "severity_text": self.log_record.severity_text,
+                "attributes": (
+                    dict(self.log_record.attributes)
+                    if bool(self.log_record.attributes)
+                    else None
+                ),
+                "dropped_attributes": self.dropped_attributes,
+                "timestamp": ns_to_iso_str(self.log_record.timestamp)
+                if self.log_record.timestamp is not None
+                else None,
+                "observed_timestamp": ns_to_iso_str(
+                    self.log_record.observed_timestamp
+                ),
+                "trace_id": (
+                    f"0x{format_trace_id(self.log_record.trace_id)}"
+                    if self.log_record.trace_id is not None
+                    else ""
+                ),
+                "span_id": (
+                    f"0x{format_span_id(self.log_record.span_id)}"
+                    if self.log_record.span_id is not None
+                    else ""
+                ),
+                "trace_flags": self.log_record.trace_flags,
+                "resource": json.loads(self.resource.to_json()),
+                "event_name": self.log_record.event_name
+                if self.log_record.event_name
+                else "",
+            },
+            indent=indent,
+            cls=BytesEncoder,
+        )
+
 
 @dataclass
 class ReadWriteLogRecord:
@@ -603,14 +643,17 @@ class Logger(APILogger):
         """Emits the :class:`ReadWriteLogRecord` by setting instrumentation scope
         and forwarding to the processor.
         """
+        writable_record: ReadWriteLogRecord
         if not isinstance(record, ReadWriteLogRecord):
             # pylint:disable=protected-access
-            record = ReadWriteLogRecord._from_api_log_record(
+            writable_record = ReadWriteLogRecord._from_api_log_record(
                 record=record,
                 resource=self._resource,
                 instrumentation_scope=self._instrumentation_scope,
             )
-        self._multi_log_record_processor.on_emit(record)
+        else:
+            writable_record = record
+        self._multi_log_record_processor.on_emit(writable_record)
 
 
 class LoggerProvider(APILoggerProvider):
