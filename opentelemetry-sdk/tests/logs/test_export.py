@@ -15,7 +15,7 @@
 # pylint: disable=protected-access
 import logging
 import os
-import random
+import sys
 import time
 import unittest
 from concurrent.futures import ThreadPoolExecutor
@@ -64,7 +64,7 @@ EMPTY_LOG = LogData(
 
 class TestSimpleLogRecordProcessor(unittest.TestCase):
     @mark.skipif(
-        version_info=(3, 13),
+        sys.version_info == (3, 13),
         reason="This will fail on 3.13 due to https://github.com/python/cpython/pull/131812 which prevents recursive log messages but was later rolled back.",
     )
     def test_simple_log_record_processor_doesnt_enter_recursive_loop(self):
@@ -73,9 +73,8 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
                 pass
 
             def export(self, batch: Sequence[LogData]):
-                raise ValueError(
-                    "Exception raised ! {}".format(random.randint(1, 10000))
-                )
+                logger = logging.getLogger("any logger..")
+                logger.warning("Something happened.")
 
         exporter = Exporter()
         logger_provider = LoggerProvider()
@@ -84,7 +83,8 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         )
         root_logger = logging.getLogger()
         # Add the OTLP handler to the root logger like is done in auto instrumentation.
-        # This means logs generated from within SimpleLogRecordProcessor.on_emit are sent back to SimpleLogRecordProcessor.on_emit
+        # This causes logs generated from within SimpleLogRecordProcessor.on_emit (such as the above log in export)
+        # to be sent back to SimpleLogRecordProcessor.on_emit
         handler = LoggingHandler(
             level=logging.DEBUG, logger_provider=logger_provider
         )

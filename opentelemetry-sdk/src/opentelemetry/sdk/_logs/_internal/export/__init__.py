@@ -17,7 +17,7 @@ import abc
 import enum
 import logging
 import sys
-from contextvars import ContextVar
+import traceback
 from os import environ, linesep
 from typing import IO, Callable, Optional, Sequence
 
@@ -119,18 +119,23 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
     """
 
     def __init__(self, exporter: LogExporter):
-        self._emit_executing = ContextVar("var", default=False)
         self._exporter = exporter
         self._shutdown = False
 
     def on_emit(self, log_data: LogData):
         # Prevent entering a recursive loop.
-        if self._emit_executing.get():
+        if (
+            sum(
+                item.name == "on_emit"
+                and item.filename.endswith("export/__init__.py")
+                for item in traceback.extract_stack()
+            )
+            > 3
+        ):
             _propagate_false_logger.warning(
                 "SimpleLogRecordProcessor.on_emit has entered a recursive loop. Dropping log and exiting the loop."
             )
             return
-        emit_token = self._emit_executing.set(True)
         suppress_token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
             if self._shutdown:
@@ -142,7 +147,6 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
             except Exception:  # pylint: disable=broad-exception-caught
                 _logger.exception("Exception while exporting logs.")
         finally:
-            self._emit_executing.reset(emit_token)
             detach(suppress_token)
 
     def shutdown(self):

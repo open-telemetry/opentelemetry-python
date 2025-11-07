@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4782](https://github.com/open-telemetry/opentelemetry-python/pull/4782))
 - semantic-conventions: Bump to 1.38.0
   ([#4791](https://github.com/open-telemetry/opentelemetry-python/pull/4791))
+- Prevent possible endless recursion from happening in `SimpleLogRecordProcessor.on_emit`,
+  ([#4799](https://github.com/open-telemetry/opentelemetry-python/pull/4799)).
 
 ## Version 1.38.0/0.59b0 (2025-10-16)
 
