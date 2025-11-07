@@ -123,6 +123,7 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
         self._shutdown = False
 
     def on_emit(self, log_data: LogData):
+        print(traceback.extract_stack())
         # Prevent entering a recursive loop.
         if (
             sum(
