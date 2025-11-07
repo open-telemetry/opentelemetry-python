@@ -130,6 +130,7 @@ strict = [
 
 [dependency-groups]
 dev = [
+    "tox",
     "tox-uv>=1",
     "pre-commit",
 ]
