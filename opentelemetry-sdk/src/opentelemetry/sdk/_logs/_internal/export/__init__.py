@@ -141,7 +141,7 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
                 "SimpleLogRecordProcessor.on_emit has entered a recursive loop. Dropping log and exiting the loop."
             )
             return
-        suppress_token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
+        token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
             if self._shutdown:
                 _logger.warning("Processor is already shutdown, ignoring call")
@@ -152,7 +152,7 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
             except Exception:  # pylint: disable=broad-exception-caught
                 _logger.exception("Exception while exporting logs.")
         finally:
-            detach(suppress_token)
+            detach(token)
 
     def shutdown(self):
         self._shutdown = True
