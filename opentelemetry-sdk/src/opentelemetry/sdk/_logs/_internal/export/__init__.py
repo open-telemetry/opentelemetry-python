@@ -123,12 +123,16 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
         self._shutdown = False
 
     def on_emit(self, log_data: LogData):
-        print(traceback.extract_stack())
         # Prevent entering a recursive loop.
         if (
             sum(
                 item.name == "on_emit"
-                and item.filename.endswith("export/__init__.py")
+                and (
+                    item.filename.endswith("export/__init__.py")
+                    or item.filename.endswith(
+                        r"export\__init__.py"
+                    )  # backward slash on windows..
+                )
                 for item in traceback.extract_stack()
             )
             > 3
