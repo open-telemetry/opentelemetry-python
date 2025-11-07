@@ -12,13 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Final
 
-PEER_SERVICE: Final = "peer.service"
-"""
-The [`service.name`](/docs/resource/README.md#service) of the remote service. SHOULD be equal to the actual `service.name` resource attribute of the remote service if any.
-Note: Examples of `peer.service` that users may specify:
+class IterEntryPoint:
+    def __init__(self, name, class_type):
+        self.name = name
+        self.class_type = class_type
 
-- A Redis cache of auth tokens as `peer.service="AuthTokenCache"`.
-- A gRPC service `rpc.service="io.opentelemetry.AuthService"` may be hosted in both a gateway, `peer.service="ExternalApiService"` and a backend, `peer.service="AuthService"`.
-"""
+    def load(self):
+        return self.class_type

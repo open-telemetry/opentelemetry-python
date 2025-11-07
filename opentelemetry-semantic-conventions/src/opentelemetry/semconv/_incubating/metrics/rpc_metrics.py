@@ -58,12 +58,7 @@ def create_rpc_client_request_size(meter: Meter) -> Histogram:
 
 RPC_CLIENT_REQUESTS_PER_RPC: Final = "rpc.client.requests_per_rpc"
 """
-Measures the number of messages received per RPC
-Instrument: histogram
-Unit: {count}
-Note: Should be 1 for all non-streaming RPCs.
-
-**Streaming**: This metric is required for server and client streaming RPCs.
+Deprecated: Removed, no replacement at this time.
 """
 
 
@@ -96,12 +91,7 @@ def create_rpc_client_response_size(meter: Meter) -> Histogram:
 
 RPC_CLIENT_RESPONSES_PER_RPC: Final = "rpc.client.responses_per_rpc"
 """
-Measures the number of messages sent per RPC
-Instrument: histogram
-Unit: {count}
-Note: Should be 1 for all non-streaming RPCs.
-
-**Streaming**: This metric is required for server and client streaming RPCs.
+Deprecated: Removed, no replacement at this time.
 """
 
 
@@ -155,12 +145,7 @@ def create_rpc_server_request_size(meter: Meter) -> Histogram:
 
 RPC_SERVER_REQUESTS_PER_RPC: Final = "rpc.server.requests_per_rpc"
 """
-Measures the number of messages received per RPC
-Instrument: histogram
-Unit: {count}
-Note: Should be 1 for all non-streaming RPCs.
-
-**Streaming** : This metric is required for server and client streaming RPCs.
+Deprecated: Removed, no replacement at this time.
 """
 
 
@@ -193,12 +178,7 @@ def create_rpc_server_response_size(meter: Meter) -> Histogram:
 
 RPC_SERVER_RESPONSES_PER_RPC: Final = "rpc.server.responses_per_rpc"
 """
-Measures the number of messages sent per RPC
-Instrument: histogram
-Unit: {count}
-Note: Should be 1 for all non-streaming RPCs.
-
-**Streaming**: This metric is required for server and client streaming RPCs.
+Deprecated: Removed, no replacement at this time.
 """
 
 

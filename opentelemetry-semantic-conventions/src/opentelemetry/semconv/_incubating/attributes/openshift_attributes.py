@@ -12,13 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=protected-access
+from typing import Final
 
+OPENSHIFT_CLUSTERQUOTA_NAME: Final = "openshift.clusterquota.name"
+"""
+The name of the cluster quota.
+"""
 
-class IterEntryPoint:
-    def __init__(self, name, class_type):
-        self.name = name
-        self.class_type = class_type
-
-    def load(self):
-        return self.class_type
+OPENSHIFT_CLUSTERQUOTA_UID: Final = "openshift.clusterquota.uid"
+"""
+The UID of the cluster quota.
+"""

@@ -29,7 +29,7 @@ State of the HTTP connection in the HTTP connection pool.
 
 HTTP_FLAVOR: Final = "http.flavor"
 """
-Deprecated: Replaced by `network.protocol.name`.
+Deprecated: Split into `network.protocol.name` and `network.protocol.version`.
 """
 
 HTTP_HOST: Final = "http.host"
@@ -160,7 +160,7 @@ class HttpConnectionStateValues(Enum):
 
 
 @deprecated(
-    "The attribute http.flavor is deprecated - Replaced by `network.protocol.name`"
+    "The attribute http.flavor is deprecated - Split into `network.protocol.name` and `network.protocol.version`"
 )
 class HttpFlavorValues(Enum):
     HTTP_1_0 = "1.0"
@@ -199,5 +199,7 @@ class HttpRequestMethodValues(Enum):
     """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.http_attributes.HttpRequestMethodValues.PUT`."""
     TRACE = "TRACE"
     """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.http_attributes.HttpRequestMethodValues.TRACE`."""
+    QUERY = "QUERY"
+    """QUERY method."""
     OTHER = "_OTHER"
     """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.http_attributes.HttpRequestMethodValues.OTHER`."""

@@ -72,6 +72,67 @@ GCP_APPHUB_WORKLOAD_ID: Final = "gcp.apphub.workload.id"
 The name of the workload as configured in AppHub.
 """
 
+GCP_APPHUB_DESTINATION_APPLICATION_CONTAINER: Final = (
+    "gcp.apphub_destination.application.container"
+)
+"""
+The container within GCP where the AppHub destination application is defined.
+"""
+
+GCP_APPHUB_DESTINATION_APPLICATION_ID: Final = (
+    "gcp.apphub_destination.application.id"
+)
+"""
+The name of the destination application as configured in AppHub.
+"""
+
+GCP_APPHUB_DESTINATION_APPLICATION_LOCATION: Final = (
+    "gcp.apphub_destination.application.location"
+)
+"""
+The GCP zone or region where the destination application is defined.
+"""
+
+GCP_APPHUB_DESTINATION_SERVICE_CRITICALITY_TYPE: Final = (
+    "gcp.apphub_destination.service.criticality_type"
+)
+"""
+Criticality of a destination workload indicates its importance to the business as specified in [AppHub type enum](https://cloud.google.com/app-hub/docs/reference/rest/v1/Attributes#type).
+"""
+
+GCP_APPHUB_DESTINATION_SERVICE_ENVIRONMENT_TYPE: Final = (
+    "gcp.apphub_destination.service.environment_type"
+)
+"""
+Software lifecycle stage of a destination service as defined [AppHub environment type](https://cloud.google.com/app-hub/docs/reference/rest/v1/Attributes#type_1).
+"""
+
+GCP_APPHUB_DESTINATION_SERVICE_ID: Final = "gcp.apphub_destination.service.id"
+"""
+The name of the destination service as configured in AppHub.
+"""
+
+GCP_APPHUB_DESTINATION_WORKLOAD_CRITICALITY_TYPE: Final = (
+    "gcp.apphub_destination.workload.criticality_type"
+)
+"""
+Criticality of a destination workload indicates its importance to the business as specified in [AppHub type enum](https://cloud.google.com/app-hub/docs/reference/rest/v1/Attributes#type).
+"""
+
+GCP_APPHUB_DESTINATION_WORKLOAD_ENVIRONMENT_TYPE: Final = (
+    "gcp.apphub_destination.workload.environment_type"
+)
+"""
+Environment of a destination workload is the stage of a software lifecycle as provided in the [AppHub environment type](https://cloud.google.com/app-hub/docs/reference/rest/v1/Attributes#type_1).
+"""
+
+GCP_APPHUB_DESTINATION_WORKLOAD_ID: Final = (
+    "gcp.apphub_destination.workload.id"
+)
+"""
+The name of the destination workload as configured in AppHub.
+"""
+
 GCP_CLIENT_SERVICE: Final = "gcp.client.service"
 """
 Identifies the Google Cloud service for which the official client library is intended.
@@ -133,6 +194,50 @@ class GcpApphubWorkloadCriticalityTypeValues(Enum):
 
 
 class GcpApphubWorkloadEnvironmentTypeValues(Enum):
+    PRODUCTION = "PRODUCTION"
+    """Production environment."""
+    STAGING = "STAGING"
+    """Staging environment."""
+    TEST = "TEST"
+    """Test environment."""
+    DEVELOPMENT = "DEVELOPMENT"
+    """Development environment."""
+
+
+class GcpApphubDestinationServiceCriticalityTypeValues(Enum):
+    MISSION_CRITICAL = "MISSION_CRITICAL"
+    """Mission critical service."""
+    HIGH = "HIGH"
+    """High impact."""
+    MEDIUM = "MEDIUM"
+    """Medium impact."""
+    LOW = "LOW"
+    """Low impact."""
+
+
+class GcpApphubDestinationServiceEnvironmentTypeValues(Enum):
+    PRODUCTION = "PRODUCTION"
+    """Production environment."""
+    STAGING = "STAGING"
+    """Staging environment."""
+    TEST = "TEST"
+    """Test environment."""
+    DEVELOPMENT = "DEVELOPMENT"
+    """Development environment."""
+
+
+class GcpApphubDestinationWorkloadCriticalityTypeValues(Enum):
+    MISSION_CRITICAL = "MISSION_CRITICAL"
+    """Mission critical service."""
+    HIGH = "HIGH"
+    """High impact."""
+    MEDIUM = "MEDIUM"
+    """Medium impact."""
+    LOW = "LOW"
+    """Low impact."""
+
+
+class GcpApphubDestinationWorkloadEnvironmentTypeValues(Enum):
     PRODUCTION = "PRODUCTION"
     """Production environment."""
     STAGING = "STAGING"
