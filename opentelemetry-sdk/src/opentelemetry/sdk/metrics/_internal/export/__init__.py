@@ -66,6 +66,43 @@ from opentelemetry.util._once import Once
 _logger = getLogger(__name__)
 
 
+class MetricProducer(ABC):
+    """Interface for external metric sources.
+    
+    A MetricProducer is a source of metrics external to the SDK, which can be
+    used to bridge existing metrics sources and third-party instrumentation
+    libraries. For example, a MetricProducer implementation might collect 
+    metrics from Prometheus endpoints or system monitoring tools.
+    
+    MetricProducers are called during metric collection by MetricReaders that
+    support them, allowing their metrics to be included in the final export.
+    
+    This interface aligns with the OpenTelemetry specification's MetricProducer
+    definition, enabling consistent behavior across language implementations.
+    """
+
+    @abstractmethod
+    def produce(self, timeout_millis: float = 10_000) -> Optional[MetricsData]:
+        """Produce metrics from this external source.
+        
+        Called during metric collection to gather metrics from this producer.
+        
+        Args:
+            timeout_millis: Maximum time to wait for metric collection, in 
+                          milliseconds. Implementations should attempt to 
+                          respect this timeout.
+        
+        Returns:
+            MetricsData containing the collected metrics, or None if no metrics
+            are available or an error occurred.
+            
+        Raises:
+            Exception: If metric collection fails. Implementations should handle
+                      errors gracefully and either return None or raise an 
+                      exception that will be logged by the MetricReader.
+        """
+
+
 class MetricExportResult(Enum):
     """Result of exporting a metric
 
@@ -220,6 +257,7 @@ class MetricReader(ABC):
             type, "opentelemetry.sdk.metrics.view.Aggregation"
         ]
         | None = None,
+        metric_producers: Iterable[MetricProducer] | None = None,
     ) -> None:
         self._collect: Callable[
             [
@@ -228,6 +266,8 @@ class MetricReader(ABC):
             ],
             Iterable["opentelemetry.sdk.metrics.export.Metric"],
         ] = None
+        
+        self._metric_producers = list(metric_producers) if metric_producers is not None else []
 
         self._instrument_class_temporality = {
             _Counter: AggregationTemporality.CUMULATIVE,
@@ -320,8 +360,8 @@ class MetricReader(ABC):
 
     @final
     def collect(self, timeout_millis: float = 10_000) -> None:
-        """Collects the metrics from the internal SDK state and
-        invokes the `_receive_metrics` with the collection.
+        """Collects the metrics from the internal SDK state and any registered
+        MetricProducers, and invokes the `_receive_metrics` with the collection.
 
         Args:
             timeout_millis: Amount of time in milliseconds before this function
@@ -337,11 +377,62 @@ class MetricReader(ABC):
             )
             return
 
-        metrics = self._collect(self, timeout_millis=timeout_millis)
+        from time import time_ns
+        from opentelemetry.sdk.metrics._internal.exceptions import MetricsTimeoutError
+        
+        start_time_ns = time_ns()
+        deadline_ns = start_time_ns + (timeout_millis * 1_000_000)
+        
+        remaining_millis = timeout_millis
+        
+        sdk_metrics = self._collect(self, timeout_millis=remaining_millis)
+        
+        if time_ns() > deadline_ns:
+            raise MetricsTimeoutError("Timeout exceeded during SDK metric collection")
+        
+        all_resource_metrics = []
+        
+        if sdk_metrics is not None:
+            if hasattr(sdk_metrics, 'resource_metrics'):
+                try:
+                    all_resource_metrics.extend(sdk_metrics.resource_metrics)
+                except TypeError:
+                    # sdk_metrics.resource_metrics is not iterable (e.g., Mock object in tests)
+                    pass
+        
+        for producer in self._metric_producers:
+            remaining_ns = deadline_ns - time_ns()
+            if remaining_ns <= 0:
+                raise MetricsTimeoutError(
+                    f"Timeout exceeded before collecting from MetricProducer: {producer.__class__.__name__}"
+                )
+            
+            remaining_millis = remaining_ns / 1_000_000
+            
+            try:
+                producer_metrics = producer.produce(remaining_millis)
+                
+                if time_ns() > deadline_ns:
+                    raise MetricsTimeoutError(
+                        f"Timeout exceeded while collecting from MetricProducer: {producer.__class__.__name__}"
+                    )
+                
+                if producer_metrics is not None and hasattr(producer_metrics, 'resource_metrics'):
+                    all_resource_metrics.extend(producer_metrics.resource_metrics)
+            except MetricsTimeoutError:
+                raise
+            except Exception as e:
+                _logger.warning("Failed to collect from MetricProducer: %s", e)
 
-        if metrics is not None:
+        if all_resource_metrics:
+            combined_metrics = MetricsData(resource_metrics=all_resource_metrics)
             self._receive_metrics(
-                metrics,
+                combined_metrics,
+                timeout_millis=timeout_millis,
+            )
+        elif sdk_metrics is not None:
+            self._receive_metrics(
+                sdk_metrics,
                 timeout_millis=timeout_millis,
             )
 
@@ -400,10 +491,12 @@ class InMemoryMetricReader(MetricReader):
             type, "opentelemetry.sdk.metrics.view.Aggregation"
         ]
         | None = None,
+        metric_producers: Iterable[MetricProducer] | None = None,
     ) -> None:
         super().__init__(
             preferred_temporality=preferred_temporality,
             preferred_aggregation=preferred_aggregation,
+            metric_producers=metric_producers,
         )
         self._lock = RLock()
         self._metrics_data: "opentelemetry.sdk.metrics.export.MetricsData" = (
@@ -448,11 +541,13 @@ class PeriodicExportingMetricReader(MetricReader):
         exporter: MetricExporter,
         export_interval_millis: Optional[float] = None,
         export_timeout_millis: Optional[float] = None,
+        metric_producers: Iterable[MetricProducer] | None = None,
     ) -> None:
         # PeriodicExportingMetricReader defers to exporter for configuration
         super().__init__(
             preferred_temporality=exporter._preferred_temporality,
             preferred_aggregation=exporter._preferred_aggregation,
+            metric_producers=metric_producers,
         )
 
         # This lock is held whenever calling self._exporter.export() to prevent concurrent
