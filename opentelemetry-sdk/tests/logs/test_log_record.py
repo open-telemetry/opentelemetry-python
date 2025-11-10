@@ -22,6 +22,7 @@ from opentelemetry.context import get_current
 from opentelemetry.sdk._logs import (
     LogDroppedAttributesWarning,
     LogLimits,
+    ReadableLogRecord,
     ReadWriteLogRecord,
 )
 from opentelemetry.sdk.resources import Resource
@@ -30,7 +31,7 @@ from opentelemetry.trace.span import TraceFlags
 
 class TestLogRecord(unittest.TestCase):
     def test_log_record_to_json(self):
-        log_record = ReadWriteLogRecord(
+        log_record = ReadableLogRecord(
             LogRecord(
                 timestamp=0,
                 observed_timestamp=0,
@@ -52,7 +53,7 @@ class TestLogRecord(unittest.TestCase):
         )
 
     def test_log_record_to_json_serializes_severity_number_as_int(self):
-        actual = ReadWriteLogRecord(
+        actual = ReadableLogRecord(
             LogRecord(
                 timestamp=0,
                 severity_number=SeverityNumber.WARN,
@@ -66,7 +67,7 @@ class TestLogRecord(unittest.TestCase):
         self.assertEqual(SeverityNumber.WARN.value, decoded["severity_number"])
 
     def test_log_record_to_json_serializes_null_severity_number(self):
-        actual = ReadWriteLogRecord(
+        actual = ReadableLogRecord(
             LogRecord(
                 observed_timestamp=0,
                 body="a log line",

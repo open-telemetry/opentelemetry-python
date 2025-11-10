@@ -28,6 +28,7 @@ from opentelemetry.sdk import trace
 from opentelemetry.sdk._logs import (
     LoggerProvider,
     LoggingHandler,
+    ReadableLogRecord,
     ReadWriteLogRecord,
 )
 from opentelemetry.sdk._logs._internal.export import _logger
@@ -628,7 +629,7 @@ class TestConsoleLogExporter(unittest.TestCase):
                 )
             )
         )
-        log_record = ReadWriteLogRecord(
+        log_record = ReadableLogRecord(
             LogRecord(
                 timestamp=int(time.time() * 1e9),
                 context=ctx,

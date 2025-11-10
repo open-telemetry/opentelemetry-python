@@ -39,6 +39,7 @@ from opentelemetry._logs import (
 )
 from opentelemetry.attributes import _VALID_ANY_VALUE_TYPES, BoundedAttributes
 from opentelemetry.context import get_current
+from opentelemetry.context.context import Context
 from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_COUNT_LIMIT,
     OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
@@ -53,7 +54,7 @@ from opentelemetry.trace import (
     format_span_id,
     format_trace_id,
 )
-from opentelemetry.util.types import _ExtendedAttributes
+from opentelemetry.util.types import AnyValue, _ExtendedAttributes
 
 _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
 _ENV_VALUE_UNSET = ""
@@ -248,46 +249,6 @@ class ReadWriteLogRecord:
         if not isinstance(other, ReadWriteLogRecord):
             return NotImplemented
         return self.__dict__ == other.__dict__
-
-    def to_json(self, indent: int | None = 4) -> str:
-        return json.dumps(
-            {
-                "body": self.log_record.body,
-                "severity_number": self.log_record.severity_number.value
-                if self.log_record.severity_number is not None
-                else None,
-                "severity_text": self.log_record.severity_text,
-                "attributes": (
-                    dict(self.log_record.attributes)
-                    if bool(self.log_record.attributes)
-                    else None
-                ),
-                "dropped_attributes": self.dropped_attributes,
-                "timestamp": ns_to_iso_str(self.log_record.timestamp)
-                if self.log_record.timestamp is not None
-                else None,
-                "observed_timestamp": ns_to_iso_str(
-                    self.log_record.observed_timestamp
-                ),
-                "trace_id": (
-                    f"0x{format_trace_id(self.log_record.trace_id)}"
-                    if self.log_record.trace_id is not None
-                    else ""
-                ),
-                "span_id": (
-                    f"0x{format_span_id(self.log_record.span_id)}"
-                    if self.log_record.span_id is not None
-                    else ""
-                ),
-                "trace_flags": self.log_record.trace_flags,
-                "resource": json.loads(self.resource.to_json()),
-                "event_name": self.log_record.event_name
-                if self.log_record.event_name
-                else "",
-            },
-            indent=indent,
-            cls=BytesEncoder,
-        )
 
     @property
     def dropped_attributes(self) -> int:
@@ -513,8 +474,8 @@ class LoggingHandler(logging.Handler):
 
     def __init__(
         self,
-        level=logging.NOTSET,
-        logger_provider=None,
+        level: int = logging.NOTSET,
+        logger_provider: APILoggerProvider | None = None,
     ) -> None:
         super().__init__(level=level)
         self._logger_provider = logger_provider or get_logger_provider()
@@ -606,11 +567,11 @@ class LoggingHandler(logging.Handler):
         Flushes the logging output. Skip flushing if logging_provider has no force_flush method.
         """
         if hasattr(self._logger_provider, "force_flush") and callable(
-            self._logger_provider.force_flush
+            self._logger_provider.force_flush  # type: ignore[reportAttributeAccessIssue]
         ):
             # This is done in a separate thread to avoid a potential deadlock, for
             # details see https://github.com/open-telemetry/opentelemetry-python/pull/4636.
-            thread = threading.Thread(target=self._logger_provider.force_flush)
+            thread = threading.Thread(target=self._logger_provider.force_flush)  # type: ignore[reportAttributeAccessIssue]
             thread.start()
 
 
@@ -639,20 +600,51 @@ class Logger(APILogger):
         return self._resource
 
     # pylint: disable=arguments-differ
-    def emit(self, record: LogRecord):
+    def emit(
+        self,
+        record: LogRecord | None = None,
+        *,
+        timestamp: int | None = None,
+        observed_timestamp: int | None = None,
+        context: Context | None = None,
+        severity_number: SeverityNumber | None = None,
+        severity_text: str | None = None,
+        body: AnyValue | None = None,
+        attributes: _ExtendedAttributes | None = None,
+        event_name: str | None = None,
+    ) -> None:
         """Emits the :class:`ReadWriteLogRecord` by setting instrumentation scope
         and forwarding to the processor.
         """
-        writable_record: ReadWriteLogRecord
-        if not isinstance(record, ReadWriteLogRecord):
-            # pylint:disable=protected-access
+        # If a record is provided, use it directly
+        if record is not None:
+            if not isinstance(record, ReadWriteLogRecord):
+                # pylint:disable=protected-access
+                writable_record = ReadWriteLogRecord._from_api_log_record(
+                    record=record,
+                    resource=self._resource,
+                    instrumentation_scope=self._instrumentation_scope,
+                )
+            else:
+                writable_record = record
+        else:
+            # Create a record from individual parameters
+            log_record = LogRecord(
+                timestamp=timestamp,
+                observed_timestamp=observed_timestamp,
+                context=context,
+                severity_number=severity_number,
+                severity_text=severity_text,
+                body=body,
+                attributes=attributes,
+                event_name=event_name,
+            )
             writable_record = ReadWriteLogRecord._from_api_log_record(
-                record=record,
+                record=log_record,
                 resource=self._resource,
                 instrumentation_scope=self._instrumentation_scope,
             )
-        else:
-            writable_record = record
+
         self._multi_log_record_processor.on_emit(writable_record)
 
 
@@ -724,7 +716,7 @@ class LoggerProvider(APILoggerProvider):
         version: str | None = None,
         schema_url: str | None = None,
         attributes: _ExtendedAttributes | None = None,
-    ) -> Logger:
+    ) -> APILogger:
         if self._disabled:
             return NoOpLogger(
                 name,
