@@ -93,6 +93,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_HEADERS,
     OTEL_EXPORTER_OTLP_INSECURE,
     OTEL_EXPORTER_OTLP_TIMEOUT,
+    OTEL_LOG_LEVEL
 )
 from opentelemetry.sdk.metrics.export import MetricExportResult, MetricsData
 from opentelemetry.sdk.resources import Resource as SDKResource
@@ -257,6 +258,11 @@ def _get_credentials(
     return ssl_channel_credentials()
 
 
+def _should_log_partial_responses():
+    otel_log_level = environ.get(OTEL_LOG_LEVEL, "off").lower()
+    return otel_log_level in ["verbose", "debug", "info"]
+
+
 # pylint: disable=no-member
 class OTLPExporterMixin(
     ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResultT, ExportStubT]
@@ -293,6 +299,7 @@ class OTLPExporterMixin(
         self._endpoint = endpoint or environ.get(
             OTEL_EXPORTER_OTLP_ENDPOINT, "http://localhost:4317"
         )
+        self._partial_response_logging_enabled = _should_log_partial_responses()
 
         parsed_url = urlparse(self._endpoint)
 
@@ -374,6 +381,13 @@ class OTLPExporterMixin(
     ) -> ExportServiceRequestT:
         pass
 
+    def _log_partial_success(self, partial_success):
+        logger.info(f"Partial success:\n{partial_success}")
+
+    def _process_response(self, response):
+        if self._partial_response_logging_enabled and response.HasField("partial_success"):
+            self._log_partial_success(response.partial_success)
+
     def _export(
         self,
         data: SDKDataT,
@@ -388,11 +402,12 @@ class OTLPExporterMixin(
         deadline_sec = time() + self._timeout
         for retry_num in range(_MAX_RETRYS):
             try:
-                self._client.Export(
+                response = self._client.Export(
                     request=self._translate_data(data),
                     metadata=self._headers,
                     timeout=deadline_sec - time(),
                 )
+                self._process_response(response)
                 return self._result.SUCCESS  # type: ignore [reportReturnType]
             except RpcError as error:
                 retry_info_bin = dict(error.trailing_metadata()).get(  # type: ignore [reportAttributeAccessIssue]
