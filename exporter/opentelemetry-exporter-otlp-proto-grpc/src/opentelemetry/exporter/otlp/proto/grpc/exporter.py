@@ -259,7 +259,7 @@ def _get_credentials(
 
 
 def _should_log_partial_responses():
-    otel_log_level = environ.get(OTEL_LOG_LEVEL, "off").lower()
+    otel_log_level = environ.get(OTEL_LOG_LEVEL, "info").lower()
     return otel_log_level in ["verbose", "debug", "info"]
 
 
