@@ -639,6 +639,7 @@ class Logger(APILogger):
                 attributes=attributes,
                 event_name=event_name,
             )
+            # pylint:disable=protected-access
             writable_record = ReadWriteLogRecord._from_api_log_record(
                 record=log_record,
                 resource=self._resource,
