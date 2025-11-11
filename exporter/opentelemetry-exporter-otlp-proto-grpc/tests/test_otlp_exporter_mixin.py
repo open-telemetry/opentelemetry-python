@@ -40,6 +40,7 @@ from opentelemetry.exporter.otlp.proto.grpc.exporter import (  # noqa: F401
 )
 from opentelemetry.exporter.otlp.proto.grpc.version import __version__
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
+    ExportTracePartialSuccess,
     ExportTraceServiceRequest,
     ExportTraceServiceResponse,
 )
@@ -51,6 +52,7 @@ from opentelemetry.proto.collector.trace.v1.trace_service_pb2_grpc import (
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_COMPRESSION,
+    OTEL_LOG_LEVEL,
 )
 from opentelemetry.sdk.trace import ReadableSpan, _Span
 from opentelemetry.sdk.trace.export import (
@@ -534,3 +536,114 @@ class TestOTLPExporterMixin(TestCase):
                 warning.records[-1].message,
                 "Failed to export traces to localhost:4317, error code: StatusCode.ALREADY_EXISTS",
             )
+
+    @patch.dict("os.environ", {}, clear=True)
+    @patch("logging.Logger.info")
+    def test_does_not_record_partial_success_if_log_level_unset(
+        self, mock_logger_info
+    ):
+        exporter = OTLPSpanExporterForTesting(insecure=True)
+        # pylint: disable=protected-access
+        exporter._client = Mock()
+        exporter._client.Export.return_value = ExportTraceServiceResponse(
+            partial_success=ExportTracePartialSuccess(
+                rejected_spans=1,
+                error_message="Span dropped",
+            )
+        )
+        exporter.export([self.span])
+        mock_logger_info.assert_not_called()
+
+    @patch.dict("os.environ", {OTEL_LOG_LEVEL: "off"})
+    @patch("logging.Logger.info")
+    def test_does_not_record_partial_success_if_log_level_off(
+        self, mock_logger_info
+    ):
+        exporter = OTLPSpanExporterForTesting(insecure=True)
+        # pylint: disable=protected-access
+        exporter._client = Mock()
+        exporter._client.Export.return_value = ExportTraceServiceResponse(
+            partial_success=ExportTracePartialSuccess(
+                rejected_spans=1,
+                error_message="Span dropped",
+            )
+        )
+        exporter.export([self.span])
+        mock_logger_info.assert_not_called()
+
+    @patch.dict("os.environ", {OTEL_LOG_LEVEL: "error"})
+    @patch("logging.Logger.info")
+    def test_does_not_record_partial_success_if_log_level_error(
+        self, mock_logger_info
+    ):
+        exporter = OTLPSpanExporterForTesting(insecure=True)
+        # pylint: disable=protected-access
+        exporter._client = Mock()
+        exporter._client.Export.return_value = ExportTraceServiceResponse(
+            partial_success=ExportTracePartialSuccess(
+                rejected_spans=1,
+                error_message="Span dropped",
+            )
+        )
+        exporter.export([self.span])
+        mock_logger_info.assert_not_called()
+
+    @patch.dict("os.environ", {OTEL_LOG_LEVEL: "verbose"})
+    @patch("logging.Logger.info")
+    def test_records_partial_success_if_log_level_verbose(
+        self, mock_logger_info
+    ):
+        exporter = OTLPSpanExporterForTesting(insecure=True)
+        # pylint: disable=protected-access
+        exporter._client = Mock()
+        partial_success = ExportTracePartialSuccess(
+            rejected_spans=1,
+            error_message="Span dropped",
+        )
+        exporter._client.Export.return_value = ExportTraceServiceResponse(
+            partial_success=partial_success
+        )
+        exporter.export([self.span])
+        mock_logger_info.assert_called_once_with(
+            f"Partial success:\n{partial_success}"
+        )
+
+    @patch.dict("os.environ", {OTEL_LOG_LEVEL: "debug"})
+    @patch("logging.Logger.info")
+    def test_records_partial_success_if_log_level_debug(
+        self, mock_logger_info
+    ):
+        exporter = OTLPSpanExporterForTesting(insecure=True)
+        # pylint: disable=protected-access
+        exporter._client = Mock()
+        partial_success = ExportTracePartialSuccess(
+            rejected_spans=1,
+            error_message="Span dropped",
+        )
+        exporter._client.Export.return_value = ExportTraceServiceResponse(
+            partial_success=partial_success
+        )
+        exporter.export([self.span])
+        mock_logger_info.assert_called_once_with(
+            f"Partial success:\n{partial_success}"
+        )
+
+    @patch.dict("os.environ", {OTEL_LOG_LEVEL: "info"})
+    @patch("logging.Logger.info")
+    def test_records_partial_success_if_log_level_info(
+        self, mock_logger_info
+    ):
+        exporter = OTLPSpanExporterForTesting(insecure=True)
+        # pylint: disable=protected-access
+        exporter._client = Mock()
+        partial_success = ExportTracePartialSuccess(
+            rejected_spans=1,
+            error_message="Span dropped",
+        )
+        exporter._client.Export.return_value = ExportTraceServiceResponse(
+            partial_success=partial_success
+        )
+        exporter.export([self.span])
+        mock_logger_info.assert_called_once_with(
+            f"Partial success:\n{partial_success}"
+        )

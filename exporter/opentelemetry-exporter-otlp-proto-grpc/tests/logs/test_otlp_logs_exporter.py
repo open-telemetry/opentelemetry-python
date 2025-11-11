@@ -14,6 +14,8 @@
 
 # pylint: disable=too-many-lines
 
+from io import StringIO
+import sys
 import time
 from os.path import dirname
 from unittest import TestCase
@@ -28,7 +30,9 @@ from opentelemetry.exporter.otlp.proto.grpc._log_exporter import (
     OTLPLogExporter,
 )
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
+    ExportLogsPartialSuccess,
     ExportLogsServiceRequest,
+    ExportLogsServiceResponse,
 )
 from opentelemetry.proto.common.v1.common_pb2 import AnyValue, KeyValue
 from opentelemetry.proto.common.v1.common_pb2 import (
@@ -48,6 +52,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
     OTEL_EXPORTER_OTLP_LOGS_HEADERS,
     OTEL_EXPORTER_OTLP_LOGS_TIMEOUT,
+    OTEL_LOG_LEVEL,
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
@@ -315,6 +320,27 @@ class TestOTLPLogExporter(TestCase):
             .get("logRecords")
         )
         return log_records
+
+    @patch.dict("os.environ", {OTEL_LOG_LEVEL: "info"})
+    @patch("sys.stderr", new_callable=StringIO)
+    def test_partial_success_recorded_directly_to_stderr(self, mock_stderr):
+        # pylint: disable=protected-access
+        exporter = OTLPLogExporter()
+        exporter._client = Mock()
+        exporter._client.Export.return_value = (
+            ExportLogsServiceResponse(
+                partial_success=ExportLogsPartialSuccess(
+                    rejected_log_records=1,
+                    error_message="Log record dropped",
+                )
+            )
+        )
+
+        exporter.export([self.log_data_1])
+
+        self.assertIn("Partial success:\n", mock_stderr.getvalue())
+        self.assertIn("rejected_log_records: 1\n", mock_stderr.getvalue())
+        self.assertIn('error_message: "Log record dropped"\n', mock_stderr.getvalue())
 
     def test_exported_log_without_trace_id(self):
         log_records = self.export_log_and_deserialize(self.log_data_4)
