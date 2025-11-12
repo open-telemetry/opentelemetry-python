@@ -42,7 +42,7 @@ from opentelemetry.util._once import Once
 class DuplicateFilter(logging.Filter):
     """Filter that can be applied to internal `logger`'s.
 
-    Currently applied to `logger`'s on the export logs path to prevent endlessly logging the same log
+    Currently applied to `logger`s on the export logs path to prevent endlessly logging the same log
     in cases where logging itself is failing."""
 
     def filter(self, record):
