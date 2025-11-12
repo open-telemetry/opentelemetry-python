@@ -135,6 +135,10 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
                 )
                 for item in traceback.extract_stack()
             )
+            # Recursive depth of 3 is sort of arbitrary. It's possible that an Exporter.export call
+            # emits a log which returns us to this function, but when we call Exporter.export again the log
+            # is no longer emitted and we exit this recursive loop naturally, a depth of 3 allows some
+            # Exporter.export recursive log calls but exits after a few.
             > 3
         ):
             _propagate_false_logger.warning(
