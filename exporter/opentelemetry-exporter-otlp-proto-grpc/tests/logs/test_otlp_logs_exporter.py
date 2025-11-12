@@ -14,9 +14,8 @@
 
 # pylint: disable=too-many-lines
 
-from io import StringIO
-import sys
 import time
+from io import StringIO
 from os.path import dirname
 from unittest import TestCase
 from unittest.mock import Mock, patch
@@ -321,18 +320,16 @@ class TestOTLPLogExporter(TestCase):
         )
         return log_records
 
-    @patch.dict("os.environ", {OTEL_LOG_LEVEL: "info"})
+    @patch.dict("os.environ", {OTEL_LOG_LEVEL: "debug"})
     @patch("sys.stderr", new_callable=StringIO)
     def test_partial_success_recorded_directly_to_stderr(self, mock_stderr):
         # pylint: disable=protected-access
         exporter = OTLPLogExporter()
         exporter._client = Mock()
-        exporter._client.Export.return_value = (
-            ExportLogsServiceResponse(
-                partial_success=ExportLogsPartialSuccess(
-                    rejected_log_records=1,
-                    error_message="Log record dropped",
-                )
+        exporter._client.Export.return_value = ExportLogsServiceResponse(
+            partial_success=ExportLogsPartialSuccess(
+                rejected_log_records=1,
+                error_message="Log record dropped",
             )
         )
 
@@ -340,7 +337,9 @@ class TestOTLPLogExporter(TestCase):
 
         self.assertIn("Partial success:\n", mock_stderr.getvalue())
         self.assertIn("rejected_log_records: 1\n", mock_stderr.getvalue())
-        self.assertIn('error_message: "Log record dropped"\n', mock_stderr.getvalue())
+        self.assertIn(
+            'error_message: "Log record dropped"\n', mock_stderr.getvalue()
+        )
 
     def test_exported_log_without_trace_id(self):
         log_records = self.export_log_and_deserialize(self.log_data_4)

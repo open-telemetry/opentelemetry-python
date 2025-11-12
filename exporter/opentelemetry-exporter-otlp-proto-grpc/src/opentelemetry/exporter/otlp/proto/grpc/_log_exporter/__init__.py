@@ -11,8 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from os import environ
 import sys
+from os import environ
 from typing import Dict, Literal, Optional, Sequence, Tuple, Union
 from typing import Sequence as TypingSequence
 
@@ -113,7 +113,7 @@ class OTLPLogExporter(
     def _log_partial_success(self, partial_success):
         # Override that skips the "logging" module due to the possibility
         # of circular logic (logging -> OTLP logs export).
-        sys.stderr.write(f"Partial success:\n{partial_success}\n") 
+        sys.stderr.write(f"Partial success:\n{partial_success}\n")
 
     def export(  # type: ignore [reportIncompatibleMethodOverride]
         self,

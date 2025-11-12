@@ -538,9 +538,9 @@ class TestOTLPExporterMixin(TestCase):
             )
 
     @patch.dict("os.environ", {}, clear=True)
-    @patch("logging.Logger.info")
+    @patch("logging.Logger.debug")
     def test_does_not_record_partial_success_if_log_level_unset(
-        self, mock_logger_info
+        self, mock_logger_debug
     ):
         exporter = OTLPSpanExporterForTesting(insecure=True)
         # pylint: disable=protected-access
@@ -552,12 +552,12 @@ class TestOTLPExporterMixin(TestCase):
             )
         )
         exporter.export([self.span])
-        mock_logger_info.assert_not_called()
+        mock_logger_debug.assert_not_called()
 
     @patch.dict("os.environ", {OTEL_LOG_LEVEL: "off"})
-    @patch("logging.Logger.info")
+    @patch("logging.Logger.debug")
     def test_does_not_record_partial_success_if_log_level_off(
-        self, mock_logger_info
+        self, mock_logger_debug
     ):
         exporter = OTLPSpanExporterForTesting(insecure=True)
         # pylint: disable=protected-access
@@ -569,12 +569,12 @@ class TestOTLPExporterMixin(TestCase):
             )
         )
         exporter.export([self.span])
-        mock_logger_info.assert_not_called()
+        mock_logger_debug.assert_not_called()
 
     @patch.dict("os.environ", {OTEL_LOG_LEVEL: "error"})
-    @patch("logging.Logger.info")
+    @patch("logging.Logger.debug")
     def test_does_not_record_partial_success_if_log_level_error(
-        self, mock_logger_info
+        self, mock_logger_debug
     ):
         exporter = OTLPSpanExporterForTesting(insecure=True)
         # pylint: disable=protected-access
@@ -586,12 +586,12 @@ class TestOTLPExporterMixin(TestCase):
             )
         )
         exporter.export([self.span])
-        mock_logger_info.assert_not_called()
+        mock_logger_debug.assert_not_called()
 
     @patch.dict("os.environ", {OTEL_LOG_LEVEL: "verbose"})
-    @patch("logging.Logger.info")
+    @patch("logging.Logger.debug")
     def test_records_partial_success_if_log_level_verbose(
-        self, mock_logger_info
+        self, mock_logger_debug
     ):
         exporter = OTLPSpanExporterForTesting(insecure=True)
         # pylint: disable=protected-access
@@ -604,14 +604,14 @@ class TestOTLPExporterMixin(TestCase):
             partial_success=partial_success
         )
         exporter.export([self.span])
-        mock_logger_info.assert_called_once_with(
-            f"Partial success:\n{partial_success}"
+        mock_logger_debug.assert_called_once_with(
+            "Partial success:\n%s", partial_success
         )
 
     @patch.dict("os.environ", {OTEL_LOG_LEVEL: "debug"})
-    @patch("logging.Logger.info")
+    @patch("logging.Logger.debug")
     def test_records_partial_success_if_log_level_debug(
-        self, mock_logger_info
+        self, mock_logger_debug
     ):
         exporter = OTLPSpanExporterForTesting(insecure=True)
         # pylint: disable=protected-access
@@ -624,14 +624,14 @@ class TestOTLPExporterMixin(TestCase):
             partial_success=partial_success
         )
         exporter.export([self.span])
-        mock_logger_info.assert_called_once_with(
-            f"Partial success:\n{partial_success}"
+        mock_logger_debug.assert_called_once_with(
+            "Partial success:\n%s", partial_success
         )
 
     @patch.dict("os.environ", {OTEL_LOG_LEVEL: "info"})
-    @patch("logging.Logger.info")
-    def test_records_partial_success_if_log_level_info(
-        self, mock_logger_info
+    @patch("logging.Logger.debug")
+    def test_does_not_record_partial_success_if_log_level_info(
+        self, mock_logger_debug
     ):
         exporter = OTLPSpanExporterForTesting(insecure=True)
         # pylint: disable=protected-access
@@ -644,6 +644,4 @@ class TestOTLPExporterMixin(TestCase):
             partial_success=partial_success
         )
         exporter.export([self.span])
-        mock_logger_info.assert_called_once_with(
-            f"Partial success:\n{partial_success}"
-        )
+        mock_logger_debug.assert_not_called()

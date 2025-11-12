@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-- OTLP exporters now log partial success responses when `OTEL_LOG_LEVEL` is set to `info`, `debug`, or `verbose`.
+- OTLP exporters now log partial success responses at `debug` level when `OTEL_LOG_LEVEL` is set to `debug` or `verbose`.
   ([#4805](https://github.com/open-telemetry/opentelemetry-python/pull/4805))
 - docs: Added sqlcommenter example
   ([#4734](https://github.com/open-telemetry/opentelemetry-python/pull/4734))

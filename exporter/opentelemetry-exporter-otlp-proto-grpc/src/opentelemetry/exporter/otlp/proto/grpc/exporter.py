@@ -93,7 +93,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_HEADERS,
     OTEL_EXPORTER_OTLP_INSECURE,
     OTEL_EXPORTER_OTLP_TIMEOUT,
-    OTEL_LOG_LEVEL
+    OTEL_LOG_LEVEL,
 )
 from opentelemetry.sdk.metrics.export import MetricExportResult, MetricsData
 from opentelemetry.sdk.resources import Resource as SDKResource
@@ -260,7 +260,7 @@ def _get_credentials(
 
 def _should_log_partial_responses():
     otel_log_level = environ.get(OTEL_LOG_LEVEL, "info").lower()
-    return otel_log_level in ["verbose", "debug", "info"]
+    return otel_log_level in ["verbose", "debug"]
 
 
 # pylint: disable=no-member
@@ -299,7 +299,9 @@ class OTLPExporterMixin(
         self._endpoint = endpoint or environ.get(
             OTEL_EXPORTER_OTLP_ENDPOINT, "http://localhost:4317"
         )
-        self._partial_response_logging_enabled = _should_log_partial_responses()
+        self._partial_response_logging_enabled = (
+            _should_log_partial_responses()
+        )
 
         parsed_url = urlparse(self._endpoint)
 
@@ -382,10 +384,12 @@ class OTLPExporterMixin(
         pass
 
     def _log_partial_success(self, partial_success):
-        logger.info(f"Partial success:\n{partial_success}")
+        logger.debug("Partial success:\n%s", partial_success)
 
     def _process_response(self, response):
-        if self._partial_response_logging_enabled and response.HasField("partial_success"):
+        if self._partial_response_logging_enabled and response.HasField(
+            "partial_success"
+        ):
             self._log_partial_success(response.partial_success)
 
     def _export(
