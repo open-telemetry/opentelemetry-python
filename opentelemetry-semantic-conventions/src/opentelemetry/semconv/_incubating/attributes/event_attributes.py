@@ -16,5 +16,5 @@ from typing import Final
 
 EVENT_NAME: Final = "event.name"
 """
-Deprecated: Replaced by EventName top-level field on the LogRecord.
+Deprecated: The value of this attribute MUST now be set as the value of the EventName field on the LogRecord to indicate that the LogRecord represents an Event.
 """

@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import asyncio
 import contextlib
 import functools
+import inspect
 from typing import TYPE_CHECKING, Callable, Generic, Iterator, TypeVar
 
 V = TypeVar("V")
@@ -63,7 +63,7 @@ class _AgnosticContextManager(
             raise RuntimeError("generator didn't yield") from None
 
     def __call__(self, func: V) -> V:  # pyright: ignore [reportIncompatibleMethodOverride]
-        if asyncio.iscoroutinefunction(func):
+        if inspect.iscoroutinefunction(func):
 
             @functools.wraps(func)  # type: ignore
             async def async_wrapper(*args: Pargs, **kwargs: Pkwargs) -> R:  # pyright: ignore [reportInvalidTypeVarUse]

@@ -57,17 +57,9 @@ from opentelemetry.sdk.trace.export import (
     SpanExporter,
     SpanExportResult,
 )
+from opentelemetry.test.mock_test_classes import IterEntryPoint
 
 logger = getLogger(__name__)
-
-
-class IterEntryPoint:
-    def __init__(self, name, class_type):
-        self.name = name
-        self.class_type = class_type
-
-    def load(self):
-        return self.class_type
 
 
 # The below tests use this test SpanExporter and Spans, but are testing the
@@ -76,11 +68,14 @@ class IterEntryPoint:
 class OTLPSpanExporterForTesting(
     SpanExporter,
     OTLPExporterMixin[
-        ReadableSpan, ExportTraceServiceRequest, SpanExportResult
+        ReadableSpan,
+        ExportTraceServiceRequest,
+        SpanExportResult,
+        TraceServiceStub,
     ],
 ):
-    _result = SpanExportResult
-    _stub = TraceServiceStub
+    def __init__(self, **kwargs):
+        super().__init__(TraceServiceStub, SpanExportResult, **kwargs)
 
     def _translate_data(
         self, data: Sequence[ReadableSpan]

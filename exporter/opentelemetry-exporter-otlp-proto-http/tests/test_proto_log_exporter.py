@@ -61,14 +61,13 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
+from opentelemetry.test.mock_test_classes import IterEntryPoint
 from opentelemetry.trace import (
     NonRecordingSpan,
     SpanContext,
     TraceFlags,
     set_span_in_context,
 )
-
-from ._common import IterEntryPoint
 
 ENV_ENDPOINT = "http://localhost.env:8080/"
 ENV_CERTIFICATE = "/etc/base.crt"

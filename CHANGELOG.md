@@ -12,6 +12,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- docs: Added sqlcommenter example
+  ([#4734](https://github.com/open-telemetry/opentelemetry-python/pull/4734))
+- build: bump ruff to 0.14.1
+  ([#4782](https://github.com/open-telemetry/opentelemetry-python/pull/4782))
+- Add `opentelemetry-exporter-credential-provider-gcp` as an optional dependency to `opentelemetry-exporter-otlp-proto-grpc` 
+  and `opentelemetry-exporter-otlp-proto-http` 
+  ([#4760](https://github.com/open-telemetry/opentelemetry-python/pull/4760))
+- semantic-conventions: Bump to 1.38.0
+  ([#4791](https://github.com/open-telemetry/opentelemetry-python/pull/4791))
+- Add configurable `max_export_batch_size` to OTLP HTTP metrics exporter
+  ([#4576](https://github.com/open-telemetry/opentelemetry-python/pull/4576))
+
+## Version 1.38.0/0.59b0 (2025-10-16)
+
+- Add `rstcheck` to pre-commit to stop introducing invalid RST
+  ([#4755](https://github.com/open-telemetry/opentelemetry-python/pull/4755))
+- logs: extend Logger.emit to accept separated keyword arguments
+  ([#4737](https://github.com/open-telemetry/opentelemetry-python/pull/4737))
+- logs: add warnings for classes that would be deprecated and renamed in 1.39.0
+  ([#4771](https://github.com/open-telemetry/opentelemetry-python/pull/4771))
+
+## Version 1.37.0/0.58b0 (2025-09-11)
+
 - Add experimental composite samplers
   ([#4714](https://github.com/open-telemetry/opentelemetry-python/pull/4714))
 - Add new environment variables to the SDK `OTEL_PYTHON_EXPORTER_OTLP_{HTTP/GRPC}_{METRICS/TRACES/LOGS}_CREDENTIAL_PROVIDER` that can be used to
@@ -24,10 +47,12 @@ inject a `requests.Session` or `grpc.ChannelCredentials` object into OTLP export
   ([#4634](https://github.com/open-telemetry/opentelemetry-python/pull/4634))
 - semantic-conventions: Bump to 1.37.0
   ([#4731](https://github.com/open-telemetry/opentelemetry-python/pull/4731))
+- opentelemetry-sdk: fix handling of OTEL_ATTRIBUTE_COUNT_LIMIT in logs
+  ([#4677](https://github.com/open-telemetry/opentelemetry-python/pull/4677))
 - Performance: Cache `importlib_metadata.entry_points`
   ([#4735](https://github.com/open-telemetry/opentelemetry-python/pull/4735))
-- Add configurable `max_export_batch_size` to OTLP HTTP metrics exporter
-  ([#4576](https://github.com/open-telemetry/opentelemetry-python/pull/4576))
+- opentelemetry-sdk: fix calling Logger.emit with an API LogRecord instance
+  ([#4741](https://github.com/open-telemetry/opentelemetry-python/pull/4741))
 
 ## Version 1.36.0/0.57b0 (2025-07-29)
 

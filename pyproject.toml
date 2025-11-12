@@ -105,6 +105,7 @@ include = [
   "opentelemetry-semantic-conventions",
   "opentelemetry-api",
   "opentelemetry-sdk",
+  "exporter/opentelemetry-exporter-otlp-proto-grpc",
 ]
 
 exclude = [
@@ -117,6 +118,7 @@ exclude = [
   "opentelemetry-sdk/src/opentelemetry/sdk/trace/__init__.py",
   "opentelemetry-sdk/src/opentelemetry/sdk/util",
   "opentelemetry-sdk/benchmarks",
+  "exporter/opentelemetry-exporter-otlp-proto-grpc/tests",
 ]
 
 # When packages are correct typed add them to the strict list
@@ -124,4 +126,11 @@ strict = [
   "opentelemetry-semantic-conventions",
   "opentelemetry-sdk/src/opentelemetry/sdk/environment_variables",
   "opentelemetry-sdk/src/opentelemetry/sdk/resources",
+]
+
+[dependency-groups]
+dev = [
+    "tox",
+    "tox-uv>=1",
+    "pre-commit",
 ]

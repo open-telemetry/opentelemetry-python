@@ -23,18 +23,13 @@ Start the Collector locally to see data being exported. Write the following file
       debug:
         verbosity: detailed
 
-    processors:
-      batch:
-
     service:
         pipelines:
             logs:
                 receivers: [otlp]
-                processors: [batch]
                 exporters: [debug]
             traces:
                 receivers: [otlp]
-                processors: [batch]
                 exporters: [debug]
 
 Then start the Docker container:
