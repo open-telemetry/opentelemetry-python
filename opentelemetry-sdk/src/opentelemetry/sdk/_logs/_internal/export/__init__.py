@@ -17,6 +17,7 @@ import abc
 import enum
 import logging
 import sys
+import traceback
 from os import environ, linesep
 from typing import IO, Callable, Optional, Sequence
 
@@ -48,6 +49,10 @@ _ENV_VAR_INT_VALUE_ERROR_MESSAGE = (
 )
 _logger = logging.getLogger(__name__)
 _logger.addFilter(DuplicateFilter())
+
+_propagate_false_logger = logging.getLogger(__name__ + ".propagate.false")
+_propagate_false_logger.addFilter(DuplicateFilter())
+_propagate_false_logger.propagate = False
 
 
 class LogExportResult(enum.Enum):
@@ -118,15 +123,40 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
         self._shutdown = False
 
     def on_emit(self, log_data: LogData):
-        if self._shutdown:
-            _logger.warning("Processor is already shutdown, ignoring call")
+        # Prevent entering a recursive loop.
+        if (
+            sum(
+                item.name == "on_emit"
+                and (
+                    item.filename.endswith("export/__init__.py")
+                    or item.filename.endswith(
+                        r"export\__init__.py"
+                    )  # backward slash on windows..
+                )
+                for item in traceback.extract_stack()
+            )
+            # Recursive depth of 3 is sort of arbitrary. It's possible that an Exporter.export call
+            # emits a log which returns us to this function, but when we call Exporter.export again the log
+            # is no longer emitted and we exit this recursive loop naturally, a depth of 3 allows some
+            # Exporter.export recursive log calls but exits after a few.
+            > 3
+        ):
+            _propagate_false_logger.warning(
+                "SimpleLogRecordProcessor.on_emit has entered a recursive loop. Dropping log and exiting the loop."
+            )
             return
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
-            self._exporter.export((log_data,))
-        except Exception:  # pylint: disable=broad-exception-caught
-            _logger.exception("Exception while exporting logs.")
-        detach(token)
+            if self._shutdown:
+                _logger.warning("Processor is already shutdown, ignoring call")
+                return
+
+            try:
+                self._exporter.export((log_data,))
+            except Exception:  # pylint: disable=broad-exception-caught
+                _logger.exception("Exception while exporting logs.")
+        finally:
+            detach(token)
 
     def shutdown(self):
         self._shutdown = True
