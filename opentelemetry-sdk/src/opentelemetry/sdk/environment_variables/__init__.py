@@ -50,8 +50,7 @@ OTEL_LOG_LEVEL = "OTEL_LOG_LEVEL"
 """
 .. envvar:: OTEL_LOG_LEVEL
 
-The :envvar:`OTEL_LOG_LEVEL` environment variable sets the log level used by the SDK logger.
-OTLP exporters will log partial success responses when this is set to `debug` or `verbose`.
+The :envvar:`OTEL_LOG_LEVEL` environment variable sets the log level used by the SDK logger
 Default: "info"
 """
 
