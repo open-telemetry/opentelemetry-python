@@ -427,6 +427,7 @@ def _initialize_components(
     span_processor: Type[SpanProcessor] | None = None,
     log_record_processor: Type[LogRecordProcessor] | None = None,
 ):
+    # pylint: disable=too-many-locals
     if trace_exporter_names is None:
         trace_exporter_names = []
     if metric_exporter_names is None:
