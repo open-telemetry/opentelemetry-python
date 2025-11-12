@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4798](https://github.com/open-telemetry/opentelemetry-python/pull/4798))
 - Silence events API warnings for internal users
   ([#4847](https://github.com/open-telemetry/opentelemetry-python/pull/4847))
+- opentelemetry-sdk: make it possible to override the default processors in the SDK configurator
+  ([#4806](https://github.com/open-telemetry/opentelemetry-python/pull/4806))
 
 ## Version 1.39.0/0.60b0 (2025-12-03)
 
