@@ -51,7 +51,6 @@ _logger = logging.getLogger(__name__)
 _logger.addFilter(DuplicateFilter())
 
 _propagate_false_logger = logging.getLogger(__name__ + ".propagate.false")
-_propagate_false_logger.addFilter(DuplicateFilter())
 _propagate_false_logger.propagate = False
 
 
