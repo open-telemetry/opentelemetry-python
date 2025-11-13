@@ -62,6 +62,13 @@ class DuplicateFilter(logging.Filter):
         return False
 
 
+class RequestFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        request = getattr(record, "request", None)
+        record.request = str(request)
+        return True
+
+
 class BatchExportStrategy(enum.Enum):
     EXPORT_ALL = 0
     EXPORT_WHILE_BATCH_EXCEEDS_THRESHOLD = 1
@@ -113,6 +120,8 @@ class BatchProcessor(Generic[Telemetry]):
         )
         self._logger = logging.getLogger(__name__)
         self._logger.addFilter(DuplicateFilter())
+        self._wsgi_request_logger = logging.getLogger("django.request")
+        self._wsgi_request_logger.addFilter(RequestFilter())
         self._exporting = exporting
 
         self._shutdown = False
