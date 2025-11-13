@@ -34,7 +34,7 @@ Note: Pseudonymous identifier of an end user.
 
 ENDUSER_ROLE: Final = "enduser.role"
 """
-Deprecated: Use `user.roles` attribute instead.
+Deprecated: Use `user.roles` instead.
 """
 
 ENDUSER_SCOPE: Final = "enduser.scope"

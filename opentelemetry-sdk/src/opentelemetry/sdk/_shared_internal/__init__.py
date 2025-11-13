@@ -16,9 +16,11 @@ from __future__ import annotations
 
 import collections
 import enum
+import inspect
 import logging
 import os
 import threading
+import time
 import weakref
 from abc import abstractmethod
 from typing import (
@@ -35,6 +37,29 @@ from opentelemetry.context import (
     set_value,
 )
 from opentelemetry.util._once import Once
+
+
+class DuplicateFilter(logging.Filter):
+    """Filter that can be applied to internal `logger`'s.
+
+    Currently applied to `logger`s on the export logs path that could otherwise cause endless logging of errors or a
+    recursion depth exceeded issue in cases where logging itself results in an exception."""
+
+    def filter(self, record):
+        current_log = (
+            record.module,
+            record.levelno,
+            record.msg,
+            # We need to pick a time longer than the OTLP LogExporter timeout
+            # which defaults to 10 seconds, but not pick something so long that
+            # it filters out useful logs.
+            time.time() // 20,
+        )
+        if current_log != getattr(self, "last_log", None):
+            self.last_log = current_log  # pylint: disable=attribute-defined-outside-init
+            return True
+        # False means python's `logging` module will no longer process this log.
+        return False
 
 
 class BatchExportStrategy(enum.Enum):
@@ -87,9 +112,11 @@ class BatchProcessor(Generic[Telemetry]):
             daemon=True,
         )
         self._logger = logging.getLogger(__name__)
+        self._logger.addFilter(DuplicateFilter())
         self._exporting = exporting
 
         self._shutdown = False
+        self._shutdown_timeout_exceeded = False
         self._export_lock = threading.Lock()
         self._worker_awaken = threading.Event()
         self._worker_thread.start()
@@ -101,7 +128,7 @@ class BatchProcessor(Generic[Telemetry]):
     def _should_export_batch(
         self, batch_strategy: BatchExportStrategy, num_iterations: int
     ) -> bool:
-        if not self._queue:
+        if not self._queue or self._shutdown_timeout_exceeded:
             return False
         # Always continue to export while queue length exceeds max batch size.
         if len(self._queue) >= self._max_export_batch_size:
@@ -180,16 +207,32 @@ class BatchProcessor(Generic[Telemetry]):
         if len(self._queue) >= self._max_export_batch_size:
             self._worker_awaken.set()
 
-    def shutdown(self):
+    def shutdown(self, timeout_millis: int = 30000):
         if self._shutdown:
             return
-        # Prevents emit and force_flush from further calling export.
+        shutdown_should_end = time.time() + (timeout_millis / 1000)
+        # Causes emit to reject telemetry and makes force_flush a no-op.
         self._shutdown = True
-        # Interrupts sleep in the worker, if it's sleeping.
+        # Interrupts sleep in the worker if it's sleeping.
         self._worker_awaken.set()
-        # Main worker loop should exit after one final export call with flush all strategy.
-        self._worker_thread.join()
-        self._exporter.shutdown()
+        self._worker_thread.join(timeout_millis / 1000)
+        # Stops worker thread from calling export again if queue is still not empty.
+        self._shutdown_timeout_exceeded = True
+        # We want to shutdown immediately only if we already waited `timeout_secs`.
+        # Otherwise we pass the remaining timeout to the exporter.
+        # Some exporter's shutdown support a timeout param.
+        if (
+            "timeout_millis"
+            in inspect.getfullargspec(self._exporter.shutdown).args
+        ):
+            remaining_millis = (shutdown_should_end - time.time()) * 1000
+            self._exporter.shutdown(timeout_millis=max(0, remaining_millis))  # type: ignore
+        else:
+            self._exporter.shutdown()
+        # Worker thread **should** be finished at this point, because we called shutdown on the exporter,
+        # and set shutdown_is_occuring to prevent further export calls. It's possible that a single export
+        # call is ongoing and the thread isn't finished. In this case we will return instead of waiting on
+        # the thread to finish.
 
     # TODO: Fix force flush so the timeout is used https://github.com/open-telemetry/opentelemetry-python/issues/4568.
     def force_flush(self, timeout_millis: Optional[int] = None) -> bool:

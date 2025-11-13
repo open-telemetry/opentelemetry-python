@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import threading
 import time
 import unittest
 from logging import WARNING
@@ -31,6 +32,7 @@ from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
 )
 from opentelemetry.exporter.otlp.proto.http.version import __version__
 from opentelemetry.sdk.environment_variables import (
+    _OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_KEY,
@@ -48,12 +50,13 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.trace import _Span
 from opentelemetry.sdk.trace.export import SpanExportResult
+from opentelemetry.test.mock_test_classes import IterEntryPoint
 
 OS_ENV_ENDPOINT = "os.env.base"
 OS_ENV_CERTIFICATE = "os/env/base.crt"
 OS_ENV_CLIENT_CERTIFICATE = "os/env/client-cert.pem"
 OS_ENV_CLIENT_KEY = "os/env/client-key.pem"
-OS_ENV_HEADERS = "envHeader1=val1,envHeader2=val2"
+OS_ENV_HEADERS = "envHeader1=val1,envHeader2=val2,User-agent=Overridden"
 OS_ENV_TIMEOUT = "30"
 BASIC_SPAN = _Span(
     "abc",
@@ -107,11 +110,21 @@ class TestOTLPSpanExporter(unittest.TestCase):
             OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY: "traces/client-key.pem",
             OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: Compression.Deflate.value,
             OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "https://traces.endpoint.env",
-            OTEL_EXPORTER_OTLP_TRACES_HEADERS: "tracesEnv1=val1,tracesEnv2=val2,traceEnv3===val3==",
+            OTEL_EXPORTER_OTLP_TRACES_HEADERS: "tracesEnv1=val1,tracesEnv2=val2,traceEnv3===val3==,User-agent=TraceUserAgent",
             OTEL_EXPORTER_OTLP_TRACES_TIMEOUT: "40",
+            _OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER: "credential_provider",
         },
     )
-    def test_exporter_traces_env_take_priority(self):
+    @patch("opentelemetry.exporter.otlp.proto.http._common.entry_points")
+    def test_exporter_traces_env_take_priority(self, mock_entry_point):
+        credential = Session()
+
+        def f():
+            return credential
+
+        mock_entry_point.configure_mock(
+            return_value=[IterEntryPoint("custom_credential", f)]
+        )
         exporter = OTLPSpanExporter()
 
         self.assertEqual(exporter._endpoint, "https://traces.endpoint.env")
@@ -128,9 +141,19 @@ class TestOTLPSpanExporter(unittest.TestCase):
                 "tracesenv1": "val1",
                 "tracesenv2": "val2",
                 "traceenv3": "==val3==",
+                "user-agent": "TraceUserAgent",
             },
         )
+        self.assertIs(exporter._session, credential)
         self.assertIsInstance(exporter._session, requests.Session)
+        self.assertEqual(
+            exporter._session.headers.get("Content-Type"),
+            "application/x-protobuf",
+        )
+        self.assertEqual(
+            exporter._session.headers.get("User-Agent"),
+            "TraceUserAgent",
+        )
 
     @patch.dict(
         "os.environ",
@@ -193,7 +216,12 @@ class TestOTLPSpanExporter(unittest.TestCase):
         self.assertEqual(exporter._timeout, int(OS_ENV_TIMEOUT))
         self.assertIs(exporter._compression, Compression.Gzip)
         self.assertEqual(
-            exporter._headers, {"envheader1": "val1", "envheader2": "val2"}
+            exporter._headers,
+            {
+                "envheader1": "val1",
+                "envheader2": "val2",
+                "user-agent": "Overridden",
+            },
         )
 
     @patch.dict(
@@ -288,3 +316,32 @@ class TestOTLPSpanExporter(unittest.TestCase):
         mock_post.side_effect = export_side_effect
         exporter = OTLPSpanExporter(timeout=0.4)
         exporter.export([BASIC_SPAN])
+
+    @patch.object(Session, "post")
+    def test_shutdown_interrupts_retry_backoff(self, mock_post):
+        exporter = OTLPSpanExporter(timeout=1.5)
+
+        resp = Response()
+        resp.status_code = 503
+        resp.reason = "UNAVAILABLE"
+        mock_post.return_value = resp
+        thread = threading.Thread(target=exporter.export, args=([BASIC_SPAN],))
+        with self.assertLogs(level=WARNING) as warning:
+            before = time.time()
+            thread.start()
+            # Wait for the first attempt to fail, then enter a 1 second backoff.
+            time.sleep(0.05)
+            # Should cause export to wake up and return.
+            exporter.shutdown()
+            thread.join()
+            after = time.time()
+            self.assertIn(
+                "Transient error UNAVAILABLE encountered while exporting span batch, retrying in",
+                warning.records[0].message,
+            )
+            self.assertIn(
+                "Shutdown in progress, aborting retry.",
+                warning.records[1].message,
+            )
+
+            assert after - before < 0.2

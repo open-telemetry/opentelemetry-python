@@ -20,8 +20,6 @@ import sys
 from os import environ, linesep
 from typing import IO, Callable, Optional, Sequence
 
-from typing_extensions import deprecated
-
 from opentelemetry.context import (
     _SUPPRESS_INSTRUMENTATION_KEY,
     attach,
@@ -29,17 +27,18 @@ from opentelemetry.context import (
     set_value,
 )
 from opentelemetry.sdk._logs import (
-    LogRecord,
-    LogRecordData,
     LogRecordProcessor,
+    ReadableLogRecord,
+    ReadWriteLogRecord,
 )
-from opentelemetry.sdk._shared_internal import BatchProcessor
+from opentelemetry.sdk._shared_internal import BatchProcessor, DuplicateFilter
 from opentelemetry.sdk.environment_variables import (
     OTEL_BLRP_EXPORT_TIMEOUT,
     OTEL_BLRP_MAX_EXPORT_BATCH_SIZE,
     OTEL_BLRP_MAX_QUEUE_SIZE,
     OTEL_BLRP_SCHEDULE_DELAY,
 )
+from opentelemetry.sdk.resources import Resource
 
 _DEFAULT_SCHEDULE_DELAY_MILLIS = 5000
 _DEFAULT_MAX_EXPORT_BATCH_SIZE = 512
@@ -49,17 +48,10 @@ _ENV_VAR_INT_VALUE_ERROR_MESSAGE = (
     "Unable to parse value for %s as integer. Defaulting to %s."
 )
 _logger = logging.getLogger(__name__)
+_logger.addFilter(DuplicateFilter())
 
 
 class LogRecordExportResult(enum.Enum):
-    SUCCESS = 0
-    FAILURE = 1
-
-
-@deprecated(
-    "Use LogRecordExportResult. Since logs are not stable yet this WILL be removed in future releases."
-)
-class LogExportResult(enum.Enum):
     SUCCESS = 0
     FAILURE = 1
 
@@ -73,10 +65,12 @@ class LogRecordExporter(abc.ABC):
     """
 
     @abc.abstractmethod
-    def export(self, batch: Sequence[LogRecordData]):
+    def export(
+        self, batch: Sequence[ReadableLogRecord]
+    ) -> LogRecordExportResult:
         """Exports a batch of logs.
         Args:
-            batch: The list of `LogRecordData` objects to be exported
+            batch: The list of `ReadableLogRecord` objects to be exported
         Returns:
             The result of the export
         """
@@ -87,13 +81,6 @@ class LogRecordExporter(abc.ABC):
 
         Called when the SDK is shut down.
         """
-
-
-@deprecated(
-    "Use LogRecordExporter. Since logs are not stable yet this WILL be removed in future releases."
-)
-class LogExporter(LogRecordExporter):
-    pass
 
 
 class ConsoleLogRecordExporter(LogRecordExporter):
@@ -107,15 +94,16 @@ class ConsoleLogRecordExporter(LogRecordExporter):
     def __init__(
         self,
         out: IO = sys.stdout,
-        formatter: Callable[[LogRecord], str] = lambda record: record.to_json()
-        + linesep,
+        formatter: Callable[
+            [ReadableLogRecord], str
+        ] = lambda record: record.to_json() + linesep,
     ):
         self.out = out
         self.formatter = formatter
 
-    def export(self, batch: Sequence[LogRecordData]):
-        for data in batch:
-            self.out.write(self.formatter(data.log_record))
+    def export(self, batch: Sequence[ReadableLogRecord]):
+        for log_record in batch:
+            self.out.write(self.formatter(log_record))
         self.out.flush()
         return LogRecordExportResult.SUCCESS
 
@@ -123,30 +111,35 @@ class ConsoleLogRecordExporter(LogRecordExporter):
         pass
 
 
-@deprecated(
-    "Use ConsoleLogRecordExporter. Since logs are not stable yet this WILL be removed in future releases."
-)
-class ConsoleLogExporter(ConsoleLogRecordExporter):
-    pass
-
-
 class SimpleLogRecordProcessor(LogRecordProcessor):
     """This is an implementation of LogRecordProcessor which passes
-    received logs in the export-friendly LogRecordData representation to the
-    configured LogRecordExporter, as soon as they are emitted.
+    received logs directly to the configured LogRecordExporter, as soon as they are emitted.
     """
 
     def __init__(self, exporter: LogRecordExporter):
         self._exporter = exporter
         self._shutdown = False
 
-    def on_emit(self, log_data: LogRecordData):
+    def on_emit(self, log_record: ReadWriteLogRecord):
         if self._shutdown:
             _logger.warning("Processor is already shutdown, ignoring call")
             return
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
-            self._exporter.export((log_data,))
+            # Convert ReadWriteLogRecord to ReadableLogRecord before exporting
+            # Note: resource should not be None at this point as it's set during Logger.emit()
+            resource = (
+                log_record.resource
+                if log_record.resource is not None
+                else Resource.create({})
+            )
+            readable_log_record = ReadableLogRecord(
+                log_record=log_record.log_record,
+                resource=resource,
+                instrumentation_scope=log_record.instrumentation_scope,
+                limits=log_record.limits,
+            )
+            self._exporter.export((readable_log_record,))
         except Exception:  # pylint: disable=broad-exception-caught
             _logger.exception("Exception while exporting logs.")
         detach(token)
@@ -161,8 +154,7 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
 
 class BatchLogRecordProcessor(LogRecordProcessor):
     """This is an implementation of LogRecordProcessor which creates batches of
-    received logs in the export-friendly LogRecordData representation and
-    send to the configured LogRecordExporter, as soon as they are emitted.
+    received logs and sends them to the configured LogRecordExporter.
 
     `BatchLogRecordProcessor` is configurable with the following environment
     variables which correspond to constructor parameters:
@@ -214,8 +206,21 @@ class BatchLogRecordProcessor(LogRecordProcessor):
             "Log",
         )
 
-    def on_emit(self, log_data: LogRecordData) -> None:
-        return self._batch_processor.emit(log_data)
+    def on_emit(self, log_record: ReadWriteLogRecord) -> None:
+        # Convert ReadWriteLogRecord to ReadableLogRecord before passing to BatchProcessor
+        # Note: resource should not be None at this point as it's set during Logger.emit()
+        resource = (
+            log_record.resource
+            if log_record.resource is not None
+            else Resource.create({})
+        )
+        readable_log_record = ReadableLogRecord(
+            log_record=log_record.log_record,
+            resource=resource,
+            instrumentation_scope=log_record.instrumentation_scope,
+            limits=log_record.limits,
+        )
+        return self._batch_processor.emit(readable_log_record)
 
     def shutdown(self):
         return self._batch_processor.shutdown()

@@ -71,7 +71,7 @@ def create_system_cpu_logical_count(meter: Meter) -> UpDownCounter:
     """Reports the number of logical (virtual) processor cores created by the operating system to manage multitasking"""
     return meter.create_up_down_counter(
         name=SYSTEM_CPU_LOGICAL_COUNT,
-        description="Reports the number of logical (virtual) processor cores created by the operating system to manage multitasking",
+        description="Reports the number of logical (virtual) processor cores created by the operating system to manage multitasking.",
         unit="{cpu}",
     )
 
@@ -89,7 +89,7 @@ def create_system_cpu_physical_count(meter: Meter) -> UpDownCounter:
     """Reports the number of actual physical processor cores on the hardware"""
     return meter.create_up_down_counter(
         name=SYSTEM_CPU_PHYSICAL_COUNT,
-        description="Reports the number of actual physical processor cores on the hardware",
+        description="Reports the number of actual physical processor cores on the hardware.",
         unit="{cpu}",
     )
 
@@ -106,7 +106,7 @@ def create_system_cpu_time(meter: Meter) -> Counter:
     """Seconds each logical CPU spent on each mode"""
     return meter.create_counter(
         name=SYSTEM_CPU_TIME,
-        description="Seconds each logical CPU spent on each mode",
+        description="Seconds each logical CPU spent on each mode.",
         unit="s",
     )
 
@@ -133,15 +133,17 @@ def create_system_cpu_utilization(
 
 SYSTEM_DISK_IO: Final = "system.disk.io"
 """
+Disk bytes transferred
 Instrument: counter
 Unit: By
 """
 
 
 def create_system_disk_io(meter: Meter) -> Counter:
+    """Disk bytes transferred"""
     return meter.create_counter(
         name=SYSTEM_DISK_IO,
-        description="",
+        description="Disk bytes transferred.",
         unit="By",
     )
 
@@ -164,7 +166,7 @@ def create_system_disk_io_time(meter: Meter) -> Counter:
     """Time disk spent activated"""
     return meter.create_counter(
         name=SYSTEM_DISK_IO_TIME,
-        description="Time disk spent activated",
+        description="Time disk spent activated.",
         unit="s",
     )
 
@@ -181,22 +183,24 @@ def create_system_disk_limit(meter: Meter) -> UpDownCounter:
     """The total storage capacity of the disk"""
     return meter.create_up_down_counter(
         name=SYSTEM_DISK_LIMIT,
-        description="The total storage capacity of the disk",
+        description="The total storage capacity of the disk.",
         unit="By",
     )
 
 
 SYSTEM_DISK_MERGED: Final = "system.disk.merged"
 """
+The number of disk reads/writes merged into single physical disk access operations
 Instrument: counter
 Unit: {operation}
 """
 
 
 def create_system_disk_merged(meter: Meter) -> Counter:
+    """The number of disk reads/writes merged into single physical disk access operations"""
     return meter.create_counter(
         name=SYSTEM_DISK_MERGED,
-        description="",
+        description="The number of disk reads/writes merged into single physical disk access operations.",
         unit="{operation}",
     )
 
@@ -217,22 +221,24 @@ def create_system_disk_operation_time(meter: Meter) -> Counter:
     """Sum of the time each operation took to complete"""
     return meter.create_counter(
         name=SYSTEM_DISK_OPERATION_TIME,
-        description="Sum of the time each operation took to complete",
+        description="Sum of the time each operation took to complete.",
         unit="s",
     )
 
 
 SYSTEM_DISK_OPERATIONS: Final = "system.disk.operations"
 """
+Disk operations count
 Instrument: counter
 Unit: {operation}
 """
 
 
 def create_system_disk_operations(meter: Meter) -> Counter:
+    """Disk operations count"""
     return meter.create_counter(
         name=SYSTEM_DISK_OPERATIONS,
-        description="",
+        description="Disk operations count.",
         unit="{operation}",
     )
 
@@ -249,7 +255,7 @@ def create_system_filesystem_limit(meter: Meter) -> UpDownCounter:
     """The total storage capacity of the filesystem"""
     return meter.create_up_down_counter(
         name=SYSTEM_FILESYSTEM_LIMIT,
-        description="The total storage capacity of the filesystem",
+        description="The total storage capacity of the filesystem.",
         unit="By",
     )
 
@@ -275,6 +281,7 @@ def create_system_filesystem_usage(meter: Meter) -> UpDownCounter:
 
 SYSTEM_FILESYSTEM_UTILIZATION: Final = "system.filesystem.utilization"
 """
+Fraction of filesystem bytes used
 Instrument: gauge
 Unit: 1
 """
@@ -283,10 +290,11 @@ Unit: 1
 def create_system_filesystem_utilization(
     meter: Meter, callbacks: Optional[Sequence[CallbackT]]
 ) -> ObservableGauge:
+    """Fraction of filesystem bytes used"""
     return meter.create_observable_gauge(
         name=SYSTEM_FILESYSTEM_UTILIZATION,
         callbacks=callbacks,
-        description="",
+        description="Fraction of filesystem bytes used.",
         unit="1",
     )
 
@@ -308,7 +316,7 @@ def create_system_linux_memory_available(meter: Meter) -> UpDownCounter:
     """An estimate of how much memory is available for starting new applications, without causing swapping"""
     return meter.create_up_down_counter(
         name=SYSTEM_LINUX_MEMORY_AVAILABLE,
-        description="An estimate of how much memory is available for starting new applications, without causing swapping",
+        description="An estimate of how much memory is available for starting new applications, without causing swapping.",
         unit="By",
     )
 
@@ -335,18 +343,17 @@ def create_system_linux_memory_slab_usage(meter: Meter) -> UpDownCounter:
 
 SYSTEM_MEMORY_LIMIT: Final = "system.memory.limit"
 """
-Total memory available in the system
+Total virtual memory available in the system
 Instrument: updowncounter
 Unit: By
-Note: Its value SHOULD equal the sum of `system.memory.state` over all states.
 """
 
 
 def create_system_memory_limit(meter: Meter) -> UpDownCounter:
-    """Total memory available in the system"""
+    """Total virtual memory available in the system"""
     return meter.create_up_down_counter(
         name=SYSTEM_MEMORY_LIMIT,
-        description="Total memory available in the system.",
+        description="Total virtual memory available in the system.",
         unit="By",
     )
 
@@ -375,8 +382,6 @@ SYSTEM_MEMORY_USAGE: Final = "system.memory.usage"
 Reports memory in use by state
 Instrument: updowncounter
 Unit: By
-Note: The sum over all `system.memory.state` values SHOULD equal the total memory
-available on the system, that is `system.memory.limit`.
 """
 
 
@@ -391,6 +396,7 @@ def create_system_memory_usage(meter: Meter) -> UpDownCounter:
 
 SYSTEM_MEMORY_UTILIZATION: Final = "system.memory.utilization"
 """
+Percentage of memory bytes in use
 Instrument: gauge
 Unit: 1
 """
@@ -399,25 +405,28 @@ Unit: 1
 def create_system_memory_utilization(
     meter: Meter, callbacks: Optional[Sequence[CallbackT]]
 ) -> ObservableGauge:
+    """Percentage of memory bytes in use"""
     return meter.create_observable_gauge(
         name=SYSTEM_MEMORY_UTILIZATION,
         callbacks=callbacks,
-        description="",
+        description="Percentage of memory bytes in use.",
         unit="1",
     )
 
 
 SYSTEM_NETWORK_CONNECTION_COUNT: Final = "system.network.connection.count"
 """
+The number of connections
 Instrument: updowncounter
 Unit: {connection}
 """
 
 
 def create_system_network_connection_count(meter: Meter) -> UpDownCounter:
+    """The number of connections"""
     return meter.create_up_down_counter(
         name=SYSTEM_NETWORK_CONNECTION_COUNT,
-        description="",
+        description="The number of connections.",
         unit="{connection}",
     )
 
@@ -432,21 +441,14 @@ def create_system_network_connections(meter: Meter) -> UpDownCounter:
     """Deprecated, use `system.network.connection.count` instead"""
     return meter.create_up_down_counter(
         name=SYSTEM_NETWORK_CONNECTIONS,
-        description="Deprecated, use `system.network.connection.count` instead",
+        description="Deprecated, use `system.network.connection.count` instead.",
         unit="{connection}",
     )
 
 
 SYSTEM_NETWORK_DROPPED: Final = "system.network.dropped"
 """
-Count of packets that are dropped or discarded even though there was no error
-Instrument: counter
-Unit: {packet}
-Note: Measured as:
-
-- Linux: the `drop` column in `/proc/dev/net` ([source](https://web.archive.org/web/20180321091318/http://www.onlamp.com/pub/a/linux/2000/11/16/LinuxAdmin.html))
-- Windows: [`InDiscards`/`OutDiscards`](https://docs.microsoft.com/windows/win32/api/netioapi/ns-netioapi-mib_if_row2)
-  from [`GetIfEntry2`](https://docs.microsoft.com/windows/win32/api/netioapi/nf-netioapi-getifentry2).
+Deprecated: Replaced by `system.network.packet.dropped`.
 """
 
 
@@ -454,7 +456,7 @@ def create_system_network_dropped(meter: Meter) -> Counter:
     """Count of packets that are dropped or discarded even though there was no error"""
     return meter.create_counter(
         name=SYSTEM_NETWORK_DROPPED,
-        description="Count of packets that are dropped or discarded even though there was no error",
+        description="Count of packets that are dropped or discarded even though there was no error.",
         unit="{packet}",
     )
 
@@ -466,7 +468,7 @@ Instrument: counter
 Unit: {error}
 Note: Measured as:
 
-- Linux: the `errs` column in `/proc/dev/net` ([source](https://web.archive.org/web/20180321091318/http://www.onlamp.com/pub/a/linux/2000/11/16/LinuxAdmin.html)).
+- Linux: the `errs` column in `/proc/net/dev` ([source](https://web.archive.org/web/20180321091318/http://www.onlamp.com/pub/a/linux/2000/11/16/LinuxAdmin.html)).
 - Windows: [`InErrors`/`OutErrors`](https://docs.microsoft.com/windows/win32/api/netioapi/ns-netioapi-mib_if_row2)
   from [`GetIfEntry2`](https://docs.microsoft.com/windows/win32/api/netioapi/nf-netioapi-getifentry2).
 """
@@ -476,67 +478,112 @@ def create_system_network_errors(meter: Meter) -> Counter:
     """Count of network errors detected"""
     return meter.create_counter(
         name=SYSTEM_NETWORK_ERRORS,
-        description="Count of network errors detected",
+        description="Count of network errors detected.",
         unit="{error}",
     )
 
 
 SYSTEM_NETWORK_IO: Final = "system.network.io"
 """
+The number of bytes transmitted and received
 Instrument: counter
 Unit: By
 """
 
 
 def create_system_network_io(meter: Meter) -> Counter:
+    """The number of bytes transmitted and received"""
     return meter.create_counter(
         name=SYSTEM_NETWORK_IO,
-        description="",
+        description="The number of bytes transmitted and received.",
         unit="By",
     )
 
 
-SYSTEM_NETWORK_PACKETS: Final = "system.network.packets"
+SYSTEM_NETWORK_PACKET_COUNT: Final = "system.network.packet.count"
 """
+The number of packets transferred
 Instrument: counter
 Unit: {packet}
 """
 
 
+def create_system_network_packet_count(meter: Meter) -> Counter:
+    """The number of packets transferred"""
+    return meter.create_counter(
+        name=SYSTEM_NETWORK_PACKET_COUNT,
+        description="The number of packets transferred.",
+        unit="{packet}",
+    )
+
+
+SYSTEM_NETWORK_PACKET_DROPPED: Final = "system.network.packet.dropped"
+"""
+Count of packets that are dropped or discarded even though there was no error
+Instrument: counter
+Unit: {packet}
+Note: Measured as:
+
+- Linux: the `drop` column in `/proc/net/dev` ([source](https://web.archive.org/web/20180321091318/http://www.onlamp.com/pub/a/linux/2000/11/16/LinuxAdmin.html))
+- Windows: [`InDiscards`/`OutDiscards`](https://docs.microsoft.com/windows/win32/api/netioapi/ns-netioapi-mib_if_row2)
+  from [`GetIfEntry2`](https://docs.microsoft.com/windows/win32/api/netioapi/nf-netioapi-getifentry2).
+"""
+
+
+def create_system_network_packet_dropped(meter: Meter) -> Counter:
+    """Count of packets that are dropped or discarded even though there was no error"""
+    return meter.create_counter(
+        name=SYSTEM_NETWORK_PACKET_DROPPED,
+        description="Count of packets that are dropped or discarded even though there was no error.",
+        unit="{packet}",
+    )
+
+
+SYSTEM_NETWORK_PACKETS: Final = "system.network.packets"
+"""
+Deprecated: Replaced by `system.network.packet.count`.
+"""
+
+
 def create_system_network_packets(meter: Meter) -> Counter:
+    """The number of packets transferred"""
     return meter.create_counter(
         name=SYSTEM_NETWORK_PACKETS,
-        description="",
+        description="The number of packets transferred.",
         unit="{packet}",
     )
 
 
 SYSTEM_PAGING_FAULTS: Final = "system.paging.faults"
 """
+The number of page faults
 Instrument: counter
 Unit: {fault}
 """
 
 
 def create_system_paging_faults(meter: Meter) -> Counter:
+    """The number of page faults"""
     return meter.create_counter(
         name=SYSTEM_PAGING_FAULTS,
-        description="",
+        description="The number of page faults.",
         unit="{fault}",
     )
 
 
 SYSTEM_PAGING_OPERATIONS: Final = "system.paging.operations"
 """
+The number of paging operations
 Instrument: counter
 Unit: {operation}
 """
 
 
 def create_system_paging_operations(meter: Meter) -> Counter:
+    """The number of paging operations"""
     return meter.create_counter(
         name=SYSTEM_PAGING_OPERATIONS,
-        description="",
+        description="The number of paging operations.",
         unit="{operation}",
     )
 
@@ -553,13 +600,14 @@ def create_system_paging_usage(meter: Meter) -> UpDownCounter:
     """Unix swap or windows pagefile usage"""
     return meter.create_up_down_counter(
         name=SYSTEM_PAGING_USAGE,
-        description="Unix swap or windows pagefile usage",
+        description="Unix swap or windows pagefile usage.",
         unit="By",
     )
 
 
 SYSTEM_PAGING_UTILIZATION: Final = "system.paging.utilization"
 """
+Swap (unix) or pagefile (windows) utilization
 Instrument: gauge
 Unit: 1
 """
@@ -568,10 +616,11 @@ Unit: 1
 def create_system_paging_utilization(
     meter: Meter, callbacks: Optional[Sequence[CallbackT]]
 ) -> ObservableGauge:
+    """Swap (unix) or pagefile (windows) utilization"""
     return meter.create_observable_gauge(
         name=SYSTEM_PAGING_UTILIZATION,
         callbacks=callbacks,
-        description="",
+        description="Swap (unix) or pagefile (windows) utilization.",
         unit="1",
     )
 
@@ -588,7 +637,7 @@ def create_system_process_count(meter: Meter) -> UpDownCounter:
     """Total number of processes in each state"""
     return meter.create_up_down_counter(
         name=SYSTEM_PROCESS_COUNT,
-        description="Total number of processes in each state",
+        description="Total number of processes in each state.",
         unit="{process}",
     )
 
@@ -605,7 +654,7 @@ def create_system_process_created(meter: Meter) -> Counter:
     """Total number of processes created over uptime of the host"""
     return meter.create_counter(
         name=SYSTEM_PROCESS_CREATED,
-        description="Total number of processes created over uptime of the host",
+        description="Total number of processes created over uptime of the host.",
         unit="{process}",
     )
 
@@ -627,6 +676,6 @@ def create_system_uptime(
     return meter.create_observable_gauge(
         name=SYSTEM_UPTIME,
         callbacks=callbacks,
-        description="The time the system has been running",
+        description="The time the system has been running.",
         unit="s",
     )

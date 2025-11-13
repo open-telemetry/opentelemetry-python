@@ -28,7 +28,7 @@ from google.protobuf.duration_pb2 import (  # pylint: disable=no-name-in-module
 from google.rpc.error_details_pb2 import (  # pylint: disable=no-name-in-module
     RetryInfo,
 )
-from grpc import Compression, StatusCode, server
+from grpc import ChannelCredentials, Compression, StatusCode, server
 
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
@@ -49,6 +49,7 @@ from opentelemetry.proto.collector.trace.v1.trace_service_pb2_grpc import (
     add_TraceServiceServicer_to_server,
 )
 from opentelemetry.sdk.environment_variables import (
+    _OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_COMPRESSION,
 )
 from opentelemetry.sdk.trace import ReadableSpan, _Span
@@ -56,6 +57,7 @@ from opentelemetry.sdk.trace.export import (
     SpanExporter,
     SpanExportResult,
 )
+from opentelemetry.test.mock_test_classes import IterEntryPoint
 
 logger = getLogger(__name__)
 
@@ -66,11 +68,14 @@ logger = getLogger(__name__)
 class OTLPSpanExporterForTesting(
     SpanExporter,
     OTLPExporterMixin[
-        ReadableSpan, ExportTraceServiceRequest, SpanExportResult
+        ReadableSpan,
+        ExportTraceServiceRequest,
+        SpanExportResult,
+        TraceServiceStub,
     ],
 ):
-    _result = SpanExportResult
-    _stub = TraceServiceStub
+    def __init__(self, **kwargs):
+        super().__init__(TraceServiceStub, SpanExportResult, **kwargs)
 
     def _translate_data(
         self, data: Sequence[ReadableSpan]
@@ -276,6 +281,55 @@ class TestOTLPExporterMixin(TestCase):
             ),
         )
 
+    @patch.dict(
+        "os.environ",
+        {
+            _OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER: "credential_provider"
+        },
+    )
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.entry_points")
+    def test_that_credential_gets_passed_to_exporter(self, mock_entry_points):
+        credential = ChannelCredentials(None)
+
+        def f():
+            return credential
+
+        mock_entry_points.configure_mock(
+            return_value=[IterEntryPoint("custom_credential", f)]
+        )
+        exporter = OTLPSpanExporterForTesting(insecure=False)
+        # pylint: disable=protected-access
+        assert exporter._credentials is credential
+
+    @patch.dict(
+        "os.environ",
+        {
+            _OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER: "credential_provider"
+        },
+    )
+    def test_that_missing_entry_point_raises_exception(self):
+        with self.assertRaises(RuntimeError):
+            OTLPSpanExporterForTesting(insecure=False)
+
+    @patch.dict(
+        "os.environ",
+        {
+            _OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER: "credential_provider"
+        },
+    )
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.entry_points")
+    def test_that_entry_point_returning_bad_type_raises_exception(
+        self, mock_entry_points
+    ):
+        def f():
+            return 1
+
+        mock_entry_points.configure_mock(
+            return_value=[IterEntryPoint("custom_credential", f)]
+        )
+        with self.assertRaises(RuntimeError):
+            OTLPSpanExporterForTesting(insecure=False)
+
     # pylint: disable=no-self-use, disable=unused-argument
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"
@@ -325,10 +379,14 @@ class TestOTLPExporterMixin(TestCase):
                 "Exporter already shutdown, ignoring batch",
             )
 
-    def test_shutdown_wait_last_export(self):
+    @unittest.skipIf(
+        system() == "Windows",
+        "For gRPC + windows there's some added delay in the RPCs which breaks the assertion over amount of time passed.",
+    )
+    def test_shutdown_interrupts_export_retry_backoff(self):
         add_TraceServiceServicer_to_server(
             TraceServiceServicerWithExportParams(
-                StatusCode.OK, optional_export_sleep=1
+                StatusCode.UNAVAILABLE,
             ),
             self.server,
         )
@@ -336,37 +394,25 @@ class TestOTLPExporterMixin(TestCase):
         export_thread = ThreadWithReturnValue(
             target=self.exporter.export, args=([self.span],)
         )
-        export_thread.start()
-        # Wait a bit for exporter to get lock and make export call.
-        time.sleep(0.25)
-        # pylint: disable=protected-access
-        self.assertTrue(self.exporter._export_lock.locked())
-        self.exporter.shutdown(timeout_millis=3000)
-        # pylint: disable=protected-access
-        self.assertTrue(self.exporter._shutdown)
-        self.assertEqual(export_thread.join(), SpanExportResult.SUCCESS)
-
-    def test_shutdown_doesnot_wait_last_export(self):
-        add_TraceServiceServicer_to_server(
-            TraceServiceServicerWithExportParams(
-                StatusCode.OK, optional_export_sleep=3
-            ),
-            self.server,
-        )
-
-        export_thread = ThreadWithReturnValue(
-            target=self.exporter.export, args=([self.span],)
-        )
-        export_thread.start()
-        # Wait for exporter to get lock and make export call.
-        time.sleep(0.25)
-        # pylint: disable=protected-access
-        self.assertTrue(self.exporter._export_lock.locked())
-        # Set to 1 seconds, so the 3 second server-side delay will not be reached.
-        self.exporter.shutdown(timeout_millis=1000)
-        # pylint: disable=protected-access
-        self.assertTrue(self.exporter._shutdown)
-        self.assertEqual(export_thread.join(), None)
+        with self.assertLogs(level=WARNING) as warning:
+            begin_wait = time.time()
+            export_thread.start()
+            # Wait a bit for export to fail and the backoff sleep to start
+            time.sleep(0.05)
+            # The code should now be in a 1 second backoff.
+            # pylint: disable=protected-access
+            self.assertFalse(self.exporter._shutdown_in_progress.is_set())
+            self.exporter.shutdown()
+            self.assertTrue(self.exporter._shutdown_in_progress.is_set())
+            export_result = export_thread.join()
+            end_wait = time.time()
+            self.assertEqual(export_result, SpanExportResult.FAILURE)
+            # Shutdown should have interrupted the sleep.
+            self.assertTrue(end_wait - begin_wait < 0.2)
+            self.assertEqual(
+                warning.records[1].message,
+                "Shutdown in progress, aborting retry.",
+            )
 
     def test_export_over_closed_grpc_channel(self):
         # pylint: disable=protected-access

@@ -15,9 +15,7 @@
 import threading
 import typing
 
-from typing_extensions import deprecated
-
-from opentelemetry.sdk._logs import LogRecordData
+from opentelemetry.sdk._logs._internal import ReadableLogRecord
 from opentelemetry.sdk._logs.export import (
     LogRecordExporter,
     LogRecordExportResult,
@@ -41,12 +39,12 @@ class InMemoryLogRecordExporter(LogRecordExporter):
         with self._lock:
             self._logs.clear()
 
-    def get_finished_logs(self) -> typing.Tuple[LogRecordData, ...]:
+    def get_finished_logs(self) -> typing.Tuple[ReadableLogRecord, ...]:
         with self._lock:
             return tuple(self._logs)
 
     def export(
-        self, batch: typing.Sequence[LogRecordData]
+        self, batch: typing.Sequence[ReadableLogRecord]
     ) -> LogRecordExportResult:
         if self._stopped:
             return LogRecordExportResult.FAILURE
@@ -56,10 +54,3 @@ class InMemoryLogRecordExporter(LogRecordExporter):
 
     def shutdown(self) -> None:
         self._stopped = True
-
-
-@deprecated(
-    "Use InMemoryLogRecordExporter. Since logs are not stable yet this WILL be removed in future releases."
-)
-class InMemoryLogExporter(InMemoryLogRecordExporter):
-    pass

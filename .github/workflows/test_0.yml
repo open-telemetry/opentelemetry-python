@@ -7,7 +7,11 @@ on:
   push:
     branches-ignore:
     - 'release/*'
+    - 'otelbot/*'
   pull_request:
+
+permissions:
+  contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
@@ -42,7 +46,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py39-test-opentelemetry-api -- -ra
@@ -61,7 +65,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py310-test-opentelemetry-api -- -ra
@@ -80,7 +84,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py311-test-opentelemetry-api -- -ra
@@ -99,7 +103,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py312-test-opentelemetry-api -- -ra
@@ -118,7 +122,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py313-test-opentelemetry-api -- -ra
@@ -137,7 +141,7 @@ jobs:
           python-version: "pypy-3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e pypy3-test-opentelemetry-api -- -ra
@@ -156,7 +160,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py39-test-opentelemetry-proto-gen-oldest -- -ra
@@ -175,7 +179,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py39-test-opentelemetry-proto-gen-latest -- -ra
@@ -194,7 +198,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py310-test-opentelemetry-proto-gen-oldest -- -ra
@@ -213,7 +217,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py310-test-opentelemetry-proto-gen-latest -- -ra
@@ -232,7 +236,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py311-test-opentelemetry-proto-gen-oldest -- -ra
@@ -251,7 +255,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py311-test-opentelemetry-proto-gen-latest -- -ra
@@ -270,7 +274,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py312-test-opentelemetry-proto-gen-oldest -- -ra
@@ -289,7 +293,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py312-test-opentelemetry-proto-gen-latest -- -ra
@@ -308,7 +312,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py313-test-opentelemetry-proto-gen-oldest -- -ra
@@ -327,7 +331,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py313-test-opentelemetry-proto-gen-latest -- -ra
@@ -346,7 +350,7 @@ jobs:
           python-version: "pypy-3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e pypy3-test-opentelemetry-proto-gen-oldest -- -ra
@@ -365,7 +369,7 @@ jobs:
           python-version: "pypy-3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e pypy3-test-opentelemetry-proto-gen-latest -- -ra
@@ -384,7 +388,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py39-test-opentelemetry-sdk -- -ra
@@ -403,7 +407,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py310-test-opentelemetry-sdk -- -ra
@@ -422,7 +426,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py311-test-opentelemetry-sdk -- -ra
@@ -441,7 +445,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py312-test-opentelemetry-sdk -- -ra
@@ -460,7 +464,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py313-test-opentelemetry-sdk -- -ra
@@ -479,7 +483,7 @@ jobs:
           python-version: "pypy-3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e pypy3-test-opentelemetry-sdk -- -ra
@@ -498,7 +502,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py39-test-opentelemetry-semantic-conventions -- -ra
@@ -517,7 +521,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py310-test-opentelemetry-semantic-conventions -- -ra
@@ -536,7 +540,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py311-test-opentelemetry-semantic-conventions -- -ra
@@ -555,7 +559,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py312-test-opentelemetry-semantic-conventions -- -ra
@@ -574,7 +578,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py313-test-opentelemetry-semantic-conventions -- -ra
@@ -593,7 +597,7 @@ jobs:
           python-version: "pypy-3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e pypy3-test-opentelemetry-semantic-conventions -- -ra
@@ -612,7 +616,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py39-test-opentelemetry-getting-started -- -ra
@@ -631,7 +635,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py310-test-opentelemetry-getting-started -- -ra
@@ -650,7 +654,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py311-test-opentelemetry-getting-started -- -ra
@@ -669,7 +673,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py312-test-opentelemetry-getting-started -- -ra
@@ -688,7 +692,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py313-test-opentelemetry-getting-started -- -ra
@@ -707,7 +711,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py39-test-opentelemetry-opentracing-shim -- -ra
@@ -726,7 +730,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py310-test-opentelemetry-opentracing-shim -- -ra
@@ -745,7 +749,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py311-test-opentelemetry-opentracing-shim -- -ra
@@ -764,7 +768,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py312-test-opentelemetry-opentracing-shim -- -ra
@@ -783,7 +787,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py313-test-opentelemetry-opentracing-shim -- -ra
@@ -802,7 +806,7 @@ jobs:
           python-version: "pypy-3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e pypy3-test-opentelemetry-opentracing-shim -- -ra
@@ -821,7 +825,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py39-test-opentelemetry-opencensus-shim -- -ra
@@ -840,7 +844,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py310-test-opentelemetry-opencensus-shim -- -ra
@@ -859,7 +863,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py311-test-opentelemetry-opencensus-shim -- -ra
@@ -878,7 +882,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py312-test-opentelemetry-opencensus-shim -- -ra
@@ -897,7 +901,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py313-test-opentelemetry-opencensus-shim -- -ra
@@ -916,7 +920,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py39-test-opentelemetry-exporter-opencensus -- -ra
@@ -935,7 +939,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py310-test-opentelemetry-exporter-opencensus -- -ra
@@ -954,7 +958,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py311-test-opentelemetry-exporter-opencensus -- -ra
@@ -973,7 +977,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py312-test-opentelemetry-exporter-opencensus -- -ra
@@ -992,7 +996,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py313-test-opentelemetry-exporter-opencensus -- -ra
@@ -1011,7 +1015,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py39-test-opentelemetry-exporter-otlp-proto-common -- -ra
@@ -1030,7 +1034,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py310-test-opentelemetry-exporter-otlp-proto-common -- -ra
@@ -1049,7 +1053,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py311-test-opentelemetry-exporter-otlp-proto-common -- -ra
@@ -1068,7 +1072,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py312-test-opentelemetry-exporter-otlp-proto-common -- -ra
@@ -1087,7 +1091,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py313-test-opentelemetry-exporter-otlp-proto-common -- -ra
@@ -1106,7 +1110,7 @@ jobs:
           python-version: "pypy-3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e pypy3-test-opentelemetry-exporter-otlp-proto-common -- -ra
@@ -1125,7 +1129,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py39-test-opentelemetry-exporter-otlp-combined -- -ra
@@ -1144,7 +1148,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py310-test-opentelemetry-exporter-otlp-combined -- -ra
@@ -1163,7 +1167,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py311-test-opentelemetry-exporter-otlp-combined -- -ra
@@ -1182,7 +1186,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py312-test-opentelemetry-exporter-otlp-combined -- -ra
@@ -1201,7 +1205,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py313-test-opentelemetry-exporter-otlp-combined -- -ra
@@ -1220,7 +1224,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py39-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
@@ -1239,7 +1243,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py39-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
@@ -1258,7 +1262,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py310-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
@@ -1277,7 +1281,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py310-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
@@ -1296,7 +1300,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py311-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
@@ -1315,7 +1319,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py311-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
@@ -1334,7 +1338,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py312-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
@@ -1353,7 +1357,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py312-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
@@ -1372,7 +1376,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py313-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
@@ -1391,7 +1395,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py313-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
@@ -1410,7 +1414,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py39-test-opentelemetry-exporter-otlp-proto-http -- -ra
@@ -1429,7 +1433,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py310-test-opentelemetry-exporter-otlp-proto-http -- -ra
@@ -1448,7 +1452,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py311-test-opentelemetry-exporter-otlp-proto-http -- -ra
@@ -1467,7 +1471,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py312-test-opentelemetry-exporter-otlp-proto-http -- -ra
@@ -1486,7 +1490,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py313-test-opentelemetry-exporter-otlp-proto-http -- -ra
@@ -1505,7 +1509,7 @@ jobs:
           python-version: "pypy-3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e pypy3-test-opentelemetry-exporter-otlp-proto-http -- -ra
@@ -1524,7 +1528,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py39-test-opentelemetry-exporter-prometheus -- -ra
@@ -1543,7 +1547,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py310-test-opentelemetry-exporter-prometheus -- -ra
@@ -1562,7 +1566,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py311-test-opentelemetry-exporter-prometheus -- -ra
@@ -1581,7 +1585,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py312-test-opentelemetry-exporter-prometheus -- -ra
@@ -1600,7 +1604,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py313-test-opentelemetry-exporter-prometheus -- -ra
@@ -1619,7 +1623,7 @@ jobs:
           python-version: "pypy-3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e pypy3-test-opentelemetry-exporter-prometheus -- -ra
@@ -1638,7 +1642,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py39-test-opentelemetry-exporter-zipkin-combined -- -ra
@@ -1657,7 +1661,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py310-test-opentelemetry-exporter-zipkin-combined -- -ra
@@ -1676,7 +1680,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py311-test-opentelemetry-exporter-zipkin-combined -- -ra
@@ -1695,7 +1699,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py312-test-opentelemetry-exporter-zipkin-combined -- -ra
@@ -1714,7 +1718,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py313-test-opentelemetry-exporter-zipkin-combined -- -ra
@@ -1733,7 +1737,7 @@ jobs:
           python-version: "pypy-3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e pypy3-test-opentelemetry-exporter-zipkin-combined -- -ra
@@ -1752,7 +1756,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py39-test-opentelemetry-exporter-zipkin-proto-http -- -ra
@@ -1771,7 +1775,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py310-test-opentelemetry-exporter-zipkin-proto-http -- -ra
@@ -1790,7 +1794,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py311-test-opentelemetry-exporter-zipkin-proto-http -- -ra
@@ -1809,7 +1813,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py312-test-opentelemetry-exporter-zipkin-proto-http -- -ra
@@ -1828,7 +1832,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py313-test-opentelemetry-exporter-zipkin-proto-http -- -ra
@@ -1847,7 +1851,7 @@ jobs:
           python-version: "pypy-3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e pypy3-test-opentelemetry-exporter-zipkin-proto-http -- -ra
@@ -1866,7 +1870,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py39-test-opentelemetry-exporter-zipkin-json -- -ra
@@ -1885,7 +1889,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py310-test-opentelemetry-exporter-zipkin-json -- -ra
@@ -1904,7 +1908,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py311-test-opentelemetry-exporter-zipkin-json -- -ra
@@ -1923,7 +1927,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py312-test-opentelemetry-exporter-zipkin-json -- -ra
@@ -1942,7 +1946,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py313-test-opentelemetry-exporter-zipkin-json -- -ra
@@ -1961,7 +1965,7 @@ jobs:
           python-version: "pypy-3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e pypy3-test-opentelemetry-exporter-zipkin-json -- -ra
@@ -1980,7 +1984,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py39-test-opentelemetry-propagator-b3 -- -ra
@@ -1999,7 +2003,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py310-test-opentelemetry-propagator-b3 -- -ra
@@ -2018,7 +2022,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py311-test-opentelemetry-propagator-b3 -- -ra
@@ -2037,7 +2041,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py312-test-opentelemetry-propagator-b3 -- -ra
@@ -2056,7 +2060,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py313-test-opentelemetry-propagator-b3 -- -ra
@@ -2075,7 +2079,7 @@ jobs:
           python-version: "pypy-3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e pypy3-test-opentelemetry-propagator-b3 -- -ra
@@ -2094,7 +2098,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py39-test-opentelemetry-propagator-jaeger -- -ra
@@ -2113,7 +2117,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py310-test-opentelemetry-propagator-jaeger -- -ra
@@ -2132,7 +2136,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py311-test-opentelemetry-propagator-jaeger -- -ra
@@ -2151,7 +2155,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py312-test-opentelemetry-propagator-jaeger -- -ra
@@ -2170,7 +2174,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py313-test-opentelemetry-propagator-jaeger -- -ra
@@ -2189,7 +2193,7 @@ jobs:
           python-version: "pypy-3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e pypy3-test-opentelemetry-propagator-jaeger -- -ra
@@ -2208,7 +2212,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py39-test-opentelemetry-test-utils -- -ra
@@ -2227,7 +2231,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py310-test-opentelemetry-test-utils -- -ra
@@ -2246,7 +2250,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py311-test-opentelemetry-test-utils -- -ra
@@ -2265,7 +2269,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py312-test-opentelemetry-test-utils -- -ra
@@ -2284,7 +2288,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py313-test-opentelemetry-test-utils -- -ra
@@ -2303,7 +2307,7 @@ jobs:
           python-version: "pypy-3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e pypy3-test-opentelemetry-test-utils -- -ra
@@ -2322,7 +2326,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -2344,7 +2348,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -2366,7 +2370,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -2388,7 +2392,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -2410,7 +2414,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -2432,7 +2436,7 @@ jobs:
           python-version: "pypy-3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -2454,7 +2458,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -2476,7 +2480,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -2498,7 +2502,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -2520,7 +2524,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -2542,7 +2546,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -2564,7 +2568,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -2586,7 +2590,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -2608,7 +2612,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -2630,7 +2634,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -2652,7 +2656,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -2674,7 +2678,7 @@ jobs:
           python-version: "pypy-3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -2696,7 +2700,7 @@ jobs:
           python-version: "pypy-3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -2718,7 +2722,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -2740,7 +2744,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -2762,7 +2766,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -2784,7 +2788,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -2806,7 +2810,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -2828,7 +2832,7 @@ jobs:
           python-version: "pypy-3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -2850,7 +2854,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -2872,7 +2876,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -2894,7 +2898,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -2916,7 +2920,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -2938,7 +2942,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -2960,7 +2964,7 @@ jobs:
           python-version: "pypy-3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -2982,7 +2986,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3004,7 +3008,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3026,7 +3030,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3048,7 +3052,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3070,7 +3074,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3092,7 +3096,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3114,7 +3118,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3136,7 +3140,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3158,7 +3162,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3180,7 +3184,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3202,7 +3206,7 @@ jobs:
           python-version: "pypy-3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3224,7 +3228,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3246,7 +3250,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3268,7 +3272,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3290,7 +3294,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3312,7 +3316,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3334,7 +3338,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3356,7 +3360,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3378,7 +3382,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3400,7 +3404,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3422,7 +3426,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3444,7 +3448,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3466,7 +3470,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3488,7 +3492,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3510,7 +3514,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3532,7 +3536,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3554,7 +3558,7 @@ jobs:
           python-version: "pypy-3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3576,7 +3580,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3598,7 +3602,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3620,7 +3624,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3642,7 +3646,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3664,7 +3668,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3686,7 +3690,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3708,7 +3712,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3730,7 +3734,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3752,7 +3756,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3774,7 +3778,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3796,7 +3800,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3818,7 +3822,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3840,7 +3844,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3862,7 +3866,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3884,7 +3888,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3906,7 +3910,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3928,7 +3932,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3950,7 +3954,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3972,7 +3976,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -3994,7 +3998,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4016,7 +4020,7 @@ jobs:
           python-version: "pypy-3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4038,7 +4042,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4060,7 +4064,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4082,7 +4086,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4104,7 +4108,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4126,7 +4130,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4148,7 +4152,7 @@ jobs:
           python-version: "pypy-3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4170,7 +4174,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4192,7 +4196,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4214,7 +4218,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4236,7 +4240,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4258,7 +4262,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4280,7 +4284,7 @@ jobs:
           python-version: "pypy-3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4302,7 +4306,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4324,7 +4328,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4346,7 +4350,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4368,7 +4372,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4390,7 +4394,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4412,7 +4416,7 @@ jobs:
           python-version: "pypy-3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4434,7 +4438,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4456,7 +4460,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4478,7 +4482,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4500,7 +4504,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4522,7 +4526,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4544,7 +4548,7 @@ jobs:
           python-version: "pypy-3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4566,7 +4570,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4588,7 +4592,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4610,7 +4614,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4632,7 +4636,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4654,7 +4658,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4676,7 +4680,7 @@ jobs:
           python-version: "pypy-3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4698,7 +4702,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4720,7 +4724,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4742,7 +4746,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4764,7 +4768,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4786,7 +4790,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4808,7 +4812,7 @@ jobs:
           python-version: "pypy-3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4830,7 +4834,7 @@ jobs:
           python-version: "3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4852,7 +4856,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4874,7 +4878,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4896,7 +4900,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4918,7 +4922,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
@@ -4940,7 +4944,7 @@ jobs:
           python-version: "pypy-3.9"
 
       - name: Install tox
-        run: pip install tox
+        run: pip install tox-uv
 
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true

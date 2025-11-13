@@ -50,6 +50,8 @@ def main():
     )
 
     breakages = list(griffe.find_breaking_changes(against, base))
+    # exclude version bumps from breakages as they are expected
+    breakages = [b for b in breakages if b._format_title() != "__version__"]
 
     if breakages:
         for b in breakages:

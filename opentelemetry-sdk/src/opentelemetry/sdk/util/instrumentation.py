@@ -17,7 +17,7 @@ from typing import Optional
 from typing_extensions import deprecated
 
 from opentelemetry.attributes import BoundedAttributes
-from opentelemetry.util.types import Attributes
+from opentelemetry.util.types import Attributes, _ExtendedAttributes
 
 
 class InstrumentationInfo:
@@ -94,7 +94,7 @@ class InstrumentationScope:
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
-        attributes: Optional[Attributes] = None,
+        attributes: Optional[_ExtendedAttributes] = None,
     ) -> None:
         self._name = name
         self._version = version

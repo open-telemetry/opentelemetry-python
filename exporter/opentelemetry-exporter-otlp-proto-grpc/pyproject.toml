@@ -30,9 +30,9 @@ dependencies = [
   "grpcio >= 1.63.2, < 2.0.0; python_version < '3.13'",
   "grpcio >= 1.66.2, < 2.0.0; python_version >= '3.13'",
   "opentelemetry-api ~= 1.15",
-  "opentelemetry-proto == 1.36.0.dev",
-  "opentelemetry-sdk ~= 1.36.0.dev",
-  "opentelemetry-exporter-otlp-proto-common == 1.36.0.dev",
+  "opentelemetry-proto == 1.39.0.dev",
+  "opentelemetry-sdk ~= 1.39.0.dev",
+  "opentelemetry-exporter-otlp-proto-common == 1.39.0.dev",
   "typing-extensions >= 4.6.0",
 ]
 
@@ -48,6 +48,11 @@ otlp_proto_grpc = "opentelemetry.exporter.otlp.proto.grpc.trace_exporter:OTLPSpa
 [project.urls]
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/exporter/opentelemetry-exporter-otlp-proto-grpc"
 Repository = "https://github.com/open-telemetry/opentelemetry-python"
+
+[project.optional-dependencies]
+gcp-auth = [
+  "opentelemetry-exporter-credential-provider-gcp >= 0.59b0",
+]
 
 [tool.hatch.version]
 path = "src/opentelemetry/exporter/otlp/proto/grpc/version/__init__.py"

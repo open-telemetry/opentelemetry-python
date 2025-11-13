@@ -1,6 +1,8 @@
 OpenTelemetry Metrics SDK
 =========================
 
+The source files of these examples are available :scm_web:`here <docs/examples/metrics/instruments/>`.
+
 Start the Collector locally to see data being exported. Write the following file:
 
 .. code-block:: yaml
@@ -15,8 +17,6 @@ Start the Collector locally to see data being exported. Write the following file
     exporters:
         debug:
 
-    processors:
-        batch:
 
     service:
         pipelines:
