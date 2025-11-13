@@ -38,6 +38,7 @@ from opentelemetry.sdk._logs.export import (
 )
 from opentelemetry.sdk._shared_internal import (
     DuplicateFilter,
+    RequestFilter,
 )
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -264,3 +265,49 @@ class TestCommonFuncs(unittest.TestCase):
             test_logger.info("message")
             test_logger.info("message")
         self.assertEqual(len(cm.output), 1)
+
+
+class TestRequestFilter(unittest.TestCase):
+    def test_converts_http_request_to_string(self):
+        class DummyRequest:
+            def __str__(self):
+                return "<DummyRequest method=GET path=/example/>"
+
+        request = DummyRequest()
+
+        record = logging.LogRecord(
+            name="django.request",
+            level=logging.ERROR,
+            pathname=__file__,
+            lineno=0,
+            msg="test message",
+            args=(),
+            exc_info=None,
+        )
+        record.request = request
+
+        expected_repr = str(request)
+
+        request_filter = RequestFilter()
+        result = request_filter.filter(record)
+
+        self.assertTrue(result)
+        self.assertEqual(getattr(record, "request", None), expected_repr)
+        self.assertIsInstance(getattr(record, "request", None), str)
+
+    def test_handles_missing_request_attribute(self):
+        record = logging.LogRecord(
+            name="django.request",
+            level=logging.INFO,
+            pathname=__file__,
+            lineno=0,
+            msg="no request",
+            args=(),
+            exc_info=None,
+        )
+
+        request_filter = RequestFilter()
+        result = request_filter.filter(record)
+
+        self.assertTrue(result)
+        self.assertEqual(getattr(record, "request", None), "None")
