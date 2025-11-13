@@ -80,7 +80,7 @@ from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401
     KeyValue,
 )
 from opentelemetry.proto.resource.v1.resource_pb2 import Resource  # noqa: F401
-from opentelemetry.sdk._logs import LogData
+from opentelemetry.sdk._logs import ReadableLogRecord
 from opentelemetry.sdk._logs.export import LogExportResult
 from opentelemetry.sdk._shared_internal import DuplicateFilter
 from opentelemetry.sdk.environment_variables import (
@@ -118,7 +118,7 @@ logger = getLogger(__name__)
 logger.addFilter(DuplicateFilter())
 SDKDataT = TypeVar(
     "SDKDataT",
-    TypingSequence[LogData],
+    TypingSequence[ReadableLogRecord],
     MetricsData,
     TypingSequence[ReadableSpan],
 )

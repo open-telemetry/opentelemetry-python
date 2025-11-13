@@ -26,7 +26,7 @@ from google.protobuf.json_format import MessageToDict
 from requests import Session
 from requests.models import Response
 
-from opentelemetry._logs import SeverityNumber
+from opentelemetry._logs import LogRecord, SeverityNumber
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http._log_exporter import (
     DEFAULT_COMPRESSION,
@@ -39,8 +39,7 @@ from opentelemetry.exporter.otlp.proto.http.version import __version__
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
     ExportLogsServiceRequest,
 )
-from opentelemetry.sdk._logs import LogData
-from opentelemetry.sdk._logs import LogRecord as SDKLogRecord
+from opentelemetry.sdk._logs import ReadWriteLogRecord
 from opentelemetry.sdk._logs.export import LogExportResult
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER,
@@ -289,16 +288,16 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                 )
             )
         )
-        log = LogData(
-            log_record=SDKLogRecord(
+        log = ReadWriteLogRecord(
+            LogRecord(
                 timestamp=1644650195189786182,
                 context=ctx,
                 severity_text="WARN",
                 severity_number=SeverityNumber.WARN,
                 body="Invalid trace id check",
-                resource=SDKResource({"first_resource": "value"}),
                 attributes={"a": 1, "b": "c"},
             ),
+            resource=SDKResource({"first_resource": "value"}),
             instrumentation_scope=InstrumentationScope("name", "version"),
         )
         log_records = TestOTLPHTTPLogExporter.export_log_and_deserialize(log)
@@ -325,16 +324,16 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             )
         )
 
-        log = LogData(
-            log_record=SDKLogRecord(
+        log = ReadWriteLogRecord(
+            LogRecord(
                 timestamp=1644650195189786360,
                 context=ctx,
                 severity_text="WARN",
                 severity_number=SeverityNumber.WARN,
                 body="Invalid span id check",
-                resource=SDKResource({"first_resource": "value"}),
                 attributes={"a": 1, "b": "c"},
             ),
+            resource=SDKResource({"first_resource": "value"}),
             instrumentation_scope=InstrumentationScope("name", "version"),
         )
         log_records = TestOTLPHTTPLogExporter.export_log_and_deserialize(log)
@@ -350,7 +349,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             self.fail("No log records found")
 
     @staticmethod
-    def _get_sdk_log_data() -> List[LogData]:
+    def _get_sdk_log_data() -> List[ReadWriteLogRecord]:
         ctx_log1 = set_span_in_context(
             NonRecordingSpan(
                 SpanContext(
@@ -361,16 +360,16 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                 )
             )
         )
-        log1 = LogData(
-            log_record=SDKLogRecord(
+        log1 = ReadWriteLogRecord(
+            LogRecord(
                 timestamp=1644650195189786880,
                 context=ctx_log1,
                 severity_text="WARN",
                 severity_number=SeverityNumber.WARN,
                 body="Do not go gentle into that good night. Rage, rage against the dying of the light",
-                resource=SDKResource({"first_resource": "value"}),
                 attributes={"a": 1, "b": "c"},
             ),
+            resource=SDKResource({"first_resource": "value"}),
             instrumentation_scope=InstrumentationScope(
                 "first_name", "first_version"
             ),
@@ -385,16 +384,16 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                 )
             )
         )
-        log2 = LogData(
-            log_record=SDKLogRecord(
+        log2 = ReadWriteLogRecord(
+            LogRecord(
                 timestamp=1644650249738562048,
                 context=ctx_log2,
                 severity_text="WARN",
                 severity_number=SeverityNumber.WARN,
                 body="Cooper, this is no time for caution!",
-                resource=SDKResource({"second_resource": "CASE"}),
                 attributes={},
             ),
+            resource=SDKResource({"second_resource": "CASE"}),
             instrumentation_scope=InstrumentationScope(
                 "second_name", "second_version"
             ),
@@ -409,16 +408,16 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                 )
             )
         )
-        log3 = LogData(
-            log_record=SDKLogRecord(
+        log3 = ReadWriteLogRecord(
+            LogRecord(
                 timestamp=1644650427658989056,
                 context=ctx_log3,
                 severity_text="DEBUG",
                 severity_number=SeverityNumber.DEBUG,
                 body="To our galaxy",
-                resource=SDKResource({"second_resource": "CASE"}),
                 attributes={"a": 1, "b": "c"},
             ),
+            resource=SDKResource({"second_resource": "CASE"}),
             instrumentation_scope=None,
         )
         ctx_log4 = set_span_in_context(
@@ -431,16 +430,16 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                 )
             )
         )
-        log4 = LogData(
-            log_record=SDKLogRecord(
+        log4 = ReadWriteLogRecord(
+            LogRecord(
                 timestamp=1644650584292683008,
                 context=ctx_log4,
                 severity_text="INFO",
                 severity_number=SeverityNumber.INFO,
                 body="Love is the one thing that transcends time and space",
-                resource=SDKResource({"first_resource": "value"}),
                 attributes={"filename": "model.py", "func_name": "run_method"},
             ),
+            resource=SDKResource({"first_resource": "value"}),
             instrumentation_scope=InstrumentationScope(
                 "another_name", "another_version"
             ),
