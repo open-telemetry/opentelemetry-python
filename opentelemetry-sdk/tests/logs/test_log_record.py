@@ -20,8 +20,8 @@ from opentelemetry._logs import LogRecord, SeverityNumber
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.context import get_current
 from opentelemetry.sdk._logs import (
-    LogDroppedAttributesWarning,
-    LogLimits,
+    LogRecordDroppedAttributesWarning,
+    LogRecordLimits,
     ReadableLogRecord,
     ReadWriteLogRecord,
 )
@@ -100,7 +100,7 @@ class TestLogRecord(unittest.TestCase):
 
     def test_log_record_dropped_attributes_set_limits_max_attribute(self):
         attr = {"key": "value", "key2": "value2"}
-        limits = LogLimits(
+        limits = LogRecordLimits(
             max_attributes=1,
         )
 
@@ -115,7 +115,7 @@ class TestLogRecord(unittest.TestCase):
     ):
         attr = {"key": "value", "key2": "value2"}
         expected = {"key": "v", "key2": "v"}
-        limits = LogLimits(
+        limits = LogRecordLimits(
             max_attribute_length=1,
         )
 
@@ -133,7 +133,7 @@ class TestLogRecord(unittest.TestCase):
     def test_log_record_dropped_attributes_set_limits(self):
         attr = {"key": "value", "key2": "value2"}
         expected = {"key2": "v"}
-        limits = LogLimits(
+        limits = LogRecordLimits(
             max_attributes=1,
             max_attribute_length=1,
         )
@@ -151,7 +151,7 @@ class TestLogRecord(unittest.TestCase):
 
     def test_log_record_dropped_attributes_set_limits_warning_once(self):
         attr = {"key1": "value1", "key2": "value2"}
-        limits = LogLimits(
+        limits = LogRecordLimits(
             max_attributes=1,
             max_attribute_length=1,
         )
@@ -167,17 +167,19 @@ class TestLogRecord(unittest.TestCase):
                     limits=limits,
                 )
 
-        # Check that at least one LogDroppedAttributesWarning was emitted
+        # Check that at least one LogRecordDroppedAttributesWarning was emitted
         dropped_attributes_warnings = [
-            w for w in cw if isinstance(w.message, LogDroppedAttributesWarning)
+            w
+            for w in cw
+            if isinstance(w.message, LogRecordDroppedAttributesWarning)
         ]
         self.assertEqual(
             len(dropped_attributes_warnings),
             1,
-            "Expected exactly one LogDroppedAttributesWarning due to simplefilter('once')",
+            "Expected exactly one LogRecordDroppedAttributesWarning due to simplefilter('once')",
         )
 
-        # Check the message content of the LogDroppedAttributesWarning
+        # Check the message content of the LogRecordDroppedAttributesWarning
         warning_message = str(dropped_attributes_warnings[0].message)
         self.assertIn(
             "Log record attributes were dropped due to limits",
@@ -186,7 +188,7 @@ class TestLogRecord(unittest.TestCase):
 
     def test_log_record_dropped_attributes_unset_limits(self):
         attr = {"key": "value", "key2": "value2"}
-        limits = LogLimits()
+        limits = LogRecordLimits()
 
         result = ReadWriteLogRecord(
             LogRecord(

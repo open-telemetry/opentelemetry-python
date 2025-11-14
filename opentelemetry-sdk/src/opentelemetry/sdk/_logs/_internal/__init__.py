@@ -28,6 +28,8 @@ from threading import Lock
 from time import time_ns
 from typing import Any, Callable, Tuple, Union, cast, overload  # noqa
 
+from typing_extensions import deprecated
+
 from opentelemetry._logs import Logger as APILogger
 from opentelemetry._logs import LoggerProvider as APILoggerProvider
 from opentelemetry._logs import (
@@ -67,7 +69,7 @@ class BytesEncoder(json.JSONEncoder):
         return super().default(o)
 
 
-class LogDroppedAttributesWarning(UserWarning):
+class LogRecordDroppedAttributesWarning(UserWarning):
     """Custom warning to indicate dropped log attributes due to limits.
 
     This class is used to filter and handle these specific warnings separately
@@ -76,10 +78,17 @@ class LogDroppedAttributesWarning(UserWarning):
     """
 
 
-warnings.simplefilter("once", LogDroppedAttributesWarning)
+warnings.simplefilter("once", LogRecordDroppedAttributesWarning)
 
 
-class LogLimits:
+@deprecated(
+    "Use LogRecordDroppedAttributesWarning. Since logs are not stable yet this WILL be removed in future releases."
+)
+class LogDroppedAttributesWarning(LogRecordDroppedAttributesWarning):
+    pass
+
+
+class LogRecordLimits:
     """This class is based on a SpanLimits class in the Tracing module.
 
     This class represents the limits that should be enforced on recorded data such as events, links, attributes etc.
@@ -159,6 +168,13 @@ class LogLimits:
         return value
 
 
+@deprecated(
+    "Use LogRecordLimits. Since logs are not stable yet this WILL be removed in future releases."
+)
+class LogLimits(LogRecordLimits):
+    pass
+
+
 @dataclass(frozen=True)
 class ReadableLogRecord:
     """Readable LogRecord should be kept exactly in-sync with ReadWriteLogRecord, only difference is the frozen=True param."""
@@ -166,7 +182,7 @@ class ReadableLogRecord:
     log_record: LogRecord
     resource: Resource
     instrumentation_scope: InstrumentationScope | None = None
-    limits: LogLimits | None = None
+    limits: LogRecordLimits | None = None
 
     @property
     def dropped_attributes(self) -> int:
@@ -226,7 +242,7 @@ class ReadWriteLogRecord:
     log_record: LogRecord
     resource: Resource | None = Resource.create({})
     instrumentation_scope: InstrumentationScope | None = None
-    limits: LogLimits = field(default_factory=LogLimits)
+    limits: LogRecordLimits = field(default_factory=LogRecordLimits)
 
     def __post_init__(self):
         self.log_record.attributes = BoundedAttributes(
@@ -241,7 +257,7 @@ class ReadWriteLogRecord:
         if self.dropped_attributes > 0:
             warnings.warn(
                 "Log record attributes were dropped due to limits",
-                LogDroppedAttributesWarning,
+                LogRecordDroppedAttributesWarning,
                 stacklevel=2,
             )
 

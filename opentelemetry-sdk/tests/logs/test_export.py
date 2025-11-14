@@ -34,8 +34,8 @@ from opentelemetry.sdk._logs import (
 from opentelemetry.sdk._logs._internal.export import _logger
 from opentelemetry.sdk._logs.export import (
     BatchLogRecordProcessor,
-    ConsoleLogExporter,
-    InMemoryLogExporter,
+    ConsoleLogRecordExporter,
+    InMemoryLogRecordExporter,
     SimpleLogRecordProcessor,
 )
 from opentelemetry.sdk.environment_variables import (
@@ -62,7 +62,7 @@ EMPTY_LOG = ReadWriteLogRecord(
 
 class TestSimpleLogRecordProcessor(unittest.TestCase):
     def test_simple_log_record_processor_default_level(self):
-        exporter = InMemoryLogExporter()
+        exporter = InMemoryLogRecordExporter()
         logger_provider = LoggerProvider()
 
         logger_provider.add_log_record_processor(
@@ -89,7 +89,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         )
 
     def test_simple_log_record_processor_custom_level(self):
-        exporter = InMemoryLogExporter()
+        exporter = InMemoryLogRecordExporter()
         logger_provider = LoggerProvider()
 
         logger_provider.add_log_record_processor(
@@ -129,7 +129,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         )
 
     def test_simple_log_record_processor_trace_correlation(self):
-        exporter = InMemoryLogExporter()
+        exporter = InMemoryLogRecordExporter()
         logger_provider = LoggerProvider()
 
         logger_provider.add_log_record_processor(
@@ -192,7 +192,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
             )
 
     def test_simple_log_record_processor_shutdown(self):
-        exporter = InMemoryLogExporter()
+        exporter = InMemoryLogRecordExporter()
         logger_provider = LoggerProvider()
 
         logger_provider.add_log_record_processor(
@@ -224,7 +224,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         self.assertEqual(len(finished_logs), 0)
 
     def test_simple_log_record_processor_different_msg_types(self):
-        exporter = InMemoryLogExporter()
+        exporter = InMemoryLogRecordExporter()
         log_record_processor = BatchLogRecordProcessor(exporter)
 
         provider = LoggerProvider()
@@ -266,7 +266,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         Tests that special-case handling for logging a single non-string object
         is correctly applied.
         """
-        exporter = InMemoryLogExporter()
+        exporter = InMemoryLogRecordExporter()
         log_record_processor = BatchLogRecordProcessor(exporter)
 
         provider = LoggerProvider()
@@ -310,7 +310,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
     def test_simple_log_record_processor_different_msg_types_with_formatter(
         self,
     ):
-        exporter = InMemoryLogExporter()
+        exporter = InMemoryLogRecordExporter()
         log_record_processor = BatchLogRecordProcessor(exporter)
 
         provider = LoggerProvider()
@@ -364,7 +364,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
 # to run after the end of the test.
 class TestBatchLogRecordProcessor(unittest.TestCase):
     def test_emit_call_log_record(self):
-        exporter = InMemoryLogExporter()
+        exporter = InMemoryLogRecordExporter()
         log_record_processor = Mock(wraps=BatchLogRecordProcessor(exporter))
         provider = LoggerProvider()
         provider.add_log_record_processor(log_record_processor)
@@ -378,7 +378,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         log_record_processor.shutdown()
 
     def test_with_multiple_threads(self):  # pylint: disable=no-self-use
-        exporter = InMemoryLogExporter()
+        exporter = InMemoryLogRecordExporter()
         batch_processor = BatchLogRecordProcessor(
             exporter,
             max_queue_size=3000,
@@ -438,7 +438,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             sdk_logger.removeHandler(handler)
 
     def test_args(self):
-        exporter = InMemoryLogExporter()
+        exporter = InMemoryLogRecordExporter()
         log_record_processor = BatchLogRecordProcessor(
             exporter,
             max_queue_size=1024,
@@ -473,7 +473,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         },
     )
     def test_env_vars(self):
-        exporter = InMemoryLogExporter()
+        exporter = InMemoryLogRecordExporter()
         log_record_processor = BatchLogRecordProcessor(exporter)
         self.assertEqual(
             log_record_processor._batch_processor._exporter, exporter
@@ -493,7 +493,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         log_record_processor.shutdown()
 
     def test_args_defaults(self):
-        exporter = InMemoryLogExporter()
+        exporter = InMemoryLogRecordExporter()
         log_record_processor = BatchLogRecordProcessor(exporter)
         self.assertEqual(
             log_record_processor._batch_processor._exporter, exporter
@@ -522,7 +522,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         },
     )
     def test_args_env_var_value_error(self):
-        exporter = InMemoryLogExporter()
+        exporter = InMemoryLogRecordExporter()
         _logger.disabled = True
         log_record_processor = BatchLogRecordProcessor(exporter)
         _logger.disabled = False
@@ -544,7 +544,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         log_record_processor.shutdown()
 
     def test_args_none_defaults(self):
-        exporter = InMemoryLogExporter()
+        exporter = InMemoryLogRecordExporter()
         log_record_processor = BatchLogRecordProcessor(
             exporter,
             max_queue_size=None,
@@ -570,7 +570,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         log_record_processor.shutdown()
 
     def test_validation_negative_max_queue_size(self):
-        exporter = InMemoryLogExporter()
+        exporter = InMemoryLogRecordExporter()
         self.assertRaises(
             ValueError,
             BatchLogRecordProcessor,
@@ -643,7 +643,7 @@ class TestConsoleLogExporter(unittest.TestCase):
                 "first_name", "first_version"
             ),
         )
-        exporter = ConsoleLogExporter()
+        exporter = ConsoleLogRecordExporter()
         # Mocking stdout interferes with debugging and test reporting, mock on
         # the exporter instance instead.
 
@@ -664,7 +664,9 @@ class TestConsoleLogExporter(unittest.TestCase):
             return mock_record_str
 
         mock_stdout = Mock()
-        exporter = ConsoleLogExporter(out=mock_stdout, formatter=formatter)
+        exporter = ConsoleLogRecordExporter(
+            out=mock_stdout, formatter=formatter
+        )
         exporter.export([EMPTY_LOG])
 
         mock_stdout.write.assert_called_once_with(mock_record_str)

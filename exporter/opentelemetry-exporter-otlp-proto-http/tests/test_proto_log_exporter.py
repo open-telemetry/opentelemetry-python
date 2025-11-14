@@ -40,7 +40,7 @@ from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
     ExportLogsServiceRequest,
 )
 from opentelemetry.sdk._logs import ReadWriteLogRecord
-from opentelemetry.sdk._logs.export import LogExportResult
+from opentelemetry.sdk._logs.export import LogRecordExportResult
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_CERTIFICATE,
@@ -454,7 +454,8 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         """
 
         self.assertEqual(
-            OTLPLogExporter().export(MagicMock()), LogExportResult.SUCCESS
+            OTLPLogExporter().export(MagicMock()),
+            LogRecordExportResult.SUCCESS,
         )
 
     @patch.object(Session, "post")
@@ -470,7 +471,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             # Set timeout to 1.5 seconds
             self.assertEqual(
                 exporter.export(self._get_sdk_log_data()),
-                LogExportResult.FAILURE,
+                LogRecordExportResult.FAILURE,
             )
             after = time.time()
             # First call at time 0, second at time 1, then an early return before the second backoff sleep b/c it would exceed timeout.

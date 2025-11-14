@@ -404,7 +404,7 @@ class TestLoggingHandler(unittest.TestCase):
     def test_otel_attribute_count_limit_respected_in_logging_handler(self):
         """Test that OTEL_ATTRIBUTE_COUNT_LIMIT is properly respected by LoggingHandler."""
         # Create a new LoggerProvider within the patched environment
-        # This will create LogLimits() that reads from the environment variable
+        # This will create LogRecordLimits() that reads from the environment variable
         logger_provider = LoggerProvider()
         processor = FakeProcessor()
         logger_provider.add_log_record_processor(processor)
@@ -443,7 +443,7 @@ class TestLoggingHandler(unittest.TestCase):
     def test_otel_attribute_count_limit_includes_code_attributes(self):
         """Test that OTEL_ATTRIBUTE_COUNT_LIMIT applies to all attributes including code attributes."""
         # Create a new LoggerProvider within the patched environment
-        # This will create LogLimits() that reads from the environment variable
+        # This will create LogRecordLimits() that reads from the environment variable
         logger_provider = LoggerProvider()
         processor = FakeProcessor()
         logger_provider.add_log_record_processor(processor)
