@@ -13,9 +13,11 @@
 # limitations under the License.
 
 from opentelemetry.sdk._logs._internal import (
+    LogDroppedAttributesWarning,
     Logger,
     LoggerProvider,
     LoggingHandler,
+    LogLimits,
     LogRecordDroppedAttributesWarning,
     LogRecordLimits,
     LogRecordProcessor,
@@ -24,12 +26,14 @@ from opentelemetry.sdk._logs._internal import (
 )
 
 __all__ = [
-    "LogRecordDroppedAttributesWarning",
     "Logger",
     "LoggerProvider",
     "LoggingHandler",
+    "LogLimits",
     "LogRecordLimits",
     "LogRecordProcessor",
+    "LogDroppedAttributesWarning",
+    "LogRecordDroppedAttributesWarning",
     "ReadableLogRecord",
     "ReadWriteLogRecord",
 ]

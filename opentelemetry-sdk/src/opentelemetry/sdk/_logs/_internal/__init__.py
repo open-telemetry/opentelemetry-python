@@ -28,6 +28,8 @@ from threading import Lock
 from time import time_ns
 from typing import Any, Callable, Tuple, Union, cast, overload  # noqa
 
+from typing_extensions import deprecated
+
 from opentelemetry._logs import Logger as APILogger
 from opentelemetry._logs import LoggerProvider as APILoggerProvider
 from opentelemetry._logs import (
@@ -77,6 +79,13 @@ class LogRecordDroppedAttributesWarning(UserWarning):
 
 
 warnings.simplefilter("once", LogRecordDroppedAttributesWarning)
+
+
+@deprecated(
+    "Use LogRecordDroppedAttributesWarning. Since logs are not stable yet this WILL be removed in future releases."
+)
+class LogDroppedAttributesWarning(LogRecordDroppedAttributesWarning):
+    pass
 
 
 class LogRecordLimits:
@@ -157,6 +166,13 @@ class LogRecordLimits:
         if value < 0:
             raise ValueError(err_msg.format(env_var, value))
         return value
+
+
+@deprecated(
+    "Use LogRecordLimits. Since logs are not stable yet this WILL be removed in future releases."
+)
+class LogLimits(LogRecordLimits):
+    pass
 
 
 @dataclass(frozen=True)

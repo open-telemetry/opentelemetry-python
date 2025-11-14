@@ -15,7 +15,9 @@
 import threading
 import typing
 
-from opentelemetry.sdk._logs._internal import ReadableLogRecord
+from typing_extensions import deprecated
+
+from opentelemetry.sdk._logs import ReadableLogRecord
 from opentelemetry.sdk._logs.export import (
     LogRecordExporter,
     LogRecordExportResult,
@@ -54,3 +56,10 @@ class InMemoryLogRecordExporter(LogRecordExporter):
 
     def shutdown(self) -> None:
         self._stopped = True
+
+
+@deprecated(
+    "Use InMemoryLogRecordExporter. Since logs are not stable yet this WILL be removed in future releases."
+)
+class InMemoryLogExporter(InMemoryLogRecordExporter):
+    pass
