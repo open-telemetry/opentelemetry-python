@@ -24,6 +24,7 @@ from unittest.mock import MagicMock, Mock, patch
 import requests
 from google.protobuf.json_format import MessageToDict
 from requests import Session
+from requests.exceptions import ConnectionError
 from requests.models import Response
 
 from opentelemetry._logs import LogRecord, SeverityNumber
@@ -480,6 +481,48 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             self.assertTrue(0.75 < after - before < 1.25)
             self.assertIn(
                 "Transient error UNAVAILABLE encountered while exporting logs batch, retrying in",
+                warning.records[0].message,
+            )
+
+    @patch.object(Session, "post")
+    def test_export_no_collector_available_retryable(self, mock_post):
+        exporter = OTLPLogExporter(timeout=1.5)
+        msg = "Server not available."
+        mock_post.side_effect = ConnectionError(msg)
+        with self.assertLogs(level=WARNING) as warning:
+            before = time.time()
+            # Set timeout to 1.5 seconds
+            self.assertEqual(
+                exporter.export(self._get_sdk_log_data()),
+                LogExportResult.FAILURE,
+            )
+            after = time.time()
+            # First call at time 0, second at time 1, then an early return before the second backoff sleep b/c it would exceed timeout.
+            # Additionally every retry results in two calls, therefore 4.
+            self.assertEqual(mock_post.call_count, 4)
+            # There's a +/-20% jitter on each backoff.
+            self.assertTrue(0.75 < after - before < 1.25)
+            self.assertIn(
+                f"Transient error {msg} encountered while exporting logs batch, retrying in",
+                warning.records[0].message,
+            )
+
+    @patch.object(Session, "post")
+    def test_export_no_collector_available(self, mock_post):
+        exporter = OTLPLogExporter(timeout=1.5)
+
+        mock_post.side_effect = requests.exceptions.RequestException()
+        with self.assertLogs(level=WARNING) as warning:
+            # Set timeout to 1.5 seconds
+            self.assertEqual(
+                exporter.export(self._get_sdk_log_data()),
+                LogExportResult.FAILURE,
+            )
+            # First call at time 0, second at time 1, then an early return before the second backoff sleep b/c it would exceed timeout.
+            self.assertEqual(mock_post.call_count, 1)
+            # There's a +/-20% jitter on each backoff.
+            self.assertIn(
+                "Failed to export logs batch code",
                 warning.records[0].message,
             )
 
