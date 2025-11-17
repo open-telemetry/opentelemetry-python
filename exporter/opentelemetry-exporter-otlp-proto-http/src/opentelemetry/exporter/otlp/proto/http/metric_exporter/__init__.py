@@ -239,7 +239,10 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                     return MetricExportResult.SUCCESS
             except requests.exceptions.RequestException as error:
                 reason = str(error)
-                retryable = True
+                if isinstance(error, ConnectionError):
+                    retryable = True
+                else:
+                    retryable = False
                 status_code = None
             else:
                 reason = resp.reason
