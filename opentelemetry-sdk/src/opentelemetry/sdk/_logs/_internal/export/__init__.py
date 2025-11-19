@@ -20,6 +20,8 @@ import sys
 from os import environ, linesep
 from typing import IO, Callable, Optional, Sequence
 
+from typing_extensions import deprecated
+
 from opentelemetry.context import (
     _SUPPRESS_INSTRUMENTATION_KEY,
     attach,
@@ -51,12 +53,20 @@ _logger = logging.getLogger(__name__)
 _logger.addFilter(DuplicateFilter())
 
 
+class LogRecordExportResult(enum.Enum):
+    SUCCESS = 0
+    FAILURE = 1
+
+
+@deprecated(
+    "Use LogRecordExportResult. Since logs are not stable yet this WILL be removed in future releases."
+)
 class LogExportResult(enum.Enum):
     SUCCESS = 0
     FAILURE = 1
 
 
-class LogExporter(abc.ABC):
+class LogRecordExporter(abc.ABC):
     """Interface for exporting logs.
     Interface to be implemented by services that want to export logs received
     in their own format.
@@ -65,7 +75,9 @@ class LogExporter(abc.ABC):
     """
 
     @abc.abstractmethod
-    def export(self, batch: Sequence[ReadableLogRecord]) -> LogExportResult:
+    def export(
+        self, batch: Sequence[ReadableLogRecord]
+    ) -> LogRecordExportResult:
         """Exports a batch of logs.
         Args:
             batch: The list of `ReadableLogRecord` objects to be exported
@@ -81,8 +93,15 @@ class LogExporter(abc.ABC):
         """
 
 
-class ConsoleLogExporter(LogExporter):
-    """Implementation of :class:`LogExporter` that prints log records to the
+@deprecated(
+    "Use LogRecordExporter. Since logs are not stable yet this WILL be removed in future releases."
+)
+class LogExporter(LogRecordExporter):
+    pass
+
+
+class ConsoleLogRecordExporter(LogRecordExporter):
+    """Implementation of :class:`LogRecordExporter` that prints log records to the
     console.
 
     This class can be used for diagnostic purposes. It prints the exported
@@ -103,18 +122,25 @@ class ConsoleLogExporter(LogExporter):
         for log_record in batch:
             self.out.write(self.formatter(log_record))
         self.out.flush()
-        return LogExportResult.SUCCESS
+        return LogRecordExportResult.SUCCESS
 
     def shutdown(self):
         pass
 
 
+@deprecated(
+    "Use ConsoleLogRecordExporter. Since logs are not stable yet this WILL be removed in future releases."
+)
+class ConsoleLogExporter(ConsoleLogRecordExporter):
+    pass
+
+
 class SimpleLogRecordProcessor(LogRecordProcessor):
     """This is an implementation of LogRecordProcessor which passes
-    received logs directly to the configured LogExporter, as soon as they are emitted.
+    received logs directly to the configured LogRecordExporter, as soon as they are emitted.
     """
 
-    def __init__(self, exporter: LogExporter):
+    def __init__(self, exporter: LogRecordExporter):
         self._exporter = exporter
         self._shutdown = False
 
@@ -152,7 +178,7 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
 
 class BatchLogRecordProcessor(LogRecordProcessor):
     """This is an implementation of LogRecordProcessor which creates batches of
-    received logs and sends them to the configured LogExporter.
+    received logs and sends them to the configured LogRecordExporter.
 
     `BatchLogRecordProcessor` is configurable with the following environment
     variables which correspond to constructor parameters:
@@ -167,7 +193,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
 
     def __init__(
         self,
-        exporter: LogExporter,
+        exporter: LogRecordExporter,
         schedule_delay_millis: float | None = None,
         max_export_batch_size: int | None = None,
         export_timeout_millis: float | None = None,
