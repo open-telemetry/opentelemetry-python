@@ -181,7 +181,6 @@ def _clean_extended_attribute_value(
         return tuple(cleaned_seq)
 
 
-
 def _clean_extended_attribute(
     key: str, value: types.AnyValue, max_len: Optional[int]
 ) -> types.AnyValue:

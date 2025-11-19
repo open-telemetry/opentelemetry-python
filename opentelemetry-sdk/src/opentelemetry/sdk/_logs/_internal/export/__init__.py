@@ -33,10 +33,7 @@ from opentelemetry.sdk._logs import (
     ReadableLogRecord,
     ReadWriteLogRecord,
 )
-from opentelemetry.sdk._shared_internal import (
-    BatchProcessor,
-    DuplicateFilter,
-)
+from opentelemetry.sdk._shared_internal import BatchProcessor, DuplicateFilter
 from opentelemetry.sdk.environment_variables import (
     OTEL_BLRP_EXPORT_TIMEOUT,
     OTEL_BLRP_MAX_EXPORT_BATCH_SIZE,
