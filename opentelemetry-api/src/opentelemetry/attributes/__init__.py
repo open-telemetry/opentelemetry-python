@@ -180,11 +180,6 @@ def _clean_extended_attribute_value(
         # Freeze mutable sequences defensively
         return tuple(cleaned_seq)
 
-    raise TypeError(
-        f"Invalid type {type(value).__name__} for attribute value. "
-        f"Expected one of {[valid_type.__name__ for valid_type in _VALID_ANY_VALUE_TYPES]} or a "
-        "sequence of those types",
-    )
 
 
 def _clean_extended_attribute(
@@ -279,6 +274,9 @@ class BoundedAttributes(MutableMapping):  # type: ignore
                 return
 
             if self._extended_attributes:
+                # Convert types other than AnyValue to strings before cleaning
+                if not isinstance(value, _VALID_ANY_VALUE_TYPES):
+                    value = str(value)
                 value = _clean_extended_attribute(
                     key, value, self.max_value_len
                 )
