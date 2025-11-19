@@ -182,6 +182,7 @@ def _clean_extended_attribute_value(
 
     return value
 
+
 def _clean_extended_attribute(
     key: str, value: types.AnyValue, max_len: Optional[int]
 ) -> types.AnyValue:
