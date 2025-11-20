@@ -23,19 +23,19 @@ from unittest.mock import Mock, patch
 
 from pytest import mark
 
-from opentelemetry._logs import SeverityNumber
+from opentelemetry._logs import LogRecord, SeverityNumber
 from opentelemetry.sdk import trace
 from opentelemetry.sdk._logs import (
-    LogData,
     LoggerProvider,
     LoggingHandler,
-    LogRecord,
+    ReadableLogRecord,
+    ReadWriteLogRecord,
 )
 from opentelemetry.sdk._logs._internal.export import _logger
 from opentelemetry.sdk._logs.export import (
     BatchLogRecordProcessor,
-    ConsoleLogExporter,
-    InMemoryLogExporter,
+    ConsoleLogRecordExporter,
+    InMemoryLogRecordExporter,
     SimpleLogRecordProcessor,
 )
 from opentelemetry.sdk.environment_variables import (
@@ -54,7 +54,7 @@ from opentelemetry.trace import (
 )
 from opentelemetry.trace.span import INVALID_SPAN_CONTEXT
 
-EMPTY_LOG = LogData(
+EMPTY_LOG = ReadWriteLogRecord(
     log_record=LogRecord(),
     instrumentation_scope=InstrumentationScope("example", "example"),
 )
@@ -62,7 +62,7 @@ EMPTY_LOG = LogData(
 
 class TestSimpleLogRecordProcessor(unittest.TestCase):
     def test_simple_log_record_processor_default_level(self):
-        exporter = InMemoryLogExporter()
+        exporter = InMemoryLogRecordExporter()
         logger_provider = LoggerProvider()
 
         logger_provider.add_log_record_processor(
@@ -76,18 +76,20 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         logger.warning("Something is wrong")
         finished_logs = exporter.get_finished_logs()
         self.assertEqual(len(finished_logs), 1)
-        warning_log_record = finished_logs[0].log_record
-        self.assertEqual(warning_log_record.body, "Something is wrong")
-        self.assertEqual(warning_log_record.severity_text, "WARN")
+        warning_log_record = finished_logs[0]
         self.assertEqual(
-            warning_log_record.severity_number, SeverityNumber.WARN
+            warning_log_record.log_record.body, "Something is wrong"
+        )
+        self.assertEqual(warning_log_record.log_record.severity_text, "WARN")
+        self.assertEqual(
+            warning_log_record.log_record.severity_number, SeverityNumber.WARN
         )
         self.assertEqual(
             finished_logs[0].instrumentation_scope.name, "default_level"
         )
 
     def test_simple_log_record_processor_custom_level(self):
-        exporter = InMemoryLogExporter()
+        exporter = InMemoryLogRecordExporter()
         logger_provider = LoggerProvider()
 
         logger_provider.add_log_record_processor(
@@ -106,17 +108,18 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         finished_logs = exporter.get_finished_logs()
         # Make sure only level >= logging.CRITICAL logs are recorded
         self.assertEqual(len(finished_logs), 2)
-        critical_log_record = finished_logs[0].log_record
-        fatal_log_record = finished_logs[1].log_record
-        self.assertEqual(critical_log_record.body, "Error message")
-        self.assertEqual(critical_log_record.severity_text, "ERROR")
+        critical_log_record = finished_logs[0]
+        fatal_log_record = finished_logs[1]
+        self.assertEqual(critical_log_record.log_record.body, "Error message")
+        self.assertEqual(critical_log_record.log_record.severity_text, "ERROR")
         self.assertEqual(
-            critical_log_record.severity_number, SeverityNumber.ERROR
+            critical_log_record.log_record.severity_number,
+            SeverityNumber.ERROR,
         )
-        self.assertEqual(fatal_log_record.body, "Critical message")
-        self.assertEqual(fatal_log_record.severity_text, "CRITICAL")
+        self.assertEqual(fatal_log_record.log_record.body, "Critical message")
+        self.assertEqual(fatal_log_record.log_record.severity_text, "CRITICAL")
         self.assertEqual(
-            fatal_log_record.severity_number, SeverityNumber.FATAL
+            fatal_log_record.log_record.severity_number, SeverityNumber.FATAL
         )
         self.assertEqual(
             finished_logs[0].instrumentation_scope.name, "custom_level"
@@ -126,7 +129,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         )
 
     def test_simple_log_record_processor_trace_correlation(self):
-        exporter = InMemoryLogExporter()
+        exporter = InMemoryLogRecordExporter()
         logger_provider = LoggerProvider()
 
         logger_provider.add_log_record_processor(
@@ -140,14 +143,20 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         logger.warning("Warning message")
         finished_logs = exporter.get_finished_logs()
         self.assertEqual(len(finished_logs), 1)
-        log_record = finished_logs[0].log_record
-        self.assertEqual(log_record.body, "Warning message")
-        self.assertEqual(log_record.severity_text, "WARN")
-        self.assertEqual(log_record.severity_number, SeverityNumber.WARN)
-        self.assertEqual(log_record.trace_id, INVALID_SPAN_CONTEXT.trace_id)
-        self.assertEqual(log_record.span_id, INVALID_SPAN_CONTEXT.span_id)
+        sdk_record = finished_logs[0]
+        self.assertEqual(sdk_record.log_record.body, "Warning message")
+        self.assertEqual(sdk_record.log_record.severity_text, "WARN")
         self.assertEqual(
-            log_record.trace_flags, INVALID_SPAN_CONTEXT.trace_flags
+            sdk_record.log_record.severity_number, SeverityNumber.WARN
+        )
+        self.assertEqual(
+            sdk_record.log_record.trace_id, INVALID_SPAN_CONTEXT.trace_id
+        )
+        self.assertEqual(
+            sdk_record.log_record.span_id, INVALID_SPAN_CONTEXT.span_id
+        )
+        self.assertEqual(
+            sdk_record.log_record.trace_flags, INVALID_SPAN_CONTEXT.trace_flags
         )
         self.assertEqual(
             finished_logs[0].instrumentation_scope.name, "trace_correlation"
@@ -159,21 +168,31 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
             logger.critical("Critical message within span")
 
             finished_logs = exporter.get_finished_logs()
-            log_record = finished_logs[0].log_record
-            self.assertEqual(log_record.body, "Critical message within span")
-            self.assertEqual(log_record.severity_text, "CRITICAL")
-            self.assertEqual(log_record.severity_number, SeverityNumber.FATAL)
+            sdk_record = finished_logs[0]
+            self.assertEqual(
+                sdk_record.log_record.body, "Critical message within span"
+            )
+            self.assertEqual(sdk_record.log_record.severity_text, "CRITICAL")
+            self.assertEqual(
+                sdk_record.log_record.severity_number, SeverityNumber.FATAL
+            )
             self.assertEqual(
                 finished_logs[0].instrumentation_scope.name,
                 "trace_correlation",
             )
             span_context = span.get_span_context()
-            self.assertEqual(log_record.trace_id, span_context.trace_id)
-            self.assertEqual(log_record.span_id, span_context.span_id)
-            self.assertEqual(log_record.trace_flags, span_context.trace_flags)
+            self.assertEqual(
+                sdk_record.log_record.trace_id, span_context.trace_id
+            )
+            self.assertEqual(
+                sdk_record.log_record.span_id, span_context.span_id
+            )
+            self.assertEqual(
+                sdk_record.log_record.trace_flags, span_context.trace_flags
+            )
 
     def test_simple_log_record_processor_shutdown(self):
-        exporter = InMemoryLogExporter()
+        exporter = InMemoryLogRecordExporter()
         logger_provider = LoggerProvider()
 
         logger_provider.add_log_record_processor(
@@ -187,11 +206,13 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         logger.warning("Something is wrong")
         finished_logs = exporter.get_finished_logs()
         self.assertEqual(len(finished_logs), 1)
-        warning_log_record = finished_logs[0].log_record
-        self.assertEqual(warning_log_record.body, "Something is wrong")
-        self.assertEqual(warning_log_record.severity_text, "WARN")
+        warning_log_record = finished_logs[0]
         self.assertEqual(
-            warning_log_record.severity_number, SeverityNumber.WARN
+            warning_log_record.log_record.body, "Something is wrong"
+        )
+        self.assertEqual(warning_log_record.log_record.severity_text, "WARN")
+        self.assertEqual(
+            warning_log_record.log_record.severity_number, SeverityNumber.WARN
         )
         self.assertEqual(
             finished_logs[0].instrumentation_scope.name, "shutdown"
@@ -203,7 +224,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         self.assertEqual(len(finished_logs), 0)
 
     def test_simple_log_record_processor_different_msg_types(self):
-        exporter = InMemoryLogExporter()
+        exporter = InMemoryLogRecordExporter()
         log_record_processor = BatchLogRecordProcessor(exporter)
 
         provider = LoggerProvider()
@@ -245,7 +266,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         Tests that special-case handling for logging a single non-string object
         is correctly applied.
         """
-        exporter = InMemoryLogExporter()
+        exporter = InMemoryLogRecordExporter()
         log_record_processor = BatchLogRecordProcessor(exporter)
 
         provider = LoggerProvider()
@@ -289,7 +310,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
     def test_simple_log_record_processor_different_msg_types_with_formatter(
         self,
     ):
-        exporter = InMemoryLogExporter()
+        exporter = InMemoryLogRecordExporter()
         log_record_processor = BatchLogRecordProcessor(exporter)
 
         provider = LoggerProvider()
@@ -343,7 +364,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
 # to run after the end of the test.
 class TestBatchLogRecordProcessor(unittest.TestCase):
     def test_emit_call_log_record(self):
-        exporter = InMemoryLogExporter()
+        exporter = InMemoryLogRecordExporter()
         log_record_processor = Mock(wraps=BatchLogRecordProcessor(exporter))
         provider = LoggerProvider()
         provider.add_log_record_processor(log_record_processor)
@@ -357,7 +378,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         log_record_processor.shutdown()
 
     def test_with_multiple_threads(self):  # pylint: disable=no-self-use
-        exporter = InMemoryLogExporter()
+        exporter = InMemoryLogRecordExporter()
         batch_processor = BatchLogRecordProcessor(
             exporter,
             max_queue_size=3000,
@@ -417,7 +438,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             sdk_logger.removeHandler(handler)
 
     def test_args(self):
-        exporter = InMemoryLogExporter()
+        exporter = InMemoryLogRecordExporter()
         log_record_processor = BatchLogRecordProcessor(
             exporter,
             max_queue_size=1024,
@@ -452,7 +473,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         },
     )
     def test_env_vars(self):
-        exporter = InMemoryLogExporter()
+        exporter = InMemoryLogRecordExporter()
         log_record_processor = BatchLogRecordProcessor(exporter)
         self.assertEqual(
             log_record_processor._batch_processor._exporter, exporter
@@ -472,7 +493,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         log_record_processor.shutdown()
 
     def test_args_defaults(self):
-        exporter = InMemoryLogExporter()
+        exporter = InMemoryLogRecordExporter()
         log_record_processor = BatchLogRecordProcessor(exporter)
         self.assertEqual(
             log_record_processor._batch_processor._exporter, exporter
@@ -501,7 +522,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         },
     )
     def test_args_env_var_value_error(self):
-        exporter = InMemoryLogExporter()
+        exporter = InMemoryLogRecordExporter()
         _logger.disabled = True
         log_record_processor = BatchLogRecordProcessor(exporter)
         _logger.disabled = False
@@ -523,7 +544,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         log_record_processor.shutdown()
 
     def test_args_none_defaults(self):
-        exporter = InMemoryLogExporter()
+        exporter = InMemoryLogRecordExporter()
         log_record_processor = BatchLogRecordProcessor(
             exporter,
             max_queue_size=None,
@@ -549,7 +570,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         log_record_processor.shutdown()
 
     def test_validation_negative_max_queue_size(self):
-        exporter = InMemoryLogExporter()
+        exporter = InMemoryLogRecordExporter()
         self.assertRaises(
             ValueError,
             BatchLogRecordProcessor,
@@ -608,28 +629,28 @@ class TestConsoleLogExporter(unittest.TestCase):
                 )
             )
         )
-        log_data = LogData(
-            log_record=LogRecord(
+        log_record = ReadableLogRecord(
+            LogRecord(
                 timestamp=int(time.time() * 1e9),
                 context=ctx,
                 severity_text="WARN",
                 severity_number=SeverityNumber.WARN,
                 body="Zhengzhou, We have a heaviest rains in 1000 years",
-                resource=SDKResource({"key": "value"}),
                 attributes={"a": 1, "b": "c"},
             ),
+            resource=SDKResource({"key": "value"}),
             instrumentation_scope=InstrumentationScope(
                 "first_name", "first_version"
             ),
         )
-        exporter = ConsoleLogExporter()
+        exporter = ConsoleLogRecordExporter()
         # Mocking stdout interferes with debugging and test reporting, mock on
         # the exporter instance instead.
 
         with patch.object(exporter, "out") as mock_stdout:
-            exporter.export([log_data])
+            exporter.export([log_record])
         mock_stdout.write.assert_called_once_with(
-            log_data.log_record.to_json() + os.linesep
+            log_record.to_json() + os.linesep
         )
 
         self.assertEqual(mock_stdout.write.call_count, 1)
@@ -643,7 +664,9 @@ class TestConsoleLogExporter(unittest.TestCase):
             return mock_record_str
 
         mock_stdout = Mock()
-        exporter = ConsoleLogExporter(out=mock_stdout, formatter=formatter)
+        exporter = ConsoleLogRecordExporter(
+            out=mock_stdout, formatter=formatter
+        )
         exporter.export([EMPTY_LOG])
 
         mock_stdout.write.assert_called_once_with(mock_record_str)
