@@ -311,12 +311,11 @@ class TestBoundedAttributes(unittest.TestCase):
 
         bdict = BoundedAttributes(extended_attributes=True, immutable=False)
         wsgi_request = DummyWSGIRequest()
-        original_request = wsgi_request  # Keep reference to original object
 
         with unittest.mock.patch(
             "opentelemetry.attributes._clean_extended_attribute",
             return_value="stringified_request",
-        ) as clean_extended_attribute_mock:
+        ):
             bdict["request"] = wsgi_request
 
         # Verify that the request stored in the bounded dict matches the cleaned value

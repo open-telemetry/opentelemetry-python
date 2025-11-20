@@ -120,7 +120,7 @@ def _clean_attribute(
 
 def _clean_extended_attribute_value(
     value: types.AnyValue, max_len: Optional[int]
-) -> types.AnyValue:
+) -> types.AnyValue:  # disable=too-many-branches
     # for primitive types just return the value and eventually shorten the string length
     if value is None or isinstance(value, _VALID_ATTR_VALUE_TYPES):
         if max_len is not None and isinstance(value, str):
