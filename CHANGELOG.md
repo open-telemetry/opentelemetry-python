@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-- opentelemetry-sdk: Added request filter which fixes invalid type at WSGI request headers and attributes
+- opentelemetry-api: Convert objects of any type other than AnyValue which fixes invalid type at WSGI request attributes
   ([#4808](https://github.com/open-telemetry/opentelemetry-python/pull/4808))
 - docs: Added sqlcommenter example
   ([#4734](https://github.com/open-telemetry/opentelemetry-python/pull/4734))
@@ -1721,7 +1721,7 @@ can cause a deadlock to occur over `logging._lock` in some cases ([#4636](https:
 - Add reset for the global configuration object, for testing purposes
   ([#636](https://github.com/open-telemetry/opentelemetry-python/pull/636))
 - Add support for programmatic instrumentation
-  ([#579](https://github.com/open-telemetry/opentelemetry-python/pull/569))
+  ([#569](https://github.com/open-telemetry/opentelemetry-python/pull/569))
 
 ### Changed
 
