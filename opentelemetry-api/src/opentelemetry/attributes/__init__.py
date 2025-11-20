@@ -180,7 +180,14 @@ def _clean_extended_attribute_value(
         # Freeze mutable sequences defensively
         return tuple(cleaned_seq)
 
-    return value
+    try:
+        return str(value)
+    except Exception:
+        raise TypeError(
+            f"Invalid type {type(value).__name__} for attribute value. "
+            f"Expected one of {[valid_type.__name__ for valid_type in _VALID_ANY_VALUE_TYPES]} or a "
+            "sequence of those types",
+        )
 
 
 def _clean_extended_attribute(

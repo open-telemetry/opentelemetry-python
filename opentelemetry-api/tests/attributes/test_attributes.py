@@ -319,16 +319,5 @@ class TestBoundedAttributes(unittest.TestCase):
         ) as clean_extended_attribute_mock:
             bdict["request"] = wsgi_request
 
-        # Verify that _clean_extended_attribute was called
-        clean_extended_attribute_mock.assert_called_once()
-
-        # Verify that the value passed to _clean_extended_attribute is a string, not the original object
-        call_args = clean_extended_attribute_mock.call_args
-        passed_value = call_args[0][1]  # Second argument is the value
-        self.assertIsInstance(passed_value, str)
-        self.assertNotEqual(
-            passed_value, original_request
-        )  # Should be stringified, not the original object
-        self.assertIn(
-            "DummyWSGIRequest", passed_value
-        )  # String representation includes class name
+        # Verify that the request stored in the bounded dict matches the cleaned value
+        self.assertEqual(bdict["request"], "stringified_request")
