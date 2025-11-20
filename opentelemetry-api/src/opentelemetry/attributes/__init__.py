@@ -118,9 +118,9 @@ def _clean_attribute(
     return None
 
 
-def _clean_extended_attribute_value(
+def _clean_extended_attribute_value( # pylint: disable=too-many-branches
     value: types.AnyValue, max_len: Optional[int]
-) -> types.AnyValue:  # pylint: disable=too-many-branches
+) -> types.AnyValue:
     # for primitive types just return the value and eventually shorten the string length
     if value is None or isinstance(value, _VALID_ATTR_VALUE_TYPES):
         if max_len is not None and isinstance(value, str):
