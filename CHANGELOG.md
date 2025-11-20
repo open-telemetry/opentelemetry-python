@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4791](https://github.com/open-telemetry/opentelemetry-python/pull/4791))
 - [BREAKING] Remove LogData and extend SDK LogRecord to have instrumentation scope
   ([#4676](https://github.com/open-telemetry/opentelemetry-python/pull/4676))
+- [BREAKING] Rename several classes from Log to LogRecord
+  ([#4647](https://github.com/open-telemetry/opentelemetry-python/pull/4647))
   
   **Migration Guide:**
   
@@ -34,12 +36,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     ```python
     # Before
     from opentelemetry.sdk._logs import LogData
-    def export(self, batch: Sequence[LogData]) -> LogExportResult:
+    def export(self, batch: Sequence[LogData]) -> LogRecordExportResult:
         ...
     
     # After
     from opentelemetry.sdk._logs import ReadableLogRecord
-    def export(self, batch: Sequence[ReadableLogRecord]) -> LogExportResult:
+    def export(self, batch: Sequence[ReadableLogRecord]) -> LogRecordExportResult:
         ...
     ```
   
@@ -67,7 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - `log_record.log_record` - The API LogRecord (contains body, severity, attributes, etc.)
     - `log_record.resource` - The Resource
     - `log_record.instrumentation_scope` - The InstrumentationScope (now included, was in LogData before)
-    - `log_record.limits` - The LogLimits
+    - `log_record.limits` - The LogRecordLimits
 
 ## Version 1.38.0/0.59b0 (2025-10-16)
 
