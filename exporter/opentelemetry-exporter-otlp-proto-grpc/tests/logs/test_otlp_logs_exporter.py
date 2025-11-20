@@ -51,7 +51,6 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
     OTEL_EXPORTER_OTLP_LOGS_HEADERS,
     OTEL_EXPORTER_OTLP_LOGS_TIMEOUT,
-    OTEL_LOG_LEVEL,
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
@@ -320,7 +319,6 @@ class TestOTLPLogExporter(TestCase):
         )
         return log_records
 
-    @patch.dict("os.environ", {OTEL_LOG_LEVEL: "debug"})
     @patch("sys.stderr", new_callable=StringIO)
     def test_partial_success_recorded_directly_to_stderr(self, mock_stderr):
         # pylint: disable=protected-access
