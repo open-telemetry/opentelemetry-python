@@ -118,7 +118,7 @@ def _clean_attribute(
     return None
 
 
-def _clean_extended_attribute_value( # pylint: disable=too-many-branches
+def _clean_extended_attribute_value(  # pylint: disable=too-many-branches
     value: types.AnyValue, max_len: Optional[int]
 ) -> types.AnyValue:
     # for primitive types just return the value and eventually shorten the string length
