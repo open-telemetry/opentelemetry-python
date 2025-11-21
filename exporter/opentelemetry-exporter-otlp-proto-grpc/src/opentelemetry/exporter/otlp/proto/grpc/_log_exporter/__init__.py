@@ -100,7 +100,7 @@ class OTLPLogExporter(
             insecure=insecure,
             credentials=credentials,
             headers=headers or environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS),
-            timeout=timeout or environ_timeout,
+            timeout=timeout if timeout is not None else environ_timeout,
             compression=compression,
             stub=LogsServiceStub,
             result=LogRecordExportResult,
@@ -110,7 +110,7 @@ class OTLPLogExporter(
     def _translate_data(
         self, data: Sequence[ReadableLogRecord]
     ) -> ExportLogsServiceRequest:
-        return encode_logs(data)
+        return ExportLogsServiceRequest(resource_logs=encode_logs(data))
 
     def export(  # type: ignore [reportIncompatibleMethodOverride]
         self,
