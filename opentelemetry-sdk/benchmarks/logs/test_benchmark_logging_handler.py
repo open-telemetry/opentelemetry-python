@@ -4,14 +4,14 @@ import pytest
 
 from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
 from opentelemetry.sdk._logs.export import (
-    InMemoryLogExporter,
+    InMemoryLogRecordExporter,
     SimpleLogRecordProcessor,
 )
 
 
 def _set_up_logging_handler(level):
     logger_provider = LoggerProvider()
-    exporter = InMemoryLogExporter()
+    exporter = InMemoryLogRecordExporter()
     processor = SimpleLogRecordProcessor(exporter=exporter)
     logger_provider.add_log_record_processor(processor)
     handler = LoggingHandler(level=level, logger_provider=logger_provider)
