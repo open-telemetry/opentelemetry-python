@@ -1,11 +1,12 @@
 # Contributing to opentelemetry-python
+The shared community calendar contains all public OpenTelemetry meetings, including weekly SIG meetings, monthly community meetings, etc.
 
-The Python special interest group (SIG) meets weekly on Thursdays at 9AM PST. Check the [OpenTelemetry community calendar](https://calendar.google.com/calendar/embed?src=google.com_b79e3e90j7bbsa2n2p5an5lf60%40group.calendar.google.com) for specific dates and Zoom meeting links.
+Check the [OpenTelemetry community calendar](https://calendar.google.com/calendar/embed?src=c_2bf73e3b6b530da4babd444e72b76a6ad893a5c3f43cf40467abc7a9a897f977%40group.calendar.google.com) for specific dates and Zoom meeting links.
 
 See the [public meeting notes](https://docs.google.com/document/d/1CIMGoIOZ-c3-igzbd6_Pnxx1SjAkjwqoYSUWxPY8XIs/edit)
 for a summary description of past meetings.
 
-See to the [community membership document](https://github.com/open-telemetry/community/blob/main/community-membership.md)
+See the [community membership document](https://github.com/open-telemetry/community/blob/main/community-membership.md)
 on how to become a [**Member**](https://github.com/open-telemetry/community/blob/main/community-membership.md#member),
 [**Approver**](https://github.com/open-telemetry/community/blob/main/community-membership.md#approver)
 and [**Maintainer**](https://github.com/open-telemetry/community/blob/main/community-membership.md#maintainer).
@@ -276,7 +277,7 @@ to your PR, can still happen.
 
 Right now Github [does not allow](https://github.com/orgs/community/discussions/5634) PRs
 to be edited by maintainers if the corresponding repo fork exists in a Github organization.
-Please for this repo in a personal Github account instead.
+Please fork this repo in a personal Github account instead.
 
 One of the maintainers will merge the PR once it is **ready to merge**.
 
