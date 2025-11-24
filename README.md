@@ -113,6 +113,7 @@ For more information about the maintainer role, see the [community repository](h
 - [Dylan Russell](https://github.com/dylanrussell), Google
 - [Emídio Neto](https://github.com/emdneto), PicPay
 - [Jeremy Voss](https://github.com/jeremydvoss), Microsoft
+- [Liudmila Molkova](https://github.com/lmolkova), Grafana Labs
 - [Owais Lone](https://github.com/owais), Splunk
 - [Pablo Collins](https://github.com/pmcollins), Splunk
 - [Shalev Roda](https://github.com/shalevr), Cisco
