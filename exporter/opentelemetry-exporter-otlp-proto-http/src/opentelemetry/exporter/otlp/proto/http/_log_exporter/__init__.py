@@ -32,14 +32,16 @@ from opentelemetry.exporter.otlp.proto.http import (
 )
 from opentelemetry.exporter.otlp.proto.http._common import (
     _is_retryable,
+    _load_session_from_envvar,
 )
-from opentelemetry.sdk._logs import LogData
+from opentelemetry.sdk._logs import ReadableLogRecord
 from opentelemetry.sdk._logs.export import (
-    LogExporter,
-    LogExportResult,
+    LogRecordExporter,
+    LogRecordExportResult,
 )
 from opentelemetry.sdk._shared_internal import DuplicateFilter
 from opentelemetry.sdk.environment_variables import (
+    _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_KEY,
@@ -69,7 +71,7 @@ DEFAULT_TIMEOUT = 10  # in seconds
 _MAX_RETRYS = 6
 
 
-class OTLPLogExporter(LogExporter):
+class OTLPLogExporter(LogRecordExporter):
     def __init__(
         self,
         endpoint: Optional[str] = None,
@@ -120,7 +122,14 @@ class OTLPLogExporter(LogExporter):
             )
         )
         self._compression = compression or _compression_from_env()
-        self._session = session or requests.Session()
+        self._session = (
+            session
+            or _load_session_from_envvar(
+                _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER
+            )
+            or requests.Session()
+        )
+        self._session.headers.update(self._headers)
         self._session.headers.update(_OTLP_HTTP_HEADERS)
         # let users override our defaults
         self._session.headers.update(self._headers)
@@ -167,17 +176,19 @@ class OTLPLogExporter(LogExporter):
             )
         return resp
 
-    def export(self, batch: Sequence[LogData]) -> LogExportResult:
+    def export(
+        self, batch: Sequence[ReadableLogRecord]
+    ) -> LogRecordExportResult:
         if self._shutdown:
             _logger.warning("Exporter already shutdown, ignoring batch")
-            return LogExportResult.FAILURE
+            return LogRecordExportResult.FAILURE
 
         serialized_data = encode_logs(batch).SerializeToString()
         deadline_sec = time() + self._timeout
         for retry_num in range(_MAX_RETRYS):
             resp = self._export(serialized_data, deadline_sec - time())
             if resp.ok:
-                return LogExportResult.SUCCESS
+                return LogRecordExportResult.SUCCESS
             # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
             backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
             if (
@@ -191,7 +202,7 @@ class OTLPLogExporter(LogExporter):
                     resp.status_code,
                     resp.text,
                 )
-                return LogExportResult.FAILURE
+                return LogRecordExportResult.FAILURE
             _logger.warning(
                 "Transient error %s encountered while exporting logs batch, retrying in %.2fs.",
                 resp.reason,
@@ -201,7 +212,7 @@ class OTLPLogExporter(LogExporter):
             if shutdown:
                 _logger.warning("Shutdown in progress, aborting retry.")
                 break
-        return LogExportResult.FAILURE
+        return LogRecordExportResult.FAILURE
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
         """Nothing is buffered in this exporter, so this method does nothing."""

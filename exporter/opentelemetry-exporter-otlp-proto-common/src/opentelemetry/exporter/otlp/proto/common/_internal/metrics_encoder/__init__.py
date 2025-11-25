@@ -115,7 +115,7 @@ class OTLPMetricExporterMixin:
                 "CUMULATIVE"
             ):
                 _logger.warning(
-                    "Unrecognized OTEL_EXPORTER_METRICS_TEMPORALITY_PREFERENCE"
+                    "Unrecognized OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE"
                     " value found: "
                     "%s, "
                     "using CUMULATIVE",

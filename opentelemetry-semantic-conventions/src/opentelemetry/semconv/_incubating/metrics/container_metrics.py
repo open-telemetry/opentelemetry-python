@@ -160,6 +160,64 @@ def create_container_filesystem_usage(meter: Meter) -> UpDownCounter:
     )
 
 
+CONTAINER_MEMORY_AVAILABLE: Final = "container.memory.available"
+"""
+Container memory available
+Instrument: updowncounter
+Unit: By
+Note: Available memory for use.  This is defined as the memory limit - workingSetBytes. If memory limit is undefined, the available bytes is omitted.
+In general, this metric can be derived from [cadvisor](https://github.com/google/cadvisor/blob/v0.53.0/docs/storage/prometheus.md#prometheus-container-metrics) and by subtracting the `container_memory_working_set_bytes` metric from the `container_spec_memory_limit_bytes` metric.
+In K8s, this metric is derived from the [MemoryStats.AvailableBytes](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) field of the [PodStats.Memory](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#PodStats) of the Kubelet's stats API.
+"""
+
+
+def create_container_memory_available(meter: Meter) -> UpDownCounter:
+    """Container memory available"""
+    return meter.create_up_down_counter(
+        name=CONTAINER_MEMORY_AVAILABLE,
+        description="Container memory available.",
+        unit="By",
+    )
+
+
+CONTAINER_MEMORY_PAGING_FAULTS: Final = "container.memory.paging.faults"
+"""
+Container memory paging faults
+Instrument: counter
+Unit: {fault}
+Note: In general, this metric can be derived from [cadvisor](https://github.com/google/cadvisor/blob/v0.53.0/docs/storage/prometheus.md#prometheus-container-metrics) and specifically the `container_memory_failures_total{failure_type=pgfault, scope=container}` and `container_memory_failures_total{failure_type=pgmajfault, scope=container}`metric.
+In K8s, this metric is derived from the [MemoryStats.PageFaults](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) and [MemoryStats.MajorPageFaults](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) field of the [PodStats.Memory](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#PodStats) of the Kubelet's stats API.
+"""
+
+
+def create_container_memory_paging_faults(meter: Meter) -> Counter:
+    """Container memory paging faults"""
+    return meter.create_counter(
+        name=CONTAINER_MEMORY_PAGING_FAULTS,
+        description="Container memory paging faults.",
+        unit="{fault}",
+    )
+
+
+CONTAINER_MEMORY_RSS: Final = "container.memory.rss"
+"""
+Container memory RSS
+Instrument: updowncounter
+Unit: By
+Note: In general, this metric can be derived from [cadvisor](https://github.com/google/cadvisor/blob/v0.53.0/docs/storage/prometheus.md#prometheus-container-metrics) and specifically the `container_memory_rss` metric.
+In K8s, this metric is derived from the [MemoryStats.RSSBytes](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) field of the [PodStats.Memory](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#PodStats) of the Kubelet's stats API.
+"""
+
+
+def create_container_memory_rss(meter: Meter) -> UpDownCounter:
+    """Container memory RSS"""
+    return meter.create_up_down_counter(
+        name=CONTAINER_MEMORY_RSS,
+        description="Container memory RSS.",
+        unit="By",
+    )
+
+
 CONTAINER_MEMORY_USAGE: Final = "container.memory.usage"
 """
 Memory usage of the container
@@ -174,6 +232,25 @@ def create_container_memory_usage(meter: Meter) -> Counter:
     return meter.create_counter(
         name=CONTAINER_MEMORY_USAGE,
         description="Memory usage of the container.",
+        unit="By",
+    )
+
+
+CONTAINER_MEMORY_WORKING_SET: Final = "container.memory.working_set"
+"""
+Container memory working set
+Instrument: updowncounter
+Unit: By
+Note: In general, this metric can be derived from [cadvisor](https://github.com/google/cadvisor/blob/v0.53.0/docs/storage/prometheus.md#prometheus-container-metrics) and specifically the `container_memory_working_set_bytes` metric.
+In K8s, this metric is derived from the [MemoryStats.WorkingSetBytes](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) field of the [PodStats.Memory](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#PodStats) of the Kubelet's stats API.
+"""
+
+
+def create_container_memory_working_set(meter: Meter) -> UpDownCounter:
+    """Container memory working set"""
+    return meter.create_up_down_counter(
+        name=CONTAINER_MEMORY_WORKING_SET,
+        description="Container memory working set.",
         unit="By",
     )
 

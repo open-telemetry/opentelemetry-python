@@ -35,7 +35,7 @@ AZURE_COSMOSDB_OPERATION_CONTACTED_REGIONS: Final = (
 )
 """
 List of regions contacted during operation in the order that they were contacted. If there is more than one region listed, it indicates that the operation was performed on multiple regions i.e. cross-regional call.
-Note: Region name matches the format of `displayName` in [Azure Location API](https://learn.microsoft.com/rest/api/subscription/subscriptions/list-locations?view=rest-subscription-2021-10-01&tabs=HTTP#location).
+Note: Region name matches the format of `displayName` in [Azure Location API](https://learn.microsoft.com/rest/api/resources/subscriptions/list-locations).
 """
 
 AZURE_COSMOSDB_OPERATION_REQUEST_CHARGE: Final = (

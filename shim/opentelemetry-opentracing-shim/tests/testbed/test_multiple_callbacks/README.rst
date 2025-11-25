@@ -38,7 +38,7 @@ Implementation details:
            with self.tracer.start_active_span("task"):
                await asyncio.sleep(interval)
 
-       # Invoke and yield over the corotuines.
-       with self.tracer.start_active_span("parent"):
-       tasks = self.submit_callbacks()
-       await asyncio.gather(*tasks)
+           # Invoke and yield over the coroutines.
+           with self.tracer.start_active_span("parent"):
+               tasks = self.submit_callbacks()
+               await asyncio.gather(*tasks)

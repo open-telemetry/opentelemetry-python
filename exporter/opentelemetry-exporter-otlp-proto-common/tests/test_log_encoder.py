@@ -15,7 +15,7 @@
 import unittest
 from typing import List, Tuple
 
-from opentelemetry._logs import SeverityNumber
+from opentelemetry._logs import LogRecord, SeverityNumber
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _encode_attributes,
     _encode_span_id,
@@ -45,8 +45,7 @@ from opentelemetry.proto.logs.v1.logs_pb2 import ScopeLogs as PB2ScopeLogs
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as PB2Resource,
 )
-from opentelemetry.sdk._logs import LogData, LogLimits
-from opentelemetry.sdk._logs import LogRecord as SDKLogRecord
+from opentelemetry.sdk._logs import LogRecordLimits, ReadWriteLogRecord
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace import (
@@ -77,7 +76,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
     def test_dropped_attributes_count(self):
         sdk_logs = self._get_test_logs_dropped_attributes()
         encoded_logs = encode_logs(sdk_logs)
-        self.assertTrue(hasattr(sdk_logs[0].log_record, "dropped_attributes"))
+        self.assertTrue(hasattr(sdk_logs[0], "dropped_attributes"))
         self.assertEqual(
             # pylint:disable=no-member
             encoded_logs.resource_logs[0]
@@ -88,7 +87,8 @@ class TestOTLPLogEncoder(unittest.TestCase):
         )
 
     @staticmethod
-    def _get_sdk_log_data() -> List[LogData]:
+    def _get_sdk_log_data() -> List[ReadWriteLogRecord]:
+        # pylint:disable=too-many-locals
         ctx_log1 = set_span_in_context(
             NonRecordingSpan(
                 SpanContext(
@@ -99,35 +99,35 @@ class TestOTLPLogEncoder(unittest.TestCase):
                 )
             )
         )
-        log1 = LogData(
-            log_record=SDKLogRecord(
+        log1 = ReadWriteLogRecord(
+            LogRecord(
                 timestamp=1644650195189786880,
                 observed_timestamp=1644650195189786881,
                 context=ctx_log1,
                 severity_text="WARN",
                 severity_number=SeverityNumber.WARN,
                 body="Do not go gentle into that good night. Rage, rage against the dying of the light",
-                resource=SDKResource(
-                    {"first_resource": "value"},
-                    "resource_schema_url",
-                ),
                 attributes={"a": 1, "b": "c"},
+            ),
+            resource=SDKResource(
+                {"first_resource": "value"},
+                "resource_schema_url",
             ),
             instrumentation_scope=InstrumentationScope(
                 "first_name", "first_version"
             ),
         )
 
-        log2 = LogData(
-            log_record=SDKLogRecord(
+        log2 = ReadWriteLogRecord(
+            LogRecord(
                 timestamp=1644650249738562048,
                 observed_timestamp=1644650249738562049,
                 severity_text="WARN",
                 severity_number=SeverityNumber.WARN,
                 body="Cooper, this is no time for caution!",
-                resource=SDKResource({"second_resource": "CASE"}),
                 attributes={},
             ),
+            resource=SDKResource({"second_resource": "CASE"}),
             instrumentation_scope=InstrumentationScope(
                 "second_name", "second_version"
             ),
@@ -143,17 +143,17 @@ class TestOTLPLogEncoder(unittest.TestCase):
                 )
             )
         )
-        log3 = LogData(
-            log_record=SDKLogRecord(
+        log3 = ReadWriteLogRecord(
+            LogRecord(
                 timestamp=1644650427658989056,
                 observed_timestamp=1644650427658989057,
                 context=ctx_log3,
                 severity_text="DEBUG",
                 severity_number=SeverityNumber.DEBUG,
                 body="To our galaxy",
-                resource=SDKResource({"second_resource": "CASE"}),
                 attributes={"a": 1, "b": "c"},
             ),
+            resource=SDKResource({"second_resource": "CASE"}),
             instrumentation_scope=None,
         )
 
@@ -167,19 +167,19 @@ class TestOTLPLogEncoder(unittest.TestCase):
                 )
             )
         )
-        log4 = LogData(
-            log_record=SDKLogRecord(
+        log4 = ReadWriteLogRecord(
+            LogRecord(
                 timestamp=1644650584292683008,
                 observed_timestamp=1644650584292683009,
                 context=ctx_log4,
                 severity_text="INFO",
                 severity_number=SeverityNumber.INFO,
                 body="Love is the one thing that transcends time and space",
-                resource=SDKResource(
-                    {"first_resource": "value"},
-                    "resource_schema_url",
-                ),
                 attributes={"filename": "model.py", "func_name": "run_method"},
+            ),
+            resource=SDKResource(
+                {"first_resource": "value"},
+                "resource_schema_url",
             ),
             instrumentation_scope=InstrumentationScope(
                 "another_name", "another_version"
@@ -196,17 +196,17 @@ class TestOTLPLogEncoder(unittest.TestCase):
                 )
             )
         )
-        log5 = LogData(
-            log_record=SDKLogRecord(
+        log5 = ReadWriteLogRecord(
+            LogRecord(
                 timestamp=1644650584292683009,
                 observed_timestamp=1644650584292683010,
                 context=ctx_log5,
                 severity_text="INFO",
                 severity_number=SeverityNumber.INFO,
                 body={"error": None, "array_with_nones": [1, None, 2]},
-                resource=SDKResource({}),
                 attributes={},
             ),
+            resource=SDKResource({}),
             instrumentation_scope=InstrumentationScope(
                 "last_name", "last_version"
             ),
@@ -222,19 +222,19 @@ class TestOTLPLogEncoder(unittest.TestCase):
                 )
             )
         )
-        log6 = LogData(
-            log_record=SDKLogRecord(
+        log6 = ReadWriteLogRecord(
+            LogRecord(
                 timestamp=1644650584292683022,
                 observed_timestamp=1644650584292683022,
                 context=ctx_log6,
                 severity_text="ERROR",
                 severity_number=SeverityNumber.ERROR,
                 body="This instrumentation scope has a schema url",
-                resource=SDKResource(
-                    {"first_resource": "value"},
-                    "resource_schema_url",
-                ),
                 attributes={"filename": "model.py", "func_name": "run_method"},
+            ),
+            resource=SDKResource(
+                {"first_resource": "value"},
+                "resource_schema_url",
             ),
             instrumentation_scope=InstrumentationScope(
                 "scope_with_url",
@@ -253,19 +253,19 @@ class TestOTLPLogEncoder(unittest.TestCase):
                 )
             )
         )
-        log7 = LogData(
-            log_record=SDKLogRecord(
+        log7 = ReadWriteLogRecord(
+            LogRecord(
                 timestamp=1644650584292683033,
                 observed_timestamp=1644650584292683033,
                 context=ctx_log7,
                 severity_text="FATAL",
                 severity_number=SeverityNumber.FATAL,
                 body="This instrumentation scope has a schema url and attributes",
-                resource=SDKResource(
-                    {"first_resource": "value"},
-                    "resource_schema_url",
-                ),
                 attributes={"filename": "model.py", "func_name": "run_method"},
+            ),
+            resource=SDKResource(
+                {"first_resource": "value"},
+                "resource_schema_url",
             ),
             instrumentation_scope=InstrumentationScope(
                 "scope_with_attributes",
@@ -285,30 +285,52 @@ class TestOTLPLogEncoder(unittest.TestCase):
                 )
             )
         )
-        log8 = LogData(
-            log_record=SDKLogRecord(
+        log8 = ReadWriteLogRecord(
+            LogRecord(
                 timestamp=1644650584292683044,
                 observed_timestamp=1644650584292683044,
                 context=ctx_log8,
                 severity_text="INFO",
                 severity_number=SeverityNumber.INFO,
                 body="Test export of extended attributes",
-                resource=SDKResource({}),
                 attributes={
                     "extended": {
                         "sequence": [{"inner": "mapping", "none": None}]
                     }
                 },
             ),
+            resource=SDKResource({}),
             instrumentation_scope=InstrumentationScope(
                 "extended_name", "extended_version"
             ),
         )
-        return [log1, log2, log3, log4, log5, log6, log7, log8]
+
+        ctx_log9 = set_span_in_context(
+            NonRecordingSpan(
+                SpanContext(
+                    212592107417388365804938480559624925566,
+                    6077757853989569466,
+                    False,
+                    TraceFlags(0x01),
+                )
+            )
+        )
+        log9 = ReadWriteLogRecord(
+            LogRecord(
+                # these are otherwise set by default
+                observed_timestamp=1644650584292683045,
+                context=ctx_log9,
+            ),
+            resource=SDKResource({}),
+            instrumentation_scope=InstrumentationScope(
+                "empty_log_record_name", "empty_log_record_version"
+            ),
+        )
+        return [log1, log2, log3, log4, log5, log6, log7, log8, log9]
 
     def get_test_logs(
         self,
-    ) -> Tuple[List[SDKLogRecord], ExportLogsServiceRequest]:
+    ) -> Tuple[List[ReadWriteLogRecord], ExportLogsServiceRequest]:
         sdk_logs = self._get_sdk_log_data()
 
         pb2_service_request = ExportLogsServiceRequest(
@@ -593,6 +615,29 @@ class TestOTLPLogEncoder(unittest.TestCase):
                                 ),
                             ],
                         ),
+                        PB2ScopeLogs(
+                            scope=PB2InstrumentationScope(
+                                name="empty_log_record_name",
+                                version="empty_log_record_version",
+                            ),
+                            log_records=[
+                                PB2LogRecord(
+                                    time_unix_nano=None,
+                                    observed_time_unix_nano=1644650584292683045,
+                                    trace_id=_encode_trace_id(
+                                        212592107417388365804938480559624925566
+                                    ),
+                                    span_id=_encode_span_id(
+                                        6077757853989569466,
+                                    ),
+                                    flags=int(TraceFlags(0x01)),
+                                    severity_text=None,
+                                    severity_number=None,
+                                    body=None,
+                                    attributes=None,
+                                ),
+                            ],
+                        ),
                     ],
                 ),
             ]
@@ -601,7 +646,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
         return sdk_logs, pb2_service_request
 
     @staticmethod
-    def _get_test_logs_dropped_attributes() -> List[LogData]:
+    def _get_test_logs_dropped_attributes() -> List[ReadWriteLogRecord]:
         ctx_log1 = set_span_in_context(
             NonRecordingSpan(
                 SpanContext(
@@ -612,17 +657,17 @@ class TestOTLPLogEncoder(unittest.TestCase):
                 )
             )
         )
-        log1 = LogData(
-            log_record=SDKLogRecord(
+        log1 = ReadWriteLogRecord(
+            LogRecord(
                 timestamp=1644650195189786880,
                 context=ctx_log1,
                 severity_text="WARN",
                 severity_number=SeverityNumber.WARN,
                 body="Do not go gentle into that good night. Rage, rage against the dying of the light",
-                resource=SDKResource({"first_resource": "value"}),
                 attributes={"a": 1, "b": "c", "user_id": "B121092"},
-                limits=LogLimits(max_attributes=1),
             ),
+            resource=SDKResource({"first_resource": "value"}),
+            limits=LogRecordLimits(max_attributes=1),
             instrumentation_scope=InstrumentationScope(
                 "first_name", "first_version"
             ),
@@ -630,16 +675,16 @@ class TestOTLPLogEncoder(unittest.TestCase):
         ctx_log2 = set_span_in_context(
             NonRecordingSpan(SpanContext(0, 0, False))
         )
-        log2 = LogData(
-            log_record=SDKLogRecord(
+        log2 = ReadWriteLogRecord(
+            LogRecord(
                 timestamp=1644650249738562048,
                 context=ctx_log2,
                 severity_text="WARN",
                 severity_number=SeverityNumber.WARN,
                 body="Cooper, this is no time for caution!",
-                resource=SDKResource({"second_resource": "CASE"}),
                 attributes={},
             ),
+            resource=SDKResource({"second_resource": "CASE"}),
             instrumentation_scope=InstrumentationScope(
                 "second_name", "second_version"
             ),

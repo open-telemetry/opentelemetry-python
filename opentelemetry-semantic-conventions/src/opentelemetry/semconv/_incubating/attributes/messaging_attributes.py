@@ -135,7 +135,7 @@ MESSAGING_KAFKA_DESTINATION_PARTITION: Final = (
     "messaging.kafka.destination.partition"
 )
 """
-Deprecated: Replaced by `messaging.destination.partition.id`.
+Deprecated: Record string representation of the partition id in `messaging.destination.partition.id` attribute.
 """
 
 MESSAGING_KAFKA_MESSAGE_KEY: Final = "messaging.kafka.message.key"
