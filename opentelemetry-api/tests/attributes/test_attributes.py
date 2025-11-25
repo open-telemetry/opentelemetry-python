@@ -317,4 +317,6 @@ class TestBoundedAttributes(unittest.TestCase):
 
         # Verify we get a string back from the cleaner
         self.assertIsInstance(cleaned_value, str)
-        self.assertEqual("<DummyWSGIRequest method=GET path=/example/>", cleaned_value)
+        self.assertEqual(
+            "<DummyWSGIRequest method=GET path=/example/>", cleaned_value
+        )
