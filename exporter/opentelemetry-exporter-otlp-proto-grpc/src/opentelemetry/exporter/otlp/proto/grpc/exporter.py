@@ -374,12 +374,9 @@ class OTLPExporterMixin(
     ) -> ExportServiceRequestT:
         pass
 
-    def _log_partial_success(self, partial_success):
-        logger.debug("Partial success:\n%s", partial_success)
-
     def _process_response(self, response):
         if response.HasField("partial_success"):
-            self._log_partial_success(response.partial_success)
+            logger.debug("Partial success:\n%s", response.partial_success)
 
     def _export(
         self,

@@ -46,17 +46,36 @@ class DuplicateFilter(logging.Filter):
     recursion depth exceeded issue in cases where logging itself results in an exception."""
 
     def filter(self, record):
-        current_log = (
+        # We need to pick a time longer than the OTLP LogExporter timeout
+        # which defaults to 10 seconds, but not pick something so long that
+        # it filters out useful logs.
+        time_boundary = time.time() // 20
+        current_log_by_line = (
+            record.module,
+            record.pathname,
+            record.lineno,
+            time_boundary,
+        )
+        previous_log_by_line = getattr(self, "last_source", None)
+        previous_log_by_line_count = getattr(self, "last_source_count", 1)
+        if current_log_by_line == previous_log_by_line:
+            recurring_count = previous_log_by_line_count + 1
+            self.last_source_count = recurring_count  # pylint: disable=attribute-defined-outside-init
+            if recurring_count > 3:
+                # Don't allow further processing, since the same line is repeatedly emitting logs.
+                return False
+        else:
+            self.last_source = current_log_by_line  # pylint: disable=attribute-defined-outside-init
+            self.last_source_count = 1  # pylint: disable=attribute-defined-outside-init
+
+        current_log_by_content = (
             record.module,
             record.levelno,
             record.msg,
-            # We need to pick a time longer than the OTLP LogExporter timeout
-            # which defaults to 10 seconds, but not pick something so long that
-            # it filters out useful logs.
-            time.time() // 20,
+            time_boundary,
         )
-        if current_log != getattr(self, "last_log", None):
-            self.last_log = current_log  # pylint: disable=attribute-defined-outside-init
+        if current_log_by_content != getattr(self, "last_log", None):
+            self.last_log = current_log_by_content  # pylint: disable=attribute-defined-outside-init
             return True
         # False means python's `logging` module will no longer process this log.
         return False
