@@ -282,9 +282,6 @@ class BoundedAttributes(MutableMapping):  # type: ignore
                 return
 
             if self._extended_attributes:
-                # Convert types other than AnyValue to strings before cleaning
-                if not isinstance(value, _VALID_ANY_VALUE_TYPES):
-                    value = str(value)
                 value = _clean_extended_attribute(
                     key, value, self.max_value_len
                 )

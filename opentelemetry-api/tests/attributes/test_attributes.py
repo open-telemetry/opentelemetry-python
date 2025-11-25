@@ -303,20 +303,18 @@ class TestBoundedAttributes(unittest.TestCase):
         clean_extended_attribute_mock.assert_called_once()
 
     def test_wsgi_request_conversion_to_string(self):
-        """Test that WSGI request objects are converted to strings before calling _clean_extended_attribute."""
+        """Test that WSGI request objects are converted to strings when _clean_extended_attribute is called."""
 
         class DummyWSGIRequest:
             def __str__(self):
                 return "<DummyWSGIRequest method=GET path=/example/>"
 
-        bdict = BoundedAttributes(extended_attributes=True, immutable=False)
         wsgi_request = DummyWSGIRequest()
 
-        with unittest.mock.patch(
-            "opentelemetry.attributes._clean_extended_attribute",
-            return_value="stringified_request",
-        ):
-            bdict["request"] = wsgi_request
+        cleaned_value = _clean_extended_attribute(
+            "request", wsgi_request, None
+        )
 
-        # Verify that the request stored in the bounded dict matches the cleaned value
-        self.assertEqual(bdict["request"], "stringified_request")
+        # Verify we get a string back from the cleaner
+        self.assertIsInstance(cleaned_value, str)
+        self.assertEqual("<DummyWSGIRequest method=GET path=/example/>", cleaned_value)
