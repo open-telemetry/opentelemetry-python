@@ -16,15 +16,14 @@ import json
 import unittest
 import warnings
 
-from opentelemetry._logs import LogRecord as APILogRecord
-from opentelemetry._logs.severity import SeverityNumber
+from opentelemetry._logs import LogRecord, SeverityNumber
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.context import get_current
 from opentelemetry.sdk._logs import (
-    LogDeprecatedInitWarning,
-    LogDroppedAttributesWarning,
-    LogLimits,
-    LogRecord,
+    LogRecordDroppedAttributesWarning,
+    LogRecordLimits,
+    ReadableLogRecord,
+    ReadWriteLogRecord,
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.trace.span import TraceFlags
@@ -32,18 +31,20 @@ from opentelemetry.trace.span import TraceFlags
 
 class TestLogRecord(unittest.TestCase):
     def test_log_record_to_json(self):
-        log_record = LogRecord(
-            timestamp=0,
-            observed_timestamp=0,
-            body={"key": "logLine", "bytes": b"123"},
+        log_record = ReadableLogRecord(
+            LogRecord(
+                timestamp=0,
+                observed_timestamp=0,
+                body={"key": "logLine", "bytes": b"123"},
+                attributes={
+                    "mapping": {"key": "value"},
+                    "none": None,
+                    "sequence": [1, 2],
+                    "str": "string",
+                },
+                event_name="a.event",
+            ),
             resource=Resource({"service.name": "foo"}),
-            attributes={
-                "mapping": {"key": "value"},
-                "none": None,
-                "sequence": [1, 2],
-                "str": "string",
-            },
-            event_name="a.event",
         )
 
         self.assertEqual(
@@ -52,11 +53,13 @@ class TestLogRecord(unittest.TestCase):
         )
 
     def test_log_record_to_json_serializes_severity_number_as_int(self):
-        actual = LogRecord(
-            timestamp=0,
-            severity_number=SeverityNumber.WARN,
-            observed_timestamp=0,
-            body="a log line",
+        actual = ReadableLogRecord(
+            LogRecord(
+                timestamp=0,
+                severity_number=SeverityNumber.WARN,
+                observed_timestamp=0,
+                body="a log line",
+            ),
             resource=Resource({"service.name": "foo"}),
         )
 
@@ -64,9 +67,11 @@ class TestLogRecord(unittest.TestCase):
         self.assertEqual(SeverityNumber.WARN.value, decoded["severity_number"])
 
     def test_log_record_to_json_serializes_null_severity_number(self):
-        actual = LogRecord(
-            observed_timestamp=0,
-            body="a log line",
+        actual = ReadableLogRecord(
+            LogRecord(
+                observed_timestamp=0,
+                body="a log line",
+            ),
             resource=Resource({"service.name": "foo"}),
         )
 
@@ -76,25 +81,32 @@ class TestLogRecord(unittest.TestCase):
     def test_log_record_bounded_attributes(self):
         attr = {"key": "value"}
 
-        result = LogRecord(timestamp=0, body="a log line", attributes=attr)
+        result = ReadWriteLogRecord(
+            LogRecord(timestamp=0, body="a log line", attributes=attr)
+        )
 
-        self.assertTrue(isinstance(result.attributes, BoundedAttributes))
+        self.assertTrue(
+            isinstance(result.log_record.attributes, BoundedAttributes)
+        )
 
     def test_log_record_dropped_attributes_empty_limits(self):
         attr = {"key": "value"}
 
-        result = LogRecord(timestamp=0, body="a log line", attributes=attr)
+        result = ReadWriteLogRecord(
+            LogRecord(timestamp=0, body="a log line", attributes=attr)
+        )
 
         self.assertTrue(result.dropped_attributes == 0)
 
     def test_log_record_dropped_attributes_set_limits_max_attribute(self):
         attr = {"key": "value", "key2": "value2"}
-        limits = LogLimits(
+        limits = LogRecordLimits(
             max_attributes=1,
         )
 
-        result = LogRecord(
-            timestamp=0, body="a log line", attributes=attr, limits=limits
+        result = ReadWriteLogRecord(
+            LogRecord(timestamp=0, body="a log line", attributes=attr),
+            limits=limits,
         )
         self.assertTrue(result.dropped_attributes == 1)
 
@@ -103,96 +115,98 @@ class TestLogRecord(unittest.TestCase):
     ):
         attr = {"key": "value", "key2": "value2"}
         expected = {"key": "v", "key2": "v"}
-        limits = LogLimits(
+        limits = LogRecordLimits(
             max_attribute_length=1,
         )
 
-        result = LogRecord(
-            timestamp=0, body="a log line", attributes=attr, limits=limits
+        result = ReadWriteLogRecord(
+            LogRecord(
+                timestamp=0,
+                body="a log line",
+                attributes=attr,
+            ),
+            limits=limits,
         )
         self.assertTrue(result.dropped_attributes == 0)
-        self.assertEqual(expected, result.attributes)
+        self.assertEqual(expected, result.log_record.attributes)
 
     def test_log_record_dropped_attributes_set_limits(self):
         attr = {"key": "value", "key2": "value2"}
         expected = {"key2": "v"}
-        limits = LogLimits(
+        limits = LogRecordLimits(
             max_attributes=1,
             max_attribute_length=1,
         )
 
-        result = LogRecord(
-            timestamp=0, body="a log line", attributes=attr, limits=limits
+        result = ReadWriteLogRecord(
+            LogRecord(
+                timestamp=0,
+                body="a log line",
+                attributes=attr,
+            ),
+            limits=limits,
         )
         self.assertTrue(result.dropped_attributes == 1)
-        self.assertEqual(expected, result.attributes)
+        self.assertEqual(expected, result.log_record.attributes)
 
     def test_log_record_dropped_attributes_set_limits_warning_once(self):
         attr = {"key1": "value1", "key2": "value2"}
-        limits = LogLimits(
+        limits = LogRecordLimits(
             max_attributes=1,
             max_attribute_length=1,
         )
 
         with warnings.catch_warnings(record=True) as cw:
             for _ in range(10):
-                LogRecord(
-                    timestamp=0,
-                    body="a log line",
-                    attributes=attr,
+                ReadWriteLogRecord(
+                    LogRecord(
+                        timestamp=0,
+                        body="a log line",
+                        attributes=attr,
+                    ),
                     limits=limits,
                 )
-        self.assertEqual(len(cw), 1)
-        self.assertIsInstance(cw[-1].message, LogDroppedAttributesWarning)
+
+        # Check that at least one LogRecordDroppedAttributesWarning was emitted
+        dropped_attributes_warnings = [
+            w
+            for w in cw
+            if isinstance(w.message, LogRecordDroppedAttributesWarning)
+        ]
+        self.assertEqual(
+            len(dropped_attributes_warnings),
+            1,
+            "Expected exactly one LogRecordDroppedAttributesWarning due to simplefilter('once')",
+        )
+
+        # Check the message content of the LogRecordDroppedAttributesWarning
+        warning_message = str(dropped_attributes_warnings[0].message)
         self.assertIn(
             "Log record attributes were dropped due to limits",
-            str(cw[-1].message),
+            warning_message,
         )
 
     def test_log_record_dropped_attributes_unset_limits(self):
         attr = {"key": "value", "key2": "value2"}
-        limits = LogLimits()
+        limits = LogRecordLimits()
 
-        result = LogRecord(
-            timestamp=0, body="a log line", attributes=attr, limits=limits
+        result = ReadWriteLogRecord(
+            LogRecord(
+                timestamp=0,
+                body="a log line",
+                attributes=attr,
+            ),
+            limits=limits,
         )
         self.assertTrue(result.dropped_attributes == 0)
-        self.assertEqual(attr, result.attributes)
-
-    def test_log_record_deprecated_init_warning(self):
-        test_cases = [
-            {"trace_id": 123},
-            {"span_id": 123},
-            {"trace_flags": TraceFlags(0x01)},
-        ]
-
-        for params in test_cases:
-            with self.subTest(params=params):
-                with warnings.catch_warnings(record=True) as cw:
-                    for _ in range(10):
-                        LogRecord(**params)
-
-                self.assertEqual(len(cw), 1)
-                self.assertIsInstance(cw[-1].message, LogDeprecatedInitWarning)
-                self.assertIn(
-                    "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated since 1.35.0. Use `context` instead.",
-                    str(cw[-1].message),
-                )
-
-        with warnings.catch_warnings(record=True) as cw:
-            for _ in range(10):
-                LogRecord(context=get_current())
-        self.assertEqual(len(cw), 0)
+        self.assertEqual(attr, result.log_record.attributes)
 
     # pylint:disable=protected-access
     def test_log_record_from_api_log_record(self):
-        api_log_record = APILogRecord(
+        api_log_record = LogRecord(
             timestamp=1,
             observed_timestamp=2,
             context=get_current(),
-            trace_id=123,
-            span_id=456,
-            trace_flags=TraceFlags(0x01),
             severity_text="WARN",
             severity_number=SeverityNumber.WARN,
             body="a log line",
@@ -201,19 +215,22 @@ class TestLogRecord(unittest.TestCase):
         )
 
         resource = Resource.create({})
-        record = LogRecord._from_api_log_record(
+        record = ReadWriteLogRecord._from_api_log_record(
             record=api_log_record, resource=resource
         )
 
-        self.assertEqual(record.timestamp, 1)
-        self.assertEqual(record.observed_timestamp, 2)
-        self.assertEqual(record.context, get_current())
-        self.assertEqual(record.trace_id, 123)
-        self.assertEqual(record.span_id, 456)
-        self.assertEqual(record.trace_flags, TraceFlags(0x01))
-        self.assertEqual(record.severity_text, "WARN")
-        self.assertEqual(record.severity_number, SeverityNumber.WARN)
-        self.assertEqual(record.body, "a log line")
-        self.assertEqual(record.attributes, {"a": "b"})
-        self.assertEqual(record.event_name, "an.event")
+        self.assertEqual(record.log_record.timestamp, 1)
+        self.assertEqual(record.log_record.observed_timestamp, 2)
+        self.assertEqual(record.log_record.context, get_current())
+        # trace_id, span_id, and trace_flags come from the context's span
+        self.assertEqual(record.log_record.trace_id, 0)
+        self.assertEqual(record.log_record.span_id, 0)
+        self.assertEqual(record.log_record.trace_flags, TraceFlags(0x00))
+        self.assertEqual(record.log_record.severity_text, "WARN")
+        self.assertEqual(
+            record.log_record.severity_number, SeverityNumber.WARN
+        )
+        self.assertEqual(record.log_record.body, "a log line")
+        self.assertEqual(record.log_record.attributes, {"a": "b"})
+        self.assertEqual(record.log_record.event_name, "an.event")
         self.assertEqual(record.resource, resource)

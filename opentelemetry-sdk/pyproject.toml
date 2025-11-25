@@ -26,8 +26,8 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
-  "opentelemetry-api == 1.38.0.dev",
-  "opentelemetry-semantic-conventions == 0.59b0.dev",
+  "opentelemetry-api == 1.39.0.dev",
+  "opentelemetry-semantic-conventions == 0.60b0.dev",
   "typing-extensions >= 4.5.0",
 ]
 
@@ -49,7 +49,7 @@ parentbased_traceidratio = "opentelemetry.sdk.trace.sampling:ParentBasedTraceIdR
 sdk_logger_provider = "opentelemetry.sdk._logs:LoggerProvider"
 
 [project.entry-points.opentelemetry_logs_exporter]
-console = "opentelemetry.sdk._logs.export:ConsoleLogExporter"
+console = "opentelemetry.sdk._logs.export:ConsoleLogRecordExporter"
 
 [project.entry-points.opentelemetry_meter_provider]
 sdk_meter_provider = "opentelemetry.sdk.metrics:MeterProvider"

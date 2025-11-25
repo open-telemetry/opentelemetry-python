@@ -111,7 +111,6 @@ include = [
 exclude = [
   "opentelemetry-sdk/tests",
   "opentelemetry-sdk/src/opentelemetry/sdk/_events",
-  "opentelemetry-sdk/src/opentelemetry/sdk/_logs",
   "opentelemetry-sdk/src/opentelemetry/sdk/error_handler",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics",
   "opentelemetry-sdk/src/opentelemetry/sdk/trace/export",
@@ -126,4 +125,11 @@ strict = [
   "opentelemetry-semantic-conventions",
   "opentelemetry-sdk/src/opentelemetry/sdk/environment_variables",
   "opentelemetry-sdk/src/opentelemetry/sdk/resources",
+]
+
+[dependency-groups]
+dev = [
+    "tox",
+    "tox-uv>=1",
+    "pre-commit",
 ]

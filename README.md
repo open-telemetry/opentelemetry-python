@@ -113,6 +113,7 @@ For more information about the maintainer role, see the [community repository](h
 - [Dylan Russell](https://github.com/dylanrussell), Google
 - [Emídio Neto](https://github.com/emdneto), PicPay
 - [Jeremy Voss](https://github.com/jeremydvoss), Microsoft
+- [Liudmila Molkova](https://github.com/lmolkova), Grafana Labs
 - [Owais Lone](https://github.com/owais), Splunk
 - [Pablo Collins](https://github.com/pmcollins), Splunk
 - [Shalev Roda](https://github.com/shalevr), Cisco
@@ -125,7 +126,7 @@ For more information about the approver role, see the [community repository](htt
 
 - [Alex Boten](https://github.com/codeboten)
 - [Chris Kleinknecht](https://github.com/c24t)
-- [Diego Hurtado](https://github.com/ocelotl), Lightstep
+- [Diego Hurtado](https://github.com/ocelotl)
 - [Owais Lone](https://github.com/owais)
 - [Reiley Yang](https://github.com/reyang)
 - [Srikanth Chekuri](https://github.com/srikanthccv)
