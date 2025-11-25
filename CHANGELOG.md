@@ -1721,7 +1721,7 @@ can cause a deadlock to occur over `logging._lock` in some cases ([#4636](https:
 - Add reset for the global configuration object, for testing purposes
   ([#636](https://github.com/open-telemetry/opentelemetry-python/pull/636))
 - Add support for programmatic instrumentation
-  ([#569](https://github.com/open-telemetry/opentelemetry-python/pull/569))
+  ([#579](https://github.com/open-telemetry/opentelemetry-python/pull/579))
 
 ### Changed
 
