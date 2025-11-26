@@ -697,6 +697,31 @@ class TestOTELResourceDetector(unittest.TestCase):
         self.assertIn(OS_TYPE, resource.attributes)
         self.assertIn(OS_VERSION, resource.attributes)
 
+    @patch.dict(
+        environ, {OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: "all"}, clear=True
+    )
+    def test_resource_detector_entry_points_all(self):
+        resource = Resource({}).create()
+
+        self.assertIn(
+            TELEMETRY_SDK_NAME,
+            resource.attributes,
+            "'otel' resource detector not enabled",
+        )
+        self.assertIn(
+            OS_TYPE, resource.attributes, "'os' resource detector not enabled"
+        )
+        self.assertIn(
+            HOST_ARCH,
+            resource.attributes,
+            "'host' resource detector not enabled",
+        )
+        self.assertIn(
+            PROCESS_RUNTIME_NAME,
+            resource.attributes,
+            "'process' resource detector not enabled",
+        )
+
     def test_resource_detector_entry_points_otel(self):
         """
         Test that OTELResourceDetector-resource-generated attributes are
