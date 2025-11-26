@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4676](https://github.com/open-telemetry/opentelemetry-python/pull/4676))
 - [BREAKING] Rename several classes from Log to LogRecord
   ([#4647](https://github.com/open-telemetry/opentelemetry-python/pull/4647))
+- Fix type checking for built in metric exporters
+  ([#4820](https://github.com/open-telemetry/opentelemetry-python/pull/4820))
   
   **Migration Guide:**
   
