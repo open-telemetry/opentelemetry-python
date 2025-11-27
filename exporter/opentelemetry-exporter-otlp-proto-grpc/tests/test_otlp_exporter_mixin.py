@@ -40,6 +40,7 @@ from opentelemetry.exporter.otlp.proto.grpc.exporter import (  # noqa: F401
 )
 from opentelemetry.exporter.otlp.proto.grpc.version import __version__
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
+    ExportTracePartialSuccess,
     ExportTraceServiceRequest,
     ExportTraceServiceResponse,
 )
@@ -534,3 +535,22 @@ class TestOTLPExporterMixin(TestCase):
                 warning.records[-1].message,
                 "Failed to export traces to localhost:4317, error code: StatusCode.ALREADY_EXISTS",
             )
+
+    @patch("logging.Logger.debug")
+    def test_records_partial_success(self, mock_logger_debug):
+        exporter = OTLPSpanExporterForTesting(insecure=True)
+        # pylint: disable=protected-access
+        exporter._client = Mock()
+        partial_success = ExportTracePartialSuccess(
+            rejected_spans=1,
+            error_message="Span dropped",
+        )
+        exporter._client.Export.return_value = ExportTraceServiceResponse(
+            partial_success=partial_success
+        )
+        exporter.export([self.span])
+
+        mock_logger_debug.assert_called_once_with(
+            "Partial success:\n%s", partial_success
+        )
+        mock_logger_debug.reset_mock()

@@ -374,6 +374,10 @@ class OTLPExporterMixin(
     ) -> ExportServiceRequestT:
         pass
 
+    def _process_response(self, response):
+        if response.HasField("partial_success"):
+            logger.debug("Partial success:\n%s", response.partial_success)
+
     def _export(
         self,
         data: SDKDataT,
@@ -388,11 +392,12 @@ class OTLPExporterMixin(
         deadline_sec = time() + self._timeout
         for retry_num in range(_MAX_RETRYS):
             try:
-                self._client.Export(
+                response = self._client.Export(
                     request=self._translate_data(data),
                     metadata=self._headers,
                     timeout=deadline_sec - time(),
                 )
+                self._process_response(response)
                 return self._result.SUCCESS  # type: ignore [reportReturnType]
             except RpcError as error:
                 retry_info_bin = dict(error.trailing_metadata()).get(  # type: ignore [reportAttributeAccessIssue]
