@@ -494,7 +494,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             # Set timeout to 1.5 seconds
             self.assertEqual(
                 exporter.export(self._get_sdk_log_data()),
-                LogExportResult.FAILURE,
+                LogRecordExportResult.FAILURE,
             )
             after = time.time()
             # First call at time 0, second at time 1, then an early return before the second backoff sleep b/c it would exceed timeout.
@@ -516,7 +516,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             # Set timeout to 1.5 seconds
             self.assertEqual(
                 exporter.export(self._get_sdk_log_data()),
-                LogExportResult.FAILURE,
+                LogRecordExportResult.FAILURE,
             )
             # First call at time 0, second at time 1, then an early return before the second backoff sleep b/c it would exceed timeout.
             self.assertEqual(mock_post.call_count, 1)
