@@ -46,8 +46,35 @@ an ``opentelemetry.instrumentation.django.DjangoInstrumentor`` to instrument the
 
 Clone the ``opentelemetry-python`` repository and go to ``opentelemetry-python/docs/examples/django``.
 
-Once there, open the ``manage.py`` file. The call to ``DjangoInstrumentor().instrument()``
-in ``main`` is all that is needed to make the app be instrumented.
+Once there, open the ``manage.py`` file. To see spans output to console, you need to:
+
+1. Set up a ``TracerProvider``
+2. Add a ``SpanProcessor`` with an exporter (e.g., ``ConsoleSpanExporter`` for stdout)
+3. Call ``DjangoInstrumentor().instrument()`` to instrument the Django app
+
+The ``manage.py`` example includes this setup:
+
+.. code-block:: python
+
+    from opentelemetry import trace
+    from opentelemetry.instrumentation.django import DjangoInstrumentor
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import (
+        BatchSpanProcessor,
+        ConsoleSpanExporter,
+    )
+
+    # Set up tracing with console exporter to see spans in stdout
+    trace.set_tracer_provider(TracerProvider())
+    trace.get_tracer_provider().add_span_processor(
+        BatchSpanProcessor(ConsoleSpanExporter())
+    )
+
+    # This call is what makes the Django application be instrumented
+    DjangoInstrumentor().instrument()
+
+Without the ``TracerProvider`` and ``SpanProcessor`` setup, the instrumentation will
+capture traces but they won't be exported anywhere (no output will be visible).
 
 Run the Django app with ``python manage.py runserver --noreload``.
 The ``--noreload`` flag is needed to avoid Django from running ``main`` twice.
