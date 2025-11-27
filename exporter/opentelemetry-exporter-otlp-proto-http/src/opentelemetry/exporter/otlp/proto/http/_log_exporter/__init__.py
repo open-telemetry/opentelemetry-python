@@ -191,7 +191,7 @@ class OTLPLogExporter(LogRecordExporter):
             try:
                 resp = self._export(serialized_data, deadline_sec - time())
                 if resp.ok:
-                    return LogExportResult.SUCCESS
+                    return LogRecordExportResult.SUCCESS
             except requests.exceptions.RequestException as error:
                 reason = str(error)
                 retryable = isinstance(error, ConnectionError)
@@ -207,7 +207,7 @@ class OTLPLogExporter(LogRecordExporter):
                     status_code,
                     reason,
                 )
-                return LogExportResult.FAILURE
+                return LogRecordExportResult.FAILURE
 
             if (
                 retry_num + 1 == _MAX_RETRYS
