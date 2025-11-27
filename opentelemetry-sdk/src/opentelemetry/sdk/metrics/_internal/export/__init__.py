@@ -145,7 +145,7 @@ class ConsoleMetricExporter(MetricExporter):
         self,
         out: IO = stdout,
         formatter: Callable[
-            ["opentelemetry.sdk.metrics.export.MetricsData"], str
+            [MetricsData], str
         ] = lambda metrics_data: metrics_data.to_json() + linesep,
         preferred_temporality: dict[type, AggregationTemporality]
         | None = None,
@@ -362,7 +362,7 @@ class MetricReader(ABC):
     @abstractmethod
     def _receive_metrics(
         self,
-        metrics_data: "opentelemetry.sdk.metrics.export.MetricsData",
+        metrics_data: MetricsData,
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> None:
@@ -406,13 +406,11 @@ class InMemoryMetricReader(MetricReader):
             preferred_aggregation=preferred_aggregation,
         )
         self._lock = RLock()
-        self._metrics_data: "opentelemetry.sdk.metrics.export.MetricsData" = (
-            None
-        )
+        self._metrics_data: MetricsData = None
 
     def get_metrics_data(
         self,
-    ) -> Optional["opentelemetry.sdk.metrics.export.MetricsData"]:
+    ) -> Optional[MetricsData]:
         """Reads and returns current metrics from the SDK"""
         with self._lock:
             self.collect()
@@ -422,7 +420,7 @@ class InMemoryMetricReader(MetricReader):
 
     def _receive_metrics(
         self,
-        metrics_data: "opentelemetry.sdk.metrics.export.MetricsData",
+        metrics_data: MetricsData,
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> None:
