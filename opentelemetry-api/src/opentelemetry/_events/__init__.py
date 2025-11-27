@@ -17,6 +17,8 @@ from logging import getLogger
 from os import environ
 from typing import Optional, cast
 
+from typing_extensions import deprecated
+
 from opentelemetry._logs import LogRecord
 from opentelemetry._logs.severity import SeverityNumber
 from opentelemetry.environment_variables import (
@@ -30,6 +32,9 @@ from opentelemetry.util.types import AnyValue, _ExtendedAttributes
 _logger = getLogger(__name__)
 
 
+@deprecated(
+    "You should use `LogRecord` with the `event_name` field set instead. Deprecated since version 1.39.0."
+)
 class Event(LogRecord):
     def __init__(
         self,
@@ -59,6 +64,9 @@ class Event(LogRecord):
         self.name = name
 
 
+@deprecated(
+    "You should use `Logger` instead. Deprecated since version 1.39.0."
+)
 class EventLogger(ABC):
     def __init__(
         self,
@@ -77,11 +85,17 @@ class EventLogger(ABC):
         """Emits a :class:`Event` representing an event."""
 
 
+@deprecated(
+    "You should use `NoOpLogger` instead. Deprecated since version 1.39.0."
+)
 class NoOpEventLogger(EventLogger):
     def emit(self, event: Event) -> None:
         pass
 
 
+@deprecated(
+    "You should use `ProxyLogger` instead. Deprecated since version 1.39.0."
+)
 class ProxyEventLogger(EventLogger):
     def __init__(
         self,
@@ -118,6 +132,9 @@ class ProxyEventLogger(EventLogger):
         self._event_logger.emit(event)
 
 
+@deprecated(
+    "You should use `LoggerProvider` instead. Deprecated since version 1.39.0."
+)
 class EventLoggerProvider(ABC):
     @abstractmethod
     def get_event_logger(
@@ -130,6 +147,9 @@ class EventLoggerProvider(ABC):
         """Returns an EventLoggerProvider for use."""
 
 
+@deprecated(
+    "You should use `NoOpLoggerProvider` instead. Deprecated since version 1.39.0."
+)
 class NoOpEventLoggerProvider(EventLoggerProvider):
     def get_event_logger(
         self,
@@ -143,6 +163,9 @@ class NoOpEventLoggerProvider(EventLoggerProvider):
         )
 
 
+@deprecated(
+    "You should use `ProxyLoggerProvider` instead. Deprecated since version 1.39.0."
+)
 class ProxyEventLoggerProvider(EventLoggerProvider):
     def get_event_logger(
         self,
@@ -171,6 +194,9 @@ _EVENT_LOGGER_PROVIDER: Optional[EventLoggerProvider] = None
 _PROXY_EVENT_LOGGER_PROVIDER = ProxyEventLoggerProvider()
 
 
+@deprecated(
+    "You should use `get_logger_provider` instead. Deprecated since version 1.39.0."
+)
 def get_event_logger_provider() -> EventLoggerProvider:
     global _EVENT_LOGGER_PROVIDER  # pylint: disable=global-variable-not-assigned
     if _EVENT_LOGGER_PROVIDER is None:
@@ -201,12 +227,18 @@ def _set_event_logger_provider(
         )
 
 
+@deprecated(
+    "You should use `set_logger_provider` instead. Deprecated since version 1.39.0."
+)
 def set_event_logger_provider(
     event_logger_provider: EventLoggerProvider,
 ) -> None:
     _set_event_logger_provider(event_logger_provider, log=True)
 
 
+@deprecated(
+    "You should use `get_logger` instead. Deprecated since version 1.39.0."
+)
 def get_event_logger(
     name: str,
     version: Optional[str] = None,
