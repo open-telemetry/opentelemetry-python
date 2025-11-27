@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Allow loading all resource detectors by setting `OTEL_EXPERIMENTAL_RESOURCE_DETECTORS` to `all`
+  ([#4819](https://github.com/open-telemetry/opentelemetry-python/pull/4819))
 - docs: Added sqlcommenter example
   ([#4734](https://github.com/open-telemetry/opentelemetry-python/pull/4734))
 - build: bump ruff to 0.14.1
