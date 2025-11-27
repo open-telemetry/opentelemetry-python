@@ -75,6 +75,7 @@ The ``manage.py`` example includes this setup:
 
 Without the ``TracerProvider`` and ``SpanProcessor`` setup, the instrumentation will
 capture traces but they won't be exported anywhere (no output will be visible).
+This pattern is consistent with the Flask example in ``docs/getting_started/flask_example.py``.
 
 Run the Django app with ``python manage.py runserver --noreload``.
 The ``--noreload`` flag is needed to avoid Django from running ``main`` twice.
