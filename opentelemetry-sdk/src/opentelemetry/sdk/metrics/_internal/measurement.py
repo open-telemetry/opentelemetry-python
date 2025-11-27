@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import Union
+from typing import Optional, Union
 
 from opentelemetry.context import Context
 from opentelemetry.metrics import Instrument
@@ -41,5 +41,5 @@ class Measurement:
     value: Union[int, float]
     time_unix_nano: int
     instrument: Instrument
-    context: Context
+    context: Optional[Context] = None
     attributes: Attributes = None
