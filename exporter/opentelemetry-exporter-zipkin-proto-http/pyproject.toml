@@ -30,7 +30,7 @@ dependencies = [
   "opentelemetry-api ~= 1.3",
   "opentelemetry-exporter-zipkin-json == 1.39.0.dev",
   "opentelemetry-sdk ~= 1.11",
-  "protobuf ~= 3.12",
+  "protobuf ~= 4.25",
   "requests ~= 2.7",
 ]
 
