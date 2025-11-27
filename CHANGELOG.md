@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `opentelemetry-api`: Convert objects of any type other than AnyValue in attributes to string to be exportable
+  ([#4808](https://github.com/open-telemetry/opentelemetry-python/pull/4808))
 - docs: Added sqlcommenter example
   ([#4734](https://github.com/open-telemetry/opentelemetry-python/pull/4734))
 - build: bump ruff to 0.14.1
@@ -1721,7 +1723,7 @@ can cause a deadlock to occur over `logging._lock` in some cases ([#4636](https:
 - Add reset for the global configuration object, for testing purposes
   ([#636](https://github.com/open-telemetry/opentelemetry-python/pull/636))
 - Add support for programmatic instrumentation
-  ([#579](https://github.com/open-telemetry/opentelemetry-python/pull/569))
+  ([#579](https://github.com/open-telemetry/opentelemetry-python/pull/579))
 
 ### Changed
 
