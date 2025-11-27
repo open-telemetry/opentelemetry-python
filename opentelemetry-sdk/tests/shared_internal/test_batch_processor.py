@@ -50,6 +50,7 @@ EMPTY_LOG = ReadWriteLogRecord(
 
 BASIC_SPAN = ReadableSpan(
     "MySpan",
+    context=(),
     instrumentation_scope=InstrumentationScope("example", "example"),
 )
 

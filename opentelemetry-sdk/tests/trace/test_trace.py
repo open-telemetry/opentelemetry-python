@@ -665,11 +665,12 @@ class TestSpanCreation(unittest.TestCase):
 
 class TestReadableSpan(unittest.TestCase):
     def test_links(self):
-        span = trace.ReadableSpan("test")
+        span = trace.ReadableSpan("test", context=())
         self.assertEqual(span.links, ())
 
         span = trace.ReadableSpan(
             "test",
+            context=(),
             links=[trace_api.Link(context=trace_api.INVALID_SPAN_CONTEXT)] * 2,
         )
         self.assertEqual(len(span.links), 2)
@@ -677,13 +678,13 @@ class TestReadableSpan(unittest.TestCase):
             self.assertFalse(link.context.is_valid)
 
     def test_events(self):
-        span = trace.ReadableSpan("test")
+        span = trace.ReadableSpan("test", context=())
         self.assertEqual(span.events, ())
         events = [
             trace.Event("foo1", {"bar1": "baz1"}),
             trace.Event("foo2", {"bar2": "baz2"}),
         ]
-        span = trace.ReadableSpan("test", events=events)
+        span = trace.ReadableSpan("test", context=(), events=events)
         self.assertEqual(span.events, tuple(events))
 
     def test_event_dropped_attributes(self):

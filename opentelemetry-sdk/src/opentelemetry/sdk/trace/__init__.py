@@ -416,7 +416,7 @@ class ReadableSpan:
     def __init__(
         self,
         name: str,
-        context: Optional[trace_api.SpanContext] = None,
+        context: trace_api.SpanContext,
         parent: Optional[trace_api.SpanContext] = None,
         resource: Optional[Resource] = None,
         attributes: types.Attributes = None,
@@ -660,12 +660,12 @@ class SpanLimits:
         max_span_attribute_length: Optional[int] = None,
     ):
         # span events and links count
-        self.max_events = self._from_env_if_absent(
+        self.max_events = self._from_env_if_absent_with_default(
             max_events,
             OTEL_SPAN_EVENT_COUNT_LIMIT,
             _DEFAULT_OTEL_SPAN_EVENT_COUNT_LIMIT,
         )
-        self.max_links = self._from_env_if_absent(
+        self.max_links = self._from_env_if_absent_with_default(
             max_links,
             OTEL_SPAN_LINK_COUNT_LIMIT,
             _DEFAULT_OTEL_SPAN_LINK_COUNT_LIMIT,
@@ -681,7 +681,7 @@ class SpanLimits:
             else _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT
         )
 
-        self.max_span_attributes = self._from_env_if_absent(
+        self.max_span_attributes = self._from_env_if_absent_with_default(
             max_span_attributes,
             OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
             (
@@ -690,7 +690,7 @@ class SpanLimits:
                 else _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT
             ),
         )
-        self.max_event_attributes = self._from_env_if_absent(
+        self.max_event_attributes = self._from_env_if_absent_with_default(
             max_event_attributes,
             OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT,
             (
@@ -699,7 +699,7 @@ class SpanLimits:
                 else _DEFAULT_OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT
             ),
         )
-        self.max_link_attributes = self._from_env_if_absent(
+        self.max_link_attributes = self._from_env_if_absent_with_default(
             max_link_attributes,
             OTEL_LINK_ATTRIBUTE_COUNT_LIMIT,
             (
@@ -751,6 +751,13 @@ class SpanLimits:
         if value < 0:
             raise ValueError(err_msg.format(env_var, value))
         return value
+
+    @classmethod
+    def _from_env_if_absent_with_default(
+        cls, value: Optional[int], env_var: str, default: int
+    ) -> int:
+        value_from_env = cls._from_env_if_absent(value, env_var, default)
+        return value_from_env if value_from_env is not None else default
 
 
 _UnsetLimits = SpanLimits(
@@ -1039,7 +1046,7 @@ class Span(trace_api.Span, ReadableSpan):
                 self.record_exception(exception=exc_val, escaped=True)
             # Records status if span is used as context manager
             # i.e. with tracer.start_span() as span:
-            if self._set_status_on_exception:
+            if exc_type and self._set_status_on_exception:
                 self.set_status(
                     Status(
                         status_code=StatusCode.ERROR,
@@ -1169,11 +1176,14 @@ class Tracer(trace_api.Tracer):
         context: Optional[context_api.Context] = None,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         attributes: types.Attributes = None,
-        links: Optional[Sequence[trace_api.Link]] = (),
+        links: Optional[Sequence[trace_api.Link]] = None,
         start_time: Optional[int] = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
     ) -> trace_api.Span:
+        if links is None:
+            links = ()
+
         parent_span_context = trace_api.get_current_span(
             context
         ).get_span_context()
