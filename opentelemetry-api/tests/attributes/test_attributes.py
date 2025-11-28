@@ -301,3 +301,22 @@ class TestBoundedAttributes(unittest.TestCase):
             bdict["key"] = "value"
 
         clean_extended_attribute_mock.assert_called_once()
+
+    def test_wsgi_request_conversion_to_string(self):
+        """Test that WSGI request objects are converted to strings when _clean_extended_attribute is called."""
+
+        class DummyWSGIRequest:
+            def __str__(self):
+                return "<DummyWSGIRequest method=GET path=/example/>"
+
+        wsgi_request = DummyWSGIRequest()
+
+        cleaned_value = _clean_extended_attribute(
+            "request", wsgi_request, None
+        )
+
+        # Verify we get a string back from the cleaner
+        self.assertIsInstance(cleaned_value, str)
+        self.assertEqual(
+            "<DummyWSGIRequest method=GET path=/example/>", cleaned_value
+        )
