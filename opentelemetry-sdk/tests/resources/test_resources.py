@@ -474,6 +474,7 @@ class TestResources(unittest.TestCase):
         self.assertEqual(resource.attributes["service.name"], "from-code")
 
 
+# pylint: disable=too-many-public-methods
 class TestOTELResourceDetector(unittest.TestCase):
     def setUp(self) -> None:
         environ[OTEL_RESOURCE_ATTRIBUTES] = ""
@@ -698,7 +699,7 @@ class TestOTELResourceDetector(unittest.TestCase):
         self.assertIn(OS_VERSION, resource.attributes)
 
     @patch.dict(
-        environ, {OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: "all"}, clear=True
+        environ, {OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: "*"}, clear=True
     )
     def test_resource_detector_entry_points_all(self):
         resource = Resource({}).create()

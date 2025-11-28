@@ -207,7 +207,7 @@ class Resource:
 
         resource_detectors: List[ResourceDetector] = []
 
-        if "all" in otel_experimental_resource_detectors:
+        if "*" in otel_experimental_resource_detectors:
             otel_experimental_resource_detectors = entry_points(
                 group="opentelemetry_resource_detector"
             ).names
