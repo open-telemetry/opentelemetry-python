@@ -13,6 +13,7 @@
 # limitations under the License.
 
 __all__ = [
+    "AlwaysRecordSampler",
     "ComposableSampler",
     "SamplingIntent",
     "composable_always_off",
@@ -25,6 +26,7 @@ __all__ = [
 
 from ._always_off import composable_always_off
 from ._always_on import composable_always_on
+from ._always_record import AlwaysRecordSampler
 from ._composable import ComposableSampler, SamplingIntent
 from ._parent_threshold import composable_parent_threshold
 from ._sampler import composite_sampler
