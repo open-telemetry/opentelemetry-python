@@ -12,7 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""OTLP Exporter"""
+"""OTLP Exporter
+
+This module provides a mixin class for OTLP exporters that send telemetry data
+to an OpenTelemetry Collector via gRPC. It includes a configurable reconnection
+logic to handle transient collector outages.
+
+Environment Variables:
+    OTEL_EXPORTER_OTLP_RETRY_INTERVAL: Base retry interval in seconds (default: 2.0).
+    OTEL_EXPORTER_OTLP_MAX_RETRIES: Maximum number of retry attempts (default: 20).
+    OTEL_EXPORTER_OTLP_RETRY_TIMEOUT: Total retry timeout in seconds (default: 300).
+    OTEL_EXPORTER_OTLP_RETRY_MAX_DELAY: Maximum delay between retries in seconds (default: 60.0).
+    OTEL_EXPORTER_OTLP_RETRY_FACTOR: Exponential backoff factor (default: 1.5).
+    OTEL_EXPORTER_OTLP_RETRY_JITTER: Jitter factor for retry delay (default: 0.2).
+"""
 
 import random
 import threading
@@ -251,9 +264,11 @@ def _get_credentials(
     if certificate_file:
         client_key_file = environ.get(client_key_file_env_key)
         client_certificate_file = environ.get(client_certificate_file_env_key)
-        return _load_credentials(
+        credentials = _load_credentials(
             certificate_file, client_key_file, client_certificate_file
         )
+        if credentials is not None:
+            return credentials
     return ssl_channel_credentials()
 
 
@@ -261,7 +276,12 @@ def _get_credentials(
 class OTLPExporterMixin(
     ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResultT, ExportStubT]
 ):
-    """OTLP span exporter
+    """OTLP gRPC exporter mixin.
+
+    This class provides the base functionality for OTLP exporters that send
+    telemetry data (spans or metrics) to an OpenTelemetry Collector via gRPC.
+    It includes a configurable reconnection mechanism to handle transient
+    collector outages.
 
     Args:
         endpoint: OpenTelemetry Collector receiver endpoint
@@ -308,6 +328,8 @@ class OTLPExporterMixin(
         if parsed_url.netloc:
             self._endpoint = parsed_url.netloc
 
+        self._insecure = insecure
+        self._credentials = credentials
         self._headers = headers or environ.get(OTEL_EXPORTER_OTLP_HEADERS)
         if isinstance(self._headers, str):
             temp_headers = parse_env_headers(self._headers, liberal=True)
@@ -341,16 +363,49 @@ class OTLPExporterMixin(
             if compression is None
             else compression
         ) or Compression.NoCompression
+        self._compression = compression
 
-        if insecure:
+        # Initialize the channel and stub using the proper method
+        self._initialize_channel_and_stub()
+
+    def _initialize_channel_and_stub(self):
+        """
+        Create a new gRPC channel and stub.
+
+        This method is used during initialization and by the reconnection
+        mechanism to reinitialize the channel on transient errors.
+        """
+        # Add channel options for better reconnection behavior
+        # Only add these if we're dealing with reconnection scenarios
+        channel_options = []
+        if hasattr(self, "_channel_reconnection_enabled"):
+            channel_options = [
+                ("grpc.keepalive_time_ms", 30000),
+                ("grpc.keepalive_timeout_ms", 15000),
+                ("grpc.keepalive_permit_without_calls", 1),
+                ("grpc.initial_reconnect_backoff_ms", 5000),
+                ("grpc.min_reconnect_backoff_ms", 5000),
+                ("grpc.max_reconnect_backoff_ms", 30000),
+            ]
+
+        # Merge reconnection options with existing channel options
+        current_options = list(self._channel_options)
+        # Filter out options that we are about to override
+        reconnection_keys = {opt[0] for opt in channel_options}
+        current_options = [
+            opt for opt in current_options if opt[0] not in reconnection_keys
+        ]
+        final_options = tuple(current_options + channel_options)
+
+        if self._insecure:
             self._channel = insecure_channel(
                 self._endpoint,
-                compression=compression,
-                options=self._channel_options,
+                compression=self._compression,
+                options=final_options,
             )
         else:
             self._credentials = _get_credentials(
-                credentials,
+                self._credentials,
                 _OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER,
                 OTEL_EXPORTER_OTLP_CERTIFICATE,
                 OTEL_EXPORTER_OTLP_CLIENT_KEY,
@@ -359,13 +414,14 @@ class OTLPExporterMixin(
             self._channel = secure_channel(
                 self._endpoint,
                 self._credentials,
-                compression=compression,
-                options=self._channel_options,
+                compression=self._compression,
+                options=final_options,
             )
         self._client = self._stub(self._channel)  # type: ignore [reportCallIssue]
 
-        self._shutdown_in_progress = threading.Event()
-        self._shutdown = False
+        if not hasattr(self, "_shutdown_in_progress"):
+            self._shutdown_in_progress = threading.Event()
+            self._shutdown = False
 
     @abstractmethod
     def _translate_data(
@@ -407,6 +463,26 @@ class OTLPExporterMixin(
                         retry_info.retry_delay.seconds
                         + retry_info.retry_delay.nanos / 1.0e9
                     )
+
+                # For UNAVAILABLE errors, reinitialize the channel to force reconnection
+                if error.code() == StatusCode.UNAVAILABLE:  # type: ignore
+                    logger.debug(
+                        "Reinitializing gRPC channel for %s exporter due to UNAVAILABLE error",
+                        self._exporting,
+                    )
+                    try:
+                        self._channel.close()
+                    except Exception as e:
+                        logger.debug(
+                            "Error closing channel for %s exporter to %s: %s",
+                            self._exporting,
+                            self._endpoint,
+                            str(e),
+                        )
+                    # Enable channel reconnection for subsequent calls
+                    self._channel_reconnection_enabled = True
+                    self._initialize_channel_and_stub()
+
                 if (
                     error.code() not in _RETRYABLE_ERROR_CODES  # type: ignore [reportAttributeAccessIssue]
                     or retry_num + 1 == _MAX_RETRYS
@@ -436,6 +512,12 @@ class OTLPExporterMixin(
         return self._result.FAILURE  # type: ignore [reportReturnType]
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
+        """
+        Shut down the exporter.
+
+        Args:
+            timeout_millis: Timeout in milliseconds for shutting down the exporter.
+        """
         if self._shutdown:
             logger.warning("Exporter already shutdown, ignoring call")
             return
