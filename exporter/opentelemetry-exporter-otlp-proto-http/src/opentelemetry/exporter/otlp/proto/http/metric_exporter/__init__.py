@@ -259,7 +259,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                 or self._shutdown
             ):
                 _logger.error(
-                    "Failed to export metrics batch due to timeout,"
+                    "Failed to export metrics batch due to timeout, "
                     "max retries or shutdown."
                 )
                 return MetricExportResult.FAILURE

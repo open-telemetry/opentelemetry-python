@@ -208,7 +208,7 @@ class OTLPSpanExporter(SpanExporter):
                 or self._shutdown
             ):
                 _logger.error(
-                    "Failed to export span batch due to timeout,"
+                    "Failed to export span batch due to timeout, "
                     "max retries or shutdown."
                 )
                 return SpanExportResult.FAILURE
