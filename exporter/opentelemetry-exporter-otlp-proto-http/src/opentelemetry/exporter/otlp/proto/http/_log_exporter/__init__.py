@@ -215,7 +215,7 @@ class OTLPLogExporter(LogRecordExporter):
                 or self._shutdown
             ):
                 _logger.error(
-                    "Failed to export logs batch due to timeout,"
+                    "Failed to export logs batch due to timeout, "
                     "max retries or shutdown."
                 )
                 return LogRecordExportResult.FAILURE
