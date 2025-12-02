@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Allow loading all resource detectors by setting `OTEL_EXPERIMENTAL_RESOURCE_DETECTORS` to `*`
   ([#4819](https://github.com/open-telemetry/opentelemetry-python/pull/4819))
+- `opentelemetry-api`: Convert objects of any type other than AnyValue in attributes to string to be exportable
+  ([#4808](https://github.com/open-telemetry/opentelemetry-python/pull/4808))
 - docs: Added sqlcommenter example
   ([#4734](https://github.com/open-telemetry/opentelemetry-python/pull/4734))
 - build: bump ruff to 0.14.1
@@ -27,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4676](https://github.com/open-telemetry/opentelemetry-python/pull/4676))
 - [BREAKING] Rename several classes from Log to LogRecord
   ([#4647](https://github.com/open-telemetry/opentelemetry-python/pull/4647))
+- Fix type checking for built in metric exporters
+  ([#4820](https://github.com/open-telemetry/opentelemetry-python/pull/4820))
   
   **Migration Guide:**
   
@@ -1721,7 +1725,7 @@ can cause a deadlock to occur over `logging._lock` in some cases ([#4636](https:
 - Add reset for the global configuration object, for testing purposes
   ([#636](https://github.com/open-telemetry/opentelemetry-python/pull/636))
 - Add support for programmatic instrumentation
-  ([#579](https://github.com/open-telemetry/opentelemetry-python/pull/569))
+  ([#579](https://github.com/open-telemetry/opentelemetry-python/pull/579))
 
 ### Changed
 
