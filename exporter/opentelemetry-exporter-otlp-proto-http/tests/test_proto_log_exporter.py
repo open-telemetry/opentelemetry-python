@@ -132,7 +132,10 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         )
         exporter = OTLPLogExporter()
 
-        self.assertEqual(exporter._endpoint, "https://logs.endpoint.env")
+        self.assertEqual(
+            exporter._endpoint,
+            f"https://logs.endpoint.env/{DEFAULT_LOGS_EXPORT_PATH}",
+        )
         self.assertEqual(exporter._certificate_file, "logs/certificate.env")
         self.assertEqual(
             exporter._client_certificate_file, "logs/client-cert.pem"
@@ -214,7 +217,10 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             session=sess(),
         )
 
-        self.assertEqual(exporter._endpoint, "endpoint.local:69/logs")
+        self.assertEqual(
+            exporter._endpoint,
+            f"endpoint.local:69/logs/{DEFAULT_LOGS_EXPORT_PATH}",
+        )
         self.assertEqual(exporter._certificate_file, "/hello.crt")
         self.assertEqual(exporter._client_certificate_file, "/client-cert.pem")
         self.assertEqual(exporter._client_key_file, "/client-key.pem")
@@ -260,6 +266,52 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             },
         )
         self.assertIsInstance(exporter._session, requests.Session)
+
+    def test_exporter_constructor_endpoint_with_path_appended(self):
+        """Test that path is appended to user-provided endpoint."""
+        exporter = OTLPLogExporter(
+            endpoint="http://collector.example.com:4318"
+        )
+        self.assertEqual(
+            exporter._endpoint,
+            f"http://collector.example.com:4318/{DEFAULT_LOGS_EXPORT_PATH}",
+        )
+
+    def test_exporter_constructor_endpoint_no_duplicate_path(self):
+        """Test that path is not duplicated if already present."""
+        exporter = OTLPLogExporter(
+            endpoint=f"http://collector.example.com:4318/{DEFAULT_LOGS_EXPORT_PATH}"
+        )
+        self.assertEqual(
+            exporter._endpoint,
+            f"http://collector.example.com:4318/{DEFAULT_LOGS_EXPORT_PATH}",
+        )
+
+    @patch.dict(
+        "os.environ",
+        {OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "http://logs.collector:4318"},
+    )
+    def test_exporter_signal_specific_env_endpoint_with_path_appended(self):
+        """Test that path is appended to signal-specific endpoint."""
+        exporter = OTLPLogExporter()
+        self.assertEqual(
+            exporter._endpoint,
+            f"http://logs.collector:4318/{DEFAULT_LOGS_EXPORT_PATH}",
+        )
+
+    @patch.dict(
+        "os.environ",
+        {
+            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: f"http://logs.collector:4318/{DEFAULT_LOGS_EXPORT_PATH}"
+        },
+    )
+    def test_exporter_signal_specific_env_endpoint_no_duplicate_path(self):
+        """Test that path is not duplicated when signal-specific endpoint already has path."""
+        exporter = OTLPLogExporter()
+        self.assertEqual(
+            exporter._endpoint,
+            f"http://logs.collector:4318/{DEFAULT_LOGS_EXPORT_PATH}",
+        )
 
     @staticmethod
     def export_log_and_deserialize(log):

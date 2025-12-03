@@ -85,11 +85,16 @@ class OTLPLogExporter(LogRecordExporter):
     ):
         self._shutdown_is_occuring = threading.Event()
         self._endpoint = endpoint or environ.get(
-            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
-            _append_logs_path(
-                environ.get(OTEL_EXPORTER_OTLP_ENDPOINT, DEFAULT_ENDPOINT)
-            ),
+            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT
         )
+        if self._endpoint:
+            # User-provided endpoint or signal-specific env var - append path if not present
+            self._endpoint = _append_logs_path(self._endpoint)
+        else:
+            # Use general endpoint with path appended per spec
+            self._endpoint = _append_logs_path(
+                environ.get(OTEL_EXPORTER_OTLP_ENDPOINT, DEFAULT_ENDPOINT)
+            )
         # Keeping these as instance variables because they are used in tests
         self._certificate_file = certificate_file or environ.get(
             OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
@@ -240,6 +245,9 @@ def _compression_from_env() -> Compression:
 
 
 def _append_logs_path(endpoint: str) -> str:
+    # Don't append path if it's already present
+    if endpoint.endswith(f"/{DEFAULT_LOGS_EXPORT_PATH}"):
+        return endpoint
     if endpoint.endswith("/"):
         return endpoint + DEFAULT_LOGS_EXPORT_PATH
     return endpoint + f"/{DEFAULT_LOGS_EXPORT_PATH}"

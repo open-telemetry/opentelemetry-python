@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `opentelemetry-exporter-otlp-proto-http`: Fix HTTP OTLP exporters to automatically append signal path
+  (`/v1/traces`, `/v1/metrics`, `/v1/logs`) to user-provided endpoints per the OpenTelemetry specification.
+  Previously, users had to manually include these paths in their endpoint configuration.
+  ([#3200](https://github.com/open-telemetry/opentelemetry-python/issues/3200))
+  ([#4412](https://github.com/open-telemetry/opentelemetry-python/issues/4412))
 - `opentelemetry-api`: Convert objects of any type other than AnyValue in attributes to string to be exportable
   ([#4808](https://github.com/open-telemetry/opentelemetry-python/pull/4808))
 - docs: Added sqlcommenter example

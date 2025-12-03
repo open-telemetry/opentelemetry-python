@@ -125,11 +125,16 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
     ):
         self._shutdown_in_progress = threading.Event()
         self._endpoint = endpoint or environ.get(
-            OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
-            _append_metrics_path(
-                environ.get(OTEL_EXPORTER_OTLP_ENDPOINT, DEFAULT_ENDPOINT)
-            ),
+            OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
         )
+        if self._endpoint:
+            # User-provided endpoint or signal-specific env var - append path if not present
+            self._endpoint = _append_metrics_path(self._endpoint)
+        else:
+            # Use general endpoint with path appended per spec
+            self._endpoint = _append_metrics_path(
+                environ.get(OTEL_EXPORTER_OTLP_ENDPOINT, DEFAULT_ENDPOINT)
+            )
         self._certificate_file = certificate_file or environ.get(
             OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,
             environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE, True),
@@ -300,6 +305,9 @@ def _compression_from_env() -> Compression:
 
 
 def _append_metrics_path(endpoint: str) -> str:
+    # Don't append path if it's already present
+    if endpoint.endswith(f"/{DEFAULT_METRICS_EXPORT_PATH}"):
+        return endpoint
     if endpoint.endswith("/"):
         return endpoint + DEFAULT_METRICS_EXPORT_PATH
     return endpoint + f"/{DEFAULT_METRICS_EXPORT_PATH}"

@@ -87,7 +87,7 @@ OS_ENV_HEADERS = "envHeader1=val1,envHeader2=val2,User-agent=Overridden"
 OS_ENV_TIMEOUT = "30"
 
 
-# pylint: disable=protected-access
+# pylint: disable=protected-access,too-many-public-methods
 class TestOTLPMetricExporter(TestCase):
     def setUp(self):
         self.metrics = {
@@ -170,7 +170,10 @@ class TestOTLPMetricExporter(TestCase):
         )
         exporter = OTLPMetricExporter()
 
-        self.assertEqual(exporter._endpoint, "https://metrics.endpoint.env")
+        self.assertEqual(
+            exporter._endpoint,
+            f"https://metrics.endpoint.env/{DEFAULT_METRICS_EXPORT_PATH}",
+        )
         self.assertEqual(exporter._certificate_file, "metrics/certificate.env")
         self.assertEqual(
             exporter._client_certificate_file, "metrics/client-cert.pem"
@@ -222,7 +225,10 @@ class TestOTLPMetricExporter(TestCase):
             session=Session(),
         )
 
-        self.assertEqual(exporter._endpoint, "example.com/1234")
+        self.assertEqual(
+            exporter._endpoint,
+            f"example.com/1234/{DEFAULT_METRICS_EXPORT_PATH}",
+        )
         self.assertEqual(exporter._certificate_file, "path/to/service.crt")
         self.assertEqual(
             exporter._client_certificate_file, "path/to/client-cert.pem"
@@ -288,6 +294,52 @@ class TestOTLPMetricExporter(TestCase):
         self.assertEqual(
             exporter._endpoint,
             OS_ENV_ENDPOINT + f"/{DEFAULT_METRICS_EXPORT_PATH}",
+        )
+
+    def test_exporter_constructor_endpoint_with_path_appended(self):
+        """Test that path is appended to user-provided endpoint."""
+        exporter = OTLPMetricExporter(
+            endpoint="http://collector.example.com:4318"
+        )
+        self.assertEqual(
+            exporter._endpoint,
+            f"http://collector.example.com:4318/{DEFAULT_METRICS_EXPORT_PATH}",
+        )
+
+    def test_exporter_constructor_endpoint_no_duplicate_path(self):
+        """Test that path is not duplicated if already present."""
+        exporter = OTLPMetricExporter(
+            endpoint=f"http://collector.example.com:4318/{DEFAULT_METRICS_EXPORT_PATH}"
+        )
+        self.assertEqual(
+            exporter._endpoint,
+            f"http://collector.example.com:4318/{DEFAULT_METRICS_EXPORT_PATH}",
+        )
+
+    @patch.dict(
+        "os.environ",
+        {OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: "http://metrics.collector:4318"},
+    )
+    def test_exporter_signal_specific_env_endpoint_with_path_appended(self):
+        """Test that path is appended to signal-specific endpoint."""
+        exporter = OTLPMetricExporter()
+        self.assertEqual(
+            exporter._endpoint,
+            f"http://metrics.collector:4318/{DEFAULT_METRICS_EXPORT_PATH}",
+        )
+
+    @patch.dict(
+        "os.environ",
+        {
+            OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: f"http://metrics.collector:4318/{DEFAULT_METRICS_EXPORT_PATH}"
+        },
+    )
+    def test_exporter_signal_specific_env_endpoint_no_duplicate_path(self):
+        """Test that path is not duplicated when signal-specific endpoint already has path."""
+        exporter = OTLPMetricExporter()
+        self.assertEqual(
+            exporter._endpoint,
+            f"http://metrics.collector:4318/{DEFAULT_METRICS_EXPORT_PATH}",
         )
 
     @patch.dict(
