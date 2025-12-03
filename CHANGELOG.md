@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Allow loading all resource detectors by setting `OTEL_EXPERIMENTAL_RESOURCE_DETECTORS` to `*`
+  ([#4819](https://github.com/open-telemetry/opentelemetry-python/pull/4819))
 - `opentelemetry-api`: Convert objects of any type other than AnyValue in attributes to string to be exportable
   ([#4808](https://github.com/open-telemetry/opentelemetry-python/pull/4808))
 - docs: Added sqlcommenter example
