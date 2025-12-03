@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## Version 1.39.0/0.60b0 (2025-12-03)
+
 - `opentelemetry-api`: Convert objects of any type other than AnyValue in attributes to string to be exportable
   ([#4808](https://github.com/open-telemetry/opentelemetry-python/pull/4808))
 - docs: Added sqlcommenter example
@@ -27,9 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4676](https://github.com/open-telemetry/opentelemetry-python/pull/4676))
 - [BREAKING] Rename several classes from Log to LogRecord
   ([#4647](https://github.com/open-telemetry/opentelemetry-python/pull/4647))
-- Fix type checking for built in metric exporters
-  ([#4820](https://github.com/open-telemetry/opentelemetry-python/pull/4820))
-  
+
   **Migration Guide:**
   
   `LogData` has been removed. Users should update their code as follows:
@@ -72,7 +72,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - `log_record.resource` - The Resource
     - `log_record.instrumentation_scope` - The InstrumentationScope (now included, was in LogData before)
     - `log_record.limits` - The LogRecordLimits
-
+- Mark the Events API/SDK as deprecated. The Logs API/SDK should be used instead, an event is now a `LogRecord` with the `event_name` field set
+([#4654](https://github.com/open-telemetry/opentelemetry-python/pull/4654)).
+- Fix type checking for built-in metric exporters
+  ([#4820](https://github.com/open-telemetry/opentelemetry-python/pull/4820))
+  
 ## Version 1.38.0/0.59b0 (2025-10-16)
 
 - Add `rstcheck` to pre-commit to stop introducing invalid RST
