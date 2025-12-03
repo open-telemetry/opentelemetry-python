@@ -33,7 +33,8 @@ _logger = getLogger(__name__)
 
 
 @deprecated(
-    "You should use `LogRecord` with the `event_name` field set instead. Deprecated since version 1.39.0."
+    "You should use `LogRecord` with the `event_name` field set instead. "
+    "Deprecated since version 1.39.0 and will be removed in a future release."
 )
 class Event(LogRecord):
     def __init__(
@@ -65,7 +66,8 @@ class Event(LogRecord):
 
 
 @deprecated(
-    "You should use `Logger` instead. Deprecated since version 1.39.0."
+    "You should use `Logger` instead. "
+    "Deprecated since version 1.39.0 and will be removed in a future release."
 )
 class EventLogger(ABC):
     def __init__(
@@ -86,7 +88,8 @@ class EventLogger(ABC):
 
 
 @deprecated(
-    "You should use `NoOpLogger` instead. Deprecated since version 1.39.0."
+    "You should use `NoOpLogger` instead. "
+    "Deprecated since version 1.39.0 and will be removed in a future release."
 )
 class NoOpEventLogger(EventLogger):
     def emit(self, event: Event) -> None:
@@ -94,7 +97,8 @@ class NoOpEventLogger(EventLogger):
 
 
 @deprecated(
-    "You should use `ProxyLogger` instead. Deprecated since version 1.39.0."
+    "You should use `ProxyLogger` instead. "
+    "Deprecated since version 1.39.0 and will be removed in a future release."
 )
 class ProxyEventLogger(EventLogger):
     def __init__(
@@ -133,7 +137,8 @@ class ProxyEventLogger(EventLogger):
 
 
 @deprecated(
-    "You should use `LoggerProvider` instead. Deprecated since version 1.39.0."
+    "You should use `LoggerProvider` instead. "
+    "Deprecated since version 1.39.0 and will be removed in a future release."
 )
 class EventLoggerProvider(ABC):
     @abstractmethod
@@ -148,7 +153,8 @@ class EventLoggerProvider(ABC):
 
 
 @deprecated(
-    "You should use `NoOpLoggerProvider` instead. Deprecated since version 1.39.0."
+    "You should use `NoOpLoggerProvider` instead. "
+    "Deprecated since version 1.39.0 and will be removed in a future release."
 )
 class NoOpEventLoggerProvider(EventLoggerProvider):
     def get_event_logger(
@@ -164,7 +170,8 @@ class NoOpEventLoggerProvider(EventLoggerProvider):
 
 
 @deprecated(
-    "You should use `ProxyLoggerProvider` instead. Deprecated since version 1.39.0."
+    "You should use `ProxyLoggerProvider` instead. "
+    "Deprecated since version 1.39.0 and will be removed in a future release."
 )
 class ProxyEventLoggerProvider(EventLoggerProvider):
     def get_event_logger(
@@ -195,7 +202,8 @@ _PROXY_EVENT_LOGGER_PROVIDER = ProxyEventLoggerProvider()
 
 
 @deprecated(
-    "You should use `get_logger_provider` instead. Deprecated since version 1.39.0."
+    "You should use `get_logger_provider` instead. "
+    "Deprecated since version 1.39.0 and will be removed in a future release."
 )
 def get_event_logger_provider() -> EventLoggerProvider:
     global _EVENT_LOGGER_PROVIDER  # pylint: disable=global-variable-not-assigned
@@ -228,7 +236,8 @@ def _set_event_logger_provider(
 
 
 @deprecated(
-    "You should use `set_logger_provider` instead. Deprecated since version 1.39.0."
+    "You should use `set_logger_provider` instead. "
+    "Deprecated since version 1.39.0 and will be removed in a future release."
 )
 def set_event_logger_provider(
     event_logger_provider: EventLoggerProvider,
@@ -237,7 +246,8 @@ def set_event_logger_provider(
 
 
 @deprecated(
-    "You should use `get_logger` instead. Deprecated since version 1.39.0."
+    "You should use `get_logger` instead. "
+    "Deprecated since version 1.39.0 and will be removed in a future release."
 )
 def get_event_logger(
     name: str,

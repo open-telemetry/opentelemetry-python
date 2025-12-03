@@ -35,7 +35,8 @@ _logger = logging.getLogger(__name__)
 
 
 @deprecated(
-    "You should use `Logger` instead. Deprecated since version 1.39.0."
+    "You should use `Logger` instead. "
+    "Deprecated since version 1.39.0 and will be removed in a future release."
 )
 class EventLogger(APIEventLogger):
     def __init__(
@@ -77,7 +78,8 @@ class EventLogger(APIEventLogger):
 
 
 @deprecated(
-    "You should use `LoggerProvider` instead. Deprecated since version 1.39.0."
+    "You should use `LoggerProvider` instead. "
+    "Deprecated since version 1.39.0 and will be removed in a future release."
 )
 class EventLoggerProvider(APIEventLoggerProvider):
     def __init__(self, logger_provider: Optional[LoggerProvider] = None):
