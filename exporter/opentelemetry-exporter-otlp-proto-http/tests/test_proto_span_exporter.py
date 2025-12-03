@@ -127,7 +127,10 @@ class TestOTLPSpanExporter(unittest.TestCase):
         )
         exporter = OTLPSpanExporter()
 
-        self.assertEqual(exporter._endpoint, "https://traces.endpoint.env")
+        self.assertEqual(
+            exporter._endpoint,
+            f"https://traces.endpoint.env/{DEFAULT_TRACES_EXPORT_PATH}",
+        )
         self.assertEqual(exporter._certificate_file, "traces/certificate.env")
         self.assertEqual(
             exporter._client_certificate_file, "traces/client-cert.pem"
@@ -180,7 +183,10 @@ class TestOTLPSpanExporter(unittest.TestCase):
             session=requests.Session(),
         )
 
-        self.assertEqual(exporter._endpoint, "example.com/1234")
+        self.assertEqual(
+            exporter._endpoint,
+            f"example.com/1234/{DEFAULT_TRACES_EXPORT_PATH}",
+        )
         self.assertEqual(exporter._certificate_file, "path/to/service.crt")
         self.assertEqual(
             exporter._client_certificate_file, "path/to/client-cert.pem"
@@ -246,6 +252,52 @@ class TestOTLPSpanExporter(unittest.TestCase):
         self.assertEqual(
             exporter._endpoint,
             OS_ENV_ENDPOINT + f"/{DEFAULT_TRACES_EXPORT_PATH}",
+        )
+
+    def test_exporter_constructor_endpoint_with_path_appended(self):
+        """Test that path is appended to user-provided endpoint."""
+        exporter = OTLPSpanExporter(
+            endpoint="http://collector.example.com:4318"
+        )
+        self.assertEqual(
+            exporter._endpoint,
+            f"http://collector.example.com:4318/{DEFAULT_TRACES_EXPORT_PATH}",
+        )
+
+    def test_exporter_constructor_endpoint_no_duplicate_path(self):
+        """Test that path is not duplicated if already present."""
+        exporter = OTLPSpanExporter(
+            endpoint=f"http://collector.example.com:4318/{DEFAULT_TRACES_EXPORT_PATH}"
+        )
+        self.assertEqual(
+            exporter._endpoint,
+            f"http://collector.example.com:4318/{DEFAULT_TRACES_EXPORT_PATH}",
+        )
+
+    @patch.dict(
+        "os.environ",
+        {OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://traces.collector:4318"},
+    )
+    def test_exporter_signal_specific_env_endpoint_with_path_appended(self):
+        """Test that path is appended to signal-specific endpoint."""
+        exporter = OTLPSpanExporter()
+        self.assertEqual(
+            exporter._endpoint,
+            f"http://traces.collector:4318/{DEFAULT_TRACES_EXPORT_PATH}",
+        )
+
+    @patch.dict(
+        "os.environ",
+        {
+            OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: f"http://traces.collector:4318/{DEFAULT_TRACES_EXPORT_PATH}"
+        },
+    )
+    def test_exporter_signal_specific_env_endpoint_no_duplicate_path(self):
+        """Test that path is not duplicated when signal-specific endpoint already has path."""
+        exporter = OTLPSpanExporter()
+        self.assertEqual(
+            exporter._endpoint,
+            f"http://traces.collector:4318/{DEFAULT_TRACES_EXPORT_PATH}",
         )
 
     @patch.dict(
