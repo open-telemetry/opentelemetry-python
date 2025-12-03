@@ -406,7 +406,7 @@ class InMemoryMetricReader(MetricReader):
             preferred_aggregation=preferred_aggregation,
         )
         self._lock = RLock()
-        self._metrics_data: MetricsData = None
+        self._metrics_data: MetricsData | None = None
 
     def get_metrics_data(
         self,
