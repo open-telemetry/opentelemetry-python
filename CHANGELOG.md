@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > [!IMPORTANT]
 > We are working on stabilizing the Log signal that would require making deprecations and breaking changes. We will try to reduce the releases that may require an update to your code, especially for instrumentations or for sdk developers.
 
-## Unreleased
+## Version 1.39.0/0.60b0 (2025-12-03)
 
 - `opentelemetry-api`: Convert objects of any type other than AnyValue in attributes to string to be exportable
   ([#4808](https://github.com/open-telemetry/opentelemetry-python/pull/4808))
