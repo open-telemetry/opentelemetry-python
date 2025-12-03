@@ -72,6 +72,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - `log_record.resource` - The Resource
     - `log_record.instrumentation_scope` - The InstrumentationScope (now included, was in LogData before)
     - `log_record.limits` - The LogRecordLimits
+- Mark the Events API/SDK as deprecated. The Logs API/SDK should be used instead, an event is now a `LogRecord` with the `event_name` field set
+([#4654](https://github.com/open-telemetry/opentelemetry-python/pull/4654)).
 
 ## Version 1.38.0/0.59b0 (2025-10-16)
 
