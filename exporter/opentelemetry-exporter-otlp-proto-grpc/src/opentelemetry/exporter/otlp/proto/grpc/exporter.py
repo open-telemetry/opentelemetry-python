@@ -15,16 +15,10 @@
 """OTLP Exporter
 
 This module provides a mixin class for OTLP exporters that send telemetry data
-to an OpenTelemetry Collector via gRPC. It includes a configurable reconnection
+to an OTLP-compatible receiver via gRPC. It includes a configurable reconnection
 logic to handle transient collector outages.
 
-Environment Variables:
-    OTEL_EXPORTER_OTLP_RETRY_INTERVAL: Base retry interval in seconds (default: 2.0).
-    OTEL_EXPORTER_OTLP_MAX_RETRIES: Maximum number of retry attempts (default: 20).
-    OTEL_EXPORTER_OTLP_RETRY_TIMEOUT: Total retry timeout in seconds (default: 300).
-    OTEL_EXPORTER_OTLP_RETRY_MAX_DELAY: Maximum delay between retries in seconds (default: 60.0).
-    OTEL_EXPORTER_OTLP_RETRY_FACTOR: Exponential backoff factor (default: 1.5).
-    OTEL_EXPORTER_OTLP_RETRY_JITTER: Jitter factor for retry delay (default: 0.2).
+
 """
 
 import random
@@ -358,14 +352,16 @@ class OTLPExporterMixin(
         )
         self._collector_kwargs = None
 
-        compression = (
-            environ_to_compression(OTEL_EXPORTER_OTLP_COMPRESSION)
-            if compression is None
-            else compression
-        ) or Compression.NoCompression
-        self._compression = compression
-
-        # Initialize the channel and stub using the proper method
+        self._compression = (
+            compression
+            or environ_to_compression(
+                environ.get(OTEL_EXPORTER_OTLP_COMPRESSION)
+            )
+            or Compression.NoCompression
+        )
+        self._channel = None
+        self._client = None
+        self._channel_reconnection_enabled = False
         self._initialize_channel_and_stub()
 
     def _initialize_channel_and_stub(self):
@@ -378,7 +374,7 @@ class OTLPExporterMixin(
         # Add channel options for better reconnection behavior
         # Only add these if we're dealing with reconnection scenarios
         channel_options = []
-        if hasattr(self, "_channel_reconnection_enabled"):
+        if self._channel_reconnection_enabled:
             channel_options = [
                 ("grpc.keepalive_time_ms", 30000),
                 ("grpc.keepalive_timeout_ms", 15000),
@@ -391,9 +387,11 @@ class OTLPExporterMixin(
         # Merge reconnection options with existing channel options
         current_options = list(self._channel_options)
         # Filter out options that we are about to override
-        reconnection_keys = {opt[0] for opt in channel_options}
+        reconnection_keys = {key for key, _ in channel_options}
         current_options = [
-            opt for opt in current_options if opt[0] not in reconnection_keys
+            (key, value)
+            for key, value in current_options
+            if key not in reconnection_keys
         ]
         final_options = tuple(current_options + channel_options)
 
@@ -465,7 +463,7 @@ class OTLPExporterMixin(
                     )
 
                 # For UNAVAILABLE errors, reinitialize the channel to force reconnection
-                if error.code() == StatusCode.UNAVAILABLE:  # type: ignore
+                if error.code() == StatusCode.UNAVAILABLE and retry_num == 0:  # type: ignore
                     logger.debug(
                         "Reinitializing gRPC channel for %s exporter due to UNAVAILABLE error",
                         self._exporting,
