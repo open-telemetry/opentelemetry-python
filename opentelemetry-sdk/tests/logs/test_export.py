@@ -64,7 +64,7 @@ EMPTY_LOG = ReadWriteLogRecord(
 
 class TestSimpleLogRecordProcessor(unittest.TestCase):
     @mark.skipif(
-        sys.version_info <= (3, 13, 5),
+        (3, 13, 0) <= sys.version_info <= (3, 13, 5),
         reason="This will fail on 3.13.5 due to https://github.com/python/cpython/pull/131812 which prevents recursive log messages but was rolled back in 3.13.6.",
     )
     def test_simple_log_record_processor_doesnt_enter_recursive_loop(self):
