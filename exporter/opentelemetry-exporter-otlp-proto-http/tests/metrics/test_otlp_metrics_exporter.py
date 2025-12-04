@@ -564,16 +564,12 @@ class TestOTLPMetricExporter(TestCase):
         mock_post.side_effect = ConnectionError(msg)
         with self.assertLogs(level=WARNING) as warning:
             before = time.time()
-            # Set timeout to 1.5 seconds
             self.assertEqual(
                 exporter.export(self.metrics["sum_int"]),
                 MetricExportResult.FAILURE,
             )
             after = time.time()
-            # First call at time 0, second at time 1, then an early return before the second backoff sleep b/c it would exceed timeout.
-            # Additionally every retry results in two calls, therefore 4.
             self.assertEqual(mock_post.call_count, 4)
-            # There's a +/-20% jitter on each backoff.
             self.assertTrue(0.75 < after - before < 1.25)
             self.assertIn(
                 f"Transient error {msg} encountered while exporting metrics batch, retrying in",
@@ -586,14 +582,11 @@ class TestOTLPMetricExporter(TestCase):
 
         mock_post.side_effect = requests.exceptions.RequestException()
         with self.assertLogs(level=WARNING) as warning:
-            # Set timeout to 1.5 seconds
             self.assertEqual(
                 exporter.export(self.metrics["sum_int"]),
                 MetricExportResult.FAILURE,
             )
-            # First call at time 0, second at time 1, then an early return before the second backoff sleep b/c it would exceed timeout.
             self.assertEqual(mock_post.call_count, 1)
-            # There's a +/-20% jitter on each backoff.
             self.assertIn(
                 "Failed to export metrics batch code",
                 warning.records[0].message,
