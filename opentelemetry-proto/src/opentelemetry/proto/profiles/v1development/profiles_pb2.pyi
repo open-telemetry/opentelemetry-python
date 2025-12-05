@@ -35,159 +35,17 @@ import builtins
 import collections.abc
 import google.protobuf.descriptor
 import google.protobuf.internal.containers
-import google.protobuf.internal.enum_type_wrapper
 import google.protobuf.message
 import opentelemetry.proto.common.v1.common_pb2
 import opentelemetry.proto.resource.v1.resource_pb2
 import sys
-import typing
 
-if sys.version_info >= (3, 10):
+if sys.version_info >= (3, 8):
     import typing as typing_extensions
 else:
     import typing_extensions
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
-
-class _AggregationTemporality:
-    ValueType = typing.NewType("ValueType", builtins.int)
-    V: typing_extensions.TypeAlias = ValueType
-
-class _AggregationTemporalityEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_AggregationTemporality.ValueType], builtins.type):
-    DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
-    AGGREGATION_TEMPORALITY_UNSPECIFIED: _AggregationTemporality.ValueType  # 0
-    """UNSPECIFIED is the default AggregationTemporality, it MUST not be used."""
-    AGGREGATION_TEMPORALITY_DELTA: _AggregationTemporality.ValueType  # 1
-    """* DELTA is an AggregationTemporality for a profiler which reports
-    changes since last report time. Successive metrics contain aggregation of
-    values from continuous and non-overlapping intervals.
-
-    The values for a DELTA metric are based only on the time interval
-    associated with one measurement cycle. There is no dependency on
-    previous measurements like is the case for CUMULATIVE metrics.
-
-    For example, consider a system measuring the number of requests that
-    it receives and reports the sum of these requests every second as a
-    DELTA metric:
-
-    1. The system starts receiving at time=t_0.
-    2. A request is received, the system measures 1 request.
-    3. A request is received, the system measures 1 request.
-    4. A request is received, the system measures 1 request.
-    5. The 1 second collection cycle ends. A metric is exported for the
-    number of requests received over the interval of time t_0 to
-    t_0+1 with a value of 3.
-    6. A request is received, the system measures 1 request.
-    7. A request is received, the system measures 1 request.
-    8. The 1 second collection cycle ends. A metric is exported for the
-    number of requests received over the interval of time t_0+1 to
-    t_0+2 with a value of 2.
-    """
-    AGGREGATION_TEMPORALITY_CUMULATIVE: _AggregationTemporality.ValueType  # 2
-    """* CUMULATIVE is an AggregationTemporality for a profiler which
-    reports changes since a fixed start time. This means that current values
-    of a CUMULATIVE metric depend on all previous measurements since the
-    start time. Because of this, the sender is required to retain this state
-    in some form. If this state is lost or invalidated, the CUMULATIVE metric
-    values MUST be reset and a new fixed start time following the last
-    reported measurement time sent MUST be used.
-
-    For example, consider a system measuring the number of requests that
-    it receives and reports the sum of these requests every second as a
-    CUMULATIVE metric:
-
-    1. The system starts receiving at time=t_0.
-    2. A request is received, the system measures 1 request.
-    3. A request is received, the system measures 1 request.
-    4. A request is received, the system measures 1 request.
-    5. The 1 second collection cycle ends. A metric is exported for the
-    number of requests received over the interval of time t_0 to
-    t_0+1 with a value of 3.
-    6. A request is received, the system measures 1 request.
-    7. A request is received, the system measures 1 request.
-    8. The 1 second collection cycle ends. A metric is exported for the
-    number of requests received over the interval of time t_0 to
-    t_0+2 with a value of 5.
-    9. The system experiences a fault and loses state.
-    10. The system recovers and resumes receiving at time=t_1.
-    11. A request is received, the system measures 1 request.
-    12. The 1 second collection cycle ends. A metric is exported for the
-    number of requests received over the interval of time t_1 to
-    t_1+1 with a value of 1.
-
-    Note: Even though, when reporting changes since last report time, using
-    CUMULATIVE is valid, it is not recommended.
-    """
-
-class AggregationTemporality(_AggregationTemporality, metaclass=_AggregationTemporalityEnumTypeWrapper):
-    """Specifies the method of aggregating metric values, either DELTA (change since last report)
-    or CUMULATIVE (total since a fixed start time).
-    """
-
-AGGREGATION_TEMPORALITY_UNSPECIFIED: AggregationTemporality.ValueType  # 0
-"""UNSPECIFIED is the default AggregationTemporality, it MUST not be used."""
-AGGREGATION_TEMPORALITY_DELTA: AggregationTemporality.ValueType  # 1
-"""* DELTA is an AggregationTemporality for a profiler which reports
-changes since last report time. Successive metrics contain aggregation of
-values from continuous and non-overlapping intervals.
-
-The values for a DELTA metric are based only on the time interval
-associated with one measurement cycle. There is no dependency on
-previous measurements like is the case for CUMULATIVE metrics.
-
-For example, consider a system measuring the number of requests that
-it receives and reports the sum of these requests every second as a
-DELTA metric:
-
-1. The system starts receiving at time=t_0.
-2. A request is received, the system measures 1 request.
-3. A request is received, the system measures 1 request.
-4. A request is received, the system measures 1 request.
-5. The 1 second collection cycle ends. A metric is exported for the
-number of requests received over the interval of time t_0 to
-t_0+1 with a value of 3.
-6. A request is received, the system measures 1 request.
-7. A request is received, the system measures 1 request.
-8. The 1 second collection cycle ends. A metric is exported for the
-number of requests received over the interval of time t_0+1 to
-t_0+2 with a value of 2.
-"""
-AGGREGATION_TEMPORALITY_CUMULATIVE: AggregationTemporality.ValueType  # 2
-"""* CUMULATIVE is an AggregationTemporality for a profiler which
-reports changes since a fixed start time. This means that current values
-of a CUMULATIVE metric depend on all previous measurements since the
-start time. Because of this, the sender is required to retain this state
-in some form. If this state is lost or invalidated, the CUMULATIVE metric
-values MUST be reset and a new fixed start time following the last
-reported measurement time sent MUST be used.
-
-For example, consider a system measuring the number of requests that
-it receives and reports the sum of these requests every second as a
-CUMULATIVE metric:
-
-1. The system starts receiving at time=t_0.
-2. A request is received, the system measures 1 request.
-3. A request is received, the system measures 1 request.
-4. A request is received, the system measures 1 request.
-5. The 1 second collection cycle ends. A metric is exported for the
-number of requests received over the interval of time t_0 to
-t_0+1 with a value of 3.
-6. A request is received, the system measures 1 request.
-7. A request is received, the system measures 1 request.
-8. The 1 second collection cycle ends. A metric is exported for the
-number of requests received over the interval of time t_0 to
-t_0+2 with a value of 5.
-9. The system experiences a fault and loses state.
-10. The system recovers and resumes receiving at time=t_1.
-11. A request is received, the system measures 1 request.
-12. The 1 second collection cycle ends. A metric is exported for the
-number of requests received over the interval of time t_1 to
-t_1+1 with a value of 1.
-
-Note: Even though, when reporting changes since last report time, using
-CUMULATIVE is valid, it is not recommended.
-"""
-global___AggregationTemporality = AggregationTemporality
 
 @typing_extensions.final
 class ProfilesDictionary(google.protobuf.message.Message):
@@ -209,7 +67,7 @@ class ProfilesDictionary(google.protobuf.message.Message):
     │  ScopeProfiles   │
     └──────────────────┘
       │
-      │ 1-1
+      │ 1-n
       ▼
     ┌──────────────────┐
     │      Profile     │
@@ -217,15 +75,21 @@ class ProfilesDictionary(google.protobuf.message.Message):
       │                                n-1
       │ 1-n         ┌───────────────────────────────────────┐
       ▼             │                                       ▽
-    ┌──────────────────┐   1-n   ┌──────────────┐      ┌──────────┐
-    │      Sample      │ ──────▷ │   KeyValue   │      │   Link   │
-    └──────────────────┘         └──────────────┘      └──────────┘
-      │                    1-n       △      △
-      │ 1-n        ┌─────────────────┘      │ 1-n
-      ▽            │                        │
-    ┌──────────────────┐   n-1   ┌──────────────┐
-    │     Location     │ ──────▷ │   Mapping    │
-    └──────────────────┘         └──────────────┘
+    ┌──────────────────┐   1-n   ┌─────────────────┐   ┌──────────┐
+    │      Sample      │ ──────▷ │ KeyValueAndUnit │   │   Link   │
+    └──────────────────┘         └─────────────────┘   └──────────┘
+      │                              △      △
+      │ n-1                          │      │ 1-n
+      ▽                              │      │
+    ┌──────────────────┐             │      │
+    │      Stack       │             │      │
+    └──────────────────┘             │      │
+      │                     1-n      │      │
+      │ 1-n         ┌────────────────┘      │
+      ▽             │                       │
+    ┌──────────────────┐   n-1   ┌─────────────┐
+    │     Location     │ ──────▷ │   Mapping   │
+    └──────────────────┘         └─────────────┘
       │
       │ 1-n
       ▼
@@ -240,7 +104,28 @@ class ProfilesDictionary(google.protobuf.message.Message):
     └──────────────────┘
 
     ProfilesDictionary represents the profiles data shared across the
-    entire message being sent.
+    entire message being sent. The following applies to all fields in this
+    message:
+
+    - A dictionary is an array of dictionary items. Users of the dictionary
+      compactly reference the items using the index within the array.
+
+    - A dictionary MUST have a zero value encoded as the first element. This
+      allows for _index fields pointing into the dictionary to use a 0 pointer
+      value to indicate 'null' / 'not set'. Unless otherwise defined, a 'zero
+      value' message value is one with all default field values, so as to
+      minimize wire encoded size.
+
+    - There SHOULD NOT be dupes in a dictionary. The identity of dictionary
+      items is based on their value, recursively as needed. If a particular
+      implementation does emit duplicated items, it MUST NOT attempt to give them
+      meaning based on the index or order. A profile processor may remove
+      duplicate items and this MUST NOT have any observable effects for
+      consumers.
+
+    - There SHOULD NOT be orphaned (unreferenced) items in a dictionary. A
+      profile processor may remove ("garbage-collect") orphaned items and this
+      MUST NOT have any observable effects for consumers.
     """
 
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
@@ -251,32 +136,67 @@ class ProfilesDictionary(google.protobuf.message.Message):
     LINK_TABLE_FIELD_NUMBER: builtins.int
     STRING_TABLE_FIELD_NUMBER: builtins.int
     ATTRIBUTE_TABLE_FIELD_NUMBER: builtins.int
-    ATTRIBUTE_UNITS_FIELD_NUMBER: builtins.int
+    STACK_TABLE_FIELD_NUMBER: builtins.int
     @property
     def mapping_table(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___Mapping]:
         """Mappings from address ranges to the image/binary/library mapped
         into that address range referenced by locations via Location.mapping_index.
+
+        mapping_table[0] must always be zero value (Mapping{}) and present.
         """
     @property
     def location_table(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___Location]:
-        """Locations referenced by samples via Profile.location_indices."""
+        """Locations referenced by samples via Stack.location_indices.
+
+        location_table[0] must always be zero value (Location{}) and present.
+        """
     @property
     def function_table(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___Function]:
-        """Functions referenced by locations via Line.function_index."""
+        """Functions referenced by locations via Line.function_index.
+
+        function_table[0] must always be zero value (Function{}) and present.
+        """
     @property
     def link_table(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___Link]:
-        """Links referenced by samples via Sample.link_index."""
+        """Links referenced by samples via Sample.link_index.
+
+        link_table[0] must always be zero value (Link{}) and present.
+        """
     @property
     def string_table(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.str]:
         """A common table for strings referenced by various messages.
-        string_table[0] must always be "".
+
+        string_table[0] must always be "" and present.
         """
     @property
-    def attribute_table(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.KeyValue]:
-        """A common table for attributes referenced by various messages."""
+    def attribute_table(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___KeyValueAndUnit]:
+        """A common table for attributes referenced by the Profile, Sample, Mapping
+        and Location messages below through attribute_indices field. Each entry is
+        a key/value pair with an optional unit. Since this is a dictionary table,
+        multiple entries with the same key may be present, unlike direct attribute
+        tables like Resource.attributes. The referencing attribute_indices fields,
+        though, do maintain the key uniqueness requirement.
+
+        It's recommended to use attributes for variables with bounded cardinality,
+        such as categorical variables
+        (https://en.wikipedia.org/wiki/Categorical_variable). Using an attribute of
+        a floating point type (e.g., CPU time) in a sample can quickly make every
+        attribute value unique, defeating the purpose of the dictionary and
+        impractically increasing the profile size.
+
+        Examples of attributes:
+            "/http/user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36"
+            "abc.com/myattribute": true
+            "allocation_size": 128 bytes
+
+        attribute_table[0] must always be zero value (KeyValueAndUnit{}) and present.
+        """
     @property
-    def attribute_units(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___AttributeUnit]:
-        """Represents a mapping between Attribute Keys and Units."""
+    def stack_table(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___Stack]:
+        """Stacks referenced by samples via Sample.stack_index.
+
+        stack_table[0] must always be zero value (Stack{}) and present.
+        """
     def __init__(
         self,
         *,
@@ -285,10 +205,10 @@ class ProfilesDictionary(google.protobuf.message.Message):
         function_table: collections.abc.Iterable[global___Function] | None = ...,
         link_table: collections.abc.Iterable[global___Link] | None = ...,
         string_table: collections.abc.Iterable[builtins.str] | None = ...,
-        attribute_table: collections.abc.Iterable[opentelemetry.proto.common.v1.common_pb2.KeyValue] | None = ...,
-        attribute_units: collections.abc.Iterable[global___AttributeUnit] | None = ...,
+        attribute_table: collections.abc.Iterable[global___KeyValueAndUnit] | None = ...,
+        stack_table: collections.abc.Iterable[global___Stack] | None = ...,
     ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["attribute_table", b"attribute_table", "attribute_units", b"attribute_units", "function_table", b"function_table", "link_table", b"link_table", "location_table", b"location_table", "mapping_table", b"mapping_table", "string_table", b"string_table"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["attribute_table", b"attribute_table", "function_table", b"function_table", "link_table", b"link_table", "location_table", b"location_table", "mapping_table", b"mapping_table", "stack_table", b"stack_table", "string_table", b"string_table"]) -> None: ...
 
 global___ProfilesDictionary = ProfilesDictionary
 
@@ -319,6 +239,8 @@ class ProfilesData(google.protobuf.message.Message):
         from non-containerized processes.
         Other resource groupings are possible as well and clarified via
         Resource.attributes and semantic conventions.
+        Tools that visualize profiles should prefer displaying
+        resources_profiles[0].scope_profiles[0].profiles[0] by default.
         """
     @property
     def dictionary(self) -> global___ProfilesDictionary:
@@ -394,7 +316,8 @@ class ScopeProfiles(google.protobuf.message.Message):
     is recorded in. Notably, the last part of the URL path is the version number of the
     schema: http[s]://server[:port]/path/<version>. To learn more about Schema URL see
     https://opentelemetry.io/docs/specs/otel/schemas/#schema-url
-    This schema_url applies to all profiles in the "profiles" field.
+    This schema_url applies to the data in the "scope" field and all profiles in the
+    "profiles" field.
     """
     def __init__(
         self,
@@ -422,21 +345,20 @@ class Profile(google.protobuf.message.Message):
       that is most useful to humans.  There should be enough
       information present to determine the original sampled values.
 
-    - On-disk, the serialized proto must be gzip-compressed.
-
     - The profile is represented as a set of samples, where each sample
-      references a sequence of locations, and where each location belongs
+      references a stack trace which is a list of locations, each belonging
       to a mapping.
-    - There is a N->1 relationship from sample.location_id entries to
-      locations. For every sample.location_id entry there must be a
+    - There is a N->1 relationship from Stack.location_indices entries to
+      locations. For every Stack.location_indices entry there must be a
       unique Location with that index.
     - There is an optional N->1 relationship from locations to
       mappings. For every nonzero Location.mapping_id there must be a
       unique Mapping with that index.
 
-    Represents a complete profile, including sample types, samples,
-    mappings to binaries, locations, functions, string table, and additional metadata.
-    It modifies and annotates pprof Profile with OpenTelemetry specific fields.
+    Represents a complete profile, including sample types, samples, mappings to
+    binaries, stacks, locations, functions, string table, and additional
+    metadata. It modifies and annotates pprof Profile with OpenTelemetry
+    specific fields.
 
     Note that whilst fields in this message retain the name and field id from pprof in most cases
     for ease of understanding data migration, it is not intended that pprof:Profile and
@@ -446,43 +368,34 @@ class Profile(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
     SAMPLE_TYPE_FIELD_NUMBER: builtins.int
-    SAMPLE_FIELD_NUMBER: builtins.int
-    LOCATION_INDICES_FIELD_NUMBER: builtins.int
-    TIME_NANOS_FIELD_NUMBER: builtins.int
-    DURATION_NANOS_FIELD_NUMBER: builtins.int
+    SAMPLES_FIELD_NUMBER: builtins.int
+    TIME_UNIX_NANO_FIELD_NUMBER: builtins.int
+    DURATION_NANO_FIELD_NUMBER: builtins.int
     PERIOD_TYPE_FIELD_NUMBER: builtins.int
     PERIOD_FIELD_NUMBER: builtins.int
-    COMMENT_STRINDICES_FIELD_NUMBER: builtins.int
-    DEFAULT_SAMPLE_TYPE_INDEX_FIELD_NUMBER: builtins.int
     PROFILE_ID_FIELD_NUMBER: builtins.int
     DROPPED_ATTRIBUTES_COUNT_FIELD_NUMBER: builtins.int
     ORIGINAL_PAYLOAD_FORMAT_FIELD_NUMBER: builtins.int
     ORIGINAL_PAYLOAD_FIELD_NUMBER: builtins.int
     ATTRIBUTE_INDICES_FIELD_NUMBER: builtins.int
     @property
-    def sample_type(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___ValueType]:
-        """A description of the samples associated with each Sample.value.
-        For a cpu profile this might be:
-          [["cpu","nanoseconds"]] or [["wall","seconds"]] or [["syscall","count"]]
+    def sample_type(self) -> global___ValueType:
+        """The type and unit of all Sample.values in this profile.
+        For a cpu or off-cpu profile this might be:
+          ["cpu","nanoseconds"] or ["off_cpu","nanoseconds"]
         For a heap profile, this might be:
-          [["allocations","count"], ["space","bytes"]],
-        If one of the values represents the number of events represented
-        by the sample, by convention it should be at index 0 and use
-        sample_type.unit == "count".
+          ["allocated_objects","count"] or ["allocated_space","bytes"],
         """
     @property
-    def sample(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___Sample]:
+    def samples(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___Sample]:
         """The set of samples recorded in this profile."""
-    @property
-    def location_indices(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.int]:
-        """References to locations in ProfilesDictionary.location_table."""
-    time_nanos: builtins.int
-    """The following fields 4-14 are informational, do not affect
+    time_unix_nano: builtins.int
+    """The following fields 3-12 are informational, do not affect
     interpretation of results.
 
     Time of collection (UTC) represented as nanoseconds past the epoch.
     """
-    duration_nanos: builtins.int
+    duration_nano: builtins.int
     """Duration of the profile, if a duration makes sense."""
     @property
     def period_type(self) -> global___ValueType:
@@ -491,98 +404,66 @@ class Profile(google.protobuf.message.Message):
         """
     period: builtins.int
     """The number of events between sampled occurrences."""
-    @property
-    def comment_strindices(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.int]:
-        """Free-form text associated with the profile. The text is displayed as is
-        to the user by the tools that read profiles (e.g. by pprof). This field
-        should not be used to store any machine-readable information, it is only
-        for human-friendly content. The profile must stay functional if this field
-        is cleaned.
-        Indices into ProfilesDictionary.string_table.
-        """
-    default_sample_type_index: builtins.int
-    """Index into the sample_type array to the default sample type."""
     profile_id: builtins.bytes
     """A globally unique identifier for a profile. The ID is a 16-byte array. An ID with
-    all zeroes is considered invalid.
-
-    This field is required.
+    all zeroes is considered invalid. It may be used for deduplication and signal
+    correlation purposes. It is acceptable to treat two profiles with different values
+    in this field as not equal, even if they represented the same object at an earlier
+    time.
+    This field is optional; an ID may be assigned to an ID-less profile in a later step.
     """
     dropped_attributes_count: builtins.int
-    """dropped_attributes_count is the number of attributes that were discarded. Attributes
+    """The number of attributes that were discarded. Attributes
     can be discarded because their keys are too long or because there are too many
     attributes. If this value is 0, then no attributes were dropped.
     """
     original_payload_format: builtins.str
-    """Specifies format of the original payload. Common values are defined in semantic conventions. [required if original_payload is present]"""
+    """The original payload format. See also original_payload. Optional, but the
+    format and the bytes must be set or unset together.
+
+    The allowed values for the format string are defined by the OpenTelemetry
+    specification. Some examples are "jfr", "pprof", "linux_perf".
+
+    The original payload may be optionally provided when the conversion to the
+    OLTP format was done from a different format with some loss of the fidelity
+    and the receiver may want to store the original payload to allow future
+    lossless export or reinterpretation. Some examples of the original format
+    are JFR (Java Flight Recorder), pprof, Linux perf.
+
+    Even when the original payload is in a format that is semantically close to
+    OTLP, such as pprof, a conversion may still be lossy in some cases (e.g. if
+    the pprof file contains custom extensions or conventions).
+
+    The original payload can be large in size, so including the original
+    payload should be configurable by the profiler or collector options. The
+    default behavior should be to not include the original payload.
+    """
     original_payload: builtins.bytes
-    """Original payload can be stored in this field. This can be useful for users who want to get the original payload.
-    Formats such as JFR are highly extensible and can contain more information than what is defined in this spec.
-    Inclusion of original payload should be configurable by the user. Default behavior should be to not include the original payload.
-    If the original payload is in pprof format, it SHOULD not be included in this field.
-    The field is optional, however if it is present then equivalent converted data should be populated in other fields
-    of this message as far as is practicable.
+    """The original payload bytes. See also original_payload_format. Optional, but
+    format and the bytes must be set or unset together.
     """
     @property
     def attribute_indices(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.int]:
-        """References to attributes in attribute_table. [optional]
-        It is a collection of key/value pairs. Note, global attributes
-        like server name can be set using the resource API. Examples of attributes:
-
-            "/http/user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36"
-            "/http/server_latency": 300
-            "abc.com/myattribute": true
-            "abc.com/score": 10.239
-
-        The OpenTelemetry API specification further restricts the allowed value types:
-        https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/common/README.md#attribute
-        Attribute keys MUST be unique (it is not allowed to have more than one
-        attribute with the same key).
-        """
+        """References to attributes in attribute_table. [optional]"""
     def __init__(
         self,
         *,
-        sample_type: collections.abc.Iterable[global___ValueType] | None = ...,
-        sample: collections.abc.Iterable[global___Sample] | None = ...,
-        location_indices: collections.abc.Iterable[builtins.int] | None = ...,
-        time_nanos: builtins.int = ...,
-        duration_nanos: builtins.int = ...,
+        sample_type: global___ValueType | None = ...,
+        samples: collections.abc.Iterable[global___Sample] | None = ...,
+        time_unix_nano: builtins.int = ...,
+        duration_nano: builtins.int = ...,
         period_type: global___ValueType | None = ...,
         period: builtins.int = ...,
-        comment_strindices: collections.abc.Iterable[builtins.int] | None = ...,
-        default_sample_type_index: builtins.int = ...,
         profile_id: builtins.bytes = ...,
         dropped_attributes_count: builtins.int = ...,
         original_payload_format: builtins.str = ...,
         original_payload: builtins.bytes = ...,
         attribute_indices: collections.abc.Iterable[builtins.int] | None = ...,
     ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["period_type", b"period_type"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["attribute_indices", b"attribute_indices", "comment_strindices", b"comment_strindices", "default_sample_type_index", b"default_sample_type_index", "dropped_attributes_count", b"dropped_attributes_count", "duration_nanos", b"duration_nanos", "location_indices", b"location_indices", "original_payload", b"original_payload", "original_payload_format", b"original_payload_format", "period", b"period", "period_type", b"period_type", "profile_id", b"profile_id", "sample", b"sample", "sample_type", b"sample_type", "time_nanos", b"time_nanos"]) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["period_type", b"period_type", "sample_type", b"sample_type"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["attribute_indices", b"attribute_indices", "dropped_attributes_count", b"dropped_attributes_count", "duration_nano", b"duration_nano", "original_payload", b"original_payload", "original_payload_format", b"original_payload_format", "period", b"period", "period_type", b"period_type", "profile_id", b"profile_id", "sample_type", b"sample_type", "samples", b"samples", "time_unix_nano", b"time_unix_nano"]) -> None: ...
 
 global___Profile = Profile
-
-@typing_extensions.final
-class AttributeUnit(google.protobuf.message.Message):
-    """Represents a mapping between Attribute Keys and Units."""
-
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor
-
-    ATTRIBUTE_KEY_STRINDEX_FIELD_NUMBER: builtins.int
-    UNIT_STRINDEX_FIELD_NUMBER: builtins.int
-    attribute_key_strindex: builtins.int
-    """Index into string table."""
-    unit_strindex: builtins.int
-    """Index into string table."""
-    def __init__(
-        self,
-        *,
-        attribute_key_strindex: builtins.int = ...,
-        unit_strindex: builtins.int = ...,
-    ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["attribute_key_strindex", b"attribute_key_strindex", "unit_strindex", b"unit_strindex"]) -> None: ...
-
-global___AttributeUnit = AttributeUnit
 
 @typing_extensions.final
 class Link(google.protobuf.message.Message):
@@ -612,83 +493,86 @@ global___Link = Link
 
 @typing_extensions.final
 class ValueType(google.protobuf.message.Message):
-    """ValueType describes the type and units of a value, with an optional aggregation temporality."""
+    """ValueType describes the type and units of a value."""
 
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
     TYPE_STRINDEX_FIELD_NUMBER: builtins.int
     UNIT_STRINDEX_FIELD_NUMBER: builtins.int
-    AGGREGATION_TEMPORALITY_FIELD_NUMBER: builtins.int
     type_strindex: builtins.int
     """Index into ProfilesDictionary.string_table."""
     unit_strindex: builtins.int
     """Index into ProfilesDictionary.string_table."""
-    aggregation_temporality: global___AggregationTemporality.ValueType
     def __init__(
         self,
         *,
         type_strindex: builtins.int = ...,
         unit_strindex: builtins.int = ...,
-        aggregation_temporality: global___AggregationTemporality.ValueType = ...,
     ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["aggregation_temporality", b"aggregation_temporality", "type_strindex", b"type_strindex", "unit_strindex", b"unit_strindex"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["type_strindex", b"type_strindex", "unit_strindex", b"unit_strindex"]) -> None: ...
 
 global___ValueType = ValueType
 
 @typing_extensions.final
 class Sample(google.protobuf.message.Message):
-    """Each Sample records values encountered in some program
-    context. The program context is typically a stack trace, perhaps
-    augmented with auxiliary information like the thread-id, some
-    indicator of a higher level request being handled etc.
+    """Each Sample records values encountered in some program context. The program
+    context is typically a stack trace, perhaps augmented with auxiliary
+    information like the thread-id, some indicator of a higher level request
+    being handled etc.
+
+    A Sample MUST have have at least one values or timestamps_unix_nano entry. If
+    both fields are populated, they MUST contain the same number of elements, and
+    the elements at the same index MUST refer to the same event.
+
+    Examples of different ways of representing a sample with the total value of 10:
+
+    Report of a stacktrace at 10 timestamps (consumers must assume the value is 1 for each point):
+       values: []
+       timestamps_unix_nano: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+    Report of a stacktrace with an aggregated value without timestamps:
+      values: [10]
+       timestamps_unix_nano: []
+
+    Report of a stacktrace at 4 timestamps where each point records a specific value:
+       values: [2, 2, 3, 3]
+       timestamps_unix_nano: [1, 2, 3, 4]
     """
 
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
-    LOCATIONS_START_INDEX_FIELD_NUMBER: builtins.int
-    LOCATIONS_LENGTH_FIELD_NUMBER: builtins.int
-    VALUE_FIELD_NUMBER: builtins.int
+    STACK_INDEX_FIELD_NUMBER: builtins.int
+    VALUES_FIELD_NUMBER: builtins.int
     ATTRIBUTE_INDICES_FIELD_NUMBER: builtins.int
     LINK_INDEX_FIELD_NUMBER: builtins.int
     TIMESTAMPS_UNIX_NANO_FIELD_NUMBER: builtins.int
-    locations_start_index: builtins.int
-    """locations_start_index along with locations_length refers to to a slice of locations in Profile.location_indices."""
-    locations_length: builtins.int
-    """locations_length along with locations_start_index refers to a slice of locations in Profile.location_indices.
-    Supersedes location_index.
-    """
+    stack_index: builtins.int
+    """Reference to stack in ProfilesDictionary.stack_table."""
     @property
-    def value(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.int]:
-        """The type and unit of each value is defined by the corresponding
-        entry in Profile.sample_type. All samples must have the same
-        number of values, the same as the length of Profile.sample_type.
-        When aggregating multiple samples into a single sample, the
-        result has a list of values that is the element-wise sum of the
-        lists of the originals.
-        """
+    def values(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.int]:
+        """The type and unit of each value is defined by Profile.sample_type."""
     @property
     def attribute_indices(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.int]:
         """References to attributes in ProfilesDictionary.attribute_table. [optional]"""
     link_index: builtins.int
-    """Reference to link in ProfilesDictionary.link_table. [optional]"""
+    """Reference to link in ProfilesDictionary.link_table. [optional]
+    It can be unset / set to 0 if no link exists, as link_table[0] is always a 'null' default value.
+    """
     @property
     def timestamps_unix_nano(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.int]:
-        """Timestamps associated with Sample represented in nanoseconds. These timestamps are expected
-        to fall within the Profile's time range. [optional]
+        """Timestamps associated with Sample represented in nanoseconds. These
+        timestamps should fall within the Profile's time range.
         """
     def __init__(
         self,
         *,
-        locations_start_index: builtins.int = ...,
-        locations_length: builtins.int = ...,
-        value: collections.abc.Iterable[builtins.int] | None = ...,
+        stack_index: builtins.int = ...,
+        values: collections.abc.Iterable[builtins.int] | None = ...,
         attribute_indices: collections.abc.Iterable[builtins.int] | None = ...,
-        link_index: builtins.int | None = ...,
+        link_index: builtins.int = ...,
         timestamps_unix_nano: collections.abc.Iterable[builtins.int] | None = ...,
     ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["_link_index", b"_link_index", "link_index", b"link_index"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["_link_index", b"_link_index", "attribute_indices", b"attribute_indices", "link_index", b"link_index", "locations_length", b"locations_length", "locations_start_index", b"locations_start_index", "timestamps_unix_nano", b"timestamps_unix_nano", "value", b"value"]) -> None: ...
-    def WhichOneof(self, oneof_group: typing_extensions.Literal["_link_index", b"_link_index"]) -> typing_extensions.Literal["link_index"] | None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["attribute_indices", b"attribute_indices", "link_index", b"link_index", "stack_index", b"stack_index", "timestamps_unix_nano", b"timestamps_unix_nano", "values", b"values"]) -> None: ...
 
 global___Sample = Sample
 
@@ -705,10 +589,6 @@ class Mapping(google.protobuf.message.Message):
     FILE_OFFSET_FIELD_NUMBER: builtins.int
     FILENAME_STRINDEX_FIELD_NUMBER: builtins.int
     ATTRIBUTE_INDICES_FIELD_NUMBER: builtins.int
-    HAS_FUNCTIONS_FIELD_NUMBER: builtins.int
-    HAS_FILENAMES_FIELD_NUMBER: builtins.int
-    HAS_LINE_NUMBERS_FIELD_NUMBER: builtins.int
-    HAS_INLINE_FRAMES_FIELD_NUMBER: builtins.int
     memory_start: builtins.int
     """Address at which the binary (or DLL) is loaded into memory."""
     memory_limit: builtins.int
@@ -724,11 +604,6 @@ class Mapping(google.protobuf.message.Message):
     @property
     def attribute_indices(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.int]:
         """References to attributes in ProfilesDictionary.attribute_table. [optional]"""
-    has_functions: builtins.bool
-    """The following fields indicate the resolution of symbolic info."""
-    has_filenames: builtins.bool
-    has_line_numbers: builtins.bool
-    has_inline_frames: builtins.bool
     def __init__(
         self,
         *,
@@ -737,14 +612,31 @@ class Mapping(google.protobuf.message.Message):
         file_offset: builtins.int = ...,
         filename_strindex: builtins.int = ...,
         attribute_indices: collections.abc.Iterable[builtins.int] | None = ...,
-        has_functions: builtins.bool = ...,
-        has_filenames: builtins.bool = ...,
-        has_line_numbers: builtins.bool = ...,
-        has_inline_frames: builtins.bool = ...,
     ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["attribute_indices", b"attribute_indices", "file_offset", b"file_offset", "filename_strindex", b"filename_strindex", "has_filenames", b"has_filenames", "has_functions", b"has_functions", "has_inline_frames", b"has_inline_frames", "has_line_numbers", b"has_line_numbers", "memory_limit", b"memory_limit", "memory_start", b"memory_start"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["attribute_indices", b"attribute_indices", "file_offset", b"file_offset", "filename_strindex", b"filename_strindex", "memory_limit", b"memory_limit", "memory_start", b"memory_start"]) -> None: ...
 
 global___Mapping = Mapping
+
+@typing_extensions.final
+class Stack(google.protobuf.message.Message):
+    """A Stack represents a stack trace as a list of locations."""
+
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    LOCATION_INDICES_FIELD_NUMBER: builtins.int
+    @property
+    def location_indices(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.int]:
+        """References to locations in ProfilesDictionary.location_table.
+        The first location is the leaf frame.
+        """
+    def __init__(
+        self,
+        *,
+        location_indices: collections.abc.Iterable[builtins.int] | None = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["location_indices", b"location_indices"]) -> None: ...
+
+global___Stack = Stack
 
 @typing_extensions.final
 class Location(google.protobuf.message.Message):
@@ -754,13 +646,12 @@ class Location(google.protobuf.message.Message):
 
     MAPPING_INDEX_FIELD_NUMBER: builtins.int
     ADDRESS_FIELD_NUMBER: builtins.int
-    LINE_FIELD_NUMBER: builtins.int
-    IS_FOLDED_FIELD_NUMBER: builtins.int
+    LINES_FIELD_NUMBER: builtins.int
     ATTRIBUTE_INDICES_FIELD_NUMBER: builtins.int
     mapping_index: builtins.int
     """Reference to mapping in ProfilesDictionary.mapping_table.
-    It can be unset if the mapping is unknown or not applicable for
-    this profile type.
+    It can be unset / set to 0 if the mapping is unknown or not applicable for
+    this profile type, as mapping_table[0] is always a 'null' default mapping.
     """
     address: builtins.int
     """The instruction address for this location, if available.  It
@@ -770,37 +661,27 @@ class Location(google.protobuf.message.Message):
     the beginning of the instruction if necessary.
     """
     @property
-    def line(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___Line]:
+    def lines(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___Line]:
         """Multiple line indicates this location has inlined functions,
         where the last entry represents the caller into which the
         preceding entries were inlined.
 
         E.g., if memcpy() is inlined into printf:
-           line[0].function_name == "memcpy"
-           line[1].function_name == "printf"
+           lines[0].function_name == "memcpy"
+           lines[1].function_name == "printf"
         """
-    is_folded: builtins.bool
-    """Provides an indication that multiple symbols map to this location's
-    address, for example due to identical code folding by the linker. In that
-    case the line information above represents one of the multiple
-    symbols. This field must be recomputed when the symbolization state of the
-    profile changes.
-    """
     @property
     def attribute_indices(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.int]:
         """References to attributes in ProfilesDictionary.attribute_table. [optional]"""
     def __init__(
         self,
         *,
-        mapping_index: builtins.int | None = ...,
+        mapping_index: builtins.int = ...,
         address: builtins.int = ...,
-        line: collections.abc.Iterable[global___Line] | None = ...,
-        is_folded: builtins.bool = ...,
+        lines: collections.abc.Iterable[global___Line] | None = ...,
         attribute_indices: collections.abc.Iterable[builtins.int] | None = ...,
     ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["_mapping_index", b"_mapping_index", "mapping_index", b"mapping_index"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["_mapping_index", b"_mapping_index", "address", b"address", "attribute_indices", b"attribute_indices", "is_folded", b"is_folded", "line", b"line", "mapping_index", b"mapping_index"]) -> None: ...
-    def WhichOneof(self, oneof_group: typing_extensions.Literal["_mapping_index", b"_mapping_index"]) -> typing_extensions.Literal["mapping_index"] | None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["address", b"address", "attribute_indices", b"attribute_indices", "lines", b"lines", "mapping_index", b"mapping_index"]) -> None: ...
 
 global___Location = Location
 
@@ -843,7 +724,7 @@ class Function(google.protobuf.message.Message):
     FILENAME_STRINDEX_FIELD_NUMBER: builtins.int
     START_LINE_FIELD_NUMBER: builtins.int
     name_strindex: builtins.int
-    """Function name. Empty string if not available."""
+    """The function name. Empty string if not available."""
     system_name_strindex: builtins.int
     """Function name, as identified by the system. For instance,
     it can be a C++ mangled name. Empty string if not available.
@@ -863,3 +744,36 @@ class Function(google.protobuf.message.Message):
     def ClearField(self, field_name: typing_extensions.Literal["filename_strindex", b"filename_strindex", "name_strindex", b"name_strindex", "start_line", b"start_line", "system_name_strindex", b"system_name_strindex"]) -> None: ...
 
 global___Function = Function
+
+@typing_extensions.final
+class KeyValueAndUnit(google.protobuf.message.Message):
+    """A custom 'dictionary native' style of encoding attributes which is more convenient
+    for profiles than opentelemetry.proto.common.v1.KeyValue
+    Specifically, uses the string table for keys and allows optional unit information.
+    """
+
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    KEY_STRINDEX_FIELD_NUMBER: builtins.int
+    VALUE_FIELD_NUMBER: builtins.int
+    UNIT_STRINDEX_FIELD_NUMBER: builtins.int
+    key_strindex: builtins.int
+    """The index into the string table for the attribute's key."""
+    @property
+    def value(self) -> opentelemetry.proto.common.v1.common_pb2.AnyValue:
+        """The value of the attribute."""
+    unit_strindex: builtins.int
+    """The index into the string table for the attribute's unit.
+    zero indicates implicit (by semconv) or non-defined unit.
+    """
+    def __init__(
+        self,
+        *,
+        key_strindex: builtins.int = ...,
+        value: opentelemetry.proto.common.v1.common_pb2.AnyValue | None = ...,
+        unit_strindex: builtins.int = ...,
+    ) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["value", b"value"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["key_strindex", b"key_strindex", "unit_strindex", b"unit_strindex", "value", b"value"]) -> None: ...
+
+global___KeyValueAndUnit = KeyValueAndUnit

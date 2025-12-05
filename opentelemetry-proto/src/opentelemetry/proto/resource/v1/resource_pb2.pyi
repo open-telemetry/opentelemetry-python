@@ -44,9 +44,10 @@ class Resource(google.protobuf.message.Message):
         """Set of attributes that describe the resource.
         Attribute keys MUST be unique (it is not allowed to have more than one
         attribute with the same key).
+        The behavior of software that receives duplicated keys can be unpredictable.
         """
     dropped_attributes_count: builtins.int
-    """dropped_attributes_count is the number of dropped attributes. If the value is 0, then
+    """The number of dropped attributes. If the value is 0, then
     no attributes were dropped.
     """
     @property
