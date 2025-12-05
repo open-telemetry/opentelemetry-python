@@ -273,12 +273,12 @@ class OTLPExporterMixin(
     """OTLP gRPC exporter mixin.
 
     This class provides the base functionality for OTLP exporters that send
-    telemetry data (spans or metrics) to an OpenTelemetry Collector via gRPC.
+    telemetry data (spans or metrics) to an OTLP-compatible receiver via gRPC.
     It includes a configurable reconnection mechanism to handle transient
-    collector outages.
+    receiver outages.
 
     Args:
-        endpoint: OpenTelemetry Collector receiver endpoint
+        endpoint: OTLP-compatible receiver endpoint
         insecure: Connection type
         credentials: ChannelCredentials object for server authentication
         headers: Headers to send when exporting
@@ -353,15 +353,26 @@ class OTLPExporterMixin(
         self._collector_kwargs = None
 
         self._compression = (
-            compression
-            or environ_to_compression(
-                environ.get(OTEL_EXPORTER_OTLP_COMPRESSION)
-            )
-            or Compression.NoCompression
-        )
+            environ_to_compression(OTEL_EXPORTER_OTLP_COMPRESSION)
+            if compression is None
+            else compression
+        ) or Compression.NoCompression
+
         self._channel = None
         self._client = None
-        self._channel_reconnection_enabled = False
+
+        self._shutdown_in_progress = threading.Event()
+        self._shutdown = False
+
+        if not self._insecure:
+            self._credentials = _get_credentials(
+                self._credentials,
+                _OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER,
+                OTEL_EXPORTER_OTLP_CERTIFICATE,
+                OTEL_EXPORTER_OTLP_CLIENT_KEY,
+                OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
+            )
+
         self._initialize_channel_and_stub()
 
     def _initialize_channel_and_stub(self):
@@ -371,55 +382,20 @@ class OTLPExporterMixin(
         This method is used during initialization and by the reconnection
         mechanism to reinitialize the channel on transient errors.
         """
-        # Add channel options for better reconnection behavior
-        # Only add these if we're dealing with reconnection scenarios
-        channel_options = []
-        if self._channel_reconnection_enabled:
-            channel_options = [
-                ("grpc.keepalive_time_ms", 30000),
-                ("grpc.keepalive_timeout_ms", 15000),
-                ("grpc.keepalive_permit_without_calls", 1),
-                ("grpc.initial_reconnect_backoff_ms", 5000),
-                ("grpc.min_reconnect_backoff_ms", 5000),
-                ("grpc.max_reconnect_backoff_ms", 30000),
-            ]
-
-        # Merge reconnection options with existing channel options
-        current_options = list(self._channel_options)
-        # Filter out options that we are about to override
-        reconnection_keys = {key for key, _ in channel_options}
-        current_options = [
-            (key, value)
-            for key, value in current_options
-            if key not in reconnection_keys
-        ]
-        final_options = tuple(current_options + channel_options)
-
         if self._insecure:
             self._channel = insecure_channel(
                 self._endpoint,
                 compression=self._compression,
-                options=final_options,
+                options=self._channel_options,
             )
         else:
-            self._credentials = _get_credentials(
-                self._credentials,
-                _OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER,
-                OTEL_EXPORTER_OTLP_CERTIFICATE,
-                OTEL_EXPORTER_OTLP_CLIENT_KEY,
-                OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
-            )
             self._channel = secure_channel(
                 self._endpoint,
                 self._credentials,
                 compression=self._compression,
-                options=final_options,
+                options=self._channel_options,
             )
         self._client = self._stub(self._channel)  # type: ignore [reportCallIssue]
-
-        if not hasattr(self, "_shutdown_in_progress"):
-            self._shutdown_in_progress = threading.Event()
-            self._shutdown = False
 
     @abstractmethod
     def _translate_data(
@@ -478,7 +454,6 @@ class OTLPExporterMixin(
                             str(e),
                         )
                     # Enable channel reconnection for subsequent calls
-                    self._channel_reconnection_enabled = True
                     self._initialize_channel_and_stub()
 
                 if (

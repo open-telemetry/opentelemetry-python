@@ -569,6 +569,3 @@ class TestOTLPExporterMixin(TestCase):
         # must be from the reconnection logic.
         self.assertTrue(mock_insecure_channel.called)
         # Verify that reconnection enabled flag is set
-        self.assertTrue(
-            getattr(self.exporter, "_channel_reconnection_enabled", False)
-        )
