@@ -59,7 +59,7 @@ You can run `tox` with the following arguments:
   under multiple Python versions
 - `tox -e docs` to regenerate the API docs
 - `tox -e opentelemetry-api` and `tox -e opentelemetry-sdk` to run the API and SDK unit tests
-- `tox -e py313-opentelemetry-api` to e.g. run the API unit tests under a specific
+- `tox -e py314-opentelemetry-api` to e.g. run the API unit tests under a specific
   Python version
 - `tox -e spellcheck` to run a spellcheck on all the code
 - `tox -e lint-some-package` to run lint checks on `some-package`

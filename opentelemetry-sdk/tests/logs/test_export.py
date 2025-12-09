@@ -17,7 +17,9 @@ import logging
 import os
 import time
 import unittest
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import (  # pylint: disable=no-name-in-module
+    ThreadPoolExecutor,
+)
 from sys import version_info
 from unittest.mock import Mock, patch
 
