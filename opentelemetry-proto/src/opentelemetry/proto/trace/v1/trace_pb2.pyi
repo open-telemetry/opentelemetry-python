@@ -177,7 +177,8 @@ class ScopeSpans(google.protobuf.message.Message):
     is recorded in. Notably, the last part of the URL path is the version number of the
     schema: http[s]://server[:port]/path/<version>. To learn more about Schema URL see
     https://opentelemetry.io/docs/specs/otel/schemas/#schema-url
-    This schema_url applies to all spans and span events in the "spans" field.
+    This schema_url applies to the data in the "scope" field and all spans and span
+    events in the "spans" field.
     """
     def __init__(
         self,
@@ -276,19 +277,20 @@ class Span(google.protobuf.message.Message):
         ATTRIBUTES_FIELD_NUMBER: builtins.int
         DROPPED_ATTRIBUTES_COUNT_FIELD_NUMBER: builtins.int
         time_unix_nano: builtins.int
-        """time_unix_nano is the time the event occurred."""
+        """The time the event occurred."""
         name: builtins.str
-        """name of the event.
+        """The name of the event.
         This field is semantically required to be set to non-empty string.
         """
         @property
         def attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.KeyValue]:
-            """attributes is a collection of attribute key/value pairs on the event.
+            """A collection of attribute key/value pairs on the event.
             Attribute keys MUST be unique (it is not allowed to have more than one
             attribute with the same key).
+            The behavior of software that receives duplicated keys can be unpredictable.
             """
         dropped_attributes_count: builtins.int
-        """dropped_attributes_count is the number of dropped attributes. If the value is 0,
+        """The number of dropped attributes. If the value is 0,
         then no attributes were dropped.
         """
         def __init__(
@@ -327,12 +329,13 @@ class Span(google.protobuf.message.Message):
         """The trace_state associated with the link."""
         @property
         def attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.KeyValue]:
-            """attributes is a collection of attribute key/value pairs on the link.
+            """A collection of attribute key/value pairs on the link.
             Attribute keys MUST be unique (it is not allowed to have more than one
             attribute with the same key).
+            The behavior of software that receives duplicated keys can be unpredictable.
             """
         dropped_attributes_count: builtins.int
-        """dropped_attributes_count is the number of dropped attributes. If the value is 0,
+        """The number of dropped attributes. If the value is 0,
         then no attributes were dropped.
         """
         flags: builtins.int
@@ -449,7 +452,7 @@ class Span(google.protobuf.message.Message):
     and `SERVER` (callee) to identify queueing latency associated with the span.
     """
     start_time_unix_nano: builtins.int
-    """start_time_unix_nano is the start time of the span. On the client side, this is the time
+    """The start time of the span. On the client side, this is the time
     kept by the local machine where the span execution starts. On the server side, this
     is the time when the server's application handler starts running.
     Value is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January 1970.
@@ -457,7 +460,7 @@ class Span(google.protobuf.message.Message):
     This field is semantically required and it is expected that end_time >= start_time.
     """
     end_time_unix_nano: builtins.int
-    """end_time_unix_nano is the end time of the span. On the client side, this is the time
+    """The end time of the span. On the client side, this is the time
     kept by the local machine where the span execution ends. On the server side, this
     is the time when the server application handler stops running.
     Value is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January 1970.
@@ -466,7 +469,7 @@ class Span(google.protobuf.message.Message):
     """
     @property
     def attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.KeyValue]:
-        """attributes is a collection of key/value pairs. Note, global attributes
+        """A collection of key/value pairs. Note, global attributes
         like server name can be set using the resource API. Examples of attributes:
 
             "/http/user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36"
@@ -474,30 +477,29 @@ class Span(google.protobuf.message.Message):
             "example.com/myattribute": true
             "example.com/score": 10.239
 
-        The OpenTelemetry API specification further restricts the allowed value types:
-        https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/common/README.md#attribute
         Attribute keys MUST be unique (it is not allowed to have more than one
         attribute with the same key).
+        The behavior of software that receives duplicated keys can be unpredictable.
         """
     dropped_attributes_count: builtins.int
-    """dropped_attributes_count is the number of attributes that were discarded. Attributes
+    """The number of attributes that were discarded. Attributes
     can be discarded because their keys are too long or because there are too many
     attributes. If this value is 0, then no attributes were dropped.
     """
     @property
     def events(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___Span.Event]:
-        """events is a collection of Event items."""
+        """A collection of Event items."""
     dropped_events_count: builtins.int
-    """dropped_events_count is the number of dropped events. If the value is 0, then no
+    """The number of dropped events. If the value is 0, then no
     events were dropped.
     """
     @property
     def links(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___Span.Link]:
-        """links is a collection of Links, which are references from this span to a span
+        """A collection of Links, which are references from this span to a span
         in the same or different trace.
         """
     dropped_links_count: builtins.int
-    """dropped_links_count is the number of dropped links after the maximum size was
+    """The number of dropped links after the maximum size was
     enforced. If this value is 0, then no links were dropped.
     """
     @property
