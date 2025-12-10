@@ -907,4 +907,3 @@ def should_drop_logs_for_trace_based_sampling(
             if span_context.is_valid and not span_context.trace_flags.sampled:
                 return True
     return False
-
