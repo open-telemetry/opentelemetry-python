@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `opentelemetry-sdk`: Fix the type hint of the `_metrics_data` property to allow `None`
   ([#4837](https://github.com/open-telemetry/opentelemetry-python/pull/4837)
+- Regenerate opentelemetry-proto code with v1.9.0 release
+  ([#4840](https://github.com/open-telemetry/opentelemetry-python/pull/4840))
+- Add python 3.14 support
+  ([#4798](https://github.com/open-telemetry/opentelemetry-python/pull/4798))
 
 ## Version 1.39.0/0.60b0 (2025-12-03)
 
@@ -26,6 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `opentelemetry-exporter-credential-provider-gcp` as an optional dependency to `opentelemetry-exporter-otlp-proto-grpc` 
   and `opentelemetry-exporter-otlp-proto-http` 
   ([#4760](https://github.com/open-telemetry/opentelemetry-python/pull/4760))
+- feat: implement on ending in span processor
+  ([#4775](https://github.com/open-telemetry/opentelemetry-python/pull/4775))
 - semantic-conventions: Bump to 1.38.0
   ([#4791](https://github.com/open-telemetry/opentelemetry-python/pull/4791))
 - [BREAKING] Remove LogData and extend SDK LogRecord to have instrumentation scope
