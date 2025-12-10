@@ -614,11 +614,11 @@ class TestLoggingInit(TestCase):
 
         self.event_logger_provider_instance_mock = Mock()
         self.event_logger_provider_patch = patch(
-            "opentelemetry.sdk._configuration.EventLoggerProvider",
+            "opentelemetry.sdk._events.EventLoggerProvider",
             return_value=self.event_logger_provider_instance_mock,
         )
         self.set_event_logger_provider_patch = patch(
-            "opentelemetry.sdk._configuration.set_event_logger_provider"
+            "opentelemetry._events.set_event_logger_provider"
         )
 
         self.processor_mock = self.processor_patch.start()
