@@ -14,7 +14,6 @@
 
 import unittest
 
-from opentelemetry import _events as events_api
 from opentelemetry import trace as trace_api
 from opentelemetry._logs import _internal as logging_api
 from opentelemetry.metrics import _internal as metrics_api
@@ -49,6 +48,10 @@ def reset_logging_globals() -> None:
 # pylint: disable=protected-access
 def reset_event_globals() -> None:
     """WARNING: only use this for tests."""
+    from opentelemetry import (  # noqa: PLC0415
+        _events as events_api,  # pylint: disable=import-outside-toplevel
+    )
+
     events_api._EVENT_LOGGER_PROVIDER_SET_ONCE = Once()  # type: ignore[attr-defined]
     events_api._EVENT_LOGGER_PROVIDER = None  # type: ignore[attr-defined]
     events_api._PROXY_EVENT_LOGGER_PROVIDER = (
