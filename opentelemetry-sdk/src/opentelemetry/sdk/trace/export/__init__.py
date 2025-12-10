@@ -101,6 +101,9 @@ class SimpleSpanProcessor(SpanProcessor):
     ) -> None:
         pass
 
+    def _on_ending(self, span: Span) -> None:
+        pass
+
     def on_end(self, span: ReadableSpan) -> None:
         if not (span.context and span.context.trace_flags.sampled):
             return
@@ -185,6 +188,9 @@ class BatchSpanProcessor(SpanProcessor):
     def on_start(
         self, span: Span, parent_context: Context | None = None
     ) -> None:
+        pass
+
+    def _on_ending(self, span: Span) -> None:
         pass
 
     def on_end(self, span: ReadableSpan) -> None:
