@@ -12,5 +12,5 @@ wrapt==1.16.0
 zipp==3.20.2
 -e opentelemetry-sdk
 -e opentelemetry-semantic-conventions
--e tests/opentelemetry-test-utils
 -e opentelemetry-api
+-e tests/opentelemetry-test-utils

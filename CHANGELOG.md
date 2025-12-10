@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Prevent possible endless recursion from happening in `SimpleLogRecordProcessor.on_emit`,
+  ([#4799](https://github.com/open-telemetry/opentelemetry-python/pull/4799)).
 - Regenerate opentelemetry-proto code with v1.9.0 release
   ([#4840](https://github.com/open-telemetry/opentelemetry-python/pull/4840))
 - Add python 3.14 support
