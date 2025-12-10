@@ -1780,6 +1780,139 @@ jobs:
       - name: Run tests
         run: tox -e pypy3-test-opentelemetry-exporter-otlp-proto-http -- -ra
 
+  py39-test-opentelemetry-exporter-otlp-proto-kafka_ubuntu-latest:
+    name: opentelemetry-exporter-otlp-proto-kafka 3.9 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py39-test-opentelemetry-exporter-otlp-proto-kafka -- -ra
+
+  py310-test-opentelemetry-exporter-otlp-proto-kafka_ubuntu-latest:
+    name: opentelemetry-exporter-otlp-proto-kafka 3.10 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py310-test-opentelemetry-exporter-otlp-proto-kafka -- -ra
+
+  py311-test-opentelemetry-exporter-otlp-proto-kafka_ubuntu-latest:
+    name: opentelemetry-exporter-otlp-proto-kafka 3.11 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py311-test-opentelemetry-exporter-otlp-proto-kafka -- -ra
+
+  py312-test-opentelemetry-exporter-otlp-proto-kafka_ubuntu-latest:
+    name: opentelemetry-exporter-otlp-proto-kafka 3.12 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py312-test-opentelemetry-exporter-otlp-proto-kafka -- -ra
+
+  py313-test-opentelemetry-exporter-otlp-proto-kafka_ubuntu-latest:
+    name: opentelemetry-exporter-otlp-proto-kafka 3.13 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py313-test-opentelemetry-exporter-otlp-proto-kafka -- -ra
+
+  py314-test-opentelemetry-exporter-otlp-proto-kafka_ubuntu-latest:
+    name: opentelemetry-exporter-otlp-proto-kafka 3.14 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py314-test-opentelemetry-exporter-otlp-proto-kafka -- -ra
+
+  pypy3-test-opentelemetry-exporter-otlp-proto-kafka_ubuntu-latest:
+    name: opentelemetry-exporter-otlp-proto-kafka pypy-3.9 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python pypy-3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "pypy-3.9"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e pypy3-test-opentelemetry-exporter-otlp-proto-kafka -- -ra
+
   py39-test-opentelemetry-exporter-prometheus_ubuntu-latest:
     name: opentelemetry-exporter-prometheus 3.9 Ubuntu
     runs-on: ubuntu-latest
@@ -4735,6 +4868,160 @@ jobs:
       - name: Run tests
         run: tox -e pypy3-test-opentelemetry-exporter-otlp-proto-http -- -ra
 
+  py39-test-opentelemetry-exporter-otlp-proto-kafka_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-kafka 3.9 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+
+      - name: Run tests
+        run: tox -e py39-test-opentelemetry-exporter-otlp-proto-kafka -- -ra
+
+  py310-test-opentelemetry-exporter-otlp-proto-kafka_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-kafka 3.10 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+
+      - name: Run tests
+        run: tox -e py310-test-opentelemetry-exporter-otlp-proto-kafka -- -ra
+
+  py311-test-opentelemetry-exporter-otlp-proto-kafka_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-kafka 3.11 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+
+      - name: Run tests
+        run: tox -e py311-test-opentelemetry-exporter-otlp-proto-kafka -- -ra
+
+  py312-test-opentelemetry-exporter-otlp-proto-kafka_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-kafka 3.12 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+
+      - name: Run tests
+        run: tox -e py312-test-opentelemetry-exporter-otlp-proto-kafka -- -ra
+
+  py313-test-opentelemetry-exporter-otlp-proto-kafka_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-kafka 3.13 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+
+      - name: Run tests
+        run: tox -e py313-test-opentelemetry-exporter-otlp-proto-kafka -- -ra
+
+  py314-test-opentelemetry-exporter-otlp-proto-kafka_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-kafka 3.14 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+
+      - name: Run tests
+        run: tox -e py314-test-opentelemetry-exporter-otlp-proto-kafka -- -ra
+
+  pypy3-test-opentelemetry-exporter-otlp-proto-kafka_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-kafka pypy-3.9 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python pypy-3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "pypy-3.9"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+
+      - name: Run tests
+        run: tox -e pypy3-test-opentelemetry-exporter-otlp-proto-kafka -- -ra
+
   py39-test-opentelemetry-exporter-prometheus_windows-latest:
     name: opentelemetry-exporter-prometheus 3.9 Windows
     runs-on: windows-latest
@@ -4800,311 +5087,3 @@ jobs:
 
       - name: Run tests
         run: tox -e py311-test-opentelemetry-exporter-prometheus -- -ra
-
-  py312-test-opentelemetry-exporter-prometheus_windows-latest:
-    name: opentelemetry-exporter-prometheus 3.12 Windows
-    runs-on: windows-latest
-    timeout-minutes: 30
-    steps:
-      - name: Checkout repo @ SHA - ${{ github.sha }}
-        uses: actions/checkout@v4
-
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install tox
-        run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
-
-      - name: Run tests
-        run: tox -e py312-test-opentelemetry-exporter-prometheus -- -ra
-
-  py313-test-opentelemetry-exporter-prometheus_windows-latest:
-    name: opentelemetry-exporter-prometheus 3.13 Windows
-    runs-on: windows-latest
-    timeout-minutes: 30
-    steps:
-      - name: Checkout repo @ SHA - ${{ github.sha }}
-        uses: actions/checkout@v4
-
-      - name: Set up Python 3.13
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-
-      - name: Install tox
-        run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
-
-      - name: Run tests
-        run: tox -e py313-test-opentelemetry-exporter-prometheus -- -ra
-
-  py314-test-opentelemetry-exporter-prometheus_windows-latest:
-    name: opentelemetry-exporter-prometheus 3.14 Windows
-    runs-on: windows-latest
-    timeout-minutes: 30
-    steps:
-      - name: Checkout repo @ SHA - ${{ github.sha }}
-        uses: actions/checkout@v4
-
-      - name: Set up Python 3.14
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.14"
-
-      - name: Install tox
-        run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
-
-      - name: Run tests
-        run: tox -e py314-test-opentelemetry-exporter-prometheus -- -ra
-
-  pypy3-test-opentelemetry-exporter-prometheus_windows-latest:
-    name: opentelemetry-exporter-prometheus pypy-3.9 Windows
-    runs-on: windows-latest
-    timeout-minutes: 30
-    steps:
-      - name: Checkout repo @ SHA - ${{ github.sha }}
-        uses: actions/checkout@v4
-
-      - name: Set up Python pypy-3.9
-        uses: actions/setup-python@v5
-        with:
-          python-version: "pypy-3.9"
-
-      - name: Install tox
-        run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
-
-      - name: Run tests
-        run: tox -e pypy3-test-opentelemetry-exporter-prometheus -- -ra
-
-  py39-test-opentelemetry-exporter-zipkin-combined_windows-latest:
-    name: opentelemetry-exporter-zipkin-combined 3.9 Windows
-    runs-on: windows-latest
-    timeout-minutes: 30
-    steps:
-      - name: Checkout repo @ SHA - ${{ github.sha }}
-        uses: actions/checkout@v4
-
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.9"
-
-      - name: Install tox
-        run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
-
-      - name: Run tests
-        run: tox -e py39-test-opentelemetry-exporter-zipkin-combined -- -ra
-
-  py310-test-opentelemetry-exporter-zipkin-combined_windows-latest:
-    name: opentelemetry-exporter-zipkin-combined 3.10 Windows
-    runs-on: windows-latest
-    timeout-minutes: 30
-    steps:
-      - name: Checkout repo @ SHA - ${{ github.sha }}
-        uses: actions/checkout@v4
-
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-
-      - name: Install tox
-        run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
-
-      - name: Run tests
-        run: tox -e py310-test-opentelemetry-exporter-zipkin-combined -- -ra
-
-  py311-test-opentelemetry-exporter-zipkin-combined_windows-latest:
-    name: opentelemetry-exporter-zipkin-combined 3.11 Windows
-    runs-on: windows-latest
-    timeout-minutes: 30
-    steps:
-      - name: Checkout repo @ SHA - ${{ github.sha }}
-        uses: actions/checkout@v4
-
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install tox
-        run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
-
-      - name: Run tests
-        run: tox -e py311-test-opentelemetry-exporter-zipkin-combined -- -ra
-
-  py312-test-opentelemetry-exporter-zipkin-combined_windows-latest:
-    name: opentelemetry-exporter-zipkin-combined 3.12 Windows
-    runs-on: windows-latest
-    timeout-minutes: 30
-    steps:
-      - name: Checkout repo @ SHA - ${{ github.sha }}
-        uses: actions/checkout@v4
-
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install tox
-        run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
-
-      - name: Run tests
-        run: tox -e py312-test-opentelemetry-exporter-zipkin-combined -- -ra
-
-  py313-test-opentelemetry-exporter-zipkin-combined_windows-latest:
-    name: opentelemetry-exporter-zipkin-combined 3.13 Windows
-    runs-on: windows-latest
-    timeout-minutes: 30
-    steps:
-      - name: Checkout repo @ SHA - ${{ github.sha }}
-        uses: actions/checkout@v4
-
-      - name: Set up Python 3.13
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-
-      - name: Install tox
-        run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
-
-      - name: Run tests
-        run: tox -e py313-test-opentelemetry-exporter-zipkin-combined -- -ra
-
-  py314-test-opentelemetry-exporter-zipkin-combined_windows-latest:
-    name: opentelemetry-exporter-zipkin-combined 3.14 Windows
-    runs-on: windows-latest
-    timeout-minutes: 30
-    steps:
-      - name: Checkout repo @ SHA - ${{ github.sha }}
-        uses: actions/checkout@v4
-
-      - name: Set up Python 3.14
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.14"
-
-      - name: Install tox
-        run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
-
-      - name: Run tests
-        run: tox -e py314-test-opentelemetry-exporter-zipkin-combined -- -ra
-
-  pypy3-test-opentelemetry-exporter-zipkin-combined_windows-latest:
-    name: opentelemetry-exporter-zipkin-combined pypy-3.9 Windows
-    runs-on: windows-latest
-    timeout-minutes: 30
-    steps:
-      - name: Checkout repo @ SHA - ${{ github.sha }}
-        uses: actions/checkout@v4
-
-      - name: Set up Python pypy-3.9
-        uses: actions/setup-python@v5
-        with:
-          python-version: "pypy-3.9"
-
-      - name: Install tox
-        run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
-
-      - name: Run tests
-        run: tox -e pypy3-test-opentelemetry-exporter-zipkin-combined -- -ra
-
-  py39-test-opentelemetry-exporter-zipkin-proto-http_windows-latest:
-    name: opentelemetry-exporter-zipkin-proto-http 3.9 Windows
-    runs-on: windows-latest
-    timeout-minutes: 30
-    steps:
-      - name: Checkout repo @ SHA - ${{ github.sha }}
-        uses: actions/checkout@v4
-
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.9"
-
-      - name: Install tox
-        run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
-
-      - name: Run tests
-        run: tox -e py39-test-opentelemetry-exporter-zipkin-proto-http -- -ra
-
-  py310-test-opentelemetry-exporter-zipkin-proto-http_windows-latest:
-    name: opentelemetry-exporter-zipkin-proto-http 3.10 Windows
-    runs-on: windows-latest
-    timeout-minutes: 30
-    steps:
-      - name: Checkout repo @ SHA - ${{ github.sha }}
-        uses: actions/checkout@v4
-
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-
-      - name: Install tox
-        run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
-
-      - name: Run tests
-        run: tox -e py310-test-opentelemetry-exporter-zipkin-proto-http -- -ra
-
-  py311-test-opentelemetry-exporter-zipkin-proto-http_windows-latest:
-    name: opentelemetry-exporter-zipkin-proto-http 3.11 Windows
-    runs-on: windows-latest
-    timeout-minutes: 30
-    steps:
-      - name: Checkout repo @ SHA - ${{ github.sha }}
-        uses: actions/checkout@v4
-
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install tox
-        run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
-
-      - name: Run tests
-        run: tox -e py311-test-opentelemetry-exporter-zipkin-proto-http -- -ra
