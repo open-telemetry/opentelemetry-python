@@ -21,7 +21,6 @@ import unittest
 from concurrent.futures import (  # pylint: disable=no-name-in-module
     ThreadPoolExecutor,
 )
-from sys import version_info
 from typing import Sequence
 from unittest.mock import Mock, patch
 
