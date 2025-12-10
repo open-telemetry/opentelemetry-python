@@ -21,6 +21,7 @@ from opentelemetry.sdk._logs._internal import (
     LogRecordDroppedAttributesWarning,
     LogRecordLimits,
     LogRecordProcessor,
+    FilteringLogRecordProcessor,
     ReadableLogRecord,
     ReadWriteLogRecord,
 )
@@ -32,6 +33,7 @@ __all__ = [
     "LogLimits",
     "LogRecordLimits",
     "LogRecordProcessor",
+    "FilteringLogRecordProcessor",
     "LogDroppedAttributesWarning",
     "LogRecordDroppedAttributesWarning",
     "ReadableLogRecord",

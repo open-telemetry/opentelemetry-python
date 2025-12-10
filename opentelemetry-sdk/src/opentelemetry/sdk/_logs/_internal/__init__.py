@@ -55,6 +55,7 @@ from opentelemetry.semconv.attributes import exception_attributes
 from opentelemetry.trace import (
     format_span_id,
     format_trace_id,
+    get_current_span,
 )
 from opentelemetry.util.types import AnyValue, _ExtendedAttributes
 
@@ -315,6 +316,35 @@ class LogRecordProcessor(abc.ABC):
         Returns:
             False if the timeout is exceeded, True otherwise.
         """
+
+
+class FilteringLogRecordProcessor(LogRecordProcessor):
+    """A processor that drops records based on minimum severity and/or trace based sampling parameters provided by the user."""
+
+    def __init__(
+        self,
+        log_record_processor: LogRecordProcessor,
+        *,
+        minimum_severity_level: SeverityNumber = SeverityNumber.UNSPECIFIED,
+        enable_trace_based_sampling: bool = False,
+    ):
+        self._log_record_processor = log_record_processor
+        self._minimum_severity_level = minimum_severity_level
+        self._enable_trace_based_sampling = enable_trace_based_sampling
+
+    def on_emit(self, log_record: ReadWriteLogRecord):
+        record = log_record.log_record
+        if is_less_than_min_severity(record, self._minimum_severity_level):
+            return
+        if should_drop_logs_for_trace_based(record, self._enable_trace_based_sampling):
+            return
+        self._log_record_processor.on_emit(log_record)
+
+    def shutdown(self):
+        self._log_record_processor.shutdown()
+
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        return self._log_record_processor.force_flush(timeout_millis)
 
 
 # Temporary fix until https://github.com/PyCQA/pylint/issues/4098 is resolved
@@ -835,3 +865,29 @@ def std_to_otel(levelno: int) -> SeverityNumber:
     if levelno > 53:
         return SeverityNumber.FATAL4
     return _STD_TO_OTEL[levelno]
+
+
+def is_less_than_minimum_severity_level(
+    record: LogRecord, minimum_severity_level: SeverityNumber
+) -> bool:
+    if record.severity_number is not None:
+        if (
+            minimum_severity_level is not None
+            and minimum_severity_level != SeverityNumber.UNSPECIFIED
+            and record.severity_number.value < minimum_severity_level.value
+        ):
+            return True
+    return False
+
+
+def should_drop_logs_for_trace_based_sampling(
+    record: LogRecord, enable_trace_based_sampling: bool
+) -> bool:
+    if enable_trace_based_sampling:
+        if record.context is not None:
+            span = get_current_span(record.context)
+            span_context = span.get_span_context()
+            if span_context.is_valid and not span_context.trace_flags.sampled:
+                return True
+    return False
+
