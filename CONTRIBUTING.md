@@ -1,7 +1,7 @@
 # Contributing to opentelemetry-python
 The Python special interest group (SIG) meets weekly on Thursdays at 9AM PST. Check the [OpenTelemetry community calendar](https://groups.google.com/a/opentelemetry.io/g/calendar-python) for specific dates and Zoom meeting links.
 
-See the [public meeting notes](https://docs.google.com/document/d/1CIMGoIOZ-c3-igzbd6_Pnxx1SjAkjwqoYSUWxPY8XIs/edit)
+See the [public meeting notes](https://docs.google.com/document/d/18w8zOBm_mbety0OqlPwxc7dvnfu641EgmrO4AdJef0U/edit?tab=t.0)
 for a summary description of past meetings.
 
 See the [community membership document](https://github.com/open-telemetry/community/blob/main/community-membership.md)
