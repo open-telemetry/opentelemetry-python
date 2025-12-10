@@ -48,8 +48,8 @@ def reset_logging_globals() -> None:
 # pylint: disable=protected-access
 def reset_event_globals() -> None:
     """WARNING: only use this for tests."""
-    from opentelemetry import (  # noqa: PLC0415
-        _events as events_api,  # pylint: disable=import-outside-toplevel
+    from opentelemetry import (  # pylint: disable=import-outside-toplevel # noqa: PLC0415
+        _events as events_api,
     )
 
     events_api._EVENT_LOGGER_PROVIDER_SET_ONCE = Once()  # type: ignore[attr-defined]
