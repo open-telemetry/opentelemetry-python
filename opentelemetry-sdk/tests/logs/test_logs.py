@@ -25,9 +25,9 @@ from opentelemetry.sdk._logs import (
     ReadableLogRecord,
 )
 from opentelemetry.sdk._logs._internal import (
+    FilteringLogRecordProcessor,
     NoOpLogger,
     SynchronousMultiLogRecordProcessor,
-    FilteringLogRecordProcessor,
 )
 from opentelemetry.sdk.environment_variables import OTEL_SDK_DISABLED
 from opentelemetry.sdk.resources import Resource
@@ -216,13 +216,33 @@ class TestLogger(unittest.TestCase):
         self.assertEqual(result_log_record.event_name, "event_name")
         self.assertEqual(log_data.resource, logger.resource)
 
-    def test_emit_logrecord_with_min_severity_filtering(self):
-        logger_processor_mock = Mock()
+
+class TestFilteringLogRecordProcessor(unittest.TestCase):
+    @staticmethod
+    def _build_logger(
+        minimum_severity_level: SeverityNumber = SeverityNumber.UNSPECIFIED,
+        enable_trace_based_sampling: bool = False,
+    ):
+        processor_mock = Mock()
         filtering_processor = FilteringLogRecordProcessor(
-            logger_processor_mock,
-            minimum_severity_level=SeverityNumber.DEBUG4,
+            processor_mock,
+            minimum_severity_level=minimum_severity_level,
+            enable_trace_based_sampling=enable_trace_based_sampling,
         )
-        logger, _ = self._get_logger(filtering_processor)
+        provider = LoggerProvider(resource=Resource.create({}))
+        provider.add_log_record_processor(filtering_processor)
+        logger = provider.get_logger(
+            "name",
+            version="version",
+            schema_url="schema_url",
+            attributes={"an": "attribute"},
+        )
+        return logger, processor_mock
+
+    def test_emit_logrecord_with_minimum_severity_level_filtering(self):
+        logger, processor_mock = self._build_logger(
+            minimum_severity_level=SeverityNumber.DEBUG4
+        )
 
         log_record_info = LogRecord(
             observed_timestamp=0,
@@ -232,9 +252,9 @@ class TestLogger(unittest.TestCase):
         )
 
         logger.emit(log_record_info)
-        logger_processor_mock.on_emit.assert_not_called()
+        processor_mock.on_emit.assert_not_called()
 
-        logger_processor_mock.reset_mock()
+        processor_mock.reset_mock()
 
         log_record_error = LogRecord(
             observed_timestamp=0,
@@ -245,18 +265,15 @@ class TestLogger(unittest.TestCase):
 
         logger.emit(log_record_error)
 
-        logger_processor_mock.on_emit.assert_called_once()
-        log_data = logger_processor_mock.on_emit.call_args.args[0]
+        processor_mock.on_emit.assert_called_once()
+        log_data = processor_mock.on_emit.call_args.args[0]
         self.assertTrue(isinstance(log_data.log_record, LogRecord))
-        self.assertEqual(log_data.log_record.severity_number, SeverityNumber.ERROR)
-
-    def test_emit_logrecord_with_min_severity_unspecified(self):
-        logger_processor_mock = Mock()
-        filtering_processor = FilteringLogRecordProcessor(
-            logger_processor_mock,
-            minimum_severity_level=SeverityNumber.UNSPECIFIED,
+        self.assertEqual(
+            log_data.log_record.severity_number, SeverityNumber.ERROR
         )
-        logger, _ = self._get_logger(filtering_processor)
+
+    def test_emit_logrecord_with_minimum_severity_level_unspecified(self):
+        logger, processor_mock = self._build_logger()
         log_record = LogRecord(
             observed_timestamp=0,
             body="debug log line",
@@ -264,15 +281,12 @@ class TestLogger(unittest.TestCase):
             severity_text="DEBUG",
         )
         logger.emit(log_record)
-        logger_processor_mock.on_emit.assert_called_once()
+        processor_mock.on_emit.assert_called_once()
 
     def test_emit_logrecord_with_trace_based_filtering(self):
-        logger_processor_mock = Mock()
-        filtering_processor = FilteringLogRecordProcessor(
-            logger_processor_mock,
-            enable_trace_based_sampling=True,
+        logger, processor_mock = self._build_logger(
+            enable_trace_based_sampling=True
         )
-        logger, _ = self._get_logger(filtering_processor)
 
         mock_span_context = Mock()
         mock_span_context.is_valid = True
@@ -296,9 +310,9 @@ class TestLogger(unittest.TestCase):
             )
 
             logger.emit(log_record)
-            logger_processor_mock.on_emit.assert_not_called()
+            processor_mock.on_emit.assert_not_called()
 
-        logger_processor_mock.reset_mock()
+        processor_mock.reset_mock()
 
         mock_span_context = Mock()
         mock_span_context.is_valid = True
@@ -320,15 +334,12 @@ class TestLogger(unittest.TestCase):
             )
 
             logger.emit(log_record)
-            logger_processor_mock.on_emit.assert_called_once()
+            processor_mock.on_emit.assert_called_once()
 
-    def test_emit_logrecord_trace_filtering_disabled(self):
-        logger_processor_mock = Mock()
-        filtering_processor = FilteringLogRecordProcessor(
-            logger_processor_mock,
-            enable_trace_based_sampling=False,
+    def test_emit_logrecord_trace_based_filtering_disabled(self):
+        logger, processor_mock = self._build_logger(
+            enable_trace_based_sampling=False
         )
-        logger, _ = self._get_logger(filtering_processor)
 
         mock_span_context = Mock()
         mock_span_context.is_valid = False
@@ -352,15 +363,12 @@ class TestLogger(unittest.TestCase):
             )
 
             logger.emit(log_record)
-            logger_processor_mock.on_emit.assert_called_once()
+            processor_mock.on_emit.assert_called_once()
 
-    def test_emit_logrecord_trace_filtering_edge_cases(self):
-        logger_processor_mock = Mock()
-        filtering_processor = FilteringLogRecordProcessor(
-            logger_processor_mock,
-            enable_trace_based_sampling=True,
+    def test_emit_logrecord_trace_based_filtering_edge_cases(self):
+        logger, processor_mock = self._build_logger(
+            enable_trace_based_sampling=True
         )
-        logger, _ = self._get_logger(filtering_processor)
 
         mock_span_context = Mock()
         mock_span_context.is_valid = False
@@ -384,9 +392,9 @@ class TestLogger(unittest.TestCase):
             )
 
             logger.emit(log_record)
-            logger_processor_mock.on_emit.assert_called_once()
+            processor_mock.on_emit.assert_called_once()
 
-        logger_processor_mock.reset_mock()
+        processor_mock.reset_mock()
 
         mock_span_context = Mock()
         mock_span_context.is_valid = True
@@ -408,16 +416,13 @@ class TestLogger(unittest.TestCase):
             )
 
             logger.emit(log_record)
-            logger_processor_mock.on_emit.assert_not_called()
+            processor_mock.on_emit.assert_not_called()
 
-    def test_emit_both_min_severity_and_trace_based_filtering(self):
-        logger_processor_mock = Mock()
-        filtering_processor = FilteringLogRecordProcessor(
-            logger_processor_mock,
+    def test_emit_both_minimum_severity_level_and_trace_based_filtering(self):
+        logger, processor_mock = self._build_logger(
             minimum_severity_level=SeverityNumber.WARN,
             enable_trace_based_sampling=True,
         )
-        logger, _ = self._get_logger(filtering_processor)
 
         mock_span_context = Mock()
         mock_span_context.is_valid = True
@@ -441,9 +446,9 @@ class TestLogger(unittest.TestCase):
             )
 
             logger.emit(log_record_info)
-            logger_processor_mock.on_emit.assert_not_called()
+            processor_mock.on_emit.assert_not_called()
 
-            logger_processor_mock.reset_mock()
+            processor_mock.reset_mock()
 
             log_record_error = LogRecord(
                 observed_timestamp=0,
@@ -454,4 +459,4 @@ class TestLogger(unittest.TestCase):
             )
 
             logger.emit(log_record_error)
-            logger_processor_mock.on_emit.assert_called_once()
+            processor_mock.on_emit.assert_called_once()

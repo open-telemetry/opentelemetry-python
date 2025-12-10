@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from opentelemetry.sdk._logs._internal import (
+    FilteringLogRecordProcessor,
     LogDroppedAttributesWarning,
     Logger,
     LoggerProvider,
@@ -21,7 +22,6 @@ from opentelemetry.sdk._logs._internal import (
     LogRecordDroppedAttributesWarning,
     LogRecordLimits,
     LogRecordProcessor,
-    FilteringLogRecordProcessor,
     ReadableLogRecord,
     ReadWriteLogRecord,
 )

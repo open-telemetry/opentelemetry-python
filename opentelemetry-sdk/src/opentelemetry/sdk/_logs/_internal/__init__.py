@@ -334,9 +334,13 @@ class FilteringLogRecordProcessor(LogRecordProcessor):
 
     def on_emit(self, log_record: ReadWriteLogRecord):
         record = log_record.log_record
-        if is_less_than_min_severity(record, self._minimum_severity_level):
+        if is_less_than_minimum_severity_level(
+            record, self._minimum_severity_level
+        ):
             return
-        if should_drop_logs_for_trace_based(record, self._enable_trace_based_sampling):
+        if should_drop_logs_for_trace_based_sampling(
+            record, self._enable_trace_based_sampling
+        ):
             return
         self._log_record_processor.on_emit(log_record)
 
@@ -870,6 +874,12 @@ def std_to_otel(levelno: int) -> SeverityNumber:
 def is_less_than_minimum_severity_level(
     record: LogRecord, minimum_severity_level: SeverityNumber
 ) -> bool:
+    """Checks if the log record's severity number is less than the minimum severity level.
+
+    :return: True if the log record's severity number is less than the minimum
+            severity level, False otherwise. Log records with an unspecified severity (i.e. `0`)
+            are not affected by this parameter and therefore bypass minimum severity filtering.
+    """
     if record.severity_number is not None:
         if (
             minimum_severity_level is not None
@@ -883,6 +893,13 @@ def is_less_than_minimum_severity_level(
 def should_drop_logs_for_trace_based_sampling(
     record: LogRecord, enable_trace_based_sampling: bool
 ) -> bool:
+    """Determines whether the logger should drop log records associated with unsampled traces.
+
+    If `enable_trace_based_sampling` is `true`, log records associated with unsampled traces are dropped by the `Logger`.
+    A log record is considered associated with an unsampled trace if it has a valid `SpanId` and its
+    `TraceFlags` indicate that the trace is unsampled. A log record that isn't associated with a trace
+    context is not affected by this parameter and therefore bypasses trace-based filtering.
+    """
     if enable_trace_based_sampling:
         if record.context is not None:
             span = get_current_span(record.context)
