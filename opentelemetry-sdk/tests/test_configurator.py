@@ -48,7 +48,7 @@ from opentelemetry.sdk._configuration import (
 from opentelemetry.sdk._logs import LoggingHandler
 from opentelemetry.sdk._logs._internal.export import LogRecordExporter
 from opentelemetry.sdk._logs.export import (
-    ConsoleLogRecordExporter
+    ConsoleLogRecordExporter,
     SimpleLogRecordProcessor,
 )
 from opentelemetry.sdk.environment_variables import (
@@ -402,11 +402,11 @@ class TestTraceInit(TestCase):
         exporter = provider.processor.exporter
         self.assertEqual(exporter.compression, "gzip")
 
-    def test_trace_init_custom_span_processor(self):
+    def test_trace_init_custom_export_span_processor(self):
         _init_tracing(
             {"otlp": OTLPSpanExporter},
             id_generator=RandomIdGenerator(),
-            processor=SimpleSpanProcessor,
+            export_processor=SimpleSpanProcessor,
         )
 
         provider = self.set_provider_mock.call_args[0][0]
@@ -722,13 +722,13 @@ class TestLoggingInit(TestCase):
             provider = self.set_provider_mock.call_args[0][0]
             self.assertEqual(provider.processor.exporter.compression, "gzip")
 
-    def test_logging_init_custom_log_record_processor(self):
+    def test_logging_init_custom_export_log_record_processor(self):
         with ResetGlobalLoggingState():
             resource = Resource.create({})
             _init_logging(
                 {"otlp": DummyOTLPLogExporter},
                 resource=resource,
-                processor=SimpleLogRecordProcessor,
+                export_processor=SimpleLogRecordProcessor,
             )
             provider = self.set_provider_mock.call_args[0][0]
             self.assertIsInstance(provider.processor, SimpleLogRecordProcessor)
@@ -769,7 +769,12 @@ class TestLoggingInit(TestCase):
         _initialize_components(auto_instrumentation_version="auto-version")
         self.assertEqual(tracing_mock.call_count, 1)
         logging_mock.assert_called_once_with(
-            mock.ANY, mock.ANY, False, exporter_args_map=None, processor=None
+            mock.ANY,
+            mock.ANY,
+            False,
+            exporter_args_map=None,
+            log_record_processors=None,
+            export_processor=None,
         )
 
     @patch.dict(
@@ -789,7 +794,8 @@ class TestLoggingInit(TestCase):
             mock.ANY,
             True,
             exporter_args_map=None,
-            processor=None,
+            log_record_processors=None,
+            export_processor=None,
         )
         self.assertEqual(tracing_mock.call_count, 1)
 
@@ -874,8 +880,10 @@ class TestLoggingInit(TestCase):
             "id_generator": "TEST_GENERATOR",
             "setup_logging_handler": True,
             "exporter_args_map": {1: {"compression": "gzip"}},
-            "log_record_processor": SimpleLogRecordProcessor,
-            "span_processor": SimpleSpanProcessor,
+            "log_export_processor": SimpleLogRecordProcessor,
+            "trace_export_processor": SimpleSpanProcessor,
+            "log_record_processors": [],
+            "span_processors": [],
         }
         _initialize_components(**kwargs)
 
@@ -910,7 +918,8 @@ class TestLoggingInit(TestCase):
             sampler="TEST_SAMPLER",
             resource="TEST_RESOURCE",
             exporter_args_map={1: {"compression": "gzip"}},
-            processor=SimpleSpanProcessor,
+            span_processors=[],
+            export_processor=SimpleSpanProcessor,
         )
         metrics_mock.assert_called_once_with(
             "TEST_METRICS_EXPORTERS_DICT",
@@ -922,7 +931,8 @@ class TestLoggingInit(TestCase):
             "TEST_RESOURCE",
             True,
             exporter_args_map={1: {"compression": "gzip"}},
-            processor=SimpleLogRecordProcessor,
+            log_record_processors=[],
+            export_processor=SimpleLogRecordProcessor,
         )
 
     def test_basicConfig_works_with_otel_handler(self):

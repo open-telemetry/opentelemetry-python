@@ -214,7 +214,8 @@ def _init_tracing(
     sampler: Sampler | None = None,
     resource: Resource | None = None,
     exporter_args_map: ExporterArgsMap | None = None,
-    processor: Type[SpanProcessor] | None = None,
+    span_processors: Sequence[Type[SpanProcessor]] | None = None,
+    export_processor: Type[SpanProcessor] | None = None,
 ):
     provider = TracerProvider(
         id_generator=id_generator,
@@ -224,11 +225,16 @@ def _init_tracing(
     set_tracer_provider(provider)
 
     exporter_args_map = exporter_args_map or {}
-    span_processor = processor or BatchSpanProcessor
+    span_processors = span_processors or []
+    export_processor = export_processor or BatchSpanProcessor
     for _, exporter_class in exporters.items():
         exporter_args = exporter_args_map.get(exporter_class, {})
+
+        for span_processor in span_processors:
+            provider.add_span_processor(span_processor)
+
         provider.add_span_processor(
-            span_processor(exporter_class(**exporter_args))
+            export_processor(exporter_class(**exporter_args))
         )
 
 
@@ -262,17 +268,24 @@ def _init_logging(
     resource: Resource | None = None,
     setup_logging_handler: bool = True,
     exporter_args_map: ExporterArgsMap | None = None,
-    processor: Type[LogRecordProcessor] | None = None,
+    log_record_processors: Sequence[Type[LogRecordProcessor]] | None = None,
+    export_processor: Type[LogRecordProcessor] | None = None,
 ):
     provider = LoggerProvider(resource=resource)
     set_logger_provider(provider)
 
     exporter_args_map = exporter_args_map or {}
-    log_record_processor = processor or BatchLogRecordProcessor
+
+    log_record_processors = log_record_processors or []
+    export_processor = export_processor or BatchLogRecordProcessor
     for _, exporter_class in exporters.items():
         exporter_args = exporter_args_map.get(exporter_class, {})
+
+        for log_record_processor in log_record_processors:
+            provider.add_log_record_processor(log_record_processor)
+
         provider.add_log_record_processor(
-            log_record_processor(exporter_class(**exporter_args))
+            export_processor(exporter_class(**exporter_args))
         )
 
     # silence warnings from internal users until we drop the deprecated Events API
@@ -437,8 +450,10 @@ def _initialize_components(
     id_generator: IdGenerator | None = None,
     setup_logging_handler: bool | None = None,
     exporter_args_map: ExporterArgsMap | None = None,
-    span_processor: Type[SpanProcessor] | None = None,
-    log_record_processor: Type[LogRecordProcessor] | None = None,
+    span_processors: Sequence[Type[SpanProcessor]] | None = None,
+    trace_export_processor: Type[SpanProcessor] | None = None,
+    log_record_processors: Sequence[Type[LogRecordProcessor]] | None = None,
+    log_export_processor: Type[LogRecordProcessor] | None = None,
 ):
     # pylint: disable=too-many-locals
     if trace_exporter_names is None:
@@ -475,7 +490,8 @@ def _initialize_components(
         sampler=sampler,
         resource=resource,
         exporter_args_map=exporter_args_map,
-        processor=span_processor,
+        span_processors=span_processors,
+        export_processor=trace_export_processor,
     )
     _init_metrics(
         metric_exporters, resource, exporter_args_map=exporter_args_map
@@ -494,7 +510,8 @@ def _initialize_components(
         resource,
         setup_logging_handler,
         exporter_args_map=exporter_args_map,
-        processor=log_record_processor,
+        log_record_processors=log_record_processors,
+        export_processor=log_export_processor,
     )
 
 
