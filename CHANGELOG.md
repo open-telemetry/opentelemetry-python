@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Added OTLP Kafka exporter
+  ([#4841](https://github.com/open-telemetry/opentelemetry-python/pull/4841))
 - `opentelemetry-sdk`: Fix the type hint of the `_metrics_data` property to allow `None`
   ([#4837](https://github.com/open-telemetry/opentelemetry-python/pull/4837)
 - Regenerate opentelemetry-proto code with v1.9.0 release

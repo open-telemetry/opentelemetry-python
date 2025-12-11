@@ -866,3 +866,52 @@ Default: 9464
 This is an experimental environment variable and the name of this variable and its behavior can
 change in a non-backwards compatible way.
 """
+
+
+OTEL_EXPORTER_KAFKA_BROKERS = "OTEL_EXPORTER_KAFKA_BROKERS"
+"""
+.. envvar:: OTEL_EXPORTER_KAFKA_BROKERS
+
+The :envvar:`OTEL_EXPORTER_KAFKA_BROKERS` environment variable configures the brokers used
+by the Kafka exporter.
+Default: localhost:9092
+"""
+
+
+OTEL_EXPORTER_KAFKA_CLIENT_ID = "OTEL_EXPORTER_KAFKA_CLIENT_ID"
+"""
+.. envvar:: OTEL_EXPORTER_KAFKA_CLIENT_ID
+
+The :envvar:`OTEL_EXPORTER_KAFKA_CLIENT_ID` environment variable configures the client id used
+by the Kafka exporter.
+Default: otel-exporter
+"""
+
+
+OTEL_EXPORTER_KAFKA_LOGS_TOPIC = "OTEL_EXPORTER_KAFKA_LOGS_TOPIC"
+"""
+.. envvar:: OTEL_EXPORTER_KAFKA_LOGS_TOPIC
+
+The :envvar:`OTEL_EXPORTER_KAFKA_LOGS_TOPIC` environment variable configures the topic used
+by the Kafka log exporter.
+Default: otlp_logs
+"""
+
+
+OTEL_EXPORTER_KAFKA_METRICS_TOPIC = "OTEL_EXPORTER_KAFKA_METRICS_TOPIC"
+"""
+.. envvar:: OTEL_EXPORTER_KAFKA_LOGS_TOPIC
+
+The :envvar:`OTEL_EXPORTER_KAFKA_LOGS_TOPIC` environment variable configures the topic used
+by the Kafka log exporter.
+Default: otlp_logs
+"""
+
+OTEL_EXPORTER_KAFKA_TRACES_TOPIC = "OTEL_EXPORTER_KAFKA_TRACES_TOPIC"
+"""
+.. envvar:: OTEL_EXPORTER_KAFKA_TRACES_TOPIC
+
+The :envvar:`OTEL_EXPORTER_KAFKA_TRACES_TOPIC` environment variable configures the topic used
+by the Kafka trace exporter.
+Default: otlp_spans
+"""

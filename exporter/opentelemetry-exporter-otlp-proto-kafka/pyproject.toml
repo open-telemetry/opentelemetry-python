@@ -1,0 +1,61 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "opentelemetry-exporter-otlp-proto-kafka"
+dynamic = ["version"]
+description = "OpenTelemetry Collector Protobuf over Kafka Exporter"
+readme = "README.rst"
+license = "Apache-2.0"
+requires-python = ">=3.9"
+authors = [
+  { name = "OpenTelemetry Authors", email = "cncf-opentelemetry-contributors@lists.cncf.io" },
+]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Framework :: OpenTelemetry",
+  "Framework :: OpenTelemetry :: Exporters",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+  "googleapis-common-protos ~= 1.52",
+  "opentelemetry-api ~= 1.15",
+  "opentelemetry-proto == 1.40.0.dev",
+  "opentelemetry-sdk ~= 1.40.0.dev",
+  "opentelemetry-exporter-otlp-proto-common == 1.40.0.dev",
+  "kafka-python ~= 2.3.0",
+]
+
+[project.entry-points.opentelemetry_traces_exporter]
+otlp_proto_kafka = "opentelemetry.exporter.otlp.proto.kafka.trace_exporter:OTLPSpanExporter"
+
+[project.entry-points.opentelemetry_metrics_exporter]
+otlp_proto_kafka = "opentelemetry.exporter.otlp.proto.kafka.metric_exporter:OTLPMetricExporter"
+
+[project.entry-points.opentelemetry_logs_exporter]
+otlp_proto_kafka = "opentelemetry.exporter.otlp.proto.kafka._log_exporter:OTLPLogExporter"
+
+[project.urls]
+Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/exporter/opentelemetry-exporter-otlp-proto-kafka"
+Repository = "https://github.com/open-telemetry/opentelemetry-python"
+
+
+[tool.hatch.version]
+path = "src/opentelemetry/exporter/otlp/proto/kafka/version/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "/src",
+  "/tests",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/opentelemetry"]
