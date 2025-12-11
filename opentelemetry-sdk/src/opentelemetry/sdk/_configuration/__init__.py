@@ -109,6 +109,14 @@ ExporterArgsMap = Mapping[
 ]
 
 
+class ExporterSpanProcessor(SpanProcessor):
+    def __init__(self, span_exporter: SpanExporter, *args, **kwargs): ...
+
+
+class ExporterLogRecordProcessor(LogRecordProcessor):
+    def __init__(self, exporter: LogRecordExporter, *args, **kwargs): ...
+
+
 def _import_config_components(
     selected_components: Sequence[str], entry_point_name: str
 ) -> list[tuple[str, Type]]:
@@ -214,8 +222,8 @@ def _init_tracing(
     sampler: Sampler | None = None,
     resource: Resource | None = None,
     exporter_args_map: ExporterArgsMap | None = None,
-    span_processors: Sequence[Type[SpanProcessor]] | None = None,
-    export_processor: Type[SpanProcessor] | None = None,
+    span_processors: Sequence[SpanProcessor] | None = None,
+    export_span_processor: Type[ExporterSpanProcessor] | None = None,
 ):
     provider = TracerProvider(
         id_generator=id_generator,
@@ -226,7 +234,7 @@ def _init_tracing(
 
     exporter_args_map = exporter_args_map or {}
     span_processors = span_processors or []
-    export_processor = export_processor or BatchSpanProcessor
+    export_processor = export_span_processor or BatchSpanProcessor
     for _, exporter_class in exporters.items():
         exporter_args = exporter_args_map.get(exporter_class, {})
 
@@ -268,8 +276,9 @@ def _init_logging(
     resource: Resource | None = None,
     setup_logging_handler: bool = True,
     exporter_args_map: ExporterArgsMap | None = None,
-    log_record_processors: Sequence[Type[LogRecordProcessor]] | None = None,
-    export_processor: Type[LogRecordProcessor] | None = None,
+    log_record_processors: Sequence[LogRecordProcessor] | None = None,
+    export_log_record_processor: Type[ExporterLogRecordProcessor]
+    | None = None,
 ):
     provider = LoggerProvider(resource=resource)
     set_logger_provider(provider)
@@ -277,7 +286,7 @@ def _init_logging(
     exporter_args_map = exporter_args_map or {}
 
     log_record_processors = log_record_processors or []
-    export_processor = export_processor or BatchLogRecordProcessor
+    export_processor = export_log_record_processor or BatchLogRecordProcessor
     for _, exporter_class in exporters.items():
         exporter_args = exporter_args_map.get(exporter_class, {})
 
@@ -450,10 +459,11 @@ def _initialize_components(
     id_generator: IdGenerator | None = None,
     setup_logging_handler: bool | None = None,
     exporter_args_map: ExporterArgsMap | None = None,
-    span_processors: Sequence[Type[SpanProcessor]] | None = None,
-    trace_export_processor: Type[SpanProcessor] | None = None,
-    log_record_processors: Sequence[Type[LogRecordProcessor]] | None = None,
-    log_export_processor: Type[LogRecordProcessor] | None = None,
+    span_processors: Sequence[SpanProcessor] | None = None,
+    export_span_processor: Type[ExporterSpanProcessor] | None = None,
+    log_record_processors: Sequence[LogRecordProcessor] | None = None,
+    export_log_record_processor: Type[ExporterLogRecordProcessor]
+    | None = None,
 ):
     # pylint: disable=too-many-locals
     if trace_exporter_names is None:
@@ -491,7 +501,7 @@ def _initialize_components(
         resource=resource,
         exporter_args_map=exporter_args_map,
         span_processors=span_processors,
-        export_processor=trace_export_processor,
+        export_span_processor=export_span_processor,
     )
     _init_metrics(
         metric_exporters, resource, exporter_args_map=exporter_args_map
@@ -511,7 +521,7 @@ def _initialize_components(
         setup_logging_handler,
         exporter_args_map=exporter_args_map,
         log_record_processors=log_record_processors,
-        export_processor=log_export_processor,
+        export_log_record_processor=export_log_record_processor,
     )
 
 
