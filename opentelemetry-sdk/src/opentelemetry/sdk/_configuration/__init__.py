@@ -37,7 +37,11 @@ from opentelemetry.environment_variables import (
     OTEL_TRACES_EXPORTER,
 )
 from opentelemetry.metrics import set_meter_provider
-from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
+from opentelemetry.sdk._logs import (
+    LoggerProvider,
+    LoggingHandler,
+    LogRecordProcessor,
+)
 from opentelemetry.sdk._logs.export import (
     BatchLogRecordProcessor,
     LogRecordExporter,
@@ -58,7 +62,7 @@ from opentelemetry.sdk.metrics.export import (
     PeriodicExportingMetricReader,
 )
 from opentelemetry.sdk.resources import Attributes, Resource
-from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace import SpanProcessor, TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExporter
 from opentelemetry.sdk.trace.id_generator import IdGenerator
 from opentelemetry.sdk.trace.sampling import Sampler
@@ -103,6 +107,14 @@ ExporterArgsMap = Mapping[
     ],
     Mapping[str, Any],
 ]
+
+
+class ExporterSpanProcessor(SpanProcessor):
+    def __init__(self, span_exporter: SpanExporter, *args, **kwargs): ...
+
+
+class ExporterLogRecordProcessor(LogRecordProcessor):
+    def __init__(self, exporter: LogRecordExporter, *args, **kwargs): ...
 
 
 def _import_config_components(
@@ -210,6 +222,8 @@ def _init_tracing(
     sampler: Sampler | None = None,
     resource: Resource | None = None,
     exporter_args_map: ExporterArgsMap | None = None,
+    span_processors: Sequence[SpanProcessor] | None = None,
+    export_span_processor: Type[ExporterSpanProcessor] | None = None,
 ):
     provider = TracerProvider(
         id_generator=id_generator,
@@ -219,10 +233,16 @@ def _init_tracing(
     set_tracer_provider(provider)
 
     exporter_args_map = exporter_args_map or {}
+    export_processor = export_span_processor or BatchSpanProcessor
+
+    span_processors = span_processors or []
+    for span_processor in span_processors:
+        provider.add_span_processor(span_processor)
+
     for _, exporter_class in exporters.items():
         exporter_args = exporter_args_map.get(exporter_class, {})
         provider.add_span_processor(
-            BatchSpanProcessor(exporter_class(**exporter_args))
+            export_processor(exporter_class(**exporter_args))
         )
 
 
@@ -256,15 +276,24 @@ def _init_logging(
     resource: Resource | None = None,
     setup_logging_handler: bool = True,
     exporter_args_map: ExporterArgsMap | None = None,
+    log_record_processors: Sequence[LogRecordProcessor] | None = None,
+    export_log_record_processor: Type[ExporterLogRecordProcessor]
+    | None = None,
 ):
     provider = LoggerProvider(resource=resource)
     set_logger_provider(provider)
 
     exporter_args_map = exporter_args_map or {}
+    export_processor = export_log_record_processor or BatchLogRecordProcessor
+
+    log_record_processors = log_record_processors or []
+    for log_record_processor in log_record_processors:
+        provider.add_log_record_processor(log_record_processor)
+
     for _, exporter_class in exporters.items():
         exporter_args = exporter_args_map.get(exporter_class, {})
         provider.add_log_record_processor(
-            BatchLogRecordProcessor(exporter_class(**exporter_args))
+            export_processor(exporter_class(**exporter_args))
         )
 
     # silence warnings from internal users until we drop the deprecated Events API
@@ -429,7 +458,13 @@ def _initialize_components(
     id_generator: IdGenerator | None = None,
     setup_logging_handler: bool | None = None,
     exporter_args_map: ExporterArgsMap | None = None,
+    span_processors: Sequence[SpanProcessor] | None = None,
+    export_span_processor: Type[ExporterSpanProcessor] | None = None,
+    log_record_processors: Sequence[LogRecordProcessor] | None = None,
+    export_log_record_processor: Type[ExporterLogRecordProcessor]
+    | None = None,
 ):
+    # pylint: disable=too-many-locals
     if trace_exporter_names is None:
         trace_exporter_names = []
     if metric_exporter_names is None:
@@ -464,6 +499,8 @@ def _initialize_components(
         sampler=sampler,
         resource=resource,
         exporter_args_map=exporter_args_map,
+        span_processors=span_processors,
+        export_span_processor=export_span_processor,
     )
     _init_metrics(
         metric_exporters, resource, exporter_args_map=exporter_args_map
@@ -482,6 +519,8 @@ def _initialize_components(
         resource,
         setup_logging_handler,
         exporter_args_map=exporter_args_map,
+        log_record_processors=log_record_processors,
+        export_log_record_processor=export_log_record_processor,
     )
 
 
