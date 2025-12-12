@@ -406,7 +406,7 @@ class TestTraceInit(TestCase):
         _init_tracing(
             {"otlp": OTLPSpanExporter},
             id_generator=RandomIdGenerator(),
-            export_processor=SimpleSpanProcessor,
+            export_span_processor=SimpleSpanProcessor,
         )
 
         provider = self.set_provider_mock.call_args[0][0]
@@ -728,7 +728,7 @@ class TestLoggingInit(TestCase):
             _init_logging(
                 {"otlp": DummyOTLPLogExporter},
                 resource=resource,
-                export_processor=SimpleLogRecordProcessor,
+                export_log_record_processor=SimpleLogRecordProcessor,
             )
             provider = self.set_provider_mock.call_args[0][0]
             self.assertIsInstance(provider.processor, SimpleLogRecordProcessor)
@@ -774,7 +774,7 @@ class TestLoggingInit(TestCase):
             False,
             exporter_args_map=None,
             log_record_processors=None,
-            export_processor=None,
+            export_log_record_processor=None,
         )
 
     @patch.dict(
@@ -795,7 +795,7 @@ class TestLoggingInit(TestCase):
             True,
             exporter_args_map=None,
             log_record_processors=None,
-            export_processor=None,
+            export_log_record_processor=None,
         )
         self.assertEqual(tracing_mock.call_count, 1)
 
@@ -880,8 +880,8 @@ class TestLoggingInit(TestCase):
             "id_generator": "TEST_GENERATOR",
             "setup_logging_handler": True,
             "exporter_args_map": {1: {"compression": "gzip"}},
-            "log_export_processor": SimpleLogRecordProcessor,
-            "trace_export_processor": SimpleSpanProcessor,
+            "export_log_record_processor": SimpleLogRecordProcessor,
+            "export_span_processor": SimpleSpanProcessor,
             "log_record_processors": [],
             "span_processors": [],
         }
@@ -919,7 +919,7 @@ class TestLoggingInit(TestCase):
             resource="TEST_RESOURCE",
             exporter_args_map={1: {"compression": "gzip"}},
             span_processors=[],
-            export_processor=SimpleSpanProcessor,
+            export_span_processor=SimpleSpanProcessor,
         )
         metrics_mock.assert_called_once_with(
             "TEST_METRICS_EXPORTERS_DICT",
@@ -932,7 +932,7 @@ class TestLoggingInit(TestCase):
             True,
             exporter_args_map={1: {"compression": "gzip"}},
             log_record_processors=[],
-            export_processor=SimpleLogRecordProcessor,
+            export_log_record_processor=SimpleLogRecordProcessor,
         )
 
     def test_basicConfig_works_with_otel_handler(self):
