@@ -307,6 +307,9 @@ class CustomIdGenerator(IdGenerator):
     def generate_trace_id(self):
         pass
 
+    def is_trace_id_random(self):
+        return False
+
 
 class TestTraceInit(TestCase):
     def setUp(self):
