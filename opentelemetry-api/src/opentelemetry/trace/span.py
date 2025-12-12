@@ -200,8 +200,8 @@ class TraceFlags(int):
     Supported flags:
     - "sampled" (``0x01``): Indicates the trace may have been sampled upstream.
     - "random-trace-id" (``0x02``): Indicates the trace ID was generated
-      randomly, with at least the 7 rightmost bytes (56 bits) selected
-      with uniform distribution.
+    randomly, with at least the 7 rightmost bytes (56 bits) selected with
+    uniform distribution.
 
     See the `W3C Trace Context - Traceparent`_ spec for details.
 

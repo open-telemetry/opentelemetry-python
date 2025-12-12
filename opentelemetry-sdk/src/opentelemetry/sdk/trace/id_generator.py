@@ -44,7 +44,7 @@ class IdGenerator(abc.ABC):
             A 128-bit int for use as a trace ID
         """
 
-    @abc.abstractmethod
+    # pylint: disable=no-self-use
     def is_trace_id_random(self) -> bool:
         """Indicates whether generated trace IDs are random.
 
@@ -58,6 +58,8 @@ class IdGenerator(abc.ABC):
         Returns:
             True if this generator produces random IDs, False otherwise.
         """
+        # By default, return False for backwards compatibility.
+        return False
 
 
 class RandomIdGenerator(IdGenerator):
