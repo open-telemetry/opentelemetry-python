@@ -25,15 +25,16 @@ from opentelemetry.instrumentation.sqlite3 import SQLite3Instrumentor
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.semconv.resource import ResourceAttributes
 from opentelemetry.shim.opencensus import install_shim
 
 DB = "example.db"
 
 # Set up OpenTelemetry
 tracer_provider = TracerProvider(
-    resource=Resource(
+    resource=Resource.create(
         {
-            "service.name": "opencensus-shim-example-flask",
+            ResourceAttributes.SERVICE_NAME: "opencensus-shim-example-flask",
         }
     )
 )
