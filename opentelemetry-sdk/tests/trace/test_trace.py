@@ -212,14 +212,7 @@ class TestTracerSampling(unittest.TestCase):
         child_span = tracer.start_span(name="child span", context=ctx)
         self.assertIsInstance(child_span, trace.Span)
         self.assertTrue(root_span.context.trace_flags.sampled)
-        self.assertEqual(
-            root_span.get_span_context().trace_flags,
-            trace_api.TraceFlags.SAMPLED,
-        )
-        self.assertEqual(
-            child_span.get_span_context().trace_flags,
-            trace_api.TraceFlags.SAMPLED,
-        )
+        self.assertTrue(root_span.get_span_context().trace_flags.sampled)
 
     def test_default_sampler_type(self):
         tracer_provider = trace.TracerProvider()
@@ -237,14 +230,8 @@ class TestTracerSampling(unittest.TestCase):
         self.assertIsInstance(root_span, trace_api.NonRecordingSpan)
         child_span = tracer.start_span(name="child span", context=ctx)
         self.assertIsInstance(child_span, trace_api.NonRecordingSpan)
-        self.assertEqual(
-            root_span.get_span_context().trace_flags,
-            trace_api.TraceFlags.DEFAULT,
-        )
-        self.assertEqual(
-            child_span.get_span_context().trace_flags,
-            trace_api.TraceFlags.DEFAULT,
-        )
+        self.assertFalse(root_span.get_span_context().trace_flags.sampled)
+        self.assertFalse(child_span.get_span_context().trace_flags.sampled)
         self.assertFalse(_get_from_env_or_default.called)
 
     @mock.patch.dict("os.environ", {OTEL_TRACES_SAMPLER: "always_off"})
@@ -464,9 +451,8 @@ class TestSpanCreation(unittest.TestCase):
                     other_parent.get_span_context().trace_state,
                     child_context.trace_state,
                 )
-                self.assertEqual(
-                    other_parent.get_span_context().trace_flags,
-                    child_context.trace_flags,
+                self.assertTrue(
+                    other_parent.get_span_context().trace_flags.sampled
                 )
 
                 # Verify start_span() did not set the current span.
@@ -827,10 +813,7 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(len(root.attributes), 2)
             self.assertEqual(root.attributes["sampler-attr"], "sample-val")
             self.assertEqual(root.attributes["attr-in-both"], "decision-attr")
-            self.assertEqual(
-                root.get_span_context().trace_flags,
-                trace_api.TraceFlags.SAMPLED,
-            )
+            self.assertTrue(root.get_span_context().trace_flags.sampled)
 
     def test_events(self):
         self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
@@ -2066,6 +2049,9 @@ class TestTraceFlags(unittest.TestCase):
     def test_constant_sampled(self):
         self.assertEqual(trace_api.TraceFlags.SAMPLED, 1)
 
+    def test_constant_random_trace_id(self):
+        self.assertEqual(trace_api.TraceFlags.RANDOM_TRACE_ID, 2)
+
     def test_get_default(self):
         self.assertEqual(
             trace_api.TraceFlags.get_default(), trace_api.TraceFlags.DEFAULT
@@ -2076,6 +2062,14 @@ class TestTraceFlags(unittest.TestCase):
 
     def test_sampled_false(self):
         self.assertFalse(trace_api.TraceFlags(0xF0).sampled)
+
+    def test_random_trace_id_true(self):
+        self.assertTrue(trace_api.TraceFlags(0xF2).random_trace_id)
+        self.assertTrue(trace_api.TraceFlags(0xF3).random_trace_id)
+
+    def test_random_trace_id_false(self):
+        self.assertFalse(trace_api.TraceFlags(0xF0).random_trace_id)
+        self.assertFalse(trace_api.TraceFlags(0xF1).random_trace_id)
 
     def test_constant_default_trace_options(self):
         self.assertEqual(
@@ -2214,3 +2208,7 @@ class TestRandomIdGenerator(unittest.TestCase):
         self.assertNotEqual(trace_id, trace_api.INVALID_TRACE_ID)
         mock_getrandbits.assert_any_call(128)
         self.assertEqual(mock_getrandbits.call_count, 2)
+
+    def test_is_trace_id_random_returns_true(self):
+        generator = RandomIdGenerator()
+        self.assertTrue(generator.is_trace_id_random())

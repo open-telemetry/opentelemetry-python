@@ -197,17 +197,21 @@ class Span(abc.ABC):
 class TraceFlags(int):
     """A bitmask that represents options specific to the trace.
 
-    The only supported option is the "sampled" flag (``0x01``). If set, this
-    flag indicates that the trace may have been sampled upstream.
+    Supported flags:
+    - "sampled" (``0x01``): Indicates the trace may have been sampled upstream.
+    - "random-trace-id" (``0x02``): Indicates the trace ID was generated
+    randomly, with at least the 7 rightmost bytes (56 bits) selected with
+    uniform distribution.
 
     See the `W3C Trace Context - Traceparent`_ spec for details.
 
     .. _W3C Trace Context - Traceparent:
-        https://www.w3.org/TR/trace-context/#trace-flags
+        https://www.w3.org/TR/trace-context-2/#trace-flags
     """
 
     DEFAULT = 0x00
     SAMPLED = 0x01
+    RANDOM_TRACE_ID = 0x02
 
     @classmethod
     def get_default(cls) -> "TraceFlags":
@@ -216,6 +220,10 @@ class TraceFlags(int):
     @property
     def sampled(self) -> bool:
         return bool(self & TraceFlags.SAMPLED)
+
+    @property
+    def random_trace_id(self) -> bool:
+        return bool(self & TraceFlags.RANDOM_TRACE_ID)
 
 
 DEFAULT_TRACE_OPTIONS = TraceFlags.get_default()

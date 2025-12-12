@@ -1169,6 +1169,12 @@ class Tracer(trace_api.Tracer):
             if sampling_result.decision.is_sampled()
             else trace_api.TraceFlags(trace_api.TraceFlags.DEFAULT)
         )
+
+        if self.id_generator.is_trace_id_random():
+            trace_flags = trace_api.TraceFlags(
+                trace_flags | trace_api.TraceFlags.RANDOM_TRACE_ID
+            )
+
         span_context = trace_api.SpanContext(
             trace_id,
             self.id_generator.generate_span_id(),
