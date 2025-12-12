@@ -233,14 +233,14 @@ def _init_tracing(
     set_tracer_provider(provider)
 
     exporter_args_map = exporter_args_map or {}
-    span_processors = span_processors or []
     export_processor = export_span_processor or BatchSpanProcessor
+
+    span_processors = span_processors or []
+    for span_processor in span_processors:
+        provider.add_span_processor(span_processor)
+
     for _, exporter_class in exporters.items():
         exporter_args = exporter_args_map.get(exporter_class, {})
-
-        for span_processor in span_processors:
-            provider.add_span_processor(span_processor)
-
         provider.add_span_processor(
             export_processor(exporter_class(**exporter_args))
         )
@@ -284,15 +284,14 @@ def _init_logging(
     set_logger_provider(provider)
 
     exporter_args_map = exporter_args_map or {}
+    export_processor = export_log_record_processor or BatchLogRecordProcessor
 
     log_record_processors = log_record_processors or []
-    export_processor = export_log_record_processor or BatchLogRecordProcessor
+    for log_record_processor in log_record_processors:
+        provider.add_log_record_processor(log_record_processor)
+
     for _, exporter_class in exporters.items():
         exporter_args = exporter_args_map.get(exporter_class, {})
-
-        for log_record_processor in log_record_processors:
-            provider.add_log_record_processor(log_record_processor)
-
         provider.add_log_record_processor(
             export_processor(exporter_class(**exporter_args))
         )
