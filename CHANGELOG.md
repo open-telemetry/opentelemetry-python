@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4958](https://github.com/open-telemetry/opentelemetry-python/pull/4958))
 - `opentelemetry-sdk`: fix type annotations on `MetricReader` and related types
   ([#4938](https://github.com/open-telemetry/opentelemetry-python/pull/4938/))
+- `opentelemetry-api`, `opentelemetry-sdk`: add support for 'random-trace-id' flags in W3C traceparent header trace flags. Implementations of `IdGenerator` that do randomly generate the 56 least significant bits, should also implement a `is_trace_id_random` methods that returns `True`. 
+  ([#4854](https://github.com/open-telemetry/opentelemetry-python/pull/4854))
 
 ## Version 1.40.0/0.61b0 (2026-03-04)
 
