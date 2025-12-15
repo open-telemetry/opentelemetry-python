@@ -222,7 +222,8 @@ class ScopeLogs(google.protobuf.message.Message):
     is recorded in. Notably, the last part of the URL path is the version number of the
     schema: http[s]://server[:port]/path/<version>. To learn more about Schema URL see
     https://opentelemetry.io/docs/specs/otel/schemas/#schema-url
-    This schema_url applies to all logs in the "logs" field.
+    This schema_url applies to the data in the "scope" field and all logs in the
+    "log_records" field.
     """
     def __init__(
         self,
@@ -296,6 +297,7 @@ class LogRecord(google.protobuf.message.Message):
         """Additional attributes that describe the specific event occurrence. [Optional].
         Attribute keys MUST be unique (it is not allowed to have more than one
         attribute with the same key).
+        The behavior of software that receives duplicated keys can be unpredictable.
         """
     dropped_attributes_count: builtins.int
     flags: builtins.int

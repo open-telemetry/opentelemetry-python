@@ -24,9 +24,10 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-  "opentelemetry-proto == 1.39.0.dev",
+  "opentelemetry-proto == 1.40.0.dev",
 ]
 
 [project.urls]

@@ -43,7 +43,9 @@ googleapis-common-protos==1.63.1
     # via opentelemetry-exporter-otlp-proto-grpc
 grpcio==1.63.2 ; python_full_version < '3.13'
     # via opentelemetry-exporter-otlp-proto-grpc
-grpcio==1.66.2 ; python_full_version >= '3.13'
+grpcio==1.66.2 ; python_full_version == '3.13.*'
+    # via opentelemetry-exporter-otlp-proto-grpc
+grpcio==1.75.1 ; python_full_version >= '3.14'
     # via opentelemetry-exporter-otlp-proto-grpc
 importlib-metadata==6.0.0
     # via opentelemetry-api
@@ -70,9 +72,16 @@ pytest==7.4.4
     #   -r exporter/opentelemetry-exporter-otlp-proto-grpc/test-requirements.in
 tomli==1.0.0 ; python_full_version < '3.11'
     # via pytest
-typing-extensions==4.6.0
+typing-extensions==4.6.0 ; python_full_version < '3.14'
     # via
     #   asgiref
+    #   opentelemetry-api
+    #   opentelemetry-exporter-otlp-proto-grpc
+    #   opentelemetry-sdk
+    #   opentelemetry-semantic-conventions
+typing-extensions==4.12.0 ; python_full_version >= '3.14'
+    # via
+    #   grpcio
     #   opentelemetry-api
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-sdk

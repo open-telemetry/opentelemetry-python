@@ -24,11 +24,12 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
   "opentelemetry-api ~= 1.12",
   # DONOTMERGE: confirm that this will becomes ~= 1.21 in the next release
-  "opentelemetry-sdk ~= 1.39.0.dev",
+  "opentelemetry-sdk ~= 1.40.0.dev",
   "prometheus_client >= 0.5.0, < 1.0.0",
 ]
 

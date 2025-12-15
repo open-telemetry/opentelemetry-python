@@ -24,13 +24,14 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
   "googleapis-common-protos ~= 1.52",
   "opentelemetry-api ~= 1.15",
-  "opentelemetry-proto == 1.39.0.dev",
-  "opentelemetry-sdk ~= 1.39.0.dev",
-  "opentelemetry-exporter-otlp-proto-common == 1.39.0.dev",
+  "opentelemetry-proto == 1.40.0.dev",
+  "opentelemetry-sdk ~= 1.40.0.dev",
+  "opentelemetry-exporter-otlp-proto-common == 1.40.0.dev",
   "requests ~= 2.7",
   "typing-extensions >= 4.5.0",
 ]
