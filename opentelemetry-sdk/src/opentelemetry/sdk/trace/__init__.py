@@ -306,7 +306,7 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
             timeout, False otherwise.
         """
         futures = []
-        for sp in self._span_processors:  # type: SpanProcessor
+        for sp in self._span_processors:
             future = self._executor.submit(sp.force_flush, timeout_millis)
             futures.append(future)
 
@@ -1240,23 +1240,48 @@ class Tracer(trace_api.Tracer):
 
 
 _TracerConfiguratorT = Callable[[InstrumentationScope], _TracerConfig]
+_TracerConfiguratorRulesPredicateT = Callable[
+    [Optional[InstrumentationScope]], bool
+]
+_TracerConfiguratorRulesT = Sequence[
+    Tuple[_TracerConfiguratorRulesPredicateT, _TracerConfig]
+]
+
+
+class _RuleBaseTracerConfigurator:
+    def __init__(self, *, rules: _TracerConfiguratorRulesT):
+        self._rules = rules
+
+    def __call__(
+        self, tracer_scope: Optional[InstrumentationScope] = None
+    ) -> _TracerConfig:
+        for predicate, tracer_config in self._rules:
+            if predicate(tracer_scope):
+                return tracer_config
+
+        # if no rule matched return a default one
+        return _TracerConfig(is_enabled=True)
 
 
 def _default_tracer_configurator(
     tracer_scope: InstrumentationScope,
 ) -> _TracerConfig:
-    """Default configurator functions for Tracers
+    """Default Tracer Configurator implementation
 
     In order to update Tracers configs you need to call
     TracerProvider._set_tracer_configurator with a function
     implementing this interface returning a Tracer Config."""
-    return _TracerConfig(is_enabled=True)
+    return _RuleBaseTracerConfigurator(
+        rules=[(lambda x: True, _TracerConfig(is_enabled=True))],
+    )(tracer_scope=tracer_scope)
 
 
 def _disable_tracer_configurator(
     tracer_scope: InstrumentationScope,
 ) -> _TracerConfig:
-    return _TracerConfig(is_enabled=False)
+    return _RuleBaseTracerConfigurator(
+        rules=[(lambda x: True, _TracerConfig(is_enabled=False))],
+    )(tracer_scope=tracer_scope)
 
 
 class TracerProvider(trace_api.TracerProvider):
