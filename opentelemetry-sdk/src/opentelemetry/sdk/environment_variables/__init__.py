@@ -335,7 +335,7 @@ OTEL_EXPORTER_OTLP_TIMEOUT = "OTEL_EXPORTER_OTLP_TIMEOUT"
 .. envvar:: OTEL_EXPORTER_OTLP_TIMEOUT
 
 The :envvar:`OTEL_EXPORTER_OTLP_TIMEOUT` is the maximum time the OTLP exporter will wait for each batch export.
-Default: 10
+Default: 10 (seconds)
 """
 
 OTEL_EXPORTER_OTLP_ENDPOINT = "OTEL_EXPORTER_OTLP_ENDPOINT"
