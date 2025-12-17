@@ -198,6 +198,7 @@ tracer_provider.add_span_processor(mock_processor)
         )
 
     def test_update_tracer_config(self):
+        # pylint: disable=protected-access
         tracer_provider = trace.TracerProvider()
         tracer = tracer_provider.get_tracer(
             "module_name",
@@ -217,6 +218,7 @@ tracer_provider.add_span_processor(mock_processor)
         self.assertEqual(tracer._is_enabled, True)
 
     def test_start_span_returns_invalid_span_if_not_enabled(self):
+        # pylint: disable=protected-access
         tracer_provider = trace.TracerProvider()
         tracer = tracer_provider.get_tracer(
             "module_name",
