@@ -43,7 +43,12 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_TRACES_SAMPLER,
     OTEL_TRACES_SAMPLER_ARG,
 )
-from opentelemetry.sdk.trace import Resource, TracerProvider, _TracerConfig
+from opentelemetry.sdk.trace import (
+    Resource,
+    TracerProvider,
+    _RuleBaseTracerConfigurator,
+    _TracerConfig,
+)
 from opentelemetry.sdk.trace.id_generator import RandomIdGenerator
 from opentelemetry.sdk.trace.sampling import (
     ALWAYS_OFF,
@@ -2223,7 +2228,8 @@ class TestTracerProvider(unittest.TestCase):
         self.assertIsNotNone(tracer_provider._span_limits)
         self.assertIsNotNone(tracer_provider._atexit_handler)
 
-    def test_tracer_configurator(self):
+    def test_default_tracer_configurator(self):
+        # pylint: disable=protected-access
         tracer_provider = trace.TracerProvider()
         tracer = tracer_provider.get_tracer(
             "module_name",
@@ -2231,20 +2237,109 @@ class TestTracerProvider(unittest.TestCase):
             "schema_url",
             {},
         )
-        # pylint: disable=protected-access
+        other_tracer = tracer_provider.get_tracer(
+            "other_module_name",
+            "library_version",
+            "schema_url",
+            {},
+        )
         self.assertEqual(tracer._instrumentation_scope.name, "module_name")
+        self.assertEqual(
+            other_tracer._instrumentation_scope.name, "other_module_name"
+        )
 
-        # pylint: disable=protected-access
         self.assertEqual(tracer._is_enabled, True)
+        self.assertEqual(other_tracer._is_enabled, True)
 
-        tracer_provider._disable_tracers(tracer_names=["different_name"])
-        self.assertEqual(tracer._is_enabled, True)
-
-        tracer_provider._disable_tracers(tracer_names=["module_name"])
+        tracer_provider._disable_tracers()
         self.assertEqual(tracer._is_enabled, False)
+        self.assertEqual(other_tracer._is_enabled, False)
 
-        tracer_provider._enable_tracers(tracer_names=["module_name"])
+        tracer_provider._enable_tracers()
         self.assertEqual(tracer._is_enabled, True)
+        self.assertEqual(other_tracer._is_enabled, True)
+
+    def test_rule_based_tracer_configurator(self):
+        # pylint: disable=protected-access
+        rules = [
+            (
+                lambda x: True if x.name == "module_name" else False,
+                _TracerConfig(is_enabled=True),
+            ),
+            (
+                lambda x: True if x.name == "other_module_name" else False,
+                _TracerConfig(is_enabled=False),
+            ),
+        ]
+        configurator = _RuleBaseTracerConfigurator(rules=rules)
+
+        tracer_provider = trace.TracerProvider()
+        tracer = tracer_provider.get_tracer(
+            "module_name",
+            "library_version",
+            "schema_url",
+            {},
+        )
+        other_tracer = tracer_provider.get_tracer(
+            "other_module_name",
+            "library_version",
+            "schema_url",
+            {},
+        )
+        self.assertEqual(tracer._instrumentation_scope.name, "module_name")
+        self.assertEqual(
+            other_tracer._instrumentation_scope.name, "other_module_name"
+        )
+
+        self.assertEqual(tracer._is_enabled, True)
+        self.assertEqual(other_tracer._is_enabled, True)
+
+        tracer_provider._set_tracer_configurator(
+            tracer_configurator=configurator
+        )
+
+        self.assertEqual(tracer._is_enabled, True)
+        self.assertEqual(other_tracer._is_enabled, False)
+
+    def test_rule_based_tracer_configurator_default_when_rules_dont_match(
+        self,
+    ):
+        # pylint: disable=protected-access
+        rules = [
+            (
+                lambda x: True if x.name == "module_name" else False,
+                _TracerConfig(is_enabled=False),
+            ),
+        ]
+        configurator = _RuleBaseTracerConfigurator(rules=rules)
+
+        tracer_provider = trace.TracerProvider()
+        tracer = tracer_provider.get_tracer(
+            "module_name",
+            "library_version",
+            "schema_url",
+            {},
+        )
+        other_tracer = tracer_provider.get_tracer(
+            "other_module_name",
+            "library_version",
+            "schema_url",
+            {},
+        )
+        self.assertEqual(tracer._instrumentation_scope.name, "module_name")
+        self.assertEqual(
+            other_tracer._instrumentation_scope.name, "other_module_name"
+        )
+
+        self.assertEqual(tracer._is_enabled, True)
+        self.assertEqual(other_tracer._is_enabled, True)
+
+        tracer_provider._set_tracer_configurator(
+            tracer_configurator=configurator
+        )
+
+        self.assertEqual(tracer._is_enabled, False)
+        self.assertEqual(other_tracer._is_enabled, True)
 
 
 class TestRandomIdGenerator(unittest.TestCase):
