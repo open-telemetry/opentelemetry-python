@@ -18,7 +18,6 @@ This module provides a mixin class for OTLP exporters that send telemetry data
 to an OTLP-compatible receiver via gRPC. It includes a configurable reconnection
 logic to handle transient collector outages.
 
-
 """
 
 import random
