@@ -1105,7 +1105,7 @@ class Tracer(trace_api.Tracer):
         span_limits: SpanLimits,
         instrumentation_scope: InstrumentationScope,
         *,
-        _tracer_config: _TracerConfig | None = None,
+        _tracer_config: Optional[_TracerConfig] = None,
     ) -> None:
         self.sampler = sampler
         self.resource = resource
@@ -1306,7 +1306,7 @@ class TracerProvider(trace_api.TracerProvider):
         self, *, tracer_configurator: _TracerConfiguratorT
     ):
         self._tracer_configurator = tracer_configurator
-        self._update_tracers(tracer_configurator)
+        self._update_tracers(tracer_configurator=tracer_configurator)
 
     def _update_tracers(
         self,
@@ -1314,6 +1314,9 @@ class TracerProvider(trace_api.TracerProvider):
         tracer_names: Optional[Sequence[str]] = None,
         tracer_configurator: _TracerConfiguratorT,
     ):
+        # pylint: disable=protected-access
+        # FIXME: the configurator should be rule based and so the logic to filter to which tracer applies this to
+        # should be there and not a parameter here so that _enable_tracers / _disable_tracers should call _set_tracer_configurator
         if tracer_names:
             tracers = [
                 t
