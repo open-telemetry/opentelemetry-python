@@ -2263,11 +2263,11 @@ class TestTracerProvider(unittest.TestCase):
         # pylint: disable=protected-access
         rules = [
             (
-                lambda x: True if x.name == "module_name" else False,
+                lambda x: x.name == "module_name",
                 _TracerConfig(is_enabled=True),
             ),
             (
-                lambda x: True if x.name == "other_module_name" else False,
+                lambda x: x.name == "other_module_name",
                 _TracerConfig(is_enabled=False),
             ),
         ]
@@ -2307,7 +2307,7 @@ class TestTracerProvider(unittest.TestCase):
         # pylint: disable=protected-access
         rules = [
             (
-                lambda x: True if x.name == "module_name" else False,
+                lambda x: x.name == "module_name",
                 _TracerConfig(is_enabled=False),
             ),
         ]
