@@ -13,13 +13,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 - `opentelemetry-sdk`: Fix the type hint of the `_metrics_data` property to allow `None`
-  ([#4837](https://github.com/open-telemetry/opentelemetry-python/pull/4837)
+  ([#4837](https://github.com/open-telemetry/opentelemetry-python/pull/4837)).
 - Regenerate opentelemetry-proto code with v1.9.0 release
   ([#4840](https://github.com/open-telemetry/opentelemetry-python/pull/4840))
 - Add python 3.14 support
   ([#4798](https://github.com/open-telemetry/opentelemetry-python/pull/4798))
 - Silence events API warnings for internal users
   ([#4847](https://github.com/open-telemetry/opentelemetry-python/pull/4847))
+- Prevent possible endless recursion from happening in `SimpleLogRecordProcessor.on_emit`,
+  ([#4799](https://github.com/open-telemetry/opentelemetry-python/pull/4799)).
 
 ## Version 1.39.0/0.60b0 (2025-12-03)
 
