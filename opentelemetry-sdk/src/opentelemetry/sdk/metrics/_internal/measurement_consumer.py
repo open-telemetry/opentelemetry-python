@@ -15,6 +15,7 @@
 # pylint: disable=unused-import
 
 from abc import ABC, abstractmethod
+from logging import getLogger
 from threading import Lock
 from time import time_ns
 from typing import Iterable, List, Mapping, Optional
@@ -30,6 +31,8 @@ from opentelemetry.sdk.metrics._internal.metric_reader_storage import (
     MetricReaderStorage,
 )
 from opentelemetry.sdk.metrics._internal.point import Metric
+
+_logger = getLogger(__name__)
 
 
 class MeasurementConsumer(ABC):
@@ -143,3 +146,39 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
             result = self._reader_storages[metric_reader].collect()
 
         return result
+
+    def add_metric_reader(
+        self, metric_reader: "opentelemetry.sdk.metrics.MetricReader"
+    ) -> None:
+        """Registers a new metric reader."""
+        with self._lock:
+            if metric_reader in self._reader_storages:
+                _logger.warning("'%s' already registered!", metric_reader)
+            self._sdk_config.metric_readers += type(
+                self._sdk_config.metric_readers
+            )((metric_reader,))
+            self._reader_storages[metric_reader] = MetricReaderStorage(
+                self._sdk_config,
+                metric_reader._instrument_class_temporality,
+                metric_reader._instrument_class_aggregation,
+            )
+            metric_reader._set_collect_callback(self.collect)
+
+    def remove_metric_reader(
+        self, metric_reader: "opentelemetry.sdk.metrics.MetricReader"
+    ) -> None:
+        """Unregisters the given metric reader."""
+        with self._lock:
+            if metric_reader not in self._reader_storages:
+                _logger.warning("'%s' has not been registered!", metric_reader)
+            self._reader_storages.pop(metric_reader, None)
+            metric_reader._set_collect_callback(None)
+            self._sdk_config.metric_readers = type(
+                self._sdk_config.metric_readers
+            )(
+                (
+                    reader
+                    for reader in self._sdk_config.metric_readers
+                    if reader is not metric_reader
+                )
+            )
