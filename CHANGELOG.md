@@ -91,7 +91,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ([#4654](https://github.com/open-telemetry/opentelemetry-python/pull/4654)).
 - Fix type checking for built-in metric exporters
   ([#4820](https://github.com/open-telemetry/opentelemetry-python/pull/4820))
-  
+- `opentelemetry-exporter-otlp-proto-http`: fix retry logic and error handling for connection failures in trace, metric, and log exporters
+  ([#4709](https://github.com/open-telemetry/opentelemetry-python/pull/4709))
+  ([#4712](https://github.com/open-telemetry/opentelemetry-python/issues/4712))
+
 ## Version 1.38.0/0.59b0 (2025-10-16)
 
 - Add `rstcheck` to pre-commit to stop introducing invalid RST
