@@ -17,16 +17,17 @@ import abc
 import enum
 import logging
 import sys
-import traceback
 from os import environ, linesep
 from typing import IO, Callable, Optional, Sequence
 
 from typing_extensions import deprecated
 
 from opentelemetry.context import (
+    _ON_EMIT_RECURSION_COUNT_KEY,
     _SUPPRESS_INSTRUMENTATION_KEY,
     attach,
     detach,
+    get_value,
     set_value,
 )
 from opentelemetry.sdk._logs import (
@@ -150,28 +151,18 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
 
     def on_emit(self, log_record: ReadWriteLogRecord):
         # Prevent entering a recursive loop.
-        if (
-            sum(
-                item.name == "on_emit"
-                and (
-                    item.filename.endswith("export/__init__.py")
-                    or item.filename.endswith(
-                        r"export\__init__.py"
-                    )  # backward slash on windows..
-                )
-                for item in traceback.extract_stack()
-            )
-            # Recursive depth of 3 is sort of arbitrary. It's possible that an Exporter.export call
-            # emits a log which returns us to this function, but when we call Exporter.export again the log
-            # is no longer emitted and we exit this recursive loop naturally, a depth of >3 allows 3
-            # recursive log calls but exits after because it's likely endless.
-            > 3
-        ):
+        cnt = get_value(_ON_EMIT_RECURSION_COUNT_KEY) or 0
+        # Recursive depth of 3 is sort of arbitrary. It's possible that an Exporter.export call
+        # emits a log which returns us to this function, but when we call Exporter.export again the log
+        # is no longer emitted and we exit this recursive loop naturally, a depth of >3 allows 3
+        # recursive log calls but exits after because it's likely endless.
+        if cnt > 3:
             _propagate_false_logger.warning(
                 "SimpleLogRecordProcessor.on_emit has entered a recursive loop. Dropping log and exiting the loop."
             )
             return
-        token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
+        set_value(_SUPPRESS_INSTRUMENTATION_KEY, True)
+        token = attach(set_value(_ON_EMIT_RECURSION_COUNT_KEY, cnt + 1))
         try:
             if self._shutdown:
                 _logger.warning("Processor is already shutdown, ignoring call")
