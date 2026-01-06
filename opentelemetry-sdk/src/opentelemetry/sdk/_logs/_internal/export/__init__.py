@@ -156,13 +156,13 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
         # emits a log which returns us to this function, but when we call Exporter.export again the log
         # is no longer emitted and we exit this recursive loop naturally, a depth of >3 allows 3
         # recursive log calls but exits after because it's likely endless.
-        if cnt > 3:
+        if cnt > 3:  # pyright: ignore[reportOperatorIssue]
             _propagate_false_logger.warning(
                 "SimpleLogRecordProcessor.on_emit has entered a recursive loop. Dropping log and exiting the loop."
             )
             return
-        set_value(_SUPPRESS_INSTRUMENTATION_KEY, True)
-        token = attach(set_value(_ON_EMIT_RECURSION_COUNT_KEY, cnt + 1))
+        token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
+        attach(set_value(_ON_EMIT_RECURSION_COUNT_KEY, cnt + 1))  # pyright: ignore[reportOperatorIssue]
         try:
             if self._shutdown:
                 _logger.warning("Processor is already shutdown, ignoring call")
