@@ -165,10 +165,9 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
             set_value(
                 _SUPPRESS_INSTRUMENTATION_KEY,
                 True,
-                set_value(_ON_EMIT_RECURSION_COUNT_KEY, cnt + 1),
+                set_value(_ON_EMIT_RECURSION_COUNT_KEY, cnt + 1),  # pyright: ignore[reportOperatorIssue]
             )
         )
-        # pyright: ignore[reportOperatorIssue]
         try:
             if self._shutdown:
                 _logger.warning("Processor is already shutdown, ignoring call")
