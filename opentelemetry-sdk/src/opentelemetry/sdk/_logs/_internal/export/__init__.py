@@ -161,8 +161,14 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
                 "SimpleLogRecordProcessor.on_emit has entered a recursive loop. Dropping log and exiting the loop."
             )
             return
-        token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
-        attach(set_value(_ON_EMIT_RECURSION_COUNT_KEY, cnt + 1))  # pyright: ignore[reportOperatorIssue]
+        token = attach(
+            set_value(
+                _SUPPRESS_INSTRUMENTATION_KEY,
+                True,
+                set_value(_ON_EMIT_RECURSION_COUNT_KEY, cnt + 1),
+            )
+        )
+        # pyright: ignore[reportOperatorIssue]
         try:
             if self._shutdown:
                 _logger.warning("Processor is already shutdown, ignoring call")
