@@ -18,9 +18,11 @@ import atexit
 import concurrent.futures
 import json
 import logging
+import os
 import threading
 import traceback
 import typing
+import weakref
 from os import environ
 from time import time_ns
 from types import MappingProxyType, TracebackType
@@ -238,6 +240,16 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
         # iterating through it on "on_start" and "on_end".
         self._span_processors = ()  # type: Tuple[SpanProcessor, ...]
         self._lock = threading.Lock()
+        self._init_executor(num_threads)
+        if hasattr(os, "register_at_fork"):
+            # Only the main thread is kept in forked processed, the executor
+            # needs to be re-instantiated to get a fresh pool of threads:
+            weak_reinit = weakref.WeakMethod(self._init_executor)
+            os.register_at_fork(
+                after_in_child=lambda: weak_reinit()(num_threads)
+            )
+
+    def _init_executor(self, num_threads: int) -> None:
         self._executor = concurrent.futures.ThreadPoolExecutor(
             max_workers=num_threads
         )
