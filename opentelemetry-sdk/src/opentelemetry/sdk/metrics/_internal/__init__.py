@@ -580,3 +580,16 @@ class MeterProvider(APIMeterProvider):
                     self._measurement_consumer,
                 )
             return self._meters[info]
+
+    def add_metric_reader(
+        self, metric_reader: "opentelemetry.sdk.metrics.export.MetricReader"
+    ) -> None:
+        with self._lock:
+            self._measurement_consumer.add_metric_reader(metric_reader)
+
+    def remove_metric_reader(
+        self,
+        metric_reader: "opentelemetry.sdk.metrics.export.MetricReader",
+    ) -> None:
+        with self._lock:
+            self._measurement_consumer.remove_metric_reader(metric_reader)
