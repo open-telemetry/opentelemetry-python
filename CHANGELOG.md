@@ -23,10 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Silence events API warnings for internal users
   ([#4847](https://github.com/open-telemetry/opentelemetry-python/pull/4847))
 - Prevent possible endless recursion from happening in `SimpleLogRecordProcessor.on_emit`,
-  ([#4799](https://github.com/open-telemetry/opentelemetry-python/pull/4799)).
+  ([#4799](https://github.com/open-telemetry/opentelemetry-python/pull/4799)) and ([#4867](https://github.com/open-telemetry/opentelemetry-python/pull/4867)).
 - Add environment variable carriers to API
   ([#4609](https://github.com/open-telemetry/opentelemetry-python/pull/4609))
-  
+
 ## Version 1.39.0/0.60b0 (2025-12-03)
 
 - `opentelemetry-api`: Convert objects of any type other than AnyValue in attributes to string to be exportable
