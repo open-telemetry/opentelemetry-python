@@ -16,7 +16,7 @@ import os
 import unittest
 from unittest.mock import patch
 
-from opentelemetry.propagators.envcarrier import (
+from opentelemetry.propagators._envcarrier import (
     EnvironmentGetter,
     EnvironmentSetter,
 )
