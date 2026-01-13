@@ -269,9 +269,7 @@ class TestEnvironmentCarrierWithTraceContext(unittest.TestCase):
 
         with patch.dict(os.environ, {"TRACEPARENT": "invalid"}, clear=True):
             getter = EnvironmentGetter()
-            ctx = self.propagator.extract(
-                {}, context=orig_ctx, getter=getter
-            )
+            ctx = self.propagator.extract({}, context=orig_ctx, getter=getter)
 
         self.assertDictEqual(ctx, orig_ctx)
 
@@ -369,7 +367,8 @@ class TestEnvironmentCarrierWithTraceContext(unittest.TestCase):
     @patch("opentelemetry.trace.get_current_span")
     def test_fields(self, mock_get_current_span, mock_invalid_span_context):
         """Test that propagator.fields matches injected keys."""
-        from opentelemetry.trace.span import TraceState
+        # pylint: disable=import-outside-toplevel
+        from opentelemetry.trace.span import TraceState  # noqa: PLC0415
 
         mock_get_current_span.configure_mock(
             return_value=Mock(
@@ -491,7 +490,10 @@ class TestEnvironmentCarrierWithCompositePropagator(unittest.TestCase):
     SPAN_ID = 0x00F067AA0BA902B7
 
     def setUp(self):
-        from opentelemetry.propagators.composite import CompositePropagator
+        # pylint: disable=import-outside-toplevel
+        from opentelemetry.propagators.composite import (  # noqa: PLC0415
+            CompositePropagator,
+        )
 
         self.propagator = CompositePropagator(
             [TraceContextTextMapPropagator(), W3CBaggagePropagator()]
