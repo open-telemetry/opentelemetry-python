@@ -459,6 +459,7 @@ def _initialize_components(
     exporter_args_map: ExporterArgsMap | None = None,
     tracer_configurator: _TracerConfiguratorT | None = None,
 ):
+    # pylint: disable=too-many-locals
     if trace_exporter_names is None:
         trace_exporter_names = []
     if metric_exporter_names is None:
