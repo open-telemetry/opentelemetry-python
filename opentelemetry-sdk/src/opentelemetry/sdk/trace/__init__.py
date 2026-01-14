@@ -75,7 +75,7 @@ from opentelemetry.semconv.attributes.exception_attributes import (
     EXCEPTION_STACKTRACE,
     EXCEPTION_TYPE,
 )
-from opentelemetry.trace import INVALID_SPAN, NoOpTracer, SpanContext
+from opentelemetry.trace import NoOpTracer, SpanContext
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
 from opentelemetry.util._decorator import _agnosticcontextmanager
@@ -1170,9 +1170,6 @@ class Tracer(trace_api.Tracer):
         record_exception: bool = True,
         set_status_on_exception: bool = True,
     ) -> trace_api.Span:
-        if not self._is_enabled:
-            return INVALID_SPAN
-
         parent_span_context = trace_api.get_current_span(
             context
         ).get_span_context()
@@ -1183,6 +1180,9 @@ class Tracer(trace_api.Tracer):
             raise TypeError(
                 "parent_span_context must be a SpanContext or None."
             )
+
+        if not self._is_enabled:
+            return trace_api.NonRecordingSpan(context=parent_span_context)
 
         # is_valid determines root span
         if parent_span_context is None or not parent_span_context.is_valid:

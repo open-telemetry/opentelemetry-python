@@ -69,7 +69,6 @@ from opentelemetry.trace import (
     get_tracer,
     set_tracer_provider,
 )
-from opentelemetry.trace.span import INVALID_SPAN
 
 
 class TestTracer(unittest.TestCase):
@@ -239,7 +238,7 @@ tracer_provider.add_span_processor(mock_processor)
         self.assertEqual(tracer._is_enabled, False)
 
         span = tracer.start_span(name="invalid span")
-        self.assertIs(span, INVALID_SPAN)
+        self.assertFalse(span.is_recording())
 
 
 class TestTracerSampling(unittest.TestCase):
