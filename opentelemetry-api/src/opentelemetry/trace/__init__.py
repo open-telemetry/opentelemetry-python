@@ -471,7 +471,15 @@ class NoOpTracer(Tracer):
         record_exception: bool = True,
         set_status_on_exception: bool = True,
     ) -> "Span":
-        return INVALID_SPAN
+        parent_span_context = get_current_span(context).get_span_context()
+        if parent_span_context is not None and not isinstance(
+            parent_span_context, SpanContext
+        ):
+            raise TypeError(
+                "parent_span_context must be a SpanContext or None."
+            )
+
+        return NonRecordingSpan(context=parent_span_context)
 
     @_agnosticcontextmanager
     def start_as_current_span(
@@ -486,7 +494,23 @@ class NoOpTracer(Tracer):
         set_status_on_exception: bool = True,
         end_on_exit: bool = True,
     ) -> Iterator["Span"]:
-        yield INVALID_SPAN
+        span = self.start_span(
+            name=name,
+            context=context,
+            kind=kind,
+            attributes=attributes,
+            links=links,
+            start_time=start_time,
+            record_exception=record_exception,
+            set_status_on_exception=set_status_on_exception,
+        )
+        with use_span(
+            span,
+            end_on_exit=end_on_exit,
+            record_exception=record_exception,
+            set_status_on_exception=set_status_on_exception,
+        ) as span:
+            yield span
 
 
 @deprecated("You should use NoOpTracer. Deprecated since version 1.9.0.")
