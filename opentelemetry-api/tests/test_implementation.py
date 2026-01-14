@@ -36,17 +36,28 @@ class TestAPIOnlyImplementation(unittest.TestCase):
         tracer_provider = trace.NoOpTracerProvider()
         tracer = tracer_provider.get_tracer(__name__)
         with tracer.start_span("test") as span:
-            self.assertEqual(
-                span.get_span_context(), trace.INVALID_SPAN_CONTEXT
-            )
-            self.assertEqual(span, trace.INVALID_SPAN)
+            self.assertFalse(span.get_span_context().is_valid)
             self.assertIs(span.is_recording(), False)
             with tracer.start_span("test2") as span2:
-                self.assertEqual(
-                    span2.get_span_context(), trace.INVALID_SPAN_CONTEXT
-                )
-                self.assertEqual(span2, trace.INVALID_SPAN)
+                self.assertFalse(span2.get_span_context().is_valid)
                 self.assertIs(span2.is_recording(), False)
+
+    def test_default_tracer_context_propagation(self):
+        tracer_provider = trace.NoOpTracerProvider()
+        tracer = tracer_provider.get_tracer(__name__)
+        ctx = trace.set_span_in_context(
+            trace.NonRecordingSpan(
+                trace.SpanContext(
+                    2604504634922341076776623263868986797,
+                    5213367945872657620,
+                    False,
+                    trace.TraceFlags(0x01),
+                )
+            )
+        )
+        with tracer.start_span("test", context=ctx) as span:
+            self.assertTrue(span.get_span_context().is_valid)
+            self.assertIs(span.is_recording(), False)
 
     def test_span(self):
         with self.assertRaises(TypeError):
