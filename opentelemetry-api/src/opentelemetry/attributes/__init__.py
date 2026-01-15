@@ -36,6 +36,10 @@ _VALID_ANY_VALUE_TYPES = (
 )
 
 
+def _type_name(t):
+    return getattr(t, "__name__", getattr(t, "_name", repr(t)))
+
+
 _logger = logging.getLogger(__name__)
 
 
@@ -190,7 +194,7 @@ def _clean_extended_attribute_value(  # pylint: disable=too-many-branches
     except Exception:
         raise TypeError(
             f"Invalid type {type(value).__name__} for attribute value. "
-            f"Expected one of {[valid_type.__name__ for valid_type in _VALID_ANY_VALUE_TYPES]} or a "
+            f"Expected one of {[_type_name(valid_type) for valid_type in _VALID_ANY_VALUE_TYPES]} or a "
             "sequence of those types",
         )
 
