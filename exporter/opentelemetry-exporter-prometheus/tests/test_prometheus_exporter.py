@@ -684,13 +684,11 @@ class TestPrometheusMetricReader(TestCase):
                 http_server_request_duration_seconds_bucket{http_target="/foobar",le="+Inf",net_host_port="8080"} 6.0
                 http_server_request_duration_seconds_count{http_target="/foobar",net_host_port="8080"} 6.0
                 http_server_request_duration_seconds_sum{http_target="/foobar",net_host_port="8080"} 579.0
-                # HELP http_server_request_duration_seconds test multiple label sets
-                # TYPE http_server_request_duration_seconds histogram
-                http_server_request_duration_seconds_bucket{le="123.0",net_host_port="8080"} 1.0
-                http_server_request_duration_seconds_bucket{le="456.0",net_host_port="8080"} 4.0
-                http_server_request_duration_seconds_bucket{le="+Inf",net_host_port="8080"} 7.0
-                http_server_request_duration_seconds_count{net_host_port="8080"} 7.0
-                http_server_request_duration_seconds_sum{net_host_port="8080"} 579.0
+                http_server_request_duration_seconds_bucket{http_target="",le="123.0",net_host_port="8080"} 1.0
+                http_server_request_duration_seconds_bucket{http_target="",le="456.0",net_host_port="8080"} 4.0
+                http_server_request_duration_seconds_bucket{http_target="",le="+Inf",net_host_port="8080"} 7.0
+                http_server_request_duration_seconds_count{http_target="",net_host_port="8080"} 7.0
+                http_server_request_duration_seconds_sum{http_target="",net_host_port="8080"} 579.0
                 """
             ),
         )
