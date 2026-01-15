@@ -12,6 +12,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `opentelemetry-exporter-prometheus`: Fix duplicate HELP/TYPE declarations for metrics with different label sets
+  ([#4868](https://github.com/open-telemetry/opentelemetry-python/issues/4868))
+- Allow loading all resource detectors by setting `OTEL_EXPERIMENTAL_RESOURCE_DETECTORS` to `*`
+  ([#4819](https://github.com/open-telemetry/opentelemetry-python/pull/4819))
+- `opentelemetry-sdk`: Fix the type hint of the `_metrics_data` property to allow `None`
+  ([#4837](https://github.com/open-telemetry/opentelemetry-python/pull/4837)).
+- Regenerate opentelemetry-proto code with v1.9.0 release
+  ([#4840](https://github.com/open-telemetry/opentelemetry-python/pull/4840))
+- Add python 3.14 support
+  ([#4798](https://github.com/open-telemetry/opentelemetry-python/pull/4798))
+- Silence events API warnings for internal users
+  ([#4847](https://github.com/open-telemetry/opentelemetry-python/pull/4847))
+- Prevent possible endless recursion from happening in `SimpleLogRecordProcessor.on_emit`,
+  ([#4799](https://github.com/open-telemetry/opentelemetry-python/pull/4799)) and ([#4867](https://github.com/open-telemetry/opentelemetry-python/pull/4867)).
+- Add configurable `max_export_batch_size` to OTLP HTTP metrics exporter
+  ([#4576](https://github.com/open-telemetry/opentelemetry-python/pull/4576))
+
+## Version 1.39.0/0.60b0 (2025-12-03)
+
+- `opentelemetry-api`: Convert objects of any type other than AnyValue in attributes to string to be exportable
+  ([#4808](https://github.com/open-telemetry/opentelemetry-python/pull/4808))
 - docs: Added sqlcommenter example
   ([#4734](https://github.com/open-telemetry/opentelemetry-python/pull/4734))
 - build: bump ruff to 0.14.1
@@ -19,13 +40,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `opentelemetry-exporter-credential-provider-gcp` as an optional dependency to `opentelemetry-exporter-otlp-proto-grpc` 
   and `opentelemetry-exporter-otlp-proto-http` 
   ([#4760](https://github.com/open-telemetry/opentelemetry-python/pull/4760))
+- feat: implement on ending in span processor
+  ([#4775](https://github.com/open-telemetry/opentelemetry-python/pull/4775))
 - semantic-conventions: Bump to 1.38.0
   ([#4791](https://github.com/open-telemetry/opentelemetry-python/pull/4791))
 - [BREAKING] Remove LogData and extend SDK LogRecord to have instrumentation scope
   ([#4676](https://github.com/open-telemetry/opentelemetry-python/pull/4676))
 - [BREAKING] Rename several classes from Log to LogRecord
   ([#4647](https://github.com/open-telemetry/opentelemetry-python/pull/4647))
-  
+
   **Migration Guide:**
   
   `LogData` has been removed. Users should update their code as follows:
@@ -68,9 +91,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - `log_record.resource` - The Resource
     - `log_record.instrumentation_scope` - The InstrumentationScope (now included, was in LogData before)
     - `log_record.limits` - The LogRecordLimits
-- Add configurable `max_export_batch_size` to OTLP HTTP metrics exporter
-  ([#4576](https://github.com/open-telemetry/opentelemetry-python/pull/4576))
-
+- Mark the Events API/SDK as deprecated. The Logs API/SDK should be used instead, an event is now a `LogRecord` with the `event_name` field set
+([#4654](https://github.com/open-telemetry/opentelemetry-python/pull/4654)).
+- Fix type checking for built-in metric exporters
+  ([#4820](https://github.com/open-telemetry/opentelemetry-python/pull/4820))
+  
 ## Version 1.38.0/0.59b0 (2025-10-16)
 
 - Add `rstcheck` to pre-commit to stop introducing invalid RST
@@ -1720,7 +1745,7 @@ can cause a deadlock to occur over `logging._lock` in some cases ([#4636](https:
 - Add reset for the global configuration object, for testing purposes
   ([#636](https://github.com/open-telemetry/opentelemetry-python/pull/636))
 - Add support for programmatic instrumentation
-  ([#579](https://github.com/open-telemetry/opentelemetry-python/pull/569))
+  ([#579](https://github.com/open-telemetry/opentelemetry-python/pull/579))
 
 ### Changed
 

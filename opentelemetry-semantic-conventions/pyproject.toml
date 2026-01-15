@@ -23,10 +23,11 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
 ]
 
 dependencies = [
-  "opentelemetry-api == 1.39.0.dev",
+  "opentelemetry-api == 1.40.0.dev",
   "typing-extensions >= 4.5.0",
 ]
 

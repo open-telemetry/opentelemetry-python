@@ -113,6 +113,16 @@ class SpanProcessor:
             parent_context: The parent context of the span that just started.
         """
 
+    def _on_ending(self, span: "Span") -> None:
+        """Called when a :class:`opentelemetry.trace.Span` is ending.
+
+        This method is called synchronously on the thread that ends the
+        span, therefore it should not block or throw an exception.
+
+        Args:
+            span: The :class:`opentelemetry.trace.Span` that is ending.
+        """
+
     def on_end(self, span: "ReadableSpan") -> None:
         """Called when a :class:`opentelemetry.trace.Span` is ended.
 
@@ -169,6 +179,11 @@ class SynchronousMultiSpanProcessor(SpanProcessor):
     ) -> None:
         for sp in self._span_processors:
             sp.on_start(span, parent_context=parent_context)
+
+    def _on_ending(self, span: "Span") -> None:
+        for sp in self._span_processors:
+            # pylint: disable=protected-access
+            sp._on_ending(span)
 
     def on_end(self, span: "ReadableSpan") -> None:
         for sp in self._span_processors:
@@ -253,6 +268,10 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
         self._submit_and_await(
             lambda sp: sp.on_start, span, parent_context=parent_context
         )
+
+    def _on_ending(self, span: "Span") -> None:
+        # pylint: disable=protected-access
+        self._submit_and_await(lambda sp: sp._on_ending, span)
 
     def on_end(self, span: "ReadableSpan") -> None:
         self._submit_and_await(lambda sp: sp.on_end, span)
@@ -945,6 +964,8 @@ class Span(trace_api.Span, ReadableSpan):
 
             self._end_time = end_time if end_time is not None else time_ns()
 
+        # pylint: disable=protected-access
+        self._span_processor._on_ending(self)
         self._span_processor.on_end(self._readable_span())
 
     @_check_span_ended
