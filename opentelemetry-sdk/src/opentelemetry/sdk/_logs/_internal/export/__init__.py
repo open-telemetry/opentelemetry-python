@@ -23,9 +23,11 @@ from typing import IO, Callable, Optional, Sequence
 from typing_extensions import deprecated
 
 from opentelemetry.context import (
+    _ON_EMIT_RECURSION_COUNT_KEY,
     _SUPPRESS_INSTRUMENTATION_KEY,
     attach,
     detach,
+    get_value,
     set_value,
 )
 from opentelemetry.sdk._logs import (
@@ -51,6 +53,9 @@ _ENV_VAR_INT_VALUE_ERROR_MESSAGE = (
 )
 _logger = logging.getLogger(__name__)
 _logger.addFilter(DuplicateFilter())
+
+_propagate_false_logger = logging.getLogger(__name__ + ".propagate.false")
+_propagate_false_logger.propagate = False
 
 
 class LogRecordExportResult(enum.Enum):
@@ -145,11 +150,28 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
         self._shutdown = False
 
     def on_emit(self, log_record: ReadWriteLogRecord):
-        if self._shutdown:
-            _logger.warning("Processor is already shutdown, ignoring call")
+        # Prevent entering a recursive loop.
+        cnt = get_value(_ON_EMIT_RECURSION_COUNT_KEY) or 0
+        # Recursive depth of 3 is sort of arbitrary. It's possible that an Exporter.export call
+        # emits a log which returns us to this function, but when we call Exporter.export again the log
+        # is no longer emitted and we exit this recursive loop naturally, a depth of >3 allows 3
+        # recursive log calls but exits after because it's likely endless.
+        if cnt > 3:  # pyright: ignore[reportOperatorIssue]
+            _propagate_false_logger.warning(
+                "SimpleLogRecordProcessor.on_emit has entered a recursive loop. Dropping log and exiting the loop."
+            )
             return
-        token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
+        token = attach(
+            set_value(
+                _SUPPRESS_INSTRUMENTATION_KEY,
+                True,
+                set_value(_ON_EMIT_RECURSION_COUNT_KEY, cnt + 1),  # pyright: ignore[reportOperatorIssue]
+            )
+        )
         try:
+            if self._shutdown:
+                _logger.warning("Processor is already shutdown, ignoring call")
+                return
             # Convert ReadWriteLogRecord to ReadableLogRecord before exporting
             # Note: resource should not be None at this point as it's set during Logger.emit()
             resource = (
@@ -166,7 +188,8 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
             self._exporter.export((readable_log_record,))
         except Exception:  # pylint: disable=broad-exception-caught
             _logger.exception("Exception while exporting logs.")
-        detach(token)
+        finally:
+            detach(token)
 
     def shutdown(self):
         self._shutdown = True
