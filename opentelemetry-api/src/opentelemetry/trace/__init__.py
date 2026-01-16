@@ -471,7 +471,10 @@ class NoOpTracer(Tracer):
         record_exception: bool = True,
         set_status_on_exception: bool = True,
     ) -> "Span":
-        parent_span_context = get_current_span(context).get_span_context()
+        current_span = get_current_span(context)
+        if isinstance(current_span, NonRecordingSpan):
+            return current_span
+        parent_span_context = current_span.get_span_context()
         if parent_span_context is not None and not isinstance(
             parent_span_context, SpanContext
         ):
