@@ -16,11 +16,13 @@
 import abc
 import atexit
 import concurrent.futures
+import fnmatch
 import json
 import logging
 import threading
 import traceback
 import typing
+from dataclasses import dataclass
 from os import environ
 from time import time_ns
 from types import MappingProxyType, TracebackType
@@ -39,6 +41,7 @@ from typing import (
     Union,
 )
 from warnings import filterwarnings
+from weakref import WeakSet
 
 from typing_extensions import deprecated
 
@@ -292,7 +295,7 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
             timeout, False otherwise.
         """
         futures = []
-        for sp in self._span_processors:  # type: SpanProcessor
+        for sp in self._span_processors:
             future = self._executor.submit(sp.force_flush, timeout_millis)
             futures.append(future)
 
@@ -1071,6 +1074,11 @@ class _Span(Span):
     """
 
 
+@dataclass
+class _TracerConfig:
+    is_enabled: bool
+
+
 class Tracer(trace_api.Tracer):
     """See `opentelemetry.trace.Tracer`."""
 
@@ -1085,6 +1093,8 @@ class Tracer(trace_api.Tracer):
         instrumentation_info: InstrumentationInfo,
         span_limits: SpanLimits,
         instrumentation_scope: InstrumentationScope,
+        *,
+        _tracer_config: Optional[_TracerConfig] = None,
     ) -> None:
         self.sampler = sampler
         self.resource = resource
@@ -1093,6 +1103,19 @@ class Tracer(trace_api.Tracer):
         self.instrumentation_info = instrumentation_info
         self._span_limits = span_limits
         self._instrumentation_scope = instrumentation_scope
+
+        self._enabled = (
+            _tracer_config.is_enabled if _tracer_config is not None else True
+        )
+
+    def _update_tracer_config(self, tracer_config: _TracerConfig):
+        self._enabled = tracer_config.is_enabled
+
+    @property
+    def _is_enabled(self) -> bool:
+        """Instrumentations needs to call this API each time to check if they should
+        create a new span."""
+        return self._enabled
 
     @_agnosticcontextmanager  # pylint: disable=protected-access
     def start_as_current_span(
@@ -1146,6 +1169,9 @@ class Tracer(trace_api.Tracer):
             raise TypeError(
                 "parent_span_context must be a SpanContext or None."
             )
+
+        if not self._is_enabled:
+            return trace_api.NonRecordingSpan(context=parent_span_context)
 
         # is_valid determines root span
         if parent_span_context is None or not parent_span_context.is_valid:
@@ -1202,6 +1228,64 @@ class Tracer(trace_api.Tracer):
         return span
 
 
+_TracerConfiguratorT = Callable[[InstrumentationScope], _TracerConfig]
+_TracerConfiguratorRulesPredicateT = Callable[[InstrumentationScope], bool]
+_TracerConfiguratorRulesT = Sequence[
+    Tuple[_TracerConfiguratorRulesPredicateT, _TracerConfig]
+]
+
+
+def _tracer_name_matches_glob(
+    glob_pattern: str,
+) -> _TracerConfiguratorRulesPredicateT:
+    def inner(tracer_scope: InstrumentationScope) -> bool:
+        return fnmatch.fnmatch(tracer_scope.name, glob_pattern)
+
+    return inner
+
+
+class _RuleBasedTracerConfigurator:
+    def __init__(
+        self,
+        *,
+        rules: _TracerConfiguratorRulesT,
+        default_config: _TracerConfig,
+    ):
+        self._rules = rules
+        self._default_config = default_config
+
+    def __call__(self, tracer_scope: InstrumentationScope) -> _TracerConfig:
+        for predicate, tracer_config in self._rules:
+            if predicate(tracer_scope):
+                return tracer_config
+
+        # if no rule matched return the default config
+        return self._default_config
+
+
+def _default_tracer_configurator(
+    tracer_scope: InstrumentationScope,
+) -> _TracerConfig:
+    """Default Tracer Configurator implementation
+
+    In order to update Tracers configs you need to call
+    TracerProvider._set_tracer_configurator with a function
+    implementing this interface returning a Tracer Config."""
+    return _RuleBasedTracerConfigurator(
+        rules=[],
+        default_config=_TracerConfig(is_enabled=True),
+    )(tracer_scope=tracer_scope)
+
+
+def _disable_tracer_configurator(
+    tracer_scope: InstrumentationScope,
+) -> _TracerConfig:
+    return _RuleBasedTracerConfigurator(
+        rules=[],
+        default_config=_TracerConfig(is_enabled=False),
+    )(tracer_scope=tracer_scope)
+
+
 class TracerProvider(trace_api.TracerProvider):
     """See `opentelemetry.trace.TracerProvider`."""
 
@@ -1215,6 +1299,8 @@ class TracerProvider(trace_api.TracerProvider):
         ] = None,
         id_generator: Optional[IdGenerator] = None,
         span_limits: Optional[SpanLimits] = None,
+        *,
+        _tracer_configurator: Optional[_TracerConfiguratorT] = None,
     ) -> None:
         self._active_span_processor = (
             active_span_processor or SynchronousMultiSpanProcessor()
@@ -1237,6 +1323,37 @@ class TracerProvider(trace_api.TracerProvider):
 
         if shutdown_on_exit:
             self._atexit_handler = atexit.register(self.shutdown)
+
+        self._tracer_configurator = (
+            _tracer_configurator or _default_tracer_configurator
+        )
+        self._cached_tracers: WeakSet[Tracer] = WeakSet()
+
+    def _set_tracer_configurator(
+        self, *, tracer_configurator: _TracerConfiguratorT
+    ):
+        self._tracer_configurator = tracer_configurator
+        self._update_tracers(tracer_configurator=tracer_configurator)
+
+    def _update_tracers(
+        self,
+        *,
+        tracer_configurator: _TracerConfiguratorT,
+    ):
+        # pylint: disable=protected-access
+        for tracer in self._cached_tracers:
+            tracer_config = tracer_configurator(tracer._instrumentation_scope)
+            tracer._update_tracer_config(tracer_config)
+
+    def _enable_tracers(self):
+        self._update_tracers(
+            tracer_configurator=_default_tracer_configurator,
+        )
+
+    def _disable_tracers(self):
+        self._update_tracers(
+            tracer_configurator=_disable_tracer_configurator,
+        )
 
     @property
     def resource(self) -> Resource:
@@ -1272,20 +1389,29 @@ class TracerProvider(trace_api.TracerProvider):
             schema_url,
         )
 
-        return Tracer(
+        instrumentation_scope = InstrumentationScope(
+            instrumenting_module_name,
+            instrumenting_library_version,
+            schema_url,
+            attributes,
+        )
+
+        tracer_config = self._tracer_configurator(instrumentation_scope)
+
+        tracer = Tracer(
             self.sampler,
             self.resource,
             self._active_span_processor,
             self.id_generator,
             instrumentation_info,
             self._span_limits,
-            InstrumentationScope(
-                instrumenting_module_name,
-                instrumenting_library_version,
-                schema_url,
-                attributes,
-            ),
+            instrumentation_scope,
+            _tracer_config=tracer_config,
         )
+
+        self._cached_tracers.add(tracer)
+
+        return tracer
 
     def add_span_processor(self, span_processor: SpanProcessor) -> None:
         """Registers a new :class:`SpanProcessor` for this `TracerProvider`.
