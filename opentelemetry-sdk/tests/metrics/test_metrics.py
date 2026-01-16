@@ -13,9 +13,8 @@
 # limitations under the License.
 
 # pylint: disable=protected-access,no-self-use
-
 import weakref
-from logging import WARNING
+from logging import DEBUG, WARNING
 from time import sleep
 from typing import Iterable, Sequence
 from unittest.mock import MagicMock, Mock, patch
@@ -36,6 +35,7 @@ from opentelemetry.sdk.metrics import (
 )
 from opentelemetry.sdk.metrics._internal import SynchronousMeasurementConsumer
 from opentelemetry.sdk.metrics.export import (
+    InMemoryMetricReader,
     Metric,
     MetricExporter,
     MetricExportResult,
@@ -425,6 +425,40 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         gauge.set(1)
 
         sync_consumer_instance.consume_measurement.assert_called()
+
+    def test_addition_of_metric_reader(self):
+        # Suppress warnings for calling collect on an unregistered metric reader
+        with self.assertLogs(
+            "opentelemetry.sdk.metrics._internal.export", DEBUG
+        ):
+            reader = InMemoryMetricReader()
+            meter_provider = MeterProvider()
+            meter = meter_provider.get_meter(__name__)
+            counter = meter.create_counter("counter")
+            counter.add(1)
+            self.assertIsNone(reader.get_metrics_data())
+
+            meter_provider.add_metric_reader(reader)
+            counter.add(1)
+            self.assertIsNotNone(reader.get_metrics_data())
+
+            with self.assertLogs(
+                "opentelemetry.sdk.metrics._internal.measurement_consumer",
+                WARNING,
+            ) as logger:
+                meter_provider.add_metric_reader(reader)
+                self.assertIn("already registered!", logger.output[0])
+
+            meter_provider.remove_metric_reader(reader)
+            counter.add(1)
+            self.assertIsNone(reader.get_metrics_data())
+
+            with self.assertLogs(
+                "opentelemetry.sdk.metrics._internal.measurement_consumer",
+                WARNING,
+            ) as logger:
+                meter_provider.remove_metric_reader(reader)
+                self.assertIn("has not been registered!", logger.output[0])
 
 
 class TestMeter(TestCase):
