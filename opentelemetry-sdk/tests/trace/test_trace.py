@@ -46,7 +46,8 @@ from opentelemetry.sdk.environment_variables import (
 from opentelemetry.sdk.trace import (
     Resource,
     TracerProvider,
-    _RuleBaseTracerConfigurator,
+    _RuleBasedTracerConfigurator,
+    _tracer_name_matches_glob,
     _TracerConfig,
 )
 from opentelemetry.sdk.trace.id_generator import RandomIdGenerator
@@ -2262,15 +2263,17 @@ class TestTracerProvider(unittest.TestCase):
         # pylint: disable=protected-access
         rules = [
             (
-                lambda x: x.name == "module_name",
+                _tracer_name_matches_glob(glob_pattern="module_name"),
                 _TracerConfig(is_enabled=True),
             ),
             (
-                lambda x: x.name == "other_module_name",
+                _tracer_name_matches_glob(glob_pattern="other_module_name"),
                 _TracerConfig(is_enabled=False),
             ),
         ]
-        configurator = _RuleBaseTracerConfigurator(rules=rules)
+        configurator = _RuleBasedTracerConfigurator(
+            rules=rules, default_config=_TracerConfig(is_enabled=True)
+        )
 
         tracer_provider = trace.TracerProvider()
         tracer = tracer_provider.get_tracer(
@@ -2306,11 +2309,13 @@ class TestTracerProvider(unittest.TestCase):
         # pylint: disable=protected-access
         rules = [
             (
-                lambda x: x.name == "module_name",
+                _tracer_name_matches_glob(glob_pattern="module_name"),
                 _TracerConfig(is_enabled=False),
             ),
         ]
-        configurator = _RuleBaseTracerConfigurator(rules=rules)
+        configurator = _RuleBasedTracerConfigurator(
+            rules=rules, default_config=_TracerConfig(is_enabled=True)
+        )
 
         tracer_provider = trace.TracerProvider()
         tracer = tracer_provider.get_tracer(

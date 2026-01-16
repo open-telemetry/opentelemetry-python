@@ -16,6 +16,7 @@
 import abc
 import atexit
 import concurrent.futures
+import fnmatch
 import json
 import logging
 import os
@@ -1240,27 +1241,38 @@ class Tracer(trace_api.Tracer):
 
 
 _TracerConfiguratorT = Callable[[InstrumentationScope], _TracerConfig]
-_TracerConfiguratorRulesPredicateT = Callable[
-    [Optional[InstrumentationScope]], bool
-]
+_TracerConfiguratorRulesPredicateT = Callable[[InstrumentationScope], bool]
 _TracerConfiguratorRulesT = Sequence[
     Tuple[_TracerConfiguratorRulesPredicateT, _TracerConfig]
 ]
 
 
-class _RuleBaseTracerConfigurator:
-    def __init__(self, *, rules: _TracerConfiguratorRulesT):
-        self._rules = rules
+def _tracer_name_matches_glob(
+    glob_pattern: str,
+) -> _TracerConfiguratorRulesPredicateT:
+    def inner(tracer_scope: InstrumentationScope) -> bool:
+        return fnmatch.fnmatch(tracer_scope.name, glob_pattern)
 
-    def __call__(
-        self, tracer_scope: Optional[InstrumentationScope] = None
-    ) -> _TracerConfig:
+    return inner
+
+
+class _RuleBasedTracerConfigurator:
+    def __init__(
+        self,
+        *,
+        rules: _TracerConfiguratorRulesT,
+        default_config: _TracerConfig,
+    ):
+        self._rules = rules
+        self._default_config = default_config
+
+    def __call__(self, tracer_scope: InstrumentationScope) -> _TracerConfig:
         for predicate, tracer_config in self._rules:
             if predicate(tracer_scope):
                 return tracer_config
 
-        # if no rule matched return a default one
-        return _TracerConfig(is_enabled=True)
+        # if no rule matched return the default config
+        return self._default_config
 
 
 def _default_tracer_configurator(
@@ -1271,16 +1283,18 @@ def _default_tracer_configurator(
     In order to update Tracers configs you need to call
     TracerProvider._set_tracer_configurator with a function
     implementing this interface returning a Tracer Config."""
-    return _RuleBaseTracerConfigurator(
-        rules=[(lambda x: True, _TracerConfig(is_enabled=True))],
+    return _RuleBasedTracerConfigurator(
+        rules=[],
+        default_config=_TracerConfig(is_enabled=True),
     )(tracer_scope=tracer_scope)
 
 
 def _disable_tracer_configurator(
     tracer_scope: InstrumentationScope,
 ) -> _TracerConfig:
-    return _RuleBaseTracerConfigurator(
-        rules=[(lambda x: True, _TracerConfig(is_enabled=False))],
+    return _RuleBasedTracerConfigurator(
+        rules=[],
+        default_config=_TracerConfig(is_enabled=False),
     )(tracer_scope=tracer_scope)
 
 

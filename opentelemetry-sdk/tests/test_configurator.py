@@ -65,7 +65,7 @@ from opentelemetry.sdk.metrics.export import (
 )
 from opentelemetry.sdk.metrics.view import Aggregation
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
-from opentelemetry.sdk.trace import _RuleBaseTracerConfigurator
+from opentelemetry.sdk.trace import _RuleBasedTracerConfigurator
 from opentelemetry.sdk.trace.export import ConsoleSpanExporter
 from opentelemetry.sdk.trace.id_generator import IdGenerator, RandomIdGenerator
 from opentelemetry.sdk.trace.sampling import (
@@ -632,7 +632,7 @@ class TestTraceInit(TestCase):
         self, mock_entry_points
     ):
         def custom_tracer_configurator(tracer_scope):
-            return mock.Mock(spec=_RuleBaseTracerConfigurator)(
+            return mock.Mock(spec=_RuleBasedTracerConfigurator)(
                 tracer_scope=tracer_scope
             )
 
