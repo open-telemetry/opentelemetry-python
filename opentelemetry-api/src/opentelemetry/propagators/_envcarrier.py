@@ -14,15 +14,21 @@
 
 import os
 import typing
+from collections.abc import MutableMapping
 
 from opentelemetry.propagators.textmap import Getter, Setter
 
 
-class EnvironmentGetter(Getter[dict]):
+class EnvironmentGetter(Getter[typing.Mapping[str, str]]):
     """Getter implementation for extracting context and baggage from environment variables.
 
     EnvironmentGetter creates a case-insensitive lookup from the current environment
-    variables and provides simple data access without validation.
+    variables at initialization time and provides simple data access without validation.
+
+    Per the OpenTelemetry specification, environment variables are treated as immutable
+    within a process. For environments where context-carrying environment variables
+    change between logical requests (e.g., AWS Lambda's _X_AMZN_TRACE_ID), create a
+    new EnvironmentGetter instance at the start of each request.
 
     Example usage:
         getter = EnvironmentGetter()
@@ -31,15 +37,18 @@ class EnvironmentGetter(Getter[dict]):
 
     def __init__(self):
         # Create case-insensitive lookup from current environment
-        self.carrier = {k.lower(): v for k, v in os.environ.items()}
+        # Per spec: "creates an in-memory copy of the current environment variables"
+        self.carrier: typing.Dict[str, str] = {
+            k.lower(): v for k, v in os.environ.items()
+        }
 
     def get(
-        self, carrier: dict, key: str
+        self, carrier: typing.Mapping[str, str], key: str
     ) -> typing.Optional[typing.List[str]]:
-        """Get a value from the environment for the given key.
+        """Get a value from the environment carrier for the given key.
 
         Args:
-            carrier: Not used for environment getter, maintained for interface compatibility
+            carrier: Not used; maintained for interface compatibility with Getter[CarrierT]
             key: The key to look up (case-insensitive)
 
         Returns:
@@ -52,11 +61,11 @@ class EnvironmentGetter(Getter[dict]):
             return list(val)
         return [val]
 
-    def keys(self, carrier: dict) -> typing.List[str]:
+    def keys(self, carrier: typing.Mapping[str, str]) -> typing.List[str]:
         """Get all keys from the environment carrier.
 
         Args:
-            carrier: Not used for environment getter, maintained for interface compatibility
+            carrier: Not used; maintained for interface compatibility with Getter[CarrierT]
 
         Returns:
             List of all environment variable keys (lowercase).
@@ -64,7 +73,7 @@ class EnvironmentGetter(Getter[dict]):
         return list(self.carrier.keys())
 
 
-class EnvironmentSetter(Setter[dict]):
+class EnvironmentSetter(Setter[MutableMapping[str, str]]):
     """Setter implementation for building environment variable dictionaries.
 
     EnvironmentSetter builds a dictionary of environment variables that
@@ -78,15 +87,13 @@ class EnvironmentSetter(Setter[dict]):
     """
 
     def set(
-        self, carrier: typing.Optional[dict], key: str, value: str
+        self, carrier: MutableMapping[str, str], key: str, value: str
     ) -> None:
         """Set a value in the carrier dictionary for the given key.
 
         Args:
-            carrier: Dictionary to store environment variables, created if None
+            carrier: Dictionary to store environment variables
             key: The key to set (will be converted to uppercase)
             value: The value to set
         """
-        if carrier is None:
-            carrier = {}
         carrier[key.upper()] = value

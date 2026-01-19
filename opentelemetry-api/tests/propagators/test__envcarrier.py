@@ -549,7 +549,3 @@ class TestEnvironmentCarrierWithCompositePropagator(unittest.TestCase):
 
             # Should not crash, return valid context
             self.assertIsInstance(ctx, Context)
-
-
-if __name__ == "__main__":
-    unittest.main()
