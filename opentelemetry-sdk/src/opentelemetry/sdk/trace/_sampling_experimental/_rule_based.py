@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from typing import Callable, Sequence
+from typing import Protocol, Sequence
 
 from opentelemetry.context import Context
 from opentelemetry.trace import Link, SpanKind, TraceState
@@ -23,17 +23,19 @@ from opentelemetry.util.types import Attributes
 from ._composable import ComposableSampler, SamplingIntent
 from ._util import INVALID_THRESHOLD
 
-PredicateT = Callable[
-    [
-        Context | None,
-        str,
-        SpanKind | None,
-        Attributes,
-        Sequence[Link] | None,
-        TraceState | None,
-    ],
-    bool,
-]
+
+class PredicateT(Protocol):
+    def __call__(
+        self,
+        parent_ctx: Context | None,
+        name: str,
+        span_kind: SpanKind | None,
+        attributes: Attributes,
+        links: Sequence[Link] | None,
+        trace_state: TraceState | None,
+    ) -> bool: ...
+
+
 RulesT = Sequence[tuple[PredicateT, ComposableSampler]]
 
 _non_sampling_intent = SamplingIntent(
