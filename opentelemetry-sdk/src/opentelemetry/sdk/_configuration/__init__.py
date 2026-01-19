@@ -25,7 +25,7 @@ import os
 import warnings
 from abc import ABC, abstractmethod
 from os import environ
-from typing import Any, Callable, Mapping, Sequence, Type, Union
+from typing import Any, Callable, Mapping, Protocol, Sequence, Type, Union
 
 from typing_extensions import Literal
 
@@ -109,12 +109,16 @@ ExporterArgsMap = Mapping[
 ]
 
 
-class ExporterSpanProcessor(SpanProcessor):
-    def __init__(self, span_exporter: SpanExporter, *args, **kwargs): ...
+class ExporterSpanProcessorT(Protocol):
+    def __call__(
+        self, span_exporter: SpanExporter, *args, **kwargs
+    ) -> SpanProcessor: ...
 
 
-class ExporterLogRecordProcessor(LogRecordProcessor):
-    def __init__(self, exporter: LogRecordExporter, *args, **kwargs): ...
+class ExporterLogRecordProcessorT(Protocol):
+    def __call__(
+        self, exporter: LogRecordExporter, *args, **kwargs
+    ) -> LogRecordProcessor: ...
 
 
 def _import_config_components(
@@ -223,7 +227,7 @@ def _init_tracing(
     resource: Resource | None = None,
     exporter_args_map: ExporterArgsMap | None = None,
     span_processors: Sequence[SpanProcessor] | None = None,
-    export_span_processor: Type[ExporterSpanProcessor] | None = None,
+    export_span_processor: ExporterSpanProcessorT | None = None,
 ):
     provider = TracerProvider(
         id_generator=id_generator,
@@ -277,8 +281,7 @@ def _init_logging(
     setup_logging_handler: bool = True,
     exporter_args_map: ExporterArgsMap | None = None,
     log_record_processors: Sequence[LogRecordProcessor] | None = None,
-    export_log_record_processor: Type[ExporterLogRecordProcessor]
-    | None = None,
+    export_log_record_processor: ExporterLogRecordProcessorT | None = None,
 ):
     provider = LoggerProvider(resource=resource)
     set_logger_provider(provider)
@@ -459,10 +462,9 @@ def _initialize_components(
     setup_logging_handler: bool | None = None,
     exporter_args_map: ExporterArgsMap | None = None,
     span_processors: Sequence[SpanProcessor] | None = None,
-    export_span_processor: Type[ExporterSpanProcessor] | None = None,
+    export_span_processor: ExporterSpanProcessorT | None = None,
     log_record_processors: Sequence[LogRecordProcessor] | None = None,
-    export_log_record_processor: Type[ExporterLogRecordProcessor]
-    | None = None,
+    export_log_record_processor: ExporterLogRecordProcessorT | None = None,
 ):
     # pylint: disable=too-many-locals
     if trace_exporter_names is None:
