@@ -12,8 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `opentelemetry-exporter-prometheus`: Fix duplicate HELP/TYPE declarations for metrics with different label sets
+  ([#4868](https://github.com/open-telemetry/opentelemetry-python/issues/4868))
+- Allow loading all resource detectors by setting `OTEL_EXPERIMENTAL_RESOURCE_DETECTORS` to `*`
+  ([#4819](https://github.com/open-telemetry/opentelemetry-python/pull/4819))
 - `opentelemetry-sdk`: Fix the type hint of the `_metrics_data` property to allow `None`
-  ([#4837](https://github.com/open-telemetry/opentelemetry-python/pull/4837)
+  ([#4837](https://github.com/open-telemetry/opentelemetry-python/pull/4837)).
 - Regenerate opentelemetry-proto code with v1.9.0 release
   ([#4840](https://github.com/open-telemetry/opentelemetry-python/pull/4840))
 - Add python 3.14 support
@@ -22,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4847](https://github.com/open-telemetry/opentelemetry-python/pull/4847))
 - opentelemetry-sdk: make it possible to override the default processors in the SDK configurator
   ([#4806](https://github.com/open-telemetry/opentelemetry-python/pull/4806))
+- Prevent possible endless recursion from happening in `SimpleLogRecordProcessor.on_emit`,
+  ([#4799](https://github.com/open-telemetry/opentelemetry-python/pull/4799)) and ([#4867](https://github.com/open-telemetry/opentelemetry-python/pull/4867)).
 
 ## Version 1.39.0/0.60b0 (2025-12-03)
 
