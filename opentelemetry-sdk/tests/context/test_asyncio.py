@@ -60,10 +60,12 @@ class TestAsyncio(unittest.TestCase):
         self.memory_exporter = InMemorySpanExporter()
         span_processor = export.SimpleSpanProcessor(self.memory_exporter)
         self.tracer_provider.add_span_processor(span_processor)
-        self.loop = asyncio.get_event_loop()
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
 
     def tearDown(self):
         context.detach(self.token)
+        self.loop.close()
 
     @patch(
         "opentelemetry.context._RUNTIME_CONTEXT", ContextVarsRuntimeContext()
