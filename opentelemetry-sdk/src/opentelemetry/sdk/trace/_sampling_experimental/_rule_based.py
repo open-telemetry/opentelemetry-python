@@ -45,7 +45,7 @@ _non_sampling_intent = SamplingIntent(
 
 class _ComposableRuleBased(ComposableSampler):
     def __init__(self, rules: RulesT):
-        self._rules = rules
+        self._rules = list(rules)
 
     def sampling_intent(
         self,
