@@ -126,7 +126,7 @@ class TestAPIOnlyImplementation(unittest.TestCase):
         tracer_provider = trace.NoOpTracerProvider()
         tracer = tracer_provider.get_tracer(__name__)
         ctx = trace.set_span_in_context(
-            RecordingSpan(context="invalid_context")
+            RecordingSpan(context="invalid_context")  # type: ignore[reportArgumentType]
         )
         with self.assertRaises(TypeError):
             tracer.start_span("test", context=ctx)
