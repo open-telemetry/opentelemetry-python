@@ -18,7 +18,7 @@ from typing import Protocol, Sequence
 
 from opentelemetry.context import Context
 from opentelemetry.trace import Link, SpanKind, TraceState
-from opentelemetry.util.types import Attributes
+from opentelemetry.util.types import AnyValue, Attributes
 
 from ._composable import ComposableSampler, SamplingIntent
 from ._util import INVALID_THRESHOLD
@@ -35,6 +35,32 @@ class PredicateT(Protocol):
         trace_state: TraceState | None,
     ) -> bool: ...
 
+    def __str__(self) -> str: ...
+
+
+class AttributePredicate:
+    """An exact match of an attribute value"""
+
+    def __init__(self, key: str, value: AnyValue):
+        self.key = key
+        self.value = value
+
+    def __call__(
+        self,
+        parent_ctx: Context | None,
+        name: str,
+        span_kind: SpanKind | None,
+        attributes: Attributes,
+        links: Sequence[Link] | None,
+        trace_state: TraceState | None,
+    ) -> bool:
+        if not attributes:
+            return False
+        return attributes.get(self.key) == self.value
+
+    def __str__(self):
+        return f"{self.key}={self.value}"
+
 
 RulesT = Sequence[tuple[PredicateT, ComposableSampler]]
 
@@ -45,6 +71,7 @@ _non_sampling_intent = SamplingIntent(
 
 class _ComposableRuleBased(ComposableSampler):
     def __init__(self, rules: RulesT):
+        # work on an internal copy of the rules
         self._rules = list(rules)
 
     def sampling_intent(
@@ -76,7 +103,13 @@ class _ComposableRuleBased(ComposableSampler):
         return _non_sampling_intent
 
     def get_description(self) -> str:
-        return "ComposableRuleBased"
+        rules_str = ",".join(
+            [
+                f"({predicate}:{sampler.get_description()})"
+                for predicate, sampler in self._rules
+            ]
+        )
+        return f"ComposableRuleBased{{[{rules_str}]}}"
 
 
 def composable_rule_based(
