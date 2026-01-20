@@ -193,7 +193,7 @@ class OTLPLogExporter(LogRecordExporter):
                 if resp.ok:
                     return LogRecordExportResult.SUCCESS
             except requests.exceptions.RequestException as error:
-                reason = str(error)
+                reason = error
                 retryable = isinstance(error, ConnectionError)
                 status_code = None
             else:
