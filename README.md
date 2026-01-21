@@ -111,7 +111,7 @@ For more information about the maintainer role, see the [community repository](h
 ### Approvers
 
 - [Dylan Russell](https://github.com/dylanrussell), Google
-- [Emídio Neto](https://github.com/emdneto), PicPay
+- [Emídio Neto](https://github.com/emdneto), Independent
 - [Héctor Hernández](https://github.com/hectorhdzg), Microsoft
 - [Jeremy Voss](https://github.com/jeremydvoss), Microsoft
 - [Liudmila Molkova](https://github.com/lmolkova), Grafana Labs
