@@ -15,7 +15,9 @@
 import threading
 import time
 import unittest
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import (  # pylint: disable=no-name-in-module
+    ThreadPoolExecutor,
+)
 from logging import WARNING, getLogger
 from platform import system
 from typing import Any, Optional, Sequence
@@ -63,7 +65,7 @@ logger = getLogger(__name__)
 
 
 # The below tests use this test SpanExporter and Spans, but are testing the
-# underlying behavior in the mixin. A MetricExporter or LogExporter could
+# underlying behavior in the mixin. A MetricExporter or LogRecordExporter could
 # just as easily be used.
 class OTLPSpanExporterForTesting(
     SpanExporter,

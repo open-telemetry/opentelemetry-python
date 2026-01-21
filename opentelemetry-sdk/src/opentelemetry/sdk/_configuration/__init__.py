@@ -22,13 +22,13 @@ from __future__ import annotations
 import logging
 import logging.config
 import os
+import warnings
 from abc import ABC, abstractmethod
 from os import environ
 from typing import Any, Callable, Mapping, Sequence, Type, Union
 
 from typing_extensions import Literal
 
-from opentelemetry._events import set_event_logger_provider
 from opentelemetry._logs import set_logger_provider
 from opentelemetry.environment_variables import (
     OTEL_LOGS_EXPORTER,
@@ -37,9 +37,11 @@ from opentelemetry.environment_variables import (
     OTEL_TRACES_EXPORTER,
 )
 from opentelemetry.metrics import set_meter_provider
-from opentelemetry.sdk._events import EventLoggerProvider
 from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
-from opentelemetry.sdk._logs.export import BatchLogRecordProcessor, LogExporter
+from opentelemetry.sdk._logs.export import (
+    BatchLogRecordProcessor,
+    LogRecordExporter,
+)
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
     OTEL_EXPORTER_OTLP_LOGS_PROTOCOL,
@@ -97,7 +99,7 @@ ExporterArgsMap = Mapping[
         Type[SpanExporter],
         Type[MetricExporter],
         Type[MetricReader],
-        Type[LogExporter],
+        Type[LogRecordExporter],
     ],
     Mapping[str, Any],
 ]
@@ -250,7 +252,7 @@ def _init_metrics(
 
 
 def _init_logging(
-    exporters: dict[str, Type[LogExporter]],
+    exporters: dict[str, Type[LogRecordExporter]],
     resource: Resource | None = None,
     setup_logging_handler: bool = True,
     exporter_args_map: ExporterArgsMap | None = None,
@@ -265,8 +267,19 @@ def _init_logging(
             BatchLogRecordProcessor(exporter_class(**exporter_args))
         )
 
-    event_logger_provider = EventLoggerProvider(logger_provider=provider)
-    set_event_logger_provider(event_logger_provider)
+    # silence warnings from internal users until we drop the deprecated Events API
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=DeprecationWarning)
+        # pylint: disable=import-outside-toplevel
+        from opentelemetry._events import (  # noqa: PLC0415
+            set_event_logger_provider,
+        )
+        from opentelemetry.sdk._events import (  # noqa: PLC0415
+            EventLoggerProvider,
+        )
+
+        event_logger_provider = EventLoggerProvider(logger_provider=provider)
+        set_event_logger_provider(event_logger_provider)
 
     if setup_logging_handler:
         # Add OTel handler
@@ -309,7 +322,7 @@ def _import_exporters(
 ) -> tuple[
     dict[str, Type[SpanExporter]],
     dict[str, Union[Type[MetricExporter], Type[MetricReader]]],
-    dict[str, Type[LogExporter]],
+    dict[str, Type[LogRecordExporter]],
 ]:
     trace_exporters = {}
     metric_exporters = {}
@@ -345,7 +358,7 @@ def _import_exporters(
     ) in _import_config_components(
         log_exporter_names, "opentelemetry_logs_exporter"
     ):
-        if issubclass(exporter_impl, LogExporter):
+        if issubclass(exporter_impl, LogRecordExporter):
             log_exporters[exporter_name] = exporter_impl
         else:
             raise RuntimeError(f"{exporter_name} is not a log exporter")

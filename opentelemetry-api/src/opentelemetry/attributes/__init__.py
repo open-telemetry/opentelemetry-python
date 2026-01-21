@@ -118,7 +118,7 @@ def _clean_attribute(
     return None
 
 
-def _clean_extended_attribute_value(
+def _clean_extended_attribute_value(  # pylint: disable=too-many-branches
     value: types.AnyValue, max_len: Optional[int]
 ) -> types.AnyValue:
     # for primitive types just return the value and eventually shorten the string length
@@ -180,11 +180,19 @@ def _clean_extended_attribute_value(
         # Freeze mutable sequences defensively
         return tuple(cleaned_seq)
 
-    raise TypeError(
-        f"Invalid type {type(value).__name__} for attribute value. "
-        f"Expected one of {[valid_type.__name__ for valid_type in _VALID_ANY_VALUE_TYPES]} or a "
-        "sequence of those types",
-    )
+    # Some applications such as Django add values to log records whose types fall outside the
+    # primitive types and `_VALID_ANY_VALUE_TYPES`, i.e., they are not of type `AnyValue`.
+    # Rather than attempt to whitelist every possible instrumentation, we stringify those values here
+    # so they can still be represented as attributes, falling back to the original TypeError only if
+    # converting to string raises.
+    try:
+        return str(value)
+    except Exception:
+        raise TypeError(
+            f"Invalid type {type(value).__name__} for attribute value. "
+            f"Expected one of {[valid_type.__name__ for valid_type in _VALID_ANY_VALUE_TYPES]} or a "
+            "sequence of those types",
+        )
 
 
 def _clean_extended_attribute(

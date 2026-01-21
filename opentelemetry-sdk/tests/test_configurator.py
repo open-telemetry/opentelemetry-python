@@ -46,8 +46,8 @@ from opentelemetry.sdk._configuration import (
     _OTelSDKConfigurator,
 )
 from opentelemetry.sdk._logs import LoggingHandler
-from opentelemetry.sdk._logs._internal.export import LogExporter
-from opentelemetry.sdk._logs.export import ConsoleLogExporter
+from opentelemetry.sdk._logs._internal.export import LogRecordExporter
+from opentelemetry.sdk._logs.export import ConsoleLogRecordExporter
 from opentelemetry.sdk.environment_variables import (
     OTEL_TRACES_SAMPLER,
     OTEL_TRACES_SAMPLER_ARG,
@@ -221,7 +221,7 @@ class OTLPSpanExporter:
         self.compression = compression
 
 
-class DummyOTLPLogExporter(LogExporter):
+class DummyOTLPLogExporter(LogRecordExporter):
     def __init__(self, compression: str | None = None, *args, **kwargs):
         self.export_called = False
         self.compression = compression
@@ -614,11 +614,11 @@ class TestLoggingInit(TestCase):
 
         self.event_logger_provider_instance_mock = Mock()
         self.event_logger_provider_patch = patch(
-            "opentelemetry.sdk._configuration.EventLoggerProvider",
+            "opentelemetry.sdk._events.EventLoggerProvider",
             return_value=self.event_logger_provider_instance_mock,
         )
         self.set_event_logger_provider_patch = patch(
-            "opentelemetry.sdk._configuration.set_event_logger_provider"
+            "opentelemetry._events.set_event_logger_provider"
         )
 
         self.processor_mock = self.processor_patch.start()
@@ -1159,7 +1159,8 @@ class TestImportExporters(TestCase):
             trace_exporters["console"].__class__, ConsoleSpanExporter.__class__
         )
         self.assertEqual(
-            logs_exporters["console"].__class__, ConsoleLogExporter.__class__
+            logs_exporters["console"].__class__,
+            ConsoleLogRecordExporter.__class__,
         )
         self.assertEqual(
             metric_exporterts["console"].__class__,
