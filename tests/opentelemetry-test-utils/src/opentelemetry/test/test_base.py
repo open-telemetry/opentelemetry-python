@@ -155,7 +155,7 @@ class TestBase(unittest.TestCase):
                 # This helper class is used by instrumentation asserting their own
                 # metrics. They should never need to assert SDK metrics so we filter
                 # them out automatically.
-                if scope_metrics.scope == "opentelemetry-sdk":
+                if scope_metrics.scope.name == "opentelemetry-sdk":
                     continue
                 all_metrics.extend(scope_metrics.metrics)
 
