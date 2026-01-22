@@ -36,6 +36,9 @@ _VALID_ANY_VALUE_TYPES = (
 )
 
 
+# TODO: Remove this workaround and revert to the simpler implementation
+# once Python 3.9 support is dropped (planned around May 2026).
+# This exists only to avoid issues caused by deprecated behavior in 3.9.
 def _type_name(t):
     return getattr(t, "__name__", getattr(t, "_name", repr(t)))
 
