@@ -28,7 +28,6 @@ from opentelemetry.sdk.metrics.export import (
     DataPointT,
     HistogramDataPoint,
     InMemoryMetricReader,
-    MetricReader,
     NumberDataPoint,
 )
 from opentelemetry.sdk.trace import TracerProvider, export
@@ -118,7 +117,9 @@ class TestBase(unittest.TestCase):
         return tracer_provider, memory_exporter
 
     @staticmethod
-    def create_meter_provider(**kwargs) -> Tuple[MeterProvider, InMemoryMetricReader]:
+    def create_meter_provider(
+        **kwargs,
+    ) -> Tuple[MeterProvider, InMemoryMetricReader]:
         """Helper to create a configured meter provider
         Creates a `MeterProvider` and an `InMemoryMetricReader`.
         Returns:
