@@ -478,9 +478,12 @@ class NoOpTracer(Tracer):
         if parent_span_context is not None and not isinstance(
             parent_span_context, SpanContext
         ):
-            raise TypeError(
-                "parent_span_context must be a SpanContext or None."
+            logger.warning(
+                "Invalid Span Context for %s: %s",
+                current_span,
+                parent_span_context,
             )
+            parent_span_context = None
 
         return NonRecordingSpan(context=parent_span_context)
 
