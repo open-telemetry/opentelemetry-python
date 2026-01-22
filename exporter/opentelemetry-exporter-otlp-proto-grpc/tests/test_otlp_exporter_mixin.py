@@ -15,7 +15,9 @@
 import threading
 import time
 import unittest
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import (  # pylint: disable=no-name-in-module
+    ThreadPoolExecutor,
+)
 from logging import WARNING, getLogger
 from platform import system
 from typing import Any, Optional, Sequence

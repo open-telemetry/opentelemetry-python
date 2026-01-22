@@ -18,9 +18,11 @@ import atexit
 import concurrent.futures
 import json
 import logging
+import os
 import threading
 import traceback
 import typing
+import weakref
 from os import environ
 from time import time_ns
 from types import MappingProxyType, TracebackType
@@ -113,6 +115,16 @@ class SpanProcessor:
             parent_context: The parent context of the span that just started.
         """
 
+    def _on_ending(self, span: "Span") -> None:
+        """Called when a :class:`opentelemetry.trace.Span` is ending.
+
+        This method is called synchronously on the thread that ends the
+        span, therefore it should not block or throw an exception.
+
+        Args:
+            span: The :class:`opentelemetry.trace.Span` that is ending.
+        """
+
     def on_end(self, span: "ReadableSpan") -> None:
         """Called when a :class:`opentelemetry.trace.Span` is ended.
 
@@ -170,6 +182,11 @@ class SynchronousMultiSpanProcessor(SpanProcessor):
         for sp in self._span_processors:
             sp.on_start(span, parent_context=parent_context)
 
+    def _on_ending(self, span: "Span") -> None:
+        for sp in self._span_processors:
+            # pylint: disable=protected-access
+            sp._on_ending(span)
+
     def on_end(self, span: "ReadableSpan") -> None:
         for sp in self._span_processors:
             sp.on_end(span)
@@ -223,6 +240,16 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
         # iterating through it on "on_start" and "on_end".
         self._span_processors = ()  # type: Tuple[SpanProcessor, ...]
         self._lock = threading.Lock()
+        self._init_executor(num_threads)
+        if hasattr(os, "register_at_fork"):
+            # Only the main thread is kept in forked processed, the executor
+            # needs to be re-instantiated to get a fresh pool of threads:
+            weak_reinit = weakref.WeakMethod(self._init_executor)
+            os.register_at_fork(
+                after_in_child=lambda: weak_reinit()(num_threads)
+            )
+
+    def _init_executor(self, num_threads: int) -> None:
         self._executor = concurrent.futures.ThreadPoolExecutor(
             max_workers=num_threads
         )
@@ -253,6 +280,10 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
         self._submit_and_await(
             lambda sp: sp.on_start, span, parent_context=parent_context
         )
+
+    def _on_ending(self, span: "Span") -> None:
+        # pylint: disable=protected-access
+        self._submit_and_await(lambda sp: sp._on_ending, span)
 
     def on_end(self, span: "ReadableSpan") -> None:
         self._submit_and_await(lambda sp: sp.on_end, span)
@@ -945,6 +976,8 @@ class Span(trace_api.Span, ReadableSpan):
 
             self._end_time = end_time if end_time is not None else time_ns()
 
+        # pylint: disable=protected-access
+        self._span_processor._on_ending(self)
         self._span_processor.on_end(self._readable_span())
 
     @_check_span_ended

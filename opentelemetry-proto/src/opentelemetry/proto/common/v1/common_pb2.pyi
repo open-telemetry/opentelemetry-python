@@ -31,7 +31,7 @@ DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
 
 @typing_extensions.final
 class AnyValue(google.protobuf.message.Message):
-    """AnyValue is used to represent any type of attribute value. AnyValue may contain a
+    """Represents any type of attribute value. AnyValue may contain a
     primitive value such as a string or integer or it may contain an arbitrary nested
     object containing arrays, key-value lists and primitives.
     """
@@ -108,8 +108,10 @@ class KeyValueList(google.protobuf.message.Message):
     def values(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___KeyValue]:
         """A collection of key/value pairs of key-value pairs. The list may be empty (may
         contain 0 elements).
+
         The keys MUST be unique (it is not allowed to have more than one
         value with the same key).
+        The behavior of software that receives duplicated keys can be unpredictable.
         """
     def __init__(
         self,
@@ -122,7 +124,7 @@ global___KeyValueList = KeyValueList
 
 @typing_extensions.final
 class KeyValue(google.protobuf.message.Message):
-    """KeyValue is a key-value pair that is used to store Span attributes, Link
+    """Represents a key-value pair that is used to store Span attributes, Link
     attributes, etc.
     """
 
@@ -131,8 +133,10 @@ class KeyValue(google.protobuf.message.Message):
     KEY_FIELD_NUMBER: builtins.int
     VALUE_FIELD_NUMBER: builtins.int
     key: builtins.str
+    """The key name of the pair."""
     @property
-    def value(self) -> global___AnyValue: ...
+    def value(self) -> global___AnyValue:
+        """The value of the pair."""
     def __init__(
         self,
         *,
@@ -157,15 +161,25 @@ class InstrumentationScope(google.protobuf.message.Message):
     ATTRIBUTES_FIELD_NUMBER: builtins.int
     DROPPED_ATTRIBUTES_COUNT_FIELD_NUMBER: builtins.int
     name: builtins.str
-    """An empty instrumentation scope name means the name is unknown."""
+    """A name denoting the Instrumentation scope.
+    An empty instrumentation scope name means the name is unknown.
+    """
     version: builtins.str
+    """Defines the version of the instrumentation scope.
+    An empty instrumentation scope version means the version is unknown.
+    """
     @property
     def attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___KeyValue]:
         """Additional attributes that describe the scope. [Optional].
         Attribute keys MUST be unique (it is not allowed to have more than one
         attribute with the same key).
+        The behavior of software that receives duplicated keys can be unpredictable.
         """
     dropped_attributes_count: builtins.int
+    """The number of attributes that were discarded. Attributes
+    can be discarded because their keys are too long or because there are too many
+    attributes. If this value is 0, then no attributes were dropped.
+    """
     def __init__(
         self,
         *,
