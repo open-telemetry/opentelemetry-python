@@ -129,7 +129,8 @@ class TestAPIOnlyImplementation(unittest.TestCase):
             RecordingSpan(context="invalid_context")  # type: ignore[reportArgumentType]
         )
         with tracer.start_span("test", context=ctx) as span:
-            self.assertIsNone(span.get_span_context())
+            self.assertFalse(span.get_span_context().is_valid)
+            self.assertIs(span, trace.INVALID_SPAN)
 
     def test_span(self):
         with self.assertRaises(TypeError):

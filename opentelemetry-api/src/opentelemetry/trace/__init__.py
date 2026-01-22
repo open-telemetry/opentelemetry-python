@@ -479,11 +479,11 @@ class NoOpTracer(Tracer):
             parent_span_context, SpanContext
         ):
             logger.warning(
-                "Invalid Span Context for %s: %s",
+                "Invalid span context for %s: %s",
                 current_span,
                 parent_span_context,
             )
-            parent_span_context = None
+            return INVALID_SPAN
 
         return NonRecordingSpan(context=parent_span_context)
 
