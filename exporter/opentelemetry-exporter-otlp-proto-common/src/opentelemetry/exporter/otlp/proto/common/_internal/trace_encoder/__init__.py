@@ -109,12 +109,7 @@ def _span_flags(
     child_trace_flags: int, parent_span_context: Optional[SpanContext]
 ) -> int:
     # Lower 8 bits: W3C TraceFlags
-    # TraceFlags is an int subclass, but we handle Mock objects in tests
-    try:
-        flags = child_trace_flags & PB2SpanFlags.SPAN_FLAGS_TRACE_FLAGS_MASK
-    except TypeError:
-        # If bitwise operation fails (e.g., Mock object in tests), default to 0
-        flags = 0
+    flags = child_trace_flags & PB2SpanFlags.SPAN_FLAGS_TRACE_FLAGS_MASK
     # Always indicate whether parent remote information is known
     flags |= PB2SpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK
     # Set remote bit when applicable

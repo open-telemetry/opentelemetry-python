@@ -101,6 +101,7 @@ class TestOTLPSpanExporter(TestCase):
                     "trace_state": {"a": "b", "c": "d"},
                     "span_id": 10217189687419569865,
                     "trace_id": 67545097771067222548457157018666467027,
+                    "trace_flags": 0x00,
                 }
             ),
             resource=SDKResource({"a": 1, "b": False}),
@@ -110,8 +111,13 @@ class TestOTLPSpanExporter(TestCase):
             links=[
                 Mock(
                     **{
-                        "context.trace_id": 1,
-                        "context.span_id": 2,
+                        "context": Mock(
+                            **{
+                                "trace_id": 1,
+                                "span_id": 2,
+                                "trace_flags": 0x00,
+                            }
+                        ),
                         "attributes": BoundedAttributes(
                             attributes={"a": 1, "b": False}
                         ),
@@ -132,6 +138,7 @@ class TestOTLPSpanExporter(TestCase):
                     "trace_state": {"a": "b", "c": "d"},
                     "span_id": 10217189687419569865,
                     "trace_id": 67545097771067222548457157018666467027,
+                    "trace_flags": 0x00,
                 }
             ),
             resource=SDKResource({"a": 2, "b": False}),
@@ -148,6 +155,7 @@ class TestOTLPSpanExporter(TestCase):
                     "trace_state": {"a": "b", "c": "d"},
                     "span_id": 10217189687419569865,
                     "trace_id": 67545097771067222548457157018666467027,
+                    "trace_flags": 0x00,
                 }
             ),
             resource=SDKResource({"a": 1, "b": False}),
@@ -788,6 +796,7 @@ def _create_span_with_status(status: SDKStatus):
                 "trace_state": {"a": "b", "c": "d"},
                 "span_id": 10217189687419569865,
                 "trace_id": 67545097771067222548457157018666467027,
+                "trace_flags": 0x00,
             }
         ),
         parent=Mock(**{"span_id": 12345}),
