@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `opentelemetry-exporter-prometheus`: Fix duplicate HELP/TYPE declarations for metrics with different label sets
+  ([#4868](https://github.com/open-telemetry/opentelemetry-python/issues/4868))
 - Allow loading all resource detectors by setting `OTEL_EXPERIMENTAL_RESOURCE_DETECTORS` to `*`
   ([#4819](https://github.com/open-telemetry/opentelemetry-python/pull/4819))
 - `opentelemetry-sdk`: Fix the type hint of the `_metrics_data` property to allow `None`
@@ -24,6 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4847](https://github.com/open-telemetry/opentelemetry-python/pull/4847))
 - Prevent possible endless recursion from happening in `SimpleLogRecordProcessor.on_emit`,
   ([#4799](https://github.com/open-telemetry/opentelemetry-python/pull/4799)) and ([#4867](https://github.com/open-telemetry/opentelemetry-python/pull/4867)).
+- Make ConcurrentMultiSpanProcessor fork safe
+  ([#4862](https://github.com/open-telemetry/opentelemetry-python/pull/4862))
+- `opentelemetry-exporter-otlp-proto-http`: fix retry logic and error handling for connection failures in trace, metric, and log exporters
+  ([#4709](https://github.com/open-telemetry/opentelemetry-python/pull/4709))
 
 ## Version 1.39.0/0.60b0 (2025-12-03)
 
@@ -91,7 +97,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ([#4654](https://github.com/open-telemetry/opentelemetry-python/pull/4654)).
 - Fix type checking for built-in metric exporters
   ([#4820](https://github.com/open-telemetry/opentelemetry-python/pull/4820))
-  
+
 ## Version 1.38.0/0.59b0 (2025-10-16)
 
 - Add `rstcheck` to pre-commit to stop introducing invalid RST
