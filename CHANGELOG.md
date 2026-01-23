@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- otlp exporters (trace): include W3C TraceFlags (bits 0–7) in OTLP `Span.flags` alongside parent isRemote bits (8–9)
+  ([#4761](https://github.com/open-telemetry/opentelemetry-python/pull/4761))
 - `opentelemetry-exporter-prometheus`: Fix duplicate HELP/TYPE declarations for metrics with different label sets
   ([#4868](https://github.com/open-telemetry/opentelemetry-python/issues/4868))
 - Allow loading all resource detectors by setting `OTEL_EXPERIMENTAL_RESOURCE_DETECTORS` to `*`
@@ -39,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4734](https://github.com/open-telemetry/opentelemetry-python/pull/4734))
 - build: bump ruff to 0.14.1
   ([#4782](https://github.com/open-telemetry/opentelemetry-python/pull/4782))
+
 - Add `opentelemetry-exporter-credential-provider-gcp` as an optional dependency to `opentelemetry-exporter-otlp-proto-grpc` 
   and `opentelemetry-exporter-otlp-proto-http` 
   ([#4760](https://github.com/open-telemetry/opentelemetry-python/pull/4760))
