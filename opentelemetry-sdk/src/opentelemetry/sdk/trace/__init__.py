@@ -1104,8 +1104,8 @@ class Tracer(trace_api.Tracer):
         id_generator: IdGenerator,
         instrumentation_info: InstrumentationInfo,
         span_limits: SpanLimits,
-        meter_provider: Optional[metrics_api.MeterProvider],
         instrumentation_scope: InstrumentationScope,
+        meter_provider: Optional[metrics_api.MeterProvider],
     ) -> None:
         self.sampler = sampler
         self.resource = resource
