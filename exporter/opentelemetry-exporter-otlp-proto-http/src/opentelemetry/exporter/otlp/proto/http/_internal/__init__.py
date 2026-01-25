@@ -11,15 +11,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-from opentelemetry.exporter.otlp.proto.http._internal.http_client import (
-    HttpResponse,
-)
-
-
-def _is_retryable(resp: HttpResponse) -> bool:
-    if resp.status_code == 408:
-        return True
-    if resp.status_code >= 500 and resp.status_code <= 599:
-        return True
-    return False

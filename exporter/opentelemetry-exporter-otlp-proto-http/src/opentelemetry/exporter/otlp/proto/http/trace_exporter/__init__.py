@@ -22,9 +22,6 @@ from os import environ
 from time import time
 from typing import Dict, Optional, Sequence
 
-import requests
-from requests.exceptions import ConnectionError
-
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
 )
@@ -34,10 +31,11 @@ from opentelemetry.exporter.otlp.proto.http import (
 )
 from opentelemetry.exporter.otlp.proto.http._common import (
     _is_retryable,
-    _load_session_from_envvar,
+)
+from opentelemetry.exporter.otlp.proto.http._internal.http_client import (
+    HttpClient,
 )
 from opentelemetry.sdk.environment_variables import (
-    _OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_KEY,
@@ -77,7 +75,6 @@ class OTLPSpanExporter(SpanExporter):
         headers: Optional[Dict[str, str]] = None,
         timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
-        session: Optional[requests.Session] = None,
     ):
         self._shutdown_in_progress = threading.Event()
         self._endpoint = endpoint or environ.get(
@@ -98,18 +95,11 @@ class OTLPSpanExporter(SpanExporter):
             OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
             environ.get(OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE, None),
         )
-        self._client_cert = (
-            (self._client_certificate_file, self._client_key_file)
-            if self._client_certificate_file and self._client_key_file
-            else self._client_certificate_file
-        )
         headers_string = environ.get(
             OTEL_EXPORTER_OTLP_TRACES_HEADERS,
             environ.get(OTEL_EXPORTER_OTLP_HEADERS, ""),
         )
-        self._headers = headers or parse_env_headers(
-            headers_string, liberal=True
-        )
+        self._headers = headers or parse_env_headers(headers_string, liberal=True)
         self._timeout = timeout or float(
             environ.get(
                 OTEL_EXPORTER_OTLP_TRACES_TIMEOUT,
@@ -117,26 +107,24 @@ class OTLPSpanExporter(SpanExporter):
             )
         )
         self._compression = compression or _compression_from_env()
-        self._session = (
-            session
-            or _load_session_from_envvar(
-                _OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER
-            )
-            or requests.Session()
-        )
-        self._session.headers.update(self._headers)
-        self._session.headers.update(_OTLP_HTTP_HEADERS)
-        # let users override our defaults
-        self._session.headers.update(self._headers)
+
+        # Build the final headers dict
+        final_headers = dict(_OTLP_HTTP_HEADERS)
+        final_headers.update(self._headers)
         if self._compression is not Compression.NoCompression:
-            self._session.headers.update(
-                {"Content-Encoding": self._compression.value}
-            )
+            final_headers["Content-Encoding"] = self._compression.value
+
+        self._client = HttpClient(
+            endpoint=self._endpoint,
+            headers=final_headers,
+            timeout=self._timeout,
+            certificate_file=self._certificate_file,
+            client_key_file=self._client_key_file,
+            client_certificate_file=self._client_certificate_file,
+        )
         self._shutdown = False
 
-    def _export(
-        self, serialized_data: bytes, timeout_sec: Optional[float] = None
-    ):
+    def _export(self, serialized_data: bytes, timeout_sec: Optional[float] = None):
         data = serialized_data
         if self._compression == Compression.Gzip:
             gzip_data = BytesIO()
@@ -146,30 +134,7 @@ class OTLPSpanExporter(SpanExporter):
         elif self._compression == Compression.Deflate:
             data = zlib.compress(serialized_data)
 
-        if timeout_sec is None:
-            timeout_sec = self._timeout
-
-        # By default, keep-alive is enabled in Session's request
-        # headers. Backends may choose to close the connection
-        # while a post happens which causes an unhandled
-        # exception. This try/except will retry the post on such exceptions
-        try:
-            resp = self._session.post(
-                url=self._endpoint,
-                data=data,
-                verify=self._certificate_file,
-                timeout=timeout_sec,
-                cert=self._client_cert,
-            )
-        except ConnectionError:
-            resp = self._session.post(
-                url=self._endpoint,
-                data=data,
-                verify=self._certificate_file,
-                timeout=timeout_sec,
-                cert=self._client_cert,
-            )
-        return resp
+        return self._client.post(data, timeout=timeout_sec)
 
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
         if self._shutdown:
@@ -185,9 +150,9 @@ class OTLPSpanExporter(SpanExporter):
                 resp = self._export(serialized_data, deadline_sec - time())
                 if resp.ok:
                     return SpanExportResult.SUCCESS
-            except requests.exceptions.RequestException as error:
+            except Exception as error:
                 reason = error
-                retryable = isinstance(error, ConnectionError)
+                retryable = isinstance(error, (ConnectionError, OSError))
                 status_code = None
             else:
                 reason = resp.reason
@@ -229,7 +194,7 @@ class OTLPSpanExporter(SpanExporter):
             return
         self._shutdown = True
         self._shutdown_in_progress.set()
-        self._session.close()
+        self._client.close()
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         """Nothing is buffered in this exporter, so this method does nothing."""

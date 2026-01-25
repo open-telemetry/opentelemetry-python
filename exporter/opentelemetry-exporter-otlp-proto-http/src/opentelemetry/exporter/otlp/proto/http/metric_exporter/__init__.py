@@ -30,8 +30,6 @@ from typing import (  # noqa: F401
     Sequence,
 )
 
-import requests
-from requests.exceptions import ConnectionError
 from typing_extensions import deprecated
 
 from opentelemetry.exporter.otlp.proto.common._internal import (
@@ -49,7 +47,9 @@ from opentelemetry.exporter.otlp.proto.http import (
 )
 from opentelemetry.exporter.otlp.proto.http._common import (
     _is_retryable,
-    _load_session_from_envvar,
+)
+from opentelemetry.exporter.otlp.proto.http._internal.http_client import (
+    HttpClient,
 )
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (  # noqa: F401
     ExportMetricsServiceRequest,
@@ -67,7 +67,6 @@ from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as PB2Resource,
 )
 from opentelemetry.sdk.environment_variables import (
-    _OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_KEY,
@@ -118,9 +117,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         headers: dict[str, str] | None = None,
         timeout: float | None = None,
         compression: Compression | None = None,
-        session: requests.Session | None = None,
-        preferred_temporality: dict[type, AggregationTemporality]
-        | None = None,
+        preferred_temporality: dict[type, AggregationTemporality] | None = None,
         preferred_aggregation: dict[type, Aggregation] | None = None,
     ):
         self._shutdown_in_progress = threading.Event()
@@ -142,18 +139,11 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE,
             environ.get(OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE, None),
         )
-        self._client_cert = (
-            (self._client_certificate_file, self._client_key_file)
-            if self._client_certificate_file and self._client_key_file
-            else self._client_certificate_file
-        )
         headers_string = environ.get(
             OTEL_EXPORTER_OTLP_METRICS_HEADERS,
             environ.get(OTEL_EXPORTER_OTLP_HEADERS, ""),
         )
-        self._headers = headers or parse_env_headers(
-            headers_string, liberal=True
-        )
+        self._headers = headers or parse_env_headers(headers_string, liberal=True)
         self._timeout = timeout or float(
             environ.get(
                 OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
@@ -161,30 +151,26 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             )
         )
         self._compression = compression or _compression_from_env()
-        self._session = (
-            session
-            or _load_session_from_envvar(
-                _OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER
-            )
-            or requests.Session()
-        )
-        self._session.headers.update(self._headers)
-        self._session.headers.update(_OTLP_HTTP_HEADERS)
-        # let users override our defaults
-        self._session.headers.update(self._headers)
-        if self._compression is not Compression.NoCompression:
-            self._session.headers.update(
-                {"Content-Encoding": self._compression.value}
-            )
 
-        self._common_configuration(
-            preferred_temporality, preferred_aggregation
+        # Build the final headers dict
+        final_headers = dict(_OTLP_HTTP_HEADERS)
+        final_headers.update(self._headers)
+        if self._compression is not Compression.NoCompression:
+            final_headers["Content-Encoding"] = self._compression.value
+
+        self._client = HttpClient(
+            endpoint=self._endpoint,
+            headers=final_headers,
+            timeout=self._timeout,
+            certificate_file=self._certificate_file,
+            client_key_file=self._client_key_file,
+            client_certificate_file=self._client_certificate_file,
         )
+
+        self._common_configuration(preferred_temporality, preferred_aggregation)
         self._shutdown = False
 
-    def _export(
-        self, serialized_data: bytes, timeout_sec: Optional[float] = None
-    ):
+    def _export(self, serialized_data: bytes, timeout_sec: Optional[float] = None):
         data = serialized_data
         if self._compression == Compression.Gzip:
             gzip_data = BytesIO()
@@ -194,30 +180,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         elif self._compression == Compression.Deflate:
             data = zlib.compress(serialized_data)
 
-        if timeout_sec is None:
-            timeout_sec = self._timeout
-
-        # By default, keep-alive is enabled in Session's request
-        # headers. Backends may choose to close the connection
-        # while a post happens which causes an unhandled
-        # exception. This try/except will retry the post on such exceptions
-        try:
-            resp = self._session.post(
-                url=self._endpoint,
-                data=data,
-                verify=self._certificate_file,
-                timeout=timeout_sec,
-                cert=self._client_cert,
-            )
-        except ConnectionError:
-            resp = self._session.post(
-                url=self._endpoint,
-                data=data,
-                verify=self._certificate_file,
-                timeout=timeout_sec,
-                cert=self._client_cert,
-            )
-        return resp
+        return self._client.post(data, timeout=timeout_sec)
 
     def export(
         self,
@@ -237,9 +200,9 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                 resp = self._export(serialized_data, deadline_sec - time())
                 if resp.ok:
                     return MetricExportResult.SUCCESS
-            except requests.exceptions.RequestException as error:
+            except Exception as error:
                 reason = error
-                retryable = isinstance(error, ConnectionError)
+                retryable = isinstance(error, (ConnectionError, OSError))
                 status_code = None
             else:
                 reason = resp.reason
@@ -280,7 +243,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             return
         self._shutdown = True
         self._shutdown_in_progress.set()
-        self._session.close()
+        self._client.close()
 
     @property
     def _exporting(self) -> str:

@@ -18,12 +18,11 @@ import unittest
 from logging import WARNING
 from unittest.mock import MagicMock, Mock, patch
 
-import requests
-from requests import Session
-from requests.exceptions import ConnectionError
-from requests.models import Response
-
 from opentelemetry.exporter.otlp.proto.http import Compression
+from opentelemetry.exporter.otlp.proto.http._internal.http_client import (
+    HttpClient,
+    HttpResponse,
+)
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     DEFAULT_COMPRESSION,
     DEFAULT_ENDPOINT,
@@ -33,7 +32,6 @@ from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
 )
 from opentelemetry.exporter.otlp.proto.http.version import __version__
 from opentelemetry.sdk.environment_variables import (
-    _OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_KEY,
@@ -51,7 +49,6 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.trace import _Span
 from opentelemetry.sdk.trace.export import SpanExportResult
-from opentelemetry.test.mock_test_classes import IterEntryPoint
 
 OS_ENV_ENDPOINT = "os.env.base"
 OS_ENV_CERTIFICATE = "os/env/base.crt"
@@ -85,76 +82,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
         self.assertEqual(exporter._timeout, DEFAULT_TIMEOUT)
         self.assertIs(exporter._compression, DEFAULT_COMPRESSION)
         self.assertEqual(exporter._headers, {})
-        self.assertIsInstance(exporter._session, requests.Session)
-        self.assertIn("User-Agent", exporter._session.headers)
-        self.assertEqual(
-            exporter._session.headers.get("Content-Type"),
-            "application/x-protobuf",
-        )
-        self.assertEqual(
-            exporter._session.headers.get("User-Agent"),
-            "OTel-OTLP-Exporter-Python/" + __version__,
-        )
-
-    @patch.dict(
-        "os.environ",
-        {
-            OTEL_EXPORTER_OTLP_CERTIFICATE: OS_ENV_CERTIFICATE,
-            OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE: OS_ENV_CLIENT_CERTIFICATE,
-            OTEL_EXPORTER_OTLP_CLIENT_KEY: OS_ENV_CLIENT_KEY,
-            OTEL_EXPORTER_OTLP_COMPRESSION: Compression.Gzip.value,
-            OTEL_EXPORTER_OTLP_ENDPOINT: OS_ENV_ENDPOINT,
-            OTEL_EXPORTER_OTLP_HEADERS: OS_ENV_HEADERS,
-            OTEL_EXPORTER_OTLP_TIMEOUT: OS_ENV_TIMEOUT,
-            OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE: "traces/certificate.env",
-            OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE: "traces/client-cert.pem",
-            OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY: "traces/client-key.pem",
-            OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: Compression.Deflate.value,
-            OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "https://traces.endpoint.env",
-            OTEL_EXPORTER_OTLP_TRACES_HEADERS: "tracesEnv1=val1,tracesEnv2=val2,traceEnv3===val3==,User-agent=TraceUserAgent",
-            OTEL_EXPORTER_OTLP_TRACES_TIMEOUT: "40",
-            _OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER: "credential_provider",
-        },
-    )
-    @patch("opentelemetry.exporter.otlp.proto.http._common.entry_points")
-    def test_exporter_traces_env_take_priority(self, mock_entry_point):
-        credential = Session()
-
-        def f():
-            return credential
-
-        mock_entry_point.configure_mock(
-            return_value=[IterEntryPoint("custom_credential", f)]
-        )
-        exporter = OTLPSpanExporter()
-
-        self.assertEqual(exporter._endpoint, "https://traces.endpoint.env")
-        self.assertEqual(exporter._certificate_file, "traces/certificate.env")
-        self.assertEqual(
-            exporter._client_certificate_file, "traces/client-cert.pem"
-        )
-        self.assertEqual(exporter._client_key_file, "traces/client-key.pem")
-        self.assertEqual(exporter._timeout, 40)
-        self.assertIs(exporter._compression, Compression.Deflate)
-        self.assertEqual(
-            exporter._headers,
-            {
-                "tracesenv1": "val1",
-                "tracesenv2": "val2",
-                "traceenv3": "==val3==",
-                "user-agent": "TraceUserAgent",
-            },
-        )
-        self.assertIs(exporter._session, credential)
-        self.assertIsInstance(exporter._session, requests.Session)
-        self.assertEqual(
-            exporter._session.headers.get("Content-Type"),
-            "application/x-protobuf",
-        )
-        self.assertEqual(
-            exporter._session.headers.get("User-Agent"),
-            "TraceUserAgent",
-        )
+        self.assertIsInstance(exporter._client, HttpClient)
 
     @patch.dict(
         "os.environ",
@@ -178,7 +106,6 @@ class TestOTLPSpanExporter(unittest.TestCase):
             headers={"testHeader1": "value1", "testHeader2": "value2"},
             timeout=20,
             compression=Compression.NoCompression,
-            session=requests.Session(),
         )
 
         self.assertEqual(exporter._endpoint, "example.com/1234")
@@ -193,7 +120,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
             exporter._headers,
             {"testHeader1": "value1", "testHeader2": "value2"},
         )
-        self.assertIsInstance(exporter._session, requests.Session)
+        self.assertIsInstance(exporter._client, HttpClient)
 
     @patch.dict(
         "os.environ",
@@ -222,6 +149,46 @@ class TestOTLPSpanExporter(unittest.TestCase):
                 "envheader1": "val1",
                 "envheader2": "val2",
                 "user-agent": "Overridden",
+            },
+        )
+
+    @patch.dict(
+        "os.environ",
+        {
+            OTEL_EXPORTER_OTLP_CERTIFICATE: OS_ENV_CERTIFICATE,
+            OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE: OS_ENV_CLIENT_CERTIFICATE,
+            OTEL_EXPORTER_OTLP_CLIENT_KEY: OS_ENV_CLIENT_KEY,
+            OTEL_EXPORTER_OTLP_COMPRESSION: Compression.Gzip.value,
+            OTEL_EXPORTER_OTLP_ENDPOINT: OS_ENV_ENDPOINT,
+            OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "https://traces.endpoint.env",
+            OTEL_EXPORTER_OTLP_HEADERS: OS_ENV_HEADERS,
+            OTEL_EXPORTER_OTLP_TIMEOUT: OS_ENV_TIMEOUT,
+            OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE: "traces/certificate.env",
+            OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE: "traces/client-cert.pem",
+            OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY: "traces/client-key.pem",
+            OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: Compression.Deflate.value,
+            OTEL_EXPORTER_OTLP_TRACES_HEADERS: "tracesEnv1=val1,tracesEnv2=val2,traceEnv3===val3==,User-agent=TraceUserAgent",
+            OTEL_EXPORTER_OTLP_TRACES_TIMEOUT: "40",
+        },
+    )
+    def test_exporter_traces_env_take_priority(self):
+        exporter = OTLPSpanExporter()
+
+        self.assertEqual(exporter._endpoint, "https://traces.endpoint.env")
+        self.assertEqual(exporter._certificate_file, "traces/certificate.env")
+        self.assertEqual(
+            exporter._client_certificate_file, "traces/client-cert.pem"
+        )
+        self.assertEqual(exporter._client_key_file, "traces/client-key.pem")
+        self.assertEqual(exporter._timeout, 40)
+        self.assertIs(exporter._compression, Compression.Deflate)
+        self.assertEqual(
+            exporter._headers,
+            {
+                "tracesenv1": "val1",
+                "tracesenv2": "val2",
+                "traceenv3": "==val3==",
+                "user-agent": "TraceUserAgent",
             },
         )
 
@@ -279,13 +246,11 @@ class TestOTLPSpanExporter(unittest.TestCase):
             OTLPSpanExporter().export(MagicMock()), SpanExportResult.SUCCESS
         )
 
-    @patch.object(Session, "post")
+    @patch.object(HttpClient, "post")
     def test_retry_timeout(self, mock_post):
         exporter = OTLPSpanExporter(timeout=1.5)
 
-        resp = Response()
-        resp.status_code = 503
-        resp.reason = "UNAVAILABLE"
+        resp = HttpResponse(status_code=503, reason="UNAVAILABLE", text="")
         mock_post.return_value = resp
         with self.assertLogs(level=WARNING) as warning:
             before = time.time()
@@ -304,44 +269,9 @@ class TestOTLPSpanExporter(unittest.TestCase):
                 warning.records[0].message,
             )
 
-    @patch.object(Session, "post")
-    def test_export_no_collector_available_retryable(self, mock_post):
-        exporter = OTLPSpanExporter(timeout=1.5)
-        msg = "Server not available."
-        mock_post.side_effect = ConnectionError(msg)
-        with self.assertLogs(level=WARNING) as warning:
-            self.assertEqual(
-                exporter.export([BASIC_SPAN]),
-                SpanExportResult.FAILURE,
-            )
-            # Check for greater 2 because the request is on each retry
-            # done twice at the moment.
-            self.assertGreater(mock_post.call_count, 2)
-            self.assertIn(
-                f"Transient error {msg} encountered while exporting span batch, retrying in",
-                warning.records[0].message,
-            )
-
-    @patch.object(Session, "post")
-    def test_export_no_collector_available(self, mock_post):
-        exporter = OTLPSpanExporter(timeout=1.5)
-
-        mock_post.side_effect = requests.exceptions.RequestException()
-        with self.assertLogs(level=WARNING) as warning:
-            self.assertEqual(
-                exporter.export([BASIC_SPAN]),
-                SpanExportResult.FAILURE,
-            )
-            self.assertEqual(mock_post.call_count, 1)
-            self.assertIn(
-                "Failed to export span batch code",
-                warning.records[0].message,
-            )
-
-    @patch.object(Session, "post")
+    @patch.object(HttpClient, "post")
     def test_timeout_set_correctly(self, mock_post):
-        resp = Response()
-        resp.status_code = 200
+        resp = HttpResponse(status_code=200, reason="OK", text="")
 
         def export_side_effect(*args, **kwargs):
             # Timeout should be set to something slightly less than 400 milliseconds depending on how much time has passed.
@@ -352,13 +282,11 @@ class TestOTLPSpanExporter(unittest.TestCase):
         exporter = OTLPSpanExporter(timeout=0.4)
         exporter.export([BASIC_SPAN])
 
-    @patch.object(Session, "post")
+    @patch.object(HttpClient, "post")
     def test_shutdown_interrupts_retry_backoff(self, mock_post):
         exporter = OTLPSpanExporter(timeout=1.5)
 
-        resp = Response()
-        resp.status_code = 503
-        resp.reason = "UNAVAILABLE"
+        resp = HttpResponse(status_code=503, reason="UNAVAILABLE", text="")
         mock_post.return_value = resp
         thread = threading.Thread(target=exporter.export, args=([BASIC_SPAN],))
         with self.assertLogs(level=WARNING) as warning:
