@@ -388,6 +388,7 @@ class OTLPExporterMixin(
                 options=self._channel_options,
             )
         else:
+            assert self._credentials is not None
             self._channel = secure_channel(
                 self._endpoint,
                 self._credentials,
@@ -417,6 +418,8 @@ class OTLPExporterMixin(
         deadline_sec = time() + self._timeout
         for retry_num in range(_MAX_RETRYS):
             try:
+                if self._client is None:
+                    return self._result.FAILURE
                 self._client.Export(
                     request=self._translate_data(data),
                     metadata=self._headers,
@@ -444,7 +447,8 @@ class OTLPExporterMixin(
                         self._exporting,
                     )
                     try:
-                        self._channel.close()
+                        if self._channel:
+                            self._channel.close()
                     except Exception as e:
                         logger.debug(
                             "Error closing channel for %s exporter to %s: %s",
@@ -495,7 +499,8 @@ class OTLPExporterMixin(
             return
         self._shutdown = True
         self._shutdown_in_progress.set()
-        self._channel.close()
+        if self._channel:
+            self._channel.close()
 
     @property
     @abstractmethod
