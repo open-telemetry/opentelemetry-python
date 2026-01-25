@@ -14,6 +14,7 @@
 
 # pylint: disable=protected-access
 
+import http.client
 import threading
 import time
 import unittest
@@ -461,3 +462,37 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             )
 
             assert after - before < 0.2
+
+    @patch.object(HttpClient, "post")
+    def test_export_no_collector_available_retryable(self, mock_post):
+        exporter = OTLPLogExporter(timeout=1.5)
+        msg = "Server not available."
+        mock_post.side_effect = ConnectionError(msg)
+        with self.assertLogs(level=WARNING) as warning:
+            self.assertEqual(
+                exporter.export(self._get_sdk_log_data()),
+                LogRecordExportResult.FAILURE,
+            )
+            # Check for greater than 1 because the request is retried
+            # on connection errors.
+            self.assertGreater(mock_post.call_count, 1)
+            self.assertIn(
+                f"Transient error {msg} encountered while exporting logs batch, retrying in",
+                warning.records[0].message,
+            )
+
+    @patch.object(HttpClient, "post")
+    def test_export_no_collector_available(self, mock_post):
+        exporter = OTLPLogExporter(timeout=1.5)
+
+        mock_post.side_effect = http.client.HTTPException("Non-retryable error")
+        with self.assertLogs(level=WARNING) as warning:
+            self.assertEqual(
+                exporter.export(self._get_sdk_log_data()),
+                LogRecordExportResult.FAILURE,
+            )
+            self.assertEqual(mock_post.call_count, 1)
+            self.assertIn(
+                "Failed to export logs batch code",
+                warning.records[0].message,
+            )

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import http.client
 import threading
 import time
 import unittest
@@ -308,3 +309,37 @@ class TestOTLPSpanExporter(unittest.TestCase):
             )
 
             assert after - before < 0.2
+
+    @patch.object(HttpClient, "post")
+    def test_export_no_collector_available_retryable(self, mock_post):
+        exporter = OTLPSpanExporter(timeout=1.5)
+        msg = "Server not available."
+        mock_post.side_effect = ConnectionError(msg)
+        with self.assertLogs(level=WARNING) as warning:
+            self.assertEqual(
+                exporter.export([BASIC_SPAN]),
+                SpanExportResult.FAILURE,
+            )
+            # Check for greater than 1 because the request is retried
+            # on connection errors.
+            self.assertGreater(mock_post.call_count, 1)
+            self.assertIn(
+                f"Transient error {msg} encountered while exporting span batch, retrying in",
+                warning.records[0].message,
+            )
+
+    @patch.object(HttpClient, "post")
+    def test_export_no_collector_available(self, mock_post):
+        exporter = OTLPSpanExporter(timeout=1.5)
+
+        mock_post.side_effect = http.client.HTTPException("Non-retryable error")
+        with self.assertLogs(level=WARNING) as warning:
+            self.assertEqual(
+                exporter.export([BASIC_SPAN]),
+                SpanExportResult.FAILURE,
+            )
+            self.assertEqual(mock_post.call_count, 1)
+            self.assertIn(
+                "Failed to export span batch code",
+                warning.records[0].message,
+            )
