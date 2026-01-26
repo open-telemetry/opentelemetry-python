@@ -109,13 +109,13 @@ ExporterArgsMap = Mapping[
 ]
 
 
-class ExporterSpanProcessorT(Protocol):
+class _ConfigurationExporterSpanProcessorT(Protocol):
     def __call__(
         self, span_exporter: SpanExporter, *args, **kwargs
     ) -> SpanProcessor: ...
 
 
-class ExporterLogRecordProcessorT(Protocol):
+class _ConfigurationExporterLogRecordProcessorT(Protocol):
     def __call__(
         self, exporter: LogRecordExporter, *args, **kwargs
     ) -> LogRecordProcessor: ...
@@ -227,7 +227,7 @@ def _init_tracing(
     resource: Resource | None = None,
     exporter_args_map: ExporterArgsMap | None = None,
     span_processors: Sequence[SpanProcessor] | None = None,
-    export_span_processor: ExporterSpanProcessorT | None = None,
+    export_span_processor: _ConfigurationExporterSpanProcessorT | None = None,
 ):
     provider = TracerProvider(
         id_generator=id_generator,
@@ -281,7 +281,8 @@ def _init_logging(
     setup_logging_handler: bool = True,
     exporter_args_map: ExporterArgsMap | None = None,
     log_record_processors: Sequence[LogRecordProcessor] | None = None,
-    export_log_record_processor: ExporterLogRecordProcessorT | None = None,
+    export_log_record_processor: _ConfigurationExporterLogRecordProcessorT
+    | None = None,
 ):
     provider = LoggerProvider(resource=resource)
     set_logger_provider(provider)
@@ -462,9 +463,10 @@ def _initialize_components(
     setup_logging_handler: bool | None = None,
     exporter_args_map: ExporterArgsMap | None = None,
     span_processors: Sequence[SpanProcessor] | None = None,
-    export_span_processor: ExporterSpanProcessorT | None = None,
+    export_span_processor: _ConfigurationExporterSpanProcessorT | None = None,
     log_record_processors: Sequence[LogRecordProcessor] | None = None,
-    export_log_record_processor: ExporterLogRecordProcessorT | None = None,
+    export_log_record_processor: _ConfigurationExporterLogRecordProcessorT
+    | None = None,
 ):
     # pylint: disable=too-many-locals
     if trace_exporter_names is None:
