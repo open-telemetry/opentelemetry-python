@@ -18,14 +18,14 @@ import base64
 from typing import Any, Dict, List, Optional, Sequence
 
 from opentelemetry._logs import SeverityNumber
-from opentelemetry.sdk._logs import LogData
+from opentelemetry.sdk._logs import ReadableLogRecord
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.exporter.otlp.json.common._internal.encoder_utils import encode_id
 from opentelemetry.exporter.otlp.json.common.encoding import IdEncoding
 
 def encode_logs(
-        logs_data: Sequence[LogData],
+        batch: Sequence[ReadableLogRecord],
         id_encoding: Optional[IdEncoding] = None) -> Dict[str, Any]:
     """Encodes logs in the OTLP JSON format.
 
@@ -37,51 +37,51 @@ def encode_logs(
 
     # Group logs by resource
     resource_logs = {}
-    for log_data in logs_data:
-        resource_key = _compute_resource_hashcode(log_data.log_record.resource)
+    for readable_log_record in batch:
+        resource_key = _compute_resource_hashcode(readable_log_record.log_record.resource)
 
         if resource_key not in resource_logs:
             resource_logs[resource_key] = {
-                "resource": _encode_resource(log_data.log_record.resource),
+                "resource": _encode_resource(readable_log_record.log_record.resource),
                 "scopeLogs": {},
                 "schemaUrl": getattr(
-                    log_data.log_record.resource, "schema_url", ""
+                    readable_log_record.log_record.resource, "schema_url", ""
                 ),
             }
 
         # Group logs by instrumentation scope within each resource
         scope_key = _compute_instrumentation_scope_hashcode(
-            log_data.instrumentation_scope
+            readable_log_record.instrumentation_scope
         )
         scope_logs = resource_logs[resource_key]["scopeLogs"]
 
         if scope_key not in scope_logs:
             scope_logs[scope_key] = {
                 "scope": _encode_instrumentation_scope(
-                    log_data.instrumentation_scope
+                    readable_log_record.instrumentation_scope
                 ),
                 "logRecords": [],
                 "schemaUrl": (
-                    getattr(log_data.instrumentation_scope, "schema_url", "")
-                    if log_data.instrumentation_scope
+                    getattr(readable_log_record.instrumentation_scope, "schema_url", "")
+                    if readable_log_record.instrumentation_scope
                     else ""
                 ),
             }
 
         # Add log record to the appropriate scope
         scope_logs[scope_key]["logRecords"].append(
-            _encode_log_record(log_data, id_encoding)
+            _encode_log_record(readable_log_record, id_encoding)
         )
 
     # Convert dictionaries to lists for JSON output
     resource_logs_list = []
-    for resource_log_data in resource_logs.values():
+    for resource_readable_log_record in resource_logs.values():
         scope_logs_list = []
-        for scope_log_data in resource_log_data["scopeLogs"].values():
-            scope_logs_list.append(scope_log_data)
+        for scope_readable_log_record in resource_readable_log_record["scopeLogs"].values():
+            scope_logs_list.append(scope_readable_log_record)
 
-        resource_log_data["scopeLogs"] = scope_logs_list
-        resource_logs_list.append(resource_log_data)
+        resource_readable_log_record["scopeLogs"] = scope_logs_list
+        resource_logs_list.append(resource_readable_log_record)
 
     return {"resourceLogs": resource_logs_list}
 
@@ -130,10 +130,10 @@ def _encode_instrumentation_scope(
 
 
 def _encode_log_record(
-        log_data: LogData,
+        readable_log_record: ReadableLogRecord,
         id_encoding: IdEncoding) -> Dict[str, Any]:
     """Encodes a log record into OTLP JSON format."""
-    log_record = log_data.log_record
+    log_record = readable_log_record.log_record
 
     result = {
         "timeUnixNano": str(log_record.timestamp),

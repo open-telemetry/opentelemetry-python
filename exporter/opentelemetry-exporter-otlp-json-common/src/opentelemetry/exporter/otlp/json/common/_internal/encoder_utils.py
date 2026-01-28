@@ -19,10 +19,9 @@ from opentelemetry.exporter.otlp.json.common.encoding import IdEncoding
 def encode_id(id_encoding: IdEncoding, the_id: int, size: int) -> str:
     if id_encoding == IdEncoding.BASE64:
         return encode_to_base64(the_id, size)
-    elif id_encoding == IdEncoding.HEX:
+    if id_encoding == IdEncoding.HEX:
         return encode_to_hex(the_id, size)
-    else:
-        raise ValueError(f"Unsupported encoding: {id_encoding}")
+    raise ValueError(f"Unsupported encoding: {id_encoding}")
 
 
 def encode_to_base64(the_id: int, size: int) -> str:
