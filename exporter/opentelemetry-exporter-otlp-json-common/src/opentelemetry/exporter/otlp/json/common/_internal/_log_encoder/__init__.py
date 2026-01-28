@@ -38,14 +38,14 @@ def encode_logs(
     # Group logs by resource
     resource_logs = {}
     for readable_log_record in batch:
-        resource_key = _compute_resource_hashcode(readable_log_record.log_record.resource)
+        resource_key = _compute_resource_hashcode(readable_log_record.resource)
 
         if resource_key not in resource_logs:
             resource_logs[resource_key] = {
-                "resource": _encode_resource(readable_log_record.log_record.resource),
+                "resource": _encode_resource(readable_log_record.resource),
                 "scopeLogs": {},
                 "schemaUrl": getattr(
-                    readable_log_record.log_record.resource, "schema_url", ""
+                    readable_log_record.resource, "schema_url", ""
                 ),
             }
 
@@ -145,7 +145,11 @@ def _encode_log_record(
         ),
         "severityText": log_record.severity_text or "",
         "attributes": _encode_attributes(log_record.attributes),
-        "droppedAttributesCount": getattr(log_record, "dropped_attributes", 0),
+        "droppedAttributesCount": (
+            readable_log_record.dropped_attributes
+            if hasattr(readable_log_record, "dropped_attributes")
+            else 0
+        ),
     }
 
     # Handle body based on type

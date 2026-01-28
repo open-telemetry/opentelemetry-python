@@ -32,9 +32,14 @@ from opentelemetry.exporter.otlp.json.http._log_exporter import (
     OTLPLogExporter,
 )
 from opentelemetry.exporter.otlp.json.http.version import __version__
-from opentelemetry.sdk._logs import LogData
-from opentelemetry.sdk._logs import LogRecord as SDKLogRecord
+from opentelemetry._logs import LogRecord
+from opentelemetry.sdk._logs import ReadWriteLogRecord
 from opentelemetry.sdk._logs.export import LogExportResult
+from opentelemetry.trace import (
+    NonRecordingSpan,
+    SpanContext,
+    set_span_in_context,
+)
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
@@ -272,68 +277,89 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         mock_session.close.assert_not_called()
 
     @staticmethod
-    def _get_sdk_log_data() -> List[LogData]:
-        log1 = LogData(
-            log_record=SDKLogRecord(
+    def _get_sdk_log_data() -> List[ReadWriteLogRecord]:
+        ctx_log1 = set_span_in_context(
+            NonRecordingSpan(
+                SpanContext(
+                    89564621134313219400156819398935297684,
+                    1312458408527513268,
+                    False,
+                    TraceFlags(0x01),
+                )
+            )
+        )
+        log1 = ReadWriteLogRecord(
+            LogRecord(
                 timestamp=1644650195189786880,
-                trace_id=89564621134313219400156819398935297684,
-                span_id=1312458408527513268,
-                trace_flags=TraceFlags(0x01),
+                context=ctx_log1,
                 severity_text="WARN",
                 severity_number=SeverityNumber.WARN,
                 body="Do not go gentle into that good night. Rage, rage against the dying of the light",
-                resource=SDKResource({"first_resource": "value"}),
                 attributes={"a": 1, "b": "c"},
             ),
+            resource=SDKResource({"first_resource": "value"}),
             instrumentation_scope=InstrumentationScope(
                 "first_name", "first_version"
             ),
         )
 
-        log2 = LogData(
-            log_record=SDKLogRecord(
+        log2 = ReadWriteLogRecord(
+            LogRecord(
                 timestamp=1644650249738562048,
-                trace_id=0,
-                span_id=0,
-                trace_flags=TraceFlags.DEFAULT,
                 severity_text="WARN",
                 severity_number=SeverityNumber.WARN,
                 body="Cooper, this is no time for caution!",
-                resource=SDKResource({"second_resource": "CASE"}),
                 attributes={},
             ),
+            resource=SDKResource({"second_resource": "CASE"}),
             instrumentation_scope=InstrumentationScope(
                 "second_name", "second_version"
             ),
         )
 
-        log3 = LogData(
-            log_record=SDKLogRecord(
+        ctx_log3 = set_span_in_context(
+            NonRecordingSpan(
+                SpanContext(
+                    271615924622795969659406376515024083555,
+                    4242561578944770265,
+                    False,
+                    TraceFlags(0x01),
+                )
+            )
+        )
+        log3 = ReadWriteLogRecord(
+            LogRecord(
                 timestamp=1644650427658989056,
-                trace_id=271615924622795969659406376515024083555,
-                span_id=4242561578944770265,
-                trace_flags=TraceFlags(0x01),
+                context=ctx_log3,
                 severity_text="DEBUG",
                 severity_number=SeverityNumber.DEBUG,
                 body="To our galaxy",
-                resource=SDKResource({"second_resource": "CASE"}),
                 attributes={"a": 1, "b": "c"},
             ),
+            resource=SDKResource({"second_resource": "CASE"}),
             instrumentation_scope=None,
         )
 
-        log4 = LogData(
-            log_record=SDKLogRecord(
+        ctx_log4 = set_span_in_context(
+            NonRecordingSpan(
+                SpanContext(
+                    212592107417388365804938480559624925555,
+                    6077757853989569223,
+                    False,
+                    TraceFlags(0x01),
+                )
+            )
+        )
+        log4 = ReadWriteLogRecord(
+            LogRecord(
                 timestamp=1644650584292683008,
-                trace_id=212592107417388365804938480559624925555,
-                span_id=6077757853989569223,
-                trace_flags=TraceFlags(0x01),
+                context=ctx_log4,
                 severity_text="INFO",
                 severity_number=SeverityNumber.INFO,
                 body="Love is the one thing that transcends time and space",
-                resource=SDKResource({"first_resource": "value"}),
                 attributes={"filename": "model.py", "func_name": "run_method"},
             ),
+            resource=SDKResource({"first_resource": "value"}),
             instrumentation_scope=InstrumentationScope(
                 "another_name", "another_version"
             ),

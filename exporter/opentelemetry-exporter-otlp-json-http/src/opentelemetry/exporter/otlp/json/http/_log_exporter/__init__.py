@@ -35,7 +35,7 @@ from opentelemetry.exporter.otlp.json.http import (
     _OTLP_JSON_HTTP_HEADERS,
     Compression,
 )
-from opentelemetry.sdk._logs import LogData
+from opentelemetry.sdk._logs import ReadableLogRecord
 from opentelemetry.sdk._logs.export import (
     LogExporter,
     LogExportResult,
@@ -174,7 +174,7 @@ class OTLPLogExporter(LogExporter):
             return True
         return False
 
-    def export(self, batch: Sequence[LogData]) -> LogExportResult:
+    def export(self, batch: Sequence[ReadableLogRecord]) -> LogExportResult:
         """Export logs to OTLP collector via JSON over HTTP.
 
         Args:
