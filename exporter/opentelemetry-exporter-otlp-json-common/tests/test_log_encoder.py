@@ -16,14 +16,18 @@ import json
 import unittest
 from typing import List
 
-from opentelemetry._logs import SeverityNumber
+from opentelemetry._logs import LogRecord, SeverityNumber
 from opentelemetry.exporter.otlp.json.common._log_encoder import encode_logs
 from opentelemetry.exporter.otlp.json.common.encoding import IdEncoding
-from opentelemetry.sdk._logs import LogData, LogLimits
-from opentelemetry.sdk._logs import LogRecord as SDKLogRecord
+from opentelemetry.sdk._logs import LogLimits, ReadWriteLogRecord
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
-from opentelemetry.trace import TraceFlags
+from opentelemetry.trace import (
+    NonRecordingSpan,
+    SpanContext,
+    TraceFlags,
+    set_span_in_context,
+)
 
 
 class TestLogEncoder(unittest.TestCase):
@@ -88,49 +92,54 @@ class TestLogEncoder(unittest.TestCase):
         self.assertEqual(log_record["droppedAttributesCount"], 2)
 
     @staticmethod
-    def _get_sdk_log_data() -> List[LogData]:
+    def _get_sdk_log_data() -> List[ReadWriteLogRecord]:
         """Create a test list of log data for encoding tests."""
-        log1 = LogData(
-            log_record=SDKLogRecord(
+        ctx_log1 = set_span_in_context(
+            NonRecordingSpan(
+                SpanContext(
+                    89564621134313219400156819398935297684,
+                    1312458408527513268,
+                    False,
+                    TraceFlags(0x01),
+                )
+            )
+        )
+        log1 = ReadWriteLogRecord(
+            LogRecord(
                 timestamp=1644650195189786880,
                 observed_timestamp=1644650195189786881,
-                trace_id=89564621134313219400156819398935297684,
-                span_id=1312458408527513268,
-                trace_flags=TraceFlags(0x01),
+                context=ctx_log1,
                 severity_text="WARN",
                 severity_number=SeverityNumber.WARN,
                 body="Do not go gentle into that good night. Rage, rage against the dying of the light",
-                resource=SDKResource(
-                    {"first_resource": "value"},
-                    "resource_schema_url",
-                ),
                 attributes={"a": 1, "b": "c"},
+            ),
+            resource=SDKResource(
+                {"first_resource": "value"},
+                "resource_schema_url",
             ),
             instrumentation_scope=InstrumentationScope(
                 "first_name", "first_version"
             ),
         )
 
-        log2 = LogData(
-            log_record=SDKLogRecord(
+        log2 = ReadWriteLogRecord(
+            LogRecord(
                 timestamp=1644650249738562048,
                 observed_timestamp=1644650249738562049,
-                trace_id=0,
-                span_id=0,
-                trace_flags=TraceFlags.DEFAULT,
                 severity_text="WARN",
                 severity_number=SeverityNumber.WARN,
                 body="Cooper, this is no time for caution!",
-                resource=SDKResource({"second_resource": "CASE"}),
                 attributes={},
             ),
+            resource=SDKResource({"second_resource": "CASE"}),
             instrumentation_scope=InstrumentationScope(
                 "second_name", "second_version"
             ),
         )
 
-        log3 = LogData(
-            log_record=SDKLogRecord(
+        log3 = ReadableLogRecord(
+            log_record=ReadWriteLogRecord(
                 timestamp=1644650427658989056,
                 observed_timestamp=1644650427658989057,
                 trace_id=271615924622795969659406376515024083555,
@@ -145,8 +154,8 @@ class TestLogEncoder(unittest.TestCase):
             instrumentation_scope=None,
         )
 
-        log4 = LogData(
-            log_record=SDKLogRecord(
+        log4 = ReadableLogRecord(
+            log_record=ReadWriteLogRecord(
                 timestamp=1644650584292683008,
                 observed_timestamp=1644650584292683009,
                 trace_id=212592107417388365804938480559624925555,
@@ -166,8 +175,8 @@ class TestLogEncoder(unittest.TestCase):
             ),
         )
 
-        log5 = LogData(
-            log_record=SDKLogRecord(
+        log5 = ReadableLogRecord(
+            log_record=ReadWriteLogRecord(
                 timestamp=1644650584292683009,
                 observed_timestamp=1644650584292683010,
                 trace_id=212592107417388365804938480559624925555,
@@ -184,8 +193,8 @@ class TestLogEncoder(unittest.TestCase):
             ),
         )
 
-        log6 = LogData(
-            log_record=SDKLogRecord(
+        log6 = ReadableLogRecord(
+            log_record=ReadWriteLogRecord(
                 timestamp=1644650584292683022,
                 observed_timestamp=1644650584292683022,
                 trace_id=212592107417388365804938480559624925522,
@@ -207,8 +216,8 @@ class TestLogEncoder(unittest.TestCase):
             ),
         )
 
-        log7 = LogData(
-            log_record=SDKLogRecord(
+        log7 = ReadableLogRecord(
+            log_record=ReadWriteLogRecord(
                 timestamp=1644650584292683033,
                 observed_timestamp=1644650584292683033,
                 trace_id=212592107417388365804938480559624925533,
@@ -234,10 +243,10 @@ class TestLogEncoder(unittest.TestCase):
         return [log1, log2, log3, log4, log5, log6, log7]
 
     @staticmethod
-    def _get_test_logs_dropped_attributes() -> List[LogData]:
+    def _get_test_logs_dropped_attributes() -> List[ReadableLogRecord]:
         """Create a test list of log data with dropped attributes."""
-        log1 = LogData(
-            log_record=SDKLogRecord(
+        log1 = ReadableLogRecord(
+            log_record=ReadWriteLogRecord(
                 timestamp=1644650195189786880,
                 trace_id=89564621134313219400156819398935297684,
                 span_id=1312458408527513268,
@@ -254,8 +263,8 @@ class TestLogEncoder(unittest.TestCase):
             ),
         )
 
-        log2 = LogData(
-            log_record=SDKLogRecord(
+        log2 = ReadableLogRecord(
+            log_record=ReadWriteLogRecord(
                 timestamp=1644650249738562048,
                 trace_id=0,
                 span_id=0,
