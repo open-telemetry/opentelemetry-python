@@ -474,7 +474,7 @@ def _encode_attribute_value(value: Any) -> Dict[str, Any]:
     if isinstance(value, bool):
         return {"value": {"boolValue": value}}
     if isinstance(value, int):
-        return {"value": {"intValue": value}}
+        return {"value": {"intValue": str(value)}}
     if isinstance(value, float):
         return {"value": {"doubleValue": value}}
     if isinstance(value, str):
