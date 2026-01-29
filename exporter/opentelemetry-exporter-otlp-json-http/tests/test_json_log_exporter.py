@@ -22,7 +22,7 @@ from unittest.mock import MagicMock, Mock, call, patch
 import requests
 import responses
 
-from opentelemetry._logs import SeverityNumber
+from opentelemetry._logs import LogRecord, SeverityNumber
 from opentelemetry.exporter.otlp.json.http import Compression
 from opentelemetry.exporter.otlp.json.http._log_exporter import (
     DEFAULT_COMPRESSION,
@@ -32,14 +32,8 @@ from opentelemetry.exporter.otlp.json.http._log_exporter import (
     OTLPLogExporter,
 )
 from opentelemetry.exporter.otlp.json.http.version import __version__
-from opentelemetry._logs import LogRecord
 from opentelemetry.sdk._logs import ReadWriteLogRecord
 from opentelemetry.sdk._logs.export import LogExportResult
-from opentelemetry.trace import (
-    NonRecordingSpan,
-    SpanContext,
-    set_span_in_context,
-)
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
@@ -58,7 +52,12 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
-from opentelemetry.trace import TraceFlags
+from opentelemetry.trace import (
+    NonRecordingSpan,
+    SpanContext,
+    TraceFlags,
+    set_span_in_context,
+)
 
 ENV_ENDPOINT = "http://localhost.env:8080/"
 ENV_CERTIFICATE = "/etc/base.crt"

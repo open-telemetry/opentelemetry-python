@@ -40,8 +40,11 @@ class TestLogEncoder(unittest.TestCase):
 
         # Check ids in hex format
         self.assertEqual(
-            json_logs["resourceLogs"][0]["scopeLogs"][0]["logRecords"][0]["traceId"],
-            "436184c1a9210ea4a4b9f1a51f8dbe94")
+            json_logs["resourceLogs"][0]["scopeLogs"][0]["logRecords"][0][
+                "traceId"
+            ],
+            "436184c1a9210ea4a4b9f1a51f8dbe94",
+        )
 
         # Encode logs to JSON
         json_logs = encode_logs(sdk_logs)

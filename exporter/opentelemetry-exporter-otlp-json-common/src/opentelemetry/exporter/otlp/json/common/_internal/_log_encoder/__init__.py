@@ -18,15 +18,19 @@ import base64
 from typing import Any, Dict, List, Optional, Sequence
 
 from opentelemetry._logs import SeverityNumber
+from opentelemetry.exporter.otlp.json.common._internal.encoder_utils import (
+    encode_id,
+)
+from opentelemetry.exporter.otlp.json.common.encoding import IdEncoding
 from opentelemetry.sdk._logs import ReadableLogRecord
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
-from opentelemetry.exporter.otlp.json.common._internal.encoder_utils import encode_id
-from opentelemetry.exporter.otlp.json.common.encoding import IdEncoding
+
 
 def encode_logs(
-        batch: Sequence[ReadableLogRecord],
-        id_encoding: Optional[IdEncoding] = None) -> Dict[str, Any]:
+    batch: Sequence[ReadableLogRecord],
+    id_encoding: Optional[IdEncoding] = None,
+) -> Dict[str, Any]:
     """Encodes logs in the OTLP JSON format.
 
     Returns:
@@ -62,7 +66,11 @@ def encode_logs(
                 ),
                 "logRecords": [],
                 "schemaUrl": (
-                    getattr(readable_log_record.instrumentation_scope, "schema_url", "")
+                    getattr(
+                        readable_log_record.instrumentation_scope,
+                        "schema_url",
+                        "",
+                    )
                     if readable_log_record.instrumentation_scope
                     else ""
                 ),
@@ -77,7 +85,9 @@ def encode_logs(
     resource_logs_list = []
     for resource_readable_log_record in resource_logs.values():
         scope_logs_list = []
-        for scope_readable_log_record in resource_readable_log_record["scopeLogs"].values():
+        for scope_readable_log_record in resource_readable_log_record[
+            "scopeLogs"
+        ].values():
             scope_logs_list.append(scope_readable_log_record)
 
         resource_readable_log_record["scopeLogs"] = scope_logs_list
@@ -130,8 +140,8 @@ def _encode_instrumentation_scope(
 
 
 def _encode_log_record(
-        readable_log_record: ReadableLogRecord,
-        id_encoding: IdEncoding) -> Dict[str, Any]:
+    readable_log_record: ReadableLogRecord, id_encoding: IdEncoding
+) -> Dict[str, Any]:
     """Encodes a log record into OTLP JSON format."""
     log_record = readable_log_record.log_record
 

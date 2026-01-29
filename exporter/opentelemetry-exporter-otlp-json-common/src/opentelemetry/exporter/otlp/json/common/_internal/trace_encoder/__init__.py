@@ -18,15 +18,18 @@ import base64
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 from opentelemetry import trace
+from opentelemetry.exporter.otlp.json.common._internal.encoder_utils import (
+    encode_id,
+)
+from opentelemetry.exporter.otlp.json.common.encoding import IdEncoding
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import Event, ReadableSpan, Status, StatusCode
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
-from opentelemetry.exporter.otlp.json.common._internal.encoder_utils import encode_id
-from opentelemetry.exporter.otlp.json.common.encoding import IdEncoding
+
 
 def encode_spans(
-        spans: Sequence[ReadableSpan],
-        id_encoding: Optional[IdEncoding] = None) -> Dict[str, Any]:
+    spans: Sequence[ReadableSpan], id_encoding: Optional[IdEncoding] = None
+) -> Dict[str, Any]:
     """Encodes spans in the OTLP JSON format.
 
     Returns:
@@ -133,7 +136,9 @@ def _encode_instrumentation_scope(
     }
 
 
-def _encode_span(span: ReadableSpan, id_encoding: IdEncoding) -> Dict[str, Any]:
+def _encode_span(
+    span: ReadableSpan, id_encoding: IdEncoding
+) -> Dict[str, Any]:
     """Encodes a span into OTLP JSON format."""
 
     # Convert trace_id and span_id to base64
@@ -270,7 +275,9 @@ def _encode_events(
     return event_list
 
 
-def _encode_links(links: Sequence[trace.Link], id_encoding: IdEncoding) -> List[Dict[str, Any]]:
+def _encode_links(
+    links: Sequence[trace.Link], id_encoding: IdEncoding
+) -> List[Dict[str, Any]]:
     """Encodes span links into OTLP JSON format."""
     if not links:
         return []

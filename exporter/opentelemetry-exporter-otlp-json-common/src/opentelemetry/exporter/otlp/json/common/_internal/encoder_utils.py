@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import base64
+
 from opentelemetry.exporter.otlp.json.common.encoding import IdEncoding
 
 
