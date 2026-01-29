@@ -67,10 +67,10 @@ from opentelemetry.util.re import parse_env_headers
 _logger = logging.getLogger(__name__)
 
 
-DEFAULT_COMPRESSION = Compression.NoCompression
-DEFAULT_ENDPOINT = "http://localhost:4318/"
-DEFAULT_METRICS_EXPORT_PATH = "v1/metrics"
-DEFAULT_TIMEOUT = 10  # in seconds
+_DEFAULT_COMPRESSION = Compression.NoCompression
+_DEFAULT_ENDPOINT = "http://localhost:4318/"
+_DEFAULT_METRICS_EXPORT_PATH = "v1/metrics"
+_DEFAULT_TIMEOUT = 10  # in seconds
 
 
 class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
@@ -129,7 +129,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         self._endpoint = endpoint or environ.get(
             OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
             _append_metrics_path(
-                environ.get(OTEL_EXPORTER_OTLP_ENDPOINT, DEFAULT_ENDPOINT)
+                environ.get(OTEL_EXPORTER_OTLP_ENDPOINT, _DEFAULT_ENDPOINT)
             ),
         )
         self._certificate_file = certificate_file or environ.get(
@@ -159,7 +159,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         self._timeout = timeout or int(
             environ.get(
                 OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
-                environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, DEFAULT_TIMEOUT),
+                environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, _DEFAULT_TIMEOUT),
             )
         )
         self._compression = compression or _compression_from_env()
@@ -289,5 +289,5 @@ def _compression_from_env() -> Compression:
 
 def _append_metrics_path(endpoint: str) -> str:
     if endpoint.endswith("/"):
-        return endpoint + DEFAULT_METRICS_EXPORT_PATH
-    return endpoint + f"/{DEFAULT_METRICS_EXPORT_PATH}"
+        return endpoint + _DEFAULT_METRICS_EXPORT_PATH
+    return endpoint + f"/{_DEFAULT_METRICS_EXPORT_PATH}"

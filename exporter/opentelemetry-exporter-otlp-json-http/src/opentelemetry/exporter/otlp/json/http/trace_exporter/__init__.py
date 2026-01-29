@@ -30,10 +30,10 @@ from opentelemetry.exporter.otlp.json.common.trace_encoder import (
 )
 from opentelemetry.exporter.otlp.json.http import Compression
 from opentelemetry.exporter.otlp.json.http.trace_exporter.constants import (
-    DEFAULT_COMPRESSION,
-    DEFAULT_ENDPOINT,
-    DEFAULT_TIMEOUT,
-    DEFAULT_TRACES_EXPORT_PATH,
+    _DEFAULT_COMPRESSION,
+    _DEFAULT_ENDPOINT,
+    _DEFAULT_TIMEOUT,
+    _DEFAULT_TRACES_EXPORT_PATH,
 )
 from opentelemetry.exporter.otlp.json.http.version import __version__
 from opentelemetry.sdk.environment_variables import (
@@ -62,11 +62,11 @@ def _append_trace_path(endpoint: str) -> str:
     """Append the traces export path to the endpoint."""
     # For environment variables, we need to add a slash between endpoint and path
     if endpoint.endswith("/"):
-        return endpoint + DEFAULT_TRACES_EXPORT_PATH.lstrip("/")
-    return endpoint + "/" + DEFAULT_TRACES_EXPORT_PATH.lstrip("/")
+        return endpoint + _DEFAULT_TRACES_EXPORT_PATH.lstrip("/")
+    return endpoint + "/" + _DEFAULT_TRACES_EXPORT_PATH.lstrip("/")
 
 
-def parse_env_headers(
+def _parse_env_headers(
     headers_string: str, liberal: bool = False
 ) -> Dict[str, str]:
     """Parse headers from an environment variable value.
@@ -132,12 +132,12 @@ class OTLPSpanExporter(SpanExporter):
             and environ.get(OTEL_EXPORTER_OTLP_TRACES_ENDPOINT) is None
             and environ.get(OTEL_EXPORTER_OTLP_ENDPOINT) is None
         ):
-            self._endpoint = DEFAULT_ENDPOINT + DEFAULT_TRACES_EXPORT_PATH
+            self._endpoint = _DEFAULT_ENDPOINT + _DEFAULT_TRACES_EXPORT_PATH
         else:
             self._endpoint = endpoint or environ.get(
                 OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
                 _append_trace_path(
-                    environ.get(OTEL_EXPORTER_OTLP_ENDPOINT, DEFAULT_ENDPOINT)
+                    environ.get(OTEL_EXPORTER_OTLP_ENDPOINT, _DEFAULT_ENDPOINT)
                 ),
             )
         self._certificate_file = certificate_file or environ.get(
@@ -169,14 +169,14 @@ class OTLPSpanExporter(SpanExporter):
                 environ.get(OTEL_EXPORTER_OTLP_TIMEOUT),
             )
             self._timeout = (
-                int(environ_timeout) if environ_timeout else DEFAULT_TIMEOUT
+                int(environ_timeout) if environ_timeout else _DEFAULT_TIMEOUT
             )
 
         headers_string = environ.get(
             OTEL_EXPORTER_OTLP_TRACES_HEADERS,
             environ.get(OTEL_EXPORTER_OTLP_HEADERS, ""),
         )
-        self._headers = headers or parse_env_headers(
+        self._headers = headers or _parse_env_headers(
             headers_string, liberal=True
         )
 
@@ -189,7 +189,7 @@ class OTLPSpanExporter(SpanExporter):
             self._compression = (
                 Compression(environ_compression.lower())
                 if environ_compression
-                else DEFAULT_COMPRESSION
+                else _DEFAULT_COMPRESSION
             )
 
         # Use provided session or create a new one

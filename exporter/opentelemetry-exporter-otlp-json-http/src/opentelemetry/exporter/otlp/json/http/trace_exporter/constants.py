@@ -14,7 +14,7 @@
 
 from opentelemetry.exporter.otlp.json.http import Compression
 
-DEFAULT_ENDPOINT = "http://localhost:4318"
-DEFAULT_TRACES_EXPORT_PATH = "/v1/traces"
-DEFAULT_TIMEOUT = 10  # in seconds
-DEFAULT_COMPRESSION = Compression.NoCompression
+_DEFAULT_ENDPOINT = "http://localhost:4318"
+_DEFAULT_TRACES_EXPORT_PATH = "/v1/traces"
+_DEFAULT_TIMEOUT = 10  # in seconds
+_DEFAULT_COMPRESSION = Compression.NoCompression
