@@ -32,50 +32,6 @@ env:
 
 jobs:
 
-  py39-test-opentelemetry-exporter-otlp-proto-http_windows-latest:
-    name: opentelemetry-exporter-otlp-proto-http 3.9 Windows
-    runs-on: windows-latest
-    timeout-minutes: 30
-    steps:
-      - name: Checkout repo @ SHA - ${{ github.sha }}
-        uses: actions/checkout@v4
-
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.9"
-
-      - name: Install tox
-        run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
-
-      - name: Run tests
-        run: tox -e py39-test-opentelemetry-exporter-otlp-proto-http -- -ra
-
-  py310-test-opentelemetry-exporter-otlp-proto-http_windows-latest:
-    name: opentelemetry-exporter-otlp-proto-http 3.10 Windows
-    runs-on: windows-latest
-    timeout-minutes: 30
-    steps:
-      - name: Checkout repo @ SHA - ${{ github.sha }}
-        uses: actions/checkout@v4
-
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-
-      - name: Install tox
-        run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
-
-      - name: Run tests
-        run: tox -e py310-test-opentelemetry-exporter-otlp-proto-http -- -ra
-
   py311-test-opentelemetry-exporter-otlp-proto-http_windows-latest:
     name: opentelemetry-exporter-otlp-proto-http 3.11 Windows
     runs-on: windows-latest
