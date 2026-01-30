@@ -178,12 +178,13 @@ Smaller PRs get merged faster, improve review quality, and reduce the risk of co
 - **Aim for 500 lines or fewer** (excluding deletions, generated files, and test fixtures)
 - **One change per PR** -- address a single bug fix, feature, or refactor
 
-If your work requires more extensive changes, consider a series of small PRs instead. If you want the community to
+- If your work requires more extensive changes, consider a series of small PRs instead. 
+- If you want the community to
 understand how your small PR fits into the context of your larger change, consider putting the large change
-in your personal fork and providing a link to it in your PR description. Regardless, strive to provide clear,
+in your personal fork and providing a link to it in your PR description. 
+- Regardless, strive to provide clear,
 incremental value to the repository for every change you make, such that the repository is always in a functional,
 coherent state.
-
 ### How to Send Pull Requests
 
 Everyone is welcome to contribute code to `opentelemetry-python` via GitHub
