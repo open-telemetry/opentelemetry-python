@@ -175,7 +175,7 @@ file in the package it is testing. Make sure that the file name begins with
 
 Smaller PRs get merged faster, improve review quality, and reduce the risk of conflicts. Please keep PRs small and focused:
 
-- **Aim for 500 lines or fewer** (excluding deletions, generated files, and test fixtures)
+- **Aim for fewer than 500 lines** (excluding deletions, generated files, and test fixtures)
 - **One change per PR** -- address a single bug fix, feature, or refactor
 
 - If your work requires more extensive changes, consider a series of small PRs instead. 
