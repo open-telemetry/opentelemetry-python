@@ -320,3 +320,25 @@ class TestBoundedAttributes(unittest.TestCase):
         self.assertEqual(
             "<DummyWSGIRequest method=GET path=/example/>", cleaned_value
         )
+
+    def test_invalid_type_error_message(self):
+        """Test that invalid types that cannot be converted to string raise TypeError with proper message.
+
+        This test specifically addresses issue #4821 where on Python 3.9, the error message
+        generation would fail with AttributeError when accessing __name__ on generic types like Mapping.
+        """
+
+        class UnstringifiableObject:
+            """An object that cannot be converted to string."""
+
+            def __str__(self):
+                raise ValueError("Cannot convert to string")
+
+        invalid_value = UnstringifiableObject()
+
+        # Should return None and log warning, not raise AttributeError
+        cleaned_value = _clean_extended_attribute(
+            "test_key", invalid_value, None
+        )
+
+        self.assertIsNone(cleaned_value)
