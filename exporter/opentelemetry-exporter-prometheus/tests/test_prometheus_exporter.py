@@ -55,7 +55,7 @@ class TestPrometheusMetricReader(TestCase):
         )
 
     def verify_text_format(
-        self, metric: Metric, expect_prometheus_text: str
+        self, metric: Metric, expect_prometheus_text: str, prefix: str = ""
     ) -> None:
         metrics_data = MetricsData(
             resource_metrics=[
@@ -73,7 +73,7 @@ class TestPrometheusMetricReader(TestCase):
             ]
         )
 
-        collector = _CustomCollector(disable_target_info=True)
+        collector = _CustomCollector(disable_target_info=True, prefix=prefix)
         collector.add_metrics_data(metrics_data)
         result_bytes = generate_latest(collector)
         result = result_bytes.decode("utf-8")
@@ -462,6 +462,28 @@ class TestPrometheusMetricReader(TestCase):
                 test_counter_total{a="1",b="true"} 1.0
                 """
             ),
+        )
+        self.verify_text_format(
+            _generate_sum(name="test_counter_w_prefix", value=1, unit=""),
+            dedent(
+                """\
+                # HELP foo_test_counter_w_prefix_total foo
+                # TYPE foo_test_counter_w_prefix_total counter
+                foo_test_counter_w_prefix_total{a="1",b="true"} 1.0
+                """
+            ),
+            prefix="foo"
+        )
+        self.verify_text_format(
+            _generate_sum(name="test_counter_w_invalid_chars_prefix", value=1, unit=""),
+            dedent(
+                """\
+                # HELP _foo_test_counter_w_invalid_chars_prefix_total foo
+                # TYPE _foo_test_counter_w_invalid_chars_prefix_total counter
+                _foo_test_counter_w_invalid_chars_prefix_total{a="1",b="true"} 1.0
+                """
+            ),
+            prefix="#foo"
         )
         self.verify_text_format(
             _generate_sum(name="1leading_digit", value=1, unit=""),
