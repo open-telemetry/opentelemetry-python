@@ -42,8 +42,8 @@ from opentelemetry.util._once import Once
 class DuplicateFilter(logging.Filter):
     """Filter that can be applied to internal `logger`'s.
 
-    Currently applied to `logger`s on the export logs path that could otherwise cause endless logging of errors or a
-    recursion depth exceeded issue in cases where logging itself results in an exception."""
+    Currently applied to `logger`s on the export logs path to prevent endlessly logging the same log
+    in cases where logging itself is failing."""
 
     def filter(self, record):
         current_log = (
@@ -81,6 +81,10 @@ class Exporter(Protocol[Telemetry]):
         raise NotImplementedError
 
 
+_logger = logging.getLogger(__name__)
+_logger.addFilter(DuplicateFilter())
+
+
 class BatchProcessor(Generic[Telemetry]):
     """This class can be used with exporter's that implement the above
     Exporter interface to buffer and send telemetry in batch through
@@ -111,8 +115,6 @@ class BatchProcessor(Generic[Telemetry]):
             target=self.worker,
             daemon=True,
         )
-        self._logger = logging.getLogger(__name__)
-        self._logger.addFilter(DuplicateFilter())
         self._exporting = exporting
 
         self._shutdown = False
@@ -189,20 +191,20 @@ class BatchProcessor(Generic[Telemetry]):
                         ]
                     )
                 except Exception:  # pylint: disable=broad-exception-caught
-                    self._logger.exception(
+                    _logger.exception(
                         "Exception while exporting %s.", self._exporting
                     )
                 detach(token)
 
-    # Do not add any logging.log statements to this function, they can be being routed back to this `emit` function,
-    # resulting in endless recursive calls that crash the program.
-    # See https://github.com/open-telemetry/opentelemetry-python/issues/4261
     def emit(self, data: Telemetry) -> None:
         if self._shutdown:
+            _logger.info("Shutdown called, ignoring %s.", self._exporting)
             return
         if self._pid != os.getpid():
             self._bsp_reset_once.do_once(self._at_fork_reinit)
-        # This will drop a log from the right side if the queue is at _max_queue_length.
+        if len(self._queue) == self._max_queue_size:
+            _logger.warning("Queue full, dropping %s.", self._exporting)
+        # This will drop a log from the right side if the queue is at _max_queue_size.
         self._queue.appendleft(data)
         if len(self._queue) >= self._max_export_batch_size:
             self._worker_awaken.set()

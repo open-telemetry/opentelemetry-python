@@ -12,14 +12,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `opentelemetry-exporter-otlp-proto-grpc`: Fix re-initialization of gRPC channel on UNAVAILABLE error
+  ([#4825](https://github.com/open-telemetry/opentelemetry-python/pull/4825))
+- `opentelemetry-exporter-prometheus`: Fix duplicate HELP/TYPE declarations for metrics with different label sets
+  ([#4868](https://github.com/open-telemetry/opentelemetry-python/issues/4868))
+- Allow loading all resource detectors by setting `OTEL_EXPERIMENTAL_RESOURCE_DETECTORS` to `*`
+  ([#4819](https://github.com/open-telemetry/opentelemetry-python/pull/4819))
 - `opentelemetry-sdk`: Fix the type hint of the `_metrics_data` property to allow `None`
-  ([#4837](https://github.com/open-telemetry/opentelemetry-python/pull/4837)
+  ([#4837](https://github.com/open-telemetry/opentelemetry-python/pull/4837)).
 - Regenerate opentelemetry-proto code with v1.9.0 release
   ([#4840](https://github.com/open-telemetry/opentelemetry-python/pull/4840))
 - Add python 3.14 support
   ([#4798](https://github.com/open-telemetry/opentelemetry-python/pull/4798))
 - Silence events API warnings for internal users
   ([#4847](https://github.com/open-telemetry/opentelemetry-python/pull/4847))
+- Prevent possible endless recursion from happening in `SimpleLogRecordProcessor.on_emit`,
+  ([#4799](https://github.com/open-telemetry/opentelemetry-python/pull/4799)) and ([#4867](https://github.com/open-telemetry/opentelemetry-python/pull/4867)).
+- Make ConcurrentMultiSpanProcessor fork safe
+  ([#4862](https://github.com/open-telemetry/opentelemetry-python/pull/4862))
+- `opentelemetry-exporter-otlp-proto-http`: fix retry logic and error handling for connection failures in trace, metric, and log exporters
+  ([#4709](https://github.com/open-telemetry/opentelemetry-python/pull/4709))
+- `opentelemetry-sdk`: automatically generate configuration models using OTel config JSON schema
+  ([#4879](https://github.com/open-telemetry/opentelemetry-python/pull/4879))
 
 ## Version 1.39.0/0.60b0 (2025-12-03)
 
@@ -87,7 +101,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ([#4654](https://github.com/open-telemetry/opentelemetry-python/pull/4654)).
 - Fix type checking for built-in metric exporters
   ([#4820](https://github.com/open-telemetry/opentelemetry-python/pull/4820))
-  
+
 ## Version 1.38.0/0.59b0 (2025-10-16)
 
 - Add `rstcheck` to pre-commit to stop introducing invalid RST
