@@ -111,8 +111,8 @@ formatters = ["ruff-format", "ruff-check"]
 use-standard-collections = true
 use-schema-description = true
 use-title-as-name = true
-use-union-operator = true
-target-python-version = "3.9"
+use-union-operator = false
+target-python-version = "3.10"
 
 include = [
   "opentelemetry-semantic-conventions",
