@@ -42,3 +42,4 @@ jobs:
         # Alert with a commit comment on possible performance regression
         alert-threshold: '200%'
         comment-on-alert: true
+        alert-comment-cc-users: "@open-telemetry/python-approvers,@open-telemetry/python-maintainers"
