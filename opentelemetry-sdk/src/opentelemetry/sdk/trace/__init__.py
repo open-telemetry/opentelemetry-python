@@ -1310,13 +1310,13 @@ class TracerProvider(trace_api.TracerProvider):
             self.id_generator,
             instrumentation_info,
             self._span_limits,
-            self._meter_provider,
             InstrumentationScope(
                 instrumenting_module_name,
                 instrumenting_library_version,
                 schema_url,
                 attributes,
             ),
+            self._meter_provider,
         )
 
     def add_span_processor(self, span_processor: SpanProcessor) -> None:
