@@ -20,7 +20,7 @@ def fix_typealias_import(file_path: str) -> None:
         return
 
     # Find the typing import line
-    pattern = r'from typing import ([^\n]+)'
+    pattern = r"from typing import ([^\n]+)"
     match = re.search(pattern, content)
 
     if not match or "TypeAlias" not in match.group(1):
@@ -28,13 +28,18 @@ def fix_typealias_import(file_path: str) -> None:
         return
 
     # Remove TypeAlias from typing import
-    imports = [imp.strip() for imp in match.group(1).split(", ")
-               if "TypeAlias" not in imp]
+    imports = [
+        imp.strip()
+        for imp in match.group(1).split(", ")
+        if "TypeAlias" not in imp
+    ]
     new_typing_import = f"from typing import {', '.join(imports)}"
 
     # Replace the old import and add typing_extensions import
     old_import = match.group(0)
-    new_imports = f"{new_typing_import}\n\nfrom typing_extensions import TypeAlias"
+    new_imports = (
+        f"{new_typing_import}\n\nfrom typing_extensions import TypeAlias"
+    )
 
     content = content.replace(old_import, new_imports, 1)
     path.write_text(content)

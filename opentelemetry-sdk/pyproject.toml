@@ -32,6 +32,11 @@ dependencies = [
   "typing-extensions >= 4.5.0",
 ]
 
+[project.optional-dependencies]
+file-configuration = [
+  "pyyaml >= 6.0",
+]
+
 [project.entry-points.opentelemetry_environment_variables]
 sdk = "opentelemetry.sdk.environment_variables"
 
