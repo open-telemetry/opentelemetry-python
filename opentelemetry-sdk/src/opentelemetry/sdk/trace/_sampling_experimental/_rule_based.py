@@ -104,10 +104,8 @@ class _ComposableRuleBased(ComposableSampler):
 
     def get_description(self) -> str:
         rules_str = ",".join(
-            [
-                f"({predicate}:{sampler.get_description()})"
-                for predicate, sampler in self._rules
-            ]
+            f"({predicate}:{sampler.get_description()})"
+            for predicate, sampler in self._rules
         )
         return f"ComposableRuleBased{{[{rules_str}]}}"
 
