@@ -211,8 +211,8 @@ class TestTracerSampling(unittest.TestCase):
         self.assertIsInstance(root_span, trace.Span)
         child_span = tracer.start_span(name="child span", context=ctx)
         self.assertIsInstance(child_span, trace.Span)
-        self.assertTrue(root_span.context.trace_flags.sampled)
         self.assertTrue(root_span.get_span_context().trace_flags.sampled)
+        self.assertTrue(child_span.get_span_context().trace_flags.sampled)
 
     def test_default_sampler_type(self):
         tracer_provider = trace.TracerProvider()
