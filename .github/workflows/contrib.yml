@@ -20,4 +20,4 @@ jobs:
     with:
       CORE_REPO_SHA: ${{ github.sha }}
       # DO NOT SUBMIT: Testing https://github.com/open-telemetry/opentelemetry-python-contrib/pull/4165
-      CONTRIB_REPO_SHA: 06d0d7c3a127b6108cd3b1f27dc657a57e79ba84
+      CONTRIB_REPO_SHA: d6b916049d9c1c7a3664a15a5cfbef722265dbd0
