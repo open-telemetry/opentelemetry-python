@@ -104,6 +104,28 @@ def test_should_sample_match():
     assert res.trace_state.get("ot", "") == "th:0"
 
 
+def test_should_sample_match_multiple_rules():
+    rules = [
+        (AttributePredicate("foo", "bar"), composable_always_off()),
+        (NameIsFooPredicate(), composable_always_on()),
+    ]
+    sampler = composite_sampler(composable_rule_based(rules=rules))
+
+    res = sampler.should_sample(
+        None,
+        RandomIdGenerator().generate_trace_id(),
+        "foo",
+        None,
+        None,
+        None,
+        None,
+    )
+
+    assert res.decision == Decision.RECORD_AND_SAMPLE
+    assert res.trace_state is not None
+    assert res.trace_state.get("ot", "") == "th:0"
+
+
 def test_should_sample_no_match():
     rules = [
         (NameIsFooPredicate(), composable_always_on()),
