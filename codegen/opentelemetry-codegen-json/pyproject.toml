@@ -1,0 +1,49 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "opentelemetry-codegen-json"
+dynamic = ["version"]
+description = "Protobuf plugin to generate JSON serializers and deserializers for OpenTelemetry protobuf messages"
+readme = "README.rst"
+license = "Apache-2.0"
+requires-python = ">=3.9"
+authors = [
+    { name = "OpenTelemetry Authors", email = "cncf-opentelemetry-contributors@lists.cncf.io" },
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Framework :: OpenTelemetry",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+    "protobuf>=4.25.3",
+    "types-protobuf>=4.24",
+]
+
+[project.scripts]
+protoc-gen-otlp_json = "opentelemetry.codegen.json.plugin:main"
+
+[project.urls]
+Homepage = "https://github.com/open-telemetry/opentelemetry-python/codegen/opentelemetry-codegen-proto-json"
+Repository = "https://github.com/open-telemetry/opentelemetry-python"
+
+[tool.hatch.version]
+path = "src/opentelemetry/codegen/json/version/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/opentelemetry"]
