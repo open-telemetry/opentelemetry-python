@@ -38,7 +38,6 @@ from typing import (
     MutableMapping,
     Optional,
     Sequence,
-    Tuple,
     Type,
     Union,
 )
@@ -164,7 +163,7 @@ class SynchronousMultiSpanProcessor(SpanProcessor):
     added.
     """
 
-    _span_processors: Tuple[SpanProcessor, ...]
+    _span_processors: tuple[SpanProcessor, ...]
 
     def __init__(self):
         # use a tuple to avoid race conditions when adding a new span and
@@ -238,10 +237,12 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
             and thus defining how many span processors can work in parallel.
     """
 
+    _span_processors: tuple[SpanProcessor, ...]
+
     def __init__(self, num_threads: int = 2):
         # use a tuple to avoid race conditions when adding a new span and
         # iterating through it on "on_start" and "on_end".
-        self._span_processors = ()  # type: Tuple[SpanProcessor, ...]
+        self._span_processors = ()
         self._lock = threading.Lock()
         self._init_executor(num_threads)
         if hasattr(os, "register_at_fork"):
@@ -1243,7 +1244,7 @@ class Tracer(trace_api.Tracer):
 _TracerConfiguratorT = Callable[[InstrumentationScope], _TracerConfig]
 _TracerConfiguratorRulesPredicateT = Callable[[InstrumentationScope], bool]
 _TracerConfiguratorRulesT = Sequence[
-    Tuple[_TracerConfiguratorRulesPredicateT, _TracerConfig]
+    tuple[_TracerConfiguratorRulesPredicateT, _TracerConfig]
 ]
 
 
