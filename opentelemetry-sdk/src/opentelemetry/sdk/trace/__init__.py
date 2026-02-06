@@ -1354,7 +1354,24 @@ class TracerProvider(trace_api.TracerProvider):
         tracer_configurator: _TracerConfiguratorT,
     ):
         # pylint: disable=protected-access
-        for tracer in self._cached_tracers:
+        # iterating over a WeakSet is thread-safe from 3.14+ so try a bunch of times to get
+        # a copy of the cached tracers in case of RuntimeError
+        tracers = []
+        failures = 0
+        num_tries = 3
+        for _ in range(num_tries):
+            try:
+                tracers = list(self._cached_tracers)
+            except RuntimeError:
+                failures += 1
+                continue
+
+        if failures == num_tries:
+            logger.error(
+                "Failed to get the cached Tracers, cannot update their config"
+            )
+
+        for tracer in tracers:
             tracer_config = tracer_configurator(tracer._instrumentation_scope)
             tracer._update_tracer_config(tracer_config)
 
