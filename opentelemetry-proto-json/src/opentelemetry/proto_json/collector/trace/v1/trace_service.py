@@ -65,10 +65,11 @@ class ExportTraceServiceRequest:
         Returns:
             ExportTraceServiceRequest instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("resourceSpans")) is not None:
-            _args["resource_spans"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.trace.v1.trace.ResourceSpans.from_dict(_v))
+            _args["resource_spans"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.trace.v1.trace.ResourceSpans.from_dict(_v), "resource_spans")
 
         return cls(**_args)
 
@@ -126,6 +127,7 @@ class ExportTraceServiceResponse:
         Returns:
             ExportTraceServiceResponse instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("partialSuccess")) is not None:
@@ -190,11 +192,13 @@ class ExportTracePartialSuccess:
         Returns:
             ExportTracePartialSuccess instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("rejectedSpans")) is not None:
-            _args["rejected_spans"] = _utils.parse_int64(_value)
+            _args["rejected_spans"] = _utils.parse_int64(_value, "rejected_spans")
         if (_value := data.get("errorMessage")) is not None:
+            _utils.validate_type(_value, str, "error_message")
             _args["error_message"] = _value
 
         return cls(**_args)

@@ -82,21 +82,24 @@ class AnyValue:
         Returns:
             AnyValue instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("bytesValue")) is not None:
-            _args["bytes_value"] = _utils.decode_base64(_value)
+            _args["bytes_value"] = _utils.decode_base64(_value, "bytes_value")
         elif (_value := data.get("kvlistValue")) is not None:
             _args["kvlist_value"] = KeyValueList.from_dict(_value)
         elif (_value := data.get("arrayValue")) is not None:
             _args["array_value"] = ArrayValue.from_dict(_value)
         elif (_value := data.get("doubleValue")) is not None:
-            _args["double_value"] = _utils.parse_float(_value)
+            _args["double_value"] = _utils.parse_float(_value, "double_value")
         elif (_value := data.get("intValue")) is not None:
-            _args["int_value"] = _utils.parse_int64(_value)
+            _args["int_value"] = _utils.parse_int64(_value, "int_value")
         elif (_value := data.get("boolValue")) is not None:
+            _utils.validate_type(_value, bool, "bool_value")
             _args["bool_value"] = _value
         elif (_value := data.get("stringValue")) is not None:
+            _utils.validate_type(_value, str, "string_value")
             _args["string_value"] = _value
 
         return cls(**_args)
@@ -155,10 +158,11 @@ class ArrayValue:
         Returns:
             ArrayValue instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("values")) is not None:
-            _args["values"] = _utils.deserialize_repeated(_value, lambda _v: AnyValue.from_dict(_v))
+            _args["values"] = _utils.deserialize_repeated(_value, lambda _v: AnyValue.from_dict(_v), "values")
 
         return cls(**_args)
 
@@ -216,10 +220,11 @@ class KeyValueList:
         Returns:
             KeyValueList instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("values")) is not None:
-            _args["values"] = _utils.deserialize_repeated(_value, lambda _v: KeyValue.from_dict(_v))
+            _args["values"] = _utils.deserialize_repeated(_value, lambda _v: KeyValue.from_dict(_v), "values")
 
         return cls(**_args)
 
@@ -280,9 +285,11 @@ class KeyValue:
         Returns:
             KeyValue instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("key")) is not None:
+            _utils.validate_type(_value, str, "key")
             _args["key"] = _value
         if (_value := data.get("value")) is not None:
             _args["value"] = AnyValue.from_dict(_value)
@@ -352,15 +359,19 @@ class InstrumentationScope:
         Returns:
             InstrumentationScope instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("name")) is not None:
+            _utils.validate_type(_value, str, "name")
             _args["name"] = _value
         if (_value := data.get("version")) is not None:
+            _utils.validate_type(_value, str, "version")
             _args["version"] = _value
         if (_value := data.get("attributes")) is not None:
-            _args["attributes"] = _utils.deserialize_repeated(_value, lambda _v: KeyValue.from_dict(_v))
+            _args["attributes"] = _utils.deserialize_repeated(_value, lambda _v: KeyValue.from_dict(_v), "attributes")
         if (_value := data.get("droppedAttributesCount")) is not None:
+            _utils.validate_type(_value, int, "dropped_attributes_count")
             _args["dropped_attributes_count"] = _value
 
         return cls(**_args)
@@ -428,16 +439,19 @@ class EntityRef:
         Returns:
             EntityRef instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("schemaUrl")) is not None:
+            _utils.validate_type(_value, str, "schema_url")
             _args["schema_url"] = _value
         if (_value := data.get("type")) is not None:
+            _utils.validate_type(_value, str, "type")
             _args["type"] = _value
         if (_value := data.get("idKeys")) is not None:
-            _args["id_keys"] = _value
+            _args["id_keys"] = _utils.deserialize_repeated(_value, lambda _v: _v, "id_keys")
         if (_value := data.get("descriptionKeys")) is not None:
-            _args["description_keys"] = _value
+            _args["description_keys"] = _utils.deserialize_repeated(_value, lambda _v: _v, "description_keys")
 
         return cls(**_args)
 

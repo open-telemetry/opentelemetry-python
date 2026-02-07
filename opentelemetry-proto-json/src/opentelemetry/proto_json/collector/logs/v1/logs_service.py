@@ -65,10 +65,11 @@ class ExportLogsServiceRequest:
         Returns:
             ExportLogsServiceRequest instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("resourceLogs")) is not None:
-            _args["resource_logs"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.logs.v1.logs.ResourceLogs.from_dict(_v))
+            _args["resource_logs"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.logs.v1.logs.ResourceLogs.from_dict(_v), "resource_logs")
 
         return cls(**_args)
 
@@ -126,6 +127,7 @@ class ExportLogsServiceResponse:
         Returns:
             ExportLogsServiceResponse instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("partialSuccess")) is not None:
@@ -190,11 +192,13 @@ class ExportLogsPartialSuccess:
         Returns:
             ExportLogsPartialSuccess instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("rejectedLogRecords")) is not None:
-            _args["rejected_log_records"] = _utils.parse_int64(_value)
+            _args["rejected_log_records"] = _utils.parse_int64(_value, "rejected_log_records")
         if (_value := data.get("errorMessage")) is not None:
+            _utils.validate_type(_value, str, "error_message")
             _args["error_message"] = _value
 
         return cls(**_args)

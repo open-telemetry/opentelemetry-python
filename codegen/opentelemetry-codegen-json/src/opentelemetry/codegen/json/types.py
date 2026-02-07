@@ -139,3 +139,24 @@ def is_numeric_type(proto_type: int) -> bool:
         descriptor.FieldDescriptorProto.TYPE_SFIXED32,
         descriptor.FieldDescriptorProto.TYPE_SINT32,
     }
+
+
+def get_json_allowed_types(proto_type: int, field_name: str = "") -> str:
+    """
+    Get the Python type(s) allowed for the JSON representation of a field.
+    Returns a string representation of the type or tuple of types.
+    """
+    if is_hex_encoded_field(field_name):
+        return "str"
+    if is_int64_type(proto_type):
+        return "(int, str)"
+    if is_bytes_type(proto_type):
+        return "str"
+    if proto_type in (
+        descriptor.FieldDescriptorProto.TYPE_FLOAT,
+        descriptor.FieldDescriptorProto.TYPE_DOUBLE,
+    ):
+        return "(float, int, str)"
+
+    py_type = get_python_type(proto_type)
+    return py_type

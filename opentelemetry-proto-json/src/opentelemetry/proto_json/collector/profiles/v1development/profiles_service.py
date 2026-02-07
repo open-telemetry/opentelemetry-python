@@ -68,10 +68,11 @@ class ExportProfilesServiceRequest:
         Returns:
             ExportProfilesServiceRequest instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("resourceProfiles")) is not None:
-            _args["resource_profiles"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.profiles.v1development.profiles.ResourceProfiles.from_dict(_v))
+            _args["resource_profiles"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.profiles.v1development.profiles.ResourceProfiles.from_dict(_v), "resource_profiles")
         if (_value := data.get("dictionary")) is not None:
             _args["dictionary"] = opentelemetry.proto_json.profiles.v1development.profiles.ProfilesDictionary.from_dict(_value)
 
@@ -131,6 +132,7 @@ class ExportProfilesServiceResponse:
         Returns:
             ExportProfilesServiceResponse instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("partialSuccess")) is not None:
@@ -195,11 +197,13 @@ class ExportProfilesPartialSuccess:
         Returns:
             ExportProfilesPartialSuccess instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("rejectedProfiles")) is not None:
-            _args["rejected_profiles"] = _utils.parse_int64(_value)
+            _args["rejected_profiles"] = _utils.parse_int64(_value, "rejected_profiles")
         if (_value := data.get("errorMessage")) is not None:
+            _utils.validate_type(_value, str, "error_message")
             _args["error_message"] = _value
 
         return cls(**_args)

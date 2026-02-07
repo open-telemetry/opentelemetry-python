@@ -84,22 +84,23 @@ class ProfilesDictionary:
         Returns:
             ProfilesDictionary instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("mappingTable")) is not None:
-            _args["mapping_table"] = _utils.deserialize_repeated(_value, lambda _v: Mapping.from_dict(_v))
+            _args["mapping_table"] = _utils.deserialize_repeated(_value, lambda _v: Mapping.from_dict(_v), "mapping_table")
         if (_value := data.get("locationTable")) is not None:
-            _args["location_table"] = _utils.deserialize_repeated(_value, lambda _v: Location.from_dict(_v))
+            _args["location_table"] = _utils.deserialize_repeated(_value, lambda _v: Location.from_dict(_v), "location_table")
         if (_value := data.get("functionTable")) is not None:
-            _args["function_table"] = _utils.deserialize_repeated(_value, lambda _v: Function.from_dict(_v))
+            _args["function_table"] = _utils.deserialize_repeated(_value, lambda _v: Function.from_dict(_v), "function_table")
         if (_value := data.get("linkTable")) is not None:
-            _args["link_table"] = _utils.deserialize_repeated(_value, lambda _v: Link.from_dict(_v))
+            _args["link_table"] = _utils.deserialize_repeated(_value, lambda _v: Link.from_dict(_v), "link_table")
         if (_value := data.get("stringTable")) is not None:
-            _args["string_table"] = _value
+            _args["string_table"] = _utils.deserialize_repeated(_value, lambda _v: _v, "string_table")
         if (_value := data.get("attributeTable")) is not None:
-            _args["attribute_table"] = _utils.deserialize_repeated(_value, lambda _v: KeyValueAndUnit.from_dict(_v))
+            _args["attribute_table"] = _utils.deserialize_repeated(_value, lambda _v: KeyValueAndUnit.from_dict(_v), "attribute_table")
         if (_value := data.get("stackTable")) is not None:
-            _args["stack_table"] = _utils.deserialize_repeated(_value, lambda _v: Stack.from_dict(_v))
+            _args["stack_table"] = _utils.deserialize_repeated(_value, lambda _v: Stack.from_dict(_v), "stack_table")
 
         return cls(**_args)
 
@@ -160,10 +161,11 @@ class ProfilesData:
         Returns:
             ProfilesData instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("resourceProfiles")) is not None:
-            _args["resource_profiles"] = _utils.deserialize_repeated(_value, lambda _v: ResourceProfiles.from_dict(_v))
+            _args["resource_profiles"] = _utils.deserialize_repeated(_value, lambda _v: ResourceProfiles.from_dict(_v), "resource_profiles")
         if (_value := data.get("dictionary")) is not None:
             _args["dictionary"] = ProfilesDictionary.from_dict(_value)
 
@@ -229,13 +231,15 @@ class ResourceProfiles:
         Returns:
             ResourceProfiles instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("resource")) is not None:
             _args["resource"] = opentelemetry.proto_json.resource.v1.resource.Resource.from_dict(_value)
         if (_value := data.get("scopeProfiles")) is not None:
-            _args["scope_profiles"] = _utils.deserialize_repeated(_value, lambda _v: ScopeProfiles.from_dict(_v))
+            _args["scope_profiles"] = _utils.deserialize_repeated(_value, lambda _v: ScopeProfiles.from_dict(_v), "scope_profiles")
         if (_value := data.get("schemaUrl")) is not None:
+            _utils.validate_type(_value, str, "schema_url")
             _args["schema_url"] = _value
 
         return cls(**_args)
@@ -300,13 +304,15 @@ class ScopeProfiles:
         Returns:
             ScopeProfiles instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("scope")) is not None:
             _args["scope"] = opentelemetry.proto_json.common.v1.common.InstrumentationScope.from_dict(_value)
         if (_value := data.get("profiles")) is not None:
-            _args["profiles"] = _utils.deserialize_repeated(_value, lambda _v: Profile.from_dict(_v))
+            _args["profiles"] = _utils.deserialize_repeated(_value, lambda _v: Profile.from_dict(_v), "profiles")
         if (_value := data.get("schemaUrl")) is not None:
+            _utils.validate_type(_value, str, "schema_url")
             _args["schema_url"] = _value
 
         return cls(**_args)
@@ -395,30 +401,33 @@ class Profile:
         Returns:
             Profile instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("sampleType")) is not None:
             _args["sample_type"] = ValueType.from_dict(_value)
         if (_value := data.get("samples")) is not None:
-            _args["samples"] = _utils.deserialize_repeated(_value, lambda _v: Sample.from_dict(_v))
+            _args["samples"] = _utils.deserialize_repeated(_value, lambda _v: Sample.from_dict(_v), "samples")
         if (_value := data.get("timeUnixNano")) is not None:
-            _args["time_unix_nano"] = _utils.parse_int64(_value)
+            _args["time_unix_nano"] = _utils.parse_int64(_value, "time_unix_nano")
         if (_value := data.get("durationNano")) is not None:
-            _args["duration_nano"] = _utils.parse_int64(_value)
+            _args["duration_nano"] = _utils.parse_int64(_value, "duration_nano")
         if (_value := data.get("periodType")) is not None:
             _args["period_type"] = ValueType.from_dict(_value)
         if (_value := data.get("period")) is not None:
-            _args["period"] = _utils.parse_int64(_value)
+            _args["period"] = _utils.parse_int64(_value, "period")
         if (_value := data.get("profileId")) is not None:
-            _args["profile_id"] = _utils.decode_base64(_value)
+            _args["profile_id"] = _utils.decode_base64(_value, "profile_id")
         if (_value := data.get("droppedAttributesCount")) is not None:
+            _utils.validate_type(_value, int, "dropped_attributes_count")
             _args["dropped_attributes_count"] = _value
         if (_value := data.get("originalPayloadFormat")) is not None:
+            _utils.validate_type(_value, str, "original_payload_format")
             _args["original_payload_format"] = _value
         if (_value := data.get("originalPayload")) is not None:
-            _args["original_payload"] = _utils.decode_base64(_value)
+            _args["original_payload"] = _utils.decode_base64(_value, "original_payload")
         if (_value := data.get("attributeIndices")) is not None:
-            _args["attribute_indices"] = _value
+            _args["attribute_indices"] = _utils.deserialize_repeated(_value, lambda _v: _v, "attribute_indices")
 
         return cls(**_args)
 
@@ -479,12 +488,13 @@ class Link:
         Returns:
             Link instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("traceId")) is not None:
-            _args["trace_id"] = _utils.decode_hex(_value)
+            _args["trace_id"] = _utils.decode_hex(_value, "trace_id")
         if (_value := data.get("spanId")) is not None:
-            _args["span_id"] = _utils.decode_hex(_value)
+            _args["span_id"] = _utils.decode_hex(_value, "span_id")
 
         return cls(**_args)
 
@@ -545,11 +555,14 @@ class ValueType:
         Returns:
             ValueType instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("typeStrindex")) is not None:
+            _utils.validate_type(_value, int, "type_strindex")
             _args["type_strindex"] = _value
         if (_value := data.get("unitStrindex")) is not None:
+            _utils.validate_type(_value, int, "unit_strindex")
             _args["unit_strindex"] = _value
 
         return cls(**_args)
@@ -620,18 +633,21 @@ class Sample:
         Returns:
             Sample instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("stackIndex")) is not None:
+            _utils.validate_type(_value, int, "stack_index")
             _args["stack_index"] = _value
         if (_value := data.get("values")) is not None:
-            _args["values"] = _utils.deserialize_repeated(_value, lambda _v: _utils.parse_int64(_v))
+            _args["values"] = _utils.deserialize_repeated(_value, lambda _v: _utils.parse_int64(_v, "values"), "values")
         if (_value := data.get("attributeIndices")) is not None:
-            _args["attribute_indices"] = _value
+            _args["attribute_indices"] = _utils.deserialize_repeated(_value, lambda _v: _v, "attribute_indices")
         if (_value := data.get("linkIndex")) is not None:
+            _utils.validate_type(_value, int, "link_index")
             _args["link_index"] = _value
         if (_value := data.get("timestampsUnixNano")) is not None:
-            _args["timestamps_unix_nano"] = _utils.deserialize_repeated(_value, lambda _v: _utils.parse_int64(_v))
+            _args["timestamps_unix_nano"] = _utils.deserialize_repeated(_value, lambda _v: _utils.parse_int64(_v, "timestamps_unix_nano"), "timestamps_unix_nano")
 
         return cls(**_args)
 
@@ -701,18 +717,20 @@ class Mapping:
         Returns:
             Mapping instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("memoryStart")) is not None:
-            _args["memory_start"] = _utils.parse_int64(_value)
+            _args["memory_start"] = _utils.parse_int64(_value, "memory_start")
         if (_value := data.get("memoryLimit")) is not None:
-            _args["memory_limit"] = _utils.parse_int64(_value)
+            _args["memory_limit"] = _utils.parse_int64(_value, "memory_limit")
         if (_value := data.get("fileOffset")) is not None:
-            _args["file_offset"] = _utils.parse_int64(_value)
+            _args["file_offset"] = _utils.parse_int64(_value, "file_offset")
         if (_value := data.get("filenameStrindex")) is not None:
+            _utils.validate_type(_value, int, "filename_strindex")
             _args["filename_strindex"] = _value
         if (_value := data.get("attributeIndices")) is not None:
-            _args["attribute_indices"] = _value
+            _args["attribute_indices"] = _utils.deserialize_repeated(_value, lambda _v: _v, "attribute_indices")
 
         return cls(**_args)
 
@@ -770,10 +788,11 @@ class Stack:
         Returns:
             Stack instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("locationIndices")) is not None:
-            _args["location_indices"] = _value
+            _args["location_indices"] = _utils.deserialize_repeated(_value, lambda _v: _v, "location_indices")
 
         return cls(**_args)
 
@@ -840,16 +859,18 @@ class Location:
         Returns:
             Location instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("mappingIndex")) is not None:
+            _utils.validate_type(_value, int, "mapping_index")
             _args["mapping_index"] = _value
         if (_value := data.get("address")) is not None:
-            _args["address"] = _utils.parse_int64(_value)
+            _args["address"] = _utils.parse_int64(_value, "address")
         if (_value := data.get("lines")) is not None:
-            _args["lines"] = _utils.deserialize_repeated(_value, lambda _v: Line.from_dict(_v))
+            _args["lines"] = _utils.deserialize_repeated(_value, lambda _v: Line.from_dict(_v), "lines")
         if (_value := data.get("attributeIndices")) is not None:
-            _args["attribute_indices"] = _value
+            _args["attribute_indices"] = _utils.deserialize_repeated(_value, lambda _v: _v, "attribute_indices")
 
         return cls(**_args)
 
@@ -913,14 +934,16 @@ class Line:
         Returns:
             Line instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("functionIndex")) is not None:
+            _utils.validate_type(_value, int, "function_index")
             _args["function_index"] = _value
         if (_value := data.get("line")) is not None:
-            _args["line"] = _utils.parse_int64(_value)
+            _args["line"] = _utils.parse_int64(_value, "line")
         if (_value := data.get("column")) is not None:
-            _args["column"] = _utils.parse_int64(_value)
+            _args["column"] = _utils.parse_int64(_value, "column")
 
         return cls(**_args)
 
@@ -987,16 +1010,20 @@ class Function:
         Returns:
             Function instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("nameStrindex")) is not None:
+            _utils.validate_type(_value, int, "name_strindex")
             _args["name_strindex"] = _value
         if (_value := data.get("systemNameStrindex")) is not None:
+            _utils.validate_type(_value, int, "system_name_strindex")
             _args["system_name_strindex"] = _value
         if (_value := data.get("filenameStrindex")) is not None:
+            _utils.validate_type(_value, int, "filename_strindex")
             _args["filename_strindex"] = _value
         if (_value := data.get("startLine")) is not None:
-            _args["start_line"] = _utils.parse_int64(_value)
+            _args["start_line"] = _utils.parse_int64(_value, "start_line")
 
         return cls(**_args)
 
@@ -1060,13 +1087,16 @@ class KeyValueAndUnit:
         Returns:
             KeyValueAndUnit instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("keyStrindex")) is not None:
+            _utils.validate_type(_value, int, "key_strindex")
             _args["key_strindex"] = _value
         if (_value := data.get("value")) is not None:
             _args["value"] = opentelemetry.proto_json.common.v1.common.AnyValue.from_dict(_value)
         if (_value := data.get("unitStrindex")) is not None:
+            _utils.validate_type(_value, int, "unit_strindex")
             _args["unit_strindex"] = _value
 
         return cls(**_args)

@@ -71,14 +71,16 @@ class Resource:
         Returns:
             Resource instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("attributes")) is not None:
-            _args["attributes"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v))
+            _args["attributes"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
         if (_value := data.get("droppedAttributesCount")) is not None:
+            _utils.validate_type(_value, int, "dropped_attributes_count")
             _args["dropped_attributes_count"] = _value
         if (_value := data.get("entityRefs")) is not None:
-            _args["entity_refs"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.EntityRef.from_dict(_v))
+            _args["entity_refs"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.EntityRef.from_dict(_v), "entity_refs")
 
         return cls(**_args)
 

@@ -31,12 +31,14 @@ from opentelemetry.codegen.json.descriptor_analyzer import (
 )
 from opentelemetry.codegen.json.types import (
     get_default_value,
+    get_json_allowed_types,
     get_python_type,
     is_bytes_type,
     is_hex_encoded_field,
     is_int64_type,
 )
 from opentelemetry.codegen.json.writer import CodeWriter
+from opentelemetry.codegen.json.version import __version__ as GENERATOR_VERSION
 
 _logger = logging.getLogger(__name__)
 
@@ -53,6 +55,7 @@ class OtlpJsonGenerator:
         self,
         analyzer: DescriptorAnalyzer,
         package_transform: Callable[[str], str],
+        version: str,
     ) -> None:
         """
         Initialize the generator.
@@ -60,9 +63,11 @@ class OtlpJsonGenerator:
         Args:
             analyzer: Analyzed descriptor information
             package_transform: A callable that transforms the proto file path.
+            version: Version string for the generated code.
         """
         self._analyzer = analyzer
         self._package_transform = package_transform
+        self._version = version
         self._generated_files: dict[str, str] = {}
         self._common_root: str = ""
 
@@ -99,6 +104,12 @@ class OtlpJsonGenerator:
 
         utils_path = f"{self._common_root}/{UTILS_MODULE_NAME}.py"
         self._generated_files[utils_path] = self._load_utils_source()
+
+        version_init_path = f"{self._common_root}/version/__init__.py"
+        version_writer = CodeWriter(indent_size=4)
+        self._generate_header(version_writer)
+        version_writer.writeln(f'__version__ = "{self._version}"')
+        self._generated_files[version_init_path] = version_writer.to_string()
 
         self._ensure_init_files()
 
@@ -208,7 +219,7 @@ class OtlpJsonGenerator:
 
         return writer.to_string()
 
-    def _generate_header(self, writer: CodeWriter, proto_file: str) -> None:
+    def _generate_header(self, writer: CodeWriter, proto_file: str = "") -> None:
         """Generate file header with license and metadata."""
         writer.writemany(
             "# Copyright The OpenTelemetry Authors",
@@ -226,7 +237,8 @@ class OtlpJsonGenerator:
             "# limitations under the License.",
         )
         writer.blank_line()
-        writer.comment(f'AUTO-GENERATED from "{proto_file}"')
+        if proto_file:
+            writer.comment(f'AUTO-GENERATED from "{proto_file}"')
         writer.comment("DO NOT EDIT MANUALLY")
         writer.blank_line()
         writer.writeln("from __future__ import annotations")
@@ -517,6 +529,7 @@ class OtlpJsonGenerator:
                     f"    {message.name} instance",
                 ]
             )
+            writer.writeln('_utils.validate_type(data, dict, "data")')
             writer.writeln("_args: dict[str, Any] = {}")
             writer.blank_line()
 
@@ -540,18 +553,14 @@ class OtlpJsonGenerator:
                         item_expr = self._get_deserialization_expr_for_type(
                             field_type, field.name, "_v", message
                         )
-                        if item_expr == "_v":
-                            writer.writeln(f'_args["{field.name}"] = _value')
-                        else:
-                            writer.writeln(
-                                f'_args["{field.name}"] = _utils.deserialize_repeated('
-                                f"_value, lambda _v: {item_expr})"
-                            )
-                    else:
-                        val_expr = self._get_deserialization_expr_for_type(
-                            field_type, field.name, "_value", message
+                        writer.writeln(
+                            f'_args["{field.name}"] = _utils.deserialize_repeated('
+                            f'_value, lambda _v: {item_expr}, "{field.name}")'
                         )
-                        writer.writeln(f'_args["{field.name}"] = {val_expr}')
+                    else:
+                        self._generate_deserialization_statements(
+                            writer, field, "_value", message, "_args"
+                        )
 
             # Handle oneof groups with "last write wins" (check fields in reverse order)
             for group_index in sorted(oneof_groups.keys()):
@@ -565,10 +574,9 @@ class OtlpJsonGenerator:
                     )
 
                     with context:
-                        val_expr = self._get_deserialization_expr_for_type(
-                            field_type, field.name, "_value", message
+                        self._generate_deserialization_statements(
+                            writer, field, "_value", message, "_args"
                         )
-                        writer.writeln(f'_args["{field.name}"] = {val_expr}')
 
             writer.blank_line()
             writer.return_("cls(**_args)")
@@ -596,6 +604,57 @@ class OtlpJsonGenerator:
             )
             writer.return_("cls.from_dict(json.loads(data))")
 
+    def _generate_deserialization_statements(
+        self,
+        writer: CodeWriter,
+        field: FieldInfo,
+        var_name: str,
+        message: MessageInfo,
+        target_dict: str,
+    ) -> None:
+        """Generate validation and assignment statements for a field."""
+        field_type = field.field_type
+        if field_type.is_message and (type_name := field_type.type_name):
+            msg_type = self._resolve_message_type(type_name, message)
+            writer.writeln(
+                f'{target_dict}["{field.name}"] = {msg_type}.from_dict({var_name})'
+            )
+        elif field_type.is_enum and (type_name := field_type.type_name):
+            enum_type = self._resolve_enum_type(type_name, message)
+            writer.writeln(
+                f'_utils.validate_type({var_name}, int, "{field.name}")'
+            )
+            writer.writeln(
+                f'{target_dict}["{field.name}"] = {enum_type}({var_name})'
+            )
+        elif is_hex_encoded_field(field.name):
+            writer.writeln(
+                f'{target_dict}["{field.name}"] = _utils.decode_hex({var_name}, "{field.name}")'
+            )
+        elif is_int64_type(field_type.proto_type):
+            writer.writeln(
+                f'{target_dict}["{field.name}"] = _utils.parse_int64({var_name}, "{field.name}")'
+            )
+        elif is_bytes_type(field_type.proto_type):
+            writer.writeln(
+                f'{target_dict}["{field.name}"] = _utils.decode_base64({var_name}, "{field.name}")'
+            )
+        elif field_type.proto_type in (
+            descriptor.FieldDescriptorProto.TYPE_FLOAT,
+            descriptor.FieldDescriptorProto.TYPE_DOUBLE,
+        ):
+            writer.writeln(
+                f'{target_dict}["{field.name}"] = _utils.parse_float({var_name}, "{field.name}")'
+            )
+        else:
+            allowed_types = get_json_allowed_types(
+                field_type.proto_type, field.name
+            )
+            writer.writeln(
+                f'_utils.validate_type({var_name}, {allowed_types}, "{field.name}")'
+            )
+            writer.writeln(f'{target_dict}["{field.name}"] = {var_name}')
+
     def _get_deserialization_expr_for_type(
         self,
         field_type: ProtoType,
@@ -611,16 +670,16 @@ class OtlpJsonGenerator:
             enum_type = self._resolve_enum_type(type_name, context)
             return f"{enum_type}({var_name})"
         if is_hex_encoded_field(field_name):
-            return f"_utils.decode_hex({var_name})"
+            return f'_utils.decode_hex({var_name}, "{field_name}")'
         if is_int64_type(field_type.proto_type):
-            return f"_utils.parse_int64({var_name})"
+            return f'_utils.parse_int64({var_name}, "{field_name}")'
         if is_bytes_type(field_type.proto_type):
-            return f"_utils.decode_base64({var_name})"
+            return f'_utils.decode_base64({var_name}, "{field_name}")'
         if field_type.proto_type in (
             descriptor.FieldDescriptorProto.TYPE_FLOAT,
             descriptor.FieldDescriptorProto.TYPE_DOUBLE,
         ):
-            return f"_utils.parse_float({var_name})"
+            return f'_utils.parse_float({var_name}, "{field_name}")'
 
         return var_name
 
@@ -807,7 +866,7 @@ def generate_code(
     analyzer = DescriptorAnalyzer(request)
     analyzer.analyze()
 
-    generator = OtlpJsonGenerator(analyzer, package_transform)
+    generator = OtlpJsonGenerator(analyzer, package_transform, version=GENERATOR_VERSION)
     return generator.generate_all()
 
 

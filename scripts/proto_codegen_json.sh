@@ -46,7 +46,7 @@ fi
 cd $repo_root/opentelemetry-proto-json/src
 
 # clean up old generated code
-find opentelemetry/ -name "*_json.py" -exec rm {} +
+rm -rf opentelemetry/proto_json/*
 
 # generate proto code for all protos
 all_protos=$(find $PROTO_REPO_DIR/ -iname "*.proto")

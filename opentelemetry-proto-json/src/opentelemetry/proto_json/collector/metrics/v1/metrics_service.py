@@ -65,10 +65,11 @@ class ExportMetricsServiceRequest:
         Returns:
             ExportMetricsServiceRequest instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("resourceMetrics")) is not None:
-            _args["resource_metrics"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.metrics.v1.metrics.ResourceMetrics.from_dict(_v))
+            _args["resource_metrics"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.metrics.v1.metrics.ResourceMetrics.from_dict(_v), "resource_metrics")
 
         return cls(**_args)
 
@@ -126,6 +127,7 @@ class ExportMetricsServiceResponse:
         Returns:
             ExportMetricsServiceResponse instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("partialSuccess")) is not None:
@@ -190,11 +192,13 @@ class ExportMetricsPartialSuccess:
         Returns:
             ExportMetricsPartialSuccess instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("rejectedDataPoints")) is not None:
-            _args["rejected_data_points"] = _utils.parse_int64(_value)
+            _args["rejected_data_points"] = _utils.parse_int64(_value, "rejected_data_points")
         if (_value := data.get("errorMessage")) is not None:
+            _utils.validate_type(_value, str, "error_message")
             _args["error_message"] = _value
 
         return cls(**_args)

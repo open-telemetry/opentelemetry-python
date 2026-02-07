@@ -76,10 +76,11 @@ class TracesData:
         Returns:
             TracesData instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("resourceSpans")) is not None:
-            _args["resource_spans"] = _utils.deserialize_repeated(_value, lambda _v: ResourceSpans.from_dict(_v))
+            _args["resource_spans"] = _utils.deserialize_repeated(_value, lambda _v: ResourceSpans.from_dict(_v), "resource_spans")
 
         return cls(**_args)
 
@@ -143,13 +144,15 @@ class ResourceSpans:
         Returns:
             ResourceSpans instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("resource")) is not None:
             _args["resource"] = opentelemetry.proto_json.resource.v1.resource.Resource.from_dict(_value)
         if (_value := data.get("scopeSpans")) is not None:
-            _args["scope_spans"] = _utils.deserialize_repeated(_value, lambda _v: ScopeSpans.from_dict(_v))
+            _args["scope_spans"] = _utils.deserialize_repeated(_value, lambda _v: ScopeSpans.from_dict(_v), "scope_spans")
         if (_value := data.get("schemaUrl")) is not None:
+            _utils.validate_type(_value, str, "schema_url")
             _args["schema_url"] = _value
 
         return cls(**_args)
@@ -214,13 +217,15 @@ class ScopeSpans:
         Returns:
             ScopeSpans instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("scope")) is not None:
             _args["scope"] = opentelemetry.proto_json.common.v1.common.InstrumentationScope.from_dict(_value)
         if (_value := data.get("spans")) is not None:
-            _args["spans"] = _utils.deserialize_repeated(_value, lambda _v: Span.from_dict(_v))
+            _args["spans"] = _utils.deserialize_repeated(_value, lambda _v: Span.from_dict(_v), "spans")
         if (_value := data.get("schemaUrl")) is not None:
+            _utils.validate_type(_value, str, "schema_url")
             _args["schema_url"] = _value
 
         return cls(**_args)
@@ -306,15 +311,18 @@ class Span:
             Returns:
                 Event instance
             """
+            _utils.validate_type(data, dict, "data")
             _args: dict[str, Any] = {}
 
             if (_value := data.get("timeUnixNano")) is not None:
-                _args["time_unix_nano"] = _utils.parse_int64(_value)
+                _args["time_unix_nano"] = _utils.parse_int64(_value, "time_unix_nano")
             if (_value := data.get("name")) is not None:
+                _utils.validate_type(_value, str, "name")
                 _args["name"] = _value
             if (_value := data.get("attributes")) is not None:
-                _args["attributes"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v))
+                _args["attributes"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
             if (_value := data.get("droppedAttributesCount")) is not None:
+                _utils.validate_type(_value, int, "dropped_attributes_count")
                 _args["dropped_attributes_count"] = _value
 
             return cls(**_args)
@@ -387,19 +395,23 @@ class Span:
             Returns:
                 Link instance
             """
+            _utils.validate_type(data, dict, "data")
             _args: dict[str, Any] = {}
 
             if (_value := data.get("traceId")) is not None:
-                _args["trace_id"] = _utils.decode_hex(_value)
+                _args["trace_id"] = _utils.decode_hex(_value, "trace_id")
             if (_value := data.get("spanId")) is not None:
-                _args["span_id"] = _utils.decode_hex(_value)
+                _args["span_id"] = _utils.decode_hex(_value, "span_id")
             if (_value := data.get("traceState")) is not None:
+                _utils.validate_type(_value, str, "trace_state")
                 _args["trace_state"] = _value
             if (_value := data.get("attributes")) is not None:
-                _args["attributes"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v))
+                _args["attributes"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
             if (_value := data.get("droppedAttributesCount")) is not None:
+                _utils.validate_type(_value, int, "dropped_attributes_count")
                 _args["dropped_attributes_count"] = _value
             if (_value := data.get("flags")) is not None:
+                _utils.validate_type(_value, int, "flags")
                 _args["flags"] = _value
 
             return cls(**_args)
@@ -496,37 +508,45 @@ class Span:
         Returns:
             Span instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("traceId")) is not None:
-            _args["trace_id"] = _utils.decode_hex(_value)
+            _args["trace_id"] = _utils.decode_hex(_value, "trace_id")
         if (_value := data.get("spanId")) is not None:
-            _args["span_id"] = _utils.decode_hex(_value)
+            _args["span_id"] = _utils.decode_hex(_value, "span_id")
         if (_value := data.get("traceState")) is not None:
+            _utils.validate_type(_value, str, "trace_state")
             _args["trace_state"] = _value
         if (_value := data.get("parentSpanId")) is not None:
-            _args["parent_span_id"] = _utils.decode_hex(_value)
+            _args["parent_span_id"] = _utils.decode_hex(_value, "parent_span_id")
         if (_value := data.get("flags")) is not None:
+            _utils.validate_type(_value, int, "flags")
             _args["flags"] = _value
         if (_value := data.get("name")) is not None:
+            _utils.validate_type(_value, str, "name")
             _args["name"] = _value
         if (_value := data.get("kind")) is not None:
+            _utils.validate_type(_value, int, "kind")
             _args["kind"] = Span.SpanKind(_value)
         if (_value := data.get("startTimeUnixNano")) is not None:
-            _args["start_time_unix_nano"] = _utils.parse_int64(_value)
+            _args["start_time_unix_nano"] = _utils.parse_int64(_value, "start_time_unix_nano")
         if (_value := data.get("endTimeUnixNano")) is not None:
-            _args["end_time_unix_nano"] = _utils.parse_int64(_value)
+            _args["end_time_unix_nano"] = _utils.parse_int64(_value, "end_time_unix_nano")
         if (_value := data.get("attributes")) is not None:
-            _args["attributes"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v))
+            _args["attributes"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
         if (_value := data.get("droppedAttributesCount")) is not None:
+            _utils.validate_type(_value, int, "dropped_attributes_count")
             _args["dropped_attributes_count"] = _value
         if (_value := data.get("events")) is not None:
-            _args["events"] = _utils.deserialize_repeated(_value, lambda _v: Span.Event.from_dict(_v))
+            _args["events"] = _utils.deserialize_repeated(_value, lambda _v: Span.Event.from_dict(_v), "events")
         if (_value := data.get("droppedEventsCount")) is not None:
+            _utils.validate_type(_value, int, "dropped_events_count")
             _args["dropped_events_count"] = _value
         if (_value := data.get("links")) is not None:
-            _args["links"] = _utils.deserialize_repeated(_value, lambda _v: Span.Link.from_dict(_v))
+            _args["links"] = _utils.deserialize_repeated(_value, lambda _v: Span.Link.from_dict(_v), "links")
         if (_value := data.get("droppedLinksCount")) is not None:
+            _utils.validate_type(_value, int, "dropped_links_count")
             _args["dropped_links_count"] = _value
         if (_value := data.get("status")) is not None:
             _args["status"] = Status.from_dict(_value)
@@ -599,11 +619,14 @@ class Status:
         Returns:
             Status instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("message")) is not None:
+            _utils.validate_type(_value, str, "message")
             _args["message"] = _value
         if (_value := data.get("code")) is not None:
+            _utils.validate_type(_value, int, "code")
             _args["code"] = Status.StatusCode(_value)
 
         return cls(**_args)

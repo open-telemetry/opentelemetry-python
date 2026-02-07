@@ -105,10 +105,11 @@ class LogsData:
         Returns:
             LogsData instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("resourceLogs")) is not None:
-            _args["resource_logs"] = _utils.deserialize_repeated(_value, lambda _v: ResourceLogs.from_dict(_v))
+            _args["resource_logs"] = _utils.deserialize_repeated(_value, lambda _v: ResourceLogs.from_dict(_v), "resource_logs")
 
         return cls(**_args)
 
@@ -172,13 +173,15 @@ class ResourceLogs:
         Returns:
             ResourceLogs instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("resource")) is not None:
             _args["resource"] = opentelemetry.proto_json.resource.v1.resource.Resource.from_dict(_value)
         if (_value := data.get("scopeLogs")) is not None:
-            _args["scope_logs"] = _utils.deserialize_repeated(_value, lambda _v: ScopeLogs.from_dict(_v))
+            _args["scope_logs"] = _utils.deserialize_repeated(_value, lambda _v: ScopeLogs.from_dict(_v), "scope_logs")
         if (_value := data.get("schemaUrl")) is not None:
+            _utils.validate_type(_value, str, "schema_url")
             _args["schema_url"] = _value
 
         return cls(**_args)
@@ -243,13 +246,15 @@ class ScopeLogs:
         Returns:
             ScopeLogs instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("scope")) is not None:
             _args["scope"] = opentelemetry.proto_json.common.v1.common.InstrumentationScope.from_dict(_value)
         if (_value := data.get("logRecords")) is not None:
-            _args["log_records"] = _utils.deserialize_repeated(_value, lambda _v: LogRecord.from_dict(_v))
+            _args["log_records"] = _utils.deserialize_repeated(_value, lambda _v: LogRecord.from_dict(_v), "log_records")
         if (_value := data.get("schemaUrl")) is not None:
+            _utils.validate_type(_value, str, "schema_url")
             _args["schema_url"] = _value
 
         return cls(**_args)
@@ -338,29 +343,35 @@ class LogRecord:
         Returns:
             LogRecord instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("timeUnixNano")) is not None:
-            _args["time_unix_nano"] = _utils.parse_int64(_value)
+            _args["time_unix_nano"] = _utils.parse_int64(_value, "time_unix_nano")
         if (_value := data.get("observedTimeUnixNano")) is not None:
-            _args["observed_time_unix_nano"] = _utils.parse_int64(_value)
+            _args["observed_time_unix_nano"] = _utils.parse_int64(_value, "observed_time_unix_nano")
         if (_value := data.get("severityNumber")) is not None:
+            _utils.validate_type(_value, int, "severity_number")
             _args["severity_number"] = SeverityNumber(_value)
         if (_value := data.get("severityText")) is not None:
+            _utils.validate_type(_value, str, "severity_text")
             _args["severity_text"] = _value
         if (_value := data.get("body")) is not None:
             _args["body"] = opentelemetry.proto_json.common.v1.common.AnyValue.from_dict(_value)
         if (_value := data.get("attributes")) is not None:
-            _args["attributes"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v))
+            _args["attributes"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
         if (_value := data.get("droppedAttributesCount")) is not None:
+            _utils.validate_type(_value, int, "dropped_attributes_count")
             _args["dropped_attributes_count"] = _value
         if (_value := data.get("flags")) is not None:
+            _utils.validate_type(_value, int, "flags")
             _args["flags"] = _value
         if (_value := data.get("traceId")) is not None:
-            _args["trace_id"] = _utils.decode_hex(_value)
+            _args["trace_id"] = _utils.decode_hex(_value, "trace_id")
         if (_value := data.get("spanId")) is not None:
-            _args["span_id"] = _utils.decode_hex(_value)
+            _args["span_id"] = _utils.decode_hex(_value, "span_id")
         if (_value := data.get("eventName")) is not None:
+            _utils.validate_type(_value, str, "event_name")
             _args["event_name"] = _value
 
         return cls(**_args)

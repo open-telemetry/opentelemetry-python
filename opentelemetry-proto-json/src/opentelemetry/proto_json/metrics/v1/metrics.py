@@ -83,10 +83,11 @@ class MetricsData:
         Returns:
             MetricsData instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("resourceMetrics")) is not None:
-            _args["resource_metrics"] = _utils.deserialize_repeated(_value, lambda _v: ResourceMetrics.from_dict(_v))
+            _args["resource_metrics"] = _utils.deserialize_repeated(_value, lambda _v: ResourceMetrics.from_dict(_v), "resource_metrics")
 
         return cls(**_args)
 
@@ -150,13 +151,15 @@ class ResourceMetrics:
         Returns:
             ResourceMetrics instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("resource")) is not None:
             _args["resource"] = opentelemetry.proto_json.resource.v1.resource.Resource.from_dict(_value)
         if (_value := data.get("scopeMetrics")) is not None:
-            _args["scope_metrics"] = _utils.deserialize_repeated(_value, lambda _v: ScopeMetrics.from_dict(_v))
+            _args["scope_metrics"] = _utils.deserialize_repeated(_value, lambda _v: ScopeMetrics.from_dict(_v), "scope_metrics")
         if (_value := data.get("schemaUrl")) is not None:
+            _utils.validate_type(_value, str, "schema_url")
             _args["schema_url"] = _value
 
         return cls(**_args)
@@ -221,13 +224,15 @@ class ScopeMetrics:
         Returns:
             ScopeMetrics instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("scope")) is not None:
             _args["scope"] = opentelemetry.proto_json.common.v1.common.InstrumentationScope.from_dict(_value)
         if (_value := data.get("metrics")) is not None:
-            _args["metrics"] = _utils.deserialize_repeated(_value, lambda _v: Metric.from_dict(_v))
+            _args["metrics"] = _utils.deserialize_repeated(_value, lambda _v: Metric.from_dict(_v), "metrics")
         if (_value := data.get("schemaUrl")) is not None:
+            _utils.validate_type(_value, str, "schema_url")
             _args["schema_url"] = _value
 
         return cls(**_args)
@@ -310,16 +315,20 @@ class Metric:
         Returns:
             Metric instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("name")) is not None:
+            _utils.validate_type(_value, str, "name")
             _args["name"] = _value
         if (_value := data.get("description")) is not None:
+            _utils.validate_type(_value, str, "description")
             _args["description"] = _value
         if (_value := data.get("unit")) is not None:
+            _utils.validate_type(_value, str, "unit")
             _args["unit"] = _value
         if (_value := data.get("metadata")) is not None:
-            _args["metadata"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v))
+            _args["metadata"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "metadata")
         if (_value := data.get("summary")) is not None:
             _args["summary"] = Summary.from_dict(_value)
         elif (_value := data.get("exponentialHistogram")) is not None:
@@ -387,10 +396,11 @@ class Gauge:
         Returns:
             Gauge instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("dataPoints")) is not None:
-            _args["data_points"] = _utils.deserialize_repeated(_value, lambda _v: NumberDataPoint.from_dict(_v))
+            _args["data_points"] = _utils.deserialize_repeated(_value, lambda _v: NumberDataPoint.from_dict(_v), "data_points")
 
         return cls(**_args)
 
@@ -454,13 +464,16 @@ class Sum:
         Returns:
             Sum instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("dataPoints")) is not None:
-            _args["data_points"] = _utils.deserialize_repeated(_value, lambda _v: NumberDataPoint.from_dict(_v))
+            _args["data_points"] = _utils.deserialize_repeated(_value, lambda _v: NumberDataPoint.from_dict(_v), "data_points")
         if (_value := data.get("aggregationTemporality")) is not None:
+            _utils.validate_type(_value, int, "aggregation_temporality")
             _args["aggregation_temporality"] = AggregationTemporality(_value)
         if (_value := data.get("isMonotonic")) is not None:
+            _utils.validate_type(_value, bool, "is_monotonic")
             _args["is_monotonic"] = _value
 
         return cls(**_args)
@@ -522,11 +535,13 @@ class Histogram:
         Returns:
             Histogram instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("dataPoints")) is not None:
-            _args["data_points"] = _utils.deserialize_repeated(_value, lambda _v: HistogramDataPoint.from_dict(_v))
+            _args["data_points"] = _utils.deserialize_repeated(_value, lambda _v: HistogramDataPoint.from_dict(_v), "data_points")
         if (_value := data.get("aggregationTemporality")) is not None:
+            _utils.validate_type(_value, int, "aggregation_temporality")
             _args["aggregation_temporality"] = AggregationTemporality(_value)
 
         return cls(**_args)
@@ -588,11 +603,13 @@ class ExponentialHistogram:
         Returns:
             ExponentialHistogram instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("dataPoints")) is not None:
-            _args["data_points"] = _utils.deserialize_repeated(_value, lambda _v: ExponentialHistogramDataPoint.from_dict(_v))
+            _args["data_points"] = _utils.deserialize_repeated(_value, lambda _v: ExponentialHistogramDataPoint.from_dict(_v), "data_points")
         if (_value := data.get("aggregationTemporality")) is not None:
+            _utils.validate_type(_value, int, "aggregation_temporality")
             _args["aggregation_temporality"] = AggregationTemporality(_value)
 
         return cls(**_args)
@@ -651,10 +668,11 @@ class Summary:
         Returns:
             Summary instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("dataPoints")) is not None:
-            _args["data_points"] = _utils.deserialize_repeated(_value, lambda _v: SummaryDataPoint.from_dict(_v))
+            _args["data_points"] = _utils.deserialize_repeated(_value, lambda _v: SummaryDataPoint.from_dict(_v), "data_points")
 
         return cls(**_args)
 
@@ -730,22 +748,24 @@ class NumberDataPoint:
         Returns:
             NumberDataPoint instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("attributes")) is not None:
-            _args["attributes"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v))
+            _args["attributes"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
         if (_value := data.get("startTimeUnixNano")) is not None:
-            _args["start_time_unix_nano"] = _utils.parse_int64(_value)
+            _args["start_time_unix_nano"] = _utils.parse_int64(_value, "start_time_unix_nano")
         if (_value := data.get("timeUnixNano")) is not None:
-            _args["time_unix_nano"] = _utils.parse_int64(_value)
+            _args["time_unix_nano"] = _utils.parse_int64(_value, "time_unix_nano")
         if (_value := data.get("exemplars")) is not None:
-            _args["exemplars"] = _utils.deserialize_repeated(_value, lambda _v: Exemplar.from_dict(_v))
+            _args["exemplars"] = _utils.deserialize_repeated(_value, lambda _v: Exemplar.from_dict(_v), "exemplars")
         if (_value := data.get("flags")) is not None:
+            _utils.validate_type(_value, int, "flags")
             _args["flags"] = _value
         if (_value := data.get("asInt")) is not None:
-            _args["as_int"] = _utils.parse_int64(_value)
+            _args["as_int"] = _utils.parse_int64(_value, "as_int")
         elif (_value := data.get("asDouble")) is not None:
-            _args["as_double"] = _utils.parse_float(_value)
+            _args["as_double"] = _utils.parse_float(_value, "as_double")
 
         return cls(**_args)
 
@@ -833,30 +853,32 @@ class HistogramDataPoint:
         Returns:
             HistogramDataPoint instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("attributes")) is not None:
-            _args["attributes"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v))
+            _args["attributes"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
         if (_value := data.get("startTimeUnixNano")) is not None:
-            _args["start_time_unix_nano"] = _utils.parse_int64(_value)
+            _args["start_time_unix_nano"] = _utils.parse_int64(_value, "start_time_unix_nano")
         if (_value := data.get("timeUnixNano")) is not None:
-            _args["time_unix_nano"] = _utils.parse_int64(_value)
+            _args["time_unix_nano"] = _utils.parse_int64(_value, "time_unix_nano")
         if (_value := data.get("count")) is not None:
-            _args["count"] = _utils.parse_int64(_value)
+            _args["count"] = _utils.parse_int64(_value, "count")
         if (_value := data.get("sum")) is not None:
-            _args["sum"] = _utils.parse_float(_value)
+            _args["sum"] = _utils.parse_float(_value, "sum")
         if (_value := data.get("bucketCounts")) is not None:
-            _args["bucket_counts"] = _utils.deserialize_repeated(_value, lambda _v: _utils.parse_int64(_v))
+            _args["bucket_counts"] = _utils.deserialize_repeated(_value, lambda _v: _utils.parse_int64(_v, "bucket_counts"), "bucket_counts")
         if (_value := data.get("explicitBounds")) is not None:
-            _args["explicit_bounds"] = _utils.deserialize_repeated(_value, lambda _v: _utils.parse_float(_v))
+            _args["explicit_bounds"] = _utils.deserialize_repeated(_value, lambda _v: _utils.parse_float(_v, "explicit_bounds"), "explicit_bounds")
         if (_value := data.get("exemplars")) is not None:
-            _args["exemplars"] = _utils.deserialize_repeated(_value, lambda _v: Exemplar.from_dict(_v))
+            _args["exemplars"] = _utils.deserialize_repeated(_value, lambda _v: Exemplar.from_dict(_v), "exemplars")
         if (_value := data.get("flags")) is not None:
+            _utils.validate_type(_value, int, "flags")
             _args["flags"] = _value
         if (_value := data.get("min")) is not None:
-            _args["min"] = _utils.parse_float(_value)
+            _args["min"] = _utils.parse_float(_value, "min")
         if (_value := data.get("max")) is not None:
-            _args["max"] = _utils.parse_float(_value)
+            _args["max"] = _utils.parse_float(_value, "max")
 
         return cls(**_args)
 
@@ -923,12 +945,14 @@ class ExponentialHistogramDataPoint:
             Returns:
                 Buckets instance
             """
+            _utils.validate_type(data, dict, "data")
             _args: dict[str, Any] = {}
 
             if (_value := data.get("offset")) is not None:
+                _utils.validate_type(_value, int, "offset")
                 _args["offset"] = _value
             if (_value := data.get("bucketCounts")) is not None:
-                _args["bucket_counts"] = _utils.deserialize_repeated(_value, lambda _v: _utils.parse_int64(_v))
+                _args["bucket_counts"] = _utils.deserialize_repeated(_value, lambda _v: _utils.parse_int64(_v, "bucket_counts"), "bucket_counts")
 
             return cls(**_args)
 
@@ -1018,36 +1042,39 @@ class ExponentialHistogramDataPoint:
         Returns:
             ExponentialHistogramDataPoint instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("attributes")) is not None:
-            _args["attributes"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v))
+            _args["attributes"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
         if (_value := data.get("startTimeUnixNano")) is not None:
-            _args["start_time_unix_nano"] = _utils.parse_int64(_value)
+            _args["start_time_unix_nano"] = _utils.parse_int64(_value, "start_time_unix_nano")
         if (_value := data.get("timeUnixNano")) is not None:
-            _args["time_unix_nano"] = _utils.parse_int64(_value)
+            _args["time_unix_nano"] = _utils.parse_int64(_value, "time_unix_nano")
         if (_value := data.get("count")) is not None:
-            _args["count"] = _utils.parse_int64(_value)
+            _args["count"] = _utils.parse_int64(_value, "count")
         if (_value := data.get("sum")) is not None:
-            _args["sum"] = _utils.parse_float(_value)
+            _args["sum"] = _utils.parse_float(_value, "sum")
         if (_value := data.get("scale")) is not None:
+            _utils.validate_type(_value, int, "scale")
             _args["scale"] = _value
         if (_value := data.get("zeroCount")) is not None:
-            _args["zero_count"] = _utils.parse_int64(_value)
+            _args["zero_count"] = _utils.parse_int64(_value, "zero_count")
         if (_value := data.get("positive")) is not None:
             _args["positive"] = ExponentialHistogramDataPoint.Buckets.from_dict(_value)
         if (_value := data.get("negative")) is not None:
             _args["negative"] = ExponentialHistogramDataPoint.Buckets.from_dict(_value)
         if (_value := data.get("flags")) is not None:
+            _utils.validate_type(_value, int, "flags")
             _args["flags"] = _value
         if (_value := data.get("exemplars")) is not None:
-            _args["exemplars"] = _utils.deserialize_repeated(_value, lambda _v: Exemplar.from_dict(_v))
+            _args["exemplars"] = _utils.deserialize_repeated(_value, lambda _v: Exemplar.from_dict(_v), "exemplars")
         if (_value := data.get("min")) is not None:
-            _args["min"] = _utils.parse_float(_value)
+            _args["min"] = _utils.parse_float(_value, "min")
         if (_value := data.get("max")) is not None:
-            _args["max"] = _utils.parse_float(_value)
+            _args["max"] = _utils.parse_float(_value, "max")
         if (_value := data.get("zeroThreshold")) is not None:
-            _args["zero_threshold"] = _utils.parse_float(_value)
+            _args["zero_threshold"] = _utils.parse_float(_value, "zero_threshold")
 
         return cls(**_args)
 
@@ -1114,12 +1141,13 @@ class SummaryDataPoint:
             Returns:
                 ValueAtQuantile instance
             """
+            _utils.validate_type(data, dict, "data")
             _args: dict[str, Any] = {}
 
             if (_value := data.get("quantile")) is not None:
-                _args["quantile"] = _utils.parse_float(_value)
+                _args["quantile"] = _utils.parse_float(_value, "quantile")
             if (_value := data.get("value")) is not None:
-                _args["value"] = _utils.parse_float(_value)
+                _args["value"] = _utils.parse_float(_value, "value")
 
             return cls(**_args)
 
@@ -1188,21 +1216,23 @@ class SummaryDataPoint:
         Returns:
             SummaryDataPoint instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("attributes")) is not None:
-            _args["attributes"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v))
+            _args["attributes"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
         if (_value := data.get("startTimeUnixNano")) is not None:
-            _args["start_time_unix_nano"] = _utils.parse_int64(_value)
+            _args["start_time_unix_nano"] = _utils.parse_int64(_value, "start_time_unix_nano")
         if (_value := data.get("timeUnixNano")) is not None:
-            _args["time_unix_nano"] = _utils.parse_int64(_value)
+            _args["time_unix_nano"] = _utils.parse_int64(_value, "time_unix_nano")
         if (_value := data.get("count")) is not None:
-            _args["count"] = _utils.parse_int64(_value)
+            _args["count"] = _utils.parse_int64(_value, "count")
         if (_value := data.get("sum")) is not None:
-            _args["sum"] = _utils.parse_float(_value)
+            _args["sum"] = _utils.parse_float(_value, "sum")
         if (_value := data.get("quantileValues")) is not None:
-            _args["quantile_values"] = _utils.deserialize_repeated(_value, lambda _v: SummaryDataPoint.ValueAtQuantile.from_dict(_v))
+            _args["quantile_values"] = _utils.deserialize_repeated(_value, lambda _v: SummaryDataPoint.ValueAtQuantile.from_dict(_v), "quantile_values")
         if (_value := data.get("flags")) is not None:
+            _utils.validate_type(_value, int, "flags")
             _args["flags"] = _value
 
         return cls(**_args)
@@ -1276,20 +1306,21 @@ class Exemplar:
         Returns:
             Exemplar instance
         """
+        _utils.validate_type(data, dict, "data")
         _args: dict[str, Any] = {}
 
         if (_value := data.get("filteredAttributes")) is not None:
-            _args["filtered_attributes"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v))
+            _args["filtered_attributes"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "filtered_attributes")
         if (_value := data.get("timeUnixNano")) is not None:
-            _args["time_unix_nano"] = _utils.parse_int64(_value)
+            _args["time_unix_nano"] = _utils.parse_int64(_value, "time_unix_nano")
         if (_value := data.get("spanId")) is not None:
-            _args["span_id"] = _utils.decode_hex(_value)
+            _args["span_id"] = _utils.decode_hex(_value, "span_id")
         if (_value := data.get("traceId")) is not None:
-            _args["trace_id"] = _utils.decode_hex(_value)
+            _args["trace_id"] = _utils.decode_hex(_value, "trace_id")
         if (_value := data.get("asInt")) is not None:
-            _args["as_int"] = _utils.parse_int64(_value)
+            _args["as_int"] = _utils.parse_int64(_value, "as_int")
         elif (_value := data.get("asDouble")) is not None:
-            _args["as_double"] = _utils.parse_float(_value)
+            _args["as_double"] = _utils.parse_float(_value, "as_double")
 
         return cls(**_args)
 
