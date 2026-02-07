@@ -69,10 +69,12 @@ class ExportProfilesServiceRequest:
             ExportProfilesServiceRequest instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("resourceProfiles")) is not None:
             _args["resource_profiles"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.profiles.v1development.profiles.ResourceProfiles.from_dict(_v))
         if (_value := data.get("dictionary")) is not None:
             _args["dictionary"] = opentelemetry.proto_json.profiles.v1development.profiles.ProfilesDictionary.from_dict(_value)
+
         return cls(**_args)
 
     @classmethod
@@ -130,8 +132,10 @@ class ExportProfilesServiceResponse:
             ExportProfilesServiceResponse instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("partialSuccess")) is not None:
             _args["partial_success"] = ExportProfilesPartialSuccess.from_dict(_value)
+
         return cls(**_args)
 
     @classmethod
@@ -192,10 +196,12 @@ class ExportProfilesPartialSuccess:
             ExportProfilesPartialSuccess instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("rejectedProfiles")) is not None:
             _args["rejected_profiles"] = _utils.parse_int64(_value)
         if (_value := data.get("errorMessage")) is not None:
             _args["error_message"] = _value
+
         return cls(**_args)
 
     @classmethod

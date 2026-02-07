@@ -77,8 +77,10 @@ class TracesData:
             TracesData instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("resourceSpans")) is not None:
             _args["resource_spans"] = _utils.deserialize_repeated(_value, lambda _v: ResourceSpans.from_dict(_v))
+
         return cls(**_args)
 
     @classmethod
@@ -142,12 +144,14 @@ class ResourceSpans:
             ResourceSpans instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("resource")) is not None:
             _args["resource"] = opentelemetry.proto_json.resource.v1.resource.Resource.from_dict(_value)
         if (_value := data.get("scopeSpans")) is not None:
             _args["scope_spans"] = _utils.deserialize_repeated(_value, lambda _v: ScopeSpans.from_dict(_v))
         if (_value := data.get("schemaUrl")) is not None:
             _args["schema_url"] = _value
+
         return cls(**_args)
 
     @classmethod
@@ -211,12 +215,14 @@ class ScopeSpans:
             ScopeSpans instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("scope")) is not None:
             _args["scope"] = opentelemetry.proto_json.common.v1.common.InstrumentationScope.from_dict(_value)
         if (_value := data.get("spans")) is not None:
             _args["spans"] = _utils.deserialize_repeated(_value, lambda _v: Span.from_dict(_v))
         if (_value := data.get("schemaUrl")) is not None:
             _args["schema_url"] = _value
+
         return cls(**_args)
 
     @classmethod
@@ -301,6 +307,7 @@ class Span:
                 Event instance
             """
             _args: dict[str, Any] = {}
+
             if (_value := data.get("timeUnixNano")) is not None:
                 _args["time_unix_nano"] = _utils.parse_int64(_value)
             if (_value := data.get("name")) is not None:
@@ -309,6 +316,7 @@ class Span:
                 _args["attributes"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v))
             if (_value := data.get("droppedAttributesCount")) is not None:
                 _args["dropped_attributes_count"] = _value
+
             return cls(**_args)
 
         @classmethod
@@ -380,6 +388,7 @@ class Span:
                 Link instance
             """
             _args: dict[str, Any] = {}
+
             if (_value := data.get("traceId")) is not None:
                 _args["trace_id"] = _utils.decode_hex(_value)
             if (_value := data.get("spanId")) is not None:
@@ -392,6 +401,7 @@ class Span:
                 _args["dropped_attributes_count"] = _value
             if (_value := data.get("flags")) is not None:
                 _args["flags"] = _value
+
             return cls(**_args)
 
         @classmethod
@@ -487,6 +497,7 @@ class Span:
             Span instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("traceId")) is not None:
             _args["trace_id"] = _utils.decode_hex(_value)
         if (_value := data.get("spanId")) is not None:
@@ -519,6 +530,7 @@ class Span:
             _args["dropped_links_count"] = _value
         if (_value := data.get("status")) is not None:
             _args["status"] = Status.from_dict(_value)
+
         return cls(**_args)
 
     @classmethod
@@ -588,10 +600,12 @@ class Status:
             Status instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("message")) is not None:
             _args["message"] = _value
         if (_value := data.get("code")) is not None:
             _args["code"] = Status.StatusCode(_value)
+
         return cls(**_args)
 
     @classmethod

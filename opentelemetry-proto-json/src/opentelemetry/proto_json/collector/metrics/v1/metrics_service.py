@@ -66,8 +66,10 @@ class ExportMetricsServiceRequest:
             ExportMetricsServiceRequest instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("resourceMetrics")) is not None:
             _args["resource_metrics"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.metrics.v1.metrics.ResourceMetrics.from_dict(_v))
+
         return cls(**_args)
 
     @classmethod
@@ -125,8 +127,10 @@ class ExportMetricsServiceResponse:
             ExportMetricsServiceResponse instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("partialSuccess")) is not None:
             _args["partial_success"] = ExportMetricsPartialSuccess.from_dict(_value)
+
         return cls(**_args)
 
     @classmethod
@@ -187,10 +191,12 @@ class ExportMetricsPartialSuccess:
             ExportMetricsPartialSuccess instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("rejectedDataPoints")) is not None:
             _args["rejected_data_points"] = _utils.parse_int64(_value)
         if (_value := data.get("errorMessage")) is not None:
             _args["error_message"] = _value
+
         return cls(**_args)
 
     @classmethod

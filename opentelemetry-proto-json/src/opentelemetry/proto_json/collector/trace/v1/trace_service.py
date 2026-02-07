@@ -66,8 +66,10 @@ class ExportTraceServiceRequest:
             ExportTraceServiceRequest instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("resourceSpans")) is not None:
             _args["resource_spans"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.trace.v1.trace.ResourceSpans.from_dict(_v))
+
         return cls(**_args)
 
     @classmethod
@@ -125,8 +127,10 @@ class ExportTraceServiceResponse:
             ExportTraceServiceResponse instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("partialSuccess")) is not None:
             _args["partial_success"] = ExportTracePartialSuccess.from_dict(_value)
+
         return cls(**_args)
 
     @classmethod
@@ -187,10 +191,12 @@ class ExportTracePartialSuccess:
             ExportTracePartialSuccess instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("rejectedSpans")) is not None:
             _args["rejected_spans"] = _utils.parse_int64(_value)
         if (_value := data.get("errorMessage")) is not None:
             _args["error_message"] = _value
+
         return cls(**_args)
 
     @classmethod

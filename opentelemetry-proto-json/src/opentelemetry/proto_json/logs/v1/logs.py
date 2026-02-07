@@ -106,8 +106,10 @@ class LogsData:
             LogsData instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("resourceLogs")) is not None:
             _args["resource_logs"] = _utils.deserialize_repeated(_value, lambda _v: ResourceLogs.from_dict(_v))
+
         return cls(**_args)
 
     @classmethod
@@ -171,12 +173,14 @@ class ResourceLogs:
             ResourceLogs instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("resource")) is not None:
             _args["resource"] = opentelemetry.proto_json.resource.v1.resource.Resource.from_dict(_value)
         if (_value := data.get("scopeLogs")) is not None:
             _args["scope_logs"] = _utils.deserialize_repeated(_value, lambda _v: ScopeLogs.from_dict(_v))
         if (_value := data.get("schemaUrl")) is not None:
             _args["schema_url"] = _value
+
         return cls(**_args)
 
     @classmethod
@@ -240,12 +244,14 @@ class ScopeLogs:
             ScopeLogs instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("scope")) is not None:
             _args["scope"] = opentelemetry.proto_json.common.v1.common.InstrumentationScope.from_dict(_value)
         if (_value := data.get("logRecords")) is not None:
             _args["log_records"] = _utils.deserialize_repeated(_value, lambda _v: LogRecord.from_dict(_v))
         if (_value := data.get("schemaUrl")) is not None:
             _args["schema_url"] = _value
+
         return cls(**_args)
 
     @classmethod
@@ -333,6 +339,7 @@ class LogRecord:
             LogRecord instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("timeUnixNano")) is not None:
             _args["time_unix_nano"] = _utils.parse_int64(_value)
         if (_value := data.get("observedTimeUnixNano")) is not None:
@@ -355,6 +362,7 @@ class LogRecord:
             _args["span_id"] = _utils.decode_hex(_value)
         if (_value := data.get("eventName")) is not None:
             _args["event_name"] = _value
+
         return cls(**_args)
 
     @classmethod

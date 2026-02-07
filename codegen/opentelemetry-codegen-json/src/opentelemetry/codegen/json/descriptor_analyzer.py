@@ -73,6 +73,7 @@ class FieldInfo:
     json_name: str
     default_value: Optional[str] = None
     oneof_index: Optional[int] = None
+    is_oneof_member: bool = False
 
     def is_id_field(self) -> bool:
         """Check if this is a trace/span ID field requiring hex encoding."""
@@ -308,6 +309,7 @@ class DescriptorAnalyzer:
             field_type=proto_type,
             json_name=json_name,
             oneof_index=oneof_index,
+            is_oneof_member=oneof_index is not None and not is_optional,
         )
 
     def _analyze_enum(

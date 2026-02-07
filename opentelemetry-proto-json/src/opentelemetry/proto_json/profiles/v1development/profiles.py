@@ -85,6 +85,7 @@ class ProfilesDictionary:
             ProfilesDictionary instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("mappingTable")) is not None:
             _args["mapping_table"] = _utils.deserialize_repeated(_value, lambda _v: Mapping.from_dict(_v))
         if (_value := data.get("locationTable")) is not None:
@@ -99,6 +100,7 @@ class ProfilesDictionary:
             _args["attribute_table"] = _utils.deserialize_repeated(_value, lambda _v: KeyValueAndUnit.from_dict(_v))
         if (_value := data.get("stackTable")) is not None:
             _args["stack_table"] = _utils.deserialize_repeated(_value, lambda _v: Stack.from_dict(_v))
+
         return cls(**_args)
 
     @classmethod
@@ -159,10 +161,12 @@ class ProfilesData:
             ProfilesData instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("resourceProfiles")) is not None:
             _args["resource_profiles"] = _utils.deserialize_repeated(_value, lambda _v: ResourceProfiles.from_dict(_v))
         if (_value := data.get("dictionary")) is not None:
             _args["dictionary"] = ProfilesDictionary.from_dict(_value)
+
         return cls(**_args)
 
     @classmethod
@@ -226,12 +230,14 @@ class ResourceProfiles:
             ResourceProfiles instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("resource")) is not None:
             _args["resource"] = opentelemetry.proto_json.resource.v1.resource.Resource.from_dict(_value)
         if (_value := data.get("scopeProfiles")) is not None:
             _args["scope_profiles"] = _utils.deserialize_repeated(_value, lambda _v: ScopeProfiles.from_dict(_v))
         if (_value := data.get("schemaUrl")) is not None:
             _args["schema_url"] = _value
+
         return cls(**_args)
 
     @classmethod
@@ -295,12 +301,14 @@ class ScopeProfiles:
             ScopeProfiles instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("scope")) is not None:
             _args["scope"] = opentelemetry.proto_json.common.v1.common.InstrumentationScope.from_dict(_value)
         if (_value := data.get("profiles")) is not None:
             _args["profiles"] = _utils.deserialize_repeated(_value, lambda _v: Profile.from_dict(_v))
         if (_value := data.get("schemaUrl")) is not None:
             _args["schema_url"] = _value
+
         return cls(**_args)
 
     @classmethod
@@ -388,6 +396,7 @@ class Profile:
             Profile instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("sampleType")) is not None:
             _args["sample_type"] = ValueType.from_dict(_value)
         if (_value := data.get("samples")) is not None:
@@ -410,6 +419,7 @@ class Profile:
             _args["original_payload"] = _utils.decode_base64(_value)
         if (_value := data.get("attributeIndices")) is not None:
             _args["attribute_indices"] = _value
+
         return cls(**_args)
 
     @classmethod
@@ -470,10 +480,12 @@ class Link:
             Link instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("traceId")) is not None:
             _args["trace_id"] = _utils.decode_hex(_value)
         if (_value := data.get("spanId")) is not None:
             _args["span_id"] = _utils.decode_hex(_value)
+
         return cls(**_args)
 
     @classmethod
@@ -534,10 +546,12 @@ class ValueType:
             ValueType instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("typeStrindex")) is not None:
             _args["type_strindex"] = _value
         if (_value := data.get("unitStrindex")) is not None:
             _args["unit_strindex"] = _value
+
         return cls(**_args)
 
     @classmethod
@@ -607,6 +621,7 @@ class Sample:
             Sample instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("stackIndex")) is not None:
             _args["stack_index"] = _value
         if (_value := data.get("values")) is not None:
@@ -617,6 +632,7 @@ class Sample:
             _args["link_index"] = _value
         if (_value := data.get("timestampsUnixNano")) is not None:
             _args["timestamps_unix_nano"] = _utils.deserialize_repeated(_value, lambda _v: _utils.parse_int64(_v))
+
         return cls(**_args)
 
     @classmethod
@@ -686,6 +702,7 @@ class Mapping:
             Mapping instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("memoryStart")) is not None:
             _args["memory_start"] = _utils.parse_int64(_value)
         if (_value := data.get("memoryLimit")) is not None:
@@ -696,6 +713,7 @@ class Mapping:
             _args["filename_strindex"] = _value
         if (_value := data.get("attributeIndices")) is not None:
             _args["attribute_indices"] = _value
+
         return cls(**_args)
 
     @classmethod
@@ -753,8 +771,10 @@ class Stack:
             Stack instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("locationIndices")) is not None:
             _args["location_indices"] = _value
+
         return cls(**_args)
 
     @classmethod
@@ -821,6 +841,7 @@ class Location:
             Location instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("mappingIndex")) is not None:
             _args["mapping_index"] = _value
         if (_value := data.get("address")) is not None:
@@ -829,6 +850,7 @@ class Location:
             _args["lines"] = _utils.deserialize_repeated(_value, lambda _v: Line.from_dict(_v))
         if (_value := data.get("attributeIndices")) is not None:
             _args["attribute_indices"] = _value
+
         return cls(**_args)
 
     @classmethod
@@ -892,12 +914,14 @@ class Line:
             Line instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("functionIndex")) is not None:
             _args["function_index"] = _value
         if (_value := data.get("line")) is not None:
             _args["line"] = _utils.parse_int64(_value)
         if (_value := data.get("column")) is not None:
             _args["column"] = _utils.parse_int64(_value)
+
         return cls(**_args)
 
     @classmethod
@@ -964,6 +988,7 @@ class Function:
             Function instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("nameStrindex")) is not None:
             _args["name_strindex"] = _value
         if (_value := data.get("systemNameStrindex")) is not None:
@@ -972,6 +997,7 @@ class Function:
             _args["filename_strindex"] = _value
         if (_value := data.get("startLine")) is not None:
             _args["start_line"] = _utils.parse_int64(_value)
+
         return cls(**_args)
 
     @classmethod
@@ -1035,12 +1061,14 @@ class KeyValueAndUnit:
             KeyValueAndUnit instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("keyStrindex")) is not None:
             _args["key_strindex"] = _value
         if (_value := data.get("value")) is not None:
             _args["value"] = opentelemetry.proto_json.common.v1.common.AnyValue.from_dict(_value)
         if (_value := data.get("unitStrindex")) is not None:
             _args["unit_strindex"] = _value
+
         return cls(**_args)
 
     @classmethod

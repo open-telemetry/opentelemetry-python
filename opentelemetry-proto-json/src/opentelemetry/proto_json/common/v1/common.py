@@ -30,13 +30,13 @@ class AnyValue:
     Generated from protobuf message AnyValue
     """
 
-    string_value: str = ''
-    bool_value: bool = False
-    int_value: int = 0
-    double_value: float = 0.0
-    array_value: ArrayValue = None
-    kvlist_value: KeyValueList = None
-    bytes_value: bytes = b''
+    string_value: Optional[str] = None
+    bool_value: Optional[bool] = None
+    int_value: Optional[int] = None
+    double_value: Optional[float] = None
+    array_value: Optional[ArrayValue] = None
+    kvlist_value: Optional[KeyValueList] = None
+    bytes_value: Optional[bytes] = None
 
     def to_dict(self) -> dict[str, Any]:
         """
@@ -46,20 +46,20 @@ class AnyValue:
             Dictionary representation following OTLP JSON encoding
         """
         _result: dict[str, Any] = {}
-        if self.string_value != '':
-            _result["stringValue"] = self.string_value
-        if self.bool_value != False:
-            _result["boolValue"] = self.bool_value
-        if self.int_value != 0:
-            _result["intValue"] = _utils.encode_int64(self.int_value)
-        if self.double_value != 0.0:
-            _result["doubleValue"] = _utils.encode_float(self.double_value)
-        if self.array_value is not None:
-            _result["arrayValue"] = self.array_value.to_dict()
-        if self.kvlist_value is not None:
-            _result["kvlistValue"] = self.kvlist_value.to_dict()
-        if self.bytes_value != b'':
+        if self.bytes_value is not None:
             _result["bytesValue"] = _utils.encode_base64(self.bytes_value)
+        elif self.kvlist_value is not None:
+            _result["kvlistValue"] = self.kvlist_value.to_dict()
+        elif self.array_value is not None:
+            _result["arrayValue"] = self.array_value.to_dict()
+        elif self.double_value is not None:
+            _result["doubleValue"] = _utils.encode_float(self.double_value)
+        elif self.int_value is not None:
+            _result["intValue"] = _utils.encode_int64(self.int_value)
+        elif self.bool_value is not None:
+            _result["boolValue"] = self.bool_value
+        elif self.string_value is not None:
+            _result["stringValue"] = self.string_value
         return _result
 
     def to_json(self) -> str:
@@ -83,20 +83,22 @@ class AnyValue:
             AnyValue instance
         """
         _args: dict[str, Any] = {}
-        if (_value := data.get("stringValue")) is not None:
-            _args["string_value"] = _value
-        if (_value := data.get("boolValue")) is not None:
-            _args["bool_value"] = _value
-        if (_value := data.get("intValue")) is not None:
-            _args["int_value"] = _utils.parse_int64(_value)
-        if (_value := data.get("doubleValue")) is not None:
-            _args["double_value"] = _utils.parse_float(_value)
-        if (_value := data.get("arrayValue")) is not None:
-            _args["array_value"] = ArrayValue.from_dict(_value)
-        if (_value := data.get("kvlistValue")) is not None:
-            _args["kvlist_value"] = KeyValueList.from_dict(_value)
+
         if (_value := data.get("bytesValue")) is not None:
             _args["bytes_value"] = _utils.decode_base64(_value)
+        elif (_value := data.get("kvlistValue")) is not None:
+            _args["kvlist_value"] = KeyValueList.from_dict(_value)
+        elif (_value := data.get("arrayValue")) is not None:
+            _args["array_value"] = ArrayValue.from_dict(_value)
+        elif (_value := data.get("doubleValue")) is not None:
+            _args["double_value"] = _utils.parse_float(_value)
+        elif (_value := data.get("intValue")) is not None:
+            _args["int_value"] = _utils.parse_int64(_value)
+        elif (_value := data.get("boolValue")) is not None:
+            _args["bool_value"] = _value
+        elif (_value := data.get("stringValue")) is not None:
+            _args["string_value"] = _value
+
         return cls(**_args)
 
     @classmethod
@@ -154,8 +156,10 @@ class ArrayValue:
             ArrayValue instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("values")) is not None:
             _args["values"] = _utils.deserialize_repeated(_value, lambda _v: AnyValue.from_dict(_v))
+
         return cls(**_args)
 
     @classmethod
@@ -213,8 +217,10 @@ class KeyValueList:
             KeyValueList instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("values")) is not None:
             _args["values"] = _utils.deserialize_repeated(_value, lambda _v: KeyValue.from_dict(_v))
+
         return cls(**_args)
 
     @classmethod
@@ -275,10 +281,12 @@ class KeyValue:
             KeyValue instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("key")) is not None:
             _args["key"] = _value
         if (_value := data.get("value")) is not None:
             _args["value"] = AnyValue.from_dict(_value)
+
         return cls(**_args)
 
     @classmethod
@@ -345,6 +353,7 @@ class InstrumentationScope:
             InstrumentationScope instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("name")) is not None:
             _args["name"] = _value
         if (_value := data.get("version")) is not None:
@@ -353,6 +362,7 @@ class InstrumentationScope:
             _args["attributes"] = _utils.deserialize_repeated(_value, lambda _v: KeyValue.from_dict(_v))
         if (_value := data.get("droppedAttributesCount")) is not None:
             _args["dropped_attributes_count"] = _value
+
         return cls(**_args)
 
     @classmethod
@@ -419,6 +429,7 @@ class EntityRef:
             EntityRef instance
         """
         _args: dict[str, Any] = {}
+
         if (_value := data.get("schemaUrl")) is not None:
             _args["schema_url"] = _value
         if (_value := data.get("type")) is not None:
@@ -427,6 +438,7 @@ class EntityRef:
             _args["id_keys"] = _value
         if (_value := data.get("descriptionKeys")) is not None:
             _args["description_keys"] = _value
+
         return cls(**_args)
 
     @classmethod

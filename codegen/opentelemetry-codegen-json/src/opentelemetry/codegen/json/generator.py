@@ -15,8 +15,9 @@
 from __future__ import annotations
 
 import logging
+from collections import defaultdict
 from pathlib import Path
-from typing import Callable, Final, Optional, Set, Union
+from typing import Callable, Final, Optional, Set
 
 from google.protobuf import descriptor_pb2 as descriptor
 from google.protobuf.compiler import plugin_pb2 as plugin
@@ -155,9 +156,7 @@ class OtlpJsonGenerator:
         for d in dirs:
             init_path = f"{d}/__init__.py"
             if init_path not in self._generated_files:
-                self._generated_files[init_path] = (
-                    "# AUTO-GENERATED - DO NOT EDIT\n"
-                )
+                self._generated_files[init_path] = ""
 
     def _get_utils_module_path(self) -> str:
         """Get the absolute module path for the utility module."""
@@ -396,7 +395,18 @@ class OtlpJsonGenerator:
             )
             writer.writeln("_result: dict[str, Any] = {}")
 
+            # Group fields by oneof_index to handle "last write wins"
+            oneof_groups: dict[int, list[FieldInfo]] = defaultdict(list)
+            standalone_fields: list[FieldInfo] = []
+
             for field in message.fields:
+                if field.is_oneof_member and field.oneof_index is not None:
+                    oneof_groups[field.oneof_index].append(field)
+                else:
+                    standalone_fields.append(field)
+
+            # Handle standalone fields
+            for field in standalone_fields:
                 field_type = field.field_type
                 if field_type.is_repeated:
                     item_expr = self._get_serialization_expr_for_type(
@@ -424,6 +434,25 @@ class OtlpJsonGenerator:
                     )
 
                     with writer.if_(check):
+                        writer.writeln(
+                            f'_result["{field.json_name}"] = {val_expr}'
+                        )
+
+            # Handle oneof groups with "last write wins" (check fields in reverse order)
+            for group_index in sorted(oneof_groups.keys()):
+                group_fields = oneof_groups[group_index]
+                # Reverse order of declaration for "last write wins"
+                for i, field in enumerate(reversed(group_fields)):
+                    field_type = field.field_type
+                    condition = f"self.{field.name} is not None"
+                    context = (
+                        writer.elif_(condition) if i else writer.if_(condition)
+                    )
+
+                    with context:
+                        val_expr = self._get_serialization_expr_for_type(
+                            field_type, field.name, f"self.{field.name}"
+                        )
                         writer.writeln(
                             f'_result["{field.json_name}"] = {val_expr}'
                         )
@@ -489,8 +518,20 @@ class OtlpJsonGenerator:
                 ]
             )
             writer.writeln("_args: dict[str, Any] = {}")
+            writer.blank_line()
+
+            # Group fields by oneof_index to handle "last write wins"
+            oneof_groups: dict[int, list[FieldInfo]] = defaultdict(list)
+            standalone_fields: list[FieldInfo] = []
 
             for field in message.fields:
+                if field.is_oneof_member and field.oneof_index is not None:
+                    oneof_groups[field.oneof_index].append(field)
+                else:
+                    standalone_fields.append(field)
+
+            # Handle standalone fields
+            for field in standalone_fields:
                 field_type = field.field_type
                 with writer.if_(
                     f'(_value := data.get("{field.json_name}")) is not None'
@@ -512,6 +553,24 @@ class OtlpJsonGenerator:
                         )
                         writer.writeln(f'_args["{field.name}"] = {val_expr}')
 
+            # Handle oneof groups with "last write wins" (check fields in reverse order)
+            for group_index in sorted(oneof_groups.keys()):
+                group_fields = oneof_groups[group_index]
+                # Reverse order of declaration for "last write wins"
+                for i, field in enumerate(reversed(group_fields)):
+                    field_type = field.field_type
+                    condition = f'(_value := data.get("{field.json_name}")) is not None'
+                    context = (
+                        writer.elif_(condition) if i else writer.if_(condition)
+                    )
+
+                    with context:
+                        val_expr = self._get_deserialization_expr_for_type(
+                            field_type, field.name, "_value", message
+                        )
+                        writer.writeln(f'_args["{field.name}"] = {val_expr}')
+
+            writer.blank_line()
             writer.return_("cls(**_args)")
 
     def _generate_from_json(
@@ -633,7 +692,7 @@ class OtlpJsonGenerator:
 
         if field_type.is_repeated:
             return f"list[{base_type}]"
-        elif field_type.is_optional:
+        elif field_type.is_optional or field_info.is_oneof_member:
             return f"Optional[{base_type}]"
         else:
             return base_type
@@ -713,8 +772,12 @@ class OtlpJsonGenerator:
         if field_type.is_repeated:
             return "field(default_factory=list)"
 
-        # Optional fields and Message types default to None
-        if field_type.is_optional or field_type.is_message:
+        # Optional fields, Message types, and oneof members default to None
+        if (
+            field_type.is_optional
+            or field_type.is_message
+            or field_info.is_oneof_member
+        ):
             return "None"
 
         # Enum types default to 0
