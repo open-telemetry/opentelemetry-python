@@ -37,8 +37,8 @@ from opentelemetry.codegen.json.types import (
     is_hex_encoded_field,
     is_int64_type,
 )
-from opentelemetry.codegen.json.writer import CodeWriter
 from opentelemetry.codegen.json.version import __version__ as GENERATOR_VERSION
+from opentelemetry.codegen.json.writer import CodeWriter
 
 _logger = logging.getLogger(__name__)
 
@@ -219,7 +219,9 @@ class OtlpJsonGenerator:
 
         return writer.to_string()
 
-    def _generate_header(self, writer: CodeWriter, proto_file: str = "") -> None:
+    def _generate_header(
+        self, writer: CodeWriter, proto_file: str = ""
+    ) -> None:
         """Generate file header with license and metadata."""
         writer.writemany(
             "# Copyright The OpenTelemetry Authors",
@@ -239,10 +241,8 @@ class OtlpJsonGenerator:
         writer.blank_line()
         if proto_file:
             writer.comment(f'AUTO-GENERATED from "{proto_file}"')
-        writer.comment("DO NOT EDIT MANUALLY")
-        writer.blank_line()
-        writer.writeln("from __future__ import annotations")
-        writer.blank_line()
+            writer.comment("DO NOT EDIT MANUALLY")
+            writer.blank_line()
 
     def _generate_imports(
         self,
@@ -257,6 +257,8 @@ class OtlpJsonGenerator:
             proto_file: Original proto file path
         """
         # Standard library imports
+        writer.writeln("from __future__ import annotations")
+        writer.blank_line()
         writer.import_("json")
         writer.import_("typing", "Any", "Optional", "Union", "Self")
         writer.import_("dataclasses", "dataclass", "field")
@@ -866,7 +868,9 @@ def generate_code(
     analyzer = DescriptorAnalyzer(request)
     analyzer.analyze()
 
-    generator = OtlpJsonGenerator(analyzer, package_transform, version=GENERATOR_VERSION)
+    generator = OtlpJsonGenerator(
+        analyzer, package_transform, version=GENERATOR_VERSION
+    )
     return generator.generate_all()
 
 
