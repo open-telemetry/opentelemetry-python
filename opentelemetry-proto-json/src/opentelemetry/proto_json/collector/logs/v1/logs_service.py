@@ -40,10 +40,10 @@ class ExportLogsServiceRequest:
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        res: dict[str, Any] = {}
+        _result: dict[str, Any] = {}
         if self.resource_logs:
-            res["resourceLogs"] = _utils.serialize_repeated(self.resource_logs, lambda v: v.to_dict())
-        return res
+            _result["resourceLogs"] = _utils.serialize_repeated(self.resource_logs, lambda _v: _v.to_dict())
+        return _result
 
     def to_json(self) -> str:
         """
@@ -65,10 +65,10 @@ class ExportLogsServiceRequest:
         Returns:
             ExportLogsServiceRequest instance
         """
-        args: dict[str, Any] = {}
-        if (val := data.get("resourceLogs")) is not None:
-            args["resource_logs"] = _utils.deserialize_repeated(val, lambda v: opentelemetry.proto_json.logs.v1.logs.ResourceLogs.from_dict(v))
-        return cls(**args)
+        _args: dict[str, Any] = {}
+        if (_value := data.get("resourceLogs")) is not None:
+            _args["resource_logs"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.logs.v1.logs.ResourceLogs.from_dict(_v))
+        return cls(**_args)
 
     @classmethod
     def from_json(cls, data: Union[str, bytes]) -> Self:
@@ -99,10 +99,10 @@ class ExportLogsServiceResponse:
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        res: dict[str, Any] = {}
+        _result: dict[str, Any] = {}
         if self.partial_success is not None:
-            res["partialSuccess"] = self.partial_success.to_dict()
-        return res
+            _result["partialSuccess"] = self.partial_success.to_dict()
+        return _result
 
     def to_json(self) -> str:
         """
@@ -124,10 +124,10 @@ class ExportLogsServiceResponse:
         Returns:
             ExportLogsServiceResponse instance
         """
-        args: dict[str, Any] = {}
-        if (val := data.get("partialSuccess")) is not None:
-            args["partial_success"] = ExportLogsPartialSuccess.from_dict(val)
-        return cls(**args)
+        _args: dict[str, Any] = {}
+        if (_value := data.get("partialSuccess")) is not None:
+            _args["partial_success"] = ExportLogsPartialSuccess.from_dict(_value)
+        return cls(**_args)
 
     @classmethod
     def from_json(cls, data: Union[str, bytes]) -> Self:
@@ -159,12 +159,12 @@ class ExportLogsPartialSuccess:
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        res: dict[str, Any] = {}
+        _result: dict[str, Any] = {}
         if self.rejected_log_records != 0:
-            res["rejectedLogRecords"] = _utils.encode_int64(self.rejected_log_records)
+            _result["rejectedLogRecords"] = _utils.encode_int64(self.rejected_log_records)
         if self.error_message != '':
-            res["errorMessage"] = self.error_message
-        return res
+            _result["errorMessage"] = self.error_message
+        return _result
 
     def to_json(self) -> str:
         """
@@ -186,12 +186,12 @@ class ExportLogsPartialSuccess:
         Returns:
             ExportLogsPartialSuccess instance
         """
-        args: dict[str, Any] = {}
-        if (val := data.get("rejectedLogRecords")) is not None:
-            args["rejected_log_records"] = _utils.parse_int64(val)
-        if (val := data.get("errorMessage")) is not None:
-            args["error_message"] = val
-        return cls(**args)
+        _args: dict[str, Any] = {}
+        if (_value := data.get("rejectedLogRecords")) is not None:
+            _args["rejected_log_records"] = _utils.parse_int64(_value)
+        if (_value := data.get("errorMessage")) is not None:
+            _args["error_message"] = _value
+        return cls(**_args)
 
     @classmethod
     def from_json(cls, data: Union[str, bytes]) -> Self:

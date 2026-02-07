@@ -41,12 +41,12 @@ class ExportProfilesServiceRequest:
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        res: dict[str, Any] = {}
+        _result: dict[str, Any] = {}
         if self.resource_profiles:
-            res["resourceProfiles"] = _utils.serialize_repeated(self.resource_profiles, lambda v: v.to_dict())
+            _result["resourceProfiles"] = _utils.serialize_repeated(self.resource_profiles, lambda _v: _v.to_dict())
         if self.dictionary is not None:
-            res["dictionary"] = self.dictionary.to_dict()
-        return res
+            _result["dictionary"] = self.dictionary.to_dict()
+        return _result
 
     def to_json(self) -> str:
         """
@@ -68,12 +68,12 @@ class ExportProfilesServiceRequest:
         Returns:
             ExportProfilesServiceRequest instance
         """
-        args: dict[str, Any] = {}
-        if (val := data.get("resourceProfiles")) is not None:
-            args["resource_profiles"] = _utils.deserialize_repeated(val, lambda v: opentelemetry.proto_json.profiles.v1development.profiles.ResourceProfiles.from_dict(v))
-        if (val := data.get("dictionary")) is not None:
-            args["dictionary"] = opentelemetry.proto_json.profiles.v1development.profiles.ProfilesDictionary.from_dict(val)
-        return cls(**args)
+        _args: dict[str, Any] = {}
+        if (_value := data.get("resourceProfiles")) is not None:
+            _args["resource_profiles"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.profiles.v1development.profiles.ResourceProfiles.from_dict(_v))
+        if (_value := data.get("dictionary")) is not None:
+            _args["dictionary"] = opentelemetry.proto_json.profiles.v1development.profiles.ProfilesDictionary.from_dict(_value)
+        return cls(**_args)
 
     @classmethod
     def from_json(cls, data: Union[str, bytes]) -> Self:
@@ -104,10 +104,10 @@ class ExportProfilesServiceResponse:
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        res: dict[str, Any] = {}
+        _result: dict[str, Any] = {}
         if self.partial_success is not None:
-            res["partialSuccess"] = self.partial_success.to_dict()
-        return res
+            _result["partialSuccess"] = self.partial_success.to_dict()
+        return _result
 
     def to_json(self) -> str:
         """
@@ -129,10 +129,10 @@ class ExportProfilesServiceResponse:
         Returns:
             ExportProfilesServiceResponse instance
         """
-        args: dict[str, Any] = {}
-        if (val := data.get("partialSuccess")) is not None:
-            args["partial_success"] = ExportProfilesPartialSuccess.from_dict(val)
-        return cls(**args)
+        _args: dict[str, Any] = {}
+        if (_value := data.get("partialSuccess")) is not None:
+            _args["partial_success"] = ExportProfilesPartialSuccess.from_dict(_value)
+        return cls(**_args)
 
     @classmethod
     def from_json(cls, data: Union[str, bytes]) -> Self:
@@ -164,12 +164,12 @@ class ExportProfilesPartialSuccess:
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        res: dict[str, Any] = {}
+        _result: dict[str, Any] = {}
         if self.rejected_profiles != 0:
-            res["rejectedProfiles"] = _utils.encode_int64(self.rejected_profiles)
+            _result["rejectedProfiles"] = _utils.encode_int64(self.rejected_profiles)
         if self.error_message != '':
-            res["errorMessage"] = self.error_message
-        return res
+            _result["errorMessage"] = self.error_message
+        return _result
 
     def to_json(self) -> str:
         """
@@ -191,12 +191,12 @@ class ExportProfilesPartialSuccess:
         Returns:
             ExportProfilesPartialSuccess instance
         """
-        args: dict[str, Any] = {}
-        if (val := data.get("rejectedProfiles")) is not None:
-            args["rejected_profiles"] = _utils.parse_int64(val)
-        if (val := data.get("errorMessage")) is not None:
-            args["error_message"] = val
-        return cls(**args)
+        _args: dict[str, Any] = {}
+        if (_value := data.get("rejectedProfiles")) is not None:
+            _args["rejected_profiles"] = _utils.parse_int64(_value)
+        if (_value := data.get("errorMessage")) is not None:
+            _args["error_message"] = _value
+        return cls(**_args)
 
     @classmethod
     def from_json(cls, data: Union[str, bytes]) -> Self:

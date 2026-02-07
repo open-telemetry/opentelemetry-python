@@ -80,10 +80,10 @@ class LogsData:
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        res: dict[str, Any] = {}
+        _result: dict[str, Any] = {}
         if self.resource_logs:
-            res["resourceLogs"] = _utils.serialize_repeated(self.resource_logs, lambda v: v.to_dict())
-        return res
+            _result["resourceLogs"] = _utils.serialize_repeated(self.resource_logs, lambda _v: _v.to_dict())
+        return _result
 
     def to_json(self) -> str:
         """
@@ -105,10 +105,10 @@ class LogsData:
         Returns:
             LogsData instance
         """
-        args: dict[str, Any] = {}
-        if (val := data.get("resourceLogs")) is not None:
-            args["resource_logs"] = _utils.deserialize_repeated(val, lambda v: ResourceLogs.from_dict(v))
-        return cls(**args)
+        _args: dict[str, Any] = {}
+        if (_value := data.get("resourceLogs")) is not None:
+            _args["resource_logs"] = _utils.deserialize_repeated(_value, lambda _v: ResourceLogs.from_dict(_v))
+        return cls(**_args)
 
     @classmethod
     def from_json(cls, data: Union[str, bytes]) -> Self:
@@ -141,14 +141,14 @@ class ResourceLogs:
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        res: dict[str, Any] = {}
+        _result: dict[str, Any] = {}
         if self.resource is not None:
-            res["resource"] = self.resource.to_dict()
+            _result["resource"] = self.resource.to_dict()
         if self.scope_logs:
-            res["scopeLogs"] = _utils.serialize_repeated(self.scope_logs, lambda v: v.to_dict())
+            _result["scopeLogs"] = _utils.serialize_repeated(self.scope_logs, lambda _v: _v.to_dict())
         if self.schema_url != '':
-            res["schemaUrl"] = self.schema_url
-        return res
+            _result["schemaUrl"] = self.schema_url
+        return _result
 
     def to_json(self) -> str:
         """
@@ -170,14 +170,14 @@ class ResourceLogs:
         Returns:
             ResourceLogs instance
         """
-        args: dict[str, Any] = {}
-        if (val := data.get("resource")) is not None:
-            args["resource"] = opentelemetry.proto_json.resource.v1.resource.Resource.from_dict(val)
-        if (val := data.get("scopeLogs")) is not None:
-            args["scope_logs"] = _utils.deserialize_repeated(val, lambda v: ScopeLogs.from_dict(v))
-        if (val := data.get("schemaUrl")) is not None:
-            args["schema_url"] = val
-        return cls(**args)
+        _args: dict[str, Any] = {}
+        if (_value := data.get("resource")) is not None:
+            _args["resource"] = opentelemetry.proto_json.resource.v1.resource.Resource.from_dict(_value)
+        if (_value := data.get("scopeLogs")) is not None:
+            _args["scope_logs"] = _utils.deserialize_repeated(_value, lambda _v: ScopeLogs.from_dict(_v))
+        if (_value := data.get("schemaUrl")) is not None:
+            _args["schema_url"] = _value
+        return cls(**_args)
 
     @classmethod
     def from_json(cls, data: Union[str, bytes]) -> Self:
@@ -210,14 +210,14 @@ class ScopeLogs:
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        res: dict[str, Any] = {}
+        _result: dict[str, Any] = {}
         if self.scope is not None:
-            res["scope"] = self.scope.to_dict()
+            _result["scope"] = self.scope.to_dict()
         if self.log_records:
-            res["logRecords"] = _utils.serialize_repeated(self.log_records, lambda v: v.to_dict())
+            _result["logRecords"] = _utils.serialize_repeated(self.log_records, lambda _v: _v.to_dict())
         if self.schema_url != '':
-            res["schemaUrl"] = self.schema_url
-        return res
+            _result["schemaUrl"] = self.schema_url
+        return _result
 
     def to_json(self) -> str:
         """
@@ -239,14 +239,14 @@ class ScopeLogs:
         Returns:
             ScopeLogs instance
         """
-        args: dict[str, Any] = {}
-        if (val := data.get("scope")) is not None:
-            args["scope"] = opentelemetry.proto_json.common.v1.common.InstrumentationScope.from_dict(val)
-        if (val := data.get("logRecords")) is not None:
-            args["log_records"] = _utils.deserialize_repeated(val, lambda v: LogRecord.from_dict(v))
-        if (val := data.get("schemaUrl")) is not None:
-            args["schema_url"] = val
-        return cls(**args)
+        _args: dict[str, Any] = {}
+        if (_value := data.get("scope")) is not None:
+            _args["scope"] = opentelemetry.proto_json.common.v1.common.InstrumentationScope.from_dict(_value)
+        if (_value := data.get("logRecords")) is not None:
+            _args["log_records"] = _utils.deserialize_repeated(_value, lambda _v: LogRecord.from_dict(_v))
+        if (_value := data.get("schemaUrl")) is not None:
+            _args["schema_url"] = _value
+        return cls(**_args)
 
     @classmethod
     def from_json(cls, data: Union[str, bytes]) -> Self:
@@ -287,30 +287,30 @@ class LogRecord:
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        res: dict[str, Any] = {}
+        _result: dict[str, Any] = {}
         if self.time_unix_nano != 0:
-            res["timeUnixNano"] = _utils.encode_int64(self.time_unix_nano)
+            _result["timeUnixNano"] = _utils.encode_int64(self.time_unix_nano)
         if self.observed_time_unix_nano != 0:
-            res["observedTimeUnixNano"] = _utils.encode_int64(self.observed_time_unix_nano)
+            _result["observedTimeUnixNano"] = _utils.encode_int64(self.observed_time_unix_nano)
         if self.severity_number != None:
-            res["severityNumber"] = int(self.severity_number)
+            _result["severityNumber"] = int(self.severity_number)
         if self.severity_text != '':
-            res["severityText"] = self.severity_text
+            _result["severityText"] = self.severity_text
         if self.body is not None:
-            res["body"] = self.body.to_dict()
+            _result["body"] = self.body.to_dict()
         if self.attributes:
-            res["attributes"] = _utils.serialize_repeated(self.attributes, lambda v: v.to_dict())
+            _result["attributes"] = _utils.serialize_repeated(self.attributes, lambda _v: _v.to_dict())
         if self.dropped_attributes_count != 0:
-            res["droppedAttributesCount"] = self.dropped_attributes_count
+            _result["droppedAttributesCount"] = self.dropped_attributes_count
         if self.flags != 0:
-            res["flags"] = self.flags
+            _result["flags"] = self.flags
         if self.trace_id != b'':
-            res["traceId"] = _utils.encode_hex(self.trace_id)
+            _result["traceId"] = _utils.encode_hex(self.trace_id)
         if self.span_id != b'':
-            res["spanId"] = _utils.encode_hex(self.span_id)
+            _result["spanId"] = _utils.encode_hex(self.span_id)
         if self.event_name != '':
-            res["eventName"] = self.event_name
-        return res
+            _result["eventName"] = self.event_name
+        return _result
 
     def to_json(self) -> str:
         """
@@ -332,30 +332,30 @@ class LogRecord:
         Returns:
             LogRecord instance
         """
-        args: dict[str, Any] = {}
-        if (val := data.get("timeUnixNano")) is not None:
-            args["time_unix_nano"] = _utils.parse_int64(val)
-        if (val := data.get("observedTimeUnixNano")) is not None:
-            args["observed_time_unix_nano"] = _utils.parse_int64(val)
-        if (val := data.get("severityNumber")) is not None:
-            args["severity_number"] = SeverityNumber(val)
-        if (val := data.get("severityText")) is not None:
-            args["severity_text"] = val
-        if (val := data.get("body")) is not None:
-            args["body"] = opentelemetry.proto_json.common.v1.common.AnyValue.from_dict(val)
-        if (val := data.get("attributes")) is not None:
-            args["attributes"] = _utils.deserialize_repeated(val, lambda v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(v))
-        if (val := data.get("droppedAttributesCount")) is not None:
-            args["dropped_attributes_count"] = val
-        if (val := data.get("flags")) is not None:
-            args["flags"] = val
-        if (val := data.get("traceId")) is not None:
-            args["trace_id"] = _utils.decode_hex(val)
-        if (val := data.get("spanId")) is not None:
-            args["span_id"] = _utils.decode_hex(val)
-        if (val := data.get("eventName")) is not None:
-            args["event_name"] = val
-        return cls(**args)
+        _args: dict[str, Any] = {}
+        if (_value := data.get("timeUnixNano")) is not None:
+            _args["time_unix_nano"] = _utils.parse_int64(_value)
+        if (_value := data.get("observedTimeUnixNano")) is not None:
+            _args["observed_time_unix_nano"] = _utils.parse_int64(_value)
+        if (_value := data.get("severityNumber")) is not None:
+            _args["severity_number"] = SeverityNumber(_value)
+        if (_value := data.get("severityText")) is not None:
+            _args["severity_text"] = _value
+        if (_value := data.get("body")) is not None:
+            _args["body"] = opentelemetry.proto_json.common.v1.common.AnyValue.from_dict(_value)
+        if (_value := data.get("attributes")) is not None:
+            _args["attributes"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v))
+        if (_value := data.get("droppedAttributesCount")) is not None:
+            _args["dropped_attributes_count"] = _value
+        if (_value := data.get("flags")) is not None:
+            _args["flags"] = _value
+        if (_value := data.get("traceId")) is not None:
+            _args["trace_id"] = _utils.decode_hex(_value)
+        if (_value := data.get("spanId")) is not None:
+            _args["span_id"] = _utils.decode_hex(_value)
+        if (_value := data.get("eventName")) is not None:
+            _args["event_name"] = _value
+        return cls(**_args)
 
     @classmethod
     def from_json(cls, data: Union[str, bytes]) -> Self:

@@ -512,7 +512,7 @@ class OtlpJsonGenerator:
                         )
                         writer.writeln(f'_args["{field.name}"] = {val_expr}')
 
-            writer.return_("cls(**args)")
+            writer.return_("cls(**_args)")
 
     def _generate_from_json(
         self, writer: CodeWriter, message: MessageInfo
@@ -750,9 +750,9 @@ def generate_code(
 
 def generate_plugin_response(
     request: plugin.CodeGeneratorRequest,
-    package_transform: Union[
-        str, Callable[[str], str]
-    ] = "opentelemetry/proto_json",
+    package_transform: Callable[[str], str] = lambda p: p.replace(
+        "opentelemetry/proto/", "opentelemetry/proto_json/"
+    ),
 ) -> plugin.CodeGeneratorResponse:
     """
     Generate plugin response with all generated files.

@@ -58,10 +58,10 @@ class MetricsData:
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        res: dict[str, Any] = {}
+        _result: dict[str, Any] = {}
         if self.resource_metrics:
-            res["resourceMetrics"] = _utils.serialize_repeated(self.resource_metrics, lambda v: v.to_dict())
-        return res
+            _result["resourceMetrics"] = _utils.serialize_repeated(self.resource_metrics, lambda _v: _v.to_dict())
+        return _result
 
     def to_json(self) -> str:
         """
@@ -83,10 +83,10 @@ class MetricsData:
         Returns:
             MetricsData instance
         """
-        args: dict[str, Any] = {}
-        if (val := data.get("resourceMetrics")) is not None:
-            args["resource_metrics"] = _utils.deserialize_repeated(val, lambda v: ResourceMetrics.from_dict(v))
-        return cls(**args)
+        _args: dict[str, Any] = {}
+        if (_value := data.get("resourceMetrics")) is not None:
+            _args["resource_metrics"] = _utils.deserialize_repeated(_value, lambda _v: ResourceMetrics.from_dict(_v))
+        return cls(**_args)
 
     @classmethod
     def from_json(cls, data: Union[str, bytes]) -> Self:
@@ -119,14 +119,14 @@ class ResourceMetrics:
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        res: dict[str, Any] = {}
+        _result: dict[str, Any] = {}
         if self.resource is not None:
-            res["resource"] = self.resource.to_dict()
+            _result["resource"] = self.resource.to_dict()
         if self.scope_metrics:
-            res["scopeMetrics"] = _utils.serialize_repeated(self.scope_metrics, lambda v: v.to_dict())
+            _result["scopeMetrics"] = _utils.serialize_repeated(self.scope_metrics, lambda _v: _v.to_dict())
         if self.schema_url != '':
-            res["schemaUrl"] = self.schema_url
-        return res
+            _result["schemaUrl"] = self.schema_url
+        return _result
 
     def to_json(self) -> str:
         """
@@ -148,14 +148,14 @@ class ResourceMetrics:
         Returns:
             ResourceMetrics instance
         """
-        args: dict[str, Any] = {}
-        if (val := data.get("resource")) is not None:
-            args["resource"] = opentelemetry.proto_json.resource.v1.resource.Resource.from_dict(val)
-        if (val := data.get("scopeMetrics")) is not None:
-            args["scope_metrics"] = _utils.deserialize_repeated(val, lambda v: ScopeMetrics.from_dict(v))
-        if (val := data.get("schemaUrl")) is not None:
-            args["schema_url"] = val
-        return cls(**args)
+        _args: dict[str, Any] = {}
+        if (_value := data.get("resource")) is not None:
+            _args["resource"] = opentelemetry.proto_json.resource.v1.resource.Resource.from_dict(_value)
+        if (_value := data.get("scopeMetrics")) is not None:
+            _args["scope_metrics"] = _utils.deserialize_repeated(_value, lambda _v: ScopeMetrics.from_dict(_v))
+        if (_value := data.get("schemaUrl")) is not None:
+            _args["schema_url"] = _value
+        return cls(**_args)
 
     @classmethod
     def from_json(cls, data: Union[str, bytes]) -> Self:
@@ -188,14 +188,14 @@ class ScopeMetrics:
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        res: dict[str, Any] = {}
+        _result: dict[str, Any] = {}
         if self.scope is not None:
-            res["scope"] = self.scope.to_dict()
+            _result["scope"] = self.scope.to_dict()
         if self.metrics:
-            res["metrics"] = _utils.serialize_repeated(self.metrics, lambda v: v.to_dict())
+            _result["metrics"] = _utils.serialize_repeated(self.metrics, lambda _v: _v.to_dict())
         if self.schema_url != '':
-            res["schemaUrl"] = self.schema_url
-        return res
+            _result["schemaUrl"] = self.schema_url
+        return _result
 
     def to_json(self) -> str:
         """
@@ -217,14 +217,14 @@ class ScopeMetrics:
         Returns:
             ScopeMetrics instance
         """
-        args: dict[str, Any] = {}
-        if (val := data.get("scope")) is not None:
-            args["scope"] = opentelemetry.proto_json.common.v1.common.InstrumentationScope.from_dict(val)
-        if (val := data.get("metrics")) is not None:
-            args["metrics"] = _utils.deserialize_repeated(val, lambda v: Metric.from_dict(v))
-        if (val := data.get("schemaUrl")) is not None:
-            args["schema_url"] = val
-        return cls(**args)
+        _args: dict[str, Any] = {}
+        if (_value := data.get("scope")) is not None:
+            _args["scope"] = opentelemetry.proto_json.common.v1.common.InstrumentationScope.from_dict(_value)
+        if (_value := data.get("metrics")) is not None:
+            _args["metrics"] = _utils.deserialize_repeated(_value, lambda _v: Metric.from_dict(_v))
+        if (_value := data.get("schemaUrl")) is not None:
+            _args["schema_url"] = _value
+        return cls(**_args)
 
     @classmethod
     def from_json(cls, data: Union[str, bytes]) -> Self:
@@ -263,26 +263,26 @@ class Metric:
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        res: dict[str, Any] = {}
+        _result: dict[str, Any] = {}
         if self.name != '':
-            res["name"] = self.name
+            _result["name"] = self.name
         if self.description != '':
-            res["description"] = self.description
+            _result["description"] = self.description
         if self.unit != '':
-            res["unit"] = self.unit
+            _result["unit"] = self.unit
         if self.gauge is not None:
-            res["gauge"] = self.gauge.to_dict()
+            _result["gauge"] = self.gauge.to_dict()
         if self.sum is not None:
-            res["sum"] = self.sum.to_dict()
+            _result["sum"] = self.sum.to_dict()
         if self.histogram is not None:
-            res["histogram"] = self.histogram.to_dict()
+            _result["histogram"] = self.histogram.to_dict()
         if self.exponential_histogram is not None:
-            res["exponentialHistogram"] = self.exponential_histogram.to_dict()
+            _result["exponentialHistogram"] = self.exponential_histogram.to_dict()
         if self.summary is not None:
-            res["summary"] = self.summary.to_dict()
+            _result["summary"] = self.summary.to_dict()
         if self.metadata:
-            res["metadata"] = _utils.serialize_repeated(self.metadata, lambda v: v.to_dict())
-        return res
+            _result["metadata"] = _utils.serialize_repeated(self.metadata, lambda _v: _v.to_dict())
+        return _result
 
     def to_json(self) -> str:
         """
@@ -304,26 +304,26 @@ class Metric:
         Returns:
             Metric instance
         """
-        args: dict[str, Any] = {}
-        if (val := data.get("name")) is not None:
-            args["name"] = val
-        if (val := data.get("description")) is not None:
-            args["description"] = val
-        if (val := data.get("unit")) is not None:
-            args["unit"] = val
-        if (val := data.get("gauge")) is not None:
-            args["gauge"] = Gauge.from_dict(val)
-        if (val := data.get("sum")) is not None:
-            args["sum"] = Sum.from_dict(val)
-        if (val := data.get("histogram")) is not None:
-            args["histogram"] = Histogram.from_dict(val)
-        if (val := data.get("exponentialHistogram")) is not None:
-            args["exponential_histogram"] = ExponentialHistogram.from_dict(val)
-        if (val := data.get("summary")) is not None:
-            args["summary"] = Summary.from_dict(val)
-        if (val := data.get("metadata")) is not None:
-            args["metadata"] = _utils.deserialize_repeated(val, lambda v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(v))
-        return cls(**args)
+        _args: dict[str, Any] = {}
+        if (_value := data.get("name")) is not None:
+            _args["name"] = _value
+        if (_value := data.get("description")) is not None:
+            _args["description"] = _value
+        if (_value := data.get("unit")) is not None:
+            _args["unit"] = _value
+        if (_value := data.get("gauge")) is not None:
+            _args["gauge"] = Gauge.from_dict(_value)
+        if (_value := data.get("sum")) is not None:
+            _args["sum"] = Sum.from_dict(_value)
+        if (_value := data.get("histogram")) is not None:
+            _args["histogram"] = Histogram.from_dict(_value)
+        if (_value := data.get("exponentialHistogram")) is not None:
+            _args["exponential_histogram"] = ExponentialHistogram.from_dict(_value)
+        if (_value := data.get("summary")) is not None:
+            _args["summary"] = Summary.from_dict(_value)
+        if (_value := data.get("metadata")) is not None:
+            _args["metadata"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v))
+        return cls(**_args)
 
     @classmethod
     def from_json(cls, data: Union[str, bytes]) -> Self:
@@ -354,10 +354,10 @@ class Gauge:
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        res: dict[str, Any] = {}
+        _result: dict[str, Any] = {}
         if self.data_points:
-            res["dataPoints"] = _utils.serialize_repeated(self.data_points, lambda v: v.to_dict())
-        return res
+            _result["dataPoints"] = _utils.serialize_repeated(self.data_points, lambda _v: _v.to_dict())
+        return _result
 
     def to_json(self) -> str:
         """
@@ -379,10 +379,10 @@ class Gauge:
         Returns:
             Gauge instance
         """
-        args: dict[str, Any] = {}
-        if (val := data.get("dataPoints")) is not None:
-            args["data_points"] = _utils.deserialize_repeated(val, lambda v: NumberDataPoint.from_dict(v))
-        return cls(**args)
+        _args: dict[str, Any] = {}
+        if (_value := data.get("dataPoints")) is not None:
+            _args["data_points"] = _utils.deserialize_repeated(_value, lambda _v: NumberDataPoint.from_dict(_v))
+        return cls(**_args)
 
     @classmethod
     def from_json(cls, data: Union[str, bytes]) -> Self:
@@ -415,14 +415,14 @@ class Sum:
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        res: dict[str, Any] = {}
+        _result: dict[str, Any] = {}
         if self.data_points:
-            res["dataPoints"] = _utils.serialize_repeated(self.data_points, lambda v: v.to_dict())
+            _result["dataPoints"] = _utils.serialize_repeated(self.data_points, lambda _v: _v.to_dict())
         if self.aggregation_temporality != None:
-            res["aggregationTemporality"] = int(self.aggregation_temporality)
+            _result["aggregationTemporality"] = int(self.aggregation_temporality)
         if self.is_monotonic != False:
-            res["isMonotonic"] = self.is_monotonic
-        return res
+            _result["isMonotonic"] = self.is_monotonic
+        return _result
 
     def to_json(self) -> str:
         """
@@ -444,14 +444,14 @@ class Sum:
         Returns:
             Sum instance
         """
-        args: dict[str, Any] = {}
-        if (val := data.get("dataPoints")) is not None:
-            args["data_points"] = _utils.deserialize_repeated(val, lambda v: NumberDataPoint.from_dict(v))
-        if (val := data.get("aggregationTemporality")) is not None:
-            args["aggregation_temporality"] = AggregationTemporality(val)
-        if (val := data.get("isMonotonic")) is not None:
-            args["is_monotonic"] = val
-        return cls(**args)
+        _args: dict[str, Any] = {}
+        if (_value := data.get("dataPoints")) is not None:
+            _args["data_points"] = _utils.deserialize_repeated(_value, lambda _v: NumberDataPoint.from_dict(_v))
+        if (_value := data.get("aggregationTemporality")) is not None:
+            _args["aggregation_temporality"] = AggregationTemporality(_value)
+        if (_value := data.get("isMonotonic")) is not None:
+            _args["is_monotonic"] = _value
+        return cls(**_args)
 
     @classmethod
     def from_json(cls, data: Union[str, bytes]) -> Self:
@@ -483,12 +483,12 @@ class Histogram:
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        res: dict[str, Any] = {}
+        _result: dict[str, Any] = {}
         if self.data_points:
-            res["dataPoints"] = _utils.serialize_repeated(self.data_points, lambda v: v.to_dict())
+            _result["dataPoints"] = _utils.serialize_repeated(self.data_points, lambda _v: _v.to_dict())
         if self.aggregation_temporality != None:
-            res["aggregationTemporality"] = int(self.aggregation_temporality)
-        return res
+            _result["aggregationTemporality"] = int(self.aggregation_temporality)
+        return _result
 
     def to_json(self) -> str:
         """
@@ -510,12 +510,12 @@ class Histogram:
         Returns:
             Histogram instance
         """
-        args: dict[str, Any] = {}
-        if (val := data.get("dataPoints")) is not None:
-            args["data_points"] = _utils.deserialize_repeated(val, lambda v: HistogramDataPoint.from_dict(v))
-        if (val := data.get("aggregationTemporality")) is not None:
-            args["aggregation_temporality"] = AggregationTemporality(val)
-        return cls(**args)
+        _args: dict[str, Any] = {}
+        if (_value := data.get("dataPoints")) is not None:
+            _args["data_points"] = _utils.deserialize_repeated(_value, lambda _v: HistogramDataPoint.from_dict(_v))
+        if (_value := data.get("aggregationTemporality")) is not None:
+            _args["aggregation_temporality"] = AggregationTemporality(_value)
+        return cls(**_args)
 
     @classmethod
     def from_json(cls, data: Union[str, bytes]) -> Self:
@@ -547,12 +547,12 @@ class ExponentialHistogram:
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        res: dict[str, Any] = {}
+        _result: dict[str, Any] = {}
         if self.data_points:
-            res["dataPoints"] = _utils.serialize_repeated(self.data_points, lambda v: v.to_dict())
+            _result["dataPoints"] = _utils.serialize_repeated(self.data_points, lambda _v: _v.to_dict())
         if self.aggregation_temporality != None:
-            res["aggregationTemporality"] = int(self.aggregation_temporality)
-        return res
+            _result["aggregationTemporality"] = int(self.aggregation_temporality)
+        return _result
 
     def to_json(self) -> str:
         """
@@ -574,12 +574,12 @@ class ExponentialHistogram:
         Returns:
             ExponentialHistogram instance
         """
-        args: dict[str, Any] = {}
-        if (val := data.get("dataPoints")) is not None:
-            args["data_points"] = _utils.deserialize_repeated(val, lambda v: ExponentialHistogramDataPoint.from_dict(v))
-        if (val := data.get("aggregationTemporality")) is not None:
-            args["aggregation_temporality"] = AggregationTemporality(val)
-        return cls(**args)
+        _args: dict[str, Any] = {}
+        if (_value := data.get("dataPoints")) is not None:
+            _args["data_points"] = _utils.deserialize_repeated(_value, lambda _v: ExponentialHistogramDataPoint.from_dict(_v))
+        if (_value := data.get("aggregationTemporality")) is not None:
+            _args["aggregation_temporality"] = AggregationTemporality(_value)
+        return cls(**_args)
 
     @classmethod
     def from_json(cls, data: Union[str, bytes]) -> Self:
@@ -610,10 +610,10 @@ class Summary:
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        res: dict[str, Any] = {}
+        _result: dict[str, Any] = {}
         if self.data_points:
-            res["dataPoints"] = _utils.serialize_repeated(self.data_points, lambda v: v.to_dict())
-        return res
+            _result["dataPoints"] = _utils.serialize_repeated(self.data_points, lambda _v: _v.to_dict())
+        return _result
 
     def to_json(self) -> str:
         """
@@ -635,10 +635,10 @@ class Summary:
         Returns:
             Summary instance
         """
-        args: dict[str, Any] = {}
-        if (val := data.get("dataPoints")) is not None:
-            args["data_points"] = _utils.deserialize_repeated(val, lambda v: SummaryDataPoint.from_dict(v))
-        return cls(**args)
+        _args: dict[str, Any] = {}
+        if (_value := data.get("dataPoints")) is not None:
+            _args["data_points"] = _utils.deserialize_repeated(_value, lambda _v: SummaryDataPoint.from_dict(_v))
+        return cls(**_args)
 
     @classmethod
     def from_json(cls, data: Union[str, bytes]) -> Self:
@@ -675,22 +675,22 @@ class NumberDataPoint:
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        res: dict[str, Any] = {}
+        _result: dict[str, Any] = {}
         if self.attributes:
-            res["attributes"] = _utils.serialize_repeated(self.attributes, lambda v: v.to_dict())
+            _result["attributes"] = _utils.serialize_repeated(self.attributes, lambda _v: _v.to_dict())
         if self.start_time_unix_nano != 0:
-            res["startTimeUnixNano"] = _utils.encode_int64(self.start_time_unix_nano)
+            _result["startTimeUnixNano"] = _utils.encode_int64(self.start_time_unix_nano)
         if self.time_unix_nano != 0:
-            res["timeUnixNano"] = _utils.encode_int64(self.time_unix_nano)
+            _result["timeUnixNano"] = _utils.encode_int64(self.time_unix_nano)
         if self.as_double != 0.0:
-            res["asDouble"] = _utils.encode_float(self.as_double)
+            _result["asDouble"] = _utils.encode_float(self.as_double)
         if self.as_int != 0:
-            res["asInt"] = _utils.encode_int64(self.as_int)
+            _result["asInt"] = _utils.encode_int64(self.as_int)
         if self.exemplars:
-            res["exemplars"] = _utils.serialize_repeated(self.exemplars, lambda v: v.to_dict())
+            _result["exemplars"] = _utils.serialize_repeated(self.exemplars, lambda _v: _v.to_dict())
         if self.flags != 0:
-            res["flags"] = self.flags
-        return res
+            _result["flags"] = self.flags
+        return _result
 
     def to_json(self) -> str:
         """
@@ -712,22 +712,22 @@ class NumberDataPoint:
         Returns:
             NumberDataPoint instance
         """
-        args: dict[str, Any] = {}
-        if (val := data.get("attributes")) is not None:
-            args["attributes"] = _utils.deserialize_repeated(val, lambda v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(v))
-        if (val := data.get("startTimeUnixNano")) is not None:
-            args["start_time_unix_nano"] = _utils.parse_int64(val)
-        if (val := data.get("timeUnixNano")) is not None:
-            args["time_unix_nano"] = _utils.parse_int64(val)
-        if (val := data.get("asDouble")) is not None:
-            args["as_double"] = _utils.parse_float(val)
-        if (val := data.get("asInt")) is not None:
-            args["as_int"] = _utils.parse_int64(val)
-        if (val := data.get("exemplars")) is not None:
-            args["exemplars"] = _utils.deserialize_repeated(val, lambda v: Exemplar.from_dict(v))
-        if (val := data.get("flags")) is not None:
-            args["flags"] = val
-        return cls(**args)
+        _args: dict[str, Any] = {}
+        if (_value := data.get("attributes")) is not None:
+            _args["attributes"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v))
+        if (_value := data.get("startTimeUnixNano")) is not None:
+            _args["start_time_unix_nano"] = _utils.parse_int64(_value)
+        if (_value := data.get("timeUnixNano")) is not None:
+            _args["time_unix_nano"] = _utils.parse_int64(_value)
+        if (_value := data.get("asDouble")) is not None:
+            _args["as_double"] = _utils.parse_float(_value)
+        if (_value := data.get("asInt")) is not None:
+            _args["as_int"] = _utils.parse_int64(_value)
+        if (_value := data.get("exemplars")) is not None:
+            _args["exemplars"] = _utils.deserialize_repeated(_value, lambda _v: Exemplar.from_dict(_v))
+        if (_value := data.get("flags")) is not None:
+            _args["flags"] = _value
+        return cls(**_args)
 
     @classmethod
     def from_json(cls, data: Union[str, bytes]) -> Self:
@@ -768,30 +768,30 @@ class HistogramDataPoint:
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        res: dict[str, Any] = {}
+        _result: dict[str, Any] = {}
         if self.attributes:
-            res["attributes"] = _utils.serialize_repeated(self.attributes, lambda v: v.to_dict())
+            _result["attributes"] = _utils.serialize_repeated(self.attributes, lambda _v: _v.to_dict())
         if self.start_time_unix_nano != 0:
-            res["startTimeUnixNano"] = _utils.encode_int64(self.start_time_unix_nano)
+            _result["startTimeUnixNano"] = _utils.encode_int64(self.start_time_unix_nano)
         if self.time_unix_nano != 0:
-            res["timeUnixNano"] = _utils.encode_int64(self.time_unix_nano)
+            _result["timeUnixNano"] = _utils.encode_int64(self.time_unix_nano)
         if self.count != 0:
-            res["count"] = _utils.encode_int64(self.count)
+            _result["count"] = _utils.encode_int64(self.count)
         if self.sum != 0.0:
-            res["sum"] = _utils.encode_float(self.sum)
+            _result["sum"] = _utils.encode_float(self.sum)
         if self.bucket_counts:
-            res["bucketCounts"] = _utils.serialize_repeated(self.bucket_counts, lambda v: _utils.encode_int64(v))
+            _result["bucketCounts"] = _utils.serialize_repeated(self.bucket_counts, lambda _v: _utils.encode_int64(_v))
         if self.explicit_bounds:
-            res["explicitBounds"] = _utils.serialize_repeated(self.explicit_bounds, lambda v: _utils.encode_float(v))
+            _result["explicitBounds"] = _utils.serialize_repeated(self.explicit_bounds, lambda _v: _utils.encode_float(_v))
         if self.exemplars:
-            res["exemplars"] = _utils.serialize_repeated(self.exemplars, lambda v: v.to_dict())
+            _result["exemplars"] = _utils.serialize_repeated(self.exemplars, lambda _v: _v.to_dict())
         if self.flags != 0:
-            res["flags"] = self.flags
+            _result["flags"] = self.flags
         if self.min != 0.0:
-            res["min"] = _utils.encode_float(self.min)
+            _result["min"] = _utils.encode_float(self.min)
         if self.max != 0.0:
-            res["max"] = _utils.encode_float(self.max)
-        return res
+            _result["max"] = _utils.encode_float(self.max)
+        return _result
 
     def to_json(self) -> str:
         """
@@ -813,30 +813,30 @@ class HistogramDataPoint:
         Returns:
             HistogramDataPoint instance
         """
-        args: dict[str, Any] = {}
-        if (val := data.get("attributes")) is not None:
-            args["attributes"] = _utils.deserialize_repeated(val, lambda v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(v))
-        if (val := data.get("startTimeUnixNano")) is not None:
-            args["start_time_unix_nano"] = _utils.parse_int64(val)
-        if (val := data.get("timeUnixNano")) is not None:
-            args["time_unix_nano"] = _utils.parse_int64(val)
-        if (val := data.get("count")) is not None:
-            args["count"] = _utils.parse_int64(val)
-        if (val := data.get("sum")) is not None:
-            args["sum"] = _utils.parse_float(val)
-        if (val := data.get("bucketCounts")) is not None:
-            args["bucket_counts"] = _utils.deserialize_repeated(val, lambda v: _utils.parse_int64(v))
-        if (val := data.get("explicitBounds")) is not None:
-            args["explicit_bounds"] = _utils.deserialize_repeated(val, lambda v: _utils.parse_float(v))
-        if (val := data.get("exemplars")) is not None:
-            args["exemplars"] = _utils.deserialize_repeated(val, lambda v: Exemplar.from_dict(v))
-        if (val := data.get("flags")) is not None:
-            args["flags"] = val
-        if (val := data.get("min")) is not None:
-            args["min"] = _utils.parse_float(val)
-        if (val := data.get("max")) is not None:
-            args["max"] = _utils.parse_float(val)
-        return cls(**args)
+        _args: dict[str, Any] = {}
+        if (_value := data.get("attributes")) is not None:
+            _args["attributes"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v))
+        if (_value := data.get("startTimeUnixNano")) is not None:
+            _args["start_time_unix_nano"] = _utils.parse_int64(_value)
+        if (_value := data.get("timeUnixNano")) is not None:
+            _args["time_unix_nano"] = _utils.parse_int64(_value)
+        if (_value := data.get("count")) is not None:
+            _args["count"] = _utils.parse_int64(_value)
+        if (_value := data.get("sum")) is not None:
+            _args["sum"] = _utils.parse_float(_value)
+        if (_value := data.get("bucketCounts")) is not None:
+            _args["bucket_counts"] = _utils.deserialize_repeated(_value, lambda _v: _utils.parse_int64(_v))
+        if (_value := data.get("explicitBounds")) is not None:
+            _args["explicit_bounds"] = _utils.deserialize_repeated(_value, lambda _v: _utils.parse_float(_v))
+        if (_value := data.get("exemplars")) is not None:
+            _args["exemplars"] = _utils.deserialize_repeated(_value, lambda _v: Exemplar.from_dict(_v))
+        if (_value := data.get("flags")) is not None:
+            _args["flags"] = _value
+        if (_value := data.get("min")) is not None:
+            _args["min"] = _utils.parse_float(_value)
+        if (_value := data.get("max")) is not None:
+            _args["max"] = _utils.parse_float(_value)
+        return cls(**_args)
 
     @classmethod
     def from_json(cls, data: Union[str, bytes]) -> Self:
@@ -874,12 +874,12 @@ class ExponentialHistogramDataPoint:
             Returns:
                 Dictionary representation following OTLP JSON encoding
             """
-            res: dict[str, Any] = {}
+            _result: dict[str, Any] = {}
             if self.offset != 0:
-                res["offset"] = self.offset
+                _result["offset"] = self.offset
             if self.bucket_counts:
-                res["bucketCounts"] = _utils.serialize_repeated(self.bucket_counts, lambda v: _utils.encode_int64(v))
-            return res
+                _result["bucketCounts"] = _utils.serialize_repeated(self.bucket_counts, lambda _v: _utils.encode_int64(_v))
+            return _result
 
         def to_json(self) -> str:
             """
@@ -901,12 +901,12 @@ class ExponentialHistogramDataPoint:
             Returns:
                 Buckets instance
             """
-            args: dict[str, Any] = {}
-            if (val := data.get("offset")) is not None:
-                args["offset"] = val
-            if (val := data.get("bucketCounts")) is not None:
-                args["bucket_counts"] = _utils.deserialize_repeated(val, lambda v: _utils.parse_int64(v))
-            return cls(**args)
+            _args: dict[str, Any] = {}
+            if (_value := data.get("offset")) is not None:
+                _args["offset"] = _value
+            if (_value := data.get("bucketCounts")) is not None:
+                _args["bucket_counts"] = _utils.deserialize_repeated(_value, lambda _v: _utils.parse_int64(_v))
+            return cls(**_args)
 
         @classmethod
         def from_json(cls, data: Union[str, bytes]) -> Self:
@@ -943,36 +943,36 @@ class ExponentialHistogramDataPoint:
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        res: dict[str, Any] = {}
+        _result: dict[str, Any] = {}
         if self.attributes:
-            res["attributes"] = _utils.serialize_repeated(self.attributes, lambda v: v.to_dict())
+            _result["attributes"] = _utils.serialize_repeated(self.attributes, lambda _v: _v.to_dict())
         if self.start_time_unix_nano != 0:
-            res["startTimeUnixNano"] = _utils.encode_int64(self.start_time_unix_nano)
+            _result["startTimeUnixNano"] = _utils.encode_int64(self.start_time_unix_nano)
         if self.time_unix_nano != 0:
-            res["timeUnixNano"] = _utils.encode_int64(self.time_unix_nano)
+            _result["timeUnixNano"] = _utils.encode_int64(self.time_unix_nano)
         if self.count != 0:
-            res["count"] = _utils.encode_int64(self.count)
+            _result["count"] = _utils.encode_int64(self.count)
         if self.sum != 0.0:
-            res["sum"] = _utils.encode_float(self.sum)
+            _result["sum"] = _utils.encode_float(self.sum)
         if self.scale != 0:
-            res["scale"] = self.scale
+            _result["scale"] = self.scale
         if self.zero_count != 0:
-            res["zeroCount"] = _utils.encode_int64(self.zero_count)
+            _result["zeroCount"] = _utils.encode_int64(self.zero_count)
         if self.positive is not None:
-            res["positive"] = self.positive.to_dict()
+            _result["positive"] = self.positive.to_dict()
         if self.negative is not None:
-            res["negative"] = self.negative.to_dict()
+            _result["negative"] = self.negative.to_dict()
         if self.flags != 0:
-            res["flags"] = self.flags
+            _result["flags"] = self.flags
         if self.exemplars:
-            res["exemplars"] = _utils.serialize_repeated(self.exemplars, lambda v: v.to_dict())
+            _result["exemplars"] = _utils.serialize_repeated(self.exemplars, lambda _v: _v.to_dict())
         if self.min != 0.0:
-            res["min"] = _utils.encode_float(self.min)
+            _result["min"] = _utils.encode_float(self.min)
         if self.max != 0.0:
-            res["max"] = _utils.encode_float(self.max)
+            _result["max"] = _utils.encode_float(self.max)
         if self.zero_threshold != 0.0:
-            res["zeroThreshold"] = _utils.encode_float(self.zero_threshold)
-        return res
+            _result["zeroThreshold"] = _utils.encode_float(self.zero_threshold)
+        return _result
 
     def to_json(self) -> str:
         """
@@ -994,36 +994,36 @@ class ExponentialHistogramDataPoint:
         Returns:
             ExponentialHistogramDataPoint instance
         """
-        args: dict[str, Any] = {}
-        if (val := data.get("attributes")) is not None:
-            args["attributes"] = _utils.deserialize_repeated(val, lambda v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(v))
-        if (val := data.get("startTimeUnixNano")) is not None:
-            args["start_time_unix_nano"] = _utils.parse_int64(val)
-        if (val := data.get("timeUnixNano")) is not None:
-            args["time_unix_nano"] = _utils.parse_int64(val)
-        if (val := data.get("count")) is not None:
-            args["count"] = _utils.parse_int64(val)
-        if (val := data.get("sum")) is not None:
-            args["sum"] = _utils.parse_float(val)
-        if (val := data.get("scale")) is not None:
-            args["scale"] = val
-        if (val := data.get("zeroCount")) is not None:
-            args["zero_count"] = _utils.parse_int64(val)
-        if (val := data.get("positive")) is not None:
-            args["positive"] = ExponentialHistogramDataPoint.Buckets.from_dict(val)
-        if (val := data.get("negative")) is not None:
-            args["negative"] = ExponentialHistogramDataPoint.Buckets.from_dict(val)
-        if (val := data.get("flags")) is not None:
-            args["flags"] = val
-        if (val := data.get("exemplars")) is not None:
-            args["exemplars"] = _utils.deserialize_repeated(val, lambda v: Exemplar.from_dict(v))
-        if (val := data.get("min")) is not None:
-            args["min"] = _utils.parse_float(val)
-        if (val := data.get("max")) is not None:
-            args["max"] = _utils.parse_float(val)
-        if (val := data.get("zeroThreshold")) is not None:
-            args["zero_threshold"] = _utils.parse_float(val)
-        return cls(**args)
+        _args: dict[str, Any] = {}
+        if (_value := data.get("attributes")) is not None:
+            _args["attributes"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v))
+        if (_value := data.get("startTimeUnixNano")) is not None:
+            _args["start_time_unix_nano"] = _utils.parse_int64(_value)
+        if (_value := data.get("timeUnixNano")) is not None:
+            _args["time_unix_nano"] = _utils.parse_int64(_value)
+        if (_value := data.get("count")) is not None:
+            _args["count"] = _utils.parse_int64(_value)
+        if (_value := data.get("sum")) is not None:
+            _args["sum"] = _utils.parse_float(_value)
+        if (_value := data.get("scale")) is not None:
+            _args["scale"] = _value
+        if (_value := data.get("zeroCount")) is not None:
+            _args["zero_count"] = _utils.parse_int64(_value)
+        if (_value := data.get("positive")) is not None:
+            _args["positive"] = ExponentialHistogramDataPoint.Buckets.from_dict(_value)
+        if (_value := data.get("negative")) is not None:
+            _args["negative"] = ExponentialHistogramDataPoint.Buckets.from_dict(_value)
+        if (_value := data.get("flags")) is not None:
+            _args["flags"] = _value
+        if (_value := data.get("exemplars")) is not None:
+            _args["exemplars"] = _utils.deserialize_repeated(_value, lambda _v: Exemplar.from_dict(_v))
+        if (_value := data.get("min")) is not None:
+            _args["min"] = _utils.parse_float(_value)
+        if (_value := data.get("max")) is not None:
+            _args["max"] = _utils.parse_float(_value)
+        if (_value := data.get("zeroThreshold")) is not None:
+            _args["zero_threshold"] = _utils.parse_float(_value)
+        return cls(**_args)
 
     @classmethod
     def from_json(cls, data: Union[str, bytes]) -> Self:
@@ -1061,12 +1061,12 @@ class SummaryDataPoint:
             Returns:
                 Dictionary representation following OTLP JSON encoding
             """
-            res: dict[str, Any] = {}
+            _result: dict[str, Any] = {}
             if self.quantile != 0.0:
-                res["quantile"] = _utils.encode_float(self.quantile)
+                _result["quantile"] = _utils.encode_float(self.quantile)
             if self.value != 0.0:
-                res["value"] = _utils.encode_float(self.value)
-            return res
+                _result["value"] = _utils.encode_float(self.value)
+            return _result
 
         def to_json(self) -> str:
             """
@@ -1088,12 +1088,12 @@ class SummaryDataPoint:
             Returns:
                 ValueAtQuantile instance
             """
-            args: dict[str, Any] = {}
-            if (val := data.get("quantile")) is not None:
-                args["quantile"] = _utils.parse_float(val)
-            if (val := data.get("value")) is not None:
-                args["value"] = _utils.parse_float(val)
-            return cls(**args)
+            _args: dict[str, Any] = {}
+            if (_value := data.get("quantile")) is not None:
+                _args["quantile"] = _utils.parse_float(_value)
+            if (_value := data.get("value")) is not None:
+                _args["value"] = _utils.parse_float(_value)
+            return cls(**_args)
 
         @classmethod
         def from_json(cls, data: Union[str, bytes]) -> Self:
@@ -1123,22 +1123,22 @@ class SummaryDataPoint:
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        res: dict[str, Any] = {}
+        _result: dict[str, Any] = {}
         if self.attributes:
-            res["attributes"] = _utils.serialize_repeated(self.attributes, lambda v: v.to_dict())
+            _result["attributes"] = _utils.serialize_repeated(self.attributes, lambda _v: _v.to_dict())
         if self.start_time_unix_nano != 0:
-            res["startTimeUnixNano"] = _utils.encode_int64(self.start_time_unix_nano)
+            _result["startTimeUnixNano"] = _utils.encode_int64(self.start_time_unix_nano)
         if self.time_unix_nano != 0:
-            res["timeUnixNano"] = _utils.encode_int64(self.time_unix_nano)
+            _result["timeUnixNano"] = _utils.encode_int64(self.time_unix_nano)
         if self.count != 0:
-            res["count"] = _utils.encode_int64(self.count)
+            _result["count"] = _utils.encode_int64(self.count)
         if self.sum != 0.0:
-            res["sum"] = _utils.encode_float(self.sum)
+            _result["sum"] = _utils.encode_float(self.sum)
         if self.quantile_values:
-            res["quantileValues"] = _utils.serialize_repeated(self.quantile_values, lambda v: v.to_dict())
+            _result["quantileValues"] = _utils.serialize_repeated(self.quantile_values, lambda _v: _v.to_dict())
         if self.flags != 0:
-            res["flags"] = self.flags
-        return res
+            _result["flags"] = self.flags
+        return _result
 
     def to_json(self) -> str:
         """
@@ -1160,22 +1160,22 @@ class SummaryDataPoint:
         Returns:
             SummaryDataPoint instance
         """
-        args: dict[str, Any] = {}
-        if (val := data.get("attributes")) is not None:
-            args["attributes"] = _utils.deserialize_repeated(val, lambda v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(v))
-        if (val := data.get("startTimeUnixNano")) is not None:
-            args["start_time_unix_nano"] = _utils.parse_int64(val)
-        if (val := data.get("timeUnixNano")) is not None:
-            args["time_unix_nano"] = _utils.parse_int64(val)
-        if (val := data.get("count")) is not None:
-            args["count"] = _utils.parse_int64(val)
-        if (val := data.get("sum")) is not None:
-            args["sum"] = _utils.parse_float(val)
-        if (val := data.get("quantileValues")) is not None:
-            args["quantile_values"] = _utils.deserialize_repeated(val, lambda v: SummaryDataPoint.ValueAtQuantile.from_dict(v))
-        if (val := data.get("flags")) is not None:
-            args["flags"] = val
-        return cls(**args)
+        _args: dict[str, Any] = {}
+        if (_value := data.get("attributes")) is not None:
+            _args["attributes"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v))
+        if (_value := data.get("startTimeUnixNano")) is not None:
+            _args["start_time_unix_nano"] = _utils.parse_int64(_value)
+        if (_value := data.get("timeUnixNano")) is not None:
+            _args["time_unix_nano"] = _utils.parse_int64(_value)
+        if (_value := data.get("count")) is not None:
+            _args["count"] = _utils.parse_int64(_value)
+        if (_value := data.get("sum")) is not None:
+            _args["sum"] = _utils.parse_float(_value)
+        if (_value := data.get("quantileValues")) is not None:
+            _args["quantile_values"] = _utils.deserialize_repeated(_value, lambda _v: SummaryDataPoint.ValueAtQuantile.from_dict(_v))
+        if (_value := data.get("flags")) is not None:
+            _args["flags"] = _value
+        return cls(**_args)
 
     @classmethod
     def from_json(cls, data: Union[str, bytes]) -> Self:
@@ -1211,20 +1211,20 @@ class Exemplar:
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        res: dict[str, Any] = {}
+        _result: dict[str, Any] = {}
         if self.filtered_attributes:
-            res["filteredAttributes"] = _utils.serialize_repeated(self.filtered_attributes, lambda v: v.to_dict())
+            _result["filteredAttributes"] = _utils.serialize_repeated(self.filtered_attributes, lambda _v: _v.to_dict())
         if self.time_unix_nano != 0:
-            res["timeUnixNano"] = _utils.encode_int64(self.time_unix_nano)
+            _result["timeUnixNano"] = _utils.encode_int64(self.time_unix_nano)
         if self.as_double != 0.0:
-            res["asDouble"] = _utils.encode_float(self.as_double)
+            _result["asDouble"] = _utils.encode_float(self.as_double)
         if self.as_int != 0:
-            res["asInt"] = _utils.encode_int64(self.as_int)
+            _result["asInt"] = _utils.encode_int64(self.as_int)
         if self.span_id != b'':
-            res["spanId"] = _utils.encode_hex(self.span_id)
+            _result["spanId"] = _utils.encode_hex(self.span_id)
         if self.trace_id != b'':
-            res["traceId"] = _utils.encode_hex(self.trace_id)
-        return res
+            _result["traceId"] = _utils.encode_hex(self.trace_id)
+        return _result
 
     def to_json(self) -> str:
         """
@@ -1246,20 +1246,20 @@ class Exemplar:
         Returns:
             Exemplar instance
         """
-        args: dict[str, Any] = {}
-        if (val := data.get("filteredAttributes")) is not None:
-            args["filtered_attributes"] = _utils.deserialize_repeated(val, lambda v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(v))
-        if (val := data.get("timeUnixNano")) is not None:
-            args["time_unix_nano"] = _utils.parse_int64(val)
-        if (val := data.get("asDouble")) is not None:
-            args["as_double"] = _utils.parse_float(val)
-        if (val := data.get("asInt")) is not None:
-            args["as_int"] = _utils.parse_int64(val)
-        if (val := data.get("spanId")) is not None:
-            args["span_id"] = _utils.decode_hex(val)
-        if (val := data.get("traceId")) is not None:
-            args["trace_id"] = _utils.decode_hex(val)
-        return cls(**args)
+        _args: dict[str, Any] = {}
+        if (_value := data.get("filteredAttributes")) is not None:
+            _args["filtered_attributes"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v))
+        if (_value := data.get("timeUnixNano")) is not None:
+            _args["time_unix_nano"] = _utils.parse_int64(_value)
+        if (_value := data.get("asDouble")) is not None:
+            _args["as_double"] = _utils.parse_float(_value)
+        if (_value := data.get("asInt")) is not None:
+            _args["as_int"] = _utils.parse_int64(_value)
+        if (_value := data.get("spanId")) is not None:
+            _args["span_id"] = _utils.decode_hex(_value)
+        if (_value := data.get("traceId")) is not None:
+            _args["trace_id"] = _utils.decode_hex(_value)
+        return cls(**_args)
 
     @classmethod
     def from_json(cls, data: Union[str, bytes]) -> Self:

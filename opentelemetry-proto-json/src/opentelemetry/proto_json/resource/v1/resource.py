@@ -42,14 +42,14 @@ class Resource:
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        res: dict[str, Any] = {}
+        _result: dict[str, Any] = {}
         if self.attributes:
-            res["attributes"] = _utils.serialize_repeated(self.attributes, lambda v: v.to_dict())
+            _result["attributes"] = _utils.serialize_repeated(self.attributes, lambda _v: _v.to_dict())
         if self.dropped_attributes_count != 0:
-            res["droppedAttributesCount"] = self.dropped_attributes_count
+            _result["droppedAttributesCount"] = self.dropped_attributes_count
         if self.entity_refs:
-            res["entityRefs"] = _utils.serialize_repeated(self.entity_refs, lambda v: v.to_dict())
-        return res
+            _result["entityRefs"] = _utils.serialize_repeated(self.entity_refs, lambda _v: _v.to_dict())
+        return _result
 
     def to_json(self) -> str:
         """
@@ -71,14 +71,14 @@ class Resource:
         Returns:
             Resource instance
         """
-        args: dict[str, Any] = {}
-        if (val := data.get("attributes")) is not None:
-            args["attributes"] = _utils.deserialize_repeated(val, lambda v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(v))
-        if (val := data.get("droppedAttributesCount")) is not None:
-            args["dropped_attributes_count"] = val
-        if (val := data.get("entityRefs")) is not None:
-            args["entity_refs"] = _utils.deserialize_repeated(val, lambda v: opentelemetry.proto_json.common.v1.common.EntityRef.from_dict(v))
-        return cls(**args)
+        _args: dict[str, Any] = {}
+        if (_value := data.get("attributes")) is not None:
+            _args["attributes"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v))
+        if (_value := data.get("droppedAttributesCount")) is not None:
+            _args["dropped_attributes_count"] = _value
+        if (_value := data.get("entityRefs")) is not None:
+            _args["entity_refs"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.EntityRef.from_dict(_v))
+        return cls(**_args)
 
     @classmethod
     def from_json(cls, data: Union[str, bytes]) -> Self:

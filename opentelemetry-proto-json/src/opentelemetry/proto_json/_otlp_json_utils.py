@@ -24,9 +24,7 @@ def encode_hex(value: bytes) -> str:
     Encode bytes as hex string.
     Used for trace_id and span_id per OTLP spec.
     """
-    if not value:
-        return ""
-    return value.hex()
+    return value.hex() if value else ""
 
 
 def encode_base64(value: bytes) -> str:
@@ -34,14 +32,12 @@ def encode_base64(value: bytes) -> str:
     Encode bytes as base64 string.
     Standard Proto3 JSON mapping for bytes.
     """
-    if not value:
-        return ""
-    return base64.b64encode(value).decode("utf-8")
+    return base64.b64encode(value).decode("utf-8") if value else ""
 
 
 def encode_int64(value: int) -> str:
     """
-    Encode 64-bit integers as strings.
+    Encode 64 bit integers as strings.
     Required for int64, uint64, fixed64, sfixed64, sint64 per Proto3 JSON spec.
     """
     return str(value)
@@ -63,9 +59,7 @@ def serialize_repeated(
     values: List[Any], map_fn: Callable[[Any], Any]
 ) -> List[Any]:
     """Helper to serialize repeated fields."""
-    if values is None:
-        return []
-    return [map_fn(v) for v in values]
+    return [map_fn(v) for v in values] if values else []
 
 
 def decode_hex(value: Optional[str]) -> bytes:
@@ -118,6 +112,4 @@ def deserialize_repeated(
     values: Optional[List[Any]], item_parser: Callable[[Any], T]
 ) -> List[T]:
     """Helper to deserialize repeated fields."""
-    if not values:
-        return []
-    return [item_parser(v) for v in values]
+    return [item_parser(v) for v in values] if values else []
