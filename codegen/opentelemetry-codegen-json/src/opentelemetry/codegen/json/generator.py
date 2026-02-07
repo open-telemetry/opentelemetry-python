@@ -265,7 +265,7 @@ class OtlpJsonGenerator:
         writer.import_("enum", "IntEnum")
         writer.blank_line()
 
-        # Collect all imports needed for cross-file references
+        # Collect all imports needed
         imports = self._collect_imports(proto_file)
 
         # Import the generated utility module
@@ -319,11 +319,11 @@ class OtlpJsonGenerator:
         enums: list[EnumInfo],
     ) -> None:
         """
-        Generate all enums for a file (top-level and nested).
+        Generate all enums for a file (top level and nested).
 
         Args:
             writer: Code writer instance
-            enums: List of top-level enums
+            enums: List of top level enums
         """
         for enum_info in enums:
             self._generate_enum_class(writer, enum_info)
@@ -337,7 +337,7 @@ class OtlpJsonGenerator:
 
         Args:
             writer: Code writer instance
-            messages: List of top-level messages
+            messages: List of top level messages
         """
         for i, message in enumerate(messages):
             if i:
@@ -357,8 +357,8 @@ class OtlpJsonGenerator:
         """
         with writer.dataclass(
             message.name,
-            frozen=False,  # Allow mutation for builder pattern if needed
-            slots=True,  # Use slots for better performance
+            frozen=False,
+            slots=True,
         ):
             if (
                 message.fields
@@ -382,7 +382,6 @@ class OtlpJsonGenerator:
                 for field_info in message.fields:
                     self._generate_field(writer, field_info, message)
             else:
-                # Empty dataclass needs a pass statement
                 writer.pass_()
 
             writer.blank_line()
@@ -409,7 +408,7 @@ class OtlpJsonGenerator:
             )
             writer.writeln("_result: dict[str, Any] = {}")
 
-            # Group fields by oneof_index to handle "last write wins"
+            # Separate fields into oneof groups and standalone fields
             oneof_groups: dict[int, list[FieldInfo]] = defaultdict(list)
             standalone_fields: list[FieldInfo] = []
 
@@ -452,10 +451,9 @@ class OtlpJsonGenerator:
                             f'_result["{field.json_name}"] = {val_expr}'
                         )
 
-            # Handle oneof groups with "last write wins" (check fields in reverse order)
+            # Handle oneof groups
             for group_index in sorted(oneof_groups.keys()):
                 group_fields = oneof_groups[group_index]
-                # Reverse order of declaration for "last write wins"
                 for i, field in enumerate(reversed(group_fields)):
                     field_type = field.field_type
                     condition = f"self.{field.name} is not None"
@@ -535,7 +533,7 @@ class OtlpJsonGenerator:
             writer.writeln("_args: dict[str, Any] = {}")
             writer.blank_line()
 
-            # Group fields by oneof_index to handle "last write wins"
+            # Separate fields into oneof groups and standalone fields
             oneof_groups: dict[int, list[FieldInfo]] = defaultdict(list)
             standalone_fields: list[FieldInfo] = []
 
@@ -564,12 +562,10 @@ class OtlpJsonGenerator:
                             writer, field, "_value", message, "_args"
                         )
 
-            # Handle oneof groups with "last write wins" (check fields in reverse order)
+            # Handle oneof groups
             for group_index in sorted(oneof_groups.keys()):
                 group_fields = oneof_groups[group_index]
-                # Reverse order of declaration for "last write wins"
                 for i, field in enumerate(reversed(group_fields)):
-                    field_type = field.field_type
                     condition = f'(_value := data.get("{field.json_name}")) is not None'
                     context = (
                         writer.elif_(condition) if i else writer.if_(condition)
@@ -845,7 +841,7 @@ class OtlpJsonGenerator:
         if field_type.is_enum:
             return "0"
 
-        # Primitive types - use proto defaults
+        # Primitive types use proto defaults
         return get_default_value(field_type.proto_type)
 
 

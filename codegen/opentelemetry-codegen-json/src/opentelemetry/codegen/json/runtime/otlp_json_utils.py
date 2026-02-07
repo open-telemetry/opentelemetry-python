@@ -38,7 +38,7 @@ def encode_base64(value: bytes) -> str:
 def encode_int64(value: int) -> str:
     """
     Encode 64 bit integers as strings.
-    Required for int64, uint64, fixed64, sfixed64, sint64 per Proto3 JSON spec.
+    Required for int64, uint64, fixed64, sfixed64 and sint64 per Proto3 JSON spec.
     """
     return str(value)
 
@@ -46,7 +46,6 @@ def encode_int64(value: int) -> str:
 def encode_float(value: float) -> Union[float, str]:
     """
     Encode float/double values.
-    Handles special values NaN, Infinity, -Infinity as strings.
     """
     if math.isnan(value):
         return "NaN"
@@ -77,7 +76,7 @@ def validate_type(
 
 
 def decode_hex(value: Optional[str], field_name: str) -> bytes:
-    """Decode hex string to bytes (trace_id, span_id)."""
+    """Decode hex string to bytes."""
     if not value:
         return b""
     validate_type(value, str, field_name)
