@@ -22,7 +22,7 @@ from typing import Callable, Final, Optional, Set
 from google.protobuf import descriptor_pb2 as descriptor
 from google.protobuf.compiler import plugin_pb2 as plugin
 
-from opentelemetry.codegen.json.descriptor_analyzer import (
+from opentelemetry.codegen.json.analyzer import (
     DescriptorAnalyzer,
     EnumInfo,
     FieldInfo,
@@ -422,7 +422,7 @@ class OtlpJsonGenerator:
             for field in standalone_fields:
                 field_type = field.field_type
                 if field_type.is_repeated:
-                    item_expr = self._get_serialization_expr_for_type(
+                    item_expr = self._get_serialization_expr(
                         field_type, field.name, "_v"
                     )
                     with writer.if_(f"self.{field.name}"):
@@ -436,7 +436,7 @@ class OtlpJsonGenerator:
                                 f"self.{field.name}, lambda _v: {item_expr})"
                             )
                 else:
-                    val_expr = self._get_serialization_expr_for_type(
+                    val_expr = self._get_serialization_expr(
                         field_type, field.name, f"self.{field.name}"
                     )
                     default = get_default_value(field_type.proto_type)
@@ -462,7 +462,7 @@ class OtlpJsonGenerator:
                     )
 
                     with context:
-                        val_expr = self._get_serialization_expr_for_type(
+                        val_expr = self._get_serialization_expr(
                             field_type, field.name, f"self.{field.name}"
                         )
                         writer.writeln(
@@ -486,7 +486,7 @@ class OtlpJsonGenerator:
             )
             writer.return_("json.dumps(self.to_dict())")
 
-    def _get_serialization_expr_for_type(
+    def _get_serialization_expr(
         self, field_type: ProtoType, field_name: str, var_name: str
     ) -> str:
         """Get the Python expression to serialize a value of a given type."""
@@ -550,7 +550,7 @@ class OtlpJsonGenerator:
                     f'(_value := data.get("{field.json_name}")) is not None'
                 ):
                     if field_type.is_repeated:
-                        item_expr = self._get_deserialization_expr_for_type(
+                        item_expr = self._get_deserialization_expr(
                             field_type, field.name, "_v", message
                         )
                         writer.writeln(
@@ -653,7 +653,7 @@ class OtlpJsonGenerator:
             )
             writer.writeln(f'{target_dict}["{field.name}"] = {var_name}')
 
-    def _get_deserialization_expr_for_type(
+    def _get_deserialization_expr(
         self,
         field_type: ProtoType,
         field_name: str,
@@ -718,12 +718,11 @@ class OtlpJsonGenerator:
             parent_message: Parent message (for context)
         """
         type_hint = self._get_field_type_hint(field_info, parent_message)
-        default = self._get_field_default(field_info)
-
-        if default:
-            writer.field(field_info.name, type_hint, default=default)
-        else:
-            writer.field(field_info.name, type_hint)
+        writer.field(
+            field_info.name,
+            type_hint,
+            default=self._get_field_default(field_info),
+        )
 
     def _get_field_type_hint(
         self, field_info: FieldInfo, parent_message: MessageInfo
@@ -749,10 +748,10 @@ class OtlpJsonGenerator:
 
         if field_type.is_repeated:
             return f"list[{base_type}]"
-        elif field_type.is_optional or field_info.is_oneof_member:
+        if field_type.is_optional or field_info.is_oneof_member:
             return f"Optional[{base_type}]"
-        else:
-            return base_type
+
+        return base_type
 
     def _resolve_message_type(
         self, fully_qualified_name: str, context_message: MessageInfo
@@ -779,10 +778,9 @@ class OtlpJsonGenerator:
         # If in same file, use relative class path
         if message_info.file_name == context_message.file_name:
             return message_info.python_class_path
-        else:
-            # Cross file reference - use fully qualified module + class path
-            module_path = self._get_module_path(message_info.file_name)
-            return f"{module_path}.{message_info.python_class_path}"
+        # Cross file reference - use fully qualified module + class path
+        module_path = self._get_module_path(message_info.file_name)
+        return f"{module_path}.{message_info.python_class_path}"
 
     def _resolve_enum_type(
         self, fully_qualified_name: str, context_message: MessageInfo
@@ -808,10 +806,9 @@ class OtlpJsonGenerator:
         # If in same file, use relative class path
         if enum_info.file_name == context_message.file_name:
             return enum_info.python_class_path
-        else:
-            # Cross file reference - use fully qualified module + class path
-            module_path = self._get_module_path(enum_info.file_name)
-            return f"{module_path}.{enum_info.python_class_path}"
+        # Cross file reference - use fully qualified module + class path
+        module_path = self._get_module_path(enum_info.file_name)
+        return f"{module_path}.{enum_info.python_class_path}"
 
     def _get_field_default(self, field_info: FieldInfo) -> Optional[str]:
         """

@@ -92,34 +92,6 @@ def is_hex_encoded_field(field_name: str) -> bool:
     return field_name in HEX_ENCODED_FIELDS
 
 
-def get_json_type_hint(proto_type: int, field_name: str = "") -> str:
-    """
-    Get the Python type hint for the JSON representation of a field.
-
-    Args:
-        proto_type: Protobuf type constant
-        field_name: Optional field name to check for hex encoding
-
-    Returns:
-        Type hint string (e.g., 'str' for int64 or hex bytes)
-    """
-    if (
-        is_hex_encoded_field(field_name)
-        or is_int64_type(proto_type)
-        or is_bytes_type(proto_type)
-    ):
-        return "str"
-    return get_python_type(proto_type)
-
-
-def accepts_numeric_or_string(proto_type: int) -> bool:
-    """
-    Check if the field accepts both numbers and strings during deserialization.
-    This applies to all 64-bit integer types per proto3 JSON spec.
-    """
-    return is_int64_type(proto_type)
-
-
 def to_json_field_name(snake_name: str) -> str:
     """Convert snake_case field name to lowerCamelCase JSON name."""
     components = snake_name.split("_")
