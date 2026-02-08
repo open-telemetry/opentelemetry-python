@@ -127,7 +127,7 @@ class ResourceMetrics:
             _result["resource"] = self.resource.to_dict()
         if self.scope_metrics:
             _result["scopeMetrics"] = _utils.serialize_repeated(self.scope_metrics, lambda _v: _v.to_dict())
-        if self.schema_url != '':
+        if self.schema_url is not None and self.schema_url != '':
             _result["schemaUrl"] = self.schema_url
         return _result
 
@@ -200,7 +200,7 @@ class ScopeMetrics:
             _result["scope"] = self.scope.to_dict()
         if self.metrics:
             _result["metrics"] = _utils.serialize_repeated(self.metrics, lambda _v: _v.to_dict())
-        if self.schema_url != '':
+        if self.schema_url is not None and self.schema_url != '':
             _result["schemaUrl"] = self.schema_url
         return _result
 
@@ -275,11 +275,11 @@ class Metric:
             Dictionary representation following OTLP JSON encoding
         """
         _result: dict[str, Any] = {}
-        if self.name != '':
+        if self.name is not None and self.name != '':
             _result["name"] = self.name
-        if self.description != '':
+        if self.description is not None and self.description != '':
             _result["description"] = self.description
-        if self.unit != '':
+        if self.unit is not None and self.unit != '':
             _result["unit"] = self.unit
         if self.metadata:
             _result["metadata"] = _utils.serialize_repeated(self.metadata, lambda _v: _v.to_dict())
@@ -438,9 +438,9 @@ class Sum:
         _result: dict[str, Any] = {}
         if self.data_points:
             _result["dataPoints"] = _utils.serialize_repeated(self.data_points, lambda _v: _v.to_dict())
-        if self.aggregation_temporality != None:
+        if self.aggregation_temporality is not None:
             _result["aggregationTemporality"] = int(self.aggregation_temporality)
-        if self.is_monotonic != False:
+        if self.is_monotonic is not None and self.is_monotonic != False:
             _result["isMonotonic"] = self.is_monotonic
         return _result
 
@@ -511,7 +511,7 @@ class Histogram:
         _result: dict[str, Any] = {}
         if self.data_points:
             _result["dataPoints"] = _utils.serialize_repeated(self.data_points, lambda _v: _v.to_dict())
-        if self.aggregation_temporality != None:
+        if self.aggregation_temporality is not None:
             _result["aggregationTemporality"] = int(self.aggregation_temporality)
         return _result
 
@@ -579,7 +579,7 @@ class ExponentialHistogram:
         _result: dict[str, Any] = {}
         if self.data_points:
             _result["dataPoints"] = _utils.serialize_repeated(self.data_points, lambda _v: _v.to_dict())
-        if self.aggregation_temporality != None:
+        if self.aggregation_temporality is not None:
             _result["aggregationTemporality"] = int(self.aggregation_temporality)
         return _result
 
@@ -714,13 +714,13 @@ class NumberDataPoint:
         _result: dict[str, Any] = {}
         if self.attributes:
             _result["attributes"] = _utils.serialize_repeated(self.attributes, lambda _v: _v.to_dict())
-        if self.start_time_unix_nano != 0:
+        if self.start_time_unix_nano is not None and self.start_time_unix_nano != 0:
             _result["startTimeUnixNano"] = _utils.encode_int64(self.start_time_unix_nano)
-        if self.time_unix_nano != 0:
+        if self.time_unix_nano is not None and self.time_unix_nano != 0:
             _result["timeUnixNano"] = _utils.encode_int64(self.time_unix_nano)
         if self.exemplars:
             _result["exemplars"] = _utils.serialize_repeated(self.exemplars, lambda _v: _v.to_dict())
-        if self.flags != 0:
+        if self.flags is not None and self.flags != 0:
             _result["flags"] = self.flags
         if self.as_int is not None:
             _result["asInt"] = _utils.encode_int64(self.as_int)
@@ -811,13 +811,13 @@ class HistogramDataPoint:
         _result: dict[str, Any] = {}
         if self.attributes:
             _result["attributes"] = _utils.serialize_repeated(self.attributes, lambda _v: _v.to_dict())
-        if self.start_time_unix_nano != 0:
+        if self.start_time_unix_nano is not None and self.start_time_unix_nano != 0:
             _result["startTimeUnixNano"] = _utils.encode_int64(self.start_time_unix_nano)
-        if self.time_unix_nano != 0:
+        if self.time_unix_nano is not None and self.time_unix_nano != 0:
             _result["timeUnixNano"] = _utils.encode_int64(self.time_unix_nano)
-        if self.count != 0:
+        if self.count is not None and self.count != 0:
             _result["count"] = _utils.encode_int64(self.count)
-        if self.sum != 0.0:
+        if self.sum is not None and self.sum != 0.0:
             _result["sum"] = _utils.encode_float(self.sum)
         if self.bucket_counts:
             _result["bucketCounts"] = _utils.serialize_repeated(self.bucket_counts, lambda _v: _utils.encode_int64(_v))
@@ -825,11 +825,11 @@ class HistogramDataPoint:
             _result["explicitBounds"] = _utils.serialize_repeated(self.explicit_bounds, lambda _v: _utils.encode_float(_v))
         if self.exemplars:
             _result["exemplars"] = _utils.serialize_repeated(self.exemplars, lambda _v: _v.to_dict())
-        if self.flags != 0:
+        if self.flags is not None and self.flags != 0:
             _result["flags"] = self.flags
-        if self.min != 0.0:
+        if self.min is not None and self.min != 0.0:
             _result["min"] = _utils.encode_float(self.min)
-        if self.max != 0.0:
+        if self.max is not None and self.max != 0.0:
             _result["max"] = _utils.encode_float(self.max)
         return _result
 
@@ -919,7 +919,7 @@ class ExponentialHistogramDataPoint:
                 Dictionary representation following OTLP JSON encoding
             """
             _result: dict[str, Any] = {}
-            if self.offset != 0:
+            if self.offset is not None and self.offset != 0:
                 _result["offset"] = self.offset
             if self.bucket_counts:
                 _result["bucketCounts"] = _utils.serialize_repeated(self.bucket_counts, lambda _v: _utils.encode_int64(_v))
@@ -994,31 +994,31 @@ class ExponentialHistogramDataPoint:
         _result: dict[str, Any] = {}
         if self.attributes:
             _result["attributes"] = _utils.serialize_repeated(self.attributes, lambda _v: _v.to_dict())
-        if self.start_time_unix_nano != 0:
+        if self.start_time_unix_nano is not None and self.start_time_unix_nano != 0:
             _result["startTimeUnixNano"] = _utils.encode_int64(self.start_time_unix_nano)
-        if self.time_unix_nano != 0:
+        if self.time_unix_nano is not None and self.time_unix_nano != 0:
             _result["timeUnixNano"] = _utils.encode_int64(self.time_unix_nano)
-        if self.count != 0:
+        if self.count is not None and self.count != 0:
             _result["count"] = _utils.encode_int64(self.count)
-        if self.sum != 0.0:
+        if self.sum is not None and self.sum != 0.0:
             _result["sum"] = _utils.encode_float(self.sum)
-        if self.scale != 0:
+        if self.scale is not None and self.scale != 0:
             _result["scale"] = self.scale
-        if self.zero_count != 0:
+        if self.zero_count is not None and self.zero_count != 0:
             _result["zeroCount"] = _utils.encode_int64(self.zero_count)
         if self.positive is not None:
             _result["positive"] = self.positive.to_dict()
         if self.negative is not None:
             _result["negative"] = self.negative.to_dict()
-        if self.flags != 0:
+        if self.flags is not None and self.flags != 0:
             _result["flags"] = self.flags
         if self.exemplars:
             _result["exemplars"] = _utils.serialize_repeated(self.exemplars, lambda _v: _v.to_dict())
-        if self.min != 0.0:
+        if self.min is not None and self.min != 0.0:
             _result["min"] = _utils.encode_float(self.min)
-        if self.max != 0.0:
+        if self.max is not None and self.max != 0.0:
             _result["max"] = _utils.encode_float(self.max)
-        if self.zero_threshold != 0.0:
+        if self.zero_threshold is not None and self.zero_threshold != 0.0:
             _result["zeroThreshold"] = _utils.encode_float(self.zero_threshold)
         return _result
 
@@ -1115,9 +1115,9 @@ class SummaryDataPoint:
                 Dictionary representation following OTLP JSON encoding
             """
             _result: dict[str, Any] = {}
-            if self.quantile != 0.0:
+            if self.quantile is not None and self.quantile != 0.0:
                 _result["quantile"] = _utils.encode_float(self.quantile)
-            if self.value != 0.0:
+            if self.value is not None and self.value != 0.0:
                 _result["value"] = _utils.encode_float(self.value)
             return _result
 
@@ -1182,17 +1182,17 @@ class SummaryDataPoint:
         _result: dict[str, Any] = {}
         if self.attributes:
             _result["attributes"] = _utils.serialize_repeated(self.attributes, lambda _v: _v.to_dict())
-        if self.start_time_unix_nano != 0:
+        if self.start_time_unix_nano is not None and self.start_time_unix_nano != 0:
             _result["startTimeUnixNano"] = _utils.encode_int64(self.start_time_unix_nano)
-        if self.time_unix_nano != 0:
+        if self.time_unix_nano is not None and self.time_unix_nano != 0:
             _result["timeUnixNano"] = _utils.encode_int64(self.time_unix_nano)
-        if self.count != 0:
+        if self.count is not None and self.count != 0:
             _result["count"] = _utils.encode_int64(self.count)
-        if self.sum != 0.0:
+        if self.sum is not None and self.sum != 0.0:
             _result["sum"] = _utils.encode_float(self.sum)
         if self.quantile_values:
             _result["quantileValues"] = _utils.serialize_repeated(self.quantile_values, lambda _v: _v.to_dict())
-        if self.flags != 0:
+        if self.flags is not None and self.flags != 0:
             _result["flags"] = self.flags
         return _result
 
@@ -1274,11 +1274,11 @@ class Exemplar:
         _result: dict[str, Any] = {}
         if self.filtered_attributes:
             _result["filteredAttributes"] = _utils.serialize_repeated(self.filtered_attributes, lambda _v: _v.to_dict())
-        if self.time_unix_nano != 0:
+        if self.time_unix_nano is not None and self.time_unix_nano != 0:
             _result["timeUnixNano"] = _utils.encode_int64(self.time_unix_nano)
-        if self.span_id != b'':
+        if self.span_id is not None and self.span_id != b'':
             _result["spanId"] = _utils.encode_hex(self.span_id)
-        if self.trace_id != b'':
+        if self.trace_id is not None and self.trace_id != b'':
             _result["traceId"] = _utils.encode_hex(self.trace_id)
         if self.as_int is not None:
             _result["asInt"] = _utils.encode_int64(self.as_int)

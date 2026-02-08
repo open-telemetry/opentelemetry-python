@@ -442,8 +442,8 @@ class OtlpJsonGenerator:
                     default = get_default_value(field_type.proto_type)
                     check = (
                         f"self.{field.name} is not None"
-                        if field_type.is_message
-                        else f"self.{field.name} != {default}"
+                        if field_type.is_message or default == "None"
+                        else f"self.{field.name} is not None and self.{field.name} != {default}"
                     )
 
                     with writer.if_(check):

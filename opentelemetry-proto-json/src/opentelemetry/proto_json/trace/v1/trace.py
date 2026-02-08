@@ -120,7 +120,7 @@ class ResourceSpans:
             _result["resource"] = self.resource.to_dict()
         if self.scope_spans:
             _result["scopeSpans"] = _utils.serialize_repeated(self.scope_spans, lambda _v: _v.to_dict())
-        if self.schema_url != '':
+        if self.schema_url is not None and self.schema_url != '':
             _result["schemaUrl"] = self.schema_url
         return _result
 
@@ -193,7 +193,7 @@ class ScopeSpans:
             _result["scope"] = self.scope.to_dict()
         if self.spans:
             _result["spans"] = _utils.serialize_repeated(self.spans, lambda _v: _v.to_dict())
-        if self.schema_url != '':
+        if self.schema_url is not None and self.schema_url != '':
             _result["schemaUrl"] = self.schema_url
         return _result
 
@@ -281,13 +281,13 @@ class Span:
                 Dictionary representation following OTLP JSON encoding
             """
             _result: dict[str, Any] = {}
-            if self.time_unix_nano != 0:
+            if self.time_unix_nano is not None and self.time_unix_nano != 0:
                 _result["timeUnixNano"] = _utils.encode_int64(self.time_unix_nano)
-            if self.name != '':
+            if self.name is not None and self.name != '':
                 _result["name"] = self.name
             if self.attributes:
                 _result["attributes"] = _utils.serialize_repeated(self.attributes, lambda _v: _v.to_dict())
-            if self.dropped_attributes_count != 0:
+            if self.dropped_attributes_count is not None and self.dropped_attributes_count != 0:
                 _result["droppedAttributesCount"] = self.dropped_attributes_count
             return _result
 
@@ -361,17 +361,17 @@ class Span:
                 Dictionary representation following OTLP JSON encoding
             """
             _result: dict[str, Any] = {}
-            if self.trace_id != b'':
+            if self.trace_id is not None and self.trace_id != b'':
                 _result["traceId"] = _utils.encode_hex(self.trace_id)
-            if self.span_id != b'':
+            if self.span_id is not None and self.span_id != b'':
                 _result["spanId"] = _utils.encode_hex(self.span_id)
-            if self.trace_state != '':
+            if self.trace_state is not None and self.trace_state != '':
                 _result["traceState"] = self.trace_state
             if self.attributes:
                 _result["attributes"] = _utils.serialize_repeated(self.attributes, lambda _v: _v.to_dict())
-            if self.dropped_attributes_count != 0:
+            if self.dropped_attributes_count is not None and self.dropped_attributes_count != 0:
                 _result["droppedAttributesCount"] = self.dropped_attributes_count
-            if self.flags != 0:
+            if self.flags is not None and self.flags != 0:
                 _result["flags"] = self.flags
             return _result
 
@@ -454,35 +454,35 @@ class Span:
             Dictionary representation following OTLP JSON encoding
         """
         _result: dict[str, Any] = {}
-        if self.trace_id != b'':
+        if self.trace_id is not None and self.trace_id != b'':
             _result["traceId"] = _utils.encode_hex(self.trace_id)
-        if self.span_id != b'':
+        if self.span_id is not None and self.span_id != b'':
             _result["spanId"] = _utils.encode_hex(self.span_id)
-        if self.trace_state != '':
+        if self.trace_state is not None and self.trace_state != '':
             _result["traceState"] = self.trace_state
-        if self.parent_span_id != b'':
+        if self.parent_span_id is not None and self.parent_span_id != b'':
             _result["parentSpanId"] = _utils.encode_hex(self.parent_span_id)
-        if self.flags != 0:
+        if self.flags is not None and self.flags != 0:
             _result["flags"] = self.flags
-        if self.name != '':
+        if self.name is not None and self.name != '':
             _result["name"] = self.name
-        if self.kind != None:
+        if self.kind is not None:
             _result["kind"] = int(self.kind)
-        if self.start_time_unix_nano != 0:
+        if self.start_time_unix_nano is not None and self.start_time_unix_nano != 0:
             _result["startTimeUnixNano"] = _utils.encode_int64(self.start_time_unix_nano)
-        if self.end_time_unix_nano != 0:
+        if self.end_time_unix_nano is not None and self.end_time_unix_nano != 0:
             _result["endTimeUnixNano"] = _utils.encode_int64(self.end_time_unix_nano)
         if self.attributes:
             _result["attributes"] = _utils.serialize_repeated(self.attributes, lambda _v: _v.to_dict())
-        if self.dropped_attributes_count != 0:
+        if self.dropped_attributes_count is not None and self.dropped_attributes_count != 0:
             _result["droppedAttributesCount"] = self.dropped_attributes_count
         if self.events:
             _result["events"] = _utils.serialize_repeated(self.events, lambda _v: _v.to_dict())
-        if self.dropped_events_count != 0:
+        if self.dropped_events_count is not None and self.dropped_events_count != 0:
             _result["droppedEventsCount"] = self.dropped_events_count
         if self.links:
             _result["links"] = _utils.serialize_repeated(self.links, lambda _v: _v.to_dict())
-        if self.dropped_links_count != 0:
+        if self.dropped_links_count is not None and self.dropped_links_count != 0:
             _result["droppedLinksCount"] = self.dropped_links_count
         if self.status is not None:
             _result["status"] = self.status.to_dict()
@@ -593,9 +593,9 @@ class Status:
             Dictionary representation following OTLP JSON encoding
         """
         _result: dict[str, Any] = {}
-        if self.message != '':
+        if self.message is not None and self.message != '':
             _result["message"] = self.message
-        if self.code != None:
+        if self.code is not None:
             _result["code"] = int(self.code)
         return _result
 

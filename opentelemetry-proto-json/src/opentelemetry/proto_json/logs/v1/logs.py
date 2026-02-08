@@ -149,7 +149,7 @@ class ResourceLogs:
             _result["resource"] = self.resource.to_dict()
         if self.scope_logs:
             _result["scopeLogs"] = _utils.serialize_repeated(self.scope_logs, lambda _v: _v.to_dict())
-        if self.schema_url != '':
+        if self.schema_url is not None and self.schema_url != '':
             _result["schemaUrl"] = self.schema_url
         return _result
 
@@ -222,7 +222,7 @@ class ScopeLogs:
             _result["scope"] = self.scope.to_dict()
         if self.log_records:
             _result["logRecords"] = _utils.serialize_repeated(self.log_records, lambda _v: _v.to_dict())
-        if self.schema_url != '':
+        if self.schema_url is not None and self.schema_url != '':
             _result["schemaUrl"] = self.schema_url
         return _result
 
@@ -299,27 +299,27 @@ class LogRecord:
             Dictionary representation following OTLP JSON encoding
         """
         _result: dict[str, Any] = {}
-        if self.time_unix_nano != 0:
+        if self.time_unix_nano is not None and self.time_unix_nano != 0:
             _result["timeUnixNano"] = _utils.encode_int64(self.time_unix_nano)
-        if self.observed_time_unix_nano != 0:
+        if self.observed_time_unix_nano is not None and self.observed_time_unix_nano != 0:
             _result["observedTimeUnixNano"] = _utils.encode_int64(self.observed_time_unix_nano)
-        if self.severity_number != None:
+        if self.severity_number is not None:
             _result["severityNumber"] = int(self.severity_number)
-        if self.severity_text != '':
+        if self.severity_text is not None and self.severity_text != '':
             _result["severityText"] = self.severity_text
         if self.body is not None:
             _result["body"] = self.body.to_dict()
         if self.attributes:
             _result["attributes"] = _utils.serialize_repeated(self.attributes, lambda _v: _v.to_dict())
-        if self.dropped_attributes_count != 0:
+        if self.dropped_attributes_count is not None and self.dropped_attributes_count != 0:
             _result["droppedAttributesCount"] = self.dropped_attributes_count
-        if self.flags != 0:
+        if self.flags is not None and self.flags != 0:
             _result["flags"] = self.flags
-        if self.trace_id != b'':
+        if self.trace_id is not None and self.trace_id != b'':
             _result["traceId"] = _utils.encode_hex(self.trace_id)
-        if self.span_id != b'':
+        if self.span_id is not None and self.span_id != b'':
             _result["spanId"] = _utils.encode_hex(self.span_id)
-        if self.event_name != '':
+        if self.event_name is not None and self.event_name != '':
             _result["eventName"] = self.event_name
         return _result
 

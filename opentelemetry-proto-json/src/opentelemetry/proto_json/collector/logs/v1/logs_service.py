@@ -166,9 +166,9 @@ class ExportLogsPartialSuccess:
             Dictionary representation following OTLP JSON encoding
         """
         _result: dict[str, Any] = {}
-        if self.rejected_log_records != 0:
+        if self.rejected_log_records is not None and self.rejected_log_records != 0:
             _result["rejectedLogRecords"] = _utils.encode_int64(self.rejected_log_records)
-        if self.error_message != '':
+        if self.error_message is not None and self.error_message != '':
             _result["errorMessage"] = self.error_message
         return _result
 

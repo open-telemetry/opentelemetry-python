@@ -166,9 +166,9 @@ class ExportMetricsPartialSuccess:
             Dictionary representation following OTLP JSON encoding
         """
         _result: dict[str, Any] = {}
-        if self.rejected_data_points != 0:
+        if self.rejected_data_points is not None and self.rejected_data_points != 0:
             _result["rejectedDataPoints"] = _utils.encode_int64(self.rejected_data_points)
-        if self.error_message != '':
+        if self.error_message is not None and self.error_message != '':
             _result["errorMessage"] = self.error_message
         return _result
 

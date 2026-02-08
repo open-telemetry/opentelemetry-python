@@ -207,7 +207,7 @@ class ResourceProfiles:
             _result["resource"] = self.resource.to_dict()
         if self.scope_profiles:
             _result["scopeProfiles"] = _utils.serialize_repeated(self.scope_profiles, lambda _v: _v.to_dict())
-        if self.schema_url != '':
+        if self.schema_url is not None and self.schema_url != '':
             _result["schemaUrl"] = self.schema_url
         return _result
 
@@ -280,7 +280,7 @@ class ScopeProfiles:
             _result["scope"] = self.scope.to_dict()
         if self.profiles:
             _result["profiles"] = _utils.serialize_repeated(self.profiles, lambda _v: _v.to_dict())
-        if self.schema_url != '':
+        if self.schema_url is not None and self.schema_url != '':
             _result["schemaUrl"] = self.schema_url
         return _result
 
@@ -361,21 +361,21 @@ class Profile:
             _result["sampleType"] = self.sample_type.to_dict()
         if self.samples:
             _result["samples"] = _utils.serialize_repeated(self.samples, lambda _v: _v.to_dict())
-        if self.time_unix_nano != 0:
+        if self.time_unix_nano is not None and self.time_unix_nano != 0:
             _result["timeUnixNano"] = _utils.encode_int64(self.time_unix_nano)
-        if self.duration_nano != 0:
+        if self.duration_nano is not None and self.duration_nano != 0:
             _result["durationNano"] = _utils.encode_int64(self.duration_nano)
         if self.period_type is not None:
             _result["periodType"] = self.period_type.to_dict()
-        if self.period != 0:
+        if self.period is not None and self.period != 0:
             _result["period"] = _utils.encode_int64(self.period)
-        if self.profile_id != b'':
+        if self.profile_id is not None and self.profile_id != b'':
             _result["profileId"] = _utils.encode_base64(self.profile_id)
-        if self.dropped_attributes_count != 0:
+        if self.dropped_attributes_count is not None and self.dropped_attributes_count != 0:
             _result["droppedAttributesCount"] = self.dropped_attributes_count
-        if self.original_payload_format != '':
+        if self.original_payload_format is not None and self.original_payload_format != '':
             _result["originalPayloadFormat"] = self.original_payload_format
-        if self.original_payload != b'':
+        if self.original_payload is not None and self.original_payload != b'':
             _result["originalPayload"] = _utils.encode_base64(self.original_payload)
         if self.attribute_indices:
             _result["attributeIndices"] = self.attribute_indices
@@ -462,9 +462,9 @@ class Link:
             Dictionary representation following OTLP JSON encoding
         """
         _result: dict[str, Any] = {}
-        if self.trace_id != b'':
+        if self.trace_id is not None and self.trace_id != b'':
             _result["traceId"] = _utils.encode_hex(self.trace_id)
-        if self.span_id != b'':
+        if self.span_id is not None and self.span_id != b'':
             _result["spanId"] = _utils.encode_hex(self.span_id)
         return _result
 
@@ -529,9 +529,9 @@ class ValueType:
             Dictionary representation following OTLP JSON encoding
         """
         _result: dict[str, Any] = {}
-        if self.type_strindex != 0:
+        if self.type_strindex is not None and self.type_strindex != 0:
             _result["typeStrindex"] = self.type_strindex
-        if self.unit_strindex != 0:
+        if self.unit_strindex is not None and self.unit_strindex != 0:
             _result["unitStrindex"] = self.unit_strindex
         return _result
 
@@ -601,13 +601,13 @@ class Sample:
             Dictionary representation following OTLP JSON encoding
         """
         _result: dict[str, Any] = {}
-        if self.stack_index != 0:
+        if self.stack_index is not None and self.stack_index != 0:
             _result["stackIndex"] = self.stack_index
         if self.values:
             _result["values"] = _utils.serialize_repeated(self.values, lambda _v: _utils.encode_int64(_v))
         if self.attribute_indices:
             _result["attributeIndices"] = self.attribute_indices
-        if self.link_index != 0:
+        if self.link_index is not None and self.link_index != 0:
             _result["linkIndex"] = self.link_index
         if self.timestamps_unix_nano:
             _result["timestampsUnixNano"] = _utils.serialize_repeated(self.timestamps_unix_nano, lambda _v: _utils.encode_int64(_v))
@@ -685,13 +685,13 @@ class Mapping:
             Dictionary representation following OTLP JSON encoding
         """
         _result: dict[str, Any] = {}
-        if self.memory_start != 0:
+        if self.memory_start is not None and self.memory_start != 0:
             _result["memoryStart"] = _utils.encode_int64(self.memory_start)
-        if self.memory_limit != 0:
+        if self.memory_limit is not None and self.memory_limit != 0:
             _result["memoryLimit"] = _utils.encode_int64(self.memory_limit)
-        if self.file_offset != 0:
+        if self.file_offset is not None and self.file_offset != 0:
             _result["fileOffset"] = _utils.encode_int64(self.file_offset)
-        if self.filename_strindex != 0:
+        if self.filename_strindex is not None and self.filename_strindex != 0:
             _result["filenameStrindex"] = self.filename_strindex
         if self.attribute_indices:
             _result["attributeIndices"] = self.attribute_indices
@@ -829,9 +829,9 @@ class Location:
             Dictionary representation following OTLP JSON encoding
         """
         _result: dict[str, Any] = {}
-        if self.mapping_index != 0:
+        if self.mapping_index is not None and self.mapping_index != 0:
             _result["mappingIndex"] = self.mapping_index
-        if self.address != 0:
+        if self.address is not None and self.address != 0:
             _result["address"] = _utils.encode_int64(self.address)
         if self.lines:
             _result["lines"] = _utils.serialize_repeated(self.lines, lambda _v: _v.to_dict())
@@ -906,11 +906,11 @@ class Line:
             Dictionary representation following OTLP JSON encoding
         """
         _result: dict[str, Any] = {}
-        if self.function_index != 0:
+        if self.function_index is not None and self.function_index != 0:
             _result["functionIndex"] = self.function_index
-        if self.line != 0:
+        if self.line is not None and self.line != 0:
             _result["line"] = _utils.encode_int64(self.line)
-        if self.column != 0:
+        if self.column is not None and self.column != 0:
             _result["column"] = _utils.encode_int64(self.column)
         return _result
 
@@ -980,13 +980,13 @@ class Function:
             Dictionary representation following OTLP JSON encoding
         """
         _result: dict[str, Any] = {}
-        if self.name_strindex != 0:
+        if self.name_strindex is not None and self.name_strindex != 0:
             _result["nameStrindex"] = self.name_strindex
-        if self.system_name_strindex != 0:
+        if self.system_name_strindex is not None and self.system_name_strindex != 0:
             _result["systemNameStrindex"] = self.system_name_strindex
-        if self.filename_strindex != 0:
+        if self.filename_strindex is not None and self.filename_strindex != 0:
             _result["filenameStrindex"] = self.filename_strindex
-        if self.start_line != 0:
+        if self.start_line is not None and self.start_line != 0:
             _result["startLine"] = _utils.encode_int64(self.start_line)
         return _result
 
@@ -1059,11 +1059,11 @@ class KeyValueAndUnit:
             Dictionary representation following OTLP JSON encoding
         """
         _result: dict[str, Any] = {}
-        if self.key_strindex != 0:
+        if self.key_strindex is not None and self.key_strindex != 0:
             _result["keyStrindex"] = self.key_strindex
         if self.value is not None:
             _result["value"] = self.value.to_dict()
-        if self.unit_strindex != 0:
+        if self.unit_strindex is not None and self.unit_strindex != 0:
             _result["unitStrindex"] = self.unit_strindex
         return _result
 

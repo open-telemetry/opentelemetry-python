@@ -259,7 +259,7 @@ class KeyValue:
             Dictionary representation following OTLP JSON encoding
         """
         _result: dict[str, Any] = {}
-        if self.key != '':
+        if self.key is not None and self.key != '':
             _result["key"] = self.key
         if self.value is not None:
             _result["value"] = self.value.to_dict()
@@ -329,13 +329,13 @@ class InstrumentationScope:
             Dictionary representation following OTLP JSON encoding
         """
         _result: dict[str, Any] = {}
-        if self.name != '':
+        if self.name is not None and self.name != '':
             _result["name"] = self.name
-        if self.version != '':
+        if self.version is not None and self.version != '':
             _result["version"] = self.version
         if self.attributes:
             _result["attributes"] = _utils.serialize_repeated(self.attributes, lambda _v: _v.to_dict())
-        if self.dropped_attributes_count != 0:
+        if self.dropped_attributes_count is not None and self.dropped_attributes_count != 0:
             _result["droppedAttributesCount"] = self.dropped_attributes_count
         return _result
 
@@ -409,9 +409,9 @@ class EntityRef:
             Dictionary representation following OTLP JSON encoding
         """
         _result: dict[str, Any] = {}
-        if self.schema_url != '':
+        if self.schema_url is not None and self.schema_url != '':
             _result["schemaUrl"] = self.schema_url
-        if self.type != '':
+        if self.type is not None and self.type != '':
             _result["type"] = self.type
         if self.id_keys:
             _result["idKeys"] = self.id_keys

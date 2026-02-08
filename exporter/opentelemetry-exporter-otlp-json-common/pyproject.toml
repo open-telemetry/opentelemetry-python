@@ -28,6 +28,7 @@ classifiers = [
 ]
 dependencies = [
     "opentelemetry-proto-json == 0.61b0.dev",
+    "opentelemetry-sdk ~= 1.40.0.dev",
 ]
 
 [project.urls]

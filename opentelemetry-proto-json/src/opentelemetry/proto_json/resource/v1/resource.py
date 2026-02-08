@@ -45,7 +45,7 @@ class Resource:
         _result: dict[str, Any] = {}
         if self.attributes:
             _result["attributes"] = _utils.serialize_repeated(self.attributes, lambda _v: _v.to_dict())
-        if self.dropped_attributes_count != 0:
+        if self.dropped_attributes_count is not None and self.dropped_attributes_count != 0:
             _result["droppedAttributesCount"] = self.dropped_attributes_count
         if self.entity_refs:
             _result["entityRefs"] = _utils.serialize_repeated(self.entity_refs, lambda _v: _v.to_dict())

@@ -1,0 +1,7 @@
+pytest==7.4.4
+-e opentelemetry-api
+-e opentelemetry-sdk
+-e opentelemetry-semantic-conventions
+-e tests/opentelemetry-test-utils
+-e opentelemetry-proto-json
+-e exporter/opentelemetry-exporter-otlp-json-common
