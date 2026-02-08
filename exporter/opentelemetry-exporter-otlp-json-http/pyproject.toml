@@ -1,0 +1,62 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "opentelemetry-exporter-otlp-json-http"
+dynamic = ["version"]
+description = "OpenTelemetry Collector Json over HTTP Exporter"
+readme = "README.rst"
+license = "Apache-2.0"
+requires-python = ">=3.9"
+authors = [
+  { name = "OpenTelemetry Authors", email = "cncf-opentelemetry-contributors@lists.cncf.io" },
+]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Framework :: OpenTelemetry",
+  "Framework :: OpenTelemetry :: Exporters",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+  "opentelemetry-api ~= 1.15",
+  "opentelemetry-sdk ~= 1.40.0.dev",
+  "opentelemetry-proto-json == 0.61b0.dev",
+  "opentelemetry-exporter-otlp-json-common == 0.61b0.dev",
+  "urllib3 ~= 2.6",
+]
+
+[project.entry-points.opentelemetry_traces_exporter]
+otlp_json_http = "opentelemetry.exporter.otlp.json.http.trace_exporter:OTLPSpanExporter"
+
+[project.entry-points.opentelemetry_metrics_exporter]
+otlp_json_http = "opentelemetry.exporter.otlp.json.http.metric_exporter:OTLPMetricExporter"
+
+[project.entry-points.opentelemetry_logs_exporter]
+otlp_json_http = "opentelemetry.exporter.otlp.json.http._log_exporter:OTLPLogExporter"
+
+[project.urls]
+Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/exporter/opentelemetry-exporter-otlp-json-http"
+Repository = "https://github.com/open-telemetry/opentelemetry-python"
+
+[project.optional-dependencies]
+
+[tool.hatch.version]
+path = "src/opentelemetry/exporter/otlp/json/http/version/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "/src",
+  "/tests",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/opentelemetry"]

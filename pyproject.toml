@@ -12,6 +12,7 @@ dependencies = [
   "opentelemetry-exporter-otlp-proto-grpc",
   "opentelemetry-exporter-otlp-proto-http",
   "opentelemetry-exporter-otlp-proto-common",
+  "opentelemetry-exporter-otlp-json-http",
   "opentelemetry-exporter-otlp-json-common",
   "opentelemetry-exporter-zipkin-json",
   "opentelemetry-exporter-prometheus",
@@ -35,6 +36,7 @@ opentelemetry-test-utils = { workspace = true }
 opentelemetry-exporter-otlp-proto-grpc = { workspace = true }
 opentelemetry-exporter-otlp-proto-http = { workspace = true }
 opentelemetry-exporter-otlp-proto-common = { workspace = true }
+opentelemetry-exporter-otlp-json-http = { workspace = true }
 opentelemetry-exporter-otlp-json-common = { workspace = true }
 opentelemetry-exporter-zipkin-json = { workspace = true }
 opentelemetry-exporter-prometheus = {workspace = true }
