@@ -108,7 +108,7 @@ class OtlpJsonGenerator:
         version_init_path = f"{self._common_root}/version/__init__.py"
         version_writer = CodeWriter(indent_size=4)
         self._generate_header(version_writer)
-        version_writer.writeln(f'__version__ = "{self._version}"')
+        version_writer.writemany(f'__version__ = "{self._version}"', "")
         self._generated_files[version_init_path] = version_writer.to_string()
 
         self._ensure_init_files()
@@ -213,9 +213,12 @@ class OtlpJsonGenerator:
         writer = CodeWriter(indent_size=4)
 
         self._generate_header(writer, proto_file)
-        self._generate_imports(writer, proto_file)
+        self._generate_imports(
+            writer, proto_file, self._has_enums(messages, enums)
+        )
         self._generate_enums_for_file(writer, enums)
         self._generate_messages_for_file(writer, messages)
+        writer.blank_line()
 
         return writer.to_string()
 
@@ -248,6 +251,7 @@ class OtlpJsonGenerator:
         self,
         writer: CodeWriter,
         proto_file: str,
+        include_enum: bool,
     ) -> None:
         """
         Generate all necessary import statements.
@@ -255,14 +259,36 @@ class OtlpJsonGenerator:
         Args:
             writer: Code writer instance
             proto_file: Original proto file path
+            include_enum: Whether to include the enum module import
         """
         # Standard library imports
         writer.writeln("from __future__ import annotations")
         writer.blank_line()
-        writer.import_("json")
-        writer.import_("typing", "Any", "Optional", "Union", "Self")
-        writer.import_("dataclasses", "dataclass", "field")
-        writer.import_("enum", "IntEnum")
+
+        std_imports = [
+            "builtins",
+            "dataclasses",
+            "functools",
+            "json",
+            "sys",
+            "typing",
+        ]
+        if include_enum:
+            std_imports.append("enum")
+
+        for module in sorted(std_imports):
+            writer.import_(module)
+
+        writer.blank_line()
+
+        writer.writeln("if sys.version_info >= (3, 10):")
+        with writer.indent():
+            writer.writeln(
+                "_dataclass = functools.partial(dataclasses.dataclass, slots=True)"
+            )
+        writer.writeln("else:")
+        with writer.indent():
+            writer.writeln("_dataclass = dataclasses.dataclass")
         writer.blank_line()
 
         # Collect all imports needed
@@ -277,6 +303,7 @@ class OtlpJsonGenerator:
             for import_info in sorted(imports):
                 writer.writeln(import_info)
             writer.blank_line()
+        writer.blank_line()
 
     def _get_module_path(self, proto_file: str) -> str:
         """
@@ -358,7 +385,9 @@ class OtlpJsonGenerator:
         with writer.dataclass(
             message.name,
             frozen=False,
-            slots=True,
+            slots=False,
+            decorators=("typing.final",),
+            decorator_name="_dataclass",
         ):
             if (
                 message.fields
@@ -397,7 +426,11 @@ class OtlpJsonGenerator:
         self, writer: CodeWriter, message: MessageInfo
     ) -> None:
         """Generate to_dict() method."""
-        with writer.method("to_dict", ["self"], return_type="dict[str, Any]"):
+        with writer.method(
+            "to_dict",
+            ["self"],
+            return_type="builtins.dict[builtins.str, typing.Any]",
+        ):
             writer.docstring(
                 [
                     "Convert this message to a dictionary with lowerCamelCase keys.",
@@ -406,7 +439,7 @@ class OtlpJsonGenerator:
                     "    Dictionary representation following OTLP JSON encoding",
                 ]
             )
-            writer.writeln("_result: dict[str, Any] = {}")
+            writer.writeln("_result = {}")
 
             # Separate fields into oneof groups and standalone fields
             oneof_groups: dict[int, list[FieldInfo]] = defaultdict(list)
@@ -440,11 +473,7 @@ class OtlpJsonGenerator:
                         field_type, field.name, f"self.{field.name}"
                     )
                     default = get_default_value(field_type.proto_type)
-                    check = (
-                        f"self.{field.name} is not None"
-                        if field_type.is_message or default == "None"
-                        else f"self.{field.name} is not None and self.{field.name} != {default}"
-                    )
+                    check = f"self.{field.name}"
 
                     with writer.if_(check):
                         writer.writeln(
@@ -475,7 +504,7 @@ class OtlpJsonGenerator:
         self, writer: CodeWriter, message: MessageInfo
     ) -> None:
         """Generate to_json() method."""
-        with writer.method("to_json", ["self"], return_type="str"):
+        with writer.method("to_json", ["self"], return_type="builtins.str"):
             writer.docstring(
                 [
                     "Serialize this message to a JSON string.",
@@ -493,7 +522,7 @@ class OtlpJsonGenerator:
         if field_type.is_message:
             return f"{var_name}.to_dict()"
         if field_type.is_enum:
-            return f"int({var_name})"
+            return f"builtins.int({var_name})"
         if is_hex_encoded_field(field_name):
             return f"_utils.encode_hex({var_name})"
         if is_int64_type(field_type.proto_type):
@@ -514,9 +543,9 @@ class OtlpJsonGenerator:
         """Generate from_dict() class method."""
         with writer.method(
             "from_dict",
-            ["cls", "data: dict[str, Any]"],
-            decorators=["classmethod"],
-            return_type="Self",
+            ["cls", "data: builtins.dict[builtins.str, typing.Any]"],
+            decorators=["builtins.classmethod"],
+            return_type=f'"{message.python_class_path}"',
         ):
             writer.docstring(
                 [
@@ -529,8 +558,8 @@ class OtlpJsonGenerator:
                     f"    {message.name} instance",
                 ]
             )
-            writer.writeln('_utils.validate_type(data, dict, "data")')
-            writer.writeln("_args: dict[str, Any] = {}")
+            writer.writeln('_utils.validate_type(data, builtins.dict, "data")')
+            writer.writeln("_args = {}")
             writer.blank_line()
 
             # Separate fields into oneof groups and standalone fields
@@ -585,9 +614,9 @@ class OtlpJsonGenerator:
         """Generate from_json() class method."""
         with writer.method(
             "from_json",
-            ["cls", "data: Union[str, bytes]"],
-            decorators=["classmethod"],
-            return_type="Self",
+            ["cls", "data: typing.Union[builtins.str, builtins.bytes]"],
+            decorators=["builtins.classmethod"],
+            return_type=f'"{message.python_class_path}"',
         ):
             writer.docstring(
                 [
@@ -620,7 +649,7 @@ class OtlpJsonGenerator:
         elif field_type.is_enum and (type_name := field_type.type_name):
             enum_type = self._resolve_enum_type(type_name, message)
             writer.writeln(
-                f'_utils.validate_type({var_name}, int, "{field.name}")'
+                f'_utils.validate_type({var_name}, builtins.int, "{field.name}")'
             )
             writer.writeln(
                 f'{target_dict}["{field.name}"] = {enum_type}({var_name})'
@@ -691,7 +720,7 @@ class OtlpJsonGenerator:
             writer: Code writer instance
             enum_info: Enum information
         """
-        with writer.enum(enum_info.name, enum_type="IntEnum"):
+        with writer.enum(enum_info.name, enum_type="enum.IntEnum", decorators=("typing.final",)):
             writer.docstring(
                 [f"Generated from protobuf enum {enum_info.name}"]
             )
@@ -747,11 +776,10 @@ class OtlpJsonGenerator:
             base_type = get_python_type(field_type.proto_type)
 
         if field_type.is_repeated:
-            return f"list[{base_type}]"
-        if field_type.is_optional or field_info.is_oneof_member:
-            return f"Optional[{base_type}]"
-
-        return base_type
+            return f"builtins.list[{base_type}]"
+        if field_type.is_enum:
+            return f"typing.Union[{base_type}, builtins.int, None]"
+        return f"typing.Optional[{base_type}]"
 
     def _resolve_message_type(
         self, fully_qualified_name: str, context_message: MessageInfo
@@ -773,7 +801,7 @@ class OtlpJsonGenerator:
             _logger.warning(
                 "Could not resolve message type: %s", fully_qualified_name
             )
-            return "Any"
+            return "typing.Any"
 
         # If in same file, use relative class path
         if message_info.file_name == context_message.file_name:
@@ -801,7 +829,7 @@ class OtlpJsonGenerator:
             _logger.warning(
                 "Could not resolve enum type: %s", fully_qualified_name
             )
-            return "int"
+            return "builtins.int"
 
         # If in same file, use relative class path
         if enum_info.file_name == context_message.file_name:
@@ -824,7 +852,7 @@ class OtlpJsonGenerator:
 
         # Repeated fields default to empty list
         if field_type.is_repeated:
-            return "field(default_factory=list)"
+            return "dataclasses.field(default_factory=builtins.list)"
 
         # Optional fields, Message types, and oneof members default to None
         if (
@@ -840,6 +868,21 @@ class OtlpJsonGenerator:
 
         # Primitive types use proto defaults
         return get_default_value(field_type.proto_type)
+
+    def _has_enums(
+        self, messages: list[MessageInfo], enums: list[EnumInfo]
+    ) -> bool:
+        """
+        Recursively check if there are any enums defined in the file.
+        """
+        if enums:
+            return True
+        for message in messages:
+            if message.nested_enums:
+                return True
+            if self._has_enums(list(message.nested_messages), []):
+                return True
+        return False
 
 
 def generate_code(

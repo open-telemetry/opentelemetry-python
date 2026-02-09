@@ -14,9 +14,7 @@
 
 import enum
 
-from opentelemetry.exporter.otlp.json.http.trace_exporter import (
-    OTLPJSONTraceExporter,
-)
+from opentelemetry.exporter.otlp.json.http.version import __version__
 
 
 class Compression(enum.Enum):
@@ -24,5 +22,3 @@ class Compression(enum.Enum):
     Deflate = "deflate"
     Gzip = "gzip"
 
-
-__all__ = ["OTLPJSONTraceExporter", "Compression"]

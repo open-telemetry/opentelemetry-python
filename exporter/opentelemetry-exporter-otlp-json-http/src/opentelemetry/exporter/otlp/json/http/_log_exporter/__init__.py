@@ -15,8 +15,8 @@
 import logging
 from typing import Optional, Sequence
 
-from opentelemetry.exporter.otlp.json.common._internal.trace_encoder import (
-    encode_spans,
+from opentelemetry.exporter.otlp.json.common._internal._log_encoder import (
+    encode_logs,
 )
 from opentelemetry.exporter.otlp.json.http import Compression
 from opentelemetry.exporter.otlp.json.http._internal import (
@@ -28,29 +28,31 @@ from opentelemetry.exporter.otlp.json.http._internal import (
     _resolve_tls_file,
     _DEFAULT_JITTER,
 )
+from opentelemetry.sdk._logs import ReadableLogRecord
+from opentelemetry.sdk._logs.export import (
+    LogRecordExporter,
+    LogRecordExportResult,
+)
+from opentelemetry.sdk._shared_internal import DuplicateFilter
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_KEY,
-    OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
-    OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
-    OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
-    OTEL_EXPORTER_OTLP_TRACES_COMPRESSION,
-    OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
-    OTEL_EXPORTER_OTLP_TRACES_HEADERS,
-    OTEL_EXPORTER_OTLP_TRACES_TIMEOUT,
-)
-from opentelemetry.sdk.trace.export import (
-    ReadableSpan,
-    SpanExporter,
-    SpanExportResult,
+    OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY,
+    OTEL_EXPORTER_OTLP_LOGS_COMPRESSION,
+    OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
+    OTEL_EXPORTER_OTLP_LOGS_HEADERS,
+    OTEL_EXPORTER_OTLP_LOGS_TIMEOUT,
 )
 
 _logger = logging.getLogger(__name__)
+_logger.addFilter(DuplicateFilter())
 
 
-class OTLPJSONTraceExporter(SpanExporter):
-    """OTLP JSON exporter for traces using urllib3."""
+class OTLPLogExporter(LogRecordExporter):
+    """OTLP JSON exporter for logs."""
 
     def __init__(
         self,
@@ -64,34 +66,33 @@ class OTLPJSONTraceExporter(SpanExporter):
         jitter: float = _DEFAULT_JITTER,
     ):
         self._endpoint = endpoint or _resolve_endpoint(
-            "v1/traces", OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+            "v1/logs", OTEL_EXPORTER_OTLP_LOGS_ENDPOINT
         )
-
         self._certificate_file = _resolve_tls_file(
             certificate_file,
-            OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
+            OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
             OTEL_EXPORTER_OTLP_CERTIFICATE,
         )
         self._client_key_file = _resolve_tls_file(
             client_key_file,
-            OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
+            OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY,
             OTEL_EXPORTER_OTLP_CLIENT_KEY,
         )
         self._client_certificate_file = _resolve_tls_file(
             client_certificate_file,
-            OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
+            OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE,
             OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
         )
 
         self._headers = _resolve_headers(
-            OTEL_EXPORTER_OTLP_TRACES_HEADERS, headers
+            OTEL_EXPORTER_OTLP_LOGS_HEADERS, headers
         )
 
         self._timeout = _resolve_timeout(
-            OTEL_EXPORTER_OTLP_TRACES_TIMEOUT, timeout
+            OTEL_EXPORTER_OTLP_LOGS_TIMEOUT, timeout
         )
         self._compression = _resolve_compression(
-            OTEL_EXPORTER_OTLP_TRACES_COMPRESSION, compression
+            OTEL_EXPORTER_OTLP_LOGS_COMPRESSION, compression
         )
 
         self._client = _OTLPHttpClient(
@@ -107,13 +108,13 @@ class OTLPJSONTraceExporter(SpanExporter):
 
     def export(
         self,
-        spans: Sequence[ReadableSpan],
-    ) -> SpanExportResult:
-        encoded_request = encode_spans(spans)
+        batch: Sequence[ReadableLogRecord],
+    ) -> LogRecordExportResult:
+        encoded_request = encode_logs(batch)
         body = encoded_request.to_json().encode("utf-8")
         if self._client.export(body):
-            return SpanExportResult.SUCCESS
-        return SpanExportResult.FAILURE
+            return LogRecordExportResult.SUCCESS
+        return LogRecordExportResult.FAILURE
 
     def shutdown(self) -> None:
         self._client.shutdown()

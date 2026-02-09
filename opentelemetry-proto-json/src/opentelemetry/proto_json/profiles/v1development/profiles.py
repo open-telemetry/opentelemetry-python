@@ -17,37 +17,46 @@
 
 from __future__ import annotations
 
+import builtins
+import dataclasses
+import functools
 import json
-from typing import Any, Optional, Union, Self
-from dataclasses import dataclass, field
-from enum import IntEnum
+import sys
+import typing
+
+if sys.version_info >= (3, 10):
+    _dataclass = functools.partial(dataclasses.dataclass, slots=True)
+else:
+    _dataclass = dataclasses.dataclass
 
 import opentelemetry.proto_json._otlp_json_utils as _utils
 import opentelemetry.proto_json.common.v1.common
 import opentelemetry.proto_json.resource.v1.resource
 
-@dataclass(slots=True)
+
+@typing.final
+@_dataclass
 class ProfilesDictionary:
     """
     Generated from protobuf message ProfilesDictionary
     """
 
-    mapping_table: list[Mapping] = field(default_factory=list)
-    location_table: list[Location] = field(default_factory=list)
-    function_table: list[Function] = field(default_factory=list)
-    link_table: list[Link] = field(default_factory=list)
-    string_table: list[str] = field(default_factory=list)
-    attribute_table: list[KeyValueAndUnit] = field(default_factory=list)
-    stack_table: list[Stack] = field(default_factory=list)
+    mapping_table: builtins.list[Mapping] = dataclasses.field(default_factory=builtins.list)
+    location_table: builtins.list[Location] = dataclasses.field(default_factory=builtins.list)
+    function_table: builtins.list[Function] = dataclasses.field(default_factory=builtins.list)
+    link_table: builtins.list[Link] = dataclasses.field(default_factory=builtins.list)
+    string_table: builtins.list[builtins.str] = dataclasses.field(default_factory=builtins.list)
+    attribute_table: builtins.list[KeyValueAndUnit] = dataclasses.field(default_factory=builtins.list)
+    stack_table: builtins.list[Stack] = dataclasses.field(default_factory=builtins.list)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
         Convert this message to a dictionary with lowerCamelCase keys.
-        
+
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        _result: dict[str, Any] = {}
+        _result = {}
         if self.mapping_table:
             _result["mappingTable"] = _utils.serialize_repeated(self.mapping_table, lambda _v: _v.to_dict())
         if self.location_table:
@@ -64,28 +73,28 @@ class ProfilesDictionary:
             _result["stackTable"] = _utils.serialize_repeated(self.stack_table, lambda _v: _v.to_dict())
         return _result
 
-    def to_json(self) -> str:
+    def to_json(self) -> builtins.str:
         """
         Serialize this message to a JSON string.
-        
+
         Returns:
             JSON string
         """
         return json.dumps(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
+    @builtins.classmethod
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ProfilesDictionary":
         """
         Create from a dictionary with lowerCamelCase keys.
-        
+
         Args:
             data: Dictionary representation following OTLP JSON encoding
-        
+
         Returns:
             ProfilesDictionary instance
         """
-        _utils.validate_type(data, dict, "data")
-        _args: dict[str, Any] = {}
+        _utils.validate_type(data, builtins.dict, "data")
+        _args = {}
 
         if (_value := data.get("mappingTable")) is not None:
             _args["mapping_table"] = _utils.deserialize_repeated(_value, lambda _v: Mapping.from_dict(_v), "mapping_table")
@@ -104,65 +113,66 @@ class ProfilesDictionary:
 
         return cls(**_args)
 
-    @classmethod
-    def from_json(cls, data: Union[str, bytes]) -> Self:
+    @builtins.classmethod
+    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "ProfilesDictionary":
         """
         Deserialize from a JSON string or bytes.
-        
+
         Args:
             data: JSON string or bytes
-        
+
         Returns:
             Instance of the class
         """
         return cls.from_dict(json.loads(data))
 
 
-@dataclass(slots=True)
+@typing.final
+@_dataclass
 class ProfilesData:
     """
     Generated from protobuf message ProfilesData
     """
 
-    resource_profiles: list[ResourceProfiles] = field(default_factory=list)
-    dictionary: ProfilesDictionary = None
+    resource_profiles: builtins.list[ResourceProfiles] = dataclasses.field(default_factory=builtins.list)
+    dictionary: typing.Optional[ProfilesDictionary] = None
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
         Convert this message to a dictionary with lowerCamelCase keys.
-        
+
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        _result: dict[str, Any] = {}
+        _result = {}
         if self.resource_profiles:
             _result["resourceProfiles"] = _utils.serialize_repeated(self.resource_profiles, lambda _v: _v.to_dict())
-        if self.dictionary is not None:
+        if self.dictionary:
             _result["dictionary"] = self.dictionary.to_dict()
         return _result
 
-    def to_json(self) -> str:
+    def to_json(self) -> builtins.str:
         """
         Serialize this message to a JSON string.
-        
+
         Returns:
             JSON string
         """
         return json.dumps(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
+    @builtins.classmethod
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ProfilesData":
         """
         Create from a dictionary with lowerCamelCase keys.
-        
+
         Args:
             data: Dictionary representation following OTLP JSON encoding
-        
+
         Returns:
             ProfilesData instance
         """
-        _utils.validate_type(data, dict, "data")
-        _args: dict[str, Any] = {}
+        _utils.validate_type(data, builtins.dict, "data")
+        _args = {}
 
         if (_value := data.get("resourceProfiles")) is not None:
             _args["resource_profiles"] = _utils.deserialize_repeated(_value, lambda _v: ResourceProfiles.from_dict(_v), "resource_profiles")
@@ -171,238 +181,241 @@ class ProfilesData:
 
         return cls(**_args)
 
-    @classmethod
-    def from_json(cls, data: Union[str, bytes]) -> Self:
+    @builtins.classmethod
+    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "ProfilesData":
         """
         Deserialize from a JSON string or bytes.
-        
+
         Args:
             data: JSON string or bytes
-        
+
         Returns:
             Instance of the class
         """
         return cls.from_dict(json.loads(data))
 
 
-@dataclass(slots=True)
+@typing.final
+@_dataclass
 class ResourceProfiles:
     """
     Generated from protobuf message ResourceProfiles
     """
 
-    resource: opentelemetry.proto_json.resource.v1.resource.Resource = None
-    scope_profiles: list[ScopeProfiles] = field(default_factory=list)
-    schema_url: str = ''
+    resource: typing.Optional[opentelemetry.proto_json.resource.v1.resource.Resource] = None
+    scope_profiles: builtins.list[ScopeProfiles] = dataclasses.field(default_factory=builtins.list)
+    schema_url: typing.Optional[builtins.str] = ""
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
         Convert this message to a dictionary with lowerCamelCase keys.
-        
+
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        _result: dict[str, Any] = {}
-        if self.resource is not None:
+        _result = {}
+        if self.resource:
             _result["resource"] = self.resource.to_dict()
         if self.scope_profiles:
             _result["scopeProfiles"] = _utils.serialize_repeated(self.scope_profiles, lambda _v: _v.to_dict())
-        if self.schema_url is not None and self.schema_url != '':
+        if self.schema_url:
             _result["schemaUrl"] = self.schema_url
         return _result
 
-    def to_json(self) -> str:
+    def to_json(self) -> builtins.str:
         """
         Serialize this message to a JSON string.
-        
+
         Returns:
             JSON string
         """
         return json.dumps(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
+    @builtins.classmethod
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ResourceProfiles":
         """
         Create from a dictionary with lowerCamelCase keys.
-        
+
         Args:
             data: Dictionary representation following OTLP JSON encoding
-        
+
         Returns:
             ResourceProfiles instance
         """
-        _utils.validate_type(data, dict, "data")
-        _args: dict[str, Any] = {}
+        _utils.validate_type(data, builtins.dict, "data")
+        _args = {}
 
         if (_value := data.get("resource")) is not None:
             _args["resource"] = opentelemetry.proto_json.resource.v1.resource.Resource.from_dict(_value)
         if (_value := data.get("scopeProfiles")) is not None:
             _args["scope_profiles"] = _utils.deserialize_repeated(_value, lambda _v: ScopeProfiles.from_dict(_v), "scope_profiles")
         if (_value := data.get("schemaUrl")) is not None:
-            _utils.validate_type(_value, str, "schema_url")
+            _utils.validate_type(_value, builtins.str, "schema_url")
             _args["schema_url"] = _value
 
         return cls(**_args)
 
-    @classmethod
-    def from_json(cls, data: Union[str, bytes]) -> Self:
+    @builtins.classmethod
+    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "ResourceProfiles":
         """
         Deserialize from a JSON string or bytes.
-        
+
         Args:
             data: JSON string or bytes
-        
+
         Returns:
             Instance of the class
         """
         return cls.from_dict(json.loads(data))
 
 
-@dataclass(slots=True)
+@typing.final
+@_dataclass
 class ScopeProfiles:
     """
     Generated from protobuf message ScopeProfiles
     """
 
-    scope: opentelemetry.proto_json.common.v1.common.InstrumentationScope = None
-    profiles: list[Profile] = field(default_factory=list)
-    schema_url: str = ''
+    scope: typing.Optional[opentelemetry.proto_json.common.v1.common.InstrumentationScope] = None
+    profiles: builtins.list[Profile] = dataclasses.field(default_factory=builtins.list)
+    schema_url: typing.Optional[builtins.str] = ""
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
         Convert this message to a dictionary with lowerCamelCase keys.
-        
+
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        _result: dict[str, Any] = {}
-        if self.scope is not None:
+        _result = {}
+        if self.scope:
             _result["scope"] = self.scope.to_dict()
         if self.profiles:
             _result["profiles"] = _utils.serialize_repeated(self.profiles, lambda _v: _v.to_dict())
-        if self.schema_url is not None and self.schema_url != '':
+        if self.schema_url:
             _result["schemaUrl"] = self.schema_url
         return _result
 
-    def to_json(self) -> str:
+    def to_json(self) -> builtins.str:
         """
         Serialize this message to a JSON string.
-        
+
         Returns:
             JSON string
         """
         return json.dumps(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
+    @builtins.classmethod
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ScopeProfiles":
         """
         Create from a dictionary with lowerCamelCase keys.
-        
+
         Args:
             data: Dictionary representation following OTLP JSON encoding
-        
+
         Returns:
             ScopeProfiles instance
         """
-        _utils.validate_type(data, dict, "data")
-        _args: dict[str, Any] = {}
+        _utils.validate_type(data, builtins.dict, "data")
+        _args = {}
 
         if (_value := data.get("scope")) is not None:
             _args["scope"] = opentelemetry.proto_json.common.v1.common.InstrumentationScope.from_dict(_value)
         if (_value := data.get("profiles")) is not None:
             _args["profiles"] = _utils.deserialize_repeated(_value, lambda _v: Profile.from_dict(_v), "profiles")
         if (_value := data.get("schemaUrl")) is not None:
-            _utils.validate_type(_value, str, "schema_url")
+            _utils.validate_type(_value, builtins.str, "schema_url")
             _args["schema_url"] = _value
 
         return cls(**_args)
 
-    @classmethod
-    def from_json(cls, data: Union[str, bytes]) -> Self:
+    @builtins.classmethod
+    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "ScopeProfiles":
         """
         Deserialize from a JSON string or bytes.
-        
+
         Args:
             data: JSON string or bytes
-        
+
         Returns:
             Instance of the class
         """
         return cls.from_dict(json.loads(data))
 
 
-@dataclass(slots=True)
+@typing.final
+@_dataclass
 class Profile:
     """
     Generated from protobuf message Profile
     """
 
-    sample_type: ValueType = None
-    samples: list[Sample] = field(default_factory=list)
-    time_unix_nano: int = 0
-    duration_nano: int = 0
-    period_type: ValueType = None
-    period: int = 0
-    profile_id: bytes = b''
-    dropped_attributes_count: int = 0
-    original_payload_format: str = ''
-    original_payload: bytes = b''
-    attribute_indices: list[int] = field(default_factory=list)
+    sample_type: typing.Optional[ValueType] = None
+    samples: builtins.list[Sample] = dataclasses.field(default_factory=builtins.list)
+    time_unix_nano: typing.Optional[builtins.int] = 0
+    duration_nano: typing.Optional[builtins.int] = 0
+    period_type: typing.Optional[ValueType] = None
+    period: typing.Optional[builtins.int] = 0
+    profile_id: typing.Optional[builtins.bytes] = b""
+    dropped_attributes_count: typing.Optional[builtins.int] = 0
+    original_payload_format: typing.Optional[builtins.str] = ""
+    original_payload: typing.Optional[builtins.bytes] = b""
+    attribute_indices: builtins.list[builtins.int] = dataclasses.field(default_factory=builtins.list)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
         Convert this message to a dictionary with lowerCamelCase keys.
-        
+
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        _result: dict[str, Any] = {}
-        if self.sample_type is not None:
+        _result = {}
+        if self.sample_type:
             _result["sampleType"] = self.sample_type.to_dict()
         if self.samples:
             _result["samples"] = _utils.serialize_repeated(self.samples, lambda _v: _v.to_dict())
-        if self.time_unix_nano is not None and self.time_unix_nano != 0:
+        if self.time_unix_nano:
             _result["timeUnixNano"] = _utils.encode_int64(self.time_unix_nano)
-        if self.duration_nano is not None and self.duration_nano != 0:
+        if self.duration_nano:
             _result["durationNano"] = _utils.encode_int64(self.duration_nano)
-        if self.period_type is not None:
+        if self.period_type:
             _result["periodType"] = self.period_type.to_dict()
-        if self.period is not None and self.period != 0:
+        if self.period:
             _result["period"] = _utils.encode_int64(self.period)
-        if self.profile_id is not None and self.profile_id != b'':
+        if self.profile_id:
             _result["profileId"] = _utils.encode_base64(self.profile_id)
-        if self.dropped_attributes_count is not None and self.dropped_attributes_count != 0:
+        if self.dropped_attributes_count:
             _result["droppedAttributesCount"] = self.dropped_attributes_count
-        if self.original_payload_format is not None and self.original_payload_format != '':
+        if self.original_payload_format:
             _result["originalPayloadFormat"] = self.original_payload_format
-        if self.original_payload is not None and self.original_payload != b'':
+        if self.original_payload:
             _result["originalPayload"] = _utils.encode_base64(self.original_payload)
         if self.attribute_indices:
             _result["attributeIndices"] = self.attribute_indices
         return _result
 
-    def to_json(self) -> str:
+    def to_json(self) -> builtins.str:
         """
         Serialize this message to a JSON string.
-        
+
         Returns:
             JSON string
         """
         return json.dumps(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
+    @builtins.classmethod
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Profile":
         """
         Create from a dictionary with lowerCamelCase keys.
-        
+
         Args:
             data: Dictionary representation following OTLP JSON encoding
-        
+
         Returns:
             Profile instance
         """
-        _utils.validate_type(data, dict, "data")
-        _args: dict[str, Any] = {}
+        _utils.validate_type(data, builtins.dict, "data")
+        _args = {}
 
         if (_value := data.get("sampleType")) is not None:
             _args["sample_type"] = ValueType.from_dict(_value)
@@ -419,10 +432,10 @@ class Profile:
         if (_value := data.get("profileId")) is not None:
             _args["profile_id"] = _utils.decode_base64(_value, "profile_id")
         if (_value := data.get("droppedAttributesCount")) is not None:
-            _utils.validate_type(_value, int, "dropped_attributes_count")
+            _utils.validate_type(_value, builtins.int, "dropped_attributes_count")
             _args["dropped_attributes_count"] = _value
         if (_value := data.get("originalPayloadFormat")) is not None:
-            _utils.validate_type(_value, str, "original_payload_format")
+            _utils.validate_type(_value, builtins.str, "original_payload_format")
             _args["original_payload_format"] = _value
         if (_value := data.get("originalPayload")) is not None:
             _args["original_payload"] = _utils.decode_base64(_value, "original_payload")
@@ -431,65 +444,66 @@ class Profile:
 
         return cls(**_args)
 
-    @classmethod
-    def from_json(cls, data: Union[str, bytes]) -> Self:
+    @builtins.classmethod
+    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "Profile":
         """
         Deserialize from a JSON string or bytes.
-        
+
         Args:
             data: JSON string or bytes
-        
+
         Returns:
             Instance of the class
         """
         return cls.from_dict(json.loads(data))
 
 
-@dataclass(slots=True)
+@typing.final
+@_dataclass
 class Link:
     """
     Generated from protobuf message Link
     """
 
-    trace_id: bytes = b''
-    span_id: bytes = b''
+    trace_id: typing.Optional[builtins.bytes] = b""
+    span_id: typing.Optional[builtins.bytes] = b""
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
         Convert this message to a dictionary with lowerCamelCase keys.
-        
+
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        _result: dict[str, Any] = {}
-        if self.trace_id is not None and self.trace_id != b'':
+        _result = {}
+        if self.trace_id:
             _result["traceId"] = _utils.encode_hex(self.trace_id)
-        if self.span_id is not None and self.span_id != b'':
+        if self.span_id:
             _result["spanId"] = _utils.encode_hex(self.span_id)
         return _result
 
-    def to_json(self) -> str:
+    def to_json(self) -> builtins.str:
         """
         Serialize this message to a JSON string.
-        
+
         Returns:
             JSON string
         """
         return json.dumps(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
+    @builtins.classmethod
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Link":
         """
         Create from a dictionary with lowerCamelCase keys.
-        
+
         Args:
             data: Dictionary representation following OTLP JSON encoding
-        
+
         Returns:
             Link instance
         """
-        _utils.validate_type(data, dict, "data")
-        _args: dict[str, Any] = {}
+        _utils.validate_type(data, builtins.dict, "data")
+        _args = {}
 
         if (_value := data.get("traceId")) is not None:
             _args["trace_id"] = _utils.decode_hex(_value, "trace_id")
@@ -498,227 +512,230 @@ class Link:
 
         return cls(**_args)
 
-    @classmethod
-    def from_json(cls, data: Union[str, bytes]) -> Self:
+    @builtins.classmethod
+    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "Link":
         """
         Deserialize from a JSON string or bytes.
-        
+
         Args:
             data: JSON string or bytes
-        
+
         Returns:
             Instance of the class
         """
         return cls.from_dict(json.loads(data))
 
 
-@dataclass(slots=True)
+@typing.final
+@_dataclass
 class ValueType:
     """
     Generated from protobuf message ValueType
     """
 
-    type_strindex: int = 0
-    unit_strindex: int = 0
+    type_strindex: typing.Optional[builtins.int] = 0
+    unit_strindex: typing.Optional[builtins.int] = 0
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
         Convert this message to a dictionary with lowerCamelCase keys.
-        
+
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        _result: dict[str, Any] = {}
-        if self.type_strindex is not None and self.type_strindex != 0:
+        _result = {}
+        if self.type_strindex:
             _result["typeStrindex"] = self.type_strindex
-        if self.unit_strindex is not None and self.unit_strindex != 0:
+        if self.unit_strindex:
             _result["unitStrindex"] = self.unit_strindex
         return _result
 
-    def to_json(self) -> str:
+    def to_json(self) -> builtins.str:
         """
         Serialize this message to a JSON string.
-        
+
         Returns:
             JSON string
         """
         return json.dumps(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
+    @builtins.classmethod
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ValueType":
         """
         Create from a dictionary with lowerCamelCase keys.
-        
+
         Args:
             data: Dictionary representation following OTLP JSON encoding
-        
+
         Returns:
             ValueType instance
         """
-        _utils.validate_type(data, dict, "data")
-        _args: dict[str, Any] = {}
+        _utils.validate_type(data, builtins.dict, "data")
+        _args = {}
 
         if (_value := data.get("typeStrindex")) is not None:
-            _utils.validate_type(_value, int, "type_strindex")
+            _utils.validate_type(_value, builtins.int, "type_strindex")
             _args["type_strindex"] = _value
         if (_value := data.get("unitStrindex")) is not None:
-            _utils.validate_type(_value, int, "unit_strindex")
+            _utils.validate_type(_value, builtins.int, "unit_strindex")
             _args["unit_strindex"] = _value
 
         return cls(**_args)
 
-    @classmethod
-    def from_json(cls, data: Union[str, bytes]) -> Self:
+    @builtins.classmethod
+    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "ValueType":
         """
         Deserialize from a JSON string or bytes.
-        
+
         Args:
             data: JSON string or bytes
-        
+
         Returns:
             Instance of the class
         """
         return cls.from_dict(json.loads(data))
 
 
-@dataclass(slots=True)
+@typing.final
+@_dataclass
 class Sample:
     """
     Generated from protobuf message Sample
     """
 
-    stack_index: int = 0
-    values: list[int] = field(default_factory=list)
-    attribute_indices: list[int] = field(default_factory=list)
-    link_index: int = 0
-    timestamps_unix_nano: list[int] = field(default_factory=list)
+    stack_index: typing.Optional[builtins.int] = 0
+    values: builtins.list[builtins.int] = dataclasses.field(default_factory=builtins.list)
+    attribute_indices: builtins.list[builtins.int] = dataclasses.field(default_factory=builtins.list)
+    link_index: typing.Optional[builtins.int] = 0
+    timestamps_unix_nano: builtins.list[builtins.int] = dataclasses.field(default_factory=builtins.list)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
         Convert this message to a dictionary with lowerCamelCase keys.
-        
+
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        _result: dict[str, Any] = {}
-        if self.stack_index is not None and self.stack_index != 0:
+        _result = {}
+        if self.stack_index:
             _result["stackIndex"] = self.stack_index
         if self.values:
             _result["values"] = _utils.serialize_repeated(self.values, lambda _v: _utils.encode_int64(_v))
         if self.attribute_indices:
             _result["attributeIndices"] = self.attribute_indices
-        if self.link_index is not None and self.link_index != 0:
+        if self.link_index:
             _result["linkIndex"] = self.link_index
         if self.timestamps_unix_nano:
             _result["timestampsUnixNano"] = _utils.serialize_repeated(self.timestamps_unix_nano, lambda _v: _utils.encode_int64(_v))
         return _result
 
-    def to_json(self) -> str:
+    def to_json(self) -> builtins.str:
         """
         Serialize this message to a JSON string.
-        
+
         Returns:
             JSON string
         """
         return json.dumps(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
+    @builtins.classmethod
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Sample":
         """
         Create from a dictionary with lowerCamelCase keys.
-        
+
         Args:
             data: Dictionary representation following OTLP JSON encoding
-        
+
         Returns:
             Sample instance
         """
-        _utils.validate_type(data, dict, "data")
-        _args: dict[str, Any] = {}
+        _utils.validate_type(data, builtins.dict, "data")
+        _args = {}
 
         if (_value := data.get("stackIndex")) is not None:
-            _utils.validate_type(_value, int, "stack_index")
+            _utils.validate_type(_value, builtins.int, "stack_index")
             _args["stack_index"] = _value
         if (_value := data.get("values")) is not None:
             _args["values"] = _utils.deserialize_repeated(_value, lambda _v: _utils.parse_int64(_v, "values"), "values")
         if (_value := data.get("attributeIndices")) is not None:
             _args["attribute_indices"] = _utils.deserialize_repeated(_value, lambda _v: _v, "attribute_indices")
         if (_value := data.get("linkIndex")) is not None:
-            _utils.validate_type(_value, int, "link_index")
+            _utils.validate_type(_value, builtins.int, "link_index")
             _args["link_index"] = _value
         if (_value := data.get("timestampsUnixNano")) is not None:
             _args["timestamps_unix_nano"] = _utils.deserialize_repeated(_value, lambda _v: _utils.parse_int64(_v, "timestamps_unix_nano"), "timestamps_unix_nano")
 
         return cls(**_args)
 
-    @classmethod
-    def from_json(cls, data: Union[str, bytes]) -> Self:
+    @builtins.classmethod
+    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "Sample":
         """
         Deserialize from a JSON string or bytes.
-        
+
         Args:
             data: JSON string or bytes
-        
+
         Returns:
             Instance of the class
         """
         return cls.from_dict(json.loads(data))
 
 
-@dataclass(slots=True)
+@typing.final
+@_dataclass
 class Mapping:
     """
     Generated from protobuf message Mapping
     """
 
-    memory_start: int = 0
-    memory_limit: int = 0
-    file_offset: int = 0
-    filename_strindex: int = 0
-    attribute_indices: list[int] = field(default_factory=list)
+    memory_start: typing.Optional[builtins.int] = 0
+    memory_limit: typing.Optional[builtins.int] = 0
+    file_offset: typing.Optional[builtins.int] = 0
+    filename_strindex: typing.Optional[builtins.int] = 0
+    attribute_indices: builtins.list[builtins.int] = dataclasses.field(default_factory=builtins.list)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
         Convert this message to a dictionary with lowerCamelCase keys.
-        
+
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        _result: dict[str, Any] = {}
-        if self.memory_start is not None and self.memory_start != 0:
+        _result = {}
+        if self.memory_start:
             _result["memoryStart"] = _utils.encode_int64(self.memory_start)
-        if self.memory_limit is not None and self.memory_limit != 0:
+        if self.memory_limit:
             _result["memoryLimit"] = _utils.encode_int64(self.memory_limit)
-        if self.file_offset is not None and self.file_offset != 0:
+        if self.file_offset:
             _result["fileOffset"] = _utils.encode_int64(self.file_offset)
-        if self.filename_strindex is not None and self.filename_strindex != 0:
+        if self.filename_strindex:
             _result["filenameStrindex"] = self.filename_strindex
         if self.attribute_indices:
             _result["attributeIndices"] = self.attribute_indices
         return _result
 
-    def to_json(self) -> str:
+    def to_json(self) -> builtins.str:
         """
         Serialize this message to a JSON string.
-        
+
         Returns:
             JSON string
         """
         return json.dumps(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
+    @builtins.classmethod
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Mapping":
         """
         Create from a dictionary with lowerCamelCase keys.
-        
+
         Args:
             data: Dictionary representation following OTLP JSON encoding
-        
+
         Returns:
             Mapping instance
         """
-        _utils.validate_type(data, dict, "data")
-        _args: dict[str, Any] = {}
+        _utils.validate_type(data, builtins.dict, "data")
+        _args = {}
 
         if (_value := data.get("memoryStart")) is not None:
             _args["memory_start"] = _utils.parse_int64(_value, "memory_start")
@@ -727,111 +744,113 @@ class Mapping:
         if (_value := data.get("fileOffset")) is not None:
             _args["file_offset"] = _utils.parse_int64(_value, "file_offset")
         if (_value := data.get("filenameStrindex")) is not None:
-            _utils.validate_type(_value, int, "filename_strindex")
+            _utils.validate_type(_value, builtins.int, "filename_strindex")
             _args["filename_strindex"] = _value
         if (_value := data.get("attributeIndices")) is not None:
             _args["attribute_indices"] = _utils.deserialize_repeated(_value, lambda _v: _v, "attribute_indices")
 
         return cls(**_args)
 
-    @classmethod
-    def from_json(cls, data: Union[str, bytes]) -> Self:
+    @builtins.classmethod
+    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "Mapping":
         """
         Deserialize from a JSON string or bytes.
-        
+
         Args:
             data: JSON string or bytes
-        
+
         Returns:
             Instance of the class
         """
         return cls.from_dict(json.loads(data))
 
 
-@dataclass(slots=True)
+@typing.final
+@_dataclass
 class Stack:
     """
     Generated from protobuf message Stack
     """
 
-    location_indices: list[int] = field(default_factory=list)
+    location_indices: builtins.list[builtins.int] = dataclasses.field(default_factory=builtins.list)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
         Convert this message to a dictionary with lowerCamelCase keys.
-        
+
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        _result: dict[str, Any] = {}
+        _result = {}
         if self.location_indices:
             _result["locationIndices"] = self.location_indices
         return _result
 
-    def to_json(self) -> str:
+    def to_json(self) -> builtins.str:
         """
         Serialize this message to a JSON string.
-        
+
         Returns:
             JSON string
         """
         return json.dumps(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
+    @builtins.classmethod
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Stack":
         """
         Create from a dictionary with lowerCamelCase keys.
-        
+
         Args:
             data: Dictionary representation following OTLP JSON encoding
-        
+
         Returns:
             Stack instance
         """
-        _utils.validate_type(data, dict, "data")
-        _args: dict[str, Any] = {}
+        _utils.validate_type(data, builtins.dict, "data")
+        _args = {}
 
         if (_value := data.get("locationIndices")) is not None:
             _args["location_indices"] = _utils.deserialize_repeated(_value, lambda _v: _v, "location_indices")
 
         return cls(**_args)
 
-    @classmethod
-    def from_json(cls, data: Union[str, bytes]) -> Self:
+    @builtins.classmethod
+    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "Stack":
         """
         Deserialize from a JSON string or bytes.
-        
+
         Args:
             data: JSON string or bytes
-        
+
         Returns:
             Instance of the class
         """
         return cls.from_dict(json.loads(data))
 
 
-@dataclass(slots=True)
+@typing.final
+@_dataclass
 class Location:
     """
     Generated from protobuf message Location
     """
 
-    mapping_index: int = 0
-    address: int = 0
-    lines: list[Line] = field(default_factory=list)
-    attribute_indices: list[int] = field(default_factory=list)
+    mapping_index: typing.Optional[builtins.int] = 0
+    address: typing.Optional[builtins.int] = 0
+    lines: builtins.list[Line] = dataclasses.field(default_factory=builtins.list)
+    attribute_indices: builtins.list[builtins.int] = dataclasses.field(default_factory=builtins.list)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
         Convert this message to a dictionary with lowerCamelCase keys.
-        
+
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        _result: dict[str, Any] = {}
-        if self.mapping_index is not None and self.mapping_index != 0:
+        _result = {}
+        if self.mapping_index:
             _result["mappingIndex"] = self.mapping_index
-        if self.address is not None and self.address != 0:
+        if self.address:
             _result["address"] = _utils.encode_int64(self.address)
         if self.lines:
             _result["lines"] = _utils.serialize_repeated(self.lines, lambda _v: _v.to_dict())
@@ -839,31 +858,31 @@ class Location:
             _result["attributeIndices"] = self.attribute_indices
         return _result
 
-    def to_json(self) -> str:
+    def to_json(self) -> builtins.str:
         """
         Serialize this message to a JSON string.
-        
+
         Returns:
             JSON string
         """
         return json.dumps(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
+    @builtins.classmethod
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Location":
         """
         Create from a dictionary with lowerCamelCase keys.
-        
+
         Args:
             data: Dictionary representation following OTLP JSON encoding
-        
+
         Returns:
             Location instance
         """
-        _utils.validate_type(data, dict, "data")
-        _args: dict[str, Any] = {}
+        _utils.validate_type(data, builtins.dict, "data")
+        _args = {}
 
         if (_value := data.get("mappingIndex")) is not None:
-            _utils.validate_type(_value, int, "mapping_index")
+            _utils.validate_type(_value, builtins.int, "mapping_index")
             _args["mapping_index"] = _value
         if (_value := data.get("address")) is not None:
             _args["address"] = _utils.parse_int64(_value, "address")
@@ -874,71 +893,72 @@ class Location:
 
         return cls(**_args)
 
-    @classmethod
-    def from_json(cls, data: Union[str, bytes]) -> Self:
+    @builtins.classmethod
+    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "Location":
         """
         Deserialize from a JSON string or bytes.
-        
+
         Args:
             data: JSON string or bytes
-        
+
         Returns:
             Instance of the class
         """
         return cls.from_dict(json.loads(data))
 
 
-@dataclass(slots=True)
+@typing.final
+@_dataclass
 class Line:
     """
     Generated from protobuf message Line
     """
 
-    function_index: int = 0
-    line: int = 0
-    column: int = 0
+    function_index: typing.Optional[builtins.int] = 0
+    line: typing.Optional[builtins.int] = 0
+    column: typing.Optional[builtins.int] = 0
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
         Convert this message to a dictionary with lowerCamelCase keys.
-        
+
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        _result: dict[str, Any] = {}
-        if self.function_index is not None and self.function_index != 0:
+        _result = {}
+        if self.function_index:
             _result["functionIndex"] = self.function_index
-        if self.line is not None and self.line != 0:
+        if self.line:
             _result["line"] = _utils.encode_int64(self.line)
-        if self.column is not None and self.column != 0:
+        if self.column:
             _result["column"] = _utils.encode_int64(self.column)
         return _result
 
-    def to_json(self) -> str:
+    def to_json(self) -> builtins.str:
         """
         Serialize this message to a JSON string.
-        
+
         Returns:
             JSON string
         """
         return json.dumps(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
+    @builtins.classmethod
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Line":
         """
         Create from a dictionary with lowerCamelCase keys.
-        
+
         Args:
             data: Dictionary representation following OTLP JSON encoding
-        
+
         Returns:
             Line instance
         """
-        _utils.validate_type(data, dict, "data")
-        _args: dict[str, Any] = {}
+        _utils.validate_type(data, builtins.dict, "data")
+        _args = {}
 
         if (_value := data.get("functionIndex")) is not None:
-            _utils.validate_type(_value, int, "function_index")
+            _utils.validate_type(_value, builtins.int, "function_index")
             _args["function_index"] = _value
         if (_value := data.get("line")) is not None:
             _args["line"] = _utils.parse_int64(_value, "line")
@@ -947,168 +967,170 @@ class Line:
 
         return cls(**_args)
 
-    @classmethod
-    def from_json(cls, data: Union[str, bytes]) -> Self:
+    @builtins.classmethod
+    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "Line":
         """
         Deserialize from a JSON string or bytes.
-        
+
         Args:
             data: JSON string or bytes
-        
+
         Returns:
             Instance of the class
         """
         return cls.from_dict(json.loads(data))
 
 
-@dataclass(slots=True)
+@typing.final
+@_dataclass
 class Function:
     """
     Generated from protobuf message Function
     """
 
-    name_strindex: int = 0
-    system_name_strindex: int = 0
-    filename_strindex: int = 0
-    start_line: int = 0
+    name_strindex: typing.Optional[builtins.int] = 0
+    system_name_strindex: typing.Optional[builtins.int] = 0
+    filename_strindex: typing.Optional[builtins.int] = 0
+    start_line: typing.Optional[builtins.int] = 0
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
         Convert this message to a dictionary with lowerCamelCase keys.
-        
+
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        _result: dict[str, Any] = {}
-        if self.name_strindex is not None and self.name_strindex != 0:
+        _result = {}
+        if self.name_strindex:
             _result["nameStrindex"] = self.name_strindex
-        if self.system_name_strindex is not None and self.system_name_strindex != 0:
+        if self.system_name_strindex:
             _result["systemNameStrindex"] = self.system_name_strindex
-        if self.filename_strindex is not None and self.filename_strindex != 0:
+        if self.filename_strindex:
             _result["filenameStrindex"] = self.filename_strindex
-        if self.start_line is not None and self.start_line != 0:
+        if self.start_line:
             _result["startLine"] = _utils.encode_int64(self.start_line)
         return _result
 
-    def to_json(self) -> str:
+    def to_json(self) -> builtins.str:
         """
         Serialize this message to a JSON string.
-        
+
         Returns:
             JSON string
         """
         return json.dumps(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
+    @builtins.classmethod
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Function":
         """
         Create from a dictionary with lowerCamelCase keys.
-        
+
         Args:
             data: Dictionary representation following OTLP JSON encoding
-        
+
         Returns:
             Function instance
         """
-        _utils.validate_type(data, dict, "data")
-        _args: dict[str, Any] = {}
+        _utils.validate_type(data, builtins.dict, "data")
+        _args = {}
 
         if (_value := data.get("nameStrindex")) is not None:
-            _utils.validate_type(_value, int, "name_strindex")
+            _utils.validate_type(_value, builtins.int, "name_strindex")
             _args["name_strindex"] = _value
         if (_value := data.get("systemNameStrindex")) is not None:
-            _utils.validate_type(_value, int, "system_name_strindex")
+            _utils.validate_type(_value, builtins.int, "system_name_strindex")
             _args["system_name_strindex"] = _value
         if (_value := data.get("filenameStrindex")) is not None:
-            _utils.validate_type(_value, int, "filename_strindex")
+            _utils.validate_type(_value, builtins.int, "filename_strindex")
             _args["filename_strindex"] = _value
         if (_value := data.get("startLine")) is not None:
             _args["start_line"] = _utils.parse_int64(_value, "start_line")
 
         return cls(**_args)
 
-    @classmethod
-    def from_json(cls, data: Union[str, bytes]) -> Self:
+    @builtins.classmethod
+    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "Function":
         """
         Deserialize from a JSON string or bytes.
-        
+
         Args:
             data: JSON string or bytes
-        
+
         Returns:
             Instance of the class
         """
         return cls.from_dict(json.loads(data))
 
 
-@dataclass(slots=True)
+@typing.final
+@_dataclass
 class KeyValueAndUnit:
     """
     Generated from protobuf message KeyValueAndUnit
     """
 
-    key_strindex: int = 0
-    value: opentelemetry.proto_json.common.v1.common.AnyValue = None
-    unit_strindex: int = 0
+    key_strindex: typing.Optional[builtins.int] = 0
+    value: typing.Optional[opentelemetry.proto_json.common.v1.common.AnyValue] = None
+    unit_strindex: typing.Optional[builtins.int] = 0
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
         Convert this message to a dictionary with lowerCamelCase keys.
-        
+
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        _result: dict[str, Any] = {}
-        if self.key_strindex is not None and self.key_strindex != 0:
+        _result = {}
+        if self.key_strindex:
             _result["keyStrindex"] = self.key_strindex
-        if self.value is not None:
+        if self.value:
             _result["value"] = self.value.to_dict()
-        if self.unit_strindex is not None and self.unit_strindex != 0:
+        if self.unit_strindex:
             _result["unitStrindex"] = self.unit_strindex
         return _result
 
-    def to_json(self) -> str:
+    def to_json(self) -> builtins.str:
         """
         Serialize this message to a JSON string.
-        
+
         Returns:
             JSON string
         """
         return json.dumps(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
+    @builtins.classmethod
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "KeyValueAndUnit":
         """
         Create from a dictionary with lowerCamelCase keys.
-        
+
         Args:
             data: Dictionary representation following OTLP JSON encoding
-        
+
         Returns:
             KeyValueAndUnit instance
         """
-        _utils.validate_type(data, dict, "data")
-        _args: dict[str, Any] = {}
+        _utils.validate_type(data, builtins.dict, "data")
+        _args = {}
 
         if (_value := data.get("keyStrindex")) is not None:
-            _utils.validate_type(_value, int, "key_strindex")
+            _utils.validate_type(_value, builtins.int, "key_strindex")
             _args["key_strindex"] = _value
         if (_value := data.get("value")) is not None:
             _args["value"] = opentelemetry.proto_json.common.v1.common.AnyValue.from_dict(_value)
         if (_value := data.get("unitStrindex")) is not None:
-            _utils.validate_type(_value, int, "unit_strindex")
+            _utils.validate_type(_value, builtins.int, "unit_strindex")
             _args["unit_strindex"] = _value
 
         return cls(**_args)
 
-    @classmethod
-    def from_json(cls, data: Union[str, bytes]) -> Self:
+    @builtins.classmethod
+    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "KeyValueAndUnit":
         """
         Deserialize from a JSON string or bytes.
-        
+
         Args:
             data: JSON string or bytes
-        
+
         Returns:
             Instance of the class
         """

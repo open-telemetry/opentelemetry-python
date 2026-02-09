@@ -23,8 +23,6 @@ from google.protobuf import descriptor_pb2 as descriptor
 from google.protobuf.compiler import plugin_pb2 as plugin
 
 from opentelemetry.codegen.json.types import (
-    HEX_ENCODED_FIELDS,
-    get_python_type,
     to_json_field_name,
 )
 
@@ -42,26 +40,6 @@ class ProtoType:
     is_enum: bool = False
     type_name: Optional[str] = None  # Fully qualified name for messages/enums
 
-    def to_python_type(self, class_name: Optional[str] = None) -> str:
-        """
-        Convert proto type to Python type hint.
-
-        Args:
-            class_name: Optional class name for nested types
-
-        Returns:
-            Python type hint string
-        """
-        base_type = (
-            class_name if class_name else get_python_type(self.proto_type)
-        )
-
-        if self.is_repeated:
-            return f"list[{base_type}]"
-        if self.is_optional:
-            return f"Optional[{base_type}]"
-        return base_type
-
 
 @dataclass(frozen=True, slots=True)
 class FieldInfo:
@@ -74,10 +52,6 @@ class FieldInfo:
     default_value: Optional[str] = None
     oneof_index: Optional[int] = None
     is_oneof_member: bool = False
-
-    def is_id_field(self) -> bool:
-        """Check if this is a trace/span ID field requiring hex encoding."""
-        return self.name in HEX_ENCODED_FIELDS
 
 
 @dataclass(frozen=True, slots=True)

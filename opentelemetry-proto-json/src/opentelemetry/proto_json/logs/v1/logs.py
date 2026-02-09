@@ -17,16 +17,26 @@
 
 from __future__ import annotations
 
+import builtins
+import dataclasses
+import enum
+import functools
 import json
-from typing import Any, Optional, Union, Self
-from dataclasses import dataclass, field
-from enum import IntEnum
+import sys
+import typing
+
+if sys.version_info >= (3, 10):
+    _dataclass = functools.partial(dataclasses.dataclass, slots=True)
+else:
+    _dataclass = dataclasses.dataclass
 
 import opentelemetry.proto_json._otlp_json_utils as _utils
 import opentelemetry.proto_json.common.v1.common
 import opentelemetry.proto_json.resource.v1.resource
 
-class SeverityNumber(IntEnum):
+
+@typing.final
+class SeverityNumber(enum.IntEnum):
     """
     Generated from protobuf enum SeverityNumber
     """
@@ -57,7 +67,8 @@ class SeverityNumber(IntEnum):
     SEVERITY_NUMBER_FATAL3 = 23
     SEVERITY_NUMBER_FATAL4 = 24
 
-class LogRecordFlags(IntEnum):
+@typing.final
+class LogRecordFlags(enum.IntEnum):
     """
     Generated from protobuf enum LogRecordFlags
     """
@@ -65,325 +76,329 @@ class LogRecordFlags(IntEnum):
     LOG_RECORD_FLAGS_DO_NOT_USE = 0
     LOG_RECORD_FLAGS_TRACE_FLAGS_MASK = 255
 
-@dataclass(slots=True)
+@typing.final
+@_dataclass
 class LogsData:
     """
     Generated from protobuf message LogsData
     """
 
-    resource_logs: list[ResourceLogs] = field(default_factory=list)
+    resource_logs: builtins.list[ResourceLogs] = dataclasses.field(default_factory=builtins.list)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
         Convert this message to a dictionary with lowerCamelCase keys.
-        
+
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        _result: dict[str, Any] = {}
+        _result = {}
         if self.resource_logs:
             _result["resourceLogs"] = _utils.serialize_repeated(self.resource_logs, lambda _v: _v.to_dict())
         return _result
 
-    def to_json(self) -> str:
+    def to_json(self) -> builtins.str:
         """
         Serialize this message to a JSON string.
-        
+
         Returns:
             JSON string
         """
         return json.dumps(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
+    @builtins.classmethod
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "LogsData":
         """
         Create from a dictionary with lowerCamelCase keys.
-        
+
         Args:
             data: Dictionary representation following OTLP JSON encoding
-        
+
         Returns:
             LogsData instance
         """
-        _utils.validate_type(data, dict, "data")
-        _args: dict[str, Any] = {}
+        _utils.validate_type(data, builtins.dict, "data")
+        _args = {}
 
         if (_value := data.get("resourceLogs")) is not None:
             _args["resource_logs"] = _utils.deserialize_repeated(_value, lambda _v: ResourceLogs.from_dict(_v), "resource_logs")
 
         return cls(**_args)
 
-    @classmethod
-    def from_json(cls, data: Union[str, bytes]) -> Self:
+    @builtins.classmethod
+    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "LogsData":
         """
         Deserialize from a JSON string or bytes.
-        
+
         Args:
             data: JSON string or bytes
-        
+
         Returns:
             Instance of the class
         """
         return cls.from_dict(json.loads(data))
 
 
-@dataclass(slots=True)
+@typing.final
+@_dataclass
 class ResourceLogs:
     """
     Generated from protobuf message ResourceLogs
     """
 
-    resource: opentelemetry.proto_json.resource.v1.resource.Resource = None
-    scope_logs: list[ScopeLogs] = field(default_factory=list)
-    schema_url: str = ''
+    resource: typing.Optional[opentelemetry.proto_json.resource.v1.resource.Resource] = None
+    scope_logs: builtins.list[ScopeLogs] = dataclasses.field(default_factory=builtins.list)
+    schema_url: typing.Optional[builtins.str] = ""
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
         Convert this message to a dictionary with lowerCamelCase keys.
-        
+
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        _result: dict[str, Any] = {}
-        if self.resource is not None:
+        _result = {}
+        if self.resource:
             _result["resource"] = self.resource.to_dict()
         if self.scope_logs:
             _result["scopeLogs"] = _utils.serialize_repeated(self.scope_logs, lambda _v: _v.to_dict())
-        if self.schema_url is not None and self.schema_url != '':
+        if self.schema_url:
             _result["schemaUrl"] = self.schema_url
         return _result
 
-    def to_json(self) -> str:
+    def to_json(self) -> builtins.str:
         """
         Serialize this message to a JSON string.
-        
+
         Returns:
             JSON string
         """
         return json.dumps(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
+    @builtins.classmethod
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ResourceLogs":
         """
         Create from a dictionary with lowerCamelCase keys.
-        
+
         Args:
             data: Dictionary representation following OTLP JSON encoding
-        
+
         Returns:
             ResourceLogs instance
         """
-        _utils.validate_type(data, dict, "data")
-        _args: dict[str, Any] = {}
+        _utils.validate_type(data, builtins.dict, "data")
+        _args = {}
 
         if (_value := data.get("resource")) is not None:
             _args["resource"] = opentelemetry.proto_json.resource.v1.resource.Resource.from_dict(_value)
         if (_value := data.get("scopeLogs")) is not None:
             _args["scope_logs"] = _utils.deserialize_repeated(_value, lambda _v: ScopeLogs.from_dict(_v), "scope_logs")
         if (_value := data.get("schemaUrl")) is not None:
-            _utils.validate_type(_value, str, "schema_url")
+            _utils.validate_type(_value, builtins.str, "schema_url")
             _args["schema_url"] = _value
 
         return cls(**_args)
 
-    @classmethod
-    def from_json(cls, data: Union[str, bytes]) -> Self:
+    @builtins.classmethod
+    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "ResourceLogs":
         """
         Deserialize from a JSON string or bytes.
-        
+
         Args:
             data: JSON string or bytes
-        
+
         Returns:
             Instance of the class
         """
         return cls.from_dict(json.loads(data))
 
 
-@dataclass(slots=True)
+@typing.final
+@_dataclass
 class ScopeLogs:
     """
     Generated from protobuf message ScopeLogs
     """
 
-    scope: opentelemetry.proto_json.common.v1.common.InstrumentationScope = None
-    log_records: list[LogRecord] = field(default_factory=list)
-    schema_url: str = ''
+    scope: typing.Optional[opentelemetry.proto_json.common.v1.common.InstrumentationScope] = None
+    log_records: builtins.list[LogRecord] = dataclasses.field(default_factory=builtins.list)
+    schema_url: typing.Optional[builtins.str] = ""
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
         Convert this message to a dictionary with lowerCamelCase keys.
-        
+
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        _result: dict[str, Any] = {}
-        if self.scope is not None:
+        _result = {}
+        if self.scope:
             _result["scope"] = self.scope.to_dict()
         if self.log_records:
             _result["logRecords"] = _utils.serialize_repeated(self.log_records, lambda _v: _v.to_dict())
-        if self.schema_url is not None and self.schema_url != '':
+        if self.schema_url:
             _result["schemaUrl"] = self.schema_url
         return _result
 
-    def to_json(self) -> str:
+    def to_json(self) -> builtins.str:
         """
         Serialize this message to a JSON string.
-        
+
         Returns:
             JSON string
         """
         return json.dumps(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
+    @builtins.classmethod
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ScopeLogs":
         """
         Create from a dictionary with lowerCamelCase keys.
-        
+
         Args:
             data: Dictionary representation following OTLP JSON encoding
-        
+
         Returns:
             ScopeLogs instance
         """
-        _utils.validate_type(data, dict, "data")
-        _args: dict[str, Any] = {}
+        _utils.validate_type(data, builtins.dict, "data")
+        _args = {}
 
         if (_value := data.get("scope")) is not None:
             _args["scope"] = opentelemetry.proto_json.common.v1.common.InstrumentationScope.from_dict(_value)
         if (_value := data.get("logRecords")) is not None:
             _args["log_records"] = _utils.deserialize_repeated(_value, lambda _v: LogRecord.from_dict(_v), "log_records")
         if (_value := data.get("schemaUrl")) is not None:
-            _utils.validate_type(_value, str, "schema_url")
+            _utils.validate_type(_value, builtins.str, "schema_url")
             _args["schema_url"] = _value
 
         return cls(**_args)
 
-    @classmethod
-    def from_json(cls, data: Union[str, bytes]) -> Self:
+    @builtins.classmethod
+    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "ScopeLogs":
         """
         Deserialize from a JSON string or bytes.
-        
+
         Args:
             data: JSON string or bytes
-        
+
         Returns:
             Instance of the class
         """
         return cls.from_dict(json.loads(data))
 
 
-@dataclass(slots=True)
+@typing.final
+@_dataclass
 class LogRecord:
     """
     Generated from protobuf message LogRecord
     """
 
-    time_unix_nano: int = 0
-    observed_time_unix_nano: int = 0
-    severity_number: SeverityNumber = 0
-    severity_text: str = ''
-    body: opentelemetry.proto_json.common.v1.common.AnyValue = None
-    attributes: list[opentelemetry.proto_json.common.v1.common.KeyValue] = field(default_factory=list)
-    dropped_attributes_count: int = 0
-    flags: int = 0
-    trace_id: bytes = b''
-    span_id: bytes = b''
-    event_name: str = ''
+    time_unix_nano: typing.Optional[builtins.int] = 0
+    observed_time_unix_nano: typing.Optional[builtins.int] = 0
+    severity_number: typing.Union[SeverityNumber, builtins.int, None] = 0
+    severity_text: typing.Optional[builtins.str] = ""
+    body: typing.Optional[opentelemetry.proto_json.common.v1.common.AnyValue] = None
+    attributes: builtins.list[opentelemetry.proto_json.common.v1.common.KeyValue] = dataclasses.field(default_factory=builtins.list)
+    dropped_attributes_count: typing.Optional[builtins.int] = 0
+    flags: typing.Optional[builtins.int] = 0
+    trace_id: typing.Optional[builtins.bytes] = b""
+    span_id: typing.Optional[builtins.bytes] = b""
+    event_name: typing.Optional[builtins.str] = ""
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
         Convert this message to a dictionary with lowerCamelCase keys.
-        
+
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        _result: dict[str, Any] = {}
-        if self.time_unix_nano is not None and self.time_unix_nano != 0:
+        _result = {}
+        if self.time_unix_nano:
             _result["timeUnixNano"] = _utils.encode_int64(self.time_unix_nano)
-        if self.observed_time_unix_nano is not None and self.observed_time_unix_nano != 0:
+        if self.observed_time_unix_nano:
             _result["observedTimeUnixNano"] = _utils.encode_int64(self.observed_time_unix_nano)
-        if self.severity_number is not None:
-            _result["severityNumber"] = int(self.severity_number)
-        if self.severity_text is not None and self.severity_text != '':
+        if self.severity_number:
+            _result["severityNumber"] = builtins.int(self.severity_number)
+        if self.severity_text:
             _result["severityText"] = self.severity_text
-        if self.body is not None:
+        if self.body:
             _result["body"] = self.body.to_dict()
         if self.attributes:
             _result["attributes"] = _utils.serialize_repeated(self.attributes, lambda _v: _v.to_dict())
-        if self.dropped_attributes_count is not None and self.dropped_attributes_count != 0:
+        if self.dropped_attributes_count:
             _result["droppedAttributesCount"] = self.dropped_attributes_count
-        if self.flags is not None and self.flags != 0:
+        if self.flags:
             _result["flags"] = self.flags
-        if self.trace_id is not None and self.trace_id != b'':
+        if self.trace_id:
             _result["traceId"] = _utils.encode_hex(self.trace_id)
-        if self.span_id is not None and self.span_id != b'':
+        if self.span_id:
             _result["spanId"] = _utils.encode_hex(self.span_id)
-        if self.event_name is not None and self.event_name != '':
+        if self.event_name:
             _result["eventName"] = self.event_name
         return _result
 
-    def to_json(self) -> str:
+    def to_json(self) -> builtins.str:
         """
         Serialize this message to a JSON string.
-        
+
         Returns:
             JSON string
         """
         return json.dumps(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
+    @builtins.classmethod
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "LogRecord":
         """
         Create from a dictionary with lowerCamelCase keys.
-        
+
         Args:
             data: Dictionary representation following OTLP JSON encoding
-        
+
         Returns:
             LogRecord instance
         """
-        _utils.validate_type(data, dict, "data")
-        _args: dict[str, Any] = {}
+        _utils.validate_type(data, builtins.dict, "data")
+        _args = {}
 
         if (_value := data.get("timeUnixNano")) is not None:
             _args["time_unix_nano"] = _utils.parse_int64(_value, "time_unix_nano")
         if (_value := data.get("observedTimeUnixNano")) is not None:
             _args["observed_time_unix_nano"] = _utils.parse_int64(_value, "observed_time_unix_nano")
         if (_value := data.get("severityNumber")) is not None:
-            _utils.validate_type(_value, int, "severity_number")
+            _utils.validate_type(_value, builtins.int, "severity_number")
             _args["severity_number"] = SeverityNumber(_value)
         if (_value := data.get("severityText")) is not None:
-            _utils.validate_type(_value, str, "severity_text")
+            _utils.validate_type(_value, builtins.str, "severity_text")
             _args["severity_text"] = _value
         if (_value := data.get("body")) is not None:
             _args["body"] = opentelemetry.proto_json.common.v1.common.AnyValue.from_dict(_value)
         if (_value := data.get("attributes")) is not None:
             _args["attributes"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
         if (_value := data.get("droppedAttributesCount")) is not None:
-            _utils.validate_type(_value, int, "dropped_attributes_count")
+            _utils.validate_type(_value, builtins.int, "dropped_attributes_count")
             _args["dropped_attributes_count"] = _value
         if (_value := data.get("flags")) is not None:
-            _utils.validate_type(_value, int, "flags")
+            _utils.validate_type(_value, builtins.int, "flags")
             _args["flags"] = _value
         if (_value := data.get("traceId")) is not None:
             _args["trace_id"] = _utils.decode_hex(_value, "trace_id")
         if (_value := data.get("spanId")) is not None:
             _args["span_id"] = _utils.decode_hex(_value, "span_id")
         if (_value := data.get("eventName")) is not None:
-            _utils.validate_type(_value, str, "event_name")
+            _utils.validate_type(_value, builtins.str, "event_name")
             _args["event_name"] = _value
 
         return cls(**_args)
 
-    @classmethod
-    def from_json(cls, data: Union[str, bytes]) -> Self:
+    @builtins.classmethod
+    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "LogRecord":
         """
         Deserialize from a JSON string or bytes.
-        
+
         Args:
             data: JSON string or bytes
-        
+
         Returns:
             Instance of the class
         """

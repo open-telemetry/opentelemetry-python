@@ -17,200 +17,211 @@
 
 from __future__ import annotations
 
+import builtins
+import dataclasses
+import functools
 import json
-from typing import Any, Optional, Union, Self
-from dataclasses import dataclass, field
-from enum import IntEnum
+import sys
+import typing
+
+if sys.version_info >= (3, 10):
+    _dataclass = functools.partial(dataclasses.dataclass, slots=True)
+else:
+    _dataclass = dataclasses.dataclass
 
 import opentelemetry.proto_json._otlp_json_utils as _utils
 import opentelemetry.proto_json.metrics.v1.metrics
 
-@dataclass(slots=True)
+
+@typing.final
+@_dataclass
 class ExportMetricsServiceRequest:
     """
     Generated from protobuf message ExportMetricsServiceRequest
     """
 
-    resource_metrics: list[opentelemetry.proto_json.metrics.v1.metrics.ResourceMetrics] = field(default_factory=list)
+    resource_metrics: builtins.list[opentelemetry.proto_json.metrics.v1.metrics.ResourceMetrics] = dataclasses.field(default_factory=builtins.list)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
         Convert this message to a dictionary with lowerCamelCase keys.
-        
+
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        _result: dict[str, Any] = {}
+        _result = {}
         if self.resource_metrics:
             _result["resourceMetrics"] = _utils.serialize_repeated(self.resource_metrics, lambda _v: _v.to_dict())
         return _result
 
-    def to_json(self) -> str:
+    def to_json(self) -> builtins.str:
         """
         Serialize this message to a JSON string.
-        
+
         Returns:
             JSON string
         """
         return json.dumps(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
+    @builtins.classmethod
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ExportMetricsServiceRequest":
         """
         Create from a dictionary with lowerCamelCase keys.
-        
+
         Args:
             data: Dictionary representation following OTLP JSON encoding
-        
+
         Returns:
             ExportMetricsServiceRequest instance
         """
-        _utils.validate_type(data, dict, "data")
-        _args: dict[str, Any] = {}
+        _utils.validate_type(data, builtins.dict, "data")
+        _args = {}
 
         if (_value := data.get("resourceMetrics")) is not None:
             _args["resource_metrics"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.metrics.v1.metrics.ResourceMetrics.from_dict(_v), "resource_metrics")
 
         return cls(**_args)
 
-    @classmethod
-    def from_json(cls, data: Union[str, bytes]) -> Self:
+    @builtins.classmethod
+    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "ExportMetricsServiceRequest":
         """
         Deserialize from a JSON string or bytes.
-        
+
         Args:
             data: JSON string or bytes
-        
+
         Returns:
             Instance of the class
         """
         return cls.from_dict(json.loads(data))
 
 
-@dataclass(slots=True)
+@typing.final
+@_dataclass
 class ExportMetricsServiceResponse:
     """
     Generated from protobuf message ExportMetricsServiceResponse
     """
 
-    partial_success: ExportMetricsPartialSuccess = None
+    partial_success: typing.Optional[ExportMetricsPartialSuccess] = None
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
         Convert this message to a dictionary with lowerCamelCase keys.
-        
+
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        _result: dict[str, Any] = {}
-        if self.partial_success is not None:
+        _result = {}
+        if self.partial_success:
             _result["partialSuccess"] = self.partial_success.to_dict()
         return _result
 
-    def to_json(self) -> str:
+    def to_json(self) -> builtins.str:
         """
         Serialize this message to a JSON string.
-        
+
         Returns:
             JSON string
         """
         return json.dumps(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
+    @builtins.classmethod
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ExportMetricsServiceResponse":
         """
         Create from a dictionary with lowerCamelCase keys.
-        
+
         Args:
             data: Dictionary representation following OTLP JSON encoding
-        
+
         Returns:
             ExportMetricsServiceResponse instance
         """
-        _utils.validate_type(data, dict, "data")
-        _args: dict[str, Any] = {}
+        _utils.validate_type(data, builtins.dict, "data")
+        _args = {}
 
         if (_value := data.get("partialSuccess")) is not None:
             _args["partial_success"] = ExportMetricsPartialSuccess.from_dict(_value)
 
         return cls(**_args)
 
-    @classmethod
-    def from_json(cls, data: Union[str, bytes]) -> Self:
+    @builtins.classmethod
+    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "ExportMetricsServiceResponse":
         """
         Deserialize from a JSON string or bytes.
-        
+
         Args:
             data: JSON string or bytes
-        
+
         Returns:
             Instance of the class
         """
         return cls.from_dict(json.loads(data))
 
 
-@dataclass(slots=True)
+@typing.final
+@_dataclass
 class ExportMetricsPartialSuccess:
     """
     Generated from protobuf message ExportMetricsPartialSuccess
     """
 
-    rejected_data_points: int = 0
-    error_message: str = ''
+    rejected_data_points: typing.Optional[builtins.int] = 0
+    error_message: typing.Optional[builtins.str] = ""
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
         Convert this message to a dictionary with lowerCamelCase keys.
-        
+
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        _result: dict[str, Any] = {}
-        if self.rejected_data_points is not None and self.rejected_data_points != 0:
+        _result = {}
+        if self.rejected_data_points:
             _result["rejectedDataPoints"] = _utils.encode_int64(self.rejected_data_points)
-        if self.error_message is not None and self.error_message != '':
+        if self.error_message:
             _result["errorMessage"] = self.error_message
         return _result
 
-    def to_json(self) -> str:
+    def to_json(self) -> builtins.str:
         """
         Serialize this message to a JSON string.
-        
+
         Returns:
             JSON string
         """
         return json.dumps(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
+    @builtins.classmethod
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ExportMetricsPartialSuccess":
         """
         Create from a dictionary with lowerCamelCase keys.
-        
+
         Args:
             data: Dictionary representation following OTLP JSON encoding
-        
+
         Returns:
             ExportMetricsPartialSuccess instance
         """
-        _utils.validate_type(data, dict, "data")
-        _args: dict[str, Any] = {}
+        _utils.validate_type(data, builtins.dict, "data")
+        _args = {}
 
         if (_value := data.get("rejectedDataPoints")) is not None:
             _args["rejected_data_points"] = _utils.parse_int64(_value, "rejected_data_points")
         if (_value := data.get("errorMessage")) is not None:
-            _utils.validate_type(_value, str, "error_message")
+            _utils.validate_type(_value, builtins.str, "error_message")
             _args["error_message"] = _value
 
         return cls(**_args)
 
-    @classmethod
-    def from_json(cls, data: Union[str, bytes]) -> Self:
+    @builtins.classmethod
+    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "ExportMetricsPartialSuccess":
         """
         Deserialize from a JSON string or bytes.
-        
+
         Args:
             data: JSON string or bytes
-        
+
         Returns:
             Instance of the class
         """

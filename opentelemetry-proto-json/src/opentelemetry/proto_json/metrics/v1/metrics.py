@@ -17,16 +17,26 @@
 
 from __future__ import annotations
 
+import builtins
+import dataclasses
+import enum
+import functools
 import json
-from typing import Any, Optional, Union, Self
-from dataclasses import dataclass, field
-from enum import IntEnum
+import sys
+import typing
+
+if sys.version_info >= (3, 10):
+    _dataclass = functools.partial(dataclasses.dataclass, slots=True)
+else:
+    _dataclass = dataclasses.dataclass
 
 import opentelemetry.proto_json._otlp_json_utils as _utils
 import opentelemetry.proto_json.common.v1.common
 import opentelemetry.proto_json.resource.v1.resource
 
-class AggregationTemporality(IntEnum):
+
+@typing.final
+class AggregationTemporality(enum.IntEnum):
     """
     Generated from protobuf enum AggregationTemporality
     """
@@ -35,7 +45,8 @@ class AggregationTemporality(IntEnum):
     AGGREGATION_TEMPORALITY_DELTA = 1
     AGGREGATION_TEMPORALITY_CUMULATIVE = 2
 
-class DataPointFlags(IntEnum):
+@typing.final
+class DataPointFlags(enum.IntEnum):
     """
     Generated from protobuf enum DataPointFlags
     """
@@ -43,243 +54,247 @@ class DataPointFlags(IntEnum):
     DATA_POINT_FLAGS_DO_NOT_USE = 0
     DATA_POINT_FLAGS_NO_RECORDED_VALUE_MASK = 1
 
-@dataclass(slots=True)
+@typing.final
+@_dataclass
 class MetricsData:
     """
     Generated from protobuf message MetricsData
     """
 
-    resource_metrics: list[ResourceMetrics] = field(default_factory=list)
+    resource_metrics: builtins.list[ResourceMetrics] = dataclasses.field(default_factory=builtins.list)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
         Convert this message to a dictionary with lowerCamelCase keys.
-        
+
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        _result: dict[str, Any] = {}
+        _result = {}
         if self.resource_metrics:
             _result["resourceMetrics"] = _utils.serialize_repeated(self.resource_metrics, lambda _v: _v.to_dict())
         return _result
 
-    def to_json(self) -> str:
+    def to_json(self) -> builtins.str:
         """
         Serialize this message to a JSON string.
-        
+
         Returns:
             JSON string
         """
         return json.dumps(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
+    @builtins.classmethod
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "MetricsData":
         """
         Create from a dictionary with lowerCamelCase keys.
-        
+
         Args:
             data: Dictionary representation following OTLP JSON encoding
-        
+
         Returns:
             MetricsData instance
         """
-        _utils.validate_type(data, dict, "data")
-        _args: dict[str, Any] = {}
+        _utils.validate_type(data, builtins.dict, "data")
+        _args = {}
 
         if (_value := data.get("resourceMetrics")) is not None:
             _args["resource_metrics"] = _utils.deserialize_repeated(_value, lambda _v: ResourceMetrics.from_dict(_v), "resource_metrics")
 
         return cls(**_args)
 
-    @classmethod
-    def from_json(cls, data: Union[str, bytes]) -> Self:
+    @builtins.classmethod
+    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "MetricsData":
         """
         Deserialize from a JSON string or bytes.
-        
+
         Args:
             data: JSON string or bytes
-        
+
         Returns:
             Instance of the class
         """
         return cls.from_dict(json.loads(data))
 
 
-@dataclass(slots=True)
+@typing.final
+@_dataclass
 class ResourceMetrics:
     """
     Generated from protobuf message ResourceMetrics
     """
 
-    resource: opentelemetry.proto_json.resource.v1.resource.Resource = None
-    scope_metrics: list[ScopeMetrics] = field(default_factory=list)
-    schema_url: str = ''
+    resource: typing.Optional[opentelemetry.proto_json.resource.v1.resource.Resource] = None
+    scope_metrics: builtins.list[ScopeMetrics] = dataclasses.field(default_factory=builtins.list)
+    schema_url: typing.Optional[builtins.str] = ""
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
         Convert this message to a dictionary with lowerCamelCase keys.
-        
+
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        _result: dict[str, Any] = {}
-        if self.resource is not None:
+        _result = {}
+        if self.resource:
             _result["resource"] = self.resource.to_dict()
         if self.scope_metrics:
             _result["scopeMetrics"] = _utils.serialize_repeated(self.scope_metrics, lambda _v: _v.to_dict())
-        if self.schema_url is not None and self.schema_url != '':
+        if self.schema_url:
             _result["schemaUrl"] = self.schema_url
         return _result
 
-    def to_json(self) -> str:
+    def to_json(self) -> builtins.str:
         """
         Serialize this message to a JSON string.
-        
+
         Returns:
             JSON string
         """
         return json.dumps(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
+    @builtins.classmethod
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ResourceMetrics":
         """
         Create from a dictionary with lowerCamelCase keys.
-        
+
         Args:
             data: Dictionary representation following OTLP JSON encoding
-        
+
         Returns:
             ResourceMetrics instance
         """
-        _utils.validate_type(data, dict, "data")
-        _args: dict[str, Any] = {}
+        _utils.validate_type(data, builtins.dict, "data")
+        _args = {}
 
         if (_value := data.get("resource")) is not None:
             _args["resource"] = opentelemetry.proto_json.resource.v1.resource.Resource.from_dict(_value)
         if (_value := data.get("scopeMetrics")) is not None:
             _args["scope_metrics"] = _utils.deserialize_repeated(_value, lambda _v: ScopeMetrics.from_dict(_v), "scope_metrics")
         if (_value := data.get("schemaUrl")) is not None:
-            _utils.validate_type(_value, str, "schema_url")
+            _utils.validate_type(_value, builtins.str, "schema_url")
             _args["schema_url"] = _value
 
         return cls(**_args)
 
-    @classmethod
-    def from_json(cls, data: Union[str, bytes]) -> Self:
+    @builtins.classmethod
+    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "ResourceMetrics":
         """
         Deserialize from a JSON string or bytes.
-        
+
         Args:
             data: JSON string or bytes
-        
+
         Returns:
             Instance of the class
         """
         return cls.from_dict(json.loads(data))
 
 
-@dataclass(slots=True)
+@typing.final
+@_dataclass
 class ScopeMetrics:
     """
     Generated from protobuf message ScopeMetrics
     """
 
-    scope: opentelemetry.proto_json.common.v1.common.InstrumentationScope = None
-    metrics: list[Metric] = field(default_factory=list)
-    schema_url: str = ''
+    scope: typing.Optional[opentelemetry.proto_json.common.v1.common.InstrumentationScope] = None
+    metrics: builtins.list[Metric] = dataclasses.field(default_factory=builtins.list)
+    schema_url: typing.Optional[builtins.str] = ""
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
         Convert this message to a dictionary with lowerCamelCase keys.
-        
+
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        _result: dict[str, Any] = {}
-        if self.scope is not None:
+        _result = {}
+        if self.scope:
             _result["scope"] = self.scope.to_dict()
         if self.metrics:
             _result["metrics"] = _utils.serialize_repeated(self.metrics, lambda _v: _v.to_dict())
-        if self.schema_url is not None and self.schema_url != '':
+        if self.schema_url:
             _result["schemaUrl"] = self.schema_url
         return _result
 
-    def to_json(self) -> str:
+    def to_json(self) -> builtins.str:
         """
         Serialize this message to a JSON string.
-        
+
         Returns:
             JSON string
         """
         return json.dumps(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
+    @builtins.classmethod
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ScopeMetrics":
         """
         Create from a dictionary with lowerCamelCase keys.
-        
+
         Args:
             data: Dictionary representation following OTLP JSON encoding
-        
+
         Returns:
             ScopeMetrics instance
         """
-        _utils.validate_type(data, dict, "data")
-        _args: dict[str, Any] = {}
+        _utils.validate_type(data, builtins.dict, "data")
+        _args = {}
 
         if (_value := data.get("scope")) is not None:
             _args["scope"] = opentelemetry.proto_json.common.v1.common.InstrumentationScope.from_dict(_value)
         if (_value := data.get("metrics")) is not None:
             _args["metrics"] = _utils.deserialize_repeated(_value, lambda _v: Metric.from_dict(_v), "metrics")
         if (_value := data.get("schemaUrl")) is not None:
-            _utils.validate_type(_value, str, "schema_url")
+            _utils.validate_type(_value, builtins.str, "schema_url")
             _args["schema_url"] = _value
 
         return cls(**_args)
 
-    @classmethod
-    def from_json(cls, data: Union[str, bytes]) -> Self:
+    @builtins.classmethod
+    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "ScopeMetrics":
         """
         Deserialize from a JSON string or bytes.
-        
+
         Args:
             data: JSON string or bytes
-        
+
         Returns:
             Instance of the class
         """
         return cls.from_dict(json.loads(data))
 
 
-@dataclass(slots=True)
+@typing.final
+@_dataclass
 class Metric:
     """
     Generated from protobuf message Metric
     """
 
-    name: str = ''
-    description: str = ''
-    unit: str = ''
-    gauge: Optional[Gauge] = None
-    sum: Optional[Sum] = None
-    histogram: Optional[Histogram] = None
-    exponential_histogram: Optional[ExponentialHistogram] = None
-    summary: Optional[Summary] = None
-    metadata: list[opentelemetry.proto_json.common.v1.common.KeyValue] = field(default_factory=list)
+    name: typing.Optional[builtins.str] = ""
+    description: typing.Optional[builtins.str] = ""
+    unit: typing.Optional[builtins.str] = ""
+    gauge: typing.Optional[Gauge] = None
+    sum: typing.Optional[Sum] = None
+    histogram: typing.Optional[Histogram] = None
+    exponential_histogram: typing.Optional[ExponentialHistogram] = None
+    summary: typing.Optional[Summary] = None
+    metadata: builtins.list[opentelemetry.proto_json.common.v1.common.KeyValue] = dataclasses.field(default_factory=builtins.list)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
         Convert this message to a dictionary with lowerCamelCase keys.
-        
+
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        _result: dict[str, Any] = {}
-        if self.name is not None and self.name != '':
+        _result = {}
+        if self.name:
             _result["name"] = self.name
-        if self.description is not None and self.description != '':
+        if self.description:
             _result["description"] = self.description
-        if self.unit is not None and self.unit != '':
+        if self.unit:
             _result["unit"] = self.unit
         if self.metadata:
             _result["metadata"] = _utils.serialize_repeated(self.metadata, lambda _v: _v.to_dict())
@@ -295,37 +310,37 @@ class Metric:
             _result["gauge"] = self.gauge.to_dict()
         return _result
 
-    def to_json(self) -> str:
+    def to_json(self) -> builtins.str:
         """
         Serialize this message to a JSON string.
-        
+
         Returns:
             JSON string
         """
         return json.dumps(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
+    @builtins.classmethod
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Metric":
         """
         Create from a dictionary with lowerCamelCase keys.
-        
+
         Args:
             data: Dictionary representation following OTLP JSON encoding
-        
+
         Returns:
             Metric instance
         """
-        _utils.validate_type(data, dict, "data")
-        _args: dict[str, Any] = {}
+        _utils.validate_type(data, builtins.dict, "data")
+        _args = {}
 
         if (_value := data.get("name")) is not None:
-            _utils.validate_type(_value, str, "name")
+            _utils.validate_type(_value, builtins.str, "name")
             _args["name"] = _value
         if (_value := data.get("description")) is not None:
-            _utils.validate_type(_value, str, "description")
+            _utils.validate_type(_value, builtins.str, "description")
             _args["description"] = _value
         if (_value := data.get("unit")) is not None:
-            _utils.validate_type(_value, str, "unit")
+            _utils.validate_type(_value, builtins.str, "unit")
             _args["unit"] = _value
         if (_value := data.get("metadata")) is not None:
             _args["metadata"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "metadata")
@@ -342,385 +357,391 @@ class Metric:
 
         return cls(**_args)
 
-    @classmethod
-    def from_json(cls, data: Union[str, bytes]) -> Self:
+    @builtins.classmethod
+    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "Metric":
         """
         Deserialize from a JSON string or bytes.
-        
+
         Args:
             data: JSON string or bytes
-        
+
         Returns:
             Instance of the class
         """
         return cls.from_dict(json.loads(data))
 
 
-@dataclass(slots=True)
+@typing.final
+@_dataclass
 class Gauge:
     """
     Generated from protobuf message Gauge
     """
 
-    data_points: list[NumberDataPoint] = field(default_factory=list)
+    data_points: builtins.list[NumberDataPoint] = dataclasses.field(default_factory=builtins.list)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
         Convert this message to a dictionary with lowerCamelCase keys.
-        
+
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        _result: dict[str, Any] = {}
+        _result = {}
         if self.data_points:
             _result["dataPoints"] = _utils.serialize_repeated(self.data_points, lambda _v: _v.to_dict())
         return _result
 
-    def to_json(self) -> str:
+    def to_json(self) -> builtins.str:
         """
         Serialize this message to a JSON string.
-        
+
         Returns:
             JSON string
         """
         return json.dumps(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
+    @builtins.classmethod
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Gauge":
         """
         Create from a dictionary with lowerCamelCase keys.
-        
+
         Args:
             data: Dictionary representation following OTLP JSON encoding
-        
+
         Returns:
             Gauge instance
         """
-        _utils.validate_type(data, dict, "data")
-        _args: dict[str, Any] = {}
+        _utils.validate_type(data, builtins.dict, "data")
+        _args = {}
 
         if (_value := data.get("dataPoints")) is not None:
             _args["data_points"] = _utils.deserialize_repeated(_value, lambda _v: NumberDataPoint.from_dict(_v), "data_points")
 
         return cls(**_args)
 
-    @classmethod
-    def from_json(cls, data: Union[str, bytes]) -> Self:
+    @builtins.classmethod
+    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "Gauge":
         """
         Deserialize from a JSON string or bytes.
-        
+
         Args:
             data: JSON string or bytes
-        
+
         Returns:
             Instance of the class
         """
         return cls.from_dict(json.loads(data))
 
 
-@dataclass(slots=True)
+@typing.final
+@_dataclass
 class Sum:
     """
     Generated from protobuf message Sum
     """
 
-    data_points: list[NumberDataPoint] = field(default_factory=list)
-    aggregation_temporality: AggregationTemporality = 0
-    is_monotonic: bool = False
+    data_points: builtins.list[NumberDataPoint] = dataclasses.field(default_factory=builtins.list)
+    aggregation_temporality: typing.Union[AggregationTemporality, builtins.int, None] = 0
+    is_monotonic: typing.Optional[builtins.bool] = False
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
         Convert this message to a dictionary with lowerCamelCase keys.
-        
+
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        _result: dict[str, Any] = {}
+        _result = {}
         if self.data_points:
             _result["dataPoints"] = _utils.serialize_repeated(self.data_points, lambda _v: _v.to_dict())
-        if self.aggregation_temporality is not None:
-            _result["aggregationTemporality"] = int(self.aggregation_temporality)
-        if self.is_monotonic is not None and self.is_monotonic != False:
+        if self.aggregation_temporality:
+            _result["aggregationTemporality"] = builtins.int(self.aggregation_temporality)
+        if self.is_monotonic:
             _result["isMonotonic"] = self.is_monotonic
         return _result
 
-    def to_json(self) -> str:
+    def to_json(self) -> builtins.str:
         """
         Serialize this message to a JSON string.
-        
+
         Returns:
             JSON string
         """
         return json.dumps(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
+    @builtins.classmethod
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Sum":
         """
         Create from a dictionary with lowerCamelCase keys.
-        
+
         Args:
             data: Dictionary representation following OTLP JSON encoding
-        
+
         Returns:
             Sum instance
         """
-        _utils.validate_type(data, dict, "data")
-        _args: dict[str, Any] = {}
+        _utils.validate_type(data, builtins.dict, "data")
+        _args = {}
 
         if (_value := data.get("dataPoints")) is not None:
             _args["data_points"] = _utils.deserialize_repeated(_value, lambda _v: NumberDataPoint.from_dict(_v), "data_points")
         if (_value := data.get("aggregationTemporality")) is not None:
-            _utils.validate_type(_value, int, "aggregation_temporality")
+            _utils.validate_type(_value, builtins.int, "aggregation_temporality")
             _args["aggregation_temporality"] = AggregationTemporality(_value)
         if (_value := data.get("isMonotonic")) is not None:
-            _utils.validate_type(_value, bool, "is_monotonic")
+            _utils.validate_type(_value, builtins.bool, "is_monotonic")
             _args["is_monotonic"] = _value
 
         return cls(**_args)
 
-    @classmethod
-    def from_json(cls, data: Union[str, bytes]) -> Self:
+    @builtins.classmethod
+    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "Sum":
         """
         Deserialize from a JSON string or bytes.
-        
+
         Args:
             data: JSON string or bytes
-        
+
         Returns:
             Instance of the class
         """
         return cls.from_dict(json.loads(data))
 
 
-@dataclass(slots=True)
+@typing.final
+@_dataclass
 class Histogram:
     """
     Generated from protobuf message Histogram
     """
 
-    data_points: list[HistogramDataPoint] = field(default_factory=list)
-    aggregation_temporality: AggregationTemporality = 0
+    data_points: builtins.list[HistogramDataPoint] = dataclasses.field(default_factory=builtins.list)
+    aggregation_temporality: typing.Union[AggregationTemporality, builtins.int, None] = 0
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
         Convert this message to a dictionary with lowerCamelCase keys.
-        
+
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        _result: dict[str, Any] = {}
+        _result = {}
         if self.data_points:
             _result["dataPoints"] = _utils.serialize_repeated(self.data_points, lambda _v: _v.to_dict())
-        if self.aggregation_temporality is not None:
-            _result["aggregationTemporality"] = int(self.aggregation_temporality)
+        if self.aggregation_temporality:
+            _result["aggregationTemporality"] = builtins.int(self.aggregation_temporality)
         return _result
 
-    def to_json(self) -> str:
+    def to_json(self) -> builtins.str:
         """
         Serialize this message to a JSON string.
-        
+
         Returns:
             JSON string
         """
         return json.dumps(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
+    @builtins.classmethod
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Histogram":
         """
         Create from a dictionary with lowerCamelCase keys.
-        
+
         Args:
             data: Dictionary representation following OTLP JSON encoding
-        
+
         Returns:
             Histogram instance
         """
-        _utils.validate_type(data, dict, "data")
-        _args: dict[str, Any] = {}
+        _utils.validate_type(data, builtins.dict, "data")
+        _args = {}
 
         if (_value := data.get("dataPoints")) is not None:
             _args["data_points"] = _utils.deserialize_repeated(_value, lambda _v: HistogramDataPoint.from_dict(_v), "data_points")
         if (_value := data.get("aggregationTemporality")) is not None:
-            _utils.validate_type(_value, int, "aggregation_temporality")
+            _utils.validate_type(_value, builtins.int, "aggregation_temporality")
             _args["aggregation_temporality"] = AggregationTemporality(_value)
 
         return cls(**_args)
 
-    @classmethod
-    def from_json(cls, data: Union[str, bytes]) -> Self:
+    @builtins.classmethod
+    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "Histogram":
         """
         Deserialize from a JSON string or bytes.
-        
+
         Args:
             data: JSON string or bytes
-        
+
         Returns:
             Instance of the class
         """
         return cls.from_dict(json.loads(data))
 
 
-@dataclass(slots=True)
+@typing.final
+@_dataclass
 class ExponentialHistogram:
     """
     Generated from protobuf message ExponentialHistogram
     """
 
-    data_points: list[ExponentialHistogramDataPoint] = field(default_factory=list)
-    aggregation_temporality: AggregationTemporality = 0
+    data_points: builtins.list[ExponentialHistogramDataPoint] = dataclasses.field(default_factory=builtins.list)
+    aggregation_temporality: typing.Union[AggregationTemporality, builtins.int, None] = 0
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
         Convert this message to a dictionary with lowerCamelCase keys.
-        
+
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        _result: dict[str, Any] = {}
+        _result = {}
         if self.data_points:
             _result["dataPoints"] = _utils.serialize_repeated(self.data_points, lambda _v: _v.to_dict())
-        if self.aggregation_temporality is not None:
-            _result["aggregationTemporality"] = int(self.aggregation_temporality)
+        if self.aggregation_temporality:
+            _result["aggregationTemporality"] = builtins.int(self.aggregation_temporality)
         return _result
 
-    def to_json(self) -> str:
+    def to_json(self) -> builtins.str:
         """
         Serialize this message to a JSON string.
-        
+
         Returns:
             JSON string
         """
         return json.dumps(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
+    @builtins.classmethod
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ExponentialHistogram":
         """
         Create from a dictionary with lowerCamelCase keys.
-        
+
         Args:
             data: Dictionary representation following OTLP JSON encoding
-        
+
         Returns:
             ExponentialHistogram instance
         """
-        _utils.validate_type(data, dict, "data")
-        _args: dict[str, Any] = {}
+        _utils.validate_type(data, builtins.dict, "data")
+        _args = {}
 
         if (_value := data.get("dataPoints")) is not None:
             _args["data_points"] = _utils.deserialize_repeated(_value, lambda _v: ExponentialHistogramDataPoint.from_dict(_v), "data_points")
         if (_value := data.get("aggregationTemporality")) is not None:
-            _utils.validate_type(_value, int, "aggregation_temporality")
+            _utils.validate_type(_value, builtins.int, "aggregation_temporality")
             _args["aggregation_temporality"] = AggregationTemporality(_value)
 
         return cls(**_args)
 
-    @classmethod
-    def from_json(cls, data: Union[str, bytes]) -> Self:
+    @builtins.classmethod
+    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "ExponentialHistogram":
         """
         Deserialize from a JSON string or bytes.
-        
+
         Args:
             data: JSON string or bytes
-        
+
         Returns:
             Instance of the class
         """
         return cls.from_dict(json.loads(data))
 
 
-@dataclass(slots=True)
+@typing.final
+@_dataclass
 class Summary:
     """
     Generated from protobuf message Summary
     """
 
-    data_points: list[SummaryDataPoint] = field(default_factory=list)
+    data_points: builtins.list[SummaryDataPoint] = dataclasses.field(default_factory=builtins.list)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
         Convert this message to a dictionary with lowerCamelCase keys.
-        
+
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        _result: dict[str, Any] = {}
+        _result = {}
         if self.data_points:
             _result["dataPoints"] = _utils.serialize_repeated(self.data_points, lambda _v: _v.to_dict())
         return _result
 
-    def to_json(self) -> str:
+    def to_json(self) -> builtins.str:
         """
         Serialize this message to a JSON string.
-        
+
         Returns:
             JSON string
         """
         return json.dumps(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
+    @builtins.classmethod
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Summary":
         """
         Create from a dictionary with lowerCamelCase keys.
-        
+
         Args:
             data: Dictionary representation following OTLP JSON encoding
-        
+
         Returns:
             Summary instance
         """
-        _utils.validate_type(data, dict, "data")
-        _args: dict[str, Any] = {}
+        _utils.validate_type(data, builtins.dict, "data")
+        _args = {}
 
         if (_value := data.get("dataPoints")) is not None:
             _args["data_points"] = _utils.deserialize_repeated(_value, lambda _v: SummaryDataPoint.from_dict(_v), "data_points")
 
         return cls(**_args)
 
-    @classmethod
-    def from_json(cls, data: Union[str, bytes]) -> Self:
+    @builtins.classmethod
+    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "Summary":
         """
         Deserialize from a JSON string or bytes.
-        
+
         Args:
             data: JSON string or bytes
-        
+
         Returns:
             Instance of the class
         """
         return cls.from_dict(json.loads(data))
 
 
-@dataclass(slots=True)
+@typing.final
+@_dataclass
 class NumberDataPoint:
     """
     Generated from protobuf message NumberDataPoint
     """
 
-    attributes: list[opentelemetry.proto_json.common.v1.common.KeyValue] = field(default_factory=list)
-    start_time_unix_nano: int = 0
-    time_unix_nano: int = 0
-    as_double: Optional[float] = None
-    as_int: Optional[int] = None
-    exemplars: list[Exemplar] = field(default_factory=list)
-    flags: int = 0
+    attributes: builtins.list[opentelemetry.proto_json.common.v1.common.KeyValue] = dataclasses.field(default_factory=builtins.list)
+    start_time_unix_nano: typing.Optional[builtins.int] = 0
+    time_unix_nano: typing.Optional[builtins.int] = 0
+    as_double: typing.Optional[builtins.float] = None
+    as_int: typing.Optional[builtins.int] = None
+    exemplars: builtins.list[Exemplar] = dataclasses.field(default_factory=builtins.list)
+    flags: typing.Optional[builtins.int] = 0
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
         Convert this message to a dictionary with lowerCamelCase keys.
-        
+
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        _result: dict[str, Any] = {}
+        _result = {}
         if self.attributes:
             _result["attributes"] = _utils.serialize_repeated(self.attributes, lambda _v: _v.to_dict())
-        if self.start_time_unix_nano is not None and self.start_time_unix_nano != 0:
+        if self.start_time_unix_nano:
             _result["startTimeUnixNano"] = _utils.encode_int64(self.start_time_unix_nano)
-        if self.time_unix_nano is not None and self.time_unix_nano != 0:
+        if self.time_unix_nano:
             _result["timeUnixNano"] = _utils.encode_int64(self.time_unix_nano)
         if self.exemplars:
             _result["exemplars"] = _utils.serialize_repeated(self.exemplars, lambda _v: _v.to_dict())
-        if self.flags is not None and self.flags != 0:
+        if self.flags:
             _result["flags"] = self.flags
         if self.as_int is not None:
             _result["asInt"] = _utils.encode_int64(self.as_int)
@@ -728,28 +749,28 @@ class NumberDataPoint:
             _result["asDouble"] = _utils.encode_float(self.as_double)
         return _result
 
-    def to_json(self) -> str:
+    def to_json(self) -> builtins.str:
         """
         Serialize this message to a JSON string.
-        
+
         Returns:
             JSON string
         """
         return json.dumps(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
+    @builtins.classmethod
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "NumberDataPoint":
         """
         Create from a dictionary with lowerCamelCase keys.
-        
+
         Args:
             data: Dictionary representation following OTLP JSON encoding
-        
+
         Returns:
             NumberDataPoint instance
         """
-        _utils.validate_type(data, dict, "data")
-        _args: dict[str, Any] = {}
+        _utils.validate_type(data, builtins.dict, "data")
+        _args = {}
 
         if (_value := data.get("attributes")) is not None:
             _args["attributes"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
@@ -760,7 +781,7 @@ class NumberDataPoint:
         if (_value := data.get("exemplars")) is not None:
             _args["exemplars"] = _utils.deserialize_repeated(_value, lambda _v: Exemplar.from_dict(_v), "exemplars")
         if (_value := data.get("flags")) is not None:
-            _utils.validate_type(_value, int, "flags")
+            _utils.validate_type(_value, builtins.int, "flags")
             _args["flags"] = _value
         if (_value := data.get("asInt")) is not None:
             _args["as_int"] = _utils.parse_int64(_value, "as_int")
@@ -769,55 +790,56 @@ class NumberDataPoint:
 
         return cls(**_args)
 
-    @classmethod
-    def from_json(cls, data: Union[str, bytes]) -> Self:
+    @builtins.classmethod
+    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "NumberDataPoint":
         """
         Deserialize from a JSON string or bytes.
-        
+
         Args:
             data: JSON string or bytes
-        
+
         Returns:
             Instance of the class
         """
         return cls.from_dict(json.loads(data))
 
 
-@dataclass(slots=True)
+@typing.final
+@_dataclass
 class HistogramDataPoint:
     """
     Generated from protobuf message HistogramDataPoint
     """
 
-    attributes: list[opentelemetry.proto_json.common.v1.common.KeyValue] = field(default_factory=list)
-    start_time_unix_nano: int = 0
-    time_unix_nano: int = 0
-    count: int = 0
-    sum: Optional[float] = None
-    bucket_counts: list[int] = field(default_factory=list)
-    explicit_bounds: list[float] = field(default_factory=list)
-    exemplars: list[Exemplar] = field(default_factory=list)
-    flags: int = 0
-    min: Optional[float] = None
-    max: Optional[float] = None
+    attributes: builtins.list[opentelemetry.proto_json.common.v1.common.KeyValue] = dataclasses.field(default_factory=builtins.list)
+    start_time_unix_nano: typing.Optional[builtins.int] = 0
+    time_unix_nano: typing.Optional[builtins.int] = 0
+    count: typing.Optional[builtins.int] = 0
+    sum: typing.Optional[builtins.float] = None
+    bucket_counts: builtins.list[builtins.int] = dataclasses.field(default_factory=builtins.list)
+    explicit_bounds: builtins.list[builtins.float] = dataclasses.field(default_factory=builtins.list)
+    exemplars: builtins.list[Exemplar] = dataclasses.field(default_factory=builtins.list)
+    flags: typing.Optional[builtins.int] = 0
+    min: typing.Optional[builtins.float] = None
+    max: typing.Optional[builtins.float] = None
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
         Convert this message to a dictionary with lowerCamelCase keys.
-        
+
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        _result: dict[str, Any] = {}
+        _result = {}
         if self.attributes:
             _result["attributes"] = _utils.serialize_repeated(self.attributes, lambda _v: _v.to_dict())
-        if self.start_time_unix_nano is not None and self.start_time_unix_nano != 0:
+        if self.start_time_unix_nano:
             _result["startTimeUnixNano"] = _utils.encode_int64(self.start_time_unix_nano)
-        if self.time_unix_nano is not None and self.time_unix_nano != 0:
+        if self.time_unix_nano:
             _result["timeUnixNano"] = _utils.encode_int64(self.time_unix_nano)
-        if self.count is not None and self.count != 0:
+        if self.count:
             _result["count"] = _utils.encode_int64(self.count)
-        if self.sum is not None and self.sum != 0.0:
+        if self.sum:
             _result["sum"] = _utils.encode_float(self.sum)
         if self.bucket_counts:
             _result["bucketCounts"] = _utils.serialize_repeated(self.bucket_counts, lambda _v: _utils.encode_int64(_v))
@@ -825,36 +847,36 @@ class HistogramDataPoint:
             _result["explicitBounds"] = _utils.serialize_repeated(self.explicit_bounds, lambda _v: _utils.encode_float(_v))
         if self.exemplars:
             _result["exemplars"] = _utils.serialize_repeated(self.exemplars, lambda _v: _v.to_dict())
-        if self.flags is not None and self.flags != 0:
+        if self.flags:
             _result["flags"] = self.flags
-        if self.min is not None and self.min != 0.0:
+        if self.min:
             _result["min"] = _utils.encode_float(self.min)
-        if self.max is not None and self.max != 0.0:
+        if self.max:
             _result["max"] = _utils.encode_float(self.max)
         return _result
 
-    def to_json(self) -> str:
+    def to_json(self) -> builtins.str:
         """
         Serialize this message to a JSON string.
-        
+
         Returns:
             JSON string
         """
         return json.dumps(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
+    @builtins.classmethod
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "HistogramDataPoint":
         """
         Create from a dictionary with lowerCamelCase keys.
-        
+
         Args:
             data: Dictionary representation following OTLP JSON encoding
-        
+
         Returns:
             HistogramDataPoint instance
         """
-        _utils.validate_type(data, dict, "data")
-        _args: dict[str, Any] = {}
+        _utils.validate_type(data, builtins.dict, "data")
+        _args = {}
 
         if (_value := data.get("attributes")) is not None:
             _args["attributes"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
@@ -873,7 +895,7 @@ class HistogramDataPoint:
         if (_value := data.get("exemplars")) is not None:
             _args["exemplars"] = _utils.deserialize_repeated(_value, lambda _v: Exemplar.from_dict(_v), "exemplars")
         if (_value := data.get("flags")) is not None:
-            _utils.validate_type(_value, int, "flags")
+            _utils.validate_type(_value, builtins.int, "flags")
             _args["flags"] = _value
         if (_value := data.get("min")) is not None:
             _args["min"] = _utils.parse_float(_value, "min")
@@ -882,168 +904,170 @@ class HistogramDataPoint:
 
         return cls(**_args)
 
-    @classmethod
-    def from_json(cls, data: Union[str, bytes]) -> Self:
+    @builtins.classmethod
+    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "HistogramDataPoint":
         """
         Deserialize from a JSON string or bytes.
-        
+
         Args:
             data: JSON string or bytes
-        
+
         Returns:
             Instance of the class
         """
         return cls.from_dict(json.loads(data))
 
 
-@dataclass(slots=True)
+@typing.final
+@_dataclass
 class ExponentialHistogramDataPoint:
     """
     Generated from protobuf message ExponentialHistogramDataPoint
     """
 
-    @dataclass(slots=True)
+    @typing.final
+    @_dataclass
     class Buckets:
         """
         Generated from protobuf message Buckets
         """
 
-        offset: int = 0
-        bucket_counts: list[int] = field(default_factory=list)
+        offset: typing.Optional[builtins.int] = 0
+        bucket_counts: builtins.list[builtins.int] = dataclasses.field(default_factory=builtins.list)
 
-        def to_dict(self) -> dict[str, Any]:
+        def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
             """
             Convert this message to a dictionary with lowerCamelCase keys.
-            
+
             Returns:
                 Dictionary representation following OTLP JSON encoding
             """
-            _result: dict[str, Any] = {}
-            if self.offset is not None and self.offset != 0:
+            _result = {}
+            if self.offset:
                 _result["offset"] = self.offset
             if self.bucket_counts:
                 _result["bucketCounts"] = _utils.serialize_repeated(self.bucket_counts, lambda _v: _utils.encode_int64(_v))
             return _result
 
-        def to_json(self) -> str:
+        def to_json(self) -> builtins.str:
             """
             Serialize this message to a JSON string.
-            
+
             Returns:
                 JSON string
             """
             return json.dumps(self.to_dict())
 
-        @classmethod
-        def from_dict(cls, data: dict[str, Any]) -> Self:
+        @builtins.classmethod
+        def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ExponentialHistogramDataPoint.Buckets":
             """
             Create from a dictionary with lowerCamelCase keys.
-            
+
             Args:
                 data: Dictionary representation following OTLP JSON encoding
-            
+
             Returns:
                 Buckets instance
             """
-            _utils.validate_type(data, dict, "data")
-            _args: dict[str, Any] = {}
+            _utils.validate_type(data, builtins.dict, "data")
+            _args = {}
 
             if (_value := data.get("offset")) is not None:
-                _utils.validate_type(_value, int, "offset")
+                _utils.validate_type(_value, builtins.int, "offset")
                 _args["offset"] = _value
             if (_value := data.get("bucketCounts")) is not None:
                 _args["bucket_counts"] = _utils.deserialize_repeated(_value, lambda _v: _utils.parse_int64(_v, "bucket_counts"), "bucket_counts")
 
             return cls(**_args)
 
-        @classmethod
-        def from_json(cls, data: Union[str, bytes]) -> Self:
+        @builtins.classmethod
+        def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "ExponentialHistogramDataPoint.Buckets":
             """
             Deserialize from a JSON string or bytes.
-            
+
             Args:
                 data: JSON string or bytes
-            
+
             Returns:
                 Instance of the class
             """
             return cls.from_dict(json.loads(data))
 
-    attributes: list[opentelemetry.proto_json.common.v1.common.KeyValue] = field(default_factory=list)
-    start_time_unix_nano: int = 0
-    time_unix_nano: int = 0
-    count: int = 0
-    sum: Optional[float] = None
-    scale: int = 0
-    zero_count: int = 0
-    positive: ExponentialHistogramDataPoint.Buckets = None
-    negative: ExponentialHistogramDataPoint.Buckets = None
-    flags: int = 0
-    exemplars: list[Exemplar] = field(default_factory=list)
-    min: Optional[float] = None
-    max: Optional[float] = None
-    zero_threshold: float = 0.0
+    attributes: builtins.list[opentelemetry.proto_json.common.v1.common.KeyValue] = dataclasses.field(default_factory=builtins.list)
+    start_time_unix_nano: typing.Optional[builtins.int] = 0
+    time_unix_nano: typing.Optional[builtins.int] = 0
+    count: typing.Optional[builtins.int] = 0
+    sum: typing.Optional[builtins.float] = None
+    scale: typing.Optional[builtins.int] = 0
+    zero_count: typing.Optional[builtins.int] = 0
+    positive: typing.Optional[ExponentialHistogramDataPoint.Buckets] = None
+    negative: typing.Optional[ExponentialHistogramDataPoint.Buckets] = None
+    flags: typing.Optional[builtins.int] = 0
+    exemplars: builtins.list[Exemplar] = dataclasses.field(default_factory=builtins.list)
+    min: typing.Optional[builtins.float] = None
+    max: typing.Optional[builtins.float] = None
+    zero_threshold: typing.Optional[builtins.float] = 0.0
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
         Convert this message to a dictionary with lowerCamelCase keys.
-        
+
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        _result: dict[str, Any] = {}
+        _result = {}
         if self.attributes:
             _result["attributes"] = _utils.serialize_repeated(self.attributes, lambda _v: _v.to_dict())
-        if self.start_time_unix_nano is not None and self.start_time_unix_nano != 0:
+        if self.start_time_unix_nano:
             _result["startTimeUnixNano"] = _utils.encode_int64(self.start_time_unix_nano)
-        if self.time_unix_nano is not None and self.time_unix_nano != 0:
+        if self.time_unix_nano:
             _result["timeUnixNano"] = _utils.encode_int64(self.time_unix_nano)
-        if self.count is not None and self.count != 0:
+        if self.count:
             _result["count"] = _utils.encode_int64(self.count)
-        if self.sum is not None and self.sum != 0.0:
+        if self.sum:
             _result["sum"] = _utils.encode_float(self.sum)
-        if self.scale is not None and self.scale != 0:
+        if self.scale:
             _result["scale"] = self.scale
-        if self.zero_count is not None and self.zero_count != 0:
+        if self.zero_count:
             _result["zeroCount"] = _utils.encode_int64(self.zero_count)
-        if self.positive is not None:
+        if self.positive:
             _result["positive"] = self.positive.to_dict()
-        if self.negative is not None:
+        if self.negative:
             _result["negative"] = self.negative.to_dict()
-        if self.flags is not None and self.flags != 0:
+        if self.flags:
             _result["flags"] = self.flags
         if self.exemplars:
             _result["exemplars"] = _utils.serialize_repeated(self.exemplars, lambda _v: _v.to_dict())
-        if self.min is not None and self.min != 0.0:
+        if self.min:
             _result["min"] = _utils.encode_float(self.min)
-        if self.max is not None and self.max != 0.0:
+        if self.max:
             _result["max"] = _utils.encode_float(self.max)
-        if self.zero_threshold is not None and self.zero_threshold != 0.0:
+        if self.zero_threshold:
             _result["zeroThreshold"] = _utils.encode_float(self.zero_threshold)
         return _result
 
-    def to_json(self) -> str:
+    def to_json(self) -> builtins.str:
         """
         Serialize this message to a JSON string.
-        
+
         Returns:
             JSON string
         """
         return json.dumps(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
+    @builtins.classmethod
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ExponentialHistogramDataPoint":
         """
         Create from a dictionary with lowerCamelCase keys.
-        
+
         Args:
             data: Dictionary representation following OTLP JSON encoding
-        
+
         Returns:
             ExponentialHistogramDataPoint instance
         """
-        _utils.validate_type(data, dict, "data")
-        _args: dict[str, Any] = {}
+        _utils.validate_type(data, builtins.dict, "data")
+        _args = {}
 
         if (_value := data.get("attributes")) is not None:
             _args["attributes"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
@@ -1056,7 +1080,7 @@ class ExponentialHistogramDataPoint:
         if (_value := data.get("sum")) is not None:
             _args["sum"] = _utils.parse_float(_value, "sum")
         if (_value := data.get("scale")) is not None:
-            _utils.validate_type(_value, int, "scale")
+            _utils.validate_type(_value, builtins.int, "scale")
             _args["scale"] = _value
         if (_value := data.get("zeroCount")) is not None:
             _args["zero_count"] = _utils.parse_int64(_value, "zero_count")
@@ -1065,7 +1089,7 @@ class ExponentialHistogramDataPoint:
         if (_value := data.get("negative")) is not None:
             _args["negative"] = ExponentialHistogramDataPoint.Buckets.from_dict(_value)
         if (_value := data.get("flags")) is not None:
-            _utils.validate_type(_value, int, "flags")
+            _utils.validate_type(_value, builtins.int, "flags")
             _args["flags"] = _value
         if (_value := data.get("exemplars")) is not None:
             _args["exemplars"] = _utils.deserialize_repeated(_value, lambda _v: Exemplar.from_dict(_v), "exemplars")
@@ -1078,71 +1102,73 @@ class ExponentialHistogramDataPoint:
 
         return cls(**_args)
 
-    @classmethod
-    def from_json(cls, data: Union[str, bytes]) -> Self:
+    @builtins.classmethod
+    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "ExponentialHistogramDataPoint":
         """
         Deserialize from a JSON string or bytes.
-        
+
         Args:
             data: JSON string or bytes
-        
+
         Returns:
             Instance of the class
         """
         return cls.from_dict(json.loads(data))
 
 
-@dataclass(slots=True)
+@typing.final
+@_dataclass
 class SummaryDataPoint:
     """
     Generated from protobuf message SummaryDataPoint
     """
 
-    @dataclass(slots=True)
+    @typing.final
+    @_dataclass
     class ValueAtQuantile:
         """
         Generated from protobuf message ValueAtQuantile
         """
 
-        quantile: float = 0.0
-        value: float = 0.0
+        quantile: typing.Optional[builtins.float] = 0.0
+        value: typing.Optional[builtins.float] = 0.0
 
-        def to_dict(self) -> dict[str, Any]:
+        def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
             """
             Convert this message to a dictionary with lowerCamelCase keys.
-            
+
             Returns:
                 Dictionary representation following OTLP JSON encoding
             """
-            _result: dict[str, Any] = {}
-            if self.quantile is not None and self.quantile != 0.0:
+            _result = {}
+            if self.quantile:
                 _result["quantile"] = _utils.encode_float(self.quantile)
-            if self.value is not None and self.value != 0.0:
+            if self.value:
                 _result["value"] = _utils.encode_float(self.value)
             return _result
 
-        def to_json(self) -> str:
+        def to_json(self) -> builtins.str:
             """
             Serialize this message to a JSON string.
-            
+
             Returns:
                 JSON string
             """
             return json.dumps(self.to_dict())
 
-        @classmethod
-        def from_dict(cls, data: dict[str, Any]) -> Self:
+        @builtins.classmethod
+        def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "SummaryDataPoint.ValueAtQuantile":
             """
             Create from a dictionary with lowerCamelCase keys.
-            
+
             Args:
                 data: Dictionary representation following OTLP JSON encoding
-            
+
             Returns:
                 ValueAtQuantile instance
             """
-            _utils.validate_type(data, dict, "data")
-            _args: dict[str, Any] = {}
+            _utils.validate_type(data, builtins.dict, "data")
+            _args = {}
 
             if (_value := data.get("quantile")) is not None:
                 _args["quantile"] = _utils.parse_float(_value, "quantile")
@@ -1151,73 +1177,73 @@ class SummaryDataPoint:
 
             return cls(**_args)
 
-        @classmethod
-        def from_json(cls, data: Union[str, bytes]) -> Self:
+        @builtins.classmethod
+        def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "SummaryDataPoint.ValueAtQuantile":
             """
             Deserialize from a JSON string or bytes.
-            
+
             Args:
                 data: JSON string or bytes
-            
+
             Returns:
                 Instance of the class
             """
             return cls.from_dict(json.loads(data))
 
-    attributes: list[opentelemetry.proto_json.common.v1.common.KeyValue] = field(default_factory=list)
-    start_time_unix_nano: int = 0
-    time_unix_nano: int = 0
-    count: int = 0
-    sum: float = 0.0
-    quantile_values: list[SummaryDataPoint.ValueAtQuantile] = field(default_factory=list)
-    flags: int = 0
+    attributes: builtins.list[opentelemetry.proto_json.common.v1.common.KeyValue] = dataclasses.field(default_factory=builtins.list)
+    start_time_unix_nano: typing.Optional[builtins.int] = 0
+    time_unix_nano: typing.Optional[builtins.int] = 0
+    count: typing.Optional[builtins.int] = 0
+    sum: typing.Optional[builtins.float] = 0.0
+    quantile_values: builtins.list[SummaryDataPoint.ValueAtQuantile] = dataclasses.field(default_factory=builtins.list)
+    flags: typing.Optional[builtins.int] = 0
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
         Convert this message to a dictionary with lowerCamelCase keys.
-        
+
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        _result: dict[str, Any] = {}
+        _result = {}
         if self.attributes:
             _result["attributes"] = _utils.serialize_repeated(self.attributes, lambda _v: _v.to_dict())
-        if self.start_time_unix_nano is not None and self.start_time_unix_nano != 0:
+        if self.start_time_unix_nano:
             _result["startTimeUnixNano"] = _utils.encode_int64(self.start_time_unix_nano)
-        if self.time_unix_nano is not None and self.time_unix_nano != 0:
+        if self.time_unix_nano:
             _result["timeUnixNano"] = _utils.encode_int64(self.time_unix_nano)
-        if self.count is not None and self.count != 0:
+        if self.count:
             _result["count"] = _utils.encode_int64(self.count)
-        if self.sum is not None and self.sum != 0.0:
+        if self.sum:
             _result["sum"] = _utils.encode_float(self.sum)
         if self.quantile_values:
             _result["quantileValues"] = _utils.serialize_repeated(self.quantile_values, lambda _v: _v.to_dict())
-        if self.flags is not None and self.flags != 0:
+        if self.flags:
             _result["flags"] = self.flags
         return _result
 
-    def to_json(self) -> str:
+    def to_json(self) -> builtins.str:
         """
         Serialize this message to a JSON string.
-        
+
         Returns:
             JSON string
         """
         return json.dumps(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
+    @builtins.classmethod
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "SummaryDataPoint":
         """
         Create from a dictionary with lowerCamelCase keys.
-        
+
         Args:
             data: Dictionary representation following OTLP JSON encoding
-        
+
         Returns:
             SummaryDataPoint instance
         """
-        _utils.validate_type(data, dict, "data")
-        _args: dict[str, Any] = {}
+        _utils.validate_type(data, builtins.dict, "data")
+        _args = {}
 
         if (_value := data.get("attributes")) is not None:
             _args["attributes"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
@@ -1232,53 +1258,54 @@ class SummaryDataPoint:
         if (_value := data.get("quantileValues")) is not None:
             _args["quantile_values"] = _utils.deserialize_repeated(_value, lambda _v: SummaryDataPoint.ValueAtQuantile.from_dict(_v), "quantile_values")
         if (_value := data.get("flags")) is not None:
-            _utils.validate_type(_value, int, "flags")
+            _utils.validate_type(_value, builtins.int, "flags")
             _args["flags"] = _value
 
         return cls(**_args)
 
-    @classmethod
-    def from_json(cls, data: Union[str, bytes]) -> Self:
+    @builtins.classmethod
+    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "SummaryDataPoint":
         """
         Deserialize from a JSON string or bytes.
-        
+
         Args:
             data: JSON string or bytes
-        
+
         Returns:
             Instance of the class
         """
         return cls.from_dict(json.loads(data))
 
 
-@dataclass(slots=True)
+@typing.final
+@_dataclass
 class Exemplar:
     """
     Generated from protobuf message Exemplar
     """
 
-    filtered_attributes: list[opentelemetry.proto_json.common.v1.common.KeyValue] = field(default_factory=list)
-    time_unix_nano: int = 0
-    as_double: Optional[float] = None
-    as_int: Optional[int] = None
-    span_id: bytes = b''
-    trace_id: bytes = b''
+    filtered_attributes: builtins.list[opentelemetry.proto_json.common.v1.common.KeyValue] = dataclasses.field(default_factory=builtins.list)
+    time_unix_nano: typing.Optional[builtins.int] = 0
+    as_double: typing.Optional[builtins.float] = None
+    as_int: typing.Optional[builtins.int] = None
+    span_id: typing.Optional[builtins.bytes] = b""
+    trace_id: typing.Optional[builtins.bytes] = b""
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
         Convert this message to a dictionary with lowerCamelCase keys.
-        
+
         Returns:
             Dictionary representation following OTLP JSON encoding
         """
-        _result: dict[str, Any] = {}
+        _result = {}
         if self.filtered_attributes:
             _result["filteredAttributes"] = _utils.serialize_repeated(self.filtered_attributes, lambda _v: _v.to_dict())
-        if self.time_unix_nano is not None and self.time_unix_nano != 0:
+        if self.time_unix_nano:
             _result["timeUnixNano"] = _utils.encode_int64(self.time_unix_nano)
-        if self.span_id is not None and self.span_id != b'':
+        if self.span_id:
             _result["spanId"] = _utils.encode_hex(self.span_id)
-        if self.trace_id is not None and self.trace_id != b'':
+        if self.trace_id:
             _result["traceId"] = _utils.encode_hex(self.trace_id)
         if self.as_int is not None:
             _result["asInt"] = _utils.encode_int64(self.as_int)
@@ -1286,28 +1313,28 @@ class Exemplar:
             _result["asDouble"] = _utils.encode_float(self.as_double)
         return _result
 
-    def to_json(self) -> str:
+    def to_json(self) -> builtins.str:
         """
         Serialize this message to a JSON string.
-        
+
         Returns:
             JSON string
         """
         return json.dumps(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
+    @builtins.classmethod
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Exemplar":
         """
         Create from a dictionary with lowerCamelCase keys.
-        
+
         Args:
             data: Dictionary representation following OTLP JSON encoding
-        
+
         Returns:
             Exemplar instance
         """
-        _utils.validate_type(data, dict, "data")
-        _args: dict[str, Any] = {}
+        _utils.validate_type(data, builtins.dict, "data")
+        _args = {}
 
         if (_value := data.get("filteredAttributes")) is not None:
             _args["filtered_attributes"] = _utils.deserialize_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "filtered_attributes")
@@ -1324,14 +1351,14 @@ class Exemplar:
 
         return cls(**_args)
 
-    @classmethod
-    def from_json(cls, data: Union[str, bytes]) -> Self:
+    @builtins.classmethod
+    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "Exemplar":
         """
         Deserialize from a JSON string or bytes.
-        
+
         Args:
             data: JSON string or bytes
-        
+
         Returns:
             Instance of the class
         """

@@ -34,6 +34,9 @@ class CodeWriter:
             self._indent_level -= 1
 
     def writeln(self, line: str = "") -> CodeWriter:
+        if not line:
+            self._lines.append("")
+            return self
         indent = " " * (self._indent_level * self._indent_size)
         self._lines.append(f"{indent}{line}")
         return self
@@ -101,6 +104,7 @@ class CodeWriter:
         decorators: Optional[Iterable[str]] = None,
         frozen: bool = False,
         slots: bool = False,
+        decorator_name: str = "dataclasses.dataclass",
     ) -> Generator[CodeWriter, None, None]:
         """Create a dataclass with optional configuration"""
         dc_params = []
@@ -110,12 +114,15 @@ class CodeWriter:
             dc_params.append("slots=True")
 
         dc_decorator = (
-            f"dataclass({', '.join(dc_params)})" if dc_params else "dataclass"
+            f"{decorator_name}({', '.join(dc_params)})"
+            if dc_params
+            else decorator_name
         )
 
-        all_decorators = [dc_decorator]
+        all_decorators = []
         if decorators is not None:
             all_decorators.extend(decorators)
+        all_decorators.append(dc_decorator)
 
         for dec in all_decorators:
             self.writeln(f"@{dec}")
@@ -130,7 +137,7 @@ class CodeWriter:
     def enum(
         self,
         name: str,
-        enum_type: str = "Enum",
+        enum_type: str = "enum.Enum",
         bases: Optional[Iterable[str]] = None,
         decorators: Optional[Iterable[str]] = None,
     ) -> Generator[CodeWriter, None, None]:
@@ -159,7 +166,7 @@ class CodeWriter:
         """Write a dataclass field"""
         if default_factory:
             self.writeln(
-                f"{name}: {type_hint} = field(default_factory={default_factory})"
+                f"{name}: {type_hint} = dataclasses.field(default_factory={default_factory})"
             )
         elif default is not None:
             self.writeln(f"{name}: {type_hint} = {default}")
@@ -174,7 +181,7 @@ class CodeWriter:
 
     def auto_enum_member(self, name: str) -> CodeWriter:
         """Write an auto() enum member"""
-        self.writeln(f"{name} = auto()")
+        self.writeln(f"{name} = enum.auto()")
         return self
 
     @contextmanager
@@ -241,7 +248,7 @@ class CodeWriter:
             name,
             params,
             body_lines,
-            decorators=["staticmethod"],
+            decorators=["builtins.staticmethod"],
             return_type=return_type,
         )
 
@@ -256,7 +263,7 @@ class CodeWriter:
             name,
             params,
             body_lines,
-            decorators=["classmethod"],
+            decorators=["builtins.classmethod"],
             return_type=return_type,
         )
 
@@ -425,7 +432,9 @@ class CodeWriter:
         """Generate __repr__ method"""
         field_strs = ", ".join([f"{f}={{self.{f}!r}}" for f in fields])
         body = f"return f'{class_name}({field_strs})'"
-        self.write_function("__repr__", ["self"], body, return_type="str")
+        self.write_function(
+            "__repr__", ["self"], body, return_type="builtins.str"
+        )
         return self
 
     def generate_eq(self, fields: Iterable[str]) -> CodeWriter:
@@ -437,7 +446,7 @@ class CodeWriter:
             f"return {comparisons}",
         ]
         self.write_function(
-            "__eq__", ["self", "other"], body, return_type="bool"
+            "__eq__", ["self", "other"], body, return_type="builtins.bool"
         )
         return self
 
@@ -447,17 +456,21 @@ class CodeWriter:
         """Generate __str__ method"""
         field_strs = ", ".join([f"{f}={{self.{f}}}" for f in fields])
         body = f"return f'{class_name}({field_strs})'"
-        self.write_function("__str__", ["self"], body, return_type="str")
+        self.write_function(
+            "__str__", ["self"], body, return_type="builtins.str"
+        )
         return self
 
     def generate_hash(self, fields: Iterable[str]) -> CodeWriter:
         """Generate __hash__ method"""
         if not fields:
-            body = "return hash(id(self))"
+            body = "return builtins.hash(builtins.id(self))"
         else:
             field_tuple = ", ".join([f"self.{f}" for f in fields])
-            body = f"return hash(({field_tuple}))"
-        self.write_function("__hash__", ["self"], body, return_type="int")
+            body = f"return builtins.hash(({field_tuple}))"
+        self.write_function(
+            "__hash__", ["self"], body, return_type="builtins.int"
+        )
         return self
 
     def write_block(self, lines: Iterable[str]) -> CodeWriter:
