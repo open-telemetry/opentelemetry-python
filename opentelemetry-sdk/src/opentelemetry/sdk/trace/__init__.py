@@ -42,7 +42,6 @@ from typing import (
     Union,
 )
 from warnings import filterwarnings
-from weakref import WeakSet
 
 from typing_extensions import deprecated
 
@@ -1107,7 +1106,7 @@ class Tracer(trace_api.Tracer):
         span_limits: SpanLimits,
         instrumentation_scope: InstrumentationScope,
         *,
-        _tracer_config: Optional[_TracerConfig] = None,
+        _tracer_provider: Optional["TracerProvider"] = None,
     ) -> None:
         self.sampler = sampler
         self.resource = resource
@@ -1116,19 +1115,19 @@ class Tracer(trace_api.Tracer):
         self.instrumentation_info = instrumentation_info
         self._span_limits = span_limits
         self._instrumentation_scope = instrumentation_scope
-
-        self._enabled = (
-            _tracer_config.is_enabled if _tracer_config is not None else True
-        )
-
-    def _update_tracer_config(self, tracer_config: _TracerConfig):
-        self._enabled = tracer_config.is_enabled
+        self._tracer_provider = _tracer_provider
 
     @property
     def _is_enabled(self) -> bool:
         """Instrumentations needs to call this API each time to check if they should
         create a new span."""
-        return self._enabled
+
+        if not self._tracer_provider:
+            return True
+        tracer_config = self._tracer_provider._tracer_configurator(
+            self._instrumentation_scope
+        )
+        return tracer_config.is_enabled
 
     @_agnosticcontextmanager  # pylint: disable=protected-access
     def start_as_current_span(
@@ -1340,50 +1339,11 @@ class TracerProvider(trace_api.TracerProvider):
         self._tracer_configurator = (
             _tracer_configurator or _default_tracer_configurator
         )
-        self._cached_tracers: WeakSet[Tracer] = WeakSet()
 
     def _set_tracer_configurator(
         self, *, tracer_configurator: _TracerConfiguratorT
     ):
         self._tracer_configurator = tracer_configurator
-        self._update_tracers(tracer_configurator=tracer_configurator)
-
-    def _update_tracers(
-        self,
-        *,
-        tracer_configurator: _TracerConfiguratorT,
-    ):
-        # pylint: disable=protected-access
-        # iterating over a WeakSet is thread-safe from 3.14+ so try a bunch of times to get
-        # a copy of the cached tracers in case of RuntimeError
-        tracers = []
-        failures = 0
-        num_tries = 3
-        for _ in range(num_tries):
-            try:
-                tracers = list(self._cached_tracers)
-            except RuntimeError:
-                failures += 1
-                continue
-
-        if failures == num_tries:
-            logger.error(
-                "Failed to get the cached Tracers, cannot update their config"
-            )
-
-        for tracer in tracers:
-            tracer_config = tracer_configurator(tracer._instrumentation_scope)
-            tracer._update_tracer_config(tracer_config)
-
-    def _enable_tracers(self):
-        self._update_tracers(
-            tracer_configurator=_default_tracer_configurator,
-        )
-
-    def _disable_tracers(self):
-        self._update_tracers(
-            tracer_configurator=_disable_tracer_configurator,
-        )
 
     @property
     def resource(self) -> Resource:
@@ -1419,15 +1379,6 @@ class TracerProvider(trace_api.TracerProvider):
             schema_url,
         )
 
-        instrumentation_scope = InstrumentationScope(
-            instrumenting_module_name,
-            instrumenting_library_version,
-            schema_url,
-            attributes,
-        )
-
-        tracer_config = self._tracer_configurator(instrumentation_scope)
-
         tracer = Tracer(
             self.sampler,
             self.resource,
@@ -1435,11 +1386,14 @@ class TracerProvider(trace_api.TracerProvider):
             self.id_generator,
             instrumentation_info,
             self._span_limits,
-            instrumentation_scope,
-            _tracer_config=tracer_config,
+            InstrumentationScope(
+                instrumenting_module_name,
+                instrumenting_library_version,
+                schema_url,
+                attributes,
+            ),
+            _tracer_provider=self,
         )
-
-        self._cached_tracers.add(tracer)
 
         return tracer
 

@@ -202,26 +202,6 @@ tracer_provider.add_span_processor(mock_processor)
             tracer_provider.get_tracer(Mock()), trace_api.NoOpTracer
         )
 
-    def test_update_tracer_config(self):
-        # pylint: disable=protected-access
-        tracer_provider = trace.TracerProvider()
-        tracer = tracer_provider.get_tracer(
-            "module_name",
-            "library_version",
-            "schema_url",
-            {},
-        )
-
-        self.assertEqual(tracer._is_enabled, True)
-
-        tracer_config = _TracerConfig(is_enabled=False)
-        tracer._update_tracer_config(tracer_config)
-        self.assertEqual(tracer._is_enabled, False)
-
-        tracer_config = _TracerConfig(is_enabled=True)
-        tracer._update_tracer_config(tracer_config)
-        self.assertEqual(tracer._is_enabled, True)
-
     def test_start_span_returns_invalid_span_if_not_enabled(self):
         # pylint: disable=protected-access
         tracer_provider = trace.TracerProvider()
@@ -234,10 +214,11 @@ tracer_provider.add_span_processor(mock_processor)
 
         self.assertEqual(tracer._is_enabled, True)
 
-        tracer_config = _TracerConfig(is_enabled=False)
-        tracer._update_tracer_config(tracer_config)
-        self.assertEqual(tracer._is_enabled, False)
+        tracer_provider._set_tracer_configurator(
+            tracer_configurator=trace._disable_tracer_configurator
+        )
 
+        self.assertEqual(tracer._is_enabled, False)
         span = tracer.start_span(name="invalid span")
         self.assertFalse(span.is_recording())
 
@@ -2248,14 +2229,6 @@ class TestTracerProvider(unittest.TestCase):
             other_tracer._instrumentation_scope.name, "other_module_name"
         )
 
-        self.assertEqual(tracer._is_enabled, True)
-        self.assertEqual(other_tracer._is_enabled, True)
-
-        tracer_provider._disable_tracers()
-        self.assertEqual(tracer._is_enabled, False)
-        self.assertEqual(other_tracer._is_enabled, False)
-
-        tracer_provider._enable_tracers()
         self.assertEqual(tracer._is_enabled, True)
         self.assertEqual(other_tracer._is_enabled, True)
 
