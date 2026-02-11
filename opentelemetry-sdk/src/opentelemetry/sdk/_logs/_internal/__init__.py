@@ -482,6 +482,50 @@ _RESERVED_ATTRS = frozenset(
 )
 
 
+def _get_exception_attributes(
+    exception: BaseException,
+) -> dict[str, AnyValue]:
+    stacktrace = "".join(
+        traceback.format_exception(
+            type(exception), value=exception, tb=exception.__traceback__
+        )
+    )
+    module = type(exception).__module__
+    qualname = type(exception).__qualname__
+    exception_type = (
+        f"{module}.{qualname}" if module and module != "builtins" else qualname
+    )
+    return {
+        exception_attributes.EXCEPTION_TYPE: exception_type,
+        exception_attributes.EXCEPTION_MESSAGE: str(exception),
+        exception_attributes.EXCEPTION_STACKTRACE: stacktrace,
+    }
+
+
+def _apply_exception_attributes(
+    log_record: LogRecord,
+    exception: BaseException | None,
+) -> None:
+    if exception is None:
+        return
+
+    exception_attributes_map = _get_exception_attributes(exception)
+    attributes = log_record.attributes
+    if attributes:
+        if isinstance(attributes, BoundedAttributes):
+            for key, value in exception_attributes_map.items():
+                if key not in attributes:
+                    attributes[key] = value
+            return
+        merged = dict(attributes)
+        for key, value in exception_attributes_map.items():
+            merged.setdefault(key, value)
+        log_record.attributes = merged
+        return
+
+    log_record.attributes = exception_attributes_map
+
+
 class LoggingHandler(logging.Handler):
     """A handler class which writes logging records, in OTLP format, to
     a network destination or file. Supports signals from the `logging` module.
@@ -628,13 +672,22 @@ class Logger(APILogger):
         body: AnyValue | None = None,
         attributes: _ExtendedAttributes | None = None,
         event_name: str | None = None,
+        exception: BaseException | None = None,
     ) -> None:
         """Emits the :class:`ReadWriteLogRecord` by setting instrumentation scope
         and forwarding to the processor.
         """
         # If a record is provided, use it directly
         if record is not None:
+            record_exception = exception or getattr(record, "exception", None)
+            if record_exception is None and isinstance(
+                record, ReadWriteLogRecord
+            ):
+                record_exception = getattr(
+                    record.log_record, "exception", None
+                )
             if not isinstance(record, ReadWriteLogRecord):
+                _apply_exception_attributes(record, record_exception)
                 # pylint:disable=protected-access
                 writable_record = ReadWriteLogRecord._from_api_log_record(
                     record=record,
@@ -642,6 +695,9 @@ class Logger(APILogger):
                     instrumentation_scope=self._instrumentation_scope,
                 )
             else:
+                _apply_exception_attributes(
+                    record.log_record, record_exception
+                )
                 writable_record = record
         else:
             # Create a record from individual parameters
@@ -654,7 +710,9 @@ class Logger(APILogger):
                 body=body,
                 attributes=attributes,
                 event_name=event_name,
+                exception=exception,
             )
+            _apply_exception_attributes(log_record, exception)
             # pylint:disable=protected-access
             writable_record = ReadWriteLogRecord._from_api_log_record(
                 record=log_record,

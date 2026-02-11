@@ -46,6 +46,7 @@ class LoggerTest(_logs.NoOpLogger):
         body=None,
         attributes=None,
         event_name=None,
+        exception: typing.Optional[BaseException] = None,
     ) -> None:
         pass
 
