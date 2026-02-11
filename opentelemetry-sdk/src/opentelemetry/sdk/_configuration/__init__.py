@@ -63,7 +63,11 @@ from opentelemetry.sdk.metrics.export import (
     PeriodicExportingMetricReader,
 )
 from opentelemetry.sdk.resources import Attributes, Resource
-from opentelemetry.sdk.trace import SpanProcessor, TracerProvider, _TracerConfiguratorT
+from opentelemetry.sdk.trace import (
+    SpanProcessor,
+    TracerProvider,
+    _TracerConfiguratorT,
+)
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExporter
 from opentelemetry.sdk.trace.id_generator import IdGenerator
 from opentelemetry.sdk.trace.sampling import Sampler

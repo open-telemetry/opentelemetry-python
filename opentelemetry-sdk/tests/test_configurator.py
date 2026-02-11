@@ -68,7 +68,7 @@ from opentelemetry.sdk.metrics.export import (
 )
 from opentelemetry.sdk.metrics.view import Aggregation
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
-from opentelemetry.sdk.trace import _RuleBasedTracerConfigurator, SpanProcessor
+from opentelemetry.sdk.trace import SpanProcessor, _RuleBasedTracerConfigurator
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
     SimpleSpanProcessor,
