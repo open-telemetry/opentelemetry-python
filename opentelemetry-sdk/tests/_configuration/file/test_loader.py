@@ -84,7 +84,9 @@ class TestConfigLoader(unittest.TestCase):
 
     def test_invalid_file_extension(self):
         """Test error on unsupported file extension."""
-        with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as temp_file:
+        with tempfile.NamedTemporaryFile(
+            suffix=".txt", delete=False
+        ) as temp_file:
             temp_file.write(b"file_format: 1.0-rc.3")
             temp_path = temp_file.name
 
