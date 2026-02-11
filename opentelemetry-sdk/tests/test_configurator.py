@@ -48,9 +48,12 @@ from opentelemetry.sdk._configuration import (
     _initialize_components,
     _OTelSDKConfigurator,
 )
-from opentelemetry.sdk._logs import LoggingHandler
+from opentelemetry.sdk._logs import LoggingHandler, LogRecordProcessor
 from opentelemetry.sdk._logs._internal.export import LogRecordExporter
-from opentelemetry.sdk._logs.export import ConsoleLogRecordExporter
+from opentelemetry.sdk._logs.export import (
+    ConsoleLogRecordExporter,
+    SimpleLogRecordProcessor,
+)
 from opentelemetry.sdk.environment_variables import (
     OTEL_TRACES_SAMPLER,
     OTEL_TRACES_SAMPLER_ARG,
@@ -65,8 +68,11 @@ from opentelemetry.sdk.metrics.export import (
 )
 from opentelemetry.sdk.metrics.view import Aggregation
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
-from opentelemetry.sdk.trace import _RuleBasedTracerConfigurator
-from opentelemetry.sdk.trace.export import ConsoleSpanExporter
+from opentelemetry.sdk.trace import _RuleBasedTracerConfigurator, SpanProcessor
+from opentelemetry.sdk.trace.export import (
+    ConsoleSpanExporter,
+    SimpleSpanProcessor,
+)
 from opentelemetry.sdk.trace.id_generator import IdGenerator, RandomIdGenerator
 from opentelemetry.sdk.trace.sampling import (
     ALWAYS_ON,
@@ -93,24 +99,24 @@ class Provider:
     ):
         self.sampler = sampler
         self.id_generator = id_generator
-        self.processor = None
+        self.processors = []
         self._tracer_configurator = _tracer_configurator
         self.resource = resource or Resource.create({})
 
     def add_span_processor(self, processor):
-        self.processor = processor
+        self.processors.append(processor)
 
 
 class DummyLoggerProvider:
     def __init__(self, resource=None):
         self.resource = resource
-        self.processor = DummyLogRecordProcessor(DummyOTLPLogExporter())
+        self.processors = []
 
     def add_log_record_processor(self, processor):
-        self.processor = processor
+        self.processors.append(processor)
 
     def get_logger(self, name, *args, **kwargs):
-        return DummyLogger(name, self.resource, self.processor)
+        return DummyLogger(name, self.resource, self.processors)
 
     def force_flush(self, *args, **kwargs):
         pass
@@ -121,10 +127,10 @@ class DummyMeterProvider(MeterProvider):
 
 
 class DummyLogger:
-    def __init__(self, name, resource, processor):
+    def __init__(self, name, resource, processors):
         self.name = name
         self.resource = resource
-        self.processor = processor
+        self.processors = processors
 
     def emit(
         self,
@@ -139,7 +145,8 @@ class DummyLogger:
         attributes=None,
         event_name=None,
     ):
-        self.processor.emit(record)
+        for processor in self.processors:
+            processor.emit(record)
 
 
 class DummyLogRecordProcessor:
@@ -363,10 +370,11 @@ class TestTraceInit(TestCase):
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsInstance(provider, Provider)
         self.assertIsInstance(provider.id_generator, RandomIdGenerator)
-        self.assertIsInstance(provider.processor, Processor)
-        self.assertIsInstance(provider.processor.exporter, Exporter)
+        self.assertEqual(len(provider.processors), 1)
+        self.assertIsInstance(provider.processors[0], Processor)
+        self.assertIsInstance(provider.processors[0].exporter, Exporter)
         self.assertEqual(
-            provider.processor.exporter.service_name, "my-test-service"
+            provider.processors[0].exporter.service_name, "my-test-service"
         )
         self.assertEqual(
             provider.resource.attributes.get("telemetry.auto.version"),
@@ -386,8 +394,11 @@ class TestTraceInit(TestCase):
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsInstance(provider, Provider)
         self.assertIsInstance(provider.id_generator, RandomIdGenerator)
-        self.assertIsInstance(provider.processor, Processor)
-        self.assertIsInstance(provider.processor.exporter, OTLPSpanExporter)
+        self.assertEqual(len(provider.processors), 1)
+        self.assertIsInstance(provider.processors[0], Processor)
+        self.assertIsInstance(
+            provider.processors[0].exporter, OTLPSpanExporter
+        )
         self.assertIsInstance(provider.resource, Resource)
         self.assertEqual(
             provider.resource.attributes.get("service.name"),
@@ -405,8 +416,25 @@ class TestTraceInit(TestCase):
         )
 
         provider = self.set_provider_mock.call_args[0][0]
-        exporter = provider.processor.exporter
+        self.assertEqual(len(provider.processors), 1)
+        exporter = provider.processors[0].exporter
         self.assertEqual(exporter.compression, "gzip")
+
+    def test_trace_init_custom_span_processors(self):
+        span_processor = mock.Mock(spec=SpanProcessor)
+        _init_tracing(
+            {"otlp": OTLPSpanExporter},
+            id_generator=RandomIdGenerator(),
+            span_processors=[span_processor],
+            export_span_processor=SimpleSpanProcessor,
+        )
+
+        provider = self.set_provider_mock.call_args[0][0]
+        self.assertEqual(len(provider.processors), 2)
+        self.assertEqual(provider.processors[0], span_processor)
+        self.assertTrue(
+            isinstance(provider.processors[1], SimpleSpanProcessor)
+        )
 
     @patch.dict(environ, {OTEL_PYTHON_ID_GENERATOR: "custom_id_generator"})
     @patch("opentelemetry.sdk._configuration.IdGenerator", new=IdGenerator)
@@ -742,12 +770,16 @@ class TestLoggingInit(TestCase):
                 provider.resource.attributes.get("service.name"),
                 "otlp-service",
             )
-            self.assertIsInstance(provider.processor, DummyLogRecordProcessor)
+            self.assertEqual(len(provider.processors), 1)
             self.assertIsInstance(
-                provider.processor.exporter, DummyOTLPLogExporter
+                provider.processors[0], DummyLogRecordProcessor
+            )
+            self.assertIsInstance(
+                provider.processors[0].exporter, DummyOTLPLogExporter
             )
             getLogger(__name__).error("hello")
-            self.assertTrue(provider.processor.exporter.export_called)
+            self.assertEqual(len(provider.processors), 1)
+            self.assertTrue(provider.processors[0].exporter.export_called)
 
     def test_logging_init_exporter_uses_exporter_args_map(self):
         with ResetGlobalLoggingState():
@@ -762,7 +794,27 @@ class TestLoggingInit(TestCase):
             )
             self.assertEqual(self.set_provider_mock.call_count, 1)
             provider = self.set_provider_mock.call_args[0][0]
-            self.assertEqual(provider.processor.exporter.compression, "gzip")
+            self.assertEqual(len(provider.processors), 1)
+            self.assertEqual(
+                provider.processors[0].exporter.compression, "gzip"
+            )
+
+    def test_logging_init_custom_log_record_processors(self):
+        log_record_processor = mock.Mock(spec=LogRecordProcessor)
+        with ResetGlobalLoggingState():
+            resource = Resource.create({})
+            _init_logging(
+                {"otlp": DummyOTLPLogExporter},
+                resource=resource,
+                log_record_processors=[log_record_processor],
+                export_log_record_processor=SimpleLogRecordProcessor,
+            )
+            provider = self.set_provider_mock.call_args[0][0]
+            self.assertEqual(len(provider.processors), 2)
+            self.assertEqual(provider.processors[0], log_record_processor)
+            self.assertIsInstance(
+                provider.processors[1], SimpleLogRecordProcessor
+            )
 
     @patch.dict(
         environ,
@@ -783,12 +835,13 @@ class TestLoggingInit(TestCase):
             provider.resource.attributes.get("service.name"),
             "otlp-service",
         )
-        self.assertIsInstance(provider.processor, DummyLogRecordProcessor)
+        self.assertEqual(len(provider.processors), 1)
+        self.assertIsInstance(provider.processors[0], DummyLogRecordProcessor)
         self.assertIsInstance(
-            provider.processor.exporter, DummyOTLPLogExporter
+            provider.processors[0].exporter, DummyOTLPLogExporter
         )
         getLogger(__name__).error("hello")
-        self.assertFalse(provider.processor.exporter.export_called)
+        self.assertFalse(provider.processors[0].exporter.export_called)
 
     @patch.dict(
         environ,
@@ -800,7 +853,12 @@ class TestLoggingInit(TestCase):
         _initialize_components(auto_instrumentation_version="auto-version")
         self.assertEqual(tracing_mock.call_count, 1)
         logging_mock.assert_called_once_with(
-            mock.ANY, mock.ANY, False, exporter_args_map=None
+            mock.ANY,
+            mock.ANY,
+            False,
+            exporter_args_map=None,
+            log_record_processors=None,
+            export_log_record_processor=None,
         )
 
     @patch.dict(
@@ -816,7 +874,12 @@ class TestLoggingInit(TestCase):
         with self.assertLogs(level=WARNING):
             _initialize_components(auto_instrumentation_version="auto-version")
         logging_mock.assert_called_once_with(
-            mock.ANY, mock.ANY, True, exporter_args_map=None
+            mock.ANY,
+            mock.ANY,
+            True,
+            exporter_args_map=None,
+            log_record_processors=None,
+            export_log_record_processor=None,
         )
         self.assertEqual(tracing_mock.call_count, 1)
 
@@ -901,6 +964,10 @@ class TestLoggingInit(TestCase):
             "id_generator": "TEST_GENERATOR",
             "setup_logging_handler": True,
             "exporter_args_map": {1: {"compression": "gzip"}},
+            "export_log_record_processor": SimpleLogRecordProcessor,
+            "export_span_processor": SimpleSpanProcessor,
+            "log_record_processors": [],
+            "span_processors": [],
             "tracer_configurator": "tracer_configurator_test",
         }
         _initialize_components(**kwargs)
@@ -936,6 +1003,8 @@ class TestLoggingInit(TestCase):
             sampler="TEST_SAMPLER",
             resource="TEST_RESOURCE",
             exporter_args_map={1: {"compression": "gzip"}},
+            span_processors=[],
+            export_span_processor=SimpleSpanProcessor,
             tracer_configurator="tracer_configurator_test",
         )
         metrics_mock.assert_called_once_with(
@@ -948,6 +1017,8 @@ class TestLoggingInit(TestCase):
             "TEST_RESOURCE",
             True,
             exporter_args_map={1: {"compression": "gzip"}},
+            log_record_processors=[],
+            export_log_record_processor=SimpleLogRecordProcessor,
         )
 
     def test_basicConfig_works_with_otel_handler(self):
