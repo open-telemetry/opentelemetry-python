@@ -1074,12 +1074,19 @@ dependencies = [
     { name = "typing-extensions" },
 ]
 
+[package.optional-dependencies]
+file-configuration = [
+    { name = "pyyaml" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "opentelemetry-api", editable = "opentelemetry-api" },
     { name = "opentelemetry-semantic-conventions", editable = "opentelemetry-semantic-conventions" },
+    { name = "pyyaml", marker = "extra == 'file-configuration'", specifier = ">=6.0" },
     { name = "typing-extensions", specifier = ">=4.5.0" },
 ]
+provides-extras = ["file-configuration"]
 
 [[package]]
 name = "opentelemetry-semantic-conventions"

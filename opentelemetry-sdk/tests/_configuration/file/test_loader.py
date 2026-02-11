@@ -84,9 +84,9 @@ class TestConfigLoader(unittest.TestCase):
 
     def test_invalid_file_extension(self):
         """Test error on unsupported file extension."""
-        with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as f:
-            f.write(b"file_format: 1.0-rc.3")
-            temp_path = f.name
+        with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as temp_file:
+            temp_file.write(b"file_format: 1.0-rc.3")
+            temp_path = temp_file.name
 
         try:
             with self.assertRaises(ConfigurationError) as ctx:
@@ -100,8 +100,8 @@ class TestConfigLoader(unittest.TestCase):
         """Test error on empty file."""
         with tempfile.NamedTemporaryFile(
             suffix=".yaml", delete=False, mode="w"
-        ) as f:
-            temp_path = f.name
+        ) as temp_file:
+            temp_path = temp_file.name
 
         try:
             with self.assertRaises(ConfigurationError) as ctx:
@@ -115,9 +115,9 @@ class TestConfigLoader(unittest.TestCase):
         """Test error when root is not a mapping."""
         with tempfile.NamedTemporaryFile(
             suffix=".yaml", delete=False, mode="w"
-        ) as f:
-            f.write("- item1\n- item2")
-            temp_path = f.name
+        ) as temp_file:
+            temp_file.write("- item1\n- item2")
+            temp_path = temp_file.name
 
         try:
             with self.assertRaises(ConfigurationError) as ctx:
@@ -145,9 +145,9 @@ class TestConfigLoader(unittest.TestCase):
         """Test .yml extension is supported."""
         with tempfile.NamedTemporaryFile(
             suffix=".yml", delete=False, mode="w"
-        ) as f:
-            f.write('file_format: "1.0-rc.3"')
-            temp_path = f.name
+        ) as temp_file:
+            temp_file.write('file_format: "1.0-rc.3"')
+            temp_path = temp_file.name
 
         try:
             config = load_config_file(temp_path)
@@ -159,9 +159,9 @@ class TestConfigLoader(unittest.TestCase):
         """Test error on invalid JSON syntax."""
         with tempfile.NamedTemporaryFile(
             suffix=".json", delete=False, mode="w"
-        ) as f:
-            f.write('{"file_format": invalid}')
-            temp_path = f.name
+        ) as temp_file:
+            temp_file.write('{"file_format": invalid}')
+            temp_path = temp_file.name
 
         try:
             with self.assertRaises(ConfigurationError) as ctx:

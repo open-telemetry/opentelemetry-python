@@ -79,8 +79,8 @@ def load_config_file(file_path: str) -> OpenTelemetryConfiguration:
         )
 
     try:
-        with open(path, encoding="utf-8") as f:
-            content = f.read()
+        with open(path, encoding="utf-8") as config_file:
+            content = config_file.read()
     except (OSError, IOError) as exc:
         _logger.exception("Failed to read configuration file: %s", file_path)
         raise ConfigurationError(

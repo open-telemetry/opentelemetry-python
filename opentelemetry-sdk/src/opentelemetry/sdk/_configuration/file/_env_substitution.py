@@ -57,14 +57,14 @@ def substitute_env_vars(text: str) -> str:
     """
     # First, handle escape sequences by temporarily replacing $$
     # Use a placeholder that's unlikely to appear in config files
-    DOLLAR_PLACEHOLDER = "\x00DOLLAR\x00"
-    text = text.replace("$$", DOLLAR_PLACEHOLDER)
+    dollar_placeholder = "\x00DOLLAR\x00"
+    text = text.replace("$$", dollar_placeholder)
 
     # Pattern matches: ${VAR_NAME} or ${VAR_NAME:-default_value}
     # Variable names must start with letter or underscore, followed by alphanumerics or underscores
     pattern = r"\$\{([A-Za-z_][A-Za-z0-9_]*)(:-([^}]*))?\}"
 
-    def replace_var(match):
+    def replace_var(match) -> str:
         var_name = match.group(1)
         has_default = match.group(2) is not None
         default_value = match.group(3) if has_default else None
@@ -73,7 +73,7 @@ def substitute_env_vars(text: str) -> str:
 
         if value is None:
             if has_default:
-                return default_value
+                return default_value or ""
             _logger.error(
                 "Environment variable '%s' not found and no default provided",
                 var_name,
@@ -88,6 +88,6 @@ def substitute_env_vars(text: str) -> str:
     text = re.sub(pattern, replace_var, text)
 
     # Restore escaped dollar signs
-    text = text.replace(DOLLAR_PLACEHOLDER, "$")
+    text = text.replace(dollar_placeholder, "$")
 
     return text
