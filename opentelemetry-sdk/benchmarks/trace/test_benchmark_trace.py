@@ -55,6 +55,7 @@ def test_simple_start_span(benchmark):
     benchmark(benchmark_start_span)
 
 
+# pylint: disable=protected-access,redefined-outer-name
 def test_simple_start_span_with_tracer_configurator_rules(
     benchmark, num_tracer_configurator_rules
 ):

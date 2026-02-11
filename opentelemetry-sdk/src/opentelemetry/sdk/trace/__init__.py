@@ -1123,7 +1123,7 @@ class Tracer(trace_api.Tracer):
 
         if not self._tracer_provider:
             return True
-        tracer_config = self._tracer_provider._tracer_configurator(
+        tracer_config = self._tracer_provider._tracer_configurator(  # pylint: disable=protected-access
             self._instrumentation_scope
         )
         return tracer_config.is_enabled
