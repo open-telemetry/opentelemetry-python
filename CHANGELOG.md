@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `opentelemetry-sdk`: Add file configuration support with YAML/JSON loading and environment variable substitution
 - `opentelemetry-exporter-otlp-proto-grpc`: Fix re-initialization of gRPC channel on UNAVAILABLE error
   ([#4825](https://github.com/open-telemetry/opentelemetry-python/pull/4825))
 - `opentelemetry-exporter-prometheus`: Fix duplicate HELP/TYPE declarations for metrics with different label sets
@@ -38,6 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4862](https://github.com/open-telemetry/opentelemetry-python/pull/4862))
 - `opentelemetry-exporter-otlp-proto-http`: fix retry logic and error handling for connection failures in trace, metric, and log exporters
   ([#4709](https://github.com/open-telemetry/opentelemetry-python/pull/4709))
+- `opentelemetry-sdk`: automatically generate configuration models using OTel config JSON schema
+  ([#4879](https://github.com/open-telemetry/opentelemetry-python/pull/4879))
 
 ## Version 1.39.0/0.60b0 (2025-12-03)
 

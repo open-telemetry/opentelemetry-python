@@ -124,9 +124,24 @@ strict = [
   "opentelemetry-sdk/src/opentelemetry/sdk/resources",
 ]
 
+[tool.datamodel-codegen]
+url = "https://raw.githubusercontent.com/open-telemetry/opentelemetry-configuration/refs/tags/v1.0.0-rc.3/opentelemetry_configuration.json"
+input-file-type = "jsonschema"
+output = "opentelemetry-sdk/src/opentelemetry/sdk/_configuration/models.py"
+output-model-type = "dataclasses.dataclass"
+field-constraints = true
+formatters = ["ruff-format", "ruff-check"]
+use-standard-collections = true
+use-schema-description = true
+use-title-as-name = true
+use-union-operator = false
+target-python-version = "3.10"
+
 [dependency-groups]
 dev = [
     "tox",
     "tox-uv>=1",
     "pre-commit",
+    "datamodel-code-generator[http]",
+    "datamodel-code-generator[ruff]",
 ]
