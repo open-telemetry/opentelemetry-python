@@ -171,6 +171,18 @@ file in the package it is testing. Make sure that the file name begins with
 
 ## Pull Requests
 
+### How to Structure Pull Requests
+
+Smaller PRs get merged faster, improve review quality, and reduce the risk of conflicts. Please keep PRs small and focused:
+
+- **Aim for fewer than 500 lines** (excluding deletions, generated files, and test fixtures)
+- One change per PR -- address a single bug fix, feature, or refactor
+- If your work requires more extensive changes, consider a series of small, self-contained PRs instead. 
+- If you want the community to understand how your small PR fits into the context of a larger change, consider putting
+the large change in your personal fork and providing a link to it in your PR description. 
+- Strive to provide clear, incremental value to the repository in your PR, such that the repository is always in a
+functional, coherent state.
+
 ### How to Send Pull Requests
 
 Everyone is welcome to contribute code to `opentelemetry-python` via GitHub
