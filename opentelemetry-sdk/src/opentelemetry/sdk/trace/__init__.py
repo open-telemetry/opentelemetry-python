@@ -25,6 +25,7 @@ import traceback
 import typing
 import weakref
 from dataclasses import dataclass
+from functools import lru_cache
 from os import environ
 from time import time_ns
 from types import MappingProxyType, TracebackType
@@ -1273,6 +1274,7 @@ class _RuleBasedTracerConfigurator:
         return self._default_config
 
 
+@lru_cache
 def _default_tracer_configurator(
     tracer_scope: InstrumentationScope,
 ) -> _TracerConfig:
@@ -1287,6 +1289,7 @@ def _default_tracer_configurator(
     )(tracer_scope=tracer_scope)
 
 
+@lru_cache
 def _disable_tracer_configurator(
     tracer_scope: InstrumentationScope,
 ) -> _TracerConfig:
@@ -1341,6 +1344,18 @@ class TracerProvider(trace_api.TracerProvider):
     def _set_tracer_configurator(
         self, *, tracer_configurator: _TracerConfiguratorT
     ):
+        """This is the function used to update the TracerProvider TracerConfigurator
+
+        Setting a new TracerConfigurator for a TracerProvider will make all the Tracers created from
+        this TracerProvider reference the new TracerConfigurator.
+
+        The tracer checks its configuration at span creation time. Since this is an hot path
+        it's important that it'll execute quickly so it is suggested to memoize it with
+        functools.lru_cache.
+        If your TracerConfigurator is using some dynamic rules you can still use functools.lru_cache
+        decorator if you remember to clear its cache with the decorator cache_clear() function when
+        the rules change.
+        """
         self._tracer_configurator = tracer_configurator
 
     @property

@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from functools import lru_cache
+
 import pytest
 
 from opentelemetry.sdk.resources import Resource
@@ -64,6 +66,7 @@ def test_simple_start_span_with_tracer_configurator_rules(
         span.add_event("benchmarkEvent")
         span.end()
 
+    @lru_cache
     def tracer_configurator(tracer_scope):
         # this is testing 100 rules that is an extreme case
         return _RuleBasedTracerConfigurator(
