@@ -1,6 +1,7 @@
 # OpenTelemetry Python
 [![Slack](https://img.shields.io/badge/slack-@cncf/otel/python-brightgreen.svg?logo=slack)](https://cloud-native.slack.com/archives/C01PD4HUVBL)
 [![Build Status 0](https://github.com/open-telemetry/opentelemetry-python/actions/workflows/test_0.yml/badge.svg?branch=main)](https://github.com/open-telemetry/opentelemetry-python/actions/workflows/test_0.yml)
+[![Build Status 1](https://github.com/open-telemetry/opentelemetry-python/actions/workflows/test_1.yml/badge.svg?branch=main)](https://github.com/open-telemetry/opentelemetry-python/actions/workflows/test_1.yml)
 [![Minimum Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![Release](https://img.shields.io/github/v/release/open-telemetry/opentelemetry-python?include_prereleases&style=)](https://github.com/open-telemetry/opentelemetry-python/releases/)
 [![Read the Docs](https://readthedocs.org/projects/opentelemetry-python/badge/?version=latest)](https://opentelemetry-python.readthedocs.io/en/latest/)
@@ -89,7 +90,7 @@ install](https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs)
 pip install -e ./opentelemetry-api -e ./opentelemetry-sdk -e ./opentelemetry-semantic-conventions
 ```
 
-For additional exporter and instrumentation packages, see the 
+For additional exporter and instrumentation packages, see the
 [`opentelemetry-python-contrib`](https://github.com/open-telemetry/opentelemetry-python-contrib) repository.
 
 ## Contributing
@@ -98,7 +99,7 @@ For information about contributing to OpenTelemetry Python, see [CONTRIBUTING.md
 
 We meet weekly on Thursdays at 9AM PST. The meeting is subject to change depending on contributors' availability. Check the [OpenTelemetry community calendar](https://calendar.google.com/calendar/embed?src=c_2bf73e3b6b530da4babd444e72b76a6ad893a5c3f43cf40467abc7a9a897f977%40group.calendar.google.com) for specific dates and Zoom meeting links.
 
-Meeting notes are available as a public [Google doc](https://docs.google.com/document/d/1CIMGoIOZ-c3-igzbd6_Pnxx1SjAkjwqoYSUWxPY8XIs/edit).
+Meeting notes are available as a public [Google doc](https://docs.google.com/document/d/18w8zOBm_mbety0OqlPwxc7dvnfu641EgmrO4AdJef0U/edit?tab=t.0).
 
 ### Maintainers
 
@@ -111,7 +112,8 @@ For more information about the maintainer role, see the [community repository](h
 ### Approvers
 
 - [Dylan Russell](https://github.com/dylanrussell), Google
-- [Emídio Neto](https://github.com/emdneto), PicPay
+- [Emídio Neto](https://github.com/emdneto), Independent
+- [Héctor Hernández](https://github.com/hectorhdzg), Microsoft
 - [Jeremy Voss](https://github.com/jeremydvoss), Microsoft
 - [Liudmila Molkova](https://github.com/lmolkova), Grafana Labs
 - [Owais Lone](https://github.com/owais), Splunk
@@ -139,7 +141,6 @@ For more information about the emeritus role, see the [community repository](htt
 - [Ashutosh Goel](https://github.com/ashu658)
 - [Carlos Alberto Cortez](https://github.com/carlosalberto)
 - [Christian Neumüller](https://github.com/Oberon00)
-- [Héctor Hernández](https://github.com/hectorhdzg)
 - [Mauricio Vásquez](https://github.com/mauriciovasquezbernal)
 - [Nathaniel Ruiz Nowell](https://github.com/NathanielRN)
 - [Nikolay Sokolik](https://github.com/oxeye-nikolay)

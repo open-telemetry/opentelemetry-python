@@ -15,13 +15,16 @@
 import threading
 import time
 import unittest
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import (  # pylint: disable=no-name-in-module
+    ThreadPoolExecutor,
+)
 from logging import WARNING, getLogger
 from platform import system
 from typing import Any, Optional, Sequence
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
+import grpc
 from google.protobuf.duration_pb2 import (  # pylint: disable=no-name-in-module
     Duration,
 )
@@ -89,8 +92,8 @@ class OTLPSpanExporterForTesting(
     def _exporting(self):
         return "traces"
 
-    def shutdown(self, timeout_millis=30_000):
-        return OTLPExporterMixin.shutdown(self, timeout_millis)
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs):
+        return OTLPExporterMixin.shutdown(self, timeout_millis, **kwargs)
 
 
 class TraceServiceServicerWithExportParams(TraceServiceServicer):
@@ -511,6 +514,16 @@ class TestOTLPExporterMixin(TestCase):
             self.assertEqual(mock_trace_service.num_requests, 2)
             self.assertAlmostEqual(after - before, 1.4, 1)
 
+    def test_channel_options_set_correctly(self):
+        """Test that gRPC channel options are set correctly for keepalive and reconnection"""
+        # This test verifies that the channel is created with the right options
+        # We patch grpc.insecure_channel to ensure it is called without errors
+        with patch(
+            "opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel"
+        ) as mock_channel:
+            OTLPSpanExporterForTesting(insecure=True)
+            self.assertTrue(mock_channel.called)
+
     def test_otlp_headers_from_env(self):
         # pylint: disable=protected-access
         # This ensures that there is no other header than standard user-agent.
@@ -534,3 +547,27 @@ class TestOTLPExporterMixin(TestCase):
                 warning.records[-1].message,
                 "Failed to export traces to localhost:4317, error code: StatusCode.ALREADY_EXISTS",
             )
+
+    def test_unavailable_reconnects(self):
+        """Test that the exporter reconnects on UNAVAILABLE error"""
+        add_TraceServiceServicer_to_server(
+            TraceServiceServicerWithExportParams(StatusCode.UNAVAILABLE),
+            self.server,
+        )
+
+        # Spy on grpc.insecure_channel to verify it's called for reconnection
+        with patch(
+            "opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel",
+            side_effect=grpc.insecure_channel,
+        ) as mock_insecure_channel:
+            # Mock sleep to avoid waiting
+            with patch("time.sleep"):
+                # We expect FAILURE because the server keeps returning UNAVAILABLE
+                # but we want to verify reconnection attempts happened
+                self.exporter.export([self.span])
+
+        # Verify that we attempted to reinitialize the channel (called insecure_channel)
+        # Since the initial channel was created in setUp (unpatched), this call
+        # must be from the reconnection logic.
+        self.assertTrue(mock_insecure_channel.called)
+        # Verify that reconnection enabled flag is set

@@ -1428,6 +1428,10 @@ def span_event_start_fmt(span_processor_name, span_name):
     return span_processor_name + ":" + span_name + ":start"
 
 
+def span_event_ending_fmt(span_processor_name, span_name):
+    return span_processor_name + ":" + span_name + ":ending"
+
+
 def span_event_end_fmt(span_processor_name, span_name):
     return span_processor_name + ":" + span_name + ":end"
 
@@ -1442,11 +1446,15 @@ class MySpanProcessor(trace.SpanProcessor):
     ) -> None:
         self.span_list.append(span_event_start_fmt(self.name, span.name))
 
+    def _on_ending(self, span: "trace.ReadableSpan") -> None:
+        self.span_list.append(span_event_ending_fmt(self.name, span.name))
+
     def on_end(self, span: "trace.ReadableSpan") -> None:
         self.span_list.append(span_event_end_fmt(self.name, span.name))
 
 
 class TestSpanProcessor(unittest.TestCase):
+    # pylint: disable=too-many-statements
     def test_span_processor(self):
         tracer_provider = trace.TracerProvider()
         tracer = tracer_provider.get_tracer(__name__)
@@ -1478,10 +1486,13 @@ class TestSpanProcessor(unittest.TestCase):
                 with tracer.start_as_current_span("baz"):
                     expected_list.append(span_event_start_fmt("SP1", "baz"))
 
+                expected_list.append(span_event_ending_fmt("SP1", "baz"))
                 expected_list.append(span_event_end_fmt("SP1", "baz"))
 
+            expected_list.append(span_event_ending_fmt("SP1", "bar"))
             expected_list.append(span_event_end_fmt("SP1", "bar"))
 
+        expected_list.append(span_event_ending_fmt("SP1", "foo"))
         expected_list.append(span_event_end_fmt("SP1", "foo"))
 
         self.assertListEqual(spans_calls_list, expected_list)
@@ -1504,12 +1515,18 @@ class TestSpanProcessor(unittest.TestCase):
                     expected_list.append(span_event_start_fmt("SP1", "baz"))
                     expected_list.append(span_event_start_fmt("SP2", "baz"))
 
+                expected_list.append(span_event_ending_fmt("SP1", "baz"))
+                expected_list.append(span_event_ending_fmt("SP2", "baz"))
                 expected_list.append(span_event_end_fmt("SP1", "baz"))
                 expected_list.append(span_event_end_fmt("SP2", "baz"))
 
+            expected_list.append(span_event_ending_fmt("SP1", "bar"))
+            expected_list.append(span_event_ending_fmt("SP2", "bar"))
             expected_list.append(span_event_end_fmt("SP1", "bar"))
             expected_list.append(span_event_end_fmt("SP2", "bar"))
 
+        expected_list.append(span_event_ending_fmt("SP1", "foo"))
+        expected_list.append(span_event_ending_fmt("SP2", "foo"))
         expected_list.append(span_event_end_fmt("SP1", "foo"))
         expected_list.append(span_event_end_fmt("SP2", "foo"))
 
@@ -1532,10 +1549,13 @@ class TestSpanProcessor(unittest.TestCase):
                     # add span processor after spans have been created
                     tracer_provider.add_span_processor(sp)
 
+                expected_list.append(span_event_ending_fmt("SP1", "baz"))
                 expected_list.append(span_event_end_fmt("SP1", "baz"))
 
+            expected_list.append(span_event_ending_fmt("SP1", "bar"))
             expected_list.append(span_event_end_fmt("SP1", "bar"))
 
+        expected_list.append(span_event_ending_fmt("SP1", "foo"))
         expected_list.append(span_event_end_fmt("SP1", "foo"))
 
         self.assertListEqual(spans_calls_list, expected_list)
