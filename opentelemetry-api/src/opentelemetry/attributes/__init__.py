@@ -39,6 +39,11 @@ _VALID_ANY_VALUE_TYPES = (
 _logger = logging.getLogger(__name__)
 
 
+def _get_type_name(type_: type) -> str:
+    """Get the name of a type, handling typing generics that may lack __name__."""
+    return getattr(type_, "__name__", str(type_))
+
+
 def _clean_attribute(
     key: str, value: types.AttributeValue, max_len: Optional[int]
 ) -> Optional[Union[types.AttributeValue, Tuple[Union[str, int, float], ...]]]:
@@ -83,7 +88,7 @@ def _clean_attribute(
                     element_type.__name__,
                     key,
                     [
-                        valid_type.__name__
+                        _get_type_name(valid_type)
                         for valid_type in _VALID_ATTR_VALUE_TYPES
                     ],
                 )
@@ -113,7 +118,7 @@ def _clean_attribute(
         "sequence of those types",
         type(value).__name__,
         key,
-        [valid_type.__name__ for valid_type in _VALID_ATTR_VALUE_TYPES],
+        [_get_type_name(valid_type) for valid_type in _VALID_ATTR_VALUE_TYPES],
     )
     return None
 
@@ -190,7 +195,7 @@ def _clean_extended_attribute_value(  # pylint: disable=too-many-branches
     except Exception:
         raise TypeError(
             f"Invalid type {type(value).__name__} for attribute value. "
-            f"Expected one of {[valid_type.__name__ for valid_type in _VALID_ANY_VALUE_TYPES]} or a "
+            f"Expected one of {[_get_type_name(valid_type) for valid_type in _VALID_ANY_VALUE_TYPES]} or a "
             "sequence of those types",
         )
 

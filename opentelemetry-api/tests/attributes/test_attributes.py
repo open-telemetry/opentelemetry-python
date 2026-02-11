@@ -16,11 +16,13 @@
 
 import unittest
 from typing import MutableSequence
+from unittest import mock
 
 from opentelemetry.attributes import (
     BoundedAttributes,
     _clean_attribute,
     _clean_extended_attribute,
+    _clean_extended_attribute_value,
 )
 
 
@@ -182,6 +184,28 @@ class TestExtendedAttributes(unittest.TestCase):
             _clean_extended_attribute("headers", mapping, None), expected
         )
 
+    def test_invalid_type_error_message(self):
+        """Test that invalid types produce proper TypeError, not AttributeError.
+
+        Regression test for issue #4821 where typing.Mapping lacks __name__ in Python 3.9.
+        """
+
+        # Create a class that raises when converted to string
+        class InvalidType:
+            def __str__(self):
+                raise ValueError("Cannot convert to string")
+
+        # This should raise TypeError with expected types listed, not AttributeError
+        with self.assertRaises(TypeError) as ctx:
+            _clean_extended_attribute_value(InvalidType(), None)
+
+        # Verify the error message contains expected information and doesn't raise AttributeError
+        error_msg = str(ctx.exception)
+        self.assertIn("Invalid type", error_msg)
+        self.assertIn("InvalidType", error_msg)
+        # Ensure the message includes valid types without raising AttributeError
+        self.assertIn("Expected one of", error_msg)
+
 
 class TestBoundedAttributes(unittest.TestCase):
     # pylint: disable=consider-using-dict-items
@@ -294,7 +318,7 @@ class TestBoundedAttributes(unittest.TestCase):
     # pylint: disable=no-self-use
     def test_extended_attributes(self):
         bdict = BoundedAttributes(extended_attributes=True, immutable=False)
-        with unittest.mock.patch(
+        with mock.patch(
             "opentelemetry.attributes._clean_extended_attribute",
             return_value="mock_value",
         ) as clean_extended_attribute_mock:
