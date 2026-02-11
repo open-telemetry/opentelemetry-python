@@ -212,13 +212,13 @@ tracer_provider.add_span_processor(mock_processor)
             {},
         )
 
-        self.assertEqual(tracer._is_enabled, True)
+        self.assertEqual(tracer._is_enabled(), True)
 
         tracer_provider._set_tracer_configurator(
             tracer_configurator=trace._disable_tracer_configurator
         )
 
-        self.assertEqual(tracer._is_enabled, False)
+        self.assertEqual(tracer._is_enabled(), False)
         span = tracer.start_span(name="invalid span")
         self.assertFalse(span.is_recording())
 
@@ -2229,8 +2229,8 @@ class TestTracerProvider(unittest.TestCase):
             other_tracer._instrumentation_scope.name, "other_module_name"
         )
 
-        self.assertEqual(tracer._is_enabled, True)
-        self.assertEqual(other_tracer._is_enabled, True)
+        self.assertEqual(tracer._is_enabled(), True)
+        self.assertEqual(other_tracer._is_enabled(), True)
 
     def test_rule_based_tracer_configurator(self):
         # pylint: disable=protected-access
@@ -2266,15 +2266,15 @@ class TestTracerProvider(unittest.TestCase):
             other_tracer._instrumentation_scope.name, "other_module_name"
         )
 
-        self.assertEqual(tracer._is_enabled, True)
-        self.assertEqual(other_tracer._is_enabled, True)
+        self.assertEqual(tracer._is_enabled(), True)
+        self.assertEqual(other_tracer._is_enabled(), True)
 
         tracer_provider._set_tracer_configurator(
             tracer_configurator=configurator
         )
 
-        self.assertEqual(tracer._is_enabled, True)
-        self.assertEqual(other_tracer._is_enabled, False)
+        self.assertEqual(tracer._is_enabled(), True)
+        self.assertEqual(other_tracer._is_enabled(), False)
 
     def test_rule_based_tracer_configurator_default_when_rules_dont_match(
         self,
@@ -2308,15 +2308,15 @@ class TestTracerProvider(unittest.TestCase):
             other_tracer._instrumentation_scope.name, "other_module_name"
         )
 
-        self.assertEqual(tracer._is_enabled, True)
-        self.assertEqual(other_tracer._is_enabled, True)
+        self.assertEqual(tracer._is_enabled(), True)
+        self.assertEqual(other_tracer._is_enabled(), True)
 
         tracer_provider._set_tracer_configurator(
             tracer_configurator=configurator
         )
 
-        self.assertEqual(tracer._is_enabled, False)
-        self.assertEqual(other_tracer._is_enabled, True)
+        self.assertEqual(tracer._is_enabled(), False)
+        self.assertEqual(other_tracer._is_enabled(), True)
 
 
 class TestRandomIdGenerator(unittest.TestCase):

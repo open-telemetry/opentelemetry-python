@@ -1117,10 +1117,8 @@ class Tracer(trace_api.Tracer):
         self._instrumentation_scope = instrumentation_scope
         self._tracer_provider = _tracer_provider
 
-    @property
     def _is_enabled(self) -> bool:
-        """Instrumentations needs to call this API each time to check if they should
-        create a new span."""
+        """If the tracer is not enabled, start_span will create a NonRecordingSpan"""
 
         if not self._tracer_provider:
             return True
@@ -1182,7 +1180,7 @@ class Tracer(trace_api.Tracer):
                 "parent_span_context must be a SpanContext or None."
             )
 
-        if not self._is_enabled:
+        if not self._is_enabled():
             return trace_api.NonRecordingSpan(context=parent_span_context)
 
         # is_valid determines root span
