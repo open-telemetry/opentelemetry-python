@@ -247,7 +247,7 @@ OTEL_EXPORTER_JAEGER_TIMEOUT = "OTEL_EXPORTER_JAEGER_TIMEOUT"
 """
 .. envvar:: OTEL_EXPORTER_JAEGER_TIMEOUT
 
-Maximum time the Jaeger exporter will wait for each batch export.
+Maximum time (in seconds) the Jaeger exporter will wait for each batch export.
 Default: 10
 """
 
@@ -334,7 +334,7 @@ OTEL_EXPORTER_OTLP_TIMEOUT = "OTEL_EXPORTER_OTLP_TIMEOUT"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_TIMEOUT
 
-The :envvar:`OTEL_EXPORTER_OTLP_TIMEOUT` is the maximum time the OTLP exporter will wait for each batch export.
+The :envvar:`OTEL_EXPORTER_OTLP_TIMEOUT` is the maximum time (in seconds) the OTLP exporter will wait for each batch export.
 Default: 10
 """
 
@@ -682,16 +682,18 @@ OTEL_EXPORTER_OTLP_TRACES_TIMEOUT = "OTEL_EXPORTER_OTLP_TRACES_TIMEOUT"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_TRACES_TIMEOUT
 
-The :envvar:`OTEL_EXPORTER_OTLP_TRACES_TIMEOUT` is the maximum time the OTLP exporter will
+The :envvar:`OTEL_EXPORTER_OTLP_TRACES_TIMEOUT` is the maximum time (in seconds) the OTLP exporter will
 wait for each batch export for spans.
+Default: 10
 """
 
 OTEL_EXPORTER_OTLP_METRICS_TIMEOUT = "OTEL_EXPORTER_OTLP_METRICS_TIMEOUT"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_METRICS_TIMEOUT
 
-The :envvar:`OTEL_EXPORTER_OTLP_METRICS_TIMEOUT` is the maximum time the OTLP exporter will
+The :envvar:`OTEL_EXPORTER_OTLP_METRICS_TIMEOUT` is the maximum time (in seconds) the OTLP exporter will
 wait for each batch export for metrics.
+Default: 10
 """
 
 OTEL_EXPORTER_OTLP_METRICS_INSECURE = "OTEL_EXPORTER_OTLP_METRICS_INSECURE"
@@ -724,8 +726,9 @@ OTEL_EXPORTER_OTLP_LOGS_TIMEOUT = "OTEL_EXPORTER_OTLP_LOGS_TIMEOUT"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_LOGS_TIMEOUT
 
-The :envvar:`OTEL_EXPORTER_OTLP_LOGS_TIMEOUT` is the maximum time the OTLP exporter will
+The :envvar:`OTEL_EXPORTER_OTLP_LOGS_TIMEOUT` is the maximum time (in seconds) the OTLP exporter will
 wait for each batch export for logs.
+Default: 10
 """
 
 OTEL_EXPORTER_JAEGER_CERTIFICATE = "OTEL_EXPORTER_JAEGER_CERTIFICATE"
