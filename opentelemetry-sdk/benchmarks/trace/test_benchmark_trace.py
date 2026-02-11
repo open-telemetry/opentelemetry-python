@@ -36,7 +36,7 @@ tracer = TracerProvider(
 ).get_tracer("sdk_tracer_provider")
 
 
-@pytest.fixture(params=[0, 1, 10, 50])
+@pytest.fixture(params=[None, 0, 1, 10, 50])
 def num_tracer_configurator_rules(request):
     return request.param
 
@@ -77,13 +77,18 @@ def test_simple_start_span_with_tracer_configurator_rules(
             default_config=_TracerConfig(is_enabled=True),
         )(tracer_scope=tracer_scope)
 
-    tracer._tracer_provider._set_tracer_configurator(
+    tracer_provider = tracer._tracer_provider
+    tracer_provider._set_tracer_configurator(
         tracer_configurator=tracer_configurator
     )
+    if num_tracer_configurator_rules is None:
+        tracer._tracer_provider = None
     benchmark(benchmark_start_span)
-    tracer._tracer_provider._set_tracer_configurator(
+    tracer_provider._set_tracer_configurator(
         tracer_configurator=_default_tracer_configurator
     )
+    if num_tracer_configurator_rules is None:
+        tracer._tracer_provider = tracer_provider
 
 
 def test_simple_start_as_current_span(benchmark):
