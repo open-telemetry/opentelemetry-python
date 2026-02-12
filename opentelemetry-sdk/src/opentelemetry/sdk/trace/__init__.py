@@ -1114,12 +1114,9 @@ class Tracer(trace_api.Tracer):
         instrumentation_info: InstrumentationInfo,
         span_limits: SpanLimits,
         instrumentation_scope: InstrumentationScope,
-<<<<<<< spanstartmetrics
         meter_provider: Optional[metrics_api.MeterProvider] = None,
-=======
         *,
         _tracer_provider: Optional["TracerProvider"] = None,
->>>>>>> main
     ) -> None:
         self.sampler = sampler
         self.resource = resource
@@ -1333,12 +1330,9 @@ class TracerProvider(trace_api.TracerProvider):
         ] = None,
         id_generator: Optional[IdGenerator] = None,
         span_limits: Optional[SpanLimits] = None,
-<<<<<<< spanstartmetrics
         meter_provider: Optional[metrics_api.MeterProvider] = None,
-=======
         *,
         _tracer_configurator: Optional[_TracerConfiguratorT] = None,
->>>>>>> main
     ) -> None:
         self._active_span_processor = (
             active_span_processor or SynchronousMultiSpanProcessor()
@@ -1431,11 +1425,8 @@ class TracerProvider(trace_api.TracerProvider):
                 schema_url,
                 attributes,
             ),
-<<<<<<< spanstartmetrics
             self._meter_provider,
-=======
             _tracer_provider=self,
->>>>>>> main
         )
 
         return tracer
