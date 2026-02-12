@@ -293,10 +293,7 @@ class OtlpJsonGenerator:
 
         # Collect all imports needed
         imports = self._collect_imports(proto_file)
-
-        # Import the generated utility module
-        utils_module = self._get_utils_module_path()
-        imports.add(f"import {utils_module} as _utils")
+        imports.add(f"import {self._get_utils_module_path()}")
 
         # Generate cross file imports
         if imports:
@@ -464,8 +461,9 @@ class OtlpJsonGenerator:
                                 f'_result["{field.json_name}"] = self.{field.name}'
                             )
                         else:
+                            utils = self._get_utils_module_path()
                             writer.writeln(
-                                f'_result["{field.json_name}"] = _utils.encode_repeated('
+                                f'_result["{field.json_name}"] = {utils}.encode_repeated('
                                 f"self.{field.name}, lambda _v: {item_expr})"
                             )
                 else:
@@ -518,21 +516,22 @@ class OtlpJsonGenerator:
         self, field_type: ProtoType, field_name: str, var_name: str
     ) -> str:
         """Get the Python expression to serialize a value of a given type."""
+        utils = self._get_utils_module_path()
         if field_type.is_message:
             return f"{var_name}.to_dict()"
         if field_type.is_enum:
             return f"builtins.int({var_name})"
         if is_hex_encoded_field(field_name):
-            return f"_utils.encode_hex({var_name})"
+            return f"{utils}.encode_hex({var_name})"
         if is_int64_type(field_type.proto_type):
-            return f"_utils.encode_int64({var_name})"
+            return f"{utils}.encode_int64({var_name})"
         if is_bytes_type(field_type.proto_type):
-            return f"_utils.encode_base64({var_name})"
+            return f"{utils}.encode_base64({var_name})"
         if field_type.proto_type in (
             descriptor.FieldDescriptorProto.TYPE_FLOAT,
             descriptor.FieldDescriptorProto.TYPE_DOUBLE,
         ):
-            return f"_utils.encode_float({var_name})"
+            return f"{utils}.encode_float({var_name})"
 
         return var_name
 
@@ -557,7 +556,10 @@ class OtlpJsonGenerator:
                     f"    {message.name} instance",
                 ]
             )
-            writer.writeln('_utils.validate_type(data, builtins.dict, "data")')
+            utils = self._get_utils_module_path()
+            writer.writeln(
+                f'{utils}.validate_type(data, builtins.dict, "data")'
+            )
             writer.writeln("_args = {}")
             writer.blank_line()
 
@@ -582,7 +584,7 @@ class OtlpJsonGenerator:
                             field_type, field.name, "_v", message
                         )
                         writer.writeln(
-                            f'_args["{field.name}"] = _utils.decode_repeated('
+                            f'_args["{field.name}"] = {utils}.decode_repeated('
                             f'_value, lambda _v: {item_expr}, "{field.name}")'
                         )
                     else:
@@ -640,6 +642,7 @@ class OtlpJsonGenerator:
     ) -> None:
         """Generate validation and assignment statements for a field."""
         field_type = field.field_type
+        utils = self._get_utils_module_path()
         if field_type.is_message and (type_name := field_type.type_name):
             msg_type = self._resolve_message_type(type_name, message)
             writer.writeln(
@@ -648,36 +651,36 @@ class OtlpJsonGenerator:
         elif field_type.is_enum and (type_name := field_type.type_name):
             enum_type = self._resolve_enum_type(type_name, message)
             writer.writeln(
-                f'_utils.validate_type({var_name}, builtins.int, "{field.name}")'
+                f'{utils}.validate_type({var_name}, builtins.int, "{field.name}")'
             )
             writer.writeln(
                 f'{target_dict}["{field.name}"] = {enum_type}({var_name})'
             )
         elif is_hex_encoded_field(field.name):
             writer.writeln(
-                f'{target_dict}["{field.name}"] = _utils.decode_hex({var_name}, "{field.name}")'
+                f'{target_dict}["{field.name}"] = {utils}.decode_hex({var_name}, "{field.name}")'
             )
         elif is_int64_type(field_type.proto_type):
             writer.writeln(
-                f'{target_dict}["{field.name}"] = _utils.decode_int64({var_name}, "{field.name}")'
+                f'{target_dict}["{field.name}"] = {utils}.decode_int64({var_name}, "{field.name}")'
             )
         elif is_bytes_type(field_type.proto_type):
             writer.writeln(
-                f'{target_dict}["{field.name}"] = _utils.decode_base64({var_name}, "{field.name}")'
+                f'{target_dict}["{field.name}"] = {utils}.decode_base64({var_name}, "{field.name}")'
             )
         elif field_type.proto_type in (
             descriptor.FieldDescriptorProto.TYPE_FLOAT,
             descriptor.FieldDescriptorProto.TYPE_DOUBLE,
         ):
             writer.writeln(
-                f'{target_dict}["{field.name}"] = _utils.decode_float({var_name}, "{field.name}")'
+                f'{target_dict}["{field.name}"] = {utils}.decode_float({var_name}, "{field.name}")'
             )
         else:
             allowed_types = get_json_allowed_types(
                 field_type.proto_type, field.name
             )
             writer.writeln(
-                f'_utils.validate_type({var_name}, {allowed_types}, "{field.name}")'
+                f'{utils}.validate_type({var_name}, {allowed_types}, "{field.name}")'
             )
             writer.writeln(f'{target_dict}["{field.name}"] = {var_name}')
 
@@ -689,6 +692,7 @@ class OtlpJsonGenerator:
         context: MessageInfo,
     ) -> str:
         """Get the Python expression to deserialize a value of a given type."""
+        utils = self._get_utils_module_path()
         if field_type.is_message and (type_name := field_type.type_name):
             msg_type = self._resolve_message_type(type_name, context)
             return f"{msg_type}.from_dict({var_name})"
@@ -696,16 +700,16 @@ class OtlpJsonGenerator:
             enum_type = self._resolve_enum_type(type_name, context)
             return f"{enum_type}({var_name})"
         if is_hex_encoded_field(field_name):
-            return f'_utils.decode_hex({var_name}, "{field_name}")'
+            return f'{utils}.decode_hex({var_name}, "{field_name}")'
         if is_int64_type(field_type.proto_type):
-            return f'_utils.decode_int64({var_name}, "{field_name}")'
+            return f'{utils}.decode_int64({var_name}, "{field_name}")'
         if is_bytes_type(field_type.proto_type):
-            return f'_utils.decode_base64({var_name}, "{field_name}")'
+            return f'{utils}.decode_base64({var_name}, "{field_name}")'
         if field_type.proto_type in (
             descriptor.FieldDescriptorProto.TYPE_FLOAT,
             descriptor.FieldDescriptorProto.TYPE_DOUBLE,
         ):
-            return f'_utils.decode_float({var_name}, "{field_name}")'
+            return f'{utils}.decode_float({var_name}, "{field_name}")'
 
         return var_name
 

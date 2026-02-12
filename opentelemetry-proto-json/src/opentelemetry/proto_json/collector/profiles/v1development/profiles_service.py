@@ -29,7 +29,7 @@ if sys.version_info >= (3, 10):
 else:
     _dataclass = dataclasses.dataclass
 
-import opentelemetry.proto_json._otlp_json_utils as _utils
+import opentelemetry.proto_json._otlp_json_utils
 import opentelemetry.proto_json.profiles.v1development.profiles
 
 
@@ -52,7 +52,7 @@ class ExportProfilesServiceRequest:
         """
         _result = {}
         if self.resource_profiles:
-            _result["resourceProfiles"] = _utils.encode_repeated(self.resource_profiles, lambda _v: _v.to_dict())
+            _result["resourceProfiles"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.resource_profiles, lambda _v: _v.to_dict())
         if self.dictionary:
             _result["dictionary"] = self.dictionary.to_dict()
         return _result
@@ -77,11 +77,11 @@ class ExportProfilesServiceRequest:
         Returns:
             ExportProfilesServiceRequest instance
         """
-        _utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("resourceProfiles")) is not None:
-            _args["resource_profiles"] = _utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json.profiles.v1development.profiles.ResourceProfiles.from_dict(_v), "resource_profiles")
+            _args["resource_profiles"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json.profiles.v1development.profiles.ResourceProfiles.from_dict(_v), "resource_profiles")
         if (_value := data.get("dictionary")) is not None:
             _args["dictionary"] = opentelemetry.proto_json.profiles.v1development.profiles.ProfilesDictionary.from_dict(_value)
 
@@ -142,7 +142,7 @@ class ExportProfilesServiceResponse:
         Returns:
             ExportProfilesServiceResponse instance
         """
-        _utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("partialSuccess")) is not None:
@@ -183,7 +183,7 @@ class ExportProfilesPartialSuccess:
         """
         _result = {}
         if self.rejected_profiles:
-            _result["rejectedProfiles"] = _utils.encode_int64(self.rejected_profiles)
+            _result["rejectedProfiles"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.rejected_profiles)
         if self.error_message:
             _result["errorMessage"] = self.error_message
         return _result
@@ -208,13 +208,13 @@ class ExportProfilesPartialSuccess:
         Returns:
             ExportProfilesPartialSuccess instance
         """
-        _utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("rejectedProfiles")) is not None:
-            _args["rejected_profiles"] = _utils.decode_int64(_value, "rejected_profiles")
+            _args["rejected_profiles"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "rejected_profiles")
         if (_value := data.get("errorMessage")) is not None:
-            _utils.validate_type(_value, builtins.str, "error_message")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.str, "error_message")
             _args["error_message"] = _value
 
         return cls(**_args)

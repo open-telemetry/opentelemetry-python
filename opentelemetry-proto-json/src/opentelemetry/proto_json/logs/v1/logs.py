@@ -30,7 +30,7 @@ if sys.version_info >= (3, 10):
 else:
     _dataclass = dataclasses.dataclass
 
-import opentelemetry.proto_json._otlp_json_utils as _utils
+import opentelemetry.proto_json._otlp_json_utils
 import opentelemetry.proto_json.common.v1.common
 import opentelemetry.proto_json.resource.v1.resource
 
@@ -94,7 +94,7 @@ class LogsData:
         """
         _result = {}
         if self.resource_logs:
-            _result["resourceLogs"] = _utils.encode_repeated(self.resource_logs, lambda _v: _v.to_dict())
+            _result["resourceLogs"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.resource_logs, lambda _v: _v.to_dict())
         return _result
 
     def to_json(self) -> builtins.str:
@@ -117,11 +117,11 @@ class LogsData:
         Returns:
             LogsData instance
         """
-        _utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("resourceLogs")) is not None:
-            _args["resource_logs"] = _utils.decode_repeated(_value, lambda _v: ResourceLogs.from_dict(_v), "resource_logs")
+            _args["resource_logs"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: ResourceLogs.from_dict(_v), "resource_logs")
 
         return cls(**_args)
 
@@ -161,7 +161,7 @@ class ResourceLogs:
         if self.resource:
             _result["resource"] = self.resource.to_dict()
         if self.scope_logs:
-            _result["scopeLogs"] = _utils.encode_repeated(self.scope_logs, lambda _v: _v.to_dict())
+            _result["scopeLogs"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.scope_logs, lambda _v: _v.to_dict())
         if self.schema_url:
             _result["schemaUrl"] = self.schema_url
         return _result
@@ -186,15 +186,15 @@ class ResourceLogs:
         Returns:
             ResourceLogs instance
         """
-        _utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("resource")) is not None:
             _args["resource"] = opentelemetry.proto_json.resource.v1.resource.Resource.from_dict(_value)
         if (_value := data.get("scopeLogs")) is not None:
-            _args["scope_logs"] = _utils.decode_repeated(_value, lambda _v: ScopeLogs.from_dict(_v), "scope_logs")
+            _args["scope_logs"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: ScopeLogs.from_dict(_v), "scope_logs")
         if (_value := data.get("schemaUrl")) is not None:
-            _utils.validate_type(_value, builtins.str, "schema_url")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.str, "schema_url")
             _args["schema_url"] = _value
 
         return cls(**_args)
@@ -235,7 +235,7 @@ class ScopeLogs:
         if self.scope:
             _result["scope"] = self.scope.to_dict()
         if self.log_records:
-            _result["logRecords"] = _utils.encode_repeated(self.log_records, lambda _v: _v.to_dict())
+            _result["logRecords"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.log_records, lambda _v: _v.to_dict())
         if self.schema_url:
             _result["schemaUrl"] = self.schema_url
         return _result
@@ -260,15 +260,15 @@ class ScopeLogs:
         Returns:
             ScopeLogs instance
         """
-        _utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("scope")) is not None:
             _args["scope"] = opentelemetry.proto_json.common.v1.common.InstrumentationScope.from_dict(_value)
         if (_value := data.get("logRecords")) is not None:
-            _args["log_records"] = _utils.decode_repeated(_value, lambda _v: LogRecord.from_dict(_v), "log_records")
+            _args["log_records"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: LogRecord.from_dict(_v), "log_records")
         if (_value := data.get("schemaUrl")) is not None:
-            _utils.validate_type(_value, builtins.str, "schema_url")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.str, "schema_url")
             _args["schema_url"] = _value
 
         return cls(**_args)
@@ -315,9 +315,9 @@ class LogRecord:
         """
         _result = {}
         if self.time_unix_nano:
-            _result["timeUnixNano"] = _utils.encode_int64(self.time_unix_nano)
+            _result["timeUnixNano"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.time_unix_nano)
         if self.observed_time_unix_nano:
-            _result["observedTimeUnixNano"] = _utils.encode_int64(self.observed_time_unix_nano)
+            _result["observedTimeUnixNano"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.observed_time_unix_nano)
         if self.severity_number:
             _result["severityNumber"] = builtins.int(self.severity_number)
         if self.severity_text:
@@ -325,15 +325,15 @@ class LogRecord:
         if self.body:
             _result["body"] = self.body.to_dict()
         if self.attributes:
-            _result["attributes"] = _utils.encode_repeated(self.attributes, lambda _v: _v.to_dict())
+            _result["attributes"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.attributes, lambda _v: _v.to_dict())
         if self.dropped_attributes_count:
             _result["droppedAttributesCount"] = self.dropped_attributes_count
         if self.flags:
             _result["flags"] = self.flags
         if self.trace_id:
-            _result["traceId"] = _utils.encode_hex(self.trace_id)
+            _result["traceId"] = opentelemetry.proto_json._otlp_json_utils.encode_hex(self.trace_id)
         if self.span_id:
-            _result["spanId"] = _utils.encode_hex(self.span_id)
+            _result["spanId"] = opentelemetry.proto_json._otlp_json_utils.encode_hex(self.span_id)
         if self.event_name:
             _result["eventName"] = self.event_name
         return _result
@@ -358,35 +358,35 @@ class LogRecord:
         Returns:
             LogRecord instance
         """
-        _utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("timeUnixNano")) is not None:
-            _args["time_unix_nano"] = _utils.decode_int64(_value, "time_unix_nano")
+            _args["time_unix_nano"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "time_unix_nano")
         if (_value := data.get("observedTimeUnixNano")) is not None:
-            _args["observed_time_unix_nano"] = _utils.decode_int64(_value, "observed_time_unix_nano")
+            _args["observed_time_unix_nano"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "observed_time_unix_nano")
         if (_value := data.get("severityNumber")) is not None:
-            _utils.validate_type(_value, builtins.int, "severity_number")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "severity_number")
             _args["severity_number"] = SeverityNumber(_value)
         if (_value := data.get("severityText")) is not None:
-            _utils.validate_type(_value, builtins.str, "severity_text")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.str, "severity_text")
             _args["severity_text"] = _value
         if (_value := data.get("body")) is not None:
             _args["body"] = opentelemetry.proto_json.common.v1.common.AnyValue.from_dict(_value)
         if (_value := data.get("attributes")) is not None:
-            _args["attributes"] = _utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
+            _args["attributes"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
         if (_value := data.get("droppedAttributesCount")) is not None:
-            _utils.validate_type(_value, builtins.int, "dropped_attributes_count")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "dropped_attributes_count")
             _args["dropped_attributes_count"] = _value
         if (_value := data.get("flags")) is not None:
-            _utils.validate_type(_value, builtins.int, "flags")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "flags")
             _args["flags"] = _value
         if (_value := data.get("traceId")) is not None:
-            _args["trace_id"] = _utils.decode_hex(_value, "trace_id")
+            _args["trace_id"] = opentelemetry.proto_json._otlp_json_utils.decode_hex(_value, "trace_id")
         if (_value := data.get("spanId")) is not None:
-            _args["span_id"] = _utils.decode_hex(_value, "span_id")
+            _args["span_id"] = opentelemetry.proto_json._otlp_json_utils.decode_hex(_value, "span_id")
         if (_value := data.get("eventName")) is not None:
-            _utils.validate_type(_value, builtins.str, "event_name")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.str, "event_name")
             _args["event_name"] = _value
 
         return cls(**_args)

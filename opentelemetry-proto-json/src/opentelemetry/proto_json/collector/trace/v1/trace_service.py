@@ -29,7 +29,7 @@ if sys.version_info >= (3, 10):
 else:
     _dataclass = dataclasses.dataclass
 
-import opentelemetry.proto_json._otlp_json_utils as _utils
+import opentelemetry.proto_json._otlp_json_utils
 import opentelemetry.proto_json.trace.v1.trace
 
 
@@ -51,7 +51,7 @@ class ExportTraceServiceRequest:
         """
         _result = {}
         if self.resource_spans:
-            _result["resourceSpans"] = _utils.encode_repeated(self.resource_spans, lambda _v: _v.to_dict())
+            _result["resourceSpans"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.resource_spans, lambda _v: _v.to_dict())
         return _result
 
     def to_json(self) -> builtins.str:
@@ -74,11 +74,11 @@ class ExportTraceServiceRequest:
         Returns:
             ExportTraceServiceRequest instance
         """
-        _utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("resourceSpans")) is not None:
-            _args["resource_spans"] = _utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json.trace.v1.trace.ResourceSpans.from_dict(_v), "resource_spans")
+            _args["resource_spans"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json.trace.v1.trace.ResourceSpans.from_dict(_v), "resource_spans")
 
         return cls(**_args)
 
@@ -137,7 +137,7 @@ class ExportTraceServiceResponse:
         Returns:
             ExportTraceServiceResponse instance
         """
-        _utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("partialSuccess")) is not None:
@@ -178,7 +178,7 @@ class ExportTracePartialSuccess:
         """
         _result = {}
         if self.rejected_spans:
-            _result["rejectedSpans"] = _utils.encode_int64(self.rejected_spans)
+            _result["rejectedSpans"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.rejected_spans)
         if self.error_message:
             _result["errorMessage"] = self.error_message
         return _result
@@ -203,13 +203,13 @@ class ExportTracePartialSuccess:
         Returns:
             ExportTracePartialSuccess instance
         """
-        _utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("rejectedSpans")) is not None:
-            _args["rejected_spans"] = _utils.decode_int64(_value, "rejected_spans")
+            _args["rejected_spans"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "rejected_spans")
         if (_value := data.get("errorMessage")) is not None:
-            _utils.validate_type(_value, builtins.str, "error_message")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.str, "error_message")
             _args["error_message"] = _value
 
         return cls(**_args)

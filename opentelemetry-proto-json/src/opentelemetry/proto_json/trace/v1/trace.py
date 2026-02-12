@@ -30,7 +30,7 @@ if sys.version_info >= (3, 10):
 else:
     _dataclass = dataclasses.dataclass
 
-import opentelemetry.proto_json._otlp_json_utils as _utils
+import opentelemetry.proto_json._otlp_json_utils
 import opentelemetry.proto_json.common.v1.common
 import opentelemetry.proto_json.resource.v1.resource
 
@@ -64,7 +64,7 @@ class TracesData:
         """
         _result = {}
         if self.resource_spans:
-            _result["resourceSpans"] = _utils.encode_repeated(self.resource_spans, lambda _v: _v.to_dict())
+            _result["resourceSpans"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.resource_spans, lambda _v: _v.to_dict())
         return _result
 
     def to_json(self) -> builtins.str:
@@ -87,11 +87,11 @@ class TracesData:
         Returns:
             TracesData instance
         """
-        _utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("resourceSpans")) is not None:
-            _args["resource_spans"] = _utils.decode_repeated(_value, lambda _v: ResourceSpans.from_dict(_v), "resource_spans")
+            _args["resource_spans"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: ResourceSpans.from_dict(_v), "resource_spans")
 
         return cls(**_args)
 
@@ -131,7 +131,7 @@ class ResourceSpans:
         if self.resource:
             _result["resource"] = self.resource.to_dict()
         if self.scope_spans:
-            _result["scopeSpans"] = _utils.encode_repeated(self.scope_spans, lambda _v: _v.to_dict())
+            _result["scopeSpans"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.scope_spans, lambda _v: _v.to_dict())
         if self.schema_url:
             _result["schemaUrl"] = self.schema_url
         return _result
@@ -156,15 +156,15 @@ class ResourceSpans:
         Returns:
             ResourceSpans instance
         """
-        _utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("resource")) is not None:
             _args["resource"] = opentelemetry.proto_json.resource.v1.resource.Resource.from_dict(_value)
         if (_value := data.get("scopeSpans")) is not None:
-            _args["scope_spans"] = _utils.decode_repeated(_value, lambda _v: ScopeSpans.from_dict(_v), "scope_spans")
+            _args["scope_spans"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: ScopeSpans.from_dict(_v), "scope_spans")
         if (_value := data.get("schemaUrl")) is not None:
-            _utils.validate_type(_value, builtins.str, "schema_url")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.str, "schema_url")
             _args["schema_url"] = _value
 
         return cls(**_args)
@@ -205,7 +205,7 @@ class ScopeSpans:
         if self.scope:
             _result["scope"] = self.scope.to_dict()
         if self.spans:
-            _result["spans"] = _utils.encode_repeated(self.spans, lambda _v: _v.to_dict())
+            _result["spans"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.spans, lambda _v: _v.to_dict())
         if self.schema_url:
             _result["schemaUrl"] = self.schema_url
         return _result
@@ -230,15 +230,15 @@ class ScopeSpans:
         Returns:
             ScopeSpans instance
         """
-        _utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("scope")) is not None:
             _args["scope"] = opentelemetry.proto_json.common.v1.common.InstrumentationScope.from_dict(_value)
         if (_value := data.get("spans")) is not None:
-            _args["spans"] = _utils.decode_repeated(_value, lambda _v: Span.from_dict(_v), "spans")
+            _args["spans"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: Span.from_dict(_v), "spans")
         if (_value := data.get("schemaUrl")) is not None:
-            _utils.validate_type(_value, builtins.str, "schema_url")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.str, "schema_url")
             _args["schema_url"] = _value
 
         return cls(**_args)
@@ -298,11 +298,11 @@ class Span:
             """
             _result = {}
             if self.time_unix_nano:
-                _result["timeUnixNano"] = _utils.encode_int64(self.time_unix_nano)
+                _result["timeUnixNano"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.time_unix_nano)
             if self.name:
                 _result["name"] = self.name
             if self.attributes:
-                _result["attributes"] = _utils.encode_repeated(self.attributes, lambda _v: _v.to_dict())
+                _result["attributes"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.attributes, lambda _v: _v.to_dict())
             if self.dropped_attributes_count:
                 _result["droppedAttributesCount"] = self.dropped_attributes_count
             return _result
@@ -327,18 +327,18 @@ class Span:
             Returns:
                 Event instance
             """
-            _utils.validate_type(data, builtins.dict, "data")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
             _args = {}
 
             if (_value := data.get("timeUnixNano")) is not None:
-                _args["time_unix_nano"] = _utils.decode_int64(_value, "time_unix_nano")
+                _args["time_unix_nano"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "time_unix_nano")
             if (_value := data.get("name")) is not None:
-                _utils.validate_type(_value, builtins.str, "name")
+                opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.str, "name")
                 _args["name"] = _value
             if (_value := data.get("attributes")) is not None:
-                _args["attributes"] = _utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
+                _args["attributes"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
             if (_value := data.get("droppedAttributesCount")) is not None:
-                _utils.validate_type(_value, builtins.int, "dropped_attributes_count")
+                opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "dropped_attributes_count")
                 _args["dropped_attributes_count"] = _value
 
             return cls(**_args)
@@ -379,13 +379,13 @@ class Span:
             """
             _result = {}
             if self.trace_id:
-                _result["traceId"] = _utils.encode_hex(self.trace_id)
+                _result["traceId"] = opentelemetry.proto_json._otlp_json_utils.encode_hex(self.trace_id)
             if self.span_id:
-                _result["spanId"] = _utils.encode_hex(self.span_id)
+                _result["spanId"] = opentelemetry.proto_json._otlp_json_utils.encode_hex(self.span_id)
             if self.trace_state:
                 _result["traceState"] = self.trace_state
             if self.attributes:
-                _result["attributes"] = _utils.encode_repeated(self.attributes, lambda _v: _v.to_dict())
+                _result["attributes"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.attributes, lambda _v: _v.to_dict())
             if self.dropped_attributes_count:
                 _result["droppedAttributesCount"] = self.dropped_attributes_count
             if self.flags:
@@ -412,23 +412,23 @@ class Span:
             Returns:
                 Link instance
             """
-            _utils.validate_type(data, builtins.dict, "data")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
             _args = {}
 
             if (_value := data.get("traceId")) is not None:
-                _args["trace_id"] = _utils.decode_hex(_value, "trace_id")
+                _args["trace_id"] = opentelemetry.proto_json._otlp_json_utils.decode_hex(_value, "trace_id")
             if (_value := data.get("spanId")) is not None:
-                _args["span_id"] = _utils.decode_hex(_value, "span_id")
+                _args["span_id"] = opentelemetry.proto_json._otlp_json_utils.decode_hex(_value, "span_id")
             if (_value := data.get("traceState")) is not None:
-                _utils.validate_type(_value, builtins.str, "trace_state")
+                opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.str, "trace_state")
                 _args["trace_state"] = _value
             if (_value := data.get("attributes")) is not None:
-                _args["attributes"] = _utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
+                _args["attributes"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
             if (_value := data.get("droppedAttributesCount")) is not None:
-                _utils.validate_type(_value, builtins.int, "dropped_attributes_count")
+                opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "dropped_attributes_count")
                 _args["dropped_attributes_count"] = _value
             if (_value := data.get("flags")) is not None:
-                _utils.validate_type(_value, builtins.int, "flags")
+                opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "flags")
                 _args["flags"] = _value
 
             return cls(**_args)
@@ -472,13 +472,13 @@ class Span:
         """
         _result = {}
         if self.trace_id:
-            _result["traceId"] = _utils.encode_hex(self.trace_id)
+            _result["traceId"] = opentelemetry.proto_json._otlp_json_utils.encode_hex(self.trace_id)
         if self.span_id:
-            _result["spanId"] = _utils.encode_hex(self.span_id)
+            _result["spanId"] = opentelemetry.proto_json._otlp_json_utils.encode_hex(self.span_id)
         if self.trace_state:
             _result["traceState"] = self.trace_state
         if self.parent_span_id:
-            _result["parentSpanId"] = _utils.encode_hex(self.parent_span_id)
+            _result["parentSpanId"] = opentelemetry.proto_json._otlp_json_utils.encode_hex(self.parent_span_id)
         if self.flags:
             _result["flags"] = self.flags
         if self.name:
@@ -486,19 +486,19 @@ class Span:
         if self.kind:
             _result["kind"] = builtins.int(self.kind)
         if self.start_time_unix_nano:
-            _result["startTimeUnixNano"] = _utils.encode_int64(self.start_time_unix_nano)
+            _result["startTimeUnixNano"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.start_time_unix_nano)
         if self.end_time_unix_nano:
-            _result["endTimeUnixNano"] = _utils.encode_int64(self.end_time_unix_nano)
+            _result["endTimeUnixNano"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.end_time_unix_nano)
         if self.attributes:
-            _result["attributes"] = _utils.encode_repeated(self.attributes, lambda _v: _v.to_dict())
+            _result["attributes"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.attributes, lambda _v: _v.to_dict())
         if self.dropped_attributes_count:
             _result["droppedAttributesCount"] = self.dropped_attributes_count
         if self.events:
-            _result["events"] = _utils.encode_repeated(self.events, lambda _v: _v.to_dict())
+            _result["events"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.events, lambda _v: _v.to_dict())
         if self.dropped_events_count:
             _result["droppedEventsCount"] = self.dropped_events_count
         if self.links:
-            _result["links"] = _utils.encode_repeated(self.links, lambda _v: _v.to_dict())
+            _result["links"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.links, lambda _v: _v.to_dict())
         if self.dropped_links_count:
             _result["droppedLinksCount"] = self.dropped_links_count
         if self.status:
@@ -525,45 +525,45 @@ class Span:
         Returns:
             Span instance
         """
-        _utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("traceId")) is not None:
-            _args["trace_id"] = _utils.decode_hex(_value, "trace_id")
+            _args["trace_id"] = opentelemetry.proto_json._otlp_json_utils.decode_hex(_value, "trace_id")
         if (_value := data.get("spanId")) is not None:
-            _args["span_id"] = _utils.decode_hex(_value, "span_id")
+            _args["span_id"] = opentelemetry.proto_json._otlp_json_utils.decode_hex(_value, "span_id")
         if (_value := data.get("traceState")) is not None:
-            _utils.validate_type(_value, builtins.str, "trace_state")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.str, "trace_state")
             _args["trace_state"] = _value
         if (_value := data.get("parentSpanId")) is not None:
-            _args["parent_span_id"] = _utils.decode_hex(_value, "parent_span_id")
+            _args["parent_span_id"] = opentelemetry.proto_json._otlp_json_utils.decode_hex(_value, "parent_span_id")
         if (_value := data.get("flags")) is not None:
-            _utils.validate_type(_value, builtins.int, "flags")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "flags")
             _args["flags"] = _value
         if (_value := data.get("name")) is not None:
-            _utils.validate_type(_value, builtins.str, "name")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.str, "name")
             _args["name"] = _value
         if (_value := data.get("kind")) is not None:
-            _utils.validate_type(_value, builtins.int, "kind")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "kind")
             _args["kind"] = Span.SpanKind(_value)
         if (_value := data.get("startTimeUnixNano")) is not None:
-            _args["start_time_unix_nano"] = _utils.decode_int64(_value, "start_time_unix_nano")
+            _args["start_time_unix_nano"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "start_time_unix_nano")
         if (_value := data.get("endTimeUnixNano")) is not None:
-            _args["end_time_unix_nano"] = _utils.decode_int64(_value, "end_time_unix_nano")
+            _args["end_time_unix_nano"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "end_time_unix_nano")
         if (_value := data.get("attributes")) is not None:
-            _args["attributes"] = _utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
+            _args["attributes"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
         if (_value := data.get("droppedAttributesCount")) is not None:
-            _utils.validate_type(_value, builtins.int, "dropped_attributes_count")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "dropped_attributes_count")
             _args["dropped_attributes_count"] = _value
         if (_value := data.get("events")) is not None:
-            _args["events"] = _utils.decode_repeated(_value, lambda _v: Span.Event.from_dict(_v), "events")
+            _args["events"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: Span.Event.from_dict(_v), "events")
         if (_value := data.get("droppedEventsCount")) is not None:
-            _utils.validate_type(_value, builtins.int, "dropped_events_count")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "dropped_events_count")
             _args["dropped_events_count"] = _value
         if (_value := data.get("links")) is not None:
-            _args["links"] = _utils.decode_repeated(_value, lambda _v: Span.Link.from_dict(_v), "links")
+            _args["links"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: Span.Link.from_dict(_v), "links")
         if (_value := data.get("droppedLinksCount")) is not None:
-            _utils.validate_type(_value, builtins.int, "dropped_links_count")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "dropped_links_count")
             _args["dropped_links_count"] = _value
         if (_value := data.get("status")) is not None:
             _args["status"] = Status.from_dict(_value)
@@ -638,14 +638,14 @@ class Status:
         Returns:
             Status instance
         """
-        _utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("message")) is not None:
-            _utils.validate_type(_value, builtins.str, "message")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.str, "message")
             _args["message"] = _value
         if (_value := data.get("code")) is not None:
-            _utils.validate_type(_value, builtins.int, "code")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "code")
             _args["code"] = Status.StatusCode(_value)
 
         return cls(**_args)

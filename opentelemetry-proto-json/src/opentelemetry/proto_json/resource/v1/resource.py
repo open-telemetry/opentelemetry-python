@@ -29,7 +29,7 @@ if sys.version_info >= (3, 10):
 else:
     _dataclass = dataclasses.dataclass
 
-import opentelemetry.proto_json._otlp_json_utils as _utils
+import opentelemetry.proto_json._otlp_json_utils
 import opentelemetry.proto_json.common.v1.common
 
 
@@ -53,11 +53,11 @@ class Resource:
         """
         _result = {}
         if self.attributes:
-            _result["attributes"] = _utils.encode_repeated(self.attributes, lambda _v: _v.to_dict())
+            _result["attributes"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.attributes, lambda _v: _v.to_dict())
         if self.dropped_attributes_count:
             _result["droppedAttributesCount"] = self.dropped_attributes_count
         if self.entity_refs:
-            _result["entityRefs"] = _utils.encode_repeated(self.entity_refs, lambda _v: _v.to_dict())
+            _result["entityRefs"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.entity_refs, lambda _v: _v.to_dict())
         return _result
 
     def to_json(self) -> builtins.str:
@@ -80,16 +80,16 @@ class Resource:
         Returns:
             Resource instance
         """
-        _utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("attributes")) is not None:
-            _args["attributes"] = _utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
+            _args["attributes"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
         if (_value := data.get("droppedAttributesCount")) is not None:
-            _utils.validate_type(_value, builtins.int, "dropped_attributes_count")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "dropped_attributes_count")
             _args["dropped_attributes_count"] = _value
         if (_value := data.get("entityRefs")) is not None:
-            _args["entity_refs"] = _utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.EntityRef.from_dict(_v), "entity_refs")
+            _args["entity_refs"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.EntityRef.from_dict(_v), "entity_refs")
 
         return cls(**_args)
 

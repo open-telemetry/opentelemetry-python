@@ -30,7 +30,7 @@ if sys.version_info >= (3, 10):
 else:
     _dataclass = dataclasses.dataclass
 
-import opentelemetry.proto_json._otlp_json_utils as _utils
+import opentelemetry.proto_json._otlp_json_utils
 import opentelemetry.proto_json.common.v1.common
 import opentelemetry.proto_json.resource.v1.resource
 
@@ -72,7 +72,7 @@ class MetricsData:
         """
         _result = {}
         if self.resource_metrics:
-            _result["resourceMetrics"] = _utils.encode_repeated(self.resource_metrics, lambda _v: _v.to_dict())
+            _result["resourceMetrics"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.resource_metrics, lambda _v: _v.to_dict())
         return _result
 
     def to_json(self) -> builtins.str:
@@ -95,11 +95,11 @@ class MetricsData:
         Returns:
             MetricsData instance
         """
-        _utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("resourceMetrics")) is not None:
-            _args["resource_metrics"] = _utils.decode_repeated(_value, lambda _v: ResourceMetrics.from_dict(_v), "resource_metrics")
+            _args["resource_metrics"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: ResourceMetrics.from_dict(_v), "resource_metrics")
 
         return cls(**_args)
 
@@ -139,7 +139,7 @@ class ResourceMetrics:
         if self.resource:
             _result["resource"] = self.resource.to_dict()
         if self.scope_metrics:
-            _result["scopeMetrics"] = _utils.encode_repeated(self.scope_metrics, lambda _v: _v.to_dict())
+            _result["scopeMetrics"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.scope_metrics, lambda _v: _v.to_dict())
         if self.schema_url:
             _result["schemaUrl"] = self.schema_url
         return _result
@@ -164,15 +164,15 @@ class ResourceMetrics:
         Returns:
             ResourceMetrics instance
         """
-        _utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("resource")) is not None:
             _args["resource"] = opentelemetry.proto_json.resource.v1.resource.Resource.from_dict(_value)
         if (_value := data.get("scopeMetrics")) is not None:
-            _args["scope_metrics"] = _utils.decode_repeated(_value, lambda _v: ScopeMetrics.from_dict(_v), "scope_metrics")
+            _args["scope_metrics"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: ScopeMetrics.from_dict(_v), "scope_metrics")
         if (_value := data.get("schemaUrl")) is not None:
-            _utils.validate_type(_value, builtins.str, "schema_url")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.str, "schema_url")
             _args["schema_url"] = _value
 
         return cls(**_args)
@@ -213,7 +213,7 @@ class ScopeMetrics:
         if self.scope:
             _result["scope"] = self.scope.to_dict()
         if self.metrics:
-            _result["metrics"] = _utils.encode_repeated(self.metrics, lambda _v: _v.to_dict())
+            _result["metrics"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.metrics, lambda _v: _v.to_dict())
         if self.schema_url:
             _result["schemaUrl"] = self.schema_url
         return _result
@@ -238,15 +238,15 @@ class ScopeMetrics:
         Returns:
             ScopeMetrics instance
         """
-        _utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("scope")) is not None:
             _args["scope"] = opentelemetry.proto_json.common.v1.common.InstrumentationScope.from_dict(_value)
         if (_value := data.get("metrics")) is not None:
-            _args["metrics"] = _utils.decode_repeated(_value, lambda _v: Metric.from_dict(_v), "metrics")
+            _args["metrics"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: Metric.from_dict(_v), "metrics")
         if (_value := data.get("schemaUrl")) is not None:
-            _utils.validate_type(_value, builtins.str, "schema_url")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.str, "schema_url")
             _args["schema_url"] = _value
 
         return cls(**_args)
@@ -297,7 +297,7 @@ class Metric:
         if self.unit:
             _result["unit"] = self.unit
         if self.metadata:
-            _result["metadata"] = _utils.encode_repeated(self.metadata, lambda _v: _v.to_dict())
+            _result["metadata"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.metadata, lambda _v: _v.to_dict())
         if self.summary is not None:
             _result["summary"] = self.summary.to_dict()
         elif self.exponential_histogram is not None:
@@ -330,20 +330,20 @@ class Metric:
         Returns:
             Metric instance
         """
-        _utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("name")) is not None:
-            _utils.validate_type(_value, builtins.str, "name")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.str, "name")
             _args["name"] = _value
         if (_value := data.get("description")) is not None:
-            _utils.validate_type(_value, builtins.str, "description")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.str, "description")
             _args["description"] = _value
         if (_value := data.get("unit")) is not None:
-            _utils.validate_type(_value, builtins.str, "unit")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.str, "unit")
             _args["unit"] = _value
         if (_value := data.get("metadata")) is not None:
-            _args["metadata"] = _utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "metadata")
+            _args["metadata"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "metadata")
         if (_value := data.get("summary")) is not None:
             _args["summary"] = Summary.from_dict(_value)
         elif (_value := data.get("exponentialHistogram")) is not None:
@@ -389,7 +389,7 @@ class Gauge:
         """
         _result = {}
         if self.data_points:
-            _result["dataPoints"] = _utils.encode_repeated(self.data_points, lambda _v: _v.to_dict())
+            _result["dataPoints"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.data_points, lambda _v: _v.to_dict())
         return _result
 
     def to_json(self) -> builtins.str:
@@ -412,11 +412,11 @@ class Gauge:
         Returns:
             Gauge instance
         """
-        _utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("dataPoints")) is not None:
-            _args["data_points"] = _utils.decode_repeated(_value, lambda _v: NumberDataPoint.from_dict(_v), "data_points")
+            _args["data_points"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: NumberDataPoint.from_dict(_v), "data_points")
 
         return cls(**_args)
 
@@ -454,7 +454,7 @@ class Sum:
         """
         _result = {}
         if self.data_points:
-            _result["dataPoints"] = _utils.encode_repeated(self.data_points, lambda _v: _v.to_dict())
+            _result["dataPoints"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.data_points, lambda _v: _v.to_dict())
         if self.aggregation_temporality:
             _result["aggregationTemporality"] = builtins.int(self.aggregation_temporality)
         if self.is_monotonic:
@@ -481,16 +481,16 @@ class Sum:
         Returns:
             Sum instance
         """
-        _utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("dataPoints")) is not None:
-            _args["data_points"] = _utils.decode_repeated(_value, lambda _v: NumberDataPoint.from_dict(_v), "data_points")
+            _args["data_points"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: NumberDataPoint.from_dict(_v), "data_points")
         if (_value := data.get("aggregationTemporality")) is not None:
-            _utils.validate_type(_value, builtins.int, "aggregation_temporality")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "aggregation_temporality")
             _args["aggregation_temporality"] = AggregationTemporality(_value)
         if (_value := data.get("isMonotonic")) is not None:
-            _utils.validate_type(_value, builtins.bool, "is_monotonic")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.bool, "is_monotonic")
             _args["is_monotonic"] = _value
 
         return cls(**_args)
@@ -528,7 +528,7 @@ class Histogram:
         """
         _result = {}
         if self.data_points:
-            _result["dataPoints"] = _utils.encode_repeated(self.data_points, lambda _v: _v.to_dict())
+            _result["dataPoints"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.data_points, lambda _v: _v.to_dict())
         if self.aggregation_temporality:
             _result["aggregationTemporality"] = builtins.int(self.aggregation_temporality)
         return _result
@@ -553,13 +553,13 @@ class Histogram:
         Returns:
             Histogram instance
         """
-        _utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("dataPoints")) is not None:
-            _args["data_points"] = _utils.decode_repeated(_value, lambda _v: HistogramDataPoint.from_dict(_v), "data_points")
+            _args["data_points"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: HistogramDataPoint.from_dict(_v), "data_points")
         if (_value := data.get("aggregationTemporality")) is not None:
-            _utils.validate_type(_value, builtins.int, "aggregation_temporality")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "aggregation_temporality")
             _args["aggregation_temporality"] = AggregationTemporality(_value)
 
         return cls(**_args)
@@ -597,7 +597,7 @@ class ExponentialHistogram:
         """
         _result = {}
         if self.data_points:
-            _result["dataPoints"] = _utils.encode_repeated(self.data_points, lambda _v: _v.to_dict())
+            _result["dataPoints"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.data_points, lambda _v: _v.to_dict())
         if self.aggregation_temporality:
             _result["aggregationTemporality"] = builtins.int(self.aggregation_temporality)
         return _result
@@ -622,13 +622,13 @@ class ExponentialHistogram:
         Returns:
             ExponentialHistogram instance
         """
-        _utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("dataPoints")) is not None:
-            _args["data_points"] = _utils.decode_repeated(_value, lambda _v: ExponentialHistogramDataPoint.from_dict(_v), "data_points")
+            _args["data_points"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: ExponentialHistogramDataPoint.from_dict(_v), "data_points")
         if (_value := data.get("aggregationTemporality")) is not None:
-            _utils.validate_type(_value, builtins.int, "aggregation_temporality")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "aggregation_temporality")
             _args["aggregation_temporality"] = AggregationTemporality(_value)
 
         return cls(**_args)
@@ -665,7 +665,7 @@ class Summary:
         """
         _result = {}
         if self.data_points:
-            _result["dataPoints"] = _utils.encode_repeated(self.data_points, lambda _v: _v.to_dict())
+            _result["dataPoints"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.data_points, lambda _v: _v.to_dict())
         return _result
 
     def to_json(self) -> builtins.str:
@@ -688,11 +688,11 @@ class Summary:
         Returns:
             Summary instance
         """
-        _utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("dataPoints")) is not None:
-            _args["data_points"] = _utils.decode_repeated(_value, lambda _v: SummaryDataPoint.from_dict(_v), "data_points")
+            _args["data_points"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: SummaryDataPoint.from_dict(_v), "data_points")
 
         return cls(**_args)
 
@@ -734,19 +734,19 @@ class NumberDataPoint:
         """
         _result = {}
         if self.attributes:
-            _result["attributes"] = _utils.encode_repeated(self.attributes, lambda _v: _v.to_dict())
+            _result["attributes"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.attributes, lambda _v: _v.to_dict())
         if self.start_time_unix_nano:
-            _result["startTimeUnixNano"] = _utils.encode_int64(self.start_time_unix_nano)
+            _result["startTimeUnixNano"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.start_time_unix_nano)
         if self.time_unix_nano:
-            _result["timeUnixNano"] = _utils.encode_int64(self.time_unix_nano)
+            _result["timeUnixNano"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.time_unix_nano)
         if self.exemplars:
-            _result["exemplars"] = _utils.encode_repeated(self.exemplars, lambda _v: _v.to_dict())
+            _result["exemplars"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.exemplars, lambda _v: _v.to_dict())
         if self.flags:
             _result["flags"] = self.flags
         if self.as_int is not None:
-            _result["asInt"] = _utils.encode_int64(self.as_int)
+            _result["asInt"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.as_int)
         elif self.as_double is not None:
-            _result["asDouble"] = _utils.encode_float(self.as_double)
+            _result["asDouble"] = opentelemetry.proto_json._otlp_json_utils.encode_float(self.as_double)
         return _result
 
     def to_json(self) -> builtins.str:
@@ -769,24 +769,24 @@ class NumberDataPoint:
         Returns:
             NumberDataPoint instance
         """
-        _utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("attributes")) is not None:
-            _args["attributes"] = _utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
+            _args["attributes"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
         if (_value := data.get("startTimeUnixNano")) is not None:
-            _args["start_time_unix_nano"] = _utils.decode_int64(_value, "start_time_unix_nano")
+            _args["start_time_unix_nano"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "start_time_unix_nano")
         if (_value := data.get("timeUnixNano")) is not None:
-            _args["time_unix_nano"] = _utils.decode_int64(_value, "time_unix_nano")
+            _args["time_unix_nano"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "time_unix_nano")
         if (_value := data.get("exemplars")) is not None:
-            _args["exemplars"] = _utils.decode_repeated(_value, lambda _v: Exemplar.from_dict(_v), "exemplars")
+            _args["exemplars"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: Exemplar.from_dict(_v), "exemplars")
         if (_value := data.get("flags")) is not None:
-            _utils.validate_type(_value, builtins.int, "flags")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "flags")
             _args["flags"] = _value
         if (_value := data.get("asInt")) is not None:
-            _args["as_int"] = _utils.decode_int64(_value, "as_int")
+            _args["as_int"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "as_int")
         elif (_value := data.get("asDouble")) is not None:
-            _args["as_double"] = _utils.decode_float(_value, "as_double")
+            _args["as_double"] = opentelemetry.proto_json._otlp_json_utils.decode_float(_value, "as_double")
 
         return cls(**_args)
 
@@ -832,27 +832,27 @@ class HistogramDataPoint:
         """
         _result = {}
         if self.attributes:
-            _result["attributes"] = _utils.encode_repeated(self.attributes, lambda _v: _v.to_dict())
+            _result["attributes"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.attributes, lambda _v: _v.to_dict())
         if self.start_time_unix_nano:
-            _result["startTimeUnixNano"] = _utils.encode_int64(self.start_time_unix_nano)
+            _result["startTimeUnixNano"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.start_time_unix_nano)
         if self.time_unix_nano:
-            _result["timeUnixNano"] = _utils.encode_int64(self.time_unix_nano)
+            _result["timeUnixNano"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.time_unix_nano)
         if self.count:
-            _result["count"] = _utils.encode_int64(self.count)
+            _result["count"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.count)
         if self.sum:
-            _result["sum"] = _utils.encode_float(self.sum)
+            _result["sum"] = opentelemetry.proto_json._otlp_json_utils.encode_float(self.sum)
         if self.bucket_counts:
-            _result["bucketCounts"] = _utils.encode_repeated(self.bucket_counts, lambda _v: _utils.encode_int64(_v))
+            _result["bucketCounts"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.bucket_counts, lambda _v: opentelemetry.proto_json._otlp_json_utils.encode_int64(_v))
         if self.explicit_bounds:
-            _result["explicitBounds"] = _utils.encode_repeated(self.explicit_bounds, lambda _v: _utils.encode_float(_v))
+            _result["explicitBounds"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.explicit_bounds, lambda _v: opentelemetry.proto_json._otlp_json_utils.encode_float(_v))
         if self.exemplars:
-            _result["exemplars"] = _utils.encode_repeated(self.exemplars, lambda _v: _v.to_dict())
+            _result["exemplars"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.exemplars, lambda _v: _v.to_dict())
         if self.flags:
             _result["flags"] = self.flags
         if self.min:
-            _result["min"] = _utils.encode_float(self.min)
+            _result["min"] = opentelemetry.proto_json._otlp_json_utils.encode_float(self.min)
         if self.max:
-            _result["max"] = _utils.encode_float(self.max)
+            _result["max"] = opentelemetry.proto_json._otlp_json_utils.encode_float(self.max)
         return _result
 
     def to_json(self) -> builtins.str:
@@ -875,32 +875,32 @@ class HistogramDataPoint:
         Returns:
             HistogramDataPoint instance
         """
-        _utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("attributes")) is not None:
-            _args["attributes"] = _utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
+            _args["attributes"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
         if (_value := data.get("startTimeUnixNano")) is not None:
-            _args["start_time_unix_nano"] = _utils.decode_int64(_value, "start_time_unix_nano")
+            _args["start_time_unix_nano"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "start_time_unix_nano")
         if (_value := data.get("timeUnixNano")) is not None:
-            _args["time_unix_nano"] = _utils.decode_int64(_value, "time_unix_nano")
+            _args["time_unix_nano"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "time_unix_nano")
         if (_value := data.get("count")) is not None:
-            _args["count"] = _utils.decode_int64(_value, "count")
+            _args["count"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "count")
         if (_value := data.get("sum")) is not None:
-            _args["sum"] = _utils.decode_float(_value, "sum")
+            _args["sum"] = opentelemetry.proto_json._otlp_json_utils.decode_float(_value, "sum")
         if (_value := data.get("bucketCounts")) is not None:
-            _args["bucket_counts"] = _utils.decode_repeated(_value, lambda _v: _utils.decode_int64(_v, "bucket_counts"), "bucket_counts")
+            _args["bucket_counts"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json._otlp_json_utils.decode_int64(_v, "bucket_counts"), "bucket_counts")
         if (_value := data.get("explicitBounds")) is not None:
-            _args["explicit_bounds"] = _utils.decode_repeated(_value, lambda _v: _utils.decode_float(_v, "explicit_bounds"), "explicit_bounds")
+            _args["explicit_bounds"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json._otlp_json_utils.decode_float(_v, "explicit_bounds"), "explicit_bounds")
         if (_value := data.get("exemplars")) is not None:
-            _args["exemplars"] = _utils.decode_repeated(_value, lambda _v: Exemplar.from_dict(_v), "exemplars")
+            _args["exemplars"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: Exemplar.from_dict(_v), "exemplars")
         if (_value := data.get("flags")) is not None:
-            _utils.validate_type(_value, builtins.int, "flags")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "flags")
             _args["flags"] = _value
         if (_value := data.get("min")) is not None:
-            _args["min"] = _utils.decode_float(_value, "min")
+            _args["min"] = opentelemetry.proto_json._otlp_json_utils.decode_float(_value, "min")
         if (_value := data.get("max")) is not None:
-            _args["max"] = _utils.decode_float(_value, "max")
+            _args["max"] = opentelemetry.proto_json._otlp_json_utils.decode_float(_value, "max")
 
         return cls(**_args)
 
@@ -946,7 +946,7 @@ class ExponentialHistogramDataPoint:
             if self.offset:
                 _result["offset"] = self.offset
             if self.bucket_counts:
-                _result["bucketCounts"] = _utils.encode_repeated(self.bucket_counts, lambda _v: _utils.encode_int64(_v))
+                _result["bucketCounts"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.bucket_counts, lambda _v: opentelemetry.proto_json._otlp_json_utils.encode_int64(_v))
             return _result
 
         def to_json(self) -> builtins.str:
@@ -969,14 +969,14 @@ class ExponentialHistogramDataPoint:
             Returns:
                 Buckets instance
             """
-            _utils.validate_type(data, builtins.dict, "data")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
             _args = {}
 
             if (_value := data.get("offset")) is not None:
-                _utils.validate_type(_value, builtins.int, "offset")
+                opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "offset")
                 _args["offset"] = _value
             if (_value := data.get("bucketCounts")) is not None:
-                _args["bucket_counts"] = _utils.decode_repeated(_value, lambda _v: _utils.decode_int64(_v, "bucket_counts"), "bucket_counts")
+                _args["bucket_counts"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json._otlp_json_utils.decode_int64(_v, "bucket_counts"), "bucket_counts")
 
             return cls(**_args)
 
@@ -1017,19 +1017,19 @@ class ExponentialHistogramDataPoint:
         """
         _result = {}
         if self.attributes:
-            _result["attributes"] = _utils.encode_repeated(self.attributes, lambda _v: _v.to_dict())
+            _result["attributes"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.attributes, lambda _v: _v.to_dict())
         if self.start_time_unix_nano:
-            _result["startTimeUnixNano"] = _utils.encode_int64(self.start_time_unix_nano)
+            _result["startTimeUnixNano"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.start_time_unix_nano)
         if self.time_unix_nano:
-            _result["timeUnixNano"] = _utils.encode_int64(self.time_unix_nano)
+            _result["timeUnixNano"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.time_unix_nano)
         if self.count:
-            _result["count"] = _utils.encode_int64(self.count)
+            _result["count"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.count)
         if self.sum:
-            _result["sum"] = _utils.encode_float(self.sum)
+            _result["sum"] = opentelemetry.proto_json._otlp_json_utils.encode_float(self.sum)
         if self.scale:
             _result["scale"] = self.scale
         if self.zero_count:
-            _result["zeroCount"] = _utils.encode_int64(self.zero_count)
+            _result["zeroCount"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.zero_count)
         if self.positive:
             _result["positive"] = self.positive.to_dict()
         if self.negative:
@@ -1037,13 +1037,13 @@ class ExponentialHistogramDataPoint:
         if self.flags:
             _result["flags"] = self.flags
         if self.exemplars:
-            _result["exemplars"] = _utils.encode_repeated(self.exemplars, lambda _v: _v.to_dict())
+            _result["exemplars"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.exemplars, lambda _v: _v.to_dict())
         if self.min:
-            _result["min"] = _utils.encode_float(self.min)
+            _result["min"] = opentelemetry.proto_json._otlp_json_utils.encode_float(self.min)
         if self.max:
-            _result["max"] = _utils.encode_float(self.max)
+            _result["max"] = opentelemetry.proto_json._otlp_json_utils.encode_float(self.max)
         if self.zero_threshold:
-            _result["zeroThreshold"] = _utils.encode_float(self.zero_threshold)
+            _result["zeroThreshold"] = opentelemetry.proto_json._otlp_json_utils.encode_float(self.zero_threshold)
         return _result
 
     def to_json(self) -> builtins.str:
@@ -1066,39 +1066,39 @@ class ExponentialHistogramDataPoint:
         Returns:
             ExponentialHistogramDataPoint instance
         """
-        _utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("attributes")) is not None:
-            _args["attributes"] = _utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
+            _args["attributes"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
         if (_value := data.get("startTimeUnixNano")) is not None:
-            _args["start_time_unix_nano"] = _utils.decode_int64(_value, "start_time_unix_nano")
+            _args["start_time_unix_nano"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "start_time_unix_nano")
         if (_value := data.get("timeUnixNano")) is not None:
-            _args["time_unix_nano"] = _utils.decode_int64(_value, "time_unix_nano")
+            _args["time_unix_nano"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "time_unix_nano")
         if (_value := data.get("count")) is not None:
-            _args["count"] = _utils.decode_int64(_value, "count")
+            _args["count"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "count")
         if (_value := data.get("sum")) is not None:
-            _args["sum"] = _utils.decode_float(_value, "sum")
+            _args["sum"] = opentelemetry.proto_json._otlp_json_utils.decode_float(_value, "sum")
         if (_value := data.get("scale")) is not None:
-            _utils.validate_type(_value, builtins.int, "scale")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "scale")
             _args["scale"] = _value
         if (_value := data.get("zeroCount")) is not None:
-            _args["zero_count"] = _utils.decode_int64(_value, "zero_count")
+            _args["zero_count"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "zero_count")
         if (_value := data.get("positive")) is not None:
             _args["positive"] = ExponentialHistogramDataPoint.Buckets.from_dict(_value)
         if (_value := data.get("negative")) is not None:
             _args["negative"] = ExponentialHistogramDataPoint.Buckets.from_dict(_value)
         if (_value := data.get("flags")) is not None:
-            _utils.validate_type(_value, builtins.int, "flags")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "flags")
             _args["flags"] = _value
         if (_value := data.get("exemplars")) is not None:
-            _args["exemplars"] = _utils.decode_repeated(_value, lambda _v: Exemplar.from_dict(_v), "exemplars")
+            _args["exemplars"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: Exemplar.from_dict(_v), "exemplars")
         if (_value := data.get("min")) is not None:
-            _args["min"] = _utils.decode_float(_value, "min")
+            _args["min"] = opentelemetry.proto_json._otlp_json_utils.decode_float(_value, "min")
         if (_value := data.get("max")) is not None:
-            _args["max"] = _utils.decode_float(_value, "max")
+            _args["max"] = opentelemetry.proto_json._otlp_json_utils.decode_float(_value, "max")
         if (_value := data.get("zeroThreshold")) is not None:
-            _args["zero_threshold"] = _utils.decode_float(_value, "zero_threshold")
+            _args["zero_threshold"] = opentelemetry.proto_json._otlp_json_utils.decode_float(_value, "zero_threshold")
 
         return cls(**_args)
 
@@ -1142,9 +1142,9 @@ class SummaryDataPoint:
             """
             _result = {}
             if self.quantile:
-                _result["quantile"] = _utils.encode_float(self.quantile)
+                _result["quantile"] = opentelemetry.proto_json._otlp_json_utils.encode_float(self.quantile)
             if self.value:
-                _result["value"] = _utils.encode_float(self.value)
+                _result["value"] = opentelemetry.proto_json._otlp_json_utils.encode_float(self.value)
             return _result
 
         def to_json(self) -> builtins.str:
@@ -1167,13 +1167,13 @@ class SummaryDataPoint:
             Returns:
                 ValueAtQuantile instance
             """
-            _utils.validate_type(data, builtins.dict, "data")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
             _args = {}
 
             if (_value := data.get("quantile")) is not None:
-                _args["quantile"] = _utils.decode_float(_value, "quantile")
+                _args["quantile"] = opentelemetry.proto_json._otlp_json_utils.decode_float(_value, "quantile")
             if (_value := data.get("value")) is not None:
-                _args["value"] = _utils.decode_float(_value, "value")
+                _args["value"] = opentelemetry.proto_json._otlp_json_utils.decode_float(_value, "value")
 
             return cls(**_args)
 
@@ -1207,17 +1207,17 @@ class SummaryDataPoint:
         """
         _result = {}
         if self.attributes:
-            _result["attributes"] = _utils.encode_repeated(self.attributes, lambda _v: _v.to_dict())
+            _result["attributes"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.attributes, lambda _v: _v.to_dict())
         if self.start_time_unix_nano:
-            _result["startTimeUnixNano"] = _utils.encode_int64(self.start_time_unix_nano)
+            _result["startTimeUnixNano"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.start_time_unix_nano)
         if self.time_unix_nano:
-            _result["timeUnixNano"] = _utils.encode_int64(self.time_unix_nano)
+            _result["timeUnixNano"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.time_unix_nano)
         if self.count:
-            _result["count"] = _utils.encode_int64(self.count)
+            _result["count"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.count)
         if self.sum:
-            _result["sum"] = _utils.encode_float(self.sum)
+            _result["sum"] = opentelemetry.proto_json._otlp_json_utils.encode_float(self.sum)
         if self.quantile_values:
-            _result["quantileValues"] = _utils.encode_repeated(self.quantile_values, lambda _v: _v.to_dict())
+            _result["quantileValues"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.quantile_values, lambda _v: _v.to_dict())
         if self.flags:
             _result["flags"] = self.flags
         return _result
@@ -1242,23 +1242,23 @@ class SummaryDataPoint:
         Returns:
             SummaryDataPoint instance
         """
-        _utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("attributes")) is not None:
-            _args["attributes"] = _utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
+            _args["attributes"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
         if (_value := data.get("startTimeUnixNano")) is not None:
-            _args["start_time_unix_nano"] = _utils.decode_int64(_value, "start_time_unix_nano")
+            _args["start_time_unix_nano"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "start_time_unix_nano")
         if (_value := data.get("timeUnixNano")) is not None:
-            _args["time_unix_nano"] = _utils.decode_int64(_value, "time_unix_nano")
+            _args["time_unix_nano"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "time_unix_nano")
         if (_value := data.get("count")) is not None:
-            _args["count"] = _utils.decode_int64(_value, "count")
+            _args["count"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "count")
         if (_value := data.get("sum")) is not None:
-            _args["sum"] = _utils.decode_float(_value, "sum")
+            _args["sum"] = opentelemetry.proto_json._otlp_json_utils.decode_float(_value, "sum")
         if (_value := data.get("quantileValues")) is not None:
-            _args["quantile_values"] = _utils.decode_repeated(_value, lambda _v: SummaryDataPoint.ValueAtQuantile.from_dict(_v), "quantile_values")
+            _args["quantile_values"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: SummaryDataPoint.ValueAtQuantile.from_dict(_v), "quantile_values")
         if (_value := data.get("flags")) is not None:
-            _utils.validate_type(_value, builtins.int, "flags")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "flags")
             _args["flags"] = _value
 
         return cls(**_args)
@@ -1300,17 +1300,17 @@ class Exemplar:
         """
         _result = {}
         if self.filtered_attributes:
-            _result["filteredAttributes"] = _utils.encode_repeated(self.filtered_attributes, lambda _v: _v.to_dict())
+            _result["filteredAttributes"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.filtered_attributes, lambda _v: _v.to_dict())
         if self.time_unix_nano:
-            _result["timeUnixNano"] = _utils.encode_int64(self.time_unix_nano)
+            _result["timeUnixNano"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.time_unix_nano)
         if self.span_id:
-            _result["spanId"] = _utils.encode_hex(self.span_id)
+            _result["spanId"] = opentelemetry.proto_json._otlp_json_utils.encode_hex(self.span_id)
         if self.trace_id:
-            _result["traceId"] = _utils.encode_hex(self.trace_id)
+            _result["traceId"] = opentelemetry.proto_json._otlp_json_utils.encode_hex(self.trace_id)
         if self.as_int is not None:
-            _result["asInt"] = _utils.encode_int64(self.as_int)
+            _result["asInt"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.as_int)
         elif self.as_double is not None:
-            _result["asDouble"] = _utils.encode_float(self.as_double)
+            _result["asDouble"] = opentelemetry.proto_json._otlp_json_utils.encode_float(self.as_double)
         return _result
 
     def to_json(self) -> builtins.str:
@@ -1333,21 +1333,21 @@ class Exemplar:
         Returns:
             Exemplar instance
         """
-        _utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("filteredAttributes")) is not None:
-            _args["filtered_attributes"] = _utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "filtered_attributes")
+            _args["filtered_attributes"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "filtered_attributes")
         if (_value := data.get("timeUnixNano")) is not None:
-            _args["time_unix_nano"] = _utils.decode_int64(_value, "time_unix_nano")
+            _args["time_unix_nano"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "time_unix_nano")
         if (_value := data.get("spanId")) is not None:
-            _args["span_id"] = _utils.decode_hex(_value, "span_id")
+            _args["span_id"] = opentelemetry.proto_json._otlp_json_utils.decode_hex(_value, "span_id")
         if (_value := data.get("traceId")) is not None:
-            _args["trace_id"] = _utils.decode_hex(_value, "trace_id")
+            _args["trace_id"] = opentelemetry.proto_json._otlp_json_utils.decode_hex(_value, "trace_id")
         if (_value := data.get("asInt")) is not None:
-            _args["as_int"] = _utils.decode_int64(_value, "as_int")
+            _args["as_int"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "as_int")
         elif (_value := data.get("asDouble")) is not None:
-            _args["as_double"] = _utils.decode_float(_value, "as_double")
+            _args["as_double"] = opentelemetry.proto_json._otlp_json_utils.decode_float(_value, "as_double")
 
         return cls(**_args)
 

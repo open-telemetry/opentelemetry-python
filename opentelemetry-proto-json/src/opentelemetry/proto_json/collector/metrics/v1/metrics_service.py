@@ -29,7 +29,7 @@ if sys.version_info >= (3, 10):
 else:
     _dataclass = dataclasses.dataclass
 
-import opentelemetry.proto_json._otlp_json_utils as _utils
+import opentelemetry.proto_json._otlp_json_utils
 import opentelemetry.proto_json.metrics.v1.metrics
 
 
@@ -51,7 +51,7 @@ class ExportMetricsServiceRequest:
         """
         _result = {}
         if self.resource_metrics:
-            _result["resourceMetrics"] = _utils.encode_repeated(self.resource_metrics, lambda _v: _v.to_dict())
+            _result["resourceMetrics"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.resource_metrics, lambda _v: _v.to_dict())
         return _result
 
     def to_json(self) -> builtins.str:
@@ -74,11 +74,11 @@ class ExportMetricsServiceRequest:
         Returns:
             ExportMetricsServiceRequest instance
         """
-        _utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("resourceMetrics")) is not None:
-            _args["resource_metrics"] = _utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json.metrics.v1.metrics.ResourceMetrics.from_dict(_v), "resource_metrics")
+            _args["resource_metrics"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json.metrics.v1.metrics.ResourceMetrics.from_dict(_v), "resource_metrics")
 
         return cls(**_args)
 
@@ -137,7 +137,7 @@ class ExportMetricsServiceResponse:
         Returns:
             ExportMetricsServiceResponse instance
         """
-        _utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("partialSuccess")) is not None:
@@ -178,7 +178,7 @@ class ExportMetricsPartialSuccess:
         """
         _result = {}
         if self.rejected_data_points:
-            _result["rejectedDataPoints"] = _utils.encode_int64(self.rejected_data_points)
+            _result["rejectedDataPoints"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.rejected_data_points)
         if self.error_message:
             _result["errorMessage"] = self.error_message
         return _result
@@ -203,13 +203,13 @@ class ExportMetricsPartialSuccess:
         Returns:
             ExportMetricsPartialSuccess instance
         """
-        _utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("rejectedDataPoints")) is not None:
-            _args["rejected_data_points"] = _utils.decode_int64(_value, "rejected_data_points")
+            _args["rejected_data_points"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "rejected_data_points")
         if (_value := data.get("errorMessage")) is not None:
-            _utils.validate_type(_value, builtins.str, "error_message")
+            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.str, "error_message")
             _args["error_message"] = _value
 
         return cls(**_args)
