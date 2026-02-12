@@ -18,6 +18,15 @@ from collections.abc import Callable
 
 from opentelemetry import metrics as metrics_api
 from opentelemetry.sdk.trace.sampling import Decision
+from opentelemetry.semconv._incubating.attributes.otel_attributes import (
+    OTEL_SPAN_PARENT_ORIGIN,
+    OTEL_SPAN_SAMPLING_RESULT,
+    OtelSpanSamplingResultValues,
+)
+from opentelemetry.semconv._incubating.metrics.otel_metrics import (
+    create_otel_sdk_span_live,
+    create_otel_sdk_span_started,
+)
 from opentelemetry.trace.span import SpanContext
 
 
@@ -25,33 +34,28 @@ class TracerMetrics:
     def __init__(self, meter_provider: metrics_api.MeterProvider) -> None:
         meter = meter_provider.get_meter("opentelemetry-sdk")
 
-        self._started_spans = meter.create_counter(
-            "otel.sdk.span.started", "{span}", "The number of created spans"
-        )
-        self._live_spans = meter.create_up_down_counter(
-            "otel.sdk.span.live",
-            "{span}",
-            "The number of currently live spans",
-        )
+        self._started_spans = create_otel_sdk_span_started(meter)
+        self._live_spans = create_otel_sdk_span_live(meter)
 
     def start_span(
         self,
         parent_span_context: SpanContext | None,
         sampling_decision: Decision,
     ) -> Callable[[], None]:
+        sampling_result_value = sampling_result(sampling_decision)
         self._started_spans.add(
             1,
             {
-                "otel.span.parent.origin": parent_origin(parent_span_context),
-                "otel.span.sampling_result": sampling_decision.name,
+                OTEL_SPAN_PARENT_ORIGIN: parent_origin(parent_span_context),
+                OTEL_SPAN_SAMPLING_RESULT: sampling_result_value,
             },
         )
 
-        if sampling_decision == Decision.DROP:
+        if not sampling_decision.is_recording():
             return noop
 
         live_span_attrs = {
-            "otel.span.sampling_result": sampling_decision.name,
+            OTEL_SPAN_SAMPLING_RESULT: sampling_result_value,
         }
         self._live_spans.add(1, live_span_attrs)
 
@@ -71,3 +75,11 @@ def parent_origin(span_ctx: SpanContext | None) -> str:
     if span_ctx.is_remote:
         return "remote"
     return "local"
+
+
+def sampling_result(decision: Decision) -> str:
+    if decision == Decision.RECORD_AND_SAMPLE:
+        return OtelSpanSamplingResultValues.RECORD_AND_SAMPLE.value
+    if decision == Decision.RECORD_ONLY:
+        return OtelSpanSamplingResultValues.RECORD_ONLY.value
+    return OtelSpanSamplingResultValues.DROP.value
