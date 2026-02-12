@@ -16,6 +16,7 @@ import math
 from typing import Optional, Union
 
 import pytest
+
 from opentelemetry.codegen.json.runtime.otlp_json_utils import (
     decode_base64,
     decode_float,
@@ -170,15 +171,13 @@ def test_decode_float_errors() -> None:
 
 def test_repeated_fields() -> None:
     values = [1, 2, 3]
-    map_fn = lambda x: str(x)
-    assert encode_repeated(values, map_fn) == ["1", "2", "3"]
-    assert encode_repeated([], map_fn) == []
-    assert encode_repeated(None, map_fn) == []  # type: ignore
+    assert encode_repeated(values, str) == ["1", "2", "3"]
+    assert encode_repeated([], str) == []
+    assert encode_repeated(None, str) == []  # type: ignore
 
-    item_parser = lambda x: int(x)
-    assert decode_repeated(["1", "2"], item_parser, "field") == [1, 2]
-    assert decode_repeated([], item_parser, "field") == []
-    assert decode_repeated(None, item_parser, "field") == []
+    assert decode_repeated(["1", "2"], int, "field") == [1, 2]
+    assert decode_repeated([], int, "field") == []
+    assert decode_repeated(None, int, "field") == []
 
 
 def test_decode_repeated_errors() -> None:

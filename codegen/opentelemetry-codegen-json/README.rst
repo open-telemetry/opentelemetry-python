@@ -1,5 +1,5 @@
 OpenTelemetry JSON Code Generator
-===========================
+=================================
 
 |pypi|
 

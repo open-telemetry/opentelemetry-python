@@ -69,6 +69,7 @@ target-version = "py38"
 line-length = 79
 extend-exclude = [
   "*_pb2*.py*",
+  "opentelemetry-proto-json/src/*",
 ]
 output-format = "concise"
 

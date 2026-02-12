@@ -14,6 +14,7 @@
 
 import pytest
 from google.protobuf import descriptor_pb2 as descriptor
+
 from opentelemetry.codegen.json.types import (
     get_default_value,
     get_json_allowed_types,

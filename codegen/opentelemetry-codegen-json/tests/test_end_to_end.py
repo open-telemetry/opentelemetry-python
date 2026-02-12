@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# ruff: noqa: PLC0415
+
 import json
 import math
 import shutil
@@ -70,7 +72,10 @@ def generate_code() -> Generator[None, None, None]:
 
 
 def test_generated_message_roundtrip() -> None:
-    from otel_test_json.test.v1.test import SubMessage, TestMessage  # type: ignore
+    from otel_test_json.test.v1.test import (  # type: ignore
+        SubMessage,
+        TestMessage,
+    )
 
     msg = TestMessage(
         name="test",
@@ -115,7 +120,9 @@ def test_generated_message_roundtrip() -> None:
 
 
 def test_cross_reference() -> None:
-    from otel_test_json.common.v1.common import InstrumentationScope  # type: ignore
+    from otel_test_json.common.v1.common import (
+        InstrumentationScope,  # type: ignore
+    )
     from otel_test_json.trace.v1.trace import Span  # type: ignore
 
     span = Span(
@@ -190,7 +197,9 @@ def test_numeric_types(field: str, value: Any, expected_json_val: Any) -> None:
 def test_oneof_suite_variants(
     kwargs: dict[str, Any], expected_data: dict[str, Any]
 ) -> None:
-    from otel_test_json.common.v1.common import InstrumentationScope  # type: ignore
+    from otel_test_json.common.v1.common import (
+        InstrumentationScope,  # type: ignore
+    )
     from otel_test_json.test.v1.complex import OneofSuite  # type: ignore
 
     processed_kwargs = {}
@@ -308,7 +317,8 @@ def test_validation_errors(
     from otel_test_json.test.v1.test import TestMessage  # type: ignore
 
     with pytest.raises(
-        expected_error, match=match if expected_error == TypeError else None
+        expected_error,
+        match=match if isinstance(expected_error, TypeError) else None,
     ):
         TestMessage.from_dict(data)
 
