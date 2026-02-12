@@ -1240,17 +1240,18 @@ class Tracer(trace_api.Tracer):
 
 
 _TracerConfiguratorT = Callable[[InstrumentationScope], _TracerConfig]
-_TracerConfiguratorRulesPredicateT = Callable[[InstrumentationScope], bool]
+_InstrumentationScopePredicateT = Callable[[InstrumentationScope], bool]
 _TracerConfiguratorRulesT = Sequence[
-    tuple[_TracerConfiguratorRulesPredicateT, _TracerConfig]
+    tuple[_InstrumentationScopePredicateT, _TracerConfig]
 ]
 
 
-def _tracer_name_matches_glob(
+# TODO: share this with configurators for other signals
+def _scope_name_matches_glob(
     glob_pattern: str,
-) -> _TracerConfiguratorRulesPredicateT:
-    def inner(tracer_scope: InstrumentationScope) -> bool:
-        return fnmatch.fnmatch(tracer_scope.name, glob_pattern)
+) -> _InstrumentationScopePredicateT:
+    def inner(scope: InstrumentationScope) -> bool:
+        return fnmatch.fnmatch(scope.name, glob_pattern)
 
     return inner
 

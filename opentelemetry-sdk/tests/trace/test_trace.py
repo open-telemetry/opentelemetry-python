@@ -47,7 +47,7 @@ from opentelemetry.sdk.trace import (
     Resource,
     TracerProvider,
     _RuleBasedTracerConfigurator,
-    _tracer_name_matches_glob,
+    _scope_name_matches_glob,
     _TracerConfig,
 )
 from opentelemetry.sdk.trace.id_generator import RandomIdGenerator
@@ -2236,11 +2236,11 @@ class TestTracerProvider(unittest.TestCase):
         # pylint: disable=protected-access
         rules = [
             (
-                _tracer_name_matches_glob(glob_pattern="module_name"),
+                _scope_name_matches_glob(glob_pattern="module_name"),
                 _TracerConfig(is_enabled=True),
             ),
             (
-                _tracer_name_matches_glob(glob_pattern="other_module_name"),
+                _scope_name_matches_glob(glob_pattern="other_module_name"),
                 _TracerConfig(is_enabled=False),
             ),
         ]
@@ -2282,7 +2282,7 @@ class TestTracerProvider(unittest.TestCase):
         # pylint: disable=protected-access
         rules = [
             (
-                _tracer_name_matches_glob(glob_pattern="module_name"),
+                _scope_name_matches_glob(glob_pattern="module_name"),
                 _TracerConfig(is_enabled=False),
             ),
         ]

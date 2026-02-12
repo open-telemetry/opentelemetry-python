@@ -21,7 +21,7 @@ from opentelemetry.sdk.trace import (
     TracerProvider,
     _default_tracer_configurator,
     _RuleBasedTracerConfigurator,
-    _tracer_name_matches_glob,
+    _scope_name_matches_glob,
     _TracerConfig,
     sampling,
 )
@@ -73,7 +73,7 @@ def test_simple_start_span_with_tracer_configurator_rules(
         return _RuleBasedTracerConfigurator(
             rules=[
                 (
-                    _tracer_name_matches_glob(glob_pattern=str(i)),
+                    _scope_name_matches_glob(glob_pattern=str(i)),
                     _TracerConfig(is_enabled=True),
                 )
                 for i in range(num_tracer_configurator_rules)
