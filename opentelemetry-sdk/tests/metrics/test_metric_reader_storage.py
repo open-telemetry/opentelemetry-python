@@ -299,7 +299,9 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             Measurement(1, time_ns(), counter, Context())
         )
 
-        view_instrument_match = storage._instrument_view_instrument_matches[counter][0]
+        view_instrument_match = storage._instrument_view_instrument_matches[
+            counter
+        ][0]
         original_collect = view_instrument_match.collect
 
         new_counter = _Counter("new_counter", Mock(), Mock())
