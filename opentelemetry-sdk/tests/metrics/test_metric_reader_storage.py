@@ -14,7 +14,6 @@
 
 # pylint: disable=protected-access,invalid-name
 
-import threading
 from logging import WARNING
 from time import time_ns
 from unittest.mock import MagicMock, Mock, patch
