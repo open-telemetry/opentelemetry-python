@@ -1127,6 +1127,9 @@ class Tracer(trace_api.Tracer):
         self._instrumentation_scope = instrumentation_scope
         self._tracer_provider = _tracer_provider
 
+        meter_provider = meter_provider or metrics_api.get_meter_provider()
+        self._tracer_metrics = TracerMetrics(meter_provider)
+
     def _is_enabled(self) -> bool:
         """If the tracer is not enabled, start_span will create a NonRecordingSpan"""
 
@@ -1136,9 +1139,6 @@ class Tracer(trace_api.Tracer):
             self._instrumentation_scope
         )
         return tracer_config.is_enabled
-
-        meter_provider = meter_provider or metrics_api.get_meter_provider()
-        self._tracer_metrics = TracerMetrics(meter_provider)
 
     @_agnosticcontextmanager  # pylint: disable=protected-access
     def start_as_current_span(
