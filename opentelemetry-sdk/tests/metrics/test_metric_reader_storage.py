@@ -278,6 +278,44 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         # _ViewInstrumentMatch constructor should have only been called once
         self.assertEqual(mock_view_instrument_match_ctor.call_count, 1)
 
+    def test_race_collect_with_new_instruments(self):
+        storage = MetricReaderStorage(
+            SdkConfiguration(
+                exemplar_filter=Mock(),
+                resource=Mock(),
+                metric_readers=(),
+                views=(View(instrument_name="test"),),
+            ),
+            MagicMock(
+                **{
+                    "__getitem__.return_value": AggregationTemporality.CUMULATIVE
+                }
+            ),
+            MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
+        )
+
+        counter = _Counter("counter", Mock(), Mock())
+        storage.consume_measurement(
+            Measurement(1, time_ns(), counter, Context())
+        )
+
+        view_instrument_match = storage._instrument_view_instrument_matches[
+            counter
+        ][0]
+        original_collect = view_instrument_match.collect
+
+        new_counter = _Counter("new_counter", Mock(), Mock())
+
+        # Patch collect() to add a new counter during iteration
+        def collect_with_modification(*args, **kwargs):
+            storage._instrument_view_instrument_matches[new_counter] = []
+            return original_collect(*args, **kwargs)
+
+        view_instrument_match.collect = collect_with_modification
+        storage.collect()
+
+        self.assertIn(new_counter, storage._instrument_view_instrument_matches)
+
     @patch(
         "opentelemetry.sdk.metrics._internal."
         "metric_reader_storage._ViewInstrumentMatch"
