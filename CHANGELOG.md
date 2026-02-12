@@ -38,6 +38,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4862](https://github.com/open-telemetry/opentelemetry-python/pull/4862))
 - `opentelemetry-exporter-otlp-proto-http`: fix retry logic and error handling for connection failures in trace, metric, and log exporters
   ([#4709](https://github.com/open-telemetry/opentelemetry-python/pull/4709))
+- feat: Add AlwaysRecordSampler
+  ([#4823](https://github.com/open-telemetry/opentelemetry-python/pull/4823))
 
 ## Version 1.39.0/0.60b0 (2025-12-03)
 
