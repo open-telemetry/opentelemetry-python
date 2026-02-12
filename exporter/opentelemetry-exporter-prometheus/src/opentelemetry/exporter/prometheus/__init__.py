@@ -131,7 +131,7 @@ def _convert_buckets(
 class PrometheusMetricReader(MetricReader):
     """Prometheus metric exporter for OpenTelemetry."""
 
-    def __init__(self, prefix: str = "", disable_target_info: bool = False) -> None:
+    def __init__(self, disable_target_info: bool = False, prefix: str = "") -> None:
         super().__init__(
             preferred_temporality={
                 Counter: AggregationTemporality.CUMULATIVE,
