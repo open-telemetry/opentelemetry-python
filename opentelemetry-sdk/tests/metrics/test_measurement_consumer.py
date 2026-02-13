@@ -34,7 +34,8 @@ from opentelemetry.sdk.metrics._internal.sdk_configuration import (
 class TestSynchronousMeasurementConsumer(TestCase):
     def test_parent(self, _):
         self.assertIsInstance(
-            SynchronousMeasurementConsumer(MagicMock()), MeasurementConsumer
+            SynchronousMeasurementConsumer(MagicMock(), metric_readers=()),
+            MeasurementConsumer,
         )
 
     def test_creates_metric_reader_storages(self, MockMetricReaderStorage):
@@ -44,9 +45,9 @@ class TestSynchronousMeasurementConsumer(TestCase):
             SdkConfiguration(
                 exemplar_filter=Mock(),
                 resource=Mock(),
-                metric_readers=reader_mocks,
                 views=Mock(),
-            )
+            ),
+            metric_readers=reader_mocks,
         )
         self.assertEqual(len(MockMetricReaderStorage.mock_calls), 5)
 
@@ -61,9 +62,9 @@ class TestSynchronousMeasurementConsumer(TestCase):
             SdkConfiguration(
                 exemplar_filter=Mock(should_sample=Mock(return_value=False)),
                 resource=Mock(),
-                metric_readers=reader_mocks,
                 views=Mock(),
-            )
+            ),
+            metric_readers=reader_mocks,
         )
         measurement_mock = Mock()
         consumer.consume_measurement(measurement_mock)
@@ -83,9 +84,9 @@ class TestSynchronousMeasurementConsumer(TestCase):
             SdkConfiguration(
                 exemplar_filter=Mock(),
                 resource=Mock(),
-                metric_readers=reader_mocks,
                 views=Mock(),
-            )
+            ),
+            metric_readers=reader_mocks,
         )
         for r_mock, rs_mock in zip(reader_mocks, reader_storage_mocks):
             rs_mock.collect.assert_not_called()
@@ -102,9 +103,9 @@ class TestSynchronousMeasurementConsumer(TestCase):
             SdkConfiguration(
                 exemplar_filter=Mock(should_sample=Mock(return_value=False)),
                 resource=Mock(),
-                metric_readers=[reader_mock],
                 views=Mock(),
-            )
+            ),
+            metric_readers=[reader_mock],
         )
         async_instrument_mocks = [MagicMock() for _ in range(5)]
         for i_mock in async_instrument_mocks:
@@ -133,9 +134,9 @@ class TestSynchronousMeasurementConsumer(TestCase):
             SdkConfiguration(
                 exemplar_filter=Mock(),
                 resource=Mock(),
-                metric_readers=[reader_mock],
                 views=Mock(),
-            )
+            ),
+            metric_readers=[reader_mock],
         )
 
         def sleep_1(*args, **kwargs):
@@ -166,9 +167,9 @@ class TestSynchronousMeasurementConsumer(TestCase):
             SdkConfiguration(
                 exemplar_filter=Mock(),
                 resource=Mock(),
-                metric_readers=[reader_mock],
                 views=Mock(),
-            )
+            ),
+            metric_readers=[reader_mock],
         )
 
         def sleep_1(*args, **kwargs):
