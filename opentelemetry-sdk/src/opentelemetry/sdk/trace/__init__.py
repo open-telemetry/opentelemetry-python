@@ -102,6 +102,8 @@ class SpanProcessor:
     in the same order as they were registered.
     """
 
+    # pylint: disable=unnecessary-ellipsis,no-self-use
+
     def on_start(
         self,
         span: "Span",
@@ -127,6 +129,7 @@ class SpanProcessor:
         Args:
             span: The :class:`opentelemetry.trace.Span` that is ending.
         """
+        ...
 
     def on_end(self, span: "ReadableSpan") -> None:
         """Called when a :class:`opentelemetry.trace.Span` is ended.
@@ -254,7 +257,7 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
             # needs to be re-instantiated to get a fresh pool of threads:
             weak_reinit = weakref.WeakMethod(self._init_executor)
             os.register_at_fork(
-                after_in_child=lambda: weak_reinit()(num_threads)
+                after_in_child=lambda: weak_reinit()(num_threads)  # pyright: ignore[reportOptionalCall]
             )
 
     def _init_executor(self, num_threads: int) -> None:
