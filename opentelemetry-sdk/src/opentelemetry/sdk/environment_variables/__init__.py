@@ -869,3 +869,15 @@ Default: 9464
 This is an experimental environment variable and the name of this variable and its behavior can
 change in a non-backwards compatible way.
 """
+
+OTEL_PYTHON_TRACER_CONFIGURATOR = "OTEL_PYTHON_TRACER_CONFIGURATOR"
+"""
+.. envvar:: OTEL_PYTHON_TRACER_CONFIGURATOR
+
+The :envvar:`OTEL_PYTHON_TRACER_CONFIGURATOR` environment variable allows users to set a
+custom Tracer Configurator function.
+Default: opentelemetry.sdk.trace._default_tracer_configurator
+
+This is an experimental environment variable and the name of this variable and its behavior can
+change in a non-backwards compatible way.
+"""
