@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `opentelemetry-exporter-otlp-proto-grpc`: Fix re-initialization of gRPC channel on UNAVAILABLE error
+  ([#4825](https://github.com/open-telemetry/opentelemetry-python/pull/4825))
 - `opentelemetry-exporter-prometheus`: Fix duplicate HELP/TYPE declarations for metrics with different label sets
   ([#4868](https://github.com/open-telemetry/opentelemetry-python/issues/4868))
 - Allow loading all resource detectors by setting `OTEL_EXPERIMENTAL_RESOURCE_DETECTORS` to `*`
@@ -24,14 +26,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4798](https://github.com/open-telemetry/opentelemetry-python/pull/4798))
 - Silence events API warnings for internal users
   ([#4847](https://github.com/open-telemetry/opentelemetry-python/pull/4847))
+- opentelemetry-sdk: make it possible to override the default processors in the SDK configurator
+  ([#4806](https://github.com/open-telemetry/opentelemetry-python/pull/4806))
 - Prevent possible endless recursion from happening in `SimpleLogRecordProcessor.on_emit`,
   ([#4799](https://github.com/open-telemetry/opentelemetry-python/pull/4799)) and ([#4867](https://github.com/open-telemetry/opentelemetry-python/pull/4867)).
+- Add environment variable carriers to API
+  ([#4609](https://github.com/open-telemetry/opentelemetry-python/pull/4609))
+- Add experimental composable rule based sampler
+  ([#4882](https://github.com/open-telemetry/opentelemetry-python/pull/4882))
 - Make ConcurrentMultiSpanProcessor fork safe
   ([#4862](https://github.com/open-telemetry/opentelemetry-python/pull/4862))
 - `opentelemetry-exporter-otlp-proto-http`: fix retry logic and error handling for connection failures in trace, metric, and log exporters
   ([#4709](https://github.com/open-telemetry/opentelemetry-python/pull/4709))
 - `opentelemetry-api`, `opentelemetry-sdk`: add support for 'random-trace-id' flags in W3C traceparent header trace flags 
   ([#4837](https://github.com/open-telemetry/opentelemetry-python/pull/4854)
+- Implement experimental TracerConfigurator
+  ([#4861](https://github.com/open-telemetry/opentelemetry-python/pull/4861))
 
 ## Version 1.39.0/0.60b0 (2025-12-03)
 
