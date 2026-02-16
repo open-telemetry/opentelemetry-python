@@ -91,14 +91,18 @@ class Meter(APIMeter):
 
     def create_counter(self, name, unit="", description="") -> APICounter:
         with self._instrument_id_instrument_lock:
-            status = self._register_instrument(name, _Counter, unit, description)
+            status = self._register_instrument(
+                name, _Counter, unit, description
+            )
             if not status.already_registered:
-                self._instrument_id_instrument[status.instrument_id] = _Counter(
-                    name,
-                    self._instrumentation_scope,
-                    self._measurement_consumer,
-                    unit,
-                    description,
+                self._instrument_id_instrument[status.instrument_id] = (
+                    _Counter(
+                        name,
+                        self._instrumentation_scope,
+                        self._measurement_consumer,
+                        unit,
+                        description,
+                    )
                 )
             instrument = self._instrument_id_instrument[status.instrument_id]
 
@@ -118,9 +122,21 @@ class Meter(APIMeter):
     def create_up_down_counter(
         self, name, unit="", description=""
     ) -> APIUpDownCounter:
-        status = self._register_instrument(
-            name, _UpDownCounter, unit, description
-        )
+        with self._instrument_id_instrument_lock:
+            status = self._register_instrument(
+                name, _UpDownCounter, unit, description
+            )
+            if not status.already_registered:
+                self._instrument_id_instrument[status.instrument_id] = (
+                    _UpDownCounter(
+                        name,
+                        self._instrumentation_scope,
+                        self._measurement_consumer,
+                        unit,
+                        description,
+                    )
+                )
+            instrument = self._instrument_id_instrument[status.instrument_id]
 
         if status.conflict:
             # FIXME #2558 go through all views here and check if this
@@ -133,21 +149,7 @@ class Meter(APIMeter):
                 description,
                 status,
             )
-        if status.already_registered:
-            with self._instrument_id_instrument_lock:
-                return self._instrument_id_instrument[status.instrument_id]
-
-        instrument = _UpDownCounter(
-            name,
-            self._instrumentation_scope,
-            self._measurement_consumer,
-            unit,
-            description,
-        )
-
-        with self._instrument_id_instrument_lock:
-            self._instrument_id_instrument[status.instrument_id] = instrument
-            return instrument
+        return instrument
 
     def create_observable_counter(
         self,
@@ -156,9 +158,28 @@ class Meter(APIMeter):
         unit="",
         description="",
     ) -> APIObservableCounter:
-        status = self._register_instrument(
-            name, _ObservableCounter, unit, description
-        )
+        with self._instrument_id_instrument_lock:
+            status = self._register_instrument(
+                name, _ObservableCounter, unit, description
+            )
+            if not status.already_registered:
+                instrument = _ObservableCounter(
+                    name,
+                    self._instrumentation_scope,
+                    self._measurement_consumer,
+                    callbacks,
+                    unit,
+                    description,
+                )
+                self._instrument_id_instrument[status.instrument_id] = (
+                    instrument
+                )
+            instrument = self._instrument_id_instrument[status.instrument_id]
+
+        if not status.already_registered:
+            self._measurement_consumer.register_asynchronous_instrument(
+                instrument
+            )
 
         if status.conflict:
             # FIXME #2558 go through all views here and check if this
@@ -171,24 +192,7 @@ class Meter(APIMeter):
                 description,
                 status,
             )
-        if status.already_registered:
-            with self._instrument_id_instrument_lock:
-                return self._instrument_id_instrument[status.instrument_id]
-
-        instrument = _ObservableCounter(
-            name,
-            self._instrumentation_scope,
-            self._measurement_consumer,
-            callbacks,
-            unit,
-            description,
-        )
-
-        self._measurement_consumer.register_asynchronous_instrument(instrument)
-
-        with self._instrument_id_instrument_lock:
-            self._instrument_id_instrument[status.instrument_id] = instrument
-            return instrument
+        return instrument
 
     def create_histogram(
         self,
@@ -219,13 +223,26 @@ class Meter(APIMeter):
                     "explicit_bucket_boundaries_advisory must be a sequence of numbers"
                 )
 
-        status = self._register_instrument(
-            name,
-            _Histogram,
-            unit,
-            description,
-            explicit_bucket_boundaries_advisory,
-        )
+        with self._instrument_id_instrument_lock:
+            status = self._register_instrument(
+                name,
+                _Histogram,
+                unit,
+                description,
+                explicit_bucket_boundaries_advisory,
+            )
+            if not status.already_registered:
+                self._instrument_id_instrument[status.instrument_id] = (
+                    _Histogram(
+                        name,
+                        self._instrumentation_scope,
+                        self._measurement_consumer,
+                        unit,
+                        description,
+                        explicit_bucket_boundaries_advisory,
+                    )
+                )
+            instrument = self._instrument_id_instrument[status.instrument_id]
 
         if status.conflict:
             # FIXME #2558 go through all views here and check if this
@@ -238,24 +255,20 @@ class Meter(APIMeter):
                 description,
                 status,
             )
-        if status.already_registered:
-            with self._instrument_id_instrument_lock:
-                return self._instrument_id_instrument[status.instrument_id]
-
-        instrument = _Histogram(
-            name,
-            self._instrumentation_scope,
-            self._measurement_consumer,
-            unit,
-            description,
-            explicit_bucket_boundaries_advisory,
-        )
-        with self._instrument_id_instrument_lock:
-            self._instrument_id_instrument[status.instrument_id] = instrument
-            return instrument
+        return instrument
 
     def create_gauge(self, name, unit="", description="") -> APIGauge:
-        status = self._register_instrument(name, _Gauge, unit, description)
+        with self._instrument_id_instrument_lock:
+            status = self._register_instrument(name, _Gauge, unit, description)
+            if not status.already_registered:
+                self._instrument_id_instrument[status.instrument_id] = _Gauge(
+                    name,
+                    self._instrumentation_scope,
+                    self._measurement_consumer,
+                    unit,
+                    description,
+                )
+            instrument = self._instrument_id_instrument[status.instrument_id]
 
         if status.conflict:
             # FIXME #2558 go through all views here and check if this
@@ -268,28 +281,31 @@ class Meter(APIMeter):
                 description,
                 status,
             )
-        if status.already_registered:
-            with self._instrument_id_instrument_lock:
-                return self._instrument_id_instrument[status.instrument_id]
-
-        instrument = _Gauge(
-            name,
-            self._instrumentation_scope,
-            self._measurement_consumer,
-            unit,
-            description,
-        )
-
-        with self._instrument_id_instrument_lock:
-            self._instrument_id_instrument[status.instrument_id] = instrument
-            return instrument
+        return instrument
 
     def create_observable_gauge(
         self, name, callbacks=None, unit="", description=""
     ) -> APIObservableGauge:
-        status = self._register_instrument(
-            name, _ObservableGauge, unit, description
-        )
+        with self._instrument_id_instrument_lock:
+            status = self._register_instrument(
+                name, _ObservableGauge, unit, description
+            )
+            if not status.already_registered:
+                instrument = _ObservableGauge(
+                    name,
+                    self._instrumentation_scope,
+                    self._measurement_consumer,
+                    callbacks,
+                    unit,
+                    description,
+                )
+                self._measurement_consumer.register_asynchronous_instrument(
+                    instrument
+                )
+                self._instrument_id_instrument[status.instrument_id] = (
+                    instrument
+                )
+            instrument = self._instrument_id_instrument[status.instrument_id]
 
         if status.conflict:
             # FIXME #2558 go through all views here and check if this
@@ -302,31 +318,31 @@ class Meter(APIMeter):
                 description,
                 status,
             )
-        if status.already_registered:
-            with self._instrument_id_instrument_lock:
-                return self._instrument_id_instrument[status.instrument_id]
-
-        instrument = _ObservableGauge(
-            name,
-            self._instrumentation_scope,
-            self._measurement_consumer,
-            callbacks,
-            unit,
-            description,
-        )
-
-        self._measurement_consumer.register_asynchronous_instrument(instrument)
-
-        with self._instrument_id_instrument_lock:
-            self._instrument_id_instrument[status.instrument_id] = instrument
-            return instrument
+        return instrument
 
     def create_observable_up_down_counter(
         self, name, callbacks=None, unit="", description=""
     ) -> APIObservableUpDownCounter:
-        status = self._register_instrument(
-            name, _ObservableUpDownCounter, unit, description
-        )
+        with self._instrument_id_instrument_lock:
+            status = self._register_instrument(
+                name, _ObservableUpDownCounter, unit, description
+            )
+            if not status.already_registered:
+                instrument = _ObservableUpDownCounter(
+                    name,
+                    self._instrumentation_scope,
+                    self._measurement_consumer,
+                    callbacks,
+                    unit,
+                    description,
+                )
+                self._measurement_consumer.register_asynchronous_instrument(
+                    instrument
+                )
+                self._instrument_id_instrument[status.instrument_id] = (
+                    instrument
+                )
+            instrument = self._instrument_id_instrument[status.instrument_id]
 
         if status.conflict:
             # FIXME #2558 go through all views here and check if this
@@ -339,24 +355,7 @@ class Meter(APIMeter):
                 description,
                 status,
             )
-        if status.already_registered:
-            with self._instrument_id_instrument_lock:
-                return self._instrument_id_instrument[status.instrument_id]
-
-        instrument = _ObservableUpDownCounter(
-            name,
-            self._instrumentation_scope,
-            self._measurement_consumer,
-            callbacks,
-            unit,
-            description,
-        )
-
-        self._measurement_consumer.register_asynchronous_instrument(instrument)
-
-        with self._instrument_id_instrument_lock:
-            self._instrument_id_instrument[status.instrument_id] = instrument
-            return instrument
+        return instrument
 
 
 def _get_exemplar_filter(exemplar_filter: str) -> ExemplarFilter:
