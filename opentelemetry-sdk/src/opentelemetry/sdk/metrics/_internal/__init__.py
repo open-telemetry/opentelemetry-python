@@ -163,13 +163,15 @@ class Meter(APIMeter):
                 name, _ObservableCounter, unit, description
             )
             if not status.already_registered:
-                self._instrument_id_instrument[status.instrument_id] = _ObservableCounter(
-                    name,
-                    self._instrumentation_scope,
-                    self._measurement_consumer,
-                    callbacks,
-                    unit,
-                    description,
+                self._instrument_id_instrument[status.instrument_id] = (
+                    _ObservableCounter(
+                        name,
+                        self._instrumentation_scope,
+                        self._measurement_consumer,
+                        callbacks,
+                        unit,
+                        description,
+                    )
                 )
             instrument = self._instrument_id_instrument[status.instrument_id]
 
@@ -288,13 +290,15 @@ class Meter(APIMeter):
                 name, _ObservableGauge, unit, description
             )
             if not status.already_registered:
-                self._instrument_id_instrument[status.instrument_id] = _ObservableGauge(
-                    name,
-                    self._instrumentation_scope,
-                    self._measurement_consumer,
-                    callbacks,
-                    unit,
-                    description,
+                self._instrument_id_instrument[status.instrument_id] = (
+                    _ObservableGauge(
+                        name,
+                        self._instrumentation_scope,
+                        self._measurement_consumer,
+                        callbacks,
+                        unit,
+                        description,
+                    )
                 )
             instrument = self._instrument_id_instrument[status.instrument_id]
 
@@ -324,13 +328,15 @@ class Meter(APIMeter):
                 name, _ObservableUpDownCounter, unit, description
             )
             if not status.already_registered:
-                self._instrument_id_instrument[status.instrument_id] = _ObservableUpDownCounter(
-                    name,
-                    self._instrumentation_scope,
-                    self._measurement_consumer,
-                    callbacks,
-                    unit,
-                    description,
+                self._instrument_id_instrument[status.instrument_id] = (
+                    _ObservableUpDownCounter(
+                        name,
+                        self._instrumentation_scope,
+                        self._measurement_consumer,
+                        callbacks,
+                        unit,
+                        description,
+                    )
                 )
             instrument = self._instrument_id_instrument[status.instrument_id]
 
