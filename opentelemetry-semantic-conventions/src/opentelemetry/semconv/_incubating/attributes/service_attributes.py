@@ -56,6 +56,16 @@ A namespace for `service.name`.
 Note: A string value having a meaning that helps to distinguish a group of services, for example the team name that owns a group of services. `service.name` is expected to be unique within the same namespace. If `service.namespace` is not specified in the Resource then `service.name` is expected to be unique for all services that have no explicit namespace defined (so the empty/unspecified namespace is simply one more valid namespace). Zero-length namespace string is assumed equal to unspecified namespace.
 """
 
+SERVICE_PEER_NAME: Final = "service.peer.name"
+"""
+Logical name of the service on the other side of the connection. SHOULD be equal to the actual [`service.name`](/docs/resource/README.md#service) resource attribute of the remote service if any.
+"""
+
+SERVICE_PEER_NAMESPACE: Final = "service.peer.namespace"
+"""
+Logical namespace of the service on the other side of the connection. SHOULD be equal to the actual [`service.namespace`](/docs/resource/README.md#service) resource attribute of the remote service if any.
+"""
+
 SERVICE_VERSION: Final = "service.version"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.service_attributes.SERVICE_VERSION`.
