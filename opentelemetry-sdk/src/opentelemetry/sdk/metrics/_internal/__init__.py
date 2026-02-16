@@ -90,7 +90,17 @@ class Meter(APIMeter):
         self._instrument_id_instrument_lock = Lock()
 
     def create_counter(self, name, unit="", description="") -> APICounter:
-        status = self._register_instrument(name, _Counter, unit, description)
+        with self._instrument_id_instrument_lock:
+            status = self._register_instrument(name, _Counter, unit, description)
+            if not status.already_registered:
+                self._instrument_id_instrument[status.instrument_id] = _Counter(
+                    name,
+                    self._instrumentation_scope,
+                    self._measurement_consumer,
+                    unit,
+                    description,
+                )
+            instrument = self._instrument_id_instrument[status.instrument_id]
 
         if status.conflict:
             # FIXME #2558 go through all views here and check if this
@@ -103,21 +113,7 @@ class Meter(APIMeter):
                 description,
                 status,
             )
-        if status.already_registered:
-            with self._instrument_id_instrument_lock:
-                return self._instrument_id_instrument[status.instrument_id]
-
-        instrument = _Counter(
-            name,
-            self._instrumentation_scope,
-            self._measurement_consumer,
-            unit,
-            description,
-        )
-
-        with self._instrument_id_instrument_lock:
-            self._instrument_id_instrument[status.instrument_id] = instrument
-            return instrument
+        return instrument
 
     def create_up_down_counter(
         self, name, unit="", description=""
