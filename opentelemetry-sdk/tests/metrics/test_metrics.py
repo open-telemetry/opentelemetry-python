@@ -15,9 +15,11 @@
 # pylint: disable=protected-access,no-self-use
 
 import weakref
+from collections.abc import Callable
 from logging import WARNING
+from threading import Lock
 from time import sleep
-from typing import Iterable, Sequence
+from typing import Any, Iterable, Sequence
 from unittest.mock import MagicMock, Mock, patch
 
 from opentelemetry.attributes import BoundedAttributes
@@ -425,6 +427,61 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         gauge.set(1)
 
         sync_consumer_instance.consume_measurement.assert_called()
+
+
+class TestMeterConcurrency(ConcurrencyTestBase, TestCase):
+    def test_create_instrument_concurrency(self):
+        """
+        Tests that concurrent creation of the same instrument does not
+        result in a KeyError or inconsistent state for all instrument types.
+        """
+
+        meter = Meter(Mock(), Mock())
+        original_register = meter._register_instrument
+        lock = Lock()
+        registered_names = set()
+
+        def mocked_register(name: str, *args, **kwargs):
+            status = original_register(name, *args, **kwargs)
+            with lock:
+                first: bool = name not in registered_names
+                registered_names.add(name)
+
+            if first:
+                # Test interleaving of threads by sleeping after the first thread registers
+                # the instrument, but before the instrument is created.
+                sleep(0.25)
+            return status
+
+        def make_create_instrument(
+            meter: Meter, method_name: str, args: list[Any]
+        ) -> Callable[[], Any]:
+            return lambda: getattr(meter, method_name)(
+                f"concurrent_{method_name}", *args
+            )
+
+        with patch.object(
+            meter, "_register_instrument", side_effect=mocked_register
+        ):
+            create_methods = [
+                ("create_counter", []),
+                ("create_up_down_counter", []),
+                ("create_histogram", []),
+                ("create_gauge", []),
+                ("create_observable_counter", [[lambda options: []]]),
+                ("create_observable_gauge", [[lambda options: []]]),
+                ("create_observable_up_down_counter", [[lambda options: []]]),
+            ]
+
+            for method_name, args in create_methods:
+                with self.subTest(method=method_name):
+                    instruments = self.run_with_many_threads(
+                        make_create_instrument(meter, method_name, args),
+                        num_threads=20,
+                    )
+
+                    for instr in instruments:
+                        self.assertIs(instr, instruments[0])
 
 
 class TestMeter(TestCase):

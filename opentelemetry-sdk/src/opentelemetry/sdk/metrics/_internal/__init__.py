@@ -163,16 +163,13 @@ class Meter(APIMeter):
                 name, _ObservableCounter, unit, description
             )
             if not status.already_registered:
-                instrument = _ObservableCounter(
+                self._instrument_id_instrument[status.instrument_id] = _ObservableCounter(
                     name,
                     self._instrumentation_scope,
                     self._measurement_consumer,
                     callbacks,
                     unit,
                     description,
-                )
-                self._instrument_id_instrument[status.instrument_id] = (
-                    instrument
                 )
             instrument = self._instrument_id_instrument[status.instrument_id]
 
@@ -291,7 +288,7 @@ class Meter(APIMeter):
                 name, _ObservableGauge, unit, description
             )
             if not status.already_registered:
-                instrument = _ObservableGauge(
+                self._instrument_id_instrument[status.instrument_id] = _ObservableGauge(
                     name,
                     self._instrumentation_scope,
                     self._measurement_consumer,
@@ -299,13 +296,12 @@ class Meter(APIMeter):
                     unit,
                     description,
                 )
-                self._measurement_consumer.register_asynchronous_instrument(
-                    instrument
-                )
-                self._instrument_id_instrument[status.instrument_id] = (
-                    instrument
-                )
             instrument = self._instrument_id_instrument[status.instrument_id]
+
+        if not status.already_registered:
+            self._measurement_consumer.register_asynchronous_instrument(
+                instrument
+            )
 
         if status.conflict:
             # FIXME #2558 go through all views here and check if this
@@ -328,7 +324,7 @@ class Meter(APIMeter):
                 name, _ObservableUpDownCounter, unit, description
             )
             if not status.already_registered:
-                instrument = _ObservableUpDownCounter(
+                self._instrument_id_instrument[status.instrument_id] = _ObservableUpDownCounter(
                     name,
                     self._instrumentation_scope,
                     self._measurement_consumer,
@@ -336,13 +332,12 @@ class Meter(APIMeter):
                     unit,
                     description,
                 )
-                self._measurement_consumer.register_asynchronous_instrument(
-                    instrument
-                )
-                self._instrument_id_instrument[status.instrument_id] = (
-                    instrument
-                )
             instrument = self._instrument_id_instrument[status.instrument_id]
+
+        if not status.already_registered:
+            self._measurement_consumer.register_asynchronous_instrument(
+                instrument
+            )
 
         if status.conflict:
             # FIXME #2558 go through all views here and check if this
