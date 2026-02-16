@@ -38,8 +38,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4862](https://github.com/open-telemetry/opentelemetry-python/pull/4862))
 - `opentelemetry-exporter-otlp-proto-http`: fix retry logic and error handling for connection failures in trace, metric, and log exporters
   ([#4709](https://github.com/open-telemetry/opentelemetry-python/pull/4709))
-- `opentelemetry-api`, `opentelemetry-sdk`: add support for 'random-trace-id' flags in W3C traceparent header trace flags. Implementations of `IdGenerator` that do randomly generate the 56 least significant bits, should also implement a `is_trace_id_random` methods that returns `True`.
-  ([#4837](https://github.com/open-telemetry/opentelemetry-python/pull/4854)
+- `opentelemetry-api`, `opentelemetry-sdk`: add support for 'random-trace-id' flags in W3C traceparent header trace flags. Implementations of `IdGenerator` that do randomly generate the 56 least significant bits, should also implement a `is_trace_id_random` methods that returns `True`. 
+  ([#4854](https://github.com/open-telemetry/opentelemetry-python/pull/4854))
 - Implement experimental TracerConfigurator
   ([#4861](https://github.com/open-telemetry/opentelemetry-python/pull/4861))
 
