@@ -17,6 +17,7 @@ from unittest import TestCase
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     Buckets,
+    DataPointFlags,
     ExponentialHistogram,
     ExponentialHistogramDataPoint,
     Gauge,
@@ -66,15 +67,16 @@ class TestToJson(TestCase):
             time_unix_nano=2,
             value=3.3,
         )
-        cls.number_data_point_0_str = f'{{"attributes": {cls.attributes_0_str}, "start_time_unix_nano": 1, "time_unix_nano": 2, "value": 3.3, "exemplars": []}}'
+        cls.number_data_point_0_str = f'{{"attributes": {cls.attributes_0_str}, "start_time_unix_nano": 1, "time_unix_nano": 2, "value": 3.3, "exemplars": [], "flags": {DataPointFlags.get_default()}}}'
 
         cls.number_data_point_1 = NumberDataPoint(
             attributes=cls.attributes_1,
             start_time_unix_nano=2,
             time_unix_nano=3,
             value=4.4,
+            flags=DataPointFlags(DataPointFlags.NO_RECORDED_VALUE),
         )
-        cls.number_data_point_1_str = f'{{"attributes": {cls.attributes_1_str}, "start_time_unix_nano": 2, "time_unix_nano": 3, "value": 4.4, "exemplars": []}}'
+        cls.number_data_point_1_str = f'{{"attributes": {cls.attributes_1_str}, "start_time_unix_nano": 2, "time_unix_nano": 3, "value": 4.4, "exemplars": [], "flags": {DataPointFlags.NO_RECORDED_VALUE}}}'
 
         cls.histogram_data_point_0 = HistogramDataPoint(
             attributes=cls.attributes_0,
@@ -87,7 +89,7 @@ class TestToJson(TestCase):
             min=0.2,
             max=3.3,
         )
-        cls.histogram_data_point_0_str = f'{{"attributes": {cls.attributes_0_str}, "start_time_unix_nano": 1, "time_unix_nano": 2, "count": 3, "sum": 3.3, "bucket_counts": [1, 1, 1], "explicit_bounds": [0.1, 1.2, 2.3, 3.4], "min": 0.2, "max": 3.3, "exemplars": []}}'
+        cls.histogram_data_point_0_str = f'{{"attributes": {cls.attributes_0_str}, "start_time_unix_nano": 1, "time_unix_nano": 2, "count": 3, "sum": 3.3, "bucket_counts": [1, 1, 1], "explicit_bounds": [0.1, 1.2, 2.3, 3.4], "min": 0.2, "max": 3.3, "exemplars": [], "flags": {DataPointFlags.get_default()}}}'
 
         cls.histogram_data_point_1 = HistogramDataPoint(
             attributes=cls.attributes_1,
@@ -99,8 +101,9 @@ class TestToJson(TestCase):
             explicit_bounds=[1.2, 2.3, 3.4, 4.5],
             min=0.3,
             max=4.4,
+            flags=DataPointFlags(DataPointFlags.NO_RECORDED_VALUE),
         )
-        cls.histogram_data_point_1_str = f'{{"attributes": {cls.attributes_1_str}, "start_time_unix_nano": 2, "time_unix_nano": 3, "count": 4, "sum": 4.4, "bucket_counts": [2, 1, 1], "explicit_bounds": [1.2, 2.3, 3.4, 4.5], "min": 0.3, "max": 4.4, "exemplars": []}}'
+        cls.histogram_data_point_1_str = f'{{"attributes": {cls.attributes_1_str}, "start_time_unix_nano": 2, "time_unix_nano": 3, "count": 4, "sum": 4.4, "bucket_counts": [2, 1, 1], "explicit_bounds": [1.2, 2.3, 3.4, 4.5], "min": 0.3, "max": 4.4, "exemplars": [], "flags": {DataPointFlags.NO_RECORDED_VALUE}}}'
 
         cls.exp_histogram_data_point_0 = ExponentialHistogramDataPoint(
             attributes=cls.attributes_0,
@@ -112,11 +115,27 @@ class TestToJson(TestCase):
             zero_count=0,
             positive=Buckets(offset=0, bucket_counts=[1]),
             negative=Buckets(offset=0, bucket_counts=[0]),
-            flags=0,
             min=10,
             max=10,
+            flags=DataPointFlags.get_default(),
         )
-        cls.exp_histogram_data_point_0_str = f'{{"attributes": {cls.attributes_0_str}, "start_time_unix_nano": 1, "time_unix_nano": 2, "count": 1, "sum": 10, "scale": 1, "zero_count": 0, "positive": {{"offset": 0, "bucket_counts": [1]}}, "negative": {{"offset": 0, "bucket_counts": [0]}}, "flags": 0, "min": 10, "max": 10, "exemplars": []}}'
+        cls.exp_histogram_data_point_0_str = f'{{"attributes": {cls.attributes_0_str}, "start_time_unix_nano": 1, "time_unix_nano": 2, "count": 1, "sum": 10, "scale": 1, "zero_count": 0, "positive": {{"offset": 0, "bucket_counts": [1]}}, "negative": {{"offset": 0, "bucket_counts": [0]}}, "min": 10, "max": 10, "exemplars": [], "flags": {DataPointFlags.get_default()}}}'
+
+        cls.exp_histogram_data_point_1 = ExponentialHistogramDataPoint(
+            attributes=cls.attributes_1,
+            start_time_unix_nano=2,
+            time_unix_nano=3,
+            count=2,
+            sum=20,
+            scale=2,
+            zero_count=1,
+            positive=Buckets(offset=0, bucket_counts=[1]),
+            negative=Buckets(offset=0, bucket_counts=[1]),
+            min=10,
+            max=20,
+            flags=DataPointFlags(DataPointFlags.NO_RECORDED_VALUE),
+        )
+        cls.exp_histogram_data_point_1_str = f'{{"attributes": {cls.attributes_1_str}, "start_time_unix_nano": 2, "time_unix_nano": 3, "count": 2, "sum": 20, "scale": 2, "zero_count": 1, "positive": {{"offset": 0, "bucket_counts": [1]}}, "negative": {{"offset": 0, "bucket_counts": [1]}}, "min": 10, "max": 20, "exemplars": [], "flags": {DataPointFlags.NO_RECORDED_VALUE}}}'
 
         cls.sum_0 = Sum(
             data_points=[cls.number_data_point_0, cls.number_data_point_1],
@@ -237,6 +256,10 @@ class TestToJson(TestCase):
         self.assertEqual(
             self.exp_histogram_data_point_0.to_json(indent=None),
             self.exp_histogram_data_point_0_str,
+        )
+        self.assertEqual(
+            self.exp_histogram_data_point_1.to_json(indent=None),
+            self.exp_histogram_data_point_1_str,
         )
 
     def test_sum(self):

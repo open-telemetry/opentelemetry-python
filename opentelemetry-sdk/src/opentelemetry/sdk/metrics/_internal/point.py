@@ -26,6 +26,39 @@ from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.util.types import Attributes
 
 
+class DataPointFlags(int):
+    """A bitmask that represents options specific to the data point.
+
+    The only supported option is the "no recorded value" flag (``0x01``). If
+    set, this flag reflects explicitly missing data in a series. It serves as
+    an indicator that a previously present timeseries was removed and that
+    this timeseries SHOULD NOT be returned in queries after such an indicator
+    was received. It is an equivalent of the Prometheus staleness marker.
+
+    If this flag is set, all other data point properties except attributes,
+    time stamps, or time windows, SHOULD be ignored.
+
+    See the `OpenTelemetry Data Point Flags`_ spec for details.
+
+    .. _OpenTelemetry Data Point Flags:
+        https://opentelemetry.io/docs/specs/otel/metrics/data-model/#data-point-flags
+    """
+
+    DEFAULT = 0x00
+    NO_RECORDED_VALUE = 0x01
+
+    @classmethod
+    def get_default(cls) -> "DataPointFlags":
+        return cls(cls.DEFAULT)
+
+    @property
+    def no_recorded_value(self) -> bool:
+        return bool(self & self.NO_RECORDED_VALUE)
+
+
+DEFAULT_DATA_POINT_FLAGS = DataPointFlags.get_default()
+
+
 @dataclass(frozen=True)
 class NumberDataPoint:
     """Single data point in a timeseries that describes the time-varying scalar
@@ -37,6 +70,7 @@ class NumberDataPoint:
     time_unix_nano: int
     value: Union[int, float]
     exemplars: Sequence[Exemplar] = field(default_factory=list)
+    flags: DataPointFlags = DEFAULT_DATA_POINT_FLAGS
 
     def to_json(self, indent: Optional[int] = 4) -> str:
         return dumps(asdict(self), indent=indent)
@@ -58,6 +92,7 @@ class HistogramDataPoint:
     min: float
     max: float
     exemplars: Sequence[Exemplar] = field(default_factory=list)
+    flags: DataPointFlags = DEFAULT_DATA_POINT_FLAGS
 
     def to_json(self, indent: Optional[int] = 4) -> str:
         return dumps(asdict(self), indent=indent)
@@ -85,10 +120,10 @@ class ExponentialHistogramDataPoint:
     zero_count: int
     positive: Buckets
     negative: Buckets
-    flags: int
     min: float
     max: float
     exemplars: Sequence[Exemplar] = field(default_factory=list)
+    flags: DataPointFlags = DEFAULT_DATA_POINT_FLAGS
 
     def to_json(self, indent: Optional[int] = 4) -> str:
         return dumps(asdict(self), indent=indent)

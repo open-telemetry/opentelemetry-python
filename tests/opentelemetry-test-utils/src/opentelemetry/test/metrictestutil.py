@@ -16,8 +16,10 @@
 from typing import Optional
 
 from opentelemetry.attributes import BoundedAttributes
+from opentelemetry.sdk.metrics._internal.point import DEFAULT_DATA_POINT_FLAGS
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
+    DataPointFlags,
     Gauge,
     Histogram,
     HistogramDataPoint,
@@ -50,6 +52,7 @@ def _generate_sum(
     description=None,
     unit=None,
     is_monotonic=True,
+    flags=DEFAULT_DATA_POINT_FLAGS,
 ) -> Metric:
     if attributes is None:
         attributes = BoundedAttributes(attributes={"a": 1, "b": True})
@@ -62,6 +65,7 @@ def _generate_sum(
                     start_time_unix_nano=1641946015139533244,
                     time_unix_nano=1641946016139533244,
                     value=value,
+                    flags=flags,
                 )
             ],
             aggregation_temporality=AggregationTemporality.CUMULATIVE,
@@ -73,7 +77,12 @@ def _generate_sum(
 
 
 def _generate_gauge(
-    name, value, attributes=None, description=None, unit=None
+    name,
+    value,
+    attributes=None,
+    description=None,
+    unit=None,
+    flags=DEFAULT_DATA_POINT_FLAGS,
 ) -> Metric:
     if attributes is None:
         attributes = BoundedAttributes(attributes={"a": 1, "b": True})
@@ -86,6 +95,7 @@ def _generate_gauge(
                     start_time_unix_nano=None,
                     time_unix_nano=1641946016139533244,
                     value=value,
+                    flags=flags,
                 )
             ],
         ),
@@ -110,6 +120,7 @@ def _generate_histogram(
     attributes: Attributes = None,
     description: Optional[str] = None,
     unit: Optional[str] = None,
+    flags: DataPointFlags = DEFAULT_DATA_POINT_FLAGS,
 ) -> Metric:
     if attributes is None:
         attributes = BoundedAttributes(attributes={"a": 1, "b": True})
@@ -127,6 +138,7 @@ def _generate_histogram(
                     explicit_bounds=[123.0, 456.0],
                     min=1,
                     max=457,
+                    flags=flags,
                 )
             ],
             aggregation_temporality=AggregationTemporality.CUMULATIVE,
