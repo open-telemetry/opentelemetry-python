@@ -46,7 +46,6 @@ from opentelemetry.sdk._logs.export import (
     LogRecordExporter,
 )
 from opentelemetry.sdk.environment_variables import (
-    _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
     OTEL_EXPORTER_OTLP_LOGS_PROTOCOL,
     OTEL_EXPORTER_OTLP_METRICS_PROTOCOL,
     OTEL_EXPORTER_OTLP_PROTOCOL,
@@ -520,15 +519,6 @@ def _initialize_components(
     _init_metrics(
         metric_exporters, resource, exporter_args_map=exporter_args_map
     )
-    if setup_logging_handler is None:
-        setup_logging_handler = (
-            os.getenv(
-                _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED, "false"
-            )
-            .strip()
-            .lower()
-            == "true"
-        )
     _init_logging(
         log_exporters,
         resource,
