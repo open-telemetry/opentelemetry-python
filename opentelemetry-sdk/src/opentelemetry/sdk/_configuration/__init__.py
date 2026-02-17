@@ -325,7 +325,7 @@ def _init_logging(
 
     if setup_logging_handler:
         _logger.warning(
-            "Handling of logging integrations as been moved to opentelemetry-instrumentation"
+            "Handling of logging integrations has been moved to opentelemetry-instrumentation"
         )
 
 
