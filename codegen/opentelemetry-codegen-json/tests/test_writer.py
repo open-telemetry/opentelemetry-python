@@ -148,11 +148,11 @@ def test_enum() -> None:
     writer = CodeWriter()
     with writer.enum("MyEnum", bases=["IntEnum"]):
         writer.enum_member("A", 1)
-        writer.auto_enum_member("B")
+        writer.enum_member("B", 2)
     expected = [
         "class MyEnum(enum.Enum, IntEnum):",
         "    A = 1",
-        "    B = enum.auto()",
+        "    B = 2",
     ]
     assert writer.to_lines() == expected
 
@@ -193,37 +193,22 @@ def test_function() -> None:
     assert writer.to_lines() == expected
 
 
-def test_write_function() -> None:
-    writer = CodeWriter()
-    writer.write_function("bar", "x", ["return x * 2"], decorators=["deco"])
-    expected = ["@deco", "def bar(x):", "    return x * 2"]
-    assert writer.to_lines() == expected
-
-
-def test_special_methods() -> None:
-    writer = CodeWriter()
-    writer.staticmethod_("s", "x", "pass")
-    writer.classmethod_("c", "cls", "pass")
-    assert "@builtins.staticmethod" in writer.to_string()
-    assert "@builtins.classmethod" in writer.to_string()
-
-
 def test_control_flow() -> None:
     writer = CodeWriter()
     with writer.if_("a > b"):
         writer.pass_()
     with writer.elif_("a == b"):
-        writer.break_()
+        writer.pass_()
     with writer.else_():
-        writer.continue_()
+        writer.pass_()
 
     expected = [
         "if a > b:",
         "    pass",
         "elif a == b:",
-        "    break",
+        "    pass",
         "else:",
-        "    continue",
+        "    pass",
     ]
     assert writer.to_lines() == expected
 
@@ -244,103 +229,12 @@ def test_loops() -> None:
     assert writer.to_lines() == expected
 
 
-def test_try_except_finally() -> None:
-    writer = CodeWriter()
-    with writer.try_():
-        writer.raise_("ValueError", "oops")
-    with writer.except_("ValueError", as_var="e"):
-        writer.writeln("print(e)")
-    with writer.finally_():
-        writer.pass_()
-
-    expected = [
-        "try:",
-        "    raise ValueError('oops')",
-        "except ValueError as e:",
-        "    print(e)",
-        "finally:",
-        "    pass",
-    ]
-    assert writer.to_lines() == expected
-
-
-def test_with() -> None:
-    writer = CodeWriter()
-    with writer.with_("open('f') as f", "open('g') as g"):
-        writer.pass_()
-    assert writer.to_lines() == [
-        "with open('f') as f, open('g') as g:",
-        "    pass",
-    ]
-
-
 def test_assignment_and_assertions() -> None:
     writer = CodeWriter()
     writer.assignment("x", "1", type_hint="int")
-    writer.assert_("x == 1", "must be 1")
-    writer.yield_("x")
 
-    expected = ["x: int = 1", "assert x == 1, 'must be 1'", "yield x"]
+    expected = ["x: int = 1"]
     assert writer.to_lines() == expected
-
-
-def test_generate_init() -> None:
-    writer = CodeWriter()
-    writer.generate_init({"a": "int", "b": "str"})
-    expected = [
-        "def __init__(self, a: int, b: str):",
-        "    self.a = a",
-        "    self.b = b",
-    ]
-    assert writer.to_lines() == expected
-
-
-def test_generate_repr() -> None:
-    writer = CodeWriter()
-    writer.generate_repr("Point", ["x", "y"])
-    expected = [
-        "def __repr__(self) -> builtins.str:",
-        "    return f'Point(x={self.x!r}, y={self.y!r})'",
-    ]
-    assert writer.to_lines() == expected
-
-
-def test_generate_eq() -> None:
-    writer = CodeWriter()
-    writer.generate_eq(["x", "y"])
-    expected = [
-        "def __eq__(self, other) -> builtins.bool:",
-        "    if not isinstance(other, self.__class__):",
-        "        return False",
-        "    return self.x == other.x and self.y == other.y",
-    ]
-    assert writer.to_lines() == expected
-
-
-def test_generate_hash() -> None:
-    writer = CodeWriter()
-    writer.generate_hash(["x", "y"])
-    expected = [
-        "def __hash__(self) -> builtins.int:",
-        "    return builtins.hash((self.x, self.y))",
-    ]
-    assert writer.to_lines() == expected
-
-
-def test_generate_hash_empty() -> None:
-    writer = CodeWriter()
-    writer.generate_hash([])
-    expected = [
-        "def __hash__(self) -> builtins.int:",
-        "    return builtins.hash(builtins.id(self))",
-    ]
-    assert writer.to_lines() == expected
-
-
-def test_write_block() -> None:
-    writer = CodeWriter()
-    writer.write_block(["line1", "line2"])
-    assert writer.to_lines() == ["line1", "line2"]
 
 
 def test_method_alias():
@@ -348,26 +242,3 @@ def test_method_alias():
     with writer.method("m", "self"):
         writer.pass_()
     assert "def m(self):" in writer.to_string()
-
-
-def test_generate_str() -> None:
-    writer = CodeWriter()
-    writer.generate_str("Point", ["x", "y"])
-    expected = [
-        "def __str__(self) -> builtins.str:",
-        "    return f'Point(x={self.x}, y={self.y})'",
-    ]
-    assert writer.to_lines() == expected
-
-
-def test_formatting_utilities() -> None:
-    writer = CodeWriter()
-    writer.module_docstring("Module doc")
-    writer.section("Title", char="-", width=10)
-    writer.blank_line(2)
-
-    output = writer.to_string()
-    assert '"""Module doc"""' in output
-    assert "# ----------" in output
-    assert "#  Title" in output
-    assert output.count("\n\n") >= 2

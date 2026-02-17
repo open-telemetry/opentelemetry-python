@@ -24,7 +24,11 @@ T = typing.TypeVar("T")
 def encode_hex(value: bytes) -> str:
     """
     Encode bytes as hex string.
-    Used for trace_id and span_id per OTLP spec.
+
+    Args:
+        value: The bytes to encode.
+    Returns:
+        Hex string representation of the input bytes.
     """
     return value.hex() if value else ""
 
@@ -33,6 +37,11 @@ def encode_base64(value: bytes) -> str:
     """
     Encode bytes as base64 string.
     Standard Proto3 JSON mapping for bytes.
+
+    Args:
+        value: The bytes to encode.
+    Returns:
+        Base64 string representation of the input bytes.
     """
     return base64.b64encode(value).decode("utf-8") if value else ""
 
@@ -41,6 +50,11 @@ def encode_int64(value: int) -> str:
     """
     Encode 64 bit integers as strings.
     Required for int64, uint64, fixed64, sfixed64 and sint64 per Proto3 JSON spec.
+
+    Args:
+        value: The integer to encode.
+    Returns:
+        String representation of the input integer.
     """
     return str(value)
 
@@ -48,6 +62,11 @@ def encode_int64(value: int) -> str:
 def encode_float(value: float) -> typing.Union[float, str]:
     """
     Encode float/double values.
+
+    Args:
+        value: The float to encode.
+    Returns:
+        The input value, or a string for special float values (NaN, Infinity).
     """
     if math.isnan(value):
         return "NaN"
@@ -57,14 +76,31 @@ def encode_float(value: float) -> typing.Union[float, str]:
 
 
 def encode_repeated(
-    values: list[typing.Any], map_fn: typing.Callable[[typing.Any], typing.Any]
+    values: typing.Optional[list[typing.Any]],
+    map_fn: typing.Callable[[typing.Any], typing.Any],
 ) -> list[typing.Any]:
-    """Helper to serialize repeated fields."""
+    """
+    Helper to serialize repeated fields with a mapping function.
+
+    Args:
+        values: The list of values to encode.
+        map_fn: A function that takes a single value and returns its encoded form.
+    Returns:
+        A list of encoded values, or an empty list if input is None or empty.
+    """
     return [map_fn(v) for v in values] if values else []
 
 
 def decode_hex(value: typing.Optional[str], field_name: str) -> bytes:
-    """Decode hex string to bytes."""
+    """
+    Decode hex string to bytes.
+
+    Args:
+        value: The hex string to decode.
+        field_name: The name of the field being decoded (for error messages).
+    Returns:
+        The decoded bytes, or empty bytes if input is None or empty.
+    """
     if not value:
         return b""
     validate_type(value, str, field_name)
@@ -77,7 +113,15 @@ def decode_hex(value: typing.Optional[str], field_name: str) -> bytes:
 
 
 def decode_base64(value: typing.Optional[str], field_name: str) -> bytes:
-    """Decode base64 string to bytes."""
+    """
+    Decode base64 string to bytes.
+
+    Args:
+        value: The base64 string to decode.
+        field_name: The name of the field being decoded (for error messages).
+    Returns:
+        The decoded bytes, or empty bytes if input is None or empty.
+    """
     if not value:
         return b""
     validate_type(value, str, field_name)
@@ -92,7 +136,15 @@ def decode_base64(value: typing.Optional[str], field_name: str) -> bytes:
 def decode_int64(
     value: typing.Optional[typing.Union[int, str]], field_name: str
 ) -> int:
-    """Parse 64-bit integer from string or number."""
+    """
+    Parse int64 from number or string.
+
+    Args:
+        value: The value to decode, which can be an int, a string, or None
+        field_name: The name of the field being decoded (for error messages).
+    Returns:
+        The decoded integer, or 0 if input is None.
+    """
     if value is None:
         return 0
     validate_type(value, (int, str), field_name)
@@ -107,7 +159,15 @@ def decode_int64(
 def decode_float(
     value: typing.Optional[typing.Union[float, int, str]], field_name: str
 ) -> float:
-    """Parse float/double from number or special string."""
+    """
+    Parse float/double from number or string, handling special values.
+
+    Args:
+        value: The value to decode, which can be a float, int, string, or None
+        field_name: The name of the field being decoded (for error messages).
+    Returns:
+        The decoded float, or 0.0 if input is None.
+    """
     if value is None:
         return 0.0
     validate_type(value, (float, int, str), field_name)
@@ -130,7 +190,16 @@ def decode_repeated(
     item_parser: typing.Callable[[typing.Any], T],
     field_name: str,
 ) -> list[T]:
-    """Helper to deserialize repeated fields."""
+    """
+    Parse a list of values using the provided item parser function.
+
+    Args:
+        values: The list of values to decode, or None.
+        item_parser: A function that takes a single value and returns the parsed form.
+        field_name: The name of the field being decoded (for error messages).
+    Returns:
+        A list of parsed values, or an empty list if input is None.
+    """
     if values is None:
         return []
     validate_type(values, list, field_name)
@@ -145,6 +214,11 @@ def validate_type(
     """
     Validate that a value is of the expected type(s).
     Raises TypeError if validation fails.
+
+    Args:
+        value: The value to validate.
+        expected_types: A type or tuple of types that the value is expected to be.
+        field_name: The name of the field being validated (for error messages).
     """
     if not isinstance(value, expected_types):
         raise TypeError(

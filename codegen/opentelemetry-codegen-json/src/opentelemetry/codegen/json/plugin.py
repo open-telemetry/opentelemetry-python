@@ -30,6 +30,9 @@ _logger = logging.getLogger(__name__)
 def code_generation() -> Iterator[
     Tuple[plugin.CodeGeneratorRequest, plugin.CodeGeneratorResponse],
 ]:
+    """
+    Context manager for handling the code generation process.
+    """
     if len(sys.argv) > 1 and sys.argv[1] in ("-V", "--version"):
         print("opentelemetry-codegen-json " + __version__)
         sys.exit(0)
@@ -48,6 +51,9 @@ def code_generation() -> Iterator[
 
 
 def main() -> None:
+    """
+    Main entry point for the protoc plugin.
+    """
     with code_generation() as (request, response):
         generated_response = generate_plugin_response(request)
 

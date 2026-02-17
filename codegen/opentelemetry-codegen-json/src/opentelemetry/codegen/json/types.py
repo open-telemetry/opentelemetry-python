@@ -68,38 +68,87 @@ HEX_ENCODED_FIELDS: Final[set[str]] = {
 
 
 def get_python_type(proto_type: int) -> str:
-    """Get Python type for a protobuf field type."""
+    """
+    Get the Python type corresponding to a protobuf field type.
+
+    Args:
+        proto_type: The protobuf field type as an integer (from FieldDescriptorProto).
+    Returns:
+        A string representing the Python type
+    """
     return PROTO_TO_PYTHON.get(proto_type, "typing.Any")
 
 
 def get_default_value(proto_type: int) -> str:
-    """Get default value for a protobuf field type."""
+    """
+    Get the default value for a protobuf field type as a string.
+
+    Args:
+        proto_type: The protobuf field type as an integer (from FieldDescriptorProto).
+    Returns:
+        A string representing the default value for that type
+    """
     return PROTO_DEFAULTS.get(proto_type, "None")
 
 
 def is_int64_type(proto_type: int) -> bool:
-    """Check if type is a 64-bit integer requiring string serialization."""
+    """
+    Check if type is a 64-bit integer type (int64, uint64, fixed64, sfixed64, sint64)
+
+    Args:
+        proto_type: The protobuf field type as an integer (from FieldDescriptorProto).
+    Returns:
+        True if the type is a 64-bit integer type, False otherwise.
+    """
     return proto_type in INT64_TYPES
 
 
 def is_bytes_type(proto_type: int) -> bool:
-    """Check if type is bytes."""
+    """
+    Check if type is bytes.
+
+    Args:
+        proto_type: The protobuf field type as an integer (from FieldDescriptorProto).
+    Returns:
+        True if the type is bytes, False otherwise.
+    """
     return proto_type == descriptor.FieldDescriptorProto.TYPE_BYTES
 
 
 def is_hex_encoded_field(field_name: str) -> bool:
-    """Check if this is a trace/span ID field requiring hex encoding."""
+    """
+    Check if field is a hex-encoded field (trace_id, span_id, parent_span_id).
+
+    Args:
+        field_name: The name of the protobuf field.
+    Returns:
+        True if the field is a hex-encoded field, False otherwise.
+    """
     return field_name in HEX_ENCODED_FIELDS
 
 
 def to_json_field_name(snake_name: str) -> str:
-    """Convert snake_case field name to lowerCamelCase JSON name."""
+    """
+    Convert snake_case field name to camelCase for JSON representation.
+
+    Args:
+        snake_name: The field name in snake_case.
+    Returns:
+        The field name converted to camelCase.k
+    """
     components = snake_name.split("_")
     return components[0] + "".join(x.title() for x in components[1:])
 
 
 def is_numeric_type(proto_type: int) -> bool:
-    """Check if type is numeric (int or float)."""
+    """
+    Check if the protobuf field type is a numeric type (int32, int64, uint32, uint64, float, double).
+
+    Args:
+        proto_type: The protobuf field type as an integer (from FieldDescriptorProto).
+    Returns:
+        True if the type is a numeric type, False otherwise.
+    """
     if proto_type in INT64_TYPES:
         return True
     return proto_type in {
@@ -116,7 +165,13 @@ def is_numeric_type(proto_type: int) -> bool:
 def get_json_allowed_types(proto_type: int, field_name: str = "") -> str:
     """
     Get the Python type(s) allowed for the JSON representation of a field.
-    Returns a string representation of the type or tuple of types.
+
+    Args:
+        proto_type: The protobuf field type as an integer (from FieldDescriptorProto).
+        field_name: The name of the protobuf field (used to determine if it's hex-encoded)
+
+    Returns:
+        A string representing the allowed Python type(s) for the JSON representation of the field.
     """
     if is_hex_encoded_field(field_name):
         return "builtins.str"

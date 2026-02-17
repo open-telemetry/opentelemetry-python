@@ -16,17 +16,26 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from contextlib import contextmanager
-from typing import Any, Generator, Mapping, Optional, Union
+from typing import Any, Generator, Optional, Union
 
 
 class CodeWriter:
     def __init__(self, indent_size: int = 4) -> None:
+        """
+        Initializes a new CodeWriter instance.
+
+        Args:
+            indent_size: Number of spaces for each indentation level (default: 4)
+        """
         self._lines: list[str] = []
         self._indent_level: int = 0
         self._indent_size: int = indent_size
 
     @contextmanager
     def indent(self) -> Generator[CodeWriter, None, None]:
+        """
+        Context manager to increase indentation level for a block of code.
+        """
         self._indent_level += 1
         try:
             yield self
@@ -34,6 +43,14 @@ class CodeWriter:
             self._indent_level -= 1
 
     def writeln(self, line: str = "") -> CodeWriter:
+        """
+        Writes a line of code with proper indentation. If the line is empty, it writes a blank line.
+
+        Args:
+            line: The line of code to write (default: empty string for a blank line)
+        Returns:
+            The CodeWriter instance
+        """
         if not line:
             self._lines.append("")
             return self
@@ -42,19 +59,43 @@ class CodeWriter:
         return self
 
     def writemany(self, *lines: str) -> CodeWriter:
+        """
+        Writes multiple lines of code with proper indentation.
+
+        Args:
+            *lines: Variable number of lines to write
+        Returns:
+            The CodeWriter instance
+        """
         for line in lines:
             self.writeln(line)
         return self
 
     def comment(self, content: Union[str, Iterable[str]]) -> CodeWriter:
+        """
+        Writes a comment line or block. If content is a string, it writes a single comment line.
+
+        Args:
+            content: A string for a single comment line or an iterable of strings for multiple comment lines
+        Returns:
+            The CodeWriter instance
+        """
         if isinstance(content, str):
-            self.writeln(f"# {content}")
+            self.writeln(f"# {content}" if content else "#")
             return self
         for line in content:
-            self.writeln(f"# {line}")
+            self.writeln(f"# {line}" if line else "#")
         return self
 
     def docstring(self, content: Union[str, Iterable[str]]) -> CodeWriter:
+        """
+        Writes a docstring. If content is a string, it writes a single-line docstring. If content is an iterable of strings, it writes a multi-line docstring.
+
+        Args:
+            content: A string for a single-line docstring or an iterable of strings for a multi line docstring
+        Returns:
+            The CodeWriter instance
+        """
         if isinstance(content, str):
             self.writeln(f'"""{content}"""')
             return self
@@ -65,6 +106,16 @@ class CodeWriter:
         return self
 
     def import_(self, module: str, *items: str) -> CodeWriter:
+        """
+        Writes an import statement. If items are provided, it writes a from-import statement.
+        Otherwise, it writes a regular import statement.
+
+        Args:
+            module: The module to import
+            *items: Optional items to import from the module (if empty, imports the whole module)
+        Returns:
+            The CodeWriter instance
+        """
         if items:
             self.writeln(f"from {module} import {', '.join(items)}")
         else:
@@ -73,7 +124,12 @@ class CodeWriter:
 
     @contextmanager
     def suite(self, header: str) -> Generator[CodeWriter, None, None]:
-        """Write header then indent"""
+        """
+        Create a generic code block with a header (e.g. if, for, while, try, etc.)
+
+        Args:
+            header: The header line for the code block
+        """
         self.writeln(header)
         with self.indent():
             yield self
@@ -85,7 +141,14 @@ class CodeWriter:
         bases: Optional[Iterable[str]] = None,
         decorators: Optional[Iterable[str]] = None,
     ) -> Generator[CodeWriter, None, None]:
-        """Create a regular class with optional bases and decorators"""
+        """
+        Generate a class definition with optional base classes and decorators.
+
+        Args:
+            name: The name of the class
+            bases: Optional iterable of base class names
+            decorators: Optional iterable of decorator names
+        """
         if decorators is not None:
             for dec in decorators:
                 self.writeln(f"@{dec}")
@@ -106,7 +169,17 @@ class CodeWriter:
         slots: bool = False,
         decorator_name: str = "dataclasses.dataclass",
     ) -> Generator[CodeWriter, None, None]:
-        """Create a dataclass with optional configuration"""
+        """
+        Generate a dataclass definition with optional base classes, decorators and dataclass parameters.
+
+        Args:
+            name: The name of the dataclass
+            bases: Optional iterable of base class names
+            decorators: Optional iterable of additional decorator names
+            frozen: Whether to set frozen=True in the dataclass decorator
+            slots: Whether to set slots=True in the dataclass decorator
+            decorator_name: The full name of the dataclass decorator to use
+        """
         dc_params = []
         if frozen:
             dc_params.append("frozen=True")
@@ -141,7 +214,15 @@ class CodeWriter:
         bases: Optional[Iterable[str]] = None,
         decorators: Optional[Iterable[str]] = None,
     ) -> Generator[CodeWriter, None, None]:
-        """Create an enum"""
+        """
+        Generate an enum definition with optional base classes and decorators.
+
+        Args:
+            name: The name of the enum
+            enum_type: The base enum type to inherit from (default: "enum.Enum")
+            bases: Optional iterable of additional base class names
+            decorators: Optional iterable of decorator names
+        """
         if decorators is not None:
             for dec in decorators:
                 self.writeln(f"@{dec}")
@@ -163,7 +244,15 @@ class CodeWriter:
         default: Any = None,
         default_factory: Optional[str] = None,
     ) -> CodeWriter:
-        """Write a dataclass field"""
+        """
+        Write a dataclass field with optional default value or default factory.
+
+        Args:
+            name: The name of the field
+            type_hint: The type hint for the field
+            default: Optional default value for the field
+            default_factory: Optional default factory for the field
+        """
         if default_factory:
             self.writeln(
                 f"{name}: {type_hint} = dataclasses.field(default_factory={default_factory})"
@@ -175,13 +264,14 @@ class CodeWriter:
         return self
 
     def enum_member(self, name: str, value: Any) -> CodeWriter:
-        """Write an enum member"""
-        self.writeln(f"{name} = {value}")
-        return self
+        """
+        Write an enum member with a specific value.
 
-    def auto_enum_member(self, name: str) -> CodeWriter:
-        """Write an auto() enum member"""
-        self.writeln(f"{name} = enum.auto()")
+        Args:
+            name: The name of the enum member
+            value: The value of the enum member
+        """
+        self.writeln(f"{name} = {value}")
         return self
 
     @contextmanager
@@ -192,7 +282,15 @@ class CodeWriter:
         decorators: Optional[Iterable[str]] = None,
         return_type: Optional[str] = None,
     ) -> Generator[CodeWriter, None, None]:
-        """Create a function as a context manager for building the body"""
+        """
+        Create a function definition with optional decorators and return type.
+
+        Args:
+            name: The name of the function
+            params: An iterable of parameter strings or a single string for the parameter list
+            decorators: Optional iterable of decorator names
+            return_type: Optional return type hint for the function
+        """
         if decorators is not None:
             for dec in decorators:
                 self.writeln(f"@{dec}")
@@ -204,25 +302,6 @@ class CodeWriter:
         with self.indent():
             yield self
 
-    def write_function(
-        self,
-        name: str,
-        params: Union[Iterable[str], str],
-        body_lines: Union[Iterable[str], str],
-        decorators: Optional[Iterable[str]] = None,
-        return_type: Optional[str] = None,
-    ) -> CodeWriter:
-        """Write a complete function"""
-        with self.function(
-            name, params, decorators=decorators, return_type=return_type
-        ):
-            if isinstance(body_lines, str):
-                self.writeln(body_lines)
-            else:
-                for line in body_lines:
-                    self.writeln(line)
-        return self
-
     @contextmanager
     def method(
         self,
@@ -231,59 +310,49 @@ class CodeWriter:
         decorators: Optional[Iterable[str]] = None,
         return_type: Optional[str] = None,
     ) -> Generator[CodeWriter, None, None]:
-        """Alias for function() - more semantic for methods in classes"""
+        """
+        Create a method definition within a class with optional decorators and return type.
+
+        Args:
+            name: The name of the method
+            params: An iterable of parameter strings or a single string for the parameter list
+            decorators: Optional iterable of decorator names
+            return_type: Optional return type hint for the method
+        """
         with self.function(
             name, params, decorators=decorators, return_type=return_type
         ):
             yield self
 
-    def staticmethod_(
-        self,
-        name: str,
-        params: Union[Iterable[str], str],
-        body_lines: Union[Iterable[str], str],
-        return_type: Optional[str] = None,
-    ) -> CodeWriter:
-        return self.write_function(
-            name,
-            params,
-            body_lines,
-            decorators=["builtins.staticmethod"],
-            return_type=return_type,
-        )
-
-    def classmethod_(
-        self,
-        name: str,
-        params: Union[Iterable[str], str],
-        body_lines: Union[Iterable[str], str],
-        return_type: Optional[str] = None,
-    ) -> CodeWriter:
-        return self.write_function(
-            name,
-            params,
-            body_lines,
-            decorators=["builtins.classmethod"],
-            return_type=return_type,
-        )
-
     @contextmanager
     def if_(self, condition: str) -> Generator[CodeWriter, None, None]:
-        """Create an if block"""
+        """
+        Create an if block
+
+        Args:
+            condition: The condition for the if statement
+        """
         self.writeln(f"if {condition}:")
         with self.indent():
             yield self
 
     @contextmanager
     def elif_(self, condition: str) -> Generator[CodeWriter, None, None]:
-        """Create an elif block"""
+        """
+        Create an elif block
+
+        Args:
+            condition: The condition for the elif statement
+        """
         self.writeln(f"elif {condition}:")
         with self.indent():
             yield self
 
     @contextmanager
     def else_(self) -> Generator[CodeWriter, None, None]:
-        """Create an else block"""
+        """
+        Create an else block
+        """
         self.writeln("else:")
         with self.indent():
             yield self
@@ -292,75 +361,42 @@ class CodeWriter:
     def for_(
         self, var: str, iterable: str
     ) -> Generator[CodeWriter, None, None]:
-        """Create a for loop"""
+        """
+        Create a for loop
+
+        Args:
+            var: The loop variable
+            iterable: The iterable to loop over
+        """
         self.writeln(f"for {var} in {iterable}:")
         with self.indent():
             yield self
 
     @contextmanager
     def while_(self, condition: str) -> Generator[CodeWriter, None, None]:
-        """Create a while loop"""
+        """
+        Create a while loop
+
+        Args:
+            condition: The condition for the while loop
+        """
         self.writeln(f"while {condition}:")
         with self.indent():
             yield self
 
-    @contextmanager
-    def try_(self) -> Generator[CodeWriter, None, None]:
-        """Create a try block"""
-        self.writeln("try:")
-        with self.indent():
-            yield self
-
-    @contextmanager
-    def except_(
-        self, exception: Optional[str] = None, as_var: Optional[str] = None
-    ) -> Generator[CodeWriter, None, None]:
-        """Create an except block"""
-        if exception and as_var:
-            self.writeln(f"except {exception} as {as_var}:")
-        elif exception:
-            self.writeln(f"except {exception}:")
-        else:
-            self.writeln("except:")
-        with self.indent():
-            yield self
-
-    @contextmanager
-    def finally_(self) -> Generator[CodeWriter, None, None]:
-        """Create a finally block"""
-        self.writeln("finally:")
-        with self.indent():
-            yield self
-
-    @contextmanager
-    def with_(self, *contexts: str) -> Generator[CodeWriter, None, None]:
-        """Create a with statement"""
-        context_str = ", ".join(contexts)
-        self.writeln(f"with {context_str}:")
-        with self.indent():
-            yield self
-
-    def section(
-        self, title: str, char: str = "=", width: int = 70
-    ) -> CodeWriter:
-        """Create a commented section divider"""
-        self.blank_line()
-        self.comment(char * width)
-        self.comment(f" {title}")
-        self.comment(char * width)
-        self.blank_line()
-        return self
-
-    def module_docstring(self, text: str) -> CodeWriter:
-        """Write a module-level docstring"""
-        self.writeln(f'"""{text}"""')
-        self.blank_line()
-        return self
-
     def assignment(
         self, var: str, value: str, type_hint: Optional[str] = None
     ) -> CodeWriter:
-        """Write a variable assignment"""
+        """
+        Write a variable assignment with optional type hint
+
+        Args:
+            var: The variable name
+            value: The value to assign to the variable
+            type_hint: Optional type hint for the variable
+        Returns:
+            The CodeWriter instance
+        """
         if type_hint:
             self.writeln(f"{var}: {type_hint} = {value}")
         else:
@@ -368,122 +404,56 @@ class CodeWriter:
         return self
 
     def return_(self, value: Optional[str] = None) -> CodeWriter:
-        """Write a return statement"""
+        """
+        Write a return statement with an optional return value
+
+        Args:
+            value: The value to return (if None, writes a bare return statement)
+        Returns:
+            The CodeWriter instance
+        """
         if value:
             self.writeln(f"return {value}")
         else:
             self.writeln("return")
         return self
 
-    def raise_(
-        self, exception: str, message: Optional[str] = None
-    ) -> CodeWriter:
-        """Write a raise statement"""
-        if message:
-            self.writeln(f"raise {exception}({message!r})")
-        else:
-            self.writeln(f"raise {exception}")
-        return self
-
-    def yield_(self, value: str) -> CodeWriter:
-        """Write a yield statement"""
-        self.writeln(f"yield {value}")
-        return self
-
-    def assert_(
-        self, condition: str, message: Optional[str] = None
-    ) -> CodeWriter:
-        """Write an assert statement"""
-        if message:
-            self.writeln(f"assert {condition}, {message!r}")
-        else:
-            self.writeln(f"assert {condition}")
-        return self
-
     def pass_(self) -> CodeWriter:
-        """Write a pass statement"""
+        """
+        Write a pass statement
+
+        Returns:
+            The CodeWriter instance
+        """
         self.writeln("pass")
         return self
 
-    def break_(self) -> CodeWriter:
-        """Write a break statement"""
-        self.writeln("break")
-        return self
-
-    def continue_(self) -> CodeWriter:
-        """Write a continue statement"""
-        self.writeln("continue")
-        return self
-
-    def generate_init(
-        self, params_with_types: Mapping[str, str]
-    ) -> CodeWriter:
-        """Generate __init__ with automatic assignment"""
-        params = ["self"] + [
-            f"{name}: {type_}" for name, type_ in params_with_types.items()
-        ]
-        body = [f"self.{name} = {name}" for name in params_with_types.keys()]
-        self.write_function("__init__", params, body)
-        return self
-
-    def generate_repr(
-        self, class_name: str, fields: Iterable[str]
-    ) -> CodeWriter:
-        """Generate __repr__ method"""
-        field_strs = ", ".join([f"{f}={{self.{f}!r}}" for f in fields])
-        body = f"return f'{class_name}({field_strs})'"
-        self.write_function(
-            "__repr__", ["self"], body, return_type="builtins.str"
-        )
-        return self
-
-    def generate_eq(self, fields: Iterable[str]) -> CodeWriter:
-        """Generate __eq__ method"""
-        comparisons = " and ".join([f"self.{f} == other.{f}" for f in fields])
-        body = [
-            "if not isinstance(other, self.__class__):",
-            "    return False",
-            f"return {comparisons}",
-        ]
-        self.write_function(
-            "__eq__", ["self", "other"], body, return_type="builtins.bool"
-        )
-        return self
-
-    def generate_str(
-        self, class_name: str, fields: Iterable[str]
-    ) -> CodeWriter:
-        """Generate __str__ method"""
-        field_strs = ", ".join([f"{f}={{self.{f}}}" for f in fields])
-        body = f"return f'{class_name}({field_strs})'"
-        self.write_function(
-            "__str__", ["self"], body, return_type="builtins.str"
-        )
-        return self
-
-    def generate_hash(self, fields: Iterable[str]) -> CodeWriter:
-        """Generate __hash__ method"""
-        if not fields:
-            body = "return builtins.hash(builtins.id(self))"
-        else:
-            field_tuple = ", ".join([f"self.{f}" for f in fields])
-            body = f"return builtins.hash(({field_tuple}))"
-        self.write_function(
-            "__hash__", ["self"], body, return_type="builtins.int"
-        )
-        return self
-
-    def write_block(self, lines: Iterable[str]) -> CodeWriter:
-        for line in lines:
-            self.writeln(line)
-        return self
-
     def blank_line(self, count: int = 1) -> CodeWriter:
+        """
+        Write one or more blank lines
+
+        Args:
+            count: The number of blank lines to write
+        Returns:
+            The CodeWriter instance
+        """
         self._lines.extend([""] * count)
         return self
 
     def to_string(self) -> str:
+        """
+        Get the generated code as a single string with newline characters separating lines.
+
+        Returns:
+            A string containing the entire generated code.
+        """
         return "\n".join(self._lines)
 
     def to_lines(self) -> list[str]:
+        """
+        Get the generated code as a list of lines
+
+        Returns:
+            A list of strings, where each string is a line of generated code.
+        """
         return self._lines
