@@ -37,6 +37,7 @@ from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
 )
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (  # noqa: F401
+    _RETRYABLE_ERROR_CODES,
     InvalidCompressionValueException,
     OTLPExporterMixin,
     environ_to_compression,
@@ -154,6 +155,7 @@ class ThreadWithReturnValue(threading.Thread):
         return self._return
 
 
+# pylint: disable-next=too-many-public-methods
 class TestOTLPExporterMixin(TestCase):
     def setUp(self):
         self.server = server(ThreadPoolExecutor(max_workers=10))
@@ -570,4 +572,51 @@ class TestOTLPExporterMixin(TestCase):
         # Since the initial channel was created in setUp (unpatched), this call
         # must be from the reconnection logic.
         self.assertTrue(mock_insecure_channel.called)
-        # Verify that reconnection enabled flag is set
+
+    def test_retryable_error_codes_initialization(self):
+        # pylint: disable=protected-access
+        self.assertEqual(
+            self.exporter._retryable_error_codes, _RETRYABLE_ERROR_CODES
+        )
+        custom_codes = [StatusCode.INTERNAL, StatusCode.UNKNOWN]
+        exporter = OTLPSpanExporterForTesting(
+            insecure=True, retryable_error_codes=custom_codes
+        )
+        self.assertEqual(
+            exporter._retryable_error_codes, frozenset(custom_codes)
+        )
+
+    @unittest.skipIf(
+        system() == "Windows",
+        "For gRPC + windows there's some added delay in the RPCs which breaks the assertion over amount of time passed.",
+    )
+    def test_retryable_error_codes_custom(self):
+        # Test that a custom error code is retried if specified
+        custom_codes = [StatusCode.INTERNAL]
+        mock_trace_service = TraceServiceServicerWithExportParams(
+            StatusCode.INTERNAL,
+            optional_retry_nanos=200000000,  # .2 seconds
+        )
+        add_TraceServiceServicer_to_server(
+            mock_trace_service,
+            self.server,
+        )
+        exporter = OTLPSpanExporterForTesting(
+            insecure=True, retryable_error_codes=custom_codes, timeout=10
+        )
+
+        self.assertEqual(
+            exporter.export([self.span]),
+            SpanExportResult.FAILURE,
+        )
+
+        self.assertEqual(mock_trace_service.num_requests, 6)
+
+        # Test that a default retryable code is NOT retried if not in custom_codes
+        mock_trace_service.num_requests = 0
+        mock_trace_service.export_result = StatusCode.UNAVAILABLE
+        self.assertEqual(
+            exporter.export([self.span]),
+            SpanExportResult.FAILURE,
+        )
+        self.assertEqual(mock_trace_service.num_requests, 1)
