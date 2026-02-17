@@ -23,7 +23,7 @@ logic to handle transient collector outages.
 import random
 import threading
 from abc import ABC, abstractmethod
-from collections.abc import Sequence  # noqa: F401
+from collections.abc import Iterable, Sequence  # noqa: F401
 from logging import getLogger
 from os import environ
 from time import time
@@ -299,6 +299,7 @@ class OTLPExporterMixin(
         timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
         channel_options: Optional[Tuple[Tuple[str, str]]] = None,
+        retryable_error_codes: Optional[Iterable[StatusCode]] = None,
     ):
         super().__init__()
         self._result = result
@@ -356,6 +357,12 @@ class OTLPExporterMixin(
             if compression is None
             else compression
         ) or Compression.NoCompression
+
+        self._retryable_error_codes = (
+            frozenset(retryable_error_codes)
+            if retryable_error_codes is not None
+            else _RETRYABLE_ERROR_CODES
+        )
 
         self._channel = None
         self._client = None
@@ -460,7 +467,7 @@ class OTLPExporterMixin(
                     self._initialize_channel_and_stub()
 
                 if (
-                    error.code() not in _RETRYABLE_ERROR_CODES  # type: ignore [reportAttributeAccessIssue]
+                    error.code() not in self._retryable_error_codes  # type: ignore [reportAttributeAccessIssue]
                     or retry_num + 1 == _MAX_RETRYS
                     or backoff_seconds > (deadline_sec - time())
                     or self._shutdown
