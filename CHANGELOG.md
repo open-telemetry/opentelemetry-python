@@ -26,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4973](https://github.com/open-telemetry/opentelemetry-python/pull/4973))
 - `opentelemetry-exporter-prometheus`: Fix metric name prefix
   ([#4895](https://github.com/open-telemetry/opentelemetry-python/pull/4895))
+- `opentelemetry-exporter-otlp-proto-grpc`: make retryable gRPC error codes configurable for gRPC exporters
+  ([#4917](https://github.com/open-telemetry/opentelemetry-python/pull/4917))
 
 ## Version 1.40.0/0.61b0 (2026-03-04)
 
