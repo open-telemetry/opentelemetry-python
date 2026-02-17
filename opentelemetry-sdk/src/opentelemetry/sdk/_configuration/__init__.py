@@ -39,7 +39,6 @@ from opentelemetry.environment_variables import (
 from opentelemetry.metrics import set_meter_provider
 from opentelemetry.sdk._logs import (
     LoggerProvider,
-    LoggingHandler,
     LogRecordProcessor,
 )
 from opentelemetry.sdk._logs.export import (
@@ -326,37 +325,9 @@ def _init_logging(
         set_event_logger_provider(event_logger_provider)
 
     if setup_logging_handler:
-        # Add OTel handler
-        handler = LoggingHandler(
-            level=logging.NOTSET, logger_provider=provider
+        _logger.warning(
+            "Handling of logging integrations as been moved to opentelemetry-instrumentation"
         )
-        logging.getLogger().addHandler(handler)
-        _overwrite_logging_config_fns(handler)
-
-
-def _overwrite_logging_config_fns(handler: LoggingHandler) -> None:
-    root = logging.getLogger()
-
-    def wrapper(config_fn: Callable) -> Callable:
-        def overwritten_config_fn(*args, **kwargs):
-            removed_handler = False
-            # We don't want the OTLP handler to be modified or deleted by the logging config functions.
-            # So we remove it and then add it back after the function call.
-            if handler in root.handlers:
-                removed_handler = True
-                root.handlers.remove(handler)
-            try:
-                config_fn(*args, **kwargs)
-            finally:
-                # Ensure handler is added back if logging function throws exception.
-                if removed_handler:
-                    root.addHandler(handler)
-
-        return overwritten_config_fn
-
-    logging.config.fileConfig = wrapper(logging.config.fileConfig)
-    logging.config.dictConfig = wrapper(logging.config.dictConfig)
-    logging.basicConfig = wrapper(logging.basicConfig)
 
 
 def _import_tracer_configurator(
