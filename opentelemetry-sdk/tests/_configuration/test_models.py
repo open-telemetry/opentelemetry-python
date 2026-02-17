@@ -18,4 +18,6 @@ import unittest
 class TestModelsImport(unittest.TestCase):
     def test_models_import(self):
         """Verify generated models import successfully across all Python versions"""
-        from opentelemetry.sdk._configuration import models  # noqa: F401
+        from opentelemetry.sdk._configuration import (
+            models,  # noqa: F401  # type: ignore
+        )
