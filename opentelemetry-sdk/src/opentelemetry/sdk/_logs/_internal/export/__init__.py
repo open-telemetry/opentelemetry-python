@@ -73,10 +73,20 @@ class LogExportResult(enum.Enum):
 
 class LogRecordExporter(abc.ABC):
     """Interface for exporting logs.
+
     Interface to be implemented by services that want to export logs received
     in their own format.
-    To export data this MUST be registered to the :class`opentelemetry.sdk._logs.Logger` using a
-    log processor.
+
+    To export data this MUST be registered to the :class:`opentelemetry.sdk._logs.Logger`
+    using a log processor.
+
+    Important
+    ---------
+    The ``export()`` method may raise exceptions (e.g., network errors,
+    timeouts, serialization errors). It is the responsibility of the
+    ``LogRecordProcessor`` calling this exporter to handle these exceptions
+    appropriately to prevent application crashes. See ``LogRecordProcessor``
+    for guidance on implementing proper error handling.
     """
 
     @abc.abstractmethod
@@ -84,10 +94,18 @@ class LogRecordExporter(abc.ABC):
         self, batch: Sequence[ReadableLogRecord]
     ) -> LogRecordExportResult:
         """Exports a batch of logs.
+
         Args:
-            batch: The list of `ReadableLogRecord` objects to be exported
+            batch: The list of ``ReadableLogRecord`` objects to be exported.
+
         Returns:
-            The result of the export
+            The result of the export.
+
+        Raises:
+            Exception: This method may raise exceptions on network errors,
+                timeouts, or other failures. Callers (i.e., log processors)
+                should handle these exceptions to comply with OpenTelemetry
+                error handling principles.
         """
 
     @abc.abstractmethod
@@ -141,8 +159,15 @@ class ConsoleLogExporter(ConsoleLogRecordExporter):
 
 
 class SimpleLogRecordProcessor(LogRecordProcessor):
-    """This is an implementation of LogRecordProcessor which passes
-    received logs directly to the configured LogRecordExporter, as soon as they are emitted.
+    """Implementation of LogRecordProcessor that exports logs synchronously.
+
+    This processor passes received logs directly to the configured
+    ``LogRecordExporter`` as soon as they are emitted.
+
+    This class serves as a reference implementation for custom log processors,
+    demonstrating proper error handling. Note how the ``on_emit`` method wraps
+    the exporter call in a try/except block to prevent exceptions from
+    propagating to the application.
     """
 
     def __init__(self, exporter: LogRecordExporter):

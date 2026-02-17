@@ -293,11 +293,43 @@ class LogRecordProcessor(abc.ABC):
     Log processors can be registered directly using
     :func:`LoggerProvider.add_log_record_processor` and they are invoked
     in the same order as they were registered.
+
+    Implementers of custom log processors should be aware of the following:
+
+    Error Handling
+    --------------
+    According to the OpenTelemetry error handling principles, the SDK should
+    not throw unhandled exceptions at runtime. When implementing a custom
+    ``LogRecordProcessor``, it is the **processor's responsibility** to handle
+    any exceptions that may be raised by the exporter's ``export()`` method.
+
+    The ``LogRecordExporter.export()`` method may raise exceptions (e.g.,
+    network errors, timeouts). If these exceptions are not caught, they will
+    propagate up and potentially crash the application.
+
+    Custom processor implementations should wrap exporter calls in a
+    try/except block. See ``SimpleLogRecordProcessor`` for a reference
+    implementation::
+
+        def on_emit(self, log_record: ReadWriteLogRecord):
+            try:
+                self._exporter.export((log_record,))
+            except Exception:  # pylint: disable=broad-exception-caught
+                logger.exception("Exception while exporting logs.")
+
+    The ``BatchLogRecordProcessor`` handles this implicitly since export
+    operations occur in a background thread where exceptions cannot bubble
+    up to the caller.
     """
 
     @abc.abstractmethod
     def on_emit(self, log_record: ReadWriteLogRecord):
-        """Emits the `ReadWriteLogRecord`"""
+        """Emits the ``ReadWriteLogRecord``.
+
+        Implementers should handle any exceptions raised during log processing
+        to prevent application crashes. See the class docstring for details
+        on error handling expectations.
+        """
 
     @abc.abstractmethod
     def shutdown(self):
