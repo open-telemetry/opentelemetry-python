@@ -42,6 +42,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4709](https://github.com/open-telemetry/opentelemetry-python/pull/4709))
 - Implement experimental TracerConfigurator
   ([#4861](https://github.com/open-telemetry/opentelemetry-python/pull/4861))
+- `opentelemetry-exporter-otlp-proto-grpc`: make retryable gRPC error codes configurable for gRPC exporters
+  ([#4917](https://github.com/open-telemetry/opentelemetry-python/pull/4917))
 
 ## Version 1.39.0/0.60b0 (2025-12-03)
 
