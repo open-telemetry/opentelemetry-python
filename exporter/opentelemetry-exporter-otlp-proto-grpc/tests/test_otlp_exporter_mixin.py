@@ -586,6 +586,24 @@ class TestOTLPExporterMixin(TestCase):
             exporter._retryable_error_codes, frozenset(custom_codes)
         )
 
+    @patch.dict(
+        "os.environ",
+        {
+            "OTEL_PYTHON_EXPORTER_OTLP_GRPC_RETRYABLE_ERROR_CODES": ",INTERNAL, unknown,,,dEAdline_Exceeded "
+        },
+    )
+    def test_retryable_error_codes_initialization_from_env(self):
+        expected_codes = frozenset(
+            {
+                StatusCode.INTERNAL,
+                StatusCode.UNKNOWN,
+                StatusCode.DEADLINE_EXCEEDED,
+            }
+        )
+        exporter = OTLPSpanExporterForTesting()
+        # pylint: disable=protected-access
+        self.assertEqual(exporter._retryable_error_codes, expected_codes)
+
     @unittest.skipIf(
         system() == "Windows",
         "For gRPC + windows there's some added delay in the RPCs which breaks the assertion over amount of time passed.",
