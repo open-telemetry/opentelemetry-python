@@ -301,7 +301,9 @@ class OTLPExporterMixin(
         timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
         channel_options: Optional[Tuple[Tuple[str, str]]] = None,
-        retryable_error_codes: Optional[Union[Iterable[StatusCode]]] = None,
+        retryable_error_codes: Optional[
+            Union[Iterable[StatusCode], str]
+        ] = None,
     ):
         super().__init__()
         self._result = result
