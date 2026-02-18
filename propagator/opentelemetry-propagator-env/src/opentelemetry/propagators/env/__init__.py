@@ -1,0 +1,2 @@
+from opentelemetry.propagators.env.propagator import EnvPropagator
+from opentelemetry.propagators.env.composite_propagator import CompositeEnvPropagator
