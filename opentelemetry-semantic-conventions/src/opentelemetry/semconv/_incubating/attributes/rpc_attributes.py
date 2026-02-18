@@ -15,78 +15,60 @@
 from enum import Enum
 from typing import Final
 
+from typing_extensions import deprecated
+
 RPC_CONNECT_RPC_ERROR_CODE: Final = "rpc.connect_rpc.error_code"
 """
-The [error codes](https://connectrpc.com//docs/protocol/#error-codes) of the Connect request. Error codes are always string values.
+Deprecated: Replaced by `rpc.response.status_code`.
 """
 
 RPC_CONNECT_RPC_REQUEST_METADATA_TEMPLATE: Final = (
     "rpc.connect_rpc.request.metadata"
 )
 """
-Connect request metadata, `<key>` being the normalized Connect Metadata key (lowercase), the value being the metadata values.
-Note: Instrumentations SHOULD require an explicit configuration of which metadata values are to be captured.
-Including all request metadata values can be a security risk - explicit configuration helps avoid leaking sensitive information.
-
-For example, a property `my-custom-key` with value `["1.2.3.4", "1.2.3.5"]` SHOULD be recorded as
-the `rpc.connect_rpc.request.metadata.my-custom-key` attribute with value `["1.2.3.4", "1.2.3.5"]`.
+Deprecated: Replaced by `rpc.request.metadata`.
 """
 
 RPC_CONNECT_RPC_RESPONSE_METADATA_TEMPLATE: Final = (
     "rpc.connect_rpc.response.metadata"
 )
 """
-Connect response metadata, `<key>` being the normalized Connect Metadata key (lowercase), the value being the metadata values.
-Note: Instrumentations SHOULD require an explicit configuration of which metadata values are to be captured.
-Including all response metadata values can be a security risk - explicit configuration helps avoid leaking sensitive information.
-
-For example, a property `my-custom-key` with value `"attribute_value"` SHOULD be recorded as
-the `rpc.connect_rpc.response.metadata.my-custom-key` attribute with value `["attribute_value"]`.
+Deprecated: Replaced by `rpc.response.metadata`.
 """
 
 RPC_GRPC_REQUEST_METADATA_TEMPLATE: Final = "rpc.grpc.request.metadata"
 """
-gRPC request metadata, `<key>` being the normalized gRPC Metadata key (lowercase), the value being the metadata values.
-Note: Instrumentations SHOULD require an explicit configuration of which metadata values are to be captured.
-Including all request metadata values can be a security risk - explicit configuration helps avoid leaking sensitive information.
-
-For example, a property `my-custom-key` with value `["1.2.3.4", "1.2.3.5"]` SHOULD be recorded as
-`rpc.grpc.request.metadata.my-custom-key` attribute with value `["1.2.3.4", "1.2.3.5"]`.
+Deprecated: Replaced by `rpc.request.metadata`.
 """
 
 RPC_GRPC_RESPONSE_METADATA_TEMPLATE: Final = "rpc.grpc.response.metadata"
 """
-gRPC response metadata, `<key>` being the normalized gRPC Metadata key (lowercase), the value being the metadata values.
-Note: Instrumentations SHOULD require an explicit configuration of which metadata values are to be captured.
-Including all response metadata values can be a security risk - explicit configuration helps avoid leaking sensitive information.
-
-For example, a property `my-custom-key` with value `["attribute_value"]` SHOULD be recorded as
-the `rpc.grpc.response.metadata.my-custom-key` attribute with value `["attribute_value"]`.
+Deprecated: Replaced by `rpc.response.metadata`.
 """
 
 RPC_GRPC_STATUS_CODE: Final = "rpc.grpc.status_code"
 """
-The [numeric status code](https://github.com/grpc/grpc/blob/v1.33.2/doc/statuscodes.md) of the gRPC request.
+Deprecated: Use string representation of the gRPC status code on the `rpc.response.status_code` attribute.
 """
 
 RPC_JSONRPC_ERROR_CODE: Final = "rpc.jsonrpc.error_code"
 """
-`error.code` property of response if it is an error response.
+Deprecated: Use string representation of the error code on the `rpc.response.status_code` attribute.
 """
 
 RPC_JSONRPC_ERROR_MESSAGE: Final = "rpc.jsonrpc.error_message"
 """
-`error.message` property of response if it is an error response.
+Deprecated: Use the span status description or `error.message` attribute on other signals.
 """
 
 RPC_JSONRPC_REQUEST_ID: Final = "rpc.jsonrpc.request_id"
 """
-`id` property of request or response. Since protocol allows id to be int, string, `null` or missing (for notifications), value is expected to be cast to string for simplicity. Use empty string in case of `null` value. Omit entirely if this is a notification.
+Deprecated: Replaced by `jsonrpc.request.id`.
 """
 
 RPC_JSONRPC_VERSION: Final = "rpc.jsonrpc.version"
 """
-Protocol version as in `jsonrpc` property of request/response. Since JSON-RPC 1.0 doesn't specify this, the value can be omitted.
+Deprecated: Replaced by `jsonrpc.protocol.version`.
 """
 
 RPC_MESSAGE_COMPRESSED_SIZE: Final = "rpc.message.compressed_size"
@@ -112,20 +94,84 @@ Uncompressed size of the message in bytes.
 
 RPC_METHOD: Final = "rpc.method"
 """
-This is the logical name of the method from the RPC interface perspective.
+The fully-qualified logical name of the method from the RPC interface perspective.
+Note: The method name MAY have unbounded cardinality in edge or error cases.
+
+Some RPC frameworks or libraries provide a fixed set of recognized methods
+for client stubs and server implementations. Instrumentations for such
+frameworks MUST set this attribute to the original method name only
+when the method is recognized by the framework or library.
+
+When the method is not recognized, for example, when the server receives
+a request for a method that is not predefined on the server, or when
+instrumentation is not able to reliably detect if the method is predefined,
+the attribute MUST be set to `_OTHER`. In such cases, tracing
+instrumentations MUST also set `rpc.method_original` attribute to
+the original method value.
+
+If the RPC instrumentation could end up converting valid RPC methods to
+`_OTHER`, then it SHOULD provide a way to configure the list of recognized
+RPC methods.
+
+The `rpc.method` can be different from the name of any implementing
+method/function.
+The `code.function.name` attribute may be used to record the fully-qualified
+method actually executing the call on the server side, or the
+RPC client stub method on the client side.
+"""
+
+RPC_METHOD_ORIGINAL: Final = "rpc.method_original"
+"""
+The original name of the method used by the client.
+"""
+
+RPC_REQUEST_METADATA_TEMPLATE: Final = "rpc.request.metadata"
+"""
+RPC request metadata, `<key>` being the normalized RPC metadata key (lowercase), the value being the metadata values.
+Note: Instrumentations SHOULD require an explicit configuration of which metadata values are to be captured.
+Including all request metadata values can be a security risk - explicit configuration helps avoid leaking sensitive information.
+
+For example, a property `my-custom-key` with value `["1.2.3.4", "1.2.3.5"]` SHOULD be recorded as
+`rpc.request.metadata.my-custom-key` attribute with value `["1.2.3.4", "1.2.3.5"]`.
+"""
+
+RPC_RESPONSE_METADATA_TEMPLATE: Final = "rpc.response.metadata"
+"""
+RPC response metadata, `<key>` being the normalized RPC metadata key (lowercase), the value being the metadata values.
+Note: Instrumentations SHOULD require an explicit configuration of which metadata values are to be captured.
+Including all response metadata values can be a security risk - explicit configuration helps avoid leaking sensitive information.
+
+For example, a property `my-custom-key` with value `["attribute_value"]` SHOULD be recorded as
+the `rpc.response.metadata.my-custom-key` attribute with value `["attribute_value"]`.
+"""
+
+RPC_RESPONSE_STATUS_CODE: Final = "rpc.response.status_code"
+"""
+Status code of the RPC returned by the RPC server or generated by the client.
+Note: Usually it represents an error code, but may also represent partial success, warning, or differentiate between various types of successful outcomes.
+Semantic conventions for individual RPC frameworks SHOULD document what `rpc.response.status_code` means in the context of that system and which values are considered to represent errors.
 """
 
 RPC_SERVICE: Final = "rpc.service"
 """
-The full (logical) name of the service being called, including its package name, if applicable.
+Deprecated: Value should be included in `rpc.method` which is expected to be a fully-qualified name.
 """
 
 RPC_SYSTEM: Final = "rpc.system"
 """
-A string identifying the remoting system. See below for a list of well-known identifiers.
+Deprecated: Replaced by `rpc.system.name`.
+"""
+
+RPC_SYSTEM_NAME: Final = "rpc.system.name"
+"""
+The Remote Procedure Call (RPC) system.
+Note: The client and server RPC systems may differ for the same RPC interaction. For example, a client may use Apache Dubbo or Connect RPC to communicate with a server that uses gRPC since both protocols provide compatibility with gRPC.
 """
 
 
+@deprecated(
+    "The attribute rpc.connect_rpc.error_code is deprecated - Replaced by `rpc.response.status_code`"
+)
 class RpcConnectRpcErrorCodeValues(Enum):
     CANCELLED = "cancelled"
     """cancelled."""
@@ -161,6 +207,9 @@ class RpcConnectRpcErrorCodeValues(Enum):
     """unauthenticated."""
 
 
+@deprecated(
+    "The attribute rpc.grpc.status_code is deprecated - Use string representation of the gRPC status code on the `rpc.response.status_code` attribute"
+)
 class RpcGrpcStatusCodeValues(Enum):
     OK = 0
     """OK."""
@@ -205,6 +254,9 @@ class RpcMessageTypeValues(Enum):
     """received."""
 
 
+@deprecated(
+    "The attribute rpc.system is deprecated - Replaced by `rpc.system.name`"
+)
 class RpcSystemValues(Enum):
     GRPC = "grpc"
     """gRPC."""
@@ -220,3 +272,14 @@ class RpcSystemValues(Enum):
     """[ONC RPC (Sun RPC)](https://datatracker.ietf.org/doc/html/rfc5531)."""
     JSONRPC = "jsonrpc"
     """JSON-RPC."""
+
+
+class RpcSystemNameValues(Enum):
+    GRPC = "grpc"
+    """[gRPC](https://grpc.io/)."""
+    DUBBO = "dubbo"
+    """[Apache Dubbo](https://dubbo.apache.org/)."""
+    CONNECTRPC = "connectrpc"
+    """[Connect RPC](https://connectrpc.com/)."""
+    JSONRPC = "jsonrpc"
+    """[JSON-RPC](https://www.jsonrpc.org/)."""

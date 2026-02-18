@@ -343,6 +343,24 @@ Note: Examples:
   the `k8s.pod.annotation.data` attribute with value `""`.
 """
 
+K8S_POD_HOSTNAME: Final = "k8s.pod.hostname"
+"""
+Specifies the hostname of the Pod.
+Note: The K8s Pod spec has an optional hostname field, which can be used to specify a hostname.
+Refer to [K8s docs](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-hostname-and-subdomain-field)
+for more information about this field.
+
+This attribute aligns with the `hostname` field of the
+[K8s PodSpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#podspec-v1-core).
+"""
+
+K8S_POD_IP: Final = "k8s.pod.ip"
+"""
+IP address allocated to the Pod.
+Note: This attribute aligns with the `podIP` field of the
+[K8s PodStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#podstatus-v1-core).
+"""
+
 K8S_POD_LABEL_TEMPLATE: Final = "k8s.pod.label"
 """
 The label placed on the Pod, the `<key>` being the label name, the value being the label value.
@@ -364,6 +382,17 @@ Deprecated: Replaced by `k8s.pod.label`.
 K8S_POD_NAME: Final = "k8s.pod.name"
 """
 The name of the Pod.
+"""
+
+K8S_POD_START_TIME: Final = "k8s.pod.start_time"
+"""
+The start timestamp of the Pod.
+Note: Date and time at which the object was acknowledged by the Kubelet.
+This is before the Kubelet pulled the container image(s) for the pod.
+
+This attribute aligns with the `startTime` field of the
+[K8s PodStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#podstatus-v1-core),
+in ISO 8601 (RFC 3339 compatible) format.
 """
 
 K8S_POD_STATUS_PHASE: Final = "k8s.pod.status.phase"
