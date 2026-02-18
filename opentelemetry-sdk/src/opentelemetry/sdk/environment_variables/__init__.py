@@ -546,7 +546,7 @@ _OTEL_PYTHON_EXPORTER_OTLP_GRPC_RETRYABLE_ERROR_CODES = (
 """
 .. envvar:: OTEL_PYTHON_EXPORTER_OTLP_GRPC_RETRYABLE_ERROR_CODES
 
-The :envvar:`OTEL_PYTHON_EXPORTER_OTLP_GRPC_RETRYABLE_ERROR_CODES` stores a comma-separated list of gRPC error codes 
+The :envvar:`OTEL_PYTHON_EXPORTER_OTLP_GRPC_RETRYABLE_ERROR_CODES` stores a comma-separated list of gRPC error codes
 that are considered retryable for the OTLP gRPC exporters.
 
 Note: This environment variable is experimental and subject to change.
