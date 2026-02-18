@@ -112,7 +112,6 @@ exclude = [
   "opentelemetry-sdk/tests",
   "opentelemetry-sdk/src/opentelemetry/sdk/_events",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/",
-  "opentelemetry-sdk/src/opentelemetry/sdk/trace/__init__.py",
   "opentelemetry-sdk/benchmarks",
   "exporter/opentelemetry-exporter-otlp-proto-grpc/tests",
 ]
