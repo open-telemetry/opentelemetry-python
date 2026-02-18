@@ -164,17 +164,15 @@ PROCESS_OPEN_FILE_DESCRIPTOR_COUNT: Final = (
     "process.open_file_descriptor.count"
 )
 """
-Number of file descriptors in use by the process
-Instrument: updowncounter
-Unit: {file_descriptor}
+Deprecated: Replaced by `process.unix.file_descriptor.count`.
 """
 
 
 def create_process_open_file_descriptor_count(meter: Meter) -> UpDownCounter:
-    """Number of file descriptors in use by the process"""
+    """Deprecated, use `process.unix.file_descriptor.count` instead"""
     return meter.create_up_down_counter(
         name=PROCESS_OPEN_FILE_DESCRIPTOR_COUNT,
-        description="Number of file descriptors in use by the process.",
+        description="Deprecated, use `process.unix.file_descriptor.count` instead.",
         unit="{file_descriptor}",
     )
 
@@ -213,6 +211,25 @@ def create_process_thread_count(meter: Meter) -> UpDownCounter:
     )
 
 
+PROCESS_UNIX_FILE_DESCRIPTOR_COUNT: Final = (
+    "process.unix.file_descriptor.count"
+)
+"""
+Number of unix file descriptors in use by the process
+Instrument: updowncounter
+Unit: {file_descriptor}
+"""
+
+
+def create_process_unix_file_descriptor_count(meter: Meter) -> UpDownCounter:
+    """Number of unix file descriptors in use by the process"""
+    return meter.create_up_down_counter(
+        name=PROCESS_UNIX_FILE_DESCRIPTOR_COUNT,
+        description="Number of unix file descriptors in use by the process.",
+        unit="{file_descriptor}",
+    )
+
+
 PROCESS_UPTIME: Final = "process.uptime"
 """
 The time the process has been running
@@ -232,4 +249,21 @@ def create_process_uptime(
         callbacks=callbacks,
         description="The time the process has been running.",
         unit="s",
+    )
+
+
+PROCESS_WINDOWS_HANDLE_COUNT: Final = "process.windows.handle.count"
+"""
+Number of handles held by the process
+Instrument: updowncounter
+Unit: {handle}
+"""
+
+
+def create_process_windows_handle_count(meter: Meter) -> UpDownCounter:
+    """Number of handles held by the process"""
+    return meter.create_up_down_counter(
+        name=PROCESS_WINDOWS_HANDLE_COUNT,
+        description="Number of handles held by the process.",
+        unit="{handle}",
     )
