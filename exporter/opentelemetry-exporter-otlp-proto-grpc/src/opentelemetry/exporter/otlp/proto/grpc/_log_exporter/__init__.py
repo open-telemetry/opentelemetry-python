@@ -70,7 +70,9 @@ class OTLPLogExporter(
         timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
         channel_options: Optional[Tuple[Tuple[str, str]]] = None,
-        retryable_error_codes: Optional[Iterable[StatusCode]] = None,
+        retryable_error_codes: Optional[
+            Union[Iterable[StatusCode], str]
+        ] = None,
         *,
         meter_provider: Optional[MeterProvider] = None,
     ):

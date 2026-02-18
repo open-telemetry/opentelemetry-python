@@ -113,7 +113,7 @@ class OTLPMetricExporter(
         preferred_aggregation: dict[type, Aggregation] | None = None,
         max_export_batch_size: int | None = None,
         channel_options: Tuple[Tuple[str, str]] | None = None,
-        retryable_error_codes: Iterable[StatusCode] | None = None,
+        retryable_error_codes: Union[Iterable[StatusCode], str] | None = None,
         *,
         meter_provider: Optional[MeterProvider] = None,
     ):
