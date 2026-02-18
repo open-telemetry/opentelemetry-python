@@ -395,83 +395,35 @@ def _split_metrics_data(
 
             for metric in scope_metrics.metrics:
                 split_data_points = []
-
-                # protobuf specifies metrics types (e.g. Sum, Histogram)
-                # with different accessors for data points, etc
-                # We maintain these structures throughout batch calculation
-                current_data_points = []
                 field_name = metric.WhichOneof("data")
-                if field_name == "sum":
-                    split_metrics.append(
-                        {
-                            "name": metric.name,
-                            "description": metric.description,
-                            "unit": metric.unit,
-                            "sum": {
-                                "aggregation_temporality": metric.sum.aggregation_temporality,
-                                "is_monotonic": metric.sum.is_monotonic,
-                                "data_points": split_data_points,
-                            },
-                        }
-                    )
-                    current_data_points = metric.sum.data_points
-                elif field_name == "histogram":
-                    split_metrics.append(
-                        {
-                            "name": metric.name,
-                            "description": metric.description,
-                            "unit": metric.unit,
-                            "histogram": {
-                                "aggregation_temporality": metric.histogram.aggregation_temporality,
-                                "data_points": split_data_points,
-                            },
-                        }
-                    )
-                    current_data_points = metric.histogram.data_points
-                elif field_name == "exponential_histogram":
-                    split_metrics.append(
-                        {
-                            "name": metric.name,
-                            "description": metric.description,
-                            "unit": metric.unit,
-                            "exponential_histogram": {
-                                "aggregation_temporality": metric.exponential_histogram.aggregation_temporality,
-                                "data_points": split_data_points,
-                            },
-                        }
-                    )
-                    current_data_points = (
-                        metric.exponential_histogram.data_points
-                    )
-                elif field_name == "gauge":
-                    split_metrics.append(
-                        {
-                            "name": metric.name,
-                            "description": metric.description,
-                            "unit": metric.unit,
-                            "gauge": {
-                                "data_points": split_data_points,
-                            },
-                        }
-                    )
-                    current_data_points = metric.gauge.data_points
-                elif field_name == "summary":
-                    split_metrics.append(
-                        {
-                            "name": metric.name,
-                            "description": metric.description,
-                            "unit": metric.unit,
-                            "summary": {
-                                "data_points": split_data_points,
-                            },
-                        }
-                    )
-                else:
+                if not field_name:
                     _logger.warning(
                         "Tried to split and export an unsupported metric type. Skipping."
                     )
                     continue
 
+                # Get data container using field name
+                # and build metric dictionary dynamically for conciseness
+                data_container = getattr(metric, field_name)
+                metric_dict = {
+                    "name": metric.name,
+                    "description": metric.description,
+                    "unit": metric.unit,
+                    field_name: {
+                        "data_points": split_data_points,
+                    },
+                }
+                if hasattr(data_container, "aggregation_temporality"):
+                    metric_dict[field_name]["aggregation_temporality"] = (
+                        data_container.aggregation_temporality
+                    )
+                if hasattr(data_container, "is_monotonic"):
+                    metric_dict[field_name]["is_monotonic"] = (
+                        data_container.is_monotonic
+                    )
+                split_metrics.append(metric_dict)
+
+                current_data_points = data_container.data_points
                 for data_point in current_data_points:
                     split_data_points.append(data_point)
                     batch_size += 1
@@ -489,67 +441,27 @@ def _split_metrics_data(
                         batch_size = 0
                         split_data_points = []
 
+                        # Rebuild metric dict generically using same approach as initial creation
                         field_name = metric.WhichOneof("data")
-                        if field_name == "sum":
-                            split_metrics = [
-                                {
-                                    "name": metric.name,
-                                    "description": metric.description,
-                                    "unit": metric.unit,
-                                    "sum": {
-                                        "aggregation_temporality": metric.sum.aggregation_temporality,
-                                        "is_monotonic": metric.sum.is_monotonic,
-                                        "data_points": split_data_points,
-                                    },
-                                }
-                            ]
-                        elif field_name == "histogram":
-                            split_metrics = [
-                                {
-                                    "name": metric.name,
-                                    "description": metric.description,
-                                    "unit": metric.unit,
-                                    "histogram": {
-                                        "aggregation_temporality": metric.histogram.aggregation_temporality,
-                                        "data_points": split_data_points,
-                                    },
-                                }
-                            ]
-                        elif field_name == "exponential_histogram":
-                            split_metrics = [
-                                {
-                                    "name": metric.name,
-                                    "description": metric.description,
-                                    "unit": metric.unit,
-                                    "exponential_histogram": {
-                                        "aggregation_temporality": metric.exponential_histogram.aggregation_temporality,
-                                        "data_points": split_data_points,
-                                    },
-                                }
-                            ]
-                        elif field_name == "gauge":
-                            split_metrics = [
-                                {
-                                    "name": metric.name,
-                                    "description": metric.description,
-                                    "unit": metric.unit,
-                                    "gauge": {
-                                        "data_points": split_data_points,
-                                    },
-                                }
-                            ]
-                        elif field_name == "summary":
-                            split_metrics = [
-                                {
-                                    "name": metric.name,
-                                    "description": metric.description,
-                                    "unit": metric.unit,
-                                    "summary": {
-                                        "data_points": split_data_points,
-                                    },
-                                }
-                            ]
+                        data_container = getattr(metric, field_name)
+                        metric_dict = {
+                            "name": metric.name,
+                            "description": metric.description,
+                            "unit": metric.unit,
+                            field_name: {
+                                "data_points": split_data_points,
+                            },
+                        }
+                        if hasattr(data_container, "aggregation_temporality"):
+                            metric_dict[field_name][
+                                "aggregation_temporality"
+                            ] = data_container.aggregation_temporality
+                        if hasattr(data_container, "is_monotonic"):
+                            metric_dict[field_name]["is_monotonic"] = (
+                                data_container.is_monotonic
+                            )
 
+                        split_metrics = [metric_dict]
                         split_scope_metrics = [
                             {
                                 "scope": scope_metrics.scope,
@@ -721,19 +633,21 @@ def _get_split_resource_metrics_pb2(
                     )
                     continue
 
-                for data_point in data_points:
-                    if "sum" in metric:
-                        new_metric.sum.data_points.append(data_point)
-                    elif "histogram" in metric:
-                        new_metric.histogram.data_points.append(data_point)
-                    elif "exponential_histogram" in metric:
-                        new_metric.exponential_histogram.data_points.append(
-                            data_point
-                        )
-                    elif "gauge" in metric:
-                        new_metric.gauge.data_points.append(data_point)
-                    elif "summary" in metric:
-                        new_metric.summary.data_points.append(data_point)
+                # Append data points generically using the field name from the metric dict
+                for field_name in [
+                    "sum",
+                    "histogram",
+                    "exponential_histogram",
+                    "gauge",
+                    "summary",
+                ]:
+                    if field_name in metric:
+                        metric_data_container = getattr(new_metric, field_name)
+                        for data_point in data_points:
+                            metric_data_container.data_points.append(
+                                data_point
+                            )
+                        break
 
                 new_scope_metrics.metrics.append(new_metric)
             new_resource_metrics.scope_metrics.append(new_scope_metrics)
