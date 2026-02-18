@@ -574,7 +574,11 @@ class OtlpJsonGenerator:
                     standalone_fields.append(field)
 
             for field in standalone_fields:
-                with writer.if_(f"self.{field.name}"):
+                with writer.if_(
+                    f"self.{field.name} is not None"
+                    if field.proto3_optional
+                    else f"self.{field.name}"
+                ):
                     self._generate_serialization_statements(
                         writer, field, "_result"
                     )
@@ -1022,9 +1026,10 @@ class OtlpJsonGenerator:
             return "dataclasses.field(default_factory=builtins.list)"
 
         # Optional fields, Message types, and oneof members default to None
-        if field_desc.type == descriptor.FieldDescriptorProto.TYPE_MESSAGE or (
-            field_desc.HasField("oneof_index")
-            and not field_desc.proto3_optional
+        if (
+            field_desc.type == descriptor.FieldDescriptorProto.TYPE_MESSAGE
+            or field_desc.HasField("oneof_index")
+            or field_desc.proto3_optional
         ):
             return "None"
 

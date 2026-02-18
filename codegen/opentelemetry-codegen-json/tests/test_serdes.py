@@ -16,66 +16,57 @@
 
 import json
 import math
-import shutil
-import subprocess
-import sys
-from pathlib import Path
-from typing import Any, Generator
+from typing import Any, Type
 
 import pytest
 
-PROJECT_ROOT = Path(__file__).parent.parent
-SRC_PATH = PROJECT_ROOT / "src"
-PROTO_PATH = Path(__file__).parent / "proto"
-GEN_PATH = Path(__file__).parent / "generated"
 
-WRAPPER_CONTENT = f"""#!/usr/bin/env python3
-import sys
-sys.path.insert(0, "{SRC_PATH.absolute()}")
-from opentelemetry.codegen.json.plugin import main
-if __name__ == "__main__":
-    main()
-"""
+@pytest.fixture
+def test_v1_types() -> tuple[Type[Any], Type[Any]]:
+    from otel_test_json.test.v1.test import SubMessage, TestMessage
+
+    return TestMessage, SubMessage
 
 
-@pytest.fixture(scope="module", autouse=True)
-def generate_code() -> Generator[None, None, None]:
-    if GEN_PATH.exists():
-        shutil.rmtree(GEN_PATH)
-    GEN_PATH.mkdir(parents=True)
+@pytest.fixture
+def common_v1_types() -> Type[Any]:
+    from otel_test_json.common.v1.common import InstrumentationScope
 
-    wrapper_path = PROJECT_ROOT / "protoc-gen-otlp_json_wrapper.py"
-    wrapper_path.write_text(WRAPPER_CONTENT)
-    wrapper_path.chmod(0o755)
-
-    try:
-        protos = list(PROTO_PATH.glob("**/*.proto"))
-        proto_files = [str(p.relative_to(PROTO_PATH)) for p in protos]
-
-        subprocess.check_call(
-            [
-                sys.executable,
-                "-m",
-                "grpc_tools.protoc",
-                f"-I{PROTO_PATH}",
-                f"--plugin=protoc-gen-otlp_json={wrapper_path}",
-                f"--otlp_json_out={GEN_PATH}",
-                *proto_files,
-            ]
-        )
-
-        sys.path.insert(0, str(GEN_PATH.absolute()))
-        yield
-    finally:
-        if wrapper_path.exists():
-            wrapper_path.unlink()
+    return InstrumentationScope
 
 
-def test_generated_message_roundtrip() -> None:
-    from otel_test_json.test.v1.test import (  # type: ignore
-        SubMessage,
-        TestMessage,
+@pytest.fixture
+def trace_v1_types() -> Type[Any]:
+    from otel_test_json.trace.v1.trace import Span
+
+    return Span
+
+
+@pytest.fixture
+def complex_v1_types() -> tuple[
+    Type[Any], Type[Any], Type[Any], Type[Any], Type[Any]
+]:
+    from otel_test_json.test.v1.complex import (
+        DeeplyNested,
+        NestedEnumSuite,
+        NumericTest,
+        OneofSuite,
+        OptionalScalar,
     )
+
+    return (
+        NumericTest,
+        OneofSuite,
+        OptionalScalar,
+        NestedEnumSuite,
+        DeeplyNested,
+    )
+
+
+def test_generated_message_roundtrip(
+    test_v1_types: tuple[Type[Any], Type[Any]],
+) -> None:
+    TestMessage, SubMessage = test_v1_types
 
     msg = TestMessage(
         name="test",
@@ -119,11 +110,11 @@ def test_generated_message_roundtrip() -> None:
     assert new_msg == msg
 
 
-def test_cross_reference() -> None:
-    from otel_test_json.common.v1.common import (
-        InstrumentationScope,  # type: ignore
-    )
-    from otel_test_json.trace.v1.trace import Span  # type: ignore
+def test_cross_reference(
+    common_v1_types: Type[Any], trace_v1_types: Type[Any]
+) -> None:
+    InstrumentationScope = common_v1_types
+    Span = trace_v1_types
 
     span = Span(
         name="my-span",
@@ -163,8 +154,13 @@ def test_cross_reference() -> None:
         ("sf64_val", -161718, "-161718"),
     ],
 )
-def test_numeric_types(field: str, value: Any, expected_json_val: Any) -> None:
-    from otel_test_json.test.v1.complex import NumericTest  # type: ignore
+def test_numeric_types(
+    complex_v1_types: tuple[Type[Any], ...],
+    field: str,
+    value: Any,
+    expected_json_val: Any,
+) -> None:
+    NumericTest = complex_v1_types[0]
 
     msg = NumericTest(**{field: value})
     data = msg.to_dict()
@@ -195,12 +191,13 @@ def test_numeric_types(field: str, value: Any, expected_json_val: Any) -> None:
     ],
 )
 def test_oneof_suite_variants(
-    kwargs: dict[str, Any], expected_data: dict[str, Any]
+    common_v1_types: Type[Any],
+    complex_v1_types: tuple[Type[Any], ...],
+    kwargs: dict[str, Any],
+    expected_data: dict[str, Any],
 ) -> None:
-    from otel_test_json.common.v1.common import (
-        InstrumentationScope,  # type: ignore
-    )
-    from otel_test_json.test.v1.complex import OneofSuite  # type: ignore
+    InstrumentationScope = common_v1_types
+    OneofSuite = complex_v1_types[1]
 
     processed_kwargs = {}
     for k, v in kwargs.items():
@@ -224,26 +221,28 @@ def test_oneof_suite_variants(
     "kwargs, expected_dict",
     [
         ({}, {}),
-        ({"opt_string": ""}, {}),
+        ({"opt_string": ""}, {"optString": ""}),
         ({"opt_string": "foo"}, {"optString": "foo"}),
-        ({"opt_int": 0}, {}),
+        ({"opt_int": 0}, {"optInt": 0}),
         ({"opt_int": 42}, {"optInt": 42}),
-        ({"opt_bool": False}, {}),
+        ({"opt_bool": False}, {"optBool": False}),
         ({"opt_bool": True}, {"optBool": True}),
     ],
 )
 def test_optional_scalars(
-    kwargs: dict[str, Any], expected_dict: dict[str, Any]
+    complex_v1_types: tuple[Type[Any], ...],
+    kwargs: dict[str, Any],
+    expected_dict: dict[str, Any],
 ) -> None:
-    from otel_test_json.test.v1.complex import OptionalScalar  # type: ignore
+    OptionalScalar = complex_v1_types[2]
 
     msg = OptionalScalar(**kwargs)
     assert msg.to_dict() == expected_dict
     assert OptionalScalar.from_dict(expected_dict) == msg
 
 
-def test_nested_enum_suite() -> None:
-    from otel_test_json.test.v1.complex import NestedEnumSuite  # type: ignore
+def test_nested_enum_suite(complex_v1_types: tuple[Type[Any], ...]) -> None:
+    NestedEnumSuite = complex_v1_types[3]
 
     msg = NestedEnumSuite(
         nested=NestedEnumSuite.NestedEnum.NESTED_FOO,
@@ -262,8 +261,8 @@ def test_nested_enum_suite() -> None:
     assert new_msg.repeated_nested == msg.repeated_nested
 
 
-def test_deeply_nested() -> None:
-    from otel_test_json.test.v1.complex import DeeplyNested  # type: ignore
+def test_deeply_nested(complex_v1_types: tuple[Type[Any], ...]) -> None:
+    DeeplyNested = complex_v1_types[4]
 
     msg = DeeplyNested(
         value="1",
@@ -290,9 +289,12 @@ def test_deeply_nested() -> None:
     ],
 )
 def test_defaults_and_none(
-    data: dict[str, Any], expected_name: str, expected_int: int
+    test_v1_types: tuple[Type[Any], Type[Any]],
+    data: dict[str, Any],
+    expected_name: str,
+    expected_int: int,
 ) -> None:
-    from otel_test_json.test.v1.test import TestMessage  # type: ignore
+    TestMessage, _ = test_v1_types
 
     msg = TestMessage.from_dict(data)
     assert msg.name == expected_name
@@ -312,9 +314,12 @@ def test_defaults_and_none(
     ],
 )
 def test_validation_errors(
-    data: dict[str, Any], expected_error: type, match: str
+    test_v1_types: tuple[Type[Any], Type[Any]],
+    data: dict[str, Any],
+    expected_error: type,
+    match: str,
 ) -> None:
-    from otel_test_json.test.v1.test import TestMessage  # type: ignore
+    TestMessage, _ = test_v1_types
 
     with pytest.raises(
         expected_error,
@@ -323,8 +328,10 @@ def test_validation_errors(
         TestMessage.from_dict(data)
 
 
-def test_unknown_fields_ignored() -> None:
-    from otel_test_json.test.v1.test import TestMessage  # type: ignore
+def test_unknown_fields_ignored(
+    test_v1_types: tuple[Type[Any], Type[Any]],
+) -> None:
+    TestMessage, _ = test_v1_types
 
     # Unknown fields should be ignored for forward compatibility
     data = {
