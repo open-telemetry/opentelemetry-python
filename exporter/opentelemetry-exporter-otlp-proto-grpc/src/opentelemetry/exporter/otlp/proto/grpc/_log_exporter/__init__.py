@@ -66,7 +66,9 @@ class OTLPLogExporter(
         timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
         channel_options: Optional[Tuple[Tuple[str, str]]] = None,
-        retryable_error_codes: Optional[Iterable[StatusCode]] = None,
+        retryable_error_codes: Optional[
+            Union[Iterable[StatusCode], str]
+        ] = None,
     ):
         insecure_logs = environ.get(OTEL_EXPORTER_OTLP_LOGS_INSECURE)
         if insecure is None and insecure_logs is not None:
