@@ -301,43 +301,31 @@ def create_system_filesystem_utilization(
 
 SYSTEM_LINUX_MEMORY_AVAILABLE: Final = "system.linux.memory.available"
 """
-An estimate of how much memory is available for starting new applications, without causing swapping
-Instrument: updowncounter
-Unit: By
-Note: This is an alternative to `system.memory.usage` metric with `state=free`.
-Linux starting from 3.14 exports "available" memory. It takes "free" memory as a baseline, and then factors in kernel-specific values.
-This is supposed to be more accurate than just "free" memory.
-For reference, see the calculations [here](https://superuser.com/a/980821).
-See also `MemAvailable` in [/proc/meminfo](https://man7.org/linux/man-pages/man5/proc.5.html).
+Deprecated: Replaced by `system.memory.linux.available`.
 """
 
 
-def create_system_linux_memory_available(meter: Meter) -> UpDownCounter:
-    """An estimate of how much memory is available for starting new applications, without causing swapping"""
-    return meter.create_up_down_counter(
+def create_system_linux_memory_available(meter: Meter) -> Counter:
+    """The number of packets transferred"""
+    return meter.create_counter(
         name=SYSTEM_LINUX_MEMORY_AVAILABLE,
-        description="An estimate of how much memory is available for starting new applications, without causing swapping.",
-        unit="By",
+        description="The number of packets transferred.",
+        unit="{packet}",
     )
 
 
 SYSTEM_LINUX_MEMORY_SLAB_USAGE: Final = "system.linux.memory.slab.usage"
 """
-Reports the memory used by the Linux kernel for managing caches of frequently used objects
-Instrument: updowncounter
-Unit: By
-Note: The sum over the `reclaimable` and `unreclaimable` state values in `linux.memory.slab.usage` SHOULD be equal to the total slab memory available on the system.
-Note that the total slab memory is not constant and may vary over time.
-See also the [Slab allocator](https://blogs.oracle.com/linux/post/understanding-linux-kernel-memory-statistics) and `Slab` in [/proc/meminfo](https://man7.org/linux/man-pages/man5/proc.5.html).
+Deprecated: Replaced by `system.memory.linux.slab.usage`.
 """
 
 
-def create_system_linux_memory_slab_usage(meter: Meter) -> UpDownCounter:
-    """Reports the memory used by the Linux kernel for managing caches of frequently used objects"""
-    return meter.create_up_down_counter(
+def create_system_linux_memory_slab_usage(meter: Meter) -> Counter:
+    """The number of packets transferred"""
+    return meter.create_counter(
         name=SYSTEM_LINUX_MEMORY_SLAB_USAGE,
-        description="Reports the memory used by the Linux kernel for managing caches of frequently used objects.",
-        unit="By",
+        description="The number of packets transferred.",
+        unit="{packet}",
     )
 
 
@@ -354,6 +342,48 @@ def create_system_memory_limit(meter: Meter) -> UpDownCounter:
     return meter.create_up_down_counter(
         name=SYSTEM_MEMORY_LIMIT,
         description="Total virtual memory available in the system.",
+        unit="By",
+    )
+
+
+SYSTEM_MEMORY_LINUX_AVAILABLE: Final = "system.memory.linux.available"
+"""
+An estimate of how much memory is available for starting new applications, without causing swapping
+Instrument: updowncounter
+Unit: By
+Note: This is an alternative to `system.memory.usage` metric with `state=free`.
+Linux starting from 3.14 exports "available" memory. It takes "free" memory as a baseline, and then factors in kernel-specific values.
+This is supposed to be more accurate than just "free" memory.
+For reference, see the calculations [here](https://superuser.com/a/980821).
+See also `MemAvailable` in [/proc/meminfo](https://man7.org/linux/man-pages/man5/proc.5.html).
+"""
+
+
+def create_system_memory_linux_available(meter: Meter) -> UpDownCounter:
+    """An estimate of how much memory is available for starting new applications, without causing swapping"""
+    return meter.create_up_down_counter(
+        name=SYSTEM_MEMORY_LINUX_AVAILABLE,
+        description="An estimate of how much memory is available for starting new applications, without causing swapping.",
+        unit="By",
+    )
+
+
+SYSTEM_MEMORY_LINUX_SLAB_USAGE: Final = "system.memory.linux.slab.usage"
+"""
+Reports the memory used by the Linux kernel for managing caches of frequently used objects
+Instrument: updowncounter
+Unit: By
+Note: The sum over the `reclaimable` and `unreclaimable` state values in `memory.linux.slab.usage` SHOULD be equal to the total slab memory available on the system.
+Note that the total slab memory is not constant and may vary over time.
+See also the [Slab allocator](https://blogs.oracle.com/linux/post/understanding-linux-kernel-memory-statistics) and `Slab` in [/proc/meminfo](https://man7.org/linux/man-pages/man5/proc.5.html).
+"""
+
+
+def create_system_memory_linux_slab_usage(meter: Meter) -> UpDownCounter:
+    """Reports the memory used by the Linux kernel for managing caches of frequently used objects"""
+    return meter.create_up_down_counter(
+        name=SYSTEM_MEMORY_LINUX_SLAB_USAGE,
+        description="Reports the memory used by the Linux kernel for managing caches of frequently used objects.",
         unit="By",
     )
 
