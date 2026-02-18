@@ -7,6 +7,7 @@ dependencies = [
   "opentelemetry-sdk",
   "opentelemetry-semantic-conventions",
   "opentelemetry-proto",
+  "opentelemetry-proto-json",
   "opentelemetry-test-utils",
   "opentelemetry-exporter-otlp-proto-grpc",
   "opentelemetry-exporter-otlp-proto-http",
@@ -15,6 +16,7 @@ dependencies = [
   "opentelemetry-exporter-prometheus",
   "opentelemetry-propagator-jaeger",
   "opentelemetry-propagator-b3",
+  "opentelemetry-codegen-json",
 ]
 
 # https://docs.astral.sh/uv/reference/settings/
@@ -26,6 +28,7 @@ required-version = ">=0.6.0"
 opentelemetry-api = { workspace = true}
 opentelemetry-sdk = { workspace = true }
 opentelemetry-proto = { workspace = true }
+opentelemetry-proto-json = { workspace = true }
 opentelemetry-semantic-conventions = { workspace = true }
 opentelemetry-test-utils = { workspace = true }
 opentelemetry-exporter-otlp-proto-grpc = { workspace = true }
@@ -35,6 +38,7 @@ opentelemetry-exporter-zipkin-json = { workspace = true }
 opentelemetry-exporter-prometheus = {workspace = true }
 opentelemetry-propagator-jaeger = { workspace = true }
 opentelemetry-propagator-b3 = { workspace = true }
+opentelemetry-codegen-json = { workspace = true }
 
 [tool.uv.workspace]
 members = [
@@ -42,8 +46,10 @@ members = [
   "opentelemetry-sdk",
   "opentelemetry-semantic-conventions",
   "opentelemetry-proto",
+  "opentelemetry-proto-json",
   "exporter/*",
   "propagator/*",
+  "codegen/*",
   "tests/opentelemetry-test-utils",
 ]
 
@@ -63,6 +69,7 @@ target-version = "py38"
 line-length = 79
 extend-exclude = [
   "*_pb2*.py*",
+  "opentelemetry-proto-json/src/*",
 ]
 output-format = "concise"
 

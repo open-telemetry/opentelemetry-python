@@ -42,6 +42,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4709](https://github.com/open-telemetry/opentelemetry-python/pull/4709))
 - Implement experimental TracerConfigurator
   ([#4861](https://github.com/open-telemetry/opentelemetry-python/pull/4861))
+- Implement custom protoc plugin to generate OTLP JSON class definitions
+  ([#4910](https://github.com/open-telemetry/opentelemetry-python/pull/4910))
 
 ## Version 1.39.0/0.60b0 (2025-12-03)
 
