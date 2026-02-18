@@ -100,7 +100,9 @@ class OTLPSpanExporter(
         timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
         channel_options: Optional[Tuple[Tuple[str, str]]] = None,
-        retryable_error_codes: Iterable[StatusCode] | None = None,
+        retryable_error_codes: Optional[
+            Union[Iterable[StatusCode], str]
+        ] = None,
         *,
         meter_provider: Optional[MeterProvider] = None,
     ):
