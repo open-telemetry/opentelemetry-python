@@ -91,6 +91,7 @@ from opentelemetry.sdk._logs.export import LogRecordExportResult
 from opentelemetry.sdk._shared_internal import DuplicateFilter
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER,
+    _OTEL_PYTHON_EXPORTER_OTLP_GRPC_RETRYABLE_ERROR_CODES,
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_KEY,
@@ -299,7 +300,7 @@ class OTLPExporterMixin(
         timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
         channel_options: Optional[Tuple[Tuple[str, str]]] = None,
-        retryable_error_codes: Optional[Iterable[StatusCode]] = None,
+        retryable_error_codes: Optional[Union[Iterable[StatusCode]]] = None,
     ):
         super().__init__()
         self._result = result
@@ -361,8 +362,18 @@ class OTLPExporterMixin(
         self._retryable_error_codes = (
             frozenset(retryable_error_codes)
             if retryable_error_codes is not None
-            else _RETRYABLE_ERROR_CODES
+            else environ.get(
+                _OTEL_PYTHON_EXPORTER_OTLP_GRPC_RETRYABLE_ERROR_CODES
+            )
         )
+        if isinstance(self._retryable_error_codes, str):
+            self._retryable_error_codes = frozenset(
+                StatusCode[code.strip().upper()]
+                for code in self._retryable_error_codes.split(",")
+                if code.strip()
+            )
+        if self._retryable_error_codes is None:
+            self._retryable_error_codes = _RETRYABLE_ERROR_CODES
 
         self._channel = None
         self._client = None
