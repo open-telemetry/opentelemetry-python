@@ -256,10 +256,6 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             MetricExportResult: SUCCESS if export succeeded, FAILURE otherwise
         """
         for retry_num in range(_MAX_RETRYS):
-            resp = self._export(serialized_data, deadline_sec - time())
-            if resp.ok:
-                return MetricExportResult.SUCCESS
-
             # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
             backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
             try:
