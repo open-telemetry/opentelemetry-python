@@ -76,6 +76,7 @@ class LogRecord(ABC):
         body: AnyValue = None,
         attributes: Optional[_ExtendedAttributes] = None,
         event_name: Optional[str] = None,
+        exception: Optional[BaseException] = None,
     ) -> None: ...
 
     @overload
@@ -94,6 +95,7 @@ class LogRecord(ABC):
         severity_number: Optional[SeverityNumber] = None,
         body: AnyValue = None,
         attributes: Optional[_ExtendedAttributes] = None,
+        exception: Optional[BaseException] = None,
     ) -> None: ...
 
     def __init__(
@@ -110,6 +112,7 @@ class LogRecord(ABC):
         body: AnyValue = None,
         attributes: Optional[_ExtendedAttributes] = None,
         event_name: Optional[str] = None,
+        exception: Optional[BaseException] = None,
     ) -> None:
         if not context:
             context = get_current()
@@ -127,6 +130,7 @@ class LogRecord(ABC):
         self.body = body
         self.attributes = attributes
         self.event_name = event_name
+        self.exception = exception
 
 
 class Logger(ABC):
@@ -157,6 +161,7 @@ class Logger(ABC):
         body: AnyValue | None = None,
         attributes: _ExtendedAttributes | None = None,
         event_name: str | None = None,
+        exception: BaseException | None = None,
     ) -> None: ...
 
     @overload
@@ -178,6 +183,7 @@ class Logger(ABC):
         body: AnyValue | None = None,
         attributes: _ExtendedAttributes | None = None,
         event_name: str | None = None,
+        exception: BaseException | None = None,
     ) -> None:
         """Emits a :class:`LogRecord` representing a log to the processing pipeline."""
 
@@ -200,6 +206,7 @@ class NoOpLogger(Logger):
         body: AnyValue | None = None,
         attributes: _ExtendedAttributes | None = None,
         event_name: str | None = None,
+        exception: BaseException | None = None,
     ) -> None: ...
 
     @overload
@@ -220,6 +227,7 @@ class NoOpLogger(Logger):
         body: AnyValue | None = None,
         attributes: _ExtendedAttributes | None = None,
         event_name: str | None = None,
+        exception: BaseException | None = None,
     ) -> None:
         pass
 
@@ -266,6 +274,7 @@ class ProxyLogger(Logger):
         body: AnyValue | None = None,
         attributes: _ExtendedAttributes | None = None,
         event_name: str | None = None,
+        exception: BaseException | None = None,
     ) -> None: ...
 
     @overload
@@ -286,6 +295,7 @@ class ProxyLogger(Logger):
         body: AnyValue | None = None,
         attributes: _ExtendedAttributes | None = None,
         event_name: str | None = None,
+        exception: BaseException | None = None,
     ) -> None:
         if record:
             self._logger.emit(record)
@@ -299,6 +309,7 @@ class ProxyLogger(Logger):
                 body=body,
                 attributes=attributes,
                 event_name=event_name,
+                exception=exception,
             )
 
 
