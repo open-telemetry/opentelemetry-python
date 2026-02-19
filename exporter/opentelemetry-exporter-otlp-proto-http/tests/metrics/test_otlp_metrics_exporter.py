@@ -1000,8 +1000,10 @@ class TestOTLPMetricExporter(TestCase):
 
         exporter = OTLPMetricExporter(max_export_batch_size=2)
         result = exporter.export("foo")
-        self.assertEqual(result, MetricExportResult.SUCCESS)
-        self.assertEqual(mock_export.call_count, 2)
+        # Return FAILURE when first batch fails (consistent with gRPC)
+        self.assertEqual(result, MetricExportResult.FAILURE)
+        # Only first batch is exported before failure
+        self.assertEqual(mock_export.call_count, 1)
         mock_export.assert_has_calls(
             [
                 call(batch_1.SerializeToString(), 10),
