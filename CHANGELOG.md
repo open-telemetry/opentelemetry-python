@@ -32,6 +32,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4806](https://github.com/open-telemetry/opentelemetry-python/pull/4806))
 - Prevent possible endless recursion from happening in `SimpleLogRecordProcessor.on_emit`,
   ([#4799](https://github.com/open-telemetry/opentelemetry-python/pull/4799)) and ([#4867](https://github.com/open-telemetry/opentelemetry-python/pull/4867)).
+- Implement span start/end metrics
+  ([#4880](https://github.com/open-telemetry/opentelemetry-python/pull/4880))
 - Add environment variable carriers to API
   ([#4609](https://github.com/open-telemetry/opentelemetry-python/pull/4609))
 - Add experimental composable rule based sampler

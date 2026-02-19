@@ -47,6 +47,7 @@ from warnings import filterwarnings
 from typing_extensions import deprecated
 
 from opentelemetry import context as context_api
+from opentelemetry import metrics as metrics_api
 from opentelemetry import trace as trace_api
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk import util
@@ -79,6 +80,8 @@ from opentelemetry.trace import NoOpTracer, SpanContext
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
 from opentelemetry.util._decorator import _agnosticcontextmanager
+
+from ._tracer_metrics import TracerMetrics
 
 logger = logging.getLogger(__name__)
 
@@ -814,6 +817,7 @@ class Span(trace_api.Span, ReadableSpan):
         set_status_on_exception: bool = True,
         limits=_UnsetLimits,
         instrumentation_scope: Optional[InstrumentationScope] = None,
+        record_end_metrics: Optional[Callable[[], None]] = None,
     ) -> None:
         if resource is None:
             resource = Resource.create({})
@@ -850,6 +854,8 @@ class Span(trace_api.Span, ReadableSpan):
                 self._events.append(event)
 
         self._links = self._new_links(links)
+
+        self._record_end_metrics = record_end_metrics
 
     def __repr__(self):
         return f'{type(self).__name__}(name="{self._name}", context={self._context})'
@@ -980,6 +986,8 @@ class Span(trace_api.Span, ReadableSpan):
 
             self._end_time = end_time if end_time is not None else time_ns()
 
+        if self._record_end_metrics:
+            self._record_end_metrics()
         # pylint: disable=protected-access
         self._span_processor._on_ending(self)
         self._span_processor.on_end(self._readable_span())
@@ -1106,6 +1114,7 @@ class Tracer(trace_api.Tracer):
         instrumentation_info: InstrumentationInfo,
         span_limits: SpanLimits,
         instrumentation_scope: InstrumentationScope,
+        meter_provider: Optional[metrics_api.MeterProvider] = None,
         *,
         _tracer_provider: Optional["TracerProvider"] = None,
     ) -> None:
@@ -1117,6 +1126,9 @@ class Tracer(trace_api.Tracer):
         self._span_limits = span_limits
         self._instrumentation_scope = instrumentation_scope
         self._tracer_provider = _tracer_provider
+
+        meter_provider = meter_provider or metrics_api.get_meter_provider()
+        self._tracer_metrics = TracerMetrics(meter_provider)
 
     def _is_enabled(self) -> bool:
         """If the tracer is not enabled, start_span will create a NonRecordingSpan"""
@@ -1214,6 +1226,10 @@ class Tracer(trace_api.Tracer):
             trace_state=sampling_result.trace_state,
         )
 
+        record_end_metrics = self._tracer_metrics.start_span(
+            parent_span_context, sampling_result.decision
+        )
+
         # Only record if is_recording() is true
         if sampling_result.decision.is_recording():
             # pylint:disable=protected-access
@@ -1232,6 +1248,7 @@ class Tracer(trace_api.Tracer):
                 set_status_on_exception=set_status_on_exception,
                 limits=self._span_limits,
                 instrumentation_scope=self._instrumentation_scope,
+                record_end_metrics=record_end_metrics,
             )
             span.start(start_time=start_time, parent_context=context)
         else:
@@ -1313,6 +1330,7 @@ class TracerProvider(trace_api.TracerProvider):
         ] = None,
         id_generator: Optional[IdGenerator] = None,
         span_limits: Optional[SpanLimits] = None,
+        meter_provider: Optional[metrics_api.MeterProvider] = None,
         *,
         _tracer_configurator: Optional[_TracerConfiguratorT] = None,
     ) -> None:
@@ -1334,6 +1352,7 @@ class TracerProvider(trace_api.TracerProvider):
         disabled = environ.get(OTEL_SDK_DISABLED, "")
         self._disabled = disabled.lower().strip() == "true"
         self._atexit_handler = None
+        self._meter_provider = meter_provider
 
         if shutdown_on_exit:
             self._atexit_handler = atexit.register(self.shutdown)
@@ -1406,6 +1425,7 @@ class TracerProvider(trace_api.TracerProvider):
                 schema_url,
                 attributes,
             ),
+            self._meter_provider,
             _tracer_provider=self,
         )
 
