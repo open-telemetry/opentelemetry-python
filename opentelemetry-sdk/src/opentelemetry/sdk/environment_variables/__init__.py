@@ -205,52 +205,6 @@ The :envvar:`OTEL_SPAN_LINK_COUNT_LIMIT` represents the maximum allowed span lin
 Default: 128
 """
 
-OTEL_EXPORTER_JAEGER_AGENT_HOST = "OTEL_EXPORTER_JAEGER_AGENT_HOST"
-"""
-.. envvar:: OTEL_EXPORTER_JAEGER_AGENT_HOST
-
-The :envvar:`OTEL_EXPORTER_JAEGER_AGENT_HOST` represents the hostname for the Jaeger agent.
-Default: "localhost"
-"""
-
-OTEL_EXPORTER_JAEGER_AGENT_PORT = "OTEL_EXPORTER_JAEGER_AGENT_PORT"
-"""
-.. envvar:: OTEL_EXPORTER_JAEGER_AGENT_PORT
-
-The :envvar:`OTEL_EXPORTER_JAEGER_AGENT_PORT` represents the port for the Jaeger agent.
-Default: 6831
-"""
-
-OTEL_EXPORTER_JAEGER_ENDPOINT = "OTEL_EXPORTER_JAEGER_ENDPOINT"
-"""
-.. envvar:: OTEL_EXPORTER_JAEGER_ENDPOINT
-
-The :envvar:`OTEL_EXPORTER_JAEGER_ENDPOINT` represents the HTTP endpoint for Jaeger traces.
-Default: "http://localhost:14250"
-"""
-
-OTEL_EXPORTER_JAEGER_USER = "OTEL_EXPORTER_JAEGER_USER"
-"""
-.. envvar:: OTEL_EXPORTER_JAEGER_USER
-
-The :envvar:`OTEL_EXPORTER_JAEGER_USER` represents the username to be used for HTTP basic authentication.
-"""
-
-OTEL_EXPORTER_JAEGER_PASSWORD = "OTEL_EXPORTER_JAEGER_PASSWORD"
-"""
-.. envvar:: OTEL_EXPORTER_JAEGER_PASSWORD
-
-The :envvar:`OTEL_EXPORTER_JAEGER_PASSWORD` represents the password to be used for HTTP basic authentication.
-"""
-
-OTEL_EXPORTER_JAEGER_TIMEOUT = "OTEL_EXPORTER_JAEGER_TIMEOUT"
-"""
-.. envvar:: OTEL_EXPORTER_JAEGER_TIMEOUT
-
-Maximum time (in seconds) the Jaeger exporter will wait for each batch export.
-Default: 10
-"""
-
 OTEL_EXPORTER_ZIPKIN_ENDPOINT = "OTEL_EXPORTER_ZIPKIN_ENDPOINT"
 """
 .. envvar:: OTEL_EXPORTER_ZIPKIN_ENDPOINT
@@ -731,24 +685,6 @@ wait for each batch export for logs.
 Default: 10
 """
 
-OTEL_EXPORTER_JAEGER_CERTIFICATE = "OTEL_EXPORTER_JAEGER_CERTIFICATE"
-"""
-.. envvar:: OTEL_EXPORTER_JAEGER_CERTIFICATE
-
-The :envvar:`OTEL_EXPORTER_JAEGER_CERTIFICATE` stores the path to the certificate file for
-TLS credentials of gRPC client for Jaeger. Should only be used for a secure connection with Jaeger.
-"""
-
-OTEL_EXPORTER_JAEGER_AGENT_SPLIT_OVERSIZED_BATCHES = (
-    "OTEL_EXPORTER_JAEGER_AGENT_SPLIT_OVERSIZED_BATCHES"
-)
-"""
-.. envvar:: OTEL_EXPORTER_JAEGER_AGENT_SPLIT_OVERSIZED_BATCHES
-
-The :envvar:`OTEL_EXPORTER_JAEGER_AGENT_SPLIT_OVERSIZED_BATCHES` is a boolean flag to determine whether
-to split a large span batch to admire the udp packet size limit.
-"""
-
 OTEL_SERVICE_NAME = "OTEL_SERVICE_NAME"
 """
 .. envvar:: OTEL_SERVICE_NAME
@@ -796,13 +732,6 @@ on the basis of instrument kind. The valid (case-insensitive) values are:
 Use ``CUMULATIVE`` aggregation temporality for ``UpDownCounter`` and ``Asynchronous UpDownCounter``.
 ``LOWMEMORY``: Use ``DELTA`` aggregation temporality for ``Counter`` and ``Histogram``.
 Use ``CUMULATIVE`` aggregation temporality for ``UpDownCounter``, ``AsynchronousCounter`` and ``Asynchronous UpDownCounter``.
-"""
-
-OTEL_EXPORTER_JAEGER_GRPC_INSECURE = "OTEL_EXPORTER_JAEGER_GRPC_INSECURE"
-"""
-.. envvar:: OTEL_EXPORTER_JAEGER_GRPC_INSECURE
-
-The :envvar:`OTEL_EXPORTER_JAEGER_GRPC_INSECURE` is a boolean flag to True if collector has no encryption or authentication.
 """
 
 OTEL_METRIC_EXPORT_INTERVAL = "OTEL_METRIC_EXPORT_INTERVAL"
