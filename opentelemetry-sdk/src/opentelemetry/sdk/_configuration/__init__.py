@@ -39,6 +39,7 @@ from opentelemetry.environment_variables import (
 from opentelemetry.metrics import set_meter_provider
 from opentelemetry.sdk._logs import (
     LoggerProvider,
+    LoggingHandler,
     LogRecordProcessor,
 )
 from opentelemetry.sdk._logs.export import (
@@ -46,6 +47,7 @@ from opentelemetry.sdk._logs.export import (
     LogRecordExporter,
 )
 from opentelemetry.sdk.environment_variables import (
+    _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
     OTEL_EXPORTER_OTLP_LOGS_PROTOCOL,
     OTEL_EXPORTER_OTLP_METRICS_PROTOCOL,
     OTEL_EXPORTER_OTLP_PROTOCOL,
@@ -324,9 +326,41 @@ def _init_logging(
         set_event_logger_provider(event_logger_provider)
 
     if setup_logging_handler:
-        _logger.warning(
-            "Handling of logging integrations has been moved to opentelemetry-instrumentation"
+        warnings.deprecated(
+            "Setting the OTel Logging handler from the SDK and the `OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED` are deprecated. You should install the opentelemetry-instrumentation-logging"
         )
+
+        # Add OTel handler
+        handler = LoggingHandler(
+            level=logging.NOTSET, logger_provider=provider
+        )
+        logging.getLogger().addHandler(handler)
+        _overwrite_logging_config_fns(handler)
+
+
+def _overwrite_logging_config_fns(handler: LoggingHandler) -> None:
+    root = logging.getLogger()
+
+    def wrapper(config_fn: Callable) -> Callable:
+        def overwritten_config_fn(*args, **kwargs):
+            removed_handler = False
+            # We don't want the OTLP handler to be modified or deleted by the logging config functions.
+            # So we remove it and then add it back after the function call.
+            if handler in root.handlers:
+                removed_handler = True
+                root.handlers.remove(handler)
+            try:
+                config_fn(*args, **kwargs)
+            finally:
+                # Ensure handler is added back if logging function throws exception.
+                if removed_handler:
+                    root.addHandler(handler)
+
+        return overwritten_config_fn
+
+    logging.config.fileConfig = wrapper(logging.config.fileConfig)
+    logging.config.dictConfig = wrapper(logging.config.dictConfig)
+    logging.basicConfig = wrapper(logging.basicConfig)
 
 
 def _import_tracer_configurator(
@@ -519,6 +553,15 @@ def _initialize_components(
     _init_metrics(
         metric_exporters, resource, exporter_args_map=exporter_args_map
     )
+    if setup_logging_handler is None:
+        setup_logging_handler = (
+            os.getenv(
+                _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED, "false"
+            )
+            .strip()
+            .lower()
+            == "true"
+        )
     _init_logging(
         log_exporters,
         resource,
