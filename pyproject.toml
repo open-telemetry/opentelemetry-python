@@ -136,7 +136,7 @@ formatters = ["ruff-format", "ruff-check"]
 use-standard-collections = true
 use-schema-description = true
 use-title-as-name = true
-use-union-operator = true
+use-union-operator = false # set to true when Python 3.9 support is dropped
 target-python-version = "3.10"
 
 [dependency-groups]
