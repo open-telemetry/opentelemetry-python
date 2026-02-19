@@ -12,12 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=too-many-lines
 import threading
 import time
 from logging import WARNING
 from os import environ
+from typing import List
 from unittest import TestCase
-from unittest.mock import ANY, MagicMock, Mock, patch
+from unittest.mock import ANY, MagicMock, Mock, call, patch
 
 import requests
 from requests import Session
@@ -34,8 +36,18 @@ from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
     DEFAULT_METRICS_EXPORT_PATH,
     DEFAULT_TIMEOUT,
     OTLPMetricExporter,
+    _get_split_resource_metrics_pb2,
+    _split_metrics_data,
 )
 from opentelemetry.exporter.otlp.proto.http.version import __version__
+from opentelemetry.proto.common.v1.common_pb2 import (
+    InstrumentationScope,
+    KeyValue,
+)
+from opentelemetry.proto.metrics.v1 import metrics_pb2 as pb2
+from opentelemetry.proto.resource.v1.resource_pb2 import (
+    Resource as Pb2Resource,
+)
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_CERTIFICATE,
@@ -91,6 +103,7 @@ OS_ENV_TIMEOUT = "30"
 
 # pylint: disable=protected-access
 class TestOTLPMetricExporter(TestCase):
+    # pylint: disable=too-many-public-methods
     def setUp(self):
         self.metrics = {
             "sum_int": MetricsData(
@@ -358,6 +371,840 @@ class TestOTLPMetricExporter(TestCase):
             verify=exporter._certificate_file,
             timeout=ANY,  # Timeout is a float based on real time, can't put an exact value here.
             cert=exporter._client_cert,
+        )
+
+    def test_split_metrics_data_many_data_points(self):
+        metrics_data = pb2.MetricsData(
+            resource_metrics=[
+                _resource_metrics(
+                    index=1,
+                    scope_metrics=[
+                        _scope_metrics(
+                            index=1,
+                            metrics=[
+                                _gauge(
+                                    index=1,
+                                    data_points=[
+                                        _number_data_point(11),
+                                        _number_data_point(12),
+                                        _number_data_point(13),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
+        split_metrics_data: List[MetricsData] = list(
+            # pylint: disable=protected-access
+            _split_metrics_data(
+                metrics_data=metrics_data,
+                max_export_batch_size=2,
+            )
+        )
+
+        self.assertEqual(
+            [
+                pb2.MetricsData(
+                    resource_metrics=[
+                        _resource_metrics(
+                            index=1,
+                            scope_metrics=[
+                                _scope_metrics(
+                                    index=1,
+                                    metrics=[
+                                        _gauge(
+                                            index=1,
+                                            data_points=[
+                                                _number_data_point(11),
+                                                _number_data_point(12),
+                                            ],
+                                        ),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ]
+                ),
+                pb2.MetricsData(
+                    resource_metrics=[
+                        _resource_metrics(
+                            index=1,
+                            scope_metrics=[
+                                _scope_metrics(
+                                    index=1,
+                                    metrics=[
+                                        _gauge(
+                                            index=1,
+                                            data_points=[
+                                                _number_data_point(13),
+                                            ],
+                                        ),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ]
+                ),
+            ],
+            split_metrics_data,
+        )
+
+    def test_split_metrics_data_nb_data_points_equal_batch_size(self):
+        metrics_data = pb2.MetricsData(
+            resource_metrics=[
+                _resource_metrics(
+                    index=1,
+                    scope_metrics=[
+                        _scope_metrics(
+                            index=1,
+                            metrics=[
+                                _gauge(
+                                    index=1,
+                                    data_points=[
+                                        _number_data_point(11),
+                                        _number_data_point(12),
+                                        _number_data_point(13),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
+
+        split_metrics_data: List[MetricsData] = list(
+            # pylint: disable=protected-access
+            _split_metrics_data(
+                metrics_data=metrics_data,
+                max_export_batch_size=3,
+            )
+        )
+
+        self.assertEqual(
+            [
+                pb2.MetricsData(
+                    resource_metrics=[
+                        _resource_metrics(
+                            index=1,
+                            scope_metrics=[
+                                _scope_metrics(
+                                    index=1,
+                                    metrics=[
+                                        _gauge(
+                                            index=1,
+                                            data_points=[
+                                                _number_data_point(11),
+                                                _number_data_point(12),
+                                                _number_data_point(13),
+                                            ],
+                                        ),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ]
+                ),
+            ],
+            split_metrics_data,
+        )
+
+    def test_split_metrics_data_many_resources_scopes_metrics(self):
+        # GIVEN
+        metrics_data = pb2.MetricsData(
+            resource_metrics=[
+                _resource_metrics(
+                    index=1,
+                    scope_metrics=[
+                        _scope_metrics(
+                            index=1,
+                            metrics=[
+                                _gauge(
+                                    index=1,
+                                    data_points=[
+                                        _number_data_point(11),
+                                    ],
+                                ),
+                                _gauge(
+                                    index=2,
+                                    data_points=[
+                                        _number_data_point(12),
+                                    ],
+                                ),
+                            ],
+                        ),
+                        _scope_metrics(
+                            index=2,
+                            metrics=[
+                                _gauge(
+                                    index=3,
+                                    data_points=[
+                                        _number_data_point(13),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+                _resource_metrics(
+                    index=2,
+                    scope_metrics=[
+                        _scope_metrics(
+                            index=3,
+                            metrics=[
+                                _gauge(
+                                    index=4,
+                                    data_points=[
+                                        _number_data_point(14),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
+
+        split_metrics_data: List[MetricsData] = list(
+            # pylint: disable=protected-access
+            _split_metrics_data(
+                metrics_data=metrics_data,
+                max_export_batch_size=2,
+            )
+        )
+
+        self.assertEqual(
+            [
+                pb2.MetricsData(
+                    resource_metrics=[
+                        _resource_metrics(
+                            index=1,
+                            scope_metrics=[
+                                _scope_metrics(
+                                    index=1,
+                                    metrics=[
+                                        _gauge(
+                                            index=1,
+                                            data_points=[
+                                                _number_data_point(11),
+                                            ],
+                                        ),
+                                        _gauge(
+                                            index=2,
+                                            data_points=[
+                                                _number_data_point(12),
+                                            ],
+                                        ),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ]
+                ),
+                pb2.MetricsData(
+                    resource_metrics=[
+                        _resource_metrics(
+                            index=1,
+                            scope_metrics=[
+                                _scope_metrics(
+                                    index=2,
+                                    metrics=[
+                                        _gauge(
+                                            index=3,
+                                            data_points=[
+                                                _number_data_point(13),
+                                            ],
+                                        ),
+                                    ],
+                                ),
+                            ],
+                        ),
+                        _resource_metrics(
+                            index=2,
+                            scope_metrics=[
+                                _scope_metrics(
+                                    index=3,
+                                    metrics=[
+                                        _gauge(
+                                            index=4,
+                                            data_points=[
+                                                _number_data_point(14),
+                                            ],
+                                        ),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ]
+                ),
+            ],
+            split_metrics_data,
+        )
+
+    def test_get_split_resource_metrics_pb2_one_of_each(self):
+        split_resource_metrics = [
+            {
+                "resource": Pb2Resource(
+                    attributes=[
+                        KeyValue(key="foo", value={"string_value": "bar"})
+                    ],
+                ),
+                "schema_url": "http://foo-bar",
+                "scope_metrics": [
+                    {
+                        "scope": InstrumentationScope(
+                            name="foo-scope", version="1.0.0"
+                        ),
+                        "schema_url": "http://foo-baz",
+                        "metrics": [
+                            {
+                                "name": "foo-metric",
+                                "description": "foo-description",
+                                "unit": "foo-unit",
+                                "sum": {
+                                    "aggregation_temporality": 1,
+                                    "is_monotonic": True,
+                                    "data_points": [
+                                        pb2.NumberDataPoint(
+                                            attributes=[
+                                                KeyValue(
+                                                    key="dp_key",
+                                                    value={
+                                                        "string_value": "dp_value"
+                                                    },
+                                                )
+                                            ],
+                                            start_time_unix_nano=12345,
+                                            time_unix_nano=12350,
+                                            as_double=42.42,
+                                        )
+                                    ],
+                                },
+                            }
+                        ],
+                    }
+                ],
+            }
+        ]
+
+        result = _get_split_resource_metrics_pb2(split_resource_metrics)
+        self.assertEqual(len(result), 1)
+        self.assertIsInstance(result[0], pb2.ResourceMetrics)
+        self.assertEqual(result[0].schema_url, "http://foo-bar")
+        self.assertEqual(len(result[0].scope_metrics), 1)
+        self.assertEqual(result[0].scope_metrics[0].scope.name, "foo-scope")
+        self.assertEqual(len(result[0].scope_metrics[0].metrics), 1)
+        self.assertEqual(
+            result[0].scope_metrics[0].metrics[0].name, "foo-metric"
+        )
+        self.assertEqual(
+            result[0].scope_metrics[0].metrics[0].sum.is_monotonic, True
+        )
+
+    def test_get_split_resource_metrics_pb2_multiples(self):
+        split_resource_metrics = [
+            {
+                "resource": Pb2Resource(
+                    attributes=[
+                        KeyValue(key="foo1", value={"string_value": "bar2"})
+                    ],
+                ),
+                "schema_url": "http://foo-bar-1",
+                "scope_metrics": [
+                    {
+                        "scope": InstrumentationScope(
+                            name="foo-scope-1", version="1.0.0"
+                        ),
+                        "schema_url": "http://foo-baz-1",
+                        "metrics": [
+                            {
+                                "name": "foo-metric-1",
+                                "description": "foo-description-1",
+                                "unit": "foo-unit-1",
+                                "gauge": {
+                                    "data_points": [
+                                        pb2.NumberDataPoint(
+                                            attributes=[
+                                                KeyValue(
+                                                    key="dp_key",
+                                                    value={
+                                                        "string_value": "dp_value"
+                                                    },
+                                                )
+                                            ],
+                                            start_time_unix_nano=12345,
+                                            time_unix_nano=12350,
+                                            as_double=42.42,
+                                        )
+                                    ],
+                                },
+                            }
+                        ],
+                    }
+                ],
+            },
+            {
+                "resource": Pb2Resource(
+                    attributes=[
+                        KeyValue(key="foo2", value={"string_value": "bar2"})
+                    ],
+                ),
+                "schema_url": "http://foo-bar-2",
+                "scope_metrics": [
+                    {
+                        "scope": InstrumentationScope(
+                            name="foo-scope-2", version="2.0.0"
+                        ),
+                        "schema_url": "http://foo-baz-2",
+                        "metrics": [
+                            {
+                                "name": "foo-metric-2",
+                                "description": "foo-description-2",
+                                "unit": "foo-unit-2",
+                                "histogram": {
+                                    "aggregation_temporality": 2,
+                                    "data_points": [
+                                        pb2.HistogramDataPoint(
+                                            attributes=[
+                                                KeyValue(
+                                                    key="dp_key",
+                                                    value={
+                                                        "string_value": "dp_value"
+                                                    },
+                                                )
+                                            ],
+                                            start_time_unix_nano=12345,
+                                            time_unix_nano=12350,
+                                        )
+                                    ],
+                                },
+                            }
+                        ],
+                    }
+                ],
+            },
+        ]
+
+        result = _get_split_resource_metrics_pb2(split_resource_metrics)
+        self.assertEqual(len(result), 2)
+        self.assertEqual(result[0].schema_url, "http://foo-bar-1")
+        self.assertEqual(result[1].schema_url, "http://foo-bar-2")
+        self.assertEqual(len(result[0].scope_metrics), 1)
+        self.assertEqual(len(result[1].scope_metrics), 1)
+        self.assertEqual(result[0].scope_metrics[0].scope.name, "foo-scope-1")
+        self.assertEqual(result[1].scope_metrics[0].scope.name, "foo-scope-2")
+        self.assertEqual(
+            result[0].scope_metrics[0].metrics[0].name, "foo-metric-1"
+        )
+        self.assertEqual(
+            result[1].scope_metrics[0].metrics[0].name, "foo-metric-2"
+        )
+
+    def test_get_split_resource_metrics_pb2_unsupported_metric_type(self):
+        split_resource_metrics = [
+            {
+                "resource": Pb2Resource(
+                    attributes=[
+                        KeyValue(key="foo", value={"string_value": "bar"})
+                    ],
+                ),
+                "schema_url": "http://foo-bar",
+                "scope_metrics": [
+                    {
+                        "scope": InstrumentationScope(
+                            name="foo", version="1.0.0"
+                        ),
+                        "schema_url": "http://foo-baz",
+                        "metrics": [
+                            {
+                                "name": "unsupported-metric",
+                                "description": "foo-bar",
+                                "unit": "foo-bar",
+                                "unsupported_metric_type": {},
+                            }
+                        ],
+                    }
+                ],
+            }
+        ]
+
+        with self.assertLogs(level="WARNING") as log:
+            result = _get_split_resource_metrics_pb2(split_resource_metrics)
+        self.assertEqual(len(result), 1)
+        self.assertIn(
+            "Tried to split and export an unsupported metric type",
+            log.output[0],
+        )
+
+    @patch.object(OTLPMetricExporter, "_export")
+    @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.random")
+    @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.time")
+    @patch(
+        "opentelemetry.exporter.otlp.proto.http.metric_exporter.encode_metrics"
+    )
+    def test_export_retries_with_batching_success(
+        self,
+        mock_encode_metrics,
+        mock_time,
+        mock_random,
+        mock_export,
+    ):
+        mock_time.return_value = 0
+        mock_random.uniform.return_value = 1
+        mock_export.side_effect = [
+            # Success
+            MagicMock(ok=True),
+            MagicMock(ok=True),
+        ]
+        mock_encode_metrics.return_value = pb2.MetricsData(
+            resource_metrics=[
+                _resource_metrics(
+                    index=1,
+                    scope_metrics=[
+                        _scope_metrics(
+                            index=1,
+                            metrics=[
+                                _gauge(
+                                    index=1,
+                                    data_points=[
+                                        _number_data_point(11),
+                                        _number_data_point(12),
+                                        _number_data_point(13),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
+        batch_1 = pb2.MetricsData(
+            resource_metrics=[
+                _resource_metrics(
+                    index=1,
+                    scope_metrics=[
+                        _scope_metrics(
+                            index=1,
+                            metrics=[
+                                _gauge(
+                                    index=1,
+                                    data_points=[
+                                        _number_data_point(11),
+                                        _number_data_point(12),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
+        batch_2 = pb2.MetricsData(
+            resource_metrics=[
+                _resource_metrics(
+                    index=1,
+                    scope_metrics=[
+                        _scope_metrics(
+                            index=1,
+                            metrics=[
+                                _gauge(
+                                    index=1,
+                                    data_points=[
+                                        _number_data_point(13),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
+
+        exporter = OTLPMetricExporter(max_export_batch_size=2)
+        result = exporter.export("foo")
+        self.assertEqual(result, MetricExportResult.SUCCESS)
+        self.assertEqual(mock_export.call_count, 2)
+        mock_export.assert_has_calls(
+            [
+                call(batch_1.SerializeToString(), 10),
+                call(batch_2.SerializeToString(), 10),
+            ]
+        )
+
+    @patch.object(OTLPMetricExporter, "_export")
+    @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.random")
+    @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.time")
+    @patch(
+        "opentelemetry.exporter.otlp.proto.http.metric_exporter.encode_metrics"
+    )
+    def test_export_retries_with_batching_failure_first(
+        self,
+        mock_encode_metrics,
+        mock_time,
+        mock_random,
+        mock_export,
+    ):
+        mock_time.return_value = 0
+        mock_random.uniform.return_value = 1
+        mock_export.side_effect = [
+            # Non-retryable
+            MagicMock(ok=False, status_code=400, reason="bad request"),
+            MagicMock(ok=True),
+            MagicMock(ok=True),
+        ]
+        mock_encode_metrics.return_value = pb2.MetricsData(
+            resource_metrics=[
+                _resource_metrics(
+                    index=1,
+                    scope_metrics=[
+                        _scope_metrics(
+                            index=1,
+                            metrics=[
+                                _gauge(
+                                    index=1,
+                                    data_points=[
+                                        _number_data_point(11),
+                                        _number_data_point(12),
+                                        _number_data_point(13),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
+        batch_1 = pb2.MetricsData(
+            resource_metrics=[
+                _resource_metrics(
+                    index=1,
+                    scope_metrics=[
+                        _scope_metrics(
+                            index=1,
+                            metrics=[
+                                _gauge(
+                                    index=1,
+                                    data_points=[
+                                        _number_data_point(11),
+                                        _number_data_point(12),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
+
+        exporter = OTLPMetricExporter(max_export_batch_size=2)
+        result = exporter.export("foo")
+        # Return FAILURE when first batch fails (consistent with gRPC)
+        self.assertEqual(result, MetricExportResult.FAILURE)
+        # Only first batch is exported before failure
+        self.assertEqual(mock_export.call_count, 1)
+        mock_export.assert_has_calls(
+            [
+                call(batch_1.SerializeToString(), 10),
+            ]
+        )
+
+    @patch.object(OTLPMetricExporter, "_export")
+    @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.random")
+    @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.time")
+    @patch(
+        "opentelemetry.exporter.otlp.proto.http.metric_exporter.encode_metrics"
+    )
+    def test_export_retries_with_batching_failure_last(
+        self,
+        mock_encode_metrics,
+        mock_time,
+        mock_random,
+        mock_export,
+    ):
+        mock_time.return_value = 0
+        mock_random.uniform.return_value = 1
+        mock_export.side_effect = [
+            # Success
+            MagicMock(ok=True),
+            # Non-retryable
+            MagicMock(ok=False, status_code=400, reason="bad request"),
+        ]
+        mock_encode_metrics.return_value = pb2.MetricsData(
+            resource_metrics=[
+                _resource_metrics(
+                    index=1,
+                    scope_metrics=[
+                        _scope_metrics(
+                            index=1,
+                            metrics=[
+                                _gauge(
+                                    index=1,
+                                    data_points=[
+                                        _number_data_point(11),
+                                        _number_data_point(12),
+                                        _number_data_point(13),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
+        batch_1 = pb2.MetricsData(
+            resource_metrics=[
+                _resource_metrics(
+                    index=1,
+                    scope_metrics=[
+                        _scope_metrics(
+                            index=1,
+                            metrics=[
+                                _gauge(
+                                    index=1,
+                                    data_points=[
+                                        _number_data_point(11),
+                                        _number_data_point(12),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
+        batch_2 = pb2.MetricsData(
+            resource_metrics=[
+                _resource_metrics(
+                    index=1,
+                    scope_metrics=[
+                        _scope_metrics(
+                            index=1,
+                            metrics=[
+                                _gauge(
+                                    index=1,
+                                    data_points=[
+                                        _number_data_point(13),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
+
+        exporter = OTLPMetricExporter(max_export_batch_size=2)
+        result = exporter.export("foo")
+        self.assertEqual(result, MetricExportResult.FAILURE)
+        self.assertEqual(mock_export.call_count, 2)
+        mock_export.assert_has_calls(
+            [
+                call(batch_1.SerializeToString(), 10),
+                call(batch_2.SerializeToString(), 10),
+            ]
+        )
+
+    @patch.object(OTLPMetricExporter, "_export")
+    @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.random")
+    @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.time")
+    @patch(
+        "opentelemetry.exporter.otlp.proto.http.metric_exporter.encode_metrics"
+    )
+    def test_export_retries_with_batching_failure_retryable(
+        self,
+        mock_encode_metrics,
+        mock_time,
+        mock_random,
+        mock_export,
+    ):
+        mock_time.return_value = 0
+        mock_random.uniform.return_value = 1
+        mock_export.side_effect = [
+            # Success
+            MagicMock(ok=True),
+            # Retryable
+            MagicMock(
+                ok=False, status_code=500, reason="internal server error"
+            ),
+            # Then success
+            MagicMock(ok=True),
+        ]
+        mock_encode_metrics.return_value = pb2.MetricsData(
+            resource_metrics=[
+                _resource_metrics(
+                    index=1,
+                    scope_metrics=[
+                        _scope_metrics(
+                            index=1,
+                            metrics=[
+                                _gauge(
+                                    index=1,
+                                    data_points=[
+                                        _number_data_point(11),
+                                        _number_data_point(12),
+                                        _number_data_point(13),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
+        batch_1 = pb2.MetricsData(
+            resource_metrics=[
+                _resource_metrics(
+                    index=1,
+                    scope_metrics=[
+                        _scope_metrics(
+                            index=1,
+                            metrics=[
+                                _gauge(
+                                    index=1,
+                                    data_points=[
+                                        _number_data_point(11),
+                                        _number_data_point(12),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
+        batch_2 = pb2.MetricsData(
+            resource_metrics=[
+                _resource_metrics(
+                    index=1,
+                    scope_metrics=[
+                        _scope_metrics(
+                            index=1,
+                            metrics=[
+                                _gauge(
+                                    index=1,
+                                    data_points=[
+                                        _number_data_point(13),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
+
+        exporter = OTLPMetricExporter(max_export_batch_size=2)
+        result = exporter.export("foo")
+        self.assertEqual(result, MetricExportResult.SUCCESS)
+        self.assertEqual(mock_export.call_count, 3)
+        mock_export.assert_has_calls(
+            [
+                call(batch_1.SerializeToString(), 10),
+                call(batch_2.SerializeToString(), 10),
+                call(batch_2.SerializeToString(), 10),
+            ]
         )
 
     def test_aggregation_temporality(self):
@@ -635,3 +1482,44 @@ class TestOTLPMetricExporter(TestCase):
             )
 
             assert after - before < 0.2
+
+
+def _resource_metrics(
+    index: int, scope_metrics: List[pb2.ScopeMetrics]
+) -> pb2.ResourceMetrics:
+    return pb2.ResourceMetrics(
+        resource={
+            "attributes": [KeyValue(key="a", value={"int_value": index})],
+        },
+        schema_url=f"resource_url_{index}",
+        scope_metrics=scope_metrics,
+    )
+
+
+def _scope_metrics(index: int, metrics: List[pb2.Metric]) -> pb2.ScopeMetrics:
+    return pb2.ScopeMetrics(
+        scope=InstrumentationScope(name=f"scope_{index}"),
+        schema_url=f"scope_url_{index}",
+        metrics=metrics,
+    )
+
+
+def _gauge(index: int, data_points: List[pb2.NumberDataPoint]) -> pb2.Metric:
+    return pb2.Metric(
+        name=f"gauge_{index}",
+        description="description",
+        unit="unit",
+        gauge=pb2.Gauge(data_points=data_points),
+    )
+
+
+def _number_data_point(value: int) -> pb2.NumberDataPoint:
+    return pb2.NumberDataPoint(
+        attributes=[
+            KeyValue(key="a", value={"int_value": 1}),
+            KeyValue(key="b", value={"bool_value": True}),
+        ],
+        start_time_unix_nano=1641946015139533244,
+        time_unix_nano=1641946016139533244,
+        as_int=value,
+    )
