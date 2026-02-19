@@ -27,7 +27,7 @@ Prometheus text format on request::
     from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 
     # Service name is required for most backends
-    resource = Resource(attributes={
+    resource = Resource.create(attributes={
         SERVICE_NAME: "your-service-name"
     })
 
