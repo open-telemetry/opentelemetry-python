@@ -36,6 +36,13 @@ _VALID_ANY_VALUE_TYPES = (
 )
 
 
+# TODO: Remove this workaround and revert to the simpler implementation
+# once Python 3.9 support is dropped (planned around May 2026).
+# This exists only to avoid issues caused by deprecated behavior in 3.9.
+def _type_name(t):
+    return getattr(t, "__name__", getattr(t, "_name", repr(t)))
+
+
 _logger = logging.getLogger(__name__)
 
 
@@ -190,7 +197,7 @@ def _clean_extended_attribute_value(  # pylint: disable=too-many-branches
     except Exception:
         raise TypeError(
             f"Invalid type {type(value).__name__} for attribute value. "
-            f"Expected one of {[valid_type.__name__ for valid_type in _VALID_ANY_VALUE_TYPES]} or a "
+            f"Expected one of {[_type_name(valid_type) for valid_type in _VALID_ANY_VALUE_TYPES]} or a "
             "sequence of those types",
         )
 
