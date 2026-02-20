@@ -291,6 +291,12 @@ Please fork this repo in a personal Github account instead.
 
 One of the maintainers will merge the PR once it is **ready to merge**.
 
+### Stale PRs
+
+PRs with no activity for 14 days will be automatically marked as stale and closed after a further 14 days of inactivity. To prevent a PR from being marked stale, ensure there is regular activity (commits, comments, reviews, etc).
+
+Project managers can also exempt a PR from this by applying one of the following labels: `hold`, `WIP`, `blocked by spec`, `do not merge`.
+
 ## Design Choices
 
 As with other OpenTelemetry clients, opentelemetry-python follows the
