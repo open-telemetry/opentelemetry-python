@@ -16,7 +16,6 @@
 from typing import Optional
 
 from opentelemetry.attributes import BoundedAttributes
-from opentelemetry.sdk.metrics._internal.point import DEFAULT_DATA_POINT_FLAGS
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     DataPointFlags,
@@ -52,10 +51,12 @@ def _generate_sum(
     description=None,
     unit=None,
     is_monotonic=True,
-    flags=DEFAULT_DATA_POINT_FLAGS,
+    flags=None,
 ) -> Metric:
     if attributes is None:
         attributes = BoundedAttributes(attributes={"a": 1, "b": True})
+    if flags is None:
+        flags = DataPointFlags.get_default()
     return _generate_metric(
         name,
         Sum(
@@ -82,10 +83,12 @@ def _generate_gauge(
     attributes=None,
     description=None,
     unit=None,
-    flags=DEFAULT_DATA_POINT_FLAGS,
+    flags=None,
 ) -> Metric:
     if attributes is None:
         attributes = BoundedAttributes(attributes={"a": 1, "b": True})
+    if flags is None:
+        flags = DataPointFlags.get_default()
     return _generate_metric(
         name,
         Gauge(
@@ -120,10 +123,12 @@ def _generate_histogram(
     attributes: Attributes = None,
     description: Optional[str] = None,
     unit: Optional[str] = None,
-    flags: DataPointFlags = DEFAULT_DATA_POINT_FLAGS,
+    flags: Optional[DataPointFlags] = None,
 ) -> Metric:
     if attributes is None:
         attributes = BoundedAttributes(attributes={"a": 1, "b": True})
+    if flags is None:
+        flags = DataPointFlags.get_default()
     return _generate_metric(
         name,
         Histogram(
