@@ -15,11 +15,14 @@
 # pylint: disable=unused-import
 
 from dataclasses import dataclass
-from typing import Sequence
+from typing import Optional, Sequence
 
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics
 import opentelemetry.sdk.resources
+from opentelemetry.sdk.metrics._internal.measurement_processor import (
+    MeasurementProcessorChain,
+)
 
 
 @dataclass
@@ -28,3 +31,4 @@ class SdkConfiguration:
     resource: "opentelemetry.sdk.resources.Resource"
     metric_readers: Sequence["opentelemetry.sdk.metrics.MetricReader"]
     views: Sequence["opentelemetry.sdk.metrics.View"]
+    measurement_processor_chain: Optional[MeasurementProcessorChain] = None
