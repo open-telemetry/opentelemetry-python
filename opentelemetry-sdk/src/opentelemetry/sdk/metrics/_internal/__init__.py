@@ -87,10 +87,10 @@ class Meter(APIMeter):
         self._instrumentation_scope = instrumentation_scope
         self._measurement_consumer = measurement_consumer
         self._instrument_id_instrument = {}
-        self._instrument_id_instrument_lock = Lock()
+        self._instrument_registration_lock = Lock()
 
     def create_counter(self, name, unit="", description="") -> APICounter:
-        with self._instrument_id_instrument_lock:
+        with self._instrument_registration_lock:
             status = self._register_instrument(
                 name, _Counter, unit, description
             )
@@ -122,7 +122,7 @@ class Meter(APIMeter):
     def create_up_down_counter(
         self, name, unit="", description=""
     ) -> APIUpDownCounter:
-        with self._instrument_id_instrument_lock:
+        with self._instrument_registration_lock:
             status = self._register_instrument(
                 name, _UpDownCounter, unit, description
             )
@@ -158,7 +158,7 @@ class Meter(APIMeter):
         unit="",
         description="",
     ) -> APIObservableCounter:
-        with self._instrument_id_instrument_lock:
+        with self._instrument_registration_lock:
             status = self._register_instrument(
                 name, _ObservableCounter, unit, description
             )
@@ -222,7 +222,7 @@ class Meter(APIMeter):
                     "explicit_bucket_boundaries_advisory must be a sequence of numbers"
                 )
 
-        with self._instrument_id_instrument_lock:
+        with self._instrument_registration_lock:
             status = self._register_instrument(
                 name,
                 _Histogram,
@@ -257,7 +257,7 @@ class Meter(APIMeter):
         return instrument
 
     def create_gauge(self, name, unit="", description="") -> APIGauge:
-        with self._instrument_id_instrument_lock:
+        with self._instrument_registration_lock:
             status = self._register_instrument(name, _Gauge, unit, description)
             if not status.already_registered:
                 self._instrument_id_instrument[status.instrument_id] = _Gauge(
@@ -285,7 +285,7 @@ class Meter(APIMeter):
     def create_observable_gauge(
         self, name, callbacks=None, unit="", description=""
     ) -> APIObservableGauge:
-        with self._instrument_id_instrument_lock:
+        with self._instrument_registration_lock:
             status = self._register_instrument(
                 name, _ObservableGauge, unit, description
             )
@@ -323,7 +323,7 @@ class Meter(APIMeter):
     def create_observable_up_down_counter(
         self, name, callbacks=None, unit="", description=""
     ) -> APIObservableUpDownCounter:
-        with self._instrument_id_instrument_lock:
+        with self._instrument_registration_lock:
             status = self._register_instrument(
                 name, _ObservableUpDownCounter, unit, description
             )
