@@ -56,9 +56,6 @@ class DataPointFlags(int):
         return bool(self & self.NO_RECORDED_VALUE)
 
 
-DEFAULT_DATA_POINT_FLAGS = DataPointFlags.get_default()
-
-
 @dataclass(frozen=True)
 class NumberDataPoint:
     """Single data point in a timeseries that describes the time-varying scalar
@@ -70,7 +67,7 @@ class NumberDataPoint:
     time_unix_nano: int
     value: Union[int, float]
     exemplars: Sequence[Exemplar] = field(default_factory=list)
-    flags: DataPointFlags = DEFAULT_DATA_POINT_FLAGS
+    flags: DataPointFlags = DataPointFlags.get_default()
 
     def to_json(self, indent: Optional[int] = 4) -> str:
         return dumps(asdict(self), indent=indent)
@@ -92,7 +89,7 @@ class HistogramDataPoint:
     min: float
     max: float
     exemplars: Sequence[Exemplar] = field(default_factory=list)
-    flags: DataPointFlags = DEFAULT_DATA_POINT_FLAGS
+    flags: DataPointFlags = DataPointFlags.get_default()
 
     def to_json(self, indent: Optional[int] = 4) -> str:
         return dumps(asdict(self), indent=indent)
@@ -123,7 +120,7 @@ class ExponentialHistogramDataPoint:
     min: float
     max: float
     exemplars: Sequence[Exemplar] = field(default_factory=list)
-    flags: DataPointFlags = DEFAULT_DATA_POINT_FLAGS
+    flags: DataPointFlags = DataPointFlags.get_default()
 
     def to_json(self, indent: Optional[int] = 4) -> str:
         return dumps(asdict(self), indent=indent)
