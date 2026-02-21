@@ -484,6 +484,34 @@ def _import_id_generator(id_generator_name: str) -> IdGenerator:
     raise RuntimeError(f"{id_generator_name} is not an IdGenerator")
 
 
+def _import_opamp() -> callable[[...], None]:
+    # this in development, at the moment we are looking for a callable that takes
+    # the resource and instantiate an OpAMP agent.
+    # Since configuration is not specified every implementors may have its own.
+    # OpAMPAgent and OpAMPClient will be contributed once I finish writing tests :)
+    # def opamp_init(resource: Resource):
+    #     endpoint = os.environ.get("OTEL_PYTHON_OPAMP_ENDPOINT")
+    #     if endpoint:
+    #          opamp_client = OpAMPClient(
+    #                endpoint=endpoint,
+    #                agent_identifying_attributes={
+    #                    "service.name": resource.get("service.name"),
+    #                    "deployment.environment.name": resource.get("deployment.environment.name"),
+    #                },
+    #            )
+    #            opamp_agent = OpAMPAgent(
+    #                interval=30,
+    #                handler=opamp_handler, # this is an handler that gets called to process each OpAMP message
+    #                client=opamp_client,
+    #            )
+    #            opamp_agent.start()
+    _, opamp_init_func = _import_config_components(
+        ["_init_func"], "_opentelemetry_opamp"
+    )[0]
+
+    return opamp_init_func
+
+
 def _initialize_components(
     auto_instrumentation_version: str | None = None,
     trace_exporter_names: list[str] | None = None,
@@ -535,6 +563,21 @@ def _initialize_components(
     # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
     # from the env variable else defaults to "unknown_service"
     resource = Resource.create(resource_attributes)
+
+    # OpAMP is a system created to configure OpenTelemetry SDKs with a remote config.
+    # This is different than other init helpers because setting up OpAMP requires distro
+    # provided code as it's not strictly specified. We call OpAMP init before other code
+    # because people may want to have it blocking to get an updated config before setting
+    # up the rest. Content of OpAMP config depends on the implementor and vendors will
+    # have their own. OpAMP to be fully integrated will need to introduce the concept of a
+    # config so we can track the difference between current config and a newly provided remote
+    # config. The goal is to have configuration updated dynamically while our SDK config is
+    # currently static.
+    try:
+        _init_opamp = _import_opamp()
+        _init_opamp(resource=resource)
+    except RuntimeError:
+        _logger.debug("No OpAMP init function found")
 
     _init_tracing(
         exporters=span_exporters,
