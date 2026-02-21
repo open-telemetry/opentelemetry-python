@@ -12,3 +12,4 @@ OpenTelemetry Python SDK
     metrics
     error_handler
     environment_variables
+    entry_points
