@@ -42,7 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4709](https://github.com/open-telemetry/opentelemetry-python/pull/4709))
 - Implement experimental TracerConfigurator
   ([#4861](https://github.com/open-telemetry/opentelemetry-python/pull/4861))
-- `opentelemetry-sdk`, `opentelemetry-exporter-otlp-proto-common`: Add support for metric data-point flags 
+- [BREAKING] `opentelemetry-sdk`, `opentelemetry-exporter-otlp-proto-common`: Add support for metric data-point flags 
   ([#4916](https://github.com/open-telemetry/opentelemetry-python/pull/4916))
 
 ## Version 1.39.0/0.60b0 (2025-12-03)
