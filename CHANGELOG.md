@@ -607,7 +607,7 @@ can cause a deadlock to occur over `logging._lock` in some cases ([#4636](https:
   - The exporter's API is not changed
 - Add parameters for Distros and configurators to configure autoinstrumentation in addition to existing environment variables.
   ([#3864](https://github.com/open-telemetry/opentelemetry-python/pull/3864))
-- `opentelemetry-sdk`, `opentelemetry-exporter-otlp-proto-common`: Add support for metric data-point flags
+- [BREAKING] `opentelemetry-sdk`, `opentelemetry-exporter-otlp-proto-common`: Add support for metric data-point flags
   ([#4916](https://github.com/open-telemetry/opentelemetry-python/pull/4916))
 
 ## Version 1.24.0/0.45b0 (2024-03-28)
