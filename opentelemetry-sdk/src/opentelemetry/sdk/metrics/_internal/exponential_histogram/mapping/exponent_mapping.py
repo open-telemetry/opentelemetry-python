@@ -122,7 +122,24 @@ class ExponentMapping(Mapping):
 
         # In summary, correction will be -1 if value is a power of 2, 0 if not.
 
-        # FIXME Document why we can assume value will not be 0, inf, or NaN.
+        # map_to_index requires value to be a finite, positive real number.
+        # 0, inf, and NaN violate this precondition.
+
+        # Zero is represented in IEEE 754 with all exponent bits set to 0,
+        # giving get_ieee_754_exponent a result of -1023. Since -1023 is less
+        # than MIN_NORMAL_EXPONENT (-1022), zero is caught by the guard above
+        # and returned early.
+
+        # Inf is represented in IEEE 754 with all 11 exponent bits set to 1
+        # and a mantissa of 0, giving get_ieee_754_exponent a result of 1024
+        # and correction a value of -1.
+
+        # NaN is represented in IEEE 754 with all 11 exponent bits set to 1
+        # and a non-zero mantissa of unspecified bit pattern, producing an
+        # unspecified correction value.
+
+        # Inf and NaN are not caught by the guard above. Callers must ensure
+        # that only finite, positive values are passed to map_to_index.
         correction = (get_ieee_754_mantissa(value) - 1) >> MANTISSA_WIDTH
 
         return (exponent + correction) >> -self._scale
