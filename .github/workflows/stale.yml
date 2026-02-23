@@ -28,6 +28,8 @@ jobs:
             This PR has been automatically marked as stale because it has not had
             any activity for 14 days. It will be closed if no further activity
             occurs within 14 days of this comment.
+
+            If you're still working on this, please add a comment or push new commits.
           close-pr-message: >
             This PR has been closed due to inactivity. Please reopen if you would
             like to continue working on it.
