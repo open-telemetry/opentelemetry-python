@@ -22,5 +22,5 @@ Note: MUST be the same for all instances of horizontally scaled services. If the
 
 SERVICE_VERSION: Final = "service.version"
 """
-The version string of the service API or implementation. The format is not defined by these conventions.
+The version string of the service component. The format is not defined by these conventions.
 """

@@ -52,6 +52,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_PROTOCOL,
     OTEL_EXPORTER_OTLP_PROTOCOL,
     OTEL_EXPORTER_OTLP_TRACES_PROTOCOL,
+    OTEL_PYTHON_TRACER_CONFIGURATOR,
     OTEL_TRACES_SAMPLER,
     OTEL_TRACES_SAMPLER_ARG,
 )
@@ -62,7 +63,11 @@ from opentelemetry.sdk.metrics.export import (
     PeriodicExportingMetricReader,
 )
 from opentelemetry.sdk.resources import Attributes, Resource
-from opentelemetry.sdk.trace import SpanProcessor, TracerProvider
+from opentelemetry.sdk.trace import (
+    SpanProcessor,
+    TracerProvider,
+    _TracerConfiguratorT,
+)
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExporter
 from opentelemetry.sdk.trace.id_generator import IdGenerator
 from opentelemetry.sdk.trace.sampling import Sampler
@@ -162,6 +167,10 @@ def _get_id_generator() -> str:
     return environ.get(OTEL_PYTHON_ID_GENERATOR, _DEFAULT_ID_GENERATOR)
 
 
+def _get_tracer_configurator() -> str | None:
+    return environ.get(OTEL_PYTHON_TRACER_CONFIGURATOR, None)
+
+
 def _get_exporter_entry_point(
     exporter_name: str, signal_type: Literal["traces", "metrics", "logs"]
 ):
@@ -228,11 +237,13 @@ def _init_tracing(
     exporter_args_map: ExporterArgsMap | None = None,
     span_processors: Sequence[SpanProcessor] | None = None,
     export_span_processor: _ConfigurationExporterSpanProcessorT | None = None,
+    tracer_configurator: _TracerConfiguratorT | None = None,
 ):
     provider = TracerProvider(
         id_generator=id_generator,
         sampler=sampler,
         resource=resource,
+        _tracer_configurator=tracer_configurator,
     )
     set_tracer_provider(provider)
 
@@ -346,6 +357,27 @@ def _overwrite_logging_config_fns(handler: LoggingHandler) -> None:
     logging.config.fileConfig = wrapper(logging.config.fileConfig)
     logging.config.dictConfig = wrapper(logging.config.dictConfig)
     logging.basicConfig = wrapper(logging.basicConfig)
+
+
+def _import_tracer_configurator(
+    tracer_configurator_name: str | None,
+) -> _TracerConfiguratorT | None:
+    if not tracer_configurator_name:
+        return None
+
+    try:
+        _, tracer_configurator_impl = _import_config_components(
+            [tracer_configurator_name.strip()],
+            "_opentelemetry_tracer_configurator",
+        )[0]
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        _logger.warning(
+            "Using default tracer configurator. Failed to load tracer configurator, %s: %s",
+            tracer_configurator_name,
+            exc,
+        )
+        return None
+    return tracer_configurator_impl
 
 
 def _import_exporters(
@@ -467,6 +499,7 @@ def _initialize_components(
     log_record_processors: Sequence[LogRecordProcessor] | None = None,
     export_log_record_processor: _ConfigurationExporterLogRecordProcessorT
     | None = None,
+    tracer_configurator: _TracerConfiguratorT | None = None,
 ):
     # pylint: disable=too-many-locals
     if trace_exporter_names is None:
@@ -493,6 +526,12 @@ def _initialize_components(
         resource_attributes[ResourceAttributes.TELEMETRY_AUTO_VERSION] = (  # type: ignore[reportIndexIssue]
             auto_instrumentation_version
         )
+    if tracer_configurator is None:
+        tracer_configurator_name = _get_tracer_configurator()
+        tracer_configurator = _import_tracer_configurator(
+            tracer_configurator_name
+        )
+
     # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
     # from the env variable else defaults to "unknown_service"
     resource = Resource.create(resource_attributes)
@@ -505,6 +544,7 @@ def _initialize_components(
         exporter_args_map=exporter_args_map,
         span_processors=span_processors,
         export_span_processor=export_span_processor,
+        tracer_configurator=tracer_configurator,
     )
     _init_metrics(
         metric_exporters, resource, exporter_args_map=exporter_args_map
