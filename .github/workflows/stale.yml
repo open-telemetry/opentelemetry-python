@@ -2,7 +2,6 @@ name: Mark stale PRs
 
 on:
   schedule:
-    # hourly at minute 23
     - cron: "12 3 * * *"
   workflow_dispatch:
 
