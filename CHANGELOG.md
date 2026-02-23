@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add stale PR GitHub Action
   ([#4926](https://github.com/open-telemetry/opentelemetry-python/pull/4926))
+- `opentelemetry-sdk`: Drop unused Jaeger exporter environment variables (exporter removed in 1.22.0)
+  ([#4918](https://github.com/open-telemetry/opentelemetry-python/issues/4918))
 - `opentelemetry-sdk`: Clarify timeout units in environment variable documentation
   ([#4906](https://github.com/open-telemetry/opentelemetry-python/pull/4906))
 - `opentelemetry-exporter-otlp-proto-grpc`: Fix re-initialization of gRPC channel on UNAVAILABLE error
@@ -34,6 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4806](https://github.com/open-telemetry/opentelemetry-python/pull/4806))
 - Prevent possible endless recursion from happening in `SimpleLogRecordProcessor.on_emit`,
   ([#4799](https://github.com/open-telemetry/opentelemetry-python/pull/4799)) and ([#4867](https://github.com/open-telemetry/opentelemetry-python/pull/4867)).
+- Implement span start/end metrics
+  ([#4880](https://github.com/open-telemetry/opentelemetry-python/pull/4880))
 - Add environment variable carriers to API
   ([#4609](https://github.com/open-telemetry/opentelemetry-python/pull/4609))
 - Add experimental composable rule based sampler
@@ -42,6 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4862](https://github.com/open-telemetry/opentelemetry-python/pull/4862))
 - `opentelemetry-exporter-otlp-proto-http`: fix retry logic and error handling for connection failures in trace, metric, and log exporters
   ([#4709](https://github.com/open-telemetry/opentelemetry-python/pull/4709))
+- `opentelemetry-sdk`: avoid RuntimeError during iteration of view instrument match dictionary in MetricReaderStorage.collect()
+  ([#4891](https://github.com/open-telemetry/opentelemetry-python/pull/4891))
 - Implement experimental TracerConfigurator
   ([#4861](https://github.com/open-telemetry/opentelemetry-python/pull/4861))
 - bump semantic-conventions to v1.39.0
