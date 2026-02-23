@@ -432,11 +432,12 @@ class MeterProvider(APIMeterProvider):
                 )
             ),
             resource=resource,
-            metric_readers=metric_readers,
             views=views,
         )
+        self._metric_readers = metric_readers
         self._measurement_consumer = SynchronousMeasurementConsumer(
-            sdk_config=self._sdk_config
+            sdk_config=self._sdk_config,
+            metric_readers=metric_readers,
         )
         disabled = environ.get(OTEL_SDK_DISABLED, "")
         self._disabled = disabled.lower().strip() == "true"
@@ -448,7 +449,7 @@ class MeterProvider(APIMeterProvider):
         self._shutdown_once = Once()
         self._shutdown = False
 
-        for metric_reader in self._sdk_config.metric_readers:
+        for metric_reader in self._metric_readers:
             with self._all_metric_readers_lock:
                 if metric_reader in self._all_metric_readers:
                     # pylint: disable=broad-exception-raised
@@ -468,7 +469,7 @@ class MeterProvider(APIMeterProvider):
 
         metric_reader_error = {}
 
-        for metric_reader in self._sdk_config.metric_readers:
+        for metric_reader in self._metric_readers:
             current_ts = time_ns()
             try:
                 if current_ts >= deadline_ns:
@@ -513,7 +514,7 @@ class MeterProvider(APIMeterProvider):
 
         metric_reader_error = {}
 
-        for metric_reader in self._sdk_config.metric_readers:
+        for metric_reader in self._metric_readers:
             current_ts = time_ns()
             try:
                 if current_ts >= deadline_ns:
@@ -580,3 +581,31 @@ class MeterProvider(APIMeterProvider):
                     self._measurement_consumer,
                 )
             return self._meters[info]
+
+    def add_metric_reader(
+        self, metric_reader: "opentelemetry.sdk.metrics.export.MetricReader"
+    ) -> None:
+        with self._all_metric_readers_lock:
+            if metric_reader in self._all_metric_readers:
+                raise ValueError(
+                    f"MetricReader {metric_reader} has been registered already!"
+                )
+            self._measurement_consumer.add_metric_reader(metric_reader)
+            metric_reader._set_collect_callback(
+                self._measurement_consumer.collect
+            )
+            self._all_metric_readers.add(metric_reader)
+
+    def remove_metric_reader(
+        self,
+        metric_reader: "opentelemetry.sdk.metrics.export.MetricReader",
+    ) -> None:
+        with self._all_metric_readers_lock:
+            if metric_reader not in self._all_metric_readers:
+                raise ValueError(
+                    f"MetricReader {metric_reader} has not been registered!"
+                )
+            self._measurement_consumer.remove_metric_reader(metric_reader)
+            metric_reader._set_collect_callback(None)
+            metric_reader.shutdown()
+            self._all_metric_readers.remove(metric_reader)
