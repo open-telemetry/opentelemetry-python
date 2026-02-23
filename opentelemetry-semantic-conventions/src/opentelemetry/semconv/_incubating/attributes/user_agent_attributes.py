@@ -18,7 +18,7 @@ from typing import Final
 USER_AGENT_NAME: Final = "user_agent.name"
 """
 Name of the user-agent extracted from original. Usually refers to the browser's name.
-Note: [Example](https://www.whatsmyua.info) of extracting browser's name from original string. In the case of using a user-agent for non-browser products, such as microservices with multiple names/versions inside the `user_agent.original`, the most significant name SHOULD be selected. In such a scenario it should align with `user_agent.version`.
+Note: [Example](https://uaparser.dev/#demo) of extracting browser's name from original string. In the case of using a user-agent for non-browser products, such as microservices with multiple names/versions inside the `user_agent.original`, the most significant name SHOULD be selected. In such a scenario it should align with `user_agent.version`.
 """
 
 USER_AGENT_ORIGINAL: Final = "user_agent.original"
@@ -47,7 +47,7 @@ Note: This attribute MAY be derived from the contents of the `user_agent.origina
 USER_AGENT_VERSION: Final = "user_agent.version"
 """
 Version of the user-agent extracted from original. Usually refers to the browser's version.
-Note: [Example](https://www.whatsmyua.info) of extracting browser's version from original string. In the case of using a user-agent for non-browser products, such as microservices with multiple names/versions inside the `user_agent.original`, the most significant version SHOULD be selected. In such a scenario it should align with `user_agent.name`.
+Note: [Example](https://uaparser.dev/#demo) of extracting browser's version from original string. In the case of using a user-agent for non-browser products, such as microservices with multiple names/versions inside the `user_agent.original`, the most significant version SHOULD be selected. In such a scenario it should align with `user_agent.name`.
 """
 
 
