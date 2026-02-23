@@ -169,6 +169,11 @@ GEN_AI_PROMPT: Final = "gen_ai.prompt"
 Deprecated: Removed, no replacement at this time.
 """
 
+GEN_AI_PROMPT_NAME: Final = "gen_ai.prompt.name"
+"""
+The name of the prompt that uniquely identifies it.
+"""
+
 GEN_AI_PROVIDER_NAME: Final = "gen_ai.provider.name"
 """
 The Generative AI provider as identified by the client or server instrumentation.

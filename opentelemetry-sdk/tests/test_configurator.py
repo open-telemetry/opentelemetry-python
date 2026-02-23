@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 # type: ignore
 # pylint: skip-file
 from __future__ import annotations
@@ -35,10 +36,12 @@ from opentelemetry.sdk._configuration import (
     _get_exporter_names,
     _get_id_generator,
     _get_sampler,
+    _get_tracer_configurator,
     _import_config_components,
     _import_exporters,
     _import_id_generator,
     _import_sampler,
+    _import_tracer_configurator,
     _init_logging,
     _init_metrics,
     _init_tracing,
@@ -65,7 +68,7 @@ from opentelemetry.sdk.metrics.export import (
 )
 from opentelemetry.sdk.metrics.view import Aggregation
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
-from opentelemetry.sdk.trace import SpanProcessor
+from opentelemetry.sdk.trace import SpanProcessor, _RuleBasedTracerConfigurator
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
     SimpleSpanProcessor,
@@ -86,10 +89,18 @@ from opentelemetry.util.types import Attributes
 
 
 class Provider:
-    def __init__(self, resource=None, sampler=None, id_generator=None):
+    def __init__(
+        self,
+        resource=None,
+        sampler=None,
+        id_generator=None,
+        *,
+        _tracer_configurator=None,
+    ):
         self.sampler = sampler
         self.id_generator = id_generator
         self.processors = []
+        self._tracer_configurator = _tracer_configurator
         self.resource = resource or Resource.create({})
 
     def add_span_processor(self, processor):
@@ -626,6 +637,52 @@ class TestTraceInit(TestCase):
         # pylint: disable=protected-access
         self.assertEqual(tracer_provider.sampler._root, ALWAYS_ON)
 
+    @patch.dict(
+        "os.environ",
+        {"OTEL_PYTHON_TRACER_CONFIGURATOR": "non_existent_entry_point"},
+    )
+    def test_trace_init_custom_tracer_configurator_with_env_non_existent_entry_point(
+        self,
+    ):
+        tracer_configurator_name = _get_tracer_configurator()
+        with self.assertLogs(level=WARNING):
+            tracer_configurator = _import_tracer_configurator(
+                tracer_configurator_name
+            )
+        _init_tracing({}, tracer_configurator=tracer_configurator)
+
+    @patch("opentelemetry.sdk._configuration.entry_points")
+    @patch.dict(
+        "os.environ",
+        {"OTEL_PYTHON_TRACER_CONFIGURATOR": "custom_tracer_configurator"},
+    )
+    def test_trace_init_custom_tracer_configurator_with_env(
+        self, mock_entry_points
+    ):
+        def custom_tracer_configurator(tracer_scope):
+            return mock.Mock(spec=_RuleBasedTracerConfigurator)(
+                tracer_scope=tracer_scope
+            )
+
+        mock_entry_points.configure_mock(
+            return_value=[
+                IterEntryPoint(
+                    "custom_tracer_configurator",
+                    custom_tracer_configurator,
+                )
+            ]
+        )
+
+        tracer_configurator_name = _get_tracer_configurator()
+        tracer_configurator = _import_tracer_configurator(
+            tracer_configurator_name
+        )
+        _init_tracing({}, tracer_configurator=tracer_configurator)
+        provider = self.set_provider_mock.call_args[0][0]
+        self.assertEqual(
+            provider._tracer_configurator, custom_tracer_configurator
+        )
+
 
 class TestLoggingInit(TestCase):
     def setUp(self):
@@ -911,6 +968,7 @@ class TestLoggingInit(TestCase):
             "export_span_processor": SimpleSpanProcessor,
             "log_record_processors": [],
             "span_processors": [],
+            "tracer_configurator": "tracer_configurator_test",
         }
         _initialize_components(**kwargs)
 
@@ -947,6 +1005,7 @@ class TestLoggingInit(TestCase):
             exporter_args_map={1: {"compression": "gzip"}},
             span_processors=[],
             export_span_processor=SimpleSpanProcessor,
+            tracer_configurator="tracer_configurator_test",
         )
         metrics_mock.assert_called_once_with(
             "TEST_METRICS_EXPORTERS_DICT",
