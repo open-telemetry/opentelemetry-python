@@ -143,10 +143,14 @@ class MetricReaderStorage:
                 InstrumentationScope, ScopeMetrics
             ] = {}
 
+            instrument_matches_snapshot = list(
+                self._instrument_view_instrument_matches.items()
+            )
+
             for (
                 instrument,
                 view_instrument_matches,
-            ) in self._instrument_view_instrument_matches.items():
+            ) in instrument_matches_snapshot:
                 aggregation_temporality = self._instrument_class_temporality[
                     instrument.__class__
                 ]

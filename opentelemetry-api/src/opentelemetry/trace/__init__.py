@@ -208,7 +208,7 @@ class TracerProvider(ABC):
         Args:
             instrumenting_module_name: The uniquely identifiable name for instrumentation
                 scope, such as instrumentation library, package, module or class name.
-                ``__name__`` may not be used as this can result in
+                ``__name__`` should be avoided as this can result in
                 different tracer names if the tracers are in different files.
                 It is better to use a fixed string that can be imported where
                 needed and used consistently as the name of the tracer.
