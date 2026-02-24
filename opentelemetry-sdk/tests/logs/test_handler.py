@@ -38,6 +38,13 @@ from opentelemetry.trace import (
 
 # pylint: disable=too-many-public-methods
 class TestLoggingHandler(unittest.TestCase):
+    def test_warns_when_used(self):
+        with self.assertWarnsRegex(
+            DeprecationWarning,
+            "`LoggingHandler` in `opentelemetry-sdk` is deprecated",
+        ):
+            LoggingHandler()
+
     def test_handler_default_log_level(self):
         processor, logger, handler = set_up_test_logging(logging.NOTSET)
 

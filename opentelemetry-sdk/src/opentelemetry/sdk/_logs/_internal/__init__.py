@@ -497,7 +497,8 @@ class LoggingHandler(logging.Handler):
         self._logger_provider = logger_provider or get_logger_provider()
 
         warnings.warn(
-            "This is deprecated you should use the one in opentelemetry-instrumentation-logging",
+            "`LoggingHandler` in `opentelemetry-sdk` is deprecated. Use the "
+            "handler from `opentelemetry-instrumentation-logging` instead.",
             DeprecationWarning,
         )
 
