@@ -52,6 +52,11 @@ SYSTEM_FILESYSTEM_TYPE: Final = "system.filesystem.type"
 The filesystem type.
 """
 
+SYSTEM_MEMORY_LINUX_SLAB_STATE: Final = "system.memory.linux.slab.state"
+"""
+The Linux Slab memory state.
+"""
+
 SYSTEM_MEMORY_STATE: Final = "system.memory.state"
 """
 The memory state.
@@ -135,6 +140,13 @@ class SystemFilesystemTypeValues(Enum):
     """hfsplus."""
     EXT4 = "ext4"
     """ext4."""
+
+
+class SystemMemoryLinuxSlabStateValues(Enum):
+    RECLAIMABLE = "reclaimable"
+    """reclaimable."""
+    UNRECLAIMABLE = "unreclaimable"
+    """unreclaimable."""
 
 
 class SystemMemoryStateValues(Enum):
