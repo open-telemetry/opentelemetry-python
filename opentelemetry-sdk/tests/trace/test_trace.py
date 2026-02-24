@@ -15,6 +15,7 @@
 # pylint: disable=too-many-lines
 # pylint: disable=no-member
 
+import copy
 import shutil
 import subprocess
 import unittest
@@ -707,6 +708,63 @@ class TestReadableSpan(unittest.TestCase):
             {"bar2": "baz2"},
         )
         self.assertEqual(link2.dropped_attributes, 0)
+
+    def test_deepcopy(self):
+        context = trace_api.SpanContext(
+            trace_id=0x000000000000000000000000DEADBEEF,
+            span_id=0x00000000DEADBEF0,
+            is_remote=False,
+        )
+        attributes = BoundedAttributes(
+            10, {"key1": "value1", "key2": 42}, immutable=False
+        )
+        events = [
+            trace.Event("event1", {"ekey": "evalue"}),
+            trace.Event("event2", {"ekey2": "evalue2"}),
+        ]
+        links = [
+            trace_api.Link(
+                context=trace_api.INVALID_SPAN_CONTEXT,
+                attributes={"lkey": "lvalue"},
+            )
+        ]
+
+        span = trace.ReadableSpan(
+            name="test-span",
+            context=context,
+            attributes=attributes,
+            events=events,
+            links=links,
+            status=Status(StatusCode.OK),
+        )
+
+        span_copy = copy.deepcopy(span)
+
+        self.assertEqual(span_copy.name, span.name)
+        self.assertEqual(span_copy.status.status_code, span.status.status_code)
+        self.assertEqual(span_copy.context.trace_id, span.context.trace_id)
+        self.assertEqual(span_copy.context.span_id, span.context.span_id)
+
+        self.assertEqual(dict(span_copy.attributes), dict(span.attributes))
+        attributes["key1"] = "mutated"
+        self.assertNotEqual(
+            span_copy.attributes["key1"], span.attributes["key1"]
+        )
+
+        self.assertEqual(len(span_copy.events), len(span.events))
+        events[0] = trace.Event("mutated-event", {"mutated": "value"})
+        self.assertNotEqual(span_copy.events[0].name, events[0].name)
+        self.assertEqual(span_copy.events[0].name, "event1")
+
+        self.assertEqual(len(span_copy.links), len(span.links))
+        self.assertEqual(
+            span_copy.links[0].attributes, span.links[0].attributes
+        )
+        links[0] = trace_api.Link(
+            context=trace_api.INVALID_SPAN_CONTEXT,
+            attributes={"mutated": "link"},
+        )
+        self.assertNotIn("mutated", span_copy.links[0].attributes)
 
 
 class DummyError(Exception):
