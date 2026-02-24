@@ -849,11 +849,12 @@ class TestLoggingInit(TestCase):
             DeprecationWarning,
             "and the `LoggingHandler` in `opentelemetry-sdk` that it controls are deprecated",
         ):
-            _init_logging(
-                {"otlp": DummyOTLPLogExporter},
-                resource=resource,
-                setup_logging_handler=True,
-            )
+            with ResetGlobalLoggingState():
+                _init_logging(
+                    {"otlp": DummyOTLPLogExporter},
+                    resource=resource,
+                    setup_logging_handler=True,
+                )
 
     @patch.dict(
         environ,
