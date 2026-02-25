@@ -31,7 +31,7 @@ DB = "example.db"
 
 # Set up OpenTelemetry
 tracer_provider = TracerProvider(
-    resource=Resource(
+    resource=Resource.create(
         {
             "service.name": "opencensus-shim-example-flask",
         }
