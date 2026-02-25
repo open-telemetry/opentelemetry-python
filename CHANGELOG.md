@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `opentelemetry-api`: Fix `AttributeError` on Python 3.9 when invalid type passed to attributes
+  ([#4933](https://github.com/open-telemetry/opentelemetry-python/pull/4933))
 - `opentelemetry-sdk`: Drop unused Jaeger exporter environment variables (exporter removed in 1.22.0)
   ([#4918](https://github.com/open-telemetry/opentelemetry-python/issues/4918))
 - `opentelemetry-sdk`: Clarify timeout units in environment variable documentation
