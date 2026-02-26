@@ -144,9 +144,9 @@ class ConsoleMetricExporter(MetricExporter):
     def __init__(
         self,
         out: IO = stdout,
-        formatter: Callable[
-            [MetricsData], str
-        ] = lambda metrics_data: metrics_data.to_json() + linesep,
+        formatter: Callable[[MetricsData], str] = lambda metrics_data: (
+            metrics_data.to_json() + linesep
+        ),
         preferred_temporality: dict[type, AggregationTemporality]
         | None = None,
         preferred_aggregation: dict[
