@@ -837,34 +837,37 @@ class TestLoggingInit(TestCase):
     )
     @patch("opentelemetry.sdk._configuration._get_log_level", return_value=39)
     def test_logging_init_exporter_level_under(self, log_level_mock):
-        resource = Resource.create({})
-        _init_logging(
-            {"otlp": DummyOTLPLogExporter},
-            resource=resource,
-        )
-        self.assertEqual(self.set_provider_mock.call_count, 1)
-        provider = self.set_provider_mock.call_args[0][0]
-        self.assertIsInstance(provider, DummyLoggerProvider)
-        self.assertIsInstance(provider.resource, Resource)
-        self.assertEqual(
-            provider.resource.attributes.get("service.name"),
-            "otlp-service",
-        )
-        self.assertEqual(len(provider.processors), 1)
-        self.assertIsInstance(provider.processors[0], DummyLogRecordProcessor)
-        self.assertIsInstance(
-            provider.processors[0].exporter, DummyOTLPLogExporter
-        )
-        getLogger(__name__).error("hello")
-        self.assertTrue(provider.processors[0].exporter.export_called)
-        root_logger = getLogger()
-        self.assertEqual(root_logger.level, WARNING)
-        handler_present = False
-        for handler in root_logger.handlers:
-            if isinstance(handler, LoggingHandler):
-                handler_present = True
-                self.assertEqual(handler.level, 39)
-        self.assertTrue(handler_present)
+        with ResetGlobalLoggingState():
+            resource = Resource.create({})
+            _init_logging(
+                {"otlp": DummyOTLPLogExporter},
+                resource=resource,
+            )
+            self.assertEqual(self.set_provider_mock.call_count, 1)
+            provider = self.set_provider_mock.call_args[0][0]
+            self.assertIsInstance(provider, DummyLoggerProvider)
+            self.assertIsInstance(provider.resource, Resource)
+            self.assertEqual(
+                provider.resource.attributes.get("service.name"),
+                "otlp-service",
+            )
+            self.assertEqual(len(provider.processors), 1)
+            self.assertIsInstance(
+                provider.processors[0], DummyLogRecordProcessor
+            )
+            self.assertIsInstance(
+                provider.processors[0].exporter, DummyOTLPLogExporter
+            )
+            getLogger(__name__).error("hello")
+            self.assertTrue(provider.processors[0].exporter.export_called)
+            root_logger = getLogger()
+            self.assertEqual(root_logger.level, WARNING)
+            handler_present = False
+            for handler in root_logger.handlers:
+                if isinstance(handler, LoggingHandler):
+                    handler_present = True
+                    self.assertEqual(handler.level, 39)
+            self.assertTrue(handler_present)
 
     @patch.dict(
         environ,
@@ -876,33 +879,36 @@ class TestLoggingInit(TestCase):
     )
     @patch("opentelemetry.sdk._configuration._get_log_level", return_value=41)
     def test_logging_init_exporter_level_over(self, log_level_mock):
-        resource = Resource.create({})
-        _init_logging(
-            {"otlp": DummyOTLPLogExporter},
-            resource=resource,
-        )
-        self.assertEqual(self.set_provider_mock.call_count, 1)
-        provider = self.set_provider_mock.call_args[0][0]
-        self.assertIsInstance(provider, DummyLoggerProvider)
-        self.assertIsInstance(provider.resource, Resource)
-        self.assertEqual(
-            provider.resource.attributes.get("service.name"),
-            "otlp-service",
-        )
-        self.assertEqual(len(provider.processors), 1)
-        self.assertIsInstance(provider.processors[0], DummyLogRecordProcessor)
-        self.assertIsInstance(
-            provider.processors[0].exporter, DummyOTLPLogExporter
-        )
-        getLogger(__name__).error("hello")
-        self.assertFalse(provider.processors[0].exporter.export_called)
-        root_logger = getLogger()
-        handler_present = False
-        for handler in root_logger.handlers:
-            if isinstance(handler, LoggingHandler):
-                handler_present = True
-                self.assertEqual(handler.level, 41)
-        self.assertTrue(handler_present)
+        with ResetGlobalLoggingState():
+            resource = Resource.create({})
+            _init_logging(
+                {"otlp": DummyOTLPLogExporter},
+                resource=resource,
+            )
+            self.assertEqual(self.set_provider_mock.call_count, 1)
+            provider = self.set_provider_mock.call_args[0][0]
+            self.assertIsInstance(provider, DummyLoggerProvider)
+            self.assertIsInstance(provider.resource, Resource)
+            self.assertEqual(
+                provider.resource.attributes.get("service.name"),
+                "otlp-service",
+            )
+            self.assertEqual(len(provider.processors), 1)
+            self.assertIsInstance(
+                provider.processors[0], DummyLogRecordProcessor
+            )
+            self.assertIsInstance(
+                provider.processors[0].exporter, DummyOTLPLogExporter
+            )
+            getLogger(__name__).error("hello")
+            self.assertFalse(provider.processors[0].exporter.export_called)
+            root_logger = getLogger()
+            handler_present = False
+            for handler in root_logger.handlers:
+                if isinstance(handler, LoggingHandler):
+                    handler_present = True
+                    self.assertEqual(handler.level, 41)
+            self.assertTrue(handler_present)
 
     @patch.dict(
         environ,
@@ -912,34 +918,37 @@ class TestLoggingInit(TestCase):
         },
     )
     def test_logging_init_exporter_format(self):
-        resource = Resource.create({})
-        _init_logging(
-            {"otlp": DummyOTLPLogExporter},
-            resource=resource,
-        )
-        self.assertEqual(self.set_provider_mock.call_count, 1)
-        provider = self.set_provider_mock.call_args[0][0]
-        self.assertIsInstance(provider, DummyLoggerProvider)
-        self.assertIsInstance(provider.resource, Resource)
-        self.assertEqual(
-            provider.resource.attributes.get("service.name"),
-            "otlp-service",
-        )
-        self.assertEqual(len(provider.processors), 1)
-        self.assertIsInstance(provider.processors[0], DummyLogRecordProcessor)
-        self.assertIsInstance(
-            provider.processors[0].exporter, DummyOTLPLogExporter
-        )
-        getLogger(__name__).error("hello")
-        self.assertTrue(provider.processors[0].exporter.export_called)
-        root_logger = getLogger()
-        self.assertEqual(root_logger.level, WARNING)
-        handler_present = False
-        for handler in root_logger.handlers:
-            if isinstance(handler, LoggingHandler):
-                self.assertEqual(handler.formatter._fmt, CUSTOM_LOG_FORMAT)
-                handler_present = True
-        self.assertTrue(handler_present)
+        with ResetGlobalLoggingState():
+            resource = Resource.create({})
+            _init_logging(
+                {"otlp": DummyOTLPLogExporter},
+                resource=resource,
+            )
+            self.assertEqual(self.set_provider_mock.call_count, 1)
+            provider = self.set_provider_mock.call_args[0][0]
+            self.assertIsInstance(provider, DummyLoggerProvider)
+            self.assertIsInstance(provider.resource, Resource)
+            self.assertEqual(
+                provider.resource.attributes.get("service.name"),
+                "otlp-service",
+            )
+            self.assertEqual(len(provider.processors), 1)
+            self.assertIsInstance(
+                provider.processors[0], DummyLogRecordProcessor
+            )
+            self.assertIsInstance(
+                provider.processors[0].exporter, DummyOTLPLogExporter
+            )
+            getLogger(__name__).error("hello")
+            self.assertTrue(provider.processors[0].exporter.export_called)
+            root_logger = getLogger()
+            self.assertEqual(root_logger.level, WARNING)
+            handler_present = False
+            for handler in root_logger.handlers:
+                if isinstance(handler, LoggingHandler):
+                    self.assertEqual(handler.formatter._fmt, CUSTOM_LOG_FORMAT)
+                    handler_present = True
+            self.assertTrue(handler_present)
 
     @patch.dict(
         environ,
@@ -971,13 +980,11 @@ class TestLoggingInit(TestCase):
         getLogger(__name__).error("hello")
         self.assertFalse(provider.processors[0].exporter.export_called)
         root_logger = getLogger()
-        self.assertEqual(root_logger.level, WARNING)
         handler_present = False
         for handler in root_logger.handlers:
             if isinstance(handler, LoggingHandler):
-                self.assertEqual(handler.formatter._fmt, CUSTOM_LOG_FORMAT)
                 handler_present = True
-        self.assertTrue(handler_present)
+        self.assertFalse(handler_present)
 
     @patch.dict(environ, {}, clear=True)
     def test_otel_log_level_by_name_default(self):
@@ -1028,6 +1035,7 @@ class TestLoggingInit(TestCase):
     @patch.dict(
         environ,
         {"OTEL_RESOURCE_ATTRIBUTES": "service.name=otlp-service"},
+        clear=True,
     )
     @patch("opentelemetry.sdk._configuration._init_tracing")
     @patch("opentelemetry.sdk._configuration._init_logging")
@@ -1049,6 +1057,7 @@ class TestLoggingInit(TestCase):
             "OTEL_RESOURCE_ATTRIBUTES": "service.name=otlp-service",
             "OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED": "True",
         },
+        clear=True,
     )
     @patch("opentelemetry.sdk._configuration._init_tracing")
     @patch("opentelemetry.sdk._configuration._init_logging")
@@ -1071,6 +1080,7 @@ class TestLoggingInit(TestCase):
             "OTEL_RESOURCE_ATTRIBUTES": "service.name=otlp-service",
             "OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED": "True",
         },
+        clear=True,
     )
     @patch("opentelemetry.sdk._configuration._init_tracing")
     @patch("opentelemetry.sdk._configuration._init_logging")
@@ -1615,9 +1625,11 @@ class ResetGlobalLoggingState:
         self.original_file_config = logging.config.fileConfig
         self.root_logger = getLogger()
         self.original_handlers = None
+        self.original_level = None
 
     def __enter__(self):
         self.original_handlers = self.root_logger.handlers[:]
+        self.original_level = self.root_logger.level
         self.root_logger.handlers = []
         return self
 
@@ -1625,6 +1637,7 @@ class ResetGlobalLoggingState:
         self.root_logger.handlers = []
         for handler in self.original_handlers:
             self.root_logger.addHandler(handler)
+        self.root_logger.setLevel(self.original_level)
         logging.basicConfig = self.original_basic_config
         logging.config.dictConfig = self.original_dict_config
         logging.config.fileConfig = self.original_file_config
