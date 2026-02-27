@@ -63,7 +63,7 @@ class SpanExporter:
 
     def export(
         self, spans: typing.Sequence[ReadableSpan]
-    ) -> "SpanExportResult":  # pyright: ignore[reportReturnType]
+    ) -> SpanExportResult:  # pyright: ignore[reportReturnType]
         """Exports a batch of telemetry data.
 
         Args:
