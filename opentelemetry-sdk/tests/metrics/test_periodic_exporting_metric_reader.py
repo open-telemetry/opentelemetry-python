@@ -19,7 +19,7 @@ import math
 import weakref
 from logging import WARNING
 from time import sleep, time_ns
-from typing import Optional, Sequence
+from typing import Optional
 from unittest.mock import Mock
 
 import pytest
@@ -133,7 +133,7 @@ metrics_list = [
         ),
     ),
 ]
-metrics_data = MetricsData(
+metrics = MetricsData(
     resource_metrics=[
         ResourceMetrics(
             scope_metrics=[
@@ -160,7 +160,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
 
     def _create_periodic_reader(
         self,
-        metrics: MetricsData,
+        metrics_data: MetricsData,
         exporter,
         collect_wait=0,
         interval=60000,
@@ -174,7 +174,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
 
         def _collect(reader, timeout_millis):
             sleep(collect_wait)
-            return metrics
+            return metrics_data
 
         pmr._set_collect_callback(_collect)
         return pmr
@@ -225,11 +225,9 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
     def test_ticker_collects_metrics(self):
         exporter = FakeMetricsExporter()
 
-        pmr = self._create_periodic_reader(
-            metrics_data, exporter, interval=100
-        )
+        pmr = self._create_periodic_reader(metrics, exporter, interval=100)
         sleep(0.15)
-        self.assertEqual(exporter.metrics[0], metrics_data)
+        self.assertEqual(exporter.metrics[0], metrics)
         pmr.shutdown()
 
     def test_shutdown(self):
