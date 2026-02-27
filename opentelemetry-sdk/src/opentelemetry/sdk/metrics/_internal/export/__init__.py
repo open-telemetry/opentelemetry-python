@@ -22,13 +22,14 @@ from logging import getLogger
 from os import environ, linesep
 from sys import stdout
 from threading import Event, Lock, RLock, Thread
-from time import time_ns
+from time import monotonic, time_ns
 from typing import IO, Callable, Iterable, Optional
 
 from typing_extensions import final
 
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics._internal
+from opentelemetry.metrics import MeterProvider, NoOpMeterProvider
 from opentelemetry.context import (
     _SUPPRESS_INSTRUMENTATION_KEY,
     attach,
@@ -61,7 +62,12 @@ from opentelemetry.sdk.metrics._internal.instrument import (
     _UpDownCounter,
 )
 from opentelemetry.sdk.metrics._internal.point import MetricsData
+from opentelemetry.semconv._incubating.attributes.otel_attributes import (
+    OtelComponentTypeValues,
+)
 from opentelemetry.util._once import Once
+
+from ._metric_reader_metrics import MetricReaderMetrics
 
 _logger = getLogger(__name__)
 
@@ -144,9 +150,9 @@ class ConsoleMetricExporter(MetricExporter):
     def __init__(
         self,
         out: IO = stdout,
-        formatter: Callable[
-            [MetricsData], str
-        ] = lambda metrics_data: metrics_data.to_json() + linesep,
+        formatter: Callable[[MetricsData], str] = lambda metrics_data: (
+            metrics_data.to_json() + linesep
+        ),
         preferred_temporality: dict[type, AggregationTemporality]
         | None = None,
         preferred_aggregation: dict[
@@ -506,6 +512,9 @@ class PeriodicExportingMetricReader(MetricReader):
                 f"interval value {self._export_interval_millis} is invalid \
                 and needs to be larger than zero."
             )
+        self._metrics = MetricReaderMetrics(
+            OtelComponentTypeValues.PERIODIC_METRIC_READER, NoOpMeterProvider()
+        )
 
     def _at_fork_reinit(self):
         self._daemon_thread = Thread(
@@ -518,6 +527,7 @@ class PeriodicExportingMetricReader(MetricReader):
     def _ticker(self) -> None:
         interval_secs = self._export_interval_millis / 1e3
         while not self._shutdown_event.wait(interval_secs):
+            start_time = monotonic()
             try:
                 self.collect(timeout_millis=self._export_timeout_millis)
             except MetricsTimeoutError:
@@ -526,6 +536,10 @@ class PeriodicExportingMetricReader(MetricReader):
                     interval_secs,
                     exc_info=True,
                 )
+            finally:
+                duration = monotonic() - start_time
+                self._metrics.record_collection(duration)
+
         # one last collection below before shutting down completely
         try:
             self.collect(timeout_millis=self._export_interval_millis)
@@ -551,6 +565,11 @@ class PeriodicExportingMetricReader(MetricReader):
         except Exception:
             _logger.exception("Exception while exporting metrics")
         detach(token)
+
+    def _set_meter_provider(self, meter_provider: MeterProvider) -> None:
+        self._metrics = MetricReaderMetrics(
+            OtelComponentTypeValues.PERIODIC_METRIC_READER, meter_provider
+        )
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         deadline_ns = time_ns() + timeout_millis * 10**6

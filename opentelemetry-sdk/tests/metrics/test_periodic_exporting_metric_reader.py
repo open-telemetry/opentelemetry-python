@@ -24,8 +24,9 @@ from unittest.mock import Mock
 
 import pytest
 
-from opentelemetry.sdk.metrics import Counter, MetricsTimeoutError
+from opentelemetry.sdk.metrics import Counter, MetricsTimeoutError, MeterProvider
 from opentelemetry.sdk.metrics._internal import _Counter
+from opentelemetry.sdk.metrics._internal.point import MetricsData
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     Gauge,
@@ -48,7 +49,7 @@ class FakeMetricsExporter(MetricExporter):
         self, wait=0, preferred_temporality=None, preferred_aggregation=None
     ):
         self.wait = wait
-        self.metrics = []
+        self.metrics: list[MetricsData] = []
         self._shutdown = False
         super().__init__(
             preferred_temporality=preferred_temporality,
@@ -57,13 +58,13 @@ class FakeMetricsExporter(MetricExporter):
 
     def export(
         self,
-        metrics_data: Sequence[Metric],
+        metrics_data: MetricsData,
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> MetricExportResult:
         sleep(self.wait)
-        self.metrics.extend(metrics_data)
-        return True
+        self.metrics.append(metrics_data)
+        return MetricExportResult.SUCCESS
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         self._shutdown = True
@@ -137,7 +138,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
             pmr.shutdown()
 
     def _create_periodic_reader(
-        self, metrics, exporter, collect_wait=0, interval=60000, timeout=30000
+        self, metrics: list[Metric], exporter, collect_wait=0, interval=60000, timeout=30000
     ):
         pmr = PeriodicExportingMetricReader(
             exporter,
@@ -146,8 +147,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         )
 
         def _collect(reader, timeout_millis):
-            sleep(collect_wait)
-            pmr._receive_metrics(metrics, timeout_millis)
+            return metrics
 
         pmr._set_collect_callback(_collect)
         return pmr
@@ -280,3 +280,24 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
             weak_ref(),
             "The PeriodicExportingMetricReader object created by this test wasn't garbage collected",
         )
+
+    def test_metric_reader_metrics(self):
+        exporter = FakeMetricsExporter()
+        pmr = PeriodicExportingMetricReader(exporter, export_interval_millis=1)
+        mp = MeterProvider(metric_readers=[pmr])
+
+        counter = mp.get_meter("test").create_counter("test_counter")
+        counter.add(1)
+
+        sleep(0.1)
+        self.assertEqual(len(exporter.metrics), 1)
+        # Need a second collection to get the metric we recorded during first collection
+        exporter.metrics.clear()
+        sleep(0.1)
+        self.assertEqual(len(exporter.metrics), 2)
+        metric_data = exporter.metrics[1]
+        self.assertEqual(
+            metric_data.resource_metrics[0].scope_metrics[0].metrics[0].name,
+            "otel.sdk.metric_reader.collection.duration",
+        )
+        mp.shutdown()

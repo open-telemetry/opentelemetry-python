@@ -38,6 +38,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_METRICS_EXEMPLAR_FILTER,
     OTEL_SDK_DISABLED,
 )
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.metrics._internal.exceptions import MetricsTimeoutError
 from opentelemetry.sdk.metrics._internal.exemplar import (
     AlwaysOffExemplarFilter,
@@ -458,6 +459,8 @@ class MeterProvider(APIMeterProvider):
             metric_reader._set_collect_callback(
                 self._measurement_consumer.collect
             )
+            if isinstance(metric_reader, PeriodicExportingMetricReader):
+                metric_reader._set_meter_provider(self)
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
         deadline_ns = time_ns() + timeout_millis * 10**6
