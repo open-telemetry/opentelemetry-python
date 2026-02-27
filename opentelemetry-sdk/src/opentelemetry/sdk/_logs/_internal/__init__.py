@@ -603,6 +603,7 @@ class Logger(APILogger):
             ConcurrentMultiLogRecordProcessor,
         ],
         instrumentation_scope: InstrumentationScope,
+        *,
         logger_metrics: LoggerMetrics,
     ):
         super().__init__(
@@ -679,6 +680,7 @@ class LoggerProvider(APILoggerProvider):
         multi_log_record_processor: SynchronousMultiLogRecordProcessor
         | ConcurrentMultiLogRecordProcessor
         | None = None,
+        *,
         meter_provider: MeterProvider | None = None,
     ):
         if resource is None:
@@ -719,7 +721,7 @@ class LoggerProvider(APILoggerProvider):
                 schema_url,
                 attributes,
             ),
-            self._logger_metrics,
+            logger_metrics=self._logger_metrics,
         )
 
     def _get_logger_cached(
