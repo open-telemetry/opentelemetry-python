@@ -29,7 +29,7 @@ from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.metric_reader_storage import (
     MetricReaderStorage,
 )
-from opentelemetry.sdk.metrics._internal.point import Metric
+from opentelemetry.sdk.metrics._internal.point import Metric, MetricsData
 
 
 class MeasurementConsumer(ABC):
@@ -51,7 +51,7 @@ class MeasurementConsumer(ABC):
         self,
         metric_reader: "opentelemetry.sdk.metrics.MetricReader",
         timeout_millis: float = 10_000,
-    ) -> Optional[Iterable[Metric]]:
+    ) -> Optional[MetricsData]:
         pass
 
 
@@ -104,7 +104,7 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
         self,
         metric_reader: "opentelemetry.sdk.metrics.MetricReader",
         timeout_millis: float = 10_000,
-    ) -> Optional[Iterable[Metric]]:
+    ) -> Optional[MetricsData]:
         with self._lock:
             metric_reader_storage = self._reader_storages[metric_reader]
             # for now, just use the defaults

@@ -26,6 +26,11 @@ import pytest
 
 from opentelemetry.sdk.metrics import Counter, MetricsTimeoutError
 from opentelemetry.sdk.metrics._internal import _Counter
+from opentelemetry.sdk.metrics._internal.point import (
+    MetricsData,
+    ResourceMetrics,
+    ScopeMetrics,
+)
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     Gauge,
@@ -40,6 +45,8 @@ from opentelemetry.sdk.metrics.view import (
     DefaultAggregation,
     LastValueAggregation,
 )
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase
 
 
@@ -48,7 +55,7 @@ class FakeMetricsExporter(MetricExporter):
         self, wait=0, preferred_temporality=None, preferred_aggregation=None
     ):
         self.wait = wait
-        self.metrics = []
+        self.metrics: list[MetricsData] = []
         self._shutdown = False
         super().__init__(
             preferred_temporality=preferred_temporality,
@@ -57,13 +64,13 @@ class FakeMetricsExporter(MetricExporter):
 
     def export(
         self,
-        metrics_data: Sequence[Metric],
+        metrics_data: MetricsData,
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> MetricExportResult:
         sleep(self.wait)
-        self.metrics.extend(metrics_data)
-        return True
+        self.metrics.append(metrics_data)
+        return MetricExportResult.SUCCESS
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         self._shutdown = True
@@ -126,6 +133,21 @@ metrics_list = [
         ),
     ),
 ]
+metrics_data = MetricsData(
+    resource_metrics=[
+        ResourceMetrics(
+            scope_metrics=[
+                ScopeMetrics(
+                    metrics=metrics_list,
+                    scope=InstrumentationScope(name="test"),
+                    schema_url="",
+                )
+            ],
+            resource=Resource.create(),
+            schema_url="",
+        )
+    ]
+)
 
 
 class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
@@ -137,7 +159,12 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
             pmr.shutdown()
 
     def _create_periodic_reader(
-        self, metrics, exporter, collect_wait=0, interval=60000, timeout=30000
+        self,
+        metrics: MetricsData,
+        exporter,
+        collect_wait=0,
+        interval=60000,
+        timeout=30000,
     ):
         pmr = PeriodicExportingMetricReader(
             exporter,
@@ -147,7 +174,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
 
         def _collect(reader, timeout_millis):
             sleep(collect_wait)
-            pmr._receive_metrics(metrics, timeout_millis)
+            return metrics
 
         pmr._set_collect_callback(_collect)
         return pmr
@@ -199,23 +226,27 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         exporter = FakeMetricsExporter()
 
         pmr = self._create_periodic_reader(
-            metrics_list, exporter, interval=100
+            metrics_data, exporter, interval=100
         )
         sleep(0.15)
-        self.assertEqual(exporter.metrics, metrics_list)
+        self.assertEqual(exporter.metrics[0], metrics_data)
         pmr.shutdown()
 
     def test_shutdown(self):
         exporter = FakeMetricsExporter()
 
-        pmr = self._create_periodic_reader([], exporter)
+        pmr = self._create_periodic_reader(
+            MetricsData(resource_metrics=[]), exporter
+        )
         pmr.shutdown()
-        self.assertEqual(exporter.metrics, [])
+        self.assertEqual(exporter.metrics[0], MetricsData(resource_metrics=[]))
         self.assertTrue(pmr._shutdown)
         self.assertTrue(exporter._shutdown)
 
     def test_shutdown_multiple_times(self):
-        pmr = self._create_periodic_reader([], FakeMetricsExporter())
+        pmr = self._create_periodic_reader(
+            MetricsData(resource_metrics=[]), FakeMetricsExporter()
+        )
         with self.assertLogs(level="WARNING") as w:
             self.run_with_many_threads(pmr.shutdown)
         self.assertTrue("Can't shutdown multiple times" in w.output[0])
