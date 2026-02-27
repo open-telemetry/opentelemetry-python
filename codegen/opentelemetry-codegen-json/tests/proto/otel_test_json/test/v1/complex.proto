@@ -1,0 +1,70 @@
+// Copyright The OpenTelemetry Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package otel_test_json.test.v1;
+
+import "otel_test_json/common/v1/common.proto";
+
+message NumericTest {
+  double d_val = 1;
+  float f_val = 2;
+  int64 i64_val = 3;
+  uint64 u64_val = 4;
+  int32 i32_val = 5;
+  uint32 u32_val = 6;
+  sint32 si32_val = 7;
+  sint64 si64_val = 8;
+  fixed32 f32_val = 9;
+  fixed64 f64_val = 10;
+  sfixed32 sf32_val = 11;
+  sfixed64 sf64_val = 12;
+}
+
+message OneofSuite {
+  oneof group1 {
+    string g1_string = 1;
+    int32 g1_int = 2;
+  }
+  oneof group2 {
+    otel_test_json.common.v1.InstrumentationScope g2_message = 3;
+    NestedMessage g2_nested = 4;
+  }
+  
+  message NestedMessage {
+    string hint = 1;
+  }
+}
+
+message OptionalScalar {
+  optional string opt_string = 1;
+  optional int32 opt_int = 2;
+  optional bool opt_bool = 3;
+}
+
+message NestedEnumSuite {
+  enum NestedEnum {
+    NESTED_UNSPECIFIED = 0;
+    NESTED_FOO = 1;
+    NESTED_BAR = 2;
+  }
+  NestedEnum nested = 1;
+  repeated NestedEnum repeated_nested = 2;
+}
+
+message DeeplyNested {
+  string value = 1;
+  DeeplyNested next = 2;
+}
