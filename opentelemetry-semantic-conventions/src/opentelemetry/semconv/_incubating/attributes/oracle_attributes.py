@@ -14,12 +14,6 @@
 
 from typing import Final
 
-
-
-
-
-
-
 ORACLE_DB_DOMAIN: Final = "oracle.db.domain"
 """
 The database domain associated with the connection.
@@ -62,5 +56,3 @@ obtain the current service name for each operation without issuing an additional
 query (such as `SELECT SYS_CONTEXT`), it is RECOMMENDED to fall back to the
 service name originally provided at connection establishment.
 """
-
-
