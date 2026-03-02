@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `opentelemetry-sdk`: Clarify log processor error handling expectations in documentation
+  ([#4915](https://github.com/open-telemetry/opentelemetry-python/pull/4915))
 - bump semantic-conventions to v1.40.0
   ([#4941](https://github.com/open-telemetry/opentelemetry-python/pull/4941))
 - Add stale PR GitHub Action
