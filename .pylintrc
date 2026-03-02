@@ -11,7 +11,7 @@ ignore=CVS,gen,proto
 
 # Add files or directories matching the regex patterns to be excluded. The
 # regex matches against base names, not paths.
-ignore-patterns=
+ignore-patterns=^models\.py$
 
 # Python code to execute, usually for sys.path manipulation such as
 # pygtk.require().
