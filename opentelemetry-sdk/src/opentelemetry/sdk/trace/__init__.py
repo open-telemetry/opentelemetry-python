@@ -817,6 +817,7 @@ class Span(trace_api.Span, ReadableSpan):
         set_status_on_exception: bool = True,
         limits=_UnsetLimits,
         instrumentation_scope: Optional[InstrumentationScope] = None,
+        *,
         record_end_metrics: Optional[Callable[[], None]] = None,
     ) -> None:
         if resource is None:
@@ -1114,8 +1115,8 @@ class Tracer(trace_api.Tracer):
         instrumentation_info: InstrumentationInfo,
         span_limits: SpanLimits,
         instrumentation_scope: InstrumentationScope,
-        meter_provider: Optional[metrics_api.MeterProvider] = None,
         *,
+        meter_provider: Optional[metrics_api.MeterProvider] = None,
         _tracer_provider: Optional["TracerProvider"] = None,
     ) -> None:
         self.sampler = sampler
@@ -1330,8 +1331,8 @@ class TracerProvider(trace_api.TracerProvider):
         ] = None,
         id_generator: Optional[IdGenerator] = None,
         span_limits: Optional[SpanLimits] = None,
-        meter_provider: Optional[metrics_api.MeterProvider] = None,
         *,
+        meter_provider: Optional[metrics_api.MeterProvider] = None,
         _tracer_configurator: Optional[_TracerConfiguratorT] = None,
     ) -> None:
         self._active_span_processor = (
@@ -1425,7 +1426,7 @@ class TracerProvider(trace_api.TracerProvider):
                 schema_url,
                 attributes,
             ),
-            self._meter_provider,
+            meter_provider=self._meter_provider,
             _tracer_provider=self,
         )
 
