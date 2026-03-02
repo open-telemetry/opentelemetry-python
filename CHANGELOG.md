@@ -52,6 +52,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4913](https://github.com/open-telemetry/opentelemetry-python/pull/4913))
 - bump semantic-conventions to v1.39.0
   ([#4914](https://github.com/open-telemetry/opentelemetry-python/pull/4914))
+- `opentelemetry-sdk`: automatically generate configuration models using OTel config JSON schema
+  ([#4879](https://github.com/open-telemetry/opentelemetry-python/pull/4879))
 
 ## Version 1.39.0/0.60b0 (2025-12-03)
 
