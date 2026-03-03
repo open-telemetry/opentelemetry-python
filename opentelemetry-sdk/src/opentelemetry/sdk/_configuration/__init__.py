@@ -326,6 +326,13 @@ def _init_logging(
         set_event_logger_provider(event_logger_provider)
 
     if setup_logging_handler:
+        warnings.warn(
+            "The `OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED` environment variable "
+            "and the `LoggingHandler` in `opentelemetry-sdk` that it controls are deprecated."
+            "Install `opentelemetry-instrumentation-logging` package instead.",
+            DeprecationWarning,
+        )
+
         # Add OTel handler
         handler = LoggingHandler(
             level=logging.NOTSET, logger_provider=provider

@@ -528,6 +528,12 @@ class LoggingHandler(logging.Handler):
         super().__init__(level=level)
         self._logger_provider = logger_provider or get_logger_provider()
 
+        warnings.warn(
+            "`LoggingHandler` in `opentelemetry-sdk` is deprecated. Use the "
+            "handler from `opentelemetry-instrumentation-logging` instead.",
+            DeprecationWarning,
+        )
+
     @staticmethod
     def _get_attributes(record: logging.LogRecord) -> _ExtendedAttributes:
         attributes = {
