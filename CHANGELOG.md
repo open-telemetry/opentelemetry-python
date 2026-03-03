@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-- `opentelemetry-sdk`: Add file configuration support with YAML/JSON loading and environment variable substitution
+- `opentelemetry-sdk`: Add file configuration support with YAML/JSON loading, environment variable substitution, and schema validation against the vendored OTel config JSON schema
 - `opentelemetry-sdk`: deprecate `LoggingHandler` in favor of `opentelemetry-instrumentation-logging`, see `opentelemetry-instrumentation-logging` documentation
   ([#4919](https://github.com/open-telemetry/opentelemetry-python/pull/4919))
 - `opentelemetry-sdk`: Clarify log processor error handling expectations in documentation

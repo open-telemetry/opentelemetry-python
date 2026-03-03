@@ -14,6 +14,7 @@
 
 """Configuration file loading and parsing."""
 
+import importlib.resources
 import json
 import logging
 from pathlib import Path
@@ -31,6 +32,28 @@ except ImportError as exc:
         "File configuration requires pyyaml. "
         "Install with: pip install opentelemetry-sdk[file-configuration]"
     ) from exc
+
+try:
+    import jsonschema
+except ImportError as exc:
+    raise ImportError(
+        "File configuration requires jsonschema. "
+        "Install with: pip install opentelemetry-sdk[file-configuration]"
+    ) from exc
+
+_schema = None
+
+
+def _get_schema() -> dict:
+    global _schema  # noqa: PLW0603
+    if _schema is None:
+        schema_path = (
+            importlib.resources.files("opentelemetry.sdk._configuration")
+            / "schema.json"
+        )
+        _schema = json.loads(schema_path.read_text(encoding="utf-8"))
+    return _schema
+
 
 _logger = logging.getLogger(__name__)
 
@@ -127,6 +150,25 @@ def load_config_file(file_path: str) -> OpenTelemetryConfiguration:
             f"Configuration must be a mapping/object, got {type(data).__name__}"
         )
 
+    # Validate against the OTel configuration JSON schema
+    try:
+        jsonschema.validate(
+            instance=data,
+            schema=_get_schema(),
+            cls=jsonschema.Draft202012Validator,
+        )
+    except jsonschema.ValidationError as exc:
+        raise ConfigurationError(
+            f"Configuration does not match schema: {exc.message} "
+            f"(at {' -> '.join(str(p) for p in exc.absolute_path)})"
+            if exc.absolute_path
+            else f"Configuration does not match schema: {exc.message}"
+        ) from exc
+    except jsonschema.SchemaError as exc:
+        raise ConfigurationError(
+            f"Invalid configuration schema: {exc.message}"
+        ) from exc
+
     # Convert to OpenTelemetryConfiguration model
     try:
         config = _dict_to_model(data)
@@ -157,19 +199,11 @@ def _dict_to_model(data: dict[str, Any]) -> OpenTelemetryConfiguration:
         TypeError: If data doesn't match expected structure.
         ValueError: If values are invalid.
     """
-    # The models.py file has dataclasses, so we need to recursively
-    # construct them from dictionaries. For now, use a simple approach
-    # that relies on dataclass construction.
-
-    # This is a simplified implementation. A more robust version would
-    # recursively handle nested dataclasses and discriminated unions.
-    # For PR 1, we're focusing on basic loading - validation can be
-    # enhanced in future PRs.
-
+    # Construct the top-level model from the validated dict. Nested fields
+    # are stored as dicts rather than their dataclass types; factory functions
+    # in later PRs will handle the full recursive conversion when building
+    # SDK objects.
     try:
-        # Attempt to construct the model
-        # This will work for simple cases but may need enhancement
-        # for complex nested structures
         config = OpenTelemetryConfiguration(**data)
         return config
     except TypeError as exc:

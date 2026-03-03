@@ -35,6 +35,7 @@ dependencies = [
 [project.optional-dependencies]
 file-configuration = [
   "pyyaml >= 6.0",
+  "jsonschema >= 4.0",
 ]
 
 [project.entry-points.opentelemetry_environment_variables]

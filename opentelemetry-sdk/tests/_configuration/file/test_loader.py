@@ -56,8 +56,6 @@ class TestConfigLoader(unittest.TestCase):
             config = load_config_file(str(config_path))
 
             self.assertIsInstance(config, OpenTelemetryConfiguration)
-            # Note: Full validation of nested structures will be in later PRs
-            # For now, just verify it loads without error
 
     def test_file_not_found(self):
         """Test error when file doesn't exist."""
@@ -170,5 +168,79 @@ class TestConfigLoader(unittest.TestCase):
                 load_config_file(temp_path)
 
             self.assertIn("json", str(ctx.exception).lower())
+        finally:
+            os.unlink(temp_path)
+
+    def test_schema_validation_wrong_type(self):
+        """Test error when field has wrong type."""
+        with tempfile.NamedTemporaryFile(
+            suffix=".yaml", delete=False, mode="w"
+        ) as temp_file:
+            # disabled must be a boolean, not a string
+            temp_file.write('file_format: "1.0-rc.3"\ndisabled: "yes"')
+            temp_path = temp_file.name
+
+        try:
+            with self.assertRaises(ConfigurationError) as ctx:
+                load_config_file(temp_path)
+
+            self.assertIn("schema", str(ctx.exception).lower())
+        finally:
+            os.unlink(temp_path)
+
+    def test_schema_validation_missing_file_format(self):
+        """Test error when required file_format field is missing."""
+        with tempfile.NamedTemporaryFile(
+            suffix=".yaml", delete=False, mode="w"
+        ) as temp_file:
+            temp_file.write("disabled: false")
+            temp_path = temp_file.name
+
+        try:
+            with self.assertRaises(ConfigurationError) as ctx:
+                load_config_file(temp_path)
+
+            self.assertIn("schema", str(ctx.exception).lower())
+        finally:
+            os.unlink(temp_path)
+
+    def test_schema_validation_nested_path_in_error(self):
+        """Test that error message includes field path for nested violations."""
+        with tempfile.NamedTemporaryFile(
+            suffix=".yaml", delete=False, mode="w"
+        ) as temp_file:
+            temp_file.write(
+                'file_format: "1.0-rc.3"\n'
+                "attribute_limits:\n"
+                '  attribute_count_limit: "not-a-number"\n'
+            )
+            temp_path = temp_file.name
+
+        try:
+            with self.assertRaises(ConfigurationError) as ctx:
+                load_config_file(temp_path)
+
+            error = str(ctx.exception)
+            self.assertIn("schema", error.lower())
+            self.assertIn("attribute_limits", error)
+            self.assertIn("attribute_count_limit", error)
+        finally:
+            os.unlink(temp_path)
+
+    def test_schema_validation_invalid_enum(self):
+        """Test error when field value is not a valid enum value."""
+        with tempfile.NamedTemporaryFile(
+            suffix=".yaml", delete=False, mode="w"
+        ) as temp_file:
+            temp_file.write(
+                'file_format: "1.0-rc.3"\nlog_level: INVALID_LEVEL'
+            )
+            temp_path = temp_file.name
+
+        try:
+            with self.assertRaises(ConfigurationError) as ctx:
+                load_config_file(temp_path)
+
+            self.assertIn("schema", str(ctx.exception).lower())
         finally:
             os.unlink(temp_path)
