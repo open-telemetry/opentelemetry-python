@@ -12,22 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from enum import Enum
 from typing import Final
 
-from typing_extensions import deprecated
-
-LINUX_MEMORY_SLAB_STATE: Final = "linux.memory.slab.state"
+ORACLE_CLOUD_REALM: Final = "oracle_cloud.realm"
 """
-Deprecated: Replaced by `system.memory.linux.slab.state`.
+The OCI realm identifier that indicates the isolated partition in which the tenancy and its resources reside.
+Note: See [OCI documentation on realms](https://docs.oracle.com/iaas/Content/General/Concepts/regions.htm).
 """
-
-
-@deprecated(
-    "The attribute linux.memory.slab.state is deprecated - Replaced by `system.memory.linux.slab.state`"
-)
-class LinuxMemorySlabStateValues(Enum):
-    RECLAIMABLE = "reclaimable"
-    """reclaimable."""
-    UNRECLAIMABLE = "unreclaimable"
-    """unreclaimable."""

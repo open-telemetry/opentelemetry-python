@@ -32,6 +32,11 @@ GEN_AI_AGENT_NAME: Final = "gen_ai.agent.name"
 Human-readable name of the GenAI agent provided by the application.
 """
 
+GEN_AI_AGENT_VERSION: Final = "gen_ai.agent.version"
+"""
+The version of the GenAI agent.
+"""
+
 GEN_AI_COMPLETION: Final = "gen_ai.completion"
 """
 Deprecated: Removed, no replacement at this time.
@@ -169,6 +174,11 @@ GEN_AI_PROMPT: Final = "gen_ai.prompt"
 Deprecated: Removed, no replacement at this time.
 """
 
+GEN_AI_PROMPT_NAME: Final = "gen_ai.prompt.name"
+"""
+The name of the prompt that uniquely identifies it.
+"""
+
 GEN_AI_PROVIDER_NAME: Final = "gen_ai.provider.name"
 """
 The Generative AI provider as identified by the client or server instrumentation.
@@ -261,6 +271,25 @@ The unique identifier for the completion.
 GEN_AI_RESPONSE_MODEL: Final = "gen_ai.response.model"
 """
 The name of the model that generated the response.
+"""
+
+GEN_AI_RETRIEVAL_DOCUMENTS: Final = "gen_ai.retrieval.documents"
+"""
+The documents retrieved.
+Note: Instrumentations MUST follow [Retrieval documents JSON schema](/docs/gen-ai/gen-ai-retrieval-documents.json).
+When the attribute is recorded on events, it MUST be recorded in structured
+form. When recorded on spans, it MAY be recorded as a JSON string if structured
+format is not supported and SHOULD be recorded in structured form otherwise.
+
+Each document object SHOULD contain at least the following properties:
+`id` (string): A unique identifier for the document, `score` (double): The relevance score of the document.
+"""
+
+GEN_AI_RETRIEVAL_QUERY_TEXT: Final = "gen_ai.retrieval.query.text"
+"""
+The query text used for retrieval.
+Note: > [!Warning]
+> This attribute may contain sensitive information.
 """
 
 GEN_AI_SYSTEM: Final = "gen_ai.system"
@@ -359,6 +388,22 @@ Function: A tool executed on the client-side, where the agent generates paramete
 Datastore: A tool used by the agent to access and query structured or unstructured external data for retrieval-augmented tasks or knowledge updates.
 """
 
+GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS: Final = (
+    "gen_ai.usage.cache_creation.input_tokens"
+)
+"""
+The number of input tokens written to a provider-managed cache.
+Note: The value SHOULD be included in `gen_ai.usage.input_tokens`.
+"""
+
+GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS: Final = (
+    "gen_ai.usage.cache_read.input_tokens"
+)
+"""
+The number of input tokens served from a provider-managed cache.
+Note: The value SHOULD be included in `gen_ai.usage.input_tokens`.
+"""
+
 GEN_AI_USAGE_COMPLETION_TOKENS: Final = "gen_ai.usage.completion_tokens"
 """
 Deprecated: Replaced by `gen_ai.usage.output_tokens`.
@@ -367,6 +412,10 @@ Deprecated: Replaced by `gen_ai.usage.output_tokens`.
 GEN_AI_USAGE_INPUT_TOKENS: Final = "gen_ai.usage.input_tokens"
 """
 The number of tokens used in the GenAI input (prompt).
+Note: This value SHOULD include all types of input tokens, including cached tokens.
+Instrumentations SHOULD make a best effort to populate this value, using a total
+provided by the provider when available or, depending on the provider API,
+by summing different token types parsed from the provider output.
 """
 
 GEN_AI_USAGE_OUTPUT_TOKENS: Final = "gen_ai.usage.output_tokens"
@@ -411,6 +460,8 @@ class GenAiOperationNameValues(Enum):
     """Text completions operation such as [OpenAI Completions API (Legacy)](https://platform.openai.com/docs/api-reference/completions)."""
     EMBEDDINGS = "embeddings"
     """Embeddings operation such as [OpenAI Create embeddings API](https://platform.openai.com/docs/api-reference/embeddings/create)."""
+    RETRIEVAL = "retrieval"
+    """Retrieval operation such as [OpenAI Search Vector Store API](https://platform.openai.com/docs/api-reference/vector-stores/search)."""
     CREATE_AGENT = "create_agent"
     """Create GenAI agent."""
     INVOKE_AGENT = "invoke_agent"

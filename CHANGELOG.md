@@ -13,6 +13,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 - `opentelemetry-sdk`: Add file configuration support with YAML/JSON loading and environment variable substitution
+- `opentelemetry-sdk`: deprecate `LoggingHandler` in favor of `opentelemetry-instrumentation-logging`, see `opentelemetry-instrumentation-logging` documentation
+  ([#4919](https://github.com/open-telemetry/opentelemetry-python/pull/4919))
+- `opentelemetry-sdk`: Clarify log processor error handling expectations in documentation
+  ([#4915](https://github.com/open-telemetry/opentelemetry-python/pull/4915))
+- bump semantic-conventions to v1.40.0
+  ([#4941](https://github.com/open-telemetry/opentelemetry-python/pull/4941))
+- Add stale PR GitHub Action
+  ([#4926](https://github.com/open-telemetry/opentelemetry-python/pull/4926))
+- `opentelemetry-sdk`: Drop unused Jaeger exporter environment variables (exporter removed in 1.22.0)
+  ([#4918](https://github.com/open-telemetry/opentelemetry-python/issues/4918))
+- `opentelemetry-sdk`: Clarify timeout units in environment variable documentation
+  ([#4906](https://github.com/open-telemetry/opentelemetry-python/pull/4906))
 - `opentelemetry-exporter-otlp-proto-grpc`: Fix re-initialization of gRPC channel on UNAVAILABLE error
   ([#4825](https://github.com/open-telemetry/opentelemetry-python/pull/4825))
 - `opentelemetry-exporter-prometheus`: Fix duplicate HELP/TYPE declarations for metrics with different label sets
@@ -31,12 +43,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4806](https://github.com/open-telemetry/opentelemetry-python/pull/4806))
 - Prevent possible endless recursion from happening in `SimpleLogRecordProcessor.on_emit`,
   ([#4799](https://github.com/open-telemetry/opentelemetry-python/pull/4799)) and ([#4867](https://github.com/open-telemetry/opentelemetry-python/pull/4867)).
+- Implement span start/end metrics
+  ([#4880](https://github.com/open-telemetry/opentelemetry-python/pull/4880))
+- Add environment variable carriers to API
+  ([#4609](https://github.com/open-telemetry/opentelemetry-python/pull/4609))
 - Add experimental composable rule based sampler
   ([#4882](https://github.com/open-telemetry/opentelemetry-python/pull/4882))
 - Make ConcurrentMultiSpanProcessor fork safe
   ([#4862](https://github.com/open-telemetry/opentelemetry-python/pull/4862))
 - `opentelemetry-exporter-otlp-proto-http`: fix retry logic and error handling for connection failures in trace, metric, and log exporters
   ([#4709](https://github.com/open-telemetry/opentelemetry-python/pull/4709))
+- `opentelemetry-sdk`: avoid RuntimeError during iteration of view instrument match dictionary in MetricReaderStorage.collect()
+  ([#4891](https://github.com/open-telemetry/opentelemetry-python/pull/4891))
+- Implement experimental TracerConfigurator
+  ([#4861](https://github.com/open-telemetry/opentelemetry-python/pull/4861))
+- `opentelemetry-sdk`: Fix instrument creation race condition
+  ([#4913](https://github.com/open-telemetry/opentelemetry-python/pull/4913))
+- bump semantic-conventions to v1.39.0
+  ([#4914](https://github.com/open-telemetry/opentelemetry-python/pull/4914))
 - `opentelemetry-sdk`: automatically generate configuration models using OTel config JSON schema
   ([#4879](https://github.com/open-telemetry/opentelemetry-python/pull/4879))
 
@@ -48,8 +72,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4734](https://github.com/open-telemetry/opentelemetry-python/pull/4734))
 - build: bump ruff to 0.14.1
   ([#4782](https://github.com/open-telemetry/opentelemetry-python/pull/4782))
-- Add `opentelemetry-exporter-credential-provider-gcp` as an optional dependency to `opentelemetry-exporter-otlp-proto-grpc` 
-  and `opentelemetry-exporter-otlp-proto-http` 
+- Add `opentelemetry-exporter-credential-provider-gcp` as an optional dependency to `opentelemetry-exporter-otlp-proto-grpc`
+  and `opentelemetry-exporter-otlp-proto-http`
   ([#4760](https://github.com/open-telemetry/opentelemetry-python/pull/4760))
 - feat: implement on ending in span processor
   ([#4775](https://github.com/open-telemetry/opentelemetry-python/pull/4775))
@@ -61,29 +85,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4647](https://github.com/open-telemetry/opentelemetry-python/pull/4647))
 
   **Migration Guide:**
-  
+
   `LogData` has been removed. Users should update their code as follows:
-  
+
   - **For Log Exporters:** Change from `Sequence[LogData]` to `Sequence[ReadableLogRecord]`
     ```python
     # Before
     from opentelemetry.sdk._logs import LogData
     def export(self, batch: Sequence[LogData]) -> LogRecordExportResult:
         ...
-    
+
     # After
     from opentelemetry.sdk._logs import ReadableLogRecord
     def export(self, batch: Sequence[ReadableLogRecord]) -> LogRecordExportResult:
         ...
     ```
-  
+
   - **For Log Processors:** Use `ReadWriteLogRecord` for processing, `ReadableLogRecord` for exporting
     ```python
     # Before
     from opentelemetry.sdk._logs import LogData
     def on_emit(self, log_data: LogData):
         ...
-    
+
     # After
     from opentelemetry.sdk._logs import ReadWriteLogRecord, ReadableLogRecord
     def on_emit(self, log_record: ReadWriteLogRecord):
@@ -96,7 +120,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
         )
         ...
     ```
-  
+
   - **Accessing log data:** Use the same attributes on `ReadableLogRecord`/`ReadWriteLogRecord`
     - `log_record.log_record` - The API LogRecord (contains body, severity, attributes, etc.)
     - `log_record.resource` - The Resource
