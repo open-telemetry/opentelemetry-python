@@ -12,6 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `opentelemetry-sdk`: deprecate `LoggingHandler` in favor of `opentelemetry-instrumentation-logging`, see `opentelemetry-instrumentation-logging` documentation
+  ([#4919](https://github.com/open-telemetry/opentelemetry-python/pull/4919))
+- `opentelemetry-sdk`: Clarify log processor error handling expectations in documentation
+  ([#4915](https://github.com/open-telemetry/opentelemetry-python/pull/4915))
+- bump semantic-conventions to v1.40.0
+  ([#4941](https://github.com/open-telemetry/opentelemetry-python/pull/4941))
+- Add stale PR GitHub Action
+  ([#4926](https://github.com/open-telemetry/opentelemetry-python/pull/4926))
 - `opentelemetry-sdk`: Drop unused Jaeger exporter environment variables (exporter removed in 1.22.0)
   ([#4918](https://github.com/open-telemetry/opentelemetry-python/issues/4918))
 - `opentelemetry-sdk`: Clarify timeout units in environment variable documentation
@@ -52,6 +60,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4913](https://github.com/open-telemetry/opentelemetry-python/pull/4913))
 - bump semantic-conventions to v1.39.0
   ([#4914](https://github.com/open-telemetry/opentelemetry-python/pull/4914))
+- `opentelemetry-sdk`: automatically generate configuration models using OTel config JSON schema
+  ([#4879](https://github.com/open-telemetry/opentelemetry-python/pull/4879))
 - Add configurable `max_export_batch_size` to OTLP HTTP metrics exporter
   ([#4576](https://github.com/open-telemetry/opentelemetry-python/pull/4576))
 

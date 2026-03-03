@@ -843,6 +843,19 @@ class TestLoggingInit(TestCase):
         getLogger(__name__).error("hello")
         self.assertFalse(provider.processors[0].exporter.export_called)
 
+    def test_logging_init_with_setup_logging_handler_to_true_warns(self):
+        resource = Resource.create({})
+        with self.assertWarnsRegex(
+            DeprecationWarning,
+            "and the `LoggingHandler` in `opentelemetry-sdk` that it controls are deprecated",
+        ):
+            with ResetGlobalLoggingState():
+                _init_logging(
+                    {"otlp": DummyOTLPLogExporter},
+                    resource=resource,
+                    setup_logging_handler=True,
+                )
+
     @patch.dict(
         environ,
         {"OTEL_RESOURCE_ATTRIBUTES": "service.name=otlp-service"},
