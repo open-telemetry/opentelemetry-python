@@ -10,7 +10,7 @@ pytest==7.4.4
 jsonschema==4.23.0
 pyyaml==6.0.2
 tomli==2.0.1
-typing_extensions==4.10.0
+typing_extensions==4.12.0
 wrapt==1.16.0
 zipp==3.19.2
 -e opentelemetry-api
