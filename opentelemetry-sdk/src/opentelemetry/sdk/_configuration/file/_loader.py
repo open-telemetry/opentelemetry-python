@@ -41,18 +41,19 @@ except ImportError as exc:
         "Install with: pip install opentelemetry-sdk[file-configuration]"
     ) from exc
 
-_schema = None
+_schema_cache: list[dict] = []
 
 
 def _get_schema() -> dict:
-    global _schema  # noqa: PLW0603
-    if _schema is None:
+    if not _schema_cache:
         schema_path = (
             importlib.resources.files("opentelemetry.sdk._configuration")
             / "schema.json"
         )
-        _schema = json.loads(schema_path.read_text(encoding="utf-8"))
-    return _schema
+        _schema_cache.append(
+            json.loads(schema_path.read_text(encoding="utf-8"))
+        )
+    return _schema_cache[0]
 
 
 _logger = logging.getLogger(__name__)
@@ -150,7 +151,28 @@ def load_config_file(file_path: str) -> OpenTelemetryConfiguration:
             f"Configuration must be a mapping/object, got {type(data).__name__}"
         )
 
-    # Validate against the OTel configuration JSON schema
+    _validate_schema(data)
+
+    # Convert to OpenTelemetryConfiguration model
+    try:
+        config = _dict_to_model(data)
+    except Exception as exc:
+        _logger.exception(
+            "Failed to validate configuration from %s", file_path
+        )
+        raise ConfigurationError(
+            f"Failed to validate configuration: {exc}"
+        ) from exc
+
+    return config
+
+
+def _validate_schema(data: dict) -> None:
+    """Validate configuration dict against the OTel configuration JSON schema.
+
+    Raises:
+        ConfigurationError: If the data does not conform to the schema.
+    """
     try:
         jsonschema.validate(
             instance=data,
@@ -168,19 +190,6 @@ def load_config_file(file_path: str) -> OpenTelemetryConfiguration:
         raise ConfigurationError(
             f"Invalid configuration schema: {exc.message}"
         ) from exc
-
-    # Convert to OpenTelemetryConfiguration model
-    try:
-        config = _dict_to_model(data)
-    except Exception as exc:
-        _logger.exception(
-            "Failed to validate configuration from %s", file_path
-        )
-        raise ConfigurationError(
-            f"Failed to validate configuration: {exc}"
-        ) from exc
-
-    return config
 
 
 def _dict_to_model(data: dict[str, Any]) -> OpenTelemetryConfiguration:
