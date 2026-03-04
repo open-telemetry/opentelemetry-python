@@ -384,6 +384,18 @@ class MeterProvider(APIMeterProvider):
             `MeterProvider.shutdown`
         views: The views to configure the metric output the SDK
 
+    .. code-block:: python
+        :caption: Push-based export with PeriodicExportingMetricReader
+
+        from opentelemetry.sdk.metrics import MeterProvider
+        from opentelemetry.sdk.metrics.export import (
+            ConsoleMetricExporter,
+            PeriodicExportingMetricReader,
+        )
+
+        reader = PeriodicExportingMetricReader(ConsoleMetricExporter())
+        provider = MeterProvider(metric_readers=[reader])
+
     By default, instruments which do not match any :class:`opentelemetry.sdk.metrics.view.View` (or if no :class:`opentelemetry.sdk.metrics.view.View`\ s
     are provided) will report metrics with the default aggregation for the
     instrument's kind. To disable instruments by default, configure a match-all
@@ -400,18 +412,6 @@ class MeterProvider(APIMeterProvider):
             ],
             # ...
         )
-
-    .. code-block:: python
-        :caption: Push-based export with PeriodicExportingMetricReader
-
-        from opentelemetry.sdk.metrics import MeterProvider
-        from opentelemetry.sdk.metrics.export import (
-            ConsoleMetricExporter,
-            PeriodicExportingMetricReader,
-        )
-
-        reader = PeriodicExportingMetricReader(ConsoleMetricExporter())
-        provider = MeterProvider(metric_readers=[reader])
     """
 
     _all_metric_readers_lock = Lock()
