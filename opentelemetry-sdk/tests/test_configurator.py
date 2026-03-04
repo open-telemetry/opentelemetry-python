@@ -261,14 +261,14 @@ class CustomSampler(Sampler):
 
     def should_sample(
         self,
-        parent_context: Optional["Context"],
+        parent_context: Optional[Context],
         trace_id: int,
         name: str,
         kind: SpanKind = None,
         attributes: Attributes = None,
         links: Sequence[Link] = None,
         trace_state: TraceState = None,
-    ) -> "SamplingResult":
+    ) -> SamplingResult:
         return SamplingResult(
             Decision.RECORD_AND_SAMPLE,
             None,
@@ -290,14 +290,14 @@ class CustomRatioSampler(TraceIdRatioBased):
 
     def should_sample(
         self,
-        parent_context: "Context" | None,
+        parent_context: Context | None,
         trace_id: int,
         name: str,
         kind: SpanKind | None = None,
         attributes: Attributes = None,
         links: Sequence[Link] | None = None,
         trace_state: TraceState | None = None,
-    ) -> "SamplingResult":
+    ) -> SamplingResult:
         return SamplingResult(
             Decision.RECORD_AND_SAMPLE,
             None,
