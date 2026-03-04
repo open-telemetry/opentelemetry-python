@@ -368,6 +368,25 @@ def create_system_memory_linux_available(meter: Meter) -> UpDownCounter:
     )
 
 
+SYSTEM_MEMORY_LINUX_SHARED: Final = "system.memory.linux.shared"
+"""
+Shared memory used (mostly by tmpfs)
+Instrument: updowncounter
+Unit: By
+Note: Equivalent of `shared` from [`free` command](https://man7.org/linux/man-pages/man1/free.1.html) or
+`Shmem` from [`/proc/meminfo`](https://man7.org/linux/man-pages/man5/proc.5.html)".
+"""
+
+
+def create_system_memory_linux_shared(meter: Meter) -> UpDownCounter:
+    """Shared memory used (mostly by tmpfs)"""
+    return meter.create_up_down_counter(
+        name=SYSTEM_MEMORY_LINUX_SHARED,
+        description="Shared memory used (mostly by tmpfs).",
+        unit="By",
+    )
+
+
 SYSTEM_MEMORY_LINUX_SLAB_USAGE: Final = "system.memory.linux.slab.usage"
 """
 Reports the memory used by the Linux kernel for managing caches of frequently used objects
@@ -390,19 +409,15 @@ def create_system_memory_linux_slab_usage(meter: Meter) -> UpDownCounter:
 
 SYSTEM_MEMORY_SHARED: Final = "system.memory.shared"
 """
-Shared memory used (mostly by tmpfs)
-Instrument: updowncounter
-Unit: By
-Note: Equivalent of `shared` from [`free` command](https://man7.org/linux/man-pages/man1/free.1.html) or
-`Shmem` from [`/proc/meminfo`](https://man7.org/linux/man-pages/man5/proc.5.html)".
+Deprecated: Replaced by `system.memory.linux.shared`.
 """
 
 
 def create_system_memory_shared(meter: Meter) -> UpDownCounter:
-    """Shared memory used (mostly by tmpfs)"""
+    """Deprecated, use `system.memory.linux.shared` instead"""
     return meter.create_up_down_counter(
         name=SYSTEM_MEMORY_SHARED,
-        description="Shared memory used (mostly by tmpfs).",
+        description="Deprecated, use `system.memory.linux.shared` instead.",
         unit="By",
     )
 
