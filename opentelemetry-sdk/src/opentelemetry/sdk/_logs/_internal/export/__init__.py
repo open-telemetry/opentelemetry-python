@@ -134,9 +134,9 @@ class ConsoleLogRecordExporter(LogRecordExporter):
     def __init__(
         self,
         out: IO = sys.stdout,
-        formatter: Callable[
-            [ReadableLogRecord], str
-        ] = lambda record: record.to_json() + linesep,
+        formatter: Callable[[ReadableLogRecord], str] = lambda record: (
+            record.to_json() + linesep
+        ),
     ):
         self.out = out
         self.formatter = formatter
