@@ -99,6 +99,7 @@ from opentracing import (
     Tracer,
     UnsupportedFormatException,
 )
+from opentracing import tags as ot_tags
 from typing_extensions import deprecated
 
 from opentelemetry.baggage import get_baggage, set_baggage
@@ -117,6 +118,7 @@ from opentelemetry.trace import (
     INVALID_SPAN_CONTEXT,
     Link,
     NonRecordingSpan,
+    SpanKind,
     TracerProvider,
     get_current_span,
     set_span_in_context,
@@ -129,6 +131,14 @@ from opentelemetry.util.types import Attributes
 ValueT = TypeVar("ValueT", int, float, bool, str)
 logger = logging.getLogger(__name__)
 _SHIM_KEY = create_key("scope_shim")
+
+# Mapping from OpenTracing span kind tag values to OpenTelemetry SpanKind.
+_OPENTRACING_TO_OTEL_KIND = {
+    ot_tags.SPAN_KIND_RPC_CLIENT: SpanKind.CLIENT,
+    ot_tags.SPAN_KIND_RPC_SERVER: SpanKind.SERVER,
+    ot_tags.SPAN_KIND_CONSUMER: SpanKind.CONSUMER,
+    ot_tags.SPAN_KIND_PRODUCER: SpanKind.PRODUCER,
+}
 
 
 def create_tracer(otel_tracer_provider: TracerProvider) -> "TracerShim":
@@ -674,13 +684,21 @@ class TracerShim(Tracer):
         if start_time_ns is not None:
             start_time_ns = util.time_seconds_to_ns(start_time)
 
-        span = self._otel_tracer.start_span(
-            operation_name,
-            context=parent_span_context,
-            links=valid_links,
-            attributes=tags,
-            start_time=start_time_ns,
-        )
+        # Extract span kind from OpenTracing tags if present.
+        # OpenTracing uses the "span.kind" tag to indicate span kind, while
+        # OpenTelemetry uses a dedicated kind argument.
+        span_kwargs: dict = {
+            "context": parent_span_context,
+            "links": valid_links,
+            "attributes": tags,
+            "start_time": start_time_ns,
+        }
+        if tags is not None and ot_tags.SPAN_KIND in tags:
+            span_kwargs["kind"] = _OPENTRACING_TO_OTEL_KIND.get(
+                tags[ot_tags.SPAN_KIND], SpanKind.INTERNAL
+            )
+
+        span = self._otel_tracer.start_span(operation_name, **span_kwargs)
 
         context = SpanContextShim(span.get_span_context())
         return SpanShim(self, context, span)

@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `opentelemetry-opentracing-shim`: Map OpenTracing `span.kind` tag to OpenTelemetry SpanKind
+  ([#2549](https://github.com/open-telemetry/opentelemetry-python/issues/2549))
 - `opentelemetry-sdk`: fix type annotations on `MetricReader` and related types
   ([#4938](https://github.com/open-telemetry/opentelemetry-python/pull/4938/))
 
@@ -19,8 +21,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `opentelemetry-sdk`: deprecate `LoggingHandler` in favor of `opentelemetry-instrumentation-logging`, see `opentelemetry-instrumentation-logging` documentation
   ([#4919](https://github.com/open-telemetry/opentelemetry-python/pull/4919))
-- `opentelemetry-sdk`: Clarify log processor error handling expectations in documentation
-  ([#4915](https://github.com/open-telemetry/opentelemetry-python/pull/4915))
 - bump semantic-conventions to v1.40.0
   ([#4941](https://github.com/open-telemetry/opentelemetry-python/pull/4941))
 - Add stale PR GitHub Action
