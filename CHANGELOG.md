@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `opentelemetry-sdk`: fix type annotations on `MetricReader` and related types
+  ([#4938](https://github.com/open-telemetry/opentelemetry-python/pull/4938/))
+
+## Version 1.40.0/0.61b0 (2026-03-04)
+
 - `opentelemetry-sdk`: deprecate `LoggingHandler` in favor of `opentelemetry-instrumentation-logging`, see `opentelemetry-instrumentation-logging` documentation
   ([#4919](https://github.com/open-telemetry/opentelemetry-python/pull/4919))
 - `opentelemetry-sdk`: Clarify log processor error handling expectations in documentation
