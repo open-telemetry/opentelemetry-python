@@ -1,0 +1,39 @@
+name: Add to project
+
+on:
+  issues:
+    types:
+      - opened
+      - transferred
+  pull_request_target:
+    # SECURITY NOTE: pull_request_target runs in the base repo context and has access to
+    # secrets, even for PRs from forks. This is intentional — pull_request does NOT have
+    # access to secrets for fork PRs, which means it cannot authenticate to add items to
+    # the org project.
+    #
+    # This is safe ONLY because this workflow never checks out any code from the PR. It
+    # only uses the event payload (a node ID) to call the GitHub API. No fork code is
+    # ever executed. Future maintainers MUST NOT add an actions/checkout step here without
+    # reassessing the security implications.
+    types:
+      - opened
+
+permissions:
+  contents: read
+
+jobs:
+  add-to-project:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v2.0.6
+        id: otelbot-token
+        with:
+          app-id: ${{ vars.OTELBOT_APP_ID }}
+          private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+          # owner is required to generate a token with org-level project access
+          owner: open-telemetry
+
+      - uses: actions/add-to-project@v1
+        with:
+          project-url: https://github.com/orgs/open-telemetry/projects/88
+          github-token: ${{ steps.otelbot-token.outputs.token }}
