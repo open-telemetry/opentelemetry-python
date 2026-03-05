@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `opentelemetry-sdk`: fix type annotations on `MetricReader` and related types
   ([#4938](https://github.com/open-telemetry/opentelemetry-python/pull/4938/))
+- Add configurable `max_export_batch_size` to OTLP HTTP metrics exporter
+  ([#4576](https://github.com/open-telemetry/opentelemetry-python/pull/4576))
 
 ## Version 1.40.0/0.61b0 (2026-03-04)
 
@@ -67,8 +69,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4914](https://github.com/open-telemetry/opentelemetry-python/pull/4914))
 - `opentelemetry-sdk`: automatically generate configuration models using OTel config JSON schema
   ([#4879](https://github.com/open-telemetry/opentelemetry-python/pull/4879))
-- Add configurable `max_export_batch_size` to OTLP HTTP metrics exporter
-  ([#4576](https://github.com/open-telemetry/opentelemetry-python/pull/4576))
 
 ## Version 1.39.0/0.60b0 (2025-12-03)
 
