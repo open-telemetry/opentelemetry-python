@@ -519,6 +519,7 @@ class LoggingHandler(logging.Handler):
     a network destination or file. Supports signals from the `logging` module.
     https://docs.python.org/3/library/logging.html
     """
+    _guard = threading.local()
 
     def __init__(
         self,
@@ -612,9 +613,22 @@ class LoggingHandler(logging.Handler):
 
         The record is translated to OTel format, and then sent across the pipeline.
         """
-        logger = get_logger(record.name, logger_provider=self._logger_provider)
-        if not isinstance(logger, NoOpLogger):
-            logger.emit(self._translate(record))
+        # Prevent recursive logging deadlock.
+        # If _translate() triggers a log (e.g., _clean_extended_attribute
+        # calling _logger.warning() for invalid attribute types), this
+        # guard prevents re-entering emit() on the same thread, which
+        # would deadlock on the handler lock.
+        # See: https://github.com/open-telemetry/opentelemetry-python/issues/3858
+
+        if getattr(self._guard, 'emitting', False):
+            return
+        self._guard.emitting = True
+        try:
+            logger = get_logger(record.name, logger_provider=self._logger_provider)
+            if not isinstance(logger, NoOpLogger):
+                logger.emit(self._translate(record))
+        finally:
+            self._guard.emitting = False
 
     def flush(self) -> None:
         """
