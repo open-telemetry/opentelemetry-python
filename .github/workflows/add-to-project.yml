@@ -1,10 +1,6 @@
 name: Add to project
 
 on:
-  issues:
-    types:
-      - opened
-      - transferred
   pull_request_target:
     # SECURITY NOTE: pull_request_target runs in the base repo context and has access to
     # secrets, even for PRs from forks. This is intentional — pull_request does NOT have
@@ -17,6 +13,7 @@ on:
     # reassessing the security implications.
     types:
       - opened
+      - ready_for_review
 
 permissions:
   contents: read
@@ -24,6 +21,8 @@ permissions:
 jobs:
   add-to-project:
     runs-on: ubuntu-latest
+    # Skip draft PRs; ready_for_review will trigger when they are published
+    if: github.event.pull_request.draft == false
     steps:
       - uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v2.0.6
         id: otelbot-token
