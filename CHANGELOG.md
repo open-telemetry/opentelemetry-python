@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `opentelemetry-sdk`: fix type annotations on `MetricReader` and related types
   ([#4938](https://github.com/open-telemetry/opentelemetry-python/pull/4938/))
+- Implement log creation metric
+  ([#4935](https://github.com/open-telemetry/opentelemetry-python/pull/4935))
 
 ## Version 1.40.0/0.61b0 (2026-03-04)
 
@@ -49,8 +51,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4799](https://github.com/open-telemetry/opentelemetry-python/pull/4799)) and ([#4867](https://github.com/open-telemetry/opentelemetry-python/pull/4867)).
 - Implement span start/end metrics
   ([#4880](https://github.com/open-telemetry/opentelemetry-python/pull/4880))
-- Implement log creation metric
-  ([#4935](https://github.com/open-telemetry/opentelemetry-python/pull/4935))
 - Add environment variable carriers to API
   ([#4609](https://github.com/open-telemetry/opentelemetry-python/pull/4609))
 - Add experimental composable rule based sampler

@@ -43,6 +43,7 @@ from opentelemetry.attributes import _VALID_ANY_VALUE_TYPES, BoundedAttributes
 from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
 from opentelemetry.metrics import MeterProvider, get_meter_provider
+from opentelemetry.sdk._logs._internal._logger_metrics import LoggerMetrics
 from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_COUNT_LIMIT,
     OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
@@ -58,8 +59,6 @@ from opentelemetry.trace import (
     format_trace_id,
 )
 from opentelemetry.util.types import AnyValue, _ExtendedAttributes
-
-from ._logger_metrics import LoggerMetrics
 
 _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
 _ENV_VALUE_UNSET = ""
