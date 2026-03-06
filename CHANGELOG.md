@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Increase stale action `operations-per-run` to 500 to allow processing all stale PRs in a single run
+  ([#4959](https://github.com/open-telemetry/opentelemetry-python/pull/4959))
 - `opentelemetry-sdk`: fix type annotations on `MetricReader` and related types
   ([#4938](https://github.com/open-telemetry/opentelemetry-python/pull/4938/))
 
