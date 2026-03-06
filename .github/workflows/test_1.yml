@@ -29,6 +29,11 @@ env:
        'main'
     ) || 'main' }}
   PIP_EXISTS_ACTION: w
+  CONTRIB_REPO_UTIL_HTTP: ${{ github.workspace }}/opentelemetry-python-contrib/util/opentelemetry-util-http
+  CONTRIB_REPO_INSTRUMENTATION: ${{ github.workspace }}/opentelemetry-python-contrib/opentelemetry-instrumentation
+  CONTRIB_REPO_INSTRUMENTATION_REQUESTS: ${{ github.workspace }}/opentelemetry-python-contrib/instrumentation/opentelemetry-instrumentation-requests
+  CONTRIB_REPO_INSTRUMENTATION_WSGI: ${{ github.workspace }}/opentelemetry-python-contrib/instrumentation/opentelemetry-instrumentation-wsgi
+  CONTRIB_REPO_INSTRUMENTATION_FLASK: ${{ github.workspace }}/opentelemetry-python-contrib/instrumentation/opentelemetry-instrumentation-flask
 
 jobs:
 
