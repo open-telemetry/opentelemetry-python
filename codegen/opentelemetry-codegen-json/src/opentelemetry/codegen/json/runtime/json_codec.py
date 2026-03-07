@@ -25,7 +25,6 @@ T = typing.TypeVar("T")
 def json_serde(cls: type[T]) -> type[T]:
     """
     A decorator that adds "to_json" and "from_json" methods to a class.
-    The class must already have to_dict and from_dict methods.
     """
 
     def to_json(self: typing.Any) -> str:
