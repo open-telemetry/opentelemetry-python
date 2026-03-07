@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `opentelemetry-opentracing-shim`: Map OpenTracing `span.kind` tag to OpenTelemetry SpanKind
+  ([#2549](https://github.com/open-telemetry/opentelemetry-python/issues/2549))
 - Fix intermittent CI failures in `getting-started` and `tracecontext` jobs caused by GitHub git CDN SHA propagation lag by installing contrib packages from the already-checked-out local copy instead of a second git clone
   ([#4958](https://github.com/open-telemetry/opentelemetry-python/pull/4958))
 - `opentelemetry-sdk`: fix type annotations on `MetricReader` and related types
@@ -21,8 +23,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `opentelemetry-sdk`: deprecate `LoggingHandler` in favor of `opentelemetry-instrumentation-logging`, see `opentelemetry-instrumentation-logging` documentation
   ([#4919](https://github.com/open-telemetry/opentelemetry-python/pull/4919))
-- `opentelemetry-sdk`: Clarify log processor error handling expectations in documentation
-  ([#4915](https://github.com/open-telemetry/opentelemetry-python/pull/4915))
 - bump semantic-conventions to v1.40.0
   ([#4941](https://github.com/open-telemetry/opentelemetry-python/pull/4941))
 - Add stale PR GitHub Action

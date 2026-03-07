@@ -668,3 +668,61 @@ class TestShim(TestCase):
                     scope.span.unwrap().parent,
                     opentelemetry_span.context,
                 )
+
+    def test_span_kind_from_tags(self):
+        """Test that span.kind OpenTracing tag is converted to OTel SpanKind."""
+
+        # Test consumer kind
+        with self.shim.start_active_span(
+            "TestSpanKind1", tags={"span.kind": "consumer"}
+        ) as scope:
+            self.assertEqual(scope.span.unwrap().kind, trace.SpanKind.CONSUMER)
+
+        # Test producer kind
+        with self.shim.start_active_span(
+            "TestSpanKind2", tags={"span.kind": "producer"}
+        ) as scope:
+            self.assertEqual(scope.span.unwrap().kind, trace.SpanKind.PRODUCER)
+
+        # Test client kind
+        with self.shim.start_active_span(
+            "TestSpanKind3", tags={"span.kind": "client"}
+        ) as scope:
+            self.assertEqual(scope.span.unwrap().kind, trace.SpanKind.CLIENT)
+
+        # Test server kind
+        with self.shim.start_active_span(
+            "TestSpanKind4", tags={"span.kind": "server"}
+        ) as scope:
+            self.assertEqual(scope.span.unwrap().kind, trace.SpanKind.SERVER)
+
+        # Test unknown kind defaults to INTERNAL
+        with self.shim.start_active_span(
+            "TestSpanKind5", tags={"span.kind": "unknown"}
+        ) as scope:
+            self.assertEqual(scope.span.unwrap().kind, trace.SpanKind.INTERNAL)
+
+        # Test no span.kind tag defaults to INTERNAL
+        with self.shim.start_active_span(
+            "TestSpanKind6", tags={"foo": "bar"}
+        ) as scope:
+            self.assertEqual(scope.span.unwrap().kind, trace.SpanKind.INTERNAL)
+
+        # Test no tags at all defaults to INTERNAL
+        with self.shim.start_active_span("TestSpanKind7") as scope:
+            self.assertEqual(scope.span.unwrap().kind, trace.SpanKind.INTERNAL)
+
+    def test_span_kind_tag_preserved_in_attributes(self):
+        """Test that span.kind tag is also preserved as an attribute."""
+
+        with self.shim.start_active_span(
+            "TestSpanKindAttr", tags={"span.kind": "consumer", "foo": "bar"}
+        ) as scope:
+            # Verify the span kind is correctly set
+            self.assertEqual(scope.span.unwrap().kind, trace.SpanKind.CONSUMER)
+            # Verify the span.kind tag is preserved as an attribute
+            self.assertEqual(
+                scope.span.unwrap().attributes.get("span.kind"), "consumer"
+            )
+            # Verify other attributes are also preserved
+            self.assertEqual(scope.span.unwrap().attributes.get("foo"), "bar")
