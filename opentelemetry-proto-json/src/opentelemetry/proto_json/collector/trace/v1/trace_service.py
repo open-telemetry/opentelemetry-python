@@ -20,7 +20,6 @@ from __future__ import annotations
 import builtins
 import dataclasses
 import functools
-import json
 import sys
 import typing
 
@@ -29,11 +28,12 @@ if sys.version_info >= (3, 10):
 else:
     _dataclass = dataclasses.dataclass
 
-import opentelemetry.proto_json._otlp_json_utils
+import opentelemetry.proto_json._json_codec
 import opentelemetry.proto_json.trace.v1.trace
 
 
 @typing.final
+@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
 class ExportTraceServiceRequest:
     """
@@ -51,17 +51,8 @@ class ExportTraceServiceRequest:
         """
         _result = {}
         if self.resource_spans:
-            _result["resourceSpans"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.resource_spans, lambda _v: _v.to_dict())
+            _result["resourceSpans"] = opentelemetry.proto_json._json_codec.encode_repeated(self.resource_spans, lambda _v: _v.to_dict())
         return _result
-
-    def to_json(self) -> builtins.str:
-        """
-        Serialize this message to a JSON string.
-
-        Returns:
-            JSON string
-        """
-        return json.dumps(self.to_dict())
 
     @builtins.classmethod
     def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ExportTraceServiceRequest":
@@ -74,29 +65,17 @@ class ExportTraceServiceRequest:
         Returns:
             ExportTraceServiceRequest instance
         """
-        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._json_codec.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("resourceSpans")) is not None:
-            _args["resource_spans"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json.trace.v1.trace.ResourceSpans.from_dict(_v), "resource_spans")
+            _args["resource_spans"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: opentelemetry.proto_json.trace.v1.trace.ResourceSpans.from_dict(_v), "resource_spans")
 
         return cls(**_args)
 
-    @builtins.classmethod
-    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "ExportTraceServiceRequest":
-        """
-        Deserialize from a JSON string or bytes.
-
-        Args:
-            data: JSON string or bytes
-
-        Returns:
-            Instance of the class
-        """
-        return cls.from_dict(json.loads(data))
-
 
 @typing.final
+@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
 class ExportTraceServiceResponse:
     """
@@ -117,15 +96,6 @@ class ExportTraceServiceResponse:
             _result["partialSuccess"] = self.partial_success.to_dict()
         return _result
 
-    def to_json(self) -> builtins.str:
-        """
-        Serialize this message to a JSON string.
-
-        Returns:
-            JSON string
-        """
-        return json.dumps(self.to_dict())
-
     @builtins.classmethod
     def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ExportTraceServiceResponse":
         """
@@ -137,7 +107,7 @@ class ExportTraceServiceResponse:
         Returns:
             ExportTraceServiceResponse instance
         """
-        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._json_codec.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("partialSuccess")) is not None:
@@ -145,21 +115,9 @@ class ExportTraceServiceResponse:
 
         return cls(**_args)
 
-    @builtins.classmethod
-    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "ExportTraceServiceResponse":
-        """
-        Deserialize from a JSON string or bytes.
-
-        Args:
-            data: JSON string or bytes
-
-        Returns:
-            Instance of the class
-        """
-        return cls.from_dict(json.loads(data))
-
 
 @typing.final
+@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
 class ExportTracePartialSuccess:
     """
@@ -178,19 +136,10 @@ class ExportTracePartialSuccess:
         """
         _result = {}
         if self.rejected_spans:
-            _result["rejectedSpans"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.rejected_spans)
+            _result["rejectedSpans"] = opentelemetry.proto_json._json_codec.encode_int64(self.rejected_spans)
         if self.error_message:
             _result["errorMessage"] = self.error_message
         return _result
-
-    def to_json(self) -> builtins.str:
-        """
-        Serialize this message to a JSON string.
-
-        Returns:
-            JSON string
-        """
-        return json.dumps(self.to_dict())
 
     @builtins.classmethod
     def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ExportTracePartialSuccess":
@@ -203,26 +152,13 @@ class ExportTracePartialSuccess:
         Returns:
             ExportTracePartialSuccess instance
         """
-        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._json_codec.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("rejectedSpans")) is not None:
-            _args["rejected_spans"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "rejected_spans")
+            _args["rejected_spans"] = opentelemetry.proto_json._json_codec.decode_int64(_value, "rejected_spans")
         if (_value := data.get("errorMessage")) is not None:
-            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.str, "error_message")
+            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.str, "error_message")
             _args["error_message"] = _value
 
         return cls(**_args)
-
-    @builtins.classmethod
-    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "ExportTracePartialSuccess":
-        """
-        Deserialize from a JSON string or bytes.
-
-        Args:
-            data: JSON string or bytes
-
-        Returns:
-            Instance of the class
-        """
-        return cls.from_dict(json.loads(data))

@@ -123,7 +123,7 @@ class CodeWriter:
         return self
 
     @contextmanager
-    def suite(self, header: str) -> Generator[CodeWriter, None, None]:
+    def block(self, header: str) -> Generator[CodeWriter, None, None]:
         """
         Create a generic code block with a header (e.g. if, for, while, try, etc.)
 

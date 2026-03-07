@@ -85,7 +85,7 @@ def test_import(module: str, items: list[str], expected: list[str]) -> None:
 
 def test_suite() -> None:
     writer = CodeWriter()
-    with writer.suite("def foo():"):
+    with writer.block("def foo():"):
         writer.writeln("pass")
     assert writer.to_lines() == ["def foo():", "    pass"]
 

@@ -17,7 +17,7 @@ from typing import Optional, Union
 
 import pytest
 
-from opentelemetry.codegen.json.runtime.otlp_json_utils import (
+from opentelemetry.codegen.json.runtime.json_codec import (
     decode_base64,
     decode_float,
     decode_hex,

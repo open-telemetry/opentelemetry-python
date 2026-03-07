@@ -15,10 +15,37 @@
 from __future__ import annotations
 
 import base64
+import json
 import math
 import typing
 
 T = typing.TypeVar("T")
+
+
+def json_serde(cls: type[T]) -> type[T]:
+    """
+    A decorator that adds "to_json" and "from_json" methods to a class.
+    The class must already have to_dict and from_dict methods.
+    """
+
+    def to_json(self: typing.Any) -> str:
+        """
+        Serialize this message to a JSON string.
+        """
+        return json.dumps(self.to_dict())
+
+    @classmethod
+    def from_json(
+            cls_inner: type[T], data: typing.Union[str, bytes]
+    ) -> T:
+        """
+        Deserialize from a JSON string or bytes.
+        """
+        return cls_inner.from_dict(json.loads(data))
+
+    cls.to_json = to_json  # type: ignore[attr-defined]
+    cls.from_json = from_json  # type: ignore[attr-defined]
+    return cls
 
 
 def encode_hex(value: bytes) -> str:

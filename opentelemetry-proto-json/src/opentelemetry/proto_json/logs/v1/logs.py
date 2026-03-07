@@ -21,7 +21,6 @@ import builtins
 import dataclasses
 import enum
 import functools
-import json
 import sys
 import typing
 
@@ -30,7 +29,7 @@ if sys.version_info >= (3, 10):
 else:
     _dataclass = dataclasses.dataclass
 
-import opentelemetry.proto_json._otlp_json_utils
+import opentelemetry.proto_json._json_codec
 import opentelemetry.proto_json.common.v1.common
 import opentelemetry.proto_json.resource.v1.resource
 
@@ -77,6 +76,7 @@ class LogRecordFlags(enum.IntEnum):
     LOG_RECORD_FLAGS_TRACE_FLAGS_MASK = 255
 
 @typing.final
+@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
 class LogsData:
     """
@@ -94,17 +94,8 @@ class LogsData:
         """
         _result = {}
         if self.resource_logs:
-            _result["resourceLogs"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.resource_logs, lambda _v: _v.to_dict())
+            _result["resourceLogs"] = opentelemetry.proto_json._json_codec.encode_repeated(self.resource_logs, lambda _v: _v.to_dict())
         return _result
-
-    def to_json(self) -> builtins.str:
-        """
-        Serialize this message to a JSON string.
-
-        Returns:
-            JSON string
-        """
-        return json.dumps(self.to_dict())
 
     @builtins.classmethod
     def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "LogsData":
@@ -117,29 +108,17 @@ class LogsData:
         Returns:
             LogsData instance
         """
-        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._json_codec.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("resourceLogs")) is not None:
-            _args["resource_logs"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: ResourceLogs.from_dict(_v), "resource_logs")
+            _args["resource_logs"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: ResourceLogs.from_dict(_v), "resource_logs")
 
         return cls(**_args)
 
-    @builtins.classmethod
-    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "LogsData":
-        """
-        Deserialize from a JSON string or bytes.
-
-        Args:
-            data: JSON string or bytes
-
-        Returns:
-            Instance of the class
-        """
-        return cls.from_dict(json.loads(data))
-
 
 @typing.final
+@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
 class ResourceLogs:
     """
@@ -161,19 +140,10 @@ class ResourceLogs:
         if self.resource:
             _result["resource"] = self.resource.to_dict()
         if self.scope_logs:
-            _result["scopeLogs"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.scope_logs, lambda _v: _v.to_dict())
+            _result["scopeLogs"] = opentelemetry.proto_json._json_codec.encode_repeated(self.scope_logs, lambda _v: _v.to_dict())
         if self.schema_url:
             _result["schemaUrl"] = self.schema_url
         return _result
-
-    def to_json(self) -> builtins.str:
-        """
-        Serialize this message to a JSON string.
-
-        Returns:
-            JSON string
-        """
-        return json.dumps(self.to_dict())
 
     @builtins.classmethod
     def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ResourceLogs":
@@ -186,34 +156,22 @@ class ResourceLogs:
         Returns:
             ResourceLogs instance
         """
-        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._json_codec.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("resource")) is not None:
             _args["resource"] = opentelemetry.proto_json.resource.v1.resource.Resource.from_dict(_value)
         if (_value := data.get("scopeLogs")) is not None:
-            _args["scope_logs"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: ScopeLogs.from_dict(_v), "scope_logs")
+            _args["scope_logs"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: ScopeLogs.from_dict(_v), "scope_logs")
         if (_value := data.get("schemaUrl")) is not None:
-            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.str, "schema_url")
+            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.str, "schema_url")
             _args["schema_url"] = _value
 
         return cls(**_args)
 
-    @builtins.classmethod
-    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "ResourceLogs":
-        """
-        Deserialize from a JSON string or bytes.
-
-        Args:
-            data: JSON string or bytes
-
-        Returns:
-            Instance of the class
-        """
-        return cls.from_dict(json.loads(data))
-
 
 @typing.final
+@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
 class ScopeLogs:
     """
@@ -235,19 +193,10 @@ class ScopeLogs:
         if self.scope:
             _result["scope"] = self.scope.to_dict()
         if self.log_records:
-            _result["logRecords"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.log_records, lambda _v: _v.to_dict())
+            _result["logRecords"] = opentelemetry.proto_json._json_codec.encode_repeated(self.log_records, lambda _v: _v.to_dict())
         if self.schema_url:
             _result["schemaUrl"] = self.schema_url
         return _result
-
-    def to_json(self) -> builtins.str:
-        """
-        Serialize this message to a JSON string.
-
-        Returns:
-            JSON string
-        """
-        return json.dumps(self.to_dict())
 
     @builtins.classmethod
     def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ScopeLogs":
@@ -260,34 +209,22 @@ class ScopeLogs:
         Returns:
             ScopeLogs instance
         """
-        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._json_codec.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("scope")) is not None:
             _args["scope"] = opentelemetry.proto_json.common.v1.common.InstrumentationScope.from_dict(_value)
         if (_value := data.get("logRecords")) is not None:
-            _args["log_records"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: LogRecord.from_dict(_v), "log_records")
+            _args["log_records"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: LogRecord.from_dict(_v), "log_records")
         if (_value := data.get("schemaUrl")) is not None:
-            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.str, "schema_url")
+            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.str, "schema_url")
             _args["schema_url"] = _value
 
         return cls(**_args)
 
-    @builtins.classmethod
-    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "ScopeLogs":
-        """
-        Deserialize from a JSON string or bytes.
-
-        Args:
-            data: JSON string or bytes
-
-        Returns:
-            Instance of the class
-        """
-        return cls.from_dict(json.loads(data))
-
 
 @typing.final
+@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
 class LogRecord:
     """
@@ -315,9 +252,9 @@ class LogRecord:
         """
         _result = {}
         if self.time_unix_nano:
-            _result["timeUnixNano"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.time_unix_nano)
+            _result["timeUnixNano"] = opentelemetry.proto_json._json_codec.encode_int64(self.time_unix_nano)
         if self.observed_time_unix_nano:
-            _result["observedTimeUnixNano"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.observed_time_unix_nano)
+            _result["observedTimeUnixNano"] = opentelemetry.proto_json._json_codec.encode_int64(self.observed_time_unix_nano)
         if self.severity_number:
             _result["severityNumber"] = builtins.int(self.severity_number)
         if self.severity_text:
@@ -325,27 +262,18 @@ class LogRecord:
         if self.body:
             _result["body"] = self.body.to_dict()
         if self.attributes:
-            _result["attributes"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.attributes, lambda _v: _v.to_dict())
+            _result["attributes"] = opentelemetry.proto_json._json_codec.encode_repeated(self.attributes, lambda _v: _v.to_dict())
         if self.dropped_attributes_count:
             _result["droppedAttributesCount"] = self.dropped_attributes_count
         if self.flags:
             _result["flags"] = self.flags
         if self.trace_id:
-            _result["traceId"] = opentelemetry.proto_json._otlp_json_utils.encode_hex(self.trace_id)
+            _result["traceId"] = opentelemetry.proto_json._json_codec.encode_hex(self.trace_id)
         if self.span_id:
-            _result["spanId"] = opentelemetry.proto_json._otlp_json_utils.encode_hex(self.span_id)
+            _result["spanId"] = opentelemetry.proto_json._json_codec.encode_hex(self.span_id)
         if self.event_name:
             _result["eventName"] = self.event_name
         return _result
-
-    def to_json(self) -> builtins.str:
-        """
-        Serialize this message to a JSON string.
-
-        Returns:
-            JSON string
-        """
-        return json.dumps(self.to_dict())
 
     @builtins.classmethod
     def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "LogRecord":
@@ -358,48 +286,35 @@ class LogRecord:
         Returns:
             LogRecord instance
         """
-        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._json_codec.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("timeUnixNano")) is not None:
-            _args["time_unix_nano"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "time_unix_nano")
+            _args["time_unix_nano"] = opentelemetry.proto_json._json_codec.decode_int64(_value, "time_unix_nano")
         if (_value := data.get("observedTimeUnixNano")) is not None:
-            _args["observed_time_unix_nano"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "observed_time_unix_nano")
+            _args["observed_time_unix_nano"] = opentelemetry.proto_json._json_codec.decode_int64(_value, "observed_time_unix_nano")
         if (_value := data.get("severityNumber")) is not None:
-            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "severity_number")
+            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "severity_number")
             _args["severity_number"] = SeverityNumber(_value)
         if (_value := data.get("severityText")) is not None:
-            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.str, "severity_text")
+            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.str, "severity_text")
             _args["severity_text"] = _value
         if (_value := data.get("body")) is not None:
             _args["body"] = opentelemetry.proto_json.common.v1.common.AnyValue.from_dict(_value)
         if (_value := data.get("attributes")) is not None:
-            _args["attributes"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
+            _args["attributes"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
         if (_value := data.get("droppedAttributesCount")) is not None:
-            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "dropped_attributes_count")
+            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "dropped_attributes_count")
             _args["dropped_attributes_count"] = _value
         if (_value := data.get("flags")) is not None:
-            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "flags")
+            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "flags")
             _args["flags"] = _value
         if (_value := data.get("traceId")) is not None:
-            _args["trace_id"] = opentelemetry.proto_json._otlp_json_utils.decode_hex(_value, "trace_id")
+            _args["trace_id"] = opentelemetry.proto_json._json_codec.decode_hex(_value, "trace_id")
         if (_value := data.get("spanId")) is not None:
-            _args["span_id"] = opentelemetry.proto_json._otlp_json_utils.decode_hex(_value, "span_id")
+            _args["span_id"] = opentelemetry.proto_json._json_codec.decode_hex(_value, "span_id")
         if (_value := data.get("eventName")) is not None:
-            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.str, "event_name")
+            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.str, "event_name")
             _args["event_name"] = _value
 
         return cls(**_args)
-
-    @builtins.classmethod
-    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "LogRecord":
-        """
-        Deserialize from a JSON string or bytes.
-
-        Args:
-            data: JSON string or bytes
-
-        Returns:
-            Instance of the class
-        """
-        return cls.from_dict(json.loads(data))

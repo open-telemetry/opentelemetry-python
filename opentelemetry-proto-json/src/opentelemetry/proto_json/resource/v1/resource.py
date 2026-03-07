@@ -20,7 +20,6 @@ from __future__ import annotations
 import builtins
 import dataclasses
 import functools
-import json
 import sys
 import typing
 
@@ -29,11 +28,12 @@ if sys.version_info >= (3, 10):
 else:
     _dataclass = dataclasses.dataclass
 
-import opentelemetry.proto_json._otlp_json_utils
+import opentelemetry.proto_json._json_codec
 import opentelemetry.proto_json.common.v1.common
 
 
 @typing.final
+@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
 class Resource:
     """
@@ -53,21 +53,12 @@ class Resource:
         """
         _result = {}
         if self.attributes:
-            _result["attributes"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.attributes, lambda _v: _v.to_dict())
+            _result["attributes"] = opentelemetry.proto_json._json_codec.encode_repeated(self.attributes, lambda _v: _v.to_dict())
         if self.dropped_attributes_count:
             _result["droppedAttributesCount"] = self.dropped_attributes_count
         if self.entity_refs:
-            _result["entityRefs"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.entity_refs, lambda _v: _v.to_dict())
+            _result["entityRefs"] = opentelemetry.proto_json._json_codec.encode_repeated(self.entity_refs, lambda _v: _v.to_dict())
         return _result
-
-    def to_json(self) -> builtins.str:
-        """
-        Serialize this message to a JSON string.
-
-        Returns:
-            JSON string
-        """
-        return json.dumps(self.to_dict())
 
     @builtins.classmethod
     def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Resource":
@@ -80,28 +71,15 @@ class Resource:
         Returns:
             Resource instance
         """
-        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._json_codec.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("attributes")) is not None:
-            _args["attributes"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
+            _args["attributes"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
         if (_value := data.get("droppedAttributesCount")) is not None:
-            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "dropped_attributes_count")
+            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "dropped_attributes_count")
             _args["dropped_attributes_count"] = _value
         if (_value := data.get("entityRefs")) is not None:
-            _args["entity_refs"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.EntityRef.from_dict(_v), "entity_refs")
+            _args["entity_refs"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.EntityRef.from_dict(_v), "entity_refs")
 
         return cls(**_args)
-
-    @builtins.classmethod
-    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "Resource":
-        """
-        Deserialize from a JSON string or bytes.
-
-        Args:
-            data: JSON string or bytes
-
-        Returns:
-            Instance of the class
-        """
-        return cls.from_dict(json.loads(data))

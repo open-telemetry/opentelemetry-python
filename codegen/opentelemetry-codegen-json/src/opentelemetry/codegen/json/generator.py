@@ -37,7 +37,7 @@ from opentelemetry.codegen.json.writer import CodeWriter
 
 _logger = logging.getLogger(__name__)
 
-UTILS_MODULE_NAME: Final[str] = "_otlp_json_utils"
+CODEC_MODULE_NAME: Final[str] = "_json_codec"
 
 
 class OtlpJsonGenerator:
@@ -101,8 +101,8 @@ class OtlpJsonGenerator:
             output_path = file_to_output[proto_file]
             self._generated_files[output_path] = code
 
-        utils_path = f"{self._common_root}/{UTILS_MODULE_NAME}.py"
-        self._generated_files[utils_path] = _load_utils_source()
+        codec_path = f"{self._common_root}/{CODEC_MODULE_NAME}.py"
+        self._generated_files[codec_path] = _load_codec_source()
 
         version_init_path = f"{self._common_root}/version/__init__.py"
         version_writer = CodeWriter(indent_size=4)
@@ -184,17 +184,17 @@ class OtlpJsonGenerator:
             if init_path not in self._generated_files:
                 self._generated_files[init_path] = ""
 
-    def _get_utils_module_path(self) -> str:
+    def _get_codec_module_path(self) -> str:
         """
-        Get the absolute module path for the utility module.
+        Get the absolute module path for the codec module.
 
         Returns:
             Absolute module path as a string
         """
         return (
-            f"{self._common_root.replace('/', '.')}.{UTILS_MODULE_NAME}"
+            f"{self._common_root.replace('/', '.')}.{CODEC_MODULE_NAME}"
             if self._common_root
-            else UTILS_MODULE_NAME
+            else CODEC_MODULE_NAME
         )
 
     def _transform_proto_path(self, proto_path: str) -> str:
@@ -346,7 +346,6 @@ class OtlpJsonGenerator:
             "builtins",
             "dataclasses",
             "functools",
-            "json",
             "sys",
             "typing",
         ]
@@ -358,6 +357,7 @@ class OtlpJsonGenerator:
 
         writer.blank_line()
 
+        # TODO: Remove after dropping support for Python 3.9
         with writer.if_("sys.version_info >= (3, 10)"):
             writer.assignment(
                 "_dataclass",
@@ -369,7 +369,7 @@ class OtlpJsonGenerator:
 
         # Collect all imports needed
         imports = self._collect_imports(proto_file)
-        imports.add(f"import {self._get_utils_module_path()}")
+        imports.add(f"import {self._get_codec_module_path()}")
 
         # Generate cross file imports
         if imports:
@@ -448,9 +448,13 @@ class OtlpJsonGenerator:
         current_path = (
             f"{parent_path}.{msg_desc.name}" if parent_path else msg_desc.name
         )
+        codec = self._get_codec_module_path()
         with writer.dataclass(
             msg_desc.name,
-            decorators=("typing.final",),
+            decorators=(
+                "typing.final",
+                f"{codec}.json_serde",
+            ),
             decorator_name="_dataclass",
         ):
             if msg_desc.field or msg_desc.nested_type or msg_desc.enum_type:
@@ -479,13 +483,9 @@ class OtlpJsonGenerator:
             writer.blank_line()
             self._generate_to_dict(writer, msg_desc)
             writer.blank_line()
-            self._generate_to_json(writer)
-            writer.blank_line()
             self._generate_from_dict(
                 writer, proto_file, msg_desc, current_path
             )
-            writer.blank_line()
-            self._generate_from_json(writer, current_path)
 
     def _generate_enum_class(
         self, writer: CodeWriter, enum_desc: descriptor.EnumDescriptorProto
@@ -598,24 +598,6 @@ class OtlpJsonGenerator:
 
             writer.return_("_result")
 
-    def _generate_to_json(self, writer: CodeWriter) -> None:
-        """
-        Generate a to_json() method that serializes the message to a JSON string.
-
-        Args:
-            writer: Code writer instance
-        """
-        with writer.method("to_json", ["self"], return_type="builtins.str"):
-            writer.docstring(
-                [
-                    "Serialize this message to a JSON string.",
-                    "",
-                    "Returns:",
-                    "    JSON string",
-                ]
-            )
-            writer.return_("json.dumps(self.to_dict())")
-
     def _generate_from_dict(
         self,
         writer: CodeWriter,
@@ -649,9 +631,9 @@ class OtlpJsonGenerator:
                     f"    {msg_desc.name} instance",
                 ]
             )
-            utils = self._get_utils_module_path()
+            codec = self._get_codec_module_path()
             writer.writeln(
-                f'{utils}.validate_type(data, builtins.dict, "data")'
+                f'{codec}.validate_type(data, builtins.dict, "data")'
             )
             writer.assignment("_args", "{}")
             writer.blank_line()
@@ -706,37 +688,6 @@ class OtlpJsonGenerator:
             writer.blank_line()
             writer.return_("cls(**_args)")
 
-    def _generate_from_json(
-        self,
-        writer: CodeWriter,
-        current_path: str,
-    ) -> None:
-        """
-        Generate a from_json() class method that creates an instance from a JSON string.
-
-        Args:
-            writer: Code writer instance
-            current_path: Full class path for type hints and return type
-        """
-        with writer.method(
-            "from_json",
-            ["cls", "data: typing.Union[builtins.str, builtins.bytes]"],
-            decorators=["builtins.classmethod"],
-            return_type=f'"{current_path}"',
-        ):
-            writer.docstring(
-                [
-                    "Deserialize from a JSON string or bytes.",
-                    "",
-                    "Args:",
-                    "    data: JSON string or bytes",
-                    "",
-                    "Returns:",
-                    "    Instance of the class",
-                ]
-            )
-            writer.return_("cls.from_dict(json.loads(data))")
-
     def _generate_serialization_statements(
         self,
         writer: CodeWriter,
@@ -763,10 +714,10 @@ class OtlpJsonGenerator:
                     f'{target_dict}["{json_name}"]', f"self.{field_desc.name}"
                 )
             else:
-                utils = self._get_utils_module_path()
+                codec = self._get_codec_module_path()
                 writer.assignment(
                     f'{target_dict}["{json_name}"]',
-                    f"{utils}.encode_repeated(self.{field_desc.name}, lambda _v: {item_expr})",
+                    f"{codec}.encode_repeated(self.{field_desc.name}, lambda _v: {item_expr})",
                 )
         else:
             val_expr = self._get_serialization_expr(
@@ -784,22 +735,22 @@ class OtlpJsonGenerator:
             field_desc: Field descriptor for the value being serialized
             var_name: Variable name representing the value to serialize
         """
-        utils = self._get_utils_module_path()
+        codec = self._get_codec_module_path()
         if field_desc.type == descriptor.FieldDescriptorProto.TYPE_MESSAGE:
             return f"{var_name}.to_dict()"
         if field_desc.type == descriptor.FieldDescriptorProto.TYPE_ENUM:
             return f"builtins.int({var_name})"
         if is_hex_encoded_field(field_desc.name):
-            return f"{utils}.encode_hex({var_name})"
+            return f"{codec}.encode_hex({var_name})"
         if is_int64_type(field_desc.type):
-            return f"{utils}.encode_int64({var_name})"
+            return f"{codec}.encode_int64({var_name})"
         if is_bytes_type(field_desc.type):
-            return f"{utils}.encode_base64({var_name})"
+            return f"{codec}.encode_base64({var_name})"
         if field_desc.type in (
             descriptor.FieldDescriptorProto.TYPE_FLOAT,
             descriptor.FieldDescriptorProto.TYPE_DOUBLE,
         ):
-            return f"{utils}.encode_float({var_name})"
+            return f"{codec}.encode_float({var_name})"
 
         return var_name
 
@@ -821,14 +772,14 @@ class OtlpJsonGenerator:
             var_name: Variable name representing the JSON value to deserialize
             target_dict: Name of the dictionary variable to assign the deserialized value to
         """
-        utils = self._get_utils_module_path()
+        codec = self._get_codec_module_path()
         if field_desc.label == descriptor.FieldDescriptorProto.LABEL_REPEATED:
             item_expr = self._get_deserialization_expr(
                 proto_file, field_desc, "_v"
             )
             writer.assignment(
                 f'{target_dict}["{field_desc.name}"]',
-                f'{utils}.decode_repeated({var_name}, lambda _v: {item_expr}, "{field_desc.name}")',
+                f'{codec}.decode_repeated({var_name}, lambda _v: {item_expr}, "{field_desc.name}")',
             )
             return
 
@@ -845,7 +796,7 @@ class OtlpJsonGenerator:
                 field_desc.type_name, proto_file
             )
             writer.writeln(
-                f'{utils}.validate_type({var_name}, builtins.int, "{field_desc.name}")'
+                f'{codec}.validate_type({var_name}, builtins.int, "{field_desc.name}")'
             )
             writer.assignment(
                 f'{target_dict}["{field_desc.name}"]',
@@ -854,17 +805,17 @@ class OtlpJsonGenerator:
         elif is_hex_encoded_field(field_desc.name):
             writer.assignment(
                 f'{target_dict}["{field_desc.name}"]',
-                f'{utils}.decode_hex({var_name}, "{field_desc.name}")',
+                f'{codec}.decode_hex({var_name}, "{field_desc.name}")',
             )
         elif is_int64_type(field_desc.type):
             writer.assignment(
                 f'{target_dict}["{field_desc.name}"]',
-                f'{utils}.decode_int64({var_name}, "{field_desc.name}")',
+                f'{codec}.decode_int64({var_name}, "{field_desc.name}")',
             )
         elif is_bytes_type(field_desc.type):
             writer.assignment(
                 f'{target_dict}["{field_desc.name}"]',
-                f'{utils}.decode_base64({var_name}, "{field_desc.name}")',
+                f'{codec}.decode_base64({var_name}, "{field_desc.name}")',
             )
         elif field_desc.type in (
             descriptor.FieldDescriptorProto.TYPE_FLOAT,
@@ -872,14 +823,14 @@ class OtlpJsonGenerator:
         ):
             writer.assignment(
                 f'{target_dict}["{field_desc.name}"]',
-                f'{utils}.decode_float({var_name}, "{field_desc.name}")',
+                f'{codec}.decode_float({var_name}, "{field_desc.name}")',
             )
         else:
             allowed_types = get_json_allowed_types(
                 field_desc.type, field_desc.name
             )
             writer.writeln(
-                f'{utils}.validate_type({var_name}, {allowed_types}, "{field_desc.name}")'
+                f'{codec}.validate_type({var_name}, {allowed_types}, "{field_desc.name}")'
             )
             writer.assignment(f'{target_dict}["{field_desc.name}"]', var_name)
 
@@ -900,7 +851,7 @@ class OtlpJsonGenerator:
         Returns:
             Python expression string to perform deserialization
         """
-        utils = self._get_utils_module_path()
+        codec = self._get_codec_module_path()
         if field_desc.type == descriptor.FieldDescriptorProto.TYPE_MESSAGE:
             msg_type = self._resolve_message_type(
                 field_desc.type_name, proto_file
@@ -912,16 +863,16 @@ class OtlpJsonGenerator:
             )
             return f"{enum_type}({var_name})"
         if is_hex_encoded_field(field_desc.name):
-            return f'{utils}.decode_hex({var_name}, "{field_desc.name}")'
+            return f'{codec}.decode_hex({var_name}, "{field_desc.name}")'
         if is_int64_type(field_desc.type):
-            return f'{utils}.decode_int64({var_name}, "{field_desc.name}")'
+            return f'{codec}.decode_int64({var_name}, "{field_desc.name}")'
         if is_bytes_type(field_desc.type):
-            return f'{utils}.decode_base64({var_name}, "{field_desc.name}")'
+            return f'{codec}.decode_base64({var_name}, "{field_desc.name}")'
         if field_desc.type in (
             descriptor.FieldDescriptorProto.TYPE_FLOAT,
             descriptor.FieldDescriptorProto.TYPE_DOUBLE,
         ):
-            return f'{utils}.decode_float({var_name}, "{field_desc.name}")'
+            return f'{codec}.decode_float({var_name}, "{field_desc.name}")'
 
         return var_name
 
@@ -1041,24 +992,24 @@ class OtlpJsonGenerator:
         return get_default_value(field_desc.type)
 
 
-def _load_utils_source() -> str:
+def _load_codec_source() -> str:
     """
-    Load the source code for the utility module from its source file.
+    Load the source code for the codec module from its source file.
 
     Returns:
         Source code as a string
     """
-    utils_src_path = Path(__file__).parent / "runtime" / "otlp_json_utils.py"
+    codec_src_path = Path(__file__).parent / "runtime" / "json_codec.py"
     try:
-        return utils_src_path.read_text(encoding="utf-8")
+        return codec_src_path.read_text(encoding="utf-8")
     except Exception as e:
         _logger.error(
-            "Failed to load utility module source from %s: %s",
-            utils_src_path,
+            "Failed to load codec module source from %s: %s",
+            codec_src_path,
             e,
         )
         raise RuntimeError(
-            f"Failed to load utility module source from {utils_src_path}"
+            f"Failed to load codec module source from {codec_src_path}"
         ) from e
 
 

@@ -20,7 +20,6 @@ from __future__ import annotations
 import builtins
 import dataclasses
 import functools
-import json
 import sys
 import typing
 
@@ -29,12 +28,13 @@ if sys.version_info >= (3, 10):
 else:
     _dataclass = dataclasses.dataclass
 
-import opentelemetry.proto_json._otlp_json_utils
+import opentelemetry.proto_json._json_codec
 import opentelemetry.proto_json.common.v1.common
 import opentelemetry.proto_json.resource.v1.resource
 
 
 @typing.final
+@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
 class ProfilesDictionary:
     """
@@ -58,29 +58,20 @@ class ProfilesDictionary:
         """
         _result = {}
         if self.mapping_table:
-            _result["mappingTable"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.mapping_table, lambda _v: _v.to_dict())
+            _result["mappingTable"] = opentelemetry.proto_json._json_codec.encode_repeated(self.mapping_table, lambda _v: _v.to_dict())
         if self.location_table:
-            _result["locationTable"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.location_table, lambda _v: _v.to_dict())
+            _result["locationTable"] = opentelemetry.proto_json._json_codec.encode_repeated(self.location_table, lambda _v: _v.to_dict())
         if self.function_table:
-            _result["functionTable"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.function_table, lambda _v: _v.to_dict())
+            _result["functionTable"] = opentelemetry.proto_json._json_codec.encode_repeated(self.function_table, lambda _v: _v.to_dict())
         if self.link_table:
-            _result["linkTable"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.link_table, lambda _v: _v.to_dict())
+            _result["linkTable"] = opentelemetry.proto_json._json_codec.encode_repeated(self.link_table, lambda _v: _v.to_dict())
         if self.string_table:
             _result["stringTable"] = self.string_table
         if self.attribute_table:
-            _result["attributeTable"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.attribute_table, lambda _v: _v.to_dict())
+            _result["attributeTable"] = opentelemetry.proto_json._json_codec.encode_repeated(self.attribute_table, lambda _v: _v.to_dict())
         if self.stack_table:
-            _result["stackTable"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.stack_table, lambda _v: _v.to_dict())
+            _result["stackTable"] = opentelemetry.proto_json._json_codec.encode_repeated(self.stack_table, lambda _v: _v.to_dict())
         return _result
-
-    def to_json(self) -> builtins.str:
-        """
-        Serialize this message to a JSON string.
-
-        Returns:
-            JSON string
-        """
-        return json.dumps(self.to_dict())
 
     @builtins.classmethod
     def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ProfilesDictionary":
@@ -93,41 +84,29 @@ class ProfilesDictionary:
         Returns:
             ProfilesDictionary instance
         """
-        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._json_codec.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("mappingTable")) is not None:
-            _args["mapping_table"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: Mapping.from_dict(_v), "mapping_table")
+            _args["mapping_table"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: Mapping.from_dict(_v), "mapping_table")
         if (_value := data.get("locationTable")) is not None:
-            _args["location_table"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: Location.from_dict(_v), "location_table")
+            _args["location_table"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: Location.from_dict(_v), "location_table")
         if (_value := data.get("functionTable")) is not None:
-            _args["function_table"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: Function.from_dict(_v), "function_table")
+            _args["function_table"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: Function.from_dict(_v), "function_table")
         if (_value := data.get("linkTable")) is not None:
-            _args["link_table"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: Link.from_dict(_v), "link_table")
+            _args["link_table"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: Link.from_dict(_v), "link_table")
         if (_value := data.get("stringTable")) is not None:
-            _args["string_table"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: _v, "string_table")
+            _args["string_table"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: _v, "string_table")
         if (_value := data.get("attributeTable")) is not None:
-            _args["attribute_table"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: KeyValueAndUnit.from_dict(_v), "attribute_table")
+            _args["attribute_table"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: KeyValueAndUnit.from_dict(_v), "attribute_table")
         if (_value := data.get("stackTable")) is not None:
-            _args["stack_table"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: Stack.from_dict(_v), "stack_table")
+            _args["stack_table"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: Stack.from_dict(_v), "stack_table")
 
         return cls(**_args)
 
-    @builtins.classmethod
-    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "ProfilesDictionary":
-        """
-        Deserialize from a JSON string or bytes.
-
-        Args:
-            data: JSON string or bytes
-
-        Returns:
-            Instance of the class
-        """
-        return cls.from_dict(json.loads(data))
-
 
 @typing.final
+@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
 class ProfilesData:
     """
@@ -146,19 +125,10 @@ class ProfilesData:
         """
         _result = {}
         if self.resource_profiles:
-            _result["resourceProfiles"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.resource_profiles, lambda _v: _v.to_dict())
+            _result["resourceProfiles"] = opentelemetry.proto_json._json_codec.encode_repeated(self.resource_profiles, lambda _v: _v.to_dict())
         if self.dictionary:
             _result["dictionary"] = self.dictionary.to_dict()
         return _result
-
-    def to_json(self) -> builtins.str:
-        """
-        Serialize this message to a JSON string.
-
-        Returns:
-            JSON string
-        """
-        return json.dumps(self.to_dict())
 
     @builtins.classmethod
     def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ProfilesData":
@@ -171,31 +141,19 @@ class ProfilesData:
         Returns:
             ProfilesData instance
         """
-        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._json_codec.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("resourceProfiles")) is not None:
-            _args["resource_profiles"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: ResourceProfiles.from_dict(_v), "resource_profiles")
+            _args["resource_profiles"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: ResourceProfiles.from_dict(_v), "resource_profiles")
         if (_value := data.get("dictionary")) is not None:
             _args["dictionary"] = ProfilesDictionary.from_dict(_value)
 
         return cls(**_args)
 
-    @builtins.classmethod
-    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "ProfilesData":
-        """
-        Deserialize from a JSON string or bytes.
-
-        Args:
-            data: JSON string or bytes
-
-        Returns:
-            Instance of the class
-        """
-        return cls.from_dict(json.loads(data))
-
 
 @typing.final
+@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
 class ResourceProfiles:
     """
@@ -217,19 +175,10 @@ class ResourceProfiles:
         if self.resource:
             _result["resource"] = self.resource.to_dict()
         if self.scope_profiles:
-            _result["scopeProfiles"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.scope_profiles, lambda _v: _v.to_dict())
+            _result["scopeProfiles"] = opentelemetry.proto_json._json_codec.encode_repeated(self.scope_profiles, lambda _v: _v.to_dict())
         if self.schema_url:
             _result["schemaUrl"] = self.schema_url
         return _result
-
-    def to_json(self) -> builtins.str:
-        """
-        Serialize this message to a JSON string.
-
-        Returns:
-            JSON string
-        """
-        return json.dumps(self.to_dict())
 
     @builtins.classmethod
     def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ResourceProfiles":
@@ -242,34 +191,22 @@ class ResourceProfiles:
         Returns:
             ResourceProfiles instance
         """
-        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._json_codec.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("resource")) is not None:
             _args["resource"] = opentelemetry.proto_json.resource.v1.resource.Resource.from_dict(_value)
         if (_value := data.get("scopeProfiles")) is not None:
-            _args["scope_profiles"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: ScopeProfiles.from_dict(_v), "scope_profiles")
+            _args["scope_profiles"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: ScopeProfiles.from_dict(_v), "scope_profiles")
         if (_value := data.get("schemaUrl")) is not None:
-            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.str, "schema_url")
+            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.str, "schema_url")
             _args["schema_url"] = _value
 
         return cls(**_args)
 
-    @builtins.classmethod
-    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "ResourceProfiles":
-        """
-        Deserialize from a JSON string or bytes.
-
-        Args:
-            data: JSON string or bytes
-
-        Returns:
-            Instance of the class
-        """
-        return cls.from_dict(json.loads(data))
-
 
 @typing.final
+@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
 class ScopeProfiles:
     """
@@ -291,19 +228,10 @@ class ScopeProfiles:
         if self.scope:
             _result["scope"] = self.scope.to_dict()
         if self.profiles:
-            _result["profiles"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.profiles, lambda _v: _v.to_dict())
+            _result["profiles"] = opentelemetry.proto_json._json_codec.encode_repeated(self.profiles, lambda _v: _v.to_dict())
         if self.schema_url:
             _result["schemaUrl"] = self.schema_url
         return _result
-
-    def to_json(self) -> builtins.str:
-        """
-        Serialize this message to a JSON string.
-
-        Returns:
-            JSON string
-        """
-        return json.dumps(self.to_dict())
 
     @builtins.classmethod
     def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ScopeProfiles":
@@ -316,34 +244,22 @@ class ScopeProfiles:
         Returns:
             ScopeProfiles instance
         """
-        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._json_codec.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("scope")) is not None:
             _args["scope"] = opentelemetry.proto_json.common.v1.common.InstrumentationScope.from_dict(_value)
         if (_value := data.get("profiles")) is not None:
-            _args["profiles"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: Profile.from_dict(_v), "profiles")
+            _args["profiles"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: Profile.from_dict(_v), "profiles")
         if (_value := data.get("schemaUrl")) is not None:
-            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.str, "schema_url")
+            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.str, "schema_url")
             _args["schema_url"] = _value
 
         return cls(**_args)
 
-    @builtins.classmethod
-    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "ScopeProfiles":
-        """
-        Deserialize from a JSON string or bytes.
-
-        Args:
-            data: JSON string or bytes
-
-        Returns:
-            Instance of the class
-        """
-        return cls.from_dict(json.loads(data))
-
 
 @typing.final
+@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
 class Profile:
     """
@@ -373,35 +289,26 @@ class Profile:
         if self.sample_type:
             _result["sampleType"] = self.sample_type.to_dict()
         if self.samples:
-            _result["samples"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.samples, lambda _v: _v.to_dict())
+            _result["samples"] = opentelemetry.proto_json._json_codec.encode_repeated(self.samples, lambda _v: _v.to_dict())
         if self.time_unix_nano:
-            _result["timeUnixNano"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.time_unix_nano)
+            _result["timeUnixNano"] = opentelemetry.proto_json._json_codec.encode_int64(self.time_unix_nano)
         if self.duration_nano:
-            _result["durationNano"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.duration_nano)
+            _result["durationNano"] = opentelemetry.proto_json._json_codec.encode_int64(self.duration_nano)
         if self.period_type:
             _result["periodType"] = self.period_type.to_dict()
         if self.period:
-            _result["period"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.period)
+            _result["period"] = opentelemetry.proto_json._json_codec.encode_int64(self.period)
         if self.profile_id:
-            _result["profileId"] = opentelemetry.proto_json._otlp_json_utils.encode_base64(self.profile_id)
+            _result["profileId"] = opentelemetry.proto_json._json_codec.encode_base64(self.profile_id)
         if self.dropped_attributes_count:
             _result["droppedAttributesCount"] = self.dropped_attributes_count
         if self.original_payload_format:
             _result["originalPayloadFormat"] = self.original_payload_format
         if self.original_payload:
-            _result["originalPayload"] = opentelemetry.proto_json._otlp_json_utils.encode_base64(self.original_payload)
+            _result["originalPayload"] = opentelemetry.proto_json._json_codec.encode_base64(self.original_payload)
         if self.attribute_indices:
             _result["attributeIndices"] = self.attribute_indices
         return _result
-
-    def to_json(self) -> builtins.str:
-        """
-        Serialize this message to a JSON string.
-
-        Returns:
-            JSON string
-        """
-        return json.dumps(self.to_dict())
 
     @builtins.classmethod
     def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Profile":
@@ -414,51 +321,39 @@ class Profile:
         Returns:
             Profile instance
         """
-        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._json_codec.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("sampleType")) is not None:
             _args["sample_type"] = ValueType.from_dict(_value)
         if (_value := data.get("samples")) is not None:
-            _args["samples"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: Sample.from_dict(_v), "samples")
+            _args["samples"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: Sample.from_dict(_v), "samples")
         if (_value := data.get("timeUnixNano")) is not None:
-            _args["time_unix_nano"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "time_unix_nano")
+            _args["time_unix_nano"] = opentelemetry.proto_json._json_codec.decode_int64(_value, "time_unix_nano")
         if (_value := data.get("durationNano")) is not None:
-            _args["duration_nano"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "duration_nano")
+            _args["duration_nano"] = opentelemetry.proto_json._json_codec.decode_int64(_value, "duration_nano")
         if (_value := data.get("periodType")) is not None:
             _args["period_type"] = ValueType.from_dict(_value)
         if (_value := data.get("period")) is not None:
-            _args["period"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "period")
+            _args["period"] = opentelemetry.proto_json._json_codec.decode_int64(_value, "period")
         if (_value := data.get("profileId")) is not None:
-            _args["profile_id"] = opentelemetry.proto_json._otlp_json_utils.decode_base64(_value, "profile_id")
+            _args["profile_id"] = opentelemetry.proto_json._json_codec.decode_base64(_value, "profile_id")
         if (_value := data.get("droppedAttributesCount")) is not None:
-            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "dropped_attributes_count")
+            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "dropped_attributes_count")
             _args["dropped_attributes_count"] = _value
         if (_value := data.get("originalPayloadFormat")) is not None:
-            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.str, "original_payload_format")
+            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.str, "original_payload_format")
             _args["original_payload_format"] = _value
         if (_value := data.get("originalPayload")) is not None:
-            _args["original_payload"] = opentelemetry.proto_json._otlp_json_utils.decode_base64(_value, "original_payload")
+            _args["original_payload"] = opentelemetry.proto_json._json_codec.decode_base64(_value, "original_payload")
         if (_value := data.get("attributeIndices")) is not None:
-            _args["attribute_indices"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: _v, "attribute_indices")
+            _args["attribute_indices"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: _v, "attribute_indices")
 
         return cls(**_args)
 
-    @builtins.classmethod
-    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "Profile":
-        """
-        Deserialize from a JSON string or bytes.
-
-        Args:
-            data: JSON string or bytes
-
-        Returns:
-            Instance of the class
-        """
-        return cls.from_dict(json.loads(data))
-
 
 @typing.final
+@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
 class Link:
     """
@@ -477,19 +372,10 @@ class Link:
         """
         _result = {}
         if self.trace_id:
-            _result["traceId"] = opentelemetry.proto_json._otlp_json_utils.encode_hex(self.trace_id)
+            _result["traceId"] = opentelemetry.proto_json._json_codec.encode_hex(self.trace_id)
         if self.span_id:
-            _result["spanId"] = opentelemetry.proto_json._otlp_json_utils.encode_hex(self.span_id)
+            _result["spanId"] = opentelemetry.proto_json._json_codec.encode_hex(self.span_id)
         return _result
-
-    def to_json(self) -> builtins.str:
-        """
-        Serialize this message to a JSON string.
-
-        Returns:
-            JSON string
-        """
-        return json.dumps(self.to_dict())
 
     @builtins.classmethod
     def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Link":
@@ -502,31 +388,19 @@ class Link:
         Returns:
             Link instance
         """
-        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._json_codec.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("traceId")) is not None:
-            _args["trace_id"] = opentelemetry.proto_json._otlp_json_utils.decode_hex(_value, "trace_id")
+            _args["trace_id"] = opentelemetry.proto_json._json_codec.decode_hex(_value, "trace_id")
         if (_value := data.get("spanId")) is not None:
-            _args["span_id"] = opentelemetry.proto_json._otlp_json_utils.decode_hex(_value, "span_id")
+            _args["span_id"] = opentelemetry.proto_json._json_codec.decode_hex(_value, "span_id")
 
         return cls(**_args)
 
-    @builtins.classmethod
-    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "Link":
-        """
-        Deserialize from a JSON string or bytes.
-
-        Args:
-            data: JSON string or bytes
-
-        Returns:
-            Instance of the class
-        """
-        return cls.from_dict(json.loads(data))
-
 
 @typing.final
+@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
 class ValueType:
     """
@@ -550,15 +424,6 @@ class ValueType:
             _result["unitStrindex"] = self.unit_strindex
         return _result
 
-    def to_json(self) -> builtins.str:
-        """
-        Serialize this message to a JSON string.
-
-        Returns:
-            JSON string
-        """
-        return json.dumps(self.to_dict())
-
     @builtins.classmethod
     def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ValueType":
         """
@@ -570,33 +435,21 @@ class ValueType:
         Returns:
             ValueType instance
         """
-        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._json_codec.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("typeStrindex")) is not None:
-            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "type_strindex")
+            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "type_strindex")
             _args["type_strindex"] = _value
         if (_value := data.get("unitStrindex")) is not None:
-            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "unit_strindex")
+            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "unit_strindex")
             _args["unit_strindex"] = _value
 
         return cls(**_args)
 
-    @builtins.classmethod
-    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "ValueType":
-        """
-        Deserialize from a JSON string or bytes.
-
-        Args:
-            data: JSON string or bytes
-
-        Returns:
-            Instance of the class
-        """
-        return cls.from_dict(json.loads(data))
-
 
 @typing.final
+@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
 class Sample:
     """
@@ -620,23 +473,14 @@ class Sample:
         if self.stack_index:
             _result["stackIndex"] = self.stack_index
         if self.values:
-            _result["values"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.values, lambda _v: opentelemetry.proto_json._otlp_json_utils.encode_int64(_v))
+            _result["values"] = opentelemetry.proto_json._json_codec.encode_repeated(self.values, lambda _v: opentelemetry.proto_json._json_codec.encode_int64(_v))
         if self.attribute_indices:
             _result["attributeIndices"] = self.attribute_indices
         if self.link_index:
             _result["linkIndex"] = self.link_index
         if self.timestamps_unix_nano:
-            _result["timestampsUnixNano"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.timestamps_unix_nano, lambda _v: opentelemetry.proto_json._otlp_json_utils.encode_int64(_v))
+            _result["timestampsUnixNano"] = opentelemetry.proto_json._json_codec.encode_repeated(self.timestamps_unix_nano, lambda _v: opentelemetry.proto_json._json_codec.encode_int64(_v))
         return _result
-
-    def to_json(self) -> builtins.str:
-        """
-        Serialize this message to a JSON string.
-
-        Returns:
-            JSON string
-        """
-        return json.dumps(self.to_dict())
 
     @builtins.classmethod
     def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Sample":
@@ -649,39 +493,27 @@ class Sample:
         Returns:
             Sample instance
         """
-        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._json_codec.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("stackIndex")) is not None:
-            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "stack_index")
+            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "stack_index")
             _args["stack_index"] = _value
         if (_value := data.get("values")) is not None:
-            _args["values"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json._otlp_json_utils.decode_int64(_v, "values"), "values")
+            _args["values"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: opentelemetry.proto_json._json_codec.decode_int64(_v, "values"), "values")
         if (_value := data.get("attributeIndices")) is not None:
-            _args["attribute_indices"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: _v, "attribute_indices")
+            _args["attribute_indices"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: _v, "attribute_indices")
         if (_value := data.get("linkIndex")) is not None:
-            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "link_index")
+            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "link_index")
             _args["link_index"] = _value
         if (_value := data.get("timestampsUnixNano")) is not None:
-            _args["timestamps_unix_nano"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: opentelemetry.proto_json._otlp_json_utils.decode_int64(_v, "timestamps_unix_nano"), "timestamps_unix_nano")
+            _args["timestamps_unix_nano"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: opentelemetry.proto_json._json_codec.decode_int64(_v, "timestamps_unix_nano"), "timestamps_unix_nano")
 
         return cls(**_args)
 
-    @builtins.classmethod
-    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "Sample":
-        """
-        Deserialize from a JSON string or bytes.
-
-        Args:
-            data: JSON string or bytes
-
-        Returns:
-            Instance of the class
-        """
-        return cls.from_dict(json.loads(data))
-
 
 @typing.final
+@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
 class Mapping:
     """
@@ -703,25 +535,16 @@ class Mapping:
         """
         _result = {}
         if self.memory_start:
-            _result["memoryStart"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.memory_start)
+            _result["memoryStart"] = opentelemetry.proto_json._json_codec.encode_int64(self.memory_start)
         if self.memory_limit:
-            _result["memoryLimit"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.memory_limit)
+            _result["memoryLimit"] = opentelemetry.proto_json._json_codec.encode_int64(self.memory_limit)
         if self.file_offset:
-            _result["fileOffset"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.file_offset)
+            _result["fileOffset"] = opentelemetry.proto_json._json_codec.encode_int64(self.file_offset)
         if self.filename_strindex:
             _result["filenameStrindex"] = self.filename_strindex
         if self.attribute_indices:
             _result["attributeIndices"] = self.attribute_indices
         return _result
-
-    def to_json(self) -> builtins.str:
-        """
-        Serialize this message to a JSON string.
-
-        Returns:
-            JSON string
-        """
-        return json.dumps(self.to_dict())
 
     @builtins.classmethod
     def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Mapping":
@@ -734,38 +557,26 @@ class Mapping:
         Returns:
             Mapping instance
         """
-        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._json_codec.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("memoryStart")) is not None:
-            _args["memory_start"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "memory_start")
+            _args["memory_start"] = opentelemetry.proto_json._json_codec.decode_int64(_value, "memory_start")
         if (_value := data.get("memoryLimit")) is not None:
-            _args["memory_limit"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "memory_limit")
+            _args["memory_limit"] = opentelemetry.proto_json._json_codec.decode_int64(_value, "memory_limit")
         if (_value := data.get("fileOffset")) is not None:
-            _args["file_offset"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "file_offset")
+            _args["file_offset"] = opentelemetry.proto_json._json_codec.decode_int64(_value, "file_offset")
         if (_value := data.get("filenameStrindex")) is not None:
-            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "filename_strindex")
+            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "filename_strindex")
             _args["filename_strindex"] = _value
         if (_value := data.get("attributeIndices")) is not None:
-            _args["attribute_indices"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: _v, "attribute_indices")
+            _args["attribute_indices"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: _v, "attribute_indices")
 
         return cls(**_args)
 
-    @builtins.classmethod
-    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "Mapping":
-        """
-        Deserialize from a JSON string or bytes.
-
-        Args:
-            data: JSON string or bytes
-
-        Returns:
-            Instance of the class
-        """
-        return cls.from_dict(json.loads(data))
-
 
 @typing.final
+@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
 class Stack:
     """
@@ -786,15 +597,6 @@ class Stack:
             _result["locationIndices"] = self.location_indices
         return _result
 
-    def to_json(self) -> builtins.str:
-        """
-        Serialize this message to a JSON string.
-
-        Returns:
-            JSON string
-        """
-        return json.dumps(self.to_dict())
-
     @builtins.classmethod
     def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Stack":
         """
@@ -806,29 +608,17 @@ class Stack:
         Returns:
             Stack instance
         """
-        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._json_codec.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("locationIndices")) is not None:
-            _args["location_indices"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: _v, "location_indices")
+            _args["location_indices"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: _v, "location_indices")
 
         return cls(**_args)
 
-    @builtins.classmethod
-    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "Stack":
-        """
-        Deserialize from a JSON string or bytes.
-
-        Args:
-            data: JSON string or bytes
-
-        Returns:
-            Instance of the class
-        """
-        return cls.from_dict(json.loads(data))
-
 
 @typing.final
+@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
 class Location:
     """
@@ -851,21 +641,12 @@ class Location:
         if self.mapping_index:
             _result["mappingIndex"] = self.mapping_index
         if self.address:
-            _result["address"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.address)
+            _result["address"] = opentelemetry.proto_json._json_codec.encode_int64(self.address)
         if self.lines:
-            _result["lines"] = opentelemetry.proto_json._otlp_json_utils.encode_repeated(self.lines, lambda _v: _v.to_dict())
+            _result["lines"] = opentelemetry.proto_json._json_codec.encode_repeated(self.lines, lambda _v: _v.to_dict())
         if self.attribute_indices:
             _result["attributeIndices"] = self.attribute_indices
         return _result
-
-    def to_json(self) -> builtins.str:
-        """
-        Serialize this message to a JSON string.
-
-        Returns:
-            JSON string
-        """
-        return json.dumps(self.to_dict())
 
     @builtins.classmethod
     def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Location":
@@ -878,36 +659,24 @@ class Location:
         Returns:
             Location instance
         """
-        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._json_codec.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("mappingIndex")) is not None:
-            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "mapping_index")
+            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "mapping_index")
             _args["mapping_index"] = _value
         if (_value := data.get("address")) is not None:
-            _args["address"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "address")
+            _args["address"] = opentelemetry.proto_json._json_codec.decode_int64(_value, "address")
         if (_value := data.get("lines")) is not None:
-            _args["lines"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: Line.from_dict(_v), "lines")
+            _args["lines"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: Line.from_dict(_v), "lines")
         if (_value := data.get("attributeIndices")) is not None:
-            _args["attribute_indices"] = opentelemetry.proto_json._otlp_json_utils.decode_repeated(_value, lambda _v: _v, "attribute_indices")
+            _args["attribute_indices"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: _v, "attribute_indices")
 
         return cls(**_args)
 
-    @builtins.classmethod
-    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "Location":
-        """
-        Deserialize from a JSON string or bytes.
-
-        Args:
-            data: JSON string or bytes
-
-        Returns:
-            Instance of the class
-        """
-        return cls.from_dict(json.loads(data))
-
 
 @typing.final
+@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
 class Line:
     """
@@ -929,19 +698,10 @@ class Line:
         if self.function_index:
             _result["functionIndex"] = self.function_index
         if self.line:
-            _result["line"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.line)
+            _result["line"] = opentelemetry.proto_json._json_codec.encode_int64(self.line)
         if self.column:
-            _result["column"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.column)
+            _result["column"] = opentelemetry.proto_json._json_codec.encode_int64(self.column)
         return _result
-
-    def to_json(self) -> builtins.str:
-        """
-        Serialize this message to a JSON string.
-
-        Returns:
-            JSON string
-        """
-        return json.dumps(self.to_dict())
 
     @builtins.classmethod
     def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Line":
@@ -954,34 +714,22 @@ class Line:
         Returns:
             Line instance
         """
-        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._json_codec.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("functionIndex")) is not None:
-            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "function_index")
+            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "function_index")
             _args["function_index"] = _value
         if (_value := data.get("line")) is not None:
-            _args["line"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "line")
+            _args["line"] = opentelemetry.proto_json._json_codec.decode_int64(_value, "line")
         if (_value := data.get("column")) is not None:
-            _args["column"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "column")
+            _args["column"] = opentelemetry.proto_json._json_codec.decode_int64(_value, "column")
 
         return cls(**_args)
 
-    @builtins.classmethod
-    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "Line":
-        """
-        Deserialize from a JSON string or bytes.
-
-        Args:
-            data: JSON string or bytes
-
-        Returns:
-            Instance of the class
-        """
-        return cls.from_dict(json.loads(data))
-
 
 @typing.final
+@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
 class Function:
     """
@@ -1008,17 +756,8 @@ class Function:
         if self.filename_strindex:
             _result["filenameStrindex"] = self.filename_strindex
         if self.start_line:
-            _result["startLine"] = opentelemetry.proto_json._otlp_json_utils.encode_int64(self.start_line)
+            _result["startLine"] = opentelemetry.proto_json._json_codec.encode_int64(self.start_line)
         return _result
-
-    def to_json(self) -> builtins.str:
-        """
-        Serialize this message to a JSON string.
-
-        Returns:
-            JSON string
-        """
-        return json.dumps(self.to_dict())
 
     @builtins.classmethod
     def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Function":
@@ -1031,38 +770,26 @@ class Function:
         Returns:
             Function instance
         """
-        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._json_codec.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("nameStrindex")) is not None:
-            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "name_strindex")
+            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "name_strindex")
             _args["name_strindex"] = _value
         if (_value := data.get("systemNameStrindex")) is not None:
-            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "system_name_strindex")
+            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "system_name_strindex")
             _args["system_name_strindex"] = _value
         if (_value := data.get("filenameStrindex")) is not None:
-            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "filename_strindex")
+            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "filename_strindex")
             _args["filename_strindex"] = _value
         if (_value := data.get("startLine")) is not None:
-            _args["start_line"] = opentelemetry.proto_json._otlp_json_utils.decode_int64(_value, "start_line")
+            _args["start_line"] = opentelemetry.proto_json._json_codec.decode_int64(_value, "start_line")
 
         return cls(**_args)
 
-    @builtins.classmethod
-    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "Function":
-        """
-        Deserialize from a JSON string or bytes.
-
-        Args:
-            data: JSON string or bytes
-
-        Returns:
-            Instance of the class
-        """
-        return cls.from_dict(json.loads(data))
-
 
 @typing.final
+@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
 class KeyValueAndUnit:
     """
@@ -1089,15 +816,6 @@ class KeyValueAndUnit:
             _result["unitStrindex"] = self.unit_strindex
         return _result
 
-    def to_json(self) -> builtins.str:
-        """
-        Serialize this message to a JSON string.
-
-        Returns:
-            JSON string
-        """
-        return json.dumps(self.to_dict())
-
     @builtins.classmethod
     def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "KeyValueAndUnit":
         """
@@ -1109,29 +827,16 @@ class KeyValueAndUnit:
         Returns:
             KeyValueAndUnit instance
         """
-        opentelemetry.proto_json._otlp_json_utils.validate_type(data, builtins.dict, "data")
+        opentelemetry.proto_json._json_codec.validate_type(data, builtins.dict, "data")
         _args = {}
 
         if (_value := data.get("keyStrindex")) is not None:
-            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "key_strindex")
+            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "key_strindex")
             _args["key_strindex"] = _value
         if (_value := data.get("value")) is not None:
             _args["value"] = opentelemetry.proto_json.common.v1.common.AnyValue.from_dict(_value)
         if (_value := data.get("unitStrindex")) is not None:
-            opentelemetry.proto_json._otlp_json_utils.validate_type(_value, builtins.int, "unit_strindex")
+            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "unit_strindex")
             _args["unit_strindex"] = _value
 
         return cls(**_args)
-
-    @builtins.classmethod
-    def from_json(cls, data: typing.Union[builtins.str, builtins.bytes]) -> "KeyValueAndUnit":
-        """
-        Deserialize from a JSON string or bytes.
-
-        Args:
-            data: JSON string or bytes
-
-        Returns:
-            Instance of the class
-        """
-        return cls.from_dict(json.loads(data))
