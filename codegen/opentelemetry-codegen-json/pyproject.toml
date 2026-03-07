@@ -24,6 +24,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
+    "Private :: Do Not Upload",
 ]
 dependencies = [
     "protobuf>=4.25.3",
@@ -34,7 +35,7 @@ dependencies = [
 protoc-gen-otlp_json = "opentelemetry.codegen.json.plugin:main"
 
 [project.urls]
-Homepage = "https://github.com/open-telemetry/opentelemetry-python/codegen/opentelemetry-codegen-proto-json"
+Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/codegen/opentelemetry-codegen-json"
 Repository = "https://github.com/open-telemetry/opentelemetry-python"
 
 [tool.hatch.version]
