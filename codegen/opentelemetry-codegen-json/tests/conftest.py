@@ -38,16 +38,16 @@ def generate_code(
     gen_path = tmp_path_factory.mktemp("generated")
 
     protos = list(PROTO_PATH.glob("**/*.proto"))
-    proto_files = [str(p.relative_to(PROTO_PATH)) for p in protos]
+    proto_files = [p.relative_to(PROTO_PATH).as_posix() for p in protos]
 
     subprocess.check_call(
         [
             sys.executable,
             "-m",
             "grpc_tools.protoc",
-            f"-I{PROTO_PATH}",
-            f"--otlp_json_out={gen_path}",
-            f"--python_out={gen_path}",
+            f"-I{PROTO_PATH.as_posix()}",
+            f"--otlp_json_out={gen_path.as_posix()}",
+            f"--python_out={gen_path.as_posix()}",
             *proto_files,
         ]
     )
