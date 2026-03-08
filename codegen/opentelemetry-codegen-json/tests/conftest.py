@@ -15,15 +15,12 @@
 # pylint: disable=redefined-outer-name
 
 import importlib
-import os
 import subprocess
 import sys
 from pathlib import Path
 
 import pytest  # type: ignore
 from _pytest.monkeypatch import MonkeyPatch  # type: ignore
-
-os.environ.setdefault("USERNAME", "runner")
 
 PROTO_PATH = Path(__file__).parent / "proto"
 GEN_PATH = Path(__file__).parent / "generated"
