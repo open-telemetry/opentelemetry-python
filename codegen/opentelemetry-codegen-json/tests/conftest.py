@@ -14,6 +14,7 @@
 
 # pylint: disable=redefined-outer-name
 
+import importlib
 import subprocess
 import sys
 from pathlib import Path
@@ -52,4 +53,5 @@ def generate_code(
         ]
     )
 
-    monkeysession.syspath_prepend(gen_path.absolute())
+    monkeysession.syspath_prepend(str(gen_path.absolute()))
+    importlib.invalidate_caches()
