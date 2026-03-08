@@ -144,6 +144,7 @@ class TestBoundedList(unittest.TestCase):
         for num in range(100):
             self.assertEqual(blist[num], num)
 
+    # pylint: disable=protected-access
     def test_deepcopy(self):
         blist = BoundedList(maxlen=10)
         blist.append(1)

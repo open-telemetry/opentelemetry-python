@@ -17,7 +17,7 @@ import datetime
 import threading
 from collections import deque
 from collections.abc import MutableMapping, Sequence
-from typing import Any, Optional
+from typing import Optional
 
 from typing_extensions import deprecated
 
