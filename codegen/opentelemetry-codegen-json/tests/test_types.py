@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
+# pylint: disable=no-member
+
+import pytest  # type: ignore
 from google.protobuf import descriptor_pb2 as descriptor
 
 from opentelemetry.codegen.json.types import (
@@ -35,7 +37,6 @@ from opentelemetry.codegen.json.types import (
         (descriptor.FieldDescriptorProto.TYPE_BOOL, "builtins.bool"),
         (descriptor.FieldDescriptorProto.TYPE_STRING, "builtins.str"),
         (descriptor.FieldDescriptorProto.TYPE_BYTES, "builtins.bytes"),
-        (999, "typing.Any"),
     ],
 )
 def test_get_python_type(proto_type: int, expected: str) -> None:

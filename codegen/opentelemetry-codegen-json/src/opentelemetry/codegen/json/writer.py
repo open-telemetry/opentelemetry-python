@@ -19,6 +19,7 @@ from contextlib import contextmanager
 from typing import Any, Generator, Optional, Union
 
 
+# pylint: disable-next=too-many-public-methods
 class CodeWriter:
     def __init__(self, indent_size: int = 4) -> None:
         """

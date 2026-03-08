@@ -15,7 +15,7 @@
 import math
 from typing import Optional, Union
 
-import pytest
+import pytest  # type: ignore
 
 from opentelemetry.codegen.json.runtime.json_codec import (
     decode_base64,
@@ -172,12 +172,12 @@ def test_decode_float_errors() -> None:
 def test_repeated_fields() -> None:
     values = [1, 2, 3]
     assert encode_repeated(values, str) == ["1", "2", "3"]
-    assert encode_repeated([], str) == []
-    assert encode_repeated(None, str) == []  # type: ignore
+    assert not encode_repeated([], str)
+    assert not encode_repeated(None, str)
 
     assert decode_repeated(["1", "2"], int, "field") == [1, 2]
-    assert decode_repeated([], int, "field") == []
-    assert decode_repeated(None, int, "field") == []
+    assert not decode_repeated([], int, "field")
+    assert not decode_repeated(None, int, "field")
 
 
 def test_decode_repeated_errors() -> None:

@@ -13,15 +13,16 @@
 # limitations under the License.
 from typing import Any, Optional
 
-import pytest
+import pytest  # type: ignore
 
 from opentelemetry.codegen.json.writer import CodeWriter
 
 
 def test_initialization() -> None:
     writer = CodeWriter(indent_size=2)
+    # pylint: disable-next=protected-access
     assert writer._indent_size == 2
-    assert writer.to_lines() == []
+    assert not writer.to_lines()
     assert writer.to_string() == ""
 
 

@@ -12,12 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: skip-file
 # ruff: noqa: PLC0415
 
 import base64
 from typing import Any, Type
 
-import pytest
+import pytest  # type: ignore
 from google.protobuf import json_format
 
 
@@ -39,18 +40,26 @@ def normalize_otlp_json(data: Any) -> Any:
 
 @pytest.fixture
 def test_msg_classes() -> tuple[Type[Any], Type[Any], Type[Any]]:
-    from otel_test_json.test.v1.test import SubMessage as JSONSubMessage
-    from otel_test_json.test.v1.test import TestMessage as JSONTestMessage
-    from otel_test_json.test.v1.test_pb2 import TestMessage as ProtoTestMessage
+    from otel_test_json.test.v1.test import (  # type: ignore
+        SubMessage as JSONSubMessage,  # type: ignore
+    )
+    from otel_test_json.test.v1.test import (  # type: ignore
+        TestMessage as JSONTestMessage,  # type: ignore
+    )
+    from otel_test_json.test.v1.test_pb2 import (  # type: ignore
+        TestMessage as ProtoTestMessage,  # type: ignore
+    )
 
     return JSONTestMessage, JSONSubMessage, ProtoTestMessage
 
 
 @pytest.fixture
 def numeric_msg_classes() -> tuple[Type[Any], Type[Any]]:
-    from otel_test_json.test.v1.complex import NumericTest as JSONNumericTest
-    from otel_test_json.test.v1.complex_pb2 import (
-        NumericTest as ProtoNumericTest,
+    from otel_test_json.test.v1.complex import (  # type: ignore
+        NumericTest as JSONNumericTest,  # type: ignore
+    )
+    from otel_test_json.test.v1.complex_pb2 import (  # type: ignore
+        NumericTest as ProtoNumericTest,  # type: ignore
     )
 
     return JSONNumericTest, ProtoNumericTest
@@ -58,11 +67,13 @@ def numeric_msg_classes() -> tuple[Type[Any], Type[Any]]:
 
 @pytest.fixture
 def oneof_msg_classes() -> tuple[Type[Any], Type[Any], Type[Any]]:
-    from otel_test_json.common.v1.common import (
+    from otel_test_json.common.v1.common import (  # type: ignore
         InstrumentationScope as JSONScope,
     )
-    from otel_test_json.test.v1.complex import OneofSuite as JSONOneofSuite
-    from otel_test_json.test.v1.complex_pb2 import (
+    from otel_test_json.test.v1.complex import (  # type: ignore
+        OneofSuite as JSONOneofSuite,  # type: ignore
+    )
+    from otel_test_json.test.v1.complex_pb2 import (  # type: ignore
         OneofSuite as ProtoOneofSuite,
     )
 
@@ -71,10 +82,10 @@ def oneof_msg_classes() -> tuple[Type[Any], Type[Any], Type[Any]]:
 
 @pytest.fixture
 def optional_msg_classes() -> tuple[Type[Any], Type[Any]]:
-    from otel_test_json.test.v1.complex import (
+    from otel_test_json.test.v1.complex import (  # type: ignore
         OptionalScalar as JSONOptionalScalar,
     )
-    from otel_test_json.test.v1.complex_pb2 import (
+    from otel_test_json.test.v1.complex_pb2 import (  # type: ignore
         OptionalScalar as ProtoOptionalScalar,
     )
 

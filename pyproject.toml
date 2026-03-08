@@ -114,6 +114,7 @@ include = [
   "opentelemetry-api",
   "opentelemetry-sdk",
   "exporter/opentelemetry-exporter-otlp-proto-grpc",
+  "codegen/opentelemetry-codegen-json"
 ]
 
 exclude = [

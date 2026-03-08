@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=no-member,invalid-name,too-many-lines
+
 from __future__ import annotations
 
 import logging
@@ -292,8 +294,9 @@ class OtlpJsonGenerator:
                 return True
         return False
 
+    @classmethod
     def _generate_header(
-        self, writer: CodeWriter, proto_file: str = ""
+        cls, writer: CodeWriter, proto_file: str = ""
     ) -> None:
         """
         Generate file header with license and metadata.
@@ -487,8 +490,9 @@ class OtlpJsonGenerator:
                 writer, proto_file, msg_desc, current_path
             )
 
+    @classmethod
     def _generate_enum_class(
-        self, writer: CodeWriter, enum_desc: descriptor.EnumDescriptorProto
+        cls, writer: CodeWriter, enum_desc: descriptor.EnumDescriptorProto
     ) -> None:
         """
         Generate an IntEnum class for a protobuf enum.
@@ -725,6 +729,7 @@ class OtlpJsonGenerator:
             )
             writer.assignment(f'{target_dict}["{json_name}"]', val_expr)
 
+    # pylint: disable-next=too-many-return-statements
     def _get_serialization_expr(
         self, field_desc: descriptor.FieldDescriptorProto, var_name: str
     ) -> str:
@@ -834,6 +839,7 @@ class OtlpJsonGenerator:
             )
             writer.assignment(f'{target_dict}["{field_desc.name}"]', var_name)
 
+    # pylint: disable-next=too-many-return-statements
     def _get_deserialization_expr(
         self,
         proto_file: str,
@@ -960,8 +966,9 @@ class OtlpJsonGenerator:
         module_path = self._get_module_path(target_file)
         return f"{module_path}.{class_path}"
 
+    @classmethod
     def _get_field_default(
-        self, field_desc: descriptor.FieldDescriptorProto
+        cls, field_desc: descriptor.FieldDescriptorProto
     ) -> Optional[str]:
         """
         Get the default value for a field.

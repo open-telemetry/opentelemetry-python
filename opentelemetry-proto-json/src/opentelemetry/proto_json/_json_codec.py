@@ -25,19 +25,16 @@ T = typing.TypeVar("T")
 def json_serde(cls: type[T]) -> type[T]:
     """
     A decorator that adds "to_json" and "from_json" methods to a class.
-    The class must already have to_dict and from_dict methods.
     """
 
-    def to_json(self: typing.Any) -> str:
+    def to_json(self: T) -> str:
         """
         Serialize this message to a JSON string.
         """
         return json.dumps(self.to_dict())
 
     @classmethod
-    def from_json(
-            cls_inner: type[T], data: typing.Union[str, bytes]
-    ) -> T:
+    def from_json(cls_inner: type[T], data: typing.Union[str, bytes]) -> T:
         """
         Deserialize from a JSON string or bytes.
         """
@@ -103,8 +100,8 @@ def encode_float(value: float) -> typing.Union[float, str]:
 
 
 def encode_repeated(
-    values: typing.Optional[list[typing.Any]],
-    map_fn: typing.Callable[[typing.Any], typing.Any],
+    values: typing.Optional[list[T]],
+    map_fn: typing.Callable[[T], typing.Any],
 ) -> list[typing.Any]:
     """
     Helper to serialize repeated fields with a mapping function.

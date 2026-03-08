@@ -31,23 +31,23 @@ def json_serde(cls: type[T]) -> type[T]:
         """
         Serialize this message to a JSON string.
         """
-        return json.dumps(self.to_dict())
+        # pylint: disable-next=no-member
+        return json.dumps(self.to_dict())  # type: ignore
 
     @classmethod
-    def from_json(
-            cls_inner: type[T], data: typing.Union[str, bytes]
-    ) -> T:
+    def from_json(cls_inner: type[T], data: typing.Union[str, bytes]) -> T:
         """
         Deserialize from a JSON string or bytes.
         """
-        return cls_inner.from_dict(json.loads(data))
+        # pylint: disable-next=no-member
+        return cls_inner.from_dict(json.loads(data))  # type: ignore
 
     cls.to_json = to_json  # type: ignore[attr-defined]
     cls.from_json = from_json  # type: ignore[attr-defined]
     return cls
 
 
-def encode_hex(value: bytes) -> str:
+def encode_hex(value: typing.Optional[bytes]) -> str:
     """
     Encode bytes as hex string.
 
@@ -59,7 +59,7 @@ def encode_hex(value: bytes) -> str:
     return value.hex() if value else ""
 
 
-def encode_base64(value: bytes) -> str:
+def encode_base64(value: typing.Optional[bytes]) -> str:
     """
     Encode bytes as base64 string.
     Standard Proto3 JSON mapping for bytes.
@@ -102,8 +102,8 @@ def encode_float(value: float) -> typing.Union[float, str]:
 
 
 def encode_repeated(
-    values: typing.Optional[list[typing.Any]],
-    map_fn: typing.Callable[[typing.Any], typing.Any],
+    values: typing.Optional[list[T]],
+    map_fn: typing.Callable[[T], typing.Any],
 ) -> list[typing.Any]:
     """
     Helper to serialize repeated fields with a mapping function.
@@ -132,9 +132,9 @@ def decode_hex(value: typing.Optional[str], field_name: str) -> bytes:
     validate_type(value, str, field_name)
     try:
         return bytes.fromhex(value)
-    except ValueError as e:
+    except ValueError as error:
         raise ValueError(
-            f"Invalid hex string for field '{field_name}': {e}"
+            f"Invalid hex string for field '{field_name}': {error}"
         ) from None
 
 
@@ -153,9 +153,9 @@ def decode_base64(value: typing.Optional[str], field_name: str) -> bytes:
     validate_type(value, str, field_name)
     try:
         return base64.b64decode(value)
-    except Exception as e:
+    except Exception as error:
         raise ValueError(
-            f"Invalid base64 string for field '{field_name}': {e}"
+            f"Invalid base64 string for field '{field_name}': {error}"
         ) from None
 
 

@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=no-member
+
 import logging
 import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Tuple
 
 from google.protobuf.compiler import plugin_pb2 as plugin
 
@@ -28,7 +29,7 @@ _logger = logging.getLogger(__name__)
 
 @contextmanager
 def code_generation() -> Iterator[
-    Tuple[plugin.CodeGeneratorRequest, plugin.CodeGeneratorResponse],
+    tuple[plugin.CodeGeneratorRequest, plugin.CodeGeneratorResponse],
 ]:
     """
     Context manager for handling the code generation process.

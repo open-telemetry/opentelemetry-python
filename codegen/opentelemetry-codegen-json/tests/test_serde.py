@@ -12,32 +12,38 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: skip-file
 # ruff: noqa: PLC0415
 
 import json
 import math
 from typing import Any, Type
 
-import pytest
+import pytest  # type: ignore
 
 
 @pytest.fixture
 def test_v1_types() -> tuple[Type[Any], Type[Any]]:
-    from otel_test_json.test.v1.test import SubMessage, TestMessage
+    from otel_test_json.test.v1.test import (  # type: ignore
+        SubMessage,
+        TestMessage,
+    )
 
     return TestMessage, SubMessage
 
 
 @pytest.fixture
 def common_v1_types() -> Type[Any]:
-    from otel_test_json.common.v1.common import InstrumentationScope
+    from otel_test_json.common.v1.common import (  # type: ignore
+        InstrumentationScope,  # type: ignore
+    )
 
     return InstrumentationScope
 
 
 @pytest.fixture
 def trace_v1_types() -> Type[Any]:
-    from otel_test_json.trace.v1.trace import Span
+    from otel_test_json.trace.v1.trace import Span  # type: ignore
 
     return Span
 
@@ -46,7 +52,7 @@ def trace_v1_types() -> Type[Any]:
 def complex_v1_types() -> tuple[
     Type[Any], Type[Any], Type[Any], Type[Any], Type[Any]
 ]:
-    from otel_test_json.test.v1.complex import (
+    from otel_test_json.test.v1.complex import (  # type: ignore
         DeeplyNested,
         NestedEnumSuite,
         NumericTest,
@@ -111,7 +117,7 @@ def test_generated_message_roundtrip(
 
 
 def test_cross_reference(
-    common_v1_types: Type[Any], trace_v1_types: Type[Any]
+    common_v1_types: type[Any], trace_v1_types: type[Any]
 ) -> None:
     InstrumentationScope = common_v1_types
     Span = trace_v1_types
@@ -155,7 +161,7 @@ def test_cross_reference(
     ],
 )
 def test_numeric_types(
-    complex_v1_types: tuple[Type[Any], ...],
+    complex_v1_types: tuple[type[Any], ...],
     field: str,
     value: Any,
     expected_json_val: Any,
@@ -191,8 +197,8 @@ def test_numeric_types(
     ],
 )
 def test_oneof_suite_variants(
-    common_v1_types: Type[Any],
-    complex_v1_types: tuple[Type[Any], ...],
+    common_v1_types: type[Any],
+    complex_v1_types: tuple[type[Any], ...],
     kwargs: dict[str, Any],
     expected_data: dict[str, Any],
 ) -> None:
@@ -230,7 +236,7 @@ def test_oneof_suite_variants(
     ],
 )
 def test_optional_scalars(
-    complex_v1_types: tuple[Type[Any], ...],
+    complex_v1_types: tuple[type[Any], ...],
     kwargs: dict[str, Any],
     expected_dict: dict[str, Any],
 ) -> None:
@@ -241,7 +247,7 @@ def test_optional_scalars(
     assert OptionalScalar.from_dict(expected_dict) == msg
 
 
-def test_nested_enum_suite(complex_v1_types: tuple[Type[Any], ...]) -> None:
+def test_nested_enum_suite(complex_v1_types: tuple[type[Any], ...]) -> None:
     NestedEnumSuite = complex_v1_types[3]
 
     msg = NestedEnumSuite(
@@ -261,7 +267,7 @@ def test_nested_enum_suite(complex_v1_types: tuple[Type[Any], ...]) -> None:
     assert new_msg.repeated_nested == msg.repeated_nested
 
 
-def test_deeply_nested(complex_v1_types: tuple[Type[Any], ...]) -> None:
+def test_deeply_nested(complex_v1_types: tuple[type[Any], ...]) -> None:
     DeeplyNested = complex_v1_types[4]
 
     msg = DeeplyNested(
@@ -289,7 +295,7 @@ def test_deeply_nested(complex_v1_types: tuple[Type[Any], ...]) -> None:
     ],
 )
 def test_defaults_and_none(
-    test_v1_types: tuple[Type[Any], Type[Any]],
+    test_v1_types: tuple[type[Any], type[Any]],
     data: dict[str, Any],
     expected_name: str,
     expected_int: int,
@@ -314,7 +320,7 @@ def test_defaults_and_none(
     ],
 )
 def test_validation_errors(
-    test_v1_types: tuple[Type[Any], Type[Any]],
+    test_v1_types: tuple[type[Any], type[Any]],
     data: dict[str, Any],
     expected_error: type,
     match: str,
@@ -329,7 +335,7 @@ def test_validation_errors(
 
 
 def test_unknown_fields_ignored(
-    test_v1_types: tuple[Type[Any], Type[Any]],
+    test_v1_types: tuple[type[Any], type[Any]],
 ) -> None:
     TestMessage, _ = test_v1_types
 

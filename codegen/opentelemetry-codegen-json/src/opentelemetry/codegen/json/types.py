@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=no-member
+
 from typing import Final
 
 from google.protobuf import descriptor_pb2 as descriptor
@@ -60,6 +62,17 @@ INT64_TYPES: Final[set[int]] = {
     descriptor.FieldDescriptorProto.TYPE_SINT64,
 }
 
+NUMERIC_TYPES: Final[set[int]] = {
+    *INT64_TYPES,
+    descriptor.FieldDescriptorProto.TYPE_DOUBLE,
+    descriptor.FieldDescriptorProto.TYPE_FLOAT,
+    descriptor.FieldDescriptorProto.TYPE_INT32,
+    descriptor.FieldDescriptorProto.TYPE_FIXED32,
+    descriptor.FieldDescriptorProto.TYPE_UINT32,
+    descriptor.FieldDescriptorProto.TYPE_SFIXED32,
+    descriptor.FieldDescriptorProto.TYPE_SINT32,
+}
+
 HEX_ENCODED_FIELDS: Final[set[str]] = {
     "trace_id",
     "span_id",
@@ -76,7 +89,9 @@ def get_python_type(proto_type: int) -> str:
     Returns:
         A string representing the Python type
     """
-    return PROTO_TO_PYTHON.get(proto_type, "typing.Any")
+    if proto_type not in PROTO_TO_PYTHON:
+        raise ValueError(f"Unknown protobuf type: {proto_type}")
+    return PROTO_TO_PYTHON[proto_type]
 
 
 def get_default_value(proto_type: int) -> str:
@@ -134,7 +149,7 @@ def to_json_field_name(snake_name: str) -> str:
     Args:
         snake_name: The field name in snake_case.
     Returns:
-        The field name converted to camelCase.k
+        The field name converted to camelCase.
     """
     components = snake_name.split("_")
     return components[0] + "".join(x.title() for x in components[1:])
@@ -149,17 +164,7 @@ def is_numeric_type(proto_type: int) -> bool:
     Returns:
         True if the type is a numeric type, False otherwise.
     """
-    if proto_type in INT64_TYPES:
-        return True
-    return proto_type in {
-        descriptor.FieldDescriptorProto.TYPE_DOUBLE,
-        descriptor.FieldDescriptorProto.TYPE_FLOAT,
-        descriptor.FieldDescriptorProto.TYPE_INT32,
-        descriptor.FieldDescriptorProto.TYPE_FIXED32,
-        descriptor.FieldDescriptorProto.TYPE_UINT32,
-        descriptor.FieldDescriptorProto.TYPE_SFIXED32,
-        descriptor.FieldDescriptorProto.TYPE_SINT32,
-    }
+    return proto_type in NUMERIC_TYPES
 
 
 def get_json_allowed_types(proto_type: int, field_name: str = "") -> str:
@@ -184,6 +189,4 @@ def get_json_allowed_types(proto_type: int, field_name: str = "") -> str:
         descriptor.FieldDescriptorProto.TYPE_DOUBLE,
     ):
         return "(builtins.float, builtins.int, builtins.str)"
-
-    py_type = get_python_type(proto_type)
-    return py_type
+    return get_python_type(proto_type)
