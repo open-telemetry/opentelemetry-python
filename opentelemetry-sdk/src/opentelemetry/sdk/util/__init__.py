@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import copy
 import datetime
 import threading
 from collections import deque
 from collections.abc import MutableMapping, Sequence
-from typing import Optional
+from typing import Any, Optional
 
 from typing_extensions import deprecated
 
@@ -54,6 +55,13 @@ class BoundedList(Sequence):
         self.dropped = 0
         self._dq = deque(maxlen=maxlen)  # type: deque
         self._lock = threading.Lock()
+
+    def __deepcopy__(self, memo):
+        copy_ = BoundedList(0)
+        with self._lock:
+            copy_.dropped = self.dropped
+            copy_._dq = copy.deepcopy(self._dq, memo)
+        return copy_
 
     def __repr__(self):
         return f"{type(self).__name__}({list(self._dq)}, maxlen={self._dq.maxlen})"

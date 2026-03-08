@@ -322,6 +322,7 @@ class BoundedAttributes(MutableMapping):  # type: ignore
     def __deepcopy__(self, memo: dict) -> "BoundedAttributes":
         with self._lock:
             attributes = copy.deepcopy(self._dict, memo)
+            dropped = self.dropped
         copy_ = BoundedAttributes(
             self.maxlen,
             attributes,
@@ -329,6 +330,7 @@ class BoundedAttributes(MutableMapping):  # type: ignore
             self.max_value_len,
             self._extended_attributes,
         )
+        copy_.dropped = dropped
         memo[id(self)] = copy_
         return copy_
 

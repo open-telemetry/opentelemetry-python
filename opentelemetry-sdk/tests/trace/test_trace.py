@@ -59,7 +59,7 @@ from opentelemetry.sdk.trace.sampling import (
     ParentBased,
     StaticSampler,
 )
-from opentelemetry.sdk.util import BoundedDict, ns_to_iso_str
+from opentelemetry.sdk.util import BoundedDict, BoundedList, ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.test.spantestutil import (
     get_span_with_dropped_attributes_events_links,
@@ -718,10 +718,14 @@ class TestReadableSpan(unittest.TestCase):
         attributes = BoundedAttributes(
             10, {"key1": "value1", "key2": 42}, immutable=False
         )
-        events = [
-            trace.Event("event1", {"ekey": "evalue"}),
-            trace.Event("event2", {"ekey2": "evalue2"}),
-        ]
+        events = BoundedList(10)
+        events.extend(
+            (
+                trace.Event("event1", {"ekey": "evalue"}),
+                trace.Event("event2", {"ekey2": "evalue2"}),
+            )
+        )
+
         links = [
             trace_api.Link(
                 context=trace_api.INVALID_SPAN_CONTEXT,
@@ -752,9 +756,11 @@ class TestReadableSpan(unittest.TestCase):
         )
 
         self.assertEqual(len(span_copy.events), len(span.events))
-        events[0] = trace.Event("mutated-event", {"mutated": "value"})
-        self.assertNotEqual(span_copy.events[0].name, events[0].name)
-        self.assertEqual(span_copy.events[0].name, "event1")
+        self.assertIsNot(span_copy.events, span.events)
+        self.assertEqual(span_copy.events[0].name, span.events[0].name)
+        self.assertEqual(
+            span_copy.events[0].attributes, span.events[0].attributes
+        )
 
         self.assertEqual(len(span_copy.links), len(span.links))
         self.assertEqual(

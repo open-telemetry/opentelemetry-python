@@ -324,6 +324,7 @@ class TestBoundedAttributes(unittest.TestCase):
 
     def test_deepcopy(self):
         bdict = BoundedAttributes(4, self.base, immutable=False)
+        bdict.dropped = 10
         bdict_copy = copy.deepcopy(bdict)
 
         for key in bdict_copy:
