@@ -56,8 +56,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py39-test-opentelemetry-opentracing-shim -- -ra
 
   py310-test-opentelemetry-opentracing-shim_windows-latest:
@@ -79,8 +77,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py310-test-opentelemetry-opentracing-shim -- -ra
 
   py311-test-opentelemetry-opentracing-shim_windows-latest:
@@ -102,8 +98,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py311-test-opentelemetry-opentracing-shim -- -ra
 
   py312-test-opentelemetry-opentracing-shim_windows-latest:
@@ -125,8 +119,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py312-test-opentelemetry-opentracing-shim -- -ra
 
   py313-test-opentelemetry-opentracing-shim_windows-latest:
@@ -148,8 +140,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py313-test-opentelemetry-opentracing-shim -- -ra
 
   py314-test-opentelemetry-opentracing-shim_windows-latest:
@@ -171,8 +161,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py314-test-opentelemetry-opentracing-shim -- -ra
 
   py314t-test-opentelemetry-opentracing-shim_windows-latest:
@@ -194,8 +182,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py314t-test-opentelemetry-opentracing-shim -- -ra
 
   pypy3-test-opentelemetry-opentracing-shim_windows-latest:
@@ -217,8 +203,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e pypy3-test-opentelemetry-opentracing-shim -- -ra
 
   py39-test-opentelemetry-opencensus-shim_windows-latest:
@@ -240,8 +224,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py39-test-opentelemetry-opencensus-shim -- -ra
 
   py310-test-opentelemetry-opencensus-shim_windows-latest:
@@ -263,8 +245,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py310-test-opentelemetry-opencensus-shim -- -ra
 
   py311-test-opentelemetry-opencensus-shim_windows-latest:
@@ -286,8 +266,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py311-test-opentelemetry-opencensus-shim -- -ra
 
   py312-test-opentelemetry-opencensus-shim_windows-latest:
@@ -309,8 +287,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py312-test-opentelemetry-opencensus-shim -- -ra
 
   py313-test-opentelemetry-opencensus-shim_windows-latest:
@@ -332,8 +308,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py313-test-opentelemetry-opencensus-shim -- -ra
 
   py314-test-opentelemetry-opencensus-shim_windows-latest:
@@ -355,8 +329,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py314-test-opentelemetry-opencensus-shim -- -ra
 
   py39-test-opentelemetry-exporter-opencensus_windows-latest:
@@ -378,8 +350,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py39-test-opentelemetry-exporter-opencensus -- -ra
 
   py310-test-opentelemetry-exporter-opencensus_windows-latest:
@@ -401,8 +371,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py310-test-opentelemetry-exporter-opencensus -- -ra
 
   py311-test-opentelemetry-exporter-opencensus_windows-latest:
@@ -424,8 +392,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py311-test-opentelemetry-exporter-opencensus -- -ra
 
   py312-test-opentelemetry-exporter-opencensus_windows-latest:
@@ -447,8 +413,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py312-test-opentelemetry-exporter-opencensus -- -ra
 
   py313-test-opentelemetry-exporter-opencensus_windows-latest:
@@ -470,8 +434,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py313-test-opentelemetry-exporter-opencensus -- -ra
 
   py314-test-opentelemetry-exporter-opencensus_windows-latest:
@@ -493,8 +455,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py314-test-opentelemetry-exporter-opencensus -- -ra
 
   py39-test-opentelemetry-exporter-otlp-proto-common_windows-latest:
@@ -516,8 +476,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py39-test-opentelemetry-exporter-otlp-proto-common -- -ra
 
   py310-test-opentelemetry-exporter-otlp-proto-common_windows-latest:
@@ -539,8 +497,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py310-test-opentelemetry-exporter-otlp-proto-common -- -ra
 
   py311-test-opentelemetry-exporter-otlp-proto-common_windows-latest:
@@ -562,8 +518,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py311-test-opentelemetry-exporter-otlp-proto-common -- -ra
 
   py312-test-opentelemetry-exporter-otlp-proto-common_windows-latest:
@@ -585,8 +539,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py312-test-opentelemetry-exporter-otlp-proto-common -- -ra
 
   py313-test-opentelemetry-exporter-otlp-proto-common_windows-latest:
@@ -608,8 +560,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py313-test-opentelemetry-exporter-otlp-proto-common -- -ra
 
   py314-test-opentelemetry-exporter-otlp-proto-common_windows-latest:
@@ -631,8 +581,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py314-test-opentelemetry-exporter-otlp-proto-common -- -ra
 
   py314t-test-opentelemetry-exporter-otlp-proto-common_windows-latest:
@@ -654,8 +602,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py314t-test-opentelemetry-exporter-otlp-proto-common -- -ra
 
   pypy3-test-opentelemetry-exporter-otlp-proto-common_windows-latest:
@@ -677,8 +623,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e pypy3-test-opentelemetry-exporter-otlp-proto-common -- -ra
 
   py39-test-opentelemetry-exporter-otlp-combined_windows-latest:
@@ -700,8 +644,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py39-test-opentelemetry-exporter-otlp-combined -- -ra
 
   py310-test-opentelemetry-exporter-otlp-combined_windows-latest:
@@ -723,8 +665,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py310-test-opentelemetry-exporter-otlp-combined -- -ra
 
   py311-test-opentelemetry-exporter-otlp-combined_windows-latest:
@@ -746,8 +686,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py311-test-opentelemetry-exporter-otlp-combined -- -ra
 
   py312-test-opentelemetry-exporter-otlp-combined_windows-latest:
@@ -769,8 +707,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py312-test-opentelemetry-exporter-otlp-combined -- -ra
 
   py313-test-opentelemetry-exporter-otlp-combined_windows-latest:
@@ -792,8 +728,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py313-test-opentelemetry-exporter-otlp-combined -- -ra
 
   py314-test-opentelemetry-exporter-otlp-combined_windows-latest:
@@ -815,8 +749,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py314-test-opentelemetry-exporter-otlp-combined -- -ra
 
   py39-test-opentelemetry-exporter-otlp-proto-grpc-oldest_windows-latest:
@@ -838,8 +770,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py39-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
 
   py39-test-opentelemetry-exporter-otlp-proto-grpc-latest_windows-latest:
@@ -861,8 +791,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py39-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
 
   py310-test-opentelemetry-exporter-otlp-proto-grpc-oldest_windows-latest:
@@ -884,8 +812,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py310-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
 
   py310-test-opentelemetry-exporter-otlp-proto-grpc-latest_windows-latest:
@@ -907,8 +833,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py310-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
 
   py311-test-opentelemetry-exporter-otlp-proto-grpc-oldest_windows-latest:
@@ -930,8 +854,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py311-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
 
   py311-test-opentelemetry-exporter-otlp-proto-grpc-latest_windows-latest:
@@ -953,8 +875,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py311-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
 
   py312-test-opentelemetry-exporter-otlp-proto-grpc-oldest_windows-latest:
@@ -976,8 +896,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py312-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
 
   py312-test-opentelemetry-exporter-otlp-proto-grpc-latest_windows-latest:
@@ -999,8 +917,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py312-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
 
   py313-test-opentelemetry-exporter-otlp-proto-grpc-oldest_windows-latest:
@@ -1022,8 +938,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py313-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
 
   py313-test-opentelemetry-exporter-otlp-proto-grpc-latest_windows-latest:
@@ -1045,8 +959,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py313-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
 
   py314-test-opentelemetry-exporter-otlp-proto-grpc-oldest_windows-latest:
@@ -1068,8 +980,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py314-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
 
   py314-test-opentelemetry-exporter-otlp-proto-grpc-latest_windows-latest:
@@ -1091,8 +1001,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py314-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
 
   py39-test-opentelemetry-exporter-otlp-proto-http_windows-latest:
@@ -1114,8 +1022,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py39-test-opentelemetry-exporter-otlp-proto-http -- -ra
 
   py310-test-opentelemetry-exporter-otlp-proto-http_windows-latest:
@@ -1137,8 +1043,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py310-test-opentelemetry-exporter-otlp-proto-http -- -ra
 
   py311-test-opentelemetry-exporter-otlp-proto-http_windows-latest:
@@ -1160,8 +1064,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py311-test-opentelemetry-exporter-otlp-proto-http -- -ra
 
   py312-test-opentelemetry-exporter-otlp-proto-http_windows-latest:
@@ -1183,8 +1085,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py312-test-opentelemetry-exporter-otlp-proto-http -- -ra
 
   py313-test-opentelemetry-exporter-otlp-proto-http_windows-latest:
@@ -1206,8 +1106,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py313-test-opentelemetry-exporter-otlp-proto-http -- -ra
 
   py314-test-opentelemetry-exporter-otlp-proto-http_windows-latest:
@@ -1229,8 +1127,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py314-test-opentelemetry-exporter-otlp-proto-http -- -ra
 
   py314t-test-opentelemetry-exporter-otlp-proto-http_windows-latest:
@@ -1252,8 +1148,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py314t-test-opentelemetry-exporter-otlp-proto-http -- -ra
 
   pypy3-test-opentelemetry-exporter-otlp-proto-http_windows-latest:
@@ -1275,8 +1169,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e pypy3-test-opentelemetry-exporter-otlp-proto-http -- -ra
 
   py39-test-opentelemetry-exporter-prometheus_windows-latest:
@@ -1298,8 +1190,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py39-test-opentelemetry-exporter-prometheus -- -ra
 
   py310-test-opentelemetry-exporter-prometheus_windows-latest:
@@ -1321,8 +1211,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py310-test-opentelemetry-exporter-prometheus -- -ra
 
   py311-test-opentelemetry-exporter-prometheus_windows-latest:
@@ -1344,8 +1232,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py311-test-opentelemetry-exporter-prometheus -- -ra
 
   py312-test-opentelemetry-exporter-prometheus_windows-latest:
@@ -1367,8 +1253,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py312-test-opentelemetry-exporter-prometheus -- -ra
 
   py313-test-opentelemetry-exporter-prometheus_windows-latest:
@@ -1390,8 +1274,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py313-test-opentelemetry-exporter-prometheus -- -ra
 
   py314-test-opentelemetry-exporter-prometheus_windows-latest:
@@ -1413,8 +1295,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py314-test-opentelemetry-exporter-prometheus -- -ra
 
   py314t-test-opentelemetry-exporter-prometheus_windows-latest:
@@ -1436,8 +1316,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py314t-test-opentelemetry-exporter-prometheus -- -ra
 
   pypy3-test-opentelemetry-exporter-prometheus_windows-latest:
@@ -1459,8 +1337,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e pypy3-test-opentelemetry-exporter-prometheus -- -ra
 
   py39-test-opentelemetry-exporter-zipkin-combined_windows-latest:
@@ -1482,8 +1358,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py39-test-opentelemetry-exporter-zipkin-combined -- -ra
 
   py310-test-opentelemetry-exporter-zipkin-combined_windows-latest:
@@ -1505,8 +1379,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py310-test-opentelemetry-exporter-zipkin-combined -- -ra
 
   py311-test-opentelemetry-exporter-zipkin-combined_windows-latest:
@@ -1528,8 +1400,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py311-test-opentelemetry-exporter-zipkin-combined -- -ra
 
   py312-test-opentelemetry-exporter-zipkin-combined_windows-latest:
@@ -1551,8 +1421,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py312-test-opentelemetry-exporter-zipkin-combined -- -ra
 
   py313-test-opentelemetry-exporter-zipkin-combined_windows-latest:
@@ -1574,8 +1442,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py313-test-opentelemetry-exporter-zipkin-combined -- -ra
 
   py314-test-opentelemetry-exporter-zipkin-combined_windows-latest:
@@ -1597,8 +1463,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py314-test-opentelemetry-exporter-zipkin-combined -- -ra
 
   py314t-test-opentelemetry-exporter-zipkin-combined_windows-latest:
@@ -1620,8 +1484,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py314t-test-opentelemetry-exporter-zipkin-combined -- -ra
 
   pypy3-test-opentelemetry-exporter-zipkin-combined_windows-latest:
@@ -1643,8 +1505,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e pypy3-test-opentelemetry-exporter-zipkin-combined -- -ra
 
   py39-test-opentelemetry-exporter-zipkin-proto-http_windows-latest:
@@ -1666,8 +1526,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py39-test-opentelemetry-exporter-zipkin-proto-http -- -ra
 
   py310-test-opentelemetry-exporter-zipkin-proto-http_windows-latest:
@@ -1689,8 +1547,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py310-test-opentelemetry-exporter-zipkin-proto-http -- -ra
 
   py311-test-opentelemetry-exporter-zipkin-proto-http_windows-latest:
@@ -1712,8 +1568,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py311-test-opentelemetry-exporter-zipkin-proto-http -- -ra
 
   py312-test-opentelemetry-exporter-zipkin-proto-http_windows-latest:
@@ -1735,8 +1589,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py312-test-opentelemetry-exporter-zipkin-proto-http -- -ra
 
   py313-test-opentelemetry-exporter-zipkin-proto-http_windows-latest:
@@ -1758,8 +1610,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py313-test-opentelemetry-exporter-zipkin-proto-http -- -ra
 
   py314-test-opentelemetry-exporter-zipkin-proto-http_windows-latest:
@@ -1781,8 +1631,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py314-test-opentelemetry-exporter-zipkin-proto-http -- -ra
 
   py314t-test-opentelemetry-exporter-zipkin-proto-http_windows-latest:
@@ -1804,8 +1652,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py314t-test-opentelemetry-exporter-zipkin-proto-http -- -ra
 
   pypy3-test-opentelemetry-exporter-zipkin-proto-http_windows-latest:
@@ -1827,8 +1673,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e pypy3-test-opentelemetry-exporter-zipkin-proto-http -- -ra
 
   py39-test-opentelemetry-exporter-zipkin-json_windows-latest:
@@ -1850,8 +1694,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py39-test-opentelemetry-exporter-zipkin-json -- -ra
 
   py310-test-opentelemetry-exporter-zipkin-json_windows-latest:
@@ -1873,8 +1715,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py310-test-opentelemetry-exporter-zipkin-json -- -ra
 
   py311-test-opentelemetry-exporter-zipkin-json_windows-latest:
@@ -1896,8 +1736,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py311-test-opentelemetry-exporter-zipkin-json -- -ra
 
   py312-test-opentelemetry-exporter-zipkin-json_windows-latest:
@@ -1919,8 +1757,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py312-test-opentelemetry-exporter-zipkin-json -- -ra
 
   py313-test-opentelemetry-exporter-zipkin-json_windows-latest:
@@ -1942,8 +1778,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py313-test-opentelemetry-exporter-zipkin-json -- -ra
 
   py314-test-opentelemetry-exporter-zipkin-json_windows-latest:
@@ -1965,8 +1799,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py314-test-opentelemetry-exporter-zipkin-json -- -ra
 
   py314t-test-opentelemetry-exporter-zipkin-json_windows-latest:
@@ -1988,8 +1820,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py314t-test-opentelemetry-exporter-zipkin-json -- -ra
 
   pypy3-test-opentelemetry-exporter-zipkin-json_windows-latest:
@@ -2011,8 +1841,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e pypy3-test-opentelemetry-exporter-zipkin-json -- -ra
 
   py39-test-opentelemetry-propagator-b3_windows-latest:
@@ -2034,8 +1862,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py39-test-opentelemetry-propagator-b3 -- -ra
 
   py310-test-opentelemetry-propagator-b3_windows-latest:
@@ -2057,8 +1883,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py310-test-opentelemetry-propagator-b3 -- -ra
 
   py311-test-opentelemetry-propagator-b3_windows-latest:
@@ -2080,8 +1904,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py311-test-opentelemetry-propagator-b3 -- -ra
 
   py312-test-opentelemetry-propagator-b3_windows-latest:
@@ -2103,8 +1925,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py312-test-opentelemetry-propagator-b3 -- -ra
 
   py313-test-opentelemetry-propagator-b3_windows-latest:
@@ -2126,8 +1946,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py313-test-opentelemetry-propagator-b3 -- -ra
 
   py314-test-opentelemetry-propagator-b3_windows-latest:
@@ -2149,8 +1967,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py314-test-opentelemetry-propagator-b3 -- -ra
 
   py314t-test-opentelemetry-propagator-b3_windows-latest:
@@ -2172,8 +1988,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py314t-test-opentelemetry-propagator-b3 -- -ra
 
   pypy3-test-opentelemetry-propagator-b3_windows-latest:
@@ -2195,8 +2009,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e pypy3-test-opentelemetry-propagator-b3 -- -ra
 
   py39-test-opentelemetry-propagator-jaeger_windows-latest:
@@ -2218,8 +2030,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py39-test-opentelemetry-propagator-jaeger -- -ra
 
   py310-test-opentelemetry-propagator-jaeger_windows-latest:
@@ -2241,8 +2051,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py310-test-opentelemetry-propagator-jaeger -- -ra
 
   py311-test-opentelemetry-propagator-jaeger_windows-latest:
@@ -2264,8 +2072,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py311-test-opentelemetry-propagator-jaeger -- -ra
 
   py312-test-opentelemetry-propagator-jaeger_windows-latest:
@@ -2287,8 +2093,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py312-test-opentelemetry-propagator-jaeger -- -ra
 
   py313-test-opentelemetry-propagator-jaeger_windows-latest:
@@ -2310,8 +2114,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py313-test-opentelemetry-propagator-jaeger -- -ra
 
   py314-test-opentelemetry-propagator-jaeger_windows-latest:
@@ -2333,8 +2135,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py314-test-opentelemetry-propagator-jaeger -- -ra
 
   py314t-test-opentelemetry-propagator-jaeger_windows-latest:
@@ -2356,8 +2156,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py314t-test-opentelemetry-propagator-jaeger -- -ra
 
   pypy3-test-opentelemetry-propagator-jaeger_windows-latest:
@@ -2379,8 +2177,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e pypy3-test-opentelemetry-propagator-jaeger -- -ra
 
   py39-test-opentelemetry-test-utils_windows-latest:
@@ -2402,8 +2198,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py39-test-opentelemetry-test-utils -- -ra
 
   py310-test-opentelemetry-test-utils_windows-latest:
@@ -2425,8 +2219,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py310-test-opentelemetry-test-utils -- -ra
 
   py311-test-opentelemetry-test-utils_windows-latest:
@@ -2448,8 +2240,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py311-test-opentelemetry-test-utils -- -ra
 
   py312-test-opentelemetry-test-utils_windows-latest:
@@ -2471,8 +2261,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py312-test-opentelemetry-test-utils -- -ra
 
   py313-test-opentelemetry-test-utils_windows-latest:
@@ -2494,8 +2282,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py313-test-opentelemetry-test-utils -- -ra
 
   py314-test-opentelemetry-test-utils_windows-latest:
@@ -2517,8 +2303,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py314-test-opentelemetry-test-utils -- -ra
 
   py314t-test-opentelemetry-test-utils_windows-latest:
@@ -2540,8 +2324,6 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e py314t-test-opentelemetry-test-utils -- -ra
 
   pypy3-test-opentelemetry-test-utils_windows-latest:
@@ -2563,6 +2345,4 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e pypy3-test-opentelemetry-test-utils -- -ra

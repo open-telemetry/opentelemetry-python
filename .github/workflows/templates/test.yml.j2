@@ -69,7 +69,5 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        env:
-          USERNAME: "runner"
         run: tox -e {{ job_data.tox_env }} -- -ra
   {%- endfor %}
