@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 - `opentelemetry-sdk`: Add file configuration support with YAML/JSON loading, environment variable substitution, and schema validation against the vendored OTel config JSON schema
+- Fix intermittent CI failures in `getting-started` and `tracecontext` jobs caused by GitHub git CDN SHA propagation lag by installing contrib packages from the already-checked-out local copy instead of a second git clone
+  ([#4958](https://github.com/open-telemetry/opentelemetry-python/pull/4958))
 - `opentelemetry-sdk`: fix type annotations on `MetricReader` and related types
   ([#4938](https://github.com/open-telemetry/opentelemetry-python/pull/4938/))
 
