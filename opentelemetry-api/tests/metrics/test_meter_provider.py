@@ -15,6 +15,7 @@
 
 # pylint: disable=protected-access
 
+import threading
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
@@ -47,8 +48,6 @@ from opentelemetry.test.globals_test import (
     MetricsGlobalsTest,
     reset_metrics_globals,
 )
-
-# FIXME Test that the instrument methods can be called concurrently safely.
 
 
 @fixture
@@ -163,6 +162,37 @@ class TestGetMeter(TestCase):
         self.assertEqual(meter.name, "name")
         self.assertEqual(meter.version, "version")
         self.assertEqual(meter.schema_url, "schema_url")
+
+
+class TestConcurrency(TestCase):
+    def _run_concurrently(self, fn, num_threads=10, calls_per_thread=100):
+        """Helper: run fn concurrently across threads and assert no exceptions."""
+        errors = []
+
+        def worker():
+            try:
+                for _ in range(calls_per_thread):
+                    fn()
+            except Exception as exc:  # pylint: disable=broad-except
+                errors.append(exc)
+
+        threads = [threading.Thread(target=worker) for _ in range(num_threads)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        self.assertEqual([], errors)
+
+    def test_no_op_meter_provider_get_meter_concurrent(self):
+        """Test that NoOpMeterProvider.get_meter can be called concurrently safely."""
+        meter_provider = NoOpMeterProvider()
+        self._run_concurrently(lambda: meter_provider.get_meter("name"))
+
+    def test_proxy_meter_provider_get_meter_concurrent(self):
+        """Test that _ProxyMeterProvider.get_meter can be called concurrently safely."""
+        meter_provider = _ProxyMeterProvider()
+        self._run_concurrently(lambda: meter_provider.get_meter("name"))
 
 
 class TestProxy(MetricsGlobalsTest, TestCase):

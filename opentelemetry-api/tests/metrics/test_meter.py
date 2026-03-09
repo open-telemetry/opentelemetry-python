@@ -13,13 +13,12 @@
 # limitations under the License.
 # type: ignore
 
+import threading
 from logging import WARNING
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
 from opentelemetry.metrics import Meter, NoOpMeter
-
-# FIXME Test that the meter methods can be called concurrently safely.
 
 
 class ChildMeter(Meter):
@@ -195,3 +194,59 @@ class TestMeter(TestCase):
         self.assertTrue(
             Meter.create_observable_up_down_counter.__isabstractmethod__
         )
+
+
+class TestConcurrency(TestCase):
+    def _run_concurrently(self, fn, num_threads=10, calls_per_thread=100):
+        """Helper: run fn concurrently across threads and assert no exceptions."""
+        errors = []
+
+        def worker():
+            try:
+                for _ in range(calls_per_thread):
+                    fn()
+            except Exception as exc:  # pylint: disable=broad-except
+                errors.append(exc)
+
+        threads = [threading.Thread(target=worker) for _ in range(num_threads)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        self.assertEqual([], errors)
+
+    def test_create_counter_concurrent(self):
+        """Test that Meter.create_counter can be called concurrently safely."""
+        meter = NoOpMeter("name")
+        self._run_concurrently(lambda: meter.create_counter("counter"))
+
+    def test_create_up_down_counter_concurrent(self):
+        """Test that Meter.create_up_down_counter can be called concurrently safely."""
+        meter = NoOpMeter("name")
+        self._run_concurrently(lambda: meter.create_up_down_counter("up_down_counter"))
+
+    def test_create_observable_counter_concurrent(self):
+        """Test that Meter.create_observable_counter can be called concurrently safely."""
+        meter = NoOpMeter("name")
+        self._run_concurrently(lambda: meter.create_observable_counter("observable_counter", lambda options: []))
+
+    def test_create_histogram_concurrent(self):
+        """Test that Meter.create_histogram can be called concurrently safely."""
+        meter = NoOpMeter("name")
+        self._run_concurrently(lambda: meter.create_histogram("histogram"))
+
+    def test_create_gauge_concurrent(self):
+        """Test that Meter.create_gauge can be called concurrently safely."""
+        meter = NoOpMeter("name")
+        self._run_concurrently(lambda: meter.create_gauge("gauge"))
+
+    def test_create_observable_gauge_concurrent(self):
+        """Test that Meter.create_observable_gauge can be called concurrently safely."""
+        meter = NoOpMeter("name")
+        self._run_concurrently(lambda: meter.create_observable_gauge("observable_gauge", lambda options: []))
+
+    def test_create_observable_up_down_counter_concurrent(self):
+        """Test that Meter.create_observable_up_down_counter can be called concurrently safely."""
+        meter = NoOpMeter("name")
+        self._run_concurrently(lambda: meter.create_observable_up_down_counter("observable_up_down_counter", lambda options: []))

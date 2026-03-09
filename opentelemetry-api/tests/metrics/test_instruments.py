@@ -13,6 +13,7 @@
 # limitations under the License.
 # type: ignore
 
+import threading
 from inspect import Signature, isabstract, signature
 from unittest import TestCase
 
@@ -31,8 +32,6 @@ from opentelemetry.metrics import (
     UpDownCounter,
     _Gauge,
 )
-
-# FIXME Test that the instrument methods can be called concurrently safely.
 
 
 class ChildInstrument(Instrument):
@@ -724,3 +723,44 @@ class TestObservableUpDownCounter(TestCase):
             ],
             "",
         )
+
+
+class TestConcurrency(TestCase):
+    def _run_concurrently(self, fn, num_threads=10, calls_per_thread=100):
+        """Helper: run fn concurrently across threads and assert no exceptions."""
+        errors = []
+
+        def worker():
+            try:
+                for _ in range(calls_per_thread):
+                    fn()
+            except Exception as exc:  # pylint: disable=broad-except
+                errors.append(exc)
+
+        threads = [threading.Thread(target=worker) for _ in range(num_threads)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        self.assertEqual([], errors)
+
+    def test_counter_add_concurrent(self):
+        """Test that Counter.add can be called concurrently safely."""
+        counter = NoOpCounter("name")
+        self._run_concurrently(lambda: counter.add(1))
+
+    def test_up_down_counter_add_concurrent(self):
+        """Test that UpDownCounter.add can be called concurrently safely."""
+        up_down_counter = NoOpUpDownCounter("name")
+        self._run_concurrently(lambda: up_down_counter.add(1))
+
+    def test_histogram_record_concurrent(self):
+        """Test that Histogram.record can be called concurrently safely."""
+        histogram = NoOpHistogram("name")
+        self._run_concurrently(lambda: histogram.record(1))
+
+    def test_gauge_set_concurrent(self):
+        """Test that Gauge.set can be called concurrently safely."""
+        gauge = NoOpMeter("name").create_gauge("name")
+        self._run_concurrently(lambda: gauge.set(1))
