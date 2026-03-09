@@ -738,10 +738,10 @@ class TestConcurrency(TestCase):
                 errors.append(exc)
 
         threads = [threading.Thread(target=worker) for _ in range(num_threads)]
-        for t in threads:
-            t.start()
-        for t in threads:
-            t.join()
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
 
         self.assertEqual([], errors)
 
