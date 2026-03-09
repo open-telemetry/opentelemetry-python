@@ -224,12 +224,18 @@ class TestConcurrency(TestCase):
     def test_create_up_down_counter_concurrent(self):
         """Test that Meter.create_up_down_counter can be called concurrently safely."""
         meter = NoOpMeter("name")
-        self._run_concurrently(lambda: meter.create_up_down_counter("up_down_counter"))
+        self._run_concurrently(
+            lambda: meter.create_up_down_counter("up_down_counter")
+        )
 
     def test_create_observable_counter_concurrent(self):
         """Test that Meter.create_observable_counter can be called concurrently safely."""
         meter = NoOpMeter("name")
-        self._run_concurrently(lambda: meter.create_observable_counter("observable_counter", lambda options: []))
+        self._run_concurrently(
+            lambda: meter.create_observable_counter(
+                "observable_counter", lambda options: []
+            )
+        )
 
     def test_create_histogram_concurrent(self):
         """Test that Meter.create_histogram can be called concurrently safely."""
@@ -244,9 +250,17 @@ class TestConcurrency(TestCase):
     def test_create_observable_gauge_concurrent(self):
         """Test that Meter.create_observable_gauge can be called concurrently safely."""
         meter = NoOpMeter("name")
-        self._run_concurrently(lambda: meter.create_observable_gauge("observable_gauge", lambda options: []))
+        self._run_concurrently(
+            lambda: meter.create_observable_gauge(
+                "observable_gauge", lambda options: []
+            )
+        )
 
     def test_create_observable_up_down_counter_concurrent(self):
         """Test that Meter.create_observable_up_down_counter can be called concurrently safely."""
         meter = NoOpMeter("name")
-        self._run_concurrently(lambda: meter.create_observable_up_down_counter("observable_up_down_counter", lambda options: []))
+        self._run_concurrently(
+            lambda: meter.create_observable_up_down_counter(
+                "observable_up_down_counter", lambda options: []
+            )
+        )
