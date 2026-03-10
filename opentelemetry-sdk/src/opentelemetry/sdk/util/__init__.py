@@ -58,6 +58,7 @@ class BoundedList(Sequence):
 
     def __deepcopy__(self, memo):
         copy_ = BoundedList(0)
+        memo[id(self)] = copy_
         with self._lock:
             copy_.dropped = self.dropped
             copy_._dq = copy.deepcopy(self._dq, memo)
