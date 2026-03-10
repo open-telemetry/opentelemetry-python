@@ -34,9 +34,8 @@ import opentelemetry.proto_json.resource.v1.resource
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class ProfilesDictionary:
+class ProfilesDictionary(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ProfilesDictionary
     """
@@ -106,9 +105,8 @@ class ProfilesDictionary:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class ProfilesData:
+class ProfilesData(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ProfilesData
     """
@@ -153,9 +151,8 @@ class ProfilesData:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class ResourceProfiles:
+class ResourceProfiles(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ResourceProfiles
     """
@@ -206,9 +203,8 @@ class ResourceProfiles:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class ScopeProfiles:
+class ScopeProfiles(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ScopeProfiles
     """
@@ -259,9 +255,8 @@ class ScopeProfiles:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class Profile:
+class Profile(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Profile
     """
@@ -353,9 +348,8 @@ class Profile:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class Link:
+class Link(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Link
     """
@@ -400,9 +394,8 @@ class Link:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class ValueType:
+class ValueType(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ValueType
     """
@@ -449,9 +442,8 @@ class ValueType:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class Sample:
+class Sample(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Sample
     """
@@ -513,9 +505,8 @@ class Sample:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class Mapping:
+class Mapping(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Mapping
     """
@@ -576,9 +567,8 @@ class Mapping:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class Stack:
+class Stack(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Stack
     """
@@ -618,9 +608,8 @@ class Stack:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class Location:
+class Location(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Location
     """
@@ -676,9 +665,8 @@ class Location:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class Line:
+class Line(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Line
     """
@@ -729,9 +717,8 @@ class Line:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class Function:
+class Function(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Function
     """
@@ -789,9 +776,8 @@ class Function:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class KeyValueAndUnit:
+class KeyValueAndUnit(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message KeyValueAndUnit
     """

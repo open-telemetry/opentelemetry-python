@@ -14,37 +14,46 @@
 
 from __future__ import annotations
 
+import abc
 import base64
 import json
 import math
 import typing
 
 T = typing.TypeVar("T")
+M = typing.TypeVar("M", bound="JsonMessage")
 
 
-def json_serde(cls: type[T]) -> type[T]:
+class JsonMessage(abc.ABC):
     """
-    A decorator that adds "to_json" and "from_json" methods to a class.
+    Abstract base class for protobuf messages with JSON serialization.
     """
 
-    def to_json(self: typing.Any) -> str:
+    @abc.abstractmethod
+    def to_dict(self) -> dict[str, typing.Any]:
+        """
+        Convert this message to a dictionary.
+        """
+
+    @classmethod
+    @abc.abstractmethod
+    def from_dict(cls: type[M], data: dict[str, typing.Any]) -> M:
+        """
+        Create an instance from a dictionary.
+        """
+
+    def to_json(self) -> str:
         """
         Serialize this message to a JSON string.
         """
-        # pylint: disable-next=no-member
-        return json.dumps(self.to_dict())  # type: ignore
+        return json.dumps(self.to_dict())
 
     @classmethod
-    def from_json(cls_inner: type[T], data: typing.Union[str, bytes]) -> T:
+    def from_json(cls: type[M], data: typing.Union[str, bytes]) -> M:
         """
         Deserialize from a JSON string or bytes.
         """
-        # pylint: disable-next=no-member
-        return cls_inner.from_dict(json.loads(data))  # type: ignore
-
-    cls.to_json = to_json  # type: ignore[attr-defined]
-    cls.from_json = from_json  # type: ignore[attr-defined]
-    return cls
+        return cls.from_dict(json.loads(data))
 
 
 def encode_hex(value: typing.Optional[bytes]) -> str:

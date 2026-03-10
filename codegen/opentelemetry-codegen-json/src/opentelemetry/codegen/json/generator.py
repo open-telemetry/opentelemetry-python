@@ -454,10 +454,8 @@ class OtlpJsonGenerator:
         codec = self._get_codec_module_path()
         with writer.dataclass(
             msg_desc.name,
-            decorators=(
-                "typing.final",
-                f"{codec}.json_serde",
-            ),
+            bases=(f"{codec}.JsonMessage",),
+            decorators=("typing.final",),
             decorator_name="_dataclass",
         ):
             if msg_desc.field or msg_desc.nested_type or msg_desc.enum_type:

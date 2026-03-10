@@ -76,9 +76,8 @@ class LogRecordFlags(enum.IntEnum):
     LOG_RECORD_FLAGS_TRACE_FLAGS_MASK = 255
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class LogsData:
+class LogsData(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message LogsData
     """
@@ -118,9 +117,8 @@ class LogsData:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class ResourceLogs:
+class ResourceLogs(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ResourceLogs
     """
@@ -171,9 +169,8 @@ class ResourceLogs:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class ScopeLogs:
+class ScopeLogs(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ScopeLogs
     """
@@ -224,9 +221,8 @@ class ScopeLogs:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class LogRecord:
+class LogRecord(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message LogRecord
     """

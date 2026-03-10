@@ -113,6 +113,7 @@ include = [
   "opentelemetry-semantic-conventions",
   "opentelemetry-api",
   "opentelemetry-sdk",
+  "opentelemetry-proto-json",
   "exporter/opentelemetry-exporter-otlp-proto-grpc",
   "codegen/opentelemetry-codegen-json"
 ]

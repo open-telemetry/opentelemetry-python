@@ -33,9 +33,8 @@ import opentelemetry.proto_json.common.v1.common
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class Resource:
+class Resource(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Resource
     """

@@ -32,9 +32,8 @@ import opentelemetry.proto_json._json_codec
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class AnyValue:
+class AnyValue(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message AnyValue
     """
@@ -106,9 +105,8 @@ class AnyValue:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class ArrayValue:
+class ArrayValue(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ArrayValue
     """
@@ -148,9 +146,8 @@ class ArrayValue:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class KeyValueList:
+class KeyValueList(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message KeyValueList
     """
@@ -190,9 +187,8 @@ class KeyValueList:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class KeyValue:
+class KeyValue(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message KeyValue
     """
@@ -238,9 +234,8 @@ class KeyValue:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class InstrumentationScope:
+class InstrumentationScope(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message InstrumentationScope
     """
@@ -298,9 +293,8 @@ class InstrumentationScope:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class EntityRef:
+class EntityRef(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message EntityRef
     """

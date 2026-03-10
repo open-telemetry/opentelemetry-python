@@ -54,9 +54,8 @@ class DataPointFlags(enum.IntEnum):
     DATA_POINT_FLAGS_NO_RECORDED_VALUE_MASK = 1
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class MetricsData:
+class MetricsData(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message MetricsData
     """
@@ -96,9 +95,8 @@ class MetricsData:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class ResourceMetrics:
+class ResourceMetrics(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ResourceMetrics
     """
@@ -149,9 +147,8 @@ class ResourceMetrics:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class ScopeMetrics:
+class ScopeMetrics(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ScopeMetrics
     """
@@ -202,9 +199,8 @@ class ScopeMetrics:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class Metric:
+class Metric(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Metric
     """
@@ -287,9 +283,8 @@ class Metric:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class Gauge:
+class Gauge(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Gauge
     """
@@ -329,9 +324,8 @@ class Gauge:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class Sum:
+class Sum(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Sum
     """
@@ -383,9 +377,8 @@ class Sum:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class Histogram:
+class Histogram(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Histogram
     """
@@ -431,9 +424,8 @@ class Histogram:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class ExponentialHistogram:
+class ExponentialHistogram(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ExponentialHistogram
     """
@@ -479,9 +471,8 @@ class ExponentialHistogram:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class Summary:
+class Summary(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Summary
     """
@@ -521,9 +512,8 @@ class Summary:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class NumberDataPoint:
+class NumberDataPoint(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message NumberDataPoint
     """
@@ -594,9 +584,8 @@ class NumberDataPoint:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class HistogramDataPoint:
+class HistogramDataPoint(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message HistogramDataPoint
     """
@@ -687,17 +676,15 @@ class HistogramDataPoint:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class ExponentialHistogramDataPoint:
+class ExponentialHistogramDataPoint(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ExponentialHistogramDataPoint
     """
 
     @typing.final
-    @opentelemetry.proto_json._json_codec.json_serde
     @_dataclass
-    class Buckets:
+    class Buckets(opentelemetry.proto_json._json_codec.JsonMessage):
         """
         Generated from protobuf message Buckets
         """
@@ -843,17 +830,15 @@ class ExponentialHistogramDataPoint:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class SummaryDataPoint:
+class SummaryDataPoint(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message SummaryDataPoint
     """
 
     @typing.final
-    @opentelemetry.proto_json._json_codec.json_serde
     @_dataclass
-    class ValueAtQuantile:
+    class ValueAtQuantile(opentelemetry.proto_json._json_codec.JsonMessage):
         """
         Generated from protobuf message ValueAtQuantile
         """
@@ -962,9 +947,8 @@ class SummaryDataPoint:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class Exemplar:
+class Exemplar(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Exemplar
     """

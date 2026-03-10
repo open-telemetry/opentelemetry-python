@@ -46,9 +46,8 @@ class SpanFlags(enum.IntEnum):
     SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK = 512
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class TracesData:
+class TracesData(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message TracesData
     """
@@ -88,9 +87,8 @@ class TracesData:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class ResourceSpans:
+class ResourceSpans(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ResourceSpans
     """
@@ -141,9 +139,8 @@ class ResourceSpans:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class ScopeSpans:
+class ScopeSpans(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ScopeSpans
     """
@@ -194,9 +191,8 @@ class ScopeSpans:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class Span:
+class Span(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Span
     """
@@ -215,9 +211,8 @@ class Span:
         SPAN_KIND_CONSUMER = 5
 
     @typing.final
-    @opentelemetry.proto_json._json_codec.json_serde
     @_dataclass
-    class Event:
+    class Event(opentelemetry.proto_json._json_codec.JsonMessage):
         """
         Generated from protobuf message Event
         """
@@ -273,9 +268,8 @@ class Span:
             return cls(**_args)
 
     @typing.final
-    @opentelemetry.proto_json._json_codec.json_serde
     @_dataclass
-    class Link:
+    class Link(opentelemetry.proto_json._json_codec.JsonMessage):
         """
         Generated from protobuf message Link
         """
@@ -458,9 +452,8 @@ class Span:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class Status:
+class Status(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Status
     """

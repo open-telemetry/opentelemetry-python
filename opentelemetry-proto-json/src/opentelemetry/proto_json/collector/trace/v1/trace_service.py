@@ -33,9 +33,8 @@ import opentelemetry.proto_json.trace.v1.trace
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class ExportTraceServiceRequest:
+class ExportTraceServiceRequest(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ExportTraceServiceRequest
     """
@@ -75,9 +74,8 @@ class ExportTraceServiceRequest:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class ExportTraceServiceResponse:
+class ExportTraceServiceResponse(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ExportTraceServiceResponse
     """
@@ -117,9 +115,8 @@ class ExportTraceServiceResponse:
 
 
 @typing.final
-@opentelemetry.proto_json._json_codec.json_serde
 @_dataclass
-class ExportTracePartialSuccess:
+class ExportTracePartialSuccess(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ExportTracePartialSuccess
     """
