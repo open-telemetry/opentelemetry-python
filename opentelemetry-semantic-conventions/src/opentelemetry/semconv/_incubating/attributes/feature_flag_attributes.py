@@ -22,11 +22,16 @@ FEATURE_FLAG_CONTEXT_ID: Final = "feature_flag.context.id"
 The unique identifier for the flag evaluation context. For example, the targeting key.
 """
 
+FEATURE_FLAG_ERROR_MESSAGE: Final = "feature_flag.error.message"
+"""
+A message providing more detail about an error that occurred during feature flag evaluation in human-readable form.
+"""
+
 FEATURE_FLAG_EVALUATION_ERROR_MESSAGE: Final = (
     "feature_flag.evaluation.error.message"
 )
 """
-Deprecated: Replaced by `error.message`.
+Deprecated: Replaced by `feature_flag.error.message`.
 """
 
 FEATURE_FLAG_EVALUATION_REASON: Final = "feature_flag.evaluation.reason"

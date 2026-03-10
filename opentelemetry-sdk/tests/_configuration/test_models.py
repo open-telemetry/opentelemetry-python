@@ -12,4 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = "1.41.0.dev"
+import unittest
+
+
+class TestModelsImport(unittest.TestCase):
+    def test_models_import(self):  # pylint: disable=no-self-use
+        """Verify generated models import successfully across all Python versions"""
+        from opentelemetry.sdk._configuration import (  # pylint: disable=import-outside-toplevel,unused-import
+            models,  # noqa: F401  # type: ignore
+        )
