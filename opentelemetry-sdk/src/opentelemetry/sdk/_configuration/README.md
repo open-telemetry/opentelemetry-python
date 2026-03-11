@@ -1,6 +1,6 @@
 # SDK File Configuration
 
-This package implements [OpenTelemetry file-based configuration](https://opentelemetry.io/docs/specs/otel/configuration/file-configuration/).
+This package implements [OpenTelemetry file-based configuration](https://opentelemetry.io/docs/specs/otel/configuration).
 
 ## Files
 
