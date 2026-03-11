@@ -184,7 +184,8 @@ class Counter(_Synchronous, APICounter):
         context: Context | None = None,
     ):
         if not self._is_enabled():
-            return super().add(amount, attributes=attributes, context=context)
+            super().add(amount, attributes=attributes, context=context)
+            return
 
         if amount < 0:
             _logger.warning(
@@ -216,7 +217,8 @@ class UpDownCounter(_Synchronous, APIUpDownCounter):
         context: Context | None = None,
     ):
         if not self._is_enabled():
-            return super().add(amount, attributes=attributes, context=context)
+            super().add(amount, attributes=attributes, context=context)
+            return
 
         time_unix_nano = time_ns()
         self._measurement_consumer.consume_measurement(
@@ -284,9 +286,8 @@ class Histogram(_Synchronous, APIHistogram):
         context: Context | None = None,
     ):
         if not self._is_enabled():
-            return super().record(
-                amount, attributes=attributes, context=context
-            )
+            super().record(amount, attributes=attributes, context=context)
+            return
 
         if amount < 0:
             _logger.warning(
@@ -319,7 +320,8 @@ class Gauge(_Synchronous, APIGauge):
         context: Context | None = None,
     ):
         if not self._is_enabled():
-            return super().set(amount, attributes=attributes, context=context)
+            super().set(amount, attributes=attributes, context=context)
+            return
 
         time_unix_nano = time_ns()
         self._measurement_consumer.consume_measurement(

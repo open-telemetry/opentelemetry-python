@@ -568,6 +568,7 @@ class MeterProvider(APIMeterProvider):
             for info, meter in self._meters.items():
                 if not isinstance(meter, Meter):
                     continue
+                # pylint: disable-next=protected-access
                 meter._set_meter_config(self._meter_configurator(info))
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:

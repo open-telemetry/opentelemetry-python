@@ -21,10 +21,10 @@ from opentelemetry.sdk.trace import (
     TracerProvider,
     _default_tracer_configurator,
     _RuleBasedTracerConfigurator,
-    _scope_name_matches_glob,
     _TracerConfig,
     sampling,
 )
+from opentelemetry.sdk.util.instrumentation import _scope_name_matches_glob
 
 tracer = TracerProvider(
     sampler=sampling.DEFAULT_ON,
