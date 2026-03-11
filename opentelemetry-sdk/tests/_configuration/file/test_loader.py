@@ -38,7 +38,7 @@ class TestConfigLoader(unittest.TestCase):
         config = load_config_file(str(config_path))
 
         self.assertIsInstance(config, OpenTelemetryConfiguration)
-        self.assertEqual(config.file_format, "1.0-rc.3")
+        self.assertEqual(config.file_format, "1.0")
 
     def test_load_minimal_json(self):
         """Test loading minimal JSON configuration."""
@@ -46,7 +46,7 @@ class TestConfigLoader(unittest.TestCase):
         config = load_config_file(str(config_path))
 
         self.assertIsInstance(config, OpenTelemetryConfiguration)
-        self.assertEqual(config.file_format, "1.0-rc.3")
+        self.assertEqual(config.file_format, "1.0")
 
     def test_load_config_with_env_vars(self):
         """Test loading configuration with environment variable substitution."""
@@ -85,7 +85,7 @@ class TestConfigLoader(unittest.TestCase):
         with tempfile.NamedTemporaryFile(
             suffix=".txt", delete=False
         ) as temp_file:
-            temp_file.write(b"file_format: 1.0-rc.3")
+            temp_file.write(b"file_format: 1.0")
             temp_path = temp_file.name
 
         try:
@@ -146,12 +146,12 @@ class TestConfigLoader(unittest.TestCase):
         with tempfile.NamedTemporaryFile(
             suffix=".yml", delete=False, mode="w"
         ) as temp_file:
-            temp_file.write('file_format: "1.0-rc.3"')
+            temp_file.write('file_format: "1.0"')
             temp_path = temp_file.name
 
         try:
             config = load_config_file(temp_path)
-            self.assertEqual(config.file_format, "1.0-rc.3")
+            self.assertEqual(config.file_format, "1.0")
         finally:
             os.unlink(temp_path)
 
@@ -177,7 +177,7 @@ class TestConfigLoader(unittest.TestCase):
             suffix=".yaml", delete=False, mode="w"
         ) as temp_file:
             # disabled must be a boolean, not a string
-            temp_file.write('file_format: "1.0-rc.3"\ndisabled: "yes"')
+            temp_file.write('file_format: "1.0"\ndisabled: "yes"')
             temp_path = temp_file.name
 
         try:
@@ -210,7 +210,7 @@ class TestConfigLoader(unittest.TestCase):
             suffix=".yaml", delete=False, mode="w"
         ) as temp_file:
             temp_file.write(
-                'file_format: "1.0-rc.3"\n'
+                'file_format: "1.0"\n'
                 "attribute_limits:\n"
                 '  attribute_count_limit: "not-a-number"\n'
             )
@@ -233,7 +233,7 @@ class TestConfigLoader(unittest.TestCase):
             suffix=".yaml", delete=False, mode="w"
         ) as temp_file:
             temp_file.write(
-                'file_format: "1.0-rc.3"\nlog_level: INVALID_LEVEL'
+                'file_format: "1.0"\nlog_level: INVALID_LEVEL'
             )
             temp_path = temp_file.name
 

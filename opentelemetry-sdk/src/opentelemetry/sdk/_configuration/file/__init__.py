@@ -21,7 +21,7 @@ Example:
     >>> from opentelemetry.sdk._configuration.file import load_config_file
     >>> config = load_config_file("otel-config.yaml")
     >>> print(config.file_format)
-    '1.0-rc.3'
+    '1.0'
 """
 
 from opentelemetry.sdk._configuration.file._env_substitution import (
