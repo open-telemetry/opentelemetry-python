@@ -232,9 +232,7 @@ class TestConfigLoader(unittest.TestCase):
         with tempfile.NamedTemporaryFile(
             suffix=".yaml", delete=False, mode="w"
         ) as temp_file:
-            temp_file.write(
-                'file_format: "1.0"\nlog_level: INVALID_LEVEL'
-            )
+            temp_file.write('file_format: "1.0"\nlog_level: INVALID_LEVEL')
             temp_path = temp_file.name
 
         try:
