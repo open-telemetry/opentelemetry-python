@@ -28,7 +28,7 @@ update the ``PROTO_REPO_BRANCH_OR_COMMIT`` variable in
 ``../scripts/proto_codegen_json.sh``. Then run the script and commit the changes
 as well as any fixes needed in the OTLP exporter.
 
-.. _opentelemetry-codegen-json: https://github.com/open-telemetry/codegen/opentelemetry-codegen-json
+.. _opentelemetry-codegen-json: https://github.com/open-telemetry/opentelemetry-python/tree/main/codegen/opentelemetry-codegen-json
 .. _opentelemetry-proto: https://github.com/open-telemetry/opentelemetry-proto
 
 References
