@@ -328,6 +328,8 @@ class BoundedAttributes(MutableMapping):  # type: ignore
         )
         memo[id(self)] = copy_
         with self._lock:
+            # Assign _dict directly to avoid re-cleaning already clean values
+            # and to bypass the immutability guard in __setitem__
             copy_._dict = copy.deepcopy(self._dict, memo)
             copy_.dropped = self.dropped
         return copy_
