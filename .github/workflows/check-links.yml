@@ -23,6 +23,8 @@ jobs:
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Get changed markdown files
         id: changed-files
@@ -37,10 +39,9 @@ jobs:
 
       - name: Run markdown-link-check
         if: steps.changed-files.outputs.any_changed == 'true'
-        env:
-          CHANGED_MARKDOWN_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
         run: |
-          printf '%s\n' "$CHANGED_MARKDOWN_FILES" | tr ' ' '\n' | xargs -r -n 1 -P 4 markdown-link-check \
+          markdown-link-check \
             --verbose \
             --config .github/workflows/check_links_config.json \
+            ${{ steps.changed-files.outputs.all_changed_files }} \
             || { echo "Check that anchor links are lowercase"; exit 1; }
