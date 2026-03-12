@@ -472,10 +472,12 @@ class TestPrometheusMetricReader(TestCase):
                 foo_test_counter_w_prefix_total{a="1",b="true"} 1.0
                 """
             ),
-            prefix="foo"
+            prefix="foo",
         )
         self.verify_text_format(
-            _generate_sum(name="test_counter_w_invalid_chars_prefix", value=1, unit=""),
+            _generate_sum(
+                name="test_counter_w_invalid_chars_prefix", value=1, unit=""
+            ),
             dedent(
                 """\
                 # HELP _foo_test_counter_w_invalid_chars_prefix_total foo
@@ -483,7 +485,7 @@ class TestPrometheusMetricReader(TestCase):
                 _foo_test_counter_w_invalid_chars_prefix_total{a="1",b="true"} 1.0
                 """
             ),
-            prefix="#foo"
+            prefix="#foo",
         )
         self.verify_text_format(
             _generate_sum(name="1leading_digit", value=1, unit=""),
