@@ -163,7 +163,7 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         provider.shutdown()
 
     @mark.skipif(
-        system() != "Linux",
+        system() == "Windows",
         reason=(
             "Tests fail because Windows time_ns resolution is too low so "
             "two different time measurements may end up having the exact same"
@@ -181,6 +181,9 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         )
 
         provider = MeterProvider(metric_readers=[reader])
+        # Disable SDK metrics
+        # pylint: disable=protected-access
+        reader._set_meter_provider(NoOpMeterProvider())
         meter = provider.get_meter("name", "version")
 
         histogram = meter.create_histogram("histogram")
