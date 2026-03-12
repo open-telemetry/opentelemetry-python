@@ -22,20 +22,20 @@ from logging import getLogger
 from os import environ, linesep
 from sys import stdout
 from threading import Event, Lock, RLock, Thread
-from time import monotonic, time_ns
+from time import perf_counter, time_ns
 from typing import IO, Callable, Iterable, Optional
 
 from typing_extensions import final
 
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics._internal
-from opentelemetry.metrics import MeterProvider, NoOpMeterProvider
 from opentelemetry.context import (
     _SUPPRESS_INSTRUMENTATION_KEY,
     attach,
     detach,
     set_value,
 )
+from opentelemetry.metrics import MeterProvider, NoOpMeterProvider
 from opentelemetry.sdk.environment_variables import (
     OTEL_METRIC_EXPORT_INTERVAL,
     OTEL_METRIC_EXPORT_TIMEOUT,
@@ -226,6 +226,8 @@ class MetricReader(ABC):
             type, "opentelemetry.sdk.metrics.view.Aggregation"
         ]
         | None = None,
+        *,
+        otel_component_type: str | None = None,
     ) -> None:
         self._collect: Callable[
             [
@@ -324,6 +326,13 @@ class MetricReader(ABC):
                 else:
                     raise Exception(f"Invalid instrument class found {typ}")
 
+        self._otel_component_type = (
+            otel_component_type or type(self).__qualname__
+        )
+        self._metrics = MetricReaderMetrics(
+            self._otel_component_type, NoOpMeterProvider()
+        )
+
     @final
     def collect(self, timeout_millis: float = 10_000) -> None:
         """Collects the metrics from the internal SDK state and
@@ -343,7 +352,11 @@ class MetricReader(ABC):
             )
             return
 
-        metrics = self._collect(self, timeout_millis=timeout_millis)
+        start_time = perf_counter()
+        try:
+            metrics = self._collect(self, timeout_millis=timeout_millis)
+        finally:
+            self._metrics.record_collection(perf_counter() - start_time)
 
         if metrics is not None:
             self._receive_metrics(
@@ -373,6 +386,11 @@ class MetricReader(ABC):
         **kwargs,
     ) -> None:
         """Called by `MetricReader.collect` when it receives a batch of metrics"""
+
+    def _set_meter_provider(self, meter_provider: MeterProvider) -> None:
+        self._metrics = MetricReaderMetrics(
+            self._otel_component_type, meter_provider
+        )
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
         self.collect(timeout_millis=timeout_millis)
@@ -457,6 +475,7 @@ class PeriodicExportingMetricReader(MetricReader):
         super().__init__(
             preferred_temporality=exporter._preferred_temporality,
             preferred_aggregation=exporter._preferred_aggregation,
+            otel_component_type=OtelComponentTypeValues.PERIODIC_METRIC_READER.value,
         )
 
         # This lock is held whenever calling self._exporter.export() to prevent concurrent
@@ -512,9 +531,6 @@ class PeriodicExportingMetricReader(MetricReader):
                 f"interval value {self._export_interval_millis} is invalid \
                 and needs to be larger than zero."
             )
-        self._metrics = MetricReaderMetrics(
-            OtelComponentTypeValues.PERIODIC_METRIC_READER, NoOpMeterProvider()
-        )
 
     def _at_fork_reinit(self):
         self._daemon_thread = Thread(
@@ -527,7 +543,6 @@ class PeriodicExportingMetricReader(MetricReader):
     def _ticker(self) -> None:
         interval_secs = self._export_interval_millis / 1e3
         while not self._shutdown_event.wait(interval_secs):
-            start_time = monotonic()
             try:
                 self.collect(timeout_millis=self._export_timeout_millis)
             except MetricsTimeoutError:
@@ -536,10 +551,6 @@ class PeriodicExportingMetricReader(MetricReader):
                     interval_secs,
                     exc_info=True,
                 )
-            finally:
-                duration = monotonic() - start_time
-                self._metrics.record_collection(duration)
-
         # one last collection below before shutting down completely
         try:
             self.collect(timeout_millis=self._export_interval_millis)
@@ -565,11 +576,6 @@ class PeriodicExportingMetricReader(MetricReader):
         except Exception:
             _logger.exception("Exception while exporting metrics")
         detach(token)
-
-    def _set_meter_provider(self, meter_provider: MeterProvider) -> None:
-        self._metrics = MetricReaderMetrics(
-            OtelComponentTypeValues.PERIODIC_METRIC_READER, meter_provider
-        )
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         deadline_ns = time_ns() + timeout_millis * 10**6
