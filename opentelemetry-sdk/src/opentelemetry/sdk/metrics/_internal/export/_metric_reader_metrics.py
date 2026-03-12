@@ -1,6 +1,5 @@
 from collections import Counter
 
-
 from opentelemetry.metrics import MeterProvider
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
     OTEL_COMPONENT_NAME,
@@ -9,7 +8,6 @@ from opentelemetry.semconv._incubating.attributes.otel_attributes import (
 from opentelemetry.semconv._incubating.metrics.otel_metrics import (
     create_otel_sdk_metric_reader_collection_duration,
 )
-
 
 _component_counter = Counter()
 

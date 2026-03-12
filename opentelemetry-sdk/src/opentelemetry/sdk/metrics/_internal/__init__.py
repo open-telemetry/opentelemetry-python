@@ -38,7 +38,6 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_METRICS_EXEMPLAR_FILTER,
     OTEL_SDK_DISABLED,
 )
-from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.metrics._internal.exceptions import MetricsTimeoutError
 from opentelemetry.sdk.metrics._internal.exemplar import (
     AlwaysOffExemplarFilter,
@@ -62,6 +61,7 @@ from opentelemetry.sdk.metrics._internal.measurement_consumer import (
 from opentelemetry.sdk.metrics._internal.sdk_configuration import (
     SdkConfiguration,
 )
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.util._once import Once
