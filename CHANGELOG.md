@@ -22,6 +22,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4935](https://github.com/open-telemetry/opentelemetry-python/pull/4935))
 - `opentelemetry-sdk`: upgrade vendored OTel configuration schema from v1.0.0-rc.3 to v1.0.0
   ([#4965](https://github.com/open-telemetry/opentelemetry-python/pull/4965))
+- Further improve compatibility with other logging libraries that override
+  `LogRecord.getMessage()` in order to customize message formatting
+  ([#4327](https://github.com/open-telemetry/opentelemetry-python/pull/4327))
 
 ## Version 1.40.0/0.61b0 (2026-03-04)
 
