@@ -142,7 +142,7 @@ class SpanProcessor:
     def shutdown(self) -> None:
         """Called when a :class:`opentelemetry.sdk.trace.TracerProvider` is shutdown."""
 
-    def force_flush(self, timeout_millis: int = 30000) -> bool:
+    def force_flush(self, timeout_millis: int = 30000) -> bool:  # type: ignore[reportReturnType]
         """Export all ended spans to the configured Exporter that have not yet
         been exported.
 
@@ -153,7 +153,6 @@ class SpanProcessor:
         Returns:
             False if the timeout is exceeded, True otherwise.
         """
-        return True
 
 
 # Temporary fix until https://github.com/PyCQA/pylint/issues/4098 is resolved
