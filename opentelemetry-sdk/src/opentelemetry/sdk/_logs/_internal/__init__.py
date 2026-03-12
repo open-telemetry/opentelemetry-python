@@ -42,6 +42,8 @@ from opentelemetry._logs import (
 from opentelemetry.attributes import _VALID_ANY_VALUE_TYPES, BoundedAttributes
 from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
+from opentelemetry.metrics import MeterProvider, get_meter_provider
+from opentelemetry.sdk._logs._internal._logger_metrics import LoggerMetrics
 from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_COUNT_LIMIT,
     OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
@@ -704,6 +706,8 @@ class Logger(APILogger):
             ConcurrentMultiLogRecordProcessor,
         ],
         instrumentation_scope: InstrumentationScope,
+        *,
+        logger_metrics: LoggerMetrics,
     ):
         super().__init__(
             instrumentation_scope.name,
@@ -714,6 +718,7 @@ class Logger(APILogger):
         self._resource = resource
         self._multi_log_record_processor = multi_log_record_processor
         self._instrumentation_scope = instrumentation_scope
+        self._logger_metrics = logger_metrics
 
     @property
     def resource(self):
@@ -788,6 +793,7 @@ class Logger(APILogger):
                 instrumentation_scope=self._instrumentation_scope,
             )
 
+        self._logger_metrics.emit_log()
         self._multi_log_record_processor.on_emit(writable_record)
 
 
@@ -799,6 +805,8 @@ class LoggerProvider(APILoggerProvider):
         multi_log_record_processor: SynchronousMultiLogRecordProcessor
         | ConcurrentMultiLogRecordProcessor
         | None = None,
+        *,
+        meter_provider: MeterProvider | None = None,
     ):
         if resource is None:
             self._resource = Resource.create({})
@@ -806,6 +814,9 @@ class LoggerProvider(APILoggerProvider):
             self._resource = resource
         self._multi_log_record_processor = (
             multi_log_record_processor or SynchronousMultiLogRecordProcessor()
+        )
+        self._logger_metrics = LoggerMetrics(
+            meter_provider or get_meter_provider()
         )
         disabled = environ.get(OTEL_SDK_DISABLED, "")
         self._disabled = disabled.lower().strip() == "true"
@@ -835,6 +846,7 @@ class LoggerProvider(APILoggerProvider):
                 schema_url,
                 attributes,
             ),
+            logger_metrics=self._logger_metrics,
         )
 
     def _get_logger_cached(

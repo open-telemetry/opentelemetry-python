@@ -83,6 +83,7 @@ class TestProxy(LoggingGlobalsTest, unittest.TestCase):
         record = _logs.LogRecord()
         exception = ValueError("boom")
 
+        self.assertIsNotNone(logger._real_logger)
         logger.emit(record, exception=exception)
 
         logger._real_logger.emit.assert_called_once_with(

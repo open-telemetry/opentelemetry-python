@@ -127,7 +127,7 @@ strict = [
 ]
 
 [tool.datamodel-codegen]
-url = "https://raw.githubusercontent.com/open-telemetry/opentelemetry-configuration/refs/tags/v1.0.0-rc.3/opentelemetry_configuration.json"
+input = "opentelemetry-sdk/src/opentelemetry/sdk/_configuration/schema.json"
 input-file-type = "jsonschema"
 output = "opentelemetry-sdk/src/opentelemetry/sdk/_configuration/models.py"
 output-model-type = "dataclasses.dataclass"
