@@ -61,7 +61,6 @@ from opentelemetry.sdk.metrics._internal.measurement_consumer import (
 from opentelemetry.sdk.metrics._internal.sdk_configuration import (
     SdkConfiguration,
 )
-from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.util._once import Once
