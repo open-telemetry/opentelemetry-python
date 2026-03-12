@@ -15,6 +15,7 @@
 # pylint: disable=W0212,W0222,W0221
 import typing
 import unittest
+from unittest.mock import Mock
 
 import opentelemetry._logs._internal as _logs_internal
 from opentelemetry import _logs
@@ -75,3 +76,15 @@ class TestProxy(LoggingGlobalsTest, unittest.TestCase):
         # references to the old provider still work but return real logger now
         real_logger = provider.get_logger("proxy-test")
         self.assertIsInstance(real_logger, LoggerTest)
+
+    def test_proxy_logger_forwards_exception_with_record(self):
+        logger = _logs_internal.ProxyLogger("proxy-test")
+        logger._real_logger = Mock(spec=LoggerTest("proxy-test"))
+        record = _logs.LogRecord()
+        exception = ValueError("boom")
+
+        logger.emit(record, exception=exception)
+
+        logger._real_logger.emit.assert_called_once_with(
+            record, exception=exception
+        )

@@ -18,6 +18,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 from opentelemetry._logs import LogRecord, SeverityNumber
+from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.context import get_current
 from opentelemetry.sdk._logs import (
     Logger,
@@ -236,6 +237,22 @@ class TestLogger(unittest.TestCase):
             attributes[exception_attributes.EXCEPTION_STACKTRACE],
         )
 
+    def test_emit_with_raised_exception_has_stacktrace(self):
+        logger, log_record_processor_mock = self._get_logger()
+
+        try:
+            raise ValueError("boom")
+        except ValueError as exc:
+            logger.emit(body="error", exception=exc)
+
+        log_record_processor_mock.on_emit.assert_called_once()
+        log_data = log_record_processor_mock.on_emit.call_args.args[0]
+        stacktrace = dict(log_data.log_record.attributes)[
+            exception_attributes.EXCEPTION_STACKTRACE
+        ]
+        self.assertIn("Traceback (most recent call last)", stacktrace)
+        self.assertIn("raise ValueError", stacktrace)
+
     def test_emit_logrecord_exception_preserves_user_attributes(self):
         logger, log_record_processor_mock = self._get_logger()
         exc = ValueError("boom")
@@ -255,6 +272,34 @@ class TestLogger(unittest.TestCase):
         )
         self.assertEqual(
             attributes[exception_attributes.EXCEPTION_MESSAGE], "boom"
+        )
+
+    def test_emit_logrecord_exception_with_immutable_attributes(self):
+        logger, log_record_processor_mock = self._get_logger()
+        exc = ValueError("boom")
+        original_attributes = BoundedAttributes(
+            attributes={"custom": "value"},
+            immutable=True,
+            extended_attributes=True,
+        )
+        log_record = LogRecord(
+            observed_timestamp=0,
+            body="a log line",
+            attributes=original_attributes,
+            exception=exc,
+        )
+
+        logger.emit(log_record)
+
+        self.assertNotIn(
+            exception_attributes.EXCEPTION_TYPE, log_record.attributes
+        )
+        log_record_processor_mock.on_emit.assert_called_once()
+        log_data = log_record_processor_mock.on_emit.call_args.args[0]
+        attributes = dict(log_data.log_record.attributes)
+        self.assertEqual(attributes["custom"], "value")
+        self.assertEqual(
+            attributes[exception_attributes.EXCEPTION_TYPE], "ValueError"
         )
 
     def test_emit_readwrite_logrecord_uses_exception(self):

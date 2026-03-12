@@ -95,7 +95,6 @@ class LogRecord(ABC):
         severity_number: Optional[SeverityNumber] = None,
         body: AnyValue = None,
         attributes: Optional[_ExtendedAttributes] = None,
-        exception: Optional[BaseException] = None,
     ) -> None: ...
 
     def __init__(
@@ -298,7 +297,7 @@ class ProxyLogger(Logger):
         exception: BaseException | None = None,
     ) -> None:
         if record:
-            self._logger.emit(record)
+            self._logger.emit(record, exception=exception)
         else:
             self._logger.emit(
                 timestamp=timestamp,
