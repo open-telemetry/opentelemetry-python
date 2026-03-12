@@ -64,6 +64,7 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import sampling
+from opentelemetry.sdk.trace._tracer_metrics import TracerMetrics
 from opentelemetry.sdk.trace.id_generator import IdGenerator, RandomIdGenerator
 from opentelemetry.sdk.util import BoundedList
 from opentelemetry.sdk.util.instrumentation import (
@@ -80,8 +81,6 @@ from opentelemetry.trace import NoOpTracer, SpanContext
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
 from opentelemetry.util._decorator import _agnosticcontextmanager
-
-from ._tracer_metrics import TracerMetrics
 
 logger = logging.getLogger(__name__)
 
@@ -817,6 +816,7 @@ class Span(trace_api.Span, ReadableSpan):
         set_status_on_exception: bool = True,
         limits=_UnsetLimits,
         instrumentation_scope: Optional[InstrumentationScope] = None,
+        *,
         record_end_metrics: Optional[Callable[[], None]] = None,
     ) -> None:
         if resource is None:
@@ -1114,8 +1114,8 @@ class Tracer(trace_api.Tracer):
         instrumentation_info: InstrumentationInfo,
         span_limits: SpanLimits,
         instrumentation_scope: InstrumentationScope,
-        meter_provider: Optional[metrics_api.MeterProvider] = None,
         *,
+        meter_provider: Optional[metrics_api.MeterProvider] = None,
         _tracer_provider: Optional["TracerProvider"] = None,
     ) -> None:
         self.sampler = sampler
@@ -1330,8 +1330,8 @@ class TracerProvider(trace_api.TracerProvider):
         ] = None,
         id_generator: Optional[IdGenerator] = None,
         span_limits: Optional[SpanLimits] = None,
-        meter_provider: Optional[metrics_api.MeterProvider] = None,
         *,
+        meter_provider: Optional[metrics_api.MeterProvider] = None,
         _tracer_configurator: Optional[_TracerConfiguratorT] = None,
     ) -> None:
         self._active_span_processor = (
@@ -1425,7 +1425,7 @@ class TracerProvider(trace_api.TracerProvider):
                 schema_url,
                 attributes,
             ),
-            self._meter_provider,
+            meter_provider=self._meter_provider,
             _tracer_provider=self,
         )
 

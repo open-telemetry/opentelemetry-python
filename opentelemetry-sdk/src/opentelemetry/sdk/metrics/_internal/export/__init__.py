@@ -359,7 +359,7 @@ class MetricReader(ABC):
                 "opentelemetry.sdk.metrics.export.MetricReader",
                 AggregationTemporality,
             ],
-            Iterable["opentelemetry.sdk.metrics.export.Metric"],
+            MetricsData,
         ],
     ) -> None:
         """This function is internal to the SDK. It should not be called or overridden by users"""

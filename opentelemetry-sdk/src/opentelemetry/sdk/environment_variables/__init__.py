@@ -714,6 +714,10 @@ enable/disable the auto instrumentation for the python logging module.
 Default: False
 
 Note: Logs SDK and its related settings are experimental.
+
+.. warning::
+
+    This option is deprecated, instead you should install `opentelemetry-instrumentation-logging`.
 """
 
 

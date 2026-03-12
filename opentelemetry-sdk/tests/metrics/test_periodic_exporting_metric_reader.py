@@ -19,7 +19,7 @@ import math
 import weakref
 from logging import WARNING
 from time import sleep, time_ns
-from typing import Optional, Sequence
+from typing import Optional
 from unittest.mock import Mock
 
 import pytest
@@ -27,6 +27,11 @@ import pytest
 from opentelemetry.sdk.metrics import Counter, MetricsTimeoutError, MeterProvider
 from opentelemetry.sdk.metrics._internal import _Counter
 from opentelemetry.sdk.metrics._internal.point import MetricsData
+from opentelemetry.sdk.metrics._internal.point import (
+    MetricsData,
+    ResourceMetrics,
+    ScopeMetrics,
+)
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     Gauge,
@@ -41,6 +46,8 @@ from opentelemetry.sdk.metrics.view import (
     DefaultAggregation,
     LastValueAggregation,
 )
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase
 
 
@@ -127,6 +134,21 @@ metrics_list = [
         ),
     ),
 ]
+metrics = MetricsData(
+    resource_metrics=[
+        ResourceMetrics(
+            scope_metrics=[
+                ScopeMetrics(
+                    metrics=metrics_list,
+                    scope=InstrumentationScope(name="test"),
+                    schema_url="",
+                )
+            ],
+            resource=Resource.create(),
+            schema_url="",
+        )
+    ]
+)
 
 
 class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
@@ -138,7 +160,12 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
             pmr.shutdown()
 
     def _create_periodic_reader(
-        self, metrics: list[Metric], exporter, collect_wait=0, interval=60000, timeout=30000
+        self,
+        metrics_data: MetricsData,
+        exporter,
+        collect_wait=0,
+        interval=60000,
+        timeout=30000,
     ):
         pmr = PeriodicExportingMetricReader(
             exporter,
@@ -147,7 +174,8 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         )
 
         def _collect(reader, timeout_millis):
-            return metrics
+            sleep(collect_wait)
+            return metrics_data
 
         pmr._set_collect_callback(_collect)
         return pmr
@@ -198,24 +226,26 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
     def test_ticker_collects_metrics(self):
         exporter = FakeMetricsExporter()
 
-        pmr = self._create_periodic_reader(
-            metrics_list, exporter, interval=100
-        )
+        pmr = self._create_periodic_reader(metrics, exporter, interval=100)
         sleep(0.15)
-        self.assertEqual(exporter.metrics, metrics_list)
+        self.assertEqual(exporter.metrics[0], metrics)
         pmr.shutdown()
 
     def test_shutdown(self):
         exporter = FakeMetricsExporter()
 
-        pmr = self._create_periodic_reader([], exporter)
+        pmr = self._create_periodic_reader(
+            MetricsData(resource_metrics=[]), exporter
+        )
         pmr.shutdown()
-        self.assertEqual(exporter.metrics, [])
+        self.assertEqual(exporter.metrics[0], MetricsData(resource_metrics=[]))
         self.assertTrue(pmr._shutdown)
         self.assertTrue(exporter._shutdown)
 
     def test_shutdown_multiple_times(self):
-        pmr = self._create_periodic_reader([], FakeMetricsExporter())
+        pmr = self._create_periodic_reader(
+            MetricsData(resource_metrics=[]), FakeMetricsExporter()
+        )
         with self.assertLogs(level="WARNING") as w:
             self.run_with_many_threads(pmr.shutdown)
         self.assertTrue("Can't shutdown multiple times" in w.output[0])

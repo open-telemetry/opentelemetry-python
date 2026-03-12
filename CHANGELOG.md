@@ -12,6 +12,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `opentelemetry-sdk`: Add file configuration support with YAML/JSON loading, environment variable substitution, and schema validation against the vendored OTel config JSON schema
+  ([#4898](https://github.com/open-telemetry/opentelemetry-python/pull/4898))
+- Fix intermittent CI failures in `getting-started` and `tracecontext` jobs caused by GitHub git CDN SHA propagation lag by installing contrib packages from the already-checked-out local copy instead of a second git clone
+  ([#4958](https://github.com/open-telemetry/opentelemetry-python/pull/4958))
+- `opentelemetry-sdk`: fix type annotations on `MetricReader` and related types
+  ([#4938](https://github.com/open-telemetry/opentelemetry-python/pull/4938/))
+- Implement log creation metric
+  ([#4935](https://github.com/open-telemetry/opentelemetry-python/pull/4935))
+- `opentelemetry-sdk`: upgrade vendored OTel configuration schema from v1.0.0-rc.3 to v1.0.0
+  ([#4965](https://github.com/open-telemetry/opentelemetry-python/pull/4965))
+
+## Version 1.40.0/0.61b0 (2026-03-04)
+
+- `opentelemetry-sdk`: deprecate `LoggingHandler` in favor of `opentelemetry-instrumentation-logging`, see `opentelemetry-instrumentation-logging` documentation
+  ([#4919](https://github.com/open-telemetry/opentelemetry-python/pull/4919))
+- `opentelemetry-sdk`: Clarify log processor error handling expectations in documentation
+  ([#4915](https://github.com/open-telemetry/opentelemetry-python/pull/4915))
+- bump semantic-conventions to v1.40.0
+  ([#4941](https://github.com/open-telemetry/opentelemetry-python/pull/4941))
+- Add stale PR GitHub Action
+  ([#4926](https://github.com/open-telemetry/opentelemetry-python/pull/4926))
 - `opentelemetry-sdk`: Drop unused Jaeger exporter environment variables (exporter removed in 1.22.0)
   ([#4918](https://github.com/open-telemetry/opentelemetry-python/issues/4918))
 - `opentelemetry-sdk`: Clarify timeout units in environment variable documentation
@@ -52,6 +73,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4913](https://github.com/open-telemetry/opentelemetry-python/pull/4913))
 - bump semantic-conventions to v1.39.0
   ([#4914](https://github.com/open-telemetry/opentelemetry-python/pull/4914))
+- `opentelemetry-sdk`: automatically generate configuration models using OTel config JSON schema
+  ([#4879](https://github.com/open-telemetry/opentelemetry-python/pull/4879))
 
 ## Version 1.39.0/0.60b0 (2025-12-03)
 

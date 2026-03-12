@@ -59,3 +59,15 @@ PPROF_PROFILE_KEEP_FRAMES: Final = "pprof.profile.keep_frames"
 """
 Frames with Function.function_name fully matching the regexp will be kept, even if it matches drop_frames.
 """
+
+PPROF_SCOPE_DEFAULT_SAMPLE_TYPE: Final = "pprof.scope.default_sample_type"
+"""
+Records the pprof's default_sample_type in the original profile. Not set if the default sample type was missing.
+Note: This attribute, if present, MUST be set at the scope level (resource_profiles[].scope_profiles[].scope.attributes[]).
+"""
+
+PPROF_SCOPE_SAMPLE_TYPE_ORDER: Final = "pprof.scope.sample_type_order"
+"""
+Records the indexes of the sample types in the original profile.
+Note: This attribute, if present, MUST be set at the scope level (resource_profiles[].scope_profiles[].scope.attributes[]).
+"""

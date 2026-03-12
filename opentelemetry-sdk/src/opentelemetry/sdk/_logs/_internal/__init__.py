@@ -42,6 +42,8 @@ from opentelemetry._logs import (
 from opentelemetry.attributes import _VALID_ANY_VALUE_TYPES, BoundedAttributes
 from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
+from opentelemetry.metrics import MeterProvider, get_meter_provider
+from opentelemetry.sdk._logs._internal._logger_metrics import LoggerMetrics
 from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_COUNT_LIMIT,
     OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
@@ -293,11 +295,43 @@ class LogRecordProcessor(abc.ABC):
     Log processors can be registered directly using
     :func:`LoggerProvider.add_log_record_processor` and they are invoked
     in the same order as they were registered.
+
+    Implementers of custom log processors should be aware of the following:
+
+    Error Handling
+    --------------
+    According to the OpenTelemetry error handling principles, the SDK should
+    not throw unhandled exceptions at runtime. When implementing a custom
+    ``LogRecordProcessor``, it is the **processor's responsibility** to handle
+    any exceptions that may be raised by the exporter's ``export()`` method.
+
+    The ``LogRecordExporter.export()`` method may raise exceptions (e.g.,
+    network errors, timeouts). If these exceptions are not caught, they will
+    propagate up and potentially crash the application.
+
+    Custom processor implementations should wrap exporter calls in a
+    try/except block. See ``SimpleLogRecordProcessor`` for a reference
+    implementation::
+
+        def on_emit(self, log_record: ReadWriteLogRecord):
+            try:
+                self._exporter.export((log_record,))
+            except Exception:  # pylint: disable=broad-exception-caught
+                logger.exception("Exception while exporting logs.")
+
+    The ``BatchLogRecordProcessor`` handles this implicitly since export
+    operations occur in a background thread where exceptions cannot bubble
+    up to the caller.
     """
 
     @abc.abstractmethod
     def on_emit(self, log_record: ReadWriteLogRecord):
-        """Emits the `ReadWriteLogRecord`"""
+        """Emits the ``ReadWriteLogRecord``.
+
+        Implementers should handle any exceptions raised during log processing
+        to prevent application crashes. See the class docstring for details
+        on error handling expectations.
+        """
 
     @abc.abstractmethod
     def shutdown(self):
@@ -496,6 +530,12 @@ class LoggingHandler(logging.Handler):
         super().__init__(level=level)
         self._logger_provider = logger_provider or get_logger_provider()
 
+        warnings.warn(
+            "`LoggingHandler` in `opentelemetry-sdk` is deprecated. Use the "
+            "handler from `opentelemetry-instrumentation-logging` instead.",
+            DeprecationWarning,
+        )
+
     @staticmethod
     def _get_attributes(record: logging.LogRecord) -> _ExtendedAttributes:
         attributes = {
@@ -600,6 +640,8 @@ class Logger(APILogger):
             ConcurrentMultiLogRecordProcessor,
         ],
         instrumentation_scope: InstrumentationScope,
+        *,
+        logger_metrics: LoggerMetrics,
     ):
         super().__init__(
             instrumentation_scope.name,
@@ -610,6 +652,7 @@ class Logger(APILogger):
         self._resource = resource
         self._multi_log_record_processor = multi_log_record_processor
         self._instrumentation_scope = instrumentation_scope
+        self._logger_metrics = logger_metrics
 
     @property
     def resource(self):
@@ -662,6 +705,7 @@ class Logger(APILogger):
                 instrumentation_scope=self._instrumentation_scope,
             )
 
+        self._logger_metrics.emit_log()
         self._multi_log_record_processor.on_emit(writable_record)
 
 
@@ -673,6 +717,8 @@ class LoggerProvider(APILoggerProvider):
         multi_log_record_processor: SynchronousMultiLogRecordProcessor
         | ConcurrentMultiLogRecordProcessor
         | None = None,
+        *,
+        meter_provider: MeterProvider | None = None,
     ):
         if resource is None:
             self._resource = Resource.create({})
@@ -680,6 +726,9 @@ class LoggerProvider(APILoggerProvider):
             self._resource = resource
         self._multi_log_record_processor = (
             multi_log_record_processor or SynchronousMultiLogRecordProcessor()
+        )
+        self._logger_metrics = LoggerMetrics(
+            meter_provider or get_meter_provider()
         )
         disabled = environ.get(OTEL_SDK_DISABLED, "")
         self._disabled = disabled.lower().strip() == "true"
@@ -709,6 +758,7 @@ class LoggerProvider(APILoggerProvider):
                 schema_url,
                 attributes,
             ),
+            logger_metrics=self._logger_metrics,
         )
 
     def _get_logger_cached(
