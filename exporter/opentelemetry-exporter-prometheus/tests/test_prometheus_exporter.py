@@ -27,6 +27,7 @@ from opentelemetry.exporter.prometheus import (
     PrometheusMetricReader,
     _CustomCollector,
 )
+from opentelemetry.metrics import NoOpMeterProvider
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
@@ -332,6 +333,8 @@ class TestPrometheusMetricReader(TestCase):
     def test_multiple_collection_calls(self):
         metric_reader = PrometheusMetricReader()
         provider = MeterProvider(metric_readers=[metric_reader])
+        # Disable SDK metrics since they are not constant across collections
+        metric_reader._set_meter_provider(NoOpMeterProvider())
         meter = provider.get_meter("getting-started", "0.1.2")
         counter = meter.create_counter("counter")
         counter.add(1)
