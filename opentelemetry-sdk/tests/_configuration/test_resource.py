@@ -12,14 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import unittest
+from unittest.mock import patch
 
 from opentelemetry.sdk._configuration._resource import create_resource
 from opentelemetry.sdk._configuration.models import (
     AttributeNameValue,
     AttributeType,
-    Resource as ResourceConfig,
 )
+from opentelemetry.sdk._configuration.models import Resource as ResourceConfig
 from opentelemetry.sdk.resources import (
     SERVICE_NAME,
     TELEMETRY_SDK_LANGUAGE,
@@ -29,7 +31,7 @@ from opentelemetry.sdk.resources import (
 )
 
 
-class TestCreateResource(unittest.TestCase):
+class TestCreateResourceDefaults(unittest.TestCase):
     def test_none_config_returns_sdk_defaults(self):
         resource = create_resource(None)
         self.assertIsInstance(resource, Resource)
@@ -38,17 +40,15 @@ class TestCreateResource(unittest.TestCase):
             resource.attributes[TELEMETRY_SDK_NAME], "opentelemetry"
         )
         self.assertIn(TELEMETRY_SDK_VERSION, resource.attributes)
-        self.assertEqual(
-            resource.attributes[SERVICE_NAME], "unknown_service"
-        )
+        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service")
 
     def test_none_config_does_not_read_env_vars(self):
-        import os
-        from unittest.mock import patch
-
         with patch.dict(
             os.environ,
-            {"OTEL_RESOURCE_ATTRIBUTES": "foo=bar", "OTEL_SERVICE_NAME": "my-service"},
+            {
+                "OTEL_RESOURCE_ATTRIBUTES": "foo=bar",
+                "OTEL_SERVICE_NAME": "my-service",
+            },
         ):
             resource = create_resource(None)
         self.assertNotIn("foo", resource.attributes)
@@ -59,6 +59,49 @@ class TestCreateResource(unittest.TestCase):
         self.assertEqual(resource.attributes[TELEMETRY_SDK_LANGUAGE], "python")
         self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service")
 
+    def test_service_name_default_added_when_missing(self):
+        config = ResourceConfig(
+            attributes=[AttributeNameValue(name="env", value="staging")]
+        )
+        resource = create_resource(config)
+        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service")
+
+    def test_service_name_not_overridden_when_set(self):
+        config = ResourceConfig(
+            attributes=[
+                AttributeNameValue(name="service.name", value="my-app")
+            ]
+        )
+        resource = create_resource(config)
+        self.assertEqual(resource.attributes[SERVICE_NAME], "my-app")
+
+    def test_env_vars_not_read(self):
+        """OTEL_RESOURCE_ATTRIBUTES must not affect declarative config resource."""
+        with patch.dict(
+            os.environ,
+            {"OTEL_RESOURCE_ATTRIBUTES": "injected=true"},
+        ):
+            config = ResourceConfig(
+                attributes=[AttributeNameValue(name="k", value="v")]
+            )
+            resource = create_resource(config)
+        self.assertNotIn("injected", resource.attributes)
+
+    def test_schema_url(self):
+        config = ResourceConfig(
+            schema_url="https://opentelemetry.io/schemas/1.24.0"
+        )
+        resource = create_resource(config)
+        self.assertEqual(
+            resource.schema_url, "https://opentelemetry.io/schemas/1.24.0"
+        )
+
+    def test_schema_url_none(self):
+        resource = create_resource(ResourceConfig())
+        self.assertEqual(resource.schema_url, "")
+
+
+class TestCreateResourceAttributes(unittest.TestCase):
     def test_attributes_plain(self):
         config = ResourceConfig(
             attributes=[
@@ -87,9 +130,7 @@ class TestCreateResource(unittest.TestCase):
     def test_attribute_type_int(self):
         config = ResourceConfig(
             attributes=[
-                AttributeNameValue(
-                    name="k", value=3.0, type=AttributeType.int
-                )
+                AttributeNameValue(name="k", value=3.0, type=AttributeType.int)
             ]
         )
         resource = create_resource(config)
@@ -182,19 +223,8 @@ class TestCreateResource(unittest.TestCase):
         resource = create_resource(config)
         self.assertEqual(list(resource.attributes["k"]), [True, False])  # type: ignore[arg-type]
 
-    def test_schema_url(self):
-        config = ResourceConfig(
-            schema_url="https://opentelemetry.io/schemas/1.24.0"
-        )
-        resource = create_resource(config)
-        self.assertEqual(
-            resource.schema_url, "https://opentelemetry.io/schemas/1.24.0"
-        )
 
-    def test_schema_url_none(self):
-        resource = create_resource(ResourceConfig())
-        self.assertEqual(resource.schema_url, "")
-
+class TestCreateResourceAttributesList(unittest.TestCase):
     def test_attributes_list_parsed(self):
         config = ResourceConfig(
             attributes_list="service.name=my-svc,region=us-east-1"
@@ -238,7 +268,9 @@ class TestCreateResource(unittest.TestCase):
             attributes_list="service.namespace=my%20namespace,region=us-east-1"
         )
         resource = create_resource(config)
-        self.assertEqual(resource.attributes["service.namespace"], "my namespace")
+        self.assertEqual(
+            resource.attributes["service.namespace"], "my namespace"
+        )
 
     def test_attributes_list_invalid_pair_skipped(self):
         with self.assertLogs(
@@ -249,34 +281,3 @@ class TestCreateResource(unittest.TestCase):
         self.assertEqual(resource.attributes["foo"], "bar")
         self.assertNotIn("no-equals", resource.attributes)
         self.assertTrue(any("no-equals" in msg for msg in cm.output))
-
-    def test_service_name_default_added_when_missing(self):
-        config = ResourceConfig(
-            attributes=[AttributeNameValue(name="env", value="staging")]
-        )
-        resource = create_resource(config)
-        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service")
-
-    def test_service_name_not_overridden_when_set(self):
-        config = ResourceConfig(
-            attributes=[
-                AttributeNameValue(name="service.name", value="my-app")
-            ]
-        )
-        resource = create_resource(config)
-        self.assertEqual(resource.attributes[SERVICE_NAME], "my-app")
-
-    def test_env_vars_not_read(self):
-        """OTEL_RESOURCE_ATTRIBUTES must not affect declarative config resource."""
-        import os
-        from unittest.mock import patch
-
-        with patch.dict(
-            os.environ,
-            {"OTEL_RESOURCE_ATTRIBUTES": "injected=true"},
-        ):
-            config = ResourceConfig(
-                attributes=[AttributeNameValue(name="k", value="v")]
-            )
-            resource = create_resource(config)
-        self.assertNotIn("injected", resource.attributes)

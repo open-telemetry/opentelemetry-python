@@ -21,18 +21,39 @@ from urllib import parse
 from opentelemetry.sdk._configuration.models import (
     AttributeNameValue,
     AttributeType,
-    Resource as ResourceConfig,
 )
+from opentelemetry.sdk._configuration.models import Resource as ResourceConfig
 from opentelemetry.sdk.resources import (
+    _OPENTELEMETRY_SDK_VERSION,
     SERVICE_NAME,
     TELEMETRY_SDK_LANGUAGE,
     TELEMETRY_SDK_NAME,
     TELEMETRY_SDK_VERSION,
     Resource,
-    _OPENTELEMETRY_SDK_VERSION,
 )
 
 _logger = logging.getLogger(__name__)
+
+# Dispatch table for scalar type coercions
+_SCALAR_COERCIONS = {
+    AttributeType.string: str,
+    AttributeType.int: int,
+    AttributeType.double: float,
+}
+
+# Dispatch table for array type coercions
+_ARRAY_COERCIONS = {
+    AttributeType.string_array: str,
+    AttributeType.bool_array: bool,
+    AttributeType.int_array: int,
+    AttributeType.double_array: float,
+}
+
+
+def _coerce_bool(value: object) -> bool:
+    if isinstance(value, str):
+        return value.lower() not in ("false", "0", "")
+    return bool(value)
 
 
 def _coerce_attribute_value(attr: AttributeNameValue) -> object:
@@ -42,26 +63,14 @@ def _coerce_attribute_value(attr: AttributeNameValue) -> object:
 
     if attr_type is None:
         return value
-
-    if attr_type == AttributeType.string:
-        return str(value)
     if attr_type == AttributeType.bool:
-        if isinstance(value, str):
-            return value.lower() not in ("false", "0", "")
-        return bool(value)
-    if attr_type == AttributeType.int:
-        return int(value)  # type: ignore[arg-type]
-    if attr_type == AttributeType.double:
-        return float(value)  # type: ignore[arg-type]
-    if attr_type == AttributeType.string_array:
-        return [str(v) for v in value]  # type: ignore[union-attr]
-    if attr_type == AttributeType.bool_array:
-        return [bool(v) for v in value]  # type: ignore[union-attr]
-    if attr_type == AttributeType.int_array:
-        return [int(v) for v in value]  # type: ignore[union-attr,arg-type]
-    if attr_type == AttributeType.double_array:
-        return [float(v) for v in value]  # type: ignore[union-attr,arg-type]
-
+        return _coerce_bool(value)
+    scalar_coercer = _SCALAR_COERCIONS.get(attr_type)
+    if scalar_coercer is not None:
+        return scalar_coercer(value)  # type: ignore[arg-type]
+    array_coercer = _ARRAY_COERCIONS.get(attr_type)
+    if array_coercer is not None:
+        return [array_coercer(item) for item in value]  # type: ignore[union-attr,arg-type]
     return value
 
 
@@ -87,7 +96,7 @@ def _parse_attributes_list(attributes_list: str) -> dict[str, str]:
     return result
 
 
-def _sdk_default_attributes() -> dict[str, object]:
+def _sdk_default_attributes() -> dict[str, str]:
     """Return the SDK telemetry attributes (equivalent to Java's Resource.getDefault())."""
     return {
         TELEMETRY_SDK_LANGUAGE: "python",
@@ -125,9 +134,9 @@ def create_resource(config: Optional[ResourceConfig]) -> Resource:
     if config.attributes_list:
         list_attrs = _parse_attributes_list(config.attributes_list)
         # attributes_list entries do not override explicit attributes
-        for k, v in list_attrs.items():
-            if k not in config_attrs:
-                config_attrs[k] = v
+        for attr_key, attr_val in list_attrs.items():
+            if attr_key not in config_attrs:
+                config_attrs[attr_key] = attr_val
 
     schema_url = config.schema_url
 

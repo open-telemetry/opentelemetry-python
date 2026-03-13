@@ -15,6 +15,9 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
+# CompositePropagator stores its propagators in _propagators (private).
+# We access it here to assert composition correctness.
+# pylint: disable=protected-access
 from opentelemetry.baggage.propagation import W3CBaggagePropagator
 from opentelemetry.propagators.composite import CompositePropagator
 from opentelemetry.sdk._configuration._propagator import (
@@ -24,6 +27,8 @@ from opentelemetry.sdk._configuration._propagator import (
 from opentelemetry.sdk._configuration.file._loader import ConfigurationError
 from opentelemetry.sdk._configuration.models import (
     Propagator as PropagatorConfig,
+)
+from opentelemetry.sdk._configuration.models import (
     TextMapPropagator as TextMapPropagatorConfig,
 )
 from opentelemetry.trace.propagation.tracecontext import (
@@ -49,7 +54,8 @@ class TestCreatePropagator(unittest.TestCase):
         result = create_propagator(config)
         self.assertEqual(len(result._propagators), 1)  # type: ignore[attr-defined]
         self.assertIsInstance(
-            result._propagators[0], TraceContextTextMapPropagator  # type: ignore[attr-defined]
+            result._propagators[0],
+            TraceContextTextMapPropagator,  # type: ignore[attr-defined]
         )
 
     def test_baggage_only(self):
@@ -70,7 +76,8 @@ class TestCreatePropagator(unittest.TestCase):
         result = create_propagator(config)
         self.assertEqual(len(result._propagators), 2)  # type: ignore[attr-defined]
         self.assertIsInstance(
-            result._propagators[0], TraceContextTextMapPropagator  # type: ignore[attr-defined]
+            result._propagators[0],
+            TraceContextTextMapPropagator,  # type: ignore[attr-defined]
         )
         self.assertIsInstance(result._propagators[1], W3CBaggagePropagator)  # type: ignore[attr-defined]
 
@@ -152,9 +159,7 @@ class TestCreatePropagator(unittest.TestCase):
             "opentelemetry.sdk._configuration._propagator.entry_points",
             side_effect=fake_entry_points,
         ):
-            config = PropagatorConfig(
-                composite_list="tracecontext,baggage"
-            )
+            config = PropagatorConfig(composite_list="tracecontext,baggage")
             result = create_propagator(config)
 
         self.assertEqual(len(result._propagators), 2)  # type: ignore[attr-defined]

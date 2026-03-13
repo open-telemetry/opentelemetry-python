@@ -24,6 +24,8 @@ from opentelemetry.propagators.textmap import TextMapPropagator
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
 from opentelemetry.sdk._configuration.models import (
     Propagator as PropagatorConfig,
+)
+from opentelemetry.sdk._configuration.models import (
     TextMapPropagator as TextMapPropagatorConfig,
 )
 from opentelemetry.trace.propagation.tracecontext import (
@@ -37,9 +39,7 @@ _logger = logging.getLogger(__name__)
 def _load_entry_point_propagator(name: str) -> TextMapPropagator:
     """Load a propagator by name from the opentelemetry_propagator entry point group."""
     try:
-        eps = list(
-            entry_points(group="opentelemetry_propagator", name=name)
-        )
+        eps = list(entry_points(group="opentelemetry_propagator", name=name))
         if not eps:
             raise ConfigurationError(
                 f"Propagator '{name}' not found. "
@@ -48,10 +48,10 @@ def _load_entry_point_propagator(name: str) -> TextMapPropagator:
         return eps[0].load()()
     except ConfigurationError:
         raise
-    except Exception as e:
+    except Exception as exc:
         raise ConfigurationError(
-            f"Failed to load propagator '{name}': {e}"
-        ) from e
+            f"Failed to load propagator '{name}': {exc}"
+        ) from exc
 
 
 def _propagators_from_textmap_config(
@@ -91,16 +91,16 @@ def create_propagator(
     propagators: list[TextMapPropagator] = []
     seen_types: set[type] = set()
 
-    def _add_deduped(p: TextMapPropagator) -> None:
-        if type(p) not in seen_types:
-            seen_types.add(type(p))
-            propagators.append(p)
+    def _add_deduped(propagator: TextMapPropagator) -> None:
+        if type(propagator) not in seen_types:
+            seen_types.add(type(propagator))
+            propagators.append(propagator)
 
     # Process structured composite list
     if config.composite:
         for entry in config.composite:
-            for p in _propagators_from_textmap_config(entry):
-                _add_deduped(p)
+            for propagator in _propagators_from_textmap_config(entry):
+                _add_deduped(propagator)
 
     # Process composite_list (comma-separated propagator names via entry_points)
     if config.composite_list:
@@ -108,8 +108,7 @@ def create_propagator(
             name = name.strip()
             if not name or name.lower() == "none":
                 continue
-            p = _load_entry_point_propagator(name)
-            _add_deduped(p)
+            _add_deduped(_load_entry_point_propagator(name))
 
     return CompositePropagator(propagators)
 
