@@ -69,6 +69,7 @@ from opentelemetry.sdk.util import BoundedList
 from opentelemetry.sdk.util.instrumentation import (
     InstrumentationInfo,
     InstrumentationScope,
+    _InstrumentationScopePredicateT,
 )
 from opentelemetry.semconv.attributes.exception_attributes import (
     EXCEPTION_ESCAPED,
@@ -1261,7 +1262,6 @@ class Tracer(trace_api.Tracer):
 
 
 _TracerConfiguratorT = Callable[[InstrumentationScope], _TracerConfig]
-_InstrumentationScopePredicateT = Callable[[InstrumentationScope], bool]
 _TracerConfiguratorRulesT = Sequence[
     tuple[_InstrumentationScopePredicateT, _TracerConfig]
 ]

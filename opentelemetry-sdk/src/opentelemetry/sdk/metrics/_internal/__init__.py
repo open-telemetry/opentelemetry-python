@@ -63,7 +63,10 @@ from opentelemetry.sdk.metrics._internal.sdk_configuration import (
     SdkConfiguration,
 )
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.util.instrumentation import InstrumentationScope
+from opentelemetry.sdk.util.instrumentation import (
+    InstrumentationScope,
+    _InstrumentationScopePredicateT,
+)
 from opentelemetry.util._once import Once
 from opentelemetry.util.types import (
     Attributes,
@@ -411,7 +414,6 @@ def _get_exemplar_filter(exemplar_filter: str) -> ExemplarFilter:
 
 
 _MeterConfiguratorT = Callable[[InstrumentationScope], _MeterConfig]
-_InstrumentationScopePredicateT = Callable[[InstrumentationScope], bool]
 _MeterConfiguratorRulesT = Sequence[
     tuple[_InstrumentationScopePredicateT, _MeterConfig]
 ]
