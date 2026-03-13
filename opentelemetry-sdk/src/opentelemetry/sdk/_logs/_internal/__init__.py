@@ -516,6 +516,78 @@ _RESERVED_ATTRS = frozenset(
 )
 
 
+def _get_exception_attributes(
+    exception: BaseException,
+) -> dict[str, AnyValue]:
+    stacktrace = "".join(
+        traceback.format_exception(
+            type(exception), value=exception, tb=exception.__traceback__
+        )
+    )
+    module = type(exception).__module__
+    qualname = type(exception).__qualname__
+    exception_type = (
+        f"{module}.{qualname}" if module and module != "builtins" else qualname
+    )
+    return {
+        exception_attributes.EXCEPTION_TYPE: exception_type,
+        exception_attributes.EXCEPTION_MESSAGE: str(exception),
+        exception_attributes.EXCEPTION_STACKTRACE: stacktrace,
+    }
+
+
+def _get_attributes_with_exception(
+    attributes: _ExtendedAttributes | None,
+    exception: BaseException | None,
+) -> _ExtendedAttributes | None:
+    if exception is None:
+        return attributes
+
+    exception_attributes_map = _get_exception_attributes(exception)
+    if attributes is None:
+        attributes_map: _ExtendedAttributes = {}
+    else:
+        attributes_map = attributes
+
+    if isinstance(attributes_map, BoundedAttributes):
+        bounded_attributes = attributes_map
+        merged = BoundedAttributes(
+            maxlen=bounded_attributes.maxlen,
+            attributes=bounded_attributes,
+            immutable=False,
+            max_value_len=bounded_attributes.max_value_len,
+            extended_attributes=bounded_attributes._extended_attributes,  # pylint: disable=protected-access
+        )
+        merged.dropped = bounded_attributes.dropped
+        for key, value in exception_attributes_map.items():
+            if key not in merged:
+                merged[key] = value
+        return merged
+
+    return exception_attributes_map | dict(attributes_map.items())
+
+
+def _copy_log_record(
+    record: LogRecord,
+    attributes: _ExtendedAttributes | None,
+) -> LogRecord:
+    copied_record = LogRecord(
+        timestamp=record.timestamp,
+        observed_timestamp=record.observed_timestamp,
+        context=record.context,
+        severity_text=record.severity_text,
+        severity_number=record.severity_number,
+        body=record.body,
+        attributes=attributes,
+        event_name=record.event_name,
+        exception=getattr(record, "exception", None),
+    )
+    copied_record.trace_id = record.trace_id
+    copied_record.span_id = record.span_id
+    copied_record.trace_flags = record.trace_flags
+    return copied_record
+
+
 class LoggingHandler(logging.Handler):
     """A handler class which writes logging records, in OTLP format, to
     a network destination or file. Supports signals from the `logging` module.
@@ -671,13 +743,28 @@ class Logger(APILogger):
         body: AnyValue | None = None,
         attributes: _ExtendedAttributes | None = None,
         event_name: str | None = None,
+        exception: BaseException | None = None,
     ) -> None:
         """Emits the :class:`ReadWriteLogRecord` by setting instrumentation scope
         and forwarding to the processor.
         """
         # If a record is provided, use it directly
         if record is not None:
+            record_exception = exception or getattr(record, "exception", None)
+            if record_exception is None and isinstance(
+                record, ReadWriteLogRecord
+            ):
+                record_exception = getattr(
+                    record.log_record, "exception", None
+                )
             if not isinstance(record, ReadWriteLogRecord):
+                if record_exception is not None:
+                    record = _copy_log_record(
+                        record,
+                        _get_attributes_with_exception(
+                            record.attributes, record_exception
+                        ),
+                    )
                 # pylint:disable=protected-access
                 writable_record = ReadWriteLogRecord._from_api_log_record(
                     record=record,
@@ -685,9 +772,15 @@ class Logger(APILogger):
                     instrumentation_scope=self._instrumentation_scope,
                 )
             else:
+                record.log_record.attributes = _get_attributes_with_exception(
+                    record.log_record.attributes, record_exception
+                )
                 writable_record = record
         else:
             # Create a record from individual parameters
+            log_record_attributes = _get_attributes_with_exception(
+                attributes, exception
+            )
             log_record = LogRecord(
                 timestamp=timestamp,
                 observed_timestamp=observed_timestamp,
@@ -695,8 +788,9 @@ class Logger(APILogger):
                 severity_number=severity_number,
                 severity_text=severity_text,
                 body=body,
-                attributes=attributes,
+                attributes=log_record_attributes,
                 event_name=event_name,
+                exception=exception,
             )
             # pylint:disable=protected-access
             writable_record = ReadWriteLogRecord._from_api_log_record(
