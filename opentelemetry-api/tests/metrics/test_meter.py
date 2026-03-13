@@ -17,9 +17,18 @@ from logging import WARNING
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
-from opentelemetry.metrics import Meter, NoOpMeter
-
-# FIXME Test that the meter methods can be called concurrently safely.
+from opentelemetry.metrics import (
+    Counter,
+    Histogram,
+    Meter,
+    NoOpMeter,
+    ObservableCounter,
+    ObservableGauge,
+    ObservableUpDownCounter,
+    UpDownCounter,
+    _Gauge,
+)
+from opentelemetry.test.concurrency_test import ConcurrencyTestBase
 
 
 class ChildMeter(Meter):
@@ -194,4 +203,77 @@ class TestMeter(TestCase):
         self.assertTrue(hasattr(Meter, "create_observable_up_down_counter"))
         self.assertTrue(
             Meter.create_observable_up_down_counter.__isabstractmethod__
+        )
+
+
+class TestConcurrency(ConcurrencyTestBase):
+    def test_create_counter_concurrent(self):
+        """Test that Meter.create_counter can be called concurrently safely."""
+        meter = NoOpMeter("name")
+        results = self.run_with_many_threads(
+            lambda: meter.create_counter("counter")
+        )
+        self.assertEqual(len(results), 100)
+        self.assertTrue(all(isinstance(r, Counter) for r in results))
+
+    def test_create_up_down_counter_concurrent(self):
+        """Test that Meter.create_up_down_counter can be called concurrently safely."""
+        meter = NoOpMeter("name")
+        results = self.run_with_many_threads(
+            lambda: meter.create_up_down_counter("up_down_counter")
+        )
+        self.assertEqual(len(results), 100)
+        self.assertTrue(all(isinstance(r, UpDownCounter) for r in results))
+
+    def test_create_observable_counter_concurrent(self):
+        """Test that Meter.create_observable_counter can be called concurrently safely."""
+        meter = NoOpMeter("name")
+        results = self.run_with_many_threads(
+            lambda: meter.create_observable_counter(
+                "observable_counter", lambda options: []
+            )
+        )
+        self.assertEqual(len(results), 100)
+        self.assertTrue(all(isinstance(r, ObservableCounter) for r in results))
+
+    def test_create_histogram_concurrent(self):
+        """Test that Meter.create_histogram can be called concurrently safely."""
+        meter = NoOpMeter("name")
+        results = self.run_with_many_threads(
+            lambda: meter.create_histogram("histogram")
+        )
+        self.assertEqual(len(results), 100)
+        self.assertTrue(all(isinstance(r, Histogram) for r in results))
+
+    def test_create_gauge_concurrent(self):
+        """Test that Meter.create_gauge can be called concurrently safely."""
+        meter = NoOpMeter("name")
+        results = self.run_with_many_threads(
+            lambda: meter.create_gauge("gauge")
+        )
+        self.assertEqual(len(results), 100)
+        self.assertTrue(all(isinstance(r, _Gauge) for r in results))
+
+    def test_create_observable_gauge_concurrent(self):
+        """Test that Meter.create_observable_gauge can be called concurrently safely."""
+        meter = NoOpMeter("name")
+        results = self.run_with_many_threads(
+            lambda: meter.create_observable_gauge(
+                "observable_gauge", lambda options: []
+            )
+        )
+        self.assertEqual(len(results), 100)
+        self.assertTrue(all(isinstance(r, ObservableGauge) for r in results))
+
+    def test_create_observable_up_down_counter_concurrent(self):
+        """Test that Meter.create_observable_up_down_counter can be called concurrently safely."""
+        meter = NoOpMeter("name")
+        results = self.run_with_many_threads(
+            lambda: meter.create_observable_up_down_counter(
+                "observable_up_down_counter", lambda options: []
+            )
+        )
+        self.assertEqual(len(results), 100)
+        self.assertTrue(
+            all(isinstance(r, ObservableUpDownCounter) for r in results)
         )

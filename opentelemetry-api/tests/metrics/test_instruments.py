@@ -31,8 +31,7 @@ from opentelemetry.metrics import (
     UpDownCounter,
     _Gauge,
 )
-
-# FIXME Test that the instrument methods can be called concurrently safely.
+from opentelemetry.test.concurrency_test import ConcurrencyTestBase
 
 
 class ChildInstrument(Instrument):
@@ -724,3 +723,33 @@ class TestObservableUpDownCounter(TestCase):
             ],
             "",
         )
+
+
+class TestConcurrency(ConcurrencyTestBase):
+    def test_counter_add_concurrent(self):
+        """Test that Counter.add can be called concurrently safely."""
+        counter = NoOpCounter("name")
+        results = self.run_with_many_threads(lambda: counter.add(1))
+        self.assertEqual(len(results), 100)
+        self.assertTrue(all(result is None for result in results))
+
+    def test_up_down_counter_add_concurrent(self):
+        """Test that UpDownCounter.add can be called concurrently safely."""
+        up_down_counter = NoOpUpDownCounter("name")
+        results = self.run_with_many_threads(lambda: up_down_counter.add(1))
+        self.assertEqual(len(results), 100)
+        self.assertTrue(all(result is None for result in results))
+
+    def test_histogram_record_concurrent(self):
+        """Test that Histogram.record can be called concurrently safely."""
+        histogram = NoOpHistogram("name")
+        results = self.run_with_many_threads(lambda: histogram.record(1))
+        self.assertEqual(len(results), 100)
+        self.assertTrue(all(result is None for result in results))
+
+    def test_gauge_set_concurrent(self):
+        """Test that Gauge.set can be called concurrently safely."""
+        gauge = NoOpMeter("name").create_gauge("name")
+        results = self.run_with_many_threads(lambda: gauge.set(1))
+        self.assertEqual(len(results), 100)
+        self.assertTrue(all(result is None for result in results))
