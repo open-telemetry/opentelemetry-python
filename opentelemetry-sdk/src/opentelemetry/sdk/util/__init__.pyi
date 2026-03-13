@@ -17,6 +17,7 @@ from typing import (
     Iterator,
     Mapping,
     MutableMapping,
+    Optional,
     Sequence,
     TypeVar,
     overload,
@@ -42,7 +43,7 @@ class BoundedList(Sequence[_T]):
     """
 
     dropped: int
-    def __init__(self, maxlen: int): ...
+    def __init__(self, maxlen: Optional[int]): ...
     def insert(self, index: int, value: _T) -> None: ...
     @overload
     def __getitem__(self, i: int) -> _T: ...
@@ -52,7 +53,9 @@ class BoundedList(Sequence[_T]):
     def append(self, item: _T) -> None: ...
     def extend(self, seq: Sequence[_T]) -> None: ...
     @classmethod
-    def from_seq(cls, maxlen: int, seq: Iterable[_T]) -> BoundedList[_T]: ...  # pylint: disable=undefined-variable
+    def from_seq(
+        cls, maxlen: Optional[int], seq: Iterable[_T]
+    ) -> BoundedList[_T]: ...  # pylint: disable=undefined-variable
 
 class BoundedDict(MutableMapping[_KT, _VT]):
     """An ordered dict with a fixed max capacity.
