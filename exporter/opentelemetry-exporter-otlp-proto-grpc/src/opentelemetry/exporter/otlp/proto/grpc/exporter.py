@@ -307,8 +307,8 @@ class OTLPExporterMixin(
         compression: Optional[Compression] = None,
         channel_options: Optional[Tuple[Tuple[str, str]]] = None,
         *,
-        component_type: str,
-        signal: Literal["span", "log", "metric_data_point"],
+        component_type: Optional[str] = None,
+        signal: Literal["span", "log", "metric_data_point"] = "span",
         meter_provider: Optional[MeterProvider],
     ):
         super().__init__()
@@ -383,11 +383,11 @@ class OTLPExporterMixin(
                 OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
             )
 
-        self._component_type = component_type
+        self._component_type = component_type or type(self).__qualname__
         self._signal: Literal["span", "log", "metric_data_point"] = signal
         self._parsed_url = parsed_url
         self._metrics = ExporterMetrics(
-            component_type,
+            self._component_type,
             signal,
             parsed_url,
             meter_provider,
