@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from typing import (
+    Any,
     Iterable,
     Iterator,
     Mapping,
@@ -44,6 +45,7 @@ class BoundedList(Sequence[_T]):
 
     dropped: int
     def __init__(self, maxlen: Optional[int]): ...
+    def __deepcopy__(self, memo: dict[int, Any]) -> BoundedList[_T]: ...
     def insert(self, index: int, value: _T) -> None: ...
     @overload
     def __getitem__(self, i: int) -> _T: ...
