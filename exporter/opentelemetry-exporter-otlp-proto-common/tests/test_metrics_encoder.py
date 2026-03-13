@@ -171,7 +171,9 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                 start_time_unix_nano=1641946015139533244,
                                                 time_unix_nano=1641946016139533244,
                                                 as_int=33,
-                                                flags=int(DataPointFlags.get_default()),
+                                                flags=int(
+                                                    DataPointFlags.get_default()
+                                                ),
                                             )
                                         ],
                                         aggregation_temporality=AggregationTemporality.CUMULATIVE,
@@ -524,7 +526,9 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                 ],
                                                 max=18.0,
                                                 min=8.0,
-                                                flags=int(DataPointFlags.get_default()),
+                                                flags=int(
+                                                    DataPointFlags.get_default()
+                                                ),
                                             )
                                         ],
                                         aggregation_temporality=AggregationTemporality.DELTA,
@@ -656,7 +660,9 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                 ],
                                                 max=18.0,
                                                 min=8.0,
-                                                flags=int(DataPointFlags.get_default()),
+                                                flags=int(
+                                                    DataPointFlags.get_default()
+                                                ),
                                             )
                                         ],
                                         aggregation_temporality=AggregationTemporality.DELTA,
@@ -719,7 +725,9 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                 ],
                                                 max=18.0,
                                                 min=8.0,
-                                                flags=int(DataPointFlags.get_default()),
+                                                flags=int(
+                                                    DataPointFlags.get_default()
+                                                ),
                                             )
                                         ],
                                         aggregation_temporality=AggregationTemporality.DELTA,
@@ -790,7 +798,9 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                 ],
                                                 max=18.0,
                                                 min=8.0,
-                                                flags=int(DataPointFlags.get_default()),
+                                                flags=int(
+                                                    DataPointFlags.get_default()
+                                                ),
                                             )
                                         ],
                                         aggregation_temporality=AggregationTemporality.DELTA,
@@ -861,7 +871,9 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                 ],
                                                 max=18.0,
                                                 min=8.0,
-                                                flags=int(DataPointFlags.get_default()),
+                                                flags=int(
+                                                    DataPointFlags.get_default()
+                                                ),
                                             )
                                         ],
                                         aggregation_temporality=AggregationTemporality.DELTA,
@@ -978,7 +990,9 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                     offset=9,
                                                     bucket_counts=[10, 11],
                                                 ),
-                                                flags=int(DataPointFlags.get_default()),
+                                                flags=int(
+                                                    DataPointFlags.get_default()
+                                                ),
                                                 exemplars=[],
                                                 min=13.0,
                                                 max=14.0,
