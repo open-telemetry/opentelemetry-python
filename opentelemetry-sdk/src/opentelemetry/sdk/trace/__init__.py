@@ -64,6 +64,7 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import sampling
+from opentelemetry.sdk.trace._tracer_metrics import TracerMetrics
 from opentelemetry.sdk.trace.id_generator import IdGenerator, RandomIdGenerator
 from opentelemetry.sdk.util import BoundedList
 from opentelemetry.sdk.util.instrumentation import (
@@ -80,8 +81,6 @@ from opentelemetry.trace import NoOpTracer, SpanContext
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
 from opentelemetry.util._decorator import _agnosticcontextmanager
-
-from ._tracer_metrics import TracerMetrics
 
 logger = logging.getLogger(__name__)
 
