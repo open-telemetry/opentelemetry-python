@@ -142,7 +142,7 @@ class SpanProcessor:
     def shutdown(self) -> None:
         """Called when a :class:`opentelemetry.sdk.trace.TracerProvider` is shutdown."""
 
-    def force_flush(self, timeout_millis: int = 30000) -> bool:
+    def force_flush(self, timeout_millis: int = 30000) -> bool:  # type: ignore[reportReturnType]
         """Export all ended spans to the configured Exporter that have not yet
         been exported.
 
@@ -251,9 +251,13 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
             # Only the main thread is kept in forked processed, the executor
             # needs to be re-instantiated to get a fresh pool of threads:
             weak_reinit = weakref.WeakMethod(self._init_executor)
-            os.register_at_fork(
-                after_in_child=lambda: weak_reinit()(num_threads)
-            )
+
+            def _after_in_child() -> None:
+                reinit = weak_reinit()
+                if reinit is not None:
+                    reinit(num_threads)
+
+            os.register_at_fork(after_in_child=_after_in_child)
 
     def _init_executor(self, num_threads: int) -> None:
         self._executor = concurrent.futures.ThreadPoolExecutor(
@@ -466,7 +470,7 @@ class ReadableSpan:
     def name(self) -> str:
         return self._name
 
-    def get_span_context(self):
+    def get_span_context(self) -> Optional[trace_api.SpanContext]:
         return self._context
 
     @property
@@ -880,8 +884,8 @@ class Span(trace_api.Span, ReadableSpan):
 
         return BoundedList.from_seq(self._limits.max_links, valid_links)
 
-    def get_span_context(self):
-        return self._context
+    def get_span_context(self) -> trace_api.SpanContext:
+        return typing.cast(trace_api.SpanContext, self._context)
 
     def set_attributes(
         self, attributes: Mapping[str, types.AttributeValue]
@@ -1047,7 +1051,7 @@ class Span(trace_api.Span, ReadableSpan):
                 self.set_status(
                     Status(
                         status_code=StatusCode.ERROR,
-                        description=f"{exc_type.__name__}: {exc_val}",
+                        description=(f"{type(exc_val).__name__}: {exc_val}"),
                     )
                 )
 
@@ -1182,6 +1186,7 @@ class Tracer(trace_api.Tracer):
         record_exception: bool = True,
         set_status_on_exception: bool = True,
     ) -> trace_api.Span:
+        links = links or ()
         parent_span_context = trace_api.get_current_span(
             context
         ).get_span_context()
