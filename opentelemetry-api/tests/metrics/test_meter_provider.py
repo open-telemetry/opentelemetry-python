@@ -15,7 +15,6 @@
 
 # pylint: disable=protected-access
 
-import threading
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
@@ -44,6 +43,7 @@ from opentelemetry.metrics._internal.instrument import (
     _ProxyObservableUpDownCounter,
     _ProxyUpDownCounter,
 )
+from opentelemetry.test.concurrency_test import ConcurrencyTestBase
 from opentelemetry.test.globals_test import (
     MetricsGlobalsTest,
     reset_metrics_globals,
@@ -164,35 +164,24 @@ class TestGetMeter(TestCase):
         self.assertEqual(meter.schema_url, "schema_url")
 
 
-class TestConcurrency(TestCase):
-    def _run_concurrently(self, fn, num_threads=10, calls_per_thread=100):
-        """Helper: run fn concurrently across threads and assert no exceptions."""
-        errors = []
-
-        def worker():
-            try:
-                for _ in range(calls_per_thread):
-                    fn()
-            except Exception as exc:  # pylint: disable=broad-except
-                errors.append(exc)
-
-        threads = [threading.Thread(target=worker) for _ in range(num_threads)]
-        for thread in threads:
-            thread.start()
-        for thread in threads:
-            thread.join()
-
-        self.assertEqual([], errors)
-
+class TestConcurrency(ConcurrencyTestBase):
     def test_no_op_meter_provider_get_meter_concurrent(self):
         """Test that NoOpMeterProvider.get_meter can be called concurrently safely."""
         meter_provider = NoOpMeterProvider()
-        self._run_concurrently(lambda: meter_provider.get_meter("name"))
+        results = self.run_with_many_threads(
+            lambda: meter_provider.get_meter("name")
+        )
+        self.assertEqual(len(results), 100)
+        self.assertTrue(all(isinstance(r, NoOpMeter) for r in results))
 
     def test_proxy_meter_provider_get_meter_concurrent(self):
         """Test that _ProxyMeterProvider.get_meter can be called concurrently safely."""
         meter_provider = _ProxyMeterProvider()
-        self._run_concurrently(lambda: meter_provider.get_meter("name"))
+        results = self.run_with_many_threads(
+            lambda: meter_provider.get_meter("name")
+        )
+        self.assertEqual(len(results), 100)
+        self.assertTrue(all(isinstance(r, _ProxyMeter) for r in results))
 
 
 class TestProxy(MetricsGlobalsTest, TestCase):

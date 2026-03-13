@@ -13,7 +13,6 @@
 # limitations under the License.
 # type: ignore
 
-import threading
 from inspect import Signature, isabstract, signature
 from unittest import TestCase
 
@@ -32,6 +31,7 @@ from opentelemetry.metrics import (
     UpDownCounter,
     _Gauge,
 )
+from opentelemetry.test.concurrency_test import ConcurrencyTestBase
 
 
 class ChildInstrument(Instrument):
@@ -725,42 +725,31 @@ class TestObservableUpDownCounter(TestCase):
         )
 
 
-class TestConcurrency(TestCase):
-    def _run_concurrently(self, fn, num_threads=10, calls_per_thread=100):
-        """Helper: run fn concurrently across threads and assert no exceptions."""
-        errors = []
-
-        def worker():
-            try:
-                for _ in range(calls_per_thread):
-                    fn()
-            except Exception as exc:  # pylint: disable=broad-except
-                errors.append(exc)
-
-        threads = [threading.Thread(target=worker) for _ in range(num_threads)]
-        for thread in threads:
-            thread.start()
-        for thread in threads:
-            thread.join()
-
-        self.assertEqual([], errors)
-
+class TestConcurrency(ConcurrencyTestBase):
     def test_counter_add_concurrent(self):
         """Test that Counter.add can be called concurrently safely."""
         counter = NoOpCounter("name")
-        self._run_concurrently(lambda: counter.add(1))
+        results = self.run_with_many_threads(lambda: counter.add(1))
+        self.assertEqual(len(results), 100)
+        self.assertTrue(all(result is None for result in results))
 
     def test_up_down_counter_add_concurrent(self):
         """Test that UpDownCounter.add can be called concurrently safely."""
         up_down_counter = NoOpUpDownCounter("name")
-        self._run_concurrently(lambda: up_down_counter.add(1))
+        results = self.run_with_many_threads(lambda: up_down_counter.add(1))
+        self.assertEqual(len(results), 100)
+        self.assertTrue(all(result is None for result in results))
 
     def test_histogram_record_concurrent(self):
         """Test that Histogram.record can be called concurrently safely."""
         histogram = NoOpHistogram("name")
-        self._run_concurrently(lambda: histogram.record(1))
+        results = self.run_with_many_threads(lambda: histogram.record(1))
+        self.assertEqual(len(results), 100)
+        self.assertTrue(all(result is None for result in results))
 
     def test_gauge_set_concurrent(self):
         """Test that Gauge.set can be called concurrently safely."""
         gauge = NoOpMeter("name").create_gauge("name")
-        self._run_concurrently(lambda: gauge.set(1))
+        results = self.run_with_many_threads(lambda: gauge.set(1))
+        self.assertEqual(len(results), 100)
+        self.assertTrue(all(result is None for result in results))
