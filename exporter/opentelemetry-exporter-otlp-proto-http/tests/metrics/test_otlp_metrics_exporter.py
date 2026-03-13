@@ -91,7 +91,7 @@ OS_ENV_HEADERS = "envHeader1=val1,envHeader2=val2,User-agent=Overridden"
 OS_ENV_TIMEOUT = "30"
 
 
-# pylint: disable=protected-access
+# pylint: disable=protected-access,too-many-public-methods
 class TestOTLPMetricExporter(TestCase):
     def setUp(self):
         self.metric_reader = InMemoryMetricReader()

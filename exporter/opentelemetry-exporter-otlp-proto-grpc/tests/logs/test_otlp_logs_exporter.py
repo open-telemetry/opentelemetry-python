@@ -403,6 +403,7 @@ class TestOTLPLogExporter(TestCase):
         )
 
     def test_count_log_data(self):
+        # pylint: disable=protected-access
         self.assertEqual(1, self.exporter._count_data([self.log_data_1]))
 
     def test_translate_multiple_logs(self):
@@ -546,6 +547,7 @@ class TestOTLPLogExporter(TestCase):
     def test_count_multiple_logs(self):
         self.assertEqual(
             3,
+            # pylint: disable=protected-access
             self.exporter._count_data(
                 [self.log_data_1, self.log_data_2, self.log_data_3]
             ),

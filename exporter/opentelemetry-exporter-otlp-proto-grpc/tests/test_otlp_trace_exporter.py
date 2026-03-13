@@ -482,6 +482,7 @@ class TestOTLPSpanExporter(TestCase):
         self.assertEqual(expected, self.exporter._translate_data([self.span]))
 
     def test_count_spans(self):
+        # pylint: disable=protected-access
         self.assertEqual(1, self.exporter._count_data([self.span]))
 
     def test_translate_spans_multi(self):
@@ -665,7 +666,9 @@ class TestOTLPSpanExporter(TestCase):
 
     def test_count_spans_multi(self):
         self.assertEqual(
-            3, self.exporter._count_data([self.span, self.span2, self.span3])
+            # pylint: disable=protected-access
+            3,
+            self.exporter._count_data([self.span, self.span2, self.span3]),
         )
 
     def _check_translated_status(

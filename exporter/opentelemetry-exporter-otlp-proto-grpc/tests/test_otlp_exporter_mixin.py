@@ -166,6 +166,7 @@ class ThreadWithReturnValue(threading.Thread):
         return self._return
 
 
+# pylint: disable=too-many-public-methods
 class TestOTLPExporterMixin(TestCase):
     def setUp(self):
         self.server = server(ThreadPoolExecutor(max_workers=10))
