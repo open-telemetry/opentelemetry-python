@@ -571,13 +571,10 @@ def _copy_log_record(
     record: LogRecord,
     attributes: _ExtendedAttributes | None,
 ) -> LogRecord:
-    return LogRecord(
+    copied_record = LogRecord(
         timestamp=record.timestamp,
         observed_timestamp=record.observed_timestamp,
         context=record.context,
-        trace_id=record.trace_id,
-        span_id=record.span_id,
-        trace_flags=record.trace_flags,
         severity_text=record.severity_text,
         severity_number=record.severity_number,
         body=record.body,
@@ -585,6 +582,10 @@ def _copy_log_record(
         event_name=record.event_name,
         exception=getattr(record, "exception", None),
     )
+    copied_record.trace_id = record.trace_id
+    copied_record.span_id = record.span_id
+    copied_record.trace_flags = record.trace_flags
+    return copied_record
 
 
 class LoggingHandler(logging.Handler):
