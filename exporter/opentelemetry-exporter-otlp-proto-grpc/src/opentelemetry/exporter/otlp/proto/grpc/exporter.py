@@ -56,12 +56,16 @@ from grpc import (
     secure_channel,
     ssl_channel_credentials,
 )
+from opentelemetry.exporter.otlp.proto.common._exporter_metrics import (
+    ExporterMetrics,
+)
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _get_resource_data,
 )
 from opentelemetry.exporter.otlp.proto.grpc import (
     _OTLP_GRPC_CHANNEL_OPTIONS,
 )
+from opentelemetry.metrics import MeterProvider
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
     ExportLogsServiceRequest,
 )
@@ -104,6 +108,9 @@ from opentelemetry.sdk.metrics.export import MetricExportResult, MetricsData
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import SpanExportResult
+from opentelemetry.semconv._incubating.attributes.rpc_attributes import (
+    RPC_RESPONSE_STATUS_CODE,
+)
 from opentelemetry.util._importlib_metadata import entry_points
 from opentelemetry.util.re import parse_env_headers
 
@@ -299,6 +306,10 @@ class OTLPExporterMixin(
         timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
         channel_options: Optional[Tuple[Tuple[str, str]]] = None,
+        *,
+        component_type: str,
+        signal: Literal["span", "log", "metric_data_point"],
+        meter_provider: Optional[MeterProvider],
     ):
         super().__init__()
         self._result = result
@@ -372,6 +383,16 @@ class OTLPExporterMixin(
                 OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
             )
 
+        self._component_type = component_type
+        self._signal: Literal["span", "log", "metric_data_point"] = signal
+        self._parsed_url = parsed_url
+        self._metrics = ExporterMetrics(
+            component_type,
+            signal,
+            parsed_url,
+            meter_provider,
+        )
+
         self._initialize_channel_and_stub()
 
     def _initialize_channel_and_stub(self):
@@ -404,6 +425,13 @@ class OTLPExporterMixin(
     ) -> ExportServiceRequestT:
         pass
 
+    @abstractmethod
+    def _count_data(
+        self,
+        data: SDKDataT,
+    ) -> int:
+        pass
+
     def _export(
         self,
         data: SDKDataT,
@@ -411,6 +439,8 @@ class OTLPExporterMixin(
         if self._shutdown:
             logger.warning("Exporter already shutdown, ignoring batch")
             return self._result.FAILURE  # type: ignore [reportReturnType]
+
+        finish_export = self._metrics.start_export(self._count_data(data))
 
         # FIXME remove this check if the export type for traces
         # gets updated to a class that represents the proto
@@ -425,6 +455,7 @@ class OTLPExporterMixin(
                     metadata=self._headers,
                     timeout=deadline_sec - time(),
                 )
+                finish_export(None, None)
                 return self._result.SUCCESS  # type: ignore [reportReturnType]
             except RpcError as error:
                 retry_info_bin = dict(error.trailing_metadata()).get(  # type: ignore [reportAttributeAccessIssue]
@@ -472,6 +503,9 @@ class OTLPExporterMixin(
                         error.code(),  # type: ignore [reportAttributeAccessIssue]
                         exc_info=error.code() == StatusCode.UNKNOWN,  # type: ignore [reportAttributeAccessIssue]
                     )
+                    finish_export(
+                        error, {RPC_RESPONSE_STATUS_CODE: error.code().name}
+                    )
                     return self._result.FAILURE  # type: ignore [reportReturnType]
                 logger.warning(
                     "Transient error %s encountered while exporting %s to %s, retrying in %.2fs.",
@@ -510,3 +544,11 @@ class OTLPExporterMixin(
         warning messages.
         """
         pass
+
+    def _set_meter_provider(self, meter_provider: MeterProvider) -> None:
+        self._metrics = ExporterMetrics(
+            self._component_type,
+            self._signal,
+            self._parsed_url,
+            meter_provider,
+        )
