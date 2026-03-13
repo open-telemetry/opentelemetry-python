@@ -99,7 +99,6 @@ def test_counter_add_with_meter_configurator_rules(
         counter_cumulative.add(1, {})
 
     if num_meter_configurator_rules is None:
-        # None case: meter is disabled, measuring the short-circuit path
         provider_reader_cumulative._set_meter_configurator(
             meter_configurator=_disable_meter_configurator
         )
