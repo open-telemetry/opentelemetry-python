@@ -544,22 +544,27 @@ def _get_attributes_with_exception(
         return attributes
 
     exception_attributes_map = _get_exception_attributes(exception)
-    attributes = attributes or {}
-    if isinstance(attributes, BoundedAttributes):
+    if attributes is None:
+        attributes_map: _ExtendedAttributes = {}
+    else:
+        attributes_map = attributes
+
+    if isinstance(attributes_map, BoundedAttributes):
+        bounded_attributes = attributes_map
         merged = BoundedAttributes(
-            maxlen=attributes.maxlen,
-            attributes=attributes,
+            maxlen=bounded_attributes.maxlen,
+            attributes=bounded_attributes,
             immutable=False,
-            max_value_len=attributes.max_value_len,
-            extended_attributes=attributes._extended_attributes,  # pylint: disable=protected-access
+            max_value_len=bounded_attributes.max_value_len,
+            extended_attributes=bounded_attributes._extended_attributes,  # pylint: disable=protected-access
         )
-        merged.dropped = attributes.dropped
+        merged.dropped = bounded_attributes.dropped
         for key, value in exception_attributes_map.items():
             if key not in merged:
                 merged[key] = value
         return merged
 
-    return exception_attributes_map | dict(attributes)
+    return exception_attributes_map | dict(attributes_map.items())
 
 
 def _copy_log_record(
