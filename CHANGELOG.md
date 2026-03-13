@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `opentelemetry-sdk`: Add `create_resource` and `create_propagator`/`configure_propagator` to declarative file configuration, enabling Resource and propagator instantiation from config files without reading env vars
+  ([#XXXX](https://github.com/open-telemetry/opentelemetry-python/pull/XXXX))
 - `opentelemetry-sdk`: Add file configuration support with YAML/JSON loading, environment variable substitution, and schema validation against the vendored OTel config JSON schema
   ([#4898](https://github.com/open-telemetry/opentelemetry-python/pull/4898))
 - Fix intermittent CI failures in `getting-started` and `tracecontext` jobs caused by GitHub git CDN SHA propagation lag by installing contrib packages from the already-checked-out local copy instead of a second git clone
