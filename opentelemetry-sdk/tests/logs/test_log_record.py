@@ -221,7 +221,6 @@ class TestLogRecord(unittest.TestCase):
 
         self.assertEqual(record.log_record.timestamp, 1)
         self.assertEqual(record.log_record.observed_timestamp, 2)
-        self.assertEqual(record.log_record.context, get_current())
         # trace_id, span_id, and trace_flags come from the context's span
         self.assertEqual(record.log_record.trace_id, 0)
         self.assertEqual(record.log_record.span_id, 0)

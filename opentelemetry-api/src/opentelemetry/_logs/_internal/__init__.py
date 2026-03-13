@@ -118,7 +118,6 @@ class LogRecord(ABC):
         if observed_timestamp is None:
             observed_timestamp = time_ns()
         self.observed_timestamp = observed_timestamp
-        self.context = context
         self.trace_id = trace_id or span_context.trace_id
         self.span_id = span_id or span_context.span_id
         self.trace_flags = trace_flags or span_context.trace_flags

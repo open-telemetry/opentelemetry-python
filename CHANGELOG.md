@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4979](https://github.com/open-telemetry/opentelemetry-python/pull/4979))
 - `opentelemetry-sdk`: Map Python `CRITICAL` log level to OTel `FATAL` severity text per the specification
   ([#4984](https://github.com/open-telemetry/opentelemetry-python/issues/4984))
+- `opentelemetry-api`: Optimize `LogRecord` memory by removing direct storage of the `Context` object.
+  ([#4957](https://github.com/open-telemetry/opentelemetry-python/issues/4957))
 - `opentelemetry-sdk`: Add file configuration support with YAML/JSON loading, environment variable substitution, and schema validation against the vendored OTel config JSON schema
   ([#4898](https://github.com/open-telemetry/opentelemetry-python/pull/4898))
 - Fix intermittent CI failures in `getting-started` and `tracecontext` jobs caused by GitHub git CDN SHA propagation lag by installing contrib packages from the already-checked-out local copy instead of a second git clone

@@ -180,7 +180,6 @@ class TestLogger(unittest.TestCase):
         self.assertTrue(isinstance(log_record, LogRecord))
         self.assertEqual(log_record.timestamp, None)
         self.assertEqual(log_record.observed_timestamp, 0)
-        self.assertIsNotNone(log_record.context)
         self.assertEqual(log_record.severity_number, None)
         self.assertEqual(log_record.severity_text, None)
         self.assertEqual(log_record.body, "a log line")
@@ -208,7 +207,6 @@ class TestLogger(unittest.TestCase):
         self.assertTrue(isinstance(result_log_record, LogRecord))
         self.assertEqual(result_log_record.timestamp, 100)
         self.assertEqual(result_log_record.observed_timestamp, 101)
-        self.assertIsNotNone(result_log_record.context)
         self.assertEqual(
             result_log_record.severity_number, SeverityNumber.WARN
         )
