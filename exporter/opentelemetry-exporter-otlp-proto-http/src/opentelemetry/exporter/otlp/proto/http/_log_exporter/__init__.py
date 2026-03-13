@@ -21,10 +21,14 @@ from io import BytesIO
 from os import environ
 from time import time
 from typing import Dict, Optional, Sequence
+from urllib.parse import urlparse
 
 import requests
 from requests.exceptions import ConnectionError
 
+from opentelemetry.exporter.otlp.proto.common._exporter_metrics import (
+    ExporterMetrics,
+)
 from opentelemetry.exporter.otlp.proto.common._log_encoder import encode_logs
 from opentelemetry.exporter.otlp.proto.http import (
     _OTLP_HTTP_HEADERS,
@@ -34,6 +38,7 @@ from opentelemetry.exporter.otlp.proto.http._common import (
     _is_retryable,
     _load_session_from_envvar,
 )
+from opentelemetry.metrics import MeterProvider
 from opentelemetry.sdk._logs import ReadableLogRecord
 from opentelemetry.sdk._logs.export import (
     LogRecordExporter,
@@ -56,6 +61,12 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_LOGS_HEADERS,
     OTEL_EXPORTER_OTLP_LOGS_TIMEOUT,
     OTEL_EXPORTER_OTLP_TIMEOUT,
+)
+from opentelemetry.semconv._incubating.attributes.otel_attributes import (
+    OtelComponentTypeValues,
+)
+from opentelemetry.semconv.attributes.http_attributes import (
+    HTTP_RESPONSE_STATUS_CODE,
 )
 from opentelemetry.util.re import parse_env_headers
 
@@ -82,6 +93,8 @@ class OTLPLogExporter(LogRecordExporter):
         timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
         session: Optional[requests.Session] = None,
+        *,
+        meter_provider: Optional[MeterProvider] = None,
     ):
         self._shutdown_is_occuring = threading.Event()
         self._endpoint = endpoint or environ.get(
@@ -139,6 +152,13 @@ class OTLPLogExporter(LogRecordExporter):
             )
         self._shutdown = False
 
+        self._metrics = ExporterMetrics(
+            OtelComponentTypeValues.OTLP_HTTP_LOG_EXPORTER.value,
+            "log",
+            urlparse(self._endpoint),
+            meter_provider,
+        )
+
     def _export(
         self, serialized_data: bytes, timeout_sec: Optional[float] = None
     ):
@@ -183,17 +203,22 @@ class OTLPLogExporter(LogRecordExporter):
             _logger.warning("Exporter already shutdown, ignoring batch")
             return LogRecordExportResult.FAILURE
 
+        finish_export = self._metrics.start_export(len(batch))
+
         serialized_data = encode_logs(batch).SerializeToString()
         deadline_sec = time() + self._timeout
         for retry_num in range(_MAX_RETRYS):
             # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
             backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
+            export_error: Optional[Exception] = None
             try:
                 resp = self._export(serialized_data, deadline_sec - time())
                 if resp.ok:
+                    finish_export(None, None)
                     return LogRecordExportResult.SUCCESS
             except requests.exceptions.RequestException as error:
                 reason = error
+                export_error = error
                 retryable = isinstance(error, ConnectionError)
                 status_code = None
             else:
@@ -207,6 +232,12 @@ class OTLPLogExporter(LogRecordExporter):
                     status_code,
                     reason,
                 )
+                error_attrs = (
+                    {HTTP_RESPONSE_STATUS_CODE: status_code}
+                    if status_code is not None
+                    else None
+                )
+                finish_export(export_error, error_attrs)
                 return LogRecordExportResult.FAILURE
 
             if (
@@ -218,6 +249,12 @@ class OTLPLogExporter(LogRecordExporter):
                     "Failed to export logs batch due to timeout, "
                     "max retries or shutdown."
                 )
+                error_attrs = (
+                    {HTTP_RESPONSE_STATUS_CODE: status_code}
+                    if status_code is not None
+                    else None
+                )
+                finish_export(export_error, error_attrs)
                 return LogRecordExportResult.FAILURE
             _logger.warning(
                 "Transient error %s encountered while exporting logs batch, retrying in %.2fs.",
