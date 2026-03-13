@@ -16,7 +16,6 @@
 import abc
 import atexit
 import concurrent.futures
-import fnmatch
 import json
 import logging
 import os
@@ -1266,16 +1265,6 @@ _InstrumentationScopePredicateT = Callable[[InstrumentationScope], bool]
 _TracerConfiguratorRulesT = Sequence[
     tuple[_InstrumentationScopePredicateT, _TracerConfig]
 ]
-
-
-# TODO: share this with configurators for other signals
-def _scope_name_matches_glob(
-    glob_pattern: str,
-) -> _InstrumentationScopePredicateT:
-    def inner(scope: InstrumentationScope) -> bool:
-        return fnmatch.fnmatch(scope.name, glob_pattern)
-
-    return inner
 
 
 class _RuleBasedTracerConfigurator:
