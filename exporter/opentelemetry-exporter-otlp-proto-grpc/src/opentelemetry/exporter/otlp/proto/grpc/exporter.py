@@ -309,7 +309,7 @@ class OTLPExporterMixin(
         *,
         component_type: Optional[str] = None,
         signal: Literal["span", "log", "metric_data_point"] = "span",
-        meter_provider: Optional[MeterProvider],
+        meter_provider: Optional[MeterProvider] = None,
     ):
         super().__init__()
         self._result = result
