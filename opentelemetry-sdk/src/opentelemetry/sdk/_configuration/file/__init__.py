@@ -24,6 +24,11 @@ Example:
     '1.0'
 """
 
+from opentelemetry.sdk._configuration._propagator import (
+    configure_propagator,
+    create_propagator,
+)
+from opentelemetry.sdk._configuration._resource import create_resource
 from opentelemetry.sdk._configuration.file._env_substitution import (
     EnvSubstitutionError,
     substitute_env_vars,
@@ -38,4 +43,7 @@ __all__ = [
     "substitute_env_vars",
     "ConfigurationError",
     "EnvSubstitutionError",
+    "create_resource",
+    "create_propagator",
+    "configure_propagator",
 ]
