@@ -346,6 +346,7 @@ class TestLoggingHandler(unittest.TestCase):
                     record.log_record.severity_number,
                     SeverityNumber.FATAL,
                 )
+                self.assertEqual(record.log_record.context, mock_context)
                 span_context = span.get_span_context()
                 self.assertEqual(
                     record.log_record.trace_id, span_context.trace_id
