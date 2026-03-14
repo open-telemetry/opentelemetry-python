@@ -814,15 +814,3 @@ Default: opentelemetry.sdk.trace._default_tracer_configurator
 This is an experimental environment variable and the name of this variable and its behavior can
 change in a non-backwards compatible way.
 """
-
-OTEL_PYTHON_METER_CONFIGURATOR = "OTEL_PYTHON_METER_CONFIGURATOR"
-"""
-.. envvar:: OTEL_PYTHON_METER_CONFIGURATOR
-
-The :envvar:`OTEL_PYTHON_METER_CONFIGURATOR` environment variable allows users to set a
-custom Meter Configurator function.
-Default: opentelemetry.sdk.metrics._internal._default_meter_configurator
-
-This is an experimental environment variable and the name of this variable and its behavior can
-change in a non-backwards compatible way.
-"""
