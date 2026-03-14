@@ -2,6 +2,10 @@ name: check-links
 on:
   push:
     branches: [ main ]
+    paths:
+      - '**/*.md'
+      - '.github/workflows/check-links.yml'
+      - '.github/workflows/check_links_config.json'
   pull_request:
     paths:
       - '**/*.md'
@@ -23,8 +27,6 @@ jobs:
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
 
       - name: Get changed markdown files
         id: changed-files
