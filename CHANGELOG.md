@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4979](https://github.com/open-telemetry/opentelemetry-python/pull/4979))
 - `opentelemetry-sdk`: Map Python `CRITICAL` log level to OTel `FATAL` severity text per the specification
   ([#4984](https://github.com/open-telemetry/opentelemetry-python/issues/4984))
-- `opentelemetry-api`: Optimize `LogRecord` memory by removing direct storage of the `Context` object.
+- `opentelemetry-sdk`: Optimize `LogRecord` memory in `BatchLogRecordProcessor` by clearing the `Context` object before buffering.
   ([#4957](https://github.com/open-telemetry/opentelemetry-python/issues/4957))
 - `opentelemetry-sdk`: Add file configuration support with YAML/JSON loading, environment variable substitution, and schema validation against the vendored OTel config JSON schema
   ([#4898](https://github.com/open-telemetry/opentelemetry-python/pull/4898))
