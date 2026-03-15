@@ -176,14 +176,21 @@ class BatchProcessor(Generic[Telemetry]):
             self._worker_awaken.clear()
         self._export(BatchExportStrategy.EXPORT_ALL)
 
-    def _export(self, batch_strategy: BatchExportStrategy, flush_should_end: Optional[float] = None) -> bool:
+    def _export(
+        self,
+        batch_strategy: BatchExportStrategy,
+        flush_should_end: Optional[float] = None,
+    ) -> bool:
         # Returns True if all batches were exported, False if flush_should_end was reached.
         with self._export_lock:
             iteration = 0
             # We could see concurrent export calls from worker and force_flush. We call _should_export_batch
             # once the lock is obtained to see if we still need to make the requested export.
             while self._should_export_batch(batch_strategy, iteration):
-                if flush_should_end is not None and time.time() >= flush_should_end:
+                if (
+                    flush_should_end is not None
+                    and time.time() >= flush_should_end
+                ):
                     return False
                 iteration += 1
                 token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
