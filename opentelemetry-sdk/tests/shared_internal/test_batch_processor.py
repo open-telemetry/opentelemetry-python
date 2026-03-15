@@ -171,6 +171,75 @@ class TestBatchProcessor:
         exporter.export.assert_called_once_with([telemetry for _ in range(10)])
         batch_processor.shutdown()
 
+    # pylint: disable=no-self-use
+    def test_force_flush_returns_true_when_all_exported(
+        self, batch_processor_class, telemetry
+    ):
+        exporter = Mock()
+        batch_processor = batch_processor_class(
+            exporter,
+            max_queue_size=15,
+            max_export_batch_size=15,
+            schedule_delay_millis=30000,
+            export_timeout_millis=500,
+        )
+        for _ in range(10):
+            batch_processor._batch_processor.emit(telemetry)
+        result = batch_processor.force_flush(timeout_millis=5000)
+        assert result is True
+        exporter.export.assert_called_once()
+        batch_processor.shutdown()
+
+    # pylint: disable=no-self-use
+    def test_force_flush_returns_false_when_timeout_exceeded(
+        self, batch_processor_class, telemetry
+    ):
+        call_count = 0
+
+        def slow_export(batch):
+            nonlocal call_count
+            call_count += 1
+            # Sleep long enough that the deadline is exceeded after first batch.
+            time.sleep(0.2)
+
+        exporter = Mock()
+        exporter.export.side_effect = slow_export
+        batch_processor = batch_processor_class(
+            exporter,
+            max_queue_size=50,
+            max_export_batch_size=1,
+            schedule_delay_millis=30000,
+            export_timeout_millis=500,
+        )
+        for _ in range(10):
+            batch_processor._batch_processor.emit(telemetry)
+        # 100ms timeout, each export takes 200ms, so deadline is hit after first batch.
+        result = batch_processor.force_flush(timeout_millis=100)
+        assert result is False
+        # Exporter was called at least once but not for all batches.
+        assert 1 <= call_count < 10
+        batch_processor.shutdown()
+
+    # pylint: disable=no-self-use
+    def test_force_flush_returns_false_when_shutdown(
+        self, batch_processor_class, telemetry
+    ):
+        exporter = Mock()
+        batch_processor = batch_processor_class(
+            exporter,
+            max_queue_size=15,
+            max_export_batch_size=15,
+            schedule_delay_millis=30000,
+            export_timeout_millis=500,
+        )
+        batch_processor.shutdown()
+        for _ in range(10):
+            batch_processor._batch_processor.emit(telemetry)
+        result = batch_processor.force_flush(timeout_millis=5000)
+        assert result is False
+        # Nothing should have been exported after shutdown.
+        exporter.export.assert_not_called()
+
     @unittest.skipUnless(
         hasattr(os, "fork"),
         "needs *nix",

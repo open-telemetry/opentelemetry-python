@@ -176,12 +176,15 @@ class BatchProcessor(Generic[Telemetry]):
             self._worker_awaken.clear()
         self._export(BatchExportStrategy.EXPORT_ALL)
 
-    def _export(self, batch_strategy: BatchExportStrategy) -> None:
+    def _export(self, batch_strategy: BatchExportStrategy, flush_should_end: Optional[float] = None) -> bool:
+        # Returns True if all batches were exported, False if flush_should_end was reached.
         with self._export_lock:
             iteration = 0
             # We could see concurrent export calls from worker and force_flush. We call _should_export_batch
             # once the lock is obtained to see if we still need to make the requested export.
             while self._should_export_batch(batch_strategy, iteration):
+                if flush_should_end is not None and time.time() >= flush_should_end:
+                    return False
                 iteration += 1
                 token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
                 error: Exception | None = None
@@ -206,6 +209,7 @@ class BatchProcessor(Generic[Telemetry]):
                 finally:
                     self._metrics.finish_items(count, error)
                 detach(token)
+        return True
 
     def emit(self, data: Telemetry) -> None:
         if self._shutdown:
@@ -248,10 +252,13 @@ class BatchProcessor(Generic[Telemetry]):
         # call is ongoing and the thread isn't finished. In this case we will return instead of waiting on
         # the thread to finish.
 
-    # TODO: Fix force flush so the timeout is used https://github.com/open-telemetry/opentelemetry-python/issues/4568.
     def force_flush(self, timeout_millis: Optional[int] = None) -> bool:
         if self._shutdown:
             return False
+        flush_should_end = (
+            time.time() + (timeout_millis / 1000)
+            if timeout_millis is not None
+            else None
+        )
         # Blocking call to export.
-        self._export(BatchExportStrategy.EXPORT_ALL)
-        return True
+        return self._export(BatchExportStrategy.EXPORT_ALL, flush_should_end)
