@@ -84,6 +84,7 @@ def create_gen_ai_server_time_per_output_token(meter: Meter) -> Histogram:
         name=GEN_AI_SERVER_TIME_PER_OUTPUT_TOKEN,
         description="Time per output token generated after the first token for successful responses.",
         unit="s",
+        explicit_bucket_boundaries_advisory=[0.01, 0.025, 0.05, 0.075, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.75, 1.0, 2.5]
     )
 
 
@@ -101,4 +102,6 @@ def create_gen_ai_server_time_to_first_token(meter: Meter) -> Histogram:
         name=GEN_AI_SERVER_TIME_TO_FIRST_TOKEN,
         description="Time to generate first token for successful responses.",
         unit="s",
+        explicit_bucket_boundaries_advisory=[0.001, 0.005, 0.01, 0.02, 0.04, 0.06, 0.08, 0.1, 0.25, 0.5, 0.75, 1.0, 2.5,
+                                             5.0, 7.5, 10.0]
     )
