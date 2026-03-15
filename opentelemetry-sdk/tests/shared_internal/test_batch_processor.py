@@ -206,18 +206,19 @@ class TestBatchProcessor:
         exporter.export.side_effect = slow_export
         batch_processor = batch_processor_class(
             exporter,
-            max_queue_size=50,
+            max_queue_size=200,
             max_export_batch_size=1,
+            # Long enough that the worker thread won't wake up during the test.
             schedule_delay_millis=30000,
             export_timeout_millis=500,
         )
-        for _ in range(10):
+        for _ in range(50):
             batch_processor._batch_processor.emit(telemetry)
         # 100ms timeout, each export takes 200ms, so deadline is hit after first batch.
         result = batch_processor.force_flush(timeout_millis=100)
         assert result is False
         # Exporter was called at least once but not for all batches.
-        assert 1 <= call_count < 10
+        assert 1 <= call_count < 50
         batch_processor.shutdown()
 
     # pylint: disable=no-self-use
