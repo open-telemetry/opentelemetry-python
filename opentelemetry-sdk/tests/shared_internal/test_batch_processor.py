@@ -171,6 +171,56 @@ class TestBatchProcessor:
         exporter.export.assert_called_once_with([telemetry for _ in range(10)])
         batch_processor.shutdown()
 
+    # pylint: disable=no-self-use
+    def test_force_flush_returns_true_when_all_exported(
+        self, batch_processor_class, telemetry
+    ):
+        exporter = Mock()
+        batch_processor = batch_processor_class(
+            exporter,
+            max_queue_size=15,
+            max_export_batch_size=15,
+            schedule_delay_millis=30000,
+            export_timeout_millis=500,
+        )
+        for _ in range(10):
+            batch_processor._batch_processor.emit(telemetry)
+        result = batch_processor.force_flush(timeout_millis=5000)
+        assert result is True
+        exporter.export.assert_called_once()
+        batch_processor.shutdown()
+
+    # pylint: disable=no-self-use
+    def test_force_flush_returns_false_when_timeout_exceeded(
+        self, batch_processor_class, telemetry
+    ):
+        # TODO: This test is difficult to write reliably across all runtimes
+        # (CPython, PyPy, free-threaded) because the deadline check in _export
+        # only fires between batches, not during a single exporter.export() call.
+        # A reliable test requires passing timeout into exporter.export() itself,
+        # which is tracked in https://github.com/open-telemetry/opentelemetry-python/issues/4555.
+        pass
+
+    # pylint: disable=no-self-use
+    def test_force_flush_returns_false_when_shutdown(
+        self, batch_processor_class, telemetry
+    ):
+        exporter = Mock()
+        batch_processor = batch_processor_class(
+            exporter,
+            max_queue_size=15,
+            max_export_batch_size=15,
+            schedule_delay_millis=30000,
+            export_timeout_millis=500,
+        )
+        batch_processor.shutdown()
+        for _ in range(10):
+            batch_processor._batch_processor.emit(telemetry)
+        result = batch_processor.force_flush(timeout_millis=5000)
+        assert result is False
+        # Nothing should have been exported after shutdown.
+        exporter.export.assert_not_called()
+
     @unittest.skipUnless(
         hasattr(os, "fork"),
         "needs *nix",
