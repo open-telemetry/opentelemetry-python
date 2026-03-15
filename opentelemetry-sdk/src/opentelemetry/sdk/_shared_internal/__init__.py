@@ -18,6 +18,7 @@ import collections
 import enum
 import inspect
 import logging
+import math
 import os
 import threading
 import time
@@ -179,18 +180,15 @@ class BatchProcessor(Generic[Telemetry]):
     def _export(
         self,
         batch_strategy: BatchExportStrategy,
-        flush_should_end: Optional[float] = None,
+        deadline: float = math.inf,
     ) -> bool:
-        # Returns True if all batches were exported, False if flush_should_end was reached.
+        # Returns True if all batches were exported, False if deadline was reached.
         with self._export_lock:
             iteration = 0
             # We could see concurrent export calls from worker and force_flush. We call _should_export_batch
             # once the lock is obtained to see if we still need to make the requested export.
             while self._should_export_batch(batch_strategy, iteration):
-                if (
-                    flush_should_end is not None
-                    and time.time() >= flush_should_end
-                ):
+                if time.time() >= deadline:
                     return False
                 iteration += 1
                 token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
@@ -262,10 +260,10 @@ class BatchProcessor(Generic[Telemetry]):
     def force_flush(self, timeout_millis: Optional[int] = None) -> bool:
         if self._shutdown:
             return False
-        flush_should_end = (
+        deadline = (
             time.time() + (timeout_millis / 1000)
             if timeout_millis is not None
-            else None
+            else math.inf
         )
         # Blocking call to export.
-        return self._export(BatchExportStrategy.EXPORT_ALL, flush_should_end)
+        return self._export(BatchExportStrategy.EXPORT_ALL, deadline)

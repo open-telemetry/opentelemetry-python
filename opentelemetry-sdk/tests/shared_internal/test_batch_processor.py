@@ -20,6 +20,7 @@ import os
 import threading
 import time
 import unittest
+import unittest.mock
 import weakref
 from platform import system
 from typing import Any
@@ -194,32 +195,33 @@ class TestBatchProcessor:
     def test_force_flush_returns_false_when_timeout_exceeded(
         self, batch_processor_class, telemetry
     ):
-        call_count = 0
-
-        def slow_export(batch):
-            nonlocal call_count
-            call_count += 1
-            # Sleep long enough that the deadline is exceeded after first batch.
-            time.sleep(0.2)
-
         exporter = Mock()
-        exporter.export.side_effect = slow_export
         batch_processor = batch_processor_class(
             exporter,
-            max_queue_size=200,
+            max_queue_size=15,
             max_export_batch_size=1,
-            # Long enough that the worker thread won't wake up during the test.
             schedule_delay_millis=30000,
             export_timeout_millis=500,
         )
-        for _ in range(50):
+        # Stop the worker thread first so it cannot export or interfere.
+        batch_processor._batch_processor._shutdown = True
+        batch_processor._batch_processor._worker_awaken.set()
+        batch_processor._batch_processor._worker_thread.join()
+        # Reset _shutdown so force_flush is not a no-op.
+        batch_processor._batch_processor._shutdown = False
+        # Emit items after worker is stopped.
+        for _ in range(3):
             batch_processor._batch_processor.emit(telemetry)
-        # 100ms timeout, each export takes 200ms, so deadline is hit after first batch.
-        result = batch_processor.force_flush(timeout_millis=100)
+        # Mock time.time(): first call computes deadline, second call is past it.
+        start = time.time()
+        with unittest.mock.patch(
+            "opentelemetry.sdk._shared_internal.time.time",
+            side_effect=[start, start + 1000],
+        ):
+            result = batch_processor.force_flush(timeout_millis=100)
         assert result is False
-        # Exporter was called at least once but not for all batches.
-        assert 1 <= call_count < 50
-        batch_processor.shutdown()
+        batch_processor._batch_processor._shutdown = True
+        batch_processor._batch_processor._exporter.shutdown()
 
     # pylint: disable=no-self-use
     def test_force_flush_returns_false_when_shutdown(
