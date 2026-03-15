@@ -42,6 +42,7 @@ from opentelemetry.sdk._logs import (
     LoggingHandler,
     LogRecordProcessor,
 )
+from opentelemetry.sdk._logs._internal import LoggerConfiguratorT
 from opentelemetry.sdk._logs.export import (
     BatchLogRecordProcessor,
     LogRecordExporter,
@@ -52,6 +53,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_PROTOCOL,
     OTEL_EXPORTER_OTLP_PROTOCOL,
     OTEL_EXPORTER_OTLP_TRACES_PROTOCOL,
+    OTEL_PYTHON_LOGGER_CONFIGURATOR,
     OTEL_PYTHON_METER_CONFIGURATOR,
     OTEL_PYTHON_TRACER_CONFIGURATOR,
     OTEL_TRACES_SAMPLER,
@@ -175,6 +177,10 @@ def _get_tracer_configurator() -> str | None:
 
 def _get_meter_configurator() -> str | None:
     return environ.get(OTEL_PYTHON_METER_CONFIGURATOR, None)
+
+
+def _get_logger_configurator() -> str | None:
+    return environ.get(OTEL_PYTHON_LOGGER_CONFIGURATOR, None)
 
 
 def _get_exporter_entry_point(
@@ -305,8 +311,11 @@ def _init_logging(
     log_record_processors: Sequence[LogRecordProcessor] | None = None,
     export_log_record_processor: _ConfigurationExporterLogRecordProcessorT
     | None = None,
+    logger_configurator: LoggerConfiguratorT | None = None,
 ):
-    provider = LoggerProvider(resource=resource)
+    provider = LoggerProvider(
+        resource=resource, logger_configurator=logger_configurator
+    )
     set_logger_provider(provider)
 
     exporter_args_map = exporter_args_map or {}
@@ -375,6 +384,27 @@ def _overwrite_logging_config_fns(handler: LoggingHandler) -> None:
     logging.config.fileConfig = wrapper(logging.config.fileConfig)
     logging.config.dictConfig = wrapper(logging.config.dictConfig)
     logging.basicConfig = wrapper(logging.basicConfig)
+
+
+def _import_logger_configurator(
+    logger_configurator_name: str | None,
+) -> LoggerConfiguratorT | None:
+    if not logger_configurator_name:
+        return None
+
+    try:
+        _, logger_configurator_impl = _import_config_components(
+            [logger_configurator_name.strip()],
+            "_opentelemetry_logger_configurator",
+        )[0]
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        _logger.warning(
+            "Using default logger configurator. Failed to load logger configurator, %s: %s",
+            logger_configurator_name,
+            exc,
+        )
+        return None
+    return logger_configurator_impl
 
 
 def _import_tracer_configurator(
@@ -540,6 +570,7 @@ def _initialize_components(
     | None = None,
     tracer_configurator: _TracerConfiguratorT | None = None,
     meter_configurator: _MeterConfiguratorT | None = None,
+    logger_configurator: LoggerConfiguratorT | None = None,
 ):
     # pylint: disable=too-many-locals
     if trace_exporter_names is None:
@@ -575,6 +606,11 @@ def _initialize_components(
         meter_configurator_name = _get_meter_configurator()
         meter_configurator = _import_meter_configurator(
             meter_configurator_name
+        )
+    if logger_configurator is None:
+        logger_configurator_name = _get_logger_configurator()
+        logger_configurator = _import_logger_configurator(
+            logger_configurator_name
         )
 
     # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
@@ -613,6 +649,7 @@ def _initialize_components(
         exporter_args_map=exporter_args_map,
         log_record_processors=log_record_processors,
         export_log_record_processor=export_log_record_processor,
+        logger_configurator=logger_configurator,
     )
 
 

@@ -778,10 +778,10 @@ class RuleBasedLoggerConfigurator:
         self._rules = rules
         self._default_config = default_config
 
-    def __call__(self, meter_scope: InstrumentationScope) -> LoggerConfig:
-        for predicate, meter_config in self._rules:
-            if predicate(meter_scope):
-                return meter_config
+    def __call__(self, logger_scope: InstrumentationScope) -> LoggerConfig:
+        for predicate, logger_config in self._rules:
+            if predicate(logger_scope):
+                return logger_config
         # by default return default config
         return self._default_config
 
