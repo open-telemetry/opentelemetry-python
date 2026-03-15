@@ -46,8 +46,7 @@ an ``opentelemetry.instrumentation.django.DjangoInstrumentor`` to instrument the
 
 Clone the ``opentelemetry-python`` repository and go to ``opentelemetry-python/docs/examples/django``.
 
-Once there, open the ``manage.py`` file. The call to ``DjangoInstrumentor().instrument()``
-in ``main`` is all that is needed to make the app be instrumented.
+Once there, open the ``manage.py`` file, which uses the OpenTelemetry SDK to set up tracing with console exporter and manual instrumentation of Django.
 
 Run the Django app with ``python manage.py runserver --noreload``.
 The ``--noreload`` flag is needed to avoid Django from running ``main`` twice.
@@ -110,9 +109,10 @@ Django's instrumentation can be disabled by setting the following environment va
 Auto Instrumentation
 --------------------
 
-This same example can be run using auto instrumentation. Comment out the call
-to ``DjangoInstrumentor().instrument()`` in ``main``, then Run the django app
-with ``opentelemetry-instrument python manage.py runserver --noreload``.
+This same example can be run using auto instrumentation. Comment out the
+``TracerProvider`` setup and the call to ``DjangoInstrumentor().instrument()``
+in ``main``, then run the Django app with
+``opentelemetry-instrument python manage.py runserver --noreload``.
 Repeat the steps with the client, the result should be the same.
 
 Usage with Auto Instrumentation and uWSGI
