@@ -26,6 +26,9 @@ import opentelemetry.sdk.metrics._internal.sdk_configuration
 from opentelemetry.metrics._internal.instrument import CallbackOptions
 from opentelemetry.sdk.metrics._internal.exceptions import MetricsTimeoutError
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
+from opentelemetry.sdk.metrics._internal.measurement_processor import (
+    MeasurementProcessorChain,
+)
 from opentelemetry.sdk.metrics._internal.metric_reader_storage import (
     MetricReaderStorage,
 )
@@ -62,6 +65,10 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
     ) -> None:
         self._lock = Lock()
         self._sdk_config = sdk_config
+        self._measurement_processor_chain = (
+            sdk_config.measurement_processor_chain
+            or MeasurementProcessorChain()
+        )
         # should never be mutated
         self._reader_storages: Mapping[
             "opentelemetry.sdk.metrics.MetricReader", MetricReaderStorage
@@ -78,18 +85,22 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
         ] = []
 
     def consume_measurement(self, measurement: Measurement) -> None:
-        should_sample_exemplar = (
-            self._sdk_config.exemplar_filter.should_sample(
-                measurement.value,
-                measurement.time_unix_nano,
-                measurement.attributes,
-                measurement.context,
+        def final_consumer(processed_measurement: Measurement) -> None:
+            should_sample_exemplar = (
+                self._sdk_config.exemplar_filter.should_sample(
+                    processed_measurement.value,
+                    processed_measurement.time_unix_nano,
+                    processed_measurement.attributes,
+                    processed_measurement.context,
+                )
             )
-        )
-        for reader_storage in self._reader_storages.values():
-            reader_storage.consume_measurement(
-                measurement, should_sample_exemplar
-            )
+            for reader_storage in self._reader_storages.values():
+                reader_storage.consume_measurement(
+                    processed_measurement, should_sample_exemplar
+                )
+
+        # Process the measurement through the processor chain
+        self._measurement_processor_chain.process(measurement, final_consumer)
 
     def register_asynchronous_instrument(
         self,
