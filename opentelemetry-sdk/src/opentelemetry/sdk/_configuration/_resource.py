@@ -24,9 +24,9 @@ from opentelemetry.sdk._configuration.models import (
 )
 from opentelemetry.sdk._configuration.models import Resource as ResourceConfig
 from opentelemetry.sdk.resources import (
+    _DEFAULT_RESOURCE,
     SERVICE_NAME,
     Resource,
-    _DEFAULT_RESOURCE,
 )
 
 _logger = logging.getLogger(__name__)
