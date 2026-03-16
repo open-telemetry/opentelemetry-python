@@ -11,7 +11,7 @@ from opentelemetry.sdk.metrics import MeterProvider
 start_http_server(port=8000, addr="localhost")
 # Exporter to export metrics to Prometheus
 prefix = "MyAppPrefix"
-reader = PrometheusMetricReader(prefix)
+reader = PrometheusMetricReader(prefix=prefix)
 # Meter is responsible for creating and recording metrics
 set_meter_provider(MeterProvider(metric_readers=[reader]))
 meter = get_meter_provider().get_meter("view-name-change", "0.1.2")
