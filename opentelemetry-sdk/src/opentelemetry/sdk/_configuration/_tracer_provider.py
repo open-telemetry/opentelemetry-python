@@ -15,13 +15,10 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Dict, Optional
+from typing import Dict, Optional
 
 from opentelemetry import trace
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
-from opentelemetry.sdk._configuration.models import (
-    BatchSpanProcessor as BatchSpanProcessorConfig,
-)
 from opentelemetry.sdk._configuration.models import (
     OtlpGrpcExporter as OtlpGrpcExporterConfig,
 )
@@ -33,9 +30,6 @@ from opentelemetry.sdk._configuration.models import (
 )
 from opentelemetry.sdk._configuration.models import (
     Sampler as SamplerConfig,
-)
-from opentelemetry.sdk._configuration.models import (
-    SimpleSpanProcessor as SimpleSpanProcessorConfig,
 )
 from opentelemetry.sdk._configuration.models import (
     SpanExporter as SpanExporterConfig,
@@ -51,13 +45,19 @@ from opentelemetry.sdk._configuration.models import (
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import (
-    SpanLimits,
-    TracerProvider,
     _DEFAULT_OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT,
     _DEFAULT_OTEL_LINK_ATTRIBUTE_COUNT_LIMIT,
     _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
     _DEFAULT_OTEL_SPAN_EVENT_COUNT_LIMIT,
     _DEFAULT_OTEL_SPAN_LINK_COUNT_LIMIT,
+    SpanLimits,
+    TracerProvider,
+)
+from opentelemetry.sdk.trace.export import (
+    BatchSpanProcessor,
+    ConsoleSpanExporter,
+    SimpleSpanProcessor,
+    SpanExporter,
 )
 from opentelemetry.sdk.trace.sampling import (
     ALWAYS_OFF,
@@ -66,9 +66,6 @@ from opentelemetry.sdk.trace.sampling import (
     Sampler,
     TraceIdRatioBased,
 )
-
-if TYPE_CHECKING:
-    from opentelemetry.sdk.trace.export import SpanExporter
 
 _logger = logging.getLogger(__name__)
 
@@ -105,14 +102,17 @@ def _parse_headers(
     return result
 
 
-def _create_otlp_http_span_exporter(config: OtlpHttpExporterConfig) -> "SpanExporter":
+def _create_otlp_http_span_exporter(
+    config: OtlpHttpExporterConfig,
+) -> SpanExporter:
     """Create an OTLP HTTP span exporter from config."""
     try:
-        from opentelemetry.exporter.otlp.proto.http.trace_exporter import (  # type: ignore[import-untyped]
-            OTLPSpanExporter,
-        )
-        from opentelemetry.exporter.otlp.proto.http import (  # type: ignore[import-untyped]
+        # pylint: disable=import-outside-toplevel,no-name-in-module
+        from opentelemetry.exporter.otlp.proto.http import (  # type: ignore[import-untyped]  # noqa: PLC0415
             Compression,
+        )
+        from opentelemetry.exporter.otlp.proto.http.trace_exporter import (  # type: ignore[import-untyped]  # noqa: PLC0415
+            OTLPSpanExporter,
         )
     except ImportError as exc:
         raise ConfigurationError(
@@ -120,36 +120,40 @@ def _create_otlp_http_span_exporter(config: OtlpHttpExporterConfig) -> "SpanExpo
             "Install it with: pip install opentelemetry-exporter-otlp-proto-http"
         ) from exc
 
-    compression = _map_compression_http(config.compression, Compression)
+    compression = _map_compression(config.compression, Compression)
     headers = _parse_headers(config.headers, config.headers_list)
     timeout = (config.timeout / 1000.0) if config.timeout is not None else None
 
-    return OTLPSpanExporter(
+    return OTLPSpanExporter(  # type: ignore[return-value]
         endpoint=config.endpoint,
         headers=headers,
         timeout=timeout,
-        compression=compression,
+        compression=compression,  # type: ignore[arg-type]
     )
 
 
-def _map_compression_http(
+def _map_compression(
     value: Optional[str], compression_enum: type
 ) -> Optional[object]:
-    """Map a compression string to the HTTP Compression enum value."""
+    """Map a compression string to the given Compression enum value."""
     if value is None or value.lower() == "none":
         return None
     if value.lower() == "gzip":
-        return compression_enum.Gzip
+        return compression_enum.Gzip  # type: ignore[attr-defined]
     raise ConfigurationError(
         f"Unsupported compression value '{value}'. Supported values: 'gzip', 'none'."
     )
 
 
-def _create_otlp_grpc_span_exporter(config: OtlpGrpcExporterConfig) -> "SpanExporter":
+def _create_otlp_grpc_span_exporter(
+    config: OtlpGrpcExporterConfig,
+) -> SpanExporter:
     """Create an OTLP gRPC span exporter from config."""
     try:
-        import grpc  # type: ignore[import-untyped]
-        from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (  # type: ignore[import-untyped]
+        # pylint: disable=import-outside-toplevel,no-name-in-module
+        import grpc  # type: ignore[import-untyped]  # noqa: PLC0415
+
+        from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (  # type: ignore[import-untyped]  # noqa: PLC0415
             OTLPSpanExporter,
         )
     except ImportError as exc:
@@ -158,40 +162,25 @@ def _create_otlp_grpc_span_exporter(config: OtlpGrpcExporterConfig) -> "SpanExpo
             "Install it with: pip install opentelemetry-exporter-otlp-proto-grpc"
         ) from exc
 
-    compression = _map_compression_grpc(config.compression, grpc)
+    compression = _map_compression(config.compression, grpc.Compression)
     headers = _parse_headers(config.headers, config.headers_list)
     timeout = (config.timeout / 1000.0) if config.timeout is not None else None
 
-    return OTLPSpanExporter(
+    return OTLPSpanExporter(  # type: ignore[return-value]
         endpoint=config.endpoint,
         headers=headers,
         timeout=timeout,
-        compression=compression,
+        compression=compression,  # type: ignore[arg-type]
     )
 
 
-def _map_compression_grpc(
-    value: Optional[str], grpc_module: object
-) -> Optional[object]:
-    """Map a compression string to the gRPC Compression enum value."""
-    if value is None or value.lower() == "none":
-        return None
-    if value.lower() == "gzip":
-        return grpc_module.Compression.Gzip  # type: ignore[attr-defined]
-    raise ConfigurationError(
-        f"Unsupported compression value '{value}'. Supported values: 'gzip', 'none'."
-    )
-
-
-def _create_span_exporter(config: SpanExporterConfig) -> "SpanExporter":
+def _create_span_exporter(config: SpanExporterConfig) -> SpanExporter:
     """Create a span exporter from config."""
     if config.otlp_http is not None:
         return _create_otlp_http_span_exporter(config.otlp_http)
     if config.otlp_grpc is not None:
         return _create_otlp_grpc_span_exporter(config.otlp_grpc)
     if config.console is not None:
-        from opentelemetry.sdk.trace.export import ConsoleSpanExporter
-
         return ConsoleSpanExporter()
     raise ConfigurationError(
         "No exporter type specified in span exporter config. "
@@ -199,35 +188,26 @@ def _create_span_exporter(config: SpanExporterConfig) -> "SpanExporter":
     )
 
 
-def _create_span_processor(config: SpanProcessorConfig) -> object:
+def _create_span_processor(
+    config: SpanProcessorConfig,
+) -> BatchSpanProcessor | SimpleSpanProcessor:
     """Create a span processor from config."""
-    from opentelemetry.sdk.trace.export import (
-        BatchSpanProcessor,
-        SimpleSpanProcessor,
-    )
-
     if config.batch is not None:
-        return _create_batch_span_processor(config.batch, BatchSpanProcessor)
+        exporter = _create_span_exporter(config.batch.exporter)
+        return BatchSpanProcessor(
+            exporter,
+            max_queue_size=config.batch.max_queue_size,
+            schedule_delay_millis=config.batch.schedule_delay,
+            max_export_batch_size=config.batch.max_export_batch_size,
+            export_timeout_millis=config.batch.export_timeout,
+        )
     if config.simple is not None:
-        exporter = _create_span_exporter(config.simple.exporter)
-        return SimpleSpanProcessor(exporter)
+        return SimpleSpanProcessor(
+            _create_span_exporter(config.simple.exporter)
+        )
     raise ConfigurationError(
         "No processor type specified in span processor config. "
         "Supported types: batch, simple."
-    )
-
-
-def _create_batch_span_processor(
-    config: BatchSpanProcessorConfig, batch_cls: type
-) -> object:
-    """Build a BatchSpanProcessor from config."""
-    exporter = _create_span_exporter(config.exporter)
-    return batch_cls(
-        exporter,
-        max_queue_size=config.max_queue_size,
-        schedule_delay_millis=config.schedule_delay,
-        max_export_batch_size=config.max_export_batch_size,
-        export_timeout_millis=config.export_timeout,
     )
 
 
@@ -250,8 +230,10 @@ def _create_sampler(config: SamplerConfig) -> Sampler:
 
 def _create_parent_based_sampler(config: ParentBasedSamplerConfig) -> Sampler:
     """Create a ParentBased sampler from config, applying SDK defaults for absent delegates."""
-    root = _create_sampler(config.root) if config.root is not None else ALWAYS_ON
-    kwargs = {"root": root}
+    root = (
+        _create_sampler(config.root) if config.root is not None else ALWAYS_ON
+    )
+    kwargs: dict = {"root": root}
     if config.remote_parent_sampled is not None:
         kwargs["remote_parent_sampled"] = _create_sampler(
             config.remote_parent_sampled
@@ -268,7 +250,7 @@ def _create_parent_based_sampler(config: ParentBasedSamplerConfig) -> Sampler:
         kwargs["local_parent_not_sampled"] = _create_sampler(
             config.local_parent_not_sampled
         )
-    return ParentBased(**kwargs)  # type: ignore[arg-type]
+    return ParentBased(**kwargs)
 
 
 def _create_span_limits(config: SpanLimitsConfig) -> SpanLimits:
@@ -303,9 +285,7 @@ def _create_span_limits(config: SpanLimitsConfig) -> SpanLimits:
             if config.link_attribute_count_limit is not None
             else _DEFAULT_OTEL_LINK_ATTRIBUTE_COUNT_LIMIT
         ),
-        max_attribute_length=(
-            config.attribute_value_length_limit
-        ),
+        max_attribute_length=config.attribute_value_length_limit,
     )
 
 
@@ -351,9 +331,7 @@ def create_tracer_provider(
 
     if config is not None:
         for proc_config in config.processors:
-            provider.add_span_processor(  # type: ignore[arg-type]
-                _create_span_processor(proc_config)
-            )
+            provider.add_span_processor(_create_span_processor(proc_config))
 
     return provider
 

@@ -12,12 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Tests access private members of SDK classes to assert correct configuration.
+# pylint: disable=protected-access
+
 import os
+import sys
 import unittest
 from unittest.mock import MagicMock, patch
 
 from opentelemetry.sdk._configuration._tracer_provider import (
-    _DEFAULT_SAMPLER,
     configure_tracer_provider,
     create_tracer_provider,
 )
@@ -50,13 +53,18 @@ from opentelemetry.sdk._configuration.models import (
     SpanProcessor as SpanProcessorConfig,
 )
 from opentelemetry.sdk._configuration.models import (
-    TracerProvider as TracerProviderConfig,
-)
-from opentelemetry.sdk._configuration.models import (
     TraceIdRatioBasedSampler as TraceIdRatioBasedConfig,
 )
+from opentelemetry.sdk._configuration.models import (
+    TracerProvider as TracerProviderConfig,
+)
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.trace import SpanLimits, TracerProvider
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import (
+    BatchSpanProcessor,
+    ConsoleSpanExporter,
+    SimpleSpanProcessor,
+)
 from opentelemetry.sdk.trace.sampling import (
     ALWAYS_OFF,
     ALWAYS_ON,
@@ -82,7 +90,6 @@ class TestCreateTracerProviderBasic(unittest.TestCase):
 
     def test_none_config_no_processors(self):
         provider = create_tracer_provider(None)
-        # SynchronousMultiSpanProcessor with no processors added
         self.assertEqual(
             len(provider._active_span_processor._span_processors), 0
         )
@@ -90,17 +97,12 @@ class TestCreateTracerProviderBasic(unittest.TestCase):
     def test_none_config_does_not_read_sampler_env_var(self):
         with patch.dict(os.environ, {"OTEL_TRACES_SAMPLER": "always_off"}):
             provider = create_tracer_provider(None)
-        # Should still be ParentBased (default), not ALWAYS_OFF from env var
         self.assertIsInstance(provider.sampler, ParentBased)
 
     def test_none_config_does_not_read_span_limit_env_var(self):
-        with patch.dict(
-            os.environ, {"OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT": "1"}
-        ):
+        with patch.dict(os.environ, {"OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT": "1"}):
             provider = create_tracer_provider(None)
-        self.assertEqual(
-            provider._span_limits.max_span_attributes, 128
-        )
+        self.assertEqual(provider._span_limits.max_span_attributes, 128)
 
     def test_configure_none_does_not_set_global(self):
         original = __import__(
@@ -150,10 +152,9 @@ class TestCreateTracerProviderBasic(unittest.TestCase):
 
 class TestCreateSampler(unittest.TestCase):
     def _make_provider(self, sampler_config):
-        config = TracerProviderConfig(
-            processors=[], sampler=sampler_config
+        return create_tracer_provider(
+            TracerProviderConfig(processors=[], sampler=sampler_config)
         )
-        return create_tracer_provider(config)
 
     def test_always_on(self):
         provider = self._make_provider(SamplerConfig(always_on={}))
@@ -194,7 +195,6 @@ class TestCreateSampler(unittest.TestCase):
             SamplerConfig(parent_based=ParentBasedSamplerConfig())
         )
         self.assertIsInstance(provider.sampler, ParentBased)
-        # Root defaults to ALWAYS_ON
         self.assertIs(provider.sampler._root, ALWAYS_ON)
 
     def test_parent_based_with_delegate_samplers(self):
@@ -219,14 +219,15 @@ class TestCreateSampler(unittest.TestCase):
     def test_unknown_sampler_raises_configuration_error(self):
         with self.assertRaises(ConfigurationError):
             create_tracer_provider(
-                TracerProviderConfig(
-                    processors=[], sampler=SamplerConfig()
-                )
+                TracerProviderConfig(processors=[], sampler=SamplerConfig())
             )
 
 
 class TestCreateSpanExporterAndProcessor(unittest.TestCase):
-    def _make_batch_config(self, exporter_config):
+    # pylint: disable=no-self-use
+
+    @staticmethod
+    def _make_batch_config(exporter_config):
         return TracerProviderConfig(
             processors=[
                 SpanProcessorConfig(
@@ -235,7 +236,8 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
             ]
         )
 
-    def _make_simple_config(self, exporter_config):
+    @staticmethod
+    def _make_simple_config(exporter_config):
         return TracerProviderConfig(
             processors=[
                 SpanProcessorConfig(
@@ -245,11 +247,6 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
         )
 
     def test_console_exporter_batch(self):
-        from opentelemetry.sdk.trace.export import (
-            BatchSpanProcessor,
-            ConsoleSpanExporter,
-        )
-
         config = self._make_batch_config(SpanExporterConfig(console={}))
         provider = create_tracer_provider(config)
         procs = provider._active_span_processor._span_processors
@@ -258,11 +255,6 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
         self.assertIsInstance(procs[0].span_exporter, ConsoleSpanExporter)
 
     def test_console_exporter_simple(self):
-        from opentelemetry.sdk.trace.export import (
-            ConsoleSpanExporter,
-            SimpleSpanProcessor,
-        )
-
         config = self._make_simple_config(SpanExporterConfig(console={}))
         provider = create_tracer_provider(config)
         procs = provider._active_span_processor._span_processors
@@ -270,8 +262,6 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
         self.assertIsInstance(procs[0].span_exporter, ConsoleSpanExporter)
 
     def test_otlp_http_missing_package_raises(self):
-        import sys
-
         config = self._make_batch_config(
             SpanExporterConfig(otlp_http=OtlpHttpExporterConfig())
         )
@@ -290,8 +280,6 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
         mock_exporter_cls = MagicMock()
         mock_compression_cls = MagicMock()
         mock_compression_cls.Gzip = "gzip_val"
-        import sys
-
         mock_module = MagicMock()
         mock_module.OTLPSpanExporter = mock_exporter_cls
         mock_http_module = MagicMock()
@@ -323,8 +311,6 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
     def test_otlp_http_headers_list(self):
         mock_exporter_cls = MagicMock()
         mock_http_module = MagicMock()
-        import sys
-
         mock_module = MagicMock()
         mock_module.OTLPSpanExporter = mock_exporter_cls
 
@@ -350,8 +336,6 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
         )
 
     def test_otlp_grpc_missing_package_raises(self):
-        import sys
-
         config = self._make_batch_config(
             SpanExporterConfig(otlp_grpc=OtlpGrpcExporterConfig())
         )
@@ -367,9 +351,7 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
         self.assertIn("otlp-proto-grpc", str(ctx.exception))
 
     def test_no_processor_type_raises(self):
-        config = TracerProviderConfig(
-            processors=[SpanProcessorConfig()]
-        )
+        config = TracerProviderConfig(processors=[SpanProcessorConfig()])
         with self.assertRaises(ConfigurationError):
             create_tracer_provider(config)
 
@@ -380,9 +362,13 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
 
 
 class TestCreateSpanLimits(unittest.TestCase):
-    def _create_with_limits(self, limits_config):
-        config = TracerProviderConfig(processors=[], limits=limits_config)
-        return create_tracer_provider(config)
+    # pylint: disable=no-self-use
+
+    @staticmethod
+    def _create_with_limits(limits_config):
+        return create_tracer_provider(
+            TracerProviderConfig(processors=[], limits=limits_config)
+        )
 
     def test_explicit_attribute_count_limit(self):
         provider = self._create_with_limits(
