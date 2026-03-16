@@ -24,6 +24,10 @@ Example:
     '1.0'
 """
 
+from opentelemetry.sdk._configuration._meter_provider import (
+    configure_meter_provider,
+    create_meter_provider,
+)
 from opentelemetry.sdk._configuration._propagator import (
     configure_propagator,
     create_propagator,
@@ -46,4 +50,6 @@ __all__ = [
     "create_resource",
     "create_propagator",
     "configure_propagator",
+    "create_meter_provider",
+    "configure_meter_provider",
 ]
