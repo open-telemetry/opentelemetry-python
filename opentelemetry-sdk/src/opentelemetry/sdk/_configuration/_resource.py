@@ -38,37 +38,27 @@ def _coerce_bool(value: object) -> bool:
     return bool(value)
 
 
-# Dispatch table for scalar type coercions
-_SCALAR_COERCIONS = {
+def _array(coerce: object) -> object:
+    return lambda value: [coerce(item) for item in value]  # type: ignore[operator]
+
+
+# Unified dispatch table for all attribute type coercions
+_COERCIONS = {
     AttributeType.string: str,
     AttributeType.int: int,
     AttributeType.double: float,
     AttributeType.bool: _coerce_bool,
-}
-
-# Dispatch table for array type coercions
-_ARRAY_COERCIONS = {
-    AttributeType.string_array: str,
-    AttributeType.bool_array: _coerce_bool,
-    AttributeType.int_array: int,
-    AttributeType.double_array: float,
+    AttributeType.string_array: _array(str),
+    AttributeType.int_array: _array(int),
+    AttributeType.double_array: _array(float),
+    AttributeType.bool_array: _array(_coerce_bool),
 }
 
 
 def _coerce_attribute_value(attr: AttributeNameValue) -> object:
     """Coerce an attribute value to the correct Python type based on AttributeType."""
-    value = attr.value
-    attr_type = attr.type
-
-    if attr_type is None:
-        return value
-    scalar_coercer = _SCALAR_COERCIONS.get(attr_type)
-    if scalar_coercer is not None:
-        return scalar_coercer(value)  # type: ignore[arg-type]
-    array_coercer = _ARRAY_COERCIONS.get(attr_type)
-    if array_coercer is not None:
-        return [array_coercer(item) for item in value]  # type: ignore[union-attr,arg-type]
-    return value
+    coerce = _COERCIONS.get(attr.type)  # type: ignore[arg-type]
+    return coerce(attr.value) if coerce is not None else attr.value  # type: ignore[operator]
 
 
 def _parse_attributes_list(attributes_list: str) -> dict[str, str]:
@@ -112,19 +102,15 @@ def create_resource(config: Optional[ResourceConfig]) -> Resource:
         service_resource = Resource({SERVICE_NAME: "unknown_service"})
         return base.merge(service_resource)
 
-    # Build attributes from config.attributes list
+    # attributes_list is lower priority; process it first so that explicit
+    # attributes can simply overwrite any conflicting keys.
     config_attrs: dict[str, object] = {}
+    if config.attributes_list:
+        config_attrs.update(_parse_attributes_list(config.attributes_list))
+
     if config.attributes:
         for attr in config.attributes:
             config_attrs[attr.name] = _coerce_attribute_value(attr)
-
-    # Parse attributes_list (key=value,key=value string format)
-    if config.attributes_list:
-        list_attrs = _parse_attributes_list(config.attributes_list)
-        # attributes_list entries do not override explicit attributes
-        for attr_key, attr_val in list_attrs.items():
-            if attr_key not in config_attrs:
-                config_attrs[attr_key] = attr_val
 
     schema_url = config.schema_url
 
