@@ -33,15 +33,15 @@ jobs:
   check:
     if: always()
     needs:
-      - misc-0
-      - linters-0
-      - tests-0
-      - tests-1
+      - misc_0
+      - lint_0
+      - tests_0
+      - tests_1
     runs-on: ubuntu-latest
     steps:
       - name: Decide whether the needed jobs succeeded or failed
         uses: re-actors/alls-green@release/v1
         with:
-          allowed-failures: misc-0
-          allowed-skips: ""
+          allowed-failures: ""
+          allowed-skips: "misc_0"
           jobs: ${{ toJSON(needs) }}
