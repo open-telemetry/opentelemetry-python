@@ -151,7 +151,8 @@ class TestCreateTracerProviderBasic(unittest.TestCase):
 
 
 class TestCreateSampler(unittest.TestCase):
-    def _make_provider(self, sampler_config):
+    @staticmethod
+    def _make_provider(sampler_config):
         return create_tracer_provider(
             TracerProviderConfig(processors=[], sampler=sampler_config)
         )
