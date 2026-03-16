@@ -141,34 +141,36 @@ def _generate_workflow(
     template_name: str,
     output_dir: Path,
     max_jobs: int = 250,
-):
-    # Github seems to limit the amount of jobs in a workflow file, that is why
-    # they are split in groups of 250 per workflow file.
-    for file_number, job_datas in enumerate(
-        [
-            job_datas[index : index + max_jobs]
-            for index in range(0, len(job_datas), max_jobs)
-        ]
-    ):
+) -> list:
+    """Generate reusable workflow files, returns list of file numbers."""
+    # GitHub limits workflows to 256 jobs per file. We use a lower default
+    # (250)
+    chunks = [
+        job_datas[index : index + max_jobs]
+        for index in range(0, len(job_datas), max_jobs)
+    ]
+    file_numbers = []
+    env = Environment(
+        loader=FileSystemLoader(Path(__file__).parent.joinpath("templates"))
+    )
+    for file_number, chunk_job_datas in enumerate(chunks):
         with open(
             output_dir.joinpath(f"{template_name}_{file_number}.yml"), "w"
-        ) as test_yml_file:
-            test_yml_file.write(
-                Environment(
-                    loader=FileSystemLoader(
-                        Path(__file__).parent.joinpath("templates")
-                    )
+        ) as yml_file:
+            yml_file.write(
+                env.get_template(f"{template_name}.yml.j2").render(
+                    job_datas=chunk_job_datas, file_number=file_number
                 )
-                .get_template(f"{template_name}.yml.j2")
-                .render(job_datas=job_datas, file_number=file_number)
             )
-            test_yml_file.write("\n")
+            yml_file.write("\n")
+        file_numbers.append(file_number)
+    return file_numbers
 
 
 def generate_test_workflow(
     tox_ini_path: Path, workflow_directory_path: Path, operating_systems
-) -> None:
-    _generate_workflow(
+) -> list:
+    return _generate_workflow(
         get_test_job_datas(get_tox_envs(tox_ini_path), operating_systems),
         "test",
         workflow_directory_path,
@@ -178,8 +180,8 @@ def generate_test_workflow(
 def generate_lint_workflow(
     tox_ini_path: Path,
     workflow_directory_path: Path,
-) -> None:
-    _generate_workflow(
+) -> list:
+    return _generate_workflow(
         get_lint_job_datas(get_tox_envs(tox_ini_path)),
         "lint",
         workflow_directory_path,
@@ -189,19 +191,46 @@ def generate_lint_workflow(
 def generate_misc_workflow(
     tox_ini_path: Path,
     workflow_directory_path: Path,
-) -> None:
-    _generate_workflow(
+) -> list:
+    return _generate_workflow(
         get_misc_job_datas(get_tox_envs(tox_ini_path)),
         "misc",
         workflow_directory_path,
     )
 
 
+def generate_ci_workflow(
+    test_file_numbers: list,
+    lint_file_numbers: list,
+    misc_file_numbers: list,
+    output_dir: Path,
+) -> None:
+    """Generate the parent CI orchestrator workflow."""
+    with open(output_dir.joinpath("ci.yml"), "w") as ci_yml_file:
+        ci_yml_file.write(
+            Environment(
+                loader=FileSystemLoader(
+                    Path(__file__).parent.joinpath("templates")
+                )
+            )
+            .get_template("ci.yml.j2")
+            .render(
+                test_file_numbers=test_file_numbers,
+                lint_file_numbers=lint_file_numbers,
+                misc_file_numbers=misc_file_numbers,
+            )
+        )
+        ci_yml_file.write("\n")
+
+
 if __name__ == "__main__":
     tox_ini_path = Path(__file__).parent.parent.parent.joinpath("tox.ini")
     output_dir = Path(__file__).parent
-    generate_test_workflow(
+    test_file_numbers = generate_test_workflow(
         tox_ini_path, output_dir, ["ubuntu-latest", "windows-latest"]
     )
-    generate_lint_workflow(tox_ini_path, output_dir)
-    generate_misc_workflow(tox_ini_path, output_dir)
+    lint_file_numbers = generate_lint_workflow(tox_ini_path, output_dir)
+    misc_file_numbers = generate_misc_workflow(tox_ini_path, output_dir)
+    generate_ci_workflow(
+        test_file_numbers, lint_file_numbers, misc_file_numbers, output_dir
+    )
