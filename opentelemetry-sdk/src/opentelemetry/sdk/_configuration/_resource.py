@@ -24,36 +24,35 @@ from opentelemetry.sdk._configuration.models import (
 )
 from opentelemetry.sdk._configuration.models import Resource as ResourceConfig
 from opentelemetry.sdk.resources import (
-    _OPENTELEMETRY_SDK_VERSION,
     SERVICE_NAME,
-    TELEMETRY_SDK_LANGUAGE,
-    TELEMETRY_SDK_NAME,
-    TELEMETRY_SDK_VERSION,
     Resource,
+    _DEFAULT_RESOURCE,
 )
 
 _logger = logging.getLogger(__name__)
-
-# Dispatch table for scalar type coercions
-_SCALAR_COERCIONS = {
-    AttributeType.string: str,
-    AttributeType.int: int,
-    AttributeType.double: float,
-}
-
-# Dispatch table for array type coercions
-_ARRAY_COERCIONS = {
-    AttributeType.string_array: str,
-    AttributeType.bool_array: bool,
-    AttributeType.int_array: int,
-    AttributeType.double_array: float,
-}
 
 
 def _coerce_bool(value: object) -> bool:
     if isinstance(value, str):
         return value.lower() not in ("false", "0", "")
     return bool(value)
+
+
+# Dispatch table for scalar type coercions
+_SCALAR_COERCIONS = {
+    AttributeType.string: str,
+    AttributeType.int: int,
+    AttributeType.double: float,
+    AttributeType.bool: _coerce_bool,
+}
+
+# Dispatch table for array type coercions
+_ARRAY_COERCIONS = {
+    AttributeType.string_array: str,
+    AttributeType.bool_array: _coerce_bool,
+    AttributeType.int_array: int,
+    AttributeType.double_array: float,
+}
 
 
 def _coerce_attribute_value(attr: AttributeNameValue) -> object:
@@ -63,8 +62,6 @@ def _coerce_attribute_value(attr: AttributeNameValue) -> object:
 
     if attr_type is None:
         return value
-    if attr_type == AttributeType.bool:
-        return _coerce_bool(value)
     scalar_coercer = _SCALAR_COERCIONS.get(attr_type)
     if scalar_coercer is not None:
         return scalar_coercer(value)  # type: ignore[arg-type]
@@ -96,15 +93,6 @@ def _parse_attributes_list(attributes_list: str) -> dict[str, str]:
     return result
 
 
-def _sdk_default_attributes() -> dict[str, str]:
-    """Return the SDK telemetry attributes (equivalent to Java's Resource.getDefault())."""
-    return {
-        TELEMETRY_SDK_LANGUAGE: "python",
-        TELEMETRY_SDK_NAME: "opentelemetry",
-        TELEMETRY_SDK_VERSION: _OPENTELEMETRY_SDK_VERSION,
-    }
-
-
 def create_resource(config: Optional[ResourceConfig]) -> Resource:
     """Create an SDK Resource from declarative config.
 
@@ -118,7 +106,7 @@ def create_resource(config: Optional[ResourceConfig]) -> Resource:
     Returns:
         A Resource with SDK defaults merged with any config-specified attributes.
     """
-    base = Resource(_sdk_default_attributes())
+    base = _DEFAULT_RESOURCE
 
     if config is None:
         service_resource = Resource({SERVICE_NAME: "unknown_service"})

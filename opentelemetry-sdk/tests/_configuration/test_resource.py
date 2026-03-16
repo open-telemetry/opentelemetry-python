@@ -223,6 +223,20 @@ class TestCreateResourceAttributes(unittest.TestCase):
         resource = create_resource(config)
         self.assertEqual(list(resource.attributes["k"]), [True, False])  # type: ignore[arg-type]
 
+    def test_attribute_type_bool_array_string_values(self):
+        """bool_array must use _coerce_bool, not plain bool() — 'false' must be False."""
+        config = ResourceConfig(
+            attributes=[
+                AttributeNameValue(
+                    name="k",
+                    value=["true", "false"],
+                    type=AttributeType.bool_array,
+                )
+            ]
+        )
+        resource = create_resource(config)
+        self.assertEqual(list(resource.attributes["k"]), [True, False])  # type: ignore[arg-type]
+
 
 class TestCreateResourceAttributesList(unittest.TestCase):
     def test_attributes_list_parsed(self):
