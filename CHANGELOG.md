@@ -30,6 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4895](https://github.com/open-telemetry/opentelemetry-python/pull/4895))
 - `opentelemetry-api`, `opentelemetry-sdk`: Add deepcopy support for `BoundedAttributes` and `BoundedList`
   ([#4934](https://github.com/open-telemetry/opentelemetry-python/pull/4934))
+- `opentelemetry-proto-json`, `opentelemetry-codegen-json`: Implement custom protoc plugin to generate OTLP JSON class definitions
+  ([#4910](https://github.com/open-telemetry/opentelemetry-python/pull/4910))
 
 ## Version 1.40.0/0.61b0 (2026-03-04)
 
