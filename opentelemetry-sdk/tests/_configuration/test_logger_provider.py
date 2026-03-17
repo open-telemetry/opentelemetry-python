@@ -110,28 +110,36 @@ class TestCreateLogRecordProcessors(unittest.TestCase):
         )
 
     def test_batch_processor_default_schedule_delay(self):
-        processor = _create_batch_log_record_processor(self._make_batch_config())
+        processor = _create_batch_log_record_processor(
+            self._make_batch_config()
+        )
         self.assertEqual(
             processor._batch_processor._schedule_delay_millis,
             _DEFAULT_SCHEDULE_DELAY_MILLIS,
         )
 
     def test_batch_processor_default_export_timeout(self):
-        processor = _create_batch_log_record_processor(self._make_batch_config())
+        processor = _create_batch_log_record_processor(
+            self._make_batch_config()
+        )
         self.assertEqual(
             processor._batch_processor._export_timeout_millis,
             _DEFAULT_EXPORT_TIMEOUT_MILLIS,
         )
 
     def test_batch_processor_default_max_queue_size(self):
-        processor = _create_batch_log_record_processor(self._make_batch_config())
+        processor = _create_batch_log_record_processor(
+            self._make_batch_config()
+        )
         self.assertEqual(
             processor._batch_processor._max_queue_size,
             _DEFAULT_MAX_QUEUE_SIZE,
         )
 
     def test_batch_processor_default_max_export_batch_size(self):
-        processor = _create_batch_log_record_processor(self._make_batch_config())
+        processor = _create_batch_log_record_processor(
+            self._make_batch_config()
+        )
         self.assertEqual(
             processor._batch_processor._max_export_batch_size,
             _DEFAULT_MAX_EXPORT_BATCH_SIZE,
@@ -163,10 +171,14 @@ class TestCreateLogRecordProcessors(unittest.TestCase):
         processor = _create_batch_log_record_processor(
             self._make_batch_config(max_export_batch_size=128)
         )
-        self.assertEqual(processor._batch_processor._max_export_batch_size, 128)
+        self.assertEqual(
+            processor._batch_processor._max_export_batch_size, 128
+        )
 
     def test_batch_processor_uses_console_exporter(self):
-        processor = _create_batch_log_record_processor(self._make_batch_config())
+        processor = _create_batch_log_record_processor(
+            self._make_batch_config()
+        )
         self.assertIsInstance(
             processor._batch_processor._exporter, ConsoleLogRecordExporter
         )
@@ -180,9 +192,7 @@ class TestCreateLogRecordProcessors(unittest.TestCase):
         self.assertIsInstance(processor._exporter, ConsoleLogRecordExporter)
 
     def test_batch_processor_dispatched_from_processor_config(self):
-        config = LogRecordProcessorConfig(
-            batch=self._make_batch_config()
-        )
+        config = LogRecordProcessorConfig(batch=self._make_batch_config())
         processor = _create_log_record_processor(config)
         self.assertIsInstance(processor, BatchLogRecordProcessor)
 
@@ -303,7 +313,9 @@ class TestCreateLogRecordExporters(unittest.TestCase):
         ):
             config = LogRecordExporterConfig(
                 otlp_http=OtlpHttpExporterConfig(
-                    headers=[NameStringValuePair(name="x-api-key", value="secret")]
+                    headers=[
+                        NameStringValuePair(name="x-api-key", value="secret")
+                    ]
                 )
             )
             _create_log_record_exporter(config)
@@ -346,7 +358,8 @@ class TestLogRecordLimits(unittest.TestCase):
             limits=LogRecordLimitsConfig(attribute_count_limit=64),
         )
         with self.assertLogs(
-            "opentelemetry.sdk._configuration._logger_provider", level="WARNING"
+            "opentelemetry.sdk._configuration._logger_provider",
+            level="WARNING",
         ) as cm:
             create_logger_provider(config)
         self.assertTrue(
