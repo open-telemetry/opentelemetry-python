@@ -17,17 +17,17 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  {%- for n in misc_file_numbers %}
+  {%- for n in range(misc_count) %}
 
   misc_{{ n }}:
     uses: ./.github/workflows/misc_{{ n }}.yml
   {%- endfor %}
-  {%- for n in lint_file_numbers %}
+  {%- for n in range(lint_count) %}
 
   lint_{{ n }}:
     uses: ./.github/workflows/lint_{{ n }}.yml
   {%- endfor %}
-  {%- for n in test_file_numbers %}
+  {%- for n in range(test_count) %}
 
   tests_{{ n }}:
     uses: ./.github/workflows/test_{{ n }}.yml
@@ -46,13 +46,13 @@ jobs:
   check:
     if: always()
     needs:
-      {%- for n in misc_file_numbers %}
+      {%- for n in range(misc_count) %}
       - misc_{{ n }}
       {%- endfor %}
-      {%- for n in lint_file_numbers %}
+      {%- for n in range(lint_count) %}
       - lint_{{ n }}
       {%- endfor %}
-      {%- for n in test_file_numbers %}
+      {%- for n in range(test_count) %}
       - tests_{{ n }}
       {%- endfor %}
       - contrib_0

@@ -141,7 +141,7 @@ def _generate_workflow(
     template_name: str,
     output_dir: Path,
     max_jobs: int = 250,
-) -> list:
+) -> int:
     """Generate reusable workflow files, returns list of file numbers."""
     # GitHub limits workflows to 256 jobs per file. We use a lower default
     # (250)
@@ -149,7 +149,6 @@ def _generate_workflow(
         job_datas[index : index + max_jobs]
         for index in range(0, len(job_datas), max_jobs)
     ]
-    file_numbers = []
     env = Environment(
         loader=FileSystemLoader(Path(__file__).parent.joinpath("templates"))
     )
@@ -163,13 +162,12 @@ def _generate_workflow(
                 )
             )
             yml_file.write("\n")
-        file_numbers.append(file_number)
-    return file_numbers
+    return len(chunks)
 
 
 def generate_test_workflow(
     tox_ini_path: Path, workflow_directory_path: Path, operating_systems
-) -> list:
+) -> int:
     return _generate_workflow(
         get_test_job_datas(get_tox_envs(tox_ini_path), operating_systems),
         "test",
@@ -180,7 +178,7 @@ def generate_test_workflow(
 def generate_lint_workflow(
     tox_ini_path: Path,
     workflow_directory_path: Path,
-) -> list:
+) -> int:
     return _generate_workflow(
         get_lint_job_datas(get_tox_envs(tox_ini_path)),
         "lint",
@@ -191,7 +189,7 @@ def generate_lint_workflow(
 def generate_misc_workflow(
     tox_ini_path: Path,
     workflow_directory_path: Path,
-) -> list:
+) -> int:
     return _generate_workflow(
         get_misc_job_datas(get_tox_envs(tox_ini_path)),
         "misc",
@@ -200,9 +198,9 @@ def generate_misc_workflow(
 
 
 def generate_ci_workflow(
-    test_file_numbers: list,
-    lint_file_numbers: list,
-    misc_file_numbers: list,
+    test_count: int,
+    lint_count: int,
+    misc_count: int,
     output_dir: Path,
 ) -> None:
     """Generate the parent CI orchestrator workflow."""
@@ -215,9 +213,9 @@ def generate_ci_workflow(
             )
             .get_template("ci.yml.j2")
             .render(
-                test_file_numbers=test_file_numbers,
-                lint_file_numbers=lint_file_numbers,
-                misc_file_numbers=misc_file_numbers,
+                test_count=test_count,
+                lint_count=lint_count,
+                misc_count=misc_count,
             )
         )
         ci_yml_file.write("\n")
@@ -226,11 +224,9 @@ def generate_ci_workflow(
 if __name__ == "__main__":
     tox_ini_path = Path(__file__).parent.parent.parent.joinpath("tox.ini")
     output_dir = Path(__file__).parent
-    test_file_numbers = generate_test_workflow(
+    test_count = generate_test_workflow(
         tox_ini_path, output_dir, ["ubuntu-latest", "windows-latest"]
     )
-    lint_file_numbers = generate_lint_workflow(tox_ini_path, output_dir)
-    misc_file_numbers = generate_misc_workflow(tox_ini_path, output_dir)
-    generate_ci_workflow(
-        test_file_numbers, lint_file_numbers, misc_file_numbers, output_dir
-    )
+    lint_count = generate_lint_workflow(tox_ini_path, output_dir)
+    misc_count = generate_misc_workflow(tox_ini_path, output_dir)
+    generate_ci_workflow(test_count, lint_count, misc_count, output_dir)
