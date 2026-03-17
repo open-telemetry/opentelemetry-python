@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4965](https://github.com/open-telemetry/opentelemetry-python/pull/4965))
 - improve check-links ci job
   ([#4978](https://github.com/open-telemetry/opentelemetry-python/pull/4978))
+
 ## Version 1.40.0/0.61b0 (2026-03-04)
 
 - `opentelemetry-sdk`: deprecate `LoggingHandler` in favor of `opentelemetry-instrumentation-logging`, see `opentelemetry-instrumentation-logging` documentation
