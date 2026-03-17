@@ -12,7 +12,7 @@ jobs:
       pull-requests: write # required for adding labels to PRs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install toml
         run: pip install toml
@@ -70,7 +70,7 @@ jobs:
       - name: Use CLA approved github bot
         run: .github/scripts/use-cla-approved-github-bot.sh
 
-      - uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v2.0.6
+      - uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859 # v3.0.0
         id: otelbot-token
         with:
           app-id: ${{ vars.OTELBOT_APP_ID }}
