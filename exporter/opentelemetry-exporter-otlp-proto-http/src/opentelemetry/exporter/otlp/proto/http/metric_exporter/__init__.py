@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import gzip
 import logging
+import os
 import random
 import threading
 import zlib
@@ -181,6 +182,28 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             preferred_temporality, preferred_aggregation
         )
         self._shutdown = False
+        if hasattr(os, "register_at_fork"):
+            os.register_at_fork(after_in_child=self._reset_session_after_fork)
+
+    def _reset_session_after_fork(self) -> None:
+        """
+        Reset exporter session in the child process after fork.
+
+        We close the existing session to avoid finalizer warnings if file
+        descriptors were already closed, then create a new session with the same
+        headers to prevent reusing the parent's connection state.
+        """
+        try:
+            headers = self._session.headers.copy()
+            self._session.close()
+
+            self._session = requests.Session()
+            self._session.headers.update(headers)
+        except Exception:
+            _logger.debug(
+                "Exception occurred while resetting exporter session",
+                exc_info=True,
+            )
 
     def _export(
         self, serialized_data: bytes, timeout_sec: Optional[float] = None
