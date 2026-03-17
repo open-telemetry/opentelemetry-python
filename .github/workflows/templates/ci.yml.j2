@@ -33,6 +33,16 @@ jobs:
     uses: ./.github/workflows/test_{{ n }}.yml
   {%- endfor %}
 
+  contrib_0:
+    uses: open-telemetry/opentelemetry-python-contrib/.github/workflows/core_contrib_test_0.yml@main
+    with:
+      CORE_REPO_SHA: ${% raw %}{{ github.sha }}{% endraw %}
+      CONTRIB_REPO_SHA: {% raw %}${{ github.event_name == 'pull_request' && (
+          contains(github.event.pull_request.labels.*.name, 'prepare-release') && github.event.pull_request.head.ref ||
+          contains(github.event.pull_request.labels.*.name, 'backport') && github.event.pull_request.base.ref ||
+          'main'
+        ) || 'main' }}{% endraw %}
+
   check:
     if: always()
     needs:
@@ -45,11 +55,12 @@ jobs:
       {%- for n in test_file_numbers %}
       - tests_{{ n }}
       {%- endfor %}
+      - contrib_0
     runs-on: ubuntu-latest
     steps:
       - name: Decide whether the needed jobs succeeded or failed
         uses: re-actors/alls-green@release/v1
         with:
           allowed-failures: ""
-          allowed-skips: "misc_0"
+          allowed-skips: "misc_0 / public-symbols-check"
           jobs: ${% raw %}{{ toJSON(needs) }}{% endraw %}
