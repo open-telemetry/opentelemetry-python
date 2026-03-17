@@ -62,5 +62,5 @@ jobs:
         uses: re-actors/alls-green@release/v1
         with:
           allowed-failures: ""
-          allowed-skips: "misc_0 / public-symbols-check"
+          allowed-skips: ""
           jobs: ${% raw %}{{ toJSON(needs) }}{% endraw %}
