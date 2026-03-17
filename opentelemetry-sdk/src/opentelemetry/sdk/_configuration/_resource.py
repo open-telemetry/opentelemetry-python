@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
+from typing import Callable, Optional
 from urllib import parse
 
 from opentelemetry.sdk._configuration.models import (
@@ -38,8 +38,8 @@ def _coerce_bool(value: object) -> bool:
     return bool(value)
 
 
-def _array(coerce: object) -> object:
-    return lambda value: [coerce(item) for item in value]  # type: ignore[operator]
+def _array(coerce: Callable) -> Callable:
+    return lambda value: [coerce(item) for item in value]
 
 
 # Unified dispatch table for all attribute type coercions
