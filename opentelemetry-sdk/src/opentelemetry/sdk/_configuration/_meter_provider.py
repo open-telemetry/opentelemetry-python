@@ -30,11 +30,7 @@ from opentelemetry.sdk._configuration.models import (
 )
 from opentelemetry.sdk._configuration.models import (
     ExporterDefaultHistogramAggregation,
-)
-from opentelemetry.sdk._configuration.models import (
     ExporterTemporalityPreference,
-)
-from opentelemetry.sdk._configuration.models import (
     InstrumentType,
 )
 from opentelemetry.sdk._configuration.models import (
@@ -190,7 +186,8 @@ def _map_histogram_aggregation(
     """
     if (
         pref is None
-        or pref == ExporterDefaultHistogramAggregation.explicit_bucket_histogram
+        or pref
+        == ExporterDefaultHistogramAggregation.explicit_bucket_histogram
     ):
         return {Histogram: ExplicitBucketHistogramAggregation()}
     if (
@@ -380,7 +377,9 @@ def _create_otlp_grpc_metric_exporter(
     )
 
 
-def _create_push_metric_exporter(config: PushMetricExporterConfig) -> MetricExporter:
+def _create_push_metric_exporter(
+    config: PushMetricExporterConfig,
+) -> MetricExporter:
     """Create a push metric exporter from config."""
     if config.console is not None:
         return _create_console_metric_exporter(config.console)

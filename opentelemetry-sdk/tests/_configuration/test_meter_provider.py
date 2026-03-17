@@ -42,15 +42,11 @@ from opentelemetry.sdk._configuration.models import (
 )
 from opentelemetry.sdk._configuration.models import (
     ExporterDefaultHistogramAggregation,
-)
-from opentelemetry.sdk._configuration.models import (
     ExporterTemporalityPreference,
-)
-from opentelemetry.sdk._configuration.models import (
     IncludeExclude,
-)
-from opentelemetry.sdk._configuration.models import (
     InstrumentType,
+    ViewSelector,
+    ViewStream,
 )
 from opentelemetry.sdk._configuration.models import (
     MeterProvider as MeterProviderConfig,
@@ -72,10 +68,6 @@ from opentelemetry.sdk._configuration.models import (
 )
 from opentelemetry.sdk._configuration.models import (
     View as ViewConfig,
-)
-from opentelemetry.sdk._configuration.models import (
-    ViewSelector,
-    ViewStream,
 )
 from opentelemetry.sdk.metrics import (
     AlwaysOffExemplarFilter,
@@ -140,14 +132,14 @@ class TestCreateMeterProviderBasic(unittest.TestCase):
             readers=[
                 MetricReaderConfig(
                     periodic=PeriodicMetricReaderConfig(
-                        exporter=PushMetricExporterConfig(console=ConsoleMetricExporterConfig())
+                        exporter=PushMetricExporterConfig(
+                            console=ConsoleMetricExporterConfig()
+                        )
                     )
                 )
             ]
         )
-        with patch.dict(
-            os.environ, {"OTEL_METRIC_EXPORT_INTERVAL": "999999"}
-        ):
+        with patch.dict(os.environ, {"OTEL_METRIC_EXPORT_INTERVAL": "999999"}):
             provider = create_meter_provider(config)
         reader = provider._sdk_config.metric_readers[0]
         self.assertIsInstance(reader, PeriodicExportingMetricReader)
@@ -221,7 +213,8 @@ class TestCreateMetricReaders(unittest.TestCase):
 
     def test_periodic_reader_explicit_interval(self):
         config = self._make_periodic_config(
-            PushMetricExporterConfig(console=ConsoleMetricExporterConfig()), interval=5000
+            PushMetricExporterConfig(console=ConsoleMetricExporterConfig()),
+            interval=5000,
         )
         provider = create_meter_provider(config)
         reader = provider._sdk_config.metric_readers[0]
@@ -229,7 +222,8 @@ class TestCreateMetricReaders(unittest.TestCase):
 
     def test_periodic_reader_explicit_timeout(self):
         config = self._make_periodic_config(
-            PushMetricExporterConfig(console=ConsoleMetricExporterConfig()), timeout=10000
+            PushMetricExporterConfig(console=ConsoleMetricExporterConfig()),
+            timeout=10000,
         )
         provider = create_meter_provider(config)
         reader = provider._sdk_config.metric_readers[0]
@@ -237,9 +231,7 @@ class TestCreateMetricReaders(unittest.TestCase):
 
     def test_otlp_http_missing_package_raises(self):
         config = self._make_periodic_config(
-            PushMetricExporterConfig(
-                otlp_http=OtlpHttpMetricExporterConfig()
-            )
+            PushMetricExporterConfig(otlp_http=OtlpHttpMetricExporterConfig())
         )
         with patch.dict(
             sys.modules,
@@ -284,9 +276,7 @@ class TestCreateMetricReaders(unittest.TestCase):
 
     def test_otlp_grpc_missing_package_raises(self):
         config = self._make_periodic_config(
-            PushMetricExporterConfig(
-                otlp_grpc=OtlpGrpcMetricExporterConfig()
-            )
+            PushMetricExporterConfig(otlp_grpc=OtlpGrpcMetricExporterConfig())
         )
         with patch.dict(
             sys.modules,
@@ -321,12 +311,16 @@ class TestCreateMetricReaders(unittest.TestCase):
             readers=[
                 MetricReaderConfig(
                     periodic=PeriodicMetricReaderConfig(
-                        exporter=PushMetricExporterConfig(console=ConsoleMetricExporterConfig())
+                        exporter=PushMetricExporterConfig(
+                            console=ConsoleMetricExporterConfig()
+                        )
                     )
                 ),
                 MetricReaderConfig(
                     periodic=PeriodicMetricReaderConfig(
-                        exporter=PushMetricExporterConfig(console=ConsoleMetricExporterConfig())
+                        exporter=PushMetricExporterConfig(
+                            console=ConsoleMetricExporterConfig()
+                        )
                     )
                 ),
             ]
@@ -467,7 +461,9 @@ class TestTemporalityAndAggregation(unittest.TestCase):
 class TestCreateViews(unittest.TestCase):
     @staticmethod
     def _make_view_config(selector_kwargs=None, stream_kwargs=None):
-        selector = ViewSelector(**(selector_kwargs or {"instrument_name": "*"}))
+        selector = ViewSelector(
+            **(selector_kwargs or {"instrument_name": "*"})
+        )
         stream = ViewStream(**(stream_kwargs or {}))
         return MeterProviderConfig(
             readers=[],
@@ -493,9 +489,7 @@ class TestCreateViews(unittest.TestCase):
 
     def test_selector_instrument_type(self):
         view = self._get_view(
-            self._make_view_config(
-                {"instrument_type": InstrumentType.counter}
-            )
+            self._make_view_config({"instrument_type": InstrumentType.counter})
         )
         self.assertIs(view._instrument_type, Counter)
 
@@ -526,9 +520,7 @@ class TestCreateViews(unittest.TestCase):
         view = self._get_view(
             self._make_view_config(
                 stream_kwargs={
-                    "attribute_keys": IncludeExclude(
-                        included=["key1", "key2"]
-                    )
+                    "attribute_keys": IncludeExclude(included=["key1", "key2"])
                 }
             )
         )
@@ -536,29 +528,25 @@ class TestCreateViews(unittest.TestCase):
 
     def test_stream_attribute_keys_excluded_logs_warning(self):
         config = self._make_view_config(
-            stream_kwargs={
-                "attribute_keys": IncludeExclude(excluded=["key1"])
-            }
+            stream_kwargs={"attribute_keys": IncludeExclude(excluded=["key1"])}
         )
         with self.assertLogs(
             "opentelemetry.sdk._configuration._meter_provider", level="WARNING"
         ) as log:
             create_meter_provider(config)
-        self.assertTrue(
-            any("excluded" in msg for msg in log.output)
-        )
+        self.assertTrue(any("excluded" in msg for msg in log.output))
 
     def test_stream_aggregation_drop(self):
         view = self._get_view(
             self._make_view_config(
-                stream_kwargs={
-                    "aggregation": AggregationConfig(drop={})
-                }
+                stream_kwargs={"aggregation": AggregationConfig(drop={})}
             )
         )
         self.assertIsInstance(view._aggregation, DropAggregation)
 
-    def test_stream_aggregation_explicit_bucket_histogram_with_boundaries(self):
+    def test_stream_aggregation_explicit_bucket_histogram_with_boundaries(
+        self,
+    ):
         view = self._get_view(
             self._make_view_config(
                 stream_kwargs={
@@ -570,10 +558,10 @@ class TestCreateViews(unittest.TestCase):
                 }
             )
         )
-        self.assertIsInstance(view._aggregation, ExplicitBucketHistogramAggregation)
-        self.assertEqual(
-            list(view._aggregation._boundaries), [1.0, 5.0, 10.0]
+        self.assertIsInstance(
+            view._aggregation, ExplicitBucketHistogramAggregation
         )
+        self.assertEqual(list(view._aggregation._boundaries), [1.0, 5.0, 10.0])
 
     def test_stream_aggregation_base2_exponential_with_params(self):
         view = self._get_view(
@@ -594,9 +582,7 @@ class TestCreateViews(unittest.TestCase):
     def test_stream_aggregation_last_value(self):
         view = self._get_view(
             self._make_view_config(
-                stream_kwargs={
-                    "aggregation": AggregationConfig(last_value={})
-                }
+                stream_kwargs={"aggregation": AggregationConfig(last_value={})}
             )
         )
         self.assertIsInstance(view._aggregation, LastValueAggregation)
@@ -612,9 +598,7 @@ class TestCreateViews(unittest.TestCase):
     def test_stream_aggregation_default(self):
         view = self._get_view(
             self._make_view_config(
-                stream_kwargs={
-                    "aggregation": AggregationConfig(default={})
-                }
+                stream_kwargs={"aggregation": AggregationConfig(default={})}
             )
         )
         self.assertIsInstance(view._aggregation, DefaultAggregation)
@@ -623,9 +607,7 @@ class TestCreateViews(unittest.TestCase):
 class TestExemplarFilter(unittest.TestCase):
     @staticmethod
     def _make_config(exemplar_filter):
-        return MeterProviderConfig(
-            readers=[], exemplar_filter=exemplar_filter
-        )
+        return MeterProviderConfig(readers=[], exemplar_filter=exemplar_filter)
 
     def test_always_on(self):
         provider = create_meter_provider(
