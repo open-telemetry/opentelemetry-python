@@ -12,6 +12,7 @@ dependencies = [
   "opentelemetry-exporter-otlp-proto-grpc",
   "opentelemetry-exporter-otlp-proto-http",
   "opentelemetry-exporter-otlp-proto-common",
+  "opentelemetry-exporter-otlp-json-common",
   "opentelemetry-exporter-zipkin-json",
   "opentelemetry-exporter-prometheus",
   "opentelemetry-propagator-jaeger",
@@ -123,6 +124,7 @@ include = [
   "opentelemetry-proto-json",
   "exporter/opentelemetry-exporter-otlp-proto-grpc",
   "exporter/opentelemetry-exporter-otlp-proto-http",
+  "exporter/opentelemetry-exporter-otlp-json-common",
   "codegen/opentelemetry-codegen-json"
 ]
 
