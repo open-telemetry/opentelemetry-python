@@ -141,7 +141,6 @@ def _generate_workflow(
     template_name: str,
     output_dir: Path,
 ) -> None:
-    """Generate a reusable workflow file."""
     env = Environment(
         loader=FileSystemLoader(Path(__file__).parent.joinpath("templates"))
     )
@@ -189,7 +188,6 @@ def generate_misc_workflow(
 def generate_ci_workflow(
     output_dir: Path,
 ) -> None:
-    """Generate the parent CI orchestrator workflow."""
     with open(output_dir.joinpath("ci.yml"), "w") as ci_yml_file:
         ci_yml_file.write(
             Environment(
