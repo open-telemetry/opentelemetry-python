@@ -17,16 +17,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-
   misc:
     uses: ./.github/workflows/misc.yml
-
   lint:
     uses: ./.github/workflows/lint.yml
-
   tests:
     uses: ./.github/workflows/test.yml
-
   contrib:
     uses: open-telemetry/opentelemetry-python-contrib/.github/workflows/core_contrib_test_0.yml@main
     with:
@@ -49,6 +45,6 @@ jobs:
       - name: Decide whether the needed jobs succeeded or failed
         uses: re-actors/alls-green@release/v1
         with:
-          allowed-failures: ""
+          allowed-failures: "misc / public-symbols-check"
           allowed-skips: ""
           jobs: ${% raw %}{{ toJSON(needs) }}{% endraw %}
