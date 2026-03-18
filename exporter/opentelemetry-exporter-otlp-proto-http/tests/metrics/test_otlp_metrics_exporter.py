@@ -639,11 +639,7 @@ class TestOTLPMetricExporter(TestCase):
 
             assert after - before < 0.2
 
-    @unittest.skipUnless(
-        hasattr(os, "register_at_fork")
-        and hasattr(OTLPMetricExporter, "_reset_session_after_fork"),
-        "fork session reset not available",
-    )
+    @unittest.skipUnless(hasattr(os, "register_at_fork"))
     def test_metric_exporter_register_at_fork_resets_session(self):
         initial_session = MagicMock(spec=requests.Session)
         initial_session.headers = {"preexisting": "yes"}
