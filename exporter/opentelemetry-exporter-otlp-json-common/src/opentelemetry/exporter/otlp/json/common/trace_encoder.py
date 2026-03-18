@@ -12,4 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = "0.62b0.dev"
+from opentelemetry.exporter.otlp.json.common._internal.trace_encoder import (
+    encode_spans,
+)
+
+__all__ = ["encode_spans"]
