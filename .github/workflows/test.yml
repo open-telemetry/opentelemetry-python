@@ -5006,7 +5006,6 @@ jobs:
 
       - name: Run tests
         run: tox -e py312-test-opentelemetry-opentracing-shim -- -ra
-<<<<<<< HEAD:.github/workflows/test.yml
 
   py313-test-opentelemetry-opentracing-shim_windows-latest:
     name: opentelemetry-opentracing-shim 3.13 Windows
@@ -7233,5 +7232,3 @@ jobs:
 
       - name: Run tests
         run: tox -e pypy3-test-opentelemetry-test-utils -- -ra
-=======
->>>>>>> c2b30a1b660a0cc589195a4295910dd4b1a4701e:.github/workflows/test_0.yml
