@@ -319,7 +319,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
         # Shallow copy the API log record to break the reference to the potentially large context
         # while keeping the original context intact for other processors.
         api_log_record = copy.copy(log_record.log_record)
-        api_log_record.context = None
+        api_log_record.context = Context()
 
         readable_log_record = ReadableLogRecord(
             log_record=api_log_record,
