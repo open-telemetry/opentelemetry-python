@@ -65,7 +65,7 @@ log_cli = true
 
 [tool.ruff]
 # https://docs.astral.sh/ruff/configuration/
-target-version = "py38"
+target-version = "py39"
 line-length = 79
 extend-exclude = [
   "*_pb2*.py*",
