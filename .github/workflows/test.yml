@@ -485,6 +485,424 @@ jobs:
       - name: Run tests
         run: tox -e pypy3-test-opentelemetry-proto-gen-latest -- -ra
 
+  py39-test-opentelemetry-protojson-gen-oldest_ubuntu-latest:
+    name: opentelemetry-protojson-gen-oldest 3.9 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py39-test-opentelemetry-protojson-gen-oldest -- -ra
+
+  py39-test-opentelemetry-protojson-gen-latest_ubuntu-latest:
+    name: opentelemetry-protojson-gen-latest 3.9 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py39-test-opentelemetry-protojson-gen-latest -- -ra
+
+  py310-test-opentelemetry-protojson-gen-oldest_ubuntu-latest:
+    name: opentelemetry-protojson-gen-oldest 3.10 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py310-test-opentelemetry-protojson-gen-oldest -- -ra
+
+  py310-test-opentelemetry-protojson-gen-latest_ubuntu-latest:
+    name: opentelemetry-protojson-gen-latest 3.10 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py310-test-opentelemetry-protojson-gen-latest -- -ra
+
+  py311-test-opentelemetry-protojson-gen-oldest_ubuntu-latest:
+    name: opentelemetry-protojson-gen-oldest 3.11 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py311-test-opentelemetry-protojson-gen-oldest -- -ra
+
+  py311-test-opentelemetry-protojson-gen-latest_ubuntu-latest:
+    name: opentelemetry-protojson-gen-latest 3.11 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py311-test-opentelemetry-protojson-gen-latest -- -ra
+
+  py312-test-opentelemetry-protojson-gen-oldest_ubuntu-latest:
+    name: opentelemetry-protojson-gen-oldest 3.12 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py312-test-opentelemetry-protojson-gen-oldest -- -ra
+
+  py312-test-opentelemetry-protojson-gen-latest_ubuntu-latest:
+    name: opentelemetry-protojson-gen-latest 3.12 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py312-test-opentelemetry-protojson-gen-latest -- -ra
+
+  py313-test-opentelemetry-protojson-gen-oldest_ubuntu-latest:
+    name: opentelemetry-protojson-gen-oldest 3.13 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py313-test-opentelemetry-protojson-gen-oldest -- -ra
+
+  py313-test-opentelemetry-protojson-gen-latest_ubuntu-latest:
+    name: opentelemetry-protojson-gen-latest 3.13 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py313-test-opentelemetry-protojson-gen-latest -- -ra
+
+  py314-test-opentelemetry-protojson-gen-oldest_ubuntu-latest:
+    name: opentelemetry-protojson-gen-oldest 3.14 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py314-test-opentelemetry-protojson-gen-oldest -- -ra
+
+  py314-test-opentelemetry-protojson-gen-latest_ubuntu-latest:
+    name: opentelemetry-protojson-gen-latest 3.14 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py314-test-opentelemetry-protojson-gen-latest -- -ra
+
+  py314t-test-opentelemetry-protojson-gen-oldest_ubuntu-latest:
+    name: opentelemetry-protojson-gen-oldest 3.14t Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.14t
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14t"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py314t-test-opentelemetry-protojson-gen-oldest -- -ra
+
+  py314t-test-opentelemetry-protojson-gen-latest_ubuntu-latest:
+    name: opentelemetry-protojson-gen-latest 3.14t Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.14t
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14t"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py314t-test-opentelemetry-protojson-gen-latest -- -ra
+
+  pypy3-test-opentelemetry-protojson-gen-oldest_ubuntu-latest:
+    name: opentelemetry-protojson-gen-oldest pypy-3.9 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python pypy-3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "pypy-3.9"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e pypy3-test-opentelemetry-protojson-gen-oldest -- -ra
+
+  pypy3-test-opentelemetry-protojson-gen-latest_ubuntu-latest:
+    name: opentelemetry-protojson-gen-latest pypy-3.9 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python pypy-3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "pypy-3.9"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e pypy3-test-opentelemetry-protojson-gen-latest -- -ra
+
+  py39-test-opentelemetry-codegen-json_ubuntu-latest:
+    name: opentelemetry-codegen-json 3.9 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py39-test-opentelemetry-codegen-json -- -ra
+
+  py310-test-opentelemetry-codegen-json_ubuntu-latest:
+    name: opentelemetry-codegen-json 3.10 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py310-test-opentelemetry-codegen-json -- -ra
+
+  py311-test-opentelemetry-codegen-json_ubuntu-latest:
+    name: opentelemetry-codegen-json 3.11 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py311-test-opentelemetry-codegen-json -- -ra
+
+  py312-test-opentelemetry-codegen-json_ubuntu-latest:
+    name: opentelemetry-codegen-json 3.12 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py312-test-opentelemetry-codegen-json -- -ra
+
+  py313-test-opentelemetry-codegen-json_ubuntu-latest:
+    name: opentelemetry-codegen-json 3.13 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py313-test-opentelemetry-codegen-json -- -ra
+
+  py314-test-opentelemetry-codegen-json_ubuntu-latest:
+    name: opentelemetry-codegen-json 3.14 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py314-test-opentelemetry-codegen-json -- -ra
+
   py39-test-opentelemetry-sdk_ubuntu-latest:
     name: opentelemetry-sdk 3.9 Ubuntu
     runs-on: ubuntu-latest
@@ -3539,6 +3957,468 @@ jobs:
       - name: Run tests
         run: tox -e pypy3-test-opentelemetry-proto-gen-latest -- -ra
 
+  py39-test-opentelemetry-protojson-gen-oldest_windows-latest:
+    name: opentelemetry-protojson-gen-oldest 3.9 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py39-test-opentelemetry-protojson-gen-oldest -- -ra
+
+  py39-test-opentelemetry-protojson-gen-latest_windows-latest:
+    name: opentelemetry-protojson-gen-latest 3.9 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py39-test-opentelemetry-protojson-gen-latest -- -ra
+
+  py310-test-opentelemetry-protojson-gen-oldest_windows-latest:
+    name: opentelemetry-protojson-gen-oldest 3.10 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py310-test-opentelemetry-protojson-gen-oldest -- -ra
+
+  py310-test-opentelemetry-protojson-gen-latest_windows-latest:
+    name: opentelemetry-protojson-gen-latest 3.10 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py310-test-opentelemetry-protojson-gen-latest -- -ra
+
+  py311-test-opentelemetry-protojson-gen-oldest_windows-latest:
+    name: opentelemetry-protojson-gen-oldest 3.11 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py311-test-opentelemetry-protojson-gen-oldest -- -ra
+
+  py311-test-opentelemetry-protojson-gen-latest_windows-latest:
+    name: opentelemetry-protojson-gen-latest 3.11 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py311-test-opentelemetry-protojson-gen-latest -- -ra
+
+  py312-test-opentelemetry-protojson-gen-oldest_windows-latest:
+    name: opentelemetry-protojson-gen-oldest 3.12 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py312-test-opentelemetry-protojson-gen-oldest -- -ra
+
+  py312-test-opentelemetry-protojson-gen-latest_windows-latest:
+    name: opentelemetry-protojson-gen-latest 3.12 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py312-test-opentelemetry-protojson-gen-latest -- -ra
+
+  py313-test-opentelemetry-protojson-gen-oldest_windows-latest:
+    name: opentelemetry-protojson-gen-oldest 3.13 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py313-test-opentelemetry-protojson-gen-oldest -- -ra
+
+  py313-test-opentelemetry-protojson-gen-latest_windows-latest:
+    name: opentelemetry-protojson-gen-latest 3.13 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py313-test-opentelemetry-protojson-gen-latest -- -ra
+
+  py314-test-opentelemetry-protojson-gen-oldest_windows-latest:
+    name: opentelemetry-protojson-gen-oldest 3.14 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py314-test-opentelemetry-protojson-gen-oldest -- -ra
+
+  py314-test-opentelemetry-protojson-gen-latest_windows-latest:
+    name: opentelemetry-protojson-gen-latest 3.14 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py314-test-opentelemetry-protojson-gen-latest -- -ra
+
+  py314t-test-opentelemetry-protojson-gen-oldest_windows-latest:
+    name: opentelemetry-protojson-gen-oldest 3.14t Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.14t
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14t"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py314t-test-opentelemetry-protojson-gen-oldest -- -ra
+
+  py314t-test-opentelemetry-protojson-gen-latest_windows-latest:
+    name: opentelemetry-protojson-gen-latest 3.14t Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.14t
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14t"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py314t-test-opentelemetry-protojson-gen-latest -- -ra
+
+  pypy3-test-opentelemetry-protojson-gen-oldest_windows-latest:
+    name: opentelemetry-protojson-gen-oldest pypy-3.9 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python pypy-3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "pypy-3.9"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e pypy3-test-opentelemetry-protojson-gen-oldest -- -ra
+
+  pypy3-test-opentelemetry-protojson-gen-latest_windows-latest:
+    name: opentelemetry-protojson-gen-latest pypy-3.9 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python pypy-3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "pypy-3.9"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e pypy3-test-opentelemetry-protojson-gen-latest -- -ra
+
+  py39-test-opentelemetry-codegen-json_windows-latest:
+    name: opentelemetry-codegen-json 3.9 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py39-test-opentelemetry-codegen-json -- -ra
+
+  py310-test-opentelemetry-codegen-json_windows-latest:
+    name: opentelemetry-codegen-json 3.10 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py310-test-opentelemetry-codegen-json -- -ra
+
+  py311-test-opentelemetry-codegen-json_windows-latest:
+    name: opentelemetry-codegen-json 3.11 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py311-test-opentelemetry-codegen-json -- -ra
+
+  py312-test-opentelemetry-codegen-json_windows-latest:
+    name: opentelemetry-codegen-json 3.12 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py312-test-opentelemetry-codegen-json -- -ra
+
+  py313-test-opentelemetry-codegen-json_windows-latest:
+    name: opentelemetry-codegen-json 3.13 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py313-test-opentelemetry-codegen-json -- -ra
+
+  py314-test-opentelemetry-codegen-json_windows-latest:
+    name: opentelemetry-codegen-json 3.14 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py314-test-opentelemetry-codegen-json -- -ra
+
   py39-test-opentelemetry-sdk_windows-latest:
     name: opentelemetry-sdk 3.9 Windows
     runs-on: windows-latest
@@ -4126,6 +5006,7 @@ jobs:
 
       - name: Run tests
         run: tox -e py312-test-opentelemetry-opentracing-shim -- -ra
+<<<<<<< HEAD:.github/workflows/test.yml
 
   py313-test-opentelemetry-opentracing-shim_windows-latest:
     name: opentelemetry-opentracing-shim 3.13 Windows
@@ -6352,3 +7233,5 @@ jobs:
 
       - name: Run tests
         run: tox -e pypy3-test-opentelemetry-test-utils -- -ra
+=======
+>>>>>>> c2b30a1b660a0cc589195a4295910dd4b1a4701e:.github/workflows/test_0.yml

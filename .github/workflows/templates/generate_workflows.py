@@ -229,4 +229,4 @@ if __name__ == "__main__":
     )
     lint_count = generate_lint_workflow(tox_ini_path, output_dir)
     misc_count = generate_misc_workflow(tox_ini_path, output_dir)
-    generate_ci_workflow(test_count, lint_count, misc_count, output_dir)
+    # generate_ci_workflow(test_count, lint_count, misc_count, output_dir)
