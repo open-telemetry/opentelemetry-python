@@ -17,23 +17,17 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  {%- for n in range(misc_count) %}
 
-  misc_{{ n }}:
-    uses: ./.github/workflows/misc_{{ n }}.yml
-  {%- endfor %}
-  {%- for n in range(lint_count) %}
+  misc:
+    uses: ./.github/workflows/misc.yml
 
-  lint_{{ n }}:
-    uses: ./.github/workflows/lint_{{ n }}.yml
-  {%- endfor %}
-  {%- for n in range(test_count) %}
+  lint:
+    uses: ./.github/workflows/lint.yml
 
-  tests_{{ n }}:
-    uses: ./.github/workflows/test_{{ n }}.yml
-  {%- endfor %}
+  tests:
+    uses: ./.github/workflows/test.yml
 
-  contrib_0:
+  contrib:
     uses: open-telemetry/opentelemetry-python-contrib/.github/workflows/core_contrib_test_0.yml@main
     with:
       CORE_REPO_SHA: ${% raw %}{{ github.sha }}{% endraw %}
@@ -46,16 +40,10 @@ jobs:
   check:
     if: always()
     needs:
-      {%- for n in range(misc_count) %}
-      - misc_{{ n }}
-      {%- endfor %}
-      {%- for n in range(lint_count) %}
-      - lint_{{ n }}
-      {%- endfor %}
-      {%- for n in range(test_count) %}
-      - tests_{{ n }}
-      {%- endfor %}
-      - contrib_0
+      - misc
+      - lint
+      - tests
+      - contrib
     runs-on: ubuntu-latest
     steps:
       - name: Decide whether the needed jobs succeeded or failed

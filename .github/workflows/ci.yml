@@ -18,19 +18,16 @@ concurrency:
 
 jobs:
 
-  misc_0:
-    uses: ./.github/workflows/misc_0.yml
+  misc:
+    uses: ./.github/workflows/misc.yml
 
-  lint_0:
-    uses: ./.github/workflows/lint_0.yml
+  lint:
+    uses: ./.github/workflows/lint.yml
 
-  tests_0:
-    uses: ./.github/workflows/test_0.yml
+  tests:
+    uses: ./.github/workflows/test.yml
 
-  tests_1:
-    uses: ./.github/workflows/test_1.yml
-
-  contrib_0:
+  contrib:
     uses: open-telemetry/opentelemetry-python-contrib/.github/workflows/core_contrib_test_0.yml@main
     with:
       CORE_REPO_SHA: ${{ github.sha }}
@@ -43,11 +40,10 @@ jobs:
   check:
     if: always()
     needs:
-      - misc_0
-      - lint_0
-      - tests_0
-      - tests_1
-      - contrib_0
+      - misc
+      - lint
+      - tests
+      - contrib
     runs-on: ubuntu-latest
     steps:
       - name: Decide whether the needed jobs succeeded or failed
