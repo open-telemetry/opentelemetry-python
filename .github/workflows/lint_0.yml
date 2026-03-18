@@ -5,9 +5,8 @@ name: Lint 0
 
 on:
   push:
-    branches-ignore:
-    - 'release/*'
-    - 'otelbot/*'
+    branches:
+    - 'main'
   pull_request:
 
 permissions:
@@ -69,6 +68,44 @@ jobs:
 
       - name: Run tests
         run: tox -e lint-opentelemetry-proto-gen-latest
+
+  lint-opentelemetry-protojson-gen-latest:
+    name: opentelemetry-protojson-gen-latest
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e lint-opentelemetry-protojson-gen-latest
+
+  lint-opentelemetry-codegen-json:
+    name: opentelemetry-codegen-json
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e lint-opentelemetry-codegen-json
 
   lint-opentelemetry-sdk:
     name: opentelemetry-sdk
