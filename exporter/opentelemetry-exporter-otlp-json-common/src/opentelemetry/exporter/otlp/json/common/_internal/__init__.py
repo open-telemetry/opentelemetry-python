@@ -110,7 +110,7 @@ def _encode_key_value(
 
 def _encode_array(
     array: Collection[Any], allow_null: bool = False
-) -> list[JSONAnyValue]:
+) -> list[JSONAnyValue | None]:
     if not allow_null:
         # Let the exception get raised by _encode_value()
         return [_encode_value(v, allow_null=allow_null) for v in array]
