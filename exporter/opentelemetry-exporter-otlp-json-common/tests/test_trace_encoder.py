@@ -39,75 +39,22 @@ from opentelemetry.proto_json.trace.v1.trace import Span as JSONSpan
 from opentelemetry.proto_json.trace.v1.trace import (
     SpanFlags as JSONSpanFlags,
 )
-from opentelemetry.sdk.trace import Event, Resource, SpanContext, _Span
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import Event, SpanContext
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
-from opentelemetry.trace import Link, SpanKind, TraceFlags
+from opentelemetry.trace import Link, SpanKind
 from opentelemetry.trace.span import TraceState
 from opentelemetry.trace.status import Status, StatusCode
-from tests import assert_proto_json_equal
 
-_TRACE_ID = 0x3E0C63257DE34C926F9EFCD03927272E
-_SPAN_ID = 0x34BF92DEEFC58C92
-_PARENT_SPAN_ID = 0x1111111111111111
-_BASE_TIME = 683647322 * 10**9
-
-
-def _make_span_unended(
-    name="test-span",
-    trace_id=_TRACE_ID,
-    span_id=_SPAN_ID,
-    parent=None,
-    resource=None,
-    instrumentation_scope=None,
-    events=(),
-    links=(),
-    start_time=_BASE_TIME,
-):
-    if resource is None:
-        resource = Resource({})
-    span = _Span(
-        name=name,
-        context=SpanContext(
-            trace_id,
-            span_id,
-            is_remote=False,
-            trace_flags=TraceFlags(TraceFlags.SAMPLED),
-        ),
-        parent=parent,
-        resource=resource,
-        instrumentation_scope=instrumentation_scope,
-        events=events,
-        links=links,
-    )
-    span.start(start_time=start_time)
-    return span
-
-
-def _make_span(
-    name="test-span",
-    trace_id=_TRACE_ID,
-    span_id=_SPAN_ID,
-    parent=None,
-    resource=None,
-    instrumentation_scope=None,
-    events=(),
-    links=(),
-    start_time=_BASE_TIME,
-    end_time=_BASE_TIME + 50 * 10**6,
-):
-    span = _make_span_unended(
-        name=name,
-        trace_id=trace_id,
-        span_id=span_id,
-        parent=parent,
-        resource=resource,
-        instrumentation_scope=instrumentation_scope,
-        events=events,
-        links=links,
-        start_time=start_time,
-    )
-    span.end(end_time=end_time)
-    return span
+from tests import (
+    BASE_TIME,
+    PARENT_SPAN_ID,
+    SPAN_ID,
+    TRACE_ID,
+    assert_proto_json_equal,
+    make_span,
+    make_span_unended,
+)
 
 
 def _get_span(result, rs_idx=0, ss_idx=0, s_idx=0):
@@ -116,7 +63,7 @@ def _get_span(result, rs_idx=0, ss_idx=0, s_idx=0):
 
 class TestOTLPTraceEncoder(unittest.TestCase):
     def test_encode_single_span(self):
-        span = _make_span()
+        span = make_span()
         result = encode_spans([span])
 
         self.assertEqual(len(result.resource_spans), 1)
@@ -126,13 +73,13 @@ class TestOTLPTraceEncoder(unittest.TestCase):
         encoded = _get_span(result)
         self.assertEqual(encoded.name, "test-span")
         self.assertEqual(encoded.kind, JSONSpan.SpanKind.SPAN_KIND_INTERNAL)
-        self.assertEqual(encoded.start_time_unix_nano, _BASE_TIME)
-        self.assertEqual(encoded.end_time_unix_nano, _BASE_TIME + 50 * 10**6)
-        self.assertEqual(encoded.trace_id, _encode_trace_id(_TRACE_ID))
-        self.assertEqual(encoded.span_id, _encode_span_id(_SPAN_ID))
+        self.assertEqual(encoded.start_time_unix_nano, BASE_TIME)
+        self.assertEqual(encoded.end_time_unix_nano, BASE_TIME + 50 * 10**6)
+        self.assertEqual(encoded.trace_id, _encode_trace_id(TRACE_ID))
+        self.assertEqual(encoded.span_id, _encode_span_id(SPAN_ID))
 
     def test_encode_span_attributes(self):
-        span = _make_span()
+        span = make_span()
         span._attributes = {"key_bool": False, "key_str": "hello"}
         result = encode_spans([span])
         encoded = _get_span(result)
@@ -146,31 +93,29 @@ class TestOTLPTraceEncoder(unittest.TestCase):
     def test_encode_span_events(self):
         event = Event(
             name="my-event",
-            timestamp=_BASE_TIME + 10 * 10**6,
+            timestamp=BASE_TIME + 10 * 10**6,
             attributes={"event_key": "event_val"},
         )
-        span = _make_span(events=(event,))
+        span = make_span(events=(event,))
         result = encode_spans([span])
         encoded = _get_span(result)
 
         self.assertEqual(len(encoded.events), 1)
         self.assertEqual(encoded.events[0].name, "my-event")
         self.assertEqual(
-            encoded.events[0].time_unix_nano, _BASE_TIME + 10 * 10**6
+            encoded.events[0].time_unix_nano, BASE_TIME + 10 * 10**6
         )
         self.assertEqual(encoded.events[0].attributes[0].key, "event_key")
 
     def test_encode_span_links(self):
-        link_ctx = SpanContext(_TRACE_ID, 0x2222222222222222, is_remote=False)
+        link_ctx = SpanContext(TRACE_ID, 0x2222222222222222, is_remote=False)
         link = Link(context=link_ctx, attributes={"link_key": True})
-        span = _make_span(links=(link,))
+        span = make_span(links=(link,))
         result = encode_spans([span])
         encoded = _get_span(result)
 
         self.assertEqual(len(encoded.links), 1)
-        self.assertEqual(
-            encoded.links[0].trace_id, _encode_trace_id(_TRACE_ID)
-        )
+        self.assertEqual(encoded.links[0].trace_id, _encode_trace_id(TRACE_ID))
         self.assertEqual(
             encoded.links[0].span_id,
             _encode_span_id(0x2222222222222222),
@@ -189,9 +134,9 @@ class TestOTLPTraceEncoder(unittest.TestCase):
         ]
         for name, code, description, expected_code in cases:
             with self.subTest(name=name):
-                span = _make_span_unended()
+                span = make_span_unended()
                 span.set_status(Status(code, description))
-                span.end(end_time=_BASE_TIME + 50 * 10**6)
+                span.end(end_time=BASE_TIME + 50 * 10**6)
 
                 result = encode_spans([span])
                 encoded = _get_span(result)
@@ -200,14 +145,14 @@ class TestOTLPTraceEncoder(unittest.TestCase):
                     self.assertEqual(encoded.status.message, description)
 
     def test_encode_span_parent(self):
-        parent_ctx = SpanContext(_TRACE_ID, _PARENT_SPAN_ID, is_remote=True)
-        span = _make_span(parent=parent_ctx)
+        parent_ctx = SpanContext(TRACE_ID, PARENT_SPAN_ID, is_remote=True)
+        span = make_span(parent=parent_ctx)
         result = encode_spans([span])
         encoded = _get_span(result)
 
         self.assertEqual(
             encoded.parent_span_id,
-            _encode_span_id(_PARENT_SPAN_ID),
+            _encode_span_id(PARENT_SPAN_ID),
         )
         self.assertEqual(
             encoded.flags,
@@ -218,7 +163,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
         )
 
     def test_encode_span_no_parent(self):
-        span = _make_span(parent=None)
+        span = make_span(parent=None)
         result = encode_spans([span])
         encoded = _get_span(result)
 
@@ -231,13 +176,12 @@ class TestOTLPTraceEncoder(unittest.TestCase):
     def test_encode_span_grouping_by_resource(self):
         r1 = Resource({"svc": "svc1"})
         r2 = Resource({"svc": "svc2"})
-        span1 = _make_span(name="s1", resource=r1, span_id=0xAAAA)
-        span2 = _make_span(name="s2", resource=r2, span_id=0xBBBB)
+        span1 = make_span(name="s1", resource=r1, span_id=0xAAAA)
+        span2 = make_span(name="s2", resource=r2, span_id=0xBBBB)
 
         result = encode_spans([span1, span2])
         self.assertEqual(len(result.resource_spans), 2)
 
-        # Build a map of resource attr value -> span names for easy lookup
         groups = {}
         for rs in result.resource_spans:
             svc_val = rs.resource.attributes[0].value.string_value
@@ -251,13 +195,13 @@ class TestOTLPTraceEncoder(unittest.TestCase):
         resource = Resource({"svc": "test"})
         scope1 = InstrumentationScope(name="lib1", version="1.0")
         scope2 = InstrumentationScope(name="lib2", version="2.0")
-        span1 = _make_span(
+        span1 = make_span(
             name="s1",
             resource=resource,
             instrumentation_scope=scope1,
             span_id=0xAAAA,
         )
-        span2 = _make_span(
+        span2 = make_span(
             name="s2",
             resource=resource,
             instrumentation_scope=scope2,
@@ -269,7 +213,6 @@ class TestOTLPTraceEncoder(unittest.TestCase):
         scope_spans = result.resource_spans[0].scope_spans
         self.assertEqual(len(scope_spans), 2)
 
-        # Build a map of scope name -> span names
         groups = {
             ss.scope.name: [s.name for s in ss.spans] for ss in scope_spans
         }
@@ -285,7 +228,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
             version="1.0",
             schema_url="scope_schema",
         )
-        span = _make_span(resource=resource, instrumentation_scope=scope)
+        span = make_span(resource=resource, instrumentation_scope=scope)
         result = encode_spans([span])
 
         self.assertEqual(
@@ -302,7 +245,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
             version="1.0",
             attributes={"scope_key": "scope_val"},
         )
-        span = _make_span(instrumentation_scope=scope)
+        span = make_span(instrumentation_scope=scope)
         result = encode_spans([span])
 
         encoded_scope = result.resource_spans[0].scope_spans[0].scope
@@ -327,7 +270,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
         cases = [
             (
                 "remote_parent",
-                SpanContext(_TRACE_ID, 0x1111, is_remote=True),
+                SpanContext(TRACE_ID, 0x1111, is_remote=True),
                 int(
                     JSONSpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK
                     | JSONSpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK
@@ -335,7 +278,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
             ),
             (
                 "local_parent",
-                SpanContext(_TRACE_ID, 0x2222, is_remote=False),
+                SpanContext(TRACE_ID, 0x2222, is_remote=False),
                 int(JSONSpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK),
             ),
             (
@@ -380,7 +323,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
         self.assertIsNone(_encode_links([]))
 
     def test_encode_parent_id(self):
-        ctx = SpanContext(_TRACE_ID, 0xABCDEF1234567890, is_remote=True)
+        ctx = SpanContext(TRACE_ID, 0xABCDEF1234567890, is_remote=True)
         self.assertEqual(
             _encode_parent_id(ctx),
             _encode_span_id(0xABCDEF1234567890),
@@ -390,7 +333,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
         self.assertIsNone(_encode_parent_id(None))
 
     def test_encode_spans_to_dict(self):
-        span = _make_span()
+        span = make_span()
         span.set_attribute("key", "value")
         result = encode_spans([span])
         result_dict = result.to_dict()
@@ -398,25 +341,18 @@ class TestOTLPTraceEncoder(unittest.TestCase):
         self.assertIn("resourceSpans", result_dict)
         s = result_dict["resourceSpans"][0]["scopeSpans"][0]["spans"][0]
 
-        # Hex-encoded IDs
         self.assertIsInstance(s["traceId"], str)
         self.assertEqual(len(s["traceId"]), 32)
         self.assertIsInstance(s["spanId"], str)
         self.assertEqual(len(s["spanId"]), 16)
-
-        # String-encoded int64 timestamps
         self.assertIsInstance(s["startTimeUnixNano"], str)
         self.assertIsInstance(s["endTimeUnixNano"], str)
 
-        # camelCase keys
-        self.assertIn("startTimeUnixNano", s)
-        self.assertIn("endTimeUnixNano", s)
-
     def test_encode_spans_json_roundtrip(self):
-        parent_ctx = SpanContext(_TRACE_ID, _PARENT_SPAN_ID, is_remote=True)
+        parent_ctx = SpanContext(TRACE_ID, PARENT_SPAN_ID, is_remote=True)
         spans = [
-            _make_span(name="span1", parent=parent_ctx),
-            _make_span(
+            make_span(name="span1", parent=parent_ctx),
+            make_span(
                 name="span2",
                 span_id=0xBBBB,
                 resource=Resource({"r": "v"}),

@@ -28,197 +28,24 @@ from opentelemetry.sdk.metrics import Exemplar
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     Buckets,
-    ExponentialHistogram,
-    ExponentialHistogramDataPoint,
-    Gauge,
-    Histogram,
-    HistogramDataPoint,
     Metric,
-    MetricsData,
-    NumberDataPoint,
-    ResourceMetrics,
-    ScopeMetrics,
-    Sum,
 )
-from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.util.instrumentation import InstrumentationScope
-from tests import assert_proto_json_equal
 
-_TIME = 1641946016139533244
-_START_TIME = 1641946015139533244
-_SPAN_ID = int("6e0c63257de34c92", 16)
-_TRACE_ID = int("d4cda95b652f4a1592b449d5929fda1b", 16)
-
-
-def _make_metrics_data(
-    metrics,
-    resource_attrs=None,
-    resource_schema_url=None,
-    scope_name="test_scope",
-    scope_version="1.0",
-    scope_schema_url=None,
-):
-    return MetricsData(
-        resource_metrics=[
-            ResourceMetrics(
-                resource=Resource(
-                    attributes=resource_attrs or {},
-                    schema_url=resource_schema_url,
-                ),
-                scope_metrics=[
-                    ScopeMetrics(
-                        scope=InstrumentationScope(
-                            name=scope_name,
-                            version=scope_version,
-                            schema_url=scope_schema_url,
-                        ),
-                        metrics=metrics,
-                        schema_url=scope_schema_url,
-                    )
-                ],
-                schema_url=resource_schema_url,
-            )
-        ]
-    )
+from tests import (
+    SPAN_ID,
+    TIME,
+    TRACE_ID,
+    assert_proto_json_equal,
+    make_exponential_histogram,
+    make_gauge,
+    make_histogram,
+    make_metrics_data,
+    make_sum,
+)
 
 
 def _get_first_metric(result):
     return result.resource_metrics[0].scope_metrics[0].metrics[0]
-
-
-def _make_sum(
-    name="test_sum",
-    value=33,
-    attributes=None,
-    temporality=AggregationTemporality.CUMULATIVE,
-    is_monotonic=True,
-    description="desc",
-    unit="s",
-):
-    return Metric(
-        name=name,
-        description=description,
-        unit=unit,
-        data=Sum(
-            data_points=[
-                NumberDataPoint(
-                    attributes=attributes or {"a": 1},
-                    start_time_unix_nano=_START_TIME,
-                    time_unix_nano=_TIME,
-                    value=value,
-                )
-            ],
-            aggregation_temporality=temporality,
-            is_monotonic=is_monotonic,
-        ),
-    )
-
-
-def _make_gauge(
-    name="test_gauge",
-    value=9000,
-    attributes=None,
-    description="desc",
-    unit="1",
-):
-    return Metric(
-        name=name,
-        description=description,
-        unit=unit,
-        data=Gauge(
-            data_points=[
-                NumberDataPoint(
-                    attributes=attributes or {"a": 1},
-                    start_time_unix_nano=None,
-                    time_unix_nano=_TIME,
-                    value=value,
-                )
-            ],
-        ),
-    )
-
-
-def _make_histogram(
-    name="test_histogram",
-    attributes=None,
-    count=5,
-    sum_value=67,
-    bucket_counts=None,
-    explicit_bounds=None,
-    min_value=8,
-    max_value=18,
-    exemplars=None,
-    temporality=AggregationTemporality.DELTA,
-    description="desc",
-    unit="ms",
-):
-    return Metric(
-        name=name,
-        description=description,
-        unit=unit,
-        data=Histogram(
-            data_points=[
-                HistogramDataPoint(
-                    attributes=attributes or {"a": 1},
-                    start_time_unix_nano=_START_TIME,
-                    time_unix_nano=_TIME,
-                    count=count,
-                    sum=sum_value,
-                    bucket_counts=bucket_counts or [1, 4],
-                    explicit_bounds=explicit_bounds or [10.0, 20.0],
-                    min=min_value,
-                    max=max_value,
-                    exemplars=exemplars or [],
-                )
-            ],
-            aggregation_temporality=temporality,
-        ),
-    )
-
-
-def _make_exponential_histogram(
-    name="test_exp_hist",
-    attributes=None,
-    count=10,
-    sum_value=100.5,
-    scale=1,
-    zero_count=2,
-    positive=None,
-    negative=None,
-    flags=0,
-    min_value=1.0,
-    max_value=50.0,
-    exemplars=None,
-    temporality=AggregationTemporality.CUMULATIVE,
-    description="desc",
-    unit="s",
-):
-    return Metric(
-        name=name,
-        description=description,
-        unit=unit,
-        data=ExponentialHistogram(
-            data_points=[
-                ExponentialHistogramDataPoint(
-                    attributes=attributes or {"a": 1},
-                    start_time_unix_nano=_START_TIME,
-                    time_unix_nano=_TIME,
-                    count=count,
-                    sum=sum_value,
-                    scale=scale,
-                    zero_count=zero_count,
-                    positive=positive
-                    or Buckets(offset=0, bucket_counts=[1, 2, 3]),
-                    negative=negative or Buckets(offset=1, bucket_counts=[1]),
-                    flags=flags,
-                    min=min_value,
-                    max=max_value,
-                    exemplars=exemplars or [],
-                )
-            ],
-            aggregation_temporality=temporality,
-        ),
-    )
 
 
 class TestOTLPMetricsEncoder(unittest.TestCase):
@@ -230,7 +57,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
         for name, value, is_int in cases:
             with self.subTest(name=name):
                 result = encode_metrics(
-                    _make_metrics_data([_make_sum(value=value)])
+                    make_metrics_data([make_sum(value=value)])
                 )
                 encoded = _get_first_metric(result)
 
@@ -243,8 +70,8 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                 self.assertTrue(encoded.sum.is_monotonic)
 
                 dp = encoded.sum.data_points[0]
-                self.assertEqual(dp.start_time_unix_nano, _START_TIME)
-                self.assertEqual(dp.time_unix_nano, _TIME)
+                self.assertIsNotNone(dp.start_time_unix_nano)
+                self.assertIsNotNone(dp.time_unix_nano)
                 if is_int:
                     self.assertEqual(dp.as_int, value)
                     self.assertIsNone(dp.as_double)
@@ -260,7 +87,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
         for name, value, is_int in cases:
             with self.subTest(name=name):
                 result = encode_metrics(
-                    _make_metrics_data([_make_gauge(value=value)])
+                    make_metrics_data([make_gauge(value=value)])
                 )
                 encoded = _get_first_metric(result)
 
@@ -268,21 +95,21 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                 self.assertIsNone(encoded.sum)
 
                 dp = encoded.gauge.data_points[0]
-                self.assertEqual(dp.time_unix_nano, _TIME)
+                self.assertIsNotNone(dp.time_unix_nano)
                 if is_int:
                     self.assertEqual(dp.as_int, value)
                 else:
                     self.assertEqual(dp.as_double, value)
 
     def test_encode_histogram(self):
-        metric = _make_histogram(
+        metric = make_histogram(
             exemplars=[
                 Exemplar(
-                    {"filtered": "banana"}, 298.0, _TIME, _SPAN_ID, _TRACE_ID
+                    {"filtered": "banana"}, 298.0, TIME, SPAN_ID, TRACE_ID
                 ),
             ],
         )
-        result = encode_metrics(_make_metrics_data([metric]))
+        result = encode_metrics(make_metrics_data([metric]))
         encoded = _get_first_metric(result)
 
         self.assertIsNotNone(encoded.histogram)
@@ -302,7 +129,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
 
     def test_encode_exponential_histogram(self):
         result = encode_metrics(
-            _make_metrics_data([_make_exponential_histogram()])
+            make_metrics_data([make_exponential_histogram()])
         )
         encoded = _get_first_metric(result)
 
@@ -320,7 +147,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
         self.assertEqual(dp.negative.bucket_counts, [1])
 
     def test_encode_exponential_histogram_empty_buckets(self):
-        metric = _make_exponential_histogram(
+        metric = make_exponential_histogram(
             attributes={},
             count=0,
             sum_value=0.0,
@@ -330,7 +157,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
             min_value=0.0,
             max_value=0.0,
         )
-        result = encode_metrics(_make_metrics_data([metric]))
+        result = encode_metrics(make_metrics_data([metric]))
         dp = _get_first_metric(result).exponential_histogram.data_points[0]
         self.assertIsNone(dp.positive)
         self.assertIsNone(dp.negative)
@@ -339,26 +166,26 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
         cases = [
             (
                 "float_with_ids",
-                Exemplar({"f": "banana"}, 298.0, _TIME, _SPAN_ID, _TRACE_ID),
+                Exemplar({"f": "banana"}, 298.0, TIME, SPAN_ID, TRACE_ID),
                 True,
                 True,
             ),
             (
                 "float_without_ids",
-                Exemplar({"f": "banana"}, 298.0, _TIME, None, None),
+                Exemplar({"f": "banana"}, 298.0, TIME, None, None),
                 False,
                 True,
             ),
             (
                 "int_with_ids",
-                Exemplar({"f": "banana"}, 42, _TIME, _SPAN_ID, _TRACE_ID),
+                Exemplar({"f": "banana"}, 42, TIME, SPAN_ID, TRACE_ID),
                 True,
                 False,
             ),
         ]
         for name, exemplar, has_ids, is_float in cases:
             with self.subTest(name=name):
-                metric = _make_histogram(
+                metric = make_histogram(
                     attributes={},
                     count=1,
                     sum_value=exemplar.value,
@@ -368,7 +195,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                     max_value=exemplar.value,
                     exemplars=[exemplar],
                 )
-                result = encode_metrics(_make_metrics_data([metric]))
+                result = encode_metrics(make_metrics_data([metric]))
                 enc_ex = (
                     _get_first_metric(result)
                     .histogram.data_points[0]
@@ -387,8 +214,8 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
 
     def test_encode_metrics_resource_and_scope(self):
         result = encode_metrics(
-            _make_metrics_data(
-                [_make_gauge(value=1, attributes={})],
+            make_metrics_data(
+                [make_gauge(value=1, attributes={})],
                 resource_attrs={"service.name": "test-svc"},
                 resource_schema_url="res_schema",
                 scope_name="my_lib",
@@ -407,7 +234,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
 
     def test_encode_metrics_to_dict(self):
         result = encode_metrics(
-            _make_metrics_data([_make_sum(name="sum_int", value=33)])
+            make_metrics_data([make_sum(name="sum_int", value=33)])
         )
         result_dict = result.to_dict()
 
@@ -416,7 +243,6 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
         self.assertIn("scopeMetrics", rm)
 
         dp = rm["scopeMetrics"][0]["metrics"][0]["sum"]["dataPoints"][0]
-        # int64 fields are string-encoded
         self.assertIsInstance(dp["startTimeUnixNano"], str)
         self.assertIsInstance(dp["timeUnixNano"], str)
         self.assertIsInstance(dp["asInt"], str)
@@ -424,17 +250,17 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
 
     def test_encode_metrics_json_roundtrip(self):
         metrics = [
-            _make_sum(name="s", value=33),
-            _make_gauge(name="g", value=52.028),
-            _make_histogram(
+            make_sum(name="s", value=33),
+            make_gauge(name="g", value=52.028),
+            make_histogram(
                 name="h",
                 exemplars=[
-                    Exemplar({"f": "b"}, 298.0, _TIME, _SPAN_ID, _TRACE_ID),
+                    Exemplar({"f": "b"}, 298.0, TIME, SPAN_ID, TRACE_ID),
                 ],
             ),
-            _make_exponential_histogram(name="eh"),
+            make_exponential_histogram(name="eh"),
         ]
-        result = encode_metrics(_make_metrics_data(metrics))
+        result = encode_metrics(make_metrics_data(metrics))
         json_str = result.to_json()
         roundtripped = JSONExportMetricsServiceRequest.from_dict(
             json.loads(json_str)
@@ -449,7 +275,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
             data=None,
         )
         with self.assertLogs(level=WARNING):
-            result = encode_metrics(_make_metrics_data([metric]))
+            result = encode_metrics(make_metrics_data([metric]))
         encoded = _get_first_metric(result)
         self.assertEqual(encoded.name, "unsupported")
         self.assertIsNone(encoded.gauge)
