@@ -661,9 +661,10 @@ class TestOTLPMetricExporter(TestCase):
             after_in_child()
 
         initial_session.close.assert_called_once()
-        assert exporter._session is new_session
-        assert exporter._session.headers.get("x-test") == "1"
-        assert (
-            exporter._session.headers.get("Content-Type")
-            == "application/x-protobuf"
+        self.assertEqual(exporter._session, new_session)
+        self.assertEqual(exporter._session.headers.get("x-test"), "1")
+        self.assertEqual(
+            exporter._session.headers.get("Content-Type"),
+            "application/x-protobuf",
         )
+        self.assertEqual(exporter._session.headers.get("preexisting"), "yes")
