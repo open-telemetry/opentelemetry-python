@@ -34,6 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4934](https://github.com/open-telemetry/opentelemetry-python/pull/4934))
 - `opentelemetry-proto-json`, `opentelemetry-codegen-json`: Implement custom protoc plugin to generate OTLP JSON class definitions
   ([#4910](https://github.com/open-telemetry/opentelemetry-python/pull/4910))
+- Add configurable `max_export_batch_size` to OTLP HTTP metrics exporter
+  ([#4576](https://github.com/open-telemetry/opentelemetry-python/pull/4576))
 
 ## Version 1.40.0/0.61b0 (2026-03-04)
 
@@ -194,7 +196,6 @@ the OTLP `LogHandler` remains attached to the root logger. Fix a bug that
 can cause a deadlock to occur over `logging._lock` in some cases ([#4636](https://github.com/open-telemetry/opentelemetry-python/pull/4636)).
 - otlp-http-exporter: set default value for param `timeout_sec` in `_export` method
   ([#4691](https://github.com/open-telemetry/opentelemetry-python/pull/4691))
-
 - Update OTLP gRPC/HTTP exporters: calling shutdown will now interrupt exporters that are sleeping
   before a retry attempt, and cause them to return failure immediately.
   Update BatchSpan/LogRecordProcessors: shutdown will now complete after 30 seconds of trying to finish
