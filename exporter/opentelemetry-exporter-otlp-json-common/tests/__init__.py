@@ -97,8 +97,10 @@ def assert_proto_json_equal(
             len(obj_b),
             f"List length mismatch at {path}: {len(obj_a)} != {len(obj_b)}",
         )
-        for i, (item_a, item_b) in enumerate(zip(obj_a, obj_b)):
-            assert_proto_json_equal(test_case, item_a, item_b, f"{path}[{i}]")
+        for idx, (item_a, item_b) in enumerate(zip(obj_a, obj_b)):
+            assert_proto_json_equal(
+                test_case, item_a, item_b, f"{path}[{idx}]"
+            )
     elif _is_none_equivalent(obj_a, obj_b):
         pass
     else:
@@ -196,28 +198,28 @@ def make_log(
     context=None,
     limits=None,
 ):
-    kwargs = dict(
-        timestamp=timestamp,
-        observed_timestamp=observed_timestamp,
-        severity_text=severity_text,
-        severity_number=severity_number,
-        body=body,
-        attributes=attributes or {},
-        event_name=event_name,
-    )
+    kwargs = {
+        "timestamp": timestamp,
+        "observed_timestamp": observed_timestamp,
+        "severity_text": severity_text,
+        "severity_number": severity_number,
+        "body": body,
+        "attributes": attributes or {},
+        "event_name": event_name,
+    }
     if context is not None:
         kwargs["context"] = context
 
-    rw_kwargs = dict(
-        resource=resource or Resource({}),
-        instrumentation_scope=InstrumentationScope("test_scope", "1.0")
+    rkwargs = {
+        "resource": resource or Resource({}),
+        "instrumentation_scope": InstrumentationScope("test_scope", "1.0")
         if instrumentation_scope is _UNSET
         else instrumentation_scope,
-    )
+    }
     if limits is not None:
-        rw_kwargs["limits"] = limits
+        rkwargs["limits"] = limits
 
-    return ReadableLogRecord(LogRecord(**kwargs), **rw_kwargs)
+    return ReadableLogRecord(LogRecord(**kwargs), **rkwargs)
 
 
 # ---------------------------------------------------------------------------

@@ -61,7 +61,6 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import Event, SpanContext
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace import Link
-
 from tests import (
     BASE_TIME,
     PARENT_SPAN_ID,

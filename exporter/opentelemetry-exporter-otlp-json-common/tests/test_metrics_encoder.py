@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=protected-access
+# pylint: disable=protected-access,unsubscriptable-object
 
 import json
 import unittest
@@ -30,7 +30,6 @@ from opentelemetry.sdk.metrics.export import (
     Buckets,
     Metric,
 )
-
 from tests import (
     SPAN_ID,
     TIME,

@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=unsubscriptable-object
+
 import json
 import unittest
 
@@ -45,7 +47,6 @@ from opentelemetry.trace import (
     TraceFlags,
     set_span_in_context,
 )
-
 from tests import (
     SPAN_ID,
     TIME,
@@ -238,6 +239,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
         self.assertEqual(len(result.resource_logs), 2)
 
         groups = {}
+        # pylint: disable-next=not-an-iterable
         for rl in result.resource_logs:
             svc_val = rl.resource.attributes[0].value.string_value
             bodies = [
