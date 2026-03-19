@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=protected-access
+
 import pytest
 
 from opentelemetry.exporter.otlp.json.common.trace_encoder import encode_spans
@@ -20,7 +22,6 @@ from opentelemetry.sdk.trace import Event, SpanContext
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace import Link
 from opentelemetry.trace.status import Status, StatusCode
-
 from tests import BASE_TIME, TRACE_ID, make_span
 
 
