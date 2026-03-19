@@ -227,7 +227,7 @@ class MetricReader(ABC):
         ]
         | None = None,
         *,
-        otel_component_type: str | None = None,
+        otel_component_type: OtelComponentTypeValues | None = None,
     ) -> None:
         self._collect: Callable[
             [
@@ -327,7 +327,9 @@ class MetricReader(ABC):
                     raise Exception(f"Invalid instrument class found {typ}")
 
         self._otel_component_type = (
-            otel_component_type or type(self).__qualname__
+            otel_component_type.value
+            if otel_component_type
+            else type(self).__qualname__
         )
         self._metrics = MetricReaderMetrics(
             self._otel_component_type, NoOpMeterProvider()
@@ -475,7 +477,7 @@ class PeriodicExportingMetricReader(MetricReader):
         super().__init__(
             preferred_temporality=exporter._preferred_temporality,
             preferred_aggregation=exporter._preferred_aggregation,
-            otel_component_type=OtelComponentTypeValues.PERIODIC_METRIC_READER.value,
+            otel_component_type=OtelComponentTypeValues.PERIODIC_METRIC_READER,
         )
 
         # This lock is held whenever calling self._exporter.export() to prevent concurrent
