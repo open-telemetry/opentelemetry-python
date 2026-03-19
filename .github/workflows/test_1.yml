@@ -5,9 +5,8 @@ name: Test 1
 
 on:
   push:
-    branches-ignore:
-    - 'release/*'
-    - 'otelbot/*'
+    branches:
+    - 'main'
   pull_request:
 
 permissions:
@@ -29,14 +28,147 @@ env:
        'main'
     ) || 'main' }}
   PIP_EXISTS_ACTION: w
+  CONTRIB_REPO_UTIL_HTTP: ${{ github.workspace }}/opentelemetry-python-contrib/util/opentelemetry-util-http
+  CONTRIB_REPO_INSTRUMENTATION: ${{ github.workspace }}/opentelemetry-python-contrib/opentelemetry-instrumentation
+  CONTRIB_REPO_INSTRUMENTATION_REQUESTS: ${{ github.workspace }}/opentelemetry-python-contrib/instrumentation/opentelemetry-instrumentation-requests
+  CONTRIB_REPO_INSTRUMENTATION_WSGI: ${{ github.workspace }}/opentelemetry-python-contrib/instrumentation/opentelemetry-instrumentation-wsgi
+  CONTRIB_REPO_INSTRUMENTATION_FLASK: ${{ github.workspace }}/opentelemetry-python-contrib/instrumentation/opentelemetry-instrumentation-flask
 
 jobs:
 
-  py311-test-opentelemetry-exporter-otlp-proto-http_windows-latest:
-    name: opentelemetry-exporter-otlp-proto-http 3.11 Windows
+  py313-test-opentelemetry-opentracing-shim_windows-latest:
+    name: opentelemetry-opentracing-shim 3.13 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py313-test-opentelemetry-opentracing-shim -- -ra
+
+  py314-test-opentelemetry-opentracing-shim_windows-latest:
+    name: opentelemetry-opentracing-shim 3.14 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py314-test-opentelemetry-opentracing-shim -- -ra
+
+  py314t-test-opentelemetry-opentracing-shim_windows-latest:
+    name: opentelemetry-opentracing-shim 3.14t Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.14t
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14t"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py314t-test-opentelemetry-opentracing-shim -- -ra
+
+  pypy3-test-opentelemetry-opentracing-shim_windows-latest:
+    name: opentelemetry-opentracing-shim pypy-3.9 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python pypy-3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "pypy-3.9"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e pypy3-test-opentelemetry-opentracing-shim -- -ra
+
+  py39-test-opentelemetry-opencensus-shim_windows-latest:
+    name: opentelemetry-opencensus-shim 3.9 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py39-test-opentelemetry-opencensus-shim -- -ra
+
+  py310-test-opentelemetry-opencensus-shim_windows-latest:
+    name: opentelemetry-opencensus-shim 3.10 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py310-test-opentelemetry-opencensus-shim -- -ra
+
+  py311-test-opentelemetry-opencensus-shim_windows-latest:
+    name: opentelemetry-opencensus-shim 3.11 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -48,8 +180,803 @@ jobs:
       - name: Install tox
         run: pip install tox-uv
 
+      - name: Run tests
+        run: tox -e py311-test-opentelemetry-opencensus-shim -- -ra
+
+  py312-test-opentelemetry-opencensus-shim_windows-latest:
+    name: opentelemetry-opencensus-shim 3.12 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
       - name: Configure git to support long filenames
         run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py312-test-opentelemetry-opencensus-shim -- -ra
+
+  py313-test-opentelemetry-opencensus-shim_windows-latest:
+    name: opentelemetry-opencensus-shim 3.13 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py313-test-opentelemetry-opencensus-shim -- -ra
+
+  py314-test-opentelemetry-opencensus-shim_windows-latest:
+    name: opentelemetry-opencensus-shim 3.14 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py314-test-opentelemetry-opencensus-shim -- -ra
+
+  py39-test-opentelemetry-exporter-opencensus_windows-latest:
+    name: opentelemetry-exporter-opencensus 3.9 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py39-test-opentelemetry-exporter-opencensus -- -ra
+
+  py310-test-opentelemetry-exporter-opencensus_windows-latest:
+    name: opentelemetry-exporter-opencensus 3.10 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py310-test-opentelemetry-exporter-opencensus -- -ra
+
+  py311-test-opentelemetry-exporter-opencensus_windows-latest:
+    name: opentelemetry-exporter-opencensus 3.11 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py311-test-opentelemetry-exporter-opencensus -- -ra
+
+  py312-test-opentelemetry-exporter-opencensus_windows-latest:
+    name: opentelemetry-exporter-opencensus 3.12 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py312-test-opentelemetry-exporter-opencensus -- -ra
+
+  py313-test-opentelemetry-exporter-opencensus_windows-latest:
+    name: opentelemetry-exporter-opencensus 3.13 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py313-test-opentelemetry-exporter-opencensus -- -ra
+
+  py314-test-opentelemetry-exporter-opencensus_windows-latest:
+    name: opentelemetry-exporter-opencensus 3.14 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py314-test-opentelemetry-exporter-opencensus -- -ra
+
+  py39-test-opentelemetry-exporter-otlp-proto-common_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-common 3.9 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py39-test-opentelemetry-exporter-otlp-proto-common -- -ra
+
+  py310-test-opentelemetry-exporter-otlp-proto-common_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-common 3.10 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py310-test-opentelemetry-exporter-otlp-proto-common -- -ra
+
+  py311-test-opentelemetry-exporter-otlp-proto-common_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-common 3.11 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py311-test-opentelemetry-exporter-otlp-proto-common -- -ra
+
+  py312-test-opentelemetry-exporter-otlp-proto-common_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-common 3.12 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py312-test-opentelemetry-exporter-otlp-proto-common -- -ra
+
+  py313-test-opentelemetry-exporter-otlp-proto-common_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-common 3.13 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py313-test-opentelemetry-exporter-otlp-proto-common -- -ra
+
+  py314-test-opentelemetry-exporter-otlp-proto-common_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-common 3.14 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py314-test-opentelemetry-exporter-otlp-proto-common -- -ra
+
+  py314t-test-opentelemetry-exporter-otlp-proto-common_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-common 3.14t Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.14t
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14t"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py314t-test-opentelemetry-exporter-otlp-proto-common -- -ra
+
+  pypy3-test-opentelemetry-exporter-otlp-proto-common_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-common pypy-3.9 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python pypy-3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "pypy-3.9"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e pypy3-test-opentelemetry-exporter-otlp-proto-common -- -ra
+
+  py39-test-opentelemetry-exporter-otlp-combined_windows-latest:
+    name: opentelemetry-exporter-otlp-combined 3.9 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py39-test-opentelemetry-exporter-otlp-combined -- -ra
+
+  py310-test-opentelemetry-exporter-otlp-combined_windows-latest:
+    name: opentelemetry-exporter-otlp-combined 3.10 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py310-test-opentelemetry-exporter-otlp-combined -- -ra
+
+  py311-test-opentelemetry-exporter-otlp-combined_windows-latest:
+    name: opentelemetry-exporter-otlp-combined 3.11 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py311-test-opentelemetry-exporter-otlp-combined -- -ra
+
+  py312-test-opentelemetry-exporter-otlp-combined_windows-latest:
+    name: opentelemetry-exporter-otlp-combined 3.12 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py312-test-opentelemetry-exporter-otlp-combined -- -ra
+
+  py313-test-opentelemetry-exporter-otlp-combined_windows-latest:
+    name: opentelemetry-exporter-otlp-combined 3.13 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py313-test-opentelemetry-exporter-otlp-combined -- -ra
+
+  py314-test-opentelemetry-exporter-otlp-combined_windows-latest:
+    name: opentelemetry-exporter-otlp-combined 3.14 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py314-test-opentelemetry-exporter-otlp-combined -- -ra
+
+  py39-test-opentelemetry-exporter-otlp-proto-grpc-oldest_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-oldest 3.9 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py39-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
+
+  py39-test-opentelemetry-exporter-otlp-proto-grpc-latest_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-latest 3.9 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py39-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
+
+  py310-test-opentelemetry-exporter-otlp-proto-grpc-oldest_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-oldest 3.10 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py310-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
+
+  py310-test-opentelemetry-exporter-otlp-proto-grpc-latest_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-latest 3.10 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py310-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
+
+  py311-test-opentelemetry-exporter-otlp-proto-grpc-oldest_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-oldest 3.11 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py311-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
+
+  py311-test-opentelemetry-exporter-otlp-proto-grpc-latest_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-latest 3.11 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py311-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
+
+  py312-test-opentelemetry-exporter-otlp-proto-grpc-oldest_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-oldest 3.12 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py312-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
+
+  py312-test-opentelemetry-exporter-otlp-proto-grpc-latest_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-latest 3.12 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py312-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
+
+  py313-test-opentelemetry-exporter-otlp-proto-grpc-oldest_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-oldest 3.13 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py313-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
+
+  py313-test-opentelemetry-exporter-otlp-proto-grpc-latest_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-latest 3.13 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py313-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
+
+  py314-test-opentelemetry-exporter-otlp-proto-grpc-oldest_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-oldest 3.14 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py314-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
+
+  py314-test-opentelemetry-exporter-otlp-proto-grpc-latest_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-latest 3.14 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py314-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
+
+  py39-test-opentelemetry-exporter-otlp-proto-http_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-http 3.9 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py39-test-opentelemetry-exporter-otlp-proto-http -- -ra
+
+  py310-test-opentelemetry-exporter-otlp-proto-http_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-http 3.10 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e py310-test-opentelemetry-exporter-otlp-proto-http -- -ra
+
+  py311-test-opentelemetry-exporter-otlp-proto-http_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-http 3.11 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install tox
+        run: pip install tox-uv
 
       - name: Run tests
         run: tox -e py311-test-opentelemetry-exporter-otlp-proto-http -- -ra
@@ -59,6 +986,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -69,9 +998,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py312-test-opentelemetry-exporter-otlp-proto-http -- -ra
@@ -81,6 +1007,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -91,9 +1019,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py313-test-opentelemetry-exporter-otlp-proto-http -- -ra
@@ -103,6 +1028,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -113,9 +1040,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py314-test-opentelemetry-exporter-otlp-proto-http -- -ra
@@ -125,6 +1049,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -135,9 +1061,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py314t-test-opentelemetry-exporter-otlp-proto-http -- -ra
@@ -147,6 +1070,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -157,9 +1082,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e pypy3-test-opentelemetry-exporter-otlp-proto-http -- -ra
@@ -169,6 +1091,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -179,9 +1103,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py39-test-opentelemetry-exporter-prometheus -- -ra
@@ -191,6 +1112,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -201,9 +1124,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py310-test-opentelemetry-exporter-prometheus -- -ra
@@ -213,6 +1133,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -223,9 +1145,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py311-test-opentelemetry-exporter-prometheus -- -ra
@@ -235,6 +1154,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -245,9 +1166,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py312-test-opentelemetry-exporter-prometheus -- -ra
@@ -257,6 +1175,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -267,9 +1187,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py313-test-opentelemetry-exporter-prometheus -- -ra
@@ -279,6 +1196,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -289,9 +1208,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py314-test-opentelemetry-exporter-prometheus -- -ra
@@ -301,6 +1217,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -311,9 +1229,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py314t-test-opentelemetry-exporter-prometheus -- -ra
@@ -323,6 +1238,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -333,9 +1250,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e pypy3-test-opentelemetry-exporter-prometheus -- -ra
@@ -345,6 +1259,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -355,9 +1271,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py39-test-opentelemetry-exporter-zipkin-combined -- -ra
@@ -367,6 +1280,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -377,9 +1292,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py310-test-opentelemetry-exporter-zipkin-combined -- -ra
@@ -389,6 +1301,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -399,9 +1313,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py311-test-opentelemetry-exporter-zipkin-combined -- -ra
@@ -411,6 +1322,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -421,9 +1334,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py312-test-opentelemetry-exporter-zipkin-combined -- -ra
@@ -433,6 +1343,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -443,9 +1355,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py313-test-opentelemetry-exporter-zipkin-combined -- -ra
@@ -455,6 +1364,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -465,9 +1376,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py314-test-opentelemetry-exporter-zipkin-combined -- -ra
@@ -477,6 +1385,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -487,9 +1397,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py314t-test-opentelemetry-exporter-zipkin-combined -- -ra
@@ -499,6 +1406,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -509,9 +1418,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e pypy3-test-opentelemetry-exporter-zipkin-combined -- -ra
@@ -521,6 +1427,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -531,9 +1439,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py39-test-opentelemetry-exporter-zipkin-proto-http -- -ra
@@ -543,6 +1448,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -553,9 +1460,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py310-test-opentelemetry-exporter-zipkin-proto-http -- -ra
@@ -565,6 +1469,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -575,9 +1481,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py311-test-opentelemetry-exporter-zipkin-proto-http -- -ra
@@ -587,6 +1490,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -597,9 +1502,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py312-test-opentelemetry-exporter-zipkin-proto-http -- -ra
@@ -609,6 +1511,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -619,9 +1523,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py313-test-opentelemetry-exporter-zipkin-proto-http -- -ra
@@ -631,6 +1532,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -641,9 +1544,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py314-test-opentelemetry-exporter-zipkin-proto-http -- -ra
@@ -653,6 +1553,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -663,9 +1565,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py314t-test-opentelemetry-exporter-zipkin-proto-http -- -ra
@@ -675,6 +1574,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -685,9 +1586,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e pypy3-test-opentelemetry-exporter-zipkin-proto-http -- -ra
@@ -697,6 +1595,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -707,9 +1607,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py39-test-opentelemetry-exporter-zipkin-json -- -ra
@@ -719,6 +1616,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -729,9 +1628,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py310-test-opentelemetry-exporter-zipkin-json -- -ra
@@ -741,6 +1637,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -751,9 +1649,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py311-test-opentelemetry-exporter-zipkin-json -- -ra
@@ -763,6 +1658,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -773,9 +1670,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py312-test-opentelemetry-exporter-zipkin-json -- -ra
@@ -785,6 +1679,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -795,9 +1691,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py313-test-opentelemetry-exporter-zipkin-json -- -ra
@@ -807,6 +1700,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -817,9 +1712,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py314-test-opentelemetry-exporter-zipkin-json -- -ra
@@ -829,6 +1721,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -839,9 +1733,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py314t-test-opentelemetry-exporter-zipkin-json -- -ra
@@ -851,6 +1742,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -861,9 +1754,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e pypy3-test-opentelemetry-exporter-zipkin-json -- -ra
@@ -873,6 +1763,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -883,9 +1775,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py39-test-opentelemetry-propagator-b3 -- -ra
@@ -895,6 +1784,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -905,9 +1796,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py310-test-opentelemetry-propagator-b3 -- -ra
@@ -917,6 +1805,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -927,9 +1817,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py311-test-opentelemetry-propagator-b3 -- -ra
@@ -939,6 +1826,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -949,9 +1838,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py312-test-opentelemetry-propagator-b3 -- -ra
@@ -961,6 +1847,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -971,9 +1859,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py313-test-opentelemetry-propagator-b3 -- -ra
@@ -983,6 +1868,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -993,9 +1880,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py314-test-opentelemetry-propagator-b3 -- -ra
@@ -1005,6 +1889,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -1015,9 +1901,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py314t-test-opentelemetry-propagator-b3 -- -ra
@@ -1027,6 +1910,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -1037,9 +1922,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e pypy3-test-opentelemetry-propagator-b3 -- -ra
@@ -1049,6 +1931,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -1059,9 +1943,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e py39-test-opentelemetry-propagator-jaeger -- -ra
@@ -1071,6 +1952,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -1082,9 +1965,6 @@ jobs:
       - name: Install tox
         run: pip install tox-uv
 
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
-
       - name: Run tests
         run: tox -e py310-test-opentelemetry-propagator-jaeger -- -ra
 
@@ -1093,6 +1973,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -1104,9 +1986,6 @@ jobs:
       - name: Install tox
         run: pip install tox-uv
 
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
-
       - name: Run tests
         run: tox -e py311-test-opentelemetry-propagator-jaeger -- -ra
 
@@ -1115,6 +1994,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -1126,9 +2007,6 @@ jobs:
       - name: Install tox
         run: pip install tox-uv
 
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
-
       - name: Run tests
         run: tox -e py312-test-opentelemetry-propagator-jaeger -- -ra
 
@@ -1137,6 +2015,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -1148,9 +2028,6 @@ jobs:
       - name: Install tox
         run: pip install tox-uv
 
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
-
       - name: Run tests
         run: tox -e py313-test-opentelemetry-propagator-jaeger -- -ra
 
@@ -1159,6 +2036,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -1170,9 +2049,6 @@ jobs:
       - name: Install tox
         run: pip install tox-uv
 
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
-
       - name: Run tests
         run: tox -e py314-test-opentelemetry-propagator-jaeger -- -ra
 
@@ -1181,6 +2057,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -1192,9 +2070,6 @@ jobs:
       - name: Install tox
         run: pip install tox-uv
 
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
-
       - name: Run tests
         run: tox -e py314t-test-opentelemetry-propagator-jaeger -- -ra
 
@@ -1203,6 +2078,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -1214,9 +2091,6 @@ jobs:
       - name: Install tox
         run: pip install tox-uv
 
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
-
       - name: Run tests
         run: tox -e pypy3-test-opentelemetry-propagator-jaeger -- -ra
 
@@ -1225,6 +2099,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -1236,9 +2112,6 @@ jobs:
       - name: Install tox
         run: pip install tox-uv
 
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
-
       - name: Run tests
         run: tox -e py39-test-opentelemetry-test-utils -- -ra
 
@@ -1247,6 +2120,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -1258,9 +2133,6 @@ jobs:
       - name: Install tox
         run: pip install tox-uv
 
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
-
       - name: Run tests
         run: tox -e py310-test-opentelemetry-test-utils -- -ra
 
@@ -1269,6 +2141,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -1280,9 +2154,6 @@ jobs:
       - name: Install tox
         run: pip install tox-uv
 
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
-
       - name: Run tests
         run: tox -e py311-test-opentelemetry-test-utils -- -ra
 
@@ -1291,6 +2162,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -1302,9 +2175,6 @@ jobs:
       - name: Install tox
         run: pip install tox-uv
 
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
-
       - name: Run tests
         run: tox -e py312-test-opentelemetry-test-utils -- -ra
 
@@ -1313,6 +2183,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -1324,9 +2196,6 @@ jobs:
       - name: Install tox
         run: pip install tox-uv
 
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
-
       - name: Run tests
         run: tox -e py313-test-opentelemetry-test-utils -- -ra
 
@@ -1335,6 +2204,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -1346,9 +2217,6 @@ jobs:
       - name: Install tox
         run: pip install tox-uv
 
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
-
       - name: Run tests
         run: tox -e py314-test-opentelemetry-test-utils -- -ra
 
@@ -1357,6 +2225,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -1368,9 +2238,6 @@ jobs:
       - name: Install tox
         run: pip install tox-uv
 
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
-
       - name: Run tests
         run: tox -e py314t-test-opentelemetry-test-utils -- -ra
 
@@ -1379,6 +2246,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
@@ -1389,9 +2258,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
 
       - name: Run tests
         run: tox -e pypy3-test-opentelemetry-test-utils -- -ra

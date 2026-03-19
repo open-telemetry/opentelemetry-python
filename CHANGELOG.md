@@ -12,8 +12,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `opentelemetry-sdk`: Add file configuration support with YAML/JSON loading, environment variable substitution, and schema validation against the vendored OTel config JSON schema
+  ([#4898](https://github.com/open-telemetry/opentelemetry-python/pull/4898))
+- Fix intermittent CI failures in `getting-started` and `tracecontext` jobs caused by GitHub git CDN SHA propagation lag by installing contrib packages from the already-checked-out local copy instead of a second git clone
+  ([#4958](https://github.com/open-telemetry/opentelemetry-python/pull/4958))
 - `opentelemetry-sdk`: fix type annotations on `MetricReader` and related types
   ([#4938](https://github.com/open-telemetry/opentelemetry-python/pull/4938/))
+- Implement log creation metric
+  ([#4935](https://github.com/open-telemetry/opentelemetry-python/pull/4935))
+- `opentelemetry-sdk`: upgrade vendored OTel configuration schema from v1.0.0-rc.3 to v1.0.0
+  ([#4965](https://github.com/open-telemetry/opentelemetry-python/pull/4965))
+- improve check-links ci job
+  ([#4978](https://github.com/open-telemetry/opentelemetry-python/pull/4978))
+- Resolve some Pyright type errors in Span/ReadableSpan and utility stubs
+  ([#4973](https://github.com/open-telemetry/opentelemetry-python/pull/4973))
+- `opentelemetry-exporter-prometheus`: Fix metric name prefix
+  ([#4895](https://github.com/open-telemetry/opentelemetry-python/pull/4895))
+- `opentelemetry-api`, `opentelemetry-sdk`: Add deepcopy support for `BoundedAttributes` and `BoundedList`
+  ([#4934](https://github.com/open-telemetry/opentelemetry-python/pull/4934))
+- `opentelemetry-proto-json`, `opentelemetry-codegen-json`: Implement custom protoc plugin to generate OTLP JSON class definitions
+  ([#4910](https://github.com/open-telemetry/opentelemetry-python/pull/4910))
 - Add configurable `max_export_batch_size` to OTLP HTTP metrics exporter
   ([#4576](https://github.com/open-telemetry/opentelemetry-python/pull/4576))
 
