@@ -18,8 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4958](https://github.com/open-telemetry/opentelemetry-python/pull/4958))
 - `opentelemetry-sdk`: fix type annotations on `MetricReader` and related types
   ([#4938](https://github.com/open-telemetry/opentelemetry-python/pull/4938/))
-- Implement log creation metric
+- `opentelemetry-sdk`: implement log creation metric
   ([#4935](https://github.com/open-telemetry/opentelemetry-python/pull/4935))
+- `opentelemetry-sdk`: implement metric reader metrics
+  ([#4970](https://github.com/open-telemetry/opentelemetry-python/pull/4970))
 - `opentelemetry-sdk`: upgrade vendored OTel configuration schema from v1.0.0-rc.3 to v1.0.0
   ([#4965](https://github.com/open-telemetry/opentelemetry-python/pull/4965))
 - improve check-links ci job
