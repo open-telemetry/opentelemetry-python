@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import os
-import requests
 import threading
 import time
 import unittest
@@ -639,7 +638,9 @@ class TestOTLPMetricExporter(TestCase):
 
             assert after - before < 0.2
 
-    @unittest.skipUnless(hasattr(os, "register_at_fork"))
+    @unittest.skipUnless(
+        hasattr(os, "register_at_fork"), "fork session reset not available"
+    )
     def test_metric_exporter_register_at_fork_resets_session(self):
         initial_session = MagicMock(spec=requests.Session)
         initial_session.headers = {"preexisting": "yes"}
@@ -647,9 +648,7 @@ class TestOTLPMetricExporter(TestCase):
         new_session = MagicMock(spec=requests.Session)
         new_session.headers = {}
 
-        with patch(
-            "os.register_at_fork"
-        ) as mock_register_at_fork, patch(
+        with patch("os.register_at_fork") as mock_register_at_fork, patch(
             "opentelemetry.exporter.otlp.proto.http.metric_exporter.requests.Session",
             return_value=new_session,
         ):
@@ -664,4 +663,7 @@ class TestOTLPMetricExporter(TestCase):
         initial_session.close.assert_called_once()
         assert exporter._session is new_session
         assert exporter._session.headers.get("x-test") == "1"
-        assert exporter._session.headers.get("Content-Type") == "application/x-protobuf"
+        assert (
+            exporter._session.headers.get("Content-Type")
+            == "application/x-protobuf"
+        )
