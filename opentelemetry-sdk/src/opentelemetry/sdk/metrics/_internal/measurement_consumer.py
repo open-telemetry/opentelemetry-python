@@ -78,9 +78,7 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
             "opentelemetry.sdk.metrics._internal.instrument._Asynchronous"
         ] = []
         if hasattr(os, "register_at_fork"):
-            os.register_at_fork(
-                after_in_child=self._at_fork_reinit
-            )  # pylint: disable=protected-access
+            os.register_at_fork(after_in_child=self._at_fork_reinit)  # pylint: disable=protected-access
 
     def _at_fork_reinit(self):
         """Reinitialize lock in child process after fork"""
@@ -92,7 +90,7 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
         self._async_instruments.clear()
 
     def consume_measurement(self, measurement: Measurement) -> None:
-        if getattr(self, '_needs_storage_reinit', False):
+        if getattr(self, "_needs_storage_reinit", False):
             self._reinit_storages()
             self._needs_storage_reinit = False
 
@@ -123,8 +121,7 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
         metric_reader: "opentelemetry.sdk.metrics.MetricReader",
         timeout_millis: float = 10_000,
     ) -> Optional[Iterable[Metric]]:
-
-        if getattr(self, '_needs_storage_reinit', False):
+        if getattr(self, "_needs_storage_reinit", False):
             self._reinit_storages()
             self._needs_storage_reinit = False
 
