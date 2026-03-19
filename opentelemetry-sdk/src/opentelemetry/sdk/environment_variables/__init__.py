@@ -79,7 +79,7 @@ OTEL_BLRP_SCHEDULE_DELAY = "OTEL_BLRP_SCHEDULE_DELAY"
 .. envvar:: OTEL_BLRP_SCHEDULE_DELAY
 
 The :envvar:`OTEL_BLRP_SCHEDULE_DELAY` represents the delay interval between two consecutive exports of the BatchLogRecordProcessor.
-Default: 5000
+Default: 1000
 """
 
 OTEL_BLRP_EXPORT_TIMEOUT = "OTEL_BLRP_EXPORT_TIMEOUT"

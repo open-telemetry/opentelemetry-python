@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-- Fix `BatchLogRecordProcessor` default `schedule_delay_millis` to 1000ms per OTel specification
+- Fix `BatchLogRecordProcessor` default `schedule_delay_millis` from 5000ms to 1000ms to comply with the OTel specification. Note: logs will be exported 5x more frequently by default (e.g. for users who don't explicitly set the `OTEL_BLRP_SCHEDULE_DELAY` env var).
   ([#4991](https://github.com/open-telemetry/opentelemetry-python/issues/4991))
 
 - `opentelemetry-sdk`: Add file configuration support with YAML/JSON loading, environment variable substitution, and schema validation against the vendored OTel config JSON schema
