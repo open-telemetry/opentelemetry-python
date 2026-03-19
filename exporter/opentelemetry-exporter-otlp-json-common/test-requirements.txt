@@ -3,6 +3,7 @@ importlib-metadata==6.11.0
 iniconfig==2.0.0
 packaging==24.0
 pluggy==1.6.0
+protobuf==6.31.1
 py-cpuinfo==9.0.0
 pytest==7.4.4
 tomli==2.0.1
@@ -14,4 +15,6 @@ zipp==3.19.2
 -e opentelemetry-semantic-conventions
 -e tests/opentelemetry-test-utils
 -e opentelemetry-proto-json
+-e opentelemetry-proto
 -e exporter/opentelemetry-exporter-otlp-json-common
+-e exporter/opentelemetry-exporter-otlp-proto-common
