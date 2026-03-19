@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=protected-access
+# pylint: disable=protected-access,unsubscriptable-object
 
 import json
 import unittest
@@ -45,7 +45,6 @@ from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace import Link, SpanKind
 from opentelemetry.trace.span import TraceState
 from opentelemetry.trace.status import Status, StatusCode
-
 from tests import (
     BASE_TIME,
     PARENT_SPAN_ID,
@@ -61,6 +60,7 @@ def _get_span(result, rs_idx=0, ss_idx=0, s_idx=0):
     return result.resource_spans[rs_idx].scope_spans[ss_idx].spans[s_idx]
 
 
+# pylint: disable=too-many-public-methods
 class TestOTLPTraceEncoder(unittest.TestCase):
     def test_encode_single_span(self):
         span = make_span()
@@ -183,6 +183,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
         self.assertEqual(len(result.resource_spans), 2)
 
         groups = {}
+        # pylint: disable-next=not-an-iterable
         for rs in result.resource_spans:
             svc_val = rs.resource.attributes[0].value.string_value
             span_names = [s.name for ss in rs.scope_spans for s in ss.spans]
@@ -339,14 +340,14 @@ class TestOTLPTraceEncoder(unittest.TestCase):
         result_dict = result.to_dict()
 
         self.assertIn("resourceSpans", result_dict)
-        s = result_dict["resourceSpans"][0]["scopeSpans"][0]["spans"][0]
+        sp = result_dict["resourceSpans"][0]["scopeSpans"][0]["spans"][0]
 
-        self.assertIsInstance(s["traceId"], str)
-        self.assertEqual(len(s["traceId"]), 32)
-        self.assertIsInstance(s["spanId"], str)
-        self.assertEqual(len(s["spanId"]), 16)
-        self.assertIsInstance(s["startTimeUnixNano"], str)
-        self.assertIsInstance(s["endTimeUnixNano"], str)
+        self.assertIsInstance(sp["traceId"], str)
+        self.assertEqual(len(sp["traceId"]), 32)
+        self.assertIsInstance(sp["spanId"], str)
+        self.assertEqual(len(sp["spanId"]), 16)
+        self.assertIsInstance(sp["startTimeUnixNano"], str)
+        self.assertIsInstance(sp["endTimeUnixNano"], str)
 
     def test_encode_spans_json_roundtrip(self):
         parent_ctx = SpanContext(TRACE_ID, PARENT_SPAN_ID, is_remote=True)
