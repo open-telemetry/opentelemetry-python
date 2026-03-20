@@ -29,6 +29,7 @@ from opentelemetry.sdk._configuration.models import Resource as ResourceConfig
 from opentelemetry.sdk.resources import (
     _DEFAULT_RESOURCE,
     SERVICE_NAME,
+    HostResourceDetector,
     Resource,
 )
 
@@ -149,6 +150,8 @@ def _run_detectors(
     is updated in-place; later detectors overwrite earlier ones for the
     same key.
     """
+    if detector_config.host is not None:
+        detected_attrs.update(HostResourceDetector().detect().attributes)
 
 
 def _filter_attributes(
