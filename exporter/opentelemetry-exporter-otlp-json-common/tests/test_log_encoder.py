@@ -196,7 +196,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
         self.assertIsNone(lr.severity_text)
         self.assertIsNone(lr.severity_number)
         self.assertIsNone(lr.body)
-        self.assertIsNone(lr.attributes)
+        self.assertEqual(lr.attributes, [])
 
     def test_encode_log_event_name(self):
         log = make_log(body="event happened", event_name="my.event")

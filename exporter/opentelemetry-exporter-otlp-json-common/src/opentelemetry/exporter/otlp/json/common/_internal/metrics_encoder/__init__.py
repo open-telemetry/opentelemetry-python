@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from __future__ import annotations
 
 import logging
@@ -67,15 +68,11 @@ from opentelemetry.sdk.metrics._internal.point import (
     ScopeMetrics,
 )
 from opentelemetry.sdk.metrics.export import (
-    ExponentialHistogram as ExponentialHistogramType,
-)
-from opentelemetry.sdk.metrics.export import (
+    ExponentialHistogram,
     Gauge,
+    Histogram,
     MetricsData,
     Sum,
-)
-from opentelemetry.sdk.metrics.export import (
-    Histogram as HistogramType,
 )
 
 _logger = logging.getLogger(__name__)
@@ -123,7 +120,7 @@ def _encode_metric(metric: Metric) -> JSONMetric:
                 _encode_gauge_data_point(pt) for pt in metric.data.data_points
             ]
         )
-    elif isinstance(metric.data, HistogramType):
+    elif isinstance(metric.data, Histogram):
         json_metric.histogram = JSONHistogram(
             data_points=[
                 _encode_histogram_data_point(pt)
@@ -139,7 +136,7 @@ def _encode_metric(metric: Metric) -> JSONMetric:
             aggregation_temporality=metric.data.aggregation_temporality,
             is_monotonic=metric.data.is_monotonic,
         )
-    elif isinstance(metric.data, ExponentialHistogramType):
+    elif isinstance(metric.data, ExponentialHistogram):
         json_metric.exponential_histogram = JSONExponentialHistogram(
             data_points=[
                 _encode_exponential_histogram_data_point(pt)
@@ -196,8 +193,8 @@ def _encode_histogram_data_point(
         exemplars=_encode_exemplars(data_point.exemplars),
         count=data_point.count,
         sum=data_point.sum,
-        bucket_counts=data_point.bucket_counts,
-        explicit_bounds=data_point.explicit_bounds,
+        bucket_counts=list(data_point.bucket_counts),
+        explicit_bounds=list(data_point.explicit_bounds),
         max=data_point.max,
         min=data_point.min,
     )
@@ -218,7 +215,7 @@ def _encode_exponential_histogram_data_point(
         positive=(
             JSONExponentialHistogramDataPoint.Buckets(
                 offset=data_point.positive.offset,
-                bucket_counts=data_point.positive.bucket_counts,
+                bucket_counts=list(data_point.positive.bucket_counts),
             )
             if data_point.positive.bucket_counts
             else None
@@ -226,7 +223,7 @@ def _encode_exponential_histogram_data_point(
         negative=(
             JSONExponentialHistogramDataPoint.Buckets(
                 offset=data_point.negative.offset,
-                bucket_counts=data_point.negative.bucket_counts,
+                bucket_counts=list(data_point.negative.bucket_counts),
             )
             if data_point.negative.bucket_counts
             else None

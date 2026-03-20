@@ -238,8 +238,8 @@ class TestCommonEncoder(unittest.TestCase):
         )
 
     def test_encode_attributes_empty(self):
-        self.assertIsNone(_encode_attributes({}))
-        self.assertIsNone(_encode_attributes(None))
+        self.assertEqual(_encode_attributes({}), [])
+        self.assertEqual(_encode_attributes(None), [])
 
     def test_encode_attributes_error_skips_bad_key(self):
         with self.assertLogs(level=ERROR) as error:
@@ -310,7 +310,7 @@ class TestCommonEncoder(unittest.TestCase):
     def test_encode_resource_empty(self):
         resource = Resource({})
         result = _encode_resource(resource)
-        self.assertEqual(result, JSONResource(attributes=None))
+        self.assertEqual(result, JSONResource())
         self.assertEqual(result.to_dict(), {})
 
     def test_encode_instrumentation_scope(self):
