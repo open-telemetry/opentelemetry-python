@@ -101,11 +101,12 @@ def create_resource(config: Optional[ResourceConfig]) -> Resource:
         A Resource with SDK defaults, optional detector attributes, and any
         config-specified attributes merged in priority order.
     """
-    base = _DEFAULT_RESOURCE
+    # Spec requires service.name to always be present; detectors and explicit
+    # config attributes can override this default.
+    base = _DEFAULT_RESOURCE.merge(Resource({SERVICE_NAME: "unknown_service"}))
 
     if config is None:
-        service_resource = Resource({SERVICE_NAME: "unknown_service"})
-        return base.merge(service_resource)
+        return base
 
     # attributes_list is lower priority; explicit attributes overwrite conflicts.
     config_attrs: dict[str, object] = {}
@@ -115,10 +116,6 @@ def create_resource(config: Optional[ResourceConfig]) -> Resource:
     if config.attributes:
         for attr in config.attributes:
             config_attrs[attr.name] = _coerce_attribute_value(attr)
-
-    # Spec requires service.name to always be present.
-    if SERVICE_NAME not in config_attrs:
-        config_attrs[SERVICE_NAME] = "unknown_service"
 
     schema_url = config.schema_url
 
