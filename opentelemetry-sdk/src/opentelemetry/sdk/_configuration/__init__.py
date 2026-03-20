@@ -597,7 +597,7 @@ def _initialize_components(
     # This is different than other init helpers because setting up OpAMP requires distro
     # provided code as it's not strictly specified. We call OpAMP init before other code
     # because people may want to have it blocking to get an updated config before setting
-    # up the rest.
+    # up the rest of the SDK.
     try:
         _init_opamp = _import_opamp()
         _init_opamp(resource=resource)
