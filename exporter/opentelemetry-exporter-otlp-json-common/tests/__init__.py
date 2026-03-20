@@ -55,11 +55,6 @@ TIME = 1641946016139533244
 _UNSET = object()
 
 
-# ---------------------------------------------------------------------------
-# Assertion utilities
-# ---------------------------------------------------------------------------
-
-
 def _is_none_equivalent(val_a, val_b):
     """Check if two values should be treated as equal because one is None
     and the other is the empty/zero default for that type.
@@ -107,11 +102,6 @@ def assert_proto_json_equal(
         test_case.assertEqual(
             obj_a, obj_b, f"Mismatch at {path}: {obj_a!r} != {obj_b!r}"
         )
-
-
-# ---------------------------------------------------------------------------
-# Span builders
-# ---------------------------------------------------------------------------
 
 
 def make_span_unended(
@@ -172,11 +162,6 @@ def make_span(
     return span
 
 
-# ---------------------------------------------------------------------------
-# Log builders
-# ---------------------------------------------------------------------------
-
-
 def make_log_context(trace_id=TRACE_ID, span_id=SPAN_ID):
     return set_span_in_context(
         NonRecordingSpan(
@@ -220,11 +205,6 @@ def make_log(
         rkwargs["limits"] = limits
 
     return ReadableLogRecord(LogRecord(**kwargs), **rkwargs)
-
-
-# ---------------------------------------------------------------------------
-# Metric builders
-# ---------------------------------------------------------------------------
 
 
 def make_metrics_data(
