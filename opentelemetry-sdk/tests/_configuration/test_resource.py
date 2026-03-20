@@ -14,15 +14,18 @@
 
 import os
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from opentelemetry.sdk._configuration._resource import create_resource
 from opentelemetry.sdk._configuration.models import (
     AttributeNameValue,
     AttributeType,
+    ExperimentalResourceDetection,
+    ExperimentalResourceDetector,
 )
 from opentelemetry.sdk._configuration.models import Resource as ResourceConfig
 from opentelemetry.sdk.resources import (
+    CONTAINER_ID,
     SERVICE_NAME,
     TELEMETRY_SDK_LANGUAGE,
     TELEMETRY_SDK_NAME,
@@ -295,3 +298,87 @@ class TestCreateResourceAttributesList(unittest.TestCase):
         self.assertEqual(resource.attributes["foo"], "bar")
         self.assertNotIn("no-equals", resource.attributes)
         self.assertTrue(any("no-equals" in msg for msg in cm.output))
+
+
+class TestContainerResourceDetector(unittest.TestCase):
+    def _config_with_container(self) -> ResourceConfig:
+        return ResourceConfig(
+            detection_development=ExperimentalResourceDetection(
+                detectors=[ExperimentalResourceDetector(container={})]
+            )
+        )
+
+    def test_container_detector_not_run_when_absent(self):
+        resource = create_resource(ResourceConfig())
+        self.assertNotIn(CONTAINER_ID, resource.attributes)
+
+    def test_container_detector_not_run_when_detection_development_is_none(
+        self,
+    ):
+        resource = create_resource(ResourceConfig(detection_development=None))
+        self.assertNotIn(CONTAINER_ID, resource.attributes)
+
+    def test_container_detector_not_run_when_detectors_list_empty(self):
+        config = ResourceConfig(
+            detection_development=ExperimentalResourceDetection(detectors=[])
+        )
+        resource = create_resource(config)
+        self.assertNotIn(CONTAINER_ID, resource.attributes)
+
+    def test_container_detector_warns_when_package_missing(self):
+        """A warning is logged when the contrib package is not installed."""
+        with patch.dict(
+            "sys.modules",
+            {"opentelemetry.resource.detector.containerid": None},
+        ):
+            with self.assertLogs(
+                "opentelemetry.sdk._configuration._resource", level="WARNING"
+            ) as cm:
+                resource = create_resource(self._config_with_container())
+        self.assertNotIn(CONTAINER_ID, resource.attributes)
+        self.assertTrue(
+            any(
+                "opentelemetry-resource-detector-containerid" in msg
+                for msg in cm.output
+            )
+        )
+
+    def test_container_detector_uses_contrib_when_available(self):
+        """When the contrib package is installed, container.id is detected."""
+        mock_resource = Resource({CONTAINER_ID: "abc123"})
+        mock_detector = MagicMock()
+        mock_detector.return_value.detect.return_value = mock_resource
+        mock_module = MagicMock()
+        mock_module.ContainerResourceDetector = mock_detector
+
+        with patch.dict(
+            "sys.modules",
+            {"opentelemetry.resource.detector.containerid": mock_module},
+        ):
+            resource = create_resource(self._config_with_container())
+
+        self.assertEqual(resource.attributes[CONTAINER_ID], "abc123")
+
+    def test_explicit_attributes_override_container_detector(self):
+        """Config attributes win over detector-provided values."""
+        mock_resource = Resource({CONTAINER_ID: "detected-id"})
+        mock_detector = MagicMock()
+        mock_detector.return_value.detect.return_value = mock_resource
+        mock_module = MagicMock()
+        mock_module.ContainerResourceDetector = mock_detector
+
+        config = ResourceConfig(
+            attributes=[
+                AttributeNameValue(name="container.id", value="explicit-id")
+            ],
+            detection_development=ExperimentalResourceDetection(
+                detectors=[ExperimentalResourceDetector(container={})]
+            ),
+        )
+        with patch.dict(
+            "sys.modules",
+            {"opentelemetry.resource.detector.containerid": mock_module},
+        ):
+            resource = create_resource(config)
+
+        self.assertEqual(resource.attributes[CONTAINER_ID], "explicit-id")
