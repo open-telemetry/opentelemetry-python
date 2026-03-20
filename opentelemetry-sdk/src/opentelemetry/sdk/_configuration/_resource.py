@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+import fnmatch
 import logging
 from typing import Callable, Optional
 from urllib import parse
@@ -21,6 +22,8 @@ from urllib import parse
 from opentelemetry.sdk._configuration.models import (
     AttributeNameValue,
     AttributeType,
+    ExperimentalResourceDetector,
+    IncludeExclude,
 )
 from opentelemetry.sdk._configuration.models import Resource as ResourceConfig
 from opentelemetry.sdk.resources import (
@@ -42,7 +45,7 @@ def _array(coerce: Callable) -> Callable:
     return lambda value: [coerce(item) for item in value]
 
 
-# Unified dispatch table for all attribute type coercions
+# Dispatch table mapping AttributeType to its coercion callable
 _COERCIONS = {
     AttributeType.string: str,
     AttributeType.int: int,
@@ -86,15 +89,17 @@ def _parse_attributes_list(attributes_list: str) -> dict[str, str]:
 def create_resource(config: Optional[ResourceConfig]) -> Resource:
     """Create an SDK Resource from declarative config.
 
-    Does NOT read OTEL_RESOURCE_ATTRIBUTES or run any resource detectors.
-    Starts from SDK telemetry defaults (telemetry.sdk.*) and merges config
-    attributes on top, matching Java SDK behavior.
+    Does NOT read OTEL_RESOURCE_ATTRIBUTES. Resource detectors are only run
+    when explicitly listed under detection_development.detectors in the config.
+    Starts from SDK telemetry defaults (telemetry.sdk.*), merges any detected
+    attributes, then merges explicit config attributes on top (highest priority).
 
     Args:
         config: Resource config from the parsed config file, or None.
 
     Returns:
-        A Resource with SDK defaults merged with any config-specified attributes.
+        A Resource with SDK defaults, optional detector attributes, and any
+        config-specified attributes merged in priority order.
     """
     base = _DEFAULT_RESOURCE
 
@@ -102,8 +107,7 @@ def create_resource(config: Optional[ResourceConfig]) -> Resource:
         service_resource = Resource({SERVICE_NAME: "unknown_service"})
         return base.merge(service_resource)
 
-    # attributes_list is lower priority; process it first so that explicit
-    # attributes can simply overwrite any conflicting keys.
+    # attributes_list is lower priority; explicit attributes overwrite conflicts.
     config_attrs: dict[str, object] = {}
     if config.attributes_list:
         config_attrs.update(_parse_attributes_list(config.attributes_list))
@@ -112,13 +116,72 @@ def create_resource(config: Optional[ResourceConfig]) -> Resource:
         for attr in config.attributes:
             config_attrs[attr.name] = _coerce_attribute_value(attr)
 
+    # Spec requires service.name to always be present.
+    if SERVICE_NAME not in config_attrs:
+        config_attrs[SERVICE_NAME] = "unknown_service"
+
     schema_url = config.schema_url
 
+    # Run detectors only if detection_development is configured. Collect all
+    # detected attributes, apply the include/exclude filter, then merge before
+    # config attributes so explicit values always win.
+    result = base
+    if config.detection_development:
+        detected_attrs: dict[str, object] = {}
+        if config.detection_development.detectors:
+            for detector_config in config.detection_development.detectors:
+                _run_detectors(detector_config, detected_attrs)
+
+        filtered = _filter_attributes(
+            detected_attrs, config.detection_development.attributes
+        )
+        if filtered:
+            result = result.merge(Resource(filtered))  # type: ignore[arg-type]
+
     config_resource = Resource(config_attrs, schema_url)  # type: ignore[arg-type]
-    result = base.merge(config_resource)
+    return result.merge(config_resource)
 
-    # Add default service.name if not specified (matches Java SDK behavior)
-    if not result.attributes.get(SERVICE_NAME):
-        result = result.merge(Resource({SERVICE_NAME: "unknown_service"}))
 
+def _run_detectors(
+    detector_config: ExperimentalResourceDetector,
+    detected_attrs: dict[str, object],
+) -> None:
+    """Run any detectors present in a single detector config entry.
+
+    Each detector PR adds its own branch here. The detected_attrs dict
+    is updated in-place; later detectors overwrite earlier ones for the
+    same key.
+    """
+
+
+def _filter_attributes(
+    attrs: dict[str, object], filter_config: Optional[IncludeExclude]
+) -> dict[str, object]:
+    """Filter detected attribute keys using include/exclude glob patterns.
+
+    Mirrors other SDK IncludeExcludePredicate.createPatternMatching behaviour:
+    - No filter config (attributes absent) → include all detected attributes.
+    - included patterns are checked first; excluded patterns are applied after.
+    - An empty included list is treated as "include everything".
+    """
+    if filter_config is None:
+        return attrs
+
+    included = filter_config.included
+    excluded = filter_config.excluded
+
+    if not included and not excluded:
+        return attrs
+
+    effective_included = included if included else None  # [] → include all
+
+    result: dict[str, object] = {}
+    for key, value in attrs.items():
+        if effective_included is not None and not any(
+            fnmatch.fnmatch(key, pat) for pat in effective_included
+        ):
+            continue
+        if excluded and any(fnmatch.fnmatch(key, pat) for pat in excluded):
+            continue
+        result[key] = value
     return result
