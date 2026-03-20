@@ -14,7 +14,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Optional
 
 from opentelemetry.baggage.propagation import W3CBaggagePropagator
@@ -32,8 +31,6 @@ from opentelemetry.trace.propagation.tracecontext import (
     TraceContextTextMapPropagator,
 )
 from opentelemetry.util._importlib_metadata import entry_points
-
-_logger = logging.getLogger(__name__)
 
 
 def _load_entry_point_propagator(name: str) -> TextMapPropagator:
