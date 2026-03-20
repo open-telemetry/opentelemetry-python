@@ -12,8 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from collections import defaultdict
 from collections.abc import Collection
+from typing import cast
 
 from opentelemetry.exporter.otlp.json.common._internal import (
     _encode_attributes,
@@ -34,6 +37,7 @@ from opentelemetry.proto_json.logs.v1.logs import (
     ScopeLogs as JSONScopeLogs,
 )
 from opentelemetry.sdk._logs import ReadableLogRecord
+from opentelemetry.util.types import Attributes
 
 
 def encode_logs(
@@ -45,27 +49,23 @@ def encode_logs(
 
 
 def _encode_log(readable_log_record: ReadableLogRecord) -> JSONLogRecord:
-    span_id = (
-        None
-        if readable_log_record.log_record.span_id == 0
-        else _encode_span_id(readable_log_record.log_record.span_id)
-    )
-    trace_id = (
-        None
-        if readable_log_record.log_record.trace_id == 0
-        else _encode_trace_id(readable_log_record.log_record.trace_id)
-    )
-    body = readable_log_record.log_record.body
     return JSONLogRecord(
         time_unix_nano=readable_log_record.log_record.timestamp,
         observed_time_unix_nano=readable_log_record.log_record.observed_timestamp,
-        span_id=span_id,
-        trace_id=trace_id,
+        span_id=_encode_span_id(readable_log_record.log_record.span_id)
+        if readable_log_record.log_record.span_id
+        else None,
+        trace_id=_encode_trace_id(readable_log_record.log_record.trace_id)
+        if readable_log_record.log_record.trace_id
+        else None,
         flags=int(readable_log_record.log_record.trace_flags),
-        body=_encode_value(body, allow_null=True),
+        body=_encode_value(
+            readable_log_record.log_record.body, allow_null=True
+        ),
         severity_text=readable_log_record.log_record.severity_text,
         attributes=_encode_attributes(
-            readable_log_record.log_record.attributes, allow_null=True
+            cast(Attributes, readable_log_record.log_record.attributes),
+            allow_null=True,
         ),
         dropped_attributes_count=readable_log_record.dropped_attributes,
         severity_number=getattr(

@@ -12,16 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from __future__ import annotations
 
 import logging
 from collections.abc import Collection, Mapping, Sequence
 from typing import (
     Any,
-    Callable,
-    Optional,
-    TypeVar,
+    cast,
 )
 
 from opentelemetry.proto_json.common.v1.common import AnyValue as JSONAnyValue
@@ -40,16 +37,13 @@ from opentelemetry.proto_json.resource.v1.resource import (
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
-from opentelemetry.util.types import _ExtendedAttributes
+from opentelemetry.util.types import Attributes
 
 _logger = logging.getLogger(__name__)
 
-_TypingResourceT = TypeVar("_TypingResourceT")
-_ResourceDataT = TypeVar("_ResourceDataT")
-
 
 def _encode_instrumentation_scope(
-    instrumentation_scope: InstrumentationScope,
+    instrumentation_scope: InstrumentationScope | None,
 ) -> JSONInstrumentationScope:
     return (
         JSONInstrumentationScope(
@@ -67,9 +61,7 @@ def _encode_resource(resource: Resource) -> JSONResource:
 
 
 # pylint: disable-next=too-many-return-statements
-def _encode_value(
-    value: Any, allow_null: bool = False
-) -> Optional[JSONAnyValue]:
+def _encode_value(value: Any, allow_null: bool = False) -> JSONAnyValue | None:
     if allow_null is True and value is None:
         return None
     if isinstance(value, bool):
@@ -85,7 +77,10 @@ def _encode_value(
     if isinstance(value, Sequence):
         return JSONAnyValue(
             array_value=JSONArrayValue(
-                values=_encode_array(value, allow_null=allow_null)
+                values=cast(
+                    list[JSONAnyValue],
+                    _encode_array(value, allow_null=allow_null),
+                )
             )
         )
     if isinstance(value, Mapping):
@@ -134,11 +129,11 @@ def _encode_trace_id(trace_id: int) -> bytes:
 
 
 def _encode_attributes(
-    attributes: _ExtendedAttributes,
+    attributes: Attributes | None,
     allow_null: bool = False,
-) -> Optional[list[JSONKeyValue]]:
+) -> list[JSONKeyValue]:
     if not attributes:
-        return None
+        return []
     json_attributes = []
     for key, value in attributes.items():
         # pylint: disable=broad-exception-caught
@@ -149,28 +144,3 @@ def _encode_attributes(
         except Exception as error:
             _logger.exception("Failed to encode key %s: %s", key, error)
     return json_attributes
-
-
-def _get_resource_data(
-    sdk_resource_scope_data: dict[Resource, _ResourceDataT],
-    resource_class: Callable[..., _TypingResourceT],
-    name: str,
-) -> list[_TypingResourceT]:
-    resource_data = []
-
-    for (
-        sdk_resource,
-        scope_data,
-    ) in sdk_resource_scope_data.items():
-        json_resource = JSONResource(
-            attributes=_encode_attributes(sdk_resource.attributes)
-        )
-        resource_data.append(
-            resource_class(
-                **{
-                    "resource": json_resource,
-                    f"scope_{name}": scope_data.values(),
-                }
-            )
-        )
-    return resource_data
