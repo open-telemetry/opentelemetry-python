@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 import logging
 from collections import defaultdict
 from collections.abc import Collection
-from typing import Optional
 
 from opentelemetry.exporter.otlp.json.common._internal import (
     _encode_attributes,
@@ -98,7 +99,7 @@ def _encode_resource_spans(
     return json_resource_spans
 
 
-def _span_flags(parent_span_context: Optional[SpanContext]) -> int:
+def _span_flags(parent_span_context: SpanContext | None) -> int:
     flags = JSONSpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK
     if parent_span_context and parent_span_context.is_remote:
         flags |= JSONSpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK
@@ -108,10 +109,14 @@ def _span_flags(parent_span_context: Optional[SpanContext]) -> int:
 def _encode_span(sdk_span: ReadableSpan) -> JSONSpan:
     span_context = sdk_span.get_span_context()
     return JSONSpan(
-        trace_id=_encode_trace_id(span_context.trace_id),
-        span_id=_encode_span_id(span_context.span_id),
-        trace_state=_encode_trace_state(span_context.trace_state),
-        parent_span_id=_encode_parent_id(sdk_span.parent),
+        trace_id=_encode_trace_id(
+            span_context.trace_id if span_context else 0
+        ),
+        span_id=_encode_span_id(span_context.span_id if span_context else 0),
+        trace_state=_encode_trace_state(
+            span_context.trace_state if span_context else None
+        ),
+        parent_span_id=_encode_context_span_id(sdk_span.parent),
         name=sdk_span.name,
         kind=_SPAN_KIND_MAP[sdk_span.kind],
         start_time_unix_nano=sdk_span.start_time,
@@ -129,40 +134,32 @@ def _encode_span(sdk_span: ReadableSpan) -> JSONSpan:
 
 def _encode_events(
     events: Collection[Event],
-) -> Optional[list[JSONSpan.Event]]:
-    return (
-        [
-            JSONSpan.Event(
-                name=event.name,
-                time_unix_nano=event.timestamp,
-                attributes=_encode_attributes(event.attributes),
-                dropped_attributes_count=event.dropped_attributes,
-            )
-            for event in events
-        ]
-        if events
-        else None
-    )
+) -> list[JSONSpan.Event]:
+    return [
+        JSONSpan.Event(
+            name=event.name,
+            time_unix_nano=event.timestamp,
+            attributes=_encode_attributes(event.attributes),
+            dropped_attributes_count=event.dropped_attributes,
+        )
+        for event in events
+    ]
 
 
 def _encode_links(links: Collection[Link]) -> list[JSONSpan.Link]:
-    return (
-        [
-            JSONSpan.Link(
-                trace_id=_encode_trace_id(link.context.trace_id),
-                span_id=_encode_span_id(link.context.span_id),
-                attributes=_encode_attributes(link.attributes),
-                dropped_attributes_count=link.dropped_attributes,
-                flags=_span_flags(link.context),
-            )
-            for link in links
-        ]
-        if links
-        else None
-    )
+    return [
+        JSONSpan.Link(
+            trace_id=_encode_trace_id(link.context.trace_id),
+            span_id=_encode_span_id(link.context.span_id),
+            attributes=_encode_attributes(link.attributes),
+            dropped_attributes_count=link.dropped_attributes,
+            flags=_span_flags(link.context),
+        )
+        for link in links
+    ]
 
 
-def _encode_status(status: Status) -> Optional[JSONStatus]:
+def _encode_status(status: Status | None) -> JSONStatus | None:
     return (
         JSONStatus(
             code=JSONStatus.StatusCode(status.status_code.value),
@@ -173,7 +170,7 @@ def _encode_status(status: Status) -> Optional[JSONStatus]:
     )
 
 
-def _encode_trace_state(trace_state: Optional[TraceState]) -> Optional[str]:
+def _encode_trace_state(trace_state: TraceState | None) -> str | None:
     return (
         ",".join([f"{key}={value}" for key, value in (trace_state.items())])
         if trace_state is not None
@@ -181,5 +178,5 @@ def _encode_trace_state(trace_state: Optional[TraceState]) -> Optional[str]:
     )
 
 
-def _encode_parent_id(context: Optional[SpanContext]) -> Optional[bytes]:
+def _encode_context_span_id(context: SpanContext | None) -> bytes | None:
     return _encode_span_id(context.span_id) if context else None

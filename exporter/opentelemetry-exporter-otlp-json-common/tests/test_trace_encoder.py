@@ -23,9 +23,9 @@ from opentelemetry.exporter.otlp.json.common._internal import (
 )
 from opentelemetry.exporter.otlp.json.common._internal.trace_encoder import (
     _SPAN_KIND_MAP,
+    _encode_context_span_id,
     _encode_events,
     _encode_links,
-    _encode_parent_id,
     _encode_status,
     _encode_trace_state,
     _span_flags,
@@ -316,22 +316,22 @@ class TestOTLPTraceEncoder(unittest.TestCase):
         self.assertIsNone(_encode_trace_state(None))
 
     def test_encode_events_empty(self):
-        self.assertIsNone(_encode_events(()))
-        self.assertIsNone(_encode_events([]))
+        self.assertEqual(_encode_events(()), [])
+        self.assertEqual(_encode_events([]), [])
 
     def test_encode_links_empty(self):
-        self.assertIsNone(_encode_links(()))
-        self.assertIsNone(_encode_links([]))
+        self.assertEqual(_encode_links(()), [])
+        self.assertEqual(_encode_links([]), [])
 
     def test_encode_parent_id(self):
         ctx = SpanContext(TRACE_ID, 0xABCDEF1234567890, is_remote=True)
         self.assertEqual(
-            _encode_parent_id(ctx),
+            _encode_context_span_id(ctx),
             _encode_span_id(0xABCDEF1234567890),
         )
 
     def test_encode_parent_id_none(self):
-        self.assertIsNone(_encode_parent_id(None))
+        self.assertIsNone(_encode_context_span_id(None))
 
     def test_encode_spans_to_dict(self):
         span = make_span()
