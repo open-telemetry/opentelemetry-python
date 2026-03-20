@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `opentelemetry-sdk`: Add `container` resource detector support to declarative file configuration via `detection_development.detectors[].container`, using a lazy import of the `opentelemetry-resource-detector-containerid` contrib package
+  ([#5004](https://github.com/open-telemetry/opentelemetry-python/pull/5004))
 - `opentelemetry-sdk`: Add `create_resource` and `create_propagator`/`configure_propagator` to declarative file configuration, enabling Resource and propagator instantiation from config files without reading env vars
   ([#4979](https://github.com/open-telemetry/opentelemetry-python/pull/4979))
 - `opentelemetry-sdk`: Add file configuration support with YAML/JSON loading, environment variable substitution, and schema validation against the vendored OTel config JSON schema
