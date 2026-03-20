@@ -2136,8 +2136,9 @@ class TestSpanLimits(unittest.TestCase):
 
         for env_var, bad_value in test_cases.items():
             with self.subTest(f"Testing {env_var}={bad_value}"):
-                with self.assertRaises(ValueError) as error, patch.dict(
-                    "os.environ", {env_var: bad_value}, clear=True
+                with (
+                    self.assertRaises(ValueError) as error,
+                    patch.dict("os.environ", {env_var: bad_value}, clear=True),
                 ):
                     trace.SpanLimits()
 
