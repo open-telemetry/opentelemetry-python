@@ -41,10 +41,6 @@ from opentelemetry.trace import (
     set_span_in_context,
 )
 
-# ---------------------------------------------------------------------------
-# Shared constants
-# ---------------------------------------------------------------------------
-
 TRACE_ID = 0x3E0C63257DE34C926F9EFCD03927272E
 SPAN_ID = 0x34BF92DEEFC58C92
 PARENT_SPAN_ID = 0x1111111111111111
@@ -60,11 +56,11 @@ def _is_none_equivalent(val_a, val_b):
     and the other is the empty/zero default for that type.
 
     Only None and type-matching empty defaults are considered equivalent:
-      None == []   (empty list)
-      None == ""   (empty string)
-      None == b""  (empty bytes)
-      None == 0    (zero int)
-      None == 0.0  (zero float)
+      None ~= []   (empty list)
+      None ~= ""   (empty string)
+      None ~= b""  (empty bytes)
+      None ~= 0    (zero int)
+      None ~= 0.0  (zero float)
     """
     if val_a is None and val_b is None:
         return True
