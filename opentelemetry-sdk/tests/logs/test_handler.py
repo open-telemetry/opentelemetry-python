@@ -32,8 +32,11 @@ from opentelemetry.semconv._incubating.attributes import code_attributes
 from opentelemetry.semconv.attributes import exception_attributes
 from opentelemetry.trace import (
     INVALID_SPAN_CONTEXT,
+    SpanContext,
+    TraceFlags,
     set_span_in_context,
 )
+from opentelemetry.context.context import Context
 
 
 # pylint: disable=too-many-public-methods
@@ -336,6 +339,7 @@ class TestLoggingHandler(unittest.TestCase):
                     logger.critical("Critical message within span")
 
                 record = processor.get_log_record(0)
+                context = processor.contexts_emitted[0]
 
                 self.assertEqual(
                     record.log_record.body,
@@ -346,7 +350,7 @@ class TestLoggingHandler(unittest.TestCase):
                     record.log_record.severity_number,
                     SeverityNumber.FATAL,
                 )
-                self.assertEqual(record.log_record.context, mock_context)
+                self.assertEqual(context, mock_context)
                 span_context = span.get_span_context()
                 self.assertEqual(
                     record.log_record.trace_id, span_context.trace_id
@@ -575,9 +579,11 @@ def set_up_test_logging(level, formatter=None, root_logger=False):
 class FakeProcessor(LogRecordProcessor):
     def __init__(self):
         self.log_data_emitted = []
+        self.contexts_emitted = []
 
-    def on_emit(self, log_record: ReadableLogRecord):
+    def on_emit(self, log_record: ReadableLogRecord, context: Context):
         self.log_data_emitted.append(log_record)
+        self.contexts_emitted.append(context)
 
     def shutdown(self):
         pass

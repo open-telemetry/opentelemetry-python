@@ -174,7 +174,7 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
         self._exporter = exporter
         self._shutdown = False
 
-    def on_emit(self, log_record: ReadWriteLogRecord):
+    def on_emit(self, log_record: ReadWriteLogRecord, context: Context):
         # Prevent entering a recursive loop.
         cnt = get_value(_ON_EMIT_RECURSION_COUNT_KEY) or 0
         # Recursive depth of 3 is sort of arbitrary. It's possible that an Exporter.export call
@@ -278,7 +278,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
             "Log",
         )
 
-    def on_emit(self, log_record: ReadWriteLogRecord) -> None:
+    def on_emit(self, log_record: ReadWriteLogRecord, context: Context) -> None:
         # Convert ReadWriteLogRecord to ReadableLogRecord before passing to BatchProcessor
         # Note: resource should not be None at this point as it's set during Logger.emit()
         resource = (

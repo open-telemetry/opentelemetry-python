@@ -27,6 +27,7 @@ from unittest.mock import Mock, patch
 from pytest import mark
 
 from opentelemetry._logs import LogRecord, SeverityNumber
+from opentelemetry.context import get_current
 from opentelemetry.sdk import trace
 from opentelemetry.sdk._logs import (
     LoggerProvider,
@@ -433,7 +434,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
 
         def bulk_emit(num_emit):
             for _ in range(num_emit):
-                batch_processor.on_emit(EMPTY_LOG)
+                batch_processor.on_emit(EMPTY_LOG, get_current())
 
         total_expected_logs = 0
         with ThreadPoolExecutor(max_workers=69) as executor:

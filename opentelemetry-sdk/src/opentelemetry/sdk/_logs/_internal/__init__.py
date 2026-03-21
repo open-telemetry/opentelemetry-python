@@ -325,7 +325,7 @@ class LogRecordProcessor(abc.ABC):
     """
 
     @abc.abstractmethod
-    def on_emit(self, log_record: ReadWriteLogRecord):
+    def on_emit(self, log_record: ReadWriteLogRecord, context: Context):
         """Emits the ``ReadWriteLogRecord``.
 
         Implementers should handle any exceptions raised during log processing
@@ -374,9 +374,9 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
         with self._lock:
             self._log_record_processors += (log_record_processor,)
 
-    def on_emit(self, log_record: ReadWriteLogRecord) -> None:
+    def on_emit(self, log_record: ReadWriteLogRecord, context: Context) -> None:
         for lp in self._log_record_processors:
-            lp.on_emit(log_record)
+            lp.on_emit(log_record, context)
 
     def shutdown(self) -> None:
         """Shutdown the log processors one by one"""
@@ -448,8 +448,8 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
         for future in futures:
             future.result()
 
-    def on_emit(self, log_record: ReadWriteLogRecord):
-        self._submit_and_wait(lambda lp: lp.on_emit, log_record)
+    def on_emit(self, log_record: ReadWriteLogRecord, context: Context):
+        self._submit_and_wait(lambda lp: lp.on_emit, log_record, context)
 
     def shutdown(self):
         self._submit_and_wait(lambda lp: lp.shutdown)
@@ -675,6 +675,9 @@ class Logger(APILogger):
         """Emits the :class:`ReadWriteLogRecord` by setting instrumentation scope
         and forwarding to the processor.
         """
+        if context is None:
+            context = get_current()
+
         # If a record is provided, use it directly
         if record is not None:
             if not isinstance(record, ReadWriteLogRecord):
@@ -706,7 +709,7 @@ class Logger(APILogger):
             )
 
         self._logger_metrics.emit_log()
-        self._multi_log_record_processor.on_emit(writable_record)
+        self._multi_log_record_processor.on_emit(writable_record, context)
 
 
 class LoggerProvider(APILoggerProvider):

@@ -22,6 +22,7 @@ from abc import ABC, abstractmethod
 from unittest.mock import Mock
 
 from opentelemetry._logs import LogRecord, SeverityNumber
+from opentelemetry.context import Context, get_current
 from opentelemetry.sdk._logs._internal import (
     ConcurrentMultiLogRecordProcessor,
     LoggerProvider,
@@ -38,7 +39,7 @@ class AnotherLogRecordProcessor(LogRecordProcessor):
         self._log_list = logs_list
         self._closed = False
 
-    def on_emit(self, log_record: ReadWriteLogRecord):
+    def on_emit(self, log_record: ReadWriteLogRecord, context: Context):
         if self._closed:
             return
         self._log_list.append(
@@ -123,9 +124,10 @@ class MultiLogRecordProcessorTestBase(ABC):
         for mock in mocks:
             multi_log_record_processor.add_log_record_processor(mock)
         record = self.make_record()
-        multi_log_record_processor.on_emit(record)
+        context = get_current()
+        multi_log_record_processor.on_emit(record, context)
         for mock in mocks:
-            mock.on_emit.assert_called_with(record)
+            mock.on_emit.assert_called_with(record, context)
         multi_log_record_processor.shutdown()
 
     def test_on_shutdown(self):

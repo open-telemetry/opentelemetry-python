@@ -163,9 +163,10 @@ class TestLogger(unittest.TestCase):
 
         logger.emit(log_record)
         log_record_processor_mock.on_emit.assert_called_once()
-        log_data = log_record_processor_mock.on_emit.call_args.args[0]
+        log_data, context = log_record_processor_mock.on_emit.call_args.args
         self.assertTrue(isinstance(log_data.log_record, LogRecord))
         self.assertTrue(log_data.log_record is log_record)
+        self.assertIsNotNone(context)
 
     def test_can_emit_api_logrecord(self):
         logger, log_record_processor_mock = self._get_logger()
@@ -175,12 +176,12 @@ class TestLogger(unittest.TestCase):
         )
         logger.emit(api_log_record)
         log_record_processor_mock.on_emit.assert_called_once()
-        log_data = log_record_processor_mock.on_emit.call_args.args[0]
+        log_data, context = log_record_processor_mock.on_emit.call_args.args
         log_record = log_data.log_record
         self.assertTrue(isinstance(log_record, LogRecord))
         self.assertEqual(log_record.timestamp, None)
         self.assertEqual(log_record.observed_timestamp, 0)
-        self.assertIsNotNone(log_record.context)
+        self.assertIsNotNone(context)
         self.assertEqual(log_record.severity_number, None)
         self.assertEqual(log_record.severity_text, None)
         self.assertEqual(log_record.body, "a log line")
@@ -203,12 +204,12 @@ class TestLogger(unittest.TestCase):
         )
         logger.emit(log_record)
         log_record_processor_mock.on_emit.assert_called_once()
-        log_data = log_record_processor_mock.on_emit.call_args.args[0]
+        log_data, context = log_record_processor_mock.on_emit.call_args.args
         result_log_record = log_data.log_record
         self.assertTrue(isinstance(result_log_record, LogRecord))
         self.assertEqual(result_log_record.timestamp, 100)
         self.assertEqual(result_log_record.observed_timestamp, 101)
-        self.assertIsNotNone(result_log_record.context)
+        self.assertIsNotNone(context)
         self.assertEqual(
             result_log_record.severity_number, SeverityNumber.WARN
         )
