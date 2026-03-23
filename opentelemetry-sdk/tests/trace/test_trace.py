@@ -196,6 +196,22 @@ tracer_provider.add_span_processor(mock_processor)
             {"key1": "value1", "key2": 6},
         )
 
+    def test_get_tracer_sdk_sets_default_tracer_config_if_configurator_raises(
+        self,
+    ):
+        def raising_tracer_configurator(tracer_scope):
+            raise ValueError()
+
+        tracer_provider = trace.TracerProvider(
+            _tracer_configurator=raising_tracer_configurator
+        )
+        tracer = tracer_provider.get_tracer(
+            "module_name",
+            "library_version",
+        )
+        # pylint: disable=protected-access
+        self.assertEqual(tracer._tracer_config, _TracerConfig.default())
+
     @mock.patch.dict("os.environ", {OTEL_SDK_DISABLED: "true"})
     def test_get_tracer_with_sdk_disabled(self):
         tracer_provider = trace.TracerProvider()
@@ -2273,6 +2289,12 @@ class TestTracerProvider(unittest.TestCase):
         sample_patch.assert_called_once()
         self.assertIsNotNone(tracer_provider._span_limits)
         self.assertIsNotNone(tracer_provider._atexit_handler)
+
+    def test_default_tracer_config(self):
+        self.assertEqual(
+            _TracerConfig.default(),
+            _TracerConfig(is_enabled=True),
+        )
 
     def test_default_tracer_configurator(self):
         # pylint: disable=protected-access
