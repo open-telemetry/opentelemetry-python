@@ -22,11 +22,11 @@ from unittest.mock import MagicMock, patch
 from opentelemetry.baggage.propagation import W3CBaggagePropagator
 from opentelemetry.environment_variables import OTEL_PROPAGATORS
 from opentelemetry.propagators.composite import CompositePropagator
+from opentelemetry.sdk._configuration._exceptions import ConfigurationError
 from opentelemetry.sdk._configuration._propagator import (
     configure_propagator,
     create_propagator,
 )
-from opentelemetry.sdk._configuration.file._loader import ConfigurationError
 from opentelemetry.sdk._configuration.models import (
     Propagator as PropagatorConfig,
 )
@@ -273,5 +273,6 @@ class TestConfigurePropagator(unittest.TestCase):
             propagator = mock_set.call_args[0][0]
             self.assertEqual(len(propagator._propagators), 1)  # type: ignore[attr-defined]
             self.assertIsInstance(
-                propagator._propagators[0], TraceContextTextMapPropagator  # type: ignore[attr-defined]
+                propagator._propagators[0],
+                TraceContextTextMapPropagator,  # type: ignore[attr-defined]
             )
