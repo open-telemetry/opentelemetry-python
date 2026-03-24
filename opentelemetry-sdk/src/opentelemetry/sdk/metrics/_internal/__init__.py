@@ -533,7 +533,7 @@ class MeterProvider(APIMeterProvider):
         if shutdown_on_exit:
             self._atexit_handler = register(self.shutdown)
 
-        self._meters = {}
+        self._meters: dict[InstrumentationScope, Meter] = {}
         self._shutdown_once = Once()
         self._shutdown = False
         self._meter_configurator = (
@@ -565,13 +565,26 @@ class MeterProvider(APIMeterProvider):
         for each outstanding Meter and for any newly created meters thereafter.
         Therefore, it is important that the provided function returns quickly.
         """
-        self._meter_configurator = meter_configurator
         with self._meter_lock:
-            for info, meter in self._meters.items():
-                if not isinstance(meter, Meter):
-                    continue
+            self._meter_configurator = meter_configurator
+            for instrumentation_scope, meter in self._meters.items():
                 # pylint: disable-next=protected-access
-                meter._set_meter_config(self._meter_configurator(info))
+                meter._set_meter_config(
+                    self._apply_meter_configurator(instrumentation_scope)
+                )
+
+    def _apply_meter_configurator(
+        self, instrumentation_scope: InstrumentationScope
+    ) -> _MeterConfig:
+        try:
+            return self._meter_configurator(instrumentation_scope)
+        # pylint: disable-next=broad-exception-caught
+        except Exception:
+            _logger.exception(
+                "meter configurator failed for scope '%s', using default config",
+                instrumentation_scope.name,
+            )
+            return _MeterConfig.default()
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
         deadline_ns = time_ns() + timeout_millis * 10**6
@@ -680,14 +693,18 @@ class MeterProvider(APIMeterProvider):
             _logger.warning("Meter name cannot be None or empty.")
             return NoOpMeter(name, version=version, schema_url=schema_url)
 
-        info = InstrumentationScope(name, version, schema_url, attributes)
+        instrumentation_scope = InstrumentationScope(
+            name, version, schema_url, attributes
+        )
         with self._meter_lock:
-            if not self._meters.get(info):
+            if not self._meters.get(instrumentation_scope):
                 # FIXME #2558 pass SDKConfig object to meter so that the meter
                 # has access to views.
-                self._meters[info] = Meter(
-                    info,
+                self._meters[instrumentation_scope] = Meter(
+                    instrumentation_scope,
                     self._measurement_consumer,
-                    _meter_config=self._meter_configurator(info),
+                    _meter_config=self._apply_meter_configurator(
+                        instrumentation_scope
+                    ),
                 )
-            return self._meters[info]
+            return self._meters[instrumentation_scope]

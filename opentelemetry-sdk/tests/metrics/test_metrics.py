@@ -463,6 +463,30 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         meter = mp.get_meter("new_meter")
         self.assertFalse(meter._is_enabled())
 
+    def test_buggy_configurator_falls_back_to_default_on_get_meter(self):
+        def raising_configurator(_scope):
+            raise RuntimeError("configurator error")
+
+        mp = MeterProvider(_meter_configurator=raising_configurator)
+        with self.assertLogs(level="ERROR"):
+            meter = mp.get_meter("test")
+        self.assertTrue(meter._is_enabled())
+
+    def test_buggy_configurator_falls_back_to_default_on_set_configurator(
+        self,
+    ):
+        mp = MeterProvider()
+        meter = mp.get_meter("test")
+        self.assertTrue(meter._is_enabled())
+
+        def raising_configurator(_scope):
+            raise ValueError("bad config")
+
+        with self.assertLogs(level="ERROR"):
+            mp._set_meter_configurator(meter_configurator=raising_configurator)
+        # Should still be enabled (default config) despite the error
+        self.assertTrue(meter._is_enabled())
+
     @patch(
         "opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer"
     )
