@@ -72,6 +72,7 @@ from os import environ
 from types import ModuleType
 from typing import List, Optional, Set, cast
 from urllib import parse
+from uuid import uuid4
 
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk.environment_variables import (
@@ -323,6 +324,7 @@ _DEFAULT_RESOURCE = Resource(
         TELEMETRY_SDK_LANGUAGE: "python",
         TELEMETRY_SDK_NAME: "opentelemetry",
         TELEMETRY_SDK_VERSION: _OPENTELEMETRY_SDK_VERSION,
+        SERVICE_INSTANCE_ID: str(uuid4()),
     }
 )
 

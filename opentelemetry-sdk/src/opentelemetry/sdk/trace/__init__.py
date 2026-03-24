@@ -42,6 +42,7 @@ from typing import (
     Type,
     Union,
 )
+from uuid import uuid4
 from warnings import filterwarnings
 
 from typing_extensions import deprecated
@@ -1364,6 +1365,28 @@ class TracerProvider(trace_api.TracerProvider):
 
         self._tracer_configurator = (
             _tracer_configurator or _default_tracer_configurator
+        )
+
+        if hasattr(os, "register_at_fork"):
+            weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
+            os.register_at_fork(
+                after_in_child=lambda: weak_reinit()()  # pylint: disable=unnecessary-lambda
+            )
+
+    def _at_fork_reinit(self) -> None:
+        """Update the resource with a new unique service.instance.id after a fork.
+
+        When gunicorn (or any other prefork server) forks workers, all workers
+        inherit the same Resource, including the same service.instance.id. This
+        causes metric collisions in backends like Datadog where multiple workers
+        exporting with the same resource identity result in last-write-wins
+        instead of correct aggregation.
+
+        This hook runs post-fork in each worker and replaces service.instance.id
+        with a fresh UUID, ensuring each worker is a distinct instance.
+        """
+        self._resource = self._resource.merge(
+            Resource({"service.instance.id": str(uuid4())})
         )
 
     def _set_tracer_configurator(

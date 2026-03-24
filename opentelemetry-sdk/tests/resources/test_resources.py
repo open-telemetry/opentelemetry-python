@@ -45,6 +45,7 @@ from opentelemetry.sdk.resources import (
     PROCESS_RUNTIME_DESCRIPTION,
     PROCESS_RUNTIME_NAME,
     PROCESS_RUNTIME_VERSION,
+    SERVICE_INSTANCE_ID,
     SERVICE_NAME,
     TELEMETRY_SDK_LANGUAGE,
     TELEMETRY_SDK_NAME,
@@ -88,6 +89,9 @@ class TestResources(unittest.TestCase):
             TELEMETRY_SDK_LANGUAGE: "python",
             TELEMETRY_SDK_VERSION: _OPENTELEMETRY_SDK_VERSION,
             SERVICE_NAME: "unknown_service",
+            SERVICE_INSTANCE_ID: _DEFAULT_RESOURCE.attributes[
+                SERVICE_INSTANCE_ID
+            ],
         }
 
         resource = Resource.create(attributes)
@@ -211,6 +215,9 @@ class TestResources(unittest.TestCase):
             TELEMETRY_SDK_LANGUAGE: "python",
             TELEMETRY_SDK_VERSION: _OPENTELEMETRY_SDK_VERSION,
             SERVICE_NAME: "unknown_service",
+            SERVICE_INSTANCE_ID: _DEFAULT_RESOURCE.attributes[
+                SERVICE_INSTANCE_ID
+            ],
         }
 
         attributes_copy = attributes.copy()
