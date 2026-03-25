@@ -1106,6 +1106,9 @@ class _TracerConfig:
     def default(cls):
         return cls(is_enabled=True)
 
+    def __eq__(self, other: "_TracerConfig"):
+        return self.is_enabled == other.is_enabled
+
 
 class Tracer(trace_api.Tracer):
     """See `opentelemetry.trace.Tracer`."""
