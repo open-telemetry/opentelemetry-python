@@ -2319,6 +2319,23 @@ class TestTracerProvider(unittest.TestCase):
         self.assertEqual(tracer._is_enabled(), True)
         self.assertEqual(other_tracer._is_enabled(), True)
 
+    def test_set_tracer_configurator_sets_default_tracer_config_if_configurator_raises(
+        self,
+    ):
+        def raising_tracer_configurator(tracer_scope):
+            raise ValueError()
+
+        tracer_provider = trace.TracerProvider()
+        tracer = tracer_provider.get_tracer(
+            "module_name",
+            "library_version",
+        )
+        tracer_provider._set_tracer_configurator(
+            tracer_configurator=raising_tracer_configurator
+        )
+        # pylint: disable=protected-access
+        self.assertEqual(tracer._tracer_config, _TracerConfig.default())
+
     def test_rule_based_tracer_configurator(self):
         # pylint: disable=protected-access
         rules = [
