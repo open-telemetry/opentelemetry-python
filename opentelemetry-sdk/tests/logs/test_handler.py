@@ -341,7 +341,7 @@ class TestLoggingHandler(unittest.TestCase):
                     record.log_record.body,
                     "Critical message within span",
                 )
-                self.assertEqual(record.log_record.severity_text, "CRITICAL")
+                self.assertEqual(record.log_record.severity_text, "FATAL")
                 self.assertEqual(
                     record.log_record.severity_number,
                     SeverityNumber.FATAL,
@@ -374,7 +374,7 @@ class TestLoggingHandler(unittest.TestCase):
             self.assertEqual(
                 record.log_record.body, "Critical message within span"
             )
-            self.assertEqual(record.log_record.severity_text, "CRITICAL")
+            self.assertEqual(record.log_record.severity_text, "FATAL")
             self.assertEqual(
                 record.log_record.severity_number, SeverityNumber.FATAL
             )
