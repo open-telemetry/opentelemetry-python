@@ -1377,14 +1377,27 @@ class TracerProvider(trace_api.TracerProvider):
         self._tracer_configurator = tracer_configurator
         with self._tracers_lock:
             for instrumentation_scope, tracer in self._tracers.items():
-                # pylint: disable-next=protected-access
-                tracer._set_tracer_config(
-                    tracer_configurator(instrumentation_scope)
+                tracer_config = self._apply_tracer_configurator(
+                    instrumentation_scope
                 )
+                # pylint: disable-next=protected-access
+                tracer._set_tracer_config(tracer_config)
 
     @property
     def resource(self) -> Resource:
         return self._resource
+
+    def _apply_tracer_configurator(
+        self, instrumentation_scope: InstrumentationScope
+    ):
+        try:
+            return self._tracer_configurator(instrumentation_scope)
+        except Exception:  # pylint: disable=broad-exception-caught
+            logger.exception(
+                "Failed to create a Tracer Config for %s, using default Tracer config",
+                instrumentation_scope,
+            )
+            return _TracerConfig.default()
 
     def get_tracer(
         self,
@@ -1422,16 +1435,7 @@ class TracerProvider(trace_api.TracerProvider):
             schema_url,
             attributes,
         )
-
-        try:
-            tracer_config = self._tracer_configurator(instrumentation_scope)
-        except Exception:  # pylint: disable=broad-exception-caught
-            logger.exception(
-                "Failed to create a Tracer Config for %s, using default Tracer config",
-                instrumentation_scope,
-            )
-            tracer_config = _TracerConfig.default()
-
+        tracer_config = self._apply_tracer_configurator(instrumentation_scope)
         tracer = Tracer(
             self.sampler,
             self.resource,
