@@ -325,7 +325,7 @@ class LogRecordProcessor(abc.ABC):
     """
 
     @abc.abstractmethod
-    def on_emit(self, log_record: ReadWriteLogRecord):
+    def on_emit(self, log_record: ReadWriteLogRecord) -> None:
         """Emits the ``ReadWriteLogRecord``.
 
         Implementers should handle any exceptions raised during log processing
@@ -334,7 +334,7 @@ class LogRecordProcessor(abc.ABC):
         """
 
     @abc.abstractmethod
-    def shutdown(self):
+    def shutdown(self) -> None:
         """Called when a :class:`opentelemetry.sdk._logs.Logger` is shutdown"""
 
     @abc.abstractmethod
@@ -448,10 +448,10 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
         for future in futures:
             future.result()
 
-    def on_emit(self, log_record: ReadWriteLogRecord):
+    def on_emit(self, log_record: ReadWriteLogRecord) -> None:
         self._submit_and_wait(lambda lp: lp.on_emit, log_record)
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         self._submit_and_wait(lambda lp: lp.shutdown)
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
@@ -812,7 +812,7 @@ class LoggerProvider(APILoggerProvider):
             log_record_processor
         )
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         """Shuts down the log processors."""
         self._multi_log_record_processor.shutdown()
         if self._at_exit_handler is not None:
