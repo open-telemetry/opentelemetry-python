@@ -596,11 +596,11 @@ class LoggingHandler(logging.Handler):
         # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/logs/data-model.md#displaying-severity
         # Python "WARNING" -> OTel "WARN" (see #3548)
         # Python "CRITICAL" -> OTel "FATAL" (see #4984)
-        _PYTHON_TO_OTEL_SEVERITY_TEXT = {
+        _python_to_otel_severity_text = {
             "WARNING": "WARN",
             "CRITICAL": "FATAL",
         }
-        level_name = _PYTHON_TO_OTEL_SEVERITY_TEXT.get(
+        level_name = _python_to_otel_severity_text.get(
             record.levelname, record.levelname
         )
 
