@@ -17,6 +17,7 @@ import abc
 import enum
 import logging
 import sys
+from functools import partial
 from os import environ, linesep
 from typing import IO, Callable, Optional, Sequence
 
@@ -30,10 +31,14 @@ from opentelemetry.context import (
     get_value,
     set_value,
 )
+from opentelemetry.metrics import MeterProvider, get_meter_provider
 from opentelemetry.sdk._logs import (
     LogRecordProcessor,
     ReadableLogRecord,
     ReadWriteLogRecord,
+)
+from opentelemetry.sdk._logs._internal.export._log_processor_metrics import (
+    LogProcessorMetrics,
 )
 from opentelemetry.sdk._shared_internal import BatchProcessor, DuplicateFilter
 from opentelemetry.sdk.environment_variables import (
@@ -43,6 +48,9 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_BLRP_SCHEDULE_DELAY,
 )
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.semconv._incubating.attributes.otel_attributes import (
+    OtelComponentTypeValues,
+)
 
 _DEFAULT_SCHEDULE_DELAY_MILLIS = 5000
 _DEFAULT_MAX_EXPORT_BATCH_SIZE = 512
@@ -170,9 +178,18 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
     propagating to the application.
     """
 
-    def __init__(self, exporter: LogRecordExporter):
+    def __init__(
+        self,
+        exporter: LogRecordExporter,
+        *,
+        meter_provider: MeterProvider | None = None,
+    ):
         self._exporter = exporter
         self._shutdown = False
+        self._metrics = LogProcessorMetrics(
+            OtelComponentTypeValues.SIMPLE_LOG_PROCESSOR.value,
+            meter_provider or get_meter_provider(),
+        )
 
     def on_emit(self, log_record: ReadWriteLogRecord):
         # Prevent entering a recursive loop.
@@ -246,6 +263,8 @@ class BatchLogRecordProcessor(LogRecordProcessor):
         max_export_batch_size: int | None = None,
         export_timeout_millis: float | None = None,
         max_queue_size: int | None = None,
+        *,
+        meter_provider: MeterProvider | None = None,
     ):
         if max_queue_size is None:
             max_queue_size = BatchLogRecordProcessor._default_max_queue_size()
@@ -276,6 +295,12 @@ class BatchLogRecordProcessor(LogRecordProcessor):
             export_timeout_millis,
             max_queue_size,
             "Log",
+            partial(
+                LogProcessorMetrics,
+                OtelComponentTypeValues.BATCHING_LOG_PROCESSOR.value,
+                meter_provider or get_meter_provider(),
+                capacity=max_queue_size,
+            ),
         )
 
     def on_emit(self, log_record: ReadWriteLogRecord) -> None:

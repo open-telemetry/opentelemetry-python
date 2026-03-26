@@ -17,6 +17,7 @@ import logging
 import sys
 import typing
 from enum import Enum
+from functools import partial
 from os import environ, linesep
 
 from opentelemetry.context import (
@@ -26,6 +27,7 @@ from opentelemetry.context import (
     detach,
     set_value,
 )
+from opentelemetry.metrics import MeterProvider, get_meter_provider
 from opentelemetry.sdk._shared_internal import BatchProcessor
 from opentelemetry.sdk.environment_variables import (
     OTEL_BSP_EXPORT_TIMEOUT,
@@ -34,6 +36,12 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_BSP_SCHEDULE_DELAY,
 )
 from opentelemetry.sdk.trace import ReadableSpan, Span, SpanProcessor
+from opentelemetry.sdk.trace.export._span_processor_metrics import (
+    SpanProcessorMetrics,
+)
+from opentelemetry.semconv._incubating.attributes.otel_attributes import (
+    OtelComponentTypeValues,
+)
 
 _DEFAULT_SCHEDULE_DELAY_MILLIS = 5000
 _DEFAULT_MAX_EXPORT_BATCH_SIZE = 512
@@ -93,8 +101,17 @@ class SimpleSpanProcessor(SpanProcessor):
     passes ended spans directly to the configured `SpanExporter`.
     """
 
-    def __init__(self, span_exporter: SpanExporter):
+    def __init__(
+        self,
+        span_exporter: SpanExporter,
+        *,
+        meter_provider: MeterProvider | None = None,
+    ):
         self.span_exporter = span_exporter
+        self._metrics = SpanProcessorMetrics(
+            OtelComponentTypeValues.SIMPLE_SPAN_PROCESSOR.value,
+            meter_provider or get_meter_provider(),
+        )
 
     def on_start(
         self, span: Span, parent_context: typing.Optional[Context] = None
@@ -108,11 +125,15 @@ class SimpleSpanProcessor(SpanProcessor):
         if not (span.context and span.context.trace_flags.sampled):
             return
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
+        error: Exception | None = None
         try:
             self.span_exporter.export((span,))
         # pylint: disable=broad-exception-caught
-        except Exception:
+        except Exception as e:
+            error = e
             logger.exception("Exception while exporting Span.")
+        finally:
+            self._metrics.finish_items(1, error)
         detach(token)
 
     def shutdown(self) -> None:
@@ -147,6 +168,8 @@ class BatchSpanProcessor(SpanProcessor):
         schedule_delay_millis: float | None = None,
         max_export_batch_size: int | None = None,
         export_timeout_millis: float | None = None,
+        *,
+        meter_provider: MeterProvider | None = None,
     ):
         if max_queue_size is None:
             max_queue_size = BatchSpanProcessor._default_max_queue_size()
@@ -178,6 +201,12 @@ class BatchSpanProcessor(SpanProcessor):
             export_timeout_millis,
             max_queue_size,
             "Span",
+            partial(
+                SpanProcessorMetrics,
+                OtelComponentTypeValues.BATCHING_SPAN_PROCESSOR.value,
+                meter_provider or get_meter_provider(),
+                capacity=max_queue_size,
+            ),
         )
 
     # Added for backward compatibility. Not recommended to directly access/use underlying exporter.

@@ -28,6 +28,8 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_BSP_MAX_QUEUE_SIZE,
     OTEL_BSP_SCHEDULE_DELAY,
 )
+from opentelemetry.sdk.metrics.export import InMemoryMetricReader
+from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.trace import export
 from opentelemetry.sdk.trace.export import logger
 
@@ -142,6 +144,22 @@ class TestSimpleSpanProcessor(unittest.TestCase):
                     pass
 
         self.assertListEqual([], spans_names_list)
+
+    def test_metrics(self):
+        metric_reader = InMemoryMetricReader()
+        meter_provider = MeterProvider(metric_readers=[metric_reader])
+        exported_once = False
+        def export_spans(_spans):
+            nonlocal exported_once
+            if not exported_once:
+                exported_once = True
+                raise RuntimeError("Export failed")
+            return export.SpanExportResult.SUCCESS
+
+        exporter = mock.MagicMock()
+        exporter.export.side_effect = export_spans
+        span_processor = export.SimpleSpanProcessor(exporter, meter_provider=meter_provider)
+
 
 
 # Many more test cases for the BatchSpanProcessor exist under
