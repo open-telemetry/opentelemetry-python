@@ -210,6 +210,7 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
                 set_value(_ON_EMIT_RECURSION_COUNT_KEY, cnt + 1),  # pyright: ignore[reportOperatorIssue]
             )
         )
+        error: Exception | None = None
         try:
             if self._shutdown:
                 _logger.warning("Processor is already shutdown, ignoring call")
@@ -228,9 +229,11 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
                 limits=log_record.limits,
             )
             self._exporter.export((readable_log_record,))
-        except Exception:  # pylint: disable=broad-exception-caught
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            error = e
             _logger.exception("Exception while exporting logs.")
         finally:
+            self._metrics.finish_items(1, error)
             detach(token)
 
     def shutdown(self):

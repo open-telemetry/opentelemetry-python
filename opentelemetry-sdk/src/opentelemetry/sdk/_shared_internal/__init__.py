@@ -186,6 +186,7 @@ class BatchProcessor(Generic[Telemetry]):
                 iteration += 1
                 token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
                 error: Exception | None = None
+                count = 0
                 try:
                     count = min(
                         self._max_export_batch_size,
@@ -203,9 +204,7 @@ class BatchProcessor(Generic[Telemetry]):
                         "Exception while exporting %s.", self._exporting
                     )
                 finally:
-                    self._metrics.finish_items(
-                        iteration * self._max_export_batch_size, error
-                    )
+                    self._metrics.finish_items(count, error)
                 detach(token)
 
     def emit(self, data: Telemetry) -> None:
@@ -216,6 +215,7 @@ class BatchProcessor(Generic[Telemetry]):
             self._bsp_reset_once.do_once(self._at_fork_reinit)
         if len(self._queue) == self._max_queue_size:
             _logger.warning("Queue full, dropping %s.", self._exporting)
+            self._metrics.drop_items(1)
         # This will drop a log from the right side if the queue is at _max_queue_size.
         self._queue.appendleft(data)
         if len(self._queue) >= self._max_export_batch_size:

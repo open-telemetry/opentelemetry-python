@@ -14,22 +14,8 @@
 
 from __future__ import annotations
 
-from collections import Counter
 from collections.abc import Callable
-
 from typing import Protocol
-
-from opentelemetry.metrics import CallbackOptions, MeterProvider, Observation
-from opentelemetry.semconv._incubating.attributes.otel_attributes import (
-    OTEL_COMPONENT_NAME,
-    OTEL_COMPONENT_TYPE,
-)
-from opentelemetry.semconv._incubating.metrics.otel_metrics import (
-    OTEL_SDK_PROCESSOR_SPAN_QUEUE_SIZE,
-    create_otel_sdk_processor_span_processed,
-    create_otel_sdk_processor_span_queue_capacity,
-)
-from opentelemetry.semconv.attributes.error_attributes import ERROR_TYPE
 
 
 class BatchProcessorMetrics(Protocol):
