@@ -65,10 +65,14 @@ class ProcessorMetrics:
 
         if signal == "traces":
             create_processed = create_otel_sdk_processor_span_processed
-            create_queue_capacity = create_otel_sdk_processor_span_queue_capacity
+            create_queue_capacity = (
+                create_otel_sdk_processor_span_queue_capacity
+            )
         else:
             create_processed = create_otel_sdk_processor_log_processed
-            create_queue_capacity = create_otel_sdk_processor_log_queue_capacity
+            create_queue_capacity = (
+                create_otel_sdk_processor_log_queue_capacity
+            )
 
         self._processed = create_processed(meter)
 
@@ -76,20 +80,19 @@ class ProcessorMetrics:
             self._queue_capacity = create_queue_capacity(meter)
             self._queue_capacity.add(capacity, self._standard_attrs)
 
-
     def register_queue_size(self, get_queue_size: Callable[[], int]) -> None:
         def record_queue_size(
-                _options: CallbackOptions,
-            ) -> tuple[Observation]:
-                return (Observation(get_queue_size(), self._standard_attrs),)
+            _options: CallbackOptions,
+        ) -> tuple[Observation]:
+            return (Observation(get_queue_size(), self._standard_attrs),)
 
         if self._signal == "traces":
             queue_size_name = OTEL_SDK_PROCESSOR_SPAN_QUEUE_SIZE
-            queue_size_description = ("The number of spans in the queue of a given instance of an SDK span processor.")
+            queue_size_description = "The number of spans in the queue of a given instance of an SDK span processor."
             queue_size_unit = "{span}"
         else:
             queue_size_name = OTEL_SDK_PROCESSOR_LOG_QUEUE_SIZE
-            queue_size_description = ("The number of logs in the queue of a given instance of an SDK log processor.")
+            queue_size_description = "The number of logs in the queue of a given instance of an SDK log processor."
             queue_size_unit = "{log}"
 
         self._meter.create_observable_up_down_counter(
