@@ -20,6 +20,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
+from opentelemetry.sdk._configuration._exceptions import ConfigurationError
 from opentelemetry.sdk._configuration.file._env_substitution import (
     substitute_env_vars,
 )
@@ -57,17 +58,6 @@ def _get_schema() -> dict:
 
 
 _logger = logging.getLogger(__name__)
-
-
-class ConfigurationError(Exception):
-    """Raised when configuration file loading, parsing, or validation fails.
-
-    This includes errors from:
-    - File not found or inaccessible
-    - Invalid YAML/JSON syntax
-    - Schema validation failures
-    - Environment variable substitution errors
-    """
 
 
 def load_config_file(file_path: str) -> OpenTelemetryConfiguration:
