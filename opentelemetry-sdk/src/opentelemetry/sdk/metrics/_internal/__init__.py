@@ -448,6 +448,9 @@ class _RuleBasedMeterConfigurator:
         # by default return default config
         return self._default_config
 
+    def update_rules(self, rules: _MeterConfiguratorRulesT) -> None:
+        self._rules = rules
+
 
 class MeterProvider(APIMeterProvider):
     r"""See `opentelemetry.metrics.MeterProvider`.
