@@ -36,8 +36,8 @@ from opentelemetry.context import (
     detach,
     set_value,
 )
-from opentelemetry.sdk._shared_internal._batch_processor_metrics import (
-    BatchProcessorMetricsFactory,
+from opentelemetry.sdk._shared_internal._processor_metrics import (
+    ProcessorMetrics,
 )
 from opentelemetry.util._once import Once
 
@@ -101,7 +101,7 @@ class BatchProcessor(Generic[Telemetry]):
         export_timeout_millis: float,
         max_queue_size: int,
         exporting: str,
-        metrics_factory: BatchProcessorMetricsFactory,
+        metrics: ProcessorMetrics,
     ):
         self._bsp_reset_once = Once()
         self._exporter = exporter
@@ -131,9 +131,8 @@ class BatchProcessor(Generic[Telemetry]):
             os.register_at_fork(after_in_child=lambda: weak_reinit()())  # pyright: ignore[reportOptionalCall] pylint: disable=unnecessary-lambda
         self._pid = os.getpid()
 
-        self._metrics = metrics_factory(
-            get_queue_size=lambda: len(self._queue)
-        )
+        metrics.register_queue_size(lambda: len(self._queue))
+        self._metrics = metrics
 
     def _should_export_batch(
         self, batch_strategy: BatchExportStrategy, num_iterations: int

@@ -17,7 +17,6 @@ import abc
 import enum
 import logging
 import sys
-from functools import partial
 from os import environ, linesep
 from typing import IO, Callable, Optional, Sequence
 
@@ -37,10 +36,11 @@ from opentelemetry.sdk._logs import (
     ReadableLogRecord,
     ReadWriteLogRecord,
 )
-from opentelemetry.sdk._logs._internal.export._log_processor_metrics import (
-    LogProcessorMetrics,
+from opentelemetry.sdk._shared_internal import (
+    BatchProcessor,
+    DuplicateFilter,
+    ProcessorMetrics,
 )
-from opentelemetry.sdk._shared_internal import BatchProcessor, DuplicateFilter
 from opentelemetry.sdk.environment_variables import (
     OTEL_BLRP_EXPORT_TIMEOUT,
     OTEL_BLRP_MAX_EXPORT_BATCH_SIZE,
@@ -186,8 +186,9 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
     ):
         self._exporter = exporter
         self._shutdown = False
-        self._metrics = LogProcessorMetrics(
-            OtelComponentTypeValues.SIMPLE_LOG_PROCESSOR.value,
+        self._metrics = ProcessorMetrics(
+            "logs",
+            OtelComponentTypeValues.SIMPLE_LOG_PROCESSOR,
             meter_provider or get_meter_provider(),
         )
 
@@ -298,9 +299,9 @@ class BatchLogRecordProcessor(LogRecordProcessor):
             export_timeout_millis,
             max_queue_size,
             "Log",
-            partial(
-                LogProcessorMetrics,
-                OtelComponentTypeValues.BATCHING_LOG_PROCESSOR.value,
+            ProcessorMetrics(
+                "logs",
+                OtelComponentTypeValues.BATCHING_LOG_PROCESSOR,
                 meter_provider or get_meter_provider(),
                 capacity=max_queue_size,
             ),

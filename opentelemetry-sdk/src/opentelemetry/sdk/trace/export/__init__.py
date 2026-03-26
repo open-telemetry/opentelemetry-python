@@ -17,7 +17,6 @@ import logging
 import sys
 import typing
 from enum import Enum
-from functools import partial
 from os import environ, linesep
 
 from opentelemetry.context import (
@@ -28,7 +27,7 @@ from opentelemetry.context import (
     set_value,
 )
 from opentelemetry.metrics import MeterProvider, get_meter_provider
-from opentelemetry.sdk._shared_internal import BatchProcessor
+from opentelemetry.sdk._shared_internal import BatchProcessor, ProcessorMetrics
 from opentelemetry.sdk.environment_variables import (
     OTEL_BSP_EXPORT_TIMEOUT,
     OTEL_BSP_MAX_EXPORT_BATCH_SIZE,
@@ -36,9 +35,6 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_BSP_SCHEDULE_DELAY,
 )
 from opentelemetry.sdk.trace import ReadableSpan, Span, SpanProcessor
-from opentelemetry.sdk.trace.export._span_processor_metrics import (
-    SpanProcessorMetrics,
-)
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
     OtelComponentTypeValues,
 )
@@ -108,8 +104,9 @@ class SimpleSpanProcessor(SpanProcessor):
         meter_provider: MeterProvider | None = None,
     ):
         self.span_exporter = span_exporter
-        self._metrics = SpanProcessorMetrics(
-            OtelComponentTypeValues.SIMPLE_SPAN_PROCESSOR.value,
+        self._metrics = ProcessorMetrics(
+            "traces",
+            OtelComponentTypeValues.SIMPLE_SPAN_PROCESSOR,
             meter_provider or get_meter_provider(),
         )
 
@@ -201,9 +198,9 @@ class BatchSpanProcessor(SpanProcessor):
             export_timeout_millis,
             max_queue_size,
             "Span",
-            partial(
-                SpanProcessorMetrics,
-                OtelComponentTypeValues.BATCHING_SPAN_PROCESSOR.value,
+            ProcessorMetrics(
+                "traces",
+                OtelComponentTypeValues.BATCHING_SPAN_PROCESSOR,
                 meter_provider or get_meter_provider(),
                 capacity=max_queue_size,
             ),
