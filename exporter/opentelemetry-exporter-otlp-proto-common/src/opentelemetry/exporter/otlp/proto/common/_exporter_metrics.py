@@ -77,7 +77,9 @@ class ExporterMetrics:
             elif endpoint.scheme == "http":
                 port = 80
 
-        component_type = (component_type or OtelComponentTypeValues("unknown_otlp_exporter")).value
+        component_type = (
+            component_type or OtelComponentTypeValues("unknown_otlp_exporter")
+        ).value
         count = _component_counter[component_type]
         _component_counter[component_type] = count + 1
         self._standard_attrs: dict[str, AttributeValue] = {

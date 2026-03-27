@@ -62,6 +62,9 @@ from opentelemetry.sdk.trace.export import (
     SpanExporter,
     SpanExportResult,
 )
+from opentelemetry.semconv._incubating.attributes.otel_attributes import (
+    OtelComponentTypeValues,
+)
 from opentelemetry.test.mock_test_classes import IterEntryPoint
 
 logger = getLogger(__name__)
@@ -83,8 +86,8 @@ class OTLPSpanExporterForTesting(
         super().__init__(
             TraceServiceStub,
             SpanExportResult,
-            component_type="test_span_exporter",
-            signal="span",
+            component_type=OtelComponentTypeValues.OTLP_GRPC_SPAN_EXPORTER,
+            signal="traces",
             meter_provider=kwargs.pop("meter_provider", None),
             **kwargs,
         )
@@ -706,10 +709,12 @@ class TestOTLPExporterMixin(TestCase):
 
     def assert_standard_metric_attrs(self, attributes):
         self.assertEqual(
-            attributes["otel.component.type"], "test_span_exporter"
+            attributes["otel.component.type"], "otlp_grpc_span_exporter"
         )
         self.assertTrue(
-            attributes["otel.component.name"].startswith("test_span_exporter/")
+            attributes["otel.component.name"].startswith(
+                "otlp_grpc_span_exporter/"
+            )
         )
         self.assertEqual(attributes["server.address"], "localhost")
         self.assertEqual(attributes["server.port"], 4317)
