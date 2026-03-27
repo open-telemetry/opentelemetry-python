@@ -198,7 +198,8 @@ class BatchProcessor(Generic[Telemetry]):
                             for _ in range(count)
                         ]
                     )
-                except Exception:  # pylint: disable=broad-exception-caught
+                except Exception as err:  # pylint: disable=broad-exception-caught
+                    error = err
                     _logger.exception(
                         "Exception while exporting %s.", self._exporting
                     )

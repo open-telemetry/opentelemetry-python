@@ -230,8 +230,8 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
                 limits=log_record.limits,
             )
             self._exporter.export((readable_log_record,))
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            error = e
+        except Exception as err:  # pylint: disable=broad-exception-caught
+            error = err
             _logger.exception("Exception while exporting logs.")
         finally:
             self._metrics.finish_items(1, error)

@@ -406,7 +406,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         ]
         self.assertEqual(expected, emitted)
 
-    def test_metrics(self):
+    def test_metrics(self): # pylint: disable=too-many-locals
         metric_reader = InMemoryMetricReader()
         meter_provider = MeterProvider(metric_readers=[metric_reader])
         num_exports = 0
@@ -697,12 +697,13 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             max_export_batch_size=101,
         )
 
-    def test_metrics(self):
+    def test_metrics(self): # pylint: disable=too-many-locals,too-many-statements
         metric_reader = InMemoryMetricReader()
         meter_provider = MeterProvider(metric_readers=[metric_reader])
         metric_reader._set_meter_provider(NoOpMeterProvider())
         num_exports = 0
         first_export_event = threading.Event()
+        last_export_event = threading.Event()
         run_exports = threading.Event()
 
         def export_logs(_logs):
@@ -711,7 +712,8 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             nonlocal num_exports
             num_exports += 1
             if num_exports == 3:
-                raise RuntimeError("Export failed")
+                last_export_event.set()
+                raise BrokenPipeError("Export failed")
             return LogRecordExportResult.SUCCESS
 
         exporter = mock.MagicMock()
@@ -794,18 +796,22 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         run_exports.set()
         provider.force_flush()
 
+        # This log is processed and exporter returns an error
+        logger.warning("baz")
+        provider.force_flush()
+        last_export_event.wait()
+
         metrics_data = metric_reader.get_metrics_data()
         scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
         self.assertEqual(scope_metrics.scope.name, "opentelemetry-sdk")
         metrics = sorted(scope_metrics.metrics, key=lambda m: m.name)
         self.assertEqual(len(metrics), 3)
-        print([m.name for m in metrics])
         self.assertEqual(metrics[0].name, "otel.sdk.processor.log.processed")
         processed_data_points = sorted(
             metrics[0].data.data_points,
             key=lambda dp: dp.attributes.get("error.type", ""),
         )
-        self.assertEqual(len(processed_data_points), 2)
+        self.assertEqual(len(processed_data_points), 3)
         processed_data_point0 = processed_data_points[0]
         self.assertEqual(processed_data_point0.value, 2)
         self.assertEqual(
@@ -830,7 +836,21 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             )
         )
         self.assertEqual(
-            processed_data_point1.attributes.get("error.type"), "queue_full"
+            processed_data_point1.attributes.get("error.type"), "BrokenPipeError"
+        )
+        processed_data_point2 = processed_data_points[2]
+        self.assertEqual(processed_data_point2.value, 1)
+        self.assertEqual(
+            processed_data_point2.attributes["otel.component.type"],
+            "batching_log_processor",
+        )
+        self.assertTrue(
+            processed_data_point2.attributes["otel.component.name"].startswith(
+                "batching_log_processor/"
+            )
+        )
+        self.assertEqual(
+            processed_data_point2.attributes.get("error.type"), "queue_full"
         )
         self.assertEqual(
             metrics[1].name, "otel.sdk.processor.log.queue.capacity"

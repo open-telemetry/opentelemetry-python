@@ -126,8 +126,8 @@ class SimpleSpanProcessor(SpanProcessor):
         try:
             self.span_exporter.export((span,))
         # pylint: disable=broad-exception-caught
-        except Exception as e:
-            error = e
+        except Exception as err:
+            error = err
             logger.exception("Exception while exporting Span.")
         finally:
             self._metrics.finish_items(1, error)
