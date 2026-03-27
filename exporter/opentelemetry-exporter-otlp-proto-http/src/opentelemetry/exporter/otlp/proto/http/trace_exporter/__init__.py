@@ -148,8 +148,8 @@ class OTLPSpanExporter(SpanExporter):
         self._shutdown = False
 
         self._metrics = ExporterMetrics(
-            OtelComponentTypeValues.OTLP_HTTP_SPAN_EXPORTER.value,
-            "span",
+            OtelComponentTypeValues.OTLP_HTTP_SPAN_EXPORTER,
+            "traces",
             urlparse(self._endpoint),
             meter_provider,
         )

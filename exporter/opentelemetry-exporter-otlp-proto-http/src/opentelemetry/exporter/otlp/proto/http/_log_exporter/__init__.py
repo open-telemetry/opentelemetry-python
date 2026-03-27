@@ -153,8 +153,8 @@ class OTLPLogExporter(LogRecordExporter):
         self._shutdown = False
 
         self._metrics = ExporterMetrics(
-            OtelComponentTypeValues.OTLP_HTTP_LOG_EXPORTER.value,
-            "log",
+            OtelComponentTypeValues.OTLP_HTTP_LOG_EXPORTER,
+            "logs",
             urlparse(self._endpoint),
             meter_provider,
         )
