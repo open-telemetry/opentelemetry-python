@@ -141,8 +141,8 @@ class OTLPSpanExporter(
             timeout=timeout or environ_timeout,
             compression=compression,
             channel_options=channel_options,
-            component_type=OtelComponentTypeValues.OTLP_GRPC_SPAN_EXPORTER.value,
-            signal="span",
+            component_type=OtelComponentTypeValues.OTLP_GRPC_SPAN_EXPORTER,
+            signal="traces",
             meter_provider=meter_provider,
         )
 

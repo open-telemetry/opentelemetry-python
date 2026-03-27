@@ -22,6 +22,7 @@ from opentelemetry.metrics import MeterProvider, get_meter_provider
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
     OTEL_COMPONENT_NAME,
     OTEL_COMPONENT_TYPE,
+    OtelComponentTypeValues,
 )
 from opentelemetry.semconv._incubating.metrics.otel_metrics import (
     create_otel_sdk_exporter_log_exported,
@@ -50,15 +51,15 @@ _component_counter = Counter()
 class ExporterMetrics:
     def __init__(
         self,
-        component_type: str,
-        signal: Literal["span", "log", "metric_data_point"],
+        component_type: OtelComponentTypeValues | None,
+        signal: Literal["traces", "metrics", "logs"],
         endpoint: UrlParseResult,
         meter_provider: MeterProvider | None,
     ) -> None:
-        if signal == "span":
+        if signal == "traces":
             create_exported = create_otel_sdk_exporter_span_exported
             create_inflight = create_otel_sdk_exporter_span_inflight
-        elif signal == "log":
+        elif signal == "logs":
             create_exported = create_otel_sdk_exporter_log_exported
             create_inflight = create_otel_sdk_exporter_log_inflight
         else:
@@ -76,6 +77,7 @@ class ExporterMetrics:
             elif endpoint.scheme == "http":
                 port = 80
 
+        component_type = (component_type or OtelComponentTypeValues("unknown_otlp_exporter")).value
         count = _component_counter[component_type]
         _component_counter[component_type] = count + 1
         self._standard_attrs: dict[str, AttributeValue] = {

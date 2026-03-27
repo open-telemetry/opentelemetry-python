@@ -111,8 +111,8 @@ class OTLPLogExporter(
             stub=LogsServiceStub,
             result=LogRecordExportResult,
             channel_options=channel_options,
-            component_type=OtelComponentTypeValues.OTLP_GRPC_LOG_EXPORTER.value,
-            signal="log",
+            component_type=OtelComponentTypeValues.OTLP_GRPC_LOG_EXPORTER,
+            signal="logs",
             meter_provider=meter_provider,
         )
 

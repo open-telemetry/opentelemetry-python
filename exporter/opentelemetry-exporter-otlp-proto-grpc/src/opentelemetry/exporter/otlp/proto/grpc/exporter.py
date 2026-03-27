@@ -108,6 +108,9 @@ from opentelemetry.sdk.metrics.export import MetricExportResult, MetricsData
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import SpanExportResult
+from opentelemetry.semconv._incubating.attributes.otel_attributes import (
+    OtelComponentTypeValues,
+)
 from opentelemetry.semconv._incubating.attributes.rpc_attributes import (
     RPC_RESPONSE_STATUS_CODE,
 )
@@ -307,8 +310,8 @@ class OTLPExporterMixin(
         compression: Optional[Compression] = None,
         channel_options: Optional[Tuple[Tuple[str, str]]] = None,
         *,
-        component_type: Optional[str] = None,
-        signal: Literal["span", "log", "metric_data_point"] = "span",
+        component_type: Union[OtelComponentTypeValues, None] = None,
+        signal: Literal["traces", "metrics", "logs"] = "traces",
         meter_provider: Optional[MeterProvider] = None,
     ):
         super().__init__()
@@ -383,8 +386,8 @@ class OTLPExporterMixin(
                 OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
             )
 
-        self._component_type = component_type or type(self).__qualname__
-        self._signal: Literal["span", "log", "metric_data_point"] = signal
+        self._component_type = component_type
+        self._signal: Literal["traces", "metrics", "logs"] = signal
         self._parsed_url = parsed_url
         self._metrics = ExporterMetrics(
             self._component_type,

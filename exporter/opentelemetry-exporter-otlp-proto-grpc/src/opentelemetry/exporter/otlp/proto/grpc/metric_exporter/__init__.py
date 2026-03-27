@@ -159,8 +159,8 @@ class OTLPMetricExporter(
             timeout=timeout or environ_timeout,
             compression=compression,
             channel_options=channel_options,
-            component_type=OtelComponentTypeValues.OTLP_GRPC_METRIC_EXPORTER.value,
-            signal="metric_data_point",
+            component_type=OtelComponentTypeValues.OTLP_GRPC_METRIC_EXPORTER,
+            signal="metrics",
             meter_provider=meter_provider,
         )
 
