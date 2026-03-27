@@ -397,7 +397,7 @@ class TestBatchSpanProcessor(unittest.TestCase):
             max_export_batch_size=512,
         )
 
-    def test_metrics(self): # pylint: disable=too-many-locals,too-many-statements
+    def test_metrics(self):  # pylint: disable=too-many-locals,too-many-statements
         metric_reader = InMemoryMetricReader()
         meter_provider = MeterProvider(metric_readers=[metric_reader])
         metric_reader._set_meter_provider(NoOpMeterProvider())

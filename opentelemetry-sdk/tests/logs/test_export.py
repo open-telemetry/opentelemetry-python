@@ -406,7 +406,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         ]
         self.assertEqual(expected, emitted)
 
-    def test_metrics(self): # pylint: disable=too-many-locals
+    def test_metrics(self):  # pylint: disable=too-many-locals
         metric_reader = InMemoryMetricReader()
         meter_provider = MeterProvider(metric_readers=[metric_reader])
         num_exports = 0
@@ -697,7 +697,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             max_export_batch_size=101,
         )
 
-    def test_metrics(self): # pylint: disable=too-many-locals,too-many-statements
+    def test_metrics(self):  # pylint: disable=too-many-locals,too-many-statements
         metric_reader = InMemoryMetricReader()
         meter_provider = MeterProvider(metric_readers=[metric_reader])
         metric_reader._set_meter_provider(NoOpMeterProvider())
@@ -836,7 +836,8 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             )
         )
         self.assertEqual(
-            processed_data_point1.attributes.get("error.type"), "BrokenPipeError"
+            processed_data_point1.attributes.get("error.type"),
+            "BrokenPipeError",
         )
         processed_data_point2 = processed_data_points[2]
         self.assertEqual(processed_data_point2.value, 1)
