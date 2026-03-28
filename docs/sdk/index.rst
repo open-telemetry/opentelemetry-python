@@ -14,6 +14,7 @@ processed, and exported.
 .. toctree::
     :maxdepth: 1
 
+    _events
     _logs
     resources
     trace
