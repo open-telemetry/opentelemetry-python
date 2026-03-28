@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `opentelemetry-api`: Fix `AttributeError` instead of `TypeError` when invalid type is passed
+  to `_clean_extended_attribute_value` on Python 3.9 due to `typing.Mapping`/`typing.Sequence`
+  lacking `__name__`
+  ([#4821](https://github.com/open-telemetry/opentelemetry-python/issues/4821))
+
 - `opentelemetry-sdk`: Add `create_resource` and `create_propagator`/`configure_propagator` to declarative file configuration, enabling Resource and propagator instantiation from config files without reading env vars
   ([#4979](https://github.com/open-telemetry/opentelemetry-python/pull/4979))
 - `opentelemetry-sdk`: Map Python `CRITICAL` log level to OTel `FATAL` severity text per the specification
