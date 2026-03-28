@@ -22,6 +22,7 @@ from opentelemetry.attributes import (
     BoundedAttributes,
     _clean_attribute,
     _clean_extended_attribute,
+    _clean_extended_attribute_value,
 )
 
 
@@ -182,6 +183,19 @@ class TestExtendedAttributes(unittest.TestCase):
         self.assertEqual(
             _clean_extended_attribute("headers", mapping, None), expected
         )
+
+    def test_invalid_type_raises_type_error_not_attribute_error(self):
+        # On Python 3.9, typing generics like Mapping/Sequence lack __name__,
+        # which previously caused AttributeError instead of TypeError (#4821).
+        class NoStr:
+            def __str__(self):
+                raise Exception("cannot stringify")
+
+        with self.assertRaises(TypeError) as ctx:
+            _clean_extended_attribute_value(NoStr(), None)
+
+        self.assertIn("Invalid type", str(ctx.exception))
+        self.assertIn("Expected one of", str(ctx.exception))
 
 
 class TestBoundedAttributes(unittest.TestCase):
