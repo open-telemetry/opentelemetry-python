@@ -94,9 +94,9 @@ class TestLogRecordProcessor(unittest.TestCase):
         provider.add_log_record_processor(processor2)
         with self.assertLogs(level=logging.CRITICAL):
             logger.critical("Something disastrous")
-        expected_list_1.append(("Something disastrous", "CRITICAL"))
+        expected_list_1.append(("Something disastrous", "FATAL"))
 
-        expected_list_2 = [("Something disastrous", "CRITICAL")]
+        expected_list_2 = [("Something disastrous", "FATAL")]
 
         self.assertEqual(logs_list_1, expected_list_1)
         self.assertEqual(logs_list_2, expected_list_2)

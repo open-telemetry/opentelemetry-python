@@ -302,7 +302,8 @@ class TestCreateResourceAttributesList(unittest.TestCase):
 
 
 class TestServiceResourceDetector(unittest.TestCase):
-    def _config_with_service(self) -> ResourceConfig:
+    @staticmethod
+    def _config_with_service() -> ResourceConfig:
         return ResourceConfig(
             detection_development=ExperimentalResourceDetection(
                 detectors=[ExperimentalResourceDetector(service={})]

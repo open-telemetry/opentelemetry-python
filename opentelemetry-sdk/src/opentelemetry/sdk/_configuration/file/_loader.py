@@ -60,10 +60,6 @@ def _get_schema() -> dict:
 _logger = logging.getLogger(__name__)
 
 
-# Re-export for backwards compatibility
-__all__ = ["ConfigurationError", "load_config_file"]
-
-
 def load_config_file(file_path: str) -> OpenTelemetryConfiguration:
     """Load and parse an OpenTelemetry configuration file.
 
