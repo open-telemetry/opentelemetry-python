@@ -301,7 +301,8 @@ class TestCreateResourceAttributesList(unittest.TestCase):
 
 
 class TestContainerResourceDetector(unittest.TestCase):
-    def _config_with_container(self) -> ResourceConfig:
+    @staticmethod
+    def _config_with_container() -> ResourceConfig:
         return ResourceConfig(
             detection_development=ExperimentalResourceDetection(
                 detectors=[ExperimentalResourceDetector(container={})]

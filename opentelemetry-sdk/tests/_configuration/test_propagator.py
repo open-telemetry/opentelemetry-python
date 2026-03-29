@@ -13,18 +13,20 @@
 # limitations under the License.
 
 import unittest
+from os import environ
 from unittest.mock import MagicMock, patch
 
 # CompositePropagator stores its propagators in _propagators (private).
 # We access it here to assert composition correctness.
 # pylint: disable=protected-access
 from opentelemetry.baggage.propagation import W3CBaggagePropagator
+from opentelemetry.environment_variables import OTEL_PROPAGATORS
 from opentelemetry.propagators.composite import CompositePropagator
+from opentelemetry.sdk._configuration._exceptions import ConfigurationError
 from opentelemetry.sdk._configuration._propagator import (
     configure_propagator,
     create_propagator,
 )
-from opentelemetry.sdk._configuration.file._loader import ConfigurationError
 from opentelemetry.sdk._configuration.models import (
     Propagator as PropagatorConfig,
 )
@@ -257,3 +259,20 @@ class TestConfigurePropagator(unittest.TestCase):
             propagator = mock_set.call_args[0][0]
             self.assertIsInstance(propagator, CompositePropagator)
             self.assertEqual(len(propagator._propagators), 1)  # type: ignore[attr-defined]
+
+    @patch.dict(environ, {OTEL_PROPAGATORS: "baggage"})
+    def test_otel_propagators_env_var_ignored(self):
+        """OTEL_PROPAGATORS env var must not influence configure_propagator output."""
+        config = PropagatorConfig(
+            composite=[TextMapPropagatorConfig(tracecontext={})]
+        )
+        with patch(
+            "opentelemetry.sdk._configuration._propagator.set_global_textmap"
+        ) as mock_set:
+            configure_propagator(config)
+            propagator = mock_set.call_args[0][0]
+            self.assertEqual(len(propagator._propagators), 1)  # type: ignore[attr-defined]
+            self.assertIsInstance(
+                propagator._propagators[0],
+                TraceContextTextMapPropagator,  # type: ignore[attr-defined]
+            )
