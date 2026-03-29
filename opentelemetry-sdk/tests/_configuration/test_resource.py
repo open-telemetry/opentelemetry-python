@@ -303,7 +303,8 @@ class TestCreateResourceAttributesList(unittest.TestCase):
 
 
 class TestProcessResourceDetector(unittest.TestCase):
-    def _config_with_process(self) -> ResourceConfig:
+    @staticmethod
+    def _config_with_process() -> ResourceConfig:
         return ResourceConfig(
             detection_development=ExperimentalResourceDetection(
                 detectors=[ExperimentalResourceDetector(process={})]
