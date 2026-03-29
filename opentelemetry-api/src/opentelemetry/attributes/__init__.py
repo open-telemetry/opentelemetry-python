@@ -24,6 +24,19 @@ from opentelemetry.util import types
 # bytes are accepted as a user supplied value for attributes but
 # decoded to strings internally.
 _VALID_ATTR_VALUE_TYPES = (bool, str, bytes, int, float)
+
+
+def _type_name(t: type) -> str:
+    """Return a human-readable name for a type.
+
+    ``typing`` generics (e.g. ``Mapping``, ``Sequence``) do not expose
+    ``__name__`` on Python 3.9, only ``_name``.  Falling back to
+    ``repr`` ensures we always produce a readable string regardless of
+    the Python version or the origin of the type.
+    """
+    return getattr(t, "__name__", None) or getattr(t, "_name", None) or repr(t)
+
+
 # AnyValue possible values
 _VALID_ANY_VALUE_TYPES = (
     type(None),
@@ -84,7 +97,7 @@ def _clean_attribute(
                     element_type.__name__,
                     key,
                     [
-                        valid_type.__name__
+                        _type_name(valid_type)
                         for valid_type in _VALID_ATTR_VALUE_TYPES
                     ],
                 )
@@ -114,7 +127,7 @@ def _clean_attribute(
         "sequence of those types",
         type(value).__name__,
         key,
-        [valid_type.__name__ for valid_type in _VALID_ATTR_VALUE_TYPES],
+        [_type_name(valid_type) for valid_type in _VALID_ATTR_VALUE_TYPES],
     )
     return None
 
@@ -191,7 +204,7 @@ def _clean_extended_attribute_value(  # pylint: disable=too-many-branches
     except Exception:
         raise TypeError(
             f"Invalid type {type(value).__name__} for attribute value. "
-            f"Expected one of {[valid_type.__name__ for valid_type in _VALID_ANY_VALUE_TYPES]} or a "
+            f"Expected one of {[_type_name(valid_type) for valid_type in _VALID_ANY_VALUE_TYPES]} or a "
             "sequence of those types",
         )
 

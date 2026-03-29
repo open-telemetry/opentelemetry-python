@@ -22,6 +22,8 @@ from opentelemetry.attributes import (
     BoundedAttributes,
     _clean_attribute,
     _clean_extended_attribute,
+    _clean_extended_attribute_value,
+    _type_name,
 )
 
 
@@ -348,3 +350,45 @@ class TestBoundedAttributes(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             bdict_copy["invalid"] = "invalid"
+
+
+class TestTypeNameHelper(unittest.TestCase):
+    """Regression tests for _type_name.
+
+    On Python 3.9, ``typing`` generics such as ``Mapping`` and ``Sequence``
+    expose ``_name`` but not ``__name__``.  Accessing ``__name__`` directly
+    raises ``AttributeError``, which masked the real ``TypeError`` when an
+    invalid attribute value was passed (issue #4821).
+    """
+
+    def test_concrete_type_returns_name(self):
+        self.assertEqual(_type_name(int), "int")
+        self.assertEqual(_type_name(str), "str")
+        self.assertEqual(_type_name(bool), "bool")
+
+    def test_typing_generic_does_not_raise(self):
+        from typing import Mapping, Sequence
+
+        # Must not raise AttributeError on any Python version
+        self.assertIsInstance(_type_name(Sequence), str)
+        self.assertIsInstance(_type_name(Mapping), str)
+        self.assertTrue(len(_type_name(Sequence)) > 0)
+        self.assertTrue(len(_type_name(Mapping)) > 0)
+
+    def test_invalid_extended_attribute_raises_type_error_not_attribute_error(
+        self,
+    ):
+        """When str(value) also fails, the raised exception must be TypeError
+        (with a message listing valid types), not AttributeError from accessing
+        ``__name__`` on typing generics such as ``Mapping`` / ``Sequence``.
+        This is the regression from issue #4821 on Python 3.9."""
+
+        class Unstringable:
+            def __str__(self):
+                raise ValueError("cannot stringify")
+
+        with self.assertRaises(TypeError) as ctx:
+            _clean_extended_attribute_value(Unstringable(), None)
+
+        self.assertNotIsInstance(ctx.exception, AttributeError)
+        self.assertIn("Invalid type", str(ctx.exception))
