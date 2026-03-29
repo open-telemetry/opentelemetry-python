@@ -158,7 +158,7 @@ def _run_detectors(
         # detection when no implementation is available. See also:
         # https://github.com/open-telemetry/opentelemetry-configuration/issues/570
         try:
-            from opentelemetry.resource.detector.containerid import (  # type: ignore[import-not-found]  # noqa: PLC0415
+            from opentelemetry.resource.detector.containerid import (  # type: ignore[import-not-found]  # noqa: PLC0415  # pylint: disable=import-outside-toplevel,no-name-in-module
                 ContainerResourceDetector,
             )
 
