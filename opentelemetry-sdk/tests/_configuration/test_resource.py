@@ -304,7 +304,8 @@ class TestCreateResourceAttributesList(unittest.TestCase):
 
 
 class TestHostResourceDetector(unittest.TestCase):
-    def _config_with_host(self) -> ResourceConfig:
+    @staticmethod
+    def _config_with_host() -> ResourceConfig:
         return ResourceConfig(
             detection_development=ExperimentalResourceDetection(
                 detectors=[ExperimentalResourceDetector(host={})]
