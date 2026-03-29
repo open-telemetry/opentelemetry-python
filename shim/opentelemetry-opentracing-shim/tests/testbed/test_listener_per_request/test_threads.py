@@ -19,9 +19,9 @@ from concurrent.futures import (  # pylint: disable=no-name-in-module
 from opentracing.ext import tags
 
 # pylint: disable=import-error
-from ..otel_ot_shim_tracer import MockTracer
-from ..testcase import OpenTelemetryTestCase
-from ..utils import get_one_by_tag
+from ..otel_ot_shim_tracer import MockTracer  # noqa: TID252
+from ..testcase import OpenTelemetryTestCase  # noqa: TID252
+from ..utils import get_one_by_tag  # noqa: TID252
 from .response_listener import ResponseListener
 
 

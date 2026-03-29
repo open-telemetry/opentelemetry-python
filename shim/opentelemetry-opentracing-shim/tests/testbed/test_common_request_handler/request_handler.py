@@ -15,7 +15,7 @@
 from opentracing.ext import tags
 
 # pylint: disable=import-error
-from ..utils import get_logger
+from ..utils import get_logger  # noqa: TID252
 
 logger = get_logger(__name__)
 
