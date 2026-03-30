@@ -14,7 +14,6 @@
 
 # type: ignore
 
-import copy
 import unittest
 import unittest.mock
 from typing import MutableSequence
@@ -187,12 +186,142 @@ class TestExtendedAttributes(unittest.TestCase):
 
 
 class TestBoundedAttributes(unittest.TestCase):
+    # pylint: disable=consider-using-dict-items
     base = {
         "name": "Firulais",
         "age": 7,
         "weight": 13,
         "vaccinated": True,
     }
+
+    def test_negative_maxlen(self):
+        with self.assertRaises(ValueError):
+            BoundedAttributes(-1)
+
+    def test_from_map(self):
+        dic_len = len(self.base)
+        base_copy = self.base.copy()
+        bdict = BoundedAttributes(dic_len, base_copy)
+
+        self.assertEqual(len(bdict), dic_len)
+
+        # modify base_copy and test that bdict is not changed
+        base_copy["name"] = "Bruno"
+        base_copy["age"] = 3
+
+        for key in self.base:
+            self.assertEqual(bdict[key], self.base[key])
+
+        # test that iter yields the correct number of elements
+        self.assertEqual(len(tuple(bdict)), dic_len)
+
+        # map too big
+        half_len = dic_len // 2
+        bdict = BoundedAttributes(half_len, self.base)
+        self.assertEqual(len(tuple(bdict)), half_len)
+        self.assertEqual(bdict.dropped, dic_len - half_len)
+
+    def test_bounded_dict(self):
+        # create empty dict
+        dic_len = len(self.base)
+        bdict = BoundedAttributes(dic_len, immutable=False)
+        self.assertEqual(len(bdict), 0)
+
+        # fill dict
+        for key in self.base:
+            bdict[key] = self.base[key]
+
+        self.assertEqual(len(bdict), dic_len)
+        self.assertEqual(bdict.dropped, 0)
+
+        for key in self.base:
+            self.assertEqual(bdict[key], self.base[key])
+
+        # test __iter__ in BoundedAttributes
+        for key in bdict:
+            self.assertEqual(bdict[key], self.base[key])
+
+        # updating an existing element should not drop
+        bdict["name"] = "Bruno"
+        self.assertEqual(bdict.dropped, 0)
+
+        # try to append more elements
+        for key in self.base:
+            bdict["new-" + key] = self.base[key]
+
+        self.assertEqual(len(bdict), dic_len)
+        self.assertEqual(bdict.dropped, dic_len)
+        # Invalid values shouldn't be considered for `dropped`
+        bdict["invalid-seq"] = [None, 1, "2"]
+        self.assertEqual(bdict.dropped, dic_len)
+
+        # test that elements in the dict are the new ones
+        for key in self.base:
+            self.assertEqual(bdict["new-" + key], self.base[key])
+
+        # delete an element
+        del bdict["new-name"]
+        self.assertEqual(len(bdict), dic_len - 1)
+
+        with self.assertRaises(KeyError):
+            _ = bdict["new-name"]
+
+    def test_no_limit_code(self):
+        bdict = BoundedAttributes(maxlen=None, immutable=False)
+        for num in range(100):
+            bdict[str(num)] = num
+
+        for num in range(100):
+            self.assertEqual(bdict[str(num)], num)
+
+    def test_immutable(self):
+        bdict = BoundedAttributes()
+        with self.assertRaises(TypeError):
+            bdict["should-not-work"] = "dict immutable"
+
+    def test_locking(self):
+        """Supporting test case for a commit titled: Fix class BoundedAttributes to have RLock rather than Lock. See #3858.
+        The change was introduced because __iter__ of the class BoundedAttributes holds lock, and we observed some deadlock symptoms
+        in the codebase. This test case is to verify that the fix works as expected.
+        """
+        bdict = BoundedAttributes(immutable=False)
+
+        with bdict._lock:  # pylint: disable=protected-access
+            for num in range(100):
+                bdict[str(num)] = num
+
+        for num in range(100):
+            self.assertEqual(bdict[str(num)], num)
+
+    # pylint: disable=no-self-use
+    def test_extended_attributes(self):
+        bdict = BoundedAttributes(extended_attributes=True, immutable=False)
+        with unittest.mock.patch(
+            "opentelemetry.attributes._clean_extended_attribute",
+            return_value="mock_value",
+        ) as clean_extended_attribute_mock:
+            bdict["key"] = "value"
+
+        clean_extended_attribute_mock.assert_called_once()
+
+    def test_wsgi_request_conversion_to_string(self):
+        """Test that WSGI request objects are converted to strings when _clean_extended_attribute is called."""
+
+        class DummyWSGIRequest:
+            def __str__(self):
+                return "<DummyWSGIRequest method=GET path=/example/>"
+
+        wsgi_request = DummyWSGIRequest()
+
+        cleaned_value = _clean_extended_attribute(
+            "request", wsgi_request, None
+        )
+
+        # Verify we get a string back from the cleaner
+        self.assertIsInstance(cleaned_value, str)
+        self.assertEqual(
+            "<DummyWSGIRequest method=GET path=/example/>", cleaned_value
+        )
 
     def test_invalid_anyvalue_type_raises_typeerror(self):
         class BadStr:
@@ -201,30 +330,3 @@ class TestBoundedAttributes(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             _clean_extended_attribute_value(BadStr(), None)
-
-    def test_deepcopy(self):
-        bdict = BoundedAttributes(4, self.base, immutable=False)
-        bdict.dropped = 10
-        bdict_copy = copy.deepcopy(bdict)
-
-        for key in bdict_copy:
-            self.assertEqual(bdict_copy[key], bdict[key])
-
-        self.assertEqual(bdict_copy.dropped, bdict.dropped)
-        self.assertEqual(bdict_copy.maxlen, bdict.maxlen)
-        self.assertEqual(bdict_copy.max_value_len, bdict.max_value_len)
-
-        bdict_copy["name"] = "Bob"
-        self.assertNotEqual(bdict_copy["name"], bdict["name"])
-
-        bdict["age"] = 99
-        self.assertNotEqual(bdict["age"], bdict_copy["age"])
-
-    def test_deepcopy_preserves_immutability(self):
-        bdict = BoundedAttributes(
-            maxlen=4, attributes=self.base, immutable=True
-        )
-        bdict_copy = copy.deepcopy(bdict)
-
-        with self.assertRaises(TypeError):
-            bdict_copy["invalid"] = "invalid"
