@@ -115,6 +115,8 @@ def set_value(
     """
     if context is None:
         context = get_current()
+    if not context:
+        return Context({key: value})
     new_values = context.copy()
     new_values[key] = value
     return Context(new_values)

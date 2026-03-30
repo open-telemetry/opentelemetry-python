@@ -146,7 +146,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_TRACES_SAMPLER_ARG,
 )
 from opentelemetry.trace import Link, SpanKind, get_current_span
-from opentelemetry.trace.span import TraceState
+from opentelemetry.trace.span import SpanContext, TraceState
 from opentelemetry.util.types import Attributes
 
 _logger = getLogger(__name__)
@@ -220,6 +220,19 @@ class StaticSampler(Sampler):
     def __init__(self, decision: "Decision") -> None:
         self._decision = decision
 
+    def _should_sample_trace_state(
+        self,
+        attributes: Attributes,
+        trace_state: Optional["TraceState"],
+    ) -> "SamplingResult":
+        if self._decision is Decision.DROP:
+            attributes = None
+        return SamplingResult(
+            self._decision,
+            attributes,
+            trace_state,
+        )
+
     def should_sample(
         self,
         parent_context: Optional["Context"],
@@ -230,12 +243,13 @@ class StaticSampler(Sampler):
         links: Optional[Sequence["Link"]] = None,
         trace_state: Optional["TraceState"] = None,
     ) -> "SamplingResult":
-        if self._decision is Decision.DROP:
-            attributes = None
-        return SamplingResult(
-            self._decision,
+        return self._should_sample_trace_state(
             attributes,
-            _get_parent_trace_state(parent_context),
+            (
+                trace_state
+                if trace_state is not None
+                else _get_parent_trace_state(parent_context)
+            ),
         )
 
     def get_description(self) -> str:
@@ -281,6 +295,23 @@ class TraceIdRatioBased(Sampler):
     def bound(self) -> int:
         return self._bound
 
+    def _should_sample_trace_state(
+        self,
+        trace_id: int,
+        attributes: Attributes,
+        trace_state: Optional["TraceState"],
+    ) -> "SamplingResult":
+        decision = Decision.DROP
+        if trace_id & self.TRACE_ID_LIMIT < self.bound:
+            decision = Decision.RECORD_AND_SAMPLE
+        if decision is Decision.DROP:
+            attributes = None
+        return SamplingResult(
+            decision,
+            attributes,
+            trace_state,
+        )
+
     def should_sample(
         self,
         parent_context: Optional["Context"],
@@ -291,15 +322,14 @@ class TraceIdRatioBased(Sampler):
         links: Optional[Sequence["Link"]] = None,
         trace_state: Optional["TraceState"] = None,
     ) -> "SamplingResult":
-        decision = Decision.DROP
-        if trace_id & self.TRACE_ID_LIMIT < self.bound:
-            decision = Decision.RECORD_AND_SAMPLE
-        if decision is Decision.DROP:
-            attributes = None
-        return SamplingResult(
-            decision,
+        return self._should_sample_trace_state(
+            trace_id,
             attributes,
-            _get_parent_trace_state(parent_context),
+            (
+                trace_state
+                if trace_state is not None
+                else _get_parent_trace_state(parent_context)
+            ),
         )
 
     def get_description(self) -> str:
@@ -336,19 +366,16 @@ class ParentBased(Sampler):
         self._local_parent_sampled = local_parent_sampled
         self._local_parent_not_sampled = local_parent_not_sampled
 
-    def should_sample(
+    def _should_sample_parent_context(
         self,
+        parent_span_context: Optional["SpanContext"],
         parent_context: Optional["Context"],
         trace_id: int,
         name: str,
         kind: Optional[SpanKind] = None,
         attributes: Attributes = None,
         links: Optional[Sequence["Link"]] = None,
-        trace_state: Optional["TraceState"] = None,
     ) -> "SamplingResult":
-        parent_span_context = get_current_span(
-            parent_context
-        ).get_span_context()
         # default to the root sampler
         sampler = self._root
         # respect the sampling and remote flag of the parent if present
@@ -364,6 +391,23 @@ class ParentBased(Sampler):
                 else:
                     sampler = self._local_parent_not_sampled
 
+        trace_state = (
+            parent_span_context.trace_state
+            if parent_span_context is not None
+            else None
+        )
+        if isinstance(sampler, StaticSampler):
+            return sampler._should_sample_trace_state(
+                attributes,
+                trace_state,
+            )
+        if isinstance(sampler, TraceIdRatioBased):
+            return sampler._should_sample_trace_state(
+                trace_id,
+                attributes,
+                trace_state,
+            )
+
         return sampler.should_sample(
             parent_context=parent_context,
             trace_id=trace_id,
@@ -371,6 +415,30 @@ class ParentBased(Sampler):
             kind=kind,
             attributes=attributes,
             links=links,
+            trace_state=trace_state,
+        )
+
+    def should_sample(
+        self,
+        parent_context: Optional["Context"],
+        trace_id: int,
+        name: str,
+        kind: Optional[SpanKind] = None,
+        attributes: Attributes = None,
+        links: Optional[Sequence["Link"]] = None,
+        trace_state: Optional["TraceState"] = None,
+    ) -> "SamplingResult":
+        parent_span_context = get_current_span(
+            parent_context
+        ).get_span_context()
+        return self._should_sample_parent_context(
+            parent_span_context,
+            parent_context,
+            trace_id,
+            name,
+            kind,
+            attributes,
+            links,
         )
 
     def get_description(self):

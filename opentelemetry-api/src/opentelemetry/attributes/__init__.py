@@ -270,7 +270,26 @@ class BoundedAttributes(MutableMapping):  # type: ignore
         self._lock = threading.RLock()
         if attributes:
             for key, value in attributes.items():
-                self[key] = value
+                if self.maxlen is not None and self.maxlen == 0:
+                    self.dropped += 1
+                    continue
+
+                if self._extended_attributes:
+                    value = _clean_extended_attribute(
+                        key, value, self.max_value_len
+                    )
+                else:
+                    value = _clean_attribute(key, value, self.max_value_len)  # type: ignore
+                    if value is None:
+                        continue
+
+                if self.maxlen is not None and len(self._dict) == self.maxlen:
+                    if not isinstance(self._dict, OrderedDict):
+                        self._dict = OrderedDict(self._dict)
+                    self._dict.popitem(last=False)  # type: ignore
+                    self.dropped += 1
+
+                self._dict[key] = value  # type: ignore
         self._immutable = immutable
 
     def __repr__(self) -> str:
