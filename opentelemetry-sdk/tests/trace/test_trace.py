@@ -16,6 +16,7 @@
 # pylint: disable=no-member
 
 import copy
+import dataclasses
 import shutil
 import subprocess
 import unittest
@@ -2366,7 +2367,10 @@ class TestTracerProvider(unittest.TestCase):
             tracer_configurator=raising_tracer_configurator
         )
         # pylint: disable=protected-access
-        self.assertEqual(tracer._tracer_config, _TracerConfig.default())
+        self.assertEqual(
+            dataclasses.asdict(tracer._tracer_config),
+            dataclasses.asdict(_TracerConfig.default()),
+        )
 
     def test_rule_based_tracer_configurator(self):
         # pylint: disable=protected-access
