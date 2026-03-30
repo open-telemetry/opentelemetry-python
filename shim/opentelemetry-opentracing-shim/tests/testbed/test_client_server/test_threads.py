@@ -19,9 +19,9 @@ import opentracing
 from opentracing.ext import tags
 
 # pylint: disable=import-error
-from ..otel_ot_shim_tracer import MockTracer  # noqa: TID252
-from ..testcase import OpenTelemetryTestCase  # noqa: TID252
-from ..utils import await_until, get_logger, get_one_by_tag  # noqa: TID252
+from ..otel_ot_shim_tracer import MockTracer
+from ..testcase import OpenTelemetryTestCase
+from ..utils import await_until, get_logger, get_one_by_tag
 
 logger = get_logger(__name__)
 

@@ -17,9 +17,9 @@ from concurrent.futures import (  # pylint: disable=no-name-in-module
 )
 
 # pylint: disable=import-error
-from ..otel_ot_shim_tracer import MockTracer  # noqa: TID252
-from ..testcase import OpenTelemetryTestCase  # noqa: TID252
-from ..utils import await_until  # noqa: TID252
+from ..otel_ot_shim_tracer import MockTracer
+from ..testcase import OpenTelemetryTestCase
+from ..utils import await_until
 
 
 class TestThreads(OpenTelemetryTestCase):

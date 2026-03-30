@@ -95,6 +95,7 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "docs/**/*.*" = ["PLE"]
 "opentelemetry-sdk/tests/_configuration/test_models.py" = ["E402", "PLC0415"]
+"shim/opentelemetry-opentracing-shim/tests/*" = ["TID252"]
 
 [tool.ruff.lint.isort]
 known-third-party = [
