@@ -142,7 +142,13 @@ class TestBase(unittest.TestCase):
         finally:
             logging.disable(logging.NOTSET)
 
-    def get_sorted_metrics(self):
+    def get_sorted_metrics(self, scope: Optional[str] = None):
+        """Returns recorded metrics sorted by name.
+
+        Args:
+            scope: Optional scope name to filter metrics by. If unset,
+                   all metrics are returned.
+        """
         metrics_data = self.memory_metrics_reader.get_metrics_data()
         resource_metrics = (
             metrics_data.resource_metrics if metrics_data else []
@@ -151,6 +157,8 @@ class TestBase(unittest.TestCase):
         all_metrics = []
         for metrics in resource_metrics:
             for scope_metrics in metrics.scope_metrics:
+                if scope is not None and scope_metrics.scope.name != scope:
+                    continue
                 all_metrics.extend(scope_metrics.metrics)
 
         return self.sorted_metrics(all_metrics)

@@ -300,9 +300,9 @@ class ConsoleSpanExporter(SpanExporter):
         self,
         service_name: str | None = None,
         out: typing.IO = sys.stdout,
-        formatter: typing.Callable[
-            [ReadableSpan], str
-        ] = lambda span: span.to_json() + linesep,
+        formatter: typing.Callable[[ReadableSpan], str] = lambda span: (
+            span.to_json() + linesep
+        ),
     ):
         self.out = out
         self.formatter = formatter

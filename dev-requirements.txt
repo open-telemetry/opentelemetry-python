@@ -13,7 +13,7 @@ codespell==2.1.0
 requests==2.32.3
 ruamel.yaml==0.17.21
 asgiref==3.7.2
-psutil==5.9.6
+psutil==7.2.2
 GitPython==3.1.41
 pre-commit==3.7.0; python_version >= '3.9'
 pre-commit==3.5.0; python_version < '3.9'

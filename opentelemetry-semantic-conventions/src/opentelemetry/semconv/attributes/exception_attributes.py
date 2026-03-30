@@ -22,6 +22,9 @@ Deprecated: It's no longer recommended to record exceptions that are handled and
 EXCEPTION_MESSAGE: Final = "exception.message"
 """
 The exception message.
+Note: > [!WARNING]
+>
+> This attribute may contain sensitive information.
 """
 
 EXCEPTION_STACKTRACE: Final = "exception.stacktrace"

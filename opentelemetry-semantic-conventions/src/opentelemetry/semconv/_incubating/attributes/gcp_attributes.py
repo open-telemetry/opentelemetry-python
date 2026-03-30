@@ -159,6 +159,27 @@ GCP_GCE_INSTANCE_NAME: Final = "gcp.gce.instance.name"
 The instance name of a GCE instance. This is the value provided by `host.name`, the visible name of the instance in the Cloud Console UI, and the prefix for the default hostname of the instance as defined by the [default internal DNS name](https://cloud.google.com/compute/docs/internal-dns#instance-fully-qualified-domain-names).
 """
 
+GCP_GCE_INSTANCE_GROUP_MANAGER_NAME: Final = (
+    "gcp.gce.instance_group_manager.name"
+)
+"""
+The name of the Instance Group Manager (IGM) that manages this VM, if any.
+"""
+
+GCP_GCE_INSTANCE_GROUP_MANAGER_REGION: Final = (
+    "gcp.gce.instance_group_manager.region"
+)
+"""
+The region of a **regional** Instance Group Manager (e.g., `us-central1`). Set this **only** when the IGM is regional.
+"""
+
+GCP_GCE_INSTANCE_GROUP_MANAGER_ZONE: Final = (
+    "gcp.gce.instance_group_manager.zone"
+)
+"""
+The zone of a **zonal** Instance Group Manager (e.g., `us-central1-a`). Set this **only** when the IGM is zonal.
+"""
+
 
 class GcpApphubServiceCriticalityTypeValues(Enum):
     MISSION_CRITICAL = "MISSION_CRITICAL"

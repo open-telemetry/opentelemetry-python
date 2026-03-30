@@ -57,7 +57,7 @@ packaging==24.0
     # via
     #   -r exporter/opentelemetry-exporter-otlp-proto-grpc/test-requirements.in
     #   pytest
-pluggy==1.5.0
+pluggy==1.6.0
     # via
     #   -r exporter/opentelemetry-exporter-otlp-proto-grpc/test-requirements.in
     #   pytest

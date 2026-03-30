@@ -5,9 +5,9 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ROOT_DIR="${SCRIPT_DIR}/../.."
 
 # freeze the spec version to make SemanticAttributes generation reproducible
-SEMCONV_VERSION=1.38.0
+SEMCONV_VERSION=1.40.0
 SEMCONV_VERSION_TAG=v$SEMCONV_VERSION
-OTEL_WEAVER_IMG_VERSION=v0.18.0
+OTEL_WEAVER_IMG_VERSION=v0.21.2
 INCUBATING_DIR=_incubating
 cd ${SCRIPT_DIR}
 
@@ -58,4 +58,4 @@ mkdir -p ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semcon
 generate "./" "./${INCUBATING_DIR}/" "any"
 
 cd "$ROOT_DIR"
-tox -e ruff
+tox -e precommit

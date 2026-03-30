@@ -18,7 +18,7 @@ packaging==25.0
     #   pytest
 pluggy==1.6.0
     # via pytest
-protobuf==6.31.1
+protobuf==6.33.5
     # via
     #   -r opentelemetry-proto/test-requirements.in
     #   opentelemetry-proto

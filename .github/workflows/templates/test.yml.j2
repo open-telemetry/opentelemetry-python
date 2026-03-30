@@ -5,9 +5,8 @@ name: Test {{ file_number }}
 
 on:
   push:
-    branches-ignore:
-    - 'release/*'
-    - 'otelbot/*'
+    branches:
+    - 'main'
   pull_request:
 
 permissions:
@@ -29,6 +28,11 @@ env:
        'main'
     ) || 'main' }}{% endraw %}
   PIP_EXISTS_ACTION: w
+  CONTRIB_REPO_UTIL_HTTP: ${% raw %}{{ github.workspace }}{% endraw %}/opentelemetry-python-contrib/util/opentelemetry-util-http
+  CONTRIB_REPO_INSTRUMENTATION: ${% raw %}{{ github.workspace }}{% endraw %}/opentelemetry-python-contrib/opentelemetry-instrumentation
+  CONTRIB_REPO_INSTRUMENTATION_REQUESTS: ${% raw %}{{ github.workspace }}{% endraw %}/opentelemetry-python-contrib/instrumentation/opentelemetry-instrumentation-requests
+  CONTRIB_REPO_INSTRUMENTATION_WSGI: ${% raw %}{{ github.workspace }}{% endraw %}/opentelemetry-python-contrib/instrumentation/opentelemetry-instrumentation-wsgi
+  CONTRIB_REPO_INSTRUMENTATION_FLASK: ${% raw %}{{ github.workspace }}{% endraw %}/opentelemetry-python-contrib/instrumentation/opentelemetry-instrumentation-flask
 
 jobs:
   {%- for job_data in job_datas %}
@@ -38,8 +42,22 @@ jobs:
     runs-on: {{ job_data.os }}
     timeout-minutes: 30
     steps:
+      {%- if job_data.os == "windows-latest" %}
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+
+      {%- endif %}
       - name: Checkout repo @ SHA - ${% raw %}{{ github.sha }}{% endraw %}
         uses: actions/checkout@v4
+      {%- if "getting-started" in job_data.tox_env %}
+
+      - name: Checkout contrib repo @ ${% raw %}{{ env.CONTRIB_REPO_SHA }}{% endraw %}
+        uses: actions/checkout@v4
+        with:
+          repository: open-telemetry/opentelemetry-python-contrib
+          ref: ${% raw %}{{ env.CONTRIB_REPO_SHA }}{% endraw %}
+          path: opentelemetry-python-contrib
+      {%- endif %}
 
       - name: Set up Python {{ job_data.python_version }}
         uses: actions/setup-python@v5
@@ -48,11 +66,6 @@ jobs:
 
       - name: Install tox
         run: pip install tox-uv
-      {%- if job_data.os == "windows-latest" %}
-
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
-      {%- endif %}
 
       - name: Run tests
         run: tox -e {{ job_data.tox_env }} -- -ra

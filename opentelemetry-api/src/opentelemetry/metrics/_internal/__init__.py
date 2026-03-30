@@ -118,7 +118,7 @@ class MeterProvider(ABC):
 
         Args:
             name: The name of the instrumenting module.
-                ``__name__`` may not be used as this can result in
+                ``__name__`` should be avoided as this can result in
                 different meter names if the meters are in different files.
                 It is better to use a fixed string that can be imported where
                 needed and used consistently as the name of the meter.

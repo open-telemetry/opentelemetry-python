@@ -343,6 +343,24 @@ Note: Examples:
   the `k8s.pod.annotation.data` attribute with value `""`.
 """
 
+K8S_POD_HOSTNAME: Final = "k8s.pod.hostname"
+"""
+Specifies the hostname of the Pod.
+Note: The K8s Pod spec has an optional hostname field, which can be used to specify a hostname.
+Refer to [K8s docs](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-hostname-and-subdomain-field)
+for more information about this field.
+
+This attribute aligns with the `hostname` field of the
+[K8s PodSpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#podspec-v1-core).
+"""
+
+K8S_POD_IP: Final = "k8s.pod.ip"
+"""
+IP address allocated to the Pod.
+Note: This attribute aligns with the `podIP` field of the
+[K8s PodStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#podstatus-v1-core).
+"""
+
 K8S_POD_LABEL_TEMPLATE: Final = "k8s.pod.label"
 """
 The label placed on the Pod, the `<key>` being the label name, the value being the label value.
@@ -364,6 +382,17 @@ Deprecated: Replaced by `k8s.pod.label`.
 K8S_POD_NAME: Final = "k8s.pod.name"
 """
 The name of the Pod.
+"""
+
+K8S_POD_START_TIME: Final = "k8s.pod.start_time"
+"""
+The start timestamp of the Pod.
+Note: Date and time at which the object was acknowledged by the Kubelet.
+This is before the Kubelet pulled the container image(s) for the pod.
+
+This attribute aligns with the `startTime` field of the
+[K8s PodStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#podstatus-v1-core),
+in ISO 8601 (RFC 3339 compatible) format.
 """
 
 K8S_POD_STATUS_PHASE: Final = "k8s.pod.status.phase"
@@ -437,6 +466,113 @@ Note: The value for this attribute can be either the full `count/<resource>[.<gr
 K8S_RESOURCEQUOTA_UID: Final = "k8s.resourcequota.uid"
 """
 The UID of the resource quota.
+"""
+
+K8S_SERVICE_ANNOTATION_TEMPLATE: Final = "k8s.service.annotation"
+"""
+The annotation placed on the Service, the `<key>` being the annotation name, the value being the annotation value, even if the value is empty.
+Note: Examples:
+
+- An annotation `prometheus.io/scrape` with value `true` SHOULD be recorded as
+  the `k8s.service.annotation.prometheus.io/scrape` attribute with value `"true"`.
+- An annotation `data` with empty string value SHOULD be recorded as
+  the `k8s.service.annotation.data` attribute with value `""`.
+"""
+
+K8S_SERVICE_ENDPOINT_ADDRESS_TYPE: Final = "k8s.service.endpoint.address_type"
+"""
+The address type of the service endpoint.
+Note: The network address family or type of the endpoint.
+This attribute aligns with the `addressType` field of the
+[K8s EndpointSlice](https://kubernetes.io/docs/reference/kubernetes-api/service-resources/endpoint-slice-v1/).
+It is used to differentiate metrics when a Service is backed by multiple address types
+(e.g., in dual-stack clusters).
+"""
+
+K8S_SERVICE_ENDPOINT_CONDITION: Final = "k8s.service.endpoint.condition"
+"""
+The condition of the service endpoint.
+Note: The current operational condition of the service endpoint.
+An endpoint can have multiple conditions set at once (e.g., both `serving` and `terminating` during rollout).
+This attribute aligns with the condition fields in the [K8s EndpointSlice](https://kubernetes.io/docs/reference/kubernetes-api/service-resources/endpoint-slice-v1/).
+"""
+
+K8S_SERVICE_ENDPOINT_ZONE: Final = "k8s.service.endpoint.zone"
+"""
+The zone of the service endpoint.
+Note: The zone where the endpoint is located, typically corresponding to a failure domain.
+This attribute aligns with the `zone` field of endpoints in the
+[K8s EndpointSlice](https://kubernetes.io/docs/reference/kubernetes-api/service-resources/endpoint-slice-v1/).
+It enables zone-aware monitoring of service endpoint distribution and supports
+features like [Topology Aware Routing](https://kubernetes.io/docs/concepts/services-networking/topology-aware-routing/).
+
+If the zone is not populated (e.g., nodes without the `topology.kubernetes.io/zone` label),
+the attribute value will be an empty string.
+"""
+
+K8S_SERVICE_LABEL_TEMPLATE: Final = "k8s.service.label"
+"""
+The label placed on the Service, the `<key>` being the label name, the value being the label value, even if the value is empty.
+Note: Examples:
+
+- A label `app` with value `my-service` SHOULD be recorded as
+  the `k8s.service.label.app` attribute with value `"my-service"`.
+- A label `data` with empty string value SHOULD be recorded as
+  the `k8s.service.label.data` attribute with value `""`.
+"""
+
+K8S_SERVICE_NAME: Final = "k8s.service.name"
+"""
+The name of the Service.
+"""
+
+K8S_SERVICE_PUBLISH_NOT_READY_ADDRESSES: Final = (
+    "k8s.service.publish_not_ready_addresses"
+)
+"""
+Whether the Service publishes not-ready endpoints.
+Note: Whether the Service is configured to publish endpoints before the pods are ready.
+This attribute is typically used to indicate that a Service (such as a headless
+Service for a StatefulSet) allows peer discovery before pods pass their readiness probes.
+It aligns with the `publishNotReadyAddresses` field of the
+[K8s ServiceSpec](https://kubernetes.io/docs/reference/kubernetes-api/service-resources/service-v1/#ServiceSpec).
+"""
+
+K8S_SERVICE_SELECTOR_TEMPLATE: Final = "k8s.service.selector"
+"""
+The selector key-value pair placed on the Service, the `<key>` being the selector key, the value being the selector value.
+Note: These selectors are used to correlate with pod labels. Each selector key-value pair becomes a separate attribute.
+
+Examples:
+
+- A selector `app=my-app` SHOULD be recorded as
+  the `k8s.service.selector.app` attribute with value `"my-app"`.
+- A selector `version=v1` SHOULD be recorded as
+  the `k8s.service.selector.version` attribute with value `"v1"`.
+"""
+
+K8S_SERVICE_TRAFFIC_DISTRIBUTION: Final = "k8s.service.traffic_distribution"
+"""
+The traffic distribution policy for the Service.
+Note: Specifies how traffic is distributed to endpoints for this Service.
+This attribute aligns with the `trafficDistribution` field of the
+[K8s ServiceSpec](https://kubernetes.io/docs/reference/networking/virtual-ips/#traffic-distribution).
+Known values include `PreferSameZone` (prefer endpoints in the same zone as the client) and
+`PreferSameNode` (prefer endpoints on the same node, fallback to same zone, then cluster-wide).
+If this field is not set on the Service, the attribute SHOULD NOT be emitted.
+When not set, Kubernetes distributes traffic evenly across all endpoints cluster-wide.
+"""
+
+K8S_SERVICE_TYPE: Final = "k8s.service.type"
+"""
+The type of the Kubernetes Service.
+Note: This attribute aligns with the `type` field of the
+[K8s ServiceSpec](https://kubernetes.io/docs/reference/kubernetes-api/service-resources/service-v1/#ServiceSpec).
+"""
+
+K8S_SERVICE_UID: Final = "k8s.service.uid"
+"""
+The UID of the Service.
 """
 
 K8S_STATEFULSET_ANNOTATION_TEMPLATE: Final = "k8s.statefulset.annotation"
@@ -570,6 +706,35 @@ class K8sPodStatusReasonValues(Enum):
     """The node is shutdown."""
     UNEXPECTED_ADMISSION_ERROR = "UnexpectedAdmissionError"
     """The pod was rejected admission to the node because of an error during admission that could not be categorized."""
+
+
+class K8sServiceEndpointAddressTypeValues(Enum):
+    IPV4 = "IPv4"
+    """IPv4 address type."""
+    IPV6 = "IPv6"
+    """IPv6 address type."""
+    FQDN = "FQDN"
+    """FQDN address type."""
+
+
+class K8sServiceEndpointConditionValues(Enum):
+    READY = "ready"
+    """The endpoint is ready to receive new connections."""
+    SERVING = "serving"
+    """The endpoint is currently handling traffic."""
+    TERMINATING = "terminating"
+    """The endpoint is in the process of shutting down."""
+
+
+class K8sServiceTypeValues(Enum):
+    CLUSTER_IP = "ClusterIP"
+    """ClusterIP service type."""
+    NODE_PORT = "NodePort"
+    """NodePort service type."""
+    LOAD_BALANCER = "LoadBalancer"
+    """LoadBalancer service type."""
+    EXTERNAL_NAME = "ExternalName"
+    """ExternalName service type."""
 
 
 class K8sVolumeTypeValues(Enum):

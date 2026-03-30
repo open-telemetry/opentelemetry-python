@@ -202,6 +202,10 @@ autodoc_default_options = {
     "exclude-members": ",".join(_exclude_members),
 }
 
+# Napoleon configuration to avoid duplication with autodoc for dataclass fields
+# Use ivar (instance variable) style for documenting attributes
+napoleon_use_ivar = True
+
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
