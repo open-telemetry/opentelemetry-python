@@ -196,6 +196,27 @@ tracer_provider.add_span_processor(mock_processor)
             {"key1": "value1", "key2": 6},
         )
 
+    def test_get_tracer_sdk_returns_same_tracer_when_called_with_same_instrumentation_scope(
+        self,
+    ):
+        tracer_provider = trace.TracerProvider()
+        tracer1 = tracer_provider.get_tracer(
+            "module_name",
+            "library_version",
+            "schema_url",
+            {"key1": "value1", "key2": 6},
+        )
+
+        tracer2 = tracer_provider.get_tracer(
+            "module_name",
+            "library_version",
+            "schema_url",
+            {"key1": "value1", "key2": 6},
+        )
+
+        self.assertEqual(tracer1, tracer2)
+        self.assertTrue(tracer1 is tracer2)
+
     def test_get_tracer_sdk_sets_default_tracer_config_if_configurator_raises(
         self,
     ):

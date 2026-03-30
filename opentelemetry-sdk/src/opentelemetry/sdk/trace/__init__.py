@@ -1438,20 +1438,25 @@ class TracerProvider(trace_api.TracerProvider):
             schema_url,
             attributes,
         )
-        tracer_config = self._apply_tracer_configurator(instrumentation_scope)
-        tracer = Tracer(
-            self.sampler,
-            self.resource,
-            self._active_span_processor,
-            self.id_generator,
-            instrumentation_info,
-            self._span_limits,
-            instrumentation_scope,
-            meter_provider=self._meter_provider,
-            _tracer_config=tracer_config,
-        )
 
         with self._tracers_lock:
+            if instrumentation_scope in self._tracers:
+                return self._tracers[instrumentation_scope]
+
+            tracer_config = self._apply_tracer_configurator(
+                instrumentation_scope
+            )
+            tracer = Tracer(
+                self.sampler,
+                self.resource,
+                self._active_span_processor,
+                self.id_generator,
+                instrumentation_info,
+                self._span_limits,
+                instrumentation_scope,
+                meter_provider=self._meter_provider,
+                _tracer_config=tracer_config,
+            )
             self._tracers[instrumentation_scope] = tracer
 
         return tracer
