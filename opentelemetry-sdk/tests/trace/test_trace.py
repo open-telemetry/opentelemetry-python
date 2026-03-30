@@ -2296,6 +2296,23 @@ class TestParentChildSpanException(unittest.TestCase):
         self.assertTupleEqual(parent_span.events, ())
 
 
+class TestTracerConfig(unittest.TestCase):
+    def test_default(self):
+        self.assertEqual(
+            _TracerConfig.default(),
+            _TracerConfig(is_enabled=True),
+        )
+
+    def test_equality(self):
+        config = _TracerConfig(is_enabled=True)
+        same_config = _TracerConfig(is_enabled=True)
+        other_config = _TracerConfig(is_enabled=False)
+
+        self.assertEqual(config, same_config)
+        self.asserNotEqual(config, other_config)
+        self.assertNotEqual(config, "string")
+
+
 # pylint: disable=protected-access
 class TestTracerProvider(unittest.TestCase):
     @patch("opentelemetry.sdk.trace.sampling._get_from_env_or_default")
@@ -2310,12 +2327,6 @@ class TestTracerProvider(unittest.TestCase):
         sample_patch.assert_called_once()
         self.assertIsNotNone(tracer_provider._span_limits)
         self.assertIsNotNone(tracer_provider._atexit_handler)
-
-    def test_default_tracer_config(self):
-        self.assertEqual(
-            _TracerConfig.default(),
-            _TracerConfig(is_enabled=True),
-        )
 
     def test_default_tracer_configurator(self):
         # pylint: disable=protected-access

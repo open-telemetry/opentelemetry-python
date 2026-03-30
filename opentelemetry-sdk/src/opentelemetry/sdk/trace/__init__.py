@@ -1106,7 +1106,9 @@ class _TracerConfig:
     def default(cls):
         return cls(is_enabled=True)
 
-    def __eq__(self, other: "_TracerConfig"):
+    def __eq__(self, other: object):
+        if not isinstance(other, _TracerConfig):
+            return False
         return self.is_enabled == other.is_enabled
 
 
