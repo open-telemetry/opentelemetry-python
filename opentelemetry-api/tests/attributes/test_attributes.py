@@ -327,10 +327,11 @@ class TestBoundedAttributes(unittest.TestCase):
     def test_invalid_anyvalue_type_raises_typeerror(self):
         class BadStr:
             def __str__(self):
-                raise Exception("boom")
+                raise RuntimeError("boom")
 
         with self.assertRaises(TypeError):
             _clean_extended_attribute_value(BadStr(), None)
+
     def test_deepcopy(self):
         bdict = BoundedAttributes(4, self.base, immutable=False)
         bdict.dropped = 10

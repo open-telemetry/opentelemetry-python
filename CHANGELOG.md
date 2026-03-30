@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `opentelemetry-api`: Replace a broad exception in attribute cleaning tests to satisfy pylint in the `lint-opentelemetry-api` CI job
 - `opentelemetry-sdk`: Add `create_resource` and `create_propagator`/`configure_propagator` to declarative file configuration, enabling Resource and propagator instantiation from config files without reading env vars
   ([#4979](https://github.com/open-telemetry/opentelemetry-python/pull/4979))
 - `opentelemetry-sdk`: Map Python `CRITICAL` log level to OTel `FATAL` severity text per the specification
