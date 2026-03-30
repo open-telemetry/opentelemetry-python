@@ -2309,7 +2309,7 @@ class TestTracerConfig(unittest.TestCase):
         other_config = _TracerConfig(is_enabled=False)
 
         self.assertEqual(config, same_config)
-        self.asserNotEqual(config, other_config)
+        self.assertNotEqual(config, other_config)
         self.assertNotEqual(config, "string")
 
 
