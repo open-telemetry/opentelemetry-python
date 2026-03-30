@@ -1106,11 +1106,6 @@ class _TracerConfig:
     def default(cls):
         return cls(is_enabled=True)
 
-    def __eq__(self, other: object):
-        if not isinstance(other, _TracerConfig):
-            return False
-        return self.is_enabled == other.is_enabled
-
 
 class Tracer(trace_api.Tracer):
     """See `opentelemetry.trace.Tracer`."""
@@ -1376,8 +1371,8 @@ class TracerProvider(trace_api.TracerProvider):
     ):
         """This is the function used to update the TracerProvider TracerConfigurator
 
-        Setting a new TracerConfigurator for a TracerProvider will make updated all the Tracers created
-        from this TracerProvider a new TracerConfig created with this.
+        Setting a new TracerConfigurator for a TracerProvider will update the
+        TracerConfig of all Tracers create by this TracerProvider.
         """
         self._tracer_configurator = tracer_configurator
         with self._tracers_lock:
