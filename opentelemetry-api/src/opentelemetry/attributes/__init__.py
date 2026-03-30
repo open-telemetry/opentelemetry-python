@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import copy
 import logging
 import threading
 from collections import OrderedDict
@@ -317,6 +318,21 @@ class BoundedAttributes(MutableMapping):  # type: ignore
 
     def __len__(self) -> int:
         return len(self._dict)
+
+    def __deepcopy__(self, memo: dict) -> "BoundedAttributes":
+        copy_ = BoundedAttributes(
+            maxlen=self.maxlen,
+            immutable=self._immutable,
+            max_value_len=self.max_value_len,
+            extended_attributes=self._extended_attributes,
+        )
+        memo[id(self)] = copy_
+        with self._lock:
+            # Assign _dict directly to avoid re-cleaning already clean values
+            # and to bypass the immutability guard in __setitem__
+            copy_._dict = copy.deepcopy(self._dict, memo)
+            copy_.dropped = self.dropped
+        return copy_
 
     def copy(self):  # type: ignore
         return self._dict.copy()  # type: ignore
