@@ -1,7 +1,11 @@
 opentelemetry.sdk.environment_variables
 =======================================
 
-.. TODO: what is the SDK
+The OpenTelemetry Python SDK can be configured through environment variables.
+These variables control behaviors such as exporter selection, resource
+attributes, span limits, and trace sampling. They follow the conventions
+defined by the `OpenTelemetry specification
+<https://opentelemetry.io/docs/specs/otel/configuration/sdk-environment-variables/>`_.
 
 .. toctree::
    :maxdepth: 1
