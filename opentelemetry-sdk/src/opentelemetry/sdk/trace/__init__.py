@@ -1134,8 +1134,8 @@ class Tracer(trace_api.Tracer):
         if tracer_metrics is not None:
             self._tracer_metrics = tracer_metrics
         else:
-         meter_provider = meter_provider or metrics_api.get_meter_provider()
-         self._tracer_metrics = TracerMetrics(meter_provider)
+            meter_provider = meter_provider or metrics_api.get_meter_provider()
+            self._tracer_metrics = TracerMetrics(meter_provider)
 
     def _is_enabled(self) -> bool:
         """If the tracer is not enabled, start_span will create a NonRecordingSpan"""
