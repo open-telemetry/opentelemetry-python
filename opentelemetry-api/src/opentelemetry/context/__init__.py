@@ -160,6 +160,7 @@ def detach(token: Token[Context]) -> None:
 # FIXME This is a temporary location for the suppress instrumentation key.
 # Once the decision around how to suppress instrumentation is made in the
 # spec, this key should be moved accordingly.
+_ON_EMIT_RECURSION_COUNT_KEY = create_key("on_emit_recursion_count")
 _SUPPRESS_INSTRUMENTATION_KEY = create_key("suppress_instrumentation")
 _SUPPRESS_HTTP_INSTRUMENTATION_KEY = create_key(
     "suppress_http_instrumentation"

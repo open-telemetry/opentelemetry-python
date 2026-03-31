@@ -326,7 +326,8 @@ class ScopeMetrics(google.protobuf.message.Message):
     is recorded in. Notably, the last part of the URL path is the version number of the
     schema: http[s]://server[:port]/path/<version>. To learn more about Schema URL see
     https://opentelemetry.io/docs/specs/otel/schemas/#schema-url
-    This schema_url applies to all metrics in the "metrics" field.
+    This schema_url applies to the data in the "scope" field and all metrics in the
+    "metrics" field.
     """
     def __init__(
         self,
@@ -440,11 +441,11 @@ class Metric(google.protobuf.message.Message):
     SUMMARY_FIELD_NUMBER: builtins.int
     METADATA_FIELD_NUMBER: builtins.int
     name: builtins.str
-    """name of the metric."""
+    """The name of the metric."""
     description: builtins.str
-    """description of the metric, which can be used in documentation."""
+    """A description of the metric, which can be used in documentation."""
     unit: builtins.str
-    """unit in which the metric value is reported. Follows the format
+    """The unit in which the metric value is reported. Follows the format
     described by https://unitsofmeasure.org/ucum.html.
     """
     @property
@@ -466,6 +467,7 @@ class Metric(google.protobuf.message.Message):
         for lossless roundtrip translation to / from another data model.
         Attribute keys MUST be unique (it is not allowed to have more than one
         attribute with the same key).
+        The behavior of software that receives duplicated keys can be unpredictable.
         """
     def __init__(
         self,
@@ -503,7 +505,10 @@ class Gauge(google.protobuf.message.Message):
 
     DATA_POINTS_FIELD_NUMBER: builtins.int
     @property
-    def data_points(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___NumberDataPoint]: ...
+    def data_points(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___NumberDataPoint]:
+        """The time series data points.
+        Note: Multiple time series may be included (same timestamp, different attributes).
+        """
     def __init__(
         self,
         *,
@@ -525,13 +530,16 @@ class Sum(google.protobuf.message.Message):
     AGGREGATION_TEMPORALITY_FIELD_NUMBER: builtins.int
     IS_MONOTONIC_FIELD_NUMBER: builtins.int
     @property
-    def data_points(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___NumberDataPoint]: ...
+    def data_points(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___NumberDataPoint]:
+        """The time series data points.
+        Note: Multiple time series may be included (same timestamp, different attributes).
+        """
     aggregation_temporality: global___AggregationTemporality.ValueType
     """aggregation_temporality describes if the aggregator reports delta changes
     since last report time, or cumulative changes since a fixed start time.
     """
     is_monotonic: builtins.bool
-    """If "true" means that the sum is monotonic."""
+    """Represents whether the sum is monotonic."""
     def __init__(
         self,
         *,
@@ -554,7 +562,10 @@ class Histogram(google.protobuf.message.Message):
     DATA_POINTS_FIELD_NUMBER: builtins.int
     AGGREGATION_TEMPORALITY_FIELD_NUMBER: builtins.int
     @property
-    def data_points(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___HistogramDataPoint]: ...
+    def data_points(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___HistogramDataPoint]:
+        """The time series data points.
+        Note: Multiple time series may be included (same timestamp, different attributes).
+        """
     aggregation_temporality: global___AggregationTemporality.ValueType
     """aggregation_temporality describes if the aggregator reports delta changes
     since last report time, or cumulative changes since a fixed start time.
@@ -580,7 +591,10 @@ class ExponentialHistogram(google.protobuf.message.Message):
     DATA_POINTS_FIELD_NUMBER: builtins.int
     AGGREGATION_TEMPORALITY_FIELD_NUMBER: builtins.int
     @property
-    def data_points(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___ExponentialHistogramDataPoint]: ...
+    def data_points(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___ExponentialHistogramDataPoint]:
+        """The time series data points.
+        Note: Multiple time series may be included (same timestamp, different attributes).
+        """
     aggregation_temporality: global___AggregationTemporality.ValueType
     """aggregation_temporality describes if the aggregator reports delta changes
     since last report time, or cumulative changes since a fixed start time.
@@ -612,7 +626,10 @@ class Summary(google.protobuf.message.Message):
 
     DATA_POINTS_FIELD_NUMBER: builtins.int
     @property
-    def data_points(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___SummaryDataPoint]: ...
+    def data_points(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___SummaryDataPoint]:
+        """The time series data points.
+        Note: Multiple time series may be included (same timestamp, different attributes).
+        """
     def __init__(
         self,
         *,
@@ -643,6 +660,7 @@ class NumberDataPoint(google.protobuf.message.Message):
         where this point belongs. The list may be empty (may contain 0 elements).
         Attribute keys MUST be unique (it is not allowed to have more than one
         attribute with the same key).
+        The behavior of software that receives duplicated keys can be unpredictable.
         """
     start_time_unix_nano: builtins.int
     """StartTimeUnixNano is optional but strongly encouraged, see the
@@ -718,6 +736,7 @@ class HistogramDataPoint(google.protobuf.message.Message):
         where this point belongs. The list may be empty (may contain 0 elements).
         Attribute keys MUST be unique (it is not allowed to have more than one
         attribute with the same key).
+        The behavior of software that receives duplicated keys can be unpredictable.
         """
     start_time_unix_nano: builtins.int
     """StartTimeUnixNano is optional but strongly encouraged, see the
@@ -838,13 +857,13 @@ class ExponentialHistogramDataPoint(google.protobuf.message.Message):
         OFFSET_FIELD_NUMBER: builtins.int
         BUCKET_COUNTS_FIELD_NUMBER: builtins.int
         offset: builtins.int
-        """Offset is the bucket index of the first entry in the bucket_counts array.
+        """The bucket index of the first entry in the bucket_counts array.
 
         Note: This uses a varint encoding as a simple form of compression.
         """
         @property
         def bucket_counts(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.int]:
-            """bucket_counts is an array of count values, where bucket_counts[i] carries
+            """An array of count values, where bucket_counts[i] carries
             the count of the bucket at index (offset+i). bucket_counts[i] is the count
             of values greater than base^(offset+i) and less than or equal to
             base^(offset+i+1).
@@ -882,6 +901,7 @@ class ExponentialHistogramDataPoint(google.protobuf.message.Message):
         where this point belongs. The list may be empty (may contain 0 elements).
         Attribute keys MUST be unique (it is not allowed to have more than one
         attribute with the same key).
+        The behavior of software that receives duplicated keys can be unpredictable.
         """
     start_time_unix_nano: builtins.int
     """StartTimeUnixNano is optional but strongly encouraged, see the
@@ -897,12 +917,12 @@ class ExponentialHistogramDataPoint(google.protobuf.message.Message):
     1970.
     """
     count: builtins.int
-    """count is the number of values in the population. Must be
+    """The number of values in the population. Must be
     non-negative. This value must be equal to the sum of the "bucket_counts"
     values in the positive and negative Buckets plus the "zero_count" field.
     """
     sum: builtins.float
-    """sum of the values in the population. If count is zero then this field
+    """The sum of the values in the population. If count is zero then this field
     must be zero.
 
     Note: Sum should only be filled out when measuring non-negative discrete
@@ -929,7 +949,7 @@ class ExponentialHistogramDataPoint(google.protobuf.message.Message):
     values depend on the range of the data.
     """
     zero_count: builtins.int
-    """zero_count is the count of values that are either exactly zero or
+    """The count of values that are either exactly zero or
     within the region considered zero by the instrumentation at the
     tolerated degree of precision.  This bucket stores values that
     cannot be expressed using the standard exponential formula as
@@ -954,9 +974,9 @@ class ExponentialHistogramDataPoint(google.protobuf.message.Message):
         measurements that were used to form the data point
         """
     min: builtins.float
-    """min is the minimum value over (start_time, end_time]."""
+    """The minimum value over (start_time, end_time]."""
     max: builtins.float
-    """max is the maximum value over (start_time, end_time]."""
+    """The maximum value over (start_time, end_time]."""
     zero_threshold: builtins.float
     """ZeroThreshold may be optionally set to convey the width of the zero
     region. Where the zero region is defined as the closed interval
@@ -1049,6 +1069,7 @@ class SummaryDataPoint(google.protobuf.message.Message):
         where this point belongs. The list may be empty (may contain 0 elements).
         Attribute keys MUST be unique (it is not allowed to have more than one
         attribute with the same key).
+        The behavior of software that receives duplicated keys can be unpredictable.
         """
     start_time_unix_nano: builtins.int
     """StartTimeUnixNano is optional but strongly encouraged, see the

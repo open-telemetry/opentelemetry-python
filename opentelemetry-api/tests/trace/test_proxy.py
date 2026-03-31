@@ -96,8 +96,8 @@ class TestProxy(TraceGlobalsTest, unittest.TestCase):
             return trace.get_current_span()
 
         # call function before configuring tracing provider, should
-        # return INVALID_SPAN from the NoOpTracer
-        self.assertEqual(my_function(), trace.INVALID_SPAN)
+        # return NonRecordingSpan from the NoOpTracer
+        self.assertFalse(my_function().is_recording())
 
         # configure tracing provider
         trace.set_tracer_provider(TestProvider())

@@ -13,8 +13,10 @@
 # limitations under the License.
 
 
-from opentelemetry.sdk.metrics._internal.export import (
+from opentelemetry.sdk.metrics._internal.aggregation import (
     AggregationTemporality,
+)
+from opentelemetry.sdk.metrics._internal.export import (
     ConsoleMetricExporter,
     InMemoryMetricReader,
     MetricExporter,

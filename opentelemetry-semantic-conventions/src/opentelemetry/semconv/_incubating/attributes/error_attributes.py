@@ -19,12 +19,7 @@ from typing_extensions import deprecated
 
 ERROR_MESSAGE: Final = "error.message"
 """
-A message providing more detail about an error in human-readable form.
-Note: `error.message` should provide additional context and detail about an error.
-It is NOT RECOMMENDED to duplicate the value of `error.type` in `error.message`.
-It is also NOT RECOMMENDED to duplicate the value of `exception.message` in `error.message`.
-
-`error.message` is NOT RECOMMENDED for metrics or spans due to its unbounded cardinality and overlap with span status.
+Deprecated: Use domain-specific error message attribute. For example, use `feature_flag.error.message` for feature flag errors.
 """
 
 ERROR_TYPE: Final = "error.type"

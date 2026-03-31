@@ -50,7 +50,7 @@ You can configure the exporter with the following environment variables:
 
     # Resource can be required for some backends, e.g. Jaeger
     # If resource wouldn't be set - traces wouldn't appears in Jaeger
-    resource = Resource(attributes={
+    resource = Resource.create({
         "service.name": "service"
     })
 

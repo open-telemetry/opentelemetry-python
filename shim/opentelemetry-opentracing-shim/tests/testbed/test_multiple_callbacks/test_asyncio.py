@@ -25,9 +25,14 @@ logger = get_logger(__name__)
 
 
 class TestAsyncio(OpenTelemetryTestCase):
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         self.tracer = MockTracer()
-        self.loop = asyncio.get_event_loop()
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+
+    def tearDown(self):
+        self.loop.close()
+        super().tearDown()
 
     def test_main(self):
         # Need to run within a Task, as the scope manager depends

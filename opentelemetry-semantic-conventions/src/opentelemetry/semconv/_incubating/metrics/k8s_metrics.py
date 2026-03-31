@@ -2481,6 +2481,78 @@ def create_k8s_resourcequota_storage_request_used(
     )
 
 
+K8S_SERVICE_ENDPOINT_COUNT: Final = "k8s.service.endpoint.count"
+"""
+Number of endpoints for a service by condition and address type
+Instrument: gauge
+Unit: {endpoint}
+Note: This metric is derived from the Kubernetes [EndpointSlice API](https://kubernetes.io/docs/reference/kubernetes-api/service-resources/endpoint-slice-v1/).
+It reports the number of network endpoints backing a Service, broken down by their condition and address type.
+
+In dual-stack or multi-protocol clusters, separate counts are reported for each address family (`IPv4`, `IPv6`, `FQDN`).
+
+When the optional `zone` attribute is enabled, counts are further broken down by availability zone for zone-aware monitoring.
+
+An endpoint may be reported under multiple conditions simultaneously (e.g., both `serving` and `terminating` during a graceful shutdown).
+See [K8s EndpointConditions](https://kubernetes.io/docs/reference/kubernetes-api/service-resources/endpoint-slice-v1/) for more details.
+
+The conditions represent:
+- `ready`: Endpoints capable of receiving new connections.
+- `serving`: Endpoints currently handling traffic.
+- `terminating`: Endpoints that are being phased out but may still be handling existing connections.
+
+For Services with `publishNotReadyAddresses` enabled (common for headless StatefulSets),
+this metric will include endpoints that are published despite not being ready.
+The `k8s.service.publish_not_ready_addresses` resource attribute indicates this setting.
+"""
+
+
+def create_k8s_service_endpoint_count(
+    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+) -> ObservableGauge:
+    """Number of endpoints for a service by condition and address type"""
+    return meter.create_observable_gauge(
+        name=K8S_SERVICE_ENDPOINT_COUNT,
+        callbacks=callbacks,
+        description="Number of endpoints for a service by condition and address type.",
+        unit="{endpoint}",
+    )
+
+
+K8S_SERVICE_LOAD_BALANCER_INGRESS_COUNT: Final = (
+    "k8s.service.load_balancer.ingress.count"
+)
+"""
+Number of load balancer ingress points (external IPs/hostnames) assigned to the service
+Instrument: gauge
+Unit: {ingress}
+Note: This metric reports the number of external ingress points (IP addresses or hostnames)
+assigned to a LoadBalancer Service.
+
+It is only emitted for Services of type `LoadBalancer` and reflects the assignments
+made by the underlying infrastructure's load balancer controller in the
+[.status.loadBalancer.ingress](https://kubernetes.io/docs/reference/kubernetes-api/service-resources/service-v1/#ServiceStatus) field.
+
+A value of `0` indicates that no ingress points have been assigned yet (e.g., during provisioning).
+A value greater than `1` may occur when multiple IPs or hostnames are assigned (e.g., dual-stack configurations).
+
+This metric signals that external endpoints have been assigned by the load balancer controller, but it does not
+guarantee that the load balancer is healthy.
+"""
+
+
+def create_k8s_service_load_balancer_ingress_count(
+    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+) -> ObservableGauge:
+    """Number of load balancer ingress points (external IPs/hostnames) assigned to the service"""
+    return meter.create_observable_gauge(
+        name=K8S_SERVICE_LOAD_BALANCER_INGRESS_COUNT,
+        callbacks=callbacks,
+        description="Number of load balancer ingress points (external IPs/hostnames) assigned to the service.",
+        unit="{ingress}",
+    )
+
+
 K8S_STATEFULSET_CURRENT_PODS: Final = "k8s.statefulset.current_pods"
 """
 Deprecated: Replaced by `k8s.statefulset.pod.current`.

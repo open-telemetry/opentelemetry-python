@@ -5,9 +5,8 @@ name: Misc {{ file_number }}
 
 on:
   push:
-    branches-ignore:
-    - 'release/*'
-    - 'otelbot/*'
+    branches:
+    - 'main'
   pull_request:
 
 permissions:
@@ -29,6 +28,11 @@ env:
        'main'
     ) || 'main' }}{% endraw %}
   PIP_EXISTS_ACTION: w
+  CONTRIB_REPO_UTIL_HTTP: ${% raw %}{{ github.workspace }}{% endraw %}/opentelemetry-python-contrib/util/opentelemetry-util-http
+  CONTRIB_REPO_INSTRUMENTATION: ${% raw %}{{ github.workspace }}{% endraw %}/opentelemetry-python-contrib/opentelemetry-instrumentation
+  CONTRIB_REPO_INSTRUMENTATION_REQUESTS: ${% raw %}{{ github.workspace }}{% endraw %}/opentelemetry-python-contrib/instrumentation/opentelemetry-instrumentation-requests
+  CONTRIB_REPO_INSTRUMENTATION_WSGI: ${% raw %}{{ github.workspace }}{% endraw %}/opentelemetry-python-contrib/instrumentation/opentelemetry-instrumentation-wsgi
+  CONTRIB_REPO_INSTRUMENTATION_FLASK: ${% raw %}{{ github.workspace }}{% endraw %}/opentelemetry-python-contrib/instrumentation/opentelemetry-instrumentation-flask
 
 jobs:
   {%- for job_data in job_datas %}
@@ -54,6 +58,15 @@ jobs:
     steps:
       - name: Checkout repo @ SHA - ${% raw %}{{ github.sha }}{% endraw %}
         uses: actions/checkout@v4
+      {%- if job_data == "tracecontext" %}
+
+      - name: Checkout contrib repo @ ${% raw %}{{ env.CONTRIB_REPO_SHA }}{% endraw %}
+        uses: actions/checkout@v4
+        with:
+          repository: open-telemetry/opentelemetry-python-contrib
+          ref: ${% raw %}{{ env.CONTRIB_REPO_SHA }}{% endraw %}
+          path: opentelemetry-python-contrib
+      {%- endif %}
       {%- if job_data == "public-symbols-check" %}
         with:
           fetch-depth: 0

@@ -13,7 +13,9 @@
 # limitations under the License.
 
 import time
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import (  # pylint: disable=no-name-in-module
+    ThreadPoolExecutor,
+)
 
 # pylint: disable=import-error
 from ..otel_ot_shim_tracer import MockTracer

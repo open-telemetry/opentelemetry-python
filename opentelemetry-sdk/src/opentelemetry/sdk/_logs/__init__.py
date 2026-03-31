@@ -12,27 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from opentelemetry.sdk._logs._internal import (
-    LogData,
-    LogDeprecatedInitWarning,
     LogDroppedAttributesWarning,
     Logger,
     LoggerProvider,
     LoggingHandler,
     LogLimits,
-    LogRecord,
+    LogRecordDroppedAttributesWarning,
+    LogRecordLimits,
     LogRecordProcessor,
+    ReadableLogRecord,
+    ReadWriteLogRecord,
 )
 
 __all__ = [
-    "LogData",
     "Logger",
     "LoggerProvider",
     "LoggingHandler",
     "LogLimits",
-    "LogRecord",
+    "LogRecordLimits",
     "LogRecordProcessor",
-    "LogDeprecatedInitWarning",
     "LogDroppedAttributesWarning",
+    "LogRecordDroppedAttributesWarning",
+    "ReadableLogRecord",
+    "ReadWriteLogRecord",
 ]

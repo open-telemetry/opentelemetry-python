@@ -12,30 +12,23 @@
 #   PROTO_REPO_DIR - the path to an existing checkout of the opentelemetry-proto repo
 
 # Pinned commit/branch/tag for the current version used in opentelemetry-proto python package.
-PROTO_REPO_BRANCH_OR_COMMIT="v1.7.0"
+PROTO_REPO_BRANCH_OR_COMMIT="v1.9.0"
 
 set -e
 
 PROTO_REPO_DIR=${PROTO_REPO_DIR:-"/tmp/opentelemetry-proto"}
 # root of opentelemetry-python repo
 repo_root="$(git rev-parse --show-toplevel)"
-venv_dir="/tmp/proto_codegen_venv"
 
-# run on exit even if crash
-cleanup() {
-    echo "Deleting $venv_dir"
-    rm -rf $venv_dir
+protoc() {
+    uvx -c $repo_root/gen-requirements.txt \
+        --python 3.12 \
+        --from grpcio-tools \
+        --with mypy-protobuf \
+        python -m grpc_tools.protoc "$@"
 }
-trap cleanup EXIT
 
-echo "Creating temporary virtualenv at $venv_dir using $(python3 --version)"
-python3 -m venv $venv_dir
-source $venv_dir/bin/activate
-python -m pip install \
-    -c $repo_root/gen-requirements.txt \
-    grpcio-tools mypy-protobuf
-echo 'python -m grpc_tools.protoc --version'
-python -m grpc_tools.protoc --version
+protoc --version
 
 # Clone the proto repo if it doesn't exist
 if [ ! -d "$PROTO_REPO_DIR" ]; then
@@ -58,7 +51,7 @@ find opentelemetry/ -regex ".*_pb2.*\.pyi?" -exec rm {} +
 
 # generate proto code for all protos
 all_protos=$(find $PROTO_REPO_DIR/ -iname "*.proto")
-python -m grpc_tools.protoc \
+protoc \
     -I $PROTO_REPO_DIR \
     --python_out=. \
     --mypy_out=. \
@@ -67,7 +60,7 @@ python -m grpc_tools.protoc \
 # generate grpc output only for protos with service definitions
 service_protos=$(grep -REl "service \w+ {" $PROTO_REPO_DIR/opentelemetry/)
 
-python -m grpc_tools.protoc \
+protoc \
     -I $PROTO_REPO_DIR \
     --python_out=. \
     --mypy_out=. \

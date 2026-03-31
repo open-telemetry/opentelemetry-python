@@ -5,7 +5,7 @@ This is an example of how to use OpenTelemetry Python instrumention with
 sqlcommenter to enrich database query statements with contextual information.
 For more information on sqlcommenter concepts, see:
 
-* `Semantic Conventions - Database Spans <https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/database-spans.md#sql-commenter>`_
+* `Semantic Conventions - Database Spans <https://github.com/open-telemetry/semantic-conventions/blob/main/docs/db/database-spans.md#sql-commenter>`_
 * `sqlcommenter <https://google.github.io/sqlcommenter/>`_
 
 The source files of this example are available `here <https://github.com/open-telemetry/opentelemetry-python/tree/main/docs/examples/sqlcommenter/>`_.
@@ -120,5 +120,5 @@ References
 * `OpenTelemetry Project <https://opentelemetry.io/>`_
 * `OpenTelemetry Collector <https://github.com/open-telemetry/opentelemetry-collector>`_
 * `OpenTelemetry MySQL instrumentation <https://github.com/open-telemetry/opentelemetry-python-contrib/tree/main/instrumentation/opentelemetry-instrumentation-mysql>`_
-* `Semantic Conventions - Database Spans <https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/database-spans.md#sql-commenter>`_
+* `Semantic Conventions - Database Spans <https://github.com/open-telemetry/semantic-conventions/blob/main/docs/db/database-spans.md#sql-commenter>`_
 * `sqlcommenter <https://google.github.io/sqlcommenter/>`_

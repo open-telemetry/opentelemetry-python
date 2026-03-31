@@ -28,8 +28,11 @@ from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2_grpc import (
     LogsServiceStub,
 )
-from opentelemetry.sdk._logs import LogData
-from opentelemetry.sdk._logs.export import LogExporter, LogExportResult
+from opentelemetry.sdk._logs import ReadableLogRecord
+from opentelemetry.sdk._logs.export import (
+    LogRecordExporter,
+    LogRecordExportResult,
+)
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_GRPC_LOGS_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
@@ -44,11 +47,11 @@ from opentelemetry.sdk.environment_variables import (
 
 
 class OTLPLogExporter(
-    LogExporter,
+    LogRecordExporter,
     OTLPExporterMixin[
-        Sequence[LogData],
+        Sequence[ReadableLogRecord],
         ExportLogsServiceRequest,
-        LogExportResult,
+        LogRecordExportResult,
         LogsServiceStub,
     ],
 ):
@@ -100,19 +103,19 @@ class OTLPLogExporter(
             timeout=timeout or environ_timeout,
             compression=compression,
             stub=LogsServiceStub,
-            result=LogExportResult,
+            result=LogRecordExportResult,
             channel_options=channel_options,
         )
 
     def _translate_data(
-        self, data: Sequence[LogData]
+        self, data: Sequence[ReadableLogRecord]
     ) -> ExportLogsServiceRequest:
         return encode_logs(data)
 
     def export(  # type: ignore [reportIncompatibleMethodOverride]
         self,
-        batch: Sequence[LogData],
-    ) -> Literal[LogExportResult.SUCCESS, LogExportResult.FAILURE]:
+        batch: Sequence[ReadableLogRecord],
+    ) -> Literal[LogRecordExportResult.SUCCESS, LogRecordExportResult.FAILURE]:
         return OTLPExporterMixin._export(self, batch)
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:

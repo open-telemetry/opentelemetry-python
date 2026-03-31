@@ -87,10 +87,24 @@ class Meter(APIMeter):
         self._instrumentation_scope = instrumentation_scope
         self._measurement_consumer = measurement_consumer
         self._instrument_id_instrument = {}
-        self._instrument_id_instrument_lock = Lock()
+        self._instrument_registration_lock = Lock()
 
     def create_counter(self, name, unit="", description="") -> APICounter:
-        status = self._register_instrument(name, _Counter, unit, description)
+        with self._instrument_registration_lock:
+            status = self._register_instrument(
+                name, _Counter, unit, description
+            )
+            if not status.already_registered:
+                self._instrument_id_instrument[status.instrument_id] = (
+                    _Counter(
+                        name,
+                        self._instrumentation_scope,
+                        self._measurement_consumer,
+                        unit,
+                        description,
+                    )
+                )
+            instrument = self._instrument_id_instrument[status.instrument_id]
 
         if status.conflict:
             # FIXME #2558 go through all views here and check if this
@@ -103,28 +117,26 @@ class Meter(APIMeter):
                 description,
                 status,
             )
-        if status.already_registered:
-            with self._instrument_id_instrument_lock:
-                return self._instrument_id_instrument[status.instrument_id]
-
-        instrument = _Counter(
-            name,
-            self._instrumentation_scope,
-            self._measurement_consumer,
-            unit,
-            description,
-        )
-
-        with self._instrument_id_instrument_lock:
-            self._instrument_id_instrument[status.instrument_id] = instrument
-            return instrument
+        return instrument
 
     def create_up_down_counter(
         self, name, unit="", description=""
     ) -> APIUpDownCounter:
-        status = self._register_instrument(
-            name, _UpDownCounter, unit, description
-        )
+        with self._instrument_registration_lock:
+            status = self._register_instrument(
+                name, _UpDownCounter, unit, description
+            )
+            if not status.already_registered:
+                self._instrument_id_instrument[status.instrument_id] = (
+                    _UpDownCounter(
+                        name,
+                        self._instrumentation_scope,
+                        self._measurement_consumer,
+                        unit,
+                        description,
+                    )
+                )
+            instrument = self._instrument_id_instrument[status.instrument_id]
 
         if status.conflict:
             # FIXME #2558 go through all views here and check if this
@@ -137,21 +149,7 @@ class Meter(APIMeter):
                 description,
                 status,
             )
-        if status.already_registered:
-            with self._instrument_id_instrument_lock:
-                return self._instrument_id_instrument[status.instrument_id]
-
-        instrument = _UpDownCounter(
-            name,
-            self._instrumentation_scope,
-            self._measurement_consumer,
-            unit,
-            description,
-        )
-
-        with self._instrument_id_instrument_lock:
-            self._instrument_id_instrument[status.instrument_id] = instrument
-            return instrument
+        return instrument
 
     def create_observable_counter(
         self,
@@ -160,9 +158,27 @@ class Meter(APIMeter):
         unit="",
         description="",
     ) -> APIObservableCounter:
-        status = self._register_instrument(
-            name, _ObservableCounter, unit, description
-        )
+        with self._instrument_registration_lock:
+            status = self._register_instrument(
+                name, _ObservableCounter, unit, description
+            )
+            if not status.already_registered:
+                self._instrument_id_instrument[status.instrument_id] = (
+                    _ObservableCounter(
+                        name,
+                        self._instrumentation_scope,
+                        self._measurement_consumer,
+                        callbacks,
+                        unit,
+                        description,
+                    )
+                )
+            instrument = self._instrument_id_instrument[status.instrument_id]
+
+        if not status.already_registered:
+            self._measurement_consumer.register_asynchronous_instrument(
+                instrument
+            )
 
         if status.conflict:
             # FIXME #2558 go through all views here and check if this
@@ -175,24 +191,7 @@ class Meter(APIMeter):
                 description,
                 status,
             )
-        if status.already_registered:
-            with self._instrument_id_instrument_lock:
-                return self._instrument_id_instrument[status.instrument_id]
-
-        instrument = _ObservableCounter(
-            name,
-            self._instrumentation_scope,
-            self._measurement_consumer,
-            callbacks,
-            unit,
-            description,
-        )
-
-        self._measurement_consumer.register_asynchronous_instrument(instrument)
-
-        with self._instrument_id_instrument_lock:
-            self._instrument_id_instrument[status.instrument_id] = instrument
-            return instrument
+        return instrument
 
     def create_histogram(
         self,
@@ -223,13 +222,26 @@ class Meter(APIMeter):
                     "explicit_bucket_boundaries_advisory must be a sequence of numbers"
                 )
 
-        status = self._register_instrument(
-            name,
-            _Histogram,
-            unit,
-            description,
-            explicit_bucket_boundaries_advisory,
-        )
+        with self._instrument_registration_lock:
+            status = self._register_instrument(
+                name,
+                _Histogram,
+                unit,
+                description,
+                explicit_bucket_boundaries_advisory,
+            )
+            if not status.already_registered:
+                self._instrument_id_instrument[status.instrument_id] = (
+                    _Histogram(
+                        name,
+                        self._instrumentation_scope,
+                        self._measurement_consumer,
+                        unit,
+                        description,
+                        explicit_bucket_boundaries_advisory,
+                    )
+                )
+            instrument = self._instrument_id_instrument[status.instrument_id]
 
         if status.conflict:
             # FIXME #2558 go through all views here and check if this
@@ -242,24 +254,20 @@ class Meter(APIMeter):
                 description,
                 status,
             )
-        if status.already_registered:
-            with self._instrument_id_instrument_lock:
-                return self._instrument_id_instrument[status.instrument_id]
-
-        instrument = _Histogram(
-            name,
-            self._instrumentation_scope,
-            self._measurement_consumer,
-            unit,
-            description,
-            explicit_bucket_boundaries_advisory,
-        )
-        with self._instrument_id_instrument_lock:
-            self._instrument_id_instrument[status.instrument_id] = instrument
-            return instrument
+        return instrument
 
     def create_gauge(self, name, unit="", description="") -> APIGauge:
-        status = self._register_instrument(name, _Gauge, unit, description)
+        with self._instrument_registration_lock:
+            status = self._register_instrument(name, _Gauge, unit, description)
+            if not status.already_registered:
+                self._instrument_id_instrument[status.instrument_id] = _Gauge(
+                    name,
+                    self._instrumentation_scope,
+                    self._measurement_consumer,
+                    unit,
+                    description,
+                )
+            instrument = self._instrument_id_instrument[status.instrument_id]
 
         if status.conflict:
             # FIXME #2558 go through all views here and check if this
@@ -272,28 +280,32 @@ class Meter(APIMeter):
                 description,
                 status,
             )
-        if status.already_registered:
-            with self._instrument_id_instrument_lock:
-                return self._instrument_id_instrument[status.instrument_id]
-
-        instrument = _Gauge(
-            name,
-            self._instrumentation_scope,
-            self._measurement_consumer,
-            unit,
-            description,
-        )
-
-        with self._instrument_id_instrument_lock:
-            self._instrument_id_instrument[status.instrument_id] = instrument
-            return instrument
+        return instrument
 
     def create_observable_gauge(
         self, name, callbacks=None, unit="", description=""
     ) -> APIObservableGauge:
-        status = self._register_instrument(
-            name, _ObservableGauge, unit, description
-        )
+        with self._instrument_registration_lock:
+            status = self._register_instrument(
+                name, _ObservableGauge, unit, description
+            )
+            if not status.already_registered:
+                self._instrument_id_instrument[status.instrument_id] = (
+                    _ObservableGauge(
+                        name,
+                        self._instrumentation_scope,
+                        self._measurement_consumer,
+                        callbacks,
+                        unit,
+                        description,
+                    )
+                )
+            instrument = self._instrument_id_instrument[status.instrument_id]
+
+        if not status.already_registered:
+            self._measurement_consumer.register_asynchronous_instrument(
+                instrument
+            )
 
         if status.conflict:
             # FIXME #2558 go through all views here and check if this
@@ -306,31 +318,32 @@ class Meter(APIMeter):
                 description,
                 status,
             )
-        if status.already_registered:
-            with self._instrument_id_instrument_lock:
-                return self._instrument_id_instrument[status.instrument_id]
-
-        instrument = _ObservableGauge(
-            name,
-            self._instrumentation_scope,
-            self._measurement_consumer,
-            callbacks,
-            unit,
-            description,
-        )
-
-        self._measurement_consumer.register_asynchronous_instrument(instrument)
-
-        with self._instrument_id_instrument_lock:
-            self._instrument_id_instrument[status.instrument_id] = instrument
-            return instrument
+        return instrument
 
     def create_observable_up_down_counter(
         self, name, callbacks=None, unit="", description=""
     ) -> APIObservableUpDownCounter:
-        status = self._register_instrument(
-            name, _ObservableUpDownCounter, unit, description
-        )
+        with self._instrument_registration_lock:
+            status = self._register_instrument(
+                name, _ObservableUpDownCounter, unit, description
+            )
+            if not status.already_registered:
+                self._instrument_id_instrument[status.instrument_id] = (
+                    _ObservableUpDownCounter(
+                        name,
+                        self._instrumentation_scope,
+                        self._measurement_consumer,
+                        callbacks,
+                        unit,
+                        description,
+                    )
+                )
+            instrument = self._instrument_id_instrument[status.instrument_id]
+
+        if not status.already_registered:
+            self._measurement_consumer.register_asynchronous_instrument(
+                instrument
+            )
 
         if status.conflict:
             # FIXME #2558 go through all views here and check if this
@@ -343,24 +356,7 @@ class Meter(APIMeter):
                 description,
                 status,
             )
-        if status.already_registered:
-            with self._instrument_id_instrument_lock:
-                return self._instrument_id_instrument[status.instrument_id]
-
-        instrument = _ObservableUpDownCounter(
-            name,
-            self._instrumentation_scope,
-            self._measurement_consumer,
-            callbacks,
-            unit,
-            description,
-        )
-
-        self._measurement_consumer.register_asynchronous_instrument(instrument)
-
-        with self._instrument_id_instrument_lock:
-            self._instrument_id_instrument[status.instrument_id] = instrument
-            return instrument
+        return instrument
 
 
 def _get_exemplar_filter(exemplar_filter: str) -> ExemplarFilter:
@@ -381,12 +377,24 @@ class MeterProvider(APIMeterProvider):
         metric_readers: Register metric readers to collect metrics from the SDK
             on demand. Each :class:`opentelemetry.sdk.metrics.export.MetricReader` is
             completely independent and will collect separate streams of
-            metrics. TODO: reference ``PeriodicExportingMetricReader`` usage with push
-            exporters here.
+            metrics. For push-based export, use
+            :class:`opentelemetry.sdk.metrics.export.PeriodicExportingMetricReader`.
         resource: The resource representing what the metrics emitted from the SDK pertain to.
         shutdown_on_exit: If true, registers an `atexit` handler to call
             `MeterProvider.shutdown`
         views: The views to configure the metric output the SDK
+
+    .. code-block:: python
+        :caption: Push-based export with PeriodicExportingMetricReader
+
+        from opentelemetry.sdk.metrics import MeterProvider
+        from opentelemetry.sdk.metrics.export import (
+            ConsoleMetricExporter,
+            PeriodicExportingMetricReader,
+        )
+
+        reader = PeriodicExportingMetricReader(ConsoleMetricExporter())
+        provider = MeterProvider(metric_readers=[reader])
 
     By default, instruments which do not match any :class:`opentelemetry.sdk.metrics.view.View` (or if no :class:`opentelemetry.sdk.metrics.view.View`\ s
     are provided) will report metrics with the default aggregation for the
@@ -462,6 +470,7 @@ class MeterProvider(APIMeterProvider):
             metric_reader._set_collect_callback(
                 self._measurement_consumer.collect
             )
+            metric_reader._set_meter_provider(self)
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
         deadline_ns = time_ns() + timeout_millis * 10**6

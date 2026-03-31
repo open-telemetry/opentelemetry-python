@@ -33,6 +33,18 @@
   * Review and merge the pull request that it creates for updating the version.
 * Note: If you are doing a patch release in `-core` repo, you should also do an equivalent patch release in `-contrib` repo (even if there's no fix to release), otherwise tests in CI will fail.
 
+### Note on `contrib.yml` Workflow Behavior
+
+The [contrib.yml](https://github.com/open-telemetry/opentelemetry-python/blob/main/.github/workflows/contrib.yml) workflow in the core repository references reusable workflows from opentelemetry-python-contrib using the hard-coded `main` branch.
+
+Because `uses:` statements cannot receive environment variables and workflows cannot patch or modify other workflows, this reference cannot dynamically follow release branches as we are doing in other workflows.
+
+As a result, when preparing a release branch that contains a different set of instrumentations (e.g., older branches without newly added tox environments), CI may attempt to run tests that do not exist on tox in that branch. In this case:
+
+* It is safe to merge the release PR even if the contrib workflow fails for this reason, or
+
+* Optionally update the contrib.yml workflow to point to the corresponding release branch before running CI.
+
 ## Making the release
 
 * Run the [Release workflow](https://github.com/open-telemetry/opentelemetry-python/actions/workflows/release.yml).

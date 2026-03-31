@@ -1,11 +1,10 @@
 # Contributing to opentelemetry-python
+The Python special interest group (SIG) meets weekly on Thursdays at 9AM PST. Check the [OpenTelemetry community calendar](https://groups.google.com/a/opentelemetry.io/g/calendar-python) for specific dates and Zoom meeting links.
 
-The Python special interest group (SIG) meets weekly on Thursdays at 9AM PST. Check the [OpenTelemetry community calendar](https://calendar.google.com/calendar/embed?src=google.com_b79e3e90j7bbsa2n2p5an5lf60%40group.calendar.google.com) for specific dates and Zoom meeting links.
-
-See the [public meeting notes](https://docs.google.com/document/d/1CIMGoIOZ-c3-igzbd6_Pnxx1SjAkjwqoYSUWxPY8XIs/edit)
+See the [public meeting notes](https://docs.google.com/document/d/18w8zOBm_mbety0OqlPwxc7dvnfu641EgmrO4AdJef0U/edit?tab=t.0)
 for a summary description of past meetings.
 
-See to the [community membership document](https://github.com/open-telemetry/community/blob/main/community-membership.md)
+See the [community membership document](https://github.com/open-telemetry/community/blob/main/community-membership.md)
 on how to become a [**Member**](https://github.com/open-telemetry/community/blob/main/community-membership.md#member),
 [**Approver**](https://github.com/open-telemetry/community/blob/main/community-membership.md#approver)
 and [**Maintainer**](https://github.com/open-telemetry/community/blob/main/community-membership.md#maintainer).
@@ -60,7 +59,7 @@ You can run `tox` with the following arguments:
   under multiple Python versions
 - `tox -e docs` to regenerate the API docs
 - `tox -e opentelemetry-api` and `tox -e opentelemetry-sdk` to run the API and SDK unit tests
-- `tox -e py313-opentelemetry-api` to e.g. run the API unit tests under a specific
+- `tox -e py314-opentelemetry-api` to e.g. run the API unit tests under a specific
   Python version
 - `tox -e spellcheck` to run a spellcheck on all the code
 - `tox -e lint-some-package` to run lint checks on `some-package`
@@ -172,6 +171,18 @@ file in the package it is testing. Make sure that the file name begins with
 
 ## Pull Requests
 
+### How to Structure Pull Requests
+
+Smaller PRs get merged faster, improve review quality, and reduce the risk of conflicts. Please keep PRs small and focused:
+
+- **Aim for fewer than 500 lines** (excluding deletions, generated files, and test fixtures)
+- One change per PR -- address a single bug fix, feature, or refactor
+- If your work requires more extensive changes, consider a series of small, self-contained PRs instead. 
+- If you want the community to understand how your small PR fits into the context of a larger change, consider putting
+the large change in your personal fork and providing a link to it in your PR description. 
+- Strive to provide clear, incremental value to the repository in your PR, such that the repository is always in a
+functional, coherent state.
+
 ### How to Send Pull Requests
 
 Everyone is welcome to contribute code to `opentelemetry-python` via GitHub
@@ -276,9 +287,15 @@ to your PR, can still happen.
 
 Right now Github [does not allow](https://github.com/orgs/community/discussions/5634) PRs
 to be edited by maintainers if the corresponding repo fork exists in a Github organization.
-Please for this repo in a personal Github account instead.
+Please fork this repo in a personal Github account instead.
 
 One of the maintainers will merge the PR once it is **ready to merge**.
+
+### Stale PRs
+
+PRs with no activity for 14 days will be automatically marked as stale and closed after a further 14 days of inactivity. To prevent a PR from being marked stale, ensure there is regular activity (commits, comments, reviews, etc).
+
+Project managers can also exempt a PR from this by applying one of the following labels: `hold`, `WIP`, `blocked by spec`, `do not merge`.
 
 ## Design Choices
 

@@ -60,10 +60,15 @@ class TestAsyncio(OpenTelemetryTestCase):
     So one issue here is setting correct parent span.
     """
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         self.tracer = MockTracer()
-        self.loop = asyncio.get_event_loop()
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
         self.client = Client(RequestHandler(self.tracer), self.loop)
+
+    def tearDown(self):
+        self.loop.close()
+        super().tearDown()
 
     def test_two_callbacks(self):
         res_future1 = self.loop.create_task(self.client.send("message1"))
