@@ -12,7 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-- Enabled the flake8-tidy-import plugins rules for the ruff linter. These rules throw warnings for relative imports in the modules. The banned-api and banned-module-level-imports rules have not been configured yet. They can be configured as per their need in future ([#5019](https://github.com/open-telemetry/opentelemetry-python/pull/5019))
+- Enabled the flake8-tidy-import plugins rules for the ruff linter. These rules throw warnings for relative imports in the modules. The banned-api and banned-module-level-imports rules have not been configured yet. They can be configured as per their need in future
+  ([#5019](https://github.com/open-telemetry/opentelemetry-python/pull/5019))
+- `opentelemetry-api`: Replace a broad exception in attribute cleaning tests to satisfy pylint in the `lint-opentelemetry-api` CI job
 - `opentelemetry-sdk`: Add `create_resource` and `create_propagator`/`configure_propagator` to declarative file configuration, enabling Resource and propagator instantiation from config files without reading env vars
   ([#4979](https://github.com/open-telemetry/opentelemetry-python/pull/4979))
 - `opentelemetry-sdk`: Map Python `CRITICAL` log level to OTel `FATAL` severity text per the specification
