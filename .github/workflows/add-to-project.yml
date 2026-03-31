@@ -1,0 +1,16 @@
+name: Add PR to project board
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review]
+
+jobs:
+  add-to-project:
+    name: add to project board
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - uses: actions/add-to-project@v1.0.2
+        with:
+          project-url: https://github.com/orgs/open-telemetry/projects/88
+          github-token: ${{ secrets.ADD_TO_PROJECT_PAT }}
