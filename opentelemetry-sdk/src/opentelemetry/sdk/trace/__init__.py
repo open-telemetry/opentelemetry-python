@@ -1120,6 +1120,7 @@ class Tracer(trace_api.Tracer):
         instrumentation_scope: InstrumentationScope,
         *,
         meter_provider: Optional[metrics_api.MeterProvider] = None,
+        tracer_metrics: Optional["TracerMetrics"] = None,
         _tracer_provider: Optional["TracerProvider"] = None,
     ) -> None:
         self.sampler = sampler
@@ -1130,9 +1131,11 @@ class Tracer(trace_api.Tracer):
         self._span_limits = span_limits
         self._instrumentation_scope = instrumentation_scope
         self._tracer_provider = _tracer_provider
-
-        meter_provider = meter_provider or metrics_api.get_meter_provider()
-        self._tracer_metrics = TracerMetrics(meter_provider)
+        if tracer_metrics is not None:
+            self._tracer_metrics = tracer_metrics
+        else:
+         meter_provider = meter_provider or metrics_api.get_meter_provider()
+         self._tracer_metrics = TracerMetrics(meter_provider)
 
     def _is_enabled(self) -> bool:
         """If the tracer is not enabled, start_span will create a NonRecordingSpan"""
@@ -1365,6 +1368,8 @@ class TracerProvider(trace_api.TracerProvider):
         self._tracer_configurator = (
             _tracer_configurator or _default_tracer_configurator
         )
+        self._tracer_metrics: Optional[TracerMetrics] = None
+        self._tracer_metrics_lock = threading.Lock()
 
     def _set_tracer_configurator(
         self, *, tracer_configurator: _TracerConfiguratorT
@@ -1386,6 +1391,24 @@ class TracerProvider(trace_api.TracerProvider):
     @property
     def resource(self) -> Resource:
         return self._resource
+
+    def _get_tracer_metrics(self) -> TracerMetrics:
+        """Return a single cached TracerMetrics instance for this provider.
+
+        Creating a new TracerMetrics on every get_tracer() call causes
+        ProxyMeterProvider to accumulate proxy meters indefinitely when no
+        SDK MeterProvider is configured, leading to unbounded memory growth.
+
+        See: https://github.com/open-telemetry/opentelemetry-python/issues/5016
+        """
+        if self._tracer_metrics is None:
+            with self._tracer_metrics_lock:
+                if self._tracer_metrics is None:
+                    self._tracer_metrics = TracerMetrics(
+                        self._meter_provider
+                        or metrics_api.get_meter_provider()
+                    )
+        return self._tracer_metrics
 
     def get_tracer(
         self,
@@ -1430,7 +1453,7 @@ class TracerProvider(trace_api.TracerProvider):
                 schema_url,
                 attributes,
             ),
-            meter_provider=self._meter_provider,
+            tracer_metrics=self._get_tracer_metrics(),
             _tracer_provider=self,
         )
 
