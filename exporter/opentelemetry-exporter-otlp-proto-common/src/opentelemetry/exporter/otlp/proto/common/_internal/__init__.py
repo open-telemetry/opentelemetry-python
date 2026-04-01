@@ -18,6 +18,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Sequence
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     Dict,
@@ -41,9 +42,11 @@ from opentelemetry.proto.common.v1.common_pb2 import (
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as PB2Resource,
 )
-from opentelemetry.sdk.trace import Resource
-from opentelemetry.sdk.util.instrumentation import InstrumentationScope
-from opentelemetry.util.types import _ExtendedAttributes
+
+if TYPE_CHECKING:
+    from opentelemetry.sdk.trace import Resource
+    from opentelemetry.sdk.util.instrumentation import InstrumentationScope
+    from opentelemetry.util.types import _ExtendedAttributes
 
 _logger = logging.getLogger(__name__)
 

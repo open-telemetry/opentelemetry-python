@@ -85,10 +85,19 @@ select = [
   "PLE", # pylint error
   "Q",   # flake8-quotes
   "G",   # https://docs.astral.sh/ruff/rules/#flake8-logging-format-g
+  "TCH", # flake8-type-checking
 ]
 
 ignore = [
   "E501", # line-too-long
+  
+  # flake8-type-checking rules:
+  # This rule enforces to add quotes for type aliases.
+  # This rule is unsafe as no static type checker can determine
+  # the exact behavior of runtime typing libraries.
+  "TC007",
+  # This rule is unstable and in preview
+  "TC008",
 ]
 
 [tool.ruff.lint.per-file-ignores]

@@ -39,19 +39,21 @@ from abc import ABC, abstractmethod
 from logging import getLogger
 from os import environ
 from time import time_ns
-from typing import Optional, cast, overload
+from typing import TYPE_CHECKING, Optional, cast, overload
 
 from typing_extensions import deprecated
 
-from opentelemetry._logs.severity import SeverityNumber
 from opentelemetry.context import get_current
-from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import _OTEL_PYTHON_LOGGER_PROVIDER
 from opentelemetry.trace import get_current_span
-from opentelemetry.trace.span import TraceFlags
 from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
-from opentelemetry.util.types import AnyValue, _ExtendedAttributes
+
+if TYPE_CHECKING:
+    from opentelemetry._logs.severity import SeverityNumber
+    from opentelemetry.context.context import Context
+    from opentelemetry.trace.span import TraceFlags
+    from opentelemetry.util.types import AnyValue, _ExtendedAttributes
 
 _logger = getLogger(__name__)
 

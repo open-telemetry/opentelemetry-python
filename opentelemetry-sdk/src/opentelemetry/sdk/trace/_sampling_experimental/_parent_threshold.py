@@ -14,11 +14,9 @@
 
 from __future__ import annotations
 
-from typing import Sequence
+from typing import TYPE_CHECKING, Sequence
 
-from opentelemetry.context import Context
 from opentelemetry.trace import Link, SpanKind, TraceState, get_current_span
-from opentelemetry.util.types import Attributes
 
 from ._composable import ComposableSampler, SamplingIntent
 from ._trace_state import OtelTraceState
@@ -27,6 +25,10 @@ from ._util import (
     MIN_THRESHOLD,
     is_valid_threshold,
 )
+
+if TYPE_CHECKING:
+    from opentelemetry.context import Context
+    from opentelemetry.util.types import Attributes
 
 
 class _ComposableParentThreshold(ComposableSampler):

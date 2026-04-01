@@ -348,7 +348,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         metric = reader_metrics[0]
 
         point = metric.data.data_points[0]
-        histogram = cast(HistogramDataPoint, point)
+        histogram = cast("HistogramDataPoint", point)
         self.assertEqual(histogram.count, 1)
         attrs = histogram.attributes
         assert attrs is not None

@@ -237,7 +237,7 @@ class Resource:
         if not resource.attributes.get(SERVICE_NAME, None):
             default_service_name = "unknown_service"
             process_executable_name = cast(
-                Optional[str],
+                "Optional[str]",
                 resource.attributes.get(PROCESS_EXECUTABLE_NAME, None),
             )
             if process_executable_name:

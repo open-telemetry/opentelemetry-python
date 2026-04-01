@@ -14,16 +14,19 @@
 
 from __future__ import annotations
 
-from typing import Sequence
+from typing import TYPE_CHECKING, Sequence
 
-from opentelemetry.context import Context
 from opentelemetry.sdk.trace.sampling import Decision, Sampler, SamplingResult
 from opentelemetry.trace import Link, SpanKind, TraceState
-from opentelemetry.util.types import Attributes
 
-from ._composable import ComposableSampler, SamplingIntent
 from ._trace_state import OTEL_TRACE_STATE_KEY, OtelTraceState
 from ._util import INVALID_THRESHOLD, is_valid_random_value, is_valid_threshold
+
+if TYPE_CHECKING:
+    from opentelemetry.context import Context
+    from opentelemetry.util.types import Attributes
+
+    from ._composable import ComposableSampler, SamplingIntent
 
 
 class _CompositeSampler(Sampler):

@@ -17,10 +17,9 @@ from __future__ import annotations
 
 from logging import getLogger
 from time import time_ns
-from typing import Generator, Iterable, List, Sequence, Union
+from typing import TYPE_CHECKING, Generator, Iterable, List, Sequence, Union
 
 # This kind of import is needed to avoid Sphinx errors.
-import opentelemetry.sdk.metrics
 from opentelemetry.context import Context, get_current
 from opentelemetry.metrics import CallbackT
 from opentelemetry.metrics import Counter as APICounter
@@ -37,7 +36,10 @@ from opentelemetry.metrics._internal.instrument import (
     _MetricsHistogramAdvisory,
 )
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
-from opentelemetry.sdk.util.instrumentation import InstrumentationScope
+
+if TYPE_CHECKING:
+    import opentelemetry.sdk.metrics
+    from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
 _logger = getLogger(__name__)
 

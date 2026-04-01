@@ -23,12 +23,11 @@ from os import environ, linesep
 from sys import stdout
 from threading import Event, Lock, RLock, Thread
 from time import perf_counter, time_ns
-from typing import IO, Callable, Iterable, Optional
+from typing import IO, TYPE_CHECKING, Callable, Iterable, Optional
 
 from typing_extensions import final
 
 # This kind of import is needed to avoid Sphinx errors.
-import opentelemetry.sdk.metrics._internal
 from opentelemetry.context import (
     _SUPPRESS_INSTRUMENTATION_KEY,
     attach,
@@ -61,13 +60,16 @@ from opentelemetry.sdk.metrics._internal.instrument import (
     _ObservableUpDownCounter,
     _UpDownCounter,
 )
-from opentelemetry.sdk.metrics._internal.point import MetricsData
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
     OtelComponentTypeValues,
 )
 from opentelemetry.util._once import Once
 
 from ._metric_reader_metrics import MetricReaderMetrics
+
+if TYPE_CHECKING:
+    import opentelemetry.sdk.metrics._internal
+    from opentelemetry.sdk.metrics._internal.point import MetricsData
 
 _logger = getLogger(__name__)
 

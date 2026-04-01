@@ -14,23 +14,25 @@
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from opentelemetry.baggage.propagation import W3CBaggagePropagator
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.composite import CompositePropagator
-from opentelemetry.propagators.textmap import TextMapPropagator
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
-from opentelemetry.sdk._configuration.models import (
-    Propagator as PropagatorConfig,
-)
-from opentelemetry.sdk._configuration.models import (
-    TextMapPropagator as TextMapPropagatorConfig,
-)
 from opentelemetry.trace.propagation.tracecontext import (
     TraceContextTextMapPropagator,
 )
 from opentelemetry.util._importlib_metadata import entry_points
+
+if TYPE_CHECKING:
+    from opentelemetry.propagators.textmap import TextMapPropagator
+    from opentelemetry.sdk._configuration.models import (
+        Propagator as PropagatorConfig,
+    )
+    from opentelemetry.sdk._configuration.models import (
+        TextMapPropagator as TextMapPropagatorConfig,
+    )
 
 
 def _load_entry_point_propagator(name: str) -> TextMapPropagator:

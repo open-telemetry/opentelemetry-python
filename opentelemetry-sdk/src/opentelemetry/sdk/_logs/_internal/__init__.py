@@ -26,7 +26,15 @@ from dataclasses import dataclass, field
 from os import environ
 from threading import Lock
 from time import time_ns
-from typing import Any, Callable, Tuple, Union, cast, overload  # noqa
+from typing import (  # noqa
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Tuple,
+    Union,
+    cast,
+    overload,
+)
 
 from typing_extensions import deprecated
 
@@ -41,7 +49,6 @@ from opentelemetry._logs import (
 )
 from opentelemetry.attributes import _VALID_ANY_VALUE_TYPES, BoundedAttributes
 from opentelemetry.context import get_current
-from opentelemetry.context.context import Context
 from opentelemetry.metrics import MeterProvider, get_meter_provider
 from opentelemetry.sdk._logs._internal._logger_metrics import LoggerMetrics
 from opentelemetry.sdk.environment_variables import (
@@ -58,7 +65,10 @@ from opentelemetry.trace import (
     format_span_id,
     format_trace_id,
 )
-from opentelemetry.util.types import AnyValue, _ExtendedAttributes
+
+if TYPE_CHECKING:
+    from opentelemetry.context.context import Context
+    from opentelemetry.util.types import AnyValue, _ExtendedAttributes
 
 _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
 _ENV_VALUE_UNSET = ""

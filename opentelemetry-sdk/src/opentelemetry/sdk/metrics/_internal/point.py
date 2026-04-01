@@ -16,14 +16,16 @@
 
 from dataclasses import asdict, dataclass, field
 from json import dumps, loads
-from typing import Optional, Sequence, Union
+from typing import TYPE_CHECKING, Optional, Sequence, Union
 
 # This kind of import is needed to avoid Sphinx errors.
-import opentelemetry.sdk.metrics._internal
 from opentelemetry.sdk.metrics._internal.exemplar import Exemplar
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.util.types import Attributes
+
+if TYPE_CHECKING:
+    import opentelemetry.sdk.metrics._internal
 
 
 @dataclass(frozen=True)

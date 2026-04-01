@@ -32,12 +32,12 @@ def _load_provider(
 ) -> Provider:  # type: ignore[type-var]
     try:
         provider_name = cast(
-            str,
+            "str",
             environ.get(provider_environment_variable, f"default_{provider}"),
         )
 
         return cast(
-            Provider,
+            "Provider",
             next(  # type: ignore
                 iter(  # type: ignore
                     entry_points(  # type: ignore

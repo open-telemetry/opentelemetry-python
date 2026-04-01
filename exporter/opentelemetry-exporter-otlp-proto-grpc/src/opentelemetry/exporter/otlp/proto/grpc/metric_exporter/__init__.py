@@ -16,10 +16,9 @@ from __future__ import annotations
 from dataclasses import replace
 from logging import getLogger
 from os import environ
-from typing import Iterable, List, Tuple, Union
+from typing import TYPE_CHECKING, Iterable, List, Tuple, Union
 from typing import Sequence as TypingSequence
 
-from grpc import ChannelCredentials, Compression
 from opentelemetry.exporter.otlp.proto.common._internal.metrics_encoder import (
     OTLPMetricExporterMixin,
 )
@@ -53,7 +52,6 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_INSECURE,
     OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
 )
-from opentelemetry.sdk.metrics._internal.aggregation import Aggregation
 from opentelemetry.sdk.metrics.export import (  # noqa: F401
     AggregationTemporality,
     DataPointT,
@@ -72,6 +70,10 @@ from opentelemetry.sdk.metrics.export import (  # noqa: F401
 from opentelemetry.sdk.metrics.export import (  # noqa: F401
     Histogram as HistogramType,
 )
+
+if TYPE_CHECKING:
+    from grpc import ChannelCredentials, Compression
+    from opentelemetry.sdk.metrics._internal.aggregation import Aggregation
 
 _logger = getLogger(__name__)
 
