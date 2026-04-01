@@ -170,12 +170,10 @@ def _filter_attributes(
     if not included and not excluded:
         return attrs
 
-    effective_included = included if included else None  # [] → include all
-
     result: dict[str, object] = {}
     for key, value in attrs.items():
-        if effective_included is not None and not any(
-            fnmatch.fnmatch(key, pat) for pat in effective_included
+        if included and not any(
+            fnmatch.fnmatch(key, pat) for pat in included
         ):
             continue
         if excluded and any(fnmatch.fnmatch(key, pat) for pat in excluded):
