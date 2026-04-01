@@ -41,6 +41,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4910](https://github.com/open-telemetry/opentelemetry-python/pull/4910))
 - Add configurable `max_export_batch_size` to OTLP HTTP metrics exporter
   ([#4576](https://github.com/open-telemetry/opentelemetry-python/pull/4576))
+- `opentelemetry-exporter-otlp-proto-http`: use consistent protobuf for export request
+  ([#5015](https://github.com/open-telemetry/opentelemetry-python/pull/5015))
 - `opentelemetry-sdk`: cache TracerConfig into the tracer, this changes an internal interface. Only one Tracer with the same instrumentation scope will be created
   ([#5007](https://github.com/open-telemetry/opentelemetry-python/pull/5007))
 
