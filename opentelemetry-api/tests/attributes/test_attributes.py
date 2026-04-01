@@ -16,12 +16,14 @@
 
 import copy
 import unittest
+import unittest.mock
 from typing import MutableSequence
 
 from opentelemetry.attributes import (
     BoundedAttributes,
     _clean_attribute,
     _clean_extended_attribute,
+    _clean_extended_attribute_value,
 )
 
 
@@ -321,6 +323,14 @@ class TestBoundedAttributes(unittest.TestCase):
         self.assertEqual(
             "<DummyWSGIRequest method=GET path=/example/>", cleaned_value
         )
+
+    def test_invalid_anyvalue_type_raises_typeerror(self):
+        class BadStr:
+            def __str__(self):
+                raise RuntimeError("boom")
+
+        with self.assertRaises(TypeError):
+            _clean_extended_attribute_value(BadStr(), None)
 
     def test_deepcopy(self):
         bdict = BoundedAttributes(4, self.base, immutable=False)
