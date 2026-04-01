@@ -36,7 +36,9 @@ from opentelemetry.util._importlib_metadata import entry_points
 def _load_entry_point_propagator(name: str) -> TextMapPropagator:
     """Load a propagator by name from the opentelemetry_propagator entry point group."""
     try:
-        ep = next(entry_points(group="opentelemetry_propagator", name=name), None)
+        ep = next(
+            entry_points(group="opentelemetry_propagator", name=name), None
+        )
         if not ep:
             raise ConfigurationError(
                 f"Propagator '{name}' not found. "
