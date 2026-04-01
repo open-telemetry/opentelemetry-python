@@ -327,10 +327,10 @@ class TestContainerResourceDetector(unittest.TestCase):
         self.assertNotIn(CONTAINER_ID, resource.attributes)
 
     def test_container_detector_warns_when_package_missing(self):
-        """A warning is logged when the contrib package is not installed."""
-        with patch.dict(
-            "sys.modules",
-            {"opentelemetry.resource.detector.containerid": None},
+        """A warning is logged when the contrib entry point is not found."""
+        with patch(
+            "opentelemetry.sdk._configuration._resource.entry_points",
+            return_value=[],
         ):
             with self.assertLogs(
                 "opentelemetry.sdk._configuration._resource", level="WARNING"
@@ -345,16 +345,16 @@ class TestContainerResourceDetector(unittest.TestCase):
         )
 
     def test_container_detector_uses_contrib_when_available(self):
-        """When the contrib package is installed, container.id is detected."""
+        """When the contrib entry point is registered, container.id is detected."""
         mock_resource = Resource({CONTAINER_ID: "abc123"})
         mock_detector = MagicMock()
         mock_detector.return_value.detect.return_value = mock_resource
-        mock_module = MagicMock()
-        mock_module.ContainerResourceDetector = mock_detector
+        mock_ep = MagicMock()
+        mock_ep.load.return_value = mock_detector
 
-        with patch.dict(
-            "sys.modules",
-            {"opentelemetry.resource.detector.containerid": mock_module},
+        with patch(
+            "opentelemetry.sdk._configuration._resource.entry_points",
+            return_value=[mock_ep],
         ):
             resource = create_resource(self._config_with_container())
 
@@ -365,8 +365,8 @@ class TestContainerResourceDetector(unittest.TestCase):
         mock_resource = Resource({CONTAINER_ID: "detected-id"})
         mock_detector = MagicMock()
         mock_detector.return_value.detect.return_value = mock_resource
-        mock_module = MagicMock()
-        mock_module.ContainerResourceDetector = mock_detector
+        mock_ep = MagicMock()
+        mock_ep.load.return_value = mock_detector
 
         config = ResourceConfig(
             attributes=[
@@ -376,9 +376,9 @@ class TestContainerResourceDetector(unittest.TestCase):
                 detectors=[ExperimentalResourceDetector(container={})]
             ),
         )
-        with patch.dict(
-            "sys.modules",
-            {"opentelemetry.resource.detector.containerid": mock_module},
+        with patch(
+            "opentelemetry.sdk._configuration._resource.entry_points",
+            return_value=[mock_ep],
         ):
             resource = create_resource(config)
 
