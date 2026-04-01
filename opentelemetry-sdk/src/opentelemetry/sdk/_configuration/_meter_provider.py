@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Dict, List, Optional, Set, Type
+from typing import Optional, Set, Type
 
 from opentelemetry import metrics
 from opentelemetry.sdk._configuration._common import _parse_headers
@@ -95,7 +95,7 @@ _DEFAULT_EXPORT_INTERVAL_MILLIS = 60000
 _DEFAULT_EXPORT_TIMEOUT_MILLIS = 30000
 
 # Instrument type → SDK instrument class mapping (for View selectors).
-_INSTRUMENT_TYPE_MAP: Dict[InstrumentType, Type] = {
+_INSTRUMENT_TYPE_MAP: dict[InstrumentType, Type] = {
     InstrumentType.counter: Counter,
     InstrumentType.up_down_counter: UpDownCounter,
     InstrumentType.histogram: Histogram,
@@ -108,7 +108,7 @@ _INSTRUMENT_TYPE_MAP: Dict[InstrumentType, Type] = {
 
 def _map_temporality(
     pref: Optional[ExporterTemporalityPreference],
-) -> Dict[type, AggregationTemporality]:
+) -> dict[type, AggregationTemporality]:
     """Map a temporality preference to an explicit preferred_temporality dict.
 
     Always returns an explicit dict to suppress OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE.
@@ -149,7 +149,7 @@ def _map_temporality(
 
 def _map_histogram_aggregation(
     pref: Optional[ExporterDefaultHistogramAggregation],
-) -> Dict[type, Aggregation]:
+) -> dict[type, Aggregation]:
     """Map a histogram aggregation preference to an explicit preferred_aggregation dict.
 
     Always returns an explicit dict to suppress
@@ -448,8 +448,8 @@ def create_meter_provider(
     if config is not None and config.exemplar_filter is not None:
         exemplar_filter = _create_exemplar_filter(config.exemplar_filter)
 
-    readers: List[MetricReader] = []
-    views: List[View] = []
+    readers: list[MetricReader] = []
+    views: list[View] = []
 
     if config is not None:
         for reader_config in config.readers:
