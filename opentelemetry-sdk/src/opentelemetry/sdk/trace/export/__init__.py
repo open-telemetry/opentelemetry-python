@@ -61,9 +61,7 @@ class SpanExporter:
     `SimpleSpanProcessor` or a `BatchSpanProcessor`.
     """
 
-    def export(
-        self, spans: typing.Sequence[ReadableSpan]
-    ) -> "SpanExportResult":  # pyright: ignore[reportReturnType]
+    def export(self, spans: typing.Sequence[ReadableSpan]) -> SpanExportResult:  # pyright: ignore[reportReturnType]
         """Exports a batch of telemetry data.
 
         Args:
