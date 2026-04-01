@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `opentelemetry-sdk`: Add `service` resource detector support to declarative file configuration via `detection_development.detectors[].service`
   ([#5003](https://github.com/open-telemetry/opentelemetry-python/pull/5003))
+- `opentelemetry-sdk`: Add shared `_parse_headers` helper for declarative config OTLP exporters
+  ([#5021](https://github.com/open-telemetry/opentelemetry-python/pull/5021))
+- `opentelemetry-api`: Replace a broad exception in attribute cleaning tests to satisfy pylint in the `lint-opentelemetry-api` CI job
 - `opentelemetry-sdk`: Add `create_resource` and `create_propagator`/`configure_propagator` to declarative file configuration, enabling Resource and propagator instantiation from config files without reading env vars
   ([#4979](https://github.com/open-telemetry/opentelemetry-python/pull/4979))
 - `opentelemetry-sdk`: Map Python `CRITICAL` log level to OTel `FATAL` severity text per the specification
@@ -42,6 +45,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4910](https://github.com/open-telemetry/opentelemetry-python/pull/4910))
 - Add configurable `max_export_batch_size` to OTLP HTTP metrics exporter
   ([#4576](https://github.com/open-telemetry/opentelemetry-python/pull/4576))
+- `opentelemetry-exporter-otlp-proto-http`: use consistent protobuf for export request
+  ([#5015](https://github.com/open-telemetry/opentelemetry-python/pull/5015))
+- `opentelemetry-sdk`: cache TracerConfig into the tracer, this changes an internal interface. Only one Tracer with the same instrumentation scope will be created
+  ([#5007](https://github.com/open-telemetry/opentelemetry-python/pull/5007))
 
 ## Version 1.40.0/0.61b0 (2026-03-04)
 
