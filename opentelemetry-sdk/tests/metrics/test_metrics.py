@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=protected-access,no-self-use
+# pylint: disable=protected-access,no-self-use,too-many-lines
 
 import weakref
 from collections.abc import Callable
