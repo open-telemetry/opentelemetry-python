@@ -15,9 +15,10 @@
 from __future__ import annotations
 
 import logging
-from typing import Dict, Optional
+from typing import Optional
 
 from opentelemetry._logs import set_logger_provider
+from opentelemetry.sdk._configuration._common import _parse_headers
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
 from opentelemetry.sdk._configuration.models import (
     BatchLogRecordProcessor as BatchLogRecordProcessorConfig,
@@ -59,35 +60,6 @@ _DEFAULT_SCHEDULE_DELAY_MILLIS = 1000
 _DEFAULT_EXPORT_TIMEOUT_MILLIS = 30000
 _DEFAULT_MAX_QUEUE_SIZE = 2048
 _DEFAULT_MAX_EXPORT_BATCH_SIZE = 512
-
-
-def _parse_headers(
-    headers: Optional[list],
-    headers_list: Optional[str],
-) -> Optional[Dict[str, str]]:
-    """Merge headers struct and headers_list into a dict.
-
-    Returns None if neither is set, letting the exporter read env vars.
-    headers struct takes priority over headers_list for the same key.
-    """
-    if headers is None and headers_list is None:
-        return None
-    result: Dict[str, str] = {}
-    if headers_list:
-        for item in headers_list.split(","):
-            item = item.strip()
-            if "=" in item:
-                key, value = item.split("=", 1)
-                result[key.strip()] = value.strip()
-            elif item:
-                _logger.warning(
-                    "Invalid header pair in headers_list (missing '='): %s",
-                    item,
-                )
-    if headers:
-        for pair in headers:
-            result[pair.name] = pair.value or ""
-    return result
 
 
 def _map_compression(

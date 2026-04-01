@@ -24,6 +24,7 @@ Example:
     '1.0'
 """
 
+from opentelemetry.sdk._configuration._exceptions import ConfigurationError
 from opentelemetry.sdk._configuration._logger_provider import (
     configure_logger_provider,
     create_logger_provider,
@@ -37,10 +38,7 @@ from opentelemetry.sdk._configuration.file._env_substitution import (
     EnvSubstitutionError,
     substitute_env_vars,
 )
-from opentelemetry.sdk._configuration.file._loader import (
-    ConfigurationError,
-    load_config_file,
-)
+from opentelemetry.sdk._configuration.file._loader import load_config_file
 
 __all__ = [
     "load_config_file",
