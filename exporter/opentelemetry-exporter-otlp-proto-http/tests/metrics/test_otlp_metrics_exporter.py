@@ -40,6 +40,9 @@ from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
     _split_metrics_data,
 )
 from opentelemetry.exporter.otlp.proto.http.version import __version__
+from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
+    ExportMetricsServiceRequest,
+)
 from opentelemetry.proto.common.v1.common_pb2 import (
     InstrumentationScope,
     KeyValue,
@@ -374,7 +377,7 @@ class TestOTLPMetricExporter(TestCase):
         )
 
     def test_split_metrics_data_many_data_points(self):
-        metrics_data = pb2.MetricsData(
+        metrics_data = ExportMetricsServiceRequest(
             resource_metrics=[
                 _resource_metrics(
                     index=1,
@@ -396,7 +399,7 @@ class TestOTLPMetricExporter(TestCase):
                 ),
             ]
         )
-        split_metrics_data: List[MetricsData] = list(
+        split_metrics_data: List[ExportMetricsServiceRequest] = list(
             # pylint: disable=protected-access
             _split_metrics_data(
                 metrics_data=metrics_data,
@@ -406,7 +409,7 @@ class TestOTLPMetricExporter(TestCase):
 
         self.assertEqual(
             [
-                pb2.MetricsData(
+                ExportMetricsServiceRequest(
                     resource_metrics=[
                         _resource_metrics(
                             index=1,
@@ -427,7 +430,7 @@ class TestOTLPMetricExporter(TestCase):
                         ),
                     ]
                 ),
-                pb2.MetricsData(
+                ExportMetricsServiceRequest(
                     resource_metrics=[
                         _resource_metrics(
                             index=1,
@@ -452,7 +455,7 @@ class TestOTLPMetricExporter(TestCase):
         )
 
     def test_split_metrics_data_nb_data_points_equal_batch_size(self):
-        metrics_data = pb2.MetricsData(
+        metrics_data = ExportMetricsServiceRequest(
             resource_metrics=[
                 _resource_metrics(
                     index=1,
@@ -475,7 +478,7 @@ class TestOTLPMetricExporter(TestCase):
             ]
         )
 
-        split_metrics_data: List[MetricsData] = list(
+        split_metrics_data: List[ExportMetricsServiceRequest] = list(
             # pylint: disable=protected-access
             _split_metrics_data(
                 metrics_data=metrics_data,
@@ -485,7 +488,7 @@ class TestOTLPMetricExporter(TestCase):
 
         self.assertEqual(
             [
-                pb2.MetricsData(
+                ExportMetricsServiceRequest(
                     resource_metrics=[
                         _resource_metrics(
                             index=1,
@@ -513,7 +516,7 @@ class TestOTLPMetricExporter(TestCase):
 
     def test_split_metrics_data_many_resources_scopes_metrics(self):
         # GIVEN
-        metrics_data = pb2.MetricsData(
+        metrics_data = ExportMetricsServiceRequest(
             resource_metrics=[
                 _resource_metrics(
                     index=1,
@@ -567,7 +570,7 @@ class TestOTLPMetricExporter(TestCase):
             ]
         )
 
-        split_metrics_data: List[MetricsData] = list(
+        split_metrics_data: List[ExportMetricsServiceRequest] = list(
             # pylint: disable=protected-access
             _split_metrics_data(
                 metrics_data=metrics_data,
@@ -577,7 +580,7 @@ class TestOTLPMetricExporter(TestCase):
 
         self.assertEqual(
             [
-                pb2.MetricsData(
+                ExportMetricsServiceRequest(
                     resource_metrics=[
                         _resource_metrics(
                             index=1,
@@ -603,7 +606,7 @@ class TestOTLPMetricExporter(TestCase):
                         ),
                     ]
                 ),
-                pb2.MetricsData(
+                ExportMetricsServiceRequest(
                     resource_metrics=[
                         _resource_metrics(
                             index=1,
@@ -858,7 +861,7 @@ class TestOTLPMetricExporter(TestCase):
             MagicMock(ok=True),
             MagicMock(ok=True),
         ]
-        mock_encode_metrics.return_value = pb2.MetricsData(
+        mock_encode_metrics.return_value = ExportMetricsServiceRequest(
             resource_metrics=[
                 _resource_metrics(
                     index=1,
@@ -880,7 +883,7 @@ class TestOTLPMetricExporter(TestCase):
                 ),
             ]
         )
-        batch_1 = pb2.MetricsData(
+        batch_1 = ExportMetricsServiceRequest(
             resource_metrics=[
                 _resource_metrics(
                     index=1,
@@ -901,7 +904,7 @@ class TestOTLPMetricExporter(TestCase):
                 ),
             ]
         )
-        batch_2 = pb2.MetricsData(
+        batch_2 = ExportMetricsServiceRequest(
             resource_metrics=[
                 _resource_metrics(
                     index=1,
@@ -954,7 +957,7 @@ class TestOTLPMetricExporter(TestCase):
             MagicMock(ok=True),
             MagicMock(ok=True),
         ]
-        mock_encode_metrics.return_value = pb2.MetricsData(
+        mock_encode_metrics.return_value = ExportMetricsServiceRequest(
             resource_metrics=[
                 _resource_metrics(
                     index=1,
@@ -976,7 +979,7 @@ class TestOTLPMetricExporter(TestCase):
                 ),
             ]
         )
-        batch_1 = pb2.MetricsData(
+        batch_1 = ExportMetricsServiceRequest(
             resource_metrics=[
                 _resource_metrics(
                     index=1,
@@ -1031,7 +1034,7 @@ class TestOTLPMetricExporter(TestCase):
             # Non-retryable
             MagicMock(ok=False, status_code=400, reason="bad request"),
         ]
-        mock_encode_metrics.return_value = pb2.MetricsData(
+        mock_encode_metrics.return_value = ExportMetricsServiceRequest(
             resource_metrics=[
                 _resource_metrics(
                     index=1,
@@ -1053,7 +1056,7 @@ class TestOTLPMetricExporter(TestCase):
                 ),
             ]
         )
-        batch_1 = pb2.MetricsData(
+        batch_1 = ExportMetricsServiceRequest(
             resource_metrics=[
                 _resource_metrics(
                     index=1,
@@ -1074,7 +1077,7 @@ class TestOTLPMetricExporter(TestCase):
                 ),
             ]
         )
-        batch_2 = pb2.MetricsData(
+        batch_2 = ExportMetricsServiceRequest(
             resource_metrics=[
                 _resource_metrics(
                     index=1,
@@ -1131,7 +1134,7 @@ class TestOTLPMetricExporter(TestCase):
             # Then success
             MagicMock(ok=True),
         ]
-        mock_encode_metrics.return_value = pb2.MetricsData(
+        mock_encode_metrics.return_value = ExportMetricsServiceRequest(
             resource_metrics=[
                 _resource_metrics(
                     index=1,
@@ -1153,7 +1156,7 @@ class TestOTLPMetricExporter(TestCase):
                 ),
             ]
         )
-        batch_1 = pb2.MetricsData(
+        batch_1 = ExportMetricsServiceRequest(
             resource_metrics=[
                 _resource_metrics(
                     index=1,
@@ -1174,7 +1177,7 @@ class TestOTLPMetricExporter(TestCase):
                 ),
             ]
         )
-        batch_2 = pb2.MetricsData(
+        batch_2 = ExportMetricsServiceRequest(
             resource_metrics=[
                 _resource_metrics(
                     index=1,

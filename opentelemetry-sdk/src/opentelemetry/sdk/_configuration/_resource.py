@@ -37,7 +37,7 @@ _logger = logging.getLogger(__name__)
 
 def _coerce_bool(value: object) -> bool:
     if isinstance(value, str):
-        return value.lower() in ("true", "1")
+        return value.lower() not in ("false", "0", "")
     return bool(value)
 
 
