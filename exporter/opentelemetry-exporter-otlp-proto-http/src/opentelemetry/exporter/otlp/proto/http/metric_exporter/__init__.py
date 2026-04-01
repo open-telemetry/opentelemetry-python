@@ -61,6 +61,7 @@ from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401
     KeyValueList,
 )
 from opentelemetry.proto.metrics.v1 import metrics_pb2 as pb2
+from opentelemetry.proto.resource.v1.resource_pb2 import Resource  # noqa: F401
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as PB2Resource,
 )
