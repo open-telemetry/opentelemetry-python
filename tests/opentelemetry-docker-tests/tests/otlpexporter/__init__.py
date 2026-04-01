@@ -20,7 +20,19 @@ from opentelemetry.sdk.metrics._internal.export import (
     MetricExportResult,
     PeriodicExportingMetricReader,
 )
+from opentelemetry.sdk.metrics._internal.point import (
+    Metric,
+    NumberDataPoint,
+    Sum,
+)
+from opentelemetry.sdk.metrics.export import (
+    MetricsData,
+    ResourceMetrics,
+    ScopeMetrics,
+)
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
 
 class ExportStatusSpanProcessor(SimpleSpanProcessor):
@@ -58,8 +70,13 @@ class BaseTestOTLPExporter(ABC):
     def get_span_processor(self):
         pass
 
+    @abstractmethod
+    def get_metric_reader(self):
+        pass
+
     # pylint: disable=no-member
     def test_export(self):
+        """Test span export"""
         with self.tracer.start_as_current_span("foo"):
             with self.tracer.start_as_current_span("bar"):
                 with self.tracer.start_as_current_span("baz"):
@@ -72,6 +89,7 @@ class BaseTestOTLPExporter(ABC):
             self.assertEqual(export_status.value, 0)
 
     def test_metrics_export(self):
+        """Test metrics export from full metrics SDK pipeline"""
         counter = self.meter.create_counter("test_counter")
         histogram = self.meter.create_histogram("test_histogram")
         up_down_counter = self.meter.create_up_down_counter(
@@ -89,8 +107,66 @@ class BaseTestOTLPExporter(ABC):
 
         # Verify at least one export happened
         self.assertTrue(len(self.metric_reader.export_status) >= 1)
-
         # Verify all exports succeeded
         for export_status in self.metric_reader.export_status:
             self.assertEqual(export_status.name, "SUCCESS")
             self.assertEqual(export_status.value, 0)
+
+    @abstractmethod
+    def test_metrics_export_batch_size_two(self):
+        """Test metrics max_export_batch_size=2 directly through exporter"""
+
+    def _create_test_metrics_data(self, num_data_points=6):
+        """Create test metrics data with specified number of data points."""
+        data_points = []
+        for i in range(num_data_points):
+            dp = NumberDataPoint(
+                attributes={"key": f"value{i}"},
+                start_time_unix_nano=1000000 + i,
+                time_unix_nano=2000000 + i,
+                value=i + 1.0,
+            )
+            data_points.append(dp)
+        metric = Metric(
+            name="otel_test_counter_foobar",
+            description="Test counter metric for batch verification",
+            unit="1",
+            data=Sum(
+                data_points=data_points,
+                aggregation_temporality=1,  # CUMULATIVE
+                is_monotonic=True,
+            ),
+        )
+        scope_metrics = ScopeMetrics(
+            scope=InstrumentationScope(name="test_scope"),
+            metrics=[metric],
+            schema_url=None,
+        )
+        resource_metrics = ResourceMetrics(
+            resource=Resource.create({"service.name": "test-service"}),
+            scope_metrics=[scope_metrics],
+            schema_url=None,
+        )
+
+        return MetricsData(resource_metrics=[resource_metrics]), data_points
+
+    def _verify_batch_export_result(
+        self, result, data_points, batch_counter, max_batch_size=2
+    ):
+        """Verify export result and batch count for export batching tests."""
+        self.assertEqual(
+            result.name, "SUCCESS", f"Expected SUCCESS, got: {result}"
+        )
+        self.assertEqual(
+            result.value, 0, f"Expected result code 0, got: {result.value}"
+        )
+
+        expected_batches = (
+            len(data_points) + max_batch_size - 1
+        ) // max_batch_size
+        self.assertEqual(
+            batch_counter.export_call_count,
+            expected_batches,
+            f"Expected {expected_batches} export calls with max_export_batch_size={max_batch_size} and {len(data_points)} data points, "
+            f"but got {batch_counter.export_call_count} calls",
+        )
