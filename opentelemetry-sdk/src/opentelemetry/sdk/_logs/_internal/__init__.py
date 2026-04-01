@@ -592,10 +592,16 @@ class LoggingHandler(logging.Handler):
             else:
                 body = record.getMessage()
 
-        # related to https://github.com/open-telemetry/opentelemetry-python/issues/3548
-        # Severity Text = WARN as defined in https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/logs/data-model.md#displaying-severity.
-        level_name = (
-            "WARN" if record.levelname == "WARNING" else record.levelname
+        # Map Python log level names to OTel severity text as defined in
+        # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/logs/data-model.md#displaying-severity
+        # Python "WARNING" -> OTel "WARN" (see #3548)
+        # Python "CRITICAL" -> OTel "FATAL" (see #4984)
+        _python_to_otel_severity_text = {
+            "WARNING": "WARN",
+            "CRITICAL": "FATAL",
+        }
+        level_name = _python_to_otel_severity_text.get(
+            record.levelname, record.levelname
         )
 
         return LogRecord(
