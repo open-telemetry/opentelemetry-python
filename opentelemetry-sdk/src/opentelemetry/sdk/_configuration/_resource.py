@@ -172,9 +172,7 @@ def _filter_attributes(
 
     result: dict[str, object] = {}
     for key, value in attrs.items():
-        if included and not any(
-            fnmatch.fnmatch(key, pat) for pat in included
-        ):
+        if included and not any(fnmatch.fnmatch(key, pat) for pat in included):
             continue
         if excluded and any(fnmatch.fnmatch(key, pat) for pat in excluded):
             continue
