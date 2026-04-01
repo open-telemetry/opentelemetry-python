@@ -16,6 +16,7 @@
 # pylint: disable=no-member
 
 import copy
+import dataclasses
 import shutil
 import subprocess
 import unittest
@@ -197,6 +198,43 @@ tracer_provider.add_span_processor(mock_processor)
             tracer._instrumentation_scope._attributes,
             {"key1": "value1", "key2": 6},
         )
+
+    def test_get_tracer_sdk_returns_same_tracer_when_called_with_same_instrumentation_scope(
+        self,
+    ):
+        tracer_provider = trace.TracerProvider()
+        tracer1 = tracer_provider.get_tracer(
+            "module_name",
+            "library_version",
+            "schema_url",
+            {"key1": "value1", "key2": 6},
+        )
+
+        tracer2 = tracer_provider.get_tracer(
+            "module_name",
+            "library_version",
+            "schema_url",
+            {"key1": "value1", "key2": 6},
+        )
+
+        self.assertEqual(tracer1, tracer2)
+        self.assertTrue(tracer1 is tracer2)
+
+    def test_get_tracer_sdk_sets_default_tracer_config_if_configurator_raises(
+        self,
+    ):
+        def raising_tracer_configurator(tracer_scope):
+            raise ValueError()
+
+        tracer_provider = trace.TracerProvider(
+            _tracer_configurator=raising_tracer_configurator
+        )
+        tracer = tracer_provider.get_tracer(
+            "module_name",
+            "library_version",
+        )
+        # pylint: disable=protected-access
+        self.assertEqual(tracer._tracer_config, _TracerConfig.default())
 
     @mock.patch.dict("os.environ", {OTEL_SDK_DISABLED: "true"})
     def test_get_tracer_with_sdk_disabled(self):
@@ -2261,6 +2299,23 @@ class TestParentChildSpanException(unittest.TestCase):
         self.assertTupleEqual(parent_span.events, ())
 
 
+class TestTracerConfig(unittest.TestCase):
+    def test_default(self):
+        self.assertEqual(
+            _TracerConfig.default(),
+            _TracerConfig(is_enabled=True),
+        )
+
+    def test_equality(self):
+        config = _TracerConfig(is_enabled=True)
+        same_config = _TracerConfig(is_enabled=True)
+        other_config = _TracerConfig(is_enabled=False)
+
+        self.assertEqual(config, same_config)
+        self.assertNotEqual(config, other_config)
+        self.assertNotEqual(config, "string")
+
+
 # pylint: disable=protected-access
 class TestTracerProvider(unittest.TestCase):
     @patch("opentelemetry.sdk.trace.sampling._get_from_env_or_default")
@@ -2298,6 +2353,26 @@ class TestTracerProvider(unittest.TestCase):
 
         self.assertEqual(tracer._is_enabled(), True)
         self.assertEqual(other_tracer._is_enabled(), True)
+
+    def test_set_tracer_configurator_sets_default_tracer_config_if_configurator_raises(
+        self,
+    ):
+        def raising_tracer_configurator(tracer_scope):
+            raise ValueError()
+
+        tracer_provider = trace.TracerProvider()
+        tracer = tracer_provider.get_tracer(
+            "module_name",
+            "library_version",
+        )
+        tracer_provider._set_tracer_configurator(
+            tracer_configurator=raising_tracer_configurator
+        )
+        # pylint: disable=protected-access
+        self.assertEqual(
+            dataclasses.asdict(tracer._tracer_config),
+            dataclasses.asdict(_TracerConfig.default()),
+        )
 
     def test_rule_based_tracer_configurator(self):
         # pylint: disable=protected-access

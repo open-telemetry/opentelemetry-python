@@ -43,6 +43,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4576](https://github.com/open-telemetry/opentelemetry-python/pull/4576))
 - `opentelemetry-sdk`: Implement experimental Meter configurator
   ([#4966](https://github.com/open-telemetry/opentelemetry-python/pull/4966))
+- `opentelemetry-sdk`: cache TracerConfig into the tracer, this changes an internal interface. Only one Tracer with the same instrumentation scope will be created
+  ([#5007](https://github.com/open-telemetry/opentelemetry-python/pull/5007))
 
 ## Version 1.40.0/0.61b0 (2026-03-04)
 
