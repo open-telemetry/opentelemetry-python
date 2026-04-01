@@ -37,7 +37,8 @@ def _load_entry_point_propagator(name: str) -> TextMapPropagator:
     """Load a propagator by name from the opentelemetry_propagator entry point group."""
     try:
         ep = next(
-            entry_points(group="opentelemetry_propagator", name=name), None
+            iter(entry_points(group="opentelemetry_propagator", name=name)),
+            None,
         )
         if not ep:
             raise ConfigurationError(
