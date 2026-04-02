@@ -49,7 +49,6 @@ from opentelemetry.sdk.trace import (
     Resource,
     TracerProvider,
     _RuleBasedTracerConfigurator,
-    _scope_name_matches_glob,
     _TracerConfig,
 )
 from opentelemetry.sdk.trace.id_generator import RandomIdGenerator
@@ -61,7 +60,10 @@ from opentelemetry.sdk.trace.sampling import (
     StaticSampler,
 )
 from opentelemetry.sdk.util import BoundedDict, BoundedList, ns_to_iso_str
-from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.sdk.util.instrumentation import (
+    InstrumentationInfo,
+    _scope_name_matches_glob,
+)
 from opentelemetry.test.spantestutil import (
     get_span_with_dropped_attributes_events_links,
     new_tracer,
