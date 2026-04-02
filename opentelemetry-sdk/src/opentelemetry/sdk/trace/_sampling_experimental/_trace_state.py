@@ -45,11 +45,11 @@ class OtelTraceState:
     rest: Sequence[str]
 
     @staticmethod
-    def invalid() -> "OtelTraceState":
+    def invalid() -> OtelTraceState:
         return OtelTraceState(INVALID_RANDOM_VALUE, INVALID_THRESHOLD, ())
 
     @staticmethod
-    def parse(trace_state: TraceState | None) -> "OtelTraceState":
+    def parse(trace_state: TraceState | None) -> OtelTraceState:
         if not trace_state:
             return OtelTraceState.invalid()
 

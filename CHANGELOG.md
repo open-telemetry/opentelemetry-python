@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `opentelemetry-sdk`: Add shared `_parse_headers` helper for declarative config OTLP exporters
+  ([#5021](https://github.com/open-telemetry/opentelemetry-python/pull/5021))
 - `opentelemetry-api`: Replace a broad exception in attribute cleaning tests to satisfy pylint in the `lint-opentelemetry-api` CI job
 - `opentelemetry-sdk`: Add `create_resource` and `create_propagator`/`configure_propagator` to declarative file configuration, enabling Resource and propagator instantiation from config files without reading env vars
   ([#4979](https://github.com/open-telemetry/opentelemetry-python/pull/4979))
@@ -43,6 +45,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4576](https://github.com/open-telemetry/opentelemetry-python/pull/4576))
 - `opentelemetry-sdk`: Implement experimental Meter configurator
   ([#4966](https://github.com/open-telemetry/opentelemetry-python/pull/4966))
+- `opentelemetry-exporter-otlp-proto-http`: use consistent protobuf for export request
+  ([#5015](https://github.com/open-telemetry/opentelemetry-python/pull/5015))
 - `opentelemetry-sdk`: cache TracerConfig into the tracer, this changes an internal interface. Only one Tracer with the same instrumentation scope will be created
   ([#5007](https://github.com/open-telemetry/opentelemetry-python/pull/5007))
 

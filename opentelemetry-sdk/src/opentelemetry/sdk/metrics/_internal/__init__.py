@@ -669,11 +669,9 @@ class MeterProvider(APIMeterProvider):
 
             # pylint: disable=broad-exception-raised
             raise Exception(
-                (
-                    "MeterProvider.shutdown failed because the following "
-                    "metric readers failed during shutdown:\n"
-                    f"{metric_reader_error_string}"
-                )
+                "MeterProvider.shutdown failed because the following "
+                "metric readers failed during shutdown:\n"
+                f"{metric_reader_error_string}"
             )
 
     def get_meter(
