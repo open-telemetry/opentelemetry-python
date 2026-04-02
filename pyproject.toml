@@ -86,6 +86,11 @@ select = [
   "Q",   # flake8-quotes
   "G",   # https://docs.astral.sh/ruff/rules/#flake8-logging-format-g
   "TID", # flake8-tidy-imports
+  "UP011", # lru-cache-without-parameters
+  "UP015", # redundant-open-modes
+  "UP032", # f-string
+  "UP034", # extraneous-parentheses
+  "UP037", # quoted-annotation
 ]
 
 ignore = [
@@ -117,6 +122,7 @@ include = [
   "opentelemetry-sdk",
   "opentelemetry-proto-json",
   "exporter/opentelemetry-exporter-otlp-proto-grpc",
+  "exporter/opentelemetry-exporter-otlp-proto-http",
   "codegen/opentelemetry-codegen-json"
 ]
 
@@ -126,6 +132,7 @@ exclude = [
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/",
   "opentelemetry-sdk/benchmarks",
   "exporter/opentelemetry-exporter-otlp-proto-grpc/tests",
+  "exporter/opentelemetry-exporter-otlp-proto-http/tests",
 ]
 
 # When packages are correct typed add them to the strict list

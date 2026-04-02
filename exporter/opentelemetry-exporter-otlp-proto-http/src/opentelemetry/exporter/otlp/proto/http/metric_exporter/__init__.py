@@ -50,7 +50,7 @@ from opentelemetry.exporter.otlp.proto.http._common import (
     _is_retryable,
     _load_session_from_envvar,
 )
-from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (  # noqa: F401
+from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
     ExportMetricsServiceRequest,
 )
 from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401
@@ -60,7 +60,7 @@ from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401
     KeyValue,
     KeyValueList,
 )
-from opentelemetry.proto.metrics.v1 import metrics_pb2 as pb2  # noqa: F401
+from opentelemetry.proto.metrics.v1 import metrics_pb2 as pb2
 from opentelemetry.proto.resource.v1.resource_pb2 import Resource  # noqa: F401
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as PB2Resource,
@@ -243,18 +243,19 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
 
     def _export_with_retries(
         self,
-        serialized_data: bytes,
+        export_request: ExportMetricsServiceRequest,
         deadline_sec: float,
     ) -> MetricExportResult:
         """Export serialized data with retry logic until success, non-transient error, or exponential backoff maxed out.
 
         Args:
-            serialized_data: serialized metrics data to export
+            export_request: ExportMetricsServiceRequest object containing metrics data to export
             deadline_sec: timestamp deadline for the export
 
         Returns:
             MetricExportResult: SUCCESS if export succeeded, FAILURE otherwise
         """
+        serialized_data = export_request.SerializeToString()
         for retry_num in range(_MAX_RETRYS):
             # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
             backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
@@ -310,23 +311,21 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             _logger.warning("Exporter already shutdown, ignoring batch")
             return MetricExportResult.FAILURE
 
-        serialized_data = encode_metrics(metrics_data)
+        export_request = encode_metrics(metrics_data)
         deadline_sec = time() + self._timeout
 
         # If no batch size configured, export as single batch with retries as configured
         if self._max_export_batch_size is None:
-            return self._export_with_retries(
-                serialized_data.SerializeToString(), deadline_sec
-            )
+            return self._export_with_retries(export_request, deadline_sec)
 
         # Else, export in batches of configured size
-        split_metrics_batches = list(
-            _split_metrics_data(serialized_data, self._max_export_batch_size)
+        batched_export_requests = _split_metrics_data(
+            export_request, self._max_export_batch_size
         )
 
-        for split_metrics_data in split_metrics_batches:
+        for split_metrics_data in batched_export_requests:
             export_result = self._export_with_retries(
-                split_metrics_data.SerializeToString(),
+                split_metrics_data,
                 deadline_sec,
             )
             if export_result != MetricExportResult.SUCCESS:
@@ -353,18 +352,18 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
 
 
 def _split_metrics_data(
-    metrics_data: pb2.MetricsData,
+    metrics_data: ExportMetricsServiceRequest,
     max_export_batch_size: int | None = None,
-) -> Iterable[pb2.MetricsData]:
-    """Splits metrics data into several MetricsData (copies protobuf originals),
+) -> Iterable[ExportMetricsServiceRequest]:
+    """Splits metrics data into several ExportMetricsServiceRequest (copies protobuf originals),
     based on configured data point max export batch size.
 
     Args:
         metrics_data: metrics object based on HTTP protocol buffer definition
 
     Returns:
-        Iterable[pb2.MetricsData]: An iterable of pb2.MetricsData objects containing
-            pb2.ResourceMetrics, pb2.ScopeMetrics, pb2.Metrics, and data points
+        Iterable[ExportMetricsServiceRequest]: An iterable of ExportMetricsServiceRequest objects containing
+            ExportMetricsServiceRequest.ResourceMetrics, ExportMetricsServiceRequest.ScopeMetrics, ExportMetricsServiceRequest.Metrics, and data points
     """
     if not max_export_batch_size:
         return metrics_data
@@ -430,7 +429,7 @@ def _split_metrics_data(
                     batch_size += 1
 
                     if batch_size >= max_export_batch_size:
-                        yield pb2.MetricsData(
+                        yield ExportMetricsServiceRequest(
                             resource_metrics=_get_split_resource_metrics_pb2(
                                 split_resource_metrics
                             )
@@ -444,6 +443,11 @@ def _split_metrics_data(
 
                         # Rebuild metric dict generically using same approach as initial creation
                         field_name = metric.WhichOneof("data")
+                        if field_name is None:
+                            _logger.warning(
+                                "Tried to split and export an unsupported metric type. Skipping."
+                            )
+                            continue
                         data_container = getattr(metric, field_name)
                         metric_dict = {
                             "name": metric.name,
@@ -491,7 +495,7 @@ def _split_metrics_data(
             split_resource_metrics.pop()
 
     if batch_size > 0:
-        yield pb2.MetricsData(
+        yield ExportMetricsServiceRequest(
             resource_metrics=_get_split_resource_metrics_pb2(
                 split_resource_metrics
             )
@@ -553,13 +557,13 @@ def _get_split_resource_metrics_pb2(
         new_resource_metrics = pb2.ResourceMetrics(
             resource=resource_metrics.get("resource"),
             scope_metrics=[],
-            schema_url=resource_metrics.get("schema_url"),
+            schema_url=resource_metrics.get("schema_url") or "",
         )
         for scope_metrics in resource_metrics.get("scope_metrics", []):
             new_scope_metrics = pb2.ScopeMetrics(
                 scope=scope_metrics.get("scope"),
                 metrics=[],
-                schema_url=scope_metrics.get("schema_url"),
+                schema_url=scope_metrics.get("schema_url") or "",
             )
 
             for metric in scope_metrics.get("metrics", []):
