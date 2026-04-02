@@ -203,69 +203,69 @@ class OTLPLogExporter(LogRecordExporter):
             _logger.warning("Exporter already shutdown, ignoring batch")
             return LogRecordExportResult.FAILURE
 
-        finish_export = self._metrics.start_export(len(batch))
+        with self._metrics.export_operation(len(batch)) as result:
+            serialized_data = encode_logs(batch).SerializeToString()
+            deadline_sec = time() + self._timeout
+            for retry_num in range(_MAX_RETRYS):
+                # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
+                backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
+                export_error: Optional[Exception] = None
+                try:
+                    resp = self._export(serialized_data, deadline_sec - time())
+                    if resp.ok:
+                        return LogRecordExportResult.SUCCESS
+                except requests.exceptions.RequestException as error:
+                    reason = error
+                    export_error = error
+                    retryable = isinstance(error, ConnectionError)
+                    status_code = None
+                else:
+                    reason = resp.reason
+                    retryable = _is_retryable(resp)
+                    status_code = resp.status_code
 
-        serialized_data = encode_logs(batch).SerializeToString()
-        deadline_sec = time() + self._timeout
-        for retry_num in range(_MAX_RETRYS):
-            # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
-            backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
-            export_error: Optional[Exception] = None
-            try:
-                resp = self._export(serialized_data, deadline_sec - time())
-                if resp.ok:
-                    finish_export(None, None)
-                    return LogRecordExportResult.SUCCESS
-            except requests.exceptions.RequestException as error:
-                reason = error
-                export_error = error
-                retryable = isinstance(error, ConnectionError)
-                status_code = None
-            else:
-                reason = resp.reason
-                retryable = _is_retryable(resp)
-                status_code = resp.status_code
+                if not retryable:
+                    _logger.error(
+                        "Failed to export logs batch code: %s, reason: %s",
+                        status_code,
+                        reason,
+                    )
+                    error_attrs = (
+                        {HTTP_RESPONSE_STATUS_CODE: status_code}
+                        if status_code is not None
+                        else None
+                    )
+                    result.error = export_error
+                    result.error_attrs = error_attrs
+                    return LogRecordExportResult.FAILURE
 
-            if not retryable:
-                _logger.error(
-                    "Failed to export logs batch code: %s, reason: %s",
-                    status_code,
+                if (
+                    retry_num + 1 == _MAX_RETRYS
+                    or backoff_seconds > (deadline_sec - time())
+                    or self._shutdown
+                ):
+                    _logger.error(
+                        "Failed to export logs batch due to timeout, "
+                        "max retries or shutdown."
+                    )
+                    error_attrs = (
+                        {HTTP_RESPONSE_STATUS_CODE: status_code}
+                        if status_code is not None
+                        else None
+                    )
+                    result.error = export_error
+                    result.error_attrs = error_attrs
+                    return LogRecordExportResult.FAILURE
+                _logger.warning(
+                    "Transient error %s encountered while exporting logs batch, retrying in %.2fs.",
                     reason,
+                    backoff_seconds,
                 )
-                error_attrs = (
-                    {HTTP_RESPONSE_STATUS_CODE: status_code}
-                    if status_code is not None
-                    else None
-                )
-                finish_export(export_error, error_attrs)
-                return LogRecordExportResult.FAILURE
-
-            if (
-                retry_num + 1 == _MAX_RETRYS
-                or backoff_seconds > (deadline_sec - time())
-                or self._shutdown
-            ):
-                _logger.error(
-                    "Failed to export logs batch due to timeout, "
-                    "max retries or shutdown."
-                )
-                error_attrs = (
-                    {HTTP_RESPONSE_STATUS_CODE: status_code}
-                    if status_code is not None
-                    else None
-                )
-                finish_export(export_error, error_attrs)
-                return LogRecordExportResult.FAILURE
-            _logger.warning(
-                "Transient error %s encountered while exporting logs batch, retrying in %.2fs.",
-                reason,
-                backoff_seconds,
-            )
-            shutdown = self._shutdown_is_occuring.wait(backoff_seconds)
-            if shutdown:
-                _logger.warning("Shutdown in progress, aborting retry.")
-                break
-        return LogRecordExportResult.FAILURE
+                shutdown = self._shutdown_is_occuring.wait(backoff_seconds)
+                if shutdown:
+                    _logger.warning("Shutdown in progress, aborting retry.")
+                    break
+            return LogRecordExportResult.FAILURE
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
         """Nothing is buffered in this exporter, so this method does nothing."""

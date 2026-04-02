@@ -395,8 +395,8 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
 
     def set_meter_provider(self, meter_provider: MeterProvider) -> None:
         self._metrics = ExporterMetrics(
-            OtelComponentTypeValues.OTLP_HTTP_METRIC_EXPORTER.value,
-            "metric_data_point",
+            OtelComponentTypeValues.OTLP_HTTP_METRIC_EXPORTER,
+            "metrics",
             urlparse(self._endpoint),
             meter_provider,
         )
