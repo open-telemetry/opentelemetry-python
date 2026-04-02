@@ -82,7 +82,7 @@ def create_key(keyname: str) -> str:
     return keyname + "-" + str(uuid4())
 
 
-def get_value(key: str, context: typing.Optional[Context] = None) -> "object":
+def get_value(key: str, context: typing.Optional[Context] = None) -> object:
     """To access the local state of a concern, the RuntimeContext API
     provides a function which takes a context and a key as input,
     and returns a value.
@@ -98,7 +98,7 @@ def get_value(key: str, context: typing.Optional[Context] = None) -> "object":
 
 
 def set_value(
-    key: str, value: "object", context: typing.Optional[Context] = None
+    key: str, value: object, context: typing.Optional[Context] = None
 ) -> Context:
     """To record the local state of a cross-cutting concern, the
     RuntimeContext API provides a function which takes a context, a

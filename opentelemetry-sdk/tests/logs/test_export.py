@@ -167,7 +167,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
             SeverityNumber.ERROR,
         )
         self.assertEqual(fatal_log_record.log_record.body, "Critical message")
-        self.assertEqual(fatal_log_record.log_record.severity_text, "CRITICAL")
+        self.assertEqual(fatal_log_record.log_record.severity_text, "FATAL")
         self.assertEqual(
             fatal_log_record.log_record.severity_number, SeverityNumber.FATAL
         )
@@ -222,7 +222,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
             self.assertEqual(
                 sdk_record.log_record.body, "Critical message within span"
             )
-            self.assertEqual(sdk_record.log_record.severity_text, "CRITICAL")
+            self.assertEqual(sdk_record.log_record.severity_text, "FATAL")
             self.assertEqual(
                 sdk_record.log_record.severity_number, SeverityNumber.FATAL
             )
@@ -296,7 +296,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
             ("Very high rise in temperatures across the globe", "ERROR"),
             (
                 "Temperature hits high 420 C in Hyderabad",
-                "CRITICAL",
+                "FATAL",
             ),
             (["list", "of", "strings"], "WARN"),
             ({"key": "value"}, "ERROR"),
@@ -392,7 +392,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
             ),
             (
                 "different_msg_types - CRITICAL - Temperature hits high 420 C in Hyderabad",
-                "CRITICAL",
+                "FATAL",
             ),
             (
                 "different_msg_types - WARNING - ['list', 'of', 'strings']",
