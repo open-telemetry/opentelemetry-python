@@ -425,13 +425,11 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         )
         provider = LoggerProvider()
         provider.add_log_record_processor(processor)
-        logger = logging.getLogger("test_simple_metrics")
-        handler = LoggingHandler(logger_provider=provider)
-        logger.addHandler(handler)
+        logger = provider.get_logger("test_simple_metrics")
 
-        logger.warning("foo")
-        logger.warning("bar")
-        logger.warning("baz")
+        logger.emit(LogRecord(body="foo", severity_number=SeverityNumber.WARN))
+        logger.emit(LogRecord(body="bar", severity_number=SeverityNumber.WARN))
+        logger.emit(LogRecord(body="baz", severity_number=SeverityNumber.WARN))
 
         metrics_data = metric_reader.get_metrics_data()
         scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
@@ -727,19 +725,17 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         )
         provider = LoggerProvider()
         provider.add_log_record_processor(processor)
-        logger = logging.getLogger("test_batch_metrics")
-        handler = LoggingHandler(logger_provider=provider)
-        logger.addHandler(handler)
+        logger = provider.get_logger("test_batch_metrics")
 
-        logger.warning("foo")
+        logger.emit(LogRecord(body="foo", severity_number=SeverityNumber.WARN))
         # Wait for log to be sent to exporter
         first_export_event.wait()
 
         # Queue empty, export in progress, this log is queued
-        logger.warning("bar")
+        logger.emit(LogRecord(body="bar", severity_number=SeverityNumber.WARN))
 
         # Queue full, this log is dropped
-        logger.warning("baz")
+        logger.emit(LogRecord(body="baz", severity_number=SeverityNumber.WARN))
 
         metrics_data = metric_reader.get_metrics_data()
         scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
@@ -797,7 +793,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         provider.force_flush()
 
         # This log is processed and exporter returns an error
-        logger.warning("baz")
+        logger.emit(LogRecord(body="baz", severity_number=SeverityNumber.WARN))
         provider.force_flush()
         last_export_event.wait()
 
