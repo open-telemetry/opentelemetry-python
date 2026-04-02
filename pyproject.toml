@@ -85,6 +85,11 @@ select = [
   "PLE", # pylint error
   "Q",   # flake8-quotes
   "G",   # https://docs.astral.sh/ruff/rules/#flake8-logging-format-g
+  "UP011", # lru-cache-without-parameters
+  "UP015", # redundant-open-modes
+  "UP032", # f-string
+  "UP034", # extraneous-parentheses
+  "UP037", # quoted-annotation
 ]
 
 ignore = [
