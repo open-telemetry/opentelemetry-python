@@ -52,8 +52,8 @@ _component_counter = Counter()
 
 @dataclass
 class ExportResult:
-    error: Exception | None
-    error_attrs: Attributes
+    error: Exception | None = None
+    error_attrs: Attributes = None
 
 
 class ExporterMetrics:
