@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `opentelemetry-sdk`: Fix `AttributeError` in `ExplicitBucketHistogramAggregation` when applied to non-Histogram instruments without explicit boundaries
+  ([#5034](https://github.com/open-telemetry/opentelemetry-python/pull/5034))
 - `opentelemetry-sdk`: Add shared `_parse_headers` helper for declarative config OTLP exporters
   ([#5021](https://github.com/open-telemetry/opentelemetry-python/pull/5021))
 - `opentelemetry-api`: Replace a broad exception in attribute cleaning tests to satisfy pylint in the `lint-opentelemetry-api` CI job
