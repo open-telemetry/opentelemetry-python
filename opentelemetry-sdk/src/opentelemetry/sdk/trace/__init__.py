@@ -25,7 +25,6 @@ import traceback
 import typing
 import weakref
 from dataclasses import dataclass
-from functools import lru_cache
 from os import environ
 from time import time_ns
 from types import MappingProxyType, TracebackType
@@ -142,7 +141,7 @@ class SpanProcessor:
     def shutdown(self) -> None:
         """Called when a :class:`opentelemetry.sdk.trace.TracerProvider` is shutdown."""
 
-    def force_flush(self, timeout_millis: int = 30000) -> bool:
+    def force_flush(self, timeout_millis: int = 30000) -> bool:  # type: ignore[reportReturnType]
         """Export all ended spans to the configured Exporter that have not yet
         been exported.
 
@@ -251,9 +250,13 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
             # Only the main thread is kept in forked processed, the executor
             # needs to be re-instantiated to get a fresh pool of threads:
             weak_reinit = weakref.WeakMethod(self._init_executor)
-            os.register_at_fork(
-                after_in_child=lambda: weak_reinit()(num_threads)
-            )
+
+            def _after_in_child() -> None:
+                reinit = weak_reinit()
+                if reinit is not None:
+                    reinit(num_threads)
+
+            os.register_at_fork(after_in_child=_after_in_child)
 
     def _init_executor(self, num_threads: int) -> None:
         self._executor = concurrent.futures.ThreadPoolExecutor(
@@ -466,7 +469,7 @@ class ReadableSpan:
     def name(self) -> str:
         return self._name
 
-    def get_span_context(self):
+    def get_span_context(self) -> Optional[trace_api.SpanContext]:
         return self._context
 
     @property
@@ -880,8 +883,8 @@ class Span(trace_api.Span, ReadableSpan):
 
         return BoundedList.from_seq(self._limits.max_links, valid_links)
 
-    def get_span_context(self):
-        return self._context
+    def get_span_context(self) -> trace_api.SpanContext:
+        return typing.cast(trace_api.SpanContext, self._context)
 
     def set_attributes(
         self, attributes: Mapping[str, types.AttributeValue]
@@ -1047,7 +1050,7 @@ class Span(trace_api.Span, ReadableSpan):
                 self.set_status(
                     Status(
                         status_code=StatusCode.ERROR,
-                        description=f"{exc_type.__name__}: {exc_val}",
+                        description=(f"{type(exc_val).__name__}: {exc_val}"),
                     )
                 )
 
@@ -1099,6 +1102,10 @@ class _Span(Span):
 class _TracerConfig:
     is_enabled: bool
 
+    @classmethod
+    def default(cls):
+        return cls(is_enabled=True)
+
 
 class Tracer(trace_api.Tracer):
     """See `opentelemetry.trace.Tracer`."""
@@ -1116,7 +1123,7 @@ class Tracer(trace_api.Tracer):
         instrumentation_scope: InstrumentationScope,
         *,
         meter_provider: Optional[metrics_api.MeterProvider] = None,
-        _tracer_provider: Optional["TracerProvider"] = None,
+        _tracer_config: Optional[_TracerConfig] = None,
     ) -> None:
         self.sampler = sampler
         self.resource = resource
@@ -1125,20 +1132,17 @@ class Tracer(trace_api.Tracer):
         self.instrumentation_info = instrumentation_info
         self._span_limits = span_limits
         self._instrumentation_scope = instrumentation_scope
-        self._tracer_provider = _tracer_provider
+        self._tracer_config = _tracer_config or _TracerConfig.default()
 
         meter_provider = meter_provider or metrics_api.get_meter_provider()
         self._tracer_metrics = TracerMetrics(meter_provider)
 
+    def _set_tracer_config(self, tracer_config: _TracerConfig):
+        self._tracer_config = tracer_config
+
     def _is_enabled(self) -> bool:
         """If the tracer is not enabled, start_span will create a NonRecordingSpan"""
-
-        if not self._tracer_provider:
-            return True
-        tracer_config = self._tracer_provider._tracer_configurator(  # pylint: disable=protected-access
-            self._instrumentation_scope
-        )
-        return tracer_config.is_enabled
+        return self._tracer_config.is_enabled
 
     @_agnosticcontextmanager  # pylint: disable=protected-access
     def start_as_current_span(
@@ -1182,6 +1186,7 @@ class Tracer(trace_api.Tracer):
         record_exception: bool = True,
         set_status_on_exception: bool = True,
     ) -> trace_api.Span:
+        links = links or ()
         parent_span_context = trace_api.get_current_span(
             context
         ).get_span_context()
@@ -1292,7 +1297,6 @@ class _RuleBasedTracerConfigurator:
         return self._default_config
 
 
-@lru_cache
 def _default_tracer_configurator(
     tracer_scope: InstrumentationScope,
 ) -> _TracerConfig:
@@ -1303,11 +1307,10 @@ def _default_tracer_configurator(
     implementing this interface returning a Tracer Config."""
     return _RuleBasedTracerConfigurator(
         rules=[],
-        default_config=_TracerConfig(is_enabled=True),
+        default_config=_TracerConfig.default(),
     )(tracer_scope=tracer_scope)
 
 
-@lru_cache
 def _disable_tracer_configurator(
     tracer_scope: InstrumentationScope,
 ) -> _TracerConfig:
@@ -1360,27 +1363,41 @@ class TracerProvider(trace_api.TracerProvider):
         self._tracer_configurator = (
             _tracer_configurator or _default_tracer_configurator
         )
+        self._tracers_lock = threading.Lock()
+        self._tracers: dict[InstrumentationScope, Tracer] = {}
 
     def _set_tracer_configurator(
         self, *, tracer_configurator: _TracerConfiguratorT
     ):
         """This is the function used to update the TracerProvider TracerConfigurator
 
-        Setting a new TracerConfigurator for a TracerProvider will make all the Tracers created from
-        this TracerProvider reference the new TracerConfigurator.
-
-        The tracer checks its configuration at span creation time. Since this is an hot path
-        it's important that it'll execute quickly so it is suggested to memoize it with
-        functools.lru_cache.
-        If your TracerConfigurator is using some dynamic rules you can still use functools.lru_cache
-        decorator if you remember to clear its cache with the decorator cache_clear() function when
-        the rules change.
+        Setting a new TracerConfigurator for a TracerProvider will update the
+        TracerConfig of all Tracers create by this TracerProvider.
         """
         self._tracer_configurator = tracer_configurator
+        with self._tracers_lock:
+            for instrumentation_scope, tracer in self._tracers.items():
+                tracer_config = self._apply_tracer_configurator(
+                    instrumentation_scope
+                )
+                # pylint: disable-next=protected-access
+                tracer._set_tracer_config(tracer_config)
 
     @property
     def resource(self) -> Resource:
         return self._resource
+
+    def _apply_tracer_configurator(
+        self, instrumentation_scope: InstrumentationScope
+    ):
+        try:
+            return self._tracer_configurator(instrumentation_scope)
+        except Exception:  # pylint: disable=broad-exception-caught
+            logger.exception(
+                "Failed to create a Tracer Config for %s, using default Tracer config",
+                instrumentation_scope,
+            )
+            return _TracerConfig.default()
 
     def get_tracer(
         self,
@@ -1412,22 +1429,32 @@ class TracerProvider(trace_api.TracerProvider):
             schema_url,
         )
 
-        tracer = Tracer(
-            self.sampler,
-            self.resource,
-            self._active_span_processor,
-            self.id_generator,
-            instrumentation_info,
-            self._span_limits,
-            InstrumentationScope(
-                instrumenting_module_name,
-                instrumenting_library_version,
-                schema_url,
-                attributes,
-            ),
-            meter_provider=self._meter_provider,
-            _tracer_provider=self,
+        instrumentation_scope = InstrumentationScope(
+            instrumenting_module_name,
+            instrumenting_library_version,
+            schema_url,
+            attributes,
         )
+
+        with self._tracers_lock:
+            if instrumentation_scope in self._tracers:
+                return self._tracers[instrumentation_scope]
+
+            tracer_config = self._apply_tracer_configurator(
+                instrumentation_scope
+            )
+            tracer = Tracer(
+                self.sampler,
+                self.resource,
+                self._active_span_processor,
+                self.id_generator,
+                instrumentation_info,
+                self._span_limits,
+                instrumentation_scope,
+                meter_provider=self._meter_provider,
+                _tracer_config=tracer_config,
+            )
+            self._tracers[instrumentation_scope] = tracer
 
         return tracer
 

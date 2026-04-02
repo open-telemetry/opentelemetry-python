@@ -15,6 +15,8 @@
 # pylint: disable=too-many-lines
 # pylint: disable=no-member
 
+import copy
+import dataclasses
 import shutil
 import subprocess
 import unittest
@@ -58,7 +60,7 @@ from opentelemetry.sdk.trace.sampling import (
     ParentBased,
     StaticSampler,
 )
-from opentelemetry.sdk.util import BoundedDict, ns_to_iso_str
+from opentelemetry.sdk.util import BoundedDict, BoundedList, ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.test.spantestutil import (
     get_span_with_dropped_attributes_events_links,
@@ -194,6 +196,43 @@ tracer_provider.add_span_processor(mock_processor)
             tracer._instrumentation_scope._attributes,
             {"key1": "value1", "key2": 6},
         )
+
+    def test_get_tracer_sdk_returns_same_tracer_when_called_with_same_instrumentation_scope(
+        self,
+    ):
+        tracer_provider = trace.TracerProvider()
+        tracer1 = tracer_provider.get_tracer(
+            "module_name",
+            "library_version",
+            "schema_url",
+            {"key1": "value1", "key2": 6},
+        )
+
+        tracer2 = tracer_provider.get_tracer(
+            "module_name",
+            "library_version",
+            "schema_url",
+            {"key1": "value1", "key2": 6},
+        )
+
+        self.assertEqual(tracer1, tracer2)
+        self.assertTrue(tracer1 is tracer2)
+
+    def test_get_tracer_sdk_sets_default_tracer_config_if_configurator_raises(
+        self,
+    ):
+        def raising_tracer_configurator(tracer_scope):
+            raise ValueError()
+
+        tracer_provider = trace.TracerProvider(
+            _tracer_configurator=raising_tracer_configurator
+        )
+        tracer = tracer_provider.get_tracer(
+            "module_name",
+            "library_version",
+        )
+        # pylint: disable=protected-access
+        self.assertEqual(tracer._tracer_config, _TracerConfig.default())
 
     @mock.patch.dict("os.environ", {OTEL_SDK_DISABLED: "true"})
     def test_get_tracer_with_sdk_disabled(self):
@@ -707,6 +746,69 @@ class TestReadableSpan(unittest.TestCase):
             {"bar2": "baz2"},
         )
         self.assertEqual(link2.dropped_attributes, 0)
+
+    def test_deepcopy(self):
+        context = trace_api.SpanContext(
+            trace_id=0x000000000000000000000000DEADBEEF,
+            span_id=0x00000000DEADBEF0,
+            is_remote=False,
+        )
+        attributes = BoundedAttributes(
+            10, {"key1": "value1", "key2": 42}, immutable=False
+        )
+        events = BoundedList(10)
+        events.extend(
+            (
+                trace.Event("event1", {"ekey": "evalue"}),
+                trace.Event("event2", {"ekey2": "evalue2"}),
+            )
+        )
+
+        links = [
+            trace_api.Link(
+                context=trace_api.INVALID_SPAN_CONTEXT,
+                attributes={"lkey": "lvalue"},
+            )
+        ]
+
+        span = trace.ReadableSpan(
+            name="test-span",
+            context=context,
+            attributes=attributes,
+            events=events,
+            links=links,
+            status=Status(StatusCode.OK),
+        )
+
+        span_copy = copy.deepcopy(span)
+
+        self.assertEqual(span_copy.name, span.name)
+        self.assertEqual(span_copy.status.status_code, span.status.status_code)
+        self.assertEqual(span_copy.context.trace_id, span.context.trace_id)
+        self.assertEqual(span_copy.context.span_id, span.context.span_id)
+
+        self.assertEqual(dict(span_copy.attributes), dict(span.attributes))
+        attributes["key1"] = "mutated"
+        self.assertNotEqual(
+            span_copy.attributes["key1"], span.attributes["key1"]
+        )
+
+        self.assertEqual(len(span_copy.events), len(span.events))
+        self.assertIsNot(span_copy.events, span.events)
+        self.assertEqual(span_copy.events[0].name, span.events[0].name)
+        self.assertEqual(
+            span_copy.events[0].attributes, span.events[0].attributes
+        )
+
+        self.assertEqual(len(span_copy.links), len(span.links))
+        self.assertEqual(
+            span_copy.links[0].attributes, span.links[0].attributes
+        )
+        links[0] = trace_api.Link(
+            context=trace_api.INVALID_SPAN_CONTEXT,
+            attributes={"mutated": "link"},
+        )
+        self.assertNotIn("mutated", span_copy.links[0].attributes)
 
 
 class DummyError(Exception):
@@ -2072,8 +2174,9 @@ class TestSpanLimits(unittest.TestCase):
 
         for env_var, bad_value in test_cases.items():
             with self.subTest(f"Testing {env_var}={bad_value}"):
-                with self.assertRaises(ValueError) as error, patch.dict(
-                    "os.environ", {env_var: bad_value}, clear=True
+                with (
+                    self.assertRaises(ValueError) as error,
+                    patch.dict("os.environ", {env_var: bad_value}, clear=True),
                 ):
                     trace.SpanLimits()
 
@@ -2194,6 +2297,23 @@ class TestParentChildSpanException(unittest.TestCase):
         self.assertTupleEqual(parent_span.events, ())
 
 
+class TestTracerConfig(unittest.TestCase):
+    def test_default(self):
+        self.assertEqual(
+            _TracerConfig.default(),
+            _TracerConfig(is_enabled=True),
+        )
+
+    def test_equality(self):
+        config = _TracerConfig(is_enabled=True)
+        same_config = _TracerConfig(is_enabled=True)
+        other_config = _TracerConfig(is_enabled=False)
+
+        self.assertEqual(config, same_config)
+        self.assertNotEqual(config, other_config)
+        self.assertNotEqual(config, "string")
+
+
 # pylint: disable=protected-access
 class TestTracerProvider(unittest.TestCase):
     @patch("opentelemetry.sdk.trace.sampling._get_from_env_or_default")
@@ -2231,6 +2351,26 @@ class TestTracerProvider(unittest.TestCase):
 
         self.assertEqual(tracer._is_enabled(), True)
         self.assertEqual(other_tracer._is_enabled(), True)
+
+    def test_set_tracer_configurator_sets_default_tracer_config_if_configurator_raises(
+        self,
+    ):
+        def raising_tracer_configurator(tracer_scope):
+            raise ValueError()
+
+        tracer_provider = trace.TracerProvider()
+        tracer = tracer_provider.get_tracer(
+            "module_name",
+            "library_version",
+        )
+        tracer_provider._set_tracer_configurator(
+            tracer_configurator=raising_tracer_configurator
+        )
+        # pylint: disable=protected-access
+        self.assertEqual(
+            dataclasses.asdict(tracer._tracer_config),
+            dataclasses.asdict(_TracerConfig.default()),
+        )
 
     def test_rule_based_tracer_configurator(self):
         # pylint: disable=protected-access

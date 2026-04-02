@@ -377,12 +377,24 @@ class MeterProvider(APIMeterProvider):
         metric_readers: Register metric readers to collect metrics from the SDK
             on demand. Each :class:`opentelemetry.sdk.metrics.export.MetricReader` is
             completely independent and will collect separate streams of
-            metrics. TODO: reference ``PeriodicExportingMetricReader`` usage with push
-            exporters here.
+            metrics. For push-based export, use
+            :class:`opentelemetry.sdk.metrics.export.PeriodicExportingMetricReader`.
         resource: The resource representing what the metrics emitted from the SDK pertain to.
         shutdown_on_exit: If true, registers an `atexit` handler to call
             `MeterProvider.shutdown`
         views: The views to configure the metric output the SDK
+
+    .. code-block:: python
+        :caption: Push-based export with PeriodicExportingMetricReader
+
+        from opentelemetry.sdk.metrics import MeterProvider
+        from opentelemetry.sdk.metrics.export import (
+            ConsoleMetricExporter,
+            PeriodicExportingMetricReader,
+        )
+
+        reader = PeriodicExportingMetricReader(ConsoleMetricExporter())
+        provider = MeterProvider(metric_readers=[reader])
 
     By default, instruments which do not match any :class:`opentelemetry.sdk.metrics.view.View` (or if no :class:`opentelemetry.sdk.metrics.view.View`\ s
     are provided) will report metrics with the default aggregation for the
@@ -458,6 +470,7 @@ class MeterProvider(APIMeterProvider):
             metric_reader._set_collect_callback(
                 self._measurement_consumer.collect
             )
+            metric_reader._set_meter_provider(self)
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
         deadline_ns = time_ns() + timeout_millis * 10**6
@@ -539,11 +552,9 @@ class MeterProvider(APIMeterProvider):
 
             # pylint: disable=broad-exception-raised
             raise Exception(
-                (
-                    "MeterProvider.shutdown failed because the following "
-                    "metric readers failed during shutdown:\n"
-                    f"{metric_reader_error_string}"
-                )
+                "MeterProvider.shutdown failed because the following "
+                "metric readers failed during shutdown:\n"
+                f"{metric_reader_error_string}"
             )
 
     def get_meter(

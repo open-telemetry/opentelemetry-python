@@ -22,7 +22,7 @@ from logging import getLogger
 from os import environ, linesep
 from sys import stdout
 from threading import Event, Lock, RLock, Thread
-from time import time_ns
+from time import perf_counter, time_ns
 from typing import IO, Callable, Iterable, Optional
 
 from typing_extensions import final
@@ -35,6 +35,7 @@ from opentelemetry.context import (
     detach,
     set_value,
 )
+from opentelemetry.metrics import MeterProvider, NoOpMeterProvider
 from opentelemetry.sdk.environment_variables import (
     OTEL_METRIC_EXPORT_INTERVAL,
     OTEL_METRIC_EXPORT_TIMEOUT,
@@ -61,7 +62,12 @@ from opentelemetry.sdk.metrics._internal.instrument import (
     _UpDownCounter,
 )
 from opentelemetry.sdk.metrics._internal.point import MetricsData
+from opentelemetry.semconv._incubating.attributes.otel_attributes import (
+    OtelComponentTypeValues,
+)
 from opentelemetry.util._once import Once
+
+from ._metric_reader_metrics import MetricReaderMetrics
 
 _logger = getLogger(__name__)
 
@@ -95,7 +101,7 @@ class MetricExporter(ABC):
         preferred_temporality: dict[type, AggregationTemporality]
         | None = None,
         preferred_aggregation: dict[
-            type, "opentelemetry.sdk.metrics.view.Aggregation"
+            type, opentelemetry.sdk.metrics.view.Aggregation
         ]
         | None = None,
     ) -> None:
@@ -150,7 +156,7 @@ class ConsoleMetricExporter(MetricExporter):
         preferred_temporality: dict[type, AggregationTemporality]
         | None = None,
         preferred_aggregation: dict[
-            type, "opentelemetry.sdk.metrics.view.Aggregation"
+            type, opentelemetry.sdk.metrics.view.Aggregation
         ]
         | None = None,
     ):
@@ -217,16 +223,18 @@ class MetricReader(ABC):
         preferred_temporality: dict[type, AggregationTemporality]
         | None = None,
         preferred_aggregation: dict[
-            type, "opentelemetry.sdk.metrics.view.Aggregation"
+            type, opentelemetry.sdk.metrics.view.Aggregation
         ]
         | None = None,
+        *,
+        otel_component_type: OtelComponentTypeValues | None = None,
     ) -> None:
         self._collect: Callable[
             [
-                "opentelemetry.sdk.metrics.export.MetricReader",
+                opentelemetry.sdk.metrics.export.MetricReader,
                 AggregationTemporality,
             ],
-            Iterable["opentelemetry.sdk.metrics.export.Metric"],
+            Iterable[opentelemetry.sdk.metrics.export.Metric],
         ] = None
 
         self._instrument_class_temporality = {
@@ -318,6 +326,15 @@ class MetricReader(ABC):
                 else:
                     raise Exception(f"Invalid instrument class found {typ}")
 
+        self._otel_component_type = (
+            otel_component_type.value
+            if otel_component_type
+            else type(self).__qualname__
+        )
+        self._metrics = MetricReaderMetrics(
+            self._otel_component_type, NoOpMeterProvider()
+        )
+
     @final
     def collect(self, timeout_millis: float = 10_000) -> None:
         """Collects the metrics from the internal SDK state and
@@ -337,7 +354,11 @@ class MetricReader(ABC):
             )
             return
 
-        metrics = self._collect(self, timeout_millis=timeout_millis)
+        start_time = perf_counter()
+        try:
+            metrics = self._collect(self, timeout_millis=timeout_millis)
+        finally:
+            self._metrics.record_collection(perf_counter() - start_time)
 
         if metrics is not None:
             self._receive_metrics(
@@ -350,7 +371,7 @@ class MetricReader(ABC):
         self,
         func: Callable[
             [
-                "opentelemetry.sdk.metrics.export.MetricReader",
+                opentelemetry.sdk.metrics.export.MetricReader,
                 AggregationTemporality,
             ],
             MetricsData,
@@ -367,6 +388,11 @@ class MetricReader(ABC):
         **kwargs,
     ) -> None:
         """Called by `MetricReader.collect` when it receives a batch of metrics"""
+
+    def _set_meter_provider(self, meter_provider: MeterProvider) -> None:
+        self._metrics = MetricReaderMetrics(
+            self._otel_component_type, meter_provider
+        )
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
         self.collect(timeout_millis=timeout_millis)
@@ -397,7 +423,7 @@ class InMemoryMetricReader(MetricReader):
         preferred_temporality: dict[type, AggregationTemporality]
         | None = None,
         preferred_aggregation: dict[
-            type, "opentelemetry.sdk.metrics.view.Aggregation"
+            type, opentelemetry.sdk.metrics.view.Aggregation
         ]
         | None = None,
     ) -> None:
@@ -451,6 +477,7 @@ class PeriodicExportingMetricReader(MetricReader):
         super().__init__(
             preferred_temporality=exporter._preferred_temporality,
             preferred_aggregation=exporter._preferred_aggregation,
+            otel_component_type=OtelComponentTypeValues.PERIODIC_METRIC_READER,
         )
 
         # This lock is held whenever calling self._exporter.export() to prevent concurrent

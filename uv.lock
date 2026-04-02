@@ -11,6 +11,7 @@ resolution-markers = [
 [manifest]
 members = [
     "opentelemetry-api",
+    "opentelemetry-codegen-json",
     "opentelemetry-exporter-otlp",
     "opentelemetry-exporter-otlp-proto-common",
     "opentelemetry-exporter-otlp-proto-grpc",
@@ -20,6 +21,7 @@ members = [
     "opentelemetry-propagator-b3",
     "opentelemetry-propagator-jaeger",
     "opentelemetry-proto",
+    "opentelemetry-proto-json",
     "opentelemetry-python",
     "opentelemetry-sdk",
     "opentelemetry-semantic-conventions",
@@ -902,6 +904,21 @@ requires-dist = [
 ]
 
 [[package]]
+name = "opentelemetry-codegen-json"
+source = { editable = "codegen/opentelemetry-codegen-json" }
+dependencies = [
+    { name = "protobuf" },
+    { name = "types-protobuf", version = "6.32.1.20251210", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "types-protobuf", version = "6.32.1.20260221", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "protobuf", specifier = ">=4.25.3" },
+    { name = "types-protobuf", specifier = ">=4.24" },
+]
+
+[[package]]
 name = "opentelemetry-exporter-credential-provider-gcp"
 version = "0.60b0"
 source = { registry = "https://pypi.org/simple" }
@@ -1070,11 +1087,16 @@ dependencies = [
 requires-dist = [{ name = "protobuf", specifier = ">=5.0,<7.0" }]
 
 [[package]]
+name = "opentelemetry-proto-json"
+source = { editable = "opentelemetry-proto-json" }
+
+[[package]]
 name = "opentelemetry-python"
 version = "0.0.0"
 source = { virtual = "." }
 dependencies = [
     { name = "opentelemetry-api" },
+    { name = "opentelemetry-codegen-json" },
     { name = "opentelemetry-exporter-otlp-proto-common" },
     { name = "opentelemetry-exporter-otlp-proto-grpc" },
     { name = "opentelemetry-exporter-otlp-proto-http" },
@@ -1083,6 +1105,7 @@ dependencies = [
     { name = "opentelemetry-propagator-b3" },
     { name = "opentelemetry-propagator-jaeger" },
     { name = "opentelemetry-proto" },
+    { name = "opentelemetry-proto-json" },
     { name = "opentelemetry-sdk" },
     { name = "opentelemetry-semantic-conventions" },
     { name = "opentelemetry-test-utils" },
@@ -1103,6 +1126,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "opentelemetry-api", editable = "opentelemetry-api" },
+    { name = "opentelemetry-codegen-json", editable = "codegen/opentelemetry-codegen-json" },
     { name = "opentelemetry-exporter-otlp-proto-common", editable = "exporter/opentelemetry-exporter-otlp-proto-common" },
     { name = "opentelemetry-exporter-otlp-proto-grpc", editable = "exporter/opentelemetry-exporter-otlp-proto-grpc" },
     { name = "opentelemetry-exporter-otlp-proto-http", editable = "exporter/opentelemetry-exporter-otlp-proto-http" },
@@ -1111,6 +1135,7 @@ requires-dist = [
     { name = "opentelemetry-propagator-b3", editable = "propagator/opentelemetry-propagator-b3" },
     { name = "opentelemetry-propagator-jaeger", editable = "propagator/opentelemetry-propagator-jaeger" },
     { name = "opentelemetry-proto", editable = "opentelemetry-proto" },
+    { name = "opentelemetry-proto-json", editable = "opentelemetry-proto-json" },
     { name = "opentelemetry-sdk", editable = "opentelemetry-sdk" },
     { name = "opentelemetry-semantic-conventions", editable = "opentelemetry-semantic-conventions" },
     { name = "opentelemetry-test-utils", editable = "tests/opentelemetry-test-utils" },
@@ -2141,6 +2166,32 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/c7/68/71c1a15b5f65f40e91b65da23b8224dad41349894535a97f63a52e462196/typeguard-4.4.4.tar.gz", hash = "sha256:3a7fd2dffb705d4d0efaed4306a704c89b9dee850b688f060a8b1615a79e5f74", size = 75203 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/1b/a9/e3aee762739c1d7528da1c3e06d518503f8b6c439c35549b53735ba52ead/typeguard-4.4.4-py3-none-any.whl", hash = "sha256:b5f562281b6bfa1f5492470464730ef001646128b180769880468bd84b68b09e", size = 34874 },
+]
+
+[[package]]
+name = "types-protobuf"
+version = "6.32.1.20251210"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version < '3.10'",
+]
+sdist = { url = "https://files.pythonhosted.org/packages/c2/59/c743a842911887cd96d56aa8936522b0cd5f7a7f228c96e81b59fced45be/types_protobuf-6.32.1.20251210.tar.gz", hash = "sha256:c698bb3f020274b1a2798ae09dc773728ce3f75209a35187bd11916ebfde6763", size = 63900, upload-time = "2025-12-10T03:14:25.451Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/aa/43/58e75bac4219cbafee83179505ff44cae3153ec279be0e30583a73b8f108/types_protobuf-6.32.1.20251210-py3-none-any.whl", hash = "sha256:2641f78f3696822a048cfb8d0ff42ccd85c25f12f871fbebe86da63793692140", size = 77921, upload-time = "2025-12-10T03:14:24.477Z" },
+]
+
+[[package]]
+name = "types-protobuf"
+version = "6.32.1.20260221"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.14'",
+    "python_full_version == '3.13.*'",
+    "python_full_version >= '3.10' and python_full_version < '3.13'",
+]
+sdist = { url = "https://files.pythonhosted.org/packages/5f/e2/9aa4a3b2469508bd7b4e2ae11cbedaf419222a09a1b94daffcd5efca4023/types_protobuf-6.32.1.20260221.tar.gz", hash = "sha256:6d5fb060a616bfb076cbb61b4b3c3969f5fc8bec5810f9a2f7e648ee5cbcbf6e", size = 64408, upload-time = "2026-02-21T03:55:13.916Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2e/e8/1fd38926f9cf031188fbc5a96694203ea6f24b0e34bd64a225ec6f6291ba/types_protobuf-6.32.1.20260221-py3-none-any.whl", hash = "sha256:da7cdd947975964a93c30bfbcc2c6841ee646b318d3816b033adc2c4eb6448e4", size = 77956, upload-time = "2026-02-21T03:55:12.894Z" },
 ]
 
 [[package]]
