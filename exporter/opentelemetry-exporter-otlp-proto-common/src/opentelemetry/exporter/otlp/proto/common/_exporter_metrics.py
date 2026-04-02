@@ -15,8 +15,10 @@
 from __future__ import annotations
 
 from collections import Counter
+from contextlib import contextmanager
+from dataclasses import dataclass
 from time import perf_counter
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Iterator
 
 from opentelemetry.metrics import MeterProvider, get_meter_provider
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
@@ -46,6 +48,12 @@ if TYPE_CHECKING:
     from opentelemetry.util.types import Attributes, AttributeValue
 
 _component_counter = Counter()
+
+
+@dataclass
+class ExportResult:
+    error: Exception | None
+    error_attrs: Attributes
 
 
 class ExporterMetrics:
@@ -97,16 +105,18 @@ class ExporterMetrics:
         self._exported = create_exported(meter)
         self._duration = create_otel_sdk_exporter_operation_duration(meter)
 
-    def start_export(
-        self, num_items: int
-    ) -> Callable[[Exception | None, Attributes], None]:
+    @contextmanager
+    def export_operation(self, num_items: int) -> Iterator[ExportResult]:
         start_time = perf_counter()
         self._inflight.add(num_items, self._standard_attrs)
 
-        def finish_export(
-            error: Exception | None,
-            error_attrs: Attributes,
-        ):
+        result = ExportResult()
+        try:
+            yield result
+        finally:
+            error = result.error
+            error_attrs = result.error_attrs
+
             end_time = perf_counter()
             self._inflight.add(-num_items, self._standard_attrs)
             exported_attrs = (
@@ -121,5 +131,3 @@ class ExporterMetrics:
                 else exported_attrs
             )
             self._duration.record(end_time - start_time, duration_attrs)
-
-        return finish_export

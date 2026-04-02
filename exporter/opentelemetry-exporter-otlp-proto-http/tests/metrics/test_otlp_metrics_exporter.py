@@ -1626,6 +1626,7 @@ class TestOTLPMetricExporter(TestCase):
         self.assertEqual(attributes["server.address"], "localhost")
         self.assertEqual(attributes["server.port"], 4318)
 
+
 def _resource_metrics(
     index: int, scope_metrics: List[pb2.ScopeMetrics]
 ) -> pb2.ResourceMetrics:
