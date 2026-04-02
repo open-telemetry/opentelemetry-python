@@ -898,6 +898,14 @@ class TestOTLPMetricExporter(TestCase):
         self.assertEqual(
             call_args.kwargs["verify"], exporter._certificate_file
         )
+        batch_data = call_args.kwargs["data"]
+        request = ExportMetricsServiceRequest()
+        request.ParseFromString(batch_data)
+        self.assertEqual(len(request.resource_metrics), 1)
+        metrics = request.resource_metrics[0].scope_metrics[0].metrics
+        self.assertEqual(len(metrics), 2)
+        metric_names = {metric.name for metric in metrics}
+        self.assertEqual(metric_names, {"sum_int_0", "sum_int_1"})
 
     @patch.object(Session, "post")
     def test_export_max_export_batch_size_multiple_batches_integration(
@@ -923,6 +931,30 @@ class TestOTLPMetricExporter(TestCase):
             self.assertEqual(
                 call_args.kwargs["verify"], exporter._certificate_file
             )
+        self.assertEqual(len(mock_post.call_args_list), 2)
+
+        # First batch should contain sum_int_0 and sum_int_1
+        first_batch_data = mock_post.call_args_list[0].kwargs["data"]
+        first_request = ExportMetricsServiceRequest()
+        first_request.ParseFromString(first_batch_data)
+        self.assertEqual(len(first_request.resource_metrics), 1)
+        first_metrics = (
+            first_request.resource_metrics[0].scope_metrics[0].metrics
+        )
+        self.assertEqual(len(first_metrics), 2)
+        first_metric_names = {metric.name for metric in first_metrics}
+        self.assertEqual(first_metric_names, {"sum_int_0", "sum_int_1"})
+
+        # Second batch should contain sum_int_2
+        second_batch_data = mock_post.call_args_list[1].kwargs["data"]
+        second_request = ExportMetricsServiceRequest()
+        second_request.ParseFromString(second_batch_data)
+        self.assertEqual(len(second_request.resource_metrics), 1)
+        second_metrics = (
+            second_request.resource_metrics[0].scope_metrics[0].metrics
+        )
+        self.assertEqual(len(second_metrics), 1)
+        self.assertEqual(second_metrics[0].name, "sum_int_2")
 
     @patch.object(Session, "post")
     def test_export_max_export_batch_size_retry_scenarios_integration(
@@ -946,6 +978,18 @@ class TestOTLPMetricExporter(TestCase):
         result = exporter.export(metrics_data)
         self.assertEqual(result, MetricExportResult.FAILURE)
         self.assertEqual(mock_post.call_count, 2)
+
+        # Verify the content of successful first batch
+        first_batch_data = mock_post.call_args_list[0].kwargs["data"]
+        first_request = ExportMetricsServiceRequest()
+        first_request.ParseFromString(first_batch_data)
+        self.assertEqual(len(first_request.resource_metrics), 1)
+        first_metrics = (
+            first_request.resource_metrics[0].scope_metrics[0].metrics
+        )
+        self.assertEqual(len(first_metrics), 2)
+        first_metric_names = {metric.name for metric in first_metrics}
+        self.assertEqual(first_metric_names, {"sum_int_0", "sum_int_1"})
 
     @patch.object(Session, "post")
     def test_export_max_export_batch_size_retryable_failure_integration(
@@ -974,6 +1018,27 @@ class TestOTLPMetricExporter(TestCase):
         self.assertEqual(
             mock_post.call_count, 3
         )  # First batch + retry of second batch
+
+        first_batch_data = mock_post.call_args_list[0].kwargs["data"]
+        first_request = ExportMetricsServiceRequest()
+        first_request.ParseFromString(first_batch_data)
+        self.assertEqual(len(first_request.resource_metrics), 1)
+        first_metrics = (
+            first_request.resource_metrics[0].scope_metrics[0].metrics
+        )
+        self.assertEqual(len(first_metrics), 2)
+        first_metric_names = {metric.name for metric in first_metrics}
+        self.assertEqual(first_metric_names, {"sum_int_0", "sum_int_1"})
+        # Second batch (retry) should contain sum_int_2
+        second_batch_data = mock_post.call_args_list[2].kwargs["data"]
+        second_request = ExportMetricsServiceRequest()
+        second_request.ParseFromString(second_batch_data)
+        self.assertEqual(len(second_request.resource_metrics), 1)
+        second_metrics = (
+            second_request.resource_metrics[0].scope_metrics[0].metrics
+        )
+        self.assertEqual(len(second_metrics), 1)
+        self.assertEqual(second_metrics[0].name, "sum_int_2")
 
     def test_aggregation_temporality(self):
         otlp_metric_exporter = OTLPMetricExporter()
