@@ -174,6 +174,10 @@ nitpick_ignore = [
         "py:class",
         "AnyValue",
     ),
+    (
+        "py:class",
+        "Event",
+    ),
 ]
 
 # Add any paths that contain templates here, relative to this directory.
