@@ -173,7 +173,7 @@ def _get_resource_data(
             resource_class(
                 **{
                     "resource": collector_resource,
-                    "scope_{}".format(name): scope_data.values(),
+                    f"scope_{name}": scope_data.values(),
                 }
             )
         )

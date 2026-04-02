@@ -25,7 +25,16 @@ import os
 import warnings
 from abc import ABC, abstractmethod
 from os import environ
-from typing import Any, Callable, Mapping, Protocol, Sequence, Type, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Mapping,
+    Protocol,
+    Sequence,
+    Type,
+    Union,
+)
 
 from typing_extensions import Literal
 
@@ -52,6 +61,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_PROTOCOL,
     OTEL_EXPORTER_OTLP_PROTOCOL,
     OTEL_EXPORTER_OTLP_TRACES_PROTOCOL,
+    OTEL_PYTHON_METER_CONFIGURATOR,
     OTEL_PYTHON_TRACER_CONFIGURATOR,
     OTEL_TRACES_SAMPLER,
     OTEL_TRACES_SAMPLER_ARG,
@@ -74,6 +84,10 @@ from opentelemetry.sdk.trace.sampling import Sampler
 from opentelemetry.semconv.resource import ResourceAttributes
 from opentelemetry.trace import set_tracer_provider
 from opentelemetry.util._importlib_metadata import entry_points
+
+if TYPE_CHECKING:
+    from opentelemetry.sdk.metrics._internal import _MeterConfiguratorT
+
 
 _EXPORTER_OTLP = "otlp"
 _EXPORTER_OTLP_PROTO_GRPC = "otlp_proto_grpc"
@@ -169,6 +183,10 @@ def _get_id_generator() -> str:
 
 def _get_tracer_configurator() -> str | None:
     return environ.get(OTEL_PYTHON_TRACER_CONFIGURATOR, None)
+
+
+def _get_meter_configurator() -> str | None:
+    return environ.get(OTEL_PYTHON_METER_CONFIGURATOR, None)
 
 
 def _get_exporter_entry_point(
@@ -267,6 +285,7 @@ def _init_metrics(
     ],
     resource: Resource | None = None,
     exporter_args_map: ExporterArgsMap | None = None,
+    meter_configurator: _MeterConfiguratorT | None = None,
 ):
     metric_readers = []
 
@@ -282,7 +301,11 @@ def _init_metrics(
                 )
             )
 
-    provider = MeterProvider(resource=resource, metric_readers=metric_readers)
+    provider = MeterProvider(
+        resource=resource,
+        metric_readers=metric_readers,
+        _meter_configurator=meter_configurator,
+    )
     set_meter_provider(provider)
 
 
@@ -385,6 +408,27 @@ def _import_tracer_configurator(
         )
         return None
     return tracer_configurator_impl
+
+
+def _import_meter_configurator(
+    meter_configurator_name: str | None,
+) -> _MeterConfiguratorT | None:
+    if not meter_configurator_name:
+        return None
+
+    try:
+        _, meter_configurator_impl = _import_config_components(
+            [meter_configurator_name.strip()],
+            "_opentelemetry_meter_configurator",
+        )[0]
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        _logger.warning(
+            "Using default meter configurator. Failed to load meter configurator, %s: %s",
+            meter_configurator_name,
+            exc,
+        )
+        return None
+    return meter_configurator_impl
 
 
 def _import_exporters(
@@ -507,6 +551,7 @@ def _initialize_components(
     export_log_record_processor: _ConfigurationExporterLogRecordProcessorT
     | None = None,
     tracer_configurator: _TracerConfiguratorT | None = None,
+    meter_configurator: _MeterConfiguratorT | None = None,
 ):
     # pylint: disable=too-many-locals
     if trace_exporter_names is None:
@@ -538,6 +583,11 @@ def _initialize_components(
         tracer_configurator = _import_tracer_configurator(
             tracer_configurator_name
         )
+    if meter_configurator is None:
+        meter_configurator_name = _get_meter_configurator()
+        meter_configurator = _import_meter_configurator(
+            meter_configurator_name
+        )
 
     # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
     # from the env variable else defaults to "unknown_service"
@@ -554,7 +604,10 @@ def _initialize_components(
         tracer_configurator=tracer_configurator,
     )
     _init_metrics(
-        metric_exporters, resource, exporter_args_map=exporter_args_map
+        exporters_or_readers=metric_exporters,
+        resource=resource,
+        exporter_args_map=exporter_args_map,
+        meter_configurator=meter_configurator,
     )
     if setup_logging_handler is None:
         setup_logging_handler = (

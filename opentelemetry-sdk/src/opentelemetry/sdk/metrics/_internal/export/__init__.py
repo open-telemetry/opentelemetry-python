@@ -103,7 +103,7 @@ class MetricExporter(ABC):
         preferred_temporality: dict[type, AggregationTemporality]
         | None = None,
         preferred_aggregation: dict[
-            type, "opentelemetry.sdk.metrics.view.Aggregation"
+            type, opentelemetry.sdk.metrics.view.Aggregation
         ]
         | None = None,
     ) -> None:
@@ -158,7 +158,7 @@ class ConsoleMetricExporter(MetricExporter):
         preferred_temporality: dict[type, AggregationTemporality]
         | None = None,
         preferred_aggregation: dict[
-            type, "opentelemetry.sdk.metrics.view.Aggregation"
+            type, opentelemetry.sdk.metrics.view.Aggregation
         ]
         | None = None,
     ):
@@ -225,7 +225,7 @@ class MetricReader(ABC):
         preferred_temporality: dict[type, AggregationTemporality]
         | None = None,
         preferred_aggregation: dict[
-            type, "opentelemetry.sdk.metrics.view.Aggregation"
+            type, opentelemetry.sdk.metrics.view.Aggregation
         ]
         | None = None,
         *,
@@ -233,10 +233,10 @@ class MetricReader(ABC):
     ) -> None:
         self._collect: Callable[
             [
-                "opentelemetry.sdk.metrics.export.MetricReader",
+                opentelemetry.sdk.metrics.export.MetricReader,
                 AggregationTemporality,
             ],
-            Iterable["opentelemetry.sdk.metrics.export.Metric"],
+            Iterable[opentelemetry.sdk.metrics.export.Metric],
         ] = None
 
         self._instrument_class_temporality = {
@@ -373,7 +373,7 @@ class MetricReader(ABC):
         self,
         func: Callable[
             [
-                "opentelemetry.sdk.metrics.export.MetricReader",
+                opentelemetry.sdk.metrics.export.MetricReader,
                 AggregationTemporality,
             ],
             MetricsData,
@@ -425,7 +425,7 @@ class InMemoryMetricReader(MetricReader):
         preferred_temporality: dict[type, AggregationTemporality]
         | None = None,
         preferred_aggregation: dict[
-            type, "opentelemetry.sdk.metrics.view.Aggregation"
+            type, opentelemetry.sdk.metrics.view.Aggregation
         ]
         | None = None,
     ) -> None:

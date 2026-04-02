@@ -134,7 +134,7 @@ logger = logging.getLogger(__name__)
 _SHIM_KEY = create_key("scope_shim")
 
 
-def create_tracer(otel_tracer_provider: TracerProvider) -> "TracerShim":
+def create_tracer(otel_tracer_provider: TracerProvider) -> TracerShim:
     """Creates a :class:`TracerShim` object from the provided OpenTelemetry
     :class:`opentelemetry.trace.TracerProvider`.
 
@@ -209,7 +209,7 @@ class SpanShim(Span):
 
         return self._otel_span
 
-    def set_operation_name(self, operation_name: str) -> "SpanShim":
+    def set_operation_name(self, operation_name: str) -> SpanShim:
         """Updates the name of the wrapped OpenTelemetry span.
 
         Args:
@@ -244,7 +244,7 @@ class SpanShim(Span):
             end_time = util.time_seconds_to_ns(finish_time)
         self._otel_span.end(end_time=end_time)
 
-    def set_tag(self, key: str, value: ValueT) -> "SpanShim":
+    def set_tag(self, key: str, value: ValueT) -> SpanShim:
         """Sets an OpenTelemetry attribute on the wrapped OpenTelemetry span.
 
         Args:
@@ -260,7 +260,7 @@ class SpanShim(Span):
 
     def log_kv(
         self, key_values: Attributes, timestamp: float | None = None
-    ) -> "SpanShim":
+    ) -> SpanShim:
         """Logs an event for the wrapped OpenTelemetry span.
 
         Note:
@@ -359,7 +359,7 @@ class ScopeShim(Scope):
     """
 
     def __init__(
-        self, manager: "ScopeManagerShim", span: SpanShim, span_cm=None
+        self, manager: ScopeManagerShim, span: SpanShim, span_cm=None
     ):
         super().__init__(manager, span)
         self._span_cm = span_cm
@@ -368,7 +368,7 @@ class ScopeShim(Scope):
     # TODO: Change type of `manager` argument to `opentracing.ScopeManager`? We
     # need to get rid of `manager.tracer` for this.
     @classmethod
-    def from_context_manager(cls, manager: "ScopeManagerShim", span_cm):
+    def from_context_manager(cls, manager: ScopeManagerShim, span_cm):
         """Constructs a :class:`ScopeShim` from an OpenTelemetry
         `opentelemetry.trace.Span` context
         manager.
@@ -455,14 +455,14 @@ class ScopeManagerShim(ScopeManager):
             span state.
     """
 
-    def __init__(self, tracer: "TracerShim"):
+    def __init__(self, tracer: TracerShim):
         # The only thing the ``__init__()``` method on the base class does is
         # initialize `self._noop_span` and `self._noop_scope` with no-op
         # objects. Therefore, it doesn't seem useful to call it.
         # pylint: disable=super-init-not-called
         self._tracer = tracer
 
-    def activate(self, span: SpanShim, finish_on_close: bool) -> "ScopeShim":
+    def activate(self, span: SpanShim, finish_on_close: bool) -> ScopeShim:
         """Activates a :class:`SpanShim` and returns a :class:`ScopeShim` which
         represents the active span.
 
@@ -480,7 +480,7 @@ class ScopeManagerShim(ScopeManager):
         return ScopeShim.from_context_manager(self, span_cm=span_cm)
 
     @property
-    def active(self) -> "ScopeShim":
+    def active(self) -> ScopeShim:
         """Returns a :class:`ScopeShim` object representing the
         currently-active span in the OpenTelemetry tracer.
 
@@ -508,7 +508,7 @@ class ScopeManagerShim(ScopeManager):
             return ScopeShim(self, span=wrapped_span)
 
     @property
-    def tracer(self) -> "TracerShim":
+    def tracer(self) -> TracerShim:
         """Returns the :class:`TracerShim` reference used by this
         :class:`ScopeManagerShim` for setting and getting the active span from
         the OpenTelemetry tracer.
@@ -570,7 +570,7 @@ class TracerShim(Tracer):
         start_time: float | None = None,
         ignore_active_span: bool = False,
         finish_on_close: bool = True,
-    ) -> "ScopeShim":
+    ) -> ScopeShim:
         """Starts and activates a span. In terms of functionality, this method
         behaves exactly like the same method on a "regular" OpenTracing tracer.
         See :meth:`opentracing.Tracer.start_active_span` for more details.
