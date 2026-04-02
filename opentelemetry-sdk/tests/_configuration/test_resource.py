@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import sys
 import unittest
 from unittest.mock import patch
 
@@ -20,9 +21,13 @@ from opentelemetry.sdk._configuration._resource import create_resource
 from opentelemetry.sdk._configuration.models import (
     AttributeNameValue,
     AttributeType,
+    ExperimentalResourceDetection,
+    ExperimentalResourceDetector,
 )
 from opentelemetry.sdk._configuration.models import Resource as ResourceConfig
 from opentelemetry.sdk.resources import (
+    PROCESS_PID,
+    PROCESS_RUNTIME_NAME,
     SERVICE_NAME,
     TELEMETRY_SDK_LANGUAGE,
     TELEMETRY_SDK_NAME,
@@ -295,3 +300,70 @@ class TestCreateResourceAttributesList(unittest.TestCase):
         self.assertEqual(resource.attributes["foo"], "bar")
         self.assertNotIn("no-equals", resource.attributes)
         self.assertTrue(any("no-equals" in msg for msg in cm.output))
+
+
+class TestProcessResourceDetector(unittest.TestCase):
+    @staticmethod
+    def _config_with_process() -> ResourceConfig:
+        return ResourceConfig(
+            detection_development=ExperimentalResourceDetection(
+                detectors=[ExperimentalResourceDetector(process={})]
+            )
+        )
+
+    def test_process_detector_adds_process_attributes(self):
+        resource = create_resource(self._config_with_process())
+        self.assertIn(PROCESS_PID, resource.attributes)
+        self.assertEqual(resource.attributes[PROCESS_PID], os.getpid())
+        self.assertEqual(
+            resource.attributes[PROCESS_RUNTIME_NAME],
+            sys.implementation.name,
+        )
+
+    def test_process_detector_also_includes_sdk_defaults(self):
+        resource = create_resource(self._config_with_process())
+        self.assertEqual(resource.attributes[TELEMETRY_SDK_LANGUAGE], "python")
+        self.assertIn(TELEMETRY_SDK_VERSION, resource.attributes)
+
+    def test_process_detector_not_run_when_absent(self):
+        resource = create_resource(ResourceConfig())
+        self.assertNotIn(PROCESS_PID, resource.attributes)
+
+    def test_process_detector_not_run_when_detection_development_is_none(self):
+        resource = create_resource(ResourceConfig(detection_development=None))
+        self.assertNotIn(PROCESS_PID, resource.attributes)
+
+    def test_process_detector_not_run_when_detectors_list_empty(self):
+        config = ResourceConfig(
+            detection_development=ExperimentalResourceDetection(detectors=[])
+        )
+        resource = create_resource(config)
+        self.assertNotIn(PROCESS_PID, resource.attributes)
+
+    def test_explicit_attributes_override_process_detector(self):
+        """Config attributes win over detector-provided values."""
+        config = ResourceConfig(
+            attributes=[
+                AttributeNameValue(
+                    name="process.pid", value=99999, type=AttributeType.int
+                )
+            ],
+            detection_development=ExperimentalResourceDetection(
+                detectors=[ExperimentalResourceDetector(process={})]
+            ),
+        )
+        resource = create_resource(config)
+        self.assertEqual(resource.attributes[PROCESS_PID], 99999)
+
+    def test_multiple_detector_entries_run_process_once(self):
+        """Multiple detector list entries each with process={} should still work."""
+        config = ResourceConfig(
+            detection_development=ExperimentalResourceDetection(
+                detectors=[
+                    ExperimentalResourceDetector(process={}),
+                    ExperimentalResourceDetector(process={}),
+                ]
+            )
+        )
+        resource = create_resource(config)
+        self.assertEqual(resource.attributes[PROCESS_PID], os.getpid())
