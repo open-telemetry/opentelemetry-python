@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 - Enabled the flake8-type-checking plugin rules for ruff linter. These rules do not allow the import of python objects outside the type-checking block, if they are only used for type annotations and are not used at runtime. ([#5029](https://github.com/open-telemetry/opentelemetry-python/pull/5029))
+- `opentelemetry-sdk`: Add `process` resource detector support to declarative file configuration via `detection_development.detectors[].process`
+  ([#5001](https://github.com/open-telemetry/opentelemetry-python/pull/5001))
 - `opentelemetry-sdk`: Add shared `_parse_headers` helper for declarative config OTLP exporters
   ([#5021](https://github.com/open-telemetry/opentelemetry-python/pull/5021))
 - `opentelemetry-api`: Replace a broad exception in attribute cleaning tests to satisfy pylint in the `lint-opentelemetry-api` CI job
