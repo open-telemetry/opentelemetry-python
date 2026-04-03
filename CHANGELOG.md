@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `opentelemetry-sdk`: Fix `AttributeError` in `ExplicitBucketHistogramAggregation` when applied to non-Histogram instruments without explicit boundaries
   ([#5034](https://github.com/open-telemetry/opentelemetry-python/pull/5034))
+- Fix `BatchLogRecordProcessor` default `schedule_delay_millis` from 5000ms to 1000ms to comply with the OTel specification. Note: logs may be exported 5x more frequently by default (e.g. for users who don't explicitly set the `OTEL_BLRP_SCHEDULE_DELAY` env var).
+  ([#4998](https://github.com/open-telemetry/opentelemetry-python/pull/4998))
 - `opentelemetry-sdk`: Add `process` resource detector support to declarative file configuration via `detection_development.detectors[].process`
   ([#5001](https://github.com/open-telemetry/opentelemetry-python/pull/5001))
 - `opentelemetry-sdk`: Add shared `_parse_headers` helper for declarative config OTLP exporters
@@ -33,6 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4935](https://github.com/open-telemetry/opentelemetry-python/pull/4935))
 - `opentelemetry-sdk`: implement metric reader metrics
   ([#4970](https://github.com/open-telemetry/opentelemetry-python/pull/4970))
+- `opentelemetry-sdk`: implement processor metrics
+  ([#5012](https://github.com/open-telemetry/opentelemetry-python/pull/5012))
 - `opentelemetry-sdk`: upgrade vendored OTel configuration schema from v1.0.0-rc.3 to v1.0.0
   ([#4965](https://github.com/open-telemetry/opentelemetry-python/pull/4965))
 - improve check-links ci job
