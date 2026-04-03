@@ -178,6 +178,7 @@ nitpick_ignore = [
         "py:class",
         "Event",
     ),
+    ("py:func", "get_finished_logs"),
 ]
 
 # Add any paths that contain templates here, relative to this directory.
