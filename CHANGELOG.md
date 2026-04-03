@@ -31,6 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4935](https://github.com/open-telemetry/opentelemetry-python/pull/4935))
 - `opentelemetry-sdk`: implement metric reader metrics
   ([#4970](https://github.com/open-telemetry/opentelemetry-python/pull/4970))
+- `opentelemetry-sdk`: implement processor metrics
+  ([#5012](https://github.com/open-telemetry/opentelemetry-python/pull/5012))
 - `opentelemetry-sdk`: upgrade vendored OTel configuration schema from v1.0.0-rc.3 to v1.0.0
   ([#4965](https://github.com/open-telemetry/opentelemetry-python/pull/4965))
 - improve check-links ci job
