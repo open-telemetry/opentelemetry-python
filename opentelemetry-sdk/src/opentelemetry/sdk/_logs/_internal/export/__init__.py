@@ -52,7 +52,7 @@ from opentelemetry.semconv._incubating.attributes.otel_attributes import (
     OtelComponentTypeValues,
 )
 
-_DEFAULT_SCHEDULE_DELAY_MILLIS = 5000
+_DEFAULT_SCHEDULE_DELAY_MILLIS = 1000
 _DEFAULT_MAX_EXPORT_BATCH_SIZE = 512
 _DEFAULT_EXPORT_TIMEOUT_MILLIS = 30000
 _DEFAULT_MAX_QUEUE_SIZE = 2048

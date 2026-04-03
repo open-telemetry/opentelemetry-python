@@ -582,7 +582,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             log_record_processor._batch_processor._max_queue_size, 2048
         )
         self.assertEqual(
-            log_record_processor._batch_processor._schedule_delay, 5
+            log_record_processor._batch_processor._schedule_delay, 1
         )
         self.assertEqual(
             log_record_processor._batch_processor._max_export_batch_size, 512
@@ -613,7 +613,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             log_record_processor._batch_processor._max_queue_size, 2048
         )
         self.assertEqual(
-            log_record_processor._batch_processor._schedule_delay, 5
+            log_record_processor._batch_processor._schedule_delay, 1
         )
         self.assertEqual(
             log_record_processor._batch_processor._max_export_batch_size, 512
@@ -639,7 +639,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             log_record_processor._batch_processor._max_queue_size, 2048
         )
         self.assertEqual(
-            log_record_processor._batch_processor._schedule_delay, 5
+            log_record_processor._batch_processor._schedule_delay, 1
         )
         self.assertEqual(
             log_record_processor._batch_processor._max_export_batch_size, 512
