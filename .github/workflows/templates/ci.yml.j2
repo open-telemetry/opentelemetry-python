@@ -24,7 +24,7 @@ jobs:
   tests:
     uses: ./.github/workflows/test.yml
   contrib:
-    uses: open-telemetry/opentelemetry-python-contrib/.github/workflows/core_contrib_test_0.yml@main
+    uses: open-telemetry/opentelemetry-python-contrib/.github/workflows/core_contrib_test.yml@main
     with:
       CORE_REPO_SHA: ${% raw %}{{ github.sha }}{% endraw %}
       CONTRIB_REPO_SHA: {% raw %}${{ github.event_name == 'pull_request' && (
