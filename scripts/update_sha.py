@@ -40,7 +40,7 @@ def update_sha(sha):
     yaml = YAML()
     yaml.preserve_quotes = True
     for workflow_file in workflow_files:
-        with open(workflow_file, "r") as file:
+        with open(workflow_file) as file:
             workflow = yaml.load(file)
         workflow["env"]["CONTRIB_REPO_SHA"] = sha
         with open(workflow_file, "w") as file:
