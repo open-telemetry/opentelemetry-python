@@ -85,6 +85,7 @@ select = [
   "PLE", # pylint error
   "Q",   # flake8-quotes
   "G",   # https://docs.astral.sh/ruff/rules/#flake8-logging-format-g
+  "TID", # flake8-tidy-imports
   "UP011", # lru-cache-without-parameters
   "UP015", # redundant-open-modes
   "UP032", # f-string
@@ -99,6 +100,7 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "docs/**/*.*" = ["PLE"]
 "opentelemetry-sdk/tests/_configuration/test_models.py" = ["E402", "PLC0415"]
+"shim/opentelemetry-opentracing-shim/tests/*" = ["TID252"]
 
 [tool.ruff.lint.isort]
 known-third-party = [
