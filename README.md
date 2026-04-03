@@ -117,6 +117,7 @@ For more information about the maintainer role, see the [community repository](h
 - [Jeremy Voss](https://github.com/jeremydvoss), Microsoft
 - [Liudmila Molkova](https://github.com/lmolkova), Grafana Labs
 - [Lukas Hering](https://github.com/herin049), Oracle
+- [Mike Goldsmith](https://github.com/MikeGoldsmith), Honeycomb
 - [Owais Lone](https://github.com/owais), Splunk
 - [Pablo Collins](https://github.com/pmcollins), Splunk
 - [Shalev Roda](https://github.com/shalevr), Cisco
