@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-- Enabled the flake8-tidy-import plugins rules for the ruff linter. These rules throw warnings for relative imports in the modules. The banned-api and banned-module-level-imports rules have not been configured yet. They can be configured as per their need in future
+- Enabled the flake8-tidy-import plugins rules for the ruff linter. These rules throw warnings for relative imports in the modules. 
   ([#5019](https://github.com/open-telemetry/opentelemetry-python/pull/5019))
 - `opentelemetry-sdk`: Add `process` resource detector support to declarative file configuration via `detection_development.detectors[].process`
   ([#5001](https://github.com/open-telemetry/opentelemetry-python/pull/5001))
