@@ -120,6 +120,7 @@ include = [
   "opentelemetry-sdk",
   "opentelemetry-proto-json",
   "exporter/opentelemetry-exporter-otlp-proto-grpc",
+  "exporter/opentelemetry-exporter-otlp-proto-http",
   "codegen/opentelemetry-codegen-json"
 ]
 
@@ -139,6 +140,7 @@ exclude = [
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/view.py",
   "opentelemetry-sdk/benchmarks",
   "exporter/opentelemetry-exporter-otlp-proto-grpc/tests",
+  "exporter/opentelemetry-exporter-otlp-proto-http/tests",
 ]
 
 # When packages are correct typed add them to the strict list
