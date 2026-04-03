@@ -680,7 +680,7 @@ class MeterProvider(APIMeterProvider):
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
         attributes: Optional[Attributes] = None,
-    ) -> Meter:
+    ) -> APIMeter:
         if self._disabled:
             return NoOpMeter(name, version=version, schema_url=schema_url)
 
