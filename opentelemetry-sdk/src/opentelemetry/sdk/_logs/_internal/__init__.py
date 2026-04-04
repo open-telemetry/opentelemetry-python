@@ -60,9 +60,9 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util import ns_to_iso_str
+from opentelemetry.sdk.util._configurator import RuleBasedConfigurator
 from opentelemetry.sdk.util.instrumentation import (
     InstrumentationScope,
-    _InstrumentationScopePredicateT,
 )
 from opentelemetry.semconv._incubating.attributes import code_attributes
 from opentelemetry.semconv.attributes import exception_attributes
@@ -654,7 +654,7 @@ class LoggerConfig:
     is_enabled: bool = True
 
     @classmethod
-    def default(cls) -> "LoggerConfig":
+    def default(cls) -> LoggerConfig:
         return LoggerConfig()
 
 
@@ -751,9 +751,7 @@ class Logger(APILogger):
 
 
 LoggerConfiguratorT = Callable[[InstrumentationScope], LoggerConfig]
-LoggerConfiguratorRulesT = Sequence[
-    tuple[_InstrumentationScopePredicateT, LoggerConfig]
-]
+RuleBasedLoggerConfigurator = RuleBasedConfigurator[LoggerConfig]
 
 
 def default_logger_configurator(
@@ -766,24 +764,6 @@ def disable_logger_configurator(
     _logger_scope: InstrumentationScope,
 ) -> LoggerConfig:
     return LoggerConfig(is_enabled=False)
-
-
-class RuleBasedLoggerConfigurator:
-    def __init__(
-        self,
-        *,
-        rules: LoggerConfiguratorRulesT,
-        default_config: LoggerConfig,
-    ):
-        self._rules = rules
-        self._default_config = default_config
-
-    def __call__(self, logger_scope: InstrumentationScope) -> LoggerConfig:
-        for predicate, logger_config in self._rules:
-            if predicate(logger_scope):
-                return logger_config
-        # by default return default config
-        return self._default_config
 
 
 class LoggerProvider(APILoggerProvider):

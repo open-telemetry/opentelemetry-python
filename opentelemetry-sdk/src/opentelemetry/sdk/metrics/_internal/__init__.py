@@ -63,6 +63,7 @@ from opentelemetry.sdk.metrics._internal.sdk_configuration import (
     SdkConfiguration,
 )
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.util._configurator import RuleBasedConfigurator
 from opentelemetry.sdk.util.instrumentation import (
     InstrumentationScope,
     _InstrumentationScopePredicateT,
@@ -414,9 +415,7 @@ def _get_exemplar_filter(exemplar_filter: str) -> ExemplarFilter:
 
 
 _MeterConfiguratorT = Callable[[InstrumentationScope], _MeterConfig]
-_MeterConfiguratorRulesT = Sequence[
-    tuple[_InstrumentationScopePredicateT, _MeterConfig]
-]
+_RuleBasedMeterConfigurator = RuleBasedConfigurator[_MeterConfig]
 
 
 def _default_meter_configurator(
@@ -429,27 +428,6 @@ def _disable_meter_configurator(
     _meter_scope: InstrumentationScope,
 ) -> _MeterConfig:
     return _MeterConfig(is_enabled=False)
-
-
-class _RuleBasedMeterConfigurator:
-    def __init__(
-        self,
-        *,
-        rules: _MeterConfiguratorRulesT,
-        default_config: _MeterConfig,
-    ):
-        self._rules = rules
-        self._default_config = default_config
-
-    def __call__(self, meter_scope: InstrumentationScope) -> _MeterConfig:
-        for predicate, meter_config in self._rules:
-            if predicate(meter_scope):
-                return meter_config
-        # by default return default config
-        return self._default_config
-
-    def update_rules(self, rules: _MeterConfiguratorRulesT) -> None:
-        self._rules = rules
 
 
 class MeterProvider(APIMeterProvider):
