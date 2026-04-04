@@ -800,7 +800,7 @@ class LoggerProvider(APILoggerProvider):
             self._at_exit_handler = atexit.register(self.shutdown)
         self._logger_cache = {}
         self._logger_cache_lock = Lock()
-        self._active_loggers = WeakSet()
+        self._active_loggers: WeakSet[Logger] = WeakSet()
         self._active_loggers_lock = Lock()
 
     @property
@@ -888,8 +888,6 @@ class LoggerProvider(APILoggerProvider):
         self._logger_configurator = logger_configurator
         with self._active_loggers_lock:
             for logger in self._active_loggers:
-                if not isinstance(logger, Logger):
-                    continue
                 logger.set_logger_config(
                     self._apply_logger_configurator(
                         logger.instrumentation_scope
