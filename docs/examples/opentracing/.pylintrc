@@ -1,0 +1,9 @@
+[MASTER]
+init-hook='import sys; sys.path.insert(0, ".")'
+
+[MESSAGES CONTROL]
+disable=missing-docstring,
+        too-few-public-methods
+
+[FORMAT]
+expected-line-ending-format=
