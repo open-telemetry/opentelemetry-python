@@ -19,7 +19,7 @@ import math
 import weakref
 from logging import WARNING
 from time import sleep, time_ns
-from typing import Optional, cast
+from typing import TYPE_CHECKING, Optional, cast
 from unittest.mock import Mock
 
 import pytest
@@ -31,7 +31,6 @@ from opentelemetry.sdk.metrics import (
 )
 from opentelemetry.sdk.metrics._internal import _Counter
 from opentelemetry.sdk.metrics._internal.point import (
-    HistogramDataPoint,
     MetricsData,
     ResourceMetrics,
     ScopeMetrics,
@@ -53,6 +52,9 @@ from opentelemetry.sdk.metrics.view import (
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase
+
+if TYPE_CHECKING:
+    from opentelemetry.sdk.metrics._internal.point import HistogramDataPoint
 
 
 class FakeMetricsExporter(MetricExporter):
