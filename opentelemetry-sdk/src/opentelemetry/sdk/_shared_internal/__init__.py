@@ -24,7 +24,6 @@ import time
 import weakref
 from abc import abstractmethod
 from typing import (
-    # TYPE_CHECKING,
     Generic,
     Optional,
     Protocol,
@@ -37,8 +36,6 @@ from opentelemetry.context import (
     detach,
     set_value,
 )
-
-# if TYPE_CHECKING:
 from opentelemetry.sdk._shared_internal._processor_metrics import (
     ProcessorMetrics,  # noqa: TC001
 )
