@@ -147,6 +147,7 @@ class TestLoggerProvider(unittest.TestCase):
         logger = provider.get_logger("new_logger")
         self.assertFalse(logger._is_enabled())
 
+    # pylint: disable-next=no-self-use
     def test_disabled_logger_skips_emit(self):
         provider = LoggerProvider(
             logger_configurator=_disable_logger_configurator

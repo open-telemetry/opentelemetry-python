@@ -672,9 +672,7 @@ class TestTraceInit(TestCase):
         self, mock_entry_points
     ):
         def custom_tracer_configurator(tracer_scope):
-            return mock.Mock(spec=_RuleBasedTracerConfigurator)(
-                tracer_scope
-            )
+            return mock.Mock(spec=_RuleBasedTracerConfigurator)(tracer_scope)
 
         mock_entry_points.configure_mock(
             return_value=[
@@ -1160,9 +1158,7 @@ class TestLoggingInit(TestCase):
             _init_logging({}, logger_configurator=mock_configurator)
             provider = self.set_provider_mock.call_args[0][0]
             self.assertIsInstance(provider, DummyLoggerProvider)
-            self.assertEqual(
-                provider._logger_configurator, mock_configurator
-            )
+            self.assertEqual(provider._logger_configurator, mock_configurator)
 
     @patch.dict(
         "os.environ",
@@ -1188,9 +1184,7 @@ class TestLoggingInit(TestCase):
         self, mock_entry_points
     ):
         def custom_logger_configurator(logger_scope):
-            return mock.Mock(spec=RuleBasedLoggerConfigurator)(
-                logger_scope
-            )
+            return mock.Mock(spec=RuleBasedLoggerConfigurator)(logger_scope)
 
         mock_entry_points.configure_mock(
             return_value=[
@@ -1337,9 +1331,7 @@ class TestMetricsInit(TestCase):
         self, mock_entry_points
     ):
         def custom_meter_configurator(meter_scope):
-            return mock.Mock(spec=_RuleBasedMeterConfigurator)(
-                meter_scope
-            )
+            return mock.Mock(spec=_RuleBasedMeterConfigurator)(meter_scope)
 
         mock_entry_points.configure_mock(
             return_value=[

@@ -303,6 +303,7 @@ def _init_metrics(
     set_meter_provider(provider)
 
 
+# pylint: disable-next=too-many-locals
 def _init_logging(
     exporters: dict[str, Type[LogRecordExporter]],
     resource: Resource | None = None,
