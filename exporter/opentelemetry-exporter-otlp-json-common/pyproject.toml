@@ -13,7 +13,7 @@ authors = [
   { name = "OpenTelemetry Authors", email = "cncf-opentelemetry-contributors@lists.cncf.io" },
 ]
 classifiers = [
-  "Development Status :: 5 - Production/Stable",
+  "Development Status :: 4 - Beta",
   "Framework :: OpenTelemetry",
   "Framework :: OpenTelemetry :: Exporters",
   "Intended Audience :: Developers",
