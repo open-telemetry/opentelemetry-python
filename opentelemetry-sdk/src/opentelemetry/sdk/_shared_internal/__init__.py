@@ -24,7 +24,7 @@ import time
 import weakref
 from abc import abstractmethod
 from typing import (
-    TYPE_CHECKING,
+    # TYPE_CHECKING,
     Generic,
     Optional,
     Protocol,
@@ -37,12 +37,12 @@ from opentelemetry.context import (
     detach,
     set_value,
 )
-from opentelemetry.util._once import Once
 
-if TYPE_CHECKING:
-    from opentelemetry.sdk._shared_internal._processor_metrics import (
-        ProcessorMetrics,
-    )
+# if TYPE_CHECKING:
+from opentelemetry.sdk._shared_internal._processor_metrics import (
+    ProcessorMetrics,  # noqa: TC001
+)
+from opentelemetry.util._once import Once
 
 
 class DuplicateFilter(logging.Filter):
