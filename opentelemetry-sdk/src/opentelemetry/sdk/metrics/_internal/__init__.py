@@ -66,7 +66,6 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util._configurator import RuleBasedConfigurator
 from opentelemetry.sdk.util.instrumentation import (
     InstrumentationScope,
-    _InstrumentationScopePredicateT,
 )
 from opentelemetry.util._once import Once
 from opentelemetry.util.types import (

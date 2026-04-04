@@ -75,6 +75,8 @@ from opentelemetry.util.types import AnyValue, _ExtendedAttributes
 _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
 _ENV_VALUE_UNSET = ""
 
+_logger = logging.getLogger(__name__)
+
 
 class BytesEncoder(json.JSONEncoder):
     def default(self, o):
@@ -754,13 +756,13 @@ LoggerConfiguratorT = Callable[[InstrumentationScope], LoggerConfig]
 RuleBasedLoggerConfigurator = RuleBasedConfigurator[LoggerConfig]
 
 
-def default_logger_configurator(
+def _default_logger_configurator(
     _logger_scope: InstrumentationScope,
 ) -> LoggerConfig:
     return LoggerConfig.default()
 
 
-def disable_logger_configurator(
+def _disable_logger_configurator(
     _logger_scope: InstrumentationScope,
 ) -> LoggerConfig:
     return LoggerConfig(is_enabled=False)
@@ -790,7 +792,9 @@ class LoggerProvider(APILoggerProvider):
         )
         disabled = environ.get(OTEL_SDK_DISABLED, "")
         self._disabled = disabled.lower().strip() == "true"
-        self._logger_configurator = logger_configurator
+        self._logger_configurator = (
+            logger_configurator or _default_logger_configurator
+        )
         self._at_exit_handler = None
         if shutdown_on_exit:
             self._at_exit_handler = atexit.register(self.shutdown)
@@ -817,7 +821,7 @@ class LoggerProvider(APILoggerProvider):
             self._multi_log_record_processor,
             scope,
             logger_metrics=self._logger_metrics,
-            logger_config=self._logger_configurator(scope),
+            logger_config=self._apply_logger_configurator(scope),
         )
 
     def _get_logger_cached(
@@ -887,8 +891,23 @@ class LoggerProvider(APILoggerProvider):
                 if not isinstance(logger, Logger):
                     continue
                 logger.set_logger_config(
-                    self._logger_configurator(logger.instrumentation_scope)
+                    self._apply_logger_configurator(
+                        logger.instrumentation_scope
+                    )
                 )
+
+    def _apply_logger_configurator(
+        self, instrumentation_scope: InstrumentationScope
+    ) -> LoggerConfig:
+        try:
+            return self._logger_configurator(instrumentation_scope)
+        # pylint: disable-next=broad-exception-caught
+        except Exception:
+            _logger.exception(
+                "logger configurator failed for scope '%s', using default config",
+                instrumentation_scope.name,
+            )
+            return LoggerConfig.default()
 
     def shutdown(self) -> None:
         """Shuts down the log processors."""
