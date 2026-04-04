@@ -12,9 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from opentelemetry.exporter.otlp.json.common._internal.metrics_encoder import (
-    encode_metrics,
-    split_metrics_data,
-)
+import enum
 
-__all__ = ["encode_metrics", "split_metrics_data"]
+
+class Compression(enum.Enum):
+    NO_COMPRESSION = "none"
+    DEFLATE = "deflate"
+    GZIP = "gzip"

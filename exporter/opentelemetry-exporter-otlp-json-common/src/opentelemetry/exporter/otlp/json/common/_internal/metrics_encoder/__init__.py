@@ -15,7 +15,9 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Collection
+from collections.abc import Collection, Iterable
+from dataclasses import replace
+from os import environ
 
 from opentelemetry.exporter.otlp.json.common._internal import (
     _encode_attributes,
@@ -56,8 +58,24 @@ from opentelemetry.proto_json.metrics.v1.metrics import Sum as JSONSum
 from opentelemetry.proto_json.resource.v1.resource import (
     Resource as JSONResource,
 )
+from opentelemetry.sdk._configuration.models import Aggregation
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION,
+    OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
+)
 from opentelemetry.sdk.metrics import (
+    Counter,
     Exemplar,
+    Histogram,
+    ObservableCounter,
+    ObservableGauge,
+    ObservableUpDownCounter,
+    UpDownCounter,
+)
+from opentelemetry.sdk.metrics._internal.aggregation import (
+    AggregationTemporality,
+    ExplicitBucketHistogramAggregation,
+    ExponentialBucketHistogramAggregation,
 )
 from opentelemetry.sdk.metrics._internal.point import (
     ExponentialHistogramDataPoint,
@@ -68,14 +86,30 @@ from opentelemetry.sdk.metrics._internal.point import (
     ScopeMetrics,
 )
 from opentelemetry.sdk.metrics.export import (
-    ExponentialHistogram,
-    Gauge,
-    Histogram,
+    ExponentialHistogram as ExponentialHistogramMetricData,
+)
+from opentelemetry.sdk.metrics.export import (
+    Gauge as GaugeMetricData,
+)
+from opentelemetry.sdk.metrics.export import (
+    Histogram as HistogramMetricData,
+)
+from opentelemetry.sdk.metrics.export import (
     MetricsData,
-    Sum,
+)
+from opentelemetry.sdk.metrics.export import (
+    Sum as SumMetricData,
 )
 
 _logger = logging.getLogger(__name__)
+
+_METRIC_DATA_FIELDS = (
+    "gauge",
+    "sum",
+    "histogram",
+    "exponential_histogram",
+    "summary",
+)
 
 
 def encode_metrics(data: MetricsData) -> JSONExportMetricsServiceRequest:
@@ -114,13 +148,13 @@ def _encode_metric(metric: Metric) -> JSONMetric:
         description=metric.description,
         unit=metric.unit,
     )
-    if isinstance(metric.data, Gauge):
+    if isinstance(metric.data, GaugeMetricData):
         json_metric.gauge = JSONGauge(
             data_points=[
                 _encode_gauge_data_point(pt) for pt in metric.data.data_points
             ]
         )
-    elif isinstance(metric.data, Histogram):
+    elif isinstance(metric.data, HistogramMetricData):
         json_metric.histogram = JSONHistogram(
             data_points=[
                 _encode_histogram_data_point(pt)
@@ -128,7 +162,7 @@ def _encode_metric(metric: Metric) -> JSONMetric:
             ],
             aggregation_temporality=metric.data.aggregation_temporality,
         )
-    elif isinstance(metric.data, Sum):
+    elif isinstance(metric.data, SumMetricData):
         json_metric.sum = JSONSum(
             data_points=[
                 _encode_sum_data_point(pt) for pt in metric.data.data_points
@@ -136,7 +170,7 @@ def _encode_metric(metric: Metric) -> JSONMetric:
             aggregation_temporality=metric.data.aggregation_temporality,
             is_monotonic=metric.data.is_monotonic,
         )
-    elif isinstance(metric.data, ExponentialHistogram):
+    elif isinstance(metric.data, ExponentialHistogramMetricData):
         json_metric.exponential_histogram = JSONExponentialHistogram(
             data_points=[
                 _encode_exponential_histogram_data_point(pt)
@@ -269,3 +303,214 @@ def _encode_exemplars(
         json_exemplars.append(json_exemplar)
 
     return json_exemplars
+
+
+def split_metrics_data(
+    metrics_data: JSONExportMetricsServiceRequest,
+    max_export_batch_size: int | None,
+) -> Iterable[JSONExportMetricsServiceRequest]:
+    """Split an ExportMetricsServiceRequest into batches of at most
+    max_export_batch_size data points, preserving resource/scope hierarchy.
+    """
+    if max_export_batch_size is None:
+        yield metrics_data
+        return
+
+    batch_size: int = 0
+    resource_metrics_batch: list[JSONResourceMetrics] = []
+    scope_metrics_batch: list[JSONScopeMetrics] = []
+    metrics_batch: list[JSONMetric] = []
+
+    for (
+        resource_metrics,
+        scope_metrics,
+        metric,
+        field_name,
+        data_points,
+    ) in _iter_metric_data_points(metrics_data):
+        if (
+            not resource_metrics_batch
+            or resource_metrics_batch[-1].resource
+            is not resource_metrics.resource
+        ):
+            scope_metrics_batch = []
+            resource_metrics_batch.append(
+                replace(resource_metrics, scope_metrics=scope_metrics_batch)
+            )
+
+        if (
+            not scope_metrics_batch
+            or scope_metrics_batch[-1].scope is not scope_metrics.scope
+        ):
+            metrics_batch = []
+            scope_metrics_batch.append(
+                replace(scope_metrics, metrics=metrics_batch)
+            )
+
+        data_points_batch: list = []
+        metrics_batch.append(
+            _build_metric_with_data_points(
+                metric, field_name, data_points_batch
+            )
+        )
+
+        for data_point in data_points:
+            if batch_size >= max_export_batch_size:
+                yield JSONExportMetricsServiceRequest(
+                    resource_metrics=resource_metrics_batch
+                )
+                (
+                    resource_metrics_batch,
+                    scope_metrics_batch,
+                    metrics_batch,
+                    data_points_batch,
+                ) = _build_empty_metric_batches(
+                    resource_metrics, scope_metrics, metric, field_name
+                )
+                batch_size = 0
+            data_points_batch.append(data_point)
+            batch_size += 1
+
+    if batch_size > 0:
+        yield JSONExportMetricsServiceRequest(
+            resource_metrics=resource_metrics_batch
+        )
+
+
+def _get_metric_data_field_name(metric: JSONMetric) -> str | None:
+    return next(
+        (f for f in _METRIC_DATA_FIELDS if getattr(metric, f) is not None),
+        None,
+    )
+
+
+def _iter_metric_data_points(
+    metrics_data: JSONExportMetricsServiceRequest,
+) -> Iterable[
+    tuple[JSONResourceMetrics, JSONScopeMetrics, JSONMetric, str, list]
+]:
+    for resource_metrics in metrics_data.resource_metrics:
+        for scope_metrics in resource_metrics.scope_metrics:
+            for metric in scope_metrics.metrics:
+                field_name = _get_metric_data_field_name(metric)
+                if field_name is None:
+                    _logger.warning(
+                        "Tried to split and export an unsupported metric type. Skipping."
+                    )
+                    continue
+                yield (
+                    resource_metrics,
+                    scope_metrics,
+                    metric,
+                    field_name,
+                    getattr(metric, field_name).data_points,
+                )
+
+
+def _build_metric_with_data_points(
+    metric: JSONMetric,
+    field_name: str,
+    data_points: list,
+) -> JSONMetric:
+    new_data = replace(getattr(metric, field_name), data_points=data_points)
+    return replace(metric, **{field_name: new_data})
+
+
+def _build_empty_metric_batches(
+    resource_metrics: JSONResourceMetrics,
+    scope_metrics: JSONScopeMetrics,
+    metric: JSONMetric,
+    field_name: str,
+) -> tuple[
+    list[JSONResourceMetrics], list[JSONScopeMetrics], list[JSONMetric], list
+]:
+    data_points_batch = []
+    metrics_batch = [
+        _build_metric_with_data_points(metric, field_name, data_points_batch)
+    ]
+    scope_metrics_batch = [replace(scope_metrics, metrics=metrics_batch)]
+    resource_metrics_batch = [
+        replace(resource_metrics, scope_metrics=scope_metrics_batch)
+    ]
+    return (
+        resource_metrics_batch,
+        scope_metrics_batch,
+        metrics_batch,
+        data_points_batch,
+    )
+
+
+def _get_temporality(
+    preferred_temporality: dict[type, AggregationTemporality] | None,
+) -> dict[type, AggregationTemporality]:
+    preference = (
+        environ.get(
+            OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE, "CUMULATIVE"
+        )
+        .upper()
+        .strip()
+    )
+
+    if preference == "DELTA":
+        instrument_class_temporality = {
+            Counter: AggregationTemporality.DELTA,
+            UpDownCounter: AggregationTemporality.CUMULATIVE,
+            Histogram: AggregationTemporality.DELTA,
+            ObservableCounter: AggregationTemporality.DELTA,
+            ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
+            ObservableGauge: AggregationTemporality.CUMULATIVE,
+        }
+    elif preference == "LOWMEMORY":
+        instrument_class_temporality = {
+            Counter: AggregationTemporality.DELTA,
+            UpDownCounter: AggregationTemporality.CUMULATIVE,
+            Histogram: AggregationTemporality.DELTA,
+            ObservableCounter: AggregationTemporality.CUMULATIVE,
+            ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
+            ObservableGauge: AggregationTemporality.CUMULATIVE,
+        }
+    else:
+        if preference != "CUMULATIVE":
+            _logger.warning(
+                "Unrecognized OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE"
+                " value found: %s, using CUMULATIVE",
+                preference,
+            )
+        instrument_class_temporality = {
+            Counter: AggregationTemporality.CUMULATIVE,
+            UpDownCounter: AggregationTemporality.CUMULATIVE,
+            Histogram: AggregationTemporality.CUMULATIVE,
+            ObservableCounter: AggregationTemporality.CUMULATIVE,
+            ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
+            ObservableGauge: AggregationTemporality.CUMULATIVE,
+        }
+
+    instrument_class_temporality.update(preferred_temporality or {})
+    return instrument_class_temporality
+
+
+def _get_aggregation(
+    preferred_aggregation: dict[type, Aggregation] | None,
+) -> dict[type, Aggregation]:
+    default_histogram_aggregation = environ.get(
+        OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION,
+        "explicit_bucket_histogram",
+    )
+
+    if default_histogram_aggregation == "base2_exponential_bucket_histogram":
+        instrument_class_aggregation: dict[type, Aggregation] = {
+            Histogram: ExponentialBucketHistogramAggregation(),
+        }
+    else:
+        if default_histogram_aggregation != "explicit_bucket_histogram":
+            _logger.warning(
+                "Invalid value for %s: %s, using explicit bucket histogram aggregation",
+                OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION,
+                default_histogram_aggregation,
+            )
+        instrument_class_aggregation = {
+            Histogram: ExplicitBucketHistogramAggregation(),
+        }
+
+    instrument_class_aggregation.update(preferred_aggregation or {})
+    return instrument_class_aggregation

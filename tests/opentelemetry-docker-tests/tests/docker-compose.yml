@@ -7,8 +7,13 @@ services:
     ports:
         - "8888:8888"
         - "55678:55678"
+
   otcollector:
-    image: otel/opentelemetry-collector:0.31.0
+    image: otel/opentelemetry-collector:0.149.0
+    command: ["--config=/etc/otel/config.yaml"]
+    volumes:
+      - ./collector-config.yaml:/etc/otel/config.yaml
     ports:
-        - "4317:4317"
-        - "4318:55681"
+        - "4317:4317"   # gRPC
+        - "4318:4318"   # HTTP Protobuf
+        - "4319:4319"   # HTTP JSON

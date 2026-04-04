@@ -12,9 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from opentelemetry.exporter.otlp.json.common._internal.metrics_encoder import (
-    encode_metrics,
-    split_metrics_data,
-)
-
-__all__ = ["encode_metrics", "split_metrics_data"]
+__version__ = "0.62b0.dev"
