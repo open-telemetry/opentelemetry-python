@@ -26,13 +26,19 @@ from opentelemetry.sdk._logs import (
     ReadableLogRecord,
 )
 from opentelemetry.sdk._logs._internal import (
+    LoggerConfig,
     LoggerMetrics,
     NoOpLogger,
+    RuleBasedLoggerConfigurator,
     SynchronousMultiLogRecordProcessor,
+    _disable_logger_configurator,
 )
 from opentelemetry.sdk.environment_variables import OTEL_SDK_DISABLED
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.util.instrumentation import InstrumentationScope
+from opentelemetry.sdk.util.instrumentation import (
+    InstrumentationScope,
+    _scope_name_matches_glob,
+)
 
 
 class TestLoggerProvider(unittest.TestCase):
@@ -95,6 +101,135 @@ class TestLoggerProvider(unittest.TestCase):
         )
         self.assertIsNotNone(logger_provider._at_exit_handler)
 
+    def test_default_logger_configurator(self):
+        provider = LoggerProvider()
+        logger = provider.get_logger("module_name", "1.0", "schema_url")
+        other_logger = provider.get_logger(
+            "other_module_name", "1.0", "schema_url"
+        )
+        self.assertTrue(logger._is_enabled())
+        self.assertTrue(other_logger._is_enabled())
+
+    def test_logger_provider_with_disabled_configurator(self):
+        provider = LoggerProvider(
+            logger_configurator=_disable_logger_configurator
+        )
+        logger = provider.get_logger("test")
+        self.assertFalse(logger._is_enabled())
+
+    def test_logger_provider_with_custom_configurator(self):
+        def configurator(scope):
+            if scope.name == "disabled_logger":
+                return LoggerConfig(is_enabled=False)
+            return LoggerConfig.default()
+
+        provider = LoggerProvider(logger_configurator=configurator)
+        enabled = provider.get_logger("enabled_logger")
+        disabled = provider.get_logger("disabled_logger")
+        self.assertTrue(enabled._is_enabled())
+        self.assertFalse(disabled._is_enabled())
+
+    def test_set_logger_configurator_updates_existing_loggers(self):
+        provider = LoggerProvider()
+        logger = provider.get_logger("test")
+        self.assertTrue(logger._is_enabled())
+
+        provider.set_logger_configurator(
+            logger_configurator=_disable_logger_configurator
+        )
+        self.assertFalse(logger._is_enabled())
+
+    def test_set_logger_configurator_affects_new_loggers(self):
+        provider = LoggerProvider()
+        provider.set_logger_configurator(
+            logger_configurator=_disable_logger_configurator
+        )
+        logger = provider.get_logger("new_logger")
+        self.assertFalse(logger._is_enabled())
+
+    def test_disabled_logger_skips_emit(self):
+        provider = LoggerProvider(
+            logger_configurator=_disable_logger_configurator
+        )
+        logger = provider.get_logger("test")
+        processor_mock = Mock()
+        provider.add_log_record_processor(processor_mock)
+
+        logger.emit(
+            LogRecord(observed_timestamp=0, body="should not be emitted")
+        )
+        processor_mock.on_emit.assert_not_called()
+
+    def test_rule_based_logger_configurator(self):
+        rules = [
+            (
+                _scope_name_matches_glob(glob_pattern="module_name"),
+                LoggerConfig(is_enabled=True),
+            ),
+            (
+                _scope_name_matches_glob(glob_pattern="other_module_name"),
+                LoggerConfig(is_enabled=False),
+            ),
+        ]
+        configurator = RuleBasedLoggerConfigurator(
+            rules=rules, default_config=LoggerConfig(is_enabled=True)
+        )
+
+        provider = LoggerProvider()
+        logger = provider.get_logger("module_name", "1.0", "schema_url")
+        other_logger = provider.get_logger(
+            "other_module_name", "1.0", "schema_url"
+        )
+
+        self.assertTrue(logger._is_enabled())
+        self.assertTrue(other_logger._is_enabled())
+
+        provider.set_logger_configurator(logger_configurator=configurator)
+
+        self.assertTrue(logger._is_enabled())
+        self.assertFalse(other_logger._is_enabled())
+
+    def test_rule_based_logger_configurator_default_when_rules_dont_match(
+        self,
+    ):
+        rules = [
+            (
+                _scope_name_matches_glob(glob_pattern="module_name"),
+                LoggerConfig(is_enabled=False),
+            ),
+        ]
+        configurator = RuleBasedLoggerConfigurator(
+            rules=rules, default_config=LoggerConfig(is_enabled=True)
+        )
+
+        provider = LoggerProvider()
+        logger = provider.get_logger("module_name", "1.0", "schema_url")
+        other_logger = provider.get_logger(
+            "other_module_name", "1.0", "schema_url"
+        )
+
+        self.assertTrue(logger._is_enabled())
+        self.assertTrue(other_logger._is_enabled())
+
+        provider.set_logger_configurator(logger_configurator=configurator)
+
+        self.assertFalse(logger._is_enabled())
+        self.assertTrue(other_logger._is_enabled())
+
+    def test_rule_based_configurator_first_match_wins(self):
+        disabled_config = LoggerConfig(is_enabled=False)
+        enabled_config = LoggerConfig(is_enabled=True)
+        configurator = RuleBasedLoggerConfigurator(
+            rules=[
+                (lambda s: s.name == "foo", disabled_config),
+                (lambda s: s.name == "foo", enabled_config),
+            ],
+            default_config=enabled_config,
+        )
+        scope = InstrumentationScope("foo", "1.0")
+        result = configurator(scope)
+        self.assertFalse(result.is_enabled)
+
 
 class TestReadableLogRecord(unittest.TestCase):
     def setUp(self):
@@ -151,6 +286,7 @@ class TestLogger(unittest.TestCase):
                 {"an": "attribute"},
             ),
             logger_metrics=LoggerMetrics(NoOpMeterProvider()),
+            logger_config=LoggerConfig.default(),
         )
         return logger, log_record_processor_mock
 

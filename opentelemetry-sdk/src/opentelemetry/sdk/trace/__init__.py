@@ -1278,7 +1278,7 @@ def _default_tracer_configurator(
     return _RuleBasedTracerConfigurator(
         rules=[],
         default_config=_TracerConfig.default(),
-    )(tracer_scope=tracer_scope)
+    )(tracer_scope)
 
 
 def _disable_tracer_configurator(
@@ -1287,7 +1287,7 @@ def _disable_tracer_configurator(
     return _RuleBasedTracerConfigurator(
         rules=[],
         default_config=_TracerConfig(is_enabled=False),
-    )(tracer_scope=tracer_scope)
+    )(tracer_scope)
 
 
 class TracerProvider(trace_api.TracerProvider):
