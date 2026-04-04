@@ -225,13 +225,8 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
                 if log_record.resource is not None
                 else Resource.create({})
             )
-            # Shallow copy the API log record to break the reference to the potentially large context
-            # while keeping the original context intact for other processors.
-            api_log_record = copy.copy(log_record.log_record)
-            api_log_record.context = Context()
-
             readable_log_record = ReadableLogRecord(
-                log_record=api_log_record,
+                log_record=log_record.log_record,
                 resource=resource,
                 instrumentation_scope=log_record.instrumentation_scope,
                 limits=log_record.limits,
