@@ -155,9 +155,7 @@ _ENVIRON_TO_COMPRESSION = {
 class InvalidCompressionValueException(Exception):
     def __init__(self, environ_key: str, environ_value: str):
         super().__init__(
-            'Invalid value "{}" for compression envvar {}'.format(
-                environ_value, environ_key
-            )
+            f'Invalid value "{environ_value}" for compression envvar {environ_key}'
         )
 
 
