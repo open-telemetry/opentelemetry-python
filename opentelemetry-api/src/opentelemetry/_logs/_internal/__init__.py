@@ -90,7 +90,7 @@ class LogRecord(ABC):
         observed_timestamp: Optional[int] = None,
         trace_id: Optional[int] = None,
         span_id: Optional[int] = None,
-        trace_flags: Optional["TraceFlags"] = None,
+        trace_flags: Optional[TraceFlags] = None,
         severity_text: Optional[str] = None,
         severity_number: Optional[SeverityNumber] = None,
         body: AnyValue = None,
@@ -105,7 +105,7 @@ class LogRecord(ABC):
         context: Optional[Context] = None,
         trace_id: Optional[int] = None,
         span_id: Optional[int] = None,
-        trace_flags: Optional["TraceFlags"] = None,
+        trace_flags: Optional[TraceFlags] = None,
         severity_text: Optional[str] = None,
         severity_number: Optional[SeverityNumber] = None,
         body: AnyValue = None,
@@ -446,7 +446,7 @@ def get_logger(
     logger_provider: Optional[LoggerProvider] = None,
     schema_url: Optional[str] = None,
     attributes: Optional[_ExtendedAttributes] = None,
-) -> "Logger":
+) -> Logger:
     """Returns a `Logger` for use within a python process.
 
     This function is a convenience wrapper for

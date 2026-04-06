@@ -41,7 +41,7 @@ class MeasurementConsumer(ABC):
     def register_asynchronous_instrument(
         self,
         instrument: (
-            "opentelemetry.sdk.metrics._internal.instrument_Asynchronous"
+            "opentelemetry.sdk.metrics._internal.instrument._Asynchronous"
         ),
     ):
         pass
@@ -49,7 +49,7 @@ class MeasurementConsumer(ABC):
     @abstractmethod
     def collect(
         self,
-        metric_reader: "opentelemetry.sdk.metrics.MetricReader",
+        metric_reader: "opentelemetry.sdk.metrics.export.MetricReader",
         timeout_millis: float = 10_000,
     ) -> Optional[MetricsData]:
         pass
@@ -64,7 +64,7 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
         self._sdk_config = sdk_config
         # should never be mutated
         self._reader_storages: Mapping[
-            "opentelemetry.sdk.metrics.MetricReader", MetricReaderStorage
+            opentelemetry.sdk.metrics.export.MetricReader, MetricReaderStorage
         ] = {
             reader: MetricReaderStorage(
                 sdk_config,
@@ -74,7 +74,7 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
             for reader in sdk_config.metric_readers
         }
         self._async_instruments: List[
-            "opentelemetry.sdk.metrics._internal.instrument._Asynchronous"
+            opentelemetry.sdk.metrics._internal.instrument._Asynchronous
         ] = []
 
     def consume_measurement(self, measurement: Measurement) -> None:
@@ -102,7 +102,7 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
 
     def collect(
         self,
-        metric_reader: "opentelemetry.sdk.metrics.MetricReader",
+        metric_reader: "opentelemetry.sdk.metrics.export.MetricReader",
         timeout_millis: float = 10_000,
     ) -> Optional[MetricsData]:
         with self._lock:
