@@ -53,7 +53,7 @@ class ExportStatusMetricReader(PeriodicExportingMetricReader):
         self.export_status = []
 
     def _receive_metrics(self, metrics_data, timeout_millis=10_000, **kwargs):
-        token = attach(set_value("suppress_instrumentation", True))
+        token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
             export_result = self._exporter.export(
                 metrics_data, timeout_millis=timeout_millis
