@@ -40,15 +40,17 @@ class TestPatch(unittest.TestCase):
         self.assertIsInstance(Tracer.tracer, property)
 
     def test_install_shim_affects_existing_tracers(self):
-        # Initially the shim is not installed. A OC Tracer instance should have a NoopTracer
+        # Initially the shim is not installed. Store the original tracer instance.
         oc_tracer = Tracer()
-        self.assertIsInstance(oc_tracer.tracer, NoopTracer)
-        self.assertNotIsInstance(oc_tracer.tracer, ShimTracer)
+        original_tracer = oc_tracer.tracer
+        self.assertNotIsInstance(original_tracer, ShimTracer)
 
         install_shim()
 
         # The property should cause existing instances to get the singleton ShimTracer
         self.assertIsInstance(oc_tracer.tracer, ShimTracer)
+        # The ShimTracer wraps a NoopTracer, which should look like a NoopTracer
+        self.assertIsInstance(oc_tracer.tracer, NoopTracer)
 
     def test_install_shim_affects_new_tracers(self):
         install_shim()
