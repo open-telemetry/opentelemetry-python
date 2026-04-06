@@ -15,7 +15,12 @@
 import time
 from abc import ABC, abstractmethod
 
-from opentelemetry.context import attach, detach, set_value
+from opentelemetry.context import (
+    _SUPPRESS_INSTRUMENTATION_KEY,
+    attach,
+    detach,
+    set_value,
+)
 from opentelemetry.sdk.metrics._internal.export import (
     MetricExportResult,
     PeriodicExportingMetricReader,
@@ -124,7 +129,8 @@ class BaseTestOTLPExporter(ABC):
                 start_time_unix_nano=1000000 + i,
                 time_unix_nano=2000000 + i,
                 value=i + 1.0,
-            ) for i in range(num_data_points)
+            )
+            for i in range(num_data_points)
         ]
         metric = Metric(
             name="otel_test_counter_foobar",
