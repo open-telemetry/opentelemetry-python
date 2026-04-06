@@ -118,15 +118,14 @@ class BaseTestOTLPExporter(ABC):
 
     def _create_test_metrics_data(self, num_data_points=6):
         """Create test metrics data with specified number of data points."""
-        data_points = []
-        for i in range(num_data_points):
-            dp = NumberDataPoint(
+        data_points = [
+            NumberDataPoint(
                 attributes={"key": f"value{i}"},
                 start_time_unix_nano=1000000 + i,
                 time_unix_nano=2000000 + i,
                 value=i + 1.0,
-            )
-            data_points.append(dp)
+            ) for i in range(num_data_points)
+        ]
         metric = Metric(
             name="otel_test_counter_foobar",
             description="Test counter metric for batch verification",
