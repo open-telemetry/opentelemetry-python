@@ -55,6 +55,14 @@ class TestPrometheusMetricReader(TestCase):
             side_effect=self._mock_registry_register,
         )
 
+    def test_custom_registry(self):
+        from prometheus_client import CollectorRegistry
+        custom_registry = CollectorRegistry()
+        reader = PrometheusMetricReader(registry=custom_registry)
+        # global REGISTRY should NOT be used
+        self._mock_registry_register.assert_not_called()
+        reader.shutdown()
+
     def verify_text_format(
         self, metric: Metric, expect_prometheus_text: str, prefix: str = ""
     ) -> None:

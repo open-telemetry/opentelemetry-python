@@ -135,7 +135,7 @@ class PrometheusMetricReader(MetricReader):
     """Prometheus metric exporter for OpenTelemetry."""
 
     def __init__(
-        self, disable_target_info: bool = False, prefix: str = ""
+        self, disable_target_info: bool = False, prefix: str = "", registry=REGISTRY
     ) -> None:
         super().__init__(
             preferred_temporality={
@@ -151,7 +151,8 @@ class PrometheusMetricReader(MetricReader):
         self._collector = _CustomCollector(
             disable_target_info=disable_target_info, prefix=prefix
         )
-        REGISTRY.register(self._collector)
+        self._registry = registry
+        self._registry.register(self._collector)
         self._collector._callback = self.collect
         self._prefix = prefix
 
@@ -166,7 +167,7 @@ class PrometheusMetricReader(MetricReader):
         self._collector.add_metrics_data(metrics_data)
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
-        REGISTRY.unregister(self._collector)
+        self._registry.unregister(self._collector)
 
 
 class _CustomCollector:
