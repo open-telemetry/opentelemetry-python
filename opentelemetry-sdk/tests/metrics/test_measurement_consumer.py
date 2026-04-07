@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=invalid-name,no-self-use,protected-access
+# pylint: disable=invalid-name,no-self-use
 
 from time import sleep
 from unittest import TestCase
@@ -209,7 +209,7 @@ class TestSynchronousMeasurementConsumer(TestCase):
     "opentelemetry.sdk.metrics._internal."
     "measurement_consumer.MetricReaderStorage"
 )
-class TestSynchronousMeasurementConsumerForkHandler(TestCase):
+class TestSynchronousMeasurementConsumerForkHandler(TestCase): # pylint: disable=protected-access
     """Exhaustive tests for fork handler, needs_storage_reinit, and lazy _reinit_storages."""
 
     def test_register_at_fork_called_when_available(
