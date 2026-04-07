@@ -63,6 +63,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#5036](https://github.com/open-telemetry/opentelemetry-python/pull/5036))
 - `opentelemetry-exporter-otlp-json-common`: add 'opentelemetry-exporter-otlp-json-common' package for OTLP JSON exporters
   ([#4996](https://github.com/open-telemetry/opentelemetry-python/pull/4996))
+- `opentelemetry-exporter-otlp-json-http`: add 'opentelemetry-exporter-otlp-json-http' package for OTLP JSON
+  ([#5051](https://github.com/open-telemetry/opentelemetry-python/pull/5051))
 
 ## Version 1.40.0/0.61b0 (2026-03-04)
 
