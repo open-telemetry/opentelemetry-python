@@ -91,6 +91,7 @@ select = [
   "UP032", # f-string
   "UP034", # extraneous-parentheses
   "UP037", # quoted-annotation
+  "T10",  # flake8-debugger
 ]
 
 ignore = [
