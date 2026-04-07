@@ -16,7 +16,6 @@
 import abc
 import atexit
 import concurrent.futures
-import fnmatch
 import json
 import logging
 import os
@@ -69,6 +68,7 @@ from opentelemetry.sdk.util import BoundedList
 from opentelemetry.sdk.util.instrumentation import (
     InstrumentationInfo,
     InstrumentationScope,
+    _InstrumentationScopePredicateT,
 )
 from opentelemetry.semconv.attributes.exception_attributes import (
     EXCEPTION_ESCAPED,
@@ -785,7 +785,9 @@ class Span(trace_api.Span, ReadableSpan):
         parent: This span's parent's `opentelemetry.trace.SpanContext`, or
             None if this is a root span
         sampler: The sampler used to create this span
-        trace_config: TODO
+        trace_config:  Unused. Originally intended for trace-level configuration
+            from the OpenTelemetry protocol, but the upstream ``TraceConfig``
+            proto was removed. Retained for backwards compatibility.
         resource: Entity producing telemetry
         attributes: The span's attributes to be exported
         events: Timestamped events to be exported
@@ -1262,20 +1264,9 @@ class Tracer(trace_api.Tracer):
 
 
 _TracerConfiguratorT = Callable[[InstrumentationScope], _TracerConfig]
-_InstrumentationScopePredicateT = Callable[[InstrumentationScope], bool]
 _TracerConfiguratorRulesT = Sequence[
     tuple[_InstrumentationScopePredicateT, _TracerConfig]
 ]
-
-
-# TODO: share this with configurators for other signals
-def _scope_name_matches_glob(
-    glob_pattern: str,
-) -> _InstrumentationScopePredicateT:
-    def inner(scope: InstrumentationScope) -> bool:
-        return fnmatch.fnmatch(scope.name, glob_pattern)
-
-    return inner
 
 
 class _RuleBasedTracerConfigurator:

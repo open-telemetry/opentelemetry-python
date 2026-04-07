@@ -140,29 +140,17 @@ def _generate_workflow(
     job_datas: list,
     template_name: str,
     output_dir: Path,
-    max_jobs: int = 250,
-):
-    # Github seems to limit the amount of jobs in a workflow file, that is why
-    # they are split in groups of 250 per workflow file.
-    for file_number, job_datas in enumerate(
-        [
-            job_datas[index : index + max_jobs]
-            for index in range(0, len(job_datas), max_jobs)
-        ]
-    ):
-        with open(
-            output_dir.joinpath(f"{template_name}_{file_number}.yml"), "w"
-        ) as test_yml_file:
-            test_yml_file.write(
-                Environment(
-                    loader=FileSystemLoader(
-                        Path(__file__).parent.joinpath("templates")
-                    )
-                )
-                .get_template(f"{template_name}.yml.j2")
-                .render(job_datas=job_datas, file_number=file_number)
+) -> None:
+    env = Environment(
+        loader=FileSystemLoader(Path(__file__).parent.joinpath("templates"))
+    )
+    with open(output_dir.joinpath(f"{template_name}.yml"), "w") as yml_file:
+        yml_file.write(
+            env.get_template(f"{template_name}.yml.j2").render(
+                job_datas=job_datas,
             )
-            test_yml_file.write("\n")
+        )
+        yml_file.write("\n")
 
 
 def generate_test_workflow(
@@ -197,6 +185,22 @@ def generate_misc_workflow(
     )
 
 
+def generate_ci_workflow(
+    output_dir: Path,
+) -> None:
+    with open(output_dir.joinpath("ci.yml"), "w") as ci_yml_file:
+        ci_yml_file.write(
+            Environment(
+                loader=FileSystemLoader(
+                    Path(__file__).parent.joinpath("templates")
+                )
+            )
+            .get_template("ci.yml.j2")
+            .render()
+        )
+        ci_yml_file.write("\n")
+
+
 if __name__ == "__main__":
     tox_ini_path = Path(__file__).parent.parent.parent.joinpath("tox.ini")
     output_dir = Path(__file__).parent
@@ -205,3 +209,4 @@ if __name__ == "__main__":
     )
     generate_lint_workflow(tox_ini_path, output_dir)
     generate_misc_workflow(tox_ini_path, output_dir)
+    generate_ci_workflow(output_dir)

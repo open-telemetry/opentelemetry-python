@@ -443,6 +443,11 @@ def _split_metrics_data(
 
                         # Rebuild metric dict generically using same approach as initial creation
                         field_name = metric.WhichOneof("data")
+                        if field_name is None:
+                            _logger.warning(
+                                "Tried to split and export an unsupported metric type. Skipping."
+                            )
+                            continue
                         data_container = getattr(metric, field_name)
                         metric_dict = {
                             "name": metric.name,
@@ -552,13 +557,13 @@ def _get_split_resource_metrics_pb2(
         new_resource_metrics = pb2.ResourceMetrics(
             resource=resource_metrics.get("resource"),
             scope_metrics=[],
-            schema_url=resource_metrics.get("schema_url"),
+            schema_url=resource_metrics.get("schema_url") or "",
         )
         for scope_metrics in resource_metrics.get("scope_metrics", []):
             new_scope_metrics = pb2.ScopeMetrics(
                 scope=scope_metrics.get("scope"),
                 metrics=[],
-                schema_url=scope_metrics.get("schema_url"),
+                schema_url=scope_metrics.get("schema_url") or "",
             )
 
             for metric in scope_metrics.get("metrics", []):
