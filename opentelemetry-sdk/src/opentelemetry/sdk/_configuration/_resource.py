@@ -33,6 +33,7 @@ from opentelemetry.sdk.resources import (
     OTEL_SERVICE_NAME,
     SERVICE_INSTANCE_ID,
     SERVICE_NAME,
+    ProcessResourceDetector,
     Resource,
 )
 
@@ -161,6 +162,8 @@ def _run_detectors(
         if service_name:
             attrs[SERVICE_NAME] = service_name
         detected_attrs.update(attrs)
+    if detector_config.process is not None:
+        detected_attrs.update(ProcessResourceDetector().detect().attributes)
 
 
 def _filter_attributes(
