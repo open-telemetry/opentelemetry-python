@@ -8,3 +8,6 @@ Module contents
 ---------------
 
 .. automodule:: opentelemetry.metrics
+    :members:
+    :undoc-members:
+    :show-inheritance:
