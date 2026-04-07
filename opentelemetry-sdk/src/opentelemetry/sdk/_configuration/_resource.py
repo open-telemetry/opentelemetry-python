@@ -29,7 +29,7 @@ from opentelemetry.sdk._configuration.models import Resource as ResourceConfig
 from opentelemetry.sdk.resources import (
     _DEFAULT_RESOURCE,
     SERVICE_NAME,
-    HostResourceDetector,
+    _HostResourceDetector,
     ProcessResourceDetector,
     Resource,
 )
@@ -152,7 +152,7 @@ def _run_detectors(
     same key.
     """
     if detector_config.host is not None:
-        detected_attrs.update(HostResourceDetector().detect().attributes)
+        detected_attrs.update(_HostResourceDetector().detect().attributes)
     if detector_config.process is not None:
         detected_attrs.update(ProcessResourceDetector().detect().attributes)
 

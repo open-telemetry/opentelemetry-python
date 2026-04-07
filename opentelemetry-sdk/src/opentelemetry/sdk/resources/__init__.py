@@ -490,8 +490,10 @@ class OsResourceDetector(ResourceDetector):
         )
 
 
-class HostResourceDetector(ResourceDetector):
-    """Detects host.name (hostname) and host.arch (CPU architecture)."""
+class _HostResourceDetector(ResourceDetector):  # type: ignore[reportUnusedClass]
+    """
+    The HostResourceDetector detects the hostname and architecture attributes.
+    """
 
     def detect(self) -> "Resource":
         return Resource(
