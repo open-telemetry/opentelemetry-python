@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Enabled the flake8-debugger rules for ruff linter. These rules do not allow for the use of debugger calls and imports in production code.
+  ([#5056](https://github.com/open-telemetry/opentelemetry-python/pull/5056))
 - Enabled the flake8-tidy-import plugins rules for the ruff linter. These rules throw warnings for relative imports in the modules. 
   ([#5019](https://github.com/open-telemetry/opentelemetry-python/pull/5019))
 - `opentelemetry-sdk`: Fix `AttributeError` in `ExplicitBucketHistogramAggregation` when applied to non-Histogram instruments without explicit boundaries
