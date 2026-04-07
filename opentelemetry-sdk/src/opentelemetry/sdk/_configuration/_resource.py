@@ -29,6 +29,7 @@ from opentelemetry.sdk._configuration.models import Resource as ResourceConfig
 from opentelemetry.sdk.resources import (
     _DEFAULT_RESOURCE,
     SERVICE_NAME,
+    ProcessResourceDetector,
     Resource,
 )
 from opentelemetry.util._importlib_metadata import entry_points
@@ -174,6 +175,8 @@ def _run_detectors(
             )
         else:
             detected_attrs.update(ep.load()().detect().attributes)
+    if detector_config.process is not None:
+        detected_attrs.update(ProcessResourceDetector().detect().attributes)
 
 
 def _filter_attributes(
