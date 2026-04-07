@@ -12,19 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=unused-import
 
-from dataclasses import dataclass
-from typing import Sequence
+class ConfigurationError(Exception):
+    """Raised when configuration loading, parsing, validation, or instantiation fails.
 
-# This kind of import is needed to avoid Sphinx errors.
-import opentelemetry.sdk.metrics
-import opentelemetry.sdk.resources
-
-
-@dataclass
-class SdkConfiguration:
-    exemplar_filter: "opentelemetry.sdk.metrics.ExemplarFilter"
-    resource: "opentelemetry.sdk.resources.Resource"
-    metric_readers: Sequence["opentelemetry.sdk.metrics.export.MetricReader"]
-    views: Sequence["opentelemetry.sdk.metrics.view.View"]
+    This includes errors from:
+    - File not found or inaccessible
+    - Invalid YAML/JSON syntax
+    - Schema validation failures
+    - Environment variable substitution errors
+    - Missing required SDK extensions (e.g., propagator packages not installed)
+    """

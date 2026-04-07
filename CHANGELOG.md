@@ -12,14 +12,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Enabled the flake8-tidy-import plugins rules for the ruff linter. These rules throw warnings for relative imports in the modules. 
+  ([#5019](https://github.com/open-telemetry/opentelemetry-python/pull/5019))
+- `opentelemetry-sdk`: Fix `AttributeError` in `ExplicitBucketHistogramAggregation` when applied to non-Histogram instruments without explicit boundaries
+  ([#5034](https://github.com/open-telemetry/opentelemetry-python/pull/5034))
+- Fix `BatchLogRecordProcessor` default `schedule_delay_millis` from 5000ms to 1000ms to comply with the OTel specification. Note: logs may be exported 5x more frequently by default (e.g. for users who don't explicitly set the `OTEL_BLRP_SCHEDULE_DELAY` env var).
+  ([#4998](https://github.com/open-telemetry/opentelemetry-python/pull/4998))
+- `opentelemetry-sdk`: Add `process` resource detector support to declarative file configuration via `detection_development.detectors[].process`
+  ([#5001](https://github.com/open-telemetry/opentelemetry-python/pull/5001))
+- `opentelemetry-sdk`: Add shared `_parse_headers` helper for declarative config OTLP exporters
+  ([#5021](https://github.com/open-telemetry/opentelemetry-python/pull/5021))
+- `opentelemetry-api`: Replace a broad exception in attribute cleaning tests to satisfy pylint in the `lint-opentelemetry-api` CI job
+- `opentelemetry-sdk`: Add `create_resource` and `create_propagator`/`configure_propagator` to declarative file configuration, enabling Resource and propagator instantiation from config files without reading env vars
+  ([#4979](https://github.com/open-telemetry/opentelemetry-python/pull/4979))
+- `opentelemetry-sdk`: Map Python `CRITICAL` log level to OTel `FATAL` severity text per the specification
+  ([#4984](https://github.com/open-telemetry/opentelemetry-python/issues/4984))
 - `opentelemetry-sdk`: Add file configuration support with YAML/JSON loading, environment variable substitution, and schema validation against the vendored OTel config JSON schema
   ([#4898](https://github.com/open-telemetry/opentelemetry-python/pull/4898))
 - Fix intermittent CI failures in `getting-started` and `tracecontext` jobs caused by GitHub git CDN SHA propagation lag by installing contrib packages from the already-checked-out local copy instead of a second git clone
   ([#4958](https://github.com/open-telemetry/opentelemetry-python/pull/4958))
 - `opentelemetry-sdk`: fix type annotations on `MetricReader` and related types
   ([#4938](https://github.com/open-telemetry/opentelemetry-python/pull/4938/))
-- Implement log creation metric
+- `opentelemetry-sdk`: implement log creation metric
   ([#4935](https://github.com/open-telemetry/opentelemetry-python/pull/4935))
+- `opentelemetry-sdk`: implement metric reader metrics
+  ([#4970](https://github.com/open-telemetry/opentelemetry-python/pull/4970))
+- `opentelemetry-sdk`: implement processor metrics
+  ([#5012](https://github.com/open-telemetry/opentelemetry-python/pull/5012))
 - `opentelemetry-sdk`: upgrade vendored OTel configuration schema from v1.0.0-rc.3 to v1.0.0
   ([#4965](https://github.com/open-telemetry/opentelemetry-python/pull/4965))
 - improve check-links ci job
@@ -32,6 +51,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4934](https://github.com/open-telemetry/opentelemetry-python/pull/4934))
 - `opentelemetry-proto-json`, `opentelemetry-codegen-json`: Implement custom protoc plugin to generate OTLP JSON class definitions
   ([#4910](https://github.com/open-telemetry/opentelemetry-python/pull/4910))
+- Add configurable `max_export_batch_size` to OTLP HTTP metrics exporter
+  ([#4576](https://github.com/open-telemetry/opentelemetry-python/pull/4576))
+- `opentelemetry-sdk`: Implement experimental Meter configurator
+  ([#4966](https://github.com/open-telemetry/opentelemetry-python/pull/4966))
+- `opentelemetry-exporter-otlp-proto-http`: use consistent protobuf for export request
+  ([#5015](https://github.com/open-telemetry/opentelemetry-python/pull/5015))
+- `opentelemetry-sdk`: cache TracerConfig into the tracer, this changes an internal interface. Only one Tracer with the same instrumentation scope will be created
+  ([#5007](https://github.com/open-telemetry/opentelemetry-python/pull/5007))
+- Redo OTLPMetricExporter unit tests of `max_export_batch_size` to use real `export`
+  ([#5036](https://github.com/open-telemetry/opentelemetry-python/pull/5036))
 
 ## Version 1.40.0/0.61b0 (2026-03-04)
 
@@ -192,7 +221,6 @@ the OTLP `LogHandler` remains attached to the root logger. Fix a bug that
 can cause a deadlock to occur over `logging._lock` in some cases ([#4636](https://github.com/open-telemetry/opentelemetry-python/pull/4636)).
 - otlp-http-exporter: set default value for param `timeout_sec` in `_export` method
   ([#4691](https://github.com/open-telemetry/opentelemetry-python/pull/4691))
-
 - Update OTLP gRPC/HTTP exporters: calling shutdown will now interrupt exporters that are sleeping
   before a retry attempt, and cause them to return failure immediately.
   Update BatchSpan/LogRecordProcessors: shutdown will now complete after 30 seconds of trying to finish

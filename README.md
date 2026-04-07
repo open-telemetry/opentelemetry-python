@@ -1,7 +1,6 @@
 # OpenTelemetry Python
 [![Slack](https://img.shields.io/badge/slack-@cncf/otel/python-brightgreen.svg?logo=slack)](https://cloud-native.slack.com/archives/C01PD4HUVBL)
-[![Build Status 0](https://github.com/open-telemetry/opentelemetry-python/actions/workflows/test_0.yml/badge.svg?branch=main)](https://github.com/open-telemetry/opentelemetry-python/actions/workflows/test_0.yml)
-[![Build Status 1](https://github.com/open-telemetry/opentelemetry-python/actions/workflows/test_1.yml/badge.svg?branch=main)](https://github.com/open-telemetry/opentelemetry-python/actions/workflows/test_1.yml)
+[![Build Status](https://github.com/open-telemetry/opentelemetry-python/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/open-telemetry/opentelemetry-python/actions/workflows/ci.yml)
 [![Minimum Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![Release](https://img.shields.io/github/v/release/open-telemetry/opentelemetry-python?include_prereleases&style=)](https://github.com/open-telemetry/opentelemetry-python/releases/)
 [![Read the Docs](https://readthedocs.org/projects/opentelemetry-python/badge/?version=latest)](https://opentelemetry-python.readthedocs.io/en/latest/)
@@ -116,7 +115,8 @@ For more information about the maintainer role, see the [community repository](h
 - [Héctor Hernández](https://github.com/hectorhdzg), Microsoft
 - [Jeremy Voss](https://github.com/jeremydvoss), Microsoft
 - [Liudmila Molkova](https://github.com/lmolkova), Grafana Labs
-- [Lukas Hering](https://github.com/herin049), Capital One
+- [Lukas Hering](https://github.com/herin049), Oracle
+- [Mike Goldsmith](https://github.com/MikeGoldsmith), Honeycomb
 - [Owais Lone](https://github.com/owais), Splunk
 - [Pablo Collins](https://github.com/pmcollins), Splunk
 - [Shalev Roda](https://github.com/shalevr), Cisco
