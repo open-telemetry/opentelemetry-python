@@ -151,6 +151,7 @@ exclude = [
   "exporter/opentelemetry-exporter-otlp-proto-http/tests",
   "exporter/opentelemetry-exporter-otlp-json-common/tests",
   "exporter/opentelemetry-exporter-otlp-json-common/benchmarks",
+  "exporter/opentelemetry-exporter-otlp-json-http/tests",
 ]
 
 # When packages are correct typed add them to the strict list

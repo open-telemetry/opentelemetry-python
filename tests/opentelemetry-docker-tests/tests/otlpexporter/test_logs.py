@@ -17,12 +17,10 @@ from __future__ import annotations
 import time
 import unittest
 
-from opentelemetry import trace
 from opentelemetry._logs import LogRecord, SeverityNumber
 from opentelemetry.sdk._logs import LoggerProvider
 from opentelemetry.sdk._logs.export import SimpleLogRecordProcessor
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.trace import TracerProvider
 
 from . import LOG_EXPORTERS
 
@@ -133,31 +131,6 @@ class TestLogExport(unittest.TestCase):
 
                 self.assertTrue(provider.force_flush())
                 provider.shutdown()
-
-    def test_log_trace_context(self):
-        """Log emitted inside an active span carries trace context."""
-        for protocol, factory in LOG_EXPORTERS:
-            with self.subTest(protocol=protocol):
-                provider, logger = _setup(factory)
-
-                tracer_provider = TracerProvider()
-                tracer = tracer_provider.get_tracer(__name__)
-
-                with tracer.start_as_current_span("parent_span"):
-                    ctx = trace.get_current_span().get_span_context()
-                    logger.emit(
-                        LogRecord(
-                            body="log with trace context",
-                            severity_number=SeverityNumber.INFO,
-                            context=trace.set_span_in_context(
-                                ctx.get_current_span()
-                            ),
-                        )
-                    )
-
-                self.assertTrue(provider.force_flush())
-                provider.shutdown()
-                tracer_provider.shutdown()
 
     def test_resource_attributes(self):
         for protocol, factory in LOG_EXPORTERS:

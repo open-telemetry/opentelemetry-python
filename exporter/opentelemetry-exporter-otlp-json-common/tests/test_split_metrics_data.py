@@ -304,6 +304,7 @@ class TestSplitMetricsData(unittest.TestCase):
         self.scope_a = JSONInstrumentationScope(name="scope_a")
         self.scope_b = JSONInstrumentationScope(name="scope_b")
 
+    # pylint: disable=no-self-use
     def split(self, req, max_size):
         return list(split_metrics_data(req, max_size))
 
@@ -404,8 +405,8 @@ class TestSplitMetricsData(unittest.TestCase):
         for label, (req, extract, expected) in cases:
             with self.subTest(level=label):
                 batches = self.split(req, 1)
-                for i, batch in enumerate(batches):
-                    with self.subTest(batch=i):
+                for idx, batch in enumerate(batches):
+                    with self.subTest(batch=idx):
                         self.assertIs(extract(batch), expected)
                 self.assert_roundtrip(req, batches)
 

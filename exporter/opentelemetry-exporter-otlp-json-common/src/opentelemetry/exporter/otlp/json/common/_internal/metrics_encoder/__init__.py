@@ -58,7 +58,6 @@ from opentelemetry.proto_json.metrics.v1.metrics import Sum as JSONSum
 from opentelemetry.proto_json.resource.v1.resource import (
     Resource as JSONResource,
 )
-from opentelemetry.sdk._configuration.models import Aggregation
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION,
     OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
@@ -73,6 +72,7 @@ from opentelemetry.sdk.metrics import (
     UpDownCounter,
 )
 from opentelemetry.sdk.metrics._internal.aggregation import (
+    Aggregation,
     AggregationTemporality,
     ExplicitBucketHistogramAggregation,
     ExponentialBucketHistogramAggregation,

@@ -89,6 +89,7 @@ class TestOTLPHttpClientExport(unittest.TestCase):
                 captured: list[bytes] = []
 
                 def _capture(*args, **kwargs):
+                    # pylint: disable=cell-var-from-loop
                     captured.append(kwargs["body"])
                     return _build_mock_response(200)
 
@@ -246,6 +247,7 @@ class TestOTLPHttpClientShutdown(unittest.TestCase):
         client.shutdown()
         self.assertTrue(client._shutdown_in_progress.is_set())
 
+    # pylint: disable=no-self-use
     def test_shutdown_clears_http_pool(self):
         client = _build_client()
         mock_http = MagicMock()
@@ -289,9 +291,9 @@ class TestGetBackoffWithJitter(unittest.TestCase):
     def test_backoff_increases_exponentially(self):
         client = _build_client(jitter=0)
         values = [client._get_backoff_with_jitter(n) for n in range(5)]
-        for i in range(1, len(values)):
-            with self.subTest(i=i):
-                self.assertAlmostEqual(values[i], values[i - 1] * 2)
+        for idx in range(1, len(values)):
+            with self.subTest(i=idx):
+                self.assertAlmostEqual(values[idx], values[idx - 1] * 2)
 
 
 class TestIsRetryable(unittest.TestCase):
@@ -574,6 +576,7 @@ class TestResolveCompression(unittest.TestCase):
         )
 
 
+# pylint: disable=invalid-name
 class TestPoolManagerConstruction(unittest.TestCase):
     @patch.object(urllib3, "PoolManager")
     def test_retries_disabled(self, MockPoolManager):

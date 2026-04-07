@@ -91,5 +91,6 @@ class CountdownEvent:
     def set(self) -> None:
         pass
 
+    # pylint: disable-next=no-self-use
     def is_set(self) -> bool:
         return False
