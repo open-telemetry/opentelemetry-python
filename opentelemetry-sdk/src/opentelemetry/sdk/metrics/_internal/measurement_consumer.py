@@ -77,6 +77,7 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
         self._async_instruments: List[
             "opentelemetry.sdk.metrics._internal.instrument._Asynchronous"
         ] = []
+        self._needs_storage_reinit = False
         if hasattr(os, "register_at_fork"):
             os.register_at_fork(after_in_child=self._at_fork_reinit)  # pylint: disable=protected-access
 
@@ -90,9 +91,8 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
         self._async_instruments.clear()
 
     def consume_measurement(self, measurement: Measurement) -> None:
-        if getattr(self, "_needs_storage_reinit", False):
+        if self._needs_storage_reinit:
             self._reinit_storages()
-            self._needs_storage_reinit = False
 
         should_sample_exemplar = (
             self._sdk_config.exemplar_filter.should_sample(
@@ -121,9 +121,8 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
         metric_reader: "opentelemetry.sdk.metrics.MetricReader",
         timeout_millis: float = 10_000,
     ) -> Optional[MetricsData]:
-        if getattr(self, "_needs_storage_reinit", False):
+        if self._needs_storage_reinit:
             self._reinit_storages()
-            self._needs_storage_reinit = False
 
         with self._lock:
             metric_reader_storage = self._reader_storages[metric_reader]
@@ -165,9 +164,12 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
         return result
 
     def _reinit_storages(self):
-        # Reinitialize the storages. Use to reinitialize the storages after a
-        # fork to avoid duplicate data points.
+        # Reinitialize the storages after a fork to avoid duplicate data points.
+        # The flag is cleared inside the lock so concurrent callers only run
+        # reinit once.
         with self._lock:
+            if not self._needs_storage_reinit:
+                return
             for storage in self._reader_storages.values():
-                storage._lock._at_fork_reinit()
-                storage._instrument_view_instrument_matches.clear()
+                storage._at_fork_reinit()
+            self._needs_storage_reinit = False
