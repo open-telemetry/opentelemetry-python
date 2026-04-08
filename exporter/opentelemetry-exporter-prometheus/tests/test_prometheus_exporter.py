@@ -16,7 +16,7 @@ from textwrap import dedent
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
-from prometheus_client import generate_latest
+from prometheus_client import CollectorRegistry, generate_latest
 from prometheus_client.core import (
     CounterMetricFamily,
     GaugeMetricFamily,
@@ -56,7 +56,6 @@ class TestPrometheusMetricReader(TestCase):
         )
 
     def test_custom_registry(self):
-        from prometheus_client import CollectorRegistry
         custom_registry = CollectorRegistry()
         reader = PrometheusMetricReader(registry=custom_registry)
         # global REGISTRY should NOT be used

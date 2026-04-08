@@ -135,7 +135,10 @@ class PrometheusMetricReader(MetricReader):
     """Prometheus metric exporter for OpenTelemetry."""
 
     def __init__(
-        self, disable_target_info: bool = False, prefix: str = "", registry=REGISTRY
+        self,
+        disable_target_info: bool = False,
+        prefix: str = "",
+        registry=REGISTRY,
     ) -> None:
         super().__init__(
             preferred_temporality={
