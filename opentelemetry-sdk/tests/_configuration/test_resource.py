@@ -337,6 +337,10 @@ class TestHostResourceDetector(unittest.TestCase):
         self.assertNotIn(HOST_NAME, resource.attributes)
 
     def test_host_detector_not_run_when_detectors_list_empty(self):
+        config = ResourceConfig(
+            detection_development=ExperimentalResourceDetection(detectors=[])
+        )
+        resource = create_resource(config)
          self.assertNotIn(HOST_NAME, resource.attributes)
 
     def test_explicit_attributes_override_host_detector(self):
