@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import socket
 import sys
 import unittest
 from unittest.mock import MagicMock, patch
@@ -23,10 +24,13 @@ from opentelemetry.sdk._configuration.models import (
     AttributeType,
     ExperimentalResourceDetection,
     ExperimentalResourceDetector,
+    IncludeExclude,
 )
 from opentelemetry.sdk._configuration.models import Resource as ResourceConfig
 from opentelemetry.sdk.resources import (
     CONTAINER_ID,
+    HOST_ARCH,
+    HOST_NAME,
     PROCESS_PID,
     PROCESS_RUNTIME_NAME,
     SERVICE_NAME,
@@ -301,6 +305,77 @@ class TestCreateResourceAttributesList(unittest.TestCase):
         self.assertEqual(resource.attributes["foo"], "bar")
         self.assertNotIn("no-equals", resource.attributes)
         self.assertTrue(any("no-equals" in msg for msg in cm.output))
+
+
+class TestHostResourceDetector(unittest.TestCase):
+    @staticmethod
+    def _config_with_host() -> ResourceConfig:
+        return ResourceConfig(
+            detection_development=ExperimentalResourceDetection(
+                detectors=[ExperimentalResourceDetector(host={})]
+            )
+        )
+
+    def test_host_detector_adds_host_attributes(self):
+        resource = create_resource(self._config_with_host())
+        self.assertIn(HOST_NAME, resource.attributes)
+        self.assertEqual(resource.attributes[HOST_NAME], socket.gethostname())
+        self.assertIn(HOST_ARCH, resource.attributes)
+
+    def test_host_detector_also_includes_sdk_defaults(self):
+        resource = create_resource(self._config_with_host())
+        self.assertEqual(resource.attributes[TELEMETRY_SDK_LANGUAGE], "python")
+        self.assertIn(TELEMETRY_SDK_VERSION, resource.attributes)
+
+    def test_host_detector_not_run_when_absent(self):
+        resource = create_resource(ResourceConfig())
+        self.assertNotIn(HOST_NAME, resource.attributes)
+        self.assertNotIn(HOST_ARCH, resource.attributes)
+
+    def test_host_detector_not_run_when_detection_development_is_none(self):
+        resource = create_resource(ResourceConfig(detection_development=None))
+        self.assertNotIn(HOST_NAME, resource.attributes)
+
+    def test_host_detector_not_run_when_detectors_list_empty(self):
+        config = ResourceConfig(
+            detection_development=ExperimentalResourceDetection(detectors=[])
+        )
+        resource = create_resource(config)
+        self.assertNotIn(HOST_NAME, resource.attributes)
+
+    def test_explicit_attributes_override_host_detector(self):
+        config = ResourceConfig(
+            attributes=[
+                AttributeNameValue(name="host.name", value="custom-host")
+            ],
+            detection_development=ExperimentalResourceDetection(
+                detectors=[ExperimentalResourceDetector(host={})]
+            ),
+        )
+        resource = create_resource(config)
+        self.assertEqual(resource.attributes[HOST_NAME], "custom-host")
+
+    def test_included_filter_limits_host_attributes(self):
+        config = ResourceConfig(
+            detection_development=ExperimentalResourceDetection(
+                detectors=[ExperimentalResourceDetector(host={})],
+                attributes=IncludeExclude(included=["host.name"]),
+            )
+        )
+        resource = create_resource(config)
+        self.assertIn(HOST_NAME, resource.attributes)
+        self.assertNotIn(HOST_ARCH, resource.attributes)
+
+    def test_excluded_filter_removes_host_attributes(self):
+        config = ResourceConfig(
+            detection_development=ExperimentalResourceDetection(
+                detectors=[ExperimentalResourceDetector(host={})],
+                attributes=IncludeExclude(excluded=["host.name"]),
+            )
+        )
+        resource = create_resource(config)
+        self.assertNotIn(HOST_NAME, resource.attributes)
+        self.assertIn(HOST_ARCH, resource.attributes)
 
 
 class TestContainerResourceDetector(unittest.TestCase):
