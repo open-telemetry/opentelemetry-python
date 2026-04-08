@@ -341,7 +341,7 @@ class TestHostResourceDetector(unittest.TestCase):
             detection_development=ExperimentalResourceDetection(detectors=[])
         )
         resource = create_resource(config)
-         self.assertNotIn(HOST_NAME, resource.attributes)
+        self.assertNotIn(HOST_NAME, resource.attributes)
 
     def test_explicit_attributes_override_host_detector(self):
         config = ResourceConfig(
