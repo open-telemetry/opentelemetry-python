@@ -29,8 +29,8 @@ from opentelemetry.sdk._configuration.models import Resource as ResourceConfig
 from opentelemetry.sdk.resources import (
     _DEFAULT_RESOURCE,
     SERVICE_NAME,
-    _HostResourceDetector,
     ProcessResourceDetector,
+    _HostResourceDetector,
     Resource,
 )
 
