@@ -34,6 +34,10 @@ from opentelemetry.sdk._configuration._propagator import (
     create_propagator,
 )
 from opentelemetry.sdk._configuration._resource import create_resource
+from opentelemetry.sdk._configuration._tracer_provider import (
+    configure_tracer_provider,
+    create_tracer_provider,
+)
 from opentelemetry.sdk._configuration.file._env_substitution import (
     EnvSubstitutionError,
     substitute_env_vars,
@@ -48,6 +52,8 @@ __all__ = [
     "create_resource",
     "create_propagator",
     "configure_propagator",
+    "create_tracer_provider",
+    "configure_tracer_provider",
     "create_meter_provider",
     "configure_meter_provider",
 ]
