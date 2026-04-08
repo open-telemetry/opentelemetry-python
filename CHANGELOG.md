@@ -15,6 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - logs: add exception support to Logger emit and LogRecord attributes
   ([#4907](https://github.com/open-telemetry/opentelemetry-python/issues/4907))
 - Enabled the flake8-tidy-import plugins rules for the ruff linter. These rules throw warnings for relative imports in the modules. 
+- `opentelemetry-sdk`: Add `host` resource detector support to declarative file configuration via `detection_development.detectors[].host`
+  ([#5002](https://github.com/open-telemetry/opentelemetry-python/pull/5002))
+- `opentelemetry-sdk`: Add `container` resource detector support to declarative file configuration via `detection_development.detectors[].container`, using entry point loading of the `opentelemetry-resource-detector-containerid` contrib package
+  ([#5004](https://github.com/open-telemetry/opentelemetry-python/pull/5004))
+- `opentelemetry-sdk`: Add `create_tracer_provider`/`configure_tracer_provider` to declarative file configuration, enabling TracerProvider instantiation from config files without reading env vars
+  ([#4985](https://github.com/open-telemetry/opentelemetry-python/pull/4985))
+- Enabled the flake8-tidy-import plugins rules for the ruff linter. These rules throw warnings for relative imports in the modules.
   ([#5019](https://github.com/open-telemetry/opentelemetry-python/pull/5019))
 - `opentelemetry-sdk`: Fix `AttributeError` in `ExplicitBucketHistogramAggregation` when applied to non-Histogram instruments without explicit boundaries
   ([#5034](https://github.com/open-telemetry/opentelemetry-python/pull/5034))
