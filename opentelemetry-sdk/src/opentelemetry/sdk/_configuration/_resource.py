@@ -33,6 +33,7 @@ from opentelemetry.sdk.resources import (
     _HostResourceDetector,
     Resource,
 )
+from opentelemetry.util._importlib_metadata import entry_points
 
 _logger = logging.getLogger(__name__)
 
@@ -153,6 +154,32 @@ def _run_detectors(
     """
     if detector_config.host is not None:
         detected_attrs.update(_HostResourceDetector().detect().attributes)
+
+    if detector_config.container is not None:
+        # The container detector is not part of the core SDK. It is provided
+        # by the opentelemetry-resource-detector-containerid contrib package,
+        # which registers itself under the opentelemetry_resource_detector
+        # entry point group as "container". Loading via entry point matches
+        # the env-var config counterpart (OTEL_EXPERIMENTAL_RESOURCE_DETECTORS)
+        # and avoids a hard import dependency on contrib. See also:
+        # https://github.com/open-telemetry/opentelemetry-configuration/issues/570
+        ep = next(
+            iter(
+                entry_points(
+                    group="opentelemetry_resource_detector", name="container"
+                )
+            ),
+            None,
+        )
+        if ep is None:
+            _logger.warning(
+                "container resource detector requested but "
+                "'opentelemetry-resource-detector-containerid' is not "
+                "installed; install it to enable container detection"
+            )
+        else:
+            detected_attrs.update(ep.load()().detect().attributes)
+
     if detector_config.process is not None:
         detected_attrs.update(ProcessResourceDetector().detect().attributes)
 
