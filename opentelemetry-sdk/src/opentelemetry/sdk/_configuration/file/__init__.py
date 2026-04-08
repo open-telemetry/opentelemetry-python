@@ -25,6 +25,10 @@ Example:
 """
 
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
+from opentelemetry.sdk._configuration._meter_provider import (
+    configure_meter_provider,
+    create_meter_provider,
+)
 from opentelemetry.sdk._configuration._propagator import (
     configure_propagator,
     create_propagator,
@@ -50,4 +54,6 @@ __all__ = [
     "configure_propagator",
     "create_tracer_provider",
     "configure_tracer_provider",
+    "create_meter_provider",
+    "configure_meter_provider",
 ]
