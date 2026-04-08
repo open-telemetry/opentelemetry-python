@@ -31,6 +31,7 @@ from opentelemetry.sdk.resources import (
     SERVICE_NAME,
     ProcessResourceDetector,
     Resource,
+    _HostResourceDetector,
 )
 from opentelemetry.util._importlib_metadata import entry_points
 
@@ -151,6 +152,9 @@ def _run_detectors(
     is updated in-place; later detectors overwrite earlier ones for the
     same key.
     """
+    if detector_config.host is not None:
+        detected_attrs.update(_HostResourceDetector().detect().attributes)
+
     if detector_config.container is not None:
         # The container detector is not part of the core SDK. It is provided
         # by the opentelemetry-resource-detector-containerid contrib package,
@@ -175,6 +179,7 @@ def _run_detectors(
             )
         else:
             detected_attrs.update(ep.load()().detect().attributes)
+
     if detector_config.process is not None:
         detected_attrs.update(ProcessResourceDetector().detect().attributes)
 
