@@ -49,12 +49,12 @@ from opentelemetry.sdk.resources import (
     TELEMETRY_SDK_LANGUAGE,
     TELEMETRY_SDK_NAME,
     TELEMETRY_SDK_VERSION,
-    _HostResourceDetector,
     OsResourceDetector,
     OTELResourceDetector,
     ProcessResourceDetector,
     Resource,
     ResourceDetector,
+    _HostResourceDetector,
     get_aggregated_resources,
 )
 
