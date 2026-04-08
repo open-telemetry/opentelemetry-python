@@ -376,7 +376,6 @@ class TestHostResourceDetector(unittest.TestCase):
         resource = create_resource(config)
         self.assertNotIn(HOST_NAME, resource.attributes)
         self.assertIn(HOST_ARCH, resource.attributes)
- 
 
 class TestContainerResourceDetector(unittest.TestCase):
     @staticmethod

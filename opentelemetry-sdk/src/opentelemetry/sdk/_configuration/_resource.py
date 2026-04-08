@@ -30,8 +30,8 @@ from opentelemetry.sdk.resources import (
     _DEFAULT_RESOURCE,
     SERVICE_NAME,
     ProcessResourceDetector,
-    _HostResourceDetector,
     Resource,
+    _HostResourceDetector,
 )
 from opentelemetry.util._importlib_metadata import entry_points
 
