@@ -127,21 +127,21 @@ For more information about the approver role, see the [community repository](htt
 
 ### Emeritus
 
-- [Alex Boten](https://github.com/codeboten), Maintainers
+- [Alex Boten](https://github.com/codeboten), Maintainer
 - [Ashutosh Goel](https://github.com/ashu658), Approver
 - [Carlos Alberto Cortez](https://github.com/carlosalberto), Approver
-- [Chris Kleinknecht](https://github.com/c24t), Maintainers
+- [Chris Kleinknecht](https://github.com/c24t), Maintainer
 - [Christian Neumüller](https://github.com/Oberon00), Approver
-- [Diego Hurtado](https://github.com/ocelotl), Maintainers
+- [Diego Hurtado](https://github.com/ocelotl), Maintainer
 - [Mauricio Vásquez](https://github.com/mauriciovasquezbernal), Approver
 - [Nathaniel Ruiz Nowell](https://github.com/NathanielRN), Approver
 - [Nikolay Sokolik](https://github.com/oxeye-nikolay), Approver
-- [Owais Lone](https://github.com/owais), Maintainers
-- [Reiley Yang](https://github.com/reyang), Maintainers
+- [Owais Lone](https://github.com/owais), Maintainer
+- [Reiley Yang](https://github.com/reyang), Maintainer
 - [Sanket Mehta](https://github.com/sanketmehta28), Approver
-- [Srikanth Chekuri](https://github.com/srikanthccv), Maintainers
+- [Srikanth Chekuri](https://github.com/srikanthccv), Maintainer
 - [Tahir H. Butt](https://github.com/majorgreys), Approver
-- [Yusuke Tsutsumi](https://github.com/toumorokoshi), Maintainers
+- [Yusuke Tsutsumi](https://github.com/toumorokoshi), Maintainer
 
 For more information about the emeritus role, see the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#emeritus-maintainerapprovertriager).
 
