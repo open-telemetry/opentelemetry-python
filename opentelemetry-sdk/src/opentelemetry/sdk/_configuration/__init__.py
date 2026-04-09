@@ -528,11 +528,25 @@ def _import_opamp() -> Callable[[...], None]:
     # the resource and instantiate an OpAMP agent.
     # Since configuration is not specified every implementors may have its own.
     # Refer to opentelemetry-opamp-client package on how to setup the OpAMP agent.
-    _, opamp_init_func = _import_config_components(
-        ["init_function"], "_opentelemetry_opamp"
-    )[0]
+    try:
+        entry_point = next(
+            iter(
+                entry_points(
+                    group="_opentelemetry_opamp", name="init_function"
+                )
+            )
+        )
+        return entry_point.load()
+    except StopIteration:
+        _logger.debug("No OpAMP init function found")
+    except AttributeError as exc:
+        _logger.warning(
+            "Failed to load OpAMP init function from entry point, %s: %s",
+            entry_point,
+            exc,
+        )
 
-    return opamp_init_func
+    return None
 
 
 def _initialize_components(
@@ -598,11 +612,9 @@ def _initialize_components(
     # provided code as it's not strictly specified. We call OpAMP init before other code
     # because people may want to have it blocking to get an updated config before setting
     # up the rest of the SDK.
-    try:
-        _init_opamp = _import_opamp()
+    _init_opamp = _import_opamp()
+    if _init_opamp is not None:
         _init_opamp(resource=resource)
-    except RuntimeError:
-        _logger.debug("No OpAMP init function found")
 
     _init_tracing(
         exporters=span_exporters,
