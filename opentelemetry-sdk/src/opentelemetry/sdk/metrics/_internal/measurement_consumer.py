@@ -83,7 +83,7 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
 
     def _at_fork_reinit(self):
         """Reinitialize lock in child process after fork"""
-        self._lock._at_fork_reinit()
+        self._lock = Lock()
         # Lazy reinitialization of storages on first use post fork. This is
         # done to avoid the overhead of reinitializing the storages on
         # every fork.

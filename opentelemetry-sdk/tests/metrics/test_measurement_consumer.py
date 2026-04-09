@@ -28,7 +28,7 @@ from opentelemetry.sdk.metrics._internal.sdk_configuration import (
 
 
 def _sdk_config(exemplar_filter=None, resource=None, metric_readers=None, views=None):
-    """Create SdkConfiguration for tests. exemplar_filter is set as attribute after init."""
+    """Create SdkConfiguration for tests."""
     config = SdkConfiguration(
         resource=resource or Mock(),
         metric_readers=metric_readers or [Mock()],
