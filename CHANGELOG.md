@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > [!IMPORTANT]
 > We are working on stabilizing the Log signal that would require making deprecations and breaking changes. We will try to reduce the releases that may require an update to your code, especially for instrumentations or for sdk developers.
 
-## Unreleased
+## Version 1.41.0/0.62b0 (2026-04-09)
 
 - `opentelemetry-sdk`: Add `host` resource detector support to declarative file configuration via `detection_development.detectors[].host`
   ([#5002](https://github.com/open-telemetry/opentelemetry-python/pull/5002))
