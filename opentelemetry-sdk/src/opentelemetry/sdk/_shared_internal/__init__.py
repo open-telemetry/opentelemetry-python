@@ -36,6 +36,9 @@ from opentelemetry.context import (
     detach,
     set_value,
 )
+from opentelemetry.sdk._shared_internal._processor_metrics import (
+    ProcessorMetrics,
+)
 from opentelemetry.util._once import Once
 
 
@@ -98,6 +101,7 @@ class BatchProcessor(Generic[Telemetry]):
         export_timeout_millis: float,
         max_queue_size: int,
         exporting: str,
+        metrics: ProcessorMetrics,
     ):
         self._bsp_reset_once = Once()
         self._exporter = exporter
@@ -126,6 +130,9 @@ class BatchProcessor(Generic[Telemetry]):
             weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
             os.register_at_fork(after_in_child=lambda: weak_reinit()())  # pyright: ignore[reportOptionalCall] pylint: disable=unnecessary-lambda
         self._pid = os.getpid()
+
+        metrics.register_queue_size(lambda: len(self._queue))
+        self._metrics = metrics
 
     def _should_export_batch(
         self, batch_strategy: BatchExportStrategy, num_iterations: int
@@ -177,23 +184,27 @@ class BatchProcessor(Generic[Telemetry]):
             while self._should_export_batch(batch_strategy, iteration):
                 iteration += 1
                 token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
+                error: Exception | None = None
+                count = 0
                 try:
+                    count = min(
+                        self._max_export_batch_size,
+                        len(self._queue),
+                    )
                     self._exporter.export(
                         [
                             # Oldest records are at the back, so pop from there.
                             self._queue.pop()
-                            for _ in range(
-                                min(
-                                    self._max_export_batch_size,
-                                    len(self._queue),
-                                )
-                            )
+                            for _ in range(count)
                         ]
                     )
-                except Exception:  # pylint: disable=broad-exception-caught
+                except Exception as err:  # pylint: disable=broad-exception-caught
+                    error = err
                     _logger.exception(
                         "Exception while exporting %s.", self._exporting
                     )
+                finally:
+                    self._metrics.finish_items(count, error)
                 detach(token)
 
     def emit(self, data: Telemetry) -> None:
@@ -204,6 +215,7 @@ class BatchProcessor(Generic[Telemetry]):
             self._bsp_reset_once.do_once(self._at_fork_reinit)
         if len(self._queue) == self._max_queue_size:
             _logger.warning("Queue full, dropping %s.", self._exporting)
+            self._metrics.drop_items(1)
         # This will drop a log from the right side if the queue is at _max_queue_size.
         self._queue.appendleft(data)
         if len(self._queue) >= self._max_export_batch_size:

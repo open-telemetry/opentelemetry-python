@@ -13,16 +13,26 @@
 # limitations under the License.
 
 import os
+import socket
+import sys
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from opentelemetry.sdk._configuration._resource import create_resource
 from opentelemetry.sdk._configuration.models import (
     AttributeNameValue,
     AttributeType,
+    ExperimentalResourceDetection,
+    ExperimentalResourceDetector,
+    IncludeExclude,
 )
 from opentelemetry.sdk._configuration.models import Resource as ResourceConfig
 from opentelemetry.sdk.resources import (
+    CONTAINER_ID,
+    HOST_ARCH,
+    HOST_NAME,
+    PROCESS_PID,
+    PROCESS_RUNTIME_NAME,
     SERVICE_NAME,
     TELEMETRY_SDK_LANGUAGE,
     TELEMETRY_SDK_NAME,
@@ -295,3 +305,226 @@ class TestCreateResourceAttributesList(unittest.TestCase):
         self.assertEqual(resource.attributes["foo"], "bar")
         self.assertNotIn("no-equals", resource.attributes)
         self.assertTrue(any("no-equals" in msg for msg in cm.output))
+
+
+class TestHostResourceDetector(unittest.TestCase):
+    @staticmethod
+    def _config_with_host() -> ResourceConfig:
+        return ResourceConfig(
+            detection_development=ExperimentalResourceDetection(
+                detectors=[ExperimentalResourceDetector(host={})]
+            )
+        )
+
+    def test_host_detector_adds_host_attributes(self):
+        resource = create_resource(self._config_with_host())
+        self.assertIn(HOST_NAME, resource.attributes)
+        self.assertEqual(resource.attributes[HOST_NAME], socket.gethostname())
+        self.assertIn(HOST_ARCH, resource.attributes)
+
+    def test_host_detector_also_includes_sdk_defaults(self):
+        resource = create_resource(self._config_with_host())
+        self.assertEqual(resource.attributes[TELEMETRY_SDK_LANGUAGE], "python")
+        self.assertIn(TELEMETRY_SDK_VERSION, resource.attributes)
+
+    def test_host_detector_not_run_when_absent(self):
+        resource = create_resource(ResourceConfig())
+        self.assertNotIn(HOST_NAME, resource.attributes)
+        self.assertNotIn(HOST_ARCH, resource.attributes)
+
+    def test_host_detector_not_run_when_detection_development_is_none(self):
+        resource = create_resource(ResourceConfig(detection_development=None))
+        self.assertNotIn(HOST_NAME, resource.attributes)
+
+    def test_host_detector_not_run_when_detectors_list_empty(self):
+        config = ResourceConfig(
+            detection_development=ExperimentalResourceDetection(detectors=[])
+        )
+        resource = create_resource(config)
+        self.assertNotIn(HOST_NAME, resource.attributes)
+
+    def test_explicit_attributes_override_host_detector(self):
+        config = ResourceConfig(
+            attributes=[
+                AttributeNameValue(name="host.name", value="custom-host")
+            ],
+            detection_development=ExperimentalResourceDetection(
+                detectors=[ExperimentalResourceDetector(host={})]
+            ),
+        )
+        resource = create_resource(config)
+        self.assertEqual(resource.attributes[HOST_NAME], "custom-host")
+
+    def test_included_filter_limits_host_attributes(self):
+        config = ResourceConfig(
+            detection_development=ExperimentalResourceDetection(
+                detectors=[ExperimentalResourceDetector(host={})],
+                attributes=IncludeExclude(included=["host.name"]),
+            )
+        )
+        resource = create_resource(config)
+        self.assertIn(HOST_NAME, resource.attributes)
+        self.assertNotIn(HOST_ARCH, resource.attributes)
+
+    def test_excluded_filter_removes_host_attributes(self):
+        config = ResourceConfig(
+            detection_development=ExperimentalResourceDetection(
+                detectors=[ExperimentalResourceDetector(host={})],
+                attributes=IncludeExclude(excluded=["host.name"]),
+            )
+        )
+        resource = create_resource(config)
+        self.assertNotIn(HOST_NAME, resource.attributes)
+        self.assertIn(HOST_ARCH, resource.attributes)
+
+
+class TestContainerResourceDetector(unittest.TestCase):
+    @staticmethod
+    def _config_with_container() -> ResourceConfig:
+        return ResourceConfig(
+            detection_development=ExperimentalResourceDetection(
+                detectors=[ExperimentalResourceDetector(container={})]
+            )
+        )
+
+    def test_container_detector_not_run_when_absent(self):
+        resource = create_resource(ResourceConfig())
+        self.assertNotIn(CONTAINER_ID, resource.attributes)
+
+    def test_container_detector_not_run_when_detection_development_is_none(
+        self,
+    ):
+        resource = create_resource(ResourceConfig(detection_development=None))
+        self.assertNotIn(CONTAINER_ID, resource.attributes)
+
+    def test_container_detector_not_run_when_detectors_list_empty(self):
+        config = ResourceConfig(
+            detection_development=ExperimentalResourceDetection(detectors=[])
+        )
+        resource = create_resource(config)
+        self.assertNotIn(CONTAINER_ID, resource.attributes)
+
+    def test_container_detector_warns_when_package_missing(self):
+        """A warning is logged when the contrib entry point is not found."""
+        with patch(
+            "opentelemetry.sdk._configuration._resource.entry_points",
+            return_value=[],
+        ):
+            with self.assertLogs(
+                "opentelemetry.sdk._configuration._resource", level="WARNING"
+            ) as cm:
+                resource = create_resource(self._config_with_container())
+        self.assertNotIn(CONTAINER_ID, resource.attributes)
+        self.assertTrue(
+            any(
+                "opentelemetry-resource-detector-containerid" in msg
+                for msg in cm.output
+            )
+        )
+
+    def test_container_detector_uses_contrib_when_available(self):
+        """When the contrib entry point is registered, container.id is detected."""
+        mock_resource = Resource({CONTAINER_ID: "abc123"})
+        mock_detector = MagicMock()
+        mock_detector.return_value.detect.return_value = mock_resource
+        mock_ep = MagicMock()
+        mock_ep.load.return_value = mock_detector
+
+        with patch(
+            "opentelemetry.sdk._configuration._resource.entry_points",
+            return_value=[mock_ep],
+        ):
+            resource = create_resource(self._config_with_container())
+
+        self.assertEqual(resource.attributes[CONTAINER_ID], "abc123")
+
+    def test_explicit_attributes_override_container_detector(self):
+        """Config attributes win over detector-provided values."""
+        mock_resource = Resource({CONTAINER_ID: "detected-id"})
+        mock_detector = MagicMock()
+        mock_detector.return_value.detect.return_value = mock_resource
+        mock_ep = MagicMock()
+        mock_ep.load.return_value = mock_detector
+
+        config = ResourceConfig(
+            attributes=[
+                AttributeNameValue(name="container.id", value="explicit-id")
+            ],
+            detection_development=ExperimentalResourceDetection(
+                detectors=[ExperimentalResourceDetector(container={})]
+            ),
+        )
+        with patch(
+            "opentelemetry.sdk._configuration._resource.entry_points",
+            return_value=[mock_ep],
+        ):
+            resource = create_resource(config)
+
+        self.assertEqual(resource.attributes[CONTAINER_ID], "explicit-id")
+
+
+class TestProcessResourceDetector(unittest.TestCase):
+    @staticmethod
+    def _config_with_process() -> ResourceConfig:
+        return ResourceConfig(
+            detection_development=ExperimentalResourceDetection(
+                detectors=[ExperimentalResourceDetector(process={})]
+            )
+        )
+
+    def test_process_detector_adds_process_attributes(self):
+        resource = create_resource(self._config_with_process())
+        self.assertIn(PROCESS_PID, resource.attributes)
+        self.assertEqual(resource.attributes[PROCESS_PID], os.getpid())
+        self.assertEqual(
+            resource.attributes[PROCESS_RUNTIME_NAME],
+            sys.implementation.name,
+        )
+
+    def test_process_detector_also_includes_sdk_defaults(self):
+        resource = create_resource(self._config_with_process())
+        self.assertEqual(resource.attributes[TELEMETRY_SDK_LANGUAGE], "python")
+        self.assertIn(TELEMETRY_SDK_VERSION, resource.attributes)
+
+    def test_process_detector_not_run_when_absent(self):
+        resource = create_resource(ResourceConfig())
+        self.assertNotIn(PROCESS_PID, resource.attributes)
+
+    def test_process_detector_not_run_when_detection_development_is_none(self):
+        resource = create_resource(ResourceConfig(detection_development=None))
+        self.assertNotIn(PROCESS_PID, resource.attributes)
+
+    def test_process_detector_not_run_when_detectors_list_empty(self):
+        config = ResourceConfig(
+            detection_development=ExperimentalResourceDetection(detectors=[])
+        )
+        resource = create_resource(config)
+        self.assertNotIn(PROCESS_PID, resource.attributes)
+
+    def test_explicit_attributes_override_process_detector(self):
+        """Config attributes win over detector-provided values."""
+        config = ResourceConfig(
+            attributes=[
+                AttributeNameValue(
+                    name="process.pid", value=99999, type=AttributeType.int
+                )
+            ],
+            detection_development=ExperimentalResourceDetection(
+                detectors=[ExperimentalResourceDetector(process={})]
+            ),
+        )
+        resource = create_resource(config)
+        self.assertEqual(resource.attributes[PROCESS_PID], 99999)
+
+    def test_multiple_detector_entries_run_process_once(self):
+        """Multiple detector list entries each with process={} should still work."""
+        config = ResourceConfig(
+            detection_development=ExperimentalResourceDetection(
+                detectors=[
+                    ExperimentalResourceDetector(process={}),
+                    ExperimentalResourceDetector(process={}),
+                ]
+            )
+        )
+        resource = create_resource(config)
+        self.assertEqual(resource.attributes[PROCESS_PID], os.getpid())
