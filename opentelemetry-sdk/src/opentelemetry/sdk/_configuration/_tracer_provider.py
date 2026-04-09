@@ -18,7 +18,10 @@ import logging
 from typing import Optional
 
 from opentelemetry import trace
-from opentelemetry.sdk._configuration._common import _parse_headers
+from opentelemetry.sdk._configuration._common import (
+    _map_compression,
+    _parse_headers,
+)
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
 from opentelemetry.sdk._configuration.models import (
     OtlpGrpcExporter as OtlpGrpcExporterConfig,
@@ -102,20 +105,6 @@ def _create_otlp_http_span_exporter(
         timeout=timeout,
         compression=compression,  # type: ignore[arg-type]
     )
-
-
-def _map_compression(
-    value: Optional[str], compression_enum: type
-) -> Optional[object]:
-    """Map a compression string to the given Compression enum value."""
-    if value is None or value.lower() == "none":
-        return None
-    if value.lower() == "gzip":
-        return compression_enum.Gzip  # type: ignore[attr-defined]
-    raise ConfigurationError(
-        f"Unsupported compression value '{value}'. Supported values: 'gzip', 'none'."
-    )
-
 
 def _create_otlp_grpc_span_exporter(
     config: OtlpGrpcExporterConfig,

@@ -17,6 +17,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from opentelemetry.sdk._configuration._common import (
+    _map_compression,
     _parse_headers,
     load_entry_point,
 )
@@ -85,7 +86,6 @@ class TestParseHeaders(unittest.TestCase):
     def test_both_empty_struct_and_none_list_returns_empty_dict(self):
         self.assertEqual(_parse_headers([], None), {})
 
-
 class TestLoadEntryPoint(unittest.TestCase):
     def test_returns_loaded_class(self):
         mock_class = MagicMock()
@@ -137,3 +137,53 @@ class TestLoadEntryPoint(unittest.TestCase):
             # ConfigurationError
             with self.assertRaises(TypeError, msg="bad init"):
                 cls()
+
+
+class _CompressionWithDeflate:
+    Gzip = "gzip"
+    Deflate = "deflate"
+
+
+class _CompressionWithoutDeflate:
+    Gzip = "gzip"
+
+
+class TestMapCompression(unittest.TestCase):
+    def test_none_returns_none(self):
+        self.assertIsNone(_map_compression(None, _CompressionWithDeflate))
+
+    def test_none_string_returns_none(self):
+        self.assertIsNone(
+            _map_compression("none", _CompressionWithDeflate)
+        )
+
+    def test_gzip_maps_to_gzip(self):
+        self.assertEqual(
+            _map_compression("gzip", _CompressionWithDeflate), "gzip"
+        )
+
+    def test_deflate_maps_when_supported(self):
+        self.assertEqual(
+            _map_compression("deflate", _CompressionWithDeflate),
+            "deflate",
+        )
+
+    def test_deflate_raises_when_unsupported(self):
+        with self.assertRaises(ConfigurationError) as ctx:
+            _map_compression("deflate", _CompressionWithoutDeflate)
+
+        self.assertEqual(
+            str(ctx.exception),
+            "Unsupported compression value 'deflate'. Supported values: "
+            "'gzip', 'none'.",
+        )
+
+    def test_http_error_message_includes_deflate(self):
+        with self.assertRaises(ConfigurationError) as ctx:
+            _map_compression("brotli", _CompressionWithDeflate)
+
+        self.assertEqual(
+            str(ctx.exception),
+            "Unsupported compression value 'brotli'. Supported values: "
+            "'gzip', 'deflate', 'none'.",
+        )

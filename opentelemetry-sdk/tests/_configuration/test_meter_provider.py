@@ -274,6 +274,34 @@ class TestCreateMetricReaders(unittest.TestCase):
         self.assertIsNone(kwargs["timeout"])
         self.assertIsNone(kwargs["compression"])
 
+    def test_otlp_http_created_with_deflate_compression(self):
+        mock_exporter_cls = MagicMock()
+        mock_compression_cls = MagicMock()
+        mock_compression_cls.Deflate = "deflate_val"
+        mock_http_module = MagicMock()
+        mock_http_module.Compression = mock_compression_cls
+        mock_module = MagicMock()
+        mock_module.OTLPMetricExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.proto.http.metric_exporter": mock_module,
+                "opentelemetry.exporter.otlp.proto.http": mock_http_module,
+            },
+        ):
+            config = self._make_periodic_config(
+                PushMetricExporterConfig(
+                    otlp_http=OtlpHttpMetricExporterConfig(
+                        compression="deflate"
+                    )
+                )
+            )
+            create_meter_provider(config)
+
+        _, kwargs = mock_exporter_cls.call_args
+        self.assertEqual(kwargs["compression"], "deflate_val")
+
     def test_otlp_grpc_missing_package_raises(self):
         config = self._make_periodic_config(
             PushMetricExporterConfig(otlp_grpc=OtlpGrpcMetricExporterConfig())

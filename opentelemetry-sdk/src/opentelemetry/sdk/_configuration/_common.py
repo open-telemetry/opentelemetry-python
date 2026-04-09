@@ -20,6 +20,8 @@ from typing import Optional, Type
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
 from opentelemetry.util._importlib_metadata import entry_points
 
+from opentelemetry.sdk._configuration._exceptions import ConfigurationError
+
 _logger = logging.getLogger(__name__)
 
 
@@ -75,3 +77,24 @@ def _parse_headers(
         for pair in headers:
             result[pair.name] = pair.value or ""
     return result
+
+
+def _map_compression(
+    value: Optional[str], compression_enum: type
+) -> Optional[object]:
+    """Map a compression string to the given Compression enum value."""
+    if value is None or value.lower() == "none":
+        return None
+    if value.lower() == "gzip":
+        return compression_enum.Gzip  # type: ignore[attr-defined]
+    if value.lower() == "deflate" and hasattr(compression_enum, "Deflate"):
+        return compression_enum.Deflate  # type: ignore[attr-defined]
+
+    supported_values = ["'gzip'", "'none'"]
+    if hasattr(compression_enum, "Deflate"):
+        supported_values.insert(1, "'deflate'")
+
+    raise ConfigurationError(
+        f"Unsupported compression value '{value}'. Supported values: "
+        f"{', '.join(supported_values)}."
+    )
