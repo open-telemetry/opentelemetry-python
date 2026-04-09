@@ -53,7 +53,7 @@ from opentelemetry.sdk._configuration import (
     _OTelSDKConfigurator,
 )
 from opentelemetry.sdk._logs import LoggingHandler, LogRecordProcessor
-from opentelemetry.sdk._logs._internal import RuleBasedLoggerConfigurator
+from opentelemetry.sdk._logs._internal import _RuleBasedLoggerConfigurator
 from opentelemetry.sdk._logs._internal.export import LogRecordExporter
 from opentelemetry.sdk._logs.export import (
     ConsoleLogRecordExporter,
@@ -119,10 +119,10 @@ class Provider:
 
 
 class DummyLoggerProvider:
-    def __init__(self, resource=None, *, logger_configurator=None):
+    def __init__(self, resource=None, *, _logger_configurator=None):
         self.resource = resource
         self.processors = []
-        self._logger_configurator = logger_configurator
+        self._logger_configurator = _logger_configurator
 
     def add_log_record_processor(self, processor):
         self.processors.append(processor)
@@ -1184,7 +1184,7 @@ class TestLoggingInit(TestCase):
         self, mock_entry_points
     ):
         def custom_logger_configurator(logger_scope):
-            return mock.Mock(spec=RuleBasedLoggerConfigurator)(logger_scope)
+            return mock.Mock(spec=_RuleBasedLoggerConfigurator)(logger_scope)
 
         mock_entry_points.configure_mock(
             return_value=[

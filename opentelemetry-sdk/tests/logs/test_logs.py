@@ -26,12 +26,12 @@ from opentelemetry.sdk._logs import (
     ReadableLogRecord,
 )
 from opentelemetry.sdk._logs._internal import (
-    LoggerConfig,
     LoggerMetrics,
     NoOpLogger,
-    RuleBasedLoggerConfigurator,
     SynchronousMultiLogRecordProcessor,
     _disable_logger_configurator,
+    _LoggerConfig,
+    _RuleBasedLoggerConfigurator,
 )
 from opentelemetry.sdk.environment_variables import OTEL_SDK_DISABLED
 from opentelemetry.sdk.resources import Resource
@@ -112,7 +112,7 @@ class TestLoggerProvider(unittest.TestCase):
 
     def test_logger_provider_with_disabled_configurator(self):
         provider = LoggerProvider(
-            logger_configurator=_disable_logger_configurator
+            _logger_configurator=_disable_logger_configurator
         )
         logger = provider.get_logger("test")
         self.assertFalse(logger._is_enabled())
@@ -120,10 +120,10 @@ class TestLoggerProvider(unittest.TestCase):
     def test_logger_provider_with_custom_configurator(self):
         def configurator(scope):
             if scope.name == "disabled_logger":
-                return LoggerConfig(is_enabled=False)
-            return LoggerConfig.default()
+                return _LoggerConfig(is_enabled=False)
+            return _LoggerConfig.default()
 
-        provider = LoggerProvider(logger_configurator=configurator)
+        provider = LoggerProvider(_logger_configurator=configurator)
         enabled = provider.get_logger("enabled_logger")
         disabled = provider.get_logger("disabled_logger")
         self.assertTrue(enabled._is_enabled())
@@ -134,14 +134,14 @@ class TestLoggerProvider(unittest.TestCase):
         logger = provider.get_logger("test")
         self.assertTrue(logger._is_enabled())
 
-        provider.set_logger_configurator(
+        provider._set_logger_configurator(
             logger_configurator=_disable_logger_configurator
         )
         self.assertFalse(logger._is_enabled())
 
     def test_set_logger_configurator_affects_new_loggers(self):
         provider = LoggerProvider()
-        provider.set_logger_configurator(
+        provider._set_logger_configurator(
             logger_configurator=_disable_logger_configurator
         )
         logger = provider.get_logger("new_logger")
@@ -150,7 +150,7 @@ class TestLoggerProvider(unittest.TestCase):
     # pylint: disable-next=no-self-use
     def test_disabled_logger_skips_emit(self):
         provider = LoggerProvider(
-            logger_configurator=_disable_logger_configurator
+            _logger_configurator=_disable_logger_configurator
         )
         logger = provider.get_logger("test")
         processor_mock = Mock()
@@ -165,15 +165,15 @@ class TestLoggerProvider(unittest.TestCase):
         rules = [
             (
                 _scope_name_matches_glob(glob_pattern="module_name"),
-                LoggerConfig(is_enabled=True),
+                _LoggerConfig(is_enabled=True),
             ),
             (
                 _scope_name_matches_glob(glob_pattern="other_module_name"),
-                LoggerConfig(is_enabled=False),
+                _LoggerConfig(is_enabled=False),
             ),
         ]
-        configurator = RuleBasedLoggerConfigurator(
-            rules=rules, default_config=LoggerConfig(is_enabled=True)
+        configurator = _RuleBasedLoggerConfigurator(
+            rules=rules, default_config=_LoggerConfig(is_enabled=True)
         )
 
         provider = LoggerProvider()
@@ -185,7 +185,7 @@ class TestLoggerProvider(unittest.TestCase):
         self.assertTrue(logger._is_enabled())
         self.assertTrue(other_logger._is_enabled())
 
-        provider.set_logger_configurator(logger_configurator=configurator)
+        provider._set_logger_configurator(logger_configurator=configurator)
 
         self.assertTrue(logger._is_enabled())
         self.assertFalse(other_logger._is_enabled())
@@ -196,11 +196,11 @@ class TestLoggerProvider(unittest.TestCase):
         rules = [
             (
                 _scope_name_matches_glob(glob_pattern="module_name"),
-                LoggerConfig(is_enabled=False),
+                _LoggerConfig(is_enabled=False),
             ),
         ]
-        configurator = RuleBasedLoggerConfigurator(
-            rules=rules, default_config=LoggerConfig(is_enabled=True)
+        configurator = _RuleBasedLoggerConfigurator(
+            rules=rules, default_config=_LoggerConfig(is_enabled=True)
         )
 
         provider = LoggerProvider()
@@ -212,15 +212,15 @@ class TestLoggerProvider(unittest.TestCase):
         self.assertTrue(logger._is_enabled())
         self.assertTrue(other_logger._is_enabled())
 
-        provider.set_logger_configurator(logger_configurator=configurator)
+        provider._set_logger_configurator(logger_configurator=configurator)
 
         self.assertFalse(logger._is_enabled())
         self.assertTrue(other_logger._is_enabled())
 
     def test_rule_based_configurator_first_match_wins(self):
-        disabled_config = LoggerConfig(is_enabled=False)
-        enabled_config = LoggerConfig(is_enabled=True)
-        configurator = RuleBasedLoggerConfigurator(
+        disabled_config = _LoggerConfig(is_enabled=False)
+        enabled_config = _LoggerConfig(is_enabled=True)
+        configurator = _RuleBasedLoggerConfigurator(
             rules=[
                 (lambda s: s.name == "foo", disabled_config),
                 (lambda s: s.name == "foo", enabled_config),
@@ -287,7 +287,7 @@ class TestLogger(unittest.TestCase):
                 {"an": "attribute"},
             ),
             logger_metrics=LoggerMetrics(NoOpMeterProvider()),
-            logger_config=LoggerConfig.default(),
+            _logger_config=_LoggerConfig.default(),
         )
         return logger, log_record_processor_mock
 

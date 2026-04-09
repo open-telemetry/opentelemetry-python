@@ -42,7 +42,7 @@ from opentelemetry.sdk._logs import (
     LoggingHandler,
     LogRecordProcessor,
 )
-from opentelemetry.sdk._logs._internal import LoggerConfiguratorT
+from opentelemetry.sdk._logs._internal import _LoggerConfiguratorT
 from opentelemetry.sdk._logs.export import (
     BatchLogRecordProcessor,
     LogRecordExporter,
@@ -312,10 +312,10 @@ def _init_logging(
     log_record_processors: Sequence[LogRecordProcessor] | None = None,
     export_log_record_processor: _ConfigurationExporterLogRecordProcessorT
     | None = None,
-    logger_configurator: LoggerConfiguratorT | None = None,
+    logger_configurator: _LoggerConfiguratorT | None = None,
 ):
     provider = LoggerProvider(
-        resource=resource, logger_configurator=logger_configurator
+        resource=resource, _logger_configurator=logger_configurator
     )
     set_logger_provider(provider)
 
@@ -389,7 +389,7 @@ def _overwrite_logging_config_fns(handler: LoggingHandler) -> None:
 
 def _import_logger_configurator(
     logger_configurator_name: str | None,
-) -> LoggerConfiguratorT | None:
+) -> _LoggerConfiguratorT | None:
     if not logger_configurator_name:
         return None
 
@@ -571,7 +571,7 @@ def _initialize_components(
     | None = None,
     tracer_configurator: _TracerConfiguratorT | None = None,
     meter_configurator: _MeterConfiguratorT | None = None,
-    logger_configurator: LoggerConfiguratorT | None = None,
+    logger_configurator: _LoggerConfiguratorT | None = None,
 ):
     # pylint: disable=too-many-locals
     if trace_exporter_names is None:

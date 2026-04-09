@@ -22,7 +22,6 @@ import logging
 import threading
 import traceback
 import warnings
-from _weakrefset import WeakSet
 from dataclasses import dataclass, field
 from os import environ
 from threading import Lock
@@ -36,6 +35,7 @@ from typing import (  # noqa
     cast,
     overload,
 )
+from weakref import WeakSet
 
 from typing_extensions import deprecated
 
@@ -652,12 +652,12 @@ class LoggingHandler(logging.Handler):
 
 
 @dataclass
-class LoggerConfig:
+class _LoggerConfig:
     is_enabled: bool = True
 
     @classmethod
-    def default(cls) -> LoggerConfig:
-        return LoggerConfig()
+    def default(cls) -> _LoggerConfig:
+        return _LoggerConfig()
 
 
 class Logger(APILogger):
@@ -671,7 +671,7 @@ class Logger(APILogger):
         instrumentation_scope: InstrumentationScope,
         *,
         logger_metrics: LoggerMetrics,
-        logger_config: LoggerConfig,
+        _logger_config: _LoggerConfig,
     ):
         super().__init__(
             instrumentation_scope.name,
@@ -683,12 +683,12 @@ class Logger(APILogger):
         self._multi_log_record_processor = multi_log_record_processor
         self._instrumentation_scope = instrumentation_scope
         self._logger_metrics = logger_metrics
-        self._logger_config = logger_config
+        self._logger_config = _logger_config
 
     def _is_enabled(self) -> bool:
         return self._logger_config.is_enabled
 
-    def set_logger_config(self, logger_config: LoggerConfig) -> None:
+    def _set_logger_config(self, logger_config: _LoggerConfig) -> None:
         self._logger_config = logger_config
 
     @property
@@ -752,20 +752,20 @@ class Logger(APILogger):
         self._multi_log_record_processor.on_emit(writable_record)
 
 
-LoggerConfiguratorT = Callable[[InstrumentationScope], LoggerConfig]
-RuleBasedLoggerConfigurator = RuleBasedConfigurator[LoggerConfig]
+_LoggerConfiguratorT = Callable[[InstrumentationScope], _LoggerConfig]
+_RuleBasedLoggerConfigurator = RuleBasedConfigurator[_LoggerConfig]
 
 
 def _default_logger_configurator(
     _logger_scope: InstrumentationScope,
-) -> LoggerConfig:
-    return LoggerConfig.default()
+) -> _LoggerConfig:
+    return _LoggerConfig.default()
 
 
 def _disable_logger_configurator(
     _logger_scope: InstrumentationScope,
-) -> LoggerConfig:
-    return LoggerConfig(is_enabled=False)
+) -> _LoggerConfig:
+    return _LoggerConfig(is_enabled=False)
 
 
 class LoggerProvider(APILoggerProvider):
@@ -778,7 +778,7 @@ class LoggerProvider(APILoggerProvider):
         | None = None,
         *,
         meter_provider: MeterProvider | None = None,
-        logger_configurator: LoggerConfiguratorT | None = None,
+        _logger_configurator: _LoggerConfiguratorT | None = None,
     ):
         if resource is None:
             self._resource = Resource.create({})
@@ -793,7 +793,7 @@ class LoggerProvider(APILoggerProvider):
         disabled = environ.get(OTEL_SDK_DISABLED, "")
         self._disabled = disabled.lower().strip() == "true"
         self._logger_configurator = (
-            logger_configurator or _default_logger_configurator
+            _logger_configurator or _default_logger_configurator
         )
         self._at_exit_handler = None
         if shutdown_on_exit:
@@ -821,7 +821,7 @@ class LoggerProvider(APILoggerProvider):
             self._multi_log_record_processor,
             scope,
             logger_metrics=self._logger_metrics,
-            logger_config=self._apply_logger_configurator(scope),
+            _logger_config=self._apply_logger_configurator(scope),
         )
 
     def _get_logger_cached(
@@ -876,8 +876,8 @@ class LoggerProvider(APILoggerProvider):
             log_record_processor
         )
 
-    def set_logger_configurator(
-        self, *, logger_configurator: LoggerConfiguratorT
+    def _set_logger_configurator(
+        self, *, logger_configurator: _LoggerConfiguratorT
     ):
         """Set a new LoggerConfigurator for this LoggerProvider.
 
@@ -888,7 +888,8 @@ class LoggerProvider(APILoggerProvider):
         self._logger_configurator = logger_configurator
         with self._active_loggers_lock:
             for logger in self._active_loggers:
-                logger.set_logger_config(
+                # pylint: disable-next=protected-access
+                logger._set_logger_config(
                     self._apply_logger_configurator(
                         logger.instrumentation_scope
                     )
@@ -896,7 +897,7 @@ class LoggerProvider(APILoggerProvider):
 
     def _apply_logger_configurator(
         self, instrumentation_scope: InstrumentationScope
-    ) -> LoggerConfig:
+    ) -> _LoggerConfig:
         try:
             return self._logger_configurator(instrumentation_scope)
         # pylint: disable-next=broad-exception-caught
@@ -905,7 +906,7 @@ class LoggerProvider(APILoggerProvider):
                 "logger configurator failed for scope '%s', using default config",
                 instrumentation_scope.name,
             )
-            return LoggerConfig.default()
+            return _LoggerConfig.default()
 
     def shutdown(self) -> None:
         """Shuts down the log processors."""
