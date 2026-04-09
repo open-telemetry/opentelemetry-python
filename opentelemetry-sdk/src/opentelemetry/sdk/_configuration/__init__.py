@@ -523,7 +523,7 @@ def _import_id_generator(id_generator_name: str) -> IdGenerator:
     raise RuntimeError(f"{id_generator_name} is not an IdGenerator")
 
 
-def _import_opamp() -> callable[[...], None]:
+def _import_opamp() -> Callable[[...], None]:
     # this in development, at the moment we are looking for a callable that takes
     # the resource and instantiate an OpAMP agent.
     # Since configuration is not specified every implementors may have its own.
