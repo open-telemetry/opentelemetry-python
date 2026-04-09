@@ -36,13 +36,16 @@ from opentelemetry.util._importlib_metadata import entry_points
 def _load_entry_point_propagator(name: str) -> TextMapPropagator:
     """Load a propagator by name from the opentelemetry_propagator entry point group."""
     try:
-        eps = list(entry_points(group="opentelemetry_propagator", name=name))
-        if not eps:
+        ep = next(
+            iter(entry_points(group="opentelemetry_propagator", name=name)),
+            None,
+        )
+        if not ep:
             raise ConfigurationError(
                 f"Propagator '{name}' not found. "
                 "It may not be installed or may be misspelled."
             )
-        return eps[0].load()()
+        return ep.load()()
     except ConfigurationError:
         raise
     except Exception as exc:
@@ -85,19 +88,13 @@ def create_propagator(
     if config is None:
         return CompositePropagator([])
 
-    propagators: list[TextMapPropagator] = []
-    seen_types: set[type] = set()
-
-    def _add_deduped(propagator: TextMapPropagator) -> None:
-        if type(propagator) not in seen_types:
-            seen_types.add(type(propagator))
-            propagators.append(propagator)
+    propagators: dict[type[TextMapPropagator], TextMapPropagator] = {}
 
     # Process structured composite list
     if config.composite:
         for entry in config.composite:
             for propagator in _propagators_from_textmap_config(entry):
-                _add_deduped(propagator)
+                propagators.setdefault(type(propagator), propagator)
 
     # Process composite_list (comma-separated propagator names via entry_points)
     if config.composite_list:
@@ -105,9 +102,10 @@ def create_propagator(
             name = name.strip()
             if not name or name.lower() == "none":
                 continue
-            _add_deduped(_load_entry_point_propagator(name))
+            propagator = _load_entry_point_propagator(name)
+            propagators.setdefault(type(propagator), propagator)
 
-    return CompositePropagator(propagators)
+    return CompositePropagator(list(propagators.values()))
 
 
 def configure_propagator(config: Optional[PropagatorConfig]) -> None:
