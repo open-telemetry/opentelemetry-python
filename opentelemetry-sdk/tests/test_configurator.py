@@ -1525,7 +1525,7 @@ class TestOpAMPInit(TestCase):
             [mock.call(group="_opentelemetry_opamp", name="init_function")]
         )
         init_function.assert_called_once_with(
-            resource=mock_resource.create.return_value
+            mock_resource.create.return_value
         )
 
     @patch("opentelemetry.sdk._configuration.entry_points")
