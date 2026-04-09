@@ -523,11 +523,12 @@ def _import_id_generator(id_generator_name: str) -> IdGenerator:
     raise RuntimeError(f"{id_generator_name} is not an IdGenerator")
 
 
-def _import_opamp() -> Callable[[...], None]:
+def _import_opamp() -> Callable[[Resource], None] | None:
     # this in development, at the moment we are looking for a callable that takes
     # the resource and instantiate an OpAMP agent.
     # Since configuration is not specified every implementors may have its own.
     # Refer to opentelemetry-opamp-client package on how to setup the OpAMP agent.
+    entry_point = None
     try:
         entry_point = next(
             iter(
@@ -614,7 +615,7 @@ def _initialize_components(
     # up the rest of the SDK.
     _init_opamp = _import_opamp()
     if _init_opamp is not None:
-        _init_opamp(resource=resource)
+        _init_opamp(resource)
 
     _init_tracing(
         exporters=span_exporters,
