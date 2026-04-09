@@ -132,8 +132,8 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         preferred_temporality: dict[type, AggregationTemporality]
         | None = None,
         preferred_aggregation: dict[type, Aggregation] | None = None,
-        *,
         max_export_batch_size: int | None = None,
+        *,
         meter_provider: Optional[MeterProvider] = None,
     ):
         """OTLP HTTP metrics exporter
@@ -267,10 +267,15 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         deadline_sec: float,
         num_items: int,
     ) -> MetricExportResult:
-        if self._shutdown:
-            _logger.warning("Exporter already shutdown, ignoring batch")
-            return MetricExportResult.FAILURE
+        """Export serialized data with retry logic until success, non-transient error, or exponential backoff maxed out.
 
+        Args:
+            export_request: ExportMetricsServiceRequest object containing metrics data to export
+            deadline_sec: timestamp deadline for the export
+
+        Returns:
+            MetricExportResult: SUCCESS if export succeeded, FAILURE otherwise
+        """
         with self._metrics.export_operation(num_items) as result:
             serialized_data = export_request.SerializeToString()
             deadline_sec = time() + self._timeout
