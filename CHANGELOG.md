@@ -69,6 +69,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#5007](https://github.com/open-telemetry/opentelemetry-python/pull/5007))
 - Redo OTLPMetricExporter unit tests of `max_export_batch_size` to use real `export`
   ([#5036](https://github.com/open-telemetry/opentelemetry-python/pull/5036))
+- `opentelemetry-sdk`: Implement experimental Logger configurator
+  ([#4980](https://github.com/open-telemetry/opentelemetry-python/pull/4980))
 
 ## Version 1.40.0/0.61b0 (2026-03-04)
 
