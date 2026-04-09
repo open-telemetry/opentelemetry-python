@@ -28,6 +28,7 @@ from opentelemetry.sdk.metrics._internal._view_instrument_match import (
 )
 from opentelemetry.sdk.metrics._internal.aggregation import (
     Aggregation,
+    AggregationTemporality,
     ExplicitBucketHistogramAggregation,
     _DropAggregation,
     _ExplicitBucketHistogramAggregation,
@@ -35,7 +36,6 @@ from opentelemetry.sdk.metrics._internal.aggregation import (
     _LastValueAggregation,
     _SumAggregation,
 )
-from opentelemetry.sdk.metrics._internal.export import AggregationTemporality
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.point import (
     ExponentialHistogram,
