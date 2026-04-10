@@ -8,7 +8,8 @@ psutil==7.2.2
 py-cpuinfo==9.0.0
 pytest==7.4.4
 jsonschema==4.25.1
-rpds-py==0.23.1
+rpds-py==0.23.1; python_version == "3.10"
+rpds-py==0.30.0; python_version >= "3.11"
 pyyaml==6.0.3
 tomli==2.0.1
 typing_extensions==4.12.0
