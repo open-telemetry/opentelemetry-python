@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `TracerMetrics` instance was created on every call, causing `ProxyMeterProvider` to
   accumulate proxy meters indefinitely when no SDK `MeterProvider` was configured.
   ([#5016](https://github.com/open-telemetry/opentelemetry-python/issues/5016))
+- `opentelemetry-sdk`: Add `service` resource detector support to declarative file configuration via `detection_development.detectors[].service`
+  ([#5003](https://github.com/open-telemetry/opentelemetry-python/pull/5003))
 
 ## Version 1.41.0/0.62b0 (2026-04-09)
 
