@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `opentelemetry-sdk`: Add `service` resource detector support to declarative file configuration via `detection_development.detectors[].service`
+  ([#5003](https://github.com/open-telemetry/opentelemetry-python/pull/5003))
+
 ## Version 1.41.0/0.62b0 (2026-04-09)
 
 - `opentelemetry-sdk`: Add `host` resource detector support to declarative file configuration via `detection_development.detectors[].host`
