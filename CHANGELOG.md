@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Fix incorrect code example in `create_tracer()` docstring ([#5072](https://github.com/open-telemetry/opentelemetry-python/issues/5072))
+
 ## Version 1.41.0/0.62b0 (2026-04-09)
 
 - `opentelemetry-sdk`: Add `host` resource detector support to declarative file configuration via `detection_development.detectors[].host`
