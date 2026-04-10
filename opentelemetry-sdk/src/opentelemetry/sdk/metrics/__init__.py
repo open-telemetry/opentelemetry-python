@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+from opentelemetry.sdk.metrics import export, view
 from opentelemetry.sdk.metrics._internal import Meter, MeterProvider
 from opentelemetry.sdk.metrics._internal.exceptions import MetricsTimeoutError
 from opentelemetry.sdk.metrics._internal.exemplar import (
@@ -54,4 +55,6 @@ __all__ = [
     "SimpleFixedSizeExemplarReservoir",
     "UpDownCounter",
     "TraceBasedExemplarFilter",
+    "export",
+    "view",
 ]
