@@ -793,19 +793,12 @@ class Logger(APILogger):
             return
         # If a record is provided, use it directly
         if record is not None:
-            record_exception = exception or getattr(record, "exception", None)
-            if record_exception is None and isinstance(
-                record, ReadWriteLogRecord
-            ):
-                record_exception = getattr(
-                    record.log_record, "exception", None
-                )
             if not isinstance(record, ReadWriteLogRecord):
-                if record_exception is not None:
+                if record.exception is not None:
                     record = _copy_log_record(
                         record,
                         _get_attributes_with_exception(
-                            record.attributes, record_exception
+                            record.attributes, record.exception
                         ),
                     )
                 # pylint:disable=protected-access
@@ -816,7 +809,7 @@ class Logger(APILogger):
                 )
             else:
                 record.log_record.attributes = _get_attributes_with_exception(
-                    record.log_record.attributes, record_exception
+                    record.log_record.attributes, record.log_record.exception
                 )
                 writable_record = record
         else:

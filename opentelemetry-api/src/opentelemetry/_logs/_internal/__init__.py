@@ -167,8 +167,6 @@ class Logger(ABC):
     def emit(
         self,
         record: LogRecord,
-        *,
-        exception: BaseException | None = None,
     ) -> None: ...
 
     @abstractmethod
@@ -214,8 +212,6 @@ class NoOpLogger(Logger):
     def emit(  # pylint:disable=arguments-differ
         self,
         record: LogRecord,
-        *,
-        exception: BaseException | None = None,
     ) -> None: ...
 
     def emit(
@@ -284,8 +280,6 @@ class ProxyLogger(Logger):
     def emit(  # pylint:disable=arguments-differ
         self,
         record: LogRecord,
-        *,
-        exception: BaseException | None = None,
     ) -> None: ...
 
     def emit(
@@ -303,7 +297,7 @@ class ProxyLogger(Logger):
         exception: BaseException | None = None,
     ) -> None:
         if record:
-            self._logger.emit(record, exception=exception)
+            self._logger.emit(record)
         else:
             self._logger.emit(
                 timestamp=timestamp,

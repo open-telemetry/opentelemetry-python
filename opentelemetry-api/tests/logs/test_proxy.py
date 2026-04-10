@@ -77,15 +77,12 @@ class TestProxy(LoggingGlobalsTest, unittest.TestCase):
         real_logger = provider.get_logger("proxy-test")
         self.assertIsInstance(real_logger, LoggerTest)
 
-    def test_proxy_logger_forwards_exception_with_record(self):
+    def test_proxy_logger_forwards_record_with_exception(self):
         logger = _logs_internal.ProxyLogger("proxy-test")
         logger._real_logger = Mock(spec=LoggerTest("proxy-test"))
-        record = _logs.LogRecord()
-        exception = ValueError("boom")
+        record = _logs.LogRecord(exception=ValueError("boom"))
 
         self.assertIsNotNone(logger._real_logger)
-        logger.emit(record, exception=exception)
+        logger.emit(record)
 
-        logger._real_logger.emit.assert_called_once_with(
-            record, exception=exception
-        )
+        logger._real_logger.emit.assert_called_once_with(record)
