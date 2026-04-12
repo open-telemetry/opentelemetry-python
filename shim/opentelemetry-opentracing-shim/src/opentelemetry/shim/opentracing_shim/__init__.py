@@ -117,6 +117,7 @@ from opentelemetry.trace import (
     INVALID_SPAN_CONTEXT,
     Link,
     NonRecordingSpan,
+    SpanKind,
     TracerProvider,
     get_current_span,
     set_span_in_context,
@@ -667,6 +668,16 @@ class TracerShim(Tracer):
 
         parent_span_context = set_span_in_context(parent)
 
+        # Extract span.kind from OpenTracing tags and map to OTel SpanKind.
+        # The span.kind tag is removed from tags as it is not a regular
+        # attribute but controls the span's kind in OpenTelemetry.
+        kind = SpanKind.INTERNAL
+        if tags is not None and "span.kind" in tags:
+            mapped_kind = util.opentracing_kind_to_otel_kind(tags["span.kind"])
+            if mapped_kind is not None:
+                kind = mapped_kind
+            del tags["span.kind"]
+
         # The OpenTracing API expects time values to be `float` values which
         # represent the number of seconds since the epoch. OpenTelemetry
         # represents time values as nanoseconds since the epoch.
@@ -677,6 +688,7 @@ class TracerShim(Tracer):
         span = self._otel_tracer.start_span(
             operation_name,
             context=parent_span_context,
+            kind=kind,
             links=valid_links,
             attributes=tags,
             start_time=start_time_ns,

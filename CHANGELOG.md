@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#5091](https://github.com/open-telemetry/opentelemetry-python/pull/5091))
 - `opentelemetry-sdk`: Add `create_logger_provider`/`configure_logger_provider` to declarative file configuration, enabling LoggerProvider instantiation from config files without reading env vars
   ([#4990](https://github.com/open-telemetry/opentelemetry-python/pull/4990))
+- `opentelemetry-opentracing-shim`: Map OpenTracing `span.kind` tag to the corresponding OpenTelemetry `SpanKind`, including support for `internal` kind
+  ([#5080](https://github.com/open-telemetry/opentelemetry-python/pull/5080))
 - `opentelemetry-sdk`: Add `service` resource detector support to declarative file configuration via `detection_development.detectors[].service`
   ([#5003](https://github.com/open-telemetry/opentelemetry-python/pull/5003))
 - logs: add exception support to Logger emit and LogRecord attributes

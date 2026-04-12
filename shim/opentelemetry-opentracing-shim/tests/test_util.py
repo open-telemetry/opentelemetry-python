@@ -18,9 +18,11 @@ from unittest import TestCase
 from opentelemetry.shim.opentracing_shim.util import (
     DEFAULT_EVENT_NAME,
     event_name_from_kv,
+    opentracing_kind_to_otel_kind,
     time_seconds_from_ns,
     time_seconds_to_ns,
 )
+from opentelemetry.trace import SpanKind
 
 
 class TestUtil(TestCase):
@@ -53,6 +55,26 @@ class TestUtil(TestCase):
         result = time_seconds_from_ns(time_nanoseconds)
 
         self.assertEqual(result, time_nanoseconds / 1e9)
+
+    def test_opentracing_kind_to_otel_kind(self):
+        """Test mapping of OpenTracing kind tags to OTel SpanKind."""
+        test_cases = {
+            "client": SpanKind.CLIENT,
+            "server": SpanKind.SERVER,
+            "producer": SpanKind.PRODUCER,
+            "consumer": SpanKind.CONSUMER,
+            "internal": SpanKind.INTERNAL,
+            "unknown": None,
+            "": None,
+        }
+        for opentracing_kind, expected in test_cases.items():
+            with self.subTest(
+                opentracing_kind=opentracing_kind, expected=expected
+            ):
+                self.assertEqual(
+                    opentracing_kind_to_otel_kind(opentracing_kind),
+                    expected,
+                )
 
     def test_time_conversion_precision(self):
         """Verify time conversion from seconds to nanoseconds and vice versa is

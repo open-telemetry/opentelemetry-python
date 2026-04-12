@@ -35,6 +35,7 @@ from opentelemetry.test.mock_textmap import (
     MockTextMapPropagator,
     NOOPTextMapPropagator,
 )
+from opentelemetry.trace import SpanKind
 
 
 class TestShim(TestCase):
@@ -642,6 +643,34 @@ class TestShim(TestCase):
 
         # Verify no span is active.
         self.assertIsNone(self.shim.active_span)
+
+    def test_span_kind_from_tags(self):
+        """Test that span.kind OpenTracing tag is mapped to OTel SpanKind."""
+        test_cases = [
+            ({"span.kind": "consumer"}, SpanKind.CONSUMER),
+            ({"span.kind": "producer"}, SpanKind.PRODUCER),
+            ({"span.kind": "client"}, SpanKind.CLIENT),
+            ({"span.kind": "server"}, SpanKind.SERVER),
+            ({"span.kind": "unknown_kind"}, SpanKind.INTERNAL),
+            ({"other_tag": "value"}, SpanKind.INTERNAL),
+            (None, SpanKind.INTERNAL),
+        ]
+
+        for tags, expected_kind in test_cases:
+            with self.subTest(tags=tags, expected_kind=expected_kind):
+                with self.shim.start_active_span(
+                    "TestSpanKind", tags=tags
+                ) as scope:
+                    self.assertEqual(scope.span.unwrap().kind, expected_kind)
+
+    def test_span_kind_tag_removed_from_attributes(self):
+        """Test that span.kind tag is removed from span attributes after extraction."""
+        with self.shim.start_active_span(
+            "TestSpanKind", tags={"span.kind": "client", "other": "value"}
+        ) as scope:
+            self.assertEqual(scope.span.unwrap().kind, SpanKind.CLIENT)
+            self.assertNotIn("span.kind", scope.span.unwrap().attributes)
+            self.assertEqual(scope.span.unwrap().attributes["other"], "value")
 
     def test_mixed_mode(self):
         """Test that span parent-child relationship is kept between

@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from opentelemetry.trace import SpanKind
+
 # A default event name to be used for logging events when a better event name
 # can't be derived from the event's key-value pairs.
 DEFAULT_EVENT_NAME = "log"
@@ -52,3 +54,21 @@ def event_name_from_kv(key_values):
         return DEFAULT_EVENT_NAME
 
     return key_values["event"]
+
+
+_OPENTRACING_TO_OTEL_KIND = {
+    "client": SpanKind.CLIENT,
+    "server": SpanKind.SERVER,
+    "producer": SpanKind.PRODUCER,
+    "consumer": SpanKind.CONSUMER,
+    "internal": SpanKind.INTERNAL,
+}
+
+
+def opentracing_kind_to_otel_kind(opentracing_kind):
+    """Maps an OpenTracing span.kind tag value to the corresponding
+    OpenTelemetry SpanKind.
+
+    Returns None if the kind is not recognized.
+    """
+    return _OPENTRACING_TO_OTEL_KIND.get(opentracing_kind)
