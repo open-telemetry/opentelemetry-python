@@ -80,18 +80,25 @@ def _parse_headers(
 
 
 def _map_compression(
-    value: Optional[str], compression_enum: type
+    value: Optional[str],
+    compression_enum: type,
+    *,
+    allow_deflate: bool = False,
 ) -> Optional[object]:
     """Map a compression string to the given Compression enum value."""
     if value is None or value.lower() == "none":
         return None
     if value.lower() == "gzip":
         return compression_enum.Gzip  # type: ignore[attr-defined]
-    if value.lower() == "deflate" and hasattr(compression_enum, "Deflate"):
+    if (
+        value.lower() == "deflate"
+        and allow_deflate
+        and hasattr(compression_enum, "Deflate")
+    ):
         return compression_enum.Deflate  # type: ignore[attr-defined]
 
     supported_values = ["'gzip'", "'none'"]
-    if hasattr(compression_enum, "Deflate"):
+    if allow_deflate and hasattr(compression_enum, "Deflate"):
         supported_values.insert(1, "'deflate'")
 
     raise ConfigurationError(

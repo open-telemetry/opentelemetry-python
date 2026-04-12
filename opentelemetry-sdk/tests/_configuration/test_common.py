@@ -162,15 +162,29 @@ class TestMapCompression(unittest.TestCase):
             _map_compression("gzip", _CompressionWithDeflate), "gzip"
         )
 
-    def test_deflate_maps_when_supported(self):
+    def test_deflate_maps_when_enabled(self):
         self.assertEqual(
-            _map_compression("deflate", _CompressionWithDeflate),
+            _map_compression(
+                "deflate", _CompressionWithDeflate, allow_deflate=True
+            ),
             "deflate",
         )
 
-    def test_deflate_raises_when_unsupported(self):
+    def test_deflate_raises_by_default(self):
         with self.assertRaises(ConfigurationError) as ctx:
-            _map_compression("deflate", _CompressionWithoutDeflate)
+            _map_compression("deflate", _CompressionWithDeflate)
+
+        self.assertEqual(
+            str(ctx.exception),
+            "Unsupported compression value 'deflate'. Supported values: "
+            "'gzip', 'none'.",
+        )
+
+    def test_deflate_raises_when_http_enum_lacks_support(self):
+        with self.assertRaises(ConfigurationError) as ctx:
+            _map_compression(
+                "deflate", _CompressionWithoutDeflate, allow_deflate=True
+            )
 
         self.assertEqual(
             str(ctx.exception),
@@ -180,7 +194,9 @@ class TestMapCompression(unittest.TestCase):
 
     def test_http_error_message_includes_deflate(self):
         with self.assertRaises(ConfigurationError) as ctx:
-            _map_compression("brotli", _CompressionWithDeflate)
+            _map_compression(
+                "brotli", _CompressionWithDeflate, allow_deflate=True
+            )
 
         self.assertEqual(
             str(ctx.exception),
