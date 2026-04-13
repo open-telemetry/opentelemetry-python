@@ -16,6 +16,8 @@ from __future__ import annotations
 
 import fnmatch
 import logging
+import os
+import uuid
 from typing import Callable, Optional
 from urllib import parse
 
@@ -28,6 +30,8 @@ from opentelemetry.sdk._configuration.models import (
 from opentelemetry.sdk._configuration.models import Resource as ResourceConfig
 from opentelemetry.sdk.resources import (
     _DEFAULT_RESOURCE,
+    OTEL_SERVICE_NAME,
+    SERVICE_INSTANCE_ID,
     SERVICE_NAME,
     ProcessResourceDetector,
     Resource,
@@ -152,6 +156,15 @@ def _run_detectors(
     is updated in-place; later detectors overwrite earlier ones for the
     same key.
     """
+    if detector_config.service is not None:
+        attrs: dict[str, object] = {
+            SERVICE_INSTANCE_ID: str(uuid.uuid4()),
+        }
+        service_name = os.environ.get(OTEL_SERVICE_NAME)
+        if service_name:
+            attrs[SERVICE_NAME] = service_name
+        detected_attrs.update(attrs)
+
     if detector_config.host is not None:
         detected_attrs.update(_HostResourceDetector().detect().attributes)
 
