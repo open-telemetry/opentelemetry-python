@@ -53,8 +53,8 @@ from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
 from opentelemetry.metrics import MeterProvider, get_meter_provider
 from opentelemetry.sdk._logs._internal._exceptions import (
+    _create_log_record_with_exception,
     _copy_log_record_with_exception,
-    _get_attributes_with_exception,
     _set_log_record_exception_attributes,
 )
 from opentelemetry.sdk._logs._internal._logger_metrics import LoggerMetrics
@@ -534,6 +534,7 @@ _RESERVED_ATTRS = frozenset(
     )
 )
 
+
 class LoggingHandler(logging.Handler):
     """A handler class which writes logging records, in OTLP format, to
     a network destination or file. Supports signals from the `logging` module.
@@ -739,15 +740,14 @@ class Logger(APILogger):
                 writable_record = record
         else:
             # Create a record from individual parameters
-            log_record_attributes = _get_attributes_with_exception(attributes, exception)
-            log_record = LogRecord(
+            log_record = _create_log_record_with_exception(
                 timestamp=timestamp,
                 observed_timestamp=observed_timestamp,
                 context=context,
                 severity_number=severity_number,
                 severity_text=severity_text,
                 body=body,
-                attributes=log_record_attributes,
+                attributes=attributes,
                 event_name=event_name,
                 exception=exception,
             )

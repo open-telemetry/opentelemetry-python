@@ -105,3 +105,28 @@ def _set_log_record_exception_attributes(record: LogRecord) -> None:
         record.attributes,
         record.exception,
     )
+
+
+def _create_log_record_with_exception(
+    *,
+    timestamp: int | None = None,
+    observed_timestamp: int | None = None,
+    context=None,
+    severity_number=None,
+    severity_text: str | None = None,
+    body: AnyValue | None = None,
+    attributes: _ExtendedAttributes | None = None,
+    event_name: str | None = None,
+    exception: BaseException | None = None,
+) -> LogRecord:
+    return LogRecord(
+        timestamp=timestamp,
+        observed_timestamp=observed_timestamp,
+        context=context,
+        severity_number=severity_number,
+        severity_text=severity_text,
+        body=body,
+        attributes=_get_attributes_with_exception(attributes, exception),
+        event_name=event_name,
+        exception=exception,
+    )
