@@ -18,12 +18,14 @@ import unittest
 from unittest.mock import Mock, patch
 
 from opentelemetry._logs import LogRecord, SeverityNumber
+from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.context import get_current
 from opentelemetry.metrics import NoOpMeterProvider
 from opentelemetry.sdk._logs import (
     Logger,
     LoggerProvider,
     ReadableLogRecord,
+    ReadWriteLogRecord,
 )
 from opentelemetry.sdk._logs._internal import (
     LoggerMetrics,
@@ -39,6 +41,7 @@ from opentelemetry.sdk.util.instrumentation import (
     InstrumentationScope,
     _scope_name_matches_glob,
 )
+from opentelemetry.semconv.attributes import exception_attributes
 
 
 class TestLoggerProvider(unittest.TestCase):
@@ -354,3 +357,109 @@ class TestLogger(unittest.TestCase):
         self.assertEqual(result_log_record.attributes, {"some": "attributes"})
         self.assertEqual(result_log_record.event_name, "event_name")
         self.assertEqual(log_data.resource, logger.resource)
+
+    def test_emit_with_exception_adds_attributes(self):
+        logger, log_record_processor_mock = self._get_logger()
+        exc = ValueError("boom")
+
+        logger.emit(body="a log line", exception=exc)
+        log_record_processor_mock.on_emit.assert_called_once()
+        log_data = log_record_processor_mock.on_emit.call_args.args[0]
+        attributes = dict(log_data.log_record.attributes)
+        self.assertEqual(
+            attributes[exception_attributes.EXCEPTION_TYPE], "ValueError"
+        )
+        self.assertEqual(
+            attributes[exception_attributes.EXCEPTION_MESSAGE], "boom"
+        )
+        self.assertIn(
+            "ValueError: boom",
+            attributes[exception_attributes.EXCEPTION_STACKTRACE],
+        )
+
+    def test_emit_with_raised_exception_has_stacktrace(self):
+        logger, log_record_processor_mock = self._get_logger()
+
+        try:
+            raise ValueError("boom")
+        except ValueError as exc:
+            logger.emit(body="error", exception=exc)
+
+        log_record_processor_mock.on_emit.assert_called_once()
+        log_data = log_record_processor_mock.on_emit.call_args.args[0]
+        stacktrace = dict(log_data.log_record.attributes)[
+            exception_attributes.EXCEPTION_STACKTRACE
+        ]
+        self.assertIn("Traceback (most recent call last)", stacktrace)
+        self.assertIn("raise ValueError", stacktrace)
+
+    def test_emit_logrecord_exception_preserves_user_attributes(self):
+        logger, log_record_processor_mock = self._get_logger()
+        exc = ValueError("boom")
+        log_record = LogRecord(
+            observed_timestamp=0,
+            body="a log line",
+            attributes={exception_attributes.EXCEPTION_TYPE: "custom"},
+            exception=exc,
+        )
+
+        logger.emit(log_record)
+        log_record_processor_mock.on_emit.assert_called_once()
+        log_data = log_record_processor_mock.on_emit.call_args.args[0]
+        attributes = dict(log_data.log_record.attributes)
+        self.assertEqual(
+            attributes[exception_attributes.EXCEPTION_TYPE], "custom"
+        )
+        self.assertEqual(
+            attributes[exception_attributes.EXCEPTION_MESSAGE], "boom"
+        )
+
+    def test_emit_logrecord_exception_with_immutable_attributes(self):
+        logger, log_record_processor_mock = self._get_logger()
+        exc = ValueError("boom")
+        original_attributes = BoundedAttributes(
+            attributes={"custom": "value"},
+            immutable=True,
+            extended_attributes=True,
+        )
+        log_record = LogRecord(
+            observed_timestamp=0,
+            body="a log line",
+            attributes=original_attributes,
+            exception=exc,
+        )
+
+        logger.emit(log_record)
+
+        self.assertNotIn(
+            exception_attributes.EXCEPTION_TYPE, log_record.attributes
+        )
+        log_record_processor_mock.on_emit.assert_called_once()
+        log_data = log_record_processor_mock.on_emit.call_args.args[0]
+        attributes = dict(log_data.log_record.attributes)
+        self.assertEqual(attributes["custom"], "value")
+        self.assertEqual(
+            attributes[exception_attributes.EXCEPTION_TYPE], "ValueError"
+        )
+
+    def test_emit_readwrite_logrecord_uses_exception(self):
+        logger, log_record_processor_mock = self._get_logger()
+        exc = RuntimeError("kaput")
+        log_record = LogRecord(
+            observed_timestamp=0,
+            body="a log line",
+            exception=exc,
+        )
+        readwrite = ReadWriteLogRecord(
+            log_record=log_record,
+            resource=Resource.create({}),
+            instrumentation_scope=logger._instrumentation_scope,
+        )
+
+        logger.emit(readwrite)
+        log_record_processor_mock.on_emit.assert_called_once()
+        log_data = log_record_processor_mock.on_emit.call_args.args[0]
+        attributes = dict(log_data.log_record.attributes)
+        self.assertEqual(
+            attributes[exception_attributes.EXCEPTION_TYPE], "RuntimeError"
+        )
