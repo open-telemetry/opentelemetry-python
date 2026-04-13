@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4990](https://github.com/open-telemetry/opentelemetry-python/pull/4990))
 - `opentelemetry-sdk`: Add `service` resource detector support to declarative file configuration via `detection_development.detectors[].service`
   ([#5003](https://github.com/open-telemetry/opentelemetry-python/pull/5003))
+- Drop Python 3.9 support
+  ([#5076](https://github.com/open-telemetry/opentelemetry-python-contrib/pull/5076))
+
 
 ## Version 1.41.0/0.62b0 (2026-04-09)
 
