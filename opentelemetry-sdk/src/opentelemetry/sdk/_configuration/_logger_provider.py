@@ -53,9 +53,6 @@ from opentelemetry.sdk.resources import Resource
 _logger = logging.getLogger(__name__)
 
 # BatchLogRecordProcessor defaults per OTel spec (milliseconds).
-# Note: The Python SDK reads OTEL_BLRP_SCHEDULE_DELAY with an incorrect default
-# of 5000ms. The spec mandates 1000ms. We pass 1000 explicitly here to match
-# the spec and suppress env var reading.
 _DEFAULT_SCHEDULE_DELAY_MILLIS = 1000
 _DEFAULT_EXPORT_TIMEOUT_MILLIS = 30000
 _DEFAULT_MAX_QUEUE_SIZE = 2048
