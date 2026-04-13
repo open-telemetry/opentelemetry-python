@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `opentelemetry-sdk`: Add `service` resource detector support to declarative file configuration via `detection_development.detectors[].service`
+  ([#5003](https://github.com/open-telemetry/opentelemetry-python/pull/5003))
 - logs: add exception support to Logger emit and LogRecord attributes
   ([#4907](https://github.com/open-telemetry/opentelemetry-python/issues/4907))
 
