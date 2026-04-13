@@ -32,9 +32,9 @@ dependencies = [
   "grpcio >= 1.66.2, < 2.0.0; python_version == '3.13'",
   "grpcio >= 1.75.1, < 2.0.0; python_version >= '3.14'",
   "opentelemetry-api ~= 1.15",
-  "opentelemetry-proto == 1.41.0.dev",
-  "opentelemetry-sdk ~= 1.41.0.dev",
-  "opentelemetry-exporter-otlp-proto-common == 1.41.0.dev",
+  "opentelemetry-proto == 1.42.0.dev",
+  "opentelemetry-sdk ~= 1.42.0.dev",
+  "opentelemetry-exporter-otlp-proto-common == 1.42.0.dev",
   "typing-extensions >= 4.6.0",
 ]
 
