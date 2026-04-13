@@ -53,8 +53,8 @@ from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
 from opentelemetry.metrics import MeterProvider, get_meter_provider
 from opentelemetry.sdk._logs._internal._exceptions import (
-    _create_log_record_with_exception,
     _copy_log_record_with_exception,
+    _create_log_record_with_exception,
     _set_log_record_exception_attributes,
 )
 from opentelemetry.sdk._logs._internal._logger_metrics import LoggerMetrics
