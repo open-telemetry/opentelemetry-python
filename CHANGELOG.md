@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `opentelemetry-sdk`: Add fork-safety to metrics `SynchronousMeasurementConsumer` by registering a post-fork child hook, lazily reinitializing metric reader storages on first use in the child process, and clearing asynchronous instruments to avoid duplicated state after `fork()`
   ([#4767](https://github.com/open-telemetry/opentelemetry-python/pull/4767))
+- `opentelemetry-sdk`: Add `service` resource detector support to declarative file configuration via `detection_development.detectors[].service`
+  ([#5003](https://github.com/open-telemetry/opentelemetry-python/pull/5003))
 
 ## Version 1.41.0/0.62b0 (2026-04-09)
 
