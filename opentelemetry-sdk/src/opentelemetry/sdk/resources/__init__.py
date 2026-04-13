@@ -380,9 +380,16 @@ class ProcessResourceDetector(ResourceDetector):
         _process_pid = os.getpid()
         _process_executable_name = sys.executable
         _process_executable_path = os.path.dirname(_process_executable_name)
-        _process_command = sys.argv[0]
-        _process_command_line = " ".join(sys.argv)
-        _process_command_args = sys.argv
+        # Prefer sys.orig_argv (Python 3.10+), which preserves the original
+        # arguments received by the interpreter. This correctly captures
+        # ``python -m <module>`` invocations where sys.argv is rewritten to
+        # the resolved module path and the ``-m <module>`` information is
+        # lost. sys.orig_argv also aligns with /proc/<pid>/cmdline, which
+        # the OTel semantic conventions reference for these attributes.
+        _process_argv = list(getattr(sys, "orig_argv", sys.argv))
+        _process_command = _process_argv[0] if _process_argv else ""
+        _process_command_line = " ".join(_process_argv)
+        _process_command_args = _process_argv
         resource_info = {
             PROCESS_RUNTIME_DESCRIPTION: sys.version,
             PROCESS_RUNTIME_NAME: sys.implementation.name,

@@ -564,6 +564,10 @@ class TestOTELResourceDetector(unittest.TestCase):
         "sys.argv",
         ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"],
     )
+    @patch(
+        "sys.orig_argv",
+        ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"],
+    )
     def test_process_detector(self):
         initial_resource = Resource({"foo": "bar"})
         aggregated_resource = get_aggregated_resources(
@@ -616,6 +620,31 @@ class TestOTELResourceDetector(unittest.TestCase):
         self.assertEqual(
             aggregated_resource.attributes[PROCESS_COMMAND_ARGS],
             tuple(sys.argv),
+        )
+
+    @patch("sys.argv", ["/path/to/myapp/__main__.py"])
+    @patch("sys.orig_argv", ["/usr/bin/python", "-m", "myapp"])
+    def test_process_detector_uses_orig_argv_for_python_m(self):
+        """For ``python -m <module>`` invocations sys.argv[0] is rewritten to
+        the resolved module path, losing the ``-m <module>`` information.
+        sys.orig_argv preserves the original invocation and must be preferred.
+        See https://github.com/open-telemetry/opentelemetry-python/issues/4518.
+        """
+        aggregated_resource = get_aggregated_resources(
+            [ProcessResourceDetector()], Resource({"foo": "bar"})
+        )
+
+        self.assertEqual(
+            aggregated_resource.attributes[PROCESS_COMMAND],
+            "/usr/bin/python",
+        )
+        self.assertEqual(
+            aggregated_resource.attributes[PROCESS_COMMAND_LINE],
+            "/usr/bin/python -m myapp",
+        )
+        self.assertEqual(
+            aggregated_resource.attributes[PROCESS_COMMAND_ARGS],
+            ("/usr/bin/python", "-m", "myapp"),
         )
 
     def test_resource_detector_entry_points_default(self):
