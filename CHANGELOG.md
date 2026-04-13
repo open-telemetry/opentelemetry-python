@@ -14,7 +14,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add `registry` keyword argument to `PrometheusMetricReader` to allow passing a custom Prometheus registry
   ([#5055](https://github.com/open-telemetry/opentelemetry-python/pull/5055))
-
 - Enabled the flake8-tidy-import plugins rules for the ruff linter. These rules throw warnings for relative imports in the modules. 
   ([#5019](https://github.com/open-telemetry/opentelemetry-python/pull/5019))
 - `opentelemetry-sdk`: Fix `AttributeError` in `ExplicitBucketHistogramAggregation` when applied to non-Histogram instruments without explicit boundaries

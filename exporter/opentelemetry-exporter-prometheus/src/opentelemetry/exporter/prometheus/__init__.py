@@ -138,7 +138,7 @@ class PrometheusMetricReader(MetricReader):
         self,
         disable_target_info: bool = False,
         prefix: str = "",
-        registry=REGISTRY,
+        registry: CollectorRegistry = REGISTRY,
     ) -> None:
         super().__init__(
             preferred_temporality={
