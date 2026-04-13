@@ -29,7 +29,7 @@ You can find the getting started guide for OpenTelemetry Python [here](https://o
 
 If you are looking for **examples** on how to use the OpenTelemetry API to
 instrument your code manually, or how to set up the OpenTelemetry
-Python SDK, see [documentation](https://opentelemetry.io/docs/languages/python/instrumentation/).
+Python SDK, see the [documentation](https://opentelemetry.io/docs/languages/python/instrumentation/).
 
 ## Python Version Support
 
