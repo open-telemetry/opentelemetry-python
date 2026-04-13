@@ -611,15 +611,15 @@ class TestOTELResourceDetector(unittest.TestCase):
             os.path.dirname(sys.executable),
         )
         self.assertEqual(
-            aggregated_resource.attributes[PROCESS_COMMAND], sys.argv[0]
+            aggregated_resource.attributes[PROCESS_COMMAND], sys.orig_argv[0]
         )
         self.assertEqual(
             aggregated_resource.attributes[PROCESS_COMMAND_LINE],
-            " ".join(sys.argv),
+            " ".join(sys.orig_argv),
         )
         self.assertEqual(
             aggregated_resource.attributes[PROCESS_COMMAND_ARGS],
-            tuple(sys.argv),
+            tuple(sys.orig_argv),
         )
 
     @patch("sys.argv", ["/path/to/myapp/__main__.py"])
