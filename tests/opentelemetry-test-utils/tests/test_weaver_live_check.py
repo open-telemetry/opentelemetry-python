@@ -22,9 +22,16 @@ import os
 import shutil
 import unittest
 
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
-    OTLPSpanExporter,
-)
+try:
+    from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
+        OTLPSpanExporter,
+    )
+
+    _HAS_GRPC_EXPORTER = True
+except ImportError:
+    OTLPSpanExporter = None  # type: ignore[assignment,misc]
+    _HAS_GRPC_EXPORTER = False
+
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -38,6 +45,7 @@ _TESTDATA_DIR = os.path.join(os.path.dirname(__file__), "testdata")
 
 
 def _make_provider(otlp_endpoint: str) -> TracerProvider:
+    assert OTLPSpanExporter is not None
     resource = Resource.create({SERVICE_NAME: "test-service"})
     exporter = OTLPSpanExporter(endpoint=otlp_endpoint, insecure=True)
     provider = TracerProvider(resource=resource)
@@ -45,6 +53,13 @@ def _make_provider(otlp_endpoint: str) -> TracerProvider:
     return provider
 
 
+@unittest.skipUnless(
+    _HAS_GRPC_EXPORTER,
+    # grpcio has no pre-built wheels for some platforms (e.g. free-threaded Python on Windows)
+    # skip these tests since they require the OTLP gRPC exporter to send telemetry to Weaver
+    # but have nothing to do with the exporter implementation itself
+    "opentelemetry-exporter-otlp-proto-grpc not installed",
+)
 @unittest.skipUnless(
     shutil.which("weaver") is not None,
     "weaver binary not found on PATH — install from https://github.com/open-telemetry/weaver/releases",

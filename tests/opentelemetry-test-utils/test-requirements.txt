@@ -15,4 +15,3 @@ zipp==3.19.2
 -e tests/opentelemetry-test-utils
 -e opentelemetry-proto
 -e exporter/opentelemetry-exporter-otlp-proto-common
--e exporter/opentelemetry-exporter-otlp-proto-grpc
