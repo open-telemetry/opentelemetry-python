@@ -564,7 +564,7 @@ def _import_opamp() -> Callable[[Resource], None] | None:
         entry_point = next(
             iter(
                 entry_points(
-                    group="_opentelemetry_opamp", name="init_function"
+                    group="_opentelemetry_opamp", name="pre_sdk_init_function"
                 )
             )
         )

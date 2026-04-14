@@ -1581,13 +1581,19 @@ class TestOpAMPInit(TestCase):
     def test_init_function_found(self, mock_resource, mock_entry_points):
         init_function = mock.Mock()
         mock_entry_points.configure_mock(
-            return_value=[IterEntryPoint("init_function", init_function)]
+            return_value=[
+                IterEntryPoint("pre_sdk_init_function", init_function)
+            ]
         )
 
         _initialize_components(id_generator=1)
 
         mock_entry_points.assert_has_calls(
-            [mock.call(group="_opentelemetry_opamp", name="init_function")]
+            [
+                mock.call(
+                    group="_opentelemetry_opamp", name="pre_sdk_init_function"
+                )
+            ]
         )
         init_function.assert_called_once_with(
             mock_resource.create.return_value
@@ -1608,7 +1614,11 @@ class TestOpAMPInit(TestCase):
             _initialize_components(id_generator=1)
 
         mock_entry_points.assert_has_calls(
-            [mock.call(group="_opentelemetry_opamp", name="init_function")]
+            [
+                mock.call(
+                    group="_opentelemetry_opamp", name="pre_sdk_init_function"
+                )
+            ]
         )
 
         self.assertIn(
