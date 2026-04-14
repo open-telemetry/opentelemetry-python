@@ -69,6 +69,7 @@ from opentelemetry.sdk.trace.sampling import (
     ALWAYS_OFF,
     ALWAYS_ON,
     ParentBased,
+    Sampler,
     TraceIdRatioBased,
 )
 
@@ -222,6 +223,48 @@ class TestCreateSampler(unittest.TestCase):
             create_tracer_provider(
                 TracerProviderConfig(processors=[], sampler=SamplerConfig())
             )
+
+    # --- dict path (YAML integration) ---
+
+    def test_dict_always_on(self):
+        provider = self._make_provider({"always_on": {}})
+        self.assertIs(provider.sampler, ALWAYS_ON)
+
+    def test_dict_always_off(self):
+        provider = self._make_provider({"always_off": {}})
+        self.assertIs(provider.sampler, ALWAYS_OFF)
+
+    def test_dict_trace_id_ratio_based(self):
+        provider = self._make_provider(
+            {"trace_id_ratio_based": {"ratio": 0.25}}
+        )
+        self.assertIsInstance(provider.sampler, TraceIdRatioBased)
+        self.assertAlmostEqual(provider.sampler._rate, 0.25)
+
+    def test_dict_parent_based(self):
+        provider = self._make_provider(
+            {"parent_based": {"root": {"always_off": {}}}}
+        )
+        self.assertIsInstance(provider.sampler, ParentBased)
+        self.assertIs(provider.sampler._root, ALWAYS_OFF)
+
+    def test_dict_plugin_sampler_loaded_via_entry_point(self):
+        mock_sampler = MagicMock(spec=Sampler)
+        mock_class = MagicMock(return_value=mock_sampler)
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            return_value=[MagicMock(**{"load.return_value": mock_class})],
+        ):
+            provider = self._make_provider({"my_custom_sampler": {}})
+        self.assertIs(provider.sampler, mock_sampler)
+
+    def test_dict_unknown_plugin_raises_configuration_error(self):
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            return_value=[],
+        ):
+            with self.assertRaises(ConfigurationError):
+                self._make_provider({"no_such_sampler": {}})
 
 
 class TestCreateSpanExporterAndProcessor(unittest.TestCase):

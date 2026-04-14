@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `opentelemetry-sdk`: add sampler plugin loading to declarative file configuration via the `opentelemetry_sampler` entry point group, matching the spec's PluginComponentProvider mechanism
+  ([#5071](https://github.com/open-telemetry/opentelemetry-python/pull/5071))
 - `opentelemetry-sdk`: add `load_entry_point` shared utility to declarative file configuration for loading plugins via entry points; refactor propagator loading to use it
   ([#5093](https://github.com/open-telemetry/opentelemetry-python/pull/5093))
 - `opentelemetry-sdk`: Add `create_logger_provider`/`configure_logger_provider` to declarative file configuration, enabling LoggerProvider instantiation from config files without reading env vars

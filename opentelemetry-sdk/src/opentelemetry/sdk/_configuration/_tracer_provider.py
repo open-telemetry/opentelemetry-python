@@ -18,19 +18,16 @@ import logging
 from typing import Optional
 
 from opentelemetry import trace
-from opentelemetry.sdk._configuration._common import _parse_headers
+from opentelemetry.sdk._configuration._common import (
+    _parse_headers,
+    load_entry_point,
+)
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
 from opentelemetry.sdk._configuration.models import (
     OtlpGrpcExporter as OtlpGrpcExporterConfig,
 )
 from opentelemetry.sdk._configuration.models import (
     OtlpHttpExporter as OtlpHttpExporterConfig,
-)
-from opentelemetry.sdk._configuration.models import (
-    ParentBasedSampler as ParentBasedSamplerConfig,
-)
-from opentelemetry.sdk._configuration.models import (
-    Sampler as SamplerConfig,
 )
 from opentelemetry.sdk._configuration.models import (
     SpanExporter as SpanExporterConfig,
@@ -183,8 +180,33 @@ def _create_span_processor(
     )
 
 
-def _create_sampler(config: SamplerConfig) -> Sampler:
-    """Create a sampler from config."""
+def _create_sampler(config) -> Sampler:
+    """Create a sampler from config.
+
+    Accepts either a SamplerConfig dataclass (direct/test usage) or a raw dict
+    (from the YAML integration path). For unknown sampler names, falls back to
+    entry point loading via the ``opentelemetry_sampler`` group — matching the
+    spec's PluginComponentProvider mechanism and Java SDK behaviour.
+    """
+    if isinstance(config, dict):
+        if len(config) != 1:
+            raise ConfigurationError(
+                f"Sampler config must have exactly one key, got: {list(config.keys())}"
+            )
+        name, plugin_config = next(iter(config.items()))
+        known = {
+            "always_on": lambda _: ALWAYS_ON,
+            "always_off": lambda _: ALWAYS_OFF,
+            "trace_id_ratio_based": lambda c: TraceIdRatioBased(
+                (c or {}).get("ratio", 1.0)
+            ),
+            "parent_based": lambda c: _create_parent_based_sampler(c or {}),
+        }
+        if name in known:
+            return known[name](plugin_config)
+        return load_entry_point("opentelemetry_sampler", name)()
+
+    # Dataclass path (direct API / unit tests)
     if config.always_on is not None:
         return ALWAYS_ON
     if config.always_off is not None:
@@ -200,12 +222,30 @@ def _create_sampler(config: SamplerConfig) -> Sampler:
     )
 
 
-def _create_parent_based_sampler(config: ParentBasedSamplerConfig) -> Sampler:
-    """Create a ParentBased sampler from config, applying SDK defaults for absent delegates."""
+def _create_parent_based_sampler(config) -> Sampler:
+    """Create a ParentBased sampler from config, applying SDK defaults for absent delegates.
+
+    Accepts either a ParentBasedSamplerConfig dataclass or a raw dict.
+    """
+    if isinstance(config, dict):
+        root = (
+            _create_sampler(config["root"]) if "root" in config else ALWAYS_ON
+        )
+        kwargs: dict = {"root": root}
+        for key in (
+            "remote_parent_sampled",
+            "remote_parent_not_sampled",
+            "local_parent_sampled",
+            "local_parent_not_sampled",
+        ):
+            if key in config:
+                kwargs[key] = _create_sampler(config[key])
+        return ParentBased(**kwargs)
+
     root = (
         _create_sampler(config.root) if config.root is not None else ALWAYS_ON
     )
-    kwargs: dict = {"root": root}
+    kwargs = {"root": root}
     if config.remote_parent_sampled is not None:
         kwargs["remote_parent_sampled"] = _create_sampler(
             config.remote_parent_sampled
