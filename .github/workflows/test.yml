@@ -6260,27 +6260,6 @@ jobs:
       - name: Run tests
         run: tox -e py314-test-opentelemetry-test-utils -- -ra
 
-  py314t-test-opentelemetry-test-utils_windows-latest:
-    name: opentelemetry-test-utils 3.14t Windows
-    runs-on: windows-latest
-    timeout-minutes: 30
-    steps:
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
-      - name: Checkout repo @ SHA - ${{ github.sha }}
-        uses: actions/checkout@v4
-
-      - name: Set up Python 3.14t
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.14t"
-
-      - name: Install tox
-        run: pip install tox-uv
-
-      - name: Run tests
-        run: tox -e py314t-test-opentelemetry-test-utils -- -ra
-
   pypy3-test-opentelemetry-test-utils_windows-latest:
     name: opentelemetry-test-utils pypy-3.10 Windows
     runs-on: windows-latest
