@@ -759,24 +759,13 @@ class ExperimentalJaegerRemoteSampler:
     interval: int | None = None
 
 
-@dataclass
-class ParentBasedSampler:
-    root: Sampler | None = None
-    remote_parent_sampled: Sampler | None = None
-    remote_parent_not_sampled: Sampler | None = None
-    local_parent_sampled: Sampler | None = None
-    local_parent_not_sampled: Sampler | None = None
-
-
-@dataclass
-class Sampler:
-    always_off: AlwaysOffSampler | None = None
-    always_on: AlwaysOnSampler | None = None
-    composite_development: ExperimentalComposableSampler | None = None
-    jaeger_remote_development: ExperimentalJaegerRemoteSampler | None = None
-    parent_based: ParentBasedSampler | None = None
-    probability_development: ExperimentalProbabilitySampler | None = None
-    trace_id_ratio_based: TraceIdRatioBasedSampler | None = None
+# Diverges from codegen: Sampler and ParentBasedSampler are typed as
+# dict[str, Any] rather than dataclasses so that unknown sampler names
+# (plugin/custom samplers) are preserved as dict keys through the config
+# pipeline. The loader stores nested fields as raw dicts anyway, so the
+# typed dataclass representation would drop unknown keys silently.
+Sampler: TypeAlias = dict[str, Any]
+ParentBasedSampler: TypeAlias = dict[str, Any]
 
 
 @dataclass
