@@ -69,7 +69,7 @@ from logging import getLogger
 from os import environ
 from typing import Deque, Dict, Iterable, Sequence, Tuple, Union
 
-from prometheus_client import start_http_server
+from prometheus_client import CollectorRegistry, start_http_server
 from prometheus_client.core import (
     REGISTRY,
     CounterMetricFamily,

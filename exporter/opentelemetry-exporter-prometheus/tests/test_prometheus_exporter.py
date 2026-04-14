@@ -56,13 +56,16 @@ class TestPrometheusMetricReader(TestCase):
         )
 
     def test_custom_registry(self):
-        custom_registry = CollectorRegistry()
-        reader = PrometheusMetricReader(registry=custom_registry)
-        # global REGISTRY should NOT be used
-        self._mock_registry_register.assert_not_called()
-        # check custom_registry was registered
-        self.assertIn(reader._collector, custom_registry._names_to_collectors.values())
-        reader.shutdown()
+        with self._registry_register_patch:
+            custom_registry = CollectorRegistry()
+            reader = PrometheusMetricReader(registry=custom_registry)
+            # global REGISTRY should NOT be used
+            self._mock_registry_register.assert_not_called()
+            # check custom_registry was registered
+            self.assertIn(reader._collector, custom_registry._collector_to_names)
+            reader.shutdown()
+
+
 
     def verify_text_format(
         self, metric: Metric, expect_prometheus_text: str, prefix: str = ""
