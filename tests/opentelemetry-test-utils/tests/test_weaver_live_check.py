@@ -58,16 +58,17 @@ class TestSDKInitLiveCheck(unittest.TestCase):
             weaver.end_and_check()
 
     def test_custom_policy_violation_raises(self):
-        """A policy that forbids service.name causes end_and_check to raise."""
+        """A policy that fails on never.use.this.attribute."""
         with WeaverLiveCheck(policies_dir=_TESTDATA_DIR) as weaver:
             provider = _make_provider(weaver.otlp_endpoint)
             with provider.get_tracer("test-tracer").start_as_current_span(
                 "test-span"
-            ):
-                pass
+            ) as span:
+                span.set_attribute("never.use.this.attribute", "bad value")
+
             provider.force_flush()
 
             with self.assertRaises(AssertionError) as cm:
                 weaver.end_and_check()
 
-        self.assertIn("service.name", str(cm.exception))
+        self.assertIn("never.use.this.attribute", str(cm.exception))
