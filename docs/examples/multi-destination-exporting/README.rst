@@ -50,9 +50,9 @@ Run the Example
     python multi_destination_metrics.py
     python multi_destination_logs.py
 
-The output will be shown in the console for the ``ConsoleSpanExporter``
-and ``ConsoleMetricExporter`` destinations. The OTLP destinations require
-a running collector.
+The output will be shown in the console for the ``ConsoleSpanExporter``,
+``ConsoleMetricExporter``, and ``ConsoleLogRecordExporter`` destinations.
+The OTLP destinations require a running collector.
 
 Useful links
 ------------
@@ -60,5 +60,7 @@ Useful links
 - `OTLP multi-destination exporting specification <https://opentelemetry.io/docs/specs/otlp/#multi-destination-exporting>`_
 - OpenTelemetry_
 - :doc:`../../api/trace`
+- :doc:`../../api/metrics`
+- :doc:`../../api/_logs`
 
 .. _OpenTelemetry: https://github.com/open-telemetry/opentelemetry-python/
