@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - logs: add exception support to Logger emit and LogRecord attributes
   ([#4907](https://github.com/open-telemetry/opentelemetry-python/issues/4907))
 - Drop Python 3.9 support
-  ([#5076](https://github.com/open-telemetry/opentelemetry-python-contrib/pull/5076))
+  ([#5076](https://github.com/open-telemetry/opentelemetry-python/pull/5076))
 
 
 ## Version 1.41.0/0.62b0 (2026-04-09)
