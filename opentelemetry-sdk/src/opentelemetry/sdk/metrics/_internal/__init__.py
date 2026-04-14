@@ -14,11 +14,12 @@
 
 import weakref
 from atexit import register, unregister
+from dataclasses import dataclass
 from logging import getLogger
 from os import environ
 from threading import Lock
 from time import time_ns
-from typing import Optional, Sequence
+from typing import Callable, Optional, Sequence
 
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics
@@ -62,13 +63,37 @@ from opentelemetry.sdk.metrics._internal.sdk_configuration import (
     SdkConfiguration,
 )
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.util.instrumentation import InstrumentationScope
+from opentelemetry.sdk.util._configurator import RuleBasedConfigurator
+from opentelemetry.sdk.util.instrumentation import (
+    InstrumentationScope,
+)
 from opentelemetry.util._once import Once
 from opentelemetry.util.types import (
     Attributes,
 )
 
 _logger = getLogger(__name__)
+
+
+@dataclass
+class _MeterConfig:
+    is_enabled: bool = True
+
+    @classmethod
+    def default(cls) -> "_MeterConfig":
+        return _MeterConfig()
+
+
+class _ProxyMeterConfig:
+    def __init__(self, config: _MeterConfig):
+        self._config = config
+
+    @property
+    def is_enabled(self) -> bool:
+        return self._config.is_enabled
+
+    def update(self, config: _MeterConfig) -> None:
+        self._config = config
 
 
 class Meter(APIMeter):
@@ -78,6 +103,8 @@ class Meter(APIMeter):
         self,
         instrumentation_scope: InstrumentationScope,
         measurement_consumer: MeasurementConsumer,
+        *,
+        _meter_config: Optional[_MeterConfig] = None,
     ):
         super().__init__(
             name=instrumentation_scope.name,
@@ -88,6 +115,15 @@ class Meter(APIMeter):
         self._measurement_consumer = measurement_consumer
         self._instrument_id_instrument = {}
         self._instrument_registration_lock = Lock()
+        self._meter_config = _ProxyMeterConfig(
+            _meter_config or _MeterConfig.default()
+        )
+
+    def _is_enabled(self) -> bool:
+        return self._meter_config.is_enabled
+
+    def _set_meter_config(self, meter_config: _MeterConfig) -> None:
+        self._meter_config.update(meter_config)
 
     def create_counter(self, name, unit="", description="") -> APICounter:
         with self._instrument_registration_lock:
@@ -102,6 +138,7 @@ class Meter(APIMeter):
                         self._measurement_consumer,
                         unit,
                         description,
+                        _meter_config=self._meter_config,
                     )
                 )
             instrument = self._instrument_id_instrument[status.instrument_id]
@@ -134,6 +171,7 @@ class Meter(APIMeter):
                         self._measurement_consumer,
                         unit,
                         description,
+                        _meter_config=self._meter_config,
                     )
                 )
             instrument = self._instrument_id_instrument[status.instrument_id]
@@ -171,6 +209,7 @@ class Meter(APIMeter):
                         callbacks,
                         unit,
                         description,
+                        _meter_config=self._meter_config,
                     )
                 )
             instrument = self._instrument_id_instrument[status.instrument_id]
@@ -239,6 +278,7 @@ class Meter(APIMeter):
                         unit,
                         description,
                         explicit_bucket_boundaries_advisory,
+                        _meter_config=self._meter_config,
                     )
                 )
             instrument = self._instrument_id_instrument[status.instrument_id]
@@ -266,6 +306,7 @@ class Meter(APIMeter):
                     self._measurement_consumer,
                     unit,
                     description,
+                    _meter_config=self._meter_config,
                 )
             instrument = self._instrument_id_instrument[status.instrument_id]
 
@@ -298,6 +339,7 @@ class Meter(APIMeter):
                         callbacks,
                         unit,
                         description,
+                        _meter_config=self._meter_config,
                     )
                 )
             instrument = self._instrument_id_instrument[status.instrument_id]
@@ -336,6 +378,7 @@ class Meter(APIMeter):
                         callbacks,
                         unit,
                         description,
+                        _meter_config=self._meter_config,
                     )
                 )
             instrument = self._instrument_id_instrument[status.instrument_id]
@@ -370,6 +413,22 @@ def _get_exemplar_filter(exemplar_filter: str) -> ExemplarFilter:
     raise ValueError(msg)
 
 
+_MeterConfiguratorT = Callable[[InstrumentationScope], _MeterConfig]
+_RuleBasedMeterConfigurator = RuleBasedConfigurator[_MeterConfig]
+
+
+def _default_meter_configurator(
+    _meter_scope: InstrumentationScope,
+) -> _MeterConfig:
+    return _MeterConfig.default()
+
+
+def _disable_meter_configurator(
+    _meter_scope: InstrumentationScope,
+) -> _MeterConfig:
+    return _MeterConfig(is_enabled=False)
+
+
 class MeterProvider(APIMeterProvider):
     r"""See `opentelemetry.metrics.MeterProvider`.
 
@@ -377,12 +436,24 @@ class MeterProvider(APIMeterProvider):
         metric_readers: Register metric readers to collect metrics from the SDK
             on demand. Each :class:`opentelemetry.sdk.metrics.export.MetricReader` is
             completely independent and will collect separate streams of
-            metrics. TODO: reference ``PeriodicExportingMetricReader`` usage with push
-            exporters here.
+            metrics. For push-based export, use
+            :class:`opentelemetry.sdk.metrics.export.PeriodicExportingMetricReader`.
         resource: The resource representing what the metrics emitted from the SDK pertain to.
         shutdown_on_exit: If true, registers an `atexit` handler to call
             `MeterProvider.shutdown`
         views: The views to configure the metric output the SDK
+
+    .. code-block:: python
+        :caption: Push-based export with PeriodicExportingMetricReader
+
+        from opentelemetry.sdk.metrics import MeterProvider
+        from opentelemetry.sdk.metrics.export import (
+            ConsoleMetricExporter,
+            PeriodicExportingMetricReader,
+        )
+
+        reader = PeriodicExportingMetricReader(ConsoleMetricExporter())
+        provider = MeterProvider(metric_readers=[reader])
 
     By default, instruments which do not match any :class:`opentelemetry.sdk.metrics.view.View` (or if no :class:`opentelemetry.sdk.metrics.view.View`\ s
     are provided) will report metrics with the default aggregation for the
@@ -414,6 +485,8 @@ class MeterProvider(APIMeterProvider):
         exemplar_filter: Optional[ExemplarFilter] = None,
         shutdown_on_exit: bool = True,
         views: Sequence["opentelemetry.sdk.metrics.view.View"] = (),
+        *,
+        _meter_configurator: Optional[_MeterConfiguratorT] = None,
     ):
         self._lock = Lock()
         self._meter_lock = Lock()
@@ -440,9 +513,12 @@ class MeterProvider(APIMeterProvider):
         if shutdown_on_exit:
             self._atexit_handler = register(self.shutdown)
 
-        self._meters = {}
+        self._meters: dict[InstrumentationScope, Meter] = {}
         self._shutdown_once = Once()
         self._shutdown = False
+        self._meter_configurator = (
+            _meter_configurator or _default_meter_configurator
+        )
 
         for metric_reader in self._sdk_config.metric_readers:
             with self._all_metric_readers_lock:
@@ -458,6 +534,37 @@ class MeterProvider(APIMeterProvider):
             metric_reader._set_collect_callback(
                 self._measurement_consumer.collect
             )
+            metric_reader._set_meter_provider(self)
+
+    def _set_meter_configurator(
+        self, *, meter_configurator: _MeterConfiguratorT
+    ):
+        """Set a new MeterConfigurator for this MeterProvider.
+
+        Setting a new MeterConfigurator will result in the configurator being called
+        for each outstanding Meter and for any newly created meters thereafter.
+        Therefore, it is important that the provided function returns quickly.
+        """
+        with self._meter_lock:
+            self._meter_configurator = meter_configurator
+            for instrumentation_scope, meter in self._meters.items():
+                # pylint: disable-next=protected-access
+                meter._set_meter_config(
+                    self._apply_meter_configurator(instrumentation_scope)
+                )
+
+    def _apply_meter_configurator(
+        self, instrumentation_scope: InstrumentationScope
+    ) -> _MeterConfig:
+        try:
+            return self._meter_configurator(instrumentation_scope)
+        # pylint: disable-next=broad-exception-caught
+        except Exception:
+            _logger.exception(
+                "meter configurator failed for scope '%s', using default config",
+                instrumentation_scope.name,
+            )
+            return _MeterConfig.default()
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
         deadline_ns = time_ns() + timeout_millis * 10**6
@@ -539,11 +646,9 @@ class MeterProvider(APIMeterProvider):
 
             # pylint: disable=broad-exception-raised
             raise Exception(
-                (
-                    "MeterProvider.shutdown failed because the following "
-                    "metric readers failed during shutdown:\n"
-                    f"{metric_reader_error_string}"
-                )
+                "MeterProvider.shutdown failed because the following "
+                "metric readers failed during shutdown:\n"
+                f"{metric_reader_error_string}"
             )
 
     def get_meter(
@@ -552,7 +657,7 @@ class MeterProvider(APIMeterProvider):
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
         attributes: Optional[Attributes] = None,
-    ) -> Meter:
+    ) -> APIMeter:
         if self._disabled:
             return NoOpMeter(name, version=version, schema_url=schema_url)
 
@@ -566,13 +671,18 @@ class MeterProvider(APIMeterProvider):
             _logger.warning("Meter name cannot be None or empty.")
             return NoOpMeter(name, version=version, schema_url=schema_url)
 
-        info = InstrumentationScope(name, version, schema_url, attributes)
+        instrumentation_scope = InstrumentationScope(
+            name, version, schema_url, attributes
+        )
         with self._meter_lock:
-            if not self._meters.get(info):
+            if not self._meters.get(instrumentation_scope):
                 # FIXME #2558 pass SDKConfig object to meter so that the meter
                 # has access to views.
-                self._meters[info] = Meter(
-                    info,
+                self._meters[instrumentation_scope] = Meter(
+                    instrumentation_scope,
                     self._measurement_consumer,
+                    _meter_config=self._apply_meter_configurator(
+                        instrumentation_scope
+                    ),
                 )
-            return self._meters[info]
+            return self._meters[instrumentation_scope]

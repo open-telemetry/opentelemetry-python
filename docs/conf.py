@@ -202,6 +202,10 @@ autodoc_default_options = {
     "exclude-members": ",".join(_exclude_members),
 }
 
+# Napoleon configuration to avoid duplication with autodoc for dataclass fields
+# Use ivar (instance variable) style for documenting attributes
+napoleon_use_ivar = True
+
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -224,11 +228,11 @@ scm_raw_web = "https://raw.githubusercontent.com/" + REPO + branch
 scm_web = "https://github.com/" + REPO + "blob/" + branch
 
 # Store variables in the epilogue so they are globally available.
-rst_epilog = """
-.. |SCM_WEB| replace:: {s}
-.. |SCM_RAW_WEB| replace:: {sr}
-.. |SCM_BRANCH| replace:: {b}
-""".format(s=scm_web, sr=scm_raw_web, b=branch)
+rst_epilog = f"""
+.. |SCM_WEB| replace:: {scm_web}
+.. |SCM_RAW_WEB| replace:: {scm_raw_web}
+.. |SCM_BRANCH| replace:: {branch}
+"""
 
 # used to have links to repo files
 extlinks = {

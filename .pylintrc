@@ -7,7 +7,7 @@ extension-pkg-whitelist=
 
 # Add list of files or directories to be excluded. They should be base names, not
 # paths.
-ignore=CVS,gen,proto
+ignore=CVS,gen,proto,proto_json
 
 # Add files or directories matching the regex patterns to be excluded. The
 # regex matches against base names, not paths.
@@ -45,7 +45,7 @@ suggestion-mode=yes
 unsafe-load-any-extension=no
 
 # Run python dependant checks considering the baseline version
-py-version=3.9
+py-version=3.10
 
 
 [MESSAGES CONTROL]

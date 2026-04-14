@@ -19,14 +19,19 @@ import math
 import weakref
 from logging import WARNING
 from time import sleep, time_ns
-from typing import Optional
+from typing import Optional, cast
 from unittest.mock import Mock
 
 import pytest
 
-from opentelemetry.sdk.metrics import Counter, MetricsTimeoutError
+from opentelemetry.sdk.metrics import (
+    Counter,
+    MeterProvider,
+    MetricsTimeoutError,
+)
 from opentelemetry.sdk.metrics._internal import _Counter
 from opentelemetry.sdk.metrics._internal.point import (
+    HistogramDataPoint,
     MetricsData,
     ResourceMetrics,
     ScopeMetrics,
@@ -309,3 +314,49 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
             weak_ref(),
             "The PeriodicExportingMetricReader object created by this test wasn't garbage collected",
         )
+
+    def test_metric_reader_metrics(self):
+        exporter = FakeMetricsExporter()
+        pmr = PeriodicExportingMetricReader(
+            exporter, export_interval_millis=100000
+        )
+        mp = MeterProvider(metric_readers=[pmr])
+
+        counter = mp.get_meter("test").create_counter("test_counter")
+        counter.add(1)
+
+        mp.force_flush()
+        self.assertEqual(len(exporter.metrics), 1)
+        # Need a second collection to get the metric we recorded during first collection
+        exporter.metrics.clear()
+        mp.force_flush()
+        self.assertEqual(len(exporter.metrics), 1)
+        metric_data = exporter.metrics[0]
+
+        scope_metrics = [
+            sm
+            for sm in metric_data.resource_metrics[0].scope_metrics
+            if sm.scope.name == "opentelemetry-sdk"
+        ]
+        self.assertEqual(len(scope_metrics), 1)
+        reader_metrics = [
+            m
+            for m in scope_metrics[0].metrics
+            if m.name == "otel.sdk.metric_reader.collection.duration"
+        ]
+        self.assertEqual(len(reader_metrics), 1)
+        metric = reader_metrics[0]
+
+        point = metric.data.data_points[0]
+        histogram = cast(HistogramDataPoint, point)
+        self.assertEqual(histogram.count, 1)
+        attrs = histogram.attributes
+        assert attrs is not None
+        self.assertEqual(
+            attrs["otel.component.type"], "periodic_metric_reader"
+        )
+        name = attrs["otel.component.name"]
+        assert isinstance(name, str)
+        self.assertTrue(name.startswith("periodic_metric_reader/"))
+
+        mp.shutdown()

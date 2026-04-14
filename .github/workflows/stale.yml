@@ -33,3 +33,5 @@ jobs:
             This PR has been closed due to inactivity. Please reopen if you would
             like to continue working on it.
           exempt-pr-labels: "hold,WIP,blocked by spec,do not merge"
+          # TODO: Revert back to default of 30 after we have cleared the backlog of stale PRs.
+          operations-per-run: 500

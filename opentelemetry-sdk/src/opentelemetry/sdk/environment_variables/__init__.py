@@ -79,7 +79,7 @@ OTEL_BLRP_SCHEDULE_DELAY = "OTEL_BLRP_SCHEDULE_DELAY"
 .. envvar:: OTEL_BLRP_SCHEDULE_DELAY
 
 The :envvar:`OTEL_BLRP_SCHEDULE_DELAY` represents the delay interval between two consecutive exports of the BatchLogRecordProcessor.
-Default: 5000
+Default: 1000
 """
 
 OTEL_BLRP_EXPORT_TIMEOUT = "OTEL_BLRP_EXPORT_TIMEOUT"
@@ -810,6 +810,30 @@ OTEL_PYTHON_TRACER_CONFIGURATOR = "OTEL_PYTHON_TRACER_CONFIGURATOR"
 The :envvar:`OTEL_PYTHON_TRACER_CONFIGURATOR` environment variable allows users to set a
 custom Tracer Configurator function.
 Default: opentelemetry.sdk.trace._default_tracer_configurator
+
+This is an experimental environment variable and the name of this variable and its behavior can
+change in a non-backwards compatible way.
+"""
+
+OTEL_PYTHON_METER_CONFIGURATOR = "OTEL_PYTHON_METER_CONFIGURATOR"
+"""
+.. envvar:: OTEL_PYTHON_METER_CONFIGURATOR
+
+The :envvar:`OTEL_PYTHON_METER_CONFIGURATOR` environment variable allows users to set a
+custom Meter Configurator function.
+Default: opentelemetry.sdk.metrics._internal._default_meter_configurator
+
+This is an experimental environment variable and the name of this variable and its behavior can
+change in a non-backwards compatible way.
+"""
+
+OTEL_PYTHON_LOGGER_CONFIGURATOR = "OTEL_PYTHON_LOGGER_CONFIGURATOR"
+"""
+.. envvar:: OTEL_PYTHON_LOGGER_CONFIGURATOR
+
+The :envvar:`OTEL_PYTHON_LOGGER_CONFIGURATOR` environment variable allows users to set a
+custom Logger Configurator function.
+Default: opentelemetry.sdk._logs._internal._default_logger_configurator
 
 This is an experimental environment variable and the name of this variable and its behavior can
 change in a non-backwards compatible way.
