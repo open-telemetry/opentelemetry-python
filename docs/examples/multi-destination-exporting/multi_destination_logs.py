@@ -27,6 +27,7 @@ from opentelemetry.exporter.otlp.proto.grpc._log_exporter import (
 from opentelemetry.exporter.otlp.proto.http._log_exporter import (
     OTLPLogExporter as HttpLogExporter,
 )
+from opentelemetry.instrumentation.logging.handler import LoggingHandler
 from opentelemetry.sdk._logs import LoggerProvider
 from opentelemetry.sdk._logs.export import (
     BatchLogRecordProcessor,
@@ -57,9 +58,12 @@ logger_provider.add_log_record_processor(
     BatchLogRecordProcessor(ConsoleLogRecordExporter())
 )
 
-# Use Python's standard logging, bridged to OpenTelemetry
+# Bridge Python's logging to OpenTelemetry
+handler = LoggingHandler(level=logging.NOTSET, logger_provider=logger_provider)
+logging.getLogger().setLevel(logging.NOTSET)
+logging.getLogger().addHandler(handler)
+
 logger = logging.getLogger("myapp")
-logger.setLevel(logging.INFO)
 logger.info("Logs are exported to all three destinations.")
 logger.warning("This warning also goes everywhere.")
 

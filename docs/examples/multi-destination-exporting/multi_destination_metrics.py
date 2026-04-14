@@ -31,13 +31,17 @@ from opentelemetry.sdk.metrics.export import (
     PeriodicExportingMetricReader,
 )
 
-# Each reader has its own export interval and exporter
+# Destination 1: OTLP over gRPC
 grpc_reader = PeriodicExportingMetricReader(
     GrpcMetricExporter(endpoint="http://localhost:4317", insecure=True)
 )
+
+# Destination 2: OTLP over HTTP
 http_reader = PeriodicExportingMetricReader(
     HttpMetricExporter(endpoint="http://localhost:4318/v1/metrics")
 )
+
+# Destination 3: Console (for debugging)
 console_reader = PeriodicExportingMetricReader(ConsoleMetricExporter())
 
 # Pass all readers to the MeterProvider
