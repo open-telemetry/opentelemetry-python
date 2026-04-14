@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4907](https://github.com/open-telemetry/opentelemetry-python/issues/4907))
 - Drop Python 3.9 support
   ([#5076](https://github.com/open-telemetry/opentelemetry-python/pull/5076))
+- `opentelemetry-proto`: relax protobuf upper bound from `<7.0` to `<8.0` to unblock adoption of protobuf 7.x (CVE-2026-8994)
+  ([#5099](https://github.com/open-telemetry/opentelemetry-python/issues/5099))
 
 
 ## Version 1.41.0/0.62b0 (2026-04-09)
