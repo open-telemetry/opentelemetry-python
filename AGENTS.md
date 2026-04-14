@@ -47,7 +47,7 @@ uv run pre-commit run ruff --all-files
 # Test a specific package
 uv run tox -e py312-test-opentelemetry-sdk
 
-# Type check
+# Lint (pylint) a specific package
 uv run tox -e lint-opentelemetry-sdk
 ```
 
