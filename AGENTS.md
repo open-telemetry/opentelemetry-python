@@ -42,13 +42,13 @@ Each package lives under its own directory with a `pyproject.toml` and `tests/`.
 uv sync --frozen --all-packages
 
 # Lint (runs ruff via pre-commit)
-uv run pre-commit run ruff --all-files
+uv run tox -e precommit
 
 # Test a specific package
 uv run tox -e py312-test-opentelemetry-sdk
 
 # Type check
-uv run tox -e lint-opentelemetry-sdk
+uv run tox -e typecheck
 ```
 
 ## Guidelines
