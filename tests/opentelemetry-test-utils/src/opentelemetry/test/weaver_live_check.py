@@ -32,9 +32,9 @@ logger = logging.getLogger(__name__)
 
 
 def _find_free_port() -> int:
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind(("", 0))
-        return s.getsockname()[1]
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.bind(("", 0))
+        return sock.getsockname()[1]
 
 
 def _extract_violations(report: dict) -> list:
@@ -56,8 +56,8 @@ def _extract_violations(report: dict) -> list:
                 for advice in obj["live_check_result"].get("all_advice", []):
                     if advice.get("level") == "violation":
                         raw.append(advice)
-            for v in obj.values():
-                collect(v)
+            for val in obj.values():
+                collect(val)
         elif isinstance(obj, list):
             for item in obj:
                 collect(item)
@@ -65,18 +65,18 @@ def _extract_violations(report: dict) -> list:
     collect(report)
 
     groups: dict[tuple, list] = defaultdict(list)
-    for v in raw:
-        ctx = v.get("context")
+    for violation in raw:
+        ctx = violation.get("context")
         key = (
-            v.get("id"),
-            v.get("message"),
+            violation.get("id"),
+            violation.get("message"),
             json.dumps(ctx, sort_keys=True)
             if isinstance(ctx, (dict, list))
             else ctx,
-            v.get("signal_name"),
-            v.get("signal_type"),
+            violation.get("signal_name"),
+            violation.get("signal_type"),
         )
-        groups[key].append(v)
+        groups[key].append(violation)
 
     violations = [
         {
@@ -98,10 +98,10 @@ def _extract_violations(report: dict) -> list:
 def _format_violations(violations: list) -> str:
     """Format violations list as human-readable text (mirrors violations.j2 output)."""
     lines = []
-    for v in violations:
+    for violation in violations:
         signal = ""
-        signal_type = v.get("signal_type")
-        signal_name = v.get("signal_name")
+        signal_type = violation.get("signal_type")
+        signal_name = violation.get("signal_name")
         if signal_type and signal_name:
             signal = f" on {signal_type} '{signal_name}'"
         elif signal_type:
@@ -109,7 +109,7 @@ def _format_violations(violations: list) -> str:
         elif signal_name:
             signal = f" on '{signal_name}'"
         lines.append(
-            f"- [{v.get('id')}] {v.get('message')} ({v['count']} occurrence(s){signal})"
+            f"- [{violation.get('id')}] {violation.get('message')} ({violation['count']} occurrence(s){signal})"
         )
     return "\n".join(lines)
 
@@ -183,8 +183,8 @@ class LiveCheckReport:
         return key in self._report
 
     def __repr__(self) -> str:
-        n = len(self.violations)
-        return f"LiveCheckReport({n} violation{'s' if n != 1 else ''})"
+        num_violations = len(self.violations)
+        return f"LiveCheckReport({num_violations} violation{'s' if num_violations != 1 else ''})"
 
 
 # NOTE: WeaverLiveCheck is experimental and its API is subject to change.
@@ -297,7 +297,7 @@ class WeaverLiveCheck:
 
     def start(self, timeout: int = 60) -> "WeaverLiveCheck":
         logger.debug("Starting WeaverLiveCheck process...")
-        self._process = subprocess.Popen(
+        self._process = subprocess.Popen(  # pylint: disable=consider-using-with
             self._command,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -305,16 +305,16 @@ class WeaverLiveCheck:
         try:
             self._wait_for_ready(timeout=timeout)
             self._ready = True
-        except Exception as e:
+        except Exception as exc:  # pylint: disable=broad-except
             logs = self._read_weaver_logs()
             logger.error(
-                "WeaverLiveCheck did not start: %s, logs: %s", e, logs
+                "WeaverLiveCheck did not start: %s, logs: %s", exc, logs
             )
             raise
         return self
 
     def _wait_for_ready(self, timeout: int = 60) -> None:
-        for i in range(timeout):
+        for attempt in range(timeout):
             if self._process is not None and self._process.poll() is not None:
                 raise RuntimeError(
                     f"WeaverLiveCheck process exited unexpectedly (code {self._process.returncode})"
@@ -326,10 +326,12 @@ class WeaverLiveCheck:
                 if response.status_code == 200:
                     return
                 logger.debug(
-                    "Health check returned %s, try %s", response.status_code, i
+                    "Health check returned %s, try %s",
+                    response.status_code,
+                    attempt,
                 )
-            except ReqConnectionError as e:
-                logger.debug("Health check connection error: %s", e)
+            except ReqConnectionError as exc:
+                logger.debug("Health check connection error: %s", exc)
             time.sleep(1)
         raise TimeoutError("WeaverLiveCheck did not become ready in time")
 
@@ -355,10 +357,10 @@ class WeaverLiveCheck:
             report = LiveCheckReport(response.json())
             assert self._process is not None
             exit_code = self._process.wait(timeout=timeout)
-        except Exception as e:
+        except Exception as exc:  # pylint: disable=broad-except
             logs = self._read_weaver_logs()
             logger.error(
-                "Error communicating with weaver: %s, logs: %s", e, logs
+                "Error communicating with weaver: %s, logs: %s", exc, logs
             )
             raise
         return report, exit_code
@@ -423,8 +425,8 @@ class WeaverLiveCheck:
                 self._process.kill()
             out, err = self._process.communicate()
             return f"{out.decode()}\n{err.decode()}"
-        except Exception as e:
-            logger.error("Could not get weaver logs: %s", e)
+        except Exception as exc:  # pylint: disable=broad-except
+            logger.error("Could not get weaver logs: %s", exc)
             return None
 
     def close(self) -> None:
@@ -441,8 +443,8 @@ class WeaverLiveCheck:
                 try:
                     self._do_stop(timeout=30)
                     return  # process already exited cleanly
-                except Exception as e:
-                    logger.debug("Error stopping weaver during close: %s", e)
+                except Exception as exc:  # pylint: disable=broad-except
+                    logger.debug("Error stopping weaver during close: %s", exc)
         if self._process and self._process.poll() is None:
             self._process.terminate()
             try:
