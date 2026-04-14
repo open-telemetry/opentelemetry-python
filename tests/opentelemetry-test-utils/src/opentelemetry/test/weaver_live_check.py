@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import functools
 import json
 import logging
 import os
@@ -81,7 +82,9 @@ def _extract_violations(report: dict) -> list:
         {
             "id": k[0],
             "message": k[1],
-            "context": k[2],
+            "context": vs[0].get(
+                "context"
+            ),  # preserve original dict, not JSON string
             "signal_name": k[3],
             "signal_type": k[4],
             "count": len(vs),
@@ -111,9 +114,87 @@ def _format_violations(violations: list) -> str:
     return "\n".join(lines)
 
 
+class LiveCheckError(AssertionError):
+    """Raised by :meth:`WeaverLiveCheck.end_and_check` when semconv violations are found.
+
+    The full :class:`LiveCheckReport` is attached as :attr:`report` for
+    structured inspection beyond the human-readable message::
+
+        with pytest.raises(LiveCheckError) as exc_info:
+            weaver.end_and_check()
+
+        err = exc_info.value
+        assert any(
+            v["id"] == "my_policy_check"
+            and v["context"]["attribute_name"] == "my.attribute"
+            for v in err.report.violations
+        )
+    """
+
+    def __init__(self, message: str, report: "LiveCheckReport") -> None:
+        super().__init__(message)
+        self.report = report
+
+
+class LiveCheckReport:
+    """The result of a weaver live-check run.
+
+    Provides structured access to violations and the full raw JSON report.
+
+    See https://github.com/open-telemetry/weaver/tree/main/crates/weaver_live_check#output
+    for the full report structure.
+
+    Example — asserting on metrics statistics::
+
+        report = weaver.end()
+        seen = report["statistics"]["seen_registry_metrics"]
+        assert seen.get("http.server.request.duration") == 1
+
+    Example — asserting on violations::
+
+        report = weaver.end()
+        assert any(
+            v["id"] == "my_policy_check"
+            and v["context"]["attribute_name"] == "my.attribute"
+            for v in report.violations
+        )
+    """
+
+    def __init__(self, report: dict[str, Any]) -> None:
+        self._report = report
+
+    @functools.cached_property
+    def violations(self) -> list[dict[str, Any]]:
+        """Deduplicated list of semconv violations found in the report.
+
+        Each item is a dict with keys: ``id``, ``message``, ``context``
+        (the raw context dict from weaver, e.g. ``{"attribute_name": "foo"}``),
+        ``signal_name``, ``signal_type``, ``count``.
+        """
+        return _extract_violations(self._report)
+
+    def __getitem__(self, key: str) -> Any:
+        return self._report[key]
+
+    def get(self, key: str, default: Any = None) -> Any:
+        return self._report.get(key, default)
+
+    def __contains__(self, key: object) -> bool:
+        return key in self._report
+
+    def __repr__(self) -> str:
+        n = len(self.violations)
+        return f"LiveCheckReport({n} violation{'s' if n != 1 else ''})"
+
+
+# NOTE: WeaverLiveCheck is experimental and its API is subject to change.
 class WeaverLiveCheck:
     """Runs ``weaver registry live-check`` as a subprocess and validates
     OTLP telemetry against OpenTelemetry semantic conventions.
+
+    .. note::
+        This class is experimental and its API is subject to change without notice.
+
 
     Requires the ``weaver`` binary on PATH:
     https://github.com/open-telemetry/weaver/releases
@@ -128,27 +209,36 @@ class WeaverLiveCheck:
                 # ... configure provider, emit telemetry ...
                 provider.force_flush()
 
-                # Signals weaver to stop, raises AssertionError listing violations
-                # if any, or returns the raw JSON report on success.
+                # Signals weaver to stop, raises LiveCheckError listing violations
+                # if any, or returns a LiveCheckReport on success.
                 report = weaver.end_and_check()
             # __exit__ calls close(), which is idempotent if end_and_check() was already called
 
-    :meth:`end_and_check` returns the raw weaver JSON report when weaver exits
-    successfully (exit code 0).  Use it for custom assertions on the report
-    content beyond the built-in violation check::
+    Use :meth:`end` when you need the full :class:`LiveCheckReport`
+    regardless of whether violations were found — for example, to assert that
+    specific metrics were observed or to inspect violation fields directly::
 
-        report = weaver.end_and_check()
-        # report is the raw JSON dict from weaver; inspect it as needed, e.g.:
-        self.assertIn("some_signal", str(report))
+        with WeaverLiveCheck() as weaver:
+            # ... configure provider, emit telemetry ...
+            provider.force_flush()
+            report = weaver.end()
+
+        seen_metrics = report["statistics"]["seen_registry_metrics"]
+        assert seen_metrics.get("http.server.request.duration") == 1
 
     Lifecycle:
         - :meth:`start` — launches weaver and waits for it to become ready.
         - :attr:`otlp_endpoint` — gRPC OTLP endpoint to point exporters at.
-        - :meth:`end_and_check` — signals weaver to stop, collects the report, and
-          raises :class:`AssertionError` with a human-readable violation list if weaver
-          exits non-zero.  Returns the raw report dict on success.
-        - :meth:`close` — calls :meth:`end_and_check` then terminates the process.
-          Idempotent; safe to call even if :meth:`end_and_check` was already called.
+        - :meth:`end` — signals weaver to stop and always returns a
+          :class:`LiveCheckReport`.  Never raises for semconv violations; use
+          this when you want to write your own assertions.
+        - :meth:`end_and_check` — signals weaver to stop and raises
+          :class:`LiveCheckError` with a human-readable violation list and the
+          full report attached if weaver exits non-zero.  Returns a
+          :class:`LiveCheckReport` on success.
+        - :meth:`close` — stops weaver if not already stopped and terminates the
+          process.  Never raises for semconv violations.  Idempotent; safe to
+          call even if :meth:`end_and_check` or :meth:`end` was already called.
     """
 
     def __init__(
@@ -247,25 +337,22 @@ class WeaverLiveCheck:
     def otlp_endpoint(self) -> str:
         return f"http://localhost:{self._otlp_port}"
 
-    def end_and_check(self, timeout: int = 30) -> dict[str, Any]:
-        if self._stopped:
-            logger.warning(
-                "end_and_check() called after weaver already stopped; returning empty report"
-            )
-            return {}
-        self._stopped = True
+    def _do_stop(self, timeout: int) -> tuple["LiveCheckReport", int]:
+        """POST /stop, wait for the process to exit, return (report, exit_code).
 
+        Raises for infrastructure errors (HTTP failure, process communication).
+        Never raises for semconv violations.
+        """
         if not self._ready:
             raise RuntimeError(
                 "WeaverLiveCheck process did not start successfully"
             )
-
         try:
             response = post(
                 f"http://localhost:{self._admin_port}/stop", timeout=5
             )
             response.raise_for_status()
-            report = response.json()
+            report = LiveCheckReport(response.json())
             assert self._process is not None
             exit_code = self._process.wait(timeout=timeout)
         except Exception as e:
@@ -274,13 +361,58 @@ class WeaverLiveCheck:
                 "Error communicating with weaver: %s, logs: %s", e, logs
             )
             raise
+        return report, exit_code
 
+    def end(self, timeout: int = 30) -> "LiveCheckReport":
+        """Signal weaver to stop and return the full :class:`LiveCheckReport`.
+
+        Never raises for semconv violations — use this when you want to write
+        your own assertions against :attr:`LiveCheckReport.violations` or the
+        raw report data.
+
+        Raises :exc:`RuntimeError` for infrastructure problems (weaver failed
+        to start, HTTP communication error, etc.).
+
+        See https://github.com/open-telemetry/weaver/tree/main/crates/weaver_live_check#output
+        for the report structure.
+        """
+        if self._stopped:
+            logger.warning(
+                "end() called after weaver already stopped; returning empty report"
+            )
+            return LiveCheckReport({})
+        self._stopped = True
+        report, _ = self._do_stop(timeout)
+        return report
+
+    def end_and_check(self, timeout: int = 30) -> "LiveCheckReport":
+        """Signal weaver to stop and assert no semconv violations were found.
+
+        Returns the :class:`LiveCheckReport` when weaver exits successfully
+        (exit code 0).
+
+        Does **not** return if weaver exits with a non-zero status — raises
+        :exc:`LiveCheckError` (a subclass of :exc:`AssertionError`) with a
+        human-readable list of violations and the full :class:`LiveCheckReport`
+        attached as :attr:`LiveCheckError.report`.
+        Use :meth:`end` if you need the report regardless of violations.
+
+        Raises :exc:`RuntimeError` for infrastructure problems (weaver failed
+        to start, HTTP communication error, etc.).
+        """
+        if self._stopped:
+            logger.warning(
+                "end_and_check() called after weaver already stopped; returning empty report"
+            )
+            return LiveCheckReport({})
+        self._stopped = True
+        report, exit_code = self._do_stop(timeout)
         if exit_code == 0:
+            # Success — no violations found, no errors communicating with weaver
             return report
-
-        violations = _extract_violations(report)
-        raise AssertionError(
-            f"Semconv violations found:\n{_format_violations(violations)}"
+        raise LiveCheckError(
+            f"Semconv violations found:\n{_format_violations(report.violations)}",
+            report,
         )
 
     def _read_weaver_logs(self) -> str | None:
@@ -296,12 +428,24 @@ class WeaverLiveCheck:
             return None
 
     def close(self) -> None:
-        try:
-            self.end_and_check()
-        finally:
-            if self._process and self._process.poll() is None:
-                self._process.terminate()
+        """Stop weaver and clean up the process.
+
+        If weaver has not been stopped yet, sends the ``/stop`` signal and
+        waits for the process to exit.  Never raises for semconv violations.
+        Idempotent — safe to call multiple times or after :meth:`end` /
+        :meth:`end_and_check` has already been called.
+        """
+        if not self._stopped:
+            self._stopped = True
+            if self._ready:
                 try:
-                    self._process.wait(timeout=5)
-                except subprocess.TimeoutExpired:
-                    self._process.kill()
+                    self._do_stop(timeout=30)
+                    return  # process already exited cleanly
+                except Exception as e:
+                    logger.debug("Error stopping weaver during close: %s", e)
+        if self._process and self._process.poll() is None:
+            self._process.terminate()
+            try:
+                self._process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                self._process.kill()

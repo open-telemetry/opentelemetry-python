@@ -2868,9 +2868,9 @@ jobs:
 
       - name: Install weaver
         run: |
-          WEAVER_URL="https://github.com/open-telemetry/weaver/releases/download/${{ env.WEAVER_VERSION }}/weaver_Linux_x86_64.tar.gz"
-          curl -sSL "$WEAVER_URL" | tar -xz -C /tmp weaver
-          sudo mv /tmp/weaver /usr/local/bin/weaver
+          WEAVER_URL="https://github.com/open-telemetry/weaver/releases/download/${{ env.WEAVER_VERSION }}/weaver-x86_64-unknown-linux-gnu.tar.xz"
+          curl -sSL "$WEAVER_URL" | tar -xJ -C /tmp weaver-x86_64-unknown-linux-gnu/weaver
+          sudo mv /tmp/weaver-x86_64-unknown-linux-gnu/weaver /usr/local/bin/weaver
 
       - name: Set up Python 3.10
         uses: actions/setup-python@v5
@@ -2893,9 +2893,9 @@ jobs:
 
       - name: Install weaver
         run: |
-          WEAVER_URL="https://github.com/open-telemetry/weaver/releases/download/${{ env.WEAVER_VERSION }}/weaver_Linux_x86_64.tar.gz"
-          curl -sSL "$WEAVER_URL" | tar -xz -C /tmp weaver
-          sudo mv /tmp/weaver /usr/local/bin/weaver
+          WEAVER_URL="https://github.com/open-telemetry/weaver/releases/download/${{ env.WEAVER_VERSION }}/weaver-x86_64-unknown-linux-gnu.tar.xz"
+          curl -sSL "$WEAVER_URL" | tar -xJ -C /tmp weaver-x86_64-unknown-linux-gnu/weaver
+          sudo mv /tmp/weaver-x86_64-unknown-linux-gnu/weaver /usr/local/bin/weaver
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
@@ -2918,9 +2918,9 @@ jobs:
 
       - name: Install weaver
         run: |
-          WEAVER_URL="https://github.com/open-telemetry/weaver/releases/download/${{ env.WEAVER_VERSION }}/weaver_Linux_x86_64.tar.gz"
-          curl -sSL "$WEAVER_URL" | tar -xz -C /tmp weaver
-          sudo mv /tmp/weaver /usr/local/bin/weaver
+          WEAVER_URL="https://github.com/open-telemetry/weaver/releases/download/${{ env.WEAVER_VERSION }}/weaver-x86_64-unknown-linux-gnu.tar.xz"
+          curl -sSL "$WEAVER_URL" | tar -xJ -C /tmp weaver-x86_64-unknown-linux-gnu/weaver
+          sudo mv /tmp/weaver-x86_64-unknown-linux-gnu/weaver /usr/local/bin/weaver
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
@@ -2943,9 +2943,9 @@ jobs:
 
       - name: Install weaver
         run: |
-          WEAVER_URL="https://github.com/open-telemetry/weaver/releases/download/${{ env.WEAVER_VERSION }}/weaver_Linux_x86_64.tar.gz"
-          curl -sSL "$WEAVER_URL" | tar -xz -C /tmp weaver
-          sudo mv /tmp/weaver /usr/local/bin/weaver
+          WEAVER_URL="https://github.com/open-telemetry/weaver/releases/download/${{ env.WEAVER_VERSION }}/weaver-x86_64-unknown-linux-gnu.tar.xz"
+          curl -sSL "$WEAVER_URL" | tar -xJ -C /tmp weaver-x86_64-unknown-linux-gnu/weaver
+          sudo mv /tmp/weaver-x86_64-unknown-linux-gnu/weaver /usr/local/bin/weaver
 
       - name: Set up Python 3.13
         uses: actions/setup-python@v5
@@ -2968,9 +2968,9 @@ jobs:
 
       - name: Install weaver
         run: |
-          WEAVER_URL="https://github.com/open-telemetry/weaver/releases/download/${{ env.WEAVER_VERSION }}/weaver_Linux_x86_64.tar.gz"
-          curl -sSL "$WEAVER_URL" | tar -xz -C /tmp weaver
-          sudo mv /tmp/weaver /usr/local/bin/weaver
+          WEAVER_URL="https://github.com/open-telemetry/weaver/releases/download/${{ env.WEAVER_VERSION }}/weaver-x86_64-unknown-linux-gnu.tar.xz"
+          curl -sSL "$WEAVER_URL" | tar -xJ -C /tmp weaver-x86_64-unknown-linux-gnu/weaver
+          sudo mv /tmp/weaver-x86_64-unknown-linux-gnu/weaver /usr/local/bin/weaver
 
       - name: Set up Python 3.14
         uses: actions/setup-python@v5
@@ -2993,9 +2993,9 @@ jobs:
 
       - name: Install weaver
         run: |
-          WEAVER_URL="https://github.com/open-telemetry/weaver/releases/download/${{ env.WEAVER_VERSION }}/weaver_Linux_x86_64.tar.gz"
-          curl -sSL "$WEAVER_URL" | tar -xz -C /tmp weaver
-          sudo mv /tmp/weaver /usr/local/bin/weaver
+          WEAVER_URL="https://github.com/open-telemetry/weaver/releases/download/${{ env.WEAVER_VERSION }}/weaver-x86_64-unknown-linux-gnu.tar.xz"
+          curl -sSL "$WEAVER_URL" | tar -xJ -C /tmp weaver-x86_64-unknown-linux-gnu/weaver
+          sudo mv /tmp/weaver-x86_64-unknown-linux-gnu/weaver /usr/local/bin/weaver
 
       - name: Set up Python 3.14t
         uses: actions/setup-python@v5
@@ -3018,9 +3018,9 @@ jobs:
 
       - name: Install weaver
         run: |
-          WEAVER_URL="https://github.com/open-telemetry/weaver/releases/download/${{ env.WEAVER_VERSION }}/weaver_Linux_x86_64.tar.gz"
-          curl -sSL "$WEAVER_URL" | tar -xz -C /tmp weaver
-          sudo mv /tmp/weaver /usr/local/bin/weaver
+          WEAVER_URL="https://github.com/open-telemetry/weaver/releases/download/${{ env.WEAVER_VERSION }}/weaver-x86_64-unknown-linux-gnu.tar.xz"
+          curl -sSL "$WEAVER_URL" | tar -xJ -C /tmp weaver-x86_64-unknown-linux-gnu/weaver
+          sudo mv /tmp/weaver-x86_64-unknown-linux-gnu/weaver /usr/local/bin/weaver
 
       - name: Set up Python pypy-3.10
         uses: actions/setup-python@v5

@@ -56,9 +56,9 @@ jobs:
 
       - name: Install weaver
         run: |
-          WEAVER_URL="https://github.com/open-telemetry/weaver/releases/download/${% raw %}{{ env.WEAVER_VERSION }}{% endraw %}/weaver_Linux_x86_64.tar.gz"
-          curl -sSL "$WEAVER_URL" | tar -xz -C /tmp weaver
-          sudo mv /tmp/weaver /usr/local/bin/weaver
+          WEAVER_URL="https://github.com/open-telemetry/weaver/releases/download/${% raw %}{{ env.WEAVER_VERSION }}{% endraw %}/weaver-x86_64-unknown-linux-gnu.tar.xz"
+          curl -sSL "$WEAVER_URL" | tar -xJ -C /tmp weaver-x86_64-unknown-linux-gnu/weaver
+          sudo mv /tmp/weaver-x86_64-unknown-linux-gnu/weaver /usr/local/bin/weaver
       {%- endif %}
 
       - name: Set up Python {{ job_data.python_version }}

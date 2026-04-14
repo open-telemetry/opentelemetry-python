@@ -28,7 +28,11 @@ from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.test.weaver_live_check import WeaverLiveCheck
+from opentelemetry.test.weaver_live_check import (
+    LiveCheckError,
+    LiveCheckReport,
+    WeaverLiveCheck,
+)
 
 _TESTDATA_DIR = os.path.join(os.path.dirname(__file__), "testdata")
 
@@ -46,8 +50,8 @@ def _make_provider(otlp_endpoint: str) -> TracerProvider:
     "weaver binary not found on PATH — install from https://github.com/open-telemetry/weaver/releases",
 )
 class TestSDKInitLiveCheck(unittest.TestCase):
-    def test_sdk_resource_with_service_name(self):
-        """SDK initialized with service.name emits conformant telemetry."""
+    def test_end_and_check_no_violations(self):
+        """end_and_check() returns a LiveCheckReport with no violations on conformant telemetry."""
         with WeaverLiveCheck() as weaver:
             provider = _make_provider(weaver.otlp_endpoint)
             with provider.get_tracer("test-tracer").start_as_current_span(
@@ -55,10 +59,13 @@ class TestSDKInitLiveCheck(unittest.TestCase):
             ):
                 pass
             provider.force_flush()
-            weaver.end_and_check()
+            report = weaver.end_and_check()
 
-    def test_custom_policy_violation_raises(self):
-        """A policy that fails on never.use.this.attribute."""
+        self.assertIsInstance(report, LiveCheckReport)
+        self.assertEqual(report.violations, [])
+
+    def test_end_and_check_raises_on_violations(self):
+        """end_and_check() raises LiveCheckError with the report attached."""
         with WeaverLiveCheck(policies_dir=_TESTDATA_DIR) as weaver:
             provider = _make_provider(weaver.otlp_endpoint)
             with provider.get_tracer("test-tracer").start_as_current_span(
@@ -68,7 +75,61 @@ class TestSDKInitLiveCheck(unittest.TestCase):
 
             provider.force_flush()
 
-            with self.assertRaises(AssertionError) as cm:
+            with self.assertRaises(LiveCheckError) as cm:
                 weaver.end_and_check()
 
-        self.assertIn("never.use.this.attribute", str(cm.exception))
+        # Human-readable message lists the violation
+        self.assertIn(
+            "never.use.this.attribute is forbidden by this bogus policy",
+            str(cm.exception),
+        )
+        # Structured report is attached for programmatic inspection
+        self.assertTrue(
+            any(
+                v["id"] == "test_check"
+                and v["context"].get("attribute_name")
+                == "never.use.this.attribute"
+                for v in cm.exception.report.violations
+            )
+        )
+
+    def test_end_no_violations(self):
+        """end() returns a LiveCheckReport with no violations on conformant telemetry."""
+        with WeaverLiveCheck() as weaver:
+            provider = _make_provider(weaver.otlp_endpoint)
+            with provider.get_tracer("test-tracer").start_as_current_span(
+                "test-span"
+            ):
+                pass
+            provider.force_flush()
+            report = weaver.end()
+
+        self.assertIsInstance(report, LiveCheckReport)
+        self.assertEqual(report.violations, [])
+
+    def test_end_with_violations(self):
+        """end() returns a LiveCheckReport with violations without raising."""
+        with WeaverLiveCheck(policies_dir=_TESTDATA_DIR) as weaver:
+            provider = _make_provider(weaver.otlp_endpoint)
+            with provider.get_tracer("test-tracer").start_as_current_span(
+                "test-span"
+            ) as span:
+                span.set_attribute("never.use.this.attribute", "bad value")
+
+            provider.force_flush()
+            report = weaver.end()
+
+        self.assertIsInstance(report, LiveCheckReport)
+        # Check the violation id (maps to advice_type in the rego policy)
+        self.assertTrue(
+            any(v["id"] == "test_check" for v in report.violations)
+        )
+        # Check the structured context identifies the offending attribute by name
+        self.assertTrue(
+            any(
+                isinstance(v["context"], dict)
+                and v["context"].get("attribute_name")
+                == "never.use.this.attribute"
+                for v in report.violations
+            )
+        )

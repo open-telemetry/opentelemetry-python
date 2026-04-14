@@ -8,6 +8,9 @@ deny contains result if {
         "type":         "advice",
         "advice_type":  "test_check",
         "advice_level": "violation",
+        "context": {
+            "attribute_name": input.sample.attribute.name,
+        },
         "message":      "never.use.this.attribute is forbidden by this bogus policy",
     }
 }
