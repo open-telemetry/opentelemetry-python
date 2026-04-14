@@ -557,7 +557,7 @@ def _import_id_generator(id_generator_name: str) -> IdGenerator:
 def _import_opamp() -> Callable[[Resource], None] | None:
     # this in development, at the moment we are looking for a callable that takes
     # the resource and instantiate an OpAMP agent.
-    # Since configuration is not specified every implementors may have its own.
+    # Since configuration is not specified every implementers may have its own.
     # Refer to opentelemetry-opamp-client package on how to setup the OpAMP agent.
     entry_point = None
     try:
