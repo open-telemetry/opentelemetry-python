@@ -323,6 +323,30 @@ class TestCreateLogRecordExporters(unittest.TestCase):
         call_kwargs = mock_exporter_cls.call_args.kwargs
         self.assertEqual(call_kwargs["headers"], {"x-api-key": "secret"})
 
+    def test_otlp_http_exporter_deflate_compression(self):
+        mock_exporter_cls = MagicMock()
+        mock_compression_cls = MagicMock()
+        mock_compression_cls.Deflate = "deflate"
+        mock_module = MagicMock()
+        mock_module.Compression = mock_compression_cls
+        mock_log_module = MagicMock()
+        mock_log_module.OTLPLogExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.proto.http": mock_module,
+                "opentelemetry.exporter.otlp.proto.http._log_exporter": mock_log_module,
+            },
+        ):
+            config = LogRecordExporterConfig(
+                otlp_http=OtlpHttpExporterConfig(compression="deflate")
+            )
+            _create_log_record_exporter(config)
+
+        call_kwargs = mock_exporter_cls.call_args.kwargs
+        self.assertEqual(call_kwargs["compression"], "deflate")
+
     def test_otlp_grpc_exporter_endpoint(self):
         mock_exporter_cls = MagicMock()
         mock_grpc = MagicMock()

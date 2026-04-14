@@ -15,10 +15,11 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
-
 from opentelemetry._logs import set_logger_provider
-from opentelemetry.sdk._configuration._common import _parse_headers
+from opentelemetry.sdk._configuration._common import (
+    _map_compression,
+    _parse_headers,
+)
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
 from opentelemetry.sdk._configuration.models import (
     BatchLogRecordProcessor as BatchLogRecordProcessorConfig,
@@ -58,20 +59,6 @@ _DEFAULT_EXPORT_TIMEOUT_MILLIS = 30000
 _DEFAULT_MAX_QUEUE_SIZE = 2048
 _DEFAULT_MAX_EXPORT_BATCH_SIZE = 512
 
-
-def _map_compression(
-    value: Optional[str], compression_enum: type
-) -> Optional[object]:
-    """Map a compression string to the given Compression enum value."""
-    if value is None or value.lower() == "none":
-        return None
-    if value.lower() == "gzip":
-        return compression_enum.Gzip  # type: ignore[attr-defined]
-    raise ConfigurationError(
-        f"Unsupported compression value '{value}'. Supported values: 'gzip', 'none'."
-    )
-
-
 def _create_console_log_exporter() -> ConsoleLogRecordExporter:
     """Create a ConsoleLogRecordExporter."""
     return ConsoleLogRecordExporter()
@@ -95,7 +82,9 @@ def _create_otlp_http_log_exporter(
             "Install it with: pip install opentelemetry-exporter-otlp-proto-http"
         ) from exc
 
-    compression = _map_compression(config.compression, Compression)
+    compression = _map_compression(
+        config.compression, Compression, allow_deflate=True
+    )
     headers = _parse_headers(config.headers, config.headers_list)
     timeout = (config.timeout / 1000.0) if config.timeout is not None else None
 
