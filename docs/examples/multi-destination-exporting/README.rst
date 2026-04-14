@@ -39,6 +39,7 @@ Installation
     pip install opentelemetry-sdk
     pip install opentelemetry-exporter-otlp-proto-grpc
     pip install opentelemetry-exporter-otlp-proto-http
+    pip install opentelemetry-instrumentation-logging # For LoggingHandler
 
 Run the Example
 ---------------
@@ -56,7 +57,7 @@ a running collector.
 Useful links
 ------------
 
-- `OTLP multi-destination exporting spec <https://opentelemetry.io/docs/specs/otlp/#multi-destination-exporting>`_
+- `OTLP multi-destination exporting specification <https://opentelemetry.io/docs/specs/otlp/#multi-destination-exporting>`_
 - OpenTelemetry_
 - :doc:`../../api/trace`
 
