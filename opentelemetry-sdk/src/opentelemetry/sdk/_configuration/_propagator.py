@@ -20,7 +20,7 @@ from opentelemetry.baggage.propagation import W3CBaggagePropagator
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.composite import CompositePropagator
 from opentelemetry.propagators.textmap import TextMapPropagator
-from opentelemetry.sdk._configuration._exceptions import ConfigurationError
+from opentelemetry.sdk._configuration._common import load_entry_point
 from opentelemetry.sdk._configuration.models import (
     Propagator as PropagatorConfig,
 )
@@ -30,28 +30,11 @@ from opentelemetry.sdk._configuration.models import (
 from opentelemetry.trace.propagation.tracecontext import (
     TraceContextTextMapPropagator,
 )
-from opentelemetry.util._importlib_metadata import entry_points
 
 
 def _load_entry_point_propagator(name: str) -> TextMapPropagator:
-    """Load a propagator by name from the opentelemetry_propagator entry point group."""
-    try:
-        ep = next(
-            iter(entry_points(group="opentelemetry_propagator", name=name)),
-            None,
-        )
-        if not ep:
-            raise ConfigurationError(
-                f"Propagator '{name}' not found. "
-                "It may not be installed or may be misspelled."
-            )
-        return ep.load()()
-    except ConfigurationError:
-        raise
-    except Exception as exc:
-        raise ConfigurationError(
-            f"Failed to load propagator '{name}': {exc}"
-        ) from exc
+    """Load and instantiate a propagator by name."""
+    return load_entry_point("opentelemetry_propagator", name)()
 
 
 def _propagators_from_textmap_config(

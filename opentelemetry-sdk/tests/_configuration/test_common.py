@@ -14,8 +14,13 @@
 
 import unittest
 from types import SimpleNamespace
+from unittest.mock import MagicMock, patch
 
-from opentelemetry.sdk._configuration._common import _parse_headers
+from opentelemetry.sdk._configuration._common import (
+    _parse_headers,
+    load_entry_point,
+)
+from opentelemetry.sdk._configuration._exceptions import ConfigurationError
 
 
 class TestParseHeaders(unittest.TestCase):
@@ -79,3 +84,37 @@ class TestParseHeaders(unittest.TestCase):
 
     def test_both_empty_struct_and_none_list_returns_empty_dict(self):
         self.assertEqual(_parse_headers([], None), {})
+
+
+class TestLoadEntryPoint(unittest.TestCase):
+    def test_returns_loaded_class(self):
+        mock_class = MagicMock()
+        mock_ep = MagicMock()
+        mock_ep.load.return_value = mock_class
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            return_value=[mock_ep],
+        ):
+            result = load_entry_point("some_group", "some_name")
+        self.assertIs(result, mock_class)
+
+    def test_raises_when_not_found(self):
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            return_value=[],
+        ):
+            with self.assertRaises(ConfigurationError) as ctx:
+                load_entry_point("some_group", "missing")
+        self.assertIn("missing", str(ctx.exception))
+        self.assertIn("some_group", str(ctx.exception))
+
+    def test_wraps_load_exception_in_configuration_error(self):
+        mock_ep = MagicMock()
+        mock_ep.load.side_effect = ImportError("bad import")
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            return_value=[mock_ep],
+        ):
+            with self.assertRaises(ConfigurationError) as ctx:
+                load_entry_point("some_group", "some_name")
+        self.assertIn("bad import", str(ctx.exception))
