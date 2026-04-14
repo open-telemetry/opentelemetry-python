@@ -20,6 +20,7 @@ env:
        contains(github.event.pull_request.labels.*.name, 'backport') && github.event.pull_request.base.ref ||
        'main'
     ) || 'main' }}{% endraw %}
+  WEAVER_VERSION: "v0.22.1"
   PIP_EXISTS_ACTION: w
   CONTRIB_REPO_UTIL_HTTP: ${% raw %}{{ github.workspace }}{% endraw %}/opentelemetry-python-contrib/util/opentelemetry-util-http
   CONTRIB_REPO_INSTRUMENTATION: ${% raw %}{{ github.workspace }}{% endraw %}/opentelemetry-python-contrib/opentelemetry-instrumentation
@@ -50,6 +51,14 @@ jobs:
           repository: open-telemetry/opentelemetry-python-contrib
           ref: ${% raw %}{{ env.CONTRIB_REPO_SHA }}{% endraw %}
           path: opentelemetry-python-contrib
+      {%- endif %}
+      {%- if "test-opentelemetry-test-utils" in job_data.tox_env and job_data.os != "windows-latest" %}
+
+      - name: Install weaver
+        run: |
+          WEAVER_URL="https://github.com/open-telemetry/weaver/releases/download/${% raw %}{{ env.WEAVER_VERSION }}{% endraw %}/weaver_Linux_x86_64.tar.gz"
+          curl -sSL "$WEAVER_URL" | tar -xz -C /tmp weaver
+          sudo mv /tmp/weaver /usr/local/bin/weaver
       {%- endif %}
 
       - name: Set up Python {{ job_data.python_version }}

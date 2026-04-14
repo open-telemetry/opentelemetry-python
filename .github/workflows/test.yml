@@ -20,6 +20,7 @@ env:
        contains(github.event.pull_request.labels.*.name, 'backport') && github.event.pull_request.base.ref ||
        'main'
     ) || 'main' }}
+  WEAVER_VERSION: "v0.22.1"
   PIP_EXISTS_ACTION: w
   CONTRIB_REPO_UTIL_HTTP: ${{ github.workspace }}/opentelemetry-python-contrib/util/opentelemetry-util-http
   CONTRIB_REPO_INSTRUMENTATION: ${{ github.workspace }}/opentelemetry-python-contrib/opentelemetry-instrumentation
@@ -2865,6 +2866,12 @@ jobs:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
+      - name: Install weaver
+        run: |
+          WEAVER_URL="https://github.com/open-telemetry/weaver/releases/download/${{ env.WEAVER_VERSION }}/weaver_Linux_x86_64.tar.gz"
+          curl -sSL "$WEAVER_URL" | tar -xz -C /tmp weaver
+          sudo mv /tmp/weaver /usr/local/bin/weaver
+
       - name: Set up Python 3.10
         uses: actions/setup-python@v5
         with:
@@ -2883,6 +2890,12 @@ jobs:
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
+
+      - name: Install weaver
+        run: |
+          WEAVER_URL="https://github.com/open-telemetry/weaver/releases/download/${{ env.WEAVER_VERSION }}/weaver_Linux_x86_64.tar.gz"
+          curl -sSL "$WEAVER_URL" | tar -xz -C /tmp weaver
+          sudo mv /tmp/weaver /usr/local/bin/weaver
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
@@ -2903,6 +2916,12 @@ jobs:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
+      - name: Install weaver
+        run: |
+          WEAVER_URL="https://github.com/open-telemetry/weaver/releases/download/${{ env.WEAVER_VERSION }}/weaver_Linux_x86_64.tar.gz"
+          curl -sSL "$WEAVER_URL" | tar -xz -C /tmp weaver
+          sudo mv /tmp/weaver /usr/local/bin/weaver
+
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
@@ -2921,6 +2940,12 @@ jobs:
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
+
+      - name: Install weaver
+        run: |
+          WEAVER_URL="https://github.com/open-telemetry/weaver/releases/download/${{ env.WEAVER_VERSION }}/weaver_Linux_x86_64.tar.gz"
+          curl -sSL "$WEAVER_URL" | tar -xz -C /tmp weaver
+          sudo mv /tmp/weaver /usr/local/bin/weaver
 
       - name: Set up Python 3.13
         uses: actions/setup-python@v5
@@ -2941,6 +2966,12 @@ jobs:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
+      - name: Install weaver
+        run: |
+          WEAVER_URL="https://github.com/open-telemetry/weaver/releases/download/${{ env.WEAVER_VERSION }}/weaver_Linux_x86_64.tar.gz"
+          curl -sSL "$WEAVER_URL" | tar -xz -C /tmp weaver
+          sudo mv /tmp/weaver /usr/local/bin/weaver
+
       - name: Set up Python 3.14
         uses: actions/setup-python@v5
         with:
@@ -2960,6 +2991,12 @@ jobs:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
 
+      - name: Install weaver
+        run: |
+          WEAVER_URL="https://github.com/open-telemetry/weaver/releases/download/${{ env.WEAVER_VERSION }}/weaver_Linux_x86_64.tar.gz"
+          curl -sSL "$WEAVER_URL" | tar -xz -C /tmp weaver
+          sudo mv /tmp/weaver /usr/local/bin/weaver
+
       - name: Set up Python 3.14t
         uses: actions/setup-python@v5
         with:
@@ -2978,6 +3015,12 @@ jobs:
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v4
+
+      - name: Install weaver
+        run: |
+          WEAVER_URL="https://github.com/open-telemetry/weaver/releases/download/${{ env.WEAVER_VERSION }}/weaver_Linux_x86_64.tar.gz"
+          curl -sSL "$WEAVER_URL" | tar -xz -C /tmp weaver
+          sudo mv /tmp/weaver /usr/local/bin/weaver
 
       - name: Set up Python pypy-3.10
         uses: actions/setup-python@v5
