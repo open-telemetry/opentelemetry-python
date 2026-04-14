@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4907](https://github.com/open-telemetry/opentelemetry-python/issues/4907))
 - Drop Python 3.9 support
   ([#5076](https://github.com/open-telemetry/opentelemetry-python-contrib/pull/5076))
+- Fix separate pylint config for opentracing example to resolve `# pylint: disable=import-error` workaround
+  ([#5037](https://github.com/open-telemetry/opentelemetry-python/pull/5037))
 
 
 ## Version 1.41.0/0.62b0 (2026-04-09)
