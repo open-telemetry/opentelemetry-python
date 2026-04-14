@@ -25,3 +25,8 @@ class TestLogRecord(unittest.TestCase):
     def test_log_record_observed_timestamp_default(self, time_ns_mock):  # type: ignore
         time_ns_mock.return_value = OBSERVED_TIMESTAMP
         self.assertEqual(LogRecord().observed_timestamp, OBSERVED_TIMESTAMP)
+
+    def test_log_record_exception(self):
+        exc = ValueError("boom")
+        log_record = LogRecord(exception=exc)
+        self.assertIs(log_record.exception, exc)
