@@ -29,6 +29,7 @@ from typing import (
     Sequence,
     Type,
     TypeVar,
+    cast,
 )
 
 from opentelemetry.metrics import (
@@ -967,6 +968,14 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     value_negative = self._previous_value_negative.copy_empty()
                 if scale is None and self._previous_scale is not None:
                     scale = self._previous_scale
+
+                # here self._previous_value_negative and self._previous_value_positive are not Optional anymore
+                self._previous_value_negative = cast(
+                    Buckets, self._previous_value_negative
+                )
+                self._previous_value_positive = cast(
+                    Buckets, self._previous_value_positive
+                )
 
                 min_scale = min(self._previous_scale, scale)
 
