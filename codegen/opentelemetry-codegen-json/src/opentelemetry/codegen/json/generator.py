@@ -386,10 +386,10 @@ class OtlpJsonGenerator:
         Returns:
             Set of import statement strings
         """
-        return set(
+        return {
             "import " + self._get_module_path(dep_file)
             for dep_file in self._file_dependencies.get(proto_file, [])
-        )
+        }
 
     def _generate_enums_for_file(
         self,

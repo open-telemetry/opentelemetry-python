@@ -81,6 +81,7 @@ select = [
   "F",   # pyflakes
   "E",   # pycodestyle errors
   "W",   # pycodestyle warnings
+  "C4",  # flake8-comprehensions
   "PLC", # pylint convention
   "PLE", # pylint error
   "Q",   # flake8-quotes

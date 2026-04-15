@@ -34,12 +34,8 @@ def get_dict_as_key(labels):
     """Converts a dict to be used as a unique key"""
     return tuple(
         sorted(
-            map(
-                lambda kv: (
-                    (kv[0], tuple(kv[1])) if isinstance(kv[1], list) else kv
-                ),
-                labels.items(),
-            )
+            (kv[0], tuple(kv[1])) if isinstance(kv[1], list) else kv
+            for kv in labels.items()
         )
     )
 
