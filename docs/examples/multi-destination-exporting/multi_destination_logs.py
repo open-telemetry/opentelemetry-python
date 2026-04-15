@@ -48,9 +48,7 @@ logger_provider.add_log_record_processor(
 )
 
 # Destination 2: OTLP over HTTP
-http_exporter = HttpLogExporter(
-    endpoint="http://localhost:4318/v1/logs"
-)
+http_exporter = HttpLogExporter(endpoint="http://localhost:4318/v1/logs")
 logger_provider.add_log_record_processor(
     BatchLogRecordProcessor(http_exporter)
 )

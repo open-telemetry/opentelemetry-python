@@ -41,9 +41,7 @@ grpc_exporter = GrpcSpanExporter(
 provider.add_span_processor(BatchSpanProcessor(grpc_exporter))
 
 # Destination 2: OTLP over HTTP
-http_exporter = HttpSpanExporter(
-    endpoint="http://localhost:4318/v1/traces"
-)
+http_exporter = HttpSpanExporter(endpoint="http://localhost:4318/v1/traces")
 provider.add_span_processor(BatchSpanProcessor(http_exporter))
 
 # Destination 3: Console (for debugging)

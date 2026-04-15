@@ -45,11 +45,15 @@ http_reader = PeriodicExportingMetricReader(
 console_reader = PeriodicExportingMetricReader(ConsoleMetricExporter())
 
 # Pass all readers to the MeterProvider
-provider = MeterProvider(metric_readers=[grpc_reader, http_reader, console_reader])
+provider = MeterProvider(
+    metric_readers=[grpc_reader, http_reader, console_reader]
+)
 metrics.set_meter_provider(provider)
 
 meter = metrics.get_meter(__name__)
-counter = meter.create_counter("request.count", description="Number of requests")
+counter = meter.create_counter(
+    "request.count", description="Number of requests"
+)
 
 counter.add(1, {"endpoint": "/api/users"})
 counter.add(1, {"endpoint": "/api/orders"})
