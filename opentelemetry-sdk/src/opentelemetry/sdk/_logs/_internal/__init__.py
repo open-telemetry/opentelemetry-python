@@ -61,6 +61,7 @@ from opentelemetry.sdk._logs._internal._logger_metrics import LoggerMetrics
 from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_COUNT_LIMIT,
     OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
+    OTEL_LOG_LEVEL,
     OTEL_SDK_DISABLED,
 )
 from opentelemetry.sdk.resources import Resource
@@ -80,7 +81,33 @@ from opentelemetry.util.types import AnyValue, _ExtendedAttributes
 _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
 _ENV_VALUE_UNSET = ""
 
+# "warn" is included alongside "warning" because the OTel spec default is
+# "info" (lowercase OTel style) and OTel canonical short names use "WARN",
+# so users following OTel documentation will naturally try "warn".
+_OTEL_LOG_LEVEL_TO_PYTHON = {
+    "debug": logging.DEBUG,
+    "info": logging.INFO,
+    "warn": logging.WARNING,
+    "warning": logging.WARNING,
+    "error": logging.ERROR,
+    "critical": logging.CRITICAL,
+}
+
 _logger = logging.getLogger(__name__)
+
+# Target opentelemetry.sdk (not the module-level _logger) so the level
+# propagates to all SDK sub-modules: trace, metrics, logs, exporters.
+_otel_log_level_raw = environ.get(OTEL_LOG_LEVEL)
+_otel_log_level = (_otel_log_level_raw or "info").lower()
+if _otel_log_level_raw and _otel_log_level not in _OTEL_LOG_LEVEL_TO_PYTHON:
+    _logger.warning(
+        "Invalid value for OTEL_LOG_LEVEL: %r. "
+        "Valid values: debug, info, warn, warning, error, critical. "
+        "Defaulting to INFO.",
+        _otel_log_level_raw,
+    )
+_python_level = _OTEL_LOG_LEVEL_TO_PYTHON.get(_otel_log_level, logging.INFO)
+logging.getLogger("opentelemetry.sdk").setLevel(_python_level)
 
 
 class BytesEncoder(json.JSONEncoder):
@@ -724,6 +751,7 @@ class Logger(APILogger):
         """
         if not self._is_enabled():
             return
+
         # If a record is provided, use it directly
         if record is not None:
             if not isinstance(record, ReadWriteLogRecord):
