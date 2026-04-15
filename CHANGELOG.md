@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - logs: add exception support to Logger emit and LogRecord attributes
   ([#4907](https://github.com/open-telemetry/opentelemetry-python/issues/4907))
 - Drop Python 3.9 support
-  ([#5076](https://github.com/open-telemetry/opentelemetry-python-contrib/pull/5076))
+  ([#5076](https://github.com/open-telemetry/opentelemetry-python/pull/5076))
 - `opentelemetry-semantic-conventions`: Attach spec-mandated explicit bucket boundaries to the GenAI histogram helpers (`gen_ai.client.operation.duration`, `gen_ai.server.request.duration`, `gen_ai.server.time_to_first_token`, `gen_ai.server.time_per_output_token`); without them the default SDK buckets produced unusable histograms for latency-per-token metrics
   ([#4946](https://github.com/open-telemetry/opentelemetry-python/issues/4946))
 
