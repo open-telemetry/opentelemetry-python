@@ -52,7 +52,8 @@ Run the Example
 
 The output will be shown in the console for the ``ConsoleSpanExporter``,
 ``ConsoleMetricExporter``, and ``ConsoleLogRecordExporter`` destinations.
-The OTLP destinations require a running collector.
+The OTLP destinations require a running `collector
+<https://opentelemetry.io/docs/collector/>`_.
 
 Useful links
 ------------
