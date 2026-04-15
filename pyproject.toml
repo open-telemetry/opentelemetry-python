@@ -133,7 +133,6 @@ exclude = [
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/_view_instrument_match.py",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/aggregation.py",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/exemplar/exemplar_reservoir.py",
-  "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/exponential_histogram/",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/export/",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/instrument.py",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/measurement_consumer.py",
