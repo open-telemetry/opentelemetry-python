@@ -22,9 +22,11 @@ from typing import (
     Generator,
     Iterable,
     List,
+    Protocol,
     Sequence,
     Union,
     cast,
+    runtime_checkable,
 )
 
 # This kind of import is needed to avoid Sphinx errors.
@@ -63,7 +65,8 @@ _ERROR_MESSAGE = (
 )
 
 
-class _Instrument:
+@runtime_checkable
+class _Instrument(Protocol):
     name: str
     unit: str
     description: str
