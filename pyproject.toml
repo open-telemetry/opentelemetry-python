@@ -130,7 +130,6 @@ exclude = [
   "opentelemetry-sdk/tests",
   "opentelemetry-sdk/src/opentelemetry/sdk/_events",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/__init__.py",
-  "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/_view_instrument_match.py",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/aggregation.py",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/exemplar/exemplar_reservoir.py",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/export/",

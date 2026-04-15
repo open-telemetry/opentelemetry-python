@@ -16,7 +16,7 @@
 from logging import getLogger
 from threading import Lock
 from time import time_ns
-from typing import Dict, List, Optional, Sequence
+from typing import Dict, List, Optional, Sequence, cast
 
 from opentelemetry.metrics import Instrument
 from opentelemetry.sdk.metrics._internal.aggregation import (
@@ -76,10 +76,16 @@ class _ViewInstrumentMatch:
             # type since they are functionally equivalent.
             and self._aggregation.__class__ == other._aggregation.__class__
         )
+        if not result:
+            return result
+
         if isinstance(self._aggregation, _SumAggregation):
+            # if result is True the two aggregation are of the same type
+            self._aggregation = cast(_SumAggregation, self._aggregation)
+            other._aggregation = cast(_SumAggregation, other._aggregation)
+
             result = (
-                result
-                and self._aggregation._instrument_is_monotonic
+                self._aggregation._instrument_is_monotonic
                 == other._aggregation._instrument_is_monotonic
                 and self._aggregation._instrument_aggregation_temporality
                 == other._aggregation._instrument_aggregation_temporality
