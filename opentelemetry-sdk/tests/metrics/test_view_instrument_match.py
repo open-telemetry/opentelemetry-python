@@ -266,6 +266,51 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         self.assertEqual(number_data_point.attributes, {"c": "d"})
         self.assertEqual(number_data_point.value, 0)
 
+    def test_consume_measurement_attributes_are_copied(self):
+        """Mutating the attributes dict after recording must not affect stored data points."""
+        instrument1 = _Counter(
+            "instrument1",
+            Mock(),
+            Mock(),
+            description="description",
+            unit="unit",
+        )
+        instrument1.instrumentation_scope = self.mock_instrumentation_scope
+        view_instrument_match = _ViewInstrumentMatch(
+            view=View(
+                instrument_name="instrument1",
+                name="name",
+                aggregation=DefaultAggregation(),
+            ),
+            instrument=instrument1,
+            instrument_class_aggregation=MagicMock(
+                **{"__getitem__.return_value": DefaultAggregation()}
+            ),
+        )
+
+        attributes = {"key": "original"}
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=1,
+                time_unix_nano=time_ns(),
+                instrument=instrument1,
+                context=Context(),
+                attributes=attributes,
+            )
+        )
+
+        # Mutate the original dict after recording
+        attributes["key"] = "mutated"
+
+        number_data_points = view_instrument_match.collect(
+            AggregationTemporality.CUMULATIVE, 0
+        )
+        number_data_points = list(number_data_points)
+        self.assertEqual(len(number_data_points), 1)
+        self.assertEqual(
+            number_data_points[0].attributes, {"key": "original"}
+        )
+
     @patch(
         "opentelemetry.sdk.metrics._internal._view_instrument_match.time_ns",
         side_effect=[0, 1, 2],

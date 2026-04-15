@@ -98,7 +98,7 @@ class _ViewInstrumentMatch:
                 if key in self._view._attribute_keys:
                     attributes[key] = value
         elif measurement.attributes is not None:
-            attributes = measurement.attributes
+            attributes = dict(measurement.attributes)
         else:
             attributes = {}
 
