@@ -13,10 +13,7 @@
 # limitations under the License.
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from threading import Lock
+from threading import Lock
 
 
 class Mapping(ABC):
