@@ -1,7 +1,7 @@
 # OpenTelemetry Python
 [![Slack](https://img.shields.io/badge/slack-@cncf/otel/python-brightgreen.svg?logo=slack)](https://cloud-native.slack.com/archives/C01PD4HUVBL)
 [![Build Status](https://github.com/open-telemetry/opentelemetry-python/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/open-telemetry/opentelemetry-python/actions/workflows/ci.yml)
-[![Minimum Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Minimum Python Version](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Release](https://img.shields.io/github/v/release/open-telemetry/opentelemetry-python?include_prereleases&style=)](https://github.com/open-telemetry/opentelemetry-python/releases/)
 [![Read the Docs](https://readthedocs.org/projects/opentelemetry-python/badge/?version=latest)](https://opentelemetry-python.readthedocs.io/en/latest/)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/11060/badge)](https://www.bestpractices.dev/projects/11060)
@@ -25,11 +25,11 @@ Project versioning information and stability guarantees can be found [here](./ra
 
 ## Getting started
 
-You can find the getting started guide for OpenTelemetry Python [here](https://opentelemetry.io/docs/instrumentation/python/getting-started/).
+You can find the getting started guide for OpenTelemetry Python [here](https://opentelemetry.io/docs/languages/python/getting-started/).
 
 If you are looking for **examples** on how to use the OpenTelemetry API to
 instrument your code manually, or how to set up the OpenTelemetry
-Python SDK, see https://opentelemetry.io/docs/instrumentation/python/manual/.
+Python SDK, see the [documentation](https://opentelemetry.io/docs/languages/python/instrumentation/).
 
 ## Python Version Support
 
@@ -116,6 +116,7 @@ For more information about the maintainer role, see the [community repository](h
 - [Jeremy Voss](https://github.com/jeremydvoss), Microsoft
 - [Liudmila Molkova](https://github.com/lmolkova), Grafana Labs
 - [Lukas Hering](https://github.com/herin049), Oracle
+- [Mike Goldsmith](https://github.com/MikeGoldsmith), Honeycomb
 - [Owais Lone](https://github.com/owais), Splunk
 - [Pablo Collins](https://github.com/pmcollins), Splunk
 - [Shalev Roda](https://github.com/shalevr), Cisco
@@ -124,28 +125,23 @@ For more information about the maintainer role, see the [community repository](h
 
 For more information about the approver role, see the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#approver).
 
-### Emeritus Maintainers
+### Emeritus
 
-- [Alex Boten](https://github.com/codeboten)
-- [Chris Kleinknecht](https://github.com/c24t)
-- [Diego Hurtado](https://github.com/ocelotl)
-- [Owais Lone](https://github.com/owais)
-- [Reiley Yang](https://github.com/reyang)
-- [Srikanth Chekuri](https://github.com/srikanthccv)
-- [Yusuke Tsutsumi](https://github.com/toumorokoshi)
-
-For more information about the emeritus role, see the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#emeritus-maintainerapprovertriager).
-
-### Emeritus Approvers
-
-- [Ashutosh Goel](https://github.com/ashu658)
-- [Carlos Alberto Cortez](https://github.com/carlosalberto)
-- [Christian Neumüller](https://github.com/Oberon00)
-- [Mauricio Vásquez](https://github.com/mauriciovasquezbernal)
-- [Nathaniel Ruiz Nowell](https://github.com/NathanielRN)
-- [Nikolay Sokolik](https://github.com/oxeye-nikolay)
-- [Sanket Mehta](https://github.com/sanketmehta28)
-- [Tahir H. Butt](https://github.com/majorgreys)
+- [Alex Boten](https://github.com/codeboten), Maintainer
+- [Ashutosh Goel](https://github.com/ashu658), Approver
+- [Carlos Alberto Cortez](https://github.com/carlosalberto), Approver
+- [Chris Kleinknecht](https://github.com/c24t), Maintainer
+- [Christian Neumüller](https://github.com/Oberon00), Approver
+- [Diego Hurtado](https://github.com/ocelotl), Maintainer
+- [Mauricio Vásquez](https://github.com/mauriciovasquezbernal), Approver
+- [Nathaniel Ruiz Nowell](https://github.com/NathanielRN), Approver
+- [Nikolay Sokolik](https://github.com/oxeye-nikolay), Approver
+- [Owais Lone](https://github.com/owais), Maintainer
+- [Reiley Yang](https://github.com/reyang), Maintainer
+- [Sanket Mehta](https://github.com/sanketmehta28), Approver
+- [Srikanth Chekuri](https://github.com/srikanthccv), Maintainer
+- [Tahir H. Butt](https://github.com/majorgreys), Approver
+- [Yusuke Tsutsumi](https://github.com/toumorokoshi), Maintainer
 
 For more information about the emeritus role, see the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#emeritus-maintainerapprovertriager).
 

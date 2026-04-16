@@ -65,10 +65,10 @@ from opentelemetry.sdk.trace import sampling
 from opentelemetry.sdk.trace._tracer_metrics import TracerMetrics
 from opentelemetry.sdk.trace.id_generator import IdGenerator, RandomIdGenerator
 from opentelemetry.sdk.util import BoundedList
+from opentelemetry.sdk.util._configurator import RuleBasedConfigurator
 from opentelemetry.sdk.util.instrumentation import (
     InstrumentationInfo,
     InstrumentationScope,
-    _InstrumentationScopePredicateT,
 )
 from opentelemetry.semconv.attributes.exception_attributes import (
     EXCEPTION_ESCAPED,
@@ -1264,28 +1264,7 @@ class Tracer(trace_api.Tracer):
 
 
 _TracerConfiguratorT = Callable[[InstrumentationScope], _TracerConfig]
-_TracerConfiguratorRulesT = Sequence[
-    tuple[_InstrumentationScopePredicateT, _TracerConfig]
-]
-
-
-class _RuleBasedTracerConfigurator:
-    def __init__(
-        self,
-        *,
-        rules: _TracerConfiguratorRulesT,
-        default_config: _TracerConfig,
-    ):
-        self._rules = rules
-        self._default_config = default_config
-
-    def __call__(self, tracer_scope: InstrumentationScope) -> _TracerConfig:
-        for predicate, tracer_config in self._rules:
-            if predicate(tracer_scope):
-                return tracer_config
-
-        # if no rule matched return the default config
-        return self._default_config
+_RuleBasedTracerConfigurator = RuleBasedConfigurator[_TracerConfig]
 
 
 def _default_tracer_configurator(
@@ -1299,7 +1278,7 @@ def _default_tracer_configurator(
     return _RuleBasedTracerConfigurator(
         rules=[],
         default_config=_TracerConfig.default(),
-    )(tracer_scope=tracer_scope)
+    )(tracer_scope)
 
 
 def _disable_tracer_configurator(
@@ -1308,7 +1287,7 @@ def _disable_tracer_configurator(
     return _RuleBasedTracerConfigurator(
         rules=[],
         default_config=_TracerConfig(is_enabled=False),
-    )(tracer_scope=tracer_scope)
+    )(tracer_scope)
 
 
 class TracerProvider(trace_api.TracerProvider):

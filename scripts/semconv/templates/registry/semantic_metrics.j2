@@ -50,14 +50,14 @@ from opentelemetry.metrics import {{i | map_text("py_instrument_to_type")}}
     {%- endfor-%}
 
     {%- if ctx.metrics | selectattr("instrument", "equalto", "gauge") | list | count > 0 %}
-from typing import Callable, Generator, Iterable, Optional, Sequence, Union
+from collections.abc import Callable, Generator, Iterable, Sequence
 from opentelemetry.metrics import CallbackOptions, ObservableGauge, Observation
 
 # pylint: disable=invalid-name
-CallbackT = Union[
-    Callable[[CallbackOptions], Iterable[Observation]],
-    Generator[Iterable[Observation], CallbackOptions, None],
-]
+CallbackT = (
+    Callable[[CallbackOptions], Iterable[Observation]]
+    | Generator[Iterable[Observation], CallbackOptions, None]
+)
     {%- endif %}
 
   {%- endif -%}
@@ -76,7 +76,7 @@ from typing import Final
 {% if ctx.filter == "any" %}
 {% set metric_name = metric.metric_name | replace(".", "_") %}
 {%- if metric.instrument == "gauge" %}
-def create_{{ metric_name }}(meter: Meter, callbacks: Optional[Sequence[CallbackT]]) -> {{metric.instrument | map_text("py_instrument_to_type")}}:
+def create_{{ metric_name }}(meter: Meter, callbacks: Sequence[CallbackT] | None) -> {{metric.instrument | map_text("py_instrument_to_type")}}:
 {%- else %}
 def create_{{ metric_name }}(meter: Meter) -> {{metric.instrument | map_text("py_instrument_to_type")}}:
 {%- endif %}
