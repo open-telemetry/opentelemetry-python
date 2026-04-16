@@ -30,8 +30,6 @@ env:
 
 jobs:
   {%- for job_data in job_datas %}
-  {#- grpcio has no wheel for free-threaded Python or PyPy on Windows; Ubuntu builds from source fine #}
-  {%- if not (("py314t" in job_data.tox_env or "pypy3" in job_data.tox_env) and "test-opentelemetry-test-utils" in job_data.tox_env and job_data.os == "windows-latest") %}
 
   {{ job_data.name }}:
     name: {{ job_data.ui_name }}
@@ -73,5 +71,4 @@ jobs:
 
       - name: Run tests
         run: tox -e {{ job_data.tox_env }} -- -ra
-  {%- endif %}
   {%- endfor %}

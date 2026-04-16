@@ -22,9 +22,6 @@ import os
 import shutil
 import unittest
 
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
-    OTLPSpanExporter,
-)
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -33,6 +30,15 @@ from opentelemetry.test.weaver_live_check import (
     LiveCheckReport,
     WeaverLiveCheck,
 )
+
+try:
+    from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
+        OTLPSpanExporter,
+    )
+
+    _HAS_GRPC = True
+except ImportError:
+    _HAS_GRPC = False
 
 _TESTDATA_DIR = os.path.join(os.path.dirname(__file__), "testdata")
 
@@ -45,6 +51,10 @@ def _make_provider(otlp_endpoint: str) -> TracerProvider:
     return provider
 
 
+@unittest.skipUnless(
+    _HAS_GRPC,
+    "grpc exporter not installed",
+)
 @unittest.skipUnless(
     shutil.which("weaver") is not None,
     "weaver binary not found on PATH — install from https://github.com/open-telemetry/weaver/releases",
