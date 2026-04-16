@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `opentelemetry-sdk`: Honour `OTEL_LOG_LEVEL` environment variable to configure the SDK's internal diagnostic logger; accepted values: `debug`, `info`, `warn`, `warning`, `error`, `critical`; invalid values emit a warning and default to `info`
+  ([#1059](https://github.com/open-telemetry/opentelemetry-python/issues/1059))
 - `opentelemetry-sdk`: fix YAML structure injection via environment variable substitution in declarative file configuration; values containing newlines are now emitted as quoted YAML scalars per spec requirement
   ([#5091](https://github.com/open-telemetry/opentelemetry-python/pull/5091))
 - `opentelemetry-sdk`: Add `create_logger_provider`/`configure_logger_provider` to declarative file configuration, enabling LoggerProvider instantiation from config files without reading env vars
