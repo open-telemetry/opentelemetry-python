@@ -32,7 +32,7 @@ from opentelemetry.test.weaver_live_check import (
 )
 
 try:
-    from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
+    from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (  # pylint: disable=no-name-in-module
         OTLPSpanExporter,
     )
 
