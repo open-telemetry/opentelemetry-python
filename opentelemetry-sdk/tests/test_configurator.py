@@ -1263,7 +1263,7 @@ class TestMetricsInit(TestCase):
             provider._sdk_config.resource.attributes.get("service.name"),
             "otlp-service",
         )
-        reader = provider._sdk_config.metric_readers[0]
+        reader = provider._metric_readers[0]
         self.assertIsInstance(reader, DummyMetricReader)
         self.assertIsInstance(reader.exporter, DummyOTLPMetricExporter)
 
@@ -1276,7 +1276,7 @@ class TestMetricsInit(TestCase):
         self.assertEqual(self.set_provider_mock.call_count, 1)
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsInstance(provider, DummyMeterProvider)
-        reader = provider._sdk_config.metric_readers[0]
+        reader = provider._metric_readers[0]
         self.assertIsInstance(reader, DummyMetricReaderPullExporter)
 
     def test_metrics_init_exporter_uses_exporter_args_map(self):
@@ -1290,7 +1290,7 @@ class TestMetricsInit(TestCase):
             },
         )
         provider = self.set_provider_mock.call_args[0][0]
-        reader = provider._sdk_config.metric_readers[0]
+        reader = provider._metric_readers[0]
         self.assertEqual(reader.exporter.compression, "gzip")
 
     def test_metrics_init_meter_configurator_none_by_default(self):

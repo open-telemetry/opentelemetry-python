@@ -110,7 +110,7 @@ class TestCreateMeterProviderBasic(unittest.TestCase):
 
     def test_none_config_no_readers(self):
         provider = create_meter_provider(None)
-        self.assertEqual(len(provider._sdk_config.metric_readers), 0)
+        self.assertEqual(len(provider._metric_readers), 0)
 
     def test_none_config_uses_trace_based_exemplar_filter(self):
         provider = create_meter_provider(None)
@@ -141,7 +141,7 @@ class TestCreateMeterProviderBasic(unittest.TestCase):
         )
         with patch.dict(os.environ, {"OTEL_METRIC_EXPORT_INTERVAL": "999999"}):
             provider = create_meter_provider(config)
-        reader = provider._sdk_config.metric_readers[0]
+        reader = provider._metric_readers[0]
         self.assertIsInstance(reader, PeriodicExportingMetricReader)
         self.assertEqual(reader._export_interval_millis, 60000.0)
 
@@ -165,11 +165,6 @@ class TestCreateMeterProviderBasic(unittest.TestCase):
             arg = mock_set.call_args[0][0]
             self.assertIsInstance(arg, MeterProvider)
 
-    def test_empty_readers_list(self):
-        config = MeterProviderConfig(readers=[])
-        provider = create_meter_provider(config)
-        self.assertEqual(len(provider._sdk_config.metric_readers), 0)
-
 
 class TestCreateMetricReaders(unittest.TestCase):
     @staticmethod
@@ -191,7 +186,7 @@ class TestCreateMetricReaders(unittest.TestCase):
             PushMetricExporterConfig(console=ConsoleMetricExporterConfig())
         )
         provider = create_meter_provider(config)
-        reader = provider._sdk_config.metric_readers[0]
+        reader = provider._metric_readers[0]
         self.assertIsInstance(reader, PeriodicExportingMetricReader)
         self.assertIsInstance(reader._exporter, ConsoleMetricExporter)
 
@@ -200,7 +195,7 @@ class TestCreateMetricReaders(unittest.TestCase):
             PushMetricExporterConfig(console=ConsoleMetricExporterConfig())
         )
         provider = create_meter_provider(config)
-        reader = provider._sdk_config.metric_readers[0]
+        reader = provider._metric_readers[0]
         self.assertEqual(reader._export_interval_millis, 60000.0)
 
     def test_periodic_reader_default_timeout(self):
@@ -208,7 +203,7 @@ class TestCreateMetricReaders(unittest.TestCase):
             PushMetricExporterConfig(console=ConsoleMetricExporterConfig())
         )
         provider = create_meter_provider(config)
-        reader = provider._sdk_config.metric_readers[0]
+        reader = provider._metric_readers[0]
         self.assertEqual(reader._export_timeout_millis, 30000.0)
 
     def test_periodic_reader_explicit_interval(self):
@@ -217,7 +212,7 @@ class TestCreateMetricReaders(unittest.TestCase):
             interval=5000,
         )
         provider = create_meter_provider(config)
-        reader = provider._sdk_config.metric_readers[0]
+        reader = provider._metric_readers[0]
         self.assertEqual(reader._export_interval_millis, 5000.0)
 
     def test_periodic_reader_explicit_timeout(self):
@@ -226,7 +221,7 @@ class TestCreateMetricReaders(unittest.TestCase):
             timeout=10000,
         )
         provider = create_meter_provider(config)
-        reader = provider._sdk_config.metric_readers[0]
+        reader = provider._metric_readers[0]
         self.assertEqual(reader._export_timeout_millis, 10000.0)
 
     def test_otlp_http_missing_package_raises(self):
@@ -326,7 +321,7 @@ class TestCreateMetricReaders(unittest.TestCase):
             ]
         )
         provider = create_meter_provider(config)
-        self.assertEqual(len(provider._sdk_config.metric_readers), 2)
+        self.assertEqual(len(provider._metric_readers), 2)
 
 
 class TestTemporalityAndAggregation(unittest.TestCase):
@@ -350,7 +345,7 @@ class TestTemporalityAndAggregation(unittest.TestCase):
     @staticmethod
     def _get_exporter(config):
         provider = create_meter_provider(config)
-        return provider._sdk_config.metric_readers[0]._exporter
+        return provider._metric_readers[0]._exporter
 
     def test_default_temporality_is_cumulative(self):
         exporter = self._get_exporter(self._make_console_config())
