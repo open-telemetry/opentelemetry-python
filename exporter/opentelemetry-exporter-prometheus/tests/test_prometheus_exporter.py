@@ -47,7 +47,7 @@ from opentelemetry.test.metrictestutil import (
 )
 
 
-class TestPrometheusMetricReader(TestCase):
+class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-methods
     def setUp(self):
         self._mock_registry_register = Mock()
         self._registry_register_patch = patch(
@@ -63,7 +63,8 @@ class TestPrometheusMetricReader(TestCase):
             self._mock_registry_register.assert_not_called()
             # check custom_registry was registered
             self.assertIn(
-                reader._collector, custom_registry._collector_to_names
+                reader._collector,   # pylint: disable=protected-access
+                custom_registry._collector_to_names,   # pylint: disable=protected-access
             )
             reader.shutdown()
 
