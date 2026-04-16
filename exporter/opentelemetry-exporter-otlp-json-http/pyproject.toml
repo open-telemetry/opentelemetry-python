@@ -8,7 +8,7 @@ dynamic = ["version"]
 description = "OpenTelemetry Collector JSON over HTTP Exporter"
 readme = "README.rst"
 license = "Apache-2.0"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [
   { name = "OpenTelemetry Authors", email = "cncf-opentelemetry-contributors@lists.cncf.io" },
 ]
@@ -19,7 +19,6 @@ classifiers = [
   "Intended Audience :: Developers",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
@@ -27,10 +26,10 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-  "opentelemetry-api ~= 1.15",
-  "opentelemetry-sdk ~= 1.41.0.dev",
-  "opentelemetry-proto-json == 0.62b0.dev",
-  "opentelemetry-exporter-otlp-json-common == 0.62b0.dev",
+  "opentelemetry-api ~= 1.42.0.dev",
+  "opentelemetry-sdk ~= 1.42.0.dev",
+  "opentelemetry-proto-json == 0.63b0.dev",
+  "opentelemetry-exporter-otlp-json-common == 0.63b0.dev",
   "urllib3 ~= 2.6",
 ]
 
