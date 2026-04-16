@@ -181,11 +181,6 @@ nitpick_ignore = [
         "py:class",
         "_ExtendedAttributes",
     ),
-    (
-        "py:class",
-        "Event",
-    ),
-    ("py:func", "get_finished_logs"),
     ("py:class", "Token"),
 ]
 
