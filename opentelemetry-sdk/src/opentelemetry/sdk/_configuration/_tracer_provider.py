@@ -15,36 +15,11 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from opentelemetry import trace
 from opentelemetry.sdk._configuration._common import _parse_headers
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
-from opentelemetry.sdk._configuration.models import (
-    OtlpGrpcExporter as OtlpGrpcExporterConfig,
-)
-from opentelemetry.sdk._configuration.models import (
-    OtlpHttpExporter as OtlpHttpExporterConfig,
-)
-from opentelemetry.sdk._configuration.models import (
-    ParentBasedSampler as ParentBasedSamplerConfig,
-)
-from opentelemetry.sdk._configuration.models import (
-    Sampler as SamplerConfig,
-)
-from opentelemetry.sdk._configuration.models import (
-    SpanExporter as SpanExporterConfig,
-)
-from opentelemetry.sdk._configuration.models import (
-    SpanLimits as SpanLimitsConfig,
-)
-from opentelemetry.sdk._configuration.models import (
-    SpanProcessor as SpanProcessorConfig,
-)
-from opentelemetry.sdk._configuration.models import (
-    TracerProvider as TracerProviderConfig,
-)
-from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import (
     _DEFAULT_OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT,
     _DEFAULT_OTEL_LINK_ATTRIBUTE_COUNT_LIMIT,
@@ -67,6 +42,33 @@ from opentelemetry.sdk.trace.sampling import (
     Sampler,
     TraceIdRatioBased,
 )
+
+if TYPE_CHECKING:
+    from opentelemetry.sdk._configuration.models import (
+        OtlpGrpcExporter as OtlpGrpcExporterConfig,
+    )
+    from opentelemetry.sdk._configuration.models import (
+        OtlpHttpExporter as OtlpHttpExporterConfig,
+    )
+    from opentelemetry.sdk._configuration.models import (
+        ParentBasedSampler as ParentBasedSamplerConfig,
+    )
+    from opentelemetry.sdk._configuration.models import (
+        Sampler as SamplerConfig,
+    )
+    from opentelemetry.sdk._configuration.models import (
+        SpanExporter as SpanExporterConfig,
+    )
+    from opentelemetry.sdk._configuration.models import (
+        SpanLimits as SpanLimitsConfig,
+    )
+    from opentelemetry.sdk._configuration.models import (
+        SpanProcessor as SpanProcessorConfig,
+    )
+    from opentelemetry.sdk._configuration.models import (
+        TracerProvider as TracerProviderConfig,
+    )
+    from opentelemetry.sdk.resources import Resource
 
 _logger = logging.getLogger(__name__)
 

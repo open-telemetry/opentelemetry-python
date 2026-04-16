@@ -51,7 +51,6 @@ from opentelemetry.sdk._logs import (
     LoggingHandler,
     LogRecordProcessor,
 )
-from opentelemetry.sdk._logs._internal import _LoggerConfiguratorT
 from opentelemetry.sdk._logs.export import (
     BatchLogRecordProcessor,
     LogRecordExporter,
@@ -88,6 +87,7 @@ from opentelemetry.trace import set_tracer_provider
 from opentelemetry.util._importlib_metadata import entry_points
 
 if TYPE_CHECKING:
+    from opentelemetry.sdk._logs._internal import _LoggerConfiguratorT
     from opentelemetry.sdk.metrics._internal import _MeterConfiguratorT
 
 
