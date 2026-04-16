@@ -14,7 +14,6 @@ For the concrete implementation of these interfaces, see the
 .. toctree::
     :maxdepth: 1
 
-    _events
     _logs
     attributes
     baggage

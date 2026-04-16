@@ -29,7 +29,7 @@ class InMemoryLogRecordExporter(LogRecordExporter):
 
     This class can be used for testing purposes. It stores the exported logs
     in a list in memory that can be retrieved using the
-    :func:`.get_finished_logs` method.
+    :meth:`.get_finished_logs` method.
     """
 
     def __init__(self):

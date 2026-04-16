@@ -34,6 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#5120](https://github.com/open-telemetry/opentelemetry-python/pull/5120))
 - Add WeaverLiveCheck test util
   ([#5088](https://github.com/open-telemetry/opentelemetry-python/pull/5088))
+- Add missing .rst files to Sphinx documentation build for SDK logs, propagators, and exporter submodules
+  ([#5017](https://github.com/open-telemetry/opentelemetry-python/pull/5017))
 
 ## Version 1.41.0/0.62b0 (2026-04-09)
 
@@ -50,8 +52,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#5034](https://github.com/open-telemetry/opentelemetry-python/pull/5034))
 - Fix `BatchLogRecordProcessor` default `schedule_delay_millis` from 5000ms to 1000ms to comply with the OTel specification. Note: logs may be exported 5x more frequently by default (e.g. for users who don't explicitly set the `OTEL_BLRP_SCHEDULE_DELAY` env var).
   ([#4998](https://github.com/open-telemetry/opentelemetry-python/pull/4998))
-- Add missing .rst files to Sphinx documentation build for SDK logs, propagators, and exporter submodules
-  ([#5017](https://github.com/open-telemetry/opentelemetry-python/pull/5017))
 - `opentelemetry-sdk`: Add `process` resource detector support to declarative file configuration via `detection_development.detectors[].process`
   ([#5001](https://github.com/open-telemetry/opentelemetry-python/pull/5001))
 - `opentelemetry-sdk`: Add shared `_parse_headers` helper for declarative config OTLP exporters
