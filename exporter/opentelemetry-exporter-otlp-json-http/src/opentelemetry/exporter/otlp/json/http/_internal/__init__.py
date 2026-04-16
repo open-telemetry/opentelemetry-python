@@ -75,7 +75,7 @@ class _OTLPHttpClient:
         if certificate is False:
             pool_kwargs["cert_reqs"] = "CERT_NONE"
         elif certificate and isinstance(certificate, str):
-            pool_kwargs["cert_file"] = certificate
+            pool_kwargs["ca_certs"] = certificate
 
         self._http = urllib3.PoolManager(
             **pool_kwargs,

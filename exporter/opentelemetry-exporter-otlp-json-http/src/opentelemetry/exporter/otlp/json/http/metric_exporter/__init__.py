@@ -117,7 +117,7 @@ class OTLPMetricExporter(MetricExporter):
     def export(
         self,
         metrics_data: MetricsData,
-        timeout_millis: float | None = 10000,
+        timeout_millis: float | None = 10_000,
         **kwargs,
     ) -> MetricExportResult:
         if self._shutdown:
@@ -125,7 +125,12 @@ class OTLPMetricExporter(MetricExporter):
             return MetricExportResult.FAILURE
 
         export_request = encode_metrics(metrics_data)
-        deadline = time.time() + self._timeout
+        timeout = (
+            self._timeout
+            if timeout_millis is None
+            else min(self._timeout, timeout_millis / 1000)
+        )
+        deadline = time.time() + timeout
         for batch in split_metrics_data(
             export_request, self._max_export_batch_size
         ):
