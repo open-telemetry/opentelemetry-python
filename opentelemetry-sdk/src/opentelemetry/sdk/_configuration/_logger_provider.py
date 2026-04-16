@@ -15,6 +15,8 @@
 from __future__ import annotations
 
 import logging
+from typing import Optional
+
 from opentelemetry._logs import set_logger_provider
 from opentelemetry.sdk._configuration._common import (
     _map_compression,
