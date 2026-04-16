@@ -4,11 +4,13 @@ on:
     branches: [ main ]
     paths:
       - '**/*.md'
+      - '**/*.rst'
       - '.github/workflows/check-links.yml'
       - '.github/workflows/check_links_config.json'
   pull_request:
     paths:
       - '**/*.md'
+      - '**/*.rst'
       - '.github/workflows/check-links.yml'
       - '.github/workflows/check_links_config.json'
 
@@ -34,6 +36,7 @@ jobs:
         with:
           files: |
             **/*.md
+            **/*.rst
 
       - name: Install markdown-link-check
         if: steps.changed-files.outputs.any_changed == 'true'
