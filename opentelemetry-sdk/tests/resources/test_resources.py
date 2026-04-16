@@ -561,10 +561,6 @@ class TestOTELResourceDetector(unittest.TestCase):
         )
 
     @patch(
-        "sys.argv",
-        ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"],
-    )
-    @patch(
         "sys.orig_argv",
         ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"],
     )
