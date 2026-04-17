@@ -252,6 +252,7 @@ class WeaverLiveCheck:
 
     def __init__(
         self,
+        registry: str | None = None,
         schema_version: str | None = None,
         policies_dir: str | None = None,
         inactivity_timeout: int = 30,
@@ -285,13 +286,14 @@ class WeaverLiveCheck:
         if policies_dir:
             command += ["--advice-policies", os.path.abspath(policies_dir)]
 
-        if schema_version is None:
-            schema_version = list(Schemas)[-1].value.rsplit("/", 1)[-1]
+        if registry is None:
+            if schema_version is None:
+                schema_version = list(Schemas)[-1].value.rsplit("/", 1)[-1]
+            registry = f"https://github.com/open-telemetry/semantic-conventions/archive/refs/tags/v{schema_version}.tar.gz[model]"
+        elif os.path.isdir(registry):
+            registry = os.path.abspath(registry)
 
-        command += [
-            "--registry",
-            f"https://github.com/open-telemetry/semantic-conventions/archive/refs/tags/v{schema_version}.tar.gz[model]",
-        ]
+        command += ["--registry", registry]
 
         self._command = command
         logger.debug("Weaver command: %s", command)
@@ -304,7 +306,7 @@ class WeaverLiveCheck:
             self._stopped = True
         self.close()
 
-    def start(self, timeout: int = 60) -> "WeaverLiveCheck":
+    def start(self) -> "WeaverLiveCheck":
         logger.debug("Starting WeaverLiveCheck process...")
         self._process = subprocess.Popen(  # pylint: disable=consider-using-with
             self._command,
@@ -312,7 +314,7 @@ class WeaverLiveCheck:
             stderr=subprocess.PIPE,
         )
         try:
-            self._wait_for_ready(timeout=timeout)
+            self._wait_for_ready()
             self._ready = True
         except Exception as exc:  # pylint: disable=broad-except
             logs = self._read_weaver_logs()
@@ -322,22 +324,22 @@ class WeaverLiveCheck:
             raise
         return self
 
-    def _wait_for_ready(self, timeout: int = 60) -> None:
+    def _wait_for_ready(self) -> None:
         retry = Retry(
-            total=timeout,
+            total=10,
             backoff_factor=1,
             backoff_max=1,
             # Any non-2xx response from /health means weaver isn't ready yet.
             status_forcelist=list(range(300, 600)),
+            raise_on_status=True,
             allowed_methods=["GET"],
         )
         session = Session()
         session.mount("http://", HTTPAdapter(max_retries=retry))
         try:
-            response = session.get(
+            session.get(
                 f"http://localhost:{self._admin_port}/health", timeout=5
             )
-            response.raise_for_status()
         except Exception as exc:  # pylint: disable=broad-except
             if self._process is not None and self._process.poll() is not None:
                 raise RuntimeError(

@@ -41,6 +41,7 @@ except ImportError:
     _HAS_GRPC = False
 
 _TESTDATA_DIR = os.path.join(os.path.dirname(__file__), "testdata")
+_REGISTRY_DIR = os.path.join(_TESTDATA_DIR, "registry")
 
 
 def _make_provider(otlp_endpoint: str) -> TracerProvider:
@@ -62,7 +63,7 @@ def _make_provider(otlp_endpoint: str) -> TracerProvider:
 class TestSDKInitLiveCheck(unittest.TestCase):
     def test_end_and_check_no_violations(self):
         """end_and_check() returns a LiveCheckReport with no violations on conformant telemetry."""
-        with WeaverLiveCheck() as weaver:
+        with WeaverLiveCheck(registry=_REGISTRY_DIR) as weaver:
             provider = _make_provider(weaver.otlp_endpoint)
             with provider.get_tracer("test-tracer").start_as_current_span(
                 "test-span"
@@ -76,7 +77,9 @@ class TestSDKInitLiveCheck(unittest.TestCase):
 
     def test_end_and_check_raises_on_violations(self):
         """end_and_check() raises LiveCheckError with the report attached."""
-        with WeaverLiveCheck(policies_dir=_TESTDATA_DIR) as weaver:
+        with WeaverLiveCheck(
+            registry=_REGISTRY_DIR, policies_dir=_TESTDATA_DIR
+        ) as weaver:
             provider = _make_provider(weaver.otlp_endpoint)
             with provider.get_tracer("test-tracer").start_as_current_span(
                 "test-span"
@@ -105,7 +108,7 @@ class TestSDKInitLiveCheck(unittest.TestCase):
 
     def test_end_no_violations(self):
         """end() returns a LiveCheckReport with no violations on conformant telemetry."""
-        with WeaverLiveCheck() as weaver:
+        with WeaverLiveCheck(registry=_REGISTRY_DIR) as weaver:
             provider = _make_provider(weaver.otlp_endpoint)
             with provider.get_tracer("test-tracer").start_as_current_span(
                 "test-span"
@@ -123,7 +126,9 @@ class TestSDKInitLiveCheck(unittest.TestCase):
 
     def test_end_with_violations(self):
         """end() returns a LiveCheckReport with violations without raising."""
-        with WeaverLiveCheck(policies_dir=_TESTDATA_DIR) as weaver:
+        with WeaverLiveCheck(
+            registry=_REGISTRY_DIR, policies_dir=_TESTDATA_DIR
+        ) as weaver:
             provider = _make_provider(weaver.otlp_endpoint)
             with provider.get_tracer("test-tracer").start_as_current_span(
                 "test-span"
@@ -150,7 +155,7 @@ class TestSDKInitLiveCheck(unittest.TestCase):
 
     def test_report_span_statistics(self):
         """The full report exposes span counts and individual span samples."""
-        with WeaverLiveCheck() as weaver:
+        with WeaverLiveCheck(registry=_REGISTRY_DIR) as weaver:
             provider = _make_provider(weaver.otlp_endpoint)
             with provider.get_tracer("test-tracer").start_as_current_span(
                 "test-span"
