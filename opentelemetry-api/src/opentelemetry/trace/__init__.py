@@ -88,7 +88,9 @@ from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import OTEL_PYTHON_TRACER_PROVIDER
 from opentelemetry.trace.propagation import (
     _SPAN_KEY,
+    get_current_link,
     get_current_span,
+    set_link_in_context,
     set_span_in_context,
 )
 from opentelemetry.trace.span import (
@@ -673,6 +675,8 @@ __all__ = [
     "set_tracer_provider",
     "set_span_in_context",
     "use_span",
+    "get_current_link",
+    "set_link_in_context",
     "Status",
     "StatusCode",
 ]
