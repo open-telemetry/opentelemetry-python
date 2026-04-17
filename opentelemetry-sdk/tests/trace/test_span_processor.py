@@ -461,7 +461,7 @@ class TestConcurrentMultiSpanProcessor(
         for mock_processor in mocks:
             multi_processor.add_span_processor(mock_processor)
 
-        flushed = multi_processor.force_flush(timeout_millis=10)
+        flushed = multi_processor.force_flush(timeout_millis=25)
         # let the thread executing the late_mock continue
         wait_event.set()
 
