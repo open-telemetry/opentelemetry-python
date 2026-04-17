@@ -70,7 +70,7 @@ import typing
 from json import dumps
 from os import environ
 from types import ModuleType
-from typing import List, Optional, Set, cast
+from typing import List, Optional, cast
 from urllib import parse
 
 from opentelemetry.attributes import BoundedAttributes
@@ -195,22 +195,27 @@ class Resource:
         if not attributes:
             attributes = {}
 
-        otel_experimental_resource_detectors: Set[str] = {"otel"}.union(
-            {
-                otel_experimental_resource_detector.strip()
-                for otel_experimental_resource_detector in environ.get(
-                    OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, ""
-                ).split(",")
-                if otel_experimental_resource_detector
-            }
-        )
+        otel_experimental_resource_detectors: list[str] = [
+            d.strip()
+            for d in environ.get(
+                OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, ""
+            ).split(",")
+            if d.strip()
+        ]
 
         resource_detectors: List[ResourceDetector] = []
 
         if "*" in otel_experimental_resource_detectors:
-            otel_experimental_resource_detectors = entry_points(
-                group="opentelemetry_resource_detector"
-            ).names
+            otel_experimental_resource_detectors = [
+                name
+                for name in entry_points(
+                    group="opentelemetry_resource_detector"
+                ).names
+                if name != "otel"
+            ]
+            otel_experimental_resource_detectors.append("otel")
+        elif "otel" not in otel_experimental_resource_detectors:
+            otel_experimental_resource_detectors.append("otel")
 
         for resource_detector in otel_experimental_resource_detectors:
             try:

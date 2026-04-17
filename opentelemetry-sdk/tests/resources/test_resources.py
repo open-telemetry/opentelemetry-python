@@ -24,6 +24,9 @@ from urllib import parse
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPERIMENTAL_RESOURCE_DETECTORS,
 )
+from opentelemetry.util._importlib_metadata import (
+    entry_points as real_entry_points,
+)
 from opentelemetry.sdk.resources import (
     _DEFAULT_RESOURCE,
     _EMPTY_RESOURCE,
@@ -475,6 +478,16 @@ class TestResources(unittest.TestCase):
 
 
 # pylint: disable=too-many-public-methods
+def _make_detector_ep(resource):
+    return Mock(
+        **{
+            "load.return_value": Mock(
+                return_value=Mock(**{"detect.return_value": resource})
+            )
+        }
+    )
+
+
 class TestOTELResourceDetector(unittest.TestCase):
     def setUp(self) -> None:
         environ[OTEL_RESOURCE_ATTRIBUTES] = ""
@@ -773,6 +786,48 @@ class TestOTELResourceDetector(unittest.TestCase):
             )
             self.assertIn(PROCESS_RUNTIME_VERSION, resource.attributes.keys())
             self.assertEqual(resource.schema_url, "")
+
+    @patch.dict(
+        environ,
+        {OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: "mock_a,mock_b"},
+        clear=True,
+    )
+    def test_resource_detector_ordering_last_wins(self):
+        """Last detector in OTEL_EXPERIMENTAL_RESOURCE_DETECTORS wins on conflict."""
+        ep_a = _make_detector_ep(Resource({"conflict_key": "from_a"}))
+        ep_b = _make_detector_ep(Resource({"conflict_key": "from_b"}))
+
+        def side_effect(*args, **kwargs):
+            return {"mock_a": [ep_a], "mock_b": [ep_b]}.get(
+                kwargs.get("name", ""), []
+            )
+
+        with patch("opentelemetry.sdk.resources.entry_points", side_effect=side_effect):
+            resource = Resource({}).create()
+
+        self.assertEqual(resource.attributes["conflict_key"], "from_b")
+
+    @patch.dict(
+        environ,
+        {
+            OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: "mock",
+            OTEL_RESOURCE_ATTRIBUTES: "conflict_key=otel_value",
+        },
+        clear=True,
+    )
+    def test_otel_detector_appended_last(self):
+        """'otel' detector is always appended last, so its attributes win over earlier detectors."""
+        ep_mock = _make_detector_ep(Resource({"conflict_key": "mock_value"}))
+
+        def side_effect(*args, **kwargs):
+            if kwargs.get("name") == "mock":
+                return [ep_mock]
+            return real_entry_points(*args, **kwargs)
+
+        with patch("opentelemetry.sdk.resources.entry_points", side_effect=side_effect):
+            resource = Resource({}).create()
+
+        self.assertEqual(resource.attributes["conflict_key"], "otel_value")
 
     @patch("platform.system", lambda: "Linux")
     @patch("platform.release", lambda: "666.5.0-35-generic")
