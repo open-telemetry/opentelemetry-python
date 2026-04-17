@@ -14,6 +14,8 @@
 #
 import re
 import typing
+from enum import Enum
+from typing import Protocol, Sequence
 
 from opentelemetry import trace
 from opentelemetry.context.context import Context
@@ -116,3 +118,149 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
         `opentelemetry.propagators.textmap.TextMapPropagator.fields`
         """
         return {self._TRACEPARENT_HEADER_NAME, self._TRACESTATE_HEADER_NAME}
+
+
+class PropagatorTracePolicy(Enum):
+    CONTINUE = 0
+    RESTART_WITH_LINK = 1
+    RESTART_WITHOUT_LINK = 2
+
+
+class PredicateT(Protocol):
+    def __call__(
+        self,
+        tracestate: TraceState | None,
+    ) -> bool: ...
+
+    def __str__(self) -> str: ...
+
+
+class OnKeyPresence(PredicateT):
+    def __init__(self, key: str):
+        self._key = key
+
+    def __call__(
+        self,
+        tracestate: TraceState | None,
+    ) -> bool:
+        return tracestate is not None and self._key in tracestate
+
+    def __str__(self):
+        return f"{self._key}=*"
+
+
+class OnKeyValue(PredicateT):
+    def __init__(self, key: str, value: str):
+        self._key = key
+        self._value = value
+
+    def __call__(
+        self,
+        tracestate: TraceState | None,
+    ) -> bool:
+        return (
+            tracestate is not None and tracestate.get(self._key) == self._value
+        )
+
+    def __str__(self):
+        return f"{self._key}={self._value}"
+
+
+class AlwaysPredicate(PredicateT):
+    def __call__(
+        self,
+        tracestate: TraceState | None,
+    ) -> bool:
+        return True
+
+    def __str__(self):
+        return "*"
+
+
+RulesT = Sequence[tuple[PredicateT, PropagatorTracePolicy]]
+
+
+class RuleBasedTraceContextTextMapPropagator(textmap.TextMapPropagator):
+    """Extracts and injects using W3C TraceContext's headers.
+
+    Rules based on the tracestate decide if the trace should be continued
+    or restarted."""
+
+    _TRACEPARENT_HEADER_NAME = "traceparent"
+    _TRACESTATE_HEADER_NAME = "tracestate"
+    _TRACEPARENT_HEADER_FORMAT = (
+        "^[ \t]*([0-9a-f]{2})-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})"
+        + "(-.*)?[ \t]*$"
+    )
+    _TRACEPARENT_HEADER_FORMAT_RE = re.compile(_TRACEPARENT_HEADER_FORMAT)
+
+    def __init__(self, rules: RulesT):
+        self._rules = rules
+
+    def extract(
+        self,
+        carrier: textmap.CarrierT,
+        context: typing.Optional[Context] = None,
+        getter: textmap.Getter[textmap.CarrierT] = textmap.default_getter,
+    ) -> Context:
+        """Extracts SpanContext from the carrier and add it as a Link.
+
+        See `opentelemetry.propagators.textmap.TextMapPropagator.extract`
+        """
+        if context is None:
+            context = Context()
+
+        header = getter.get(carrier, self._TRACEPARENT_HEADER_NAME)
+
+        if not header:
+            return context
+
+        match = re.search(self._TRACEPARENT_HEADER_FORMAT_RE, header[0])
+        if not match:
+            return context
+
+        version: str = match.group(1)
+        trace_id: str = match.group(2)
+        span_id: str = match.group(3)
+        trace_flags: str = match.group(4)
+
+        if trace_id == "0" * 32 or span_id == "0" * 16:
+            return context
+
+        if version == "00":
+            if match.group(5):  # type: ignore
+                return context
+        if version == "ff":
+            return context
+
+        tracestate_headers = getter.get(carrier, self._TRACESTATE_HEADER_NAME)
+        if tracestate_headers is None:
+            tracestate = None
+        else:
+            tracestate = TraceState.from_header(tracestate_headers)
+
+        span_context = trace.SpanContext(
+            trace_id=int(trace_id, 16),
+            span_id=int(span_id, 16),
+            is_remote=True,
+            trace_flags=trace.TraceFlags(int(trace_flags, 16)),
+            trace_state=tracestate,
+        )
+
+        propagator_policy = PropagatorTracePolicy.CONTINUE
+        for predicate, policy in self._rules:
+            if predicate(tracestate):
+                propagator_policy = policy
+                break
+
+        match propagator_policy:
+            case PropagatorTracePolicy.CONTINUE:
+                return trace.set_span_in_context(
+                    trace.NonRecordingSpan(span_context), context
+                )
+            case PropagatorTracePolicy.RESTART_WITH_LINK:
+                return trace.set_link_in_context(
+                    trace.Link(span_context), context
+                )
+            case PropagatorTracePolicy.RESTART_WITHOUT_LINK:
+                return context

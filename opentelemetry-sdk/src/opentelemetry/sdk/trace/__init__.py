@@ -1188,7 +1188,7 @@ class Tracer(trace_api.Tracer):
         record_exception: bool = True,
         set_status_on_exception: bool = True,
     ) -> trace_api.Span:
-        links = links or ()
+        links = tuple(links) if links else ()
         parent_span_context = trace_api.get_current_span(
             context
         ).get_span_context()
@@ -1202,6 +1202,11 @@ class Tracer(trace_api.Tracer):
 
         if not self._is_enabled():
             return trace_api.NonRecordingSpan(context=parent_span_context)
+
+        # pick any eventual link added by the propagators
+        current_link = trace_api.get_current_link(context)
+        if current_link is not None:
+            links += (current_link,)
 
         # is_valid determines root span
         if parent_span_context is None or not parent_span_context.is_valid:

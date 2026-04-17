@@ -15,10 +15,12 @@ from typing import Optional
 
 from opentelemetry.context import create_key, get_value, set_value
 from opentelemetry.context.context import Context
+from opentelemetry.trace import Link
 from opentelemetry.trace.span import INVALID_SPAN, Span
 
 SPAN_KEY = "current-span"
 _SPAN_KEY = create_key("current-span")
+_LINK_KEY = create_key("current-link")
 
 
 def set_span_in_context(
@@ -49,3 +51,33 @@ def get_current_span(context: Optional[Context] = None) -> Span:
     if span is None or not isinstance(span, Span):
         return INVALID_SPAN
     return span
+
+
+def set_link_in_context(
+    link: Link, context: Optional[Context] = None
+) -> Context:
+    """Set the link in the given context.
+
+    Args:
+        link: The Link to set.
+        context: a Context object. if one is not passed, the
+            default current context is used instead.
+    """
+    ctx = set_value(_LINK_KEY, link, context=context)
+    return ctx
+
+
+def get_current_link(context: Optional[Context] = None) -> Optional[Link]:
+    """Retrieve the current link.
+
+    Args:
+        context: A Context object. If one is not passed, the
+            default current context is used instead.
+
+    Returns:
+        The Link set in the context if it exists. None otherwise.
+    """
+    link = get_value(_LINK_KEY, context=context)
+    if link is None or not isinstance(link, Link):
+        return None
+    return link
