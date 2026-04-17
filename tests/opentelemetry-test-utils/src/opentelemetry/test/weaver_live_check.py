@@ -52,24 +52,21 @@ def _extract_violations(report: dict) -> list:
     raw: list[dict] = []
 
     def _collect(obj: Any) -> list[dict]:
-        match obj:
-            case {"live_check_result": {"all_advice": advices}, **_rest}:
-                violations = [
-                    a for a in advices if a.get("level") == "violation"
-                ]
-                return violations + list(
-                    chain.from_iterable(_collect(v) for v in obj.values())
-                )
-            case dict():
-                return list(
-                    chain.from_iterable(_collect(v) for v in obj.values())
-                )
-            case list():
-                return list(
-                    chain.from_iterable(_collect(item) for item in obj)
-                )
-            case _:
-                return []
+        if isinstance(obj, dict):
+            result: list[dict] = []
+            lcr = obj.get("live_check_result")
+            if isinstance(lcr, dict):
+                advices = lcr.get("all_advice")
+                if isinstance(advices, list):
+                    result.extend(
+                        a for a in advices if a.get("level") == "violation"
+                    )
+            for value in obj.values():
+                result.extend(_collect(value))
+            return result
+        if isinstance(obj, list):
+            return list(chain.from_iterable(_collect(item) for item in obj))
+        return []
 
     raw = _collect(report)
 
