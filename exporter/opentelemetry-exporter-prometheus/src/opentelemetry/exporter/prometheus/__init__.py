@@ -67,7 +67,7 @@ from itertools import chain
 from json import dumps
 from logging import getLogger
 from os import environ
-from typing import Deque, Dict, Iterable, Sequence, Tuple, Union
+from typing import Deque, Dict, Iterable, Optional, Sequence, Tuple, Union
 
 from prometheus_client import start_http_server
 from prometheus_client.core import (
@@ -105,6 +105,9 @@ from opentelemetry.sdk.metrics.export import (
     MetricsData,
     Sum,
 )
+from opentelemetry.sdk.metrics.view import (
+    Aggregation,
+)
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
     OtelComponentTypeValues,
 )
@@ -135,7 +138,10 @@ class PrometheusMetricReader(MetricReader):
     """Prometheus metric exporter for OpenTelemetry."""
 
     def __init__(
-        self, disable_target_info: bool = False, prefix: str = ""
+        self,
+        disable_target_info: bool = False,
+        prefix: str = "",
+        default_aggregation: Optional[Dict[type, Aggregation]] = None,
     ) -> None:
         super().__init__(
             preferred_temporality={
@@ -146,6 +152,7 @@ class PrometheusMetricReader(MetricReader):
                 ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
                 ObservableGauge: AggregationTemporality.CUMULATIVE,
             },
+            preferred_aggregation=default_aggregation,
             otel_component_type=OtelComponentTypeValues.PROMETHEUS_HTTP_TEXT_METRIC_EXPORTER,
         )
         self._collector = _CustomCollector(

@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `opentelemetry-exporter-prometheus`: Add `default_aggregation` parameter to `PrometheusMetricReader` to allow configuring default aggregation per instrument kind
+  ([#5109](https://github.com/open-telemetry/opentelemetry-python/issues/5109))
 - `opentelemetry-sdk`: fix YAML structure injection via environment variable substitution in declarative file configuration; values containing newlines are now emitted as quoted YAML scalars per spec requirement
   ([#5091](https://github.com/open-telemetry/opentelemetry-python/pull/5091))
 - `opentelemetry-sdk`: Add `create_logger_provider`/`configure_logger_provider` to declarative file configuration, enabling LoggerProvider instantiation from config files without reading env vars
