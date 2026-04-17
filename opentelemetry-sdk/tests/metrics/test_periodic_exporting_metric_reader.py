@@ -359,4 +359,54 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         assert isinstance(name, str)
         self.assertTrue(name.startswith("periodic_metric_reader/"))
 
-        mp.shutdown()
+        mp.shutdown()                          
+
+    def test_force_flush_returns_true_on_success(self):
+        exporter = FakeMetricsExporter()
+        pmr = self._create_periodic_reader(metrics, exporter)
+        result = pmr.force_flush(timeout_millis=5_000)
+        self.assertTrue(result)
+        pmr.shutdown()
+
+    def test_force_flush_returns_false_on_export_failure(self):
+        exporter = FakeMetricsExporter()
+        exporter.export = Mock(return_value=MetricExportResult.FAILURE)
+        pmr = self._create_periodic_reader(metrics, exporter)
+        result = pmr.force_flush(timeout_millis=5_000)
+        self.assertFalse(result)
+        pmr.shutdown()
+
+    def test_force_flush_skips_exporter_flush_when_collect_fails(self):
+        exporter = FakeMetricsExporter()
+        exporter.force_flush = Mock(return_value=True)
+        pmr = PeriodicExportingMetricReader(
+            exporter, export_interval_millis=math.inf
+        )
+        # No collect callback registered → collect returns None → force_flush
+        # on base treats None as not-False (success), so wire up a failing one
+        exporter.export = Mock(return_value=MetricExportResult.FAILURE)
+
+        def _collect_failure(reader, timeout_millis):
+            return metrics
+
+        pmr._set_collect_callback(_collect_failure)
+        exporter.export = Mock(return_value=MetricExportResult.FAILURE)
+        result = pmr.force_flush(timeout_millis=5_000)
+        self.assertFalse(result)
+        exporter.force_flush.assert_not_called()
+        pmr.shutdown()
+
+    def test_detach_called_on_export_failure(self):
+        """detach(token) must run in finally even when export returns FAILURE."""
+        from unittest.mock import patch
+
+        exporter = FakeMetricsExporter()
+        exporter.export = Mock(return_value=MetricExportResult.FAILURE)
+        pmr = self._create_periodic_reader(metrics, exporter)
+
+        with patch(
+            "opentelemetry.sdk.metrics._internal.export.detach"
+        ) as mock_detach:
+            pmr.force_flush(timeout_millis=5_000)
+            self.assertTrue(mock_detach.called)
+        pmr.shutdown()

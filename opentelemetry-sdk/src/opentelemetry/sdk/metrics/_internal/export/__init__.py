@@ -23,7 +23,7 @@ from os import environ, linesep
 from sys import stdout
 from threading import Event, Lock, RLock, Thread
 from time import perf_counter, time_ns
-from typing import IO, Callable, Iterable, Optional
+from typing import IO, Callable, Iterable
 
 from typing_extensions import final
 
@@ -336,7 +336,7 @@ class MetricReader(ABC):
         )
 
     @final
-    def collect(self, timeout_millis: float = 10_000) -> Optional[bool]:
+    def collect(self, timeout_millis: float = 10_000) -> bool | None:
         """Collects the metrics from the internal SDK state and
         invokes the `_receive_metrics` with the collection.
 
@@ -387,7 +387,7 @@ class MetricReader(ABC):
         metrics_data: MetricsData,
         timeout_millis: float = 10_000,
         **kwargs,
-    ) -> bool:
+    ) -> bool | None:
         """Called by `MetricReader.collect` when it receives a batch of metrics.
 
         Subclasses must return ``True`` on success and ``False`` on failure.
@@ -445,7 +445,7 @@ class InMemoryMetricReader(MetricReader):
 
     def get_metrics_data(
         self,
-    ) -> Optional[MetricsData]:
+    ) -> MetricsData | None:
         """Reads and returns current metrics from the SDK"""
         with self._lock:
             self.collect()
@@ -480,8 +480,8 @@ class PeriodicExportingMetricReader(MetricReader):
     def __init__(
         self,
         exporter: MetricExporter,
-        export_interval_millis: Optional[float] = None,
-        export_timeout_millis: Optional[float] = None,
+        export_interval_millis: float | None = None,
+        export_timeout_millis: float | None = None,
     ) -> None:
         # PeriodicExportingMetricReader defers to exporter for configuration
         super().__init__(
@@ -608,6 +608,6 @@ class PeriodicExportingMetricReader(MetricReader):
         self._exporter.shutdown(timeout=(deadline_ns - time_ns()) / 10**6)
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
-        collect_ok = super().force_flush(timeout_millis=timeout_millis)
-        exporter_ok = self._exporter.force_flush(timeout_millis=timeout_millis)
-        return collect_ok and exporter_ok
+        if not super().force_flush(timeout_millis=timeout_millis):
+            return False
+        return self._exporter.force_flush(timeout_millis=timeout_millis)
