@@ -14,7 +14,6 @@ from sys import stdout
 from threading import Event, Lock, RLock, Thread
 from time import perf_counter, time_ns
 from typing import IO
-
 from typing_extensions import final
 
 # This kind of import is needed to avoid Sphinx errors.
@@ -334,7 +333,7 @@ class MetricReader(ABC):
         )
 
     @final
-    def collect(self, timeout_millis: float = 10_000) -> Optional[bool]:
+    def collect(self, timeout_millis: float = 10_000) -> bool | None:
         """Collects the metrics from the internal SDK state and
         invokes the `_receive_metrics` with the collection.
 
@@ -385,10 +384,10 @@ class MetricReader(ABC):
         metrics_data: MetricsData,
         timeout_millis: float = 10_000,
         **kwargs,
-    ) -> bool:
+    ) -> bool | None:
         """Called by `MetricReader.collect` when it receives a batch of metrics.
 
-        Subclasses must return ``True`` on success and ``False`` on failure.
+        Subclasses should return ``True`` on success and ``False`` on failure.
 
         .. note::
             Existing subclasses that return ``None`` (the old implicit default)
@@ -587,7 +586,7 @@ class PeriodicExportingMetricReader(MetricReader):
                     metrics_data, timeout_millis=timeout_millis
                 )
                 return result is MetricExportResult.SUCCESS
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             _logger.exception("Exception while exporting metrics")
             return False
         finally:
@@ -610,6 +609,6 @@ class PeriodicExportingMetricReader(MetricReader):
         self._exporter.shutdown(timeout=(deadline_ns - time_ns()) / 10**6)
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
-        collect_ok = super().force_flush(timeout_millis=timeout_millis)
-        exporter_ok = self._exporter.force_flush(timeout_millis=timeout_millis)
-        return collect_ok and exporter_ok
+        if not super().force_flush(timeout_millis=timeout_millis):
+            return False
+        return self._exporter.force_flush(timeout_millis=timeout_millis)
