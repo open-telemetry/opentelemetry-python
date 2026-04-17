@@ -24,9 +24,6 @@ from urllib import parse
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPERIMENTAL_RESOURCE_DETECTORS,
 )
-from opentelemetry.util._importlib_metadata import (
-    entry_points as real_entry_points,
-)
 from opentelemetry.sdk.resources import (
     _DEFAULT_RESOURCE,
     _EMPTY_RESOURCE,
@@ -59,6 +56,9 @@ from opentelemetry.sdk.resources import (
     ResourceDetector,
     _HostResourceDetector,
     get_aggregated_resources,
+)
+from opentelemetry.util._importlib_metadata import (
+    entry_points as real_entry_points,
 )
 
 try:
@@ -802,7 +802,9 @@ class TestOTELResourceDetector(unittest.TestCase):
                 kwargs.get("name", ""), []
             )
 
-        with patch("opentelemetry.sdk.resources.entry_points", side_effect=side_effect):
+        with patch(
+            "opentelemetry.sdk.resources.entry_points", side_effect=side_effect
+        ):
             resource = Resource({}).create()
 
         self.assertEqual(resource.attributes["conflict_key"], "from_b")
@@ -824,7 +826,9 @@ class TestOTELResourceDetector(unittest.TestCase):
                 return [ep_mock]
             return real_entry_points(*args, **kwargs)
 
-        with patch("opentelemetry.sdk.resources.entry_points", side_effect=side_effect):
+        with patch(
+            "opentelemetry.sdk.resources.entry_points", side_effect=side_effect
+        ):
             resource = Resource({}).create()
 
         self.assertEqual(resource.attributes["conflict_key"], "otel_value")
