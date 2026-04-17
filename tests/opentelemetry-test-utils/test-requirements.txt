@@ -13,3 +13,9 @@ zipp==3.19.2
 -e opentelemetry-sdk
 -e opentelemetry-semantic-conventions
 -e tests/opentelemetry-test-utils
+# these are required for weaver integration tests, we're running that only on linux
+# because of lack of support for gRPC on Windows in some cases.
+# note: tox does not support PEP 508 markers on `-e` editable installs, so these are installed non-editable
+./opentelemetry-proto ; sys_platform != 'win32'
+./exporter/opentelemetry-exporter-otlp-proto-common ; sys_platform != 'win32'
+./exporter/opentelemetry-exporter-otlp-proto-grpc ; sys_platform != 'win32'

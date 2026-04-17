@@ -19,12 +19,13 @@ import os
 import shutil
 import socket
 import subprocess
-import time
 from collections import defaultdict
+from itertools import chain
 from typing import Any
 
-from requests import get, post
-from requests.exceptions import ConnectionError as ReqConnectionError
+from requests import Session, post
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 from opentelemetry.semconv.schemas import Schemas
 
@@ -50,19 +51,27 @@ def _extract_violations(report: dict) -> list:
     """
     raw: list[dict] = []
 
-    def collect(obj: Any) -> None:
-        if isinstance(obj, dict):
-            if "live_check_result" in obj:
-                for advice in obj["live_check_result"].get("all_advice", []):
-                    if advice.get("level") == "violation":
-                        raw.append(advice)
-            for val in obj.values():
-                collect(val)
-        elif isinstance(obj, list):
-            for item in obj:
-                collect(item)
+    def _collect(obj: Any) -> list[dict]:
+        match obj:
+            case {"live_check_result": {"all_advice": advices}, **_rest}:
+                violations = [
+                    a for a in advices if a.get("level") == "violation"
+                ]
+                return violations + list(
+                    chain.from_iterable(_collect(v) for v in obj.values())
+                )
+            case dict():
+                return list(
+                    chain.from_iterable(_collect(v) for v in obj.values())
+                )
+            case list():
+                return list(
+                    chain.from_iterable(_collect(item) for item in obj)
+                )
+            case _:
+                return []
 
-    collect(report)
+    raw = _collect(report)
 
     groups: dict[tuple, list] = defaultdict(list)
     for violation in raw:
@@ -96,7 +105,7 @@ def _extract_violations(report: dict) -> list:
 
 
 def _format_violations(violations: list) -> str:
-    """Format violations list as human-readable text (mirrors violations.j2 output)."""
+    """Format violations list as human-readable text."""
     lines = []
     for violation in violations:
         signal = ""
@@ -314,26 +323,29 @@ class WeaverLiveCheck:
         return self
 
     def _wait_for_ready(self, timeout: int = 60) -> None:
-        for attempt in range(timeout):
+        retry = Retry(
+            total=timeout,
+            backoff_factor=1,
+            backoff_max=1,
+            # Any non-2xx response from /health means weaver isn't ready yet.
+            status_forcelist=list(range(300, 600)),
+            allowed_methods=["GET"],
+        )
+        session = Session()
+        session.mount("http://", HTTPAdapter(max_retries=retry))
+        try:
+            response = session.get(
+                f"http://localhost:{self._admin_port}/health", timeout=5
+            )
+            response.raise_for_status()
+        except Exception as exc:  # pylint: disable=broad-except
             if self._process is not None and self._process.poll() is not None:
                 raise RuntimeError(
                     f"WeaverLiveCheck process exited unexpectedly (code {self._process.returncode})"
-                )
-            try:
-                response = get(
-                    f"http://localhost:{self._admin_port}/health", timeout=5
-                )
-                if response.status_code == 200:
-                    return
-                logger.debug(
-                    "Health check returned %s, try %s",
-                    response.status_code,
-                    attempt,
-                )
-            except ReqConnectionError as exc:
-                logger.debug("Health check connection error: %s", exc)
-            time.sleep(1)
-        raise TimeoutError("WeaverLiveCheck did not become ready in time")
+                ) from exc
+            raise TimeoutError(
+                "WeaverLiveCheck did not become ready in time"
+            ) from exc
 
     @property
     def otlp_endpoint(self) -> str:
