@@ -28,6 +28,7 @@ from opentelemetry.exporter.prometheus import (
     _CustomCollector,
 )
 from opentelemetry.metrics import NoOpMeterProvider
+from opentelemetry.sdk.metrics import Histogram as HistogramInstrument
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
@@ -38,6 +39,7 @@ from opentelemetry.sdk.metrics.export import (
     ResourceMetrics,
     ScopeMetrics,
 )
+from opentelemetry.sdk.metrics.view import ExplicitBucketHistogramAggregation
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.test.metrictestutil import (
     _generate_gauge,
@@ -719,10 +721,9 @@ class TestPrometheusMetricReader(TestCase):
                 """
             ),
         )
+
         def test_default_aggregation(self):
             """Test that default_aggregation parameter is passed to MetricReader."""
-            from opentelemetry.sdk.metrics.view import ExplicitBucketHistogramAggregation
-            from opentelemetry.sdk.metrics import Histogram as HistogramInstrument
             custom_aggregation = {
                 HistogramInstrument: ExplicitBucketHistogramAggregation(
                     boundaries=[1.0, 5.0, 10.0]
@@ -732,7 +733,9 @@ class TestPrometheusMetricReader(TestCase):
                 default_aggregation=custom_aggregation
             )
             self.assertEqual(
-                reader._instrument_class_aggregation[HistogramInstrument].__class__,
+                reader._instrument_class_aggregation[
+                    HistogramInstrument
+                ].__class__,
                 ExplicitBucketHistogramAggregation,
             )
             reader.shutdown()
