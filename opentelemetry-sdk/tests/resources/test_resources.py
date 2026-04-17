@@ -618,7 +618,6 @@ class TestOTELResourceDetector(unittest.TestCase):
             tuple(sys.orig_argv),
         )
 
-    @patch("sys.argv", ["/path/to/myapp/__main__.py"])
     @patch("sys.orig_argv", ["/usr/bin/python", "-m", "myapp"])
     def test_process_detector_uses_orig_argv_for_python_m(self):
         """For ``python -m <module>`` invocations sys.argv[0] is rewritten to
