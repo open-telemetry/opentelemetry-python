@@ -67,7 +67,7 @@ from itertools import chain
 from json import dumps
 from logging import getLogger
 from os import environ
-from typing import Deque, Dict, Iterable, Sequence, Tuple, Union
+from typing import Any, Deque, Dict, Iterable, Sequence, Tuple, Union
 
 from prometheus_client import start_http_server
 from prometheus_client.core import (
@@ -115,6 +115,12 @@ _logger = getLogger(__name__)
 _TARGET_INFO_NAME = "target"
 _TARGET_INFO_DESCRIPTION = "Target metadata"
 
+_OTEL_SCOPE_NAME_LABEL = "otel_scope_name"
+_OTEL_SCOPE_VERSION_LABEL = "otel_scope_version"
+_OTEL_SCOPE_SCHEMA_URL_LABEL = "otel_scope_schema_url"
+_OTEL_SCOPE_ATTR_PREFIX = "otel_scope_"
+_SCOPE_ATTR_CONFLICT_NAMES = frozenset({"name", "version", "schema_url"})
+
 
 def _convert_buckets(
     bucket_counts: Sequence[int], explicit_bounds: Sequence[float]
@@ -135,7 +141,10 @@ class PrometheusMetricReader(MetricReader):
     """Prometheus metric exporter for OpenTelemetry."""
 
     def __init__(
-        self, disable_target_info: bool = False, prefix: str = ""
+        self,
+        disable_target_info: bool = False,
+        without_scope_info: bool = False,
+        prefix: str = "",
     ) -> None:
         super().__init__(
             preferred_temporality={
@@ -149,7 +158,9 @@ class PrometheusMetricReader(MetricReader):
             otel_component_type=OtelComponentTypeValues.PROMETHEUS_HTTP_TEXT_METRIC_EXPORTER,
         )
         self._collector = _CustomCollector(
-            disable_target_info=disable_target_info, prefix=prefix
+            disable_target_info=disable_target_info,
+            without_scope_info=without_scope_info,
+            prefix=prefix,
         )
         REGISTRY.register(self._collector)
         self._collector._callback = self.collect
@@ -176,10 +187,16 @@ class _CustomCollector:
     https://github.com/prometheus/client_python#custom-collectors
     """
 
-    def __init__(self, disable_target_info: bool = False, prefix: str = ""):
+    def __init__(
+        self,
+        disable_target_info: bool = False,
+        without_scope_info: bool = False,
+        prefix: str = "",
+    ):
         self._callback = None
         self._metrics_datas: Deque[MetricsData] = deque()
         self._disable_target_info = disable_target_info
+        self._without_scope_info = without_scope_info
         self._target_info = None
         self._prefix = prefix
 
@@ -224,163 +241,191 @@ class _CustomCollector:
     def _translate_to_prometheus(
         self,
         metrics_data: MetricsData,
-        metric_family_id_metric_family: Dict[str, PrometheusMetric],
+        metric_family_id_metric_family: dict[str, PrometheusMetric],
     ):
-        metrics = []
-
-        for resource_metrics in metrics_data.resource_metrics:
-            for scope_metrics in resource_metrics.scope_metrics:
-                for metric in scope_metrics.metrics:
-                    metrics.append(metric)
-
-        for metric in metrics:
-            label_values_data_points = []
-            values = []
-
-            metric_name = metric.name
-            if self._prefix:
-                metric_name = self._prefix + "_" + metric_name
-            metric_name = sanitize_full_name(metric_name)
-            metric_description = metric.description or ""
-            metric_unit = map_unit(metric.unit)
-
-            # First pass: collect all unique label keys across all data points
-            all_label_keys_set = set()
-            data_point_attributes = []
-            for number_data_point in metric.data.data_points:
-                attrs = {}
-                for key, value in number_data_point.attributes.items():
-                    sanitized_key = sanitize_attribute(key)
-                    all_label_keys_set.add(sanitized_key)
-                    attrs[sanitized_key] = self._check_value(value)
-                data_point_attributes.append(attrs)
-
-                if isinstance(number_data_point, HistogramDataPoint):
-                    values.append(
-                        {
-                            "bucket_counts": number_data_point.bucket_counts,
-                            "explicit_bounds": (
-                                number_data_point.explicit_bounds
-                            ),
-                            "sum": number_data_point.sum,
-                        }
-                    )
-                else:
-                    values.append(number_data_point.value)
-
-            # Sort label keys for consistent ordering
-            all_label_keys = sorted(all_label_keys_set)
-
-            # Second pass: build label values with empty strings for missing labels
-            for attrs in data_point_attributes:
-                label_values = []
-                for key in all_label_keys:
-                    label_values.append(attrs.get(key, ""))
-                label_values_data_points.append(label_values)
-
-            # Create metric family ID without label keys
-            per_metric_family_id = "|".join(
-                [
-                    metric_name,
-                    metric_description,
-                    metric_unit,
-                ]
-            )
-
-            is_non_monotonic_sum = (
-                isinstance(metric.data, Sum)
-                and metric.data.is_monotonic is False
-            )
-            is_cumulative = (
-                isinstance(metric.data, Sum)
-                and metric.data.aggregation_temporality
-                == AggregationTemporality.CUMULATIVE
-            )
-
-            # The prometheus compatibility spec for sums says: If the aggregation temporality is cumulative and the sum is non-monotonic, it MUST be converted to a Prometheus Gauge.
-            should_convert_sum_to_gauge = (
-                is_non_monotonic_sum and is_cumulative
-            )
-
-            if (
-                isinstance(metric.data, Sum)
-                and not should_convert_sum_to_gauge
-            ):
-                metric_family_id = "|".join(
-                    [per_metric_family_id, CounterMetricFamily.__name__]
-                )
-
-                if metric_family_id not in metric_family_id_metric_family:
-                    metric_family_id_metric_family[metric_family_id] = (
-                        CounterMetricFamily(
-                            name=metric_name,
-                            documentation=metric_description,
-                            labels=all_label_keys,
-                            unit=metric_unit,
-                        )
-                    )
-                for label_values, value in zip(
-                    label_values_data_points, values
-                ):
-                    metric_family_id_metric_family[
-                        metric_family_id
-                    ].add_metric(labels=label_values, value=value)
-            elif isinstance(metric.data, Gauge) or should_convert_sum_to_gauge:
-                metric_family_id = "|".join(
-                    [per_metric_family_id, GaugeMetricFamily.__name__]
-                )
-
-                if (
-                    metric_family_id
-                    not in metric_family_id_metric_family.keys()
-                ):
-                    metric_family_id_metric_family[metric_family_id] = (
-                        GaugeMetricFamily(
-                            name=metric_name,
-                            documentation=metric_description,
-                            labels=all_label_keys,
-                            unit=metric_unit,
-                        )
-                    )
-                for label_values, value in zip(
-                    label_values_data_points, values
-                ):
-                    metric_family_id_metric_family[
-                        metric_family_id
-                    ].add_metric(labels=label_values, value=value)
-            elif isinstance(metric.data, Histogram):
-                metric_family_id = "|".join(
-                    [per_metric_family_id, HistogramMetricFamily.__name__]
-                )
-
-                if (
-                    metric_family_id
-                    not in metric_family_id_metric_family.keys()
-                ):
-                    metric_family_id_metric_family[metric_family_id] = (
-                        HistogramMetricFamily(
-                            name=metric_name,
-                            documentation=metric_description,
-                            labels=all_label_keys,
-                            unit=metric_unit,
-                        )
-                    )
-                for label_values, value in zip(
-                    label_values_data_points, values
-                ):
-                    metric_family_id_metric_family[
-                        metric_family_id
-                    ].add_metric(
-                        labels=label_values,
-                        buckets=_convert_buckets(
-                            value["bucket_counts"], value["explicit_bounds"]
+        for rm in metrics_data.resource_metrics:
+            for sm in rm.scope_metrics:
+                scope_attrs: dict[str, Any] = (
+                    {
+                        **(
+                            {
+                                _OTEL_SCOPE_ATTR_PREFIX + key: value
+                                for key, value in sm.scope.attributes.items()
+                            }
+                            if sm.scope.attributes
+                            else {}
                         ),
-                        sum_value=value["sum"],
-                    )
-            else:
-                _logger.warning(
-                    "Unsupported metric data. %s", type(metric.data)
+                        _OTEL_SCOPE_NAME_LABEL: sm.scope.name or "",
+                        _OTEL_SCOPE_VERSION_LABEL: sm.scope.version or "",
+                        _OTEL_SCOPE_SCHEMA_URL_LABEL: sm.scope.schema_url
+                        or "",
+                    }
+                    if not self._without_scope_info
+                    else {}
                 )
+
+                for metric in sm.metrics:
+                    label_values_data_points = []
+                    values = []
+
+                    metric_name = metric.name
+                    if self._prefix:
+                        metric_name = self._prefix + "_" + metric_name
+                    metric_name = sanitize_full_name(metric_name)
+                    metric_description = metric.description or ""
+                    metric_unit = map_unit(metric.unit)
+
+                    # First pass: collect all unique label keys across all data points
+                    all_label_keys_set = set()
+                    data_point_attributes = []
+                    for number_data_point in metric.data.data_points:
+                        attrs = {}
+                        for key, value in chain(
+                            scope_attrs.items(),
+                            number_data_point.attributes.items(),
+                        ):
+                            sanitized_key = sanitize_attribute(key)
+                            all_label_keys_set.add(sanitized_key)
+                            attrs[sanitized_key] = self._check_value(value)
+                        data_point_attributes.append(attrs)
+
+                        if isinstance(number_data_point, HistogramDataPoint):
+                            values.append(
+                                {
+                                    "bucket_counts": number_data_point.bucket_counts,
+                                    "explicit_bounds": (
+                                        number_data_point.explicit_bounds
+                                    ),
+                                    "sum": number_data_point.sum,
+                                }
+                            )
+                        else:
+                            values.append(number_data_point.value)
+
+                    all_label_keys = sorted(all_label_keys_set)
+
+                    # Second pass: build label values with empty strings for missing labels
+                    for attrs in data_point_attributes:
+                        label_values_data_points.append(
+                            [attrs.get(key, "") for key in all_label_keys]
+                        )
+
+                    # Create metric family ID without label keys
+                    per_metric_family_id = "|".join(
+                        [
+                            metric_name,
+                            metric_description,
+                            metric_unit,
+                        ]
+                    )
+
+                    is_non_monotonic_sum = (
+                        isinstance(metric.data, Sum)
+                        and metric.data.is_monotonic is False
+                    )
+                    is_cumulative = (
+                        isinstance(metric.data, Sum)
+                        and metric.data.aggregation_temporality
+                        == AggregationTemporality.CUMULATIVE
+                    )
+
+                    # The prometheus compatibility spec for sums says: If the aggregation temporality is cumulative and the sum is non-monotonic, it MUST be converted to a Prometheus Gauge.
+                    should_convert_sum_to_gauge = (
+                        is_non_monotonic_sum and is_cumulative
+                    )
+
+                    if (
+                        isinstance(metric.data, Sum)
+                        and not should_convert_sum_to_gauge
+                    ):
+                        metric_family_id = "|".join(
+                            [
+                                per_metric_family_id,
+                                CounterMetricFamily.__name__,
+                            ]
+                        )
+
+                        if (
+                            metric_family_id
+                            not in metric_family_id_metric_family
+                        ):
+                            metric_family_id_metric_family[
+                                metric_family_id
+                            ] = CounterMetricFamily(
+                                name=metric_name,
+                                documentation=metric_description,
+                                labels=all_label_keys,
+                                unit=metric_unit,
+                            )
+                        for label_values, value in zip(
+                            label_values_data_points, values
+                        ):
+                            metric_family_id_metric_family[
+                                metric_family_id
+                            ].add_metric(labels=label_values, value=value)
+                    elif (
+                        isinstance(metric.data, Gauge)
+                        or should_convert_sum_to_gauge
+                    ):
+                        metric_family_id = "|".join(
+                            [per_metric_family_id, GaugeMetricFamily.__name__]
+                        )
+
+                        if (
+                            metric_family_id
+                            not in metric_family_id_metric_family.keys()
+                        ):
+                            metric_family_id_metric_family[
+                                metric_family_id
+                            ] = GaugeMetricFamily(
+                                name=metric_name,
+                                documentation=metric_description,
+                                labels=all_label_keys,
+                                unit=metric_unit,
+                            )
+                        for label_values, value in zip(
+                            label_values_data_points, values
+                        ):
+                            metric_family_id_metric_family[
+                                metric_family_id
+                            ].add_metric(labels=label_values, value=value)
+                    elif isinstance(metric.data, Histogram):
+                        metric_family_id = "|".join(
+                            [
+                                per_metric_family_id,
+                                HistogramMetricFamily.__name__,
+                            ]
+                        )
+
+                        if (
+                            metric_family_id
+                            not in metric_family_id_metric_family.keys()
+                        ):
+                            metric_family_id_metric_family[
+                                metric_family_id
+                            ] = HistogramMetricFamily(
+                                name=metric_name,
+                                documentation=metric_description,
+                                labels=all_label_keys,
+                                unit=metric_unit,
+                            )
+                        for label_values, value in zip(
+                            label_values_data_points, values
+                        ):
+                            metric_family_id_metric_family[
+                                metric_family_id
+                            ].add_metric(
+                                labels=label_values,
+                                buckets=_convert_buckets(
+                                    value["bucket_counts"],
+                                    value["explicit_bounds"],
+                                ),
+                                sum_value=value["sum"],
+                            )
+                    else:
+                        _logger.warning(
+                            "Unsupported metric data. %s", type(metric.data)
+                        )
 
     # pylint: disable=no-self-use
     def _check_value(self, value: Union[int, float, str, Sequence]) -> str:

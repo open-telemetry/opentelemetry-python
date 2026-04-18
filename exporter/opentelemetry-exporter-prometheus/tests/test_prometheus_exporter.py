@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from textwrap import dedent
 from unittest import TestCase
 from unittest.mock import Mock, patch
@@ -24,6 +26,10 @@ from prometheus_client.core import (
 )
 
 from opentelemetry.exporter.prometheus import (
+    _OTEL_SCOPE_ATTR_PREFIX,
+    _OTEL_SCOPE_NAME_LABEL,
+    _OTEL_SCOPE_SCHEMA_URL_LABEL,
+    _OTEL_SCOPE_VERSION_LABEL,
     PrometheusMetricReader,
     _CustomCollector,
 )
@@ -39,6 +45,7 @@ from opentelemetry.sdk.metrics.export import (
     ScopeMetrics,
 )
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.test.metrictestutil import (
     _generate_gauge,
     _generate_histogram,
@@ -47,6 +54,7 @@ from opentelemetry.test.metrictestutil import (
 )
 
 
+# pylint: disable=too-many-public-methods
 class TestPrometheusMetricReader(TestCase):
     def setUp(self):
         self._mock_registry_register = Mock()
@@ -74,7 +82,9 @@ class TestPrometheusMetricReader(TestCase):
             ]
         )
 
-        collector = _CustomCollector(disable_target_info=True, prefix=prefix)
+        collector = _CustomCollector(
+            disable_target_info=True, without_scope_info=True, prefix=prefix
+        )
         collector.add_metrics_data(metrics_data)
         result_bytes = generate_latest(collector)
         result = result_bytes.decode("utf-8")
@@ -158,7 +168,9 @@ class TestPrometheusMetricReader(TestCase):
             ]
         )
 
-        collector = _CustomCollector(disable_target_info=True)
+        collector = _CustomCollector(
+            disable_target_info=True, without_scope_info=True
+        )
         collector.add_metrics_data(metrics_data)
 
         for prometheus_metric in collector.collect():
@@ -204,7 +216,9 @@ class TestPrometheusMetricReader(TestCase):
             ]
         )
 
-        collector = _CustomCollector(disable_target_info=True)
+        collector = _CustomCollector(
+            disable_target_info=True, without_scope_info=True
+        )
         collector.add_metrics_data(metrics_data)
 
         for prometheus_metric in collector.collect():
@@ -249,7 +263,9 @@ class TestPrometheusMetricReader(TestCase):
             ]
         )
 
-        collector = _CustomCollector(disable_target_info=True)
+        collector = _CustomCollector(
+            disable_target_info=True, without_scope_info=True
+        )
         collector.add_metrics_data(metrics_data)
 
         for prometheus_metric in collector.collect():
@@ -301,7 +317,9 @@ class TestPrometheusMetricReader(TestCase):
                 )
             ]
         )
-        collector = _CustomCollector(disable_target_info=True)
+        collector = _CustomCollector(
+            disable_target_info=True, without_scope_info=True
+        )
         collector.add_metrics_data(metrics_data)
 
         for prometheus_metric in collector.collect():
@@ -665,6 +683,129 @@ class TestPrometheusMetricReader(TestCase):
                 """
             ),
         )
+
+    def test_scope_info_labels_default(self):
+        scope = InstrumentationScope(
+            name="library.test",
+            version="1.2.3",
+            schema_url="schema_url",
+        )
+        metric = _generate_gauge(
+            "test_gauge",
+            42,
+            attributes={"env": "prod"},
+            description="testdesc",
+            unit="",
+        )
+        metrics_data = MetricsData(
+            resource_metrics=[
+                ResourceMetrics(
+                    resource=Mock(),
+                    scope_metrics=[
+                        ScopeMetrics(
+                            scope=scope,
+                            metrics=[metric],
+                            schema_url="schema_url",
+                        )
+                    ],
+                    schema_url="schema_url",
+                )
+            ]
+        )
+        collector = _CustomCollector(disable_target_info=True)
+        collector.add_metrics_data(metrics_data)
+
+        for prometheus_metric in collector.collect():
+            labels = prometheus_metric.samples[0].labels
+            self.assertEqual(labels[_OTEL_SCOPE_NAME_LABEL], "library.test")
+            self.assertEqual(labels[_OTEL_SCOPE_VERSION_LABEL], "1.2.3")
+            self.assertEqual(
+                labels[_OTEL_SCOPE_SCHEMA_URL_LABEL],
+                "schema_url",
+            )
+            self.assertEqual(labels["env"], "prod")
+
+    def test_scope_info_disabled(self):
+        scope = InstrumentationScope(name="library.test", version="1.2.3")
+        metric = _generate_gauge(
+            "test_gauge",
+            42,
+            attributes={"env": "prod"},
+            description="testdesc",
+            unit="",
+        )
+        metrics_data = MetricsData(
+            resource_metrics=[
+                ResourceMetrics(
+                    resource=Mock(),
+                    scope_metrics=[
+                        ScopeMetrics(
+                            scope=scope,
+                            metrics=[metric],
+                            schema_url="schema_url",
+                        )
+                    ],
+                    schema_url="schema_url",
+                )
+            ]
+        )
+        collector = _CustomCollector(
+            disable_target_info=True, without_scope_info=True
+        )
+        collector.add_metrics_data(metrics_data)
+
+        for prometheus_metric in collector.collect():
+            labels = prometheus_metric.samples[0].labels
+            self.assertNotIn(_OTEL_SCOPE_NAME_LABEL, labels)
+            self.assertNotIn(_OTEL_SCOPE_VERSION_LABEL, labels)
+            self.assertNotIn(_OTEL_SCOPE_SCHEMA_URL_LABEL, labels)
+            self.assertNotIn(_OTEL_SCOPE_ATTR_PREFIX + "region", labels)
+
+    def test_scope_attributes_labels(self):
+        scope = InstrumentationScope(
+            name="library.test",
+            version="1.0",
+            schema_url="schema_url",
+            attributes={
+                "region": "us-east-1",
+                "name": "should-be-dropped",
+                "version": "should-be-dropped",
+                "schema_url": "should-be-dropped",
+            },
+        )
+        metric = _generate_gauge(
+            "test_gauge",
+            7,
+            attributes={},
+            description="testdesc",
+            unit="",
+        )
+        metrics_data = MetricsData(
+            resource_metrics=[
+                ResourceMetrics(
+                    resource=Mock(),
+                    scope_metrics=[
+                        ScopeMetrics(
+                            scope=scope,
+                            metrics=[metric],
+                            schema_url="schema_url",
+                        )
+                    ],
+                    schema_url="schema_url",
+                )
+            ]
+        )
+        collector = _CustomCollector(disable_target_info=True)
+        collector.add_metrics_data(metrics_data)
+
+        for prometheus_metric in collector.collect():
+            labels = prometheus_metric.samples[0].labels
+            self.assertEqual(
+                labels[_OTEL_SCOPE_ATTR_PREFIX + "region"], "us-east-1"
+            )
+            self.assertEqual(labels[_OTEL_SCOPE_NAME_LABEL], "library.test")
+            self.assertEqual(labels[_OTEL_SCOPE_VERSION_LABEL], "1.0")
+            self.assertEqual(labels[_OTEL_SCOPE_SCHEMA_URL_LABEL], "schema_url")
 
     def test_multiple_data_points_with_different_label_sets(self):
         hist_point_1 = HistogramDataPoint(
