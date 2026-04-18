@@ -79,7 +79,7 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
         ] = []
         self._needs_storage_reinit = False
         if hasattr(os, "register_at_fork"):
-            os.register_at_fork(after_in_child=self._at_fork_reinit)  # pylint: disable=protected-access
+            os.register_at_fork(after_in_child=self._at_fork_reinit)
 
     def _at_fork_reinit(self):
         """Reinitialize lock in child process after fork"""
