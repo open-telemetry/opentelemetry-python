@@ -349,7 +349,6 @@ class OtlpJsonGenerator:
             "builtins",
             "dataclasses",
             "functools",
-            "sys",
             "typing",
         ]
         if include_enum:
@@ -360,14 +359,10 @@ class OtlpJsonGenerator:
 
         writer.blank_line()
 
-        # TODO: Remove after dropping support for Python 3.9
-        with writer.if_("sys.version_info >= (3, 10)"):
-            writer.assignment(
-                "_dataclass",
-                "functools.partial(dataclasses.dataclass, slots=True)",
-            )
-        with writer.else_():
-            writer.assignment("_dataclass", "dataclasses.dataclass")
+        writer.assignment(
+            "_dataclass",
+            "functools.partial(dataclasses.dataclass, slots=True)",
+        )
         writer.blank_line()
 
         # Collect all imports needed
