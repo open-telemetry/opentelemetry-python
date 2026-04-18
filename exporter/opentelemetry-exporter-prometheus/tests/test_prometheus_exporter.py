@@ -47,6 +47,7 @@ from opentelemetry.test.metrictestutil import (
 )
 
 
+# pylint: disable=too-many-public-methods
 class TestPrometheusMetricReader(TestCase):
     def setUp(self):
         self._mock_registry_register = Mock()
@@ -718,4 +719,114 @@ class TestPrometheusMetricReader(TestCase):
                 http_server_request_duration_seconds_sum{http_target="",net_host_port="8080"} 579.0
                 """
             ),
+        )
+
+    # pylint: disable=too-many-locals
+    def test_resource_attr_filter_basic(self):
+        cases = [
+            (
+                "single key included",
+                lambda k: k == "os",
+                {"os": "Unix"},
+                {"version", "service_name", "service_version", "host"},
+            ),
+            (
+                "all keys included",
+                lambda k: True,
+                {
+                    "os": "Unix",
+                    "version": "1.2.3",
+                    "service_name": "myapp",
+                    "service_version": "1.0",
+                    "host": "localhost",
+                },
+                set(),
+            ),
+            (
+                "no keys included",
+                lambda k: False,
+                {},
+                {"os", "version", "service_name", "service_version", "host"},
+            ),
+            (
+                "prefix match",
+                lambda k: k.startswith("service."),
+                {"service_name": "myapp", "service_version": "1.0"},
+                {"os", "version", "host"},
+            ),
+        ]
+        for name, resource_attr_filter, expected_in, expected_not_in in cases:
+            with self.subTest(name):
+                metric_reader = PrometheusMetricReader(
+                    resource_attr_filter=resource_attr_filter
+                )
+                provider = MeterProvider(
+                    metric_readers=[metric_reader],
+                    resource=Resource(
+                        {
+                            "os": "Unix",
+                            "version": "1.2.3",
+                            "service.name": "myapp",
+                            "service.version": "1.0",
+                            "host": "localhost",
+                        }
+                    ),
+                )
+                meter = provider.get_meter("test")
+                counter = meter.create_counter("counter")
+                counter.add(1)
+                result = list(metric_reader._collector.collect())
+
+                # target info always has all resource attrs regardless of filter
+                target_info = result[0]
+                self.assertEqual(type(target_info), InfoMetricFamily)
+                for attr in (
+                    "os",
+                    "version",
+                    "service_name",
+                    "service_version",
+                    "host",
+                ):
+                    self.assertIn(attr, target_info.samples[0].labels)
+
+                counter_metric = result[1]
+                for label, value in expected_in.items():
+                    self.assertIn(label, counter_metric.samples[0].labels)
+                    self.assertEqual(
+                        counter_metric.samples[0].labels[label], value
+                    )
+                for label in expected_not_in:
+                    self.assertNotIn(label, counter_metric.samples[0].labels)
+
+    def test_resource_attr_filter_disabled_by_default(self):
+        metric_reader = PrometheusMetricReader()
+        provider = MeterProvider(
+            metric_readers=[metric_reader],
+            resource=Resource({"os": "Unix", "version": "1.2.3"}),
+        )
+        meter = provider.get_meter("test")
+        counter = meter.create_counter("counter")
+        counter.add(1)
+        result = list(metric_reader._collector.collect())
+
+        counter_metric = result[1]
+        self.assertNotIn("os", counter_metric.samples[0].labels)
+        self.assertNotIn("version", counter_metric.samples[0].labels)
+
+    def test_resource_attr_filter_metric_attr_takes_precedence(self):
+        metric_reader = PrometheusMetricReader(
+            resource_attr_filter=lambda k: k == "service.name"
+        )
+        provider = MeterProvider(
+            metric_readers=[metric_reader],
+            resource=Resource({"service.name": "from-resource"}),
+        )
+        meter = provider.get_meter("test")
+        counter = meter.create_counter("counter")
+        counter.add(1, {"service_name": "from-metric"})
+        result = list(metric_reader._collector.collect())
+
+        counter_metric = result[1]
+        self.assertEqual(
+            counter_metric.samples[0].labels["service_name"], "from-metric"
         )
