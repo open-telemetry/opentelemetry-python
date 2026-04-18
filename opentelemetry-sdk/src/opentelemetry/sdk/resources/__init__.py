@@ -196,11 +196,11 @@ class Resource:
             attributes = {}
 
         otel_experimental_resource_detectors: list[str] = [
-            d.strip()
-            for d in environ.get(
+            detector.strip()
+            for detector in environ.get(
                 OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, ""
             ).split(",")
-            if d.strip()
+            if detector.strip()
         ]
 
         resource_detectors: List[ResourceDetector] = []
