@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import annotations
-
 from textwrap import dedent
 from unittest import TestCase
 from unittest.mock import Mock, patch
@@ -805,7 +803,9 @@ class TestPrometheusMetricReader(TestCase):
             )
             self.assertEqual(labels[_OTEL_SCOPE_NAME_LABEL], "library.test")
             self.assertEqual(labels[_OTEL_SCOPE_VERSION_LABEL], "1.0")
-            self.assertEqual(labels[_OTEL_SCOPE_SCHEMA_URL_LABEL], "schema_url")
+            self.assertEqual(
+                labels[_OTEL_SCOPE_SCHEMA_URL_LABEL], "schema_url"
+            )
 
     def test_multiple_data_points_with_different_label_sets(self):
         hist_point_1 = HistogramDataPoint(
