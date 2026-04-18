@@ -791,7 +791,6 @@ class TestPrometheusMetricReader(TestCase):
 
                 counter_metric = result[1]
                 for label, value in expected_in.items():
-                    self.assertIn(label, counter_metric.samples[0].labels)
                     self.assertEqual(
                         counter_metric.samples[0].labels[label], value
                     )
