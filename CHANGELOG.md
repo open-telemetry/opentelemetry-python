@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Enabled the flake8-type-checking plugin rules for ruff linter. These rules do not allow the import of python objects outside the type-checking block, if they are only used for type annotations and are not used at runtime. ([#5029](https://github.com/open-telemetry/opentelemetry-python/pull/5029))
 - Enabled the flake8-tidy-import plugins rules for the ruff linter. These rules throw warnings for relative imports in the modules. 
+- `opentelemetry-sdk`: add `load_entry_point` shared utility to declarative file configuration for loading plugins via entry points; refactor propagator loading to use it
+  ([#5093](https://github.com/open-telemetry/opentelemetry-python/pull/5093))
 - `opentelemetry-sdk`: fix YAML structure injection via environment variable substitution in declarative file configuration; values containing newlines are now emitted as quoted YAML scalars per spec requirement
   ([#5091](https://github.com/open-telemetry/opentelemetry-python/pull/5091))
 - `opentelemetry-sdk`: Add `create_logger_provider`/`configure_logger_provider` to declarative file configuration, enabling LoggerProvider instantiation from config files without reading env vars
