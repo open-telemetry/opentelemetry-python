@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 - `opentelemetry-sdk`: Fix mutable attributes reference in metrics: attributes passed to instrument `add`/`record` are now copied so that subsequent mutations to the caller's dict do not affect recorded data points
-  ([#4610](https://github.com/open-telemetry/opentelemetry-python/issues/4610))
+  ([#5106](https://github.com/open-telemetry/opentelemetry-python/pull/5106))
 - `opentelemetry-sdk`: Add `create_logger_provider`/`configure_logger_provider` to declarative file configuration, enabling LoggerProvider instantiation from config files without reading env vars
   ([#4990](https://github.com/open-telemetry/opentelemetry-python/pull/4990))
 - `opentelemetry-sdk`: Add `service` resource detector support to declarative file configuration via `detection_development.detectors[].service`
