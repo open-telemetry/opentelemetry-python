@@ -77,7 +77,7 @@ class MetricReaderStorage:
 
     def _at_fork_reinit(self) -> None:
         """Reinitialize locks and clear state in the child process after fork."""
-        self._lock = Lock()
+        self._lock = RLock()
         self._instrument_view_instrument_matches.clear()
 
     def _get_or_init_view_instrument_match(
