@@ -39,8 +39,10 @@ from opentelemetry.sdk.metrics._internal.measurement import Measurement
 
 if TYPE_CHECKING:
     from opentelemetry.sdk.metrics._internal import (
-        MeasurementConsumer,
         _ProxyMeterConfig,
+    )
+    from opentelemetry.sdk.metrics._internal.measurement_consumer import (
+        MeasurementConsumer,
     )
     from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 

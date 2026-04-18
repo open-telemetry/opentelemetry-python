@@ -10,7 +10,7 @@ body:
 
         Before filing a bug, please be sure you have searched through [existing bugs](https://github.com/open-telemetry/opentelemetry-python/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc+label%3Abug) to see if your bug is already addressed.
         If your bug is related to an instrumentation or plugin in [opentelemetry-python-contrib](https://github.com/open-telemetry/opentelemetry-python-contrib) please be sure to file it there.
-  
+
   - type: textarea
     id: environment
     attributes:
@@ -19,10 +19,10 @@ body:
         Please describe any aspect of your environment relevant to the problem, including your Python version, [platform](https://docs.python.org/3/library/platform.html), version numbers of installed dependencies, information about your cloud hosting provider, etc. If you're reporting a problem with a specific version of a library in this repo, please check whether the problem has been fixed on main.
       value: |
         OS: (e.g, Ubuntu)
-        Python version: (e.g., Python 3.9.10)
+        Python version: (e.g., Python 3.10.0)
         SDK version: (e.g., 1.25.0)
         API version: (e.g., 1.25.0)
-  
+
   - type: textarea
     attributes:
       label: What happened?

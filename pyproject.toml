@@ -1,7 +1,7 @@
 [project]
 name = "opentelemetry-python"
 version = "0.0.0" # This is not used.
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
   "opentelemetry-api",
   "opentelemetry-sdk",
@@ -65,7 +65,7 @@ log_cli = true
 
 [tool.ruff]
 # https://docs.astral.sh/ruff/configuration/
-target-version = "py39"
+target-version = "py310"
 line-length = 79
 extend-exclude = [
   "*_pb2*.py*",
@@ -115,7 +115,7 @@ known-first-party = ["opentelemetry", "opentelemetry_example_app"]
 
 [tool.pyright]
 typeCheckingMode = "standard"
-pythonVersion = "3.9"
+pythonVersion = "3.10"
 
 include = [
   "opentelemetry-semantic-conventions",
@@ -139,7 +139,6 @@ exclude = [
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/instrument.py",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/measurement_consumer.py",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/metric_reader_storage.py",
-  "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/point.py",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/view.py",
   "opentelemetry-sdk/benchmarks",
   "exporter/opentelemetry-exporter-otlp-proto-grpc/tests",
@@ -163,7 +162,7 @@ formatters = ["ruff-format", "ruff-check"]
 use-standard-collections = true
 use-schema-description = true
 use-title-as-name = true
-use-union-operator = false # set to true when Python 3.9 support is dropped
+use-union-operator = true
 target-python-version = "3.10"
 
 [dependency-groups]

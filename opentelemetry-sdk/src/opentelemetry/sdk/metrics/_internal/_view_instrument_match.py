@@ -21,11 +21,11 @@ from typing import Dict, List, Optional, Sequence
 from opentelemetry.metrics import Instrument
 from opentelemetry.sdk.metrics._internal.aggregation import (
     Aggregation,
+    AggregationTemporality,
     DefaultAggregation,
     _Aggregation,
     _SumAggregation,
 )
-from opentelemetry.sdk.metrics._internal.export import AggregationTemporality
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.point import DataPointT
 from opentelemetry.sdk.metrics._internal.view import View
