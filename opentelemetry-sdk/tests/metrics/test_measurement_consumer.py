@@ -27,13 +27,16 @@ from opentelemetry.sdk.metrics._internal.sdk_configuration import (
 )
 
 
-def _sdk_config(exemplar_filter=None, resource=None, metric_readers=None, views=None):
+def _sdk_config(
+    exemplar_filter=None, resource=None, metric_readers=None, views=None
+):
     """Create SdkConfiguration for tests."""
     config = SdkConfiguration(
         resource=resource or Mock(),
         metric_readers=metric_readers or [Mock()],
         views=views or Mock(),
-        exemplar_filter=exemplar_filter or Mock(should_sample=Mock(return_value=False))
+        exemplar_filter=exemplar_filter
+        or Mock(should_sample=Mock(return_value=False)),
     )
     return config
 
@@ -167,9 +170,8 @@ class TestSynchronousMeasurementConsumer(TestCase):
         "opentelemetry.sdk.metrics._internal."
         "measurement_consumer.CallbackOptions"
     )
-    @patch("opentelemetry.sdk.metrics._internal.measurement_consumer.time_ns")
     def test_collect_deadline(
-        self, mock_time_ns, mock_callback_options, MockMetricReaderStorage
+        self, mock_callback_options, MockMetricReaderStorage
     ):
         reader_mock = Mock()
         reader_storage_mock = Mock()
@@ -183,22 +185,16 @@ class TestSynchronousMeasurementConsumer(TestCase):
             )
         )
 
-        consumer.register_asynchronous_instrument(
-            Mock(**{"callback.return_value": []})
-        )
-        consumer.register_asynchronous_instrument(
-            Mock(**{"callback.return_value": []})
-        )
+        def sleep_1(*args, **kwargs):
+            sleep(1)
+            return []
 
-        # collect start, first remaining_time, post-first callback,
-        # second remaining_time, post-second callback
-        mock_time_ns.side_effect = [
-            0,
-            0,
-            int(1e9),
-            int(1e9),
-            int(2e9),
-        ]
+        consumer.register_asynchronous_instrument(
+            Mock(**{"callback.side_effect": sleep_1})
+        )
+        consumer.register_asynchronous_instrument(
+            Mock(**{"callback.side_effect": sleep_1})
+        )
 
         consumer.collect(reader_mock)
 
@@ -216,7 +212,7 @@ class TestSynchronousMeasurementConsumer(TestCase):
     "opentelemetry.sdk.metrics._internal."
     "measurement_consumer.MetricReaderStorage"
 )
-class TestSynchronousMeasurementConsumerForkHandler(TestCase): # pylint: disable=protected-access
+class TestSynchronousMeasurementConsumerForkHandler(TestCase):  # pylint: disable=protected-access
     """Exhaustive tests for fork handler, needs_storage_reinit, and lazy _reinit_storages."""
 
     def test_register_at_fork_called_when_available(
@@ -471,9 +467,7 @@ class TestSynchronousMeasurementConsumerForkHandler(TestCase): # pylint: disable
                 consumer.consume_measurement(Mock())
                 reinit_spy.assert_not_called()
 
-    def test_no_reinit_on_collect_without_fork(
-        self, MockMetricReaderStorage
-    ):
+    def test_no_reinit_on_collect_without_fork(self, MockMetricReaderStorage):
         """collect without prior fork should NOT call _reinit_storages."""
         reader_mock = Mock()
         storage_mock = Mock()
