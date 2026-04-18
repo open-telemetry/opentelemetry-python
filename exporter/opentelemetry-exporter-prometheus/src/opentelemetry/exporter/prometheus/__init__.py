@@ -141,7 +141,7 @@ class PrometheusMetricReader(MetricReader):
         self,
         disable_target_info: bool = False,
         prefix: str = "",
-        default_aggregation: dict[type, Aggregation] | None = None,
+        preferred_aggregation: dict[type, Aggregation] | None = None,
     ) -> None:
         super().__init__(
             preferred_temporality={
@@ -152,7 +152,7 @@ class PrometheusMetricReader(MetricReader):
                 ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
                 ObservableGauge: AggregationTemporality.CUMULATIVE,
             },
-            preferred_aggregation=default_aggregation,
+            preferred_aggregation=preferred_aggregation,
             otel_component_type=OtelComponentTypeValues.PROMETHEUS_HTTP_TEXT_METRIC_EXPORTER,
         )
         self._collector = _CustomCollector(

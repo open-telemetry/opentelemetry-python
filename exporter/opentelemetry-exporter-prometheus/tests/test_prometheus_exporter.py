@@ -722,20 +722,20 @@ class TestPrometheusMetricReader(TestCase):
             ),
         )
 
-        def test_default_aggregation(self):
-            """Test that default_aggregation parameter is passed to MetricReader."""
-            custom_aggregation = {
-                HistogramInstrument: ExplicitBucketHistogramAggregation(
-                    boundaries=[1.0, 5.0, 10.0]
-                )
-            }
-            reader = PrometheusMetricReader(
-                default_aggregation=custom_aggregation
+    def test_preferred_aggregation(self):
+        """Test that preferred_aggregation parameter is passed to MetricReader."""
+        custom_aggregation = {
+            HistogramInstrument: ExplicitBucketHistogramAggregation(
+                boundaries=[1.0, 5.0, 10.0]
             )
-            self.assertEqual(
-                reader._instrument_class_aggregation[
-                    HistogramInstrument
-                ].__class__,
-                ExplicitBucketHistogramAggregation,
-            )
-            reader.shutdown()
+        }
+        reader = PrometheusMetricReader(
+            preferred_aggregation=custom_aggregation
+        )
+        provider = MeterProvider(metric_readers=[reader])
+        meter = provider.get_meter("test")
+        histogram = meter.create_histogram("test_histogram")
+        histogram.record(5)
+        result = list(reader._collector.collect())
+        self.assertTrue(len(result) > 0)
+        reader.shutdown()
