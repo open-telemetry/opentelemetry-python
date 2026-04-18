@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 - `opentelemetry-sdk`: Fix mutable attributes reference in metrics: attributes passed to instrument `add`/`record` are now copied so that subsequent mutations to the caller's dict do not affect recorded data points
-  ([#4610](https://github.com/open-telemetry/opentelemetry-python/issues/4610))
+  ([#5106](https://github.com/open-telemetry/opentelemetry-python/pull/5106))
 - Apply fixes for `UP` ruff rule
   ([#5133](https://github.com/open-telemetry/opentelemetry-python/pull/5133))
 - Switch to SPDX license headers and add CI enforcement
