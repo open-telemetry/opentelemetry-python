@@ -174,7 +174,13 @@ nitpick_ignore = [
         "py:class",
         "AnyValue",
     ),
+    (
+        "py:class",
+        "_ExtendedAttributes",
+    ),
 ]
+
+suppress_warnings = ["ref.python"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]

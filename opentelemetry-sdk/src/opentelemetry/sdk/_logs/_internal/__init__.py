@@ -121,12 +121,14 @@ class LogRecordLimits:
     default values and from user provided arguments.
 
     All limit arguments must be either a non-negative integer or ``None``.
+
     - All limit arguments are optional.
     - If a limit argument is not set, the class will try to read its value from the corresponding
       environment variable.
     - If the environment variable is not set, the default value, if any, will be used.
 
     Limit precedence:
+
     - If a model specific limit is set, it will be used.
     - Else if the corresponding global limit is set, it will be used.
     - Else if the model specific limit has a default value, the default value will be used.
