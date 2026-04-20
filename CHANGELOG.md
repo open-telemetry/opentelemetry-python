@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 - `opentelemetry-sdk`: add generic resource detector plugin loading to declarative file configuration via the `opentelemetry_resource_detector` entry point group
-  ([#XXXX](https://github.com/open-telemetry/opentelemetry-python/pull/XXXX))
+  ([#5129](https://github.com/open-telemetry/opentelemetry-python/pull/5129))
 - `opentelemetry-sdk`: add `load_entry_point` shared utility to declarative file configuration for loading plugins via entry points; refactor propagator loading to use it
   ([#5093](https://github.com/open-telemetry/opentelemetry-python/pull/5093))
 - `opentelemetry-sdk`: fix YAML structure injection via environment variable substitution in declarative file configuration; values containing newlines are now emitted as quoted YAML scalars per spec requirement
