@@ -46,13 +46,14 @@ def _additional_properties_support(cls):
         known = {k: v for k, v in kwargs.items() if k in known_fields}
         extra = {k: v for k, v in kwargs.items() if k not in known_fields}
         original_init(self, **known)
-        object.__setattr__(self, "additional_properties", extra)
+        self.additional_properties = extra
 
     # Preserve the original parameter list for IDE autocompletion and
     # inspect.signature(), adding **kwargs to signal extras are accepted.
+    # setattr used because pyright rejects direct __signature__ assignment.
     params = list(original_sig.parameters.values())
     params.append(inspect.Parameter("kwargs", inspect.Parameter.VAR_KEYWORD))
-    _init.__signature__ = original_sig.replace(parameters=params)
+    setattr(_init, "__signature__", original_sig.replace(parameters=params))  # noqa: B010
 
     cls.__init__ = _init
     return cls

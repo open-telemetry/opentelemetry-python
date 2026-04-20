@@ -168,6 +168,7 @@ class TestAdditionalPropertiesSupport(unittest.TestCase):
         self.assertEqual(obj.additional_properties, {})
 
     def test_unknown_kwargs_captured_in_additional_properties(self):
+        # pylint: disable=unexpected-keyword-arg
         obj = self.cls(my_plugin={"key": "val"})
         self.assertIsNone(obj.known_field)
         self.assertEqual(
@@ -175,6 +176,7 @@ class TestAdditionalPropertiesSupport(unittest.TestCase):
         )
 
     def test_mixed_known_and_unknown_kwargs(self):
+        # pylint: disable=unexpected-keyword-arg
         obj = self.cls(known_field={}, my_plugin={})
         self.assertEqual(obj.known_field, {})
         self.assertEqual(obj.additional_properties, {"my_plugin": {}})
@@ -205,6 +207,7 @@ class TestGeneratedModelsHaveAdditionalProperties(unittest.TestCase):
     """
 
     def _assert_supports_additional_properties(self, model_cls):
+        # pylint: disable=unexpected-keyword-arg
         obj = model_cls(_test_plugin_key={})
         self.assertTrue(
             hasattr(obj, "additional_properties"),
