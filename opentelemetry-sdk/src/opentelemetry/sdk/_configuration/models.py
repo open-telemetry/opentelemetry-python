@@ -573,10 +573,12 @@ class SpanProcessor:
     simple: SimpleSpanProcessor | None = None
 
 
-# Diverges from codegen: TextMapPropagator is typed as dict[str, Any] rather
-# than a dataclass so that unknown propagator names (plugin/custom propagators)
-# are preserved as dict keys through the config pipeline.
-TextMapPropagator: TypeAlias = dict[str, Any]
+@dataclass
+class TextMapPropagator:
+    tracecontext: TraceContextPropagator | None = None
+    baggage: BaggagePropagator | None = None
+    b3: B3Propagator | None = None
+    b3multi: B3MultiPropagator | None = None
 
 
 @dataclass
