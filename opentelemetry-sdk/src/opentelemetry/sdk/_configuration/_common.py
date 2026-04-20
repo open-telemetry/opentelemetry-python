@@ -15,9 +15,37 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
+from typing import Optional, Type
+
+from opentelemetry.sdk._configuration._exceptions import ConfigurationError
+from opentelemetry.util._importlib_metadata import entry_points
 
 _logger = logging.getLogger(__name__)
+
+
+def load_entry_point(group: str, name: str) -> Type:
+    """Load a plugin class from an entry point group by name.
+
+    Returns the loaded class — callers are responsible for instantiation
+    with whatever arguments their config requires.
+
+    Raises:
+        ConfigurationError: If the entry point is not found or fails to load.
+    """
+    try:
+        ep = next(iter(entry_points(group=group, name=name)), None)
+        if ep is None:
+            raise ConfigurationError(
+                f"Plugin '{name}' not found in group '{group}'. "
+                "Make sure the package providing this plugin is installed."
+            )
+        return ep.load()
+    except ConfigurationError:
+        raise
+    except Exception as exc:
+        raise ConfigurationError(
+            f"Failed to load plugin '{name}' from group '{group}': {exc}"
+        ) from exc
 
 
 def _parse_headers(
