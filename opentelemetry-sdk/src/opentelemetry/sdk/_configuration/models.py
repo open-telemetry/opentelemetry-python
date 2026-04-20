@@ -500,12 +500,10 @@ class ExperimentalPrometheusMetricExporter:
     )
 
 
-@dataclass
-class ExperimentalResourceDetector:
-    container: ExperimentalContainerResourceDetector | None = None
-    host: ExperimentalHostResourceDetector | None = None
-    process: ExperimentalProcessResourceDetector | None = None
-    service: ExperimentalServiceResourceDetector | None = None
+# Diverges from codegen: ExperimentalResourceDetector is typed as dict[str, Any]
+# rather than a dataclass so that unknown detector names (plugin/custom detectors)
+# are preserved as dict keys through the config pipeline.
+ExperimentalResourceDetector: TypeAlias = dict[str, Any]
 
 
 @dataclass
