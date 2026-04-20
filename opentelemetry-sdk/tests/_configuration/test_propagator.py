@@ -89,7 +89,7 @@ class TestCreatePropagator(unittest.TestCase):
         mock_ep.load.return_value = lambda: mock_propagator
 
         with patch(
-            "opentelemetry.sdk._configuration._propagator.entry_points",
+            "opentelemetry.sdk._configuration._common.entry_points",
             return_value=[mock_ep],
         ):
             config = PropagatorConfig(
@@ -106,7 +106,7 @@ class TestCreatePropagator(unittest.TestCase):
         mock_ep.load.return_value = lambda: mock_propagator
 
         with patch(
-            "opentelemetry.sdk._configuration._propagator.entry_points",
+            "opentelemetry.sdk._configuration._common.entry_points",
             return_value=[mock_ep],
         ):
             config = PropagatorConfig(
@@ -118,7 +118,7 @@ class TestCreatePropagator(unittest.TestCase):
 
     def test_b3_not_installed_raises_configuration_error(self):
         with patch(
-            "opentelemetry.sdk._configuration._propagator.entry_points",
+            "opentelemetry.sdk._configuration._common.entry_points",
             return_value=[],
         ):
             config = PropagatorConfig(
@@ -135,7 +135,7 @@ class TestCreatePropagator(unittest.TestCase):
         mock_ep.load.return_value = lambda: mock_tc
 
         with patch(
-            "opentelemetry.sdk._configuration._propagator.entry_points",
+            "opentelemetry.sdk._configuration._common.entry_points",
             return_value=[mock_ep],
         ):
             result = create_propagator(config)
@@ -158,7 +158,7 @@ class TestCreatePropagator(unittest.TestCase):
             return []
 
         with patch(
-            "opentelemetry.sdk._configuration._propagator.entry_points",
+            "opentelemetry.sdk._configuration._common.entry_points",
             side_effect=fake_entry_points,
         ):
             config = PropagatorConfig(composite_list="tracecontext,baggage")
@@ -182,7 +182,7 @@ class TestCreatePropagator(unittest.TestCase):
         mock_ep.load.return_value = lambda: mock_tc
 
         with patch(
-            "opentelemetry.sdk._configuration._propagator.entry_points",
+            "opentelemetry.sdk._configuration._common.entry_points",
             return_value=[mock_ep],
         ):
             config = PropagatorConfig(composite_list=" tracecontext ")
@@ -195,7 +195,7 @@ class TestCreatePropagator(unittest.TestCase):
         mock_ep.load.side_effect = RuntimeError("package broken")
 
         with patch(
-            "opentelemetry.sdk._configuration._propagator.entry_points",
+            "opentelemetry.sdk._configuration._common.entry_points",
             return_value=[mock_ep],
         ):
             config = PropagatorConfig(composite_list="broken-prop")
@@ -210,7 +210,7 @@ class TestCreatePropagator(unittest.TestCase):
         mock_ep.load.return_value = lambda: mock_tc
 
         with patch(
-            "opentelemetry.sdk._configuration._propagator.entry_points",
+            "opentelemetry.sdk._configuration._common.entry_points",
             return_value=[mock_ep],
         ):
             config = PropagatorConfig(
@@ -229,7 +229,7 @@ class TestCreatePropagator(unittest.TestCase):
 
     def test_unknown_composite_list_propagator_raises(self):
         with patch(
-            "opentelemetry.sdk._configuration._propagator.entry_points",
+            "opentelemetry.sdk._configuration._common.entry_points",
             return_value=[],
         ):
             config = PropagatorConfig(composite_list="nonexistent")
