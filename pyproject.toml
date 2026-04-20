@@ -12,6 +12,8 @@ dependencies = [
   "opentelemetry-exporter-otlp-proto-grpc",
   "opentelemetry-exporter-otlp-proto-http",
   "opentelemetry-exporter-otlp-proto-common",
+  "opentelemetry-exporter-otlp-json-common",
+  "opentelemetry-exporter-otlp-json-http",
   "opentelemetry-exporter-zipkin-json",
   "opentelemetry-exporter-prometheus",
   "opentelemetry-propagator-jaeger",
@@ -34,6 +36,8 @@ opentelemetry-test-utils = { workspace = true }
 opentelemetry-exporter-otlp-proto-grpc = { workspace = true }
 opentelemetry-exporter-otlp-proto-http = { workspace = true }
 opentelemetry-exporter-otlp-proto-common = { workspace = true }
+opentelemetry-exporter-otlp-json-common = { workspace = true }
+opentelemetry-exporter-otlp-json-http = { workspace = true }
 opentelemetry-exporter-zipkin-json = { workspace = true }
 opentelemetry-exporter-prometheus = {workspace = true }
 opentelemetry-propagator-jaeger = { workspace = true }
@@ -123,6 +127,8 @@ include = [
   "opentelemetry-proto-json",
   "exporter/opentelemetry-exporter-otlp-proto-grpc",
   "exporter/opentelemetry-exporter-otlp-proto-http",
+  "exporter/opentelemetry-exporter-otlp-json-common",
+  "exporter/opentelemetry-exporter-otlp-json-http",
   "codegen/opentelemetry-codegen-json"
 ]
 
@@ -138,10 +144,14 @@ exclude = [
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/instrument.py",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/measurement_consumer.py",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/metric_reader_storage.py",
+  "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/point.py",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/view.py",
   "opentelemetry-sdk/benchmarks",
   "exporter/opentelemetry-exporter-otlp-proto-grpc/tests",
   "exporter/opentelemetry-exporter-otlp-proto-http/tests",
+  "exporter/opentelemetry-exporter-otlp-json-common/tests",
+  "exporter/opentelemetry-exporter-otlp-json-common/benchmarks",
+  "exporter/opentelemetry-exporter-otlp-json-http/tests",
 ]
 
 # When packages are correct typed add them to the strict list

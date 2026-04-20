@@ -12,10 +12,70 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from abc import ABC, abstractmethod
+from __future__ import annotations
 
 from opentelemetry.context import attach, detach, set_value
+from opentelemetry.exporter.otlp.json.http._log_exporter import (
+    OTLPLogExporter as JsonHttpLogExporter,
+)
+from opentelemetry.exporter.otlp.json.http.metric_exporter import (
+    OTLPMetricExporter as JsonHttpMetricExporter,
+)
+from opentelemetry.exporter.otlp.json.http.trace_exporter import (
+    OTLPSpanExporter as JsonHttpSpanExporter,
+)
+from opentelemetry.exporter.otlp.proto.grpc._log_exporter import (
+    OTLPLogExporter as GrpcLogExporter,
+)
+from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import (
+    OTLPMetricExporter as GrpcMetricExporter,
+)
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
+    OTLPSpanExporter as GrpcSpanExporter,
+)
+from opentelemetry.exporter.otlp.proto.http._log_exporter import (
+    OTLPLogExporter as HttpLogExporter,
+)
+from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
+    OTLPMetricExporter as HttpMetricExporter,
+)
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+    OTLPSpanExporter as HttpSpanExporter,
+)
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+
+_JSON_HTTP_ENDPOINT = "http://localhost:4319"
+
+TRACE_EXPORTERS = [
+    ("grpc", lambda: GrpcSpanExporter(insecure=True, timeout=1)),
+    ("proto-http", HttpSpanExporter),
+    (
+        "json-http",
+        lambda: JsonHttpSpanExporter(
+            endpoint=_JSON_HTTP_ENDPOINT + "/v1/traces"
+        ),
+    ),
+]
+
+METRIC_EXPORTERS = [
+    ("grpc", lambda: GrpcMetricExporter(insecure=True, timeout=1)),
+    ("proto-http", HttpMetricExporter),
+    (
+        "json-http",
+        lambda: JsonHttpMetricExporter(
+            endpoint=_JSON_HTTP_ENDPOINT + "/v1/metrics"
+        ),
+    ),
+]
+
+LOG_EXPORTERS = [
+    ("grpc", lambda: GrpcLogExporter(insecure=True, timeout=1)),
+    ("proto-http", HttpLogExporter),
+    (
+        "json-http",
+        lambda: JsonHttpLogExporter(endpoint=_JSON_HTTP_ENDPOINT + "/v1/logs"),
+    ),
+]
 
 
 class ExportStatusSpanProcessor(SimpleSpanProcessor):
@@ -27,22 +87,3 @@ class ExportStatusSpanProcessor(SimpleSpanProcessor):
         token = attach(set_value("suppress_instrumentation", True))
         self.export_status.append(self.span_exporter.export((span,)))
         detach(token)
-
-
-class BaseTestOTLPExporter(ABC):
-    @abstractmethod
-    def get_span_processor(self):
-        pass
-
-    # pylint: disable=no-member
-    def test_export(self):
-        with self.tracer.start_as_current_span("foo"):
-            with self.tracer.start_as_current_span("bar"):
-                with self.tracer.start_as_current_span("baz"):
-                    pass
-
-        self.assertTrue(len(self.span_processor.export_status), 3)
-
-        for export_status in self.span_processor.export_status:
-            self.assertEqual(export_status.name, "SUCCESS")
-            self.assertEqual(export_status.value, 0)
