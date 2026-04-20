@@ -12,15 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import inspect
 import unittest
+from dataclasses import dataclass, field
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from opentelemetry.sdk._configuration._common import (
+    _additional_properties_support,
     _parse_headers,
     load_entry_point,
 )
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
+from opentelemetry.sdk._configuration.models import (
+    ExperimentalResourceDetector,
+    LogRecordExporter,
+    PushMetricExporter,
+    Sampler,
+    SpanExporter,
+    TextMapPropagator,
+)
 
 
 class TestParseHeaders(unittest.TestCase):
@@ -137,3 +148,86 @@ class TestLoadEntryPoint(unittest.TestCase):
             # ConfigurationError
             with self.assertRaises(TypeError, msg="bad init"):
                 cls()
+
+
+class TestAdditionalPropertiesSupport(unittest.TestCase):
+    def setUp(self):
+        @_additional_properties_support
+        @dataclass
+        class _SampleConfig:
+            known_field: dict | None = None
+            another_field: str | None = None
+            additional_properties: dict = field(default_factory=dict)
+
+        self.cls = _SampleConfig
+
+    def test_known_fields_work_normally(self):
+        obj = self.cls(known_field={}, another_field="val")
+        self.assertEqual(obj.known_field, {})
+        self.assertEqual(obj.another_field, "val")
+        self.assertEqual(obj.additional_properties, {})
+
+    def test_unknown_kwargs_captured_in_additional_properties(self):
+        obj = self.cls(my_plugin={"key": "val"})
+        self.assertIsNone(obj.known_field)
+        self.assertEqual(
+            obj.additional_properties, {"my_plugin": {"key": "val"}}
+        )
+
+    def test_mixed_known_and_unknown_kwargs(self):
+        obj = self.cls(known_field={}, my_plugin={})
+        self.assertEqual(obj.known_field, {})
+        self.assertEqual(obj.additional_properties, {"my_plugin": {}})
+
+    def test_no_args_creates_empty_additional_properties(self):
+        obj = self.cls()
+        self.assertIsNone(obj.known_field)
+        self.assertEqual(obj.additional_properties, {})
+
+    def test_signature_preserves_known_fields_and_adds_kwargs(self):
+        sig = inspect.signature(self.cls)
+        param_names = list(sig.parameters.keys())
+        self.assertIn("known_field", param_names)
+        self.assertIn("another_field", param_names)
+        # **kwargs signals that extras are accepted
+        kwargs_param = sig.parameters.get("kwargs")
+        self.assertIsNotNone(kwargs_param)
+        self.assertEqual(kwargs_param.kind, inspect.Parameter.VAR_KEYWORD)
+
+
+class TestGeneratedModelsHaveAdditionalProperties(unittest.TestCase):
+    """Guards against regressions in the custom datamodel-codegen template.
+
+    The codegen/dataclass.jinja2 template conditionally applies the
+    @_additional_properties_support decorator based on the
+    additionalPropertiesType template variable. If datamodel-codegen
+    changes how it passes this variable, these tests will fail.
+    """
+
+    def _assert_supports_additional_properties(self, model_cls):
+        obj = model_cls(_test_plugin_key={})
+        self.assertTrue(
+            hasattr(obj, "additional_properties"),
+            f"{model_cls.__name__} missing additional_properties field",
+        )
+        self.assertIn("_test_plugin_key", obj.additional_properties)
+
+    def test_sampler(self):
+        self._assert_supports_additional_properties(Sampler)
+
+    def test_span_exporter(self):
+        self._assert_supports_additional_properties(SpanExporter)
+
+    def test_text_map_propagator(self):
+        self._assert_supports_additional_properties(TextMapPropagator)
+
+    def test_resource_detector(self):
+        self._assert_supports_additional_properties(
+            ExperimentalResourceDetector
+        )
+
+    def test_log_record_exporter(self):
+        self._assert_supports_additional_properties(LogRecordExporter)
+
+    def test_push_metric_exporter(self):
+        self._assert_supports_additional_properties(PushMetricExporter)
