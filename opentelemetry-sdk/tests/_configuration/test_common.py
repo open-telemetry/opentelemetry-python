@@ -118,3 +118,22 @@ class TestLoadEntryPoint(unittest.TestCase):
             with self.assertRaises(ConfigurationError) as ctx:
                 load_entry_point("some_group", "some_name")
         self.assertIn("bad import", str(ctx.exception))
+
+    def test_instantiation_error_not_wrapped(self):
+        """load_entry_point returns the class; instantiation is the caller's
+        responsibility. Errors from calling the returned class are NOT wrapped
+        in ConfigurationError — they propagate as-is."""
+        mock_class = MagicMock(side_effect=TypeError("bad init"))
+        mock_ep = MagicMock()
+        mock_ep.load.return_value = mock_class
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            return_value=[mock_ep],
+        ):
+            cls = load_entry_point("some_group", "some_name")
+            # load_entry_point itself succeeds
+            self.assertIs(cls, mock_class)
+            # Calling the returned class raises the original error, not
+            # ConfigurationError
+            with self.assertRaises(TypeError, msg="bad init"):
+                cls()
