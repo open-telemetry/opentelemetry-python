@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `opentelemetry-sdk`: add exporter plugin loading to declarative file configuration for all three signals (traces, metrics, logs) via the `opentelemetry_*_exporter` entry point groups
+  ([#5069](https://github.com/open-telemetry/opentelemetry-python/pull/5069))
 - `opentelemetry-sdk`: add `load_entry_point` shared utility to declarative file configuration for loading plugins via entry points; refactor propagator loading to use it
   ([#5093](https://github.com/open-telemetry/opentelemetry-python/pull/5093))
 - `opentelemetry-sdk`: fix YAML structure injection via environment variable substitution in declarative file configuration; values containing newlines are now emitted as quoted YAML scalars per spec requirement

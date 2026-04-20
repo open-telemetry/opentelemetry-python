@@ -18,16 +18,16 @@ import logging
 from typing import Optional
 
 from opentelemetry._logs import set_logger_provider
-from opentelemetry.sdk._configuration._common import _parse_headers
+from opentelemetry.sdk._configuration._common import (
+    _parse_headers,
+    load_entry_point,
+)
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
 from opentelemetry.sdk._configuration.models import (
     BatchLogRecordProcessor as BatchLogRecordProcessorConfig,
 )
 from opentelemetry.sdk._configuration.models import (
     LoggerProvider as LoggerProviderConfig,
-)
-from opentelemetry.sdk._configuration.models import (
-    LogRecordExporter as LogRecordExporterConfig,
 )
 from opentelemetry.sdk._configuration.models import (
     LogRecordProcessor as LogRecordProcessorConfig,
@@ -136,24 +136,28 @@ def _create_otlp_grpc_log_exporter(
     )
 
 
-def _create_log_record_exporter(
-    config: LogRecordExporterConfig,
-) -> LogRecordExporter:
-    """Create a log record exporter from config."""
-    if config.console is not None:
-        return _create_console_log_exporter()
-    if config.otlp_http is not None:
-        return _create_otlp_http_log_exporter(config.otlp_http)
-    if config.otlp_grpc is not None:
-        return _create_otlp_grpc_log_exporter(config.otlp_grpc)
-    if config.otlp_file_development is not None:
+_LOG_EXPORTER_REGISTRY: dict = {
+    "otlp_http": _create_otlp_http_log_exporter,
+    "otlp_grpc": _create_otlp_grpc_log_exporter,
+    "console": lambda _: _create_console_log_exporter(),
+}
+
+
+def _create_log_record_exporter(config: dict) -> LogRecordExporter:
+    """Create a log record exporter from a config dict with a single key naming the exporter type.
+
+    Known names (otlp_http, otlp_grpc, console) are bootstrapped directly.
+    Unknown names are loaded via the ``opentelemetry_logs_exporter`` entry
+    point group, matching the spec's PluginComponentProvider mechanism.
+    """
+    if len(config) != 1:
         raise ConfigurationError(
-            "otlp_file_development log exporter is experimental and not yet supported."
+            f"Log exporter config must have exactly one key, got: {list(config.keys())}"
         )
-    raise ConfigurationError(
-        "No exporter type specified in log record exporter config. "
-        "Supported types: console, otlp_http, otlp_grpc."
-    )
+    name, exporter_config = next(iter(config.items()))
+    if name in _LOG_EXPORTER_REGISTRY:
+        return _LOG_EXPORTER_REGISTRY[name](exporter_config)
+    return load_entry_point("opentelemetry_logs_exporter", name)()
 
 
 def _create_batch_log_record_processor(

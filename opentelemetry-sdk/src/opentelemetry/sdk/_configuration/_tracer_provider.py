@@ -18,7 +18,10 @@ import logging
 from typing import Optional
 
 from opentelemetry import trace
-from opentelemetry.sdk._configuration._common import _parse_headers
+from opentelemetry.sdk._configuration._common import (
+    _parse_headers,
+    load_entry_point,
+)
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
 from opentelemetry.sdk._configuration.models import (
     OtlpGrpcExporter as OtlpGrpcExporterConfig,
@@ -31,9 +34,6 @@ from opentelemetry.sdk._configuration.models import (
 )
 from opentelemetry.sdk._configuration.models import (
     Sampler as SamplerConfig,
-)
-from opentelemetry.sdk._configuration.models import (
-    SpanExporter as SpanExporterConfig,
 )
 from opentelemetry.sdk._configuration.models import (
     SpanLimits as SpanLimitsConfig,
@@ -146,18 +146,28 @@ def _create_otlp_grpc_span_exporter(
     )
 
 
-def _create_span_exporter(config: SpanExporterConfig) -> SpanExporter:
-    """Create a span exporter from config."""
-    if config.otlp_http is not None:
-        return _create_otlp_http_span_exporter(config.otlp_http)
-    if config.otlp_grpc is not None:
-        return _create_otlp_grpc_span_exporter(config.otlp_grpc)
-    if config.console is not None:
-        return ConsoleSpanExporter()
-    raise ConfigurationError(
-        "No exporter type specified in span exporter config. "
-        "Supported types: otlp_http, otlp_grpc, console."
-    )
+_SPAN_EXPORTER_REGISTRY: dict = {
+    "otlp_http": _create_otlp_http_span_exporter,
+    "otlp_grpc": _create_otlp_grpc_span_exporter,
+    "console": lambda _: ConsoleSpanExporter(),
+}
+
+
+def _create_span_exporter(config: dict) -> SpanExporter:
+    """Create a span exporter from a config dict with a single key naming the exporter type.
+
+    Known names (otlp_http, otlp_grpc, console) are bootstrapped directly.
+    Unknown names are loaded via the ``opentelemetry_traces_exporter`` entry
+    point group, matching the spec's PluginComponentProvider mechanism.
+    """
+    if len(config) != 1:
+        raise ConfigurationError(
+            f"Span exporter config must have exactly one key, got: {list(config.keys())}"
+        )
+    name, exporter_config = next(iter(config.items()))
+    if name in _SPAN_EXPORTER_REGISTRY:
+        return _SPAN_EXPORTER_REGISTRY[name](exporter_config)
+    return load_entry_point("opentelemetry_traces_exporter", name)()
 
 
 def _create_span_processor(

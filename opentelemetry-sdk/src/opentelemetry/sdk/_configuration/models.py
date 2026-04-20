@@ -350,12 +350,10 @@ class SeverityNumber(Enum):
     fatal4 = "fatal4"
 
 
-@dataclass
-class SpanExporter:
-    otlp_http: OtlpHttpExporter | None = None
-    otlp_grpc: OtlpGrpcExporter | None = None
-    otlp_file_development: ExperimentalOtlpFileExporter | None = None
-    console: ConsoleExporter | None = None
+# Diverges from codegen: SpanExporter is typed as dict[str, Any] rather than
+# a dataclass so that unknown exporter names (plugin/custom exporters) are
+# preserved as dict keys through the config pipeline.
+SpanExporter: TypeAlias = dict[str, Any]
 
 
 class SpanKind(Enum):
@@ -524,12 +522,10 @@ class ExperimentalTracerConfigurator:
     tracers: list[ExperimentalTracerMatcherAndConfig] | None = None
 
 
-@dataclass
-class LogRecordExporter:
-    otlp_http: OtlpHttpExporter | None = None
-    otlp_grpc: OtlpGrpcExporter | None = None
-    otlp_file_development: ExperimentalOtlpFileExporter | None = None
-    console: ConsoleExporter | None = None
+# Diverges from codegen: LogRecordExporter is typed as dict[str, Any] rather
+# than a dataclass so that unknown exporter names (plugin/custom exporters)
+# are preserved as dict keys through the config pipeline.
+LogRecordExporter: TypeAlias = dict[str, Any]
 
 
 @dataclass
@@ -549,12 +545,10 @@ class PullMetricReader:
     cardinality_limits: CardinalityLimits | None = None
 
 
-@dataclass
-class PushMetricExporter:
-    otlp_http: OtlpHttpMetricExporter | None = None
-    otlp_grpc: OtlpGrpcMetricExporter | None = None
-    otlp_file_development: ExperimentalOtlpFileMetricExporter | None = None
-    console: ConsoleMetricExporter | None = None
+# Diverges from codegen: PushMetricExporter is typed as dict[str, Any] rather
+# than a dataclass so that unknown exporter names (plugin/custom exporters)
+# are preserved as dict keys through the config pipeline.
+PushMetricExporter: TypeAlias = dict[str, Any]
 
 
 @dataclass

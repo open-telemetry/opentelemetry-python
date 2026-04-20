@@ -306,6 +306,26 @@ class TestCreateMetricReaders(unittest.TestCase):
         with self.assertRaises(ConfigurationError):
             create_meter_provider(config)
 
+    def test_plugin_metric_exporter_loaded_via_entry_point(self):
+        mock_exporter = MagicMock()
+        mock_class = MagicMock(return_value=mock_exporter)
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            return_value=[MagicMock(**{"load.return_value": mock_class})],
+        ):
+            config = self._make_periodic_config({"my_custom_exporter": {}})
+            provider = create_meter_provider(config)
+        self.assertEqual(len(provider._sdk_config.metric_readers), 1)
+
+    def test_unknown_metric_exporter_raises_configuration_error(self):
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            return_value=[],
+        ):
+            config = self._make_periodic_config({"no_such_exporter": {}})
+            with self.assertRaises(ConfigurationError):
+                create_meter_provider(config)
+
     def test_multiple_readers(self):
         config = MeterProviderConfig(
             readers=[
