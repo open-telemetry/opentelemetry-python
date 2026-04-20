@@ -36,7 +36,6 @@ from opentelemetry.metrics import (
     Asynchronous,
     Counter,
     Histogram,
-    Instrument,
     ObservableCounter,
     ObservableGauge,
     ObservableUpDownCounter,
@@ -60,6 +59,7 @@ from opentelemetry.sdk.metrics._internal.exponential_histogram.mapping.exponent_
 from opentelemetry.sdk.metrics._internal.exponential_histogram.mapping.logarithm_mapping import (
     LogarithmMapping,
 )
+from opentelemetry.sdk.metrics._internal.instrument import _Instrument
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.point import Buckets as BucketsPoint
 from opentelemetry.sdk.metrics._internal.point import (
@@ -1209,7 +1209,7 @@ class Aggregation(ABC):
     @abstractmethod
     def _create_aggregation(
         self,
-        instrument: Instrument,
+        instrument: _Instrument,
         attributes: Attributes,
         reservoir_factory: Callable[
             [Type[_Aggregation]], ExemplarReservoirBuilder
@@ -1240,7 +1240,7 @@ class DefaultAggregation(Aggregation):
 
     def _create_aggregation(
         self,
-        instrument: Instrument,
+        instrument: _Instrument,
         attributes: Attributes,
         reservoir_factory: Callable[
             [Type[_Aggregation]], ExemplarReservoirBuilder
@@ -1332,7 +1332,7 @@ class ExponentialBucketHistogramAggregation(Aggregation):
 
     def _create_aggregation(
         self,
-        instrument: Instrument,
+        instrument: _Instrument,
         attributes: Attributes,
         reservoir_factory: Callable[
             [Type[_Aggregation]], ExemplarReservoirBuilder
@@ -1381,7 +1381,7 @@ class ExplicitBucketHistogramAggregation(Aggregation):
 
     def _create_aggregation(
         self,
-        instrument: Instrument,
+        instrument: _Instrument,
         attributes: Attributes,
         reservoir_factory: Callable[
             [Type[_Aggregation]], ExemplarReservoirBuilder
@@ -1425,7 +1425,7 @@ class SumAggregation(Aggregation):
 
     def _create_aggregation(
         self,
-        instrument: Instrument,
+        instrument: _Instrument,
         attributes: Attributes,
         reservoir_factory: Callable[
             [Type[_Aggregation]], ExemplarReservoirBuilder
@@ -1459,7 +1459,7 @@ class LastValueAggregation(Aggregation):
 
     def _create_aggregation(
         self,
-        instrument: Instrument,
+        instrument: _Instrument,
         attributes: Attributes,
         reservoir_factory: Callable[
             [Type[_Aggregation]], ExemplarReservoirBuilder
@@ -1477,7 +1477,7 @@ class DropAggregation(Aggregation):
 
     def _create_aggregation(
         self,
-        instrument: Instrument,
+        instrument: _Instrument,
         attributes: Attributes,
         reservoir_factory: Callable[
             [Type[_Aggregation]], ExemplarReservoirBuilder
