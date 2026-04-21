@@ -15,7 +15,8 @@
 import contextlib
 import functools
 import inspect
-from typing import TYPE_CHECKING, Callable, Generic, Iterator, TypeVar
+from collections.abc import Callable, Iterator
+from typing import TYPE_CHECKING, Generic, TypeVar
 
 V = TypeVar("V")
 R = TypeVar("R")  # Return type

@@ -17,10 +17,10 @@ import logging
 import random
 import threading
 import zlib
+from collections.abc import Sequence
 from io import BytesIO
 from os import environ
 from time import time
-from typing import Dict, Optional, Sequence
 from urllib.parse import urlparse
 
 import requests
@@ -81,16 +81,16 @@ _MAX_RETRYS = 6
 class OTLPSpanExporter(SpanExporter):
     def __init__(
         self,
-        endpoint: Optional[str] = None,
-        certificate_file: Optional[str] = None,
-        client_key_file: Optional[str] = None,
-        client_certificate_file: Optional[str] = None,
-        headers: Optional[Dict[str, str]] = None,
-        timeout: Optional[float] = None,
-        compression: Optional[Compression] = None,
-        session: Optional[requests.Session] = None,
+        endpoint: str | None = None,
+        certificate_file: str | None = None,
+        client_key_file: str | None = None,
+        client_certificate_file: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | None = None,
+        compression: Compression | None = None,
+        session: requests.Session | None = None,
         *,
-        meter_provider: Optional[MeterProvider] = None,
+        meter_provider: MeterProvider | None = None,
     ):
         self._shutdown_in_progress = threading.Event()
         self._endpoint = endpoint or environ.get(
@@ -155,7 +155,7 @@ class OTLPSpanExporter(SpanExporter):
         )
 
     def _export(
-        self, serialized_data: bytes, timeout_sec: Optional[float] = None
+        self, serialized_data: bytes, timeout_sec: float | None = None
     ):
         data = serialized_data
         if self._compression == Compression.Gzip:
@@ -202,7 +202,7 @@ class OTLPSpanExporter(SpanExporter):
             for retry_num in range(_MAX_RETRYS):
                 # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
                 backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
-                export_error: Optional[Exception] = None
+                export_error: Exception | None = None
                 try:
                     resp = self._export(serialized_data, deadline_sec - time())
                     if resp.ok:

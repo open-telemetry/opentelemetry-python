@@ -70,7 +70,6 @@ Example::
 
 from logging import getLogger
 from os import environ
-from typing import List, Optional
 
 from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import OTEL_PROPAGATORS
@@ -82,7 +81,7 @@ logger = getLogger(__name__)
 
 def extract(
     carrier: textmap.CarrierT,
-    context: Optional[Context] = None,
+    context: Context | None = None,
     getter: textmap.Getter[textmap.CarrierT] = textmap.default_getter,
 ) -> Context:
     """Uses the configured propagator to extract a Context from the carrier.
@@ -103,7 +102,7 @@ def extract(
 
 def inject(
     carrier: textmap.CarrierT,
-    context: Optional[Context] = None,
+    context: Context | None = None,
     setter: textmap.Setter[textmap.CarrierT] = textmap.default_setter,
 ) -> None:
     """Uses the configured propagator to inject a Context into the carrier.
@@ -121,7 +120,7 @@ def inject(
     get_global_textmap().inject(carrier, context=context, setter=setter)
 
 
-propagators: List[textmap.TextMapPropagator] = []
+propagators: list[textmap.TextMapPropagator] = []
 
 # Single use variable here to hack black and make lint pass
 environ_propagators = environ.get(

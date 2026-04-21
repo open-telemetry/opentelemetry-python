@@ -16,7 +16,6 @@
 from logging import WARNING
 from os import environ
 from os.path import dirname
-from typing import List
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -345,7 +344,7 @@ class TestOTLPMetricExporter(TestCase):
             ]
         )
         # WHEN
-        split_metrics_data: List[MetricsData] = list(
+        split_metrics_data: list[MetricsData] = list(
             # pylint: disable=protected-access
             OTLPMetricExporter(max_export_batch_size=2)._split_metrics_data(
                 metrics_data=metrics_data,
@@ -424,7 +423,7 @@ class TestOTLPMetricExporter(TestCase):
             ]
         )
         # WHEN
-        split_metrics_data: List[MetricsData] = list(
+        split_metrics_data: list[MetricsData] = list(
             # pylint: disable=protected-access
             OTLPMetricExporter(max_export_batch_size=3)._split_metrics_data(
                 metrics_data=metrics_data,
@@ -515,7 +514,7 @@ class TestOTLPMetricExporter(TestCase):
             ]
         )
         # WHEN
-        split_metrics_data: List[MetricsData] = list(
+        split_metrics_data: list[MetricsData] = list(
             # pylint: disable=protected-access
             OTLPMetricExporter(max_export_batch_size=2)._split_metrics_data(
                 metrics_data=metrics_data,
@@ -829,7 +828,7 @@ class TestOTLPMetricExporter(TestCase):
 
 
 def _resource_metrics(
-    index: int, scope_metrics: List[ScopeMetrics]
+    index: int, scope_metrics: list[ScopeMetrics]
 ) -> ResourceMetrics:
     return ResourceMetrics(
         resource=Resource(
@@ -841,7 +840,7 @@ def _resource_metrics(
     )
 
 
-def _scope_metrics(index: int, metrics: List[Metric]) -> ScopeMetrics:
+def _scope_metrics(index: int, metrics: list[Metric]) -> ScopeMetrics:
     return ScopeMetrics(
         scope=InstrumentationScope(name=f"scope_{index}"),
         schema_url=f"scope_url_{index}",
@@ -849,7 +848,7 @@ def _scope_metrics(index: int, metrics: List[Metric]) -> ScopeMetrics:
     )
 
 
-def _gauge(index: int, data_points: List[NumberDataPoint]) -> Metric:
+def _gauge(index: int, data_points: list[NumberDataPoint]) -> Metric:
     return Metric(
         name=f"gauge_{index}",
         description="description",

@@ -42,11 +42,12 @@ The following code shows how to obtain a meter using the global :class:`.MeterPr
 
 import warnings
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from dataclasses import dataclass
 from logging import getLogger
 from os import environ
 from threading import Lock
-from typing import Dict, List, Optional, Sequence, Union, cast
+from typing import cast
 
 from opentelemetry.environment_variables import OTEL_PYTHON_METER_PROVIDER
 from opentelemetry.metrics._internal.instrument import (
@@ -84,15 +85,15 @@ _logger = getLogger(__name__)
 
 
 # pylint: disable=invalid-name
-_ProxyInstrumentT = Union[
-    _ProxyCounter,
-    _ProxyHistogram,
-    _ProxyGauge,
-    _ProxyObservableCounter,
-    _ProxyObservableGauge,
-    _ProxyObservableUpDownCounter,
-    _ProxyUpDownCounter,
-]
+_ProxyInstrumentT = (
+    _ProxyCounter
+    | _ProxyHistogram
+    | _ProxyGauge
+    | _ProxyObservableCounter
+    | _ProxyObservableGauge
+    | _ProxyObservableUpDownCounter
+    | _ProxyUpDownCounter
+)
 
 
 class MeterProvider(ABC):
@@ -104,9 +105,9 @@ class MeterProvider(ABC):
     def get_meter(
         self,
         name: str,
-        version: Optional[str] = None,
-        schema_url: Optional[str] = None,
-        attributes: Optional[Attributes] = None,
+        version: str | None = None,
+        schema_url: str | None = None,
+        attributes: Attributes | None = None,
     ) -> "Meter":
         """Returns a `Meter` for use by the given instrumentation library.
 
@@ -143,9 +144,9 @@ class NoOpMeterProvider(MeterProvider):
     def get_meter(
         self,
         name: str,
-        version: Optional[str] = None,
-        schema_url: Optional[str] = None,
-        attributes: Optional[Attributes] = None,
+        version: str | None = None,
+        schema_url: str | None = None,
+        attributes: Attributes | None = None,
     ) -> "Meter":
         """Returns a NoOpMeter."""
         return NoOpMeter(name, version=version, schema_url=schema_url)
@@ -154,15 +155,15 @@ class NoOpMeterProvider(MeterProvider):
 class _ProxyMeterProvider(MeterProvider):
     def __init__(self) -> None:
         self._lock = Lock()
-        self._meters: List[_ProxyMeter] = []
-        self._real_meter_provider: Optional[MeterProvider] = None
+        self._meters: list[_ProxyMeter] = []
+        self._real_meter_provider: MeterProvider | None = None
 
     def get_meter(
         self,
         name: str,
-        version: Optional[str] = None,
-        schema_url: Optional[str] = None,
-        attributes: Optional[Attributes] = None,
+        version: str | None = None,
+        schema_url: str | None = None,
+        attributes: Attributes | None = None,
     ) -> "Meter":
         with self._lock:
             if self._real_meter_provider is not None:
@@ -186,7 +187,7 @@ class _InstrumentRegistrationStatus:
     instrument_id: str
     already_registered: bool
     conflict: bool
-    current_advisory: Optional[_MetricsHistogramAdvisory]
+    current_advisory: _MetricsHistogramAdvisory | None
 
 
 class Meter(ABC):
@@ -199,16 +200,14 @@ class Meter(ABC):
     def __init__(
         self,
         name: str,
-        version: Optional[str] = None,
-        schema_url: Optional[str] = None,
+        version: str | None = None,
+        schema_url: str | None = None,
     ) -> None:
         super().__init__()
         self._name = name
         self._version = version
         self._schema_url = schema_url
-        self._instrument_ids: Dict[
-            str, Optional[_MetricsHistogramAdvisory]
-        ] = {}
+        self._instrument_ids: dict[str, _MetricsHistogramAdvisory | None] = {}
         self._instrument_ids_lock = Lock()
 
     @property
@@ -219,14 +218,14 @@ class Meter(ABC):
         return self._name
 
     @property
-    def version(self) -> Optional[str]:
+    def version(self) -> str | None:
         """
         The version string of the instrumenting library.
         """
         return self._version
 
     @property
-    def schema_url(self) -> Optional[str]:
+    def schema_url(self) -> str | None:
         """
         Specifies the Schema URL of the emitted telemetry
         """
@@ -238,7 +237,7 @@ class Meter(ABC):
         type_: type,
         unit: str,
         description: str,
-        advisory: Optional[_MetricsHistogramAdvisory] = None,
+        advisory: _MetricsHistogramAdvisory | None = None,
     ) -> _InstrumentRegistrationStatus:
         """
         Register an instrument with the name, type, unit and description as
@@ -331,7 +330,7 @@ class Meter(ABC):
     def create_observable_counter(
         self,
         name: str,
-        callbacks: Optional[Sequence[CallbackT]] = None,
+        callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
     ) -> ObservableCounter:
@@ -431,7 +430,7 @@ class Meter(ABC):
         unit: str = "",
         description: str = "",
         *,
-        explicit_bucket_boundaries_advisory: Optional[Sequence[float]] = None,
+        explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
     ) -> Histogram:
         """Creates a :class:`~opentelemetry.metrics.Histogram` instrument
 
@@ -462,7 +461,7 @@ class Meter(ABC):
     def create_observable_gauge(
         self,
         name: str,
-        callbacks: Optional[Sequence[CallbackT]] = None,
+        callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
     ) -> ObservableGauge:
@@ -482,7 +481,7 @@ class Meter(ABC):
     def create_observable_up_down_counter(
         self,
         name: str,
-        callbacks: Optional[Sequence[CallbackT]] = None,
+        callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
     ) -> ObservableUpDownCounter:
@@ -503,13 +502,13 @@ class _ProxyMeter(Meter):
     def __init__(
         self,
         name: str,
-        version: Optional[str] = None,
-        schema_url: Optional[str] = None,
+        version: str | None = None,
+        schema_url: str | None = None,
     ) -> None:
         super().__init__(name, version=version, schema_url=schema_url)
         self._lock = Lock()
-        self._instruments: List[_ProxyInstrumentT] = []
-        self._real_meter: Optional[Meter] = None
+        self._instruments: list[_ProxyInstrumentT] = []
+        self._real_meter: Meter | None = None
 
     def on_set_meter_provider(self, meter_provider: MeterProvider) -> None:
         """Called when a real meter provider is set on the creating _ProxyMeterProvider
@@ -559,7 +558,7 @@ class _ProxyMeter(Meter):
     def create_observable_counter(
         self,
         name: str,
-        callbacks: Optional[Sequence[CallbackT]] = None,
+        callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
     ) -> ObservableCounter:
@@ -580,7 +579,7 @@ class _ProxyMeter(Meter):
         unit: str = "",
         description: str = "",
         *,
-        explicit_bucket_boundaries_advisory: Optional[Sequence[float]] = None,
+        explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
     ) -> Histogram:
         with self._lock:
             if self._real_meter:
@@ -612,7 +611,7 @@ class _ProxyMeter(Meter):
     def create_observable_gauge(
         self,
         name: str,
-        callbacks: Optional[Sequence[CallbackT]] = None,
+        callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
     ) -> ObservableGauge:
@@ -630,7 +629,7 @@ class _ProxyMeter(Meter):
     def create_observable_up_down_counter(
         self,
         name: str,
-        callbacks: Optional[Sequence[CallbackT]] = None,
+        callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
     ) -> ObservableUpDownCounter:
@@ -717,7 +716,7 @@ class NoOpMeter(Meter):
     def create_observable_counter(
         self,
         name: str,
-        callbacks: Optional[Sequence[CallbackT]] = None,
+        callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
     ) -> ObservableCounter:
@@ -746,7 +745,7 @@ class NoOpMeter(Meter):
         unit: str = "",
         description: str = "",
         *,
-        explicit_bucket_boundaries_advisory: Optional[Sequence[float]] = None,
+        explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
     ) -> Histogram:
         """Returns a no-op Histogram."""
         status = self._register_instrument(
@@ -776,7 +775,7 @@ class NoOpMeter(Meter):
     def create_observable_gauge(
         self,
         name: str,
-        callbacks: Optional[Sequence[CallbackT]] = None,
+        callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
     ) -> ObservableGauge:
@@ -802,7 +801,7 @@ class NoOpMeter(Meter):
     def create_observable_up_down_counter(
         self,
         name: str,
-        callbacks: Optional[Sequence[CallbackT]] = None,
+        callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
     ) -> ObservableUpDownCounter:
@@ -827,16 +826,16 @@ class NoOpMeter(Meter):
 
 
 _METER_PROVIDER_SET_ONCE = Once()
-_METER_PROVIDER: Optional[MeterProvider] = None
+_METER_PROVIDER: MeterProvider | None = None
 _PROXY_METER_PROVIDER = _ProxyMeterProvider()
 
 
 def get_meter(
     name: str,
     version: str = "",
-    meter_provider: Optional[MeterProvider] = None,
-    schema_url: Optional[str] = None,
-    attributes: Optional[Attributes] = None,
+    meter_provider: MeterProvider | None = None,
+    schema_url: str | None = None,
+    attributes: Attributes | None = None,
 ) -> "Meter":
     """Returns a `Meter` for use by the given instrumentation library.
 

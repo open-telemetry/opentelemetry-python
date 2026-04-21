@@ -14,7 +14,7 @@
 
 import logging  # noqa: F401
 from collections import abc  # noqa: F401
-from typing import Any, List, Optional, Sequence  # noqa: F401
+from collections.abc import Sequence  # noqa: F401
 
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (  # noqa: F401
     ExportTraceServiceRequest as PB2ExportTraceServiceRequest,

@@ -14,9 +14,9 @@
 
 # pylint: disable=unused-import
 
+from collections.abc import Sequence
 from dataclasses import asdict, dataclass, field
 from json import dumps, loads
-from typing import Optional, Sequence, Union
 
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics._internal
@@ -35,10 +35,10 @@ class NumberDataPoint:
     attributes: Attributes
     start_time_unix_nano: int
     time_unix_nano: int
-    value: Union[int, float]
+    value: int | float
     exemplars: Sequence[Exemplar] = field(default_factory=list)
 
-    def to_json(self, indent: Optional[int] = 4) -> str:
+    def to_json(self, indent: int | None = 4) -> str:
         return dumps(asdict(self), indent=indent)
 
 
@@ -52,14 +52,14 @@ class HistogramDataPoint:
     start_time_unix_nano: int
     time_unix_nano: int
     count: int
-    sum: Union[int, float]
+    sum: int | float
     bucket_counts: Sequence[int]
     explicit_bounds: Sequence[float]
     min: float
     max: float
     exemplars: Sequence[Exemplar] = field(default_factory=list)
 
-    def to_json(self, indent: Optional[int] = 4) -> str:
+    def to_json(self, indent: int | None = 4) -> str:
         return dumps(asdict(self), indent=indent)
 
 
@@ -80,7 +80,7 @@ class ExponentialHistogramDataPoint:
     start_time_unix_nano: int
     time_unix_nano: int
     count: int
-    sum: Union[int, float]
+    sum: int | float
     scale: int
     zero_count: int
     positive: Buckets
@@ -90,7 +90,7 @@ class ExponentialHistogramDataPoint:
     max: float
     exemplars: Sequence[Exemplar] = field(default_factory=list)
 
-    def to_json(self, indent: Optional[int] = 4) -> str:
+    def to_json(self, indent: int | None = 4) -> str:
         return dumps(asdict(self), indent=indent)
 
 
@@ -105,7 +105,7 @@ class ExponentialHistogram:
         "opentelemetry.sdk.metrics.export.AggregationTemporality"
     )
 
-    def to_json(self, indent: Optional[int] = 4) -> str:
+    def to_json(self, indent: int | None = 4) -> str:
         return dumps(
             {
                 "data_points": [
@@ -129,7 +129,7 @@ class Sum:
     )
     is_monotonic: bool
 
-    def to_json(self, indent: Optional[int] = 4) -> str:
+    def to_json(self, indent: int | None = 4) -> str:
         return dumps(
             {
                 "data_points": [
@@ -151,7 +151,7 @@ class Gauge:
 
     data_points: Sequence[NumberDataPoint]
 
-    def to_json(self, indent: Optional[int] = 4) -> str:
+    def to_json(self, indent: int | None = 4) -> str:
         return dumps(
             {
                 "data_points": [
@@ -173,7 +173,7 @@ class Histogram:
         "opentelemetry.sdk.metrics.export.AggregationTemporality"
     )
 
-    def to_json(self, indent: Optional[int] = 4) -> str:
+    def to_json(self, indent: int | None = 4) -> str:
         return dumps(
             {
                 "data_points": [
@@ -187,10 +187,10 @@ class Histogram:
 
 
 # pylint: disable=invalid-name
-DataT = Union[Sum, Gauge, Histogram, ExponentialHistogram]
-DataPointT = Union[
-    NumberDataPoint, HistogramDataPoint, ExponentialHistogramDataPoint
-]
+DataT = Sum | Gauge | Histogram | ExponentialHistogram
+DataPointT = (
+    NumberDataPoint | HistogramDataPoint | ExponentialHistogramDataPoint
+)
 
 
 @dataclass(frozen=True)
@@ -199,11 +199,11 @@ class Metric:
     exported."""
 
     name: str
-    description: Optional[str]
-    unit: Optional[str]
+    description: str | None
+    unit: str | None
     data: DataT
 
-    def to_json(self, indent: Optional[int] = 4) -> str:
+    def to_json(self, indent: int | None = 4) -> str:
         return dumps(
             {
                 "name": self.name,
@@ -223,7 +223,7 @@ class ScopeMetrics:
     metrics: Sequence[Metric]
     schema_url: str
 
-    def to_json(self, indent: Optional[int] = 4) -> str:
+    def to_json(self, indent: int | None = 4) -> str:
         return dumps(
             {
                 "scope": loads(self.scope.to_json(indent=indent)),
@@ -245,7 +245,7 @@ class ResourceMetrics:
     scope_metrics: Sequence[ScopeMetrics]
     schema_url: str
 
-    def to_json(self, indent: Optional[int] = 4) -> str:
+    def to_json(self, indent: int | None = 4) -> str:
         return dumps(
             {
                 "resource": loads(self.resource.to_json(indent=indent)),
@@ -265,7 +265,7 @@ class MetricsData:
 
     resource_metrics: Sequence[ResourceMetrics]
 
-    def to_json(self, indent: Optional[int] = 4) -> str:
+    def to_json(self, indent: int | None = 4) -> str:
         return dumps(
             {
                 "resource_metrics": [

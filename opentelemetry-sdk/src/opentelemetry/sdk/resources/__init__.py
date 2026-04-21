@@ -70,7 +70,7 @@ import typing
 from json import dumps
 from os import environ
 from types import ModuleType
-from typing import List, Optional, Set, cast
+from typing import cast
 from urllib import parse
 
 from opentelemetry.attributes import BoundedAttributes
@@ -86,7 +86,7 @@ from opentelemetry.util._importlib_metadata import (
 )
 from opentelemetry.util.types import AttributeValue
 
-psutil: Optional[ModuleType] = None
+psutil: ModuleType | None = None
 
 try:
     import psutil as psutil_module
@@ -167,9 +167,7 @@ class Resource:
     _attributes: BoundedAttributes
     _schema_url: str
 
-    def __init__(
-        self, attributes: Attributes, schema_url: typing.Optional[str] = None
-    ):
+    def __init__(self, attributes: Attributes, schema_url: str | None = None):
         self._attributes = BoundedAttributes(attributes=attributes)
         if schema_url is None:
             schema_url = ""
@@ -177,8 +175,8 @@ class Resource:
 
     @staticmethod
     def create(
-        attributes: typing.Optional[Attributes] = None,
-        schema_url: typing.Optional[str] = None,
+        attributes: Attributes | None = None,
+        schema_url: str | None = None,
     ) -> "Resource":
         """Creates a new `Resource` from attributes.
 
@@ -195,7 +193,7 @@ class Resource:
         if not attributes:
             attributes = {}
 
-        otel_experimental_resource_detectors: Set[str] = {"otel"}.union(
+        otel_experimental_resource_detectors: set[str] = {"otel"}.union(
             {
                 otel_experimental_resource_detector.strip()
                 for otel_experimental_resource_detector in environ.get(
@@ -205,7 +203,7 @@ class Resource:
             }
         )
 
-        resource_detectors: List[ResourceDetector] = []
+        resource_detectors: list[ResourceDetector] = []
 
         if "*" in otel_experimental_resource_detectors:
             otel_experimental_resource_detectors = entry_points(
@@ -237,7 +235,7 @@ class Resource:
         if not resource.attributes.get(SERVICE_NAME, None):
             default_service_name = "unknown_service"
             process_executable_name = cast(
-                Optional[str],
+                str | None,
                 resource.attributes.get(PROCESS_EXECUTABLE_NAME, None),
             )
             if process_executable_name:
@@ -307,7 +305,7 @@ class Resource:
             f"{dumps(self._attributes.copy(), sort_keys=True)}|{self._schema_url}"
         )
 
-    def to_json(self, indent: Optional[int] = 4) -> str:
+    def to_json(self, indent: int | None = 4) -> str:
         return dumps(
             {
                 "attributes": dict(self.attributes),
@@ -505,8 +503,8 @@ class _HostResourceDetector(ResourceDetector):  # type: ignore[reportUnusedClass
 
 
 def get_aggregated_resources(
-    detectors: typing.List["ResourceDetector"],
-    initial_resource: typing.Optional[Resource] = None,
+    detectors: list["ResourceDetector"],
+    initial_resource: Resource | None = None,
     timeout: int = 5,
 ) -> "Resource":
     """Retrieves resources from detectors in the order that they were passed

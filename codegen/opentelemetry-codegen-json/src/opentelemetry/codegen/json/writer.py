@@ -14,9 +14,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Generator, Iterable
 from contextlib import contextmanager
-from typing import Any, Generator, Optional, Union
+from typing import Any
 
 
 # pylint: disable-next=too-many-public-methods
@@ -72,7 +72,7 @@ class CodeWriter:
             self.writeln(line)
         return self
 
-    def comment(self, content: Union[str, Iterable[str]]) -> CodeWriter:
+    def comment(self, content: str | Iterable[str]) -> CodeWriter:
         """
         Writes a comment line or block. If content is a string, it writes a single comment line.
 
@@ -88,7 +88,7 @@ class CodeWriter:
             self.writeln(f"# {line}" if line else "#")
         return self
 
-    def docstring(self, content: Union[str, Iterable[str]]) -> CodeWriter:
+    def docstring(self, content: str | Iterable[str]) -> CodeWriter:
         """
         Writes a docstring. If content is a string, it writes a single-line docstring. If content is an iterable of strings, it writes a multi-line docstring.
 
@@ -139,8 +139,8 @@ class CodeWriter:
     def class_(
         self,
         name: str,
-        bases: Optional[Iterable[str]] = None,
-        decorators: Optional[Iterable[str]] = None,
+        bases: Iterable[str] | None = None,
+        decorators: Iterable[str] | None = None,
     ) -> Generator[CodeWriter, None, None]:
         """
         Generate a class definition with optional base classes and decorators.
@@ -164,8 +164,8 @@ class CodeWriter:
     def dataclass(
         self,
         name: str,
-        bases: Optional[Iterable[str]] = None,
-        decorators: Optional[Iterable[str]] = None,
+        bases: Iterable[str] | None = None,
+        decorators: Iterable[str] | None = None,
         frozen: bool = False,
         slots: bool = False,
         decorator_name: str = "dataclasses.dataclass",
@@ -212,8 +212,8 @@ class CodeWriter:
         self,
         name: str,
         enum_type: str = "enum.Enum",
-        bases: Optional[Iterable[str]] = None,
-        decorators: Optional[Iterable[str]] = None,
+        bases: Iterable[str] | None = None,
+        decorators: Iterable[str] | None = None,
     ) -> Generator[CodeWriter, None, None]:
         """
         Generate an enum definition with optional base classes and decorators.
@@ -243,7 +243,7 @@ class CodeWriter:
         name: str,
         type_hint: str,
         default: Any = None,
-        default_factory: Optional[str] = None,
+        default_factory: str | None = None,
     ) -> CodeWriter:
         """
         Write a dataclass field with optional default value or default factory.
@@ -279,9 +279,9 @@ class CodeWriter:
     def function(
         self,
         name: str,
-        params: Union[Iterable[str], str],
-        decorators: Optional[Iterable[str]] = None,
-        return_type: Optional[str] = None,
+        params: Iterable[str] | str,
+        decorators: Iterable[str] | None = None,
+        return_type: str | None = None,
     ) -> Generator[CodeWriter, None, None]:
         """
         Create a function definition with optional decorators and return type.
@@ -307,9 +307,9 @@ class CodeWriter:
     def method(
         self,
         name: str,
-        params: Union[Iterable[str], str],
-        decorators: Optional[Iterable[str]] = None,
-        return_type: Optional[str] = None,
+        params: Iterable[str] | str,
+        decorators: Iterable[str] | None = None,
+        return_type: str | None = None,
     ) -> Generator[CodeWriter, None, None]:
         """
         Create a method definition within a class with optional decorators and return type.
@@ -386,7 +386,7 @@ class CodeWriter:
             yield self
 
     def assignment(
-        self, var: str, value: str, type_hint: Optional[str] = None
+        self, var: str, value: str, type_hint: str | None = None
     ) -> CodeWriter:
         """
         Write a variable assignment with optional type hint
@@ -404,7 +404,7 @@ class CodeWriter:
             self.writeln(f"{var} = {value}")
         return self
 
-    def return_(self, value: Optional[str] = None) -> CodeWriter:
+    def return_(self, value: str | None = None) -> CodeWriter:
         """
         Write a return statement with an optional return value
 

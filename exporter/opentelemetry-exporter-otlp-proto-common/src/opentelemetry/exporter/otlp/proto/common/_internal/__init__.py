@@ -16,14 +16,9 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import (
     Any,
-    Callable,
-    Dict,
-    List,
-    Mapping,
-    Optional,
     TypeVar,
 )
 
@@ -67,9 +62,7 @@ def _encode_resource(resource: Resource) -> PB2Resource:
     return PB2Resource(attributes=_encode_attributes(resource.attributes))
 
 
-def _encode_value(
-    value: Any, allow_null: bool = False
-) -> Optional[PB2AnyValue]:
+def _encode_value(value: Any, allow_null: bool = False) -> PB2AnyValue | None:
     if allow_null is True and value is None:
         return None
     if isinstance(value, bool):
@@ -136,7 +129,7 @@ def _encode_trace_id(trace_id: int) -> bytes:
 def _encode_attributes(
     attributes: _ExtendedAttributes,
     allow_null: bool = False,
-) -> Optional[List[PB2KeyValue]]:
+) -> list[PB2KeyValue] | None:
     if attributes:
         pb2_attributes = []
         for key, value in attributes.items():
@@ -153,10 +146,10 @@ def _encode_attributes(
 
 
 def _get_resource_data(
-    sdk_resource_scope_data: Dict[Resource, _ResourceDataT],
+    sdk_resource_scope_data: dict[Resource, _ResourceDataT],
     resource_class: Callable[..., _TypingResourceT],
     name: str,
-) -> List[_TypingResourceT]:
+) -> list[_TypingResourceT]:
     resource_data = []
 
     for (

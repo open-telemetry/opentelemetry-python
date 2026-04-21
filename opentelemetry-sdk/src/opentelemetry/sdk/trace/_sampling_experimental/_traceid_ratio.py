@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from typing import Sequence
+from collections.abc import Sequence
 
 from opentelemetry.context import Context
 from opentelemetry.trace import Link, SpanKind, TraceState

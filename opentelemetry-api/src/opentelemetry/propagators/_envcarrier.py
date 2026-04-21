@@ -38,13 +38,13 @@ class EnvironmentGetter(Getter[typing.Mapping[str, str]]):
     def __init__(self):
         # Create case-insensitive lookup from current environment
         # Per spec: "creates an in-memory copy of the current environment variables"
-        self.carrier: typing.Dict[str, str] = {
+        self.carrier: dict[str, str] = {
             k.lower(): v for k, v in os.environ.items()
         }
 
     def get(
         self, carrier: typing.Mapping[str, str], key: str
-    ) -> typing.Optional[typing.List[str]]:
+    ) -> list[str] | None:
         """Get a value from the environment carrier for the given key.
 
         Args:
@@ -61,7 +61,7 @@ class EnvironmentGetter(Getter[typing.Mapping[str, str]]):
             return list(val)
         return [val]
 
-    def keys(self, carrier: typing.Mapping[str, str]) -> typing.List[str]:
+    def keys(self, carrier: typing.Mapping[str, str]) -> list[str]:
         """Get all keys from the environment carrier.
 
         Args:

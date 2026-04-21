@@ -14,8 +14,8 @@
 
 import logging
 import unittest
+from collections.abc import Sequence
 from contextlib import contextmanager
-from typing import Optional, Sequence, Tuple
 
 from opentelemetry import metrics as metrics_api
 from opentelemetry import trace as trace_api
@@ -118,7 +118,7 @@ class TestBase(unittest.TestCase):
         return tracer_provider, memory_exporter
 
     @staticmethod
-    def create_meter_provider(**kwargs) -> Tuple[MeterProvider, MetricReader]:
+    def create_meter_provider(**kwargs) -> tuple[MeterProvider, MetricReader]:
         """Helper to create a configured meter provider
         Creates a `MeterProvider` and an `InMemoryMetricReader`.
         Returns:
@@ -142,7 +142,7 @@ class TestBase(unittest.TestCase):
         finally:
             logging.disable(logging.NOTSET)
 
-    def get_sorted_metrics(self, scope: Optional[str] = None):
+    def get_sorted_metrics(self, scope: str | None = None):
         """Returns recorded metrics sorted by name.
 
         Args:
@@ -177,7 +177,7 @@ class TestBase(unittest.TestCase):
         self,
         metric: Metric,
         expected_data_points: Sequence[DataPointT],
-        est_value_delta: Optional[float] = 0,
+        est_value_delta: float | None = 0,
     ):
         self.assertEqual(
             len(expected_data_points), len(metric.data.data_points)
@@ -192,7 +192,7 @@ class TestBase(unittest.TestCase):
     def is_data_points_equal(
         expected_data_point: DataPointT,
         data_point: DataPointT,
-        est_value_delta: Optional[float] = 0,
+        est_value_delta: float | None = 0,
     ):
         if type(expected_data_point) != type(  # noqa: E721
             data_point
@@ -230,7 +230,7 @@ class TestBase(unittest.TestCase):
         self,
         expected_data_point: DataPointT,
         data_points: Sequence[DataPointT],
-        est_value_delta: Optional[float] = 0,
+        est_value_delta: float | None = 0,
     ):
         is_data_point_exist = False
         for data_point in data_points:

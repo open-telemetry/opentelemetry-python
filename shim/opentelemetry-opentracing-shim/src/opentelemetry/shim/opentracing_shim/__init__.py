@@ -88,7 +88,7 @@ from __future__ import annotations
 
 import logging
 from types import TracebackType
-from typing import Type, TypeVar
+from typing import TypeVar
 
 from opentracing import (
     Format,
@@ -425,7 +425,7 @@ class ScopeShim(Scope):
 
     def _end_span_scope(
         self,
-        exc_type: Type[BaseException] | None,
+        exc_type: type[BaseException] | None,
         exc_val: BaseException | None,
         exc_tb: TracebackType | None,
     ) -> None:

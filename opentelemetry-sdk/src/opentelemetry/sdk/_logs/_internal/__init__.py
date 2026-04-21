@@ -669,10 +669,8 @@ class Logger(APILogger):
     def __init__(
         self,
         resource: Resource,
-        multi_log_record_processor: Union[
-            SynchronousMultiLogRecordProcessor,
-            ConcurrentMultiLogRecordProcessor,
-        ],
+        multi_log_record_processor: SynchronousMultiLogRecordProcessor
+        | ConcurrentMultiLogRecordProcessor,
         instrumentation_scope: InstrumentationScope,
         *,
         logger_metrics: LoggerMetrics,

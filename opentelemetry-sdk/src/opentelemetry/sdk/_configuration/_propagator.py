@@ -14,8 +14,6 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 from opentelemetry.baggage.propagation import W3CBaggagePropagator
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.composite import CompositePropagator
@@ -54,7 +52,7 @@ def _propagators_from_textmap_config(
 
 
 def create_propagator(
-    config: Optional[PropagatorConfig],
+    config: PropagatorConfig | None,
 ) -> CompositePropagator:
     """Create a CompositePropagator from declarative config.
 
@@ -91,7 +89,7 @@ def create_propagator(
     return CompositePropagator(list(propagators.values()))
 
 
-def configure_propagator(config: Optional[PropagatorConfig]) -> None:
+def configure_propagator(config: PropagatorConfig | None) -> None:
     """Configure the global text map propagator from declarative config.
 
     Always calls set_global_textmap to override any defaults (including the

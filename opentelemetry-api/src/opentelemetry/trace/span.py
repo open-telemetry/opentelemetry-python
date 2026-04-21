@@ -57,7 +57,7 @@ class Span(abc.ABC):
     """A span represents a single operation within a trace."""
 
     @abc.abstractmethod
-    def end(self, end_time: typing.Optional[int] = None) -> None:
+    def end(self, end_time: int | None = None) -> None:
         """Sets the current time as the span's end time.
 
         The span's end time is the wall time at which the operation finished.
@@ -108,7 +108,7 @@ class Span(abc.ABC):
         self,
         name: str,
         attributes: types.Attributes = None,
-        timestamp: typing.Optional[int] = None,
+        timestamp: int | None = None,
     ) -> None:
         """Adds an `Event`.
 
@@ -159,8 +159,8 @@ class Span(abc.ABC):
     @abc.abstractmethod
     def set_status(
         self,
-        status: typing.Union[Status, StatusCode],
-        description: typing.Optional[str] = None,
+        status: Status | StatusCode,
+        description: str | None = None,
     ) -> None:
         """Sets the Status of the Span. If used, this will override the default
         Span status.
@@ -171,7 +171,7 @@ class Span(abc.ABC):
         self,
         exception: BaseException,
         attributes: types.Attributes = None,
-        timestamp: typing.Optional[int] = None,
+        timestamp: int | None = None,
         escaped: bool = False,
     ) -> None:
         """Records an exception as a span event."""
@@ -185,9 +185,9 @@ class Span(abc.ABC):
 
     def __exit__(
         self,
-        exc_type: typing.Optional[typing.Type[BaseException]],
-        exc_val: typing.Optional[BaseException],
-        exc_tb: typing.Optional[python_types.TracebackType],
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: python_types.TracebackType | None,
     ) -> None:
         """Ends context manager and calls `end` on the `Span`."""
 
@@ -234,9 +234,7 @@ class TraceState(typing.Mapping[str, str]):
 
     def __init__(
         self,
-        entries: typing.Optional[
-            typing.Sequence[typing.Tuple[str, str]]
-        ] = None,
+        entries: typing.Sequence[tuple[str, str]] | None = None,
     ) -> None:
         self._dict = {}  # type: dict[str, str]
         if entries is None:
@@ -365,7 +363,7 @@ class TraceState(typing.Mapping[str, str]):
         return ",".join(key + "=" + value for key, value in self._dict.items())
 
     @classmethod
-    def from_header(cls, header_list: typing.List[str]) -> "TraceState":
+    def from_header(cls, header_list: list[str]) -> "TraceState":
         """Parses one or more w3c tracestate header into a TraceState.
 
         Args:
@@ -383,7 +381,7 @@ class TraceState(typing.Mapping[str, str]):
         """
         pairs = {}  # type: dict[str, str]
         for header in header_list:
-            members: typing.List[str] = re.split(_delimiter_pattern, header)
+            members: list[str] = re.split(_delimiter_pattern, header)
             for member in members:
                 # empty members are valid, but no need to process further.
                 if not member:
@@ -395,7 +393,7 @@ class TraceState(typing.Mapping[str, str]):
                         member,
                     )
                     return cls()
-                groups: typing.Tuple[str, ...] = match.groups()
+                groups: tuple[str, ...] = match.groups()
                 key, _eq, value = groups
                 # duplicate keys are not legal in header
                 if key in pairs:
@@ -422,9 +420,7 @@ _TRACE_ID_MAX_VALUE = 2**128 - 1
 _SPAN_ID_MAX_VALUE = 2**64 - 1
 
 
-class SpanContext(
-    typing.Tuple[int, int, bool, "TraceFlags", "TraceState", bool]
-):
+class SpanContext(tuple[int, int, bool, "TraceFlags", "TraceState", bool]):
     """The state of a Span to propagate between processes.
 
     This class includes the immutable attributes of a :class:`.Span` that must
@@ -463,7 +459,7 @@ class SpanContext(
 
     def __getnewargs__(
         self,
-    ) -> typing.Tuple[int, int, bool, "TraceFlags", "TraceState"]:
+    ) -> tuple[int, int, bool, "TraceFlags", "TraceState"]:
         return (
             self.trace_id,
             self.span_id,
@@ -525,7 +521,7 @@ class NonRecordingSpan(Span):
     def is_recording(self) -> bool:
         return False
 
-    def end(self, end_time: typing.Optional[int] = None) -> None:
+    def end(self, end_time: int | None = None) -> None:
         pass
 
     def set_attributes(
@@ -540,7 +536,7 @@ class NonRecordingSpan(Span):
         self,
         name: str,
         attributes: types.Attributes = None,
-        timestamp: typing.Optional[int] = None,
+        timestamp: int | None = None,
     ) -> None:
         pass
 
@@ -556,8 +552,8 @@ class NonRecordingSpan(Span):
 
     def set_status(
         self,
-        status: typing.Union[Status, StatusCode],
-        description: typing.Optional[str] = None,
+        status: Status | StatusCode,
+        description: str | None = None,
     ) -> None:
         pass
 
@@ -565,7 +561,7 @@ class NonRecordingSpan(Span):
         self,
         exception: BaseException,
         attributes: types.Attributes = None,
-        timestamp: typing.Optional[int] = None,
+        timestamp: int | None = None,
         escaped: bool = False,
     ) -> None:
         pass

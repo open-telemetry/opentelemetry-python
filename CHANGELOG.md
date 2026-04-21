@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Apply fixes for `UP` ruff rule
+  ([#5132](https://github.com/open-telemetry/opentelemetry-python/pull/5132))
 - Fix incorrect code example in `create_tracer()` docstring
   ([#5072](https://github.com/open-telemetry/opentelemetry-python/issues/5072))
 - `opentelemetry-sdk`: add `load_entry_point` shared utility to declarative file configuration for loading plugins via entry points; refactor propagator loading to use it

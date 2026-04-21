@@ -17,11 +17,9 @@ import gc
 import multiprocessing
 import os
 import time
-import typing
 import unittest
 import weakref
 from threading import Event
-from typing import Optional
 from unittest import mock
 
 from opentelemetry import trace as trace_api
@@ -51,7 +49,7 @@ class MySpanProcessor(trace.SpanProcessor):
         self.span_list = span_list
 
     def on_start(
-        self, span: "trace.Span", parent_context: Optional[Context] = None
+        self, span: "trace.Span", parent_context: Context | None = None
     ) -> None:
         self.span_list.append(span_event_start_fmt(self.name, span.name))
 
@@ -273,9 +271,10 @@ class MultiSpanProcessorTestBase(abc.ABC):
     @abc.abstractmethod
     def create_multi_span_processor(
         self,
-    ) -> typing.Union[
-        trace.SynchronousMultiSpanProcessor, trace.ConcurrentMultiSpanProcessor
-    ]:
+    ) -> (
+        trace.SynchronousMultiSpanProcessor
+        | trace.ConcurrentMultiSpanProcessor
+    ):
         pass
 
     @staticmethod

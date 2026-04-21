@@ -23,25 +23,23 @@ logic to handle transient collector outages.
 import random
 import threading
 from abc import ABC, abstractmethod
-from collections.abc import Sequence  # noqa: F401
+from collections.abc import (
+    Callable,
+    Sequence,  # noqa: F401
+)
+from collections.abc import Sequence as TypingSequence
 from logging import getLogger
 from os import environ
 from time import time
 from typing import (  # noqa: F401
     Any,
-    Callable,
-    Dict,
     Generic,
-    List,
     Literal,
     NewType,
     Optional,
-    Tuple,
-    Type,
     TypeVar,
     Union,
 )
-from typing import Sequence as TypingSequence
 from urllib.parse import urlparse
 
 from google.rpc.error_details_pb2 import RetryInfo
@@ -169,7 +167,7 @@ class InvalidCompressionValueException(Exception):
         )
 
 
-def environ_to_compression(environ_key: str) -> Optional[Compression]:
+def environ_to_compression(environ_key: str) -> Compression | None:
     environ_value = (
         environ[environ_key].lower().strip()
         if environ_key in environ
@@ -187,14 +185,14 @@ def environ_to_compression(environ_key: str) -> Optional[Compression]:
     "Use one of the encoders from opentelemetry-exporter-otlp-proto-common instead. Deprecated since version 1.18.0.",
 )
 def get_resource_data(
-    sdk_resource_scope_data: Dict[SDKResource, ResourceDataT],
+    sdk_resource_scope_data: dict[SDKResource, ResourceDataT],
     resource_class: Callable[..., TypingResourceT],
     name: str,
-) -> List[TypingResourceT]:
+) -> list[TypingResourceT]:
     return _get_resource_data(sdk_resource_scope_data, resource_class, name)
 
 
-def _read_file(file_path: str) -> Optional[bytes]:
+def _read_file(file_path: str) -> bytes | None:
     try:
         with open(file_path, "rb") as file:
             return file.read()
@@ -207,9 +205,9 @@ def _read_file(file_path: str) -> Optional[bytes]:
 
 
 def _load_credentials(
-    certificate_file: Optional[str],
-    client_key_file: Optional[str],
-    client_certificate_file: Optional[str],
+    certificate_file: str | None,
+    client_key_file: str | None,
+    client_certificate_file: str | None,
 ) -> ChannelCredentials:
     root_certificates = (
         _read_file(certificate_file) if certificate_file else None
@@ -229,7 +227,7 @@ def _load_credentials(
 
 
 def _get_credentials(
-    creds: Optional[ChannelCredentials],
+    creds: ChannelCredentials | None,
     credential_entry_point_env_key: str,
     certificate_file_env_key: str,
     client_key_file_env_key: str,
@@ -298,19 +296,20 @@ class OTLPExporterMixin(
         self,
         stub: ExportStubT,
         result: ExportResultT,
-        endpoint: Optional[str] = None,
-        insecure: Optional[bool] = None,
-        credentials: Optional[ChannelCredentials] = None,
-        headers: Optional[
-            Union[TypingSequence[Tuple[str, str]], Dict[str, str], str]
-        ] = None,
-        timeout: Optional[float] = None,
-        compression: Optional[Compression] = None,
-        channel_options: Optional[Tuple[Tuple[str, str]]] = None,
+        endpoint: str | None = None,
+        insecure: bool | None = None,
+        credentials: ChannelCredentials | None = None,
+        headers: TypingSequence[tuple[str, str]]
+        | dict[str, str]
+        | str
+        | None = None,
+        timeout: float | None = None,
+        compression: Compression | None = None,
+        channel_options: tuple[tuple[str, str]] | None = None,
         *,
-        component_type: Union[OtelComponentTypeValues, None] = None,
+        component_type: OtelComponentTypeValues | None = None,
         signal: Literal["traces", "metrics", "logs"] = "traces",
-        meter_provider: Optional[MeterProvider] = None,
+        meter_provider: MeterProvider | None = None,
     ):
         super().__init__()
         self._result = result

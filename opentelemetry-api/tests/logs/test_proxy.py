@@ -13,7 +13,6 @@
 # limitations under the License.
 
 # pylint: disable=W0212,W0222,W0221
-import typing
 import unittest
 from unittest.mock import Mock
 
@@ -27,9 +26,9 @@ class TestProvider(_logs.NoOpLoggerProvider):
     def get_logger(
         self,
         name: str,
-        version: typing.Optional[str] = None,
-        schema_url: typing.Optional[str] = None,
-        attributes: typing.Optional[_ExtendedAttributes] = None,
+        version: str | None = None,
+        schema_url: str | None = None,
+        attributes: _ExtendedAttributes | None = None,
     ) -> _logs.Logger:
         return LoggerTest(name)
 
@@ -37,7 +36,7 @@ class TestProvider(_logs.NoOpLoggerProvider):
 class LoggerTest(_logs.NoOpLogger):
     def emit(
         self,
-        record: typing.Optional[_logs.LogRecord] = None,
+        record: _logs.LogRecord | None = None,
         *,
         timestamp=None,
         observed_timestamp=None,
@@ -47,7 +46,7 @@ class LoggerTest(_logs.NoOpLogger):
         body=None,
         attributes=None,
         event_name=None,
-        exception: typing.Optional[BaseException] = None,
+        exception: BaseException | None = None,
     ) -> None:
         pass
 

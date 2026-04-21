@@ -17,8 +17,9 @@ import abc
 import enum
 import logging
 import sys
+from collections.abc import Callable, Sequence
 from os import environ, linesep
-from typing import IO, Callable, Optional, Sequence
+from typing import IO
 
 from typing_extensions import deprecated
 
@@ -326,7 +327,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
     def shutdown(self):
         return self._batch_processor.shutdown()
 
-    def force_flush(self, timeout_millis: Optional[int] = None) -> bool:
+    def force_flush(self, timeout_millis: int | None = None) -> bool:
         return self._batch_processor.force_flush(timeout_millis)
 
     @staticmethod

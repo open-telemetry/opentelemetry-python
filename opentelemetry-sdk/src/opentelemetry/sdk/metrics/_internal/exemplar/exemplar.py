@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import dataclasses
-from typing import Optional, Union
 
 from opentelemetry.util.types import Attributes
 
@@ -39,7 +38,7 @@ class Exemplar:
     """
 
     filtered_attributes: Attributes
-    value: Union[int, float]
+    value: int | float
     time_unix_nano: int
-    span_id: Optional[int] = None
-    trace_id: Optional[int] = None
+    span_id: int | None = None
+    trace_id: int | None = None

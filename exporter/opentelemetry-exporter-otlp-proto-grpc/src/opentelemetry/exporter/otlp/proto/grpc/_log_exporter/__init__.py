@@ -11,9 +11,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections.abc import Sequence
+from collections.abc import Sequence as TypingSequence
 from os import environ
-from typing import Dict, Literal, Optional, Sequence, Tuple, Union
-from typing import Sequence as TypingSequence
+from typing import Literal
 
 from grpc import ChannelCredentials, Compression
 from opentelemetry.exporter.otlp.proto.common._log_encoder import encode_logs
@@ -61,17 +62,18 @@ class OTLPLogExporter(
 ):
     def __init__(
         self,
-        endpoint: Optional[str] = None,
-        insecure: Optional[bool] = None,
-        credentials: Optional[ChannelCredentials] = None,
-        headers: Optional[
-            Union[TypingSequence[Tuple[str, str]], Dict[str, str], str]
-        ] = None,
-        timeout: Optional[float] = None,
-        compression: Optional[Compression] = None,
-        channel_options: Optional[Tuple[Tuple[str, str]]] = None,
+        endpoint: str | None = None,
+        insecure: bool | None = None,
+        credentials: ChannelCredentials | None = None,
+        headers: TypingSequence[tuple[str, str]]
+        | dict[str, str]
+        | str
+        | None = None,
+        timeout: float | None = None,
+        compression: Compression | None = None,
+        channel_options: tuple[tuple[str, str]] | None = None,
         *,
-        meter_provider: Optional[MeterProvider] = None,
+        meter_provider: MeterProvider | None = None,
     ):
         insecure_logs = environ.get(OTEL_EXPORTER_OTLP_LOGS_INSECURE)
         if insecure is None and insecure_logs is not None:

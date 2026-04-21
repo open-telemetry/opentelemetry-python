@@ -15,12 +15,13 @@
 import threading
 import time
 import unittest
+from collections.abc import Sequence
 from concurrent.futures import (  # pylint: disable=no-name-in-module
     ThreadPoolExecutor,
 )
 from logging import WARNING, getLogger
 from platform import system
-from typing import Any, Optional, Sequence
+from typing import Any
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
@@ -115,8 +116,8 @@ class TraceServiceServicerWithExportParams(TraceServiceServicer):
     def __init__(
         self,
         export_result: StatusCode,
-        optional_retry_nanos: Optional[int] = None,
-        optional_export_sleep: Optional[float] = None,
+        optional_retry_nanos: int | None = None,
+        optional_export_sleep: float | None = None,
     ):
         self.export_result = export_result
         self.optional_export_sleep = optional_export_sleep
@@ -164,7 +165,7 @@ class ThreadWithReturnValue(threading.Thread):
             # an argument that has a member that points to the thread.
             del self._target, self._args, self._kwargs  # type: ignore
 
-    def join(self, timeout: Optional[float] = None) -> Any:
+    def join(self, timeout: float | None = None) -> Any:
         super().join(timeout=timeout)
         return self._return
 

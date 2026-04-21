@@ -16,7 +16,7 @@
 # ruff: noqa: PLC0415
 
 import base64
-from typing import Any, Type
+from typing import Any
 
 import pytest  # type: ignore
 from google.protobuf import json_format
@@ -39,7 +39,7 @@ def normalize_otlp_json(data: Any) -> Any:
 
 
 @pytest.fixture
-def test_msg_classes() -> tuple[Type[Any], Type[Any], Type[Any]]:
+def test_msg_classes() -> tuple[type[Any], type[Any], type[Any]]:
     from otel_test_json.test.v1.test import (  # type: ignore
         SubMessage as JSONSubMessage,  # type: ignore
     )
@@ -54,7 +54,7 @@ def test_msg_classes() -> tuple[Type[Any], Type[Any], Type[Any]]:
 
 
 @pytest.fixture
-def numeric_msg_classes() -> tuple[Type[Any], Type[Any]]:
+def numeric_msg_classes() -> tuple[type[Any], type[Any]]:
     from otel_test_json.test.v1.complex import (  # type: ignore
         NumericTest as JSONNumericTest,  # type: ignore
     )
@@ -66,7 +66,7 @@ def numeric_msg_classes() -> tuple[Type[Any], Type[Any]]:
 
 
 @pytest.fixture
-def oneof_msg_classes() -> tuple[Type[Any], Type[Any], Type[Any]]:
+def oneof_msg_classes() -> tuple[type[Any], type[Any], type[Any]]:
     from otel_test_json.common.v1.common import (  # type: ignore
         InstrumentationScope as JSONScope,
     )
@@ -81,7 +81,7 @@ def oneof_msg_classes() -> tuple[Type[Any], Type[Any], Type[Any]]:
 
 
 @pytest.fixture
-def optional_msg_classes() -> tuple[Type[Any], Type[Any]]:
+def optional_msg_classes() -> tuple[type[Any], type[Any]]:
     from otel_test_json.test.v1.complex import (  # type: ignore
         OptionalScalar as JSONOptionalScalar,
     )
@@ -93,7 +93,7 @@ def optional_msg_classes() -> tuple[Type[Any], Type[Any]]:
 
 
 def test_parity_test_message(
-    test_msg_classes: tuple[Type[Any], Type[Any], Type[Any]],
+    test_msg_classes: tuple[type[Any], type[Any], type[Any]],
 ) -> None:
     JSONTestMessage, JSONSubMessage, ProtoTestMessage = test_msg_classes
 
@@ -147,7 +147,7 @@ def test_parity_test_message(
     ],
 )
 def test_parity_numeric_test(
-    numeric_msg_classes: tuple[Type[Any], Type[Any]], values: dict[str, Any]
+    numeric_msg_classes: tuple[type[Any], type[Any]], values: dict[str, Any]
 ) -> None:
     JSONNumericTest, ProtoNumericTest = numeric_msg_classes
 
@@ -171,7 +171,7 @@ def test_parity_numeric_test(
     ],
 )
 def test_parity_oneof_suite(
-    oneof_msg_classes: tuple[Type[Any], Type[Any], Type[Any]],
+    oneof_msg_classes: tuple[type[Any], type[Any], type[Any]],
     branch_data: dict[str, Any],
 ) -> None:
     JSONOneofSuite, ProtoOneofSuite, JSONScope = oneof_msg_classes
@@ -215,7 +215,7 @@ def test_parity_oneof_suite(
     ],
 )
 def test_parity_optional_scalars(
-    optional_msg_classes: tuple[Type[Any], Type[Any]], kwargs: dict[str, Any]
+    optional_msg_classes: tuple[type[Any], type[Any]], kwargs: dict[str, Any]
 ) -> None:
     JSONOptionalScalar, ProtoOptionalScalar = optional_msg_classes
 

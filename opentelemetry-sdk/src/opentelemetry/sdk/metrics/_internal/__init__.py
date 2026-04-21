@@ -14,12 +14,12 @@
 
 import weakref
 from atexit import register, unregister
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from logging import getLogger
 from os import environ
 from threading import Lock
 from time import time_ns
-from typing import Callable, Optional, Sequence
 
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics
@@ -104,7 +104,7 @@ class Meter(APIMeter):
         instrumentation_scope: InstrumentationScope,
         measurement_consumer: MeasurementConsumer,
         *,
-        _meter_config: Optional[_MeterConfig] = None,
+        _meter_config: _MeterConfig | None = None,
     ):
         super().__init__(
             name=instrumentation_scope.name,
@@ -238,7 +238,7 @@ class Meter(APIMeter):
         unit: str = "",
         description: str = "",
         *,
-        explicit_bucket_boundaries_advisory: Optional[Sequence[float]] = None,
+        explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
     ) -> APIHistogram:
         if explicit_bucket_boundaries_advisory is not None:
             invalid_advisory = False
@@ -481,12 +481,12 @@ class MeterProvider(APIMeterProvider):
         metric_readers: Sequence[
             "opentelemetry.sdk.metrics.export.MetricReader"
         ] = (),
-        resource: Optional[Resource] = None,
-        exemplar_filter: Optional[ExemplarFilter] = None,
+        resource: Resource | None = None,
+        exemplar_filter: ExemplarFilter | None = None,
         shutdown_on_exit: bool = True,
         views: Sequence["opentelemetry.sdk.metrics.view.View"] = (),
         *,
-        _meter_configurator: Optional[_MeterConfiguratorT] = None,
+        _meter_configurator: _MeterConfiguratorT | None = None,
     ):
         self._lock = Lock()
         self._meter_lock = Lock()
@@ -654,9 +654,9 @@ class MeterProvider(APIMeterProvider):
     def get_meter(
         self,
         name: str,
-        version: Optional[str] = None,
-        schema_url: Optional[str] = None,
-        attributes: Optional[Attributes] = None,
+        version: str | None = None,
+        schema_url: str | None = None,
+        attributes: Attributes | None = None,
     ) -> APIMeter:
         if self._disabled:
             return NoOpMeter(name, version=version, schema_url=schema_url)

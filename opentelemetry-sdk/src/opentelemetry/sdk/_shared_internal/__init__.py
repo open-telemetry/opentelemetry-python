@@ -25,7 +25,6 @@ import weakref
 from abc import abstractmethod
 from typing import (
     Generic,
-    Optional,
     Protocol,
     TypeVar,
 )
@@ -249,7 +248,7 @@ class BatchProcessor(Generic[Telemetry]):
         # the thread to finish.
 
     # TODO: Fix force flush so the timeout is used https://github.com/open-telemetry/opentelemetry-python/issues/4568.
-    def force_flush(self, timeout_millis: Optional[int] = None) -> bool:
+    def force_flush(self, timeout_millis: int | None = None) -> bool:
         if self._shutdown:
             return False
         # Blocking call to export.

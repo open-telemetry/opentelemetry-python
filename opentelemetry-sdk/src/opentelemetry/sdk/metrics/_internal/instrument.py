@@ -15,16 +15,12 @@
 # pylint: disable=too-many-ancestors, unused-import
 from __future__ import annotations
 
+from collections.abc import Generator, Iterable, Sequence
 from logging import getLogger
 from time import time_ns
 from typing import (
     TYPE_CHECKING,
-    Generator,
-    Iterable,
-    List,
     Protocol,
-    Sequence,
-    Union,
     cast,
     runtime_checkable,
 )
@@ -146,7 +142,7 @@ class _Asynchronous(_Instrument, Asynchronous):
         self._meter_config = _meter_config
         super().__init__(name, callbacks, unit=unit, description=description)
 
-        self._callbacks: List[CallbackT] = []
+        self._callbacks: list[CallbackT] = []
 
         if callbacks is not None:
             for callback in callbacks:
@@ -199,7 +195,7 @@ class Counter(_Synchronous, APICounter):
 
     def add(
         self,
-        amount: Union[int, float],
+        amount: int | float,
         attributes: dict[str, str] | None = None,
         context: Context | None = None,
     ):
@@ -232,7 +228,7 @@ class UpDownCounter(_Synchronous, APIUpDownCounter):
 
     def add(
         self,
-        amount: Union[int, float],
+        amount: int | float,
         attributes: dict[str, str] | None = None,
         context: Context | None = None,
     ):
@@ -301,7 +297,7 @@ class Histogram(_Synchronous, APIHistogram):
 
     def record(
         self,
-        amount: Union[int, float],
+        amount: int | float,
         attributes: dict[str, str] | None = None,
         context: Context | None = None,
     ):
@@ -335,7 +331,7 @@ class Gauge(_Synchronous, APIGauge):
 
     def set(
         self,
-        amount: Union[int, float],
+        amount: int | float,
         attributes: dict[str, str] | None = None,
         context: Context | None = None,
     ):

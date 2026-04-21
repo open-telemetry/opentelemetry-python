@@ -73,8 +73,8 @@ API
 """
 
 import logging
+from collections.abc import Sequence
 from os import environ
-from typing import Optional, Sequence
 
 import requests
 
@@ -100,13 +100,13 @@ class ZipkinExporter(SpanExporter):
     def __init__(
         self,
         version: Protocol = Protocol.V2,
-        endpoint: Optional[str] = None,
+        endpoint: str | None = None,
         local_node_ipv4: IpInput = None,
         local_node_ipv6: IpInput = None,
-        local_node_port: Optional[int] = None,
-        max_tag_value_length: Optional[int] = None,
-        timeout: Optional[int] = None,
-        session: Optional[requests.Session] = None,
+        local_node_port: int | None = None,
+        max_tag_value_length: int | None = None,
+        timeout: int | None = None,
+        session: requests.Session | None = None,
     ):
         """Zipkin exporter.
 

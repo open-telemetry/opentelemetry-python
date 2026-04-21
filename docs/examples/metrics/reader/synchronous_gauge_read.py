@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import math
-from typing import Iterable
+from collections.abc import Iterable
 
 from opentelemetry.metrics import (
     CallbackOptions,

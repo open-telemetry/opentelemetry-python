@@ -49,7 +49,7 @@ class B3MultiFormat(TextMapPropagator):
     def extract(
         self,
         carrier: CarrierT,
-        context: typing.Optional[Context] = None,
+        context: Context | None = None,
         getter: Getter = default_getter,
     ) -> Context:
         if context is None:
@@ -130,7 +130,7 @@ class B3MultiFormat(TextMapPropagator):
     def inject(
         self,
         carrier: CarrierT,
-        context: typing.Optional[Context] = None,
+        context: Context | None = None,
         setter: Setter = default_setter,
     ) -> None:
         span = trace.get_current_span(context=context)
@@ -151,7 +151,7 @@ class B3MultiFormat(TextMapPropagator):
         setter.set(carrier, self.SAMPLED_KEY, "1" if sampled else "0")
 
     @property
-    def fields(self) -> typing.Set[str]:
+    def fields(self) -> set[str]:
         return {
             self.TRACE_ID_KEY,
             self.SPAN_ID_KEY,
@@ -169,7 +169,7 @@ class B3SingleFormat(B3MultiFormat):
     def inject(
         self,
         carrier: CarrierT,
-        context: typing.Optional[Context] = None,
+        context: Context | None = None,
         setter: Setter = default_setter,
     ) -> None:
         span = trace.get_current_span(context=context)
@@ -189,7 +189,7 @@ class B3SingleFormat(B3MultiFormat):
         setter.set(carrier, self.SINGLE_HEADER_KEY, "-".join(fields))
 
     @property
-    def fields(self) -> typing.Set[str]:
+    def fields(self) -> set[str]:
         return {self.SINGLE_HEADER_KEY}
 
 
@@ -203,7 +203,7 @@ class B3Format(B3MultiFormat):
 
 def _extract_first_element(
     items: typing.Iterable[CarrierT],
-) -> typing.Optional[CarrierT]:
+) -> CarrierT | None:
     if items is None:
         return None
     return next(iter(items), None)

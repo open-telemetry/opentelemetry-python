@@ -14,7 +14,7 @@
 
 import asyncio
 import unittest
-from typing import Callable, Iterator
+from collections.abc import Callable, Iterator
 
 from opentelemetry.util._decorator import _agnosticcontextmanager
 

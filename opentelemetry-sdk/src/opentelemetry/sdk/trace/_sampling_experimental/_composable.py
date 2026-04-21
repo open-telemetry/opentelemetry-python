@@ -14,8 +14,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
-from typing import Callable, Protocol, Sequence
+from typing import Protocol
 
 from opentelemetry.context import Context
 from opentelemetry.trace import Link, SpanKind, TraceState

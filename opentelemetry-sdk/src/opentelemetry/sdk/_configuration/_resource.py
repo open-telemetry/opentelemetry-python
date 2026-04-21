@@ -18,7 +18,7 @@ import fnmatch
 import logging
 import os
 import uuid
-from typing import Callable, Optional
+from collections.abc import Callable
 from urllib import parse
 
 from opentelemetry.sdk._configuration.models import (
@@ -93,7 +93,7 @@ def _parse_attributes_list(attributes_list: str) -> dict[str, str]:
     return result
 
 
-def create_resource(config: Optional[ResourceConfig]) -> Resource:
+def create_resource(config: ResourceConfig | None) -> Resource:
     """Create an SDK Resource from declarative config.
 
     Does NOT read OTEL_RESOURCE_ATTRIBUTES. Resource detectors are only run
@@ -198,7 +198,7 @@ def _run_detectors(
 
 
 def _filter_attributes(
-    attrs: dict[str, object], filter_config: Optional[IncludeExclude]
+    attrs: dict[str, object], filter_config: IncludeExclude | None
 ) -> dict[str, object]:
     """Filter detected attribute keys using include/exclude glob patterns.
 

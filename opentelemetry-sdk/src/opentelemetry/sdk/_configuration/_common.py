@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional, Type
 
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
 from opentelemetry.util._importlib_metadata import entry_points
@@ -23,7 +22,7 @@ from opentelemetry.util._importlib_metadata import entry_points
 _logger = logging.getLogger(__name__)
 
 
-def load_entry_point(group: str, name: str) -> Type:
+def load_entry_point(group: str, name: str) -> type:
     """Load a plugin class from an entry point group by name.
 
     Returns the loaded class — callers are responsible for instantiation
@@ -49,9 +48,9 @@ def load_entry_point(group: str, name: str) -> Type:
 
 
 def _parse_headers(
-    headers: Optional[list],
-    headers_list: Optional[str],
-) -> Optional[dict[str, str]]:
+    headers: list | None,
+    headers_list: str | None,
+) -> dict[str, str] | None:
     """Merge headers struct and headers_list into a dict.
 
     Returns None if neither is set, letting the exporter read env vars.
