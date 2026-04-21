@@ -13,10 +13,9 @@
 # limitations under the License.
 
 # pylint: disable=protected-access,no-self-use,too-many-lines
-
 import weakref
 from collections.abc import Callable
-from logging import WARNING
+from logging import DEBUG, WARNING
 from threading import Lock
 from time import sleep
 from typing import Any, Iterable, Sequence
@@ -45,6 +44,7 @@ from opentelemetry.sdk.metrics._internal import (
     _RuleBasedMeterConfigurator,
 )
 from opentelemetry.sdk.metrics.export import (
+    InMemoryMetricReader,
     Metric,
     MetricExporter,
     MetricExportResult,
@@ -498,6 +498,36 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         gauge.set(1)
 
         sync_consumer_instance.consume_measurement.assert_called()
+
+    def test_addition_of_metric_reader(self):
+        internal_logger = "opentelemetry.sdk.metrics._internal"
+        export_logger = "opentelemetry.sdk.metrics._internal.export"
+
+        reader = InMemoryMetricReader()
+        meter_provider = MeterProvider()
+        meter = meter_provider.get_meter(__name__)
+        counter = meter.create_counter("counter")
+        counter.add(1)
+        # Suppress warnings for calling collect on an unregistered metric reader
+        with self.assertLogs(export_logger, DEBUG):
+            self.assertIsNone(reader.get_metrics_data())
+
+        meter_provider.add_metric_reader(reader)
+        counter.add(1)
+        self.assertIsNotNone(reader.get_metrics_data())
+
+        with self.assertLogs(internal_logger, DEBUG) as cm:
+            meter_provider.add_metric_reader(reader)
+            self.assertIn("has been registered already!", cm.output[0])
+
+        meter_provider.remove_metric_reader(reader)
+        counter.add(1)
+        with self.assertLogs(export_logger, DEBUG):
+            self.assertIsNone(reader.get_metrics_data())
+
+        with self.assertLogs(internal_logger, DEBUG) as cm:
+            meter_provider.remove_metric_reader(reader)
+            self.assertIn("has not been registered!", cm.output[0])
 
 
 class TestMeterConcurrency(ConcurrencyTestBase, TestCase):

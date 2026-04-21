@@ -82,7 +82,6 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         cls.sdk_configuration = SdkConfiguration(
             exemplar_filter=Mock(),
             resource=cls.mock_resource,
-            metric_readers=[],
             views=[],
         )
 
