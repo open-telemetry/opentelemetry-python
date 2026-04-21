@@ -182,9 +182,9 @@ class Buckets:
         # pylint: disable=protected-access
         # pylint: disable=attribute-defined-outside-init
         # pylint: disable=invalid-name
-        copy._Buckets__index_base = self._Buckets__index_base
-        copy._Buckets__index_start = self._Buckets__index_start
-        copy._Buckets__index_end = self._Buckets__index_end
+        copy._Buckets__index_base = self._Buckets__index_base  # type: ignore[reportArgumentType]
+        copy._Buckets__index_start = self._Buckets__index_start  # type: ignore[reportArgumentType]
+        copy._Buckets__index_end = self._Buckets__index_end  # type: ignore[reportArgumentType]
         copy._counts = [0 for _ in self._counts]
 
         return copy
