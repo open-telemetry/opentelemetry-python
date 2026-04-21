@@ -208,9 +208,9 @@ class Resource:
         if "*" in otel_experimental_resource_detectors:
             otel_experimental_resource_detectors = [
                 name
-                for name in entry_points(
-                    group="opentelemetry_resource_detector"
-                ).names
+                for name in sorted(
+                    entry_points(group="opentelemetry_resource_detector").names
+                )
                 if name != "otel"
             ]
             otel_experimental_resource_detectors.append("otel")
