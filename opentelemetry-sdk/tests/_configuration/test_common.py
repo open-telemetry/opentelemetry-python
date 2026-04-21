@@ -14,8 +14,9 @@
 
 import inspect
 import unittest
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from types import SimpleNamespace
+from typing import Any, ClassVar
 from unittest.mock import MagicMock, patch
 
 from opentelemetry.sdk._configuration._common import (
@@ -157,7 +158,7 @@ class TestAdditionalPropertiesSupport(unittest.TestCase):
         class _SampleConfig:
             known_field: dict | None = None
             another_field: str | None = None
-            additional_properties: dict = field(default_factory=dict)
+            additional_properties: ClassVar[dict[str, Any]]
 
         self.cls = _SampleConfig
 
@@ -211,7 +212,7 @@ class TestGeneratedModelsHaveAdditionalProperties(unittest.TestCase):
         obj = model_cls(_test_plugin_key={})
         self.assertTrue(
             hasattr(obj, "additional_properties"),
-            f"{model_cls.__name__} missing additional_properties field",
+            f"{model_cls.__name__} missing additional_properties attribute",
         )
         self.assertIn("_test_plugin_key", obj.additional_properties)
 

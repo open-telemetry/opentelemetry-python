@@ -3,7 +3,7 @@
    JSON Schema additionalProperties. When a schema type allows additional
    properties (e.g. Sampler, SpanExporter), this template adds:
    - @_additional_properties_support decorator (captures unknown kwargs)
-   - additional_properties: dict[str, Any] field
+   - additional_properties: ClassVar[dict[str, Any]] annotation (for type checkers)
 
    The template checks two context variables set by datamodel-codegen:
    - additionalProperties: set when the schema value is a boolean (true/false)
@@ -69,5 +69,5 @@ class {{ class_name }}:
     {%- endif %}
 {%- endfor -%}
 {%- if has_additional %}
-    additional_properties: dict[str, Any] = field(default_factory=dict)
+    additional_properties: ClassVar[dict[str, Any]]
 {%- endif -%}

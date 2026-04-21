@@ -29,10 +29,10 @@ def _additional_properties_support(cls):
     """Decorator for dataclasses whose JSON Schema sets additionalProperties.
 
     Wraps the dataclass-generated ``__init__`` so that unknown keyword
-    arguments are captured into the ``additional_properties`` dict field
-    instead of raising ``TypeError``.  This lets plugin/custom component
-    names flow through the config pipeline without modifying the codegen
-    output for known fields.
+    arguments are captured into an ``additional_properties`` instance
+    attribute instead of raising ``TypeError``.  This lets plugin/custom
+    component names flow through the config pipeline without modifying
+    the codegen output for known fields.
 
     Applied automatically by the custom template in ``opentelemetry-sdk/codegen/``
     when ``additionalPropertiesType`` is present in the template context

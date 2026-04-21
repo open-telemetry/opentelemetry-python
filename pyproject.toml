@@ -164,7 +164,7 @@ use-title-as-name = true
 use-union-operator = true
 target-python-version = "3.10"
 custom-template-dir = "opentelemetry-sdk/codegen"
-additional-imports = "dataclasses.field,opentelemetry.sdk._configuration._common._additional_properties_support"
+additional-imports = "typing.ClassVar,opentelemetry.sdk._configuration._common._additional_properties_support"
 
 [dependency-groups]
 dev = [

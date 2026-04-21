@@ -7,7 +7,7 @@ Custom [datamodel-code-generator](https://github.com/koxudaxi/datamodel-code-gen
 Extends the default dataclass template to support `additionalProperties` from the JSON Schema. Schema types that allow additional properties (e.g. `Sampler`, `SpanExporter`, `TextMapPropagator`) get:
 
 - `@_additional_properties_support` decorator — captures unknown constructor kwargs
-- `additional_properties: dict[str, Any]` field — stores the captured values
+- `additional_properties: ClassVar[dict[str, Any]]` annotation — satisfies type checkers without creating a dataclass field
 
 This enables plugin/custom component names to flow through typed dataclasses without a post-processing step.
 
