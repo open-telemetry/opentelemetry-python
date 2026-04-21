@@ -24,8 +24,8 @@ class Mapping(ABC):
     _mappings: dict[int, "Mapping"]
     _mappings_lock: Lock
 
-    _min_scale = int
-    _max_scale = int
+    _min_scale: int
+    _max_scale: int
 
     # pylint: disable=no-member
     def __new__(cls, scale: int):
