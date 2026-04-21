@@ -132,7 +132,16 @@ def _convert_buckets(
 
 
 class PrometheusMetricReader(MetricReader):
-    """Prometheus metric exporter for OpenTelemetry."""
+    """Prometheus metric exporter for OpenTelemetry.
+
+    Args:
+        disable_target_info: Whether to disable the ``target_info`` metric.
+        prefix: Prefix added to exported Prometheus metric names.
+        resource_attr_filter: Optional callback to select resource attributes
+            that are copied as labels on exported metrics. The callback receives
+            the original resource attribute key. Selected keys are sanitized to
+            valid Prometheus label names.
+    """
 
     def __init__(
         self,
