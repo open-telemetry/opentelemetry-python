@@ -20,7 +20,6 @@ from typing import Dict, List, Optional
 from opentelemetry.metrics import (
     Asynchronous,
     Counter,
-    Instrument,
     ObservableCounter,
 )
 from opentelemetry.sdk.metrics._internal._view_instrument_match import (
@@ -36,6 +35,7 @@ from opentelemetry.sdk.metrics._internal.aggregation import (
     _LastValueAggregation,
     _SumAggregation,
 )
+from opentelemetry.sdk.metrics._internal.instrument import _Instrument
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.point import (
     ExponentialHistogram,
@@ -70,7 +70,7 @@ class MetricReaderStorage:
         self._lock = RLock()
         self._sdk_config = sdk_config
         self._instrument_view_instrument_matches: Dict[
-            Instrument, List[_ViewInstrumentMatch]
+            _Instrument, List[_ViewInstrumentMatch]
         ] = {}
         self._instrument_class_temporality = instrument_class_temporality
         self._instrument_class_aggregation = instrument_class_aggregation
@@ -81,7 +81,7 @@ class MetricReaderStorage:
         self._instrument_view_instrument_matches.clear()
 
     def _get_or_init_view_instrument_match(
-        self, instrument: Instrument
+        self, instrument: _Instrument
     ) -> List[_ViewInstrumentMatch]:
         # Optimistically get the relevant views for the given instrument. Once set for a given
         # instrument, the mapping will never change
@@ -258,7 +258,7 @@ class MetricReaderStorage:
 
     def _handle_view_instrument_match(
         self,
-        instrument: Instrument,
+        instrument: _Instrument,
         view_instrument_matches: List["_ViewInstrumentMatch"],
     ) -> None:
         for view in self._sdk_config.views:
@@ -297,7 +297,7 @@ class MetricReaderStorage:
 
     @staticmethod
     def _check_view_instrument_compatibility(
-        view: View, instrument: Instrument
+        view: View, instrument: _Instrument
     ) -> bool:
         """
         Checks if a view and an instrument are compatible.
