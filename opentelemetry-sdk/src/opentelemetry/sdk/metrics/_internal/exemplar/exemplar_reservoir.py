@@ -318,9 +318,7 @@ class AlignedHistogramBucketExemplarReservoir(FixedSizeExemplarReservoirABC):
         return len(self._boundaries)
 
 
+# ExemplarReservoirBuilder: A callable that takes Aggregation parameters
+# (e.g. boundaries for _ExplicitBucketHistogramAggregation) and returns
+# an ExemplarReservoir instance.
 ExemplarReservoirBuilder = Callable[[dict[str, Any]], ExemplarReservoir]
-ExemplarReservoirBuilder.__doc__ = """ExemplarReservoir builder.
-
-It may receive the Aggregation parameters it is bounded to; e.g.
-the _ExplicitBucketHistogramAggregation will provide the boundaries.
-"""
