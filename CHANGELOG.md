@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#5093](https://github.com/open-telemetry/opentelemetry-python/pull/5093))
 - `opentelemetry-sdk`: fix YAML structure injection via environment variable substitution in declarative file configuration; values containing newlines are now emitted as quoted YAML scalars per spec requirement
   ([#5091](https://github.com/open-telemetry/opentelemetry-python/pull/5091))
-- `opentelemetry-sdk`: Fix `force_flush` on `MetricReader` and `PeriodicExportingMetricReader` to return a meaningful `bool` reflecting actual export success/failure instead of always returning `True`. Also fixes `detach(token)` not being called when export raises an exception. ([#5020](https://github.com/open-telemetry/opentelemetry-python/issues/5020))
+- `opentelemetry-sdk`: Fix `force_flush` on `MetricReader` and `PeriodicExportingMetricReader` to return a meaningful `bool` reflecting actual export success/failure instead of always returning `True`. Also fixes `detach(token)` not being called when export raises an exception. ([#5085](https://github.com/open-telemetry/opentelemetry-python/pull/5085))
 - `opentelemetry-sdk`: Add `create_logger_provider`/`configure_logger_provider` to declarative file configuration, enabling LoggerProvider instantiation from config files without reading env vars
   ([#4990](https://github.com/open-telemetry/opentelemetry-python/pull/4990))
 - `opentelemetry-sdk`: Add `service` resource detector support to declarative file configuration via `detection_development.detectors[].service`

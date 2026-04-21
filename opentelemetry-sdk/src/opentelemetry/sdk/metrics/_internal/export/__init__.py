@@ -390,7 +390,7 @@ class MetricReader(ABC):
     ) -> bool | None:
         """Called by `MetricReader.collect` when it receives a batch of metrics.
 
-        Subclasses must return ``True`` on success and ``False`` on failure.
+        Subclasses should return ``True`` on success and ``False`` on failure.
 
         .. note::
             Existing subclasses that return ``None`` (the old implicit default)
