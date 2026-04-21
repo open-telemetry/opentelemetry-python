@@ -138,7 +138,14 @@ def _convert_buckets(
 
 
 class PrometheusMetricReader(MetricReader):
-    """Prometheus metric exporter for OpenTelemetry."""
+    """Prometheus metric exporter for OpenTelemetry.
+
+    Args:
+        disable_target_info: Whether to disable the ``target_info`` metric.
+        without_scope_info: Whether to omit instrumentation scope labels from
+            exported metrics. Scope labels are exported by default.
+        prefix: Prefix added to exported Prometheus metric names.
+    """
 
     def __init__(
         self,
