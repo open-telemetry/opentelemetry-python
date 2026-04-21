@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional, Set, Type
 
 from opentelemetry import metrics
 from opentelemetry.sdk._configuration._common import _parse_headers
@@ -95,7 +94,7 @@ _DEFAULT_EXPORT_INTERVAL_MILLIS = 60000
 _DEFAULT_EXPORT_TIMEOUT_MILLIS = 30000
 
 # Instrument type → SDK instrument class mapping (for View selectors).
-_INSTRUMENT_TYPE_MAP: dict[InstrumentType, Type] = {
+_INSTRUMENT_TYPE_MAP: dict[InstrumentType, type] = {
     InstrumentType.counter: Counter,
     InstrumentType.up_down_counter: UpDownCounter,
     InstrumentType.histogram: Histogram,
@@ -107,7 +106,7 @@ _INSTRUMENT_TYPE_MAP: dict[InstrumentType, Type] = {
 
 
 def _map_temporality(
-    pref: Optional[ExporterTemporalityPreference],
+    pref: ExporterTemporalityPreference | None,
 ) -> dict[type, AggregationTemporality]:
     """Map a temporality preference to an explicit preferred_temporality dict.
 
@@ -148,7 +147,7 @@ def _map_temporality(
 
 
 def _map_histogram_aggregation(
-    pref: Optional[ExporterDefaultHistogramAggregation],
+    pref: ExporterDefaultHistogramAggregation | None,
 ) -> dict[type, Aggregation]:
     """Map a histogram aggregation preference to an explicit preferred_aggregation dict.
 
@@ -223,7 +222,7 @@ def _create_view(config: ViewConfig) -> View:
                 f"Unknown instrument type: {selector.instrument_type!r}"
             )
 
-    attribute_keys: Optional[Set[str]] = None
+    attribute_keys: set[str] | None = None
     if stream.attribute_keys is not None:
         if stream.attribute_keys.excluded:
             _logger.warning(
@@ -266,8 +265,8 @@ def _create_console_metric_exporter(
 
 
 def _map_compression_metric(
-    value: Optional[str], compression_enum: type
-) -> Optional[object]:
+    value: str | None, compression_enum: type
+) -> object | None:
     """Map a compression string to the given Compression enum value."""
     if value is None or value.lower() == "none":
         return None
@@ -426,8 +425,8 @@ def _create_exemplar_filter(
 
 
 def create_meter_provider(
-    config: Optional[MeterProviderConfig],
-    resource: Optional[Resource] = None,
+    config: MeterProviderConfig | None,
+    resource: Resource | None = None,
 ) -> MeterProvider:
     """Create an SDK MeterProvider from declarative config.
 
@@ -467,8 +466,8 @@ def create_meter_provider(
 
 
 def configure_meter_provider(
-    config: Optional[MeterProviderConfig],
-    resource: Optional[Resource] = None,
+    config: MeterProviderConfig | None,
+    resource: Resource | None = None,
 ) -> None:
     """Configure the global MeterProvider from declarative config.
 

@@ -13,10 +13,10 @@
 # limitations under the License.
 
 
+from collections.abc import Sequence
 from logging import getLogger
 from threading import Lock
 from time import time_ns
-from typing import Dict, List, Optional, Sequence
 
 from opentelemetry.metrics import Instrument
 from opentelemetry.sdk.metrics._internal.aggregation import (
@@ -38,11 +38,11 @@ class _ViewInstrumentMatch:
         self,
         view: View,
         instrument: Instrument,
-        instrument_class_aggregation: Dict[type, Aggregation],
+        instrument_class_aggregation: dict[type, Aggregation],
     ):
         self._view = view
         self._instrument = instrument
-        self._attributes_aggregation: Dict[frozenset, _Aggregation] = {}
+        self._attributes_aggregation: dict[frozenset, _Aggregation] = {}
         self._lock = Lock()
         self._instrument_class_aggregation = instrument_class_aggregation
         self._name = self._view._name or self._instrument.name
@@ -137,8 +137,8 @@ class _ViewInstrumentMatch:
         self,
         collection_aggregation_temporality: AggregationTemporality,
         collection_start_nanos: int,
-    ) -> Optional[Sequence[DataPointT]]:
-        data_points: List[DataPointT] = []
+    ) -> Sequence[DataPointT] | None:
+        data_points: list[DataPointT] = []
         with self._lock:
             for aggregation in self._attributes_aggregation.values():
                 data_point = aggregation.collect(

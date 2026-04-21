@@ -15,15 +15,14 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 _logger = logging.getLogger(__name__)
 
 
 def _parse_headers(
-    headers: Optional[list],
-    headers_list: Optional[str],
-) -> Optional[dict[str, str]]:
+    headers: list | None,
+    headers_list: str | None,
+) -> dict[str, str] | None:
     """Merge headers struct and headers_list into a dict.
 
     Returns None if neither is set, letting the exporter read env vars.

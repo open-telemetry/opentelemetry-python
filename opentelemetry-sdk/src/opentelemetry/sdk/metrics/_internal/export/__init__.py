@@ -17,13 +17,14 @@ import math
 import os
 import weakref
 from abc import ABC, abstractmethod
+from collections.abc import Callable, Iterable
 from enum import Enum
 from logging import getLogger
 from os import environ, linesep
 from sys import stdout
 from threading import Event, Lock, RLock, Thread
 from time import perf_counter, time_ns
-from typing import IO, Callable, Iterable, Optional
+from typing import IO
 
 from typing_extensions import final
 
@@ -436,7 +437,7 @@ class InMemoryMetricReader(MetricReader):
 
     def get_metrics_data(
         self,
-    ) -> Optional[MetricsData]:
+    ) -> MetricsData | None:
         """Reads and returns current metrics from the SDK"""
         with self._lock:
             self.collect()
@@ -470,8 +471,8 @@ class PeriodicExportingMetricReader(MetricReader):
     def __init__(
         self,
         exporter: MetricExporter,
-        export_interval_millis: Optional[float] = None,
-        export_timeout_millis: Optional[float] = None,
+        export_interval_millis: float | None = None,
+        export_timeout_millis: float | None = None,
     ) -> None:
         # PeriodicExportingMetricReader defers to exporter for configuration
         super().__init__(

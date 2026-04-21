@@ -15,8 +15,8 @@
 # pylint: disable=protected-access
 from __future__ import annotations
 
+from collections.abc import Callable, Sequence
 from time import time_ns
-from typing import Callable, Sequence, Type
 from unittest import TestCase
 from unittest.mock import MagicMock, Mock, patch
 
@@ -52,9 +52,9 @@ from opentelemetry.sdk.metrics.view import (
 
 def generalized_reservoir_factory(
     size: int = 1, boundaries: Sequence[float] | None = None
-) -> Callable[[Type[_Aggregation]], ExemplarReservoirBuilder]:
+) -> Callable[[type[_Aggregation]], ExemplarReservoirBuilder]:
     def factory(
-        aggregation_type: Type[_Aggregation],
+        aggregation_type: type[_Aggregation],
     ) -> ExemplarReservoirBuilder:
         if issubclass(aggregation_type, _ExplicitBucketHistogramAggregation):
             return lambda **kwargs: AlignedHistogramBucketExemplarReservoir(

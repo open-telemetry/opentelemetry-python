@@ -17,7 +17,6 @@ import datetime
 import threading
 from collections import deque
 from collections.abc import MutableMapping, Sequence
-from typing import Optional
 
 from typing_extensions import deprecated
 
@@ -51,7 +50,7 @@ class BoundedList(Sequence):
     not enough room.
     """
 
-    def __init__(self, maxlen: Optional[int]):
+    def __init__(self, maxlen: int | None):
         self.dropped = 0
         self._dq = deque(maxlen=maxlen)  # type: deque
         self._lock = threading.Lock()
@@ -110,7 +109,7 @@ class BoundedDict(MutableMapping):
     added.
     """
 
-    def __init__(self, maxlen: Optional[int]):
+    def __init__(self, maxlen: int | None):
         if maxlen is not None:
             if not isinstance(maxlen, int):
                 raise ValueError

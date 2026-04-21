@@ -13,9 +13,9 @@
 # limitations under the License.
 
 
+from collections.abc import Callable
 from fnmatch import fnmatch
 from logging import getLogger
-from typing import Callable, Optional, Set, Type
 
 from opentelemetry.metrics import Instrument
 from opentelemetry.sdk.metrics._internal.aggregation import (
@@ -35,7 +35,7 @@ _logger = getLogger(__name__)
 
 
 def _default_reservoir_factory(
-    aggregation_type: Type[_Aggregation],
+    aggregation_type: type[_Aggregation],
 ) -> ExemplarReservoirBuilder:
     """Default reservoir factory per aggregation."""
     if issubclass(aggregation_type, _ExplicitBucketHistogramAggregation):
@@ -105,19 +105,20 @@ class View:
 
     def __init__(
         self,
-        instrument_type: Optional[Type[Instrument]] = None,
-        instrument_name: Optional[str] = None,
-        meter_name: Optional[str] = None,
-        meter_version: Optional[str] = None,
-        meter_schema_url: Optional[str] = None,
-        name: Optional[str] = None,
-        description: Optional[str] = None,
-        attribute_keys: Optional[Set[str]] = None,
-        aggregation: Optional[Aggregation] = None,
-        exemplar_reservoir_factory: Optional[
-            Callable[[Type[_Aggregation]], ExemplarReservoirBuilder]
-        ] = None,
-        instrument_unit: Optional[str] = None,
+        instrument_type: type[Instrument] | None = None,
+        instrument_name: str | None = None,
+        meter_name: str | None = None,
+        meter_version: str | None = None,
+        meter_schema_url: str | None = None,
+        name: str | None = None,
+        description: str | None = None,
+        attribute_keys: set[str] | None = None,
+        aggregation: Aggregation | None = None,
+        exemplar_reservoir_factory: Callable[
+            [type[_Aggregation]], ExemplarReservoirBuilder
+        ]
+        | None = None,
+        instrument_unit: str | None = None,
     ):
         if (
             instrument_type

@@ -109,7 +109,7 @@ class SimpleSpanProcessor(SpanProcessor):
         )
 
     def on_start(
-        self, span: Span, parent_context: typing.Optional[Context] = None
+        self, span: Span, parent_context: Context | None = None
     ) -> None:
         pass
 
@@ -225,7 +225,7 @@ class BatchSpanProcessor(SpanProcessor):
     def shutdown(self):
         return self._batch_processor.shutdown()
 
-    def force_flush(self, timeout_millis: typing.Optional[int] = None) -> bool:
+    def force_flush(self, timeout_millis: int | None = None) -> bool:
         return self._batch_processor.force_flush(timeout_millis)
 
     @staticmethod
