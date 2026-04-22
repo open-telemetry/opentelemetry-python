@@ -264,3 +264,34 @@ class RuleBasedTraceContextTextMapPropagator(textmap.TextMapPropagator):
                 )
             case PropagatorTracePolicy.RESTART_WITHOUT_LINK:
                 return context
+
+    def inject(
+        self,
+        carrier: textmap.CarrierT,
+        context: typing.Optional[Context] = None,
+        setter: textmap.Setter[textmap.CarrierT] = textmap.default_setter,
+    ) -> None:
+        """Injects SpanContext into the carrier.
+
+        See `opentelemetry.propagators.textmap.TextMapPropagator.inject`
+        """
+        span = trace.get_current_span(context)
+        span_context = span.get_span_context()
+        if span_context == trace.INVALID_SPAN_CONTEXT:
+            return
+        traceparent_string = f"00-{format_trace_id(span_context.trace_id)}-{format_span_id(span_context.span_id)}-{span_context.trace_flags:02x}"
+        setter.set(carrier, self._TRACEPARENT_HEADER_NAME, traceparent_string)
+        if span_context.trace_state:
+            tracestate_string = span_context.trace_state.to_header()
+            setter.set(
+                carrier, self._TRACESTATE_HEADER_NAME, tracestate_string
+            )
+
+    @property
+    def fields(self) -> typing.Set[str]:
+        """Returns a set with the fields set in `inject`.
+
+        See
+        `opentelemetry.propagators.textmap.TextMapPropagator.fields`
+        """
+        return {self._TRACEPARENT_HEADER_NAME, self._TRACESTATE_HEADER_NAME}
