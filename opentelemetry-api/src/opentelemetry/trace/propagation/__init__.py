@@ -34,7 +34,8 @@ def set_span_in_context(
             default current context is used instead.
     """
     ctx = set_value(_SPAN_KEY, span, context=context)
-    return ctx
+    # A pending restart link is a one-shot hint for the next activated span.
+    return set_value(_LINK_KEY, None, context=ctx)
 
 
 def get_current_span(context: Optional[Context] = None) -> Span:

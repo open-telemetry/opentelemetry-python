@@ -120,6 +120,18 @@ class TestTracer(unittest.TestCase):
             context.detach(token)
         self.assertEqual(trace.get_current_span(), trace.INVALID_SPAN)
 
+    def test_set_span_in_context_clears_current_link(self):
+        link = trace.Link(
+            trace.SpanContext(trace_id=1, span_id=1, is_remote=True)
+        )
+        span = trace.NonRecordingSpan(trace.INVALID_SPAN_CONTEXT)
+        ctx = trace.set_link_in_context(link)
+
+        ctx = trace.set_span_in_context(span, ctx)
+
+        self.assertIs(trace.get_current_span(ctx), span)
+        self.assertIsNone(trace.get_current_link(ctx))
+
 
 class TestUseTracer(unittest.TestCase):
     def test_use_span(self):
@@ -139,6 +151,19 @@ class TestUseTracer(unittest.TestCase):
         with trace.use_span(test_span, end_on_exit=True):
             pass
         self.assertTrue(test_span.has_ended)
+
+    def test_use_span_clears_current_link_while_active(self):
+        link = trace.Link(
+            trace.SpanContext(trace_id=1, span_id=1, is_remote=True)
+        )
+        token = context.attach(trace.set_link_in_context(link))
+        try:
+            span = trace.NonRecordingSpan(trace.INVALID_SPAN_CONTEXT)
+            with trace.use_span(span):
+                self.assertIsNone(trace.get_current_link())
+                self.assertIs(trace.get_current_span(), span)
+        finally:
+            context.detach(token)
 
     def test_use_span_exception(self):
         class TestUseSpanException(Exception):
