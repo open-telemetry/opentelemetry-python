@@ -18,7 +18,11 @@ from json import dumps
 from typing_extensions import deprecated
 
 from opentelemetry.attributes import BoundedAttributes
-from opentelemetry.util.types import Attributes, _ExtendedAttributes
+from opentelemetry.util.types import (  # noqa: F401
+    AnyValue,
+    Attributes,
+    _ExtendedAttributes,
+)
 
 
 class InstrumentationInfo:
