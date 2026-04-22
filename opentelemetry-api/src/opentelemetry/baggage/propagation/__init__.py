@@ -14,7 +14,7 @@
 #
 from logging import getLogger
 from re import split
-from typing import Iterable, List, Mapping, Optional, Set
+from typing import Iterable, List, Mapping, Optional, Protocol, Sequence, Set
 from urllib.parse import quote_plus, unquote_plus
 
 from opentelemetry.baggage import _is_valid_pair, get_all, set_baggage
@@ -144,3 +144,178 @@ def _extract_first_element(
     if items is None:
         return None
     return next(iter(items), None)
+
+
+class PredicateT(Protocol):
+    def __call__(
+        self,
+        name: str,
+        value: str,
+    ) -> bool: ...
+
+    def __str__(self) -> str: ...
+
+
+class OnKeyPresence(PredicateT):
+    def __init__(self, key: str):
+        self._key = key
+
+    def __call__(
+        self,
+        name: str,
+        value: str,
+    ) -> bool:
+        return name == self._key
+
+    def __str__(self):
+        return f"{self._key}=*"
+
+
+class OnKeyValue(PredicateT):
+    def __init__(self, key: str, value: str):
+        self._key = key
+        self._value = value
+
+    def __call__(
+        self,
+        name: str,
+        value: str,
+    ) -> bool:
+        return name == self._key and value == self._value
+
+    def __str__(self):
+        return f"{self._key}={self._value}"
+
+
+class AlwaysPredicate(PredicateT):
+    def __call__(
+        self,
+        name: str,
+        value: str,
+    ) -> bool:
+        return True
+
+    def __str__(self):
+        return "*"
+
+
+RulesT = Sequence[tuple[PredicateT, bool]]
+
+
+class RuleBasedW3CBaggagePropagator(textmap.TextMapPropagator):
+    """Extracts and injects Baggage which is used to annotate telemetry.
+
+    Baggage entries are injected depending on the rules."""
+
+    _MAX_HEADER_LENGTH = 8192
+    _MAX_PAIR_LENGTH = 4096
+    _MAX_PAIRS = 180
+    _BAGGAGE_HEADER_NAME = "baggage"
+
+    def __init__(self, rules: RulesT):
+        self._rules = rules
+
+    def extract(
+        self,
+        carrier: textmap.CarrierT,
+        context: Optional[Context] = None,
+        getter: textmap.Getter[textmap.CarrierT] = textmap.default_getter,
+    ) -> Context:
+        """Extract Baggage from the carrier.
+
+        See
+        `opentelemetry.propagators.textmap.TextMapPropagator.extract`
+        """
+
+        if context is None:
+            context = get_current()
+
+        header = _extract_first_element(
+            getter.get(carrier, self._BAGGAGE_HEADER_NAME)
+        )
+
+        if not header:
+            return context
+
+        if len(header) > self._MAX_HEADER_LENGTH:
+            _logger.warning(
+                "Baggage header `%s` exceeded the maximum number of bytes per baggage-string",
+                header,
+            )
+            return context
+
+        baggage_entries: List[str] = split(_DELIMITER_PATTERN, header)
+        total_baggage_entries = self._MAX_PAIRS
+
+        if len(baggage_entries) > self._MAX_PAIRS:
+            _logger.warning(
+                "Baggage header `%s` exceeded the maximum number of list-members",
+                header,
+            )
+
+        for entry in baggage_entries:
+            if len(entry) > self._MAX_PAIR_LENGTH:
+                _logger.warning(
+                    "Baggage entry `%s` exceeded the maximum number of bytes per list-member",
+                    entry,
+                )
+                continue
+            if not entry:  # empty string
+                continue
+            try:
+                name, value = entry.split("=", 1)
+            except Exception:  # pylint: disable=broad-exception-caught
+                _logger.warning(
+                    "Baggage list-member `%s` doesn't match the format", entry
+                )
+                continue
+
+            if not _is_valid_pair(name, value):
+                _logger.warning("Invalid baggage entry: `%s`", entry)
+                continue
+
+            name = unquote_plus(name).strip()
+            value = unquote_plus(value).strip()
+
+            skip_entry = False
+            for predicate, outcome in self._rules:
+                if predicate(name, value):
+                    skip_entry = outcome
+                    break
+
+            if skip_entry:
+                continue
+
+            context = set_baggage(
+                name,
+                value,
+                context=context,
+            )
+            total_baggage_entries -= 1
+            if total_baggage_entries == 0:
+                break
+
+        return context
+
+    def inject(
+        self,
+        carrier: textmap.CarrierT,
+        context: Optional[Context] = None,
+        setter: textmap.Setter[textmap.CarrierT] = textmap.default_setter,
+    ) -> None:
+        """Injects Baggage into the carrier.
+
+        See
+        `opentelemetry.propagators.textmap.TextMapPropagator.inject`
+        """
+        baggage_entries = get_all(context=context)
+        if not baggage_entries:
+            return
+
+        baggage_string = _format_baggage(baggage_entries)
+        setter.set(carrier, self._BAGGAGE_HEADER_NAME, baggage_string)
+
+    @property
+    def fields(self) -> Set[str]:
+        """Returns a set with the fields set in `inject`."""
+        return {self._BAGGAGE_HEADER_NAME}
