@@ -479,9 +479,10 @@ class TestOtelLogLevelEnvVar(unittest.TestCase):
         self._sdk_logger = logging.getLogger("opentelemetry.sdk")
 
     def tearDown(self):
+        self._sdk_logger.setLevel(logging.NOTSET)
         importlib.reload(_logs_internal)
 
-    def test_otel_log_level_to_python_mapping_accepted_values(self):
+    def test_otel_log_level_to_python_mapping_accepted_keys(self):
         expected_keys = {
             "debug",
             "info",
@@ -493,11 +494,11 @@ class TestOtelLogLevelEnvVar(unittest.TestCase):
         self.assertEqual(set(_OTEL_LOG_LEVEL_TO_PYTHON.keys()), expected_keys)
 
     @patch.dict("os.environ", {OTEL_LOG_LEVEL: ""})
-    def test_default_level_is_info(self):
+    def test_unset_env_var_does_not_modify_logger_level(self):
         importlib.reload(_logs_internal)
-        self.assertEqual(self._sdk_logger.level, logging.INFO)
+        self.assertEqual(self._sdk_logger.level, logging.NOTSET)
 
-    def test_invalid_value_warns_and_defaults_to_info(self):
+    def test_invalid_value_warns_and_leaves_level_unchanged(self):
         # "trace", "verbose", "none" are valid in other SDKs but not accepted here
         for invalid in ("INVALID", "trace", "verbose", "none", "0"):
             with self.subTest(invalid=invalid):
@@ -507,7 +508,7 @@ class TestOtelLogLevelEnvVar(unittest.TestCase):
                         level=logging.WARNING,
                     ):
                         importlib.reload(_logs_internal)
-                self.assertEqual(self._sdk_logger.level, logging.INFO)
+                self.assertEqual(self._sdk_logger.level, logging.NOTSET)
 
     def test_case_insensitive(self):
         for env_value, expected_level in (

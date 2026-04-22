@@ -95,19 +95,22 @@ _OTEL_LOG_LEVEL_TO_PYTHON = {
 
 _logger = logging.getLogger(__name__)
 
-# Target opentelemetry.sdk (not the module-level _logger) so the level
-# propagates to all SDK sub-modules: trace, metrics, logs, exporters.
+# Apply OTEL_LOG_LEVEL to opentelemetry.sdk (not the module-level _logger)
+# so the level propagates to all SDK sub-modules: trace, metrics, logs, exporters.
 _otel_log_level_raw = environ.get(OTEL_LOG_LEVEL)
-_otel_log_level = (_otel_log_level_raw or "info").lower()
-if _otel_log_level_raw and _otel_log_level not in _OTEL_LOG_LEVEL_TO_PYTHON:
-    _logger.warning(
-        "Invalid value for OTEL_LOG_LEVEL: %r. "
-        "Valid values: debug, info, warn, warning, error, critical. "
-        "Defaulting to INFO.",
-        _otel_log_level_raw,
-    )
-_python_level = _OTEL_LOG_LEVEL_TO_PYTHON.get(_otel_log_level, logging.INFO)
-logging.getLogger("opentelemetry.sdk").setLevel(_python_level)
+if _otel_log_level_raw:
+    _otel_log_level = _otel_log_level_raw.lower()
+    if _otel_log_level in _OTEL_LOG_LEVEL_TO_PYTHON:
+        logging.getLogger("opentelemetry.sdk").setLevel(
+            _OTEL_LOG_LEVEL_TO_PYTHON[_otel_log_level]
+        )
+    else:
+        _logger.warning(
+            "Invalid value for OTEL_LOG_LEVEL: %r. "
+            "Valid values: debug, info, warn, warning, error, critical. "
+            "Logger level unchanged.",
+            _otel_log_level_raw,
+        )
 
 
 class BytesEncoder(json.JSONEncoder):
