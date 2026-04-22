@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#5076](https://github.com/open-telemetry/opentelemetry-python/pull/5076))
 - `opentelemetry-semantic-conventions`: use `X | Y` union annotation
   ([#5096](https://github.com/open-telemetry/opentelemetry-python/pull/5096))
+- `opentelemetry-sdk`: make resource detector ordering deterministic
+  ([#5120](https://github.com/open-telemetry/opentelemetry-python/pull/5120))
 - Add WeaverLiveCheck test util
   ([#5088](https://github.com/open-telemetry/opentelemetry-python/pull/5088))
 
