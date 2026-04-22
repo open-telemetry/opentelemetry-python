@@ -83,9 +83,9 @@ from typing import Iterator, Optional, Sequence, cast
 from typing_extensions import deprecated
 
 from opentelemetry import context as context_api
-from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import OTEL_PYTHON_TRACER_PROVIDER
+from opentelemetry.trace.link import Link
 from opentelemetry.trace.propagation import (
     _SPAN_KEY,
     get_current_link,
@@ -115,47 +115,6 @@ from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
 
 logger = getLogger(__name__)
-
-
-class _LinkBase(ABC):
-    def __init__(self, context: "SpanContext") -> None:
-        self._context = context
-
-    @property
-    def context(self) -> "SpanContext":
-        return self._context
-
-    @property
-    @abstractmethod
-    def attributes(self) -> types.Attributes:
-        pass
-
-
-class Link(_LinkBase):
-    """A link to a `Span`. The attributes of a Link are immutable.
-
-    Args:
-        context: `SpanContext` of the `Span` to link to.
-        attributes: Link's attributes.
-    """
-
-    def __init__(
-        self,
-        context: "SpanContext",
-        attributes: types.Attributes = None,
-    ) -> None:
-        super().__init__(context)
-        self._attributes = attributes
-
-    @property
-    def attributes(self) -> types.Attributes:
-        return self._attributes
-
-    @property
-    def dropped_attributes(self) -> int:
-        if isinstance(self._attributes, BoundedAttributes):
-            return self._attributes.dropped
-        return 0
 
 
 _Links = Optional[Sequence[Link]]

@@ -15,7 +15,7 @@ from typing import Optional
 
 from opentelemetry.context import create_key, get_value, set_value
 from opentelemetry.context.context import Context
-from opentelemetry.trace import Link
+from opentelemetry.trace.link import Link
 from opentelemetry.trace.span import INVALID_SPAN, Span
 
 SPAN_KEY = "current-span"
