@@ -20,6 +20,10 @@ from unittest.mock import Mock, patch
 
 from opentelemetry.baggage import get_all, set_baggage
 from opentelemetry.baggage.propagation import (
+    AlwaysPredicate,
+    OnKeyPresence,
+    OnKeyValue,
+    RuleBasedW3CBaggagePropagator,
     W3CBaggagePropagator,
     _format_baggage,
 )
@@ -264,4 +268,50 @@ class TestW3CBaggagePropagator(TestCase):
 
         self.assertEqual(
             context, {"abc": {"transaction": "string with spaces"}}
+        )
+
+
+class TestRuleBasedW3CBaggagePropagator(TestCase):
+    def _extract(self, rules, header_value):
+        propagator = RuleBasedW3CBaggagePropagator(rules)
+        header = {"baggage": [header_value]}
+        return get_all(propagator.extract(header))
+
+    def test_extract_skips_entry_when_key_matches(self):
+        self.assertEqual(
+            self._extract(
+                [(OnKeyPresence("key1"), True)],
+                "key1=val1,key2=val2",
+            ),
+            {"key2": "val2"},
+        )
+
+    def test_extract_skips_entry_when_key_value_matches(self):
+        self.assertEqual(
+            self._extract(
+                [(OnKeyValue("key1", "val1"), True)],
+                "key1=val1,key2=val2",
+            ),
+            {"key2": "val2"},
+        )
+
+    def test_extract_uses_first_matching_rule(self):
+        self.assertEqual(
+            self._extract(
+                [
+                    (OnKeyPresence("key1"), False),
+                    (OnKeyValue("key1", "val1"), True),
+                ],
+                "key1=val1,key2=val2",
+            ),
+            {"key1": "val1", "key2": "val2"},
+        )
+
+    def test_extract_always_predicate_can_skip_all_entries(self):
+        self.assertEqual(
+            self._extract(
+                [(AlwaysPredicate(), True)],
+                "key1=val1,key2=val2",
+            ),
+            {},
         )
