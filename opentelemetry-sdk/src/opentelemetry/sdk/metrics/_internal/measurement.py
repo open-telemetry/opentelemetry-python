@@ -12,12 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Union
+from typing import TYPE_CHECKING, Union
 
 from opentelemetry.context import Context
-from opentelemetry.metrics import Instrument
 from opentelemetry.util.types import Attributes
+
+if TYPE_CHECKING:
+    from opentelemetry.sdk.metrics._internal.instrument import _Instrument
 
 
 @dataclass(frozen=True)
@@ -35,6 +39,6 @@ class Measurement:
 
     value: Union[int, float]
     time_unix_nano: int
-    instrument: Instrument
+    instrument: _Instrument
     context: Context
     attributes: Attributes = None
