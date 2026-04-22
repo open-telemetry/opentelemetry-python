@@ -14,6 +14,7 @@
 
 # pylint: disable=unused-import
 
+import os
 from abc import ABC, abstractmethod
 from threading import Lock
 from time import time_ns
@@ -76,8 +77,23 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
         self._async_instruments: List[
             opentelemetry.sdk.metrics._internal.instrument._Asynchronous
         ] = []
+        self._needs_storage_reinit = False
+        if hasattr(os, "register_at_fork"):
+            os.register_at_fork(after_in_child=self._at_fork_reinit)
+
+    def _at_fork_reinit(self):
+        """Reinitialize lock in child process after fork"""
+        self._lock = Lock()
+        # Lazy reinitialization of storages on first use post fork. This is
+        # done to avoid the overhead of reinitializing the storages on
+        # every fork.
+        self._needs_storage_reinit = True
+        self._async_instruments.clear()
 
     def consume_measurement(self, measurement: Measurement) -> None:
+        if self._needs_storage_reinit:
+            self._reinit_storages()
+
         should_sample_exemplar = (
             self._sdk_config.exemplar_filter.should_sample(
                 measurement.value,
@@ -105,6 +121,9 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
         metric_reader: "opentelemetry.sdk.metrics.export.MetricReader",
         timeout_millis: float = 10_000,
     ) -> Optional[MetricsData]:
+        if self._needs_storage_reinit:
+            self._reinit_storages()
+
         with self._lock:
             metric_reader_storage = self._reader_storages[metric_reader]
             # for now, just use the defaults
@@ -143,3 +162,14 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
             result = self._reader_storages[metric_reader].collect()
 
         return result
+
+    def _reinit_storages(self):
+        # Reinitialize the storages after a fork to avoid duplicate data points.
+        # The flag is cleared inside the lock so concurrent callers only run
+        # reinit once.
+        with self._lock:
+            if not self._needs_storage_reinit:
+                return
+            for storage in self._reader_storages.values():
+                storage._at_fork_reinit()
+            self._needs_storage_reinit = False

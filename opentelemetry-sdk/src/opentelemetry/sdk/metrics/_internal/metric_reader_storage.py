@@ -75,6 +75,11 @@ class MetricReaderStorage:
         self._instrument_class_temporality = instrument_class_temporality
         self._instrument_class_aggregation = instrument_class_aggregation
 
+    def _at_fork_reinit(self) -> None:
+        """Reinitialize locks and clear state in the child process after fork."""
+        self._lock = RLock()
+        self._instrument_view_instrument_matches.clear()
+
     def _get_or_init_view_instrument_match(
         self, instrument: _Instrument
     ) -> List[_ViewInstrumentMatch]:

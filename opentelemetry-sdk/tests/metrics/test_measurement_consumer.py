@@ -27,6 +27,20 @@ from opentelemetry.sdk.metrics._internal.sdk_configuration import (
 )
 
 
+def _sdk_config(
+    exemplar_filter=None, resource=None, metric_readers=None, views=None
+):
+    """Create SdkConfiguration for tests."""
+    config = SdkConfiguration(
+        resource=resource or Mock(),
+        metric_readers=metric_readers or [Mock()],
+        views=views or Mock(),
+        exemplar_filter=exemplar_filter
+        or Mock(should_sample=Mock(return_value=False)),
+    )
+    return config
+
+
 @patch(
     "opentelemetry.sdk.metrics._internal."
     "measurement_consumer.MetricReaderStorage"
@@ -199,3 +213,317 @@ class TestSynchronousMeasurementConsumer(TestCase):
             callback_options_time_call,
             10000,
         )
+
+
+@patch(
+    "opentelemetry.sdk.metrics._internal."
+    "measurement_consumer.MetricReaderStorage"
+)
+class TestSynchronousMeasurementConsumerForkHandler(TestCase):  # pylint: disable=protected-access
+    """Exhaustive tests for fork handler, needs_storage_reinit, and lazy _reinit_storages."""
+
+    def test_register_at_fork_called_when_available(
+        self, MockMetricReaderStorage
+    ):
+        """Consumer should register fork handler when os.register_at_fork exists."""
+        register_mock = Mock()
+        with patch(
+            "opentelemetry.sdk.metrics._internal.measurement_consumer.os"
+        ) as mock_os:
+            mock_os.register_at_fork = register_mock
+
+            SynchronousMeasurementConsumer(_sdk_config())
+            register_mock.assert_called_once()
+            call_kwargs = register_mock.call_args[1]
+            self.assertIn("after_in_child", call_kwargs)
+            self.assertTrue(callable(call_kwargs["after_in_child"]))
+
+    def test_at_fork_reinit_sets_needs_storage_reinit_and_clears_async_instruments(
+        self, MockMetricReaderStorage
+    ):
+        """_at_fork_reinit should set _needs_storage_reinit=True and clear _async_instruments."""
+        reader_mock = Mock()
+        storage_mock = Mock()
+        storage_mock._lock = Mock()
+        storage_mock._instrument_view_instrument_matches = {}
+        MockMetricReaderStorage.return_value = storage_mock
+
+        register_mock = Mock()
+        with patch(
+            "opentelemetry.sdk.metrics._internal.measurement_consumer.os"
+        ) as mock_os:
+            mock_os.register_at_fork = register_mock
+
+            consumer = SynchronousMeasurementConsumer(
+                _sdk_config(metric_readers=[reader_mock])
+            )
+            async_instrument = MagicMock()
+            consumer.register_asynchronous_instrument(async_instrument)
+            self.assertEqual(len(consumer._async_instruments), 1)
+
+            # Simulate fork: call the after_in_child callback
+            after_in_child = register_mock.call_args[1]["after_in_child"]
+            after_in_child()
+
+            self.assertTrue(consumer._needs_storage_reinit)
+            self.assertEqual(len(consumer._async_instruments), 0)
+
+    def test_consume_measurement_triggers_lazy_reinit_on_first_use_after_fork(
+        self, MockMetricReaderStorage
+    ):
+        """First consume_measurement after fork should call _reinit_storages."""
+        reader_mocks = [Mock()]
+        storage_mocks = [Mock()]
+        storage_mocks[0]._lock = Mock()
+        storage_mocks[0]._instrument_view_instrument_matches = {}
+        storage_mocks[0].consume_measurement = Mock()
+        MockMetricReaderStorage.side_effect = storage_mocks
+
+        register_mock = Mock()
+        with patch(
+            "opentelemetry.sdk.metrics._internal.measurement_consumer.os"
+        ) as mock_os:
+            mock_os.register_at_fork = register_mock
+
+            consumer = SynchronousMeasurementConsumer(
+                _sdk_config(metric_readers=reader_mocks)
+            )
+            after_in_child = register_mock.call_args[1]["after_in_child"]
+            after_in_child()
+
+            with patch.object(
+                consumer, "_reinit_storages", wraps=consumer._reinit_storages
+            ) as reinit_spy:
+                consumer.consume_measurement(Mock())
+                reinit_spy.assert_called_once()
+
+    def test_consume_measurement_does_not_reinit_on_second_call(
+        self, MockMetricReaderStorage
+    ):
+        """Second consume_measurement after fork should NOT call _reinit_storages again."""
+        reader_mocks = [Mock()]
+        storage_mock = Mock()
+        storage_mock._lock = Mock()
+        storage_mock._instrument_view_instrument_matches = {}
+        storage_mock.consume_measurement = Mock()
+        MockMetricReaderStorage.return_value = storage_mock
+
+        register_mock = Mock()
+        with patch(
+            "opentelemetry.sdk.metrics._internal.measurement_consumer.os"
+        ) as mock_os:
+            mock_os.register_at_fork = register_mock
+
+            consumer = SynchronousMeasurementConsumer(
+                _sdk_config(metric_readers=reader_mocks)
+            )
+            after_in_child = register_mock.call_args[1]["after_in_child"]
+            after_in_child()
+
+            with patch.object(
+                consumer, "_reinit_storages", wraps=consumer._reinit_storages
+            ) as reinit_spy:
+                consumer.consume_measurement(Mock())
+                consumer.consume_measurement(Mock())
+                reinit_spy.assert_called_once()
+
+    def test_collect_triggers_lazy_reinit_on_first_use_after_fork(
+        self, MockMetricReaderStorage
+    ):
+        """First collect after fork should call _reinit_storages."""
+        reader_mock = Mock()
+        storage_mock = Mock()
+        storage_mock._lock = Mock()
+        storage_mock._instrument_view_instrument_matches = {}
+        storage_mock.collect.return_value = []
+        MockMetricReaderStorage.return_value = storage_mock
+
+        register_mock = Mock()
+        with patch(
+            "opentelemetry.sdk.metrics._internal.measurement_consumer.os"
+        ) as mock_os:
+            mock_os.register_at_fork = register_mock
+
+            consumer = SynchronousMeasurementConsumer(
+                _sdk_config(metric_readers=[reader_mock])
+            )
+            after_in_child = register_mock.call_args[1]["after_in_child"]
+            after_in_child()
+
+            with patch.object(
+                consumer, "_reinit_storages", wraps=consumer._reinit_storages
+            ) as reinit_spy:
+                consumer.collect(reader_mock)
+                reinit_spy.assert_called_once()
+
+    def test_collect_does_not_reinit_on_second_call(
+        self, MockMetricReaderStorage
+    ):
+        """Second collect after fork should NOT call _reinit_storages again."""
+        reader_mock = Mock()
+        storage_mock = Mock()
+        storage_mock._lock = Mock()
+        storage_mock._instrument_view_instrument_matches = {}
+        storage_mock.collect.return_value = []
+        MockMetricReaderStorage.return_value = storage_mock
+
+        register_mock = Mock()
+        with patch(
+            "opentelemetry.sdk.metrics._internal.measurement_consumer.os"
+        ) as mock_os:
+            mock_os.register_at_fork = register_mock
+
+            consumer = SynchronousMeasurementConsumer(
+                _sdk_config(metric_readers=[reader_mock])
+            )
+            after_in_child = register_mock.call_args[1]["after_in_child"]
+            after_in_child()
+
+            with patch.object(
+                consumer, "_reinit_storages", wraps=consumer._reinit_storages
+            ) as reinit_spy:
+                consumer.collect(reader_mock)
+                consumer.collect(reader_mock)
+                reinit_spy.assert_called_once()
+
+    def test_consume_then_collect_after_fork_reinits_once(
+        self, MockMetricReaderStorage
+    ):
+        """After fork, consume_measurement triggers reinit; collect uses same reinit (no second call)."""
+        reader_mock = Mock()
+        storage_mock = Mock()
+        storage_mock._lock = Mock()
+        storage_mock._instrument_view_instrument_matches = {}
+        storage_mock.consume_measurement = Mock()
+        storage_mock.collect.return_value = []
+        MockMetricReaderStorage.return_value = storage_mock
+
+        register_mock = Mock()
+        with patch(
+            "opentelemetry.sdk.metrics._internal.measurement_consumer.os"
+        ) as mock_os:
+            mock_os.register_at_fork = register_mock
+
+            consumer = SynchronousMeasurementConsumer(
+                _sdk_config(metric_readers=[reader_mock])
+            )
+            after_in_child = register_mock.call_args[1]["after_in_child"]
+            after_in_child()
+
+            with patch.object(
+                consumer, "_reinit_storages", wraps=consumer._reinit_storages
+            ) as reinit_spy:
+                consumer.consume_measurement(Mock())
+                consumer.collect(reader_mock)
+                reinit_spy.assert_called_once()
+
+    def test_collect_then_consume_after_fork_reinits_once(
+        self, MockMetricReaderStorage
+    ):
+        """After fork, collect triggers reinit; consume_measurement uses same reinit (no second call)."""
+        reader_mock = Mock()
+        storage_mock = Mock()
+        storage_mock._lock = Mock()
+        storage_mock._instrument_view_instrument_matches = {}
+        storage_mock.consume_measurement = Mock()
+        storage_mock.collect.return_value = []
+        MockMetricReaderStorage.return_value = storage_mock
+
+        register_mock = Mock()
+        with patch(
+            "opentelemetry.sdk.metrics._internal.measurement_consumer.os"
+        ) as mock_os:
+            mock_os.register_at_fork = register_mock
+
+            consumer = SynchronousMeasurementConsumer(
+                _sdk_config(metric_readers=[reader_mock])
+            )
+            after_in_child = register_mock.call_args[1]["after_in_child"]
+            after_in_child()
+
+            with patch.object(
+                consumer, "_reinit_storages", wraps=consumer._reinit_storages
+            ) as reinit_spy:
+                consumer.collect(reader_mock)
+                consumer.consume_measurement(Mock())
+                reinit_spy.assert_called_once()
+
+    def test_no_reinit_on_consume_measurement_without_fork(
+        self, MockMetricReaderStorage
+    ):
+        """consume_measurement without prior fork should NOT call _reinit_storages."""
+        reader_mocks = [Mock()]
+        storage_mock = Mock()
+        storage_mock._lock = Mock()
+        storage_mock._instrument_view_instrument_matches = {}
+        storage_mock.consume_measurement = Mock()
+        MockMetricReaderStorage.return_value = storage_mock
+
+        with patch(
+            "opentelemetry.sdk.metrics._internal.measurement_consumer.os"
+        ) as mock_os:
+            mock_os.register_at_fork = Mock()
+
+            consumer = SynchronousMeasurementConsumer(
+                _sdk_config(metric_readers=reader_mocks)
+            )
+            # Do NOT simulate fork
+            with patch.object(
+                consumer, "_reinit_storages", wraps=consumer._reinit_storages
+            ) as reinit_spy:
+                consumer.consume_measurement(Mock())
+                reinit_spy.assert_not_called()
+
+    def test_no_reinit_on_collect_without_fork(self, MockMetricReaderStorage):
+        """collect without prior fork should NOT call _reinit_storages."""
+        reader_mock = Mock()
+        storage_mock = Mock()
+        storage_mock._lock = Mock()
+        storage_mock._instrument_view_instrument_matches = {}
+        storage_mock.collect.return_value = []
+        MockMetricReaderStorage.return_value = storage_mock
+
+        with patch(
+            "opentelemetry.sdk.metrics._internal.measurement_consumer.os"
+        ) as mock_os:
+            mock_os.register_at_fork = Mock()
+
+            consumer = SynchronousMeasurementConsumer(
+                _sdk_config(metric_readers=[reader_mock])
+            )
+            with patch.object(
+                consumer, "_reinit_storages", wraps=consumer._reinit_storages
+            ) as reinit_spy:
+                consumer.collect(reader_mock)
+                reinit_spy.assert_not_called()
+
+    def test_collect_after_fork_does_not_invoke_cleared_async_instruments(
+        self, MockMetricReaderStorage
+    ):
+        """After fork, collect should not invoke async instruments (they were cleared)."""
+        reader_mock = Mock()
+        storage_mock = Mock()
+        storage_mock._lock = Mock()
+        storage_mock._instrument_view_instrument_matches = {}
+        storage_mock.collect.return_value = []
+        MockMetricReaderStorage.return_value = storage_mock
+
+        register_mock = Mock()
+        with patch(
+            "opentelemetry.sdk.metrics._internal.measurement_consumer.os"
+        ) as mock_os:
+            mock_os.register_at_fork = register_mock
+
+            consumer = SynchronousMeasurementConsumer(
+                _sdk_config(metric_readers=[reader_mock])
+            )
+            async_instrument = MagicMock()
+            async_instrument.callback.return_value = []
+            consumer.register_asynchronous_instrument(async_instrument)
+
+            after_in_child = register_mock.call_args[1]["after_in_child"]
+            after_in_child()
+
+            consumer.collect(reader_mock)
+
+            async_instrument.callback.assert_not_called()
