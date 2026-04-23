@@ -20,8 +20,6 @@ from typing import Optional, Type
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
 from opentelemetry.util._importlib_metadata import entry_points
 
-from opentelemetry.sdk._configuration._exceptions import ConfigurationError
-
 _logger = logging.getLogger(__name__)
 
 
@@ -90,17 +88,17 @@ def _map_compression(
         return None
 
     value_lower = value.lower()
-    supports_deflate = allow_deflate and hasattr(compression_enum, "Deflate")
+    supports_deflate = hasattr(compression_enum, "Deflate")
 
     if value_lower == "none":
         return None
     if value_lower == "gzip":
         return compression_enum.Gzip  # type: ignore[attr-defined]
-    if value_lower == "deflate" and supports_deflate:
+    if value_lower == "deflate" and allow_deflate and supports_deflate:
         return compression_enum.Deflate  # type: ignore[attr-defined]
 
     supported_values = ["'gzip'", "'none'"]
-    if supports_deflate:
+    if allow_deflate and supports_deflate:
         supported_values.insert(1, "'deflate'")
 
     raise ConfigurationError(
