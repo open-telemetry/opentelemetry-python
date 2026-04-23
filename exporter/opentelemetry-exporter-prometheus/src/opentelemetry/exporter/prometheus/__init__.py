@@ -105,6 +105,9 @@ from opentelemetry.sdk.metrics.export import (
     MetricsData,
     Sum,
 )
+from opentelemetry.sdk.metrics.view import (
+    Aggregation,
+)
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
     OtelComponentTypeValues,
 )
@@ -135,7 +138,10 @@ class PrometheusMetricReader(MetricReader):
     """Prometheus metric exporter for OpenTelemetry."""
 
     def __init__(
-        self, disable_target_info: bool = False, prefix: str = ""
+        self,
+        disable_target_info: bool = False,
+        prefix: str = "",
+        preferred_aggregation: dict[type, Aggregation] | None = None,
     ) -> None:
         super().__init__(
             preferred_temporality={
@@ -146,6 +152,7 @@ class PrometheusMetricReader(MetricReader):
                 ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
                 ObservableGauge: AggregationTemporality.CUMULATIVE,
             },
+            preferred_aggregation=preferred_aggregation,
             otel_component_type=OtelComponentTypeValues.PROMETHEUS_HTTP_TEXT_METRIC_EXPORTER,
         )
         self._collector = _CustomCollector(
