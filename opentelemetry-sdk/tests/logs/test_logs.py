@@ -19,11 +19,12 @@ import logging
 import unittest
 from unittest.mock import Mock, patch
 
-import opentelemetry.sdk._logs._internal as _logs_internal
+import opentelemetry.sdk as _sdk
 from opentelemetry._logs import LogRecord, SeverityNumber
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.context import get_current
 from opentelemetry.metrics import NoOpMeterProvider
+from opentelemetry.sdk import _OTEL_LOG_LEVEL_TO_PYTHON
 from opentelemetry.sdk._logs import (
     Logger,
     LoggerProvider,
@@ -31,7 +32,6 @@ from opentelemetry.sdk._logs import (
     ReadWriteLogRecord,
 )
 from opentelemetry.sdk._logs._internal import (
-    _OTEL_LOG_LEVEL_TO_PYTHON,
     LoggerMetrics,
     NoOpLogger,
     SynchronousMultiLogRecordProcessor,
@@ -480,7 +480,7 @@ class TestOtelLogLevelEnvVar(unittest.TestCase):
 
     def tearDown(self):
         self._sdk_logger.setLevel(logging.NOTSET)
-        importlib.reload(_logs_internal)
+        importlib.reload(_sdk)
 
     def test_otel_log_level_to_python_mapping_accepted_keys(self):
         expected_keys = {
@@ -495,7 +495,7 @@ class TestOtelLogLevelEnvVar(unittest.TestCase):
 
     @patch.dict("os.environ", {OTEL_LOG_LEVEL: ""})
     def test_unset_env_var_does_not_modify_logger_level(self):
-        importlib.reload(_logs_internal)
+        importlib.reload(_sdk)
         self.assertEqual(self._sdk_logger.level, logging.NOTSET)
 
     def test_invalid_value_warns_and_leaves_level_unchanged(self):
@@ -504,10 +504,10 @@ class TestOtelLogLevelEnvVar(unittest.TestCase):
             with self.subTest(invalid=invalid):
                 with patch.dict("os.environ", {OTEL_LOG_LEVEL: invalid}):
                     with self.assertLogs(
-                        "opentelemetry.sdk._logs._internal",
+                        "opentelemetry.sdk",
                         level=logging.WARNING,
                     ):
-                        importlib.reload(_logs_internal)
+                        importlib.reload(_sdk)
                 self.assertEqual(self._sdk_logger.level, logging.NOTSET)
 
     def test_case_insensitive(self):
@@ -519,12 +519,12 @@ class TestOtelLogLevelEnvVar(unittest.TestCase):
         ):
             with self.subTest(env_value=env_value):
                 with patch.dict("os.environ", {OTEL_LOG_LEVEL: env_value}):
-                    importlib.reload(_logs_internal)
+                    importlib.reload(_sdk)
                 self.assertEqual(self._sdk_logger.level, expected_level)
 
     @patch.dict("os.environ", {OTEL_LOG_LEVEL: "critical"})
     def test_level_propagates_to_child_loggers(self):
-        importlib.reload(_logs_internal)
+        importlib.reload(_sdk)
         self.assertEqual(
             self._sdk_logger.getChild("trace").getEffectiveLevel(),
             logging.CRITICAL,
@@ -550,5 +550,5 @@ class TestOtelLogLevelEnvVar(unittest.TestCase):
         for env_value, expected_level in cases:
             with self.subTest(env_value=env_value):
                 with patch.dict("os.environ", {OTEL_LOG_LEVEL: env_value}):
-                    importlib.reload(_logs_internal)
+                    importlib.reload(_sdk)
                 self.assertEqual(self._sdk_logger.level, expected_level)
