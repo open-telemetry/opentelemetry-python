@@ -49,6 +49,7 @@ from opentelemetry.test.metrictestutil import (
 )
 
 
+# pylint: disable=too-many-public-methods
 class TestPrometheusMetricReader(TestCase):
     def setUp(self):
         self._mock_registry_register = Mock()
@@ -738,4 +739,13 @@ class TestPrometheusMetricReader(TestCase):
         histogram.record(5)
         result = list(reader._collector.collect())
         self.assertTrue(len(result) > 0)
+        prometheus_metric = result[1]
+        bucket_bounds = [
+            sample.labels["le"]
+            for sample in prometheus_metric.samples
+            if "le" in sample.labels
+        ]
+        self.assertIn("1.0", bucket_bounds)
+        self.assertIn("5.0", bucket_bounds)
+        self.assertIn("10.0", bucket_bounds)
         reader.shutdown()
