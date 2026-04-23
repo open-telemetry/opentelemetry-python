@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `registry` keyword argument to `PrometheusMetricReader` to allow passing a custom Prometheus registry
   ([#5055](https://github.com/open-telemetry/opentelemetry-python/pull/5055))
 - Enabled the flake8-tidy-import plugins rules for the ruff linter. These rules throw warnings for relative imports in the modules. 
+- `opentelemetry-sdk`: fix YAML structure injection via environment variable substitution in declarative file configuration; values containing newlines are now emitted as quoted YAML scalars per spec requirement
+  ([#5091](https://github.com/open-telemetry/opentelemetry-python/pull/5091))
 - `opentelemetry-sdk`: Add `create_logger_provider`/`configure_logger_provider` to declarative file configuration, enabling LoggerProvider instantiation from config files without reading env vars
   ([#4990](https://github.com/open-telemetry/opentelemetry-python/pull/4990))
 - `opentelemetry-sdk`: Add `service` resource detector support to declarative file configuration via `detection_development.detectors[].service`
@@ -22,7 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - logs: add exception support to Logger emit and LogRecord attributes
   ([#4907](https://github.com/open-telemetry/opentelemetry-python/issues/4907))
 - Drop Python 3.9 support
-  ([#5076](https://github.com/open-telemetry/opentelemetry-python-contrib/pull/5076))
+  ([#5076](https://github.com/open-telemetry/opentelemetry-python/pull/5076))
+- `opentelemetry-semantic-conventions`: use `X | Y` union annotation
+  ([#5096](https://github.com/open-telemetry/opentelemetry-python/pull/5096))
 
 
 ## Version 1.41.0/0.62b0 (2026-04-09)
