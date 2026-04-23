@@ -20,7 +20,7 @@ from typing import Any, ClassVar
 from unittest.mock import MagicMock, patch
 
 from opentelemetry.sdk._configuration._common import (
-    _additional_properties_support,
+    _additional_properties,
     _parse_headers,
     load_entry_point,
 )
@@ -153,7 +153,7 @@ class TestLoadEntryPoint(unittest.TestCase):
 
 class TestAdditionalPropertiesSupport(unittest.TestCase):
     def setUp(self):
-        @_additional_properties_support
+        @_additional_properties
         @dataclass
         class _SampleConfig:
             known_field: dict | None = None
@@ -202,7 +202,7 @@ class TestGeneratedModelsHaveAdditionalProperties(unittest.TestCase):
     """Guards against regressions in the custom datamodel-codegen template.
 
     The codegen/dataclass.jinja2 template conditionally applies the
-    @_additional_properties_support decorator based on the
+    @_additional_properties decorator based on the
     additionalPropertiesType template variable. If datamodel-codegen
     changes how it passes this variable, these tests will fail.
     """

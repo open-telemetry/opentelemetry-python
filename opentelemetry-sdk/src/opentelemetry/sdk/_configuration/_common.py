@@ -25,7 +25,7 @@ from opentelemetry.util._importlib_metadata import entry_points
 _logger = logging.getLogger(__name__)
 
 
-def _additional_properties_support(cls):
+def _additional_properties(cls):
     """Decorator for dataclasses whose JSON Schema sets additionalProperties.
 
     Wraps the dataclass-generated ``__init__`` so that unknown keyword
