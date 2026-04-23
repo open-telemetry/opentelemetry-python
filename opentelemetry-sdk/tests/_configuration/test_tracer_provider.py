@@ -309,6 +309,32 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
             compression=None,
         )
 
+    def test_otlp_http_created_with_deflate_compression(self):
+        mock_exporter_cls = MagicMock()
+        mock_compression_cls = MagicMock()
+        mock_compression_cls.Deflate = "deflate_val"
+        mock_module = MagicMock()
+        mock_module.OTLPSpanExporter = mock_exporter_cls
+        mock_http_module = MagicMock()
+        mock_http_module.Compression = mock_compression_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.proto.http.trace_exporter": mock_module,
+                "opentelemetry.exporter.otlp.proto.http": mock_http_module,
+            },
+        ):
+            config = self._make_batch_config(
+                SpanExporterConfig(
+                    otlp_http=OtlpHttpExporterConfig(compression="deflate")
+                )
+            )
+            create_tracer_provider(config)
+
+        _, kwargs = mock_exporter_cls.call_args
+        self.assertEqual(kwargs["compression"], "deflate_val")
+
     def test_otlp_http_headers_list(self):
         mock_exporter_cls = MagicMock()
         mock_http_module = MagicMock()

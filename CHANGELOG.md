@@ -26,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4907](https://github.com/open-telemetry/opentelemetry-python/issues/4907))
 - Drop Python 3.9 support
   ([#5076](https://github.com/open-telemetry/opentelemetry-python/pull/5076))
+- `opentelemetry-sdk`: Allow declarative OTLP HTTP exporters to map `compression: deflate` instead of rejecting it as unsupported
+  ([#5075](https://github.com/open-telemetry/opentelemetry-python/pull/5075))
 - `opentelemetry-semantic-conventions`: use `X | Y` union annotation
   ([#5096](https://github.com/open-telemetry/opentelemetry-python/pull/5096))
 - `opentelemetry-sdk`: Fix `ProcessResourceDetector` to use `sys.orig_argv` so that `process.command`, `process.command_line`, and `process.command_args` reflect the original invocation for `python -m <module>` runs (where `sys.argv[0]` is rewritten to the module path)

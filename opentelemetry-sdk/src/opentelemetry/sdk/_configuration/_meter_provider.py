@@ -18,7 +18,10 @@ import logging
 from typing import Optional, Set, Type
 
 from opentelemetry import metrics
-from opentelemetry.sdk._configuration._common import _parse_headers
+from opentelemetry.sdk._configuration._common import (
+    _map_compression,
+    _parse_headers,
+)
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
 from opentelemetry.sdk._configuration.models import (
     Aggregation as AggregationConfig,
@@ -265,19 +268,6 @@ def _create_console_metric_exporter(
     )
 
 
-def _map_compression_metric(
-    value: Optional[str], compression_enum: type
-) -> Optional[object]:
-    """Map a compression string to the given Compression enum value."""
-    if value is None or value.lower() == "none":
-        return None
-    if value.lower() == "gzip":
-        return compression_enum.Gzip  # type: ignore[attr-defined]
-    raise ConfigurationError(
-        f"Unsupported compression value '{value}'. Supported values: 'gzip', 'none'."
-    )
-
-
 def _create_otlp_http_metric_exporter(
     config: OtlpHttpMetricExporterConfig,
 ) -> MetricExporter:
@@ -296,7 +286,9 @@ def _create_otlp_http_metric_exporter(
             "Install it with: pip install opentelemetry-exporter-otlp-proto-http"
         ) from exc
 
-    compression = _map_compression_metric(config.compression, Compression)
+    compression = _map_compression(
+        config.compression, Compression, allow_deflate=True
+    )
     headers = _parse_headers(config.headers, config.headers_list)
     timeout = (config.timeout / 1000.0) if config.timeout is not None else None
     preferred_temporality = _map_temporality(config.temporality_preference)
@@ -331,7 +323,7 @@ def _create_otlp_grpc_metric_exporter(
             "Install it with: pip install opentelemetry-exporter-otlp-proto-grpc"
         ) from exc
 
-    compression = _map_compression_metric(config.compression, grpc.Compression)
+    compression = _map_compression(config.compression, grpc.Compression)
     headers = _parse_headers(config.headers, config.headers_list)
     timeout = (config.timeout / 1000.0) if config.timeout is not None else None
     preferred_temporality = _map_temporality(config.temporality_preference)

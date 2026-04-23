@@ -75,3 +75,33 @@ def _parse_headers(
         for pair in headers:
             result[pair.name] = pair.value or ""
     return result
+
+
+def _map_compression(
+    value: str | None,
+    compression_enum: type,
+    *,
+    allow_deflate: bool = False,
+) -> object | None:
+    """Map a compression string to the given Compression enum value."""
+    if value is None:
+        return None
+
+    value_lower = value.lower()
+    supports_deflate = hasattr(compression_enum, "Deflate")
+
+    if value_lower == "none":
+        return None
+    if value_lower == "gzip":
+        return compression_enum.Gzip  # type: ignore[attr-defined]
+    if value_lower == "deflate" and allow_deflate and supports_deflate:
+        return compression_enum.Deflate  # type: ignore[attr-defined]
+
+    supported_values = ["'gzip'", "'none'"]
+    if allow_deflate and supports_deflate:
+        supported_values.insert(1, "'deflate'")
+
+    raise ConfigurationError(
+        f"Unsupported compression value '{value}'. Supported values: "
+        f"{', '.join(supported_values)}."
+    )
