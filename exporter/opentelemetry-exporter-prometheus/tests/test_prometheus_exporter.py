@@ -63,8 +63,8 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
             self._mock_registry_register.assert_not_called()
             # check custom_registry was registered
             self.assertIn(
-                reader._collector,   # pylint: disable=protected-access
-                custom_registry._collector_to_names,   # pylint: disable=protected-access
+                reader._collector,  # pylint: disable=protected-access
+                custom_registry._collector_to_names,  # pylint: disable=protected-access
             )
             reader.shutdown()
 
