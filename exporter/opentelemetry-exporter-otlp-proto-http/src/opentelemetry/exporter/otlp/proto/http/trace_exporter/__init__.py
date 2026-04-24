@@ -33,12 +33,11 @@ from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
 )
 from opentelemetry.exporter.otlp.proto.http import (
-    _OTLP_HTTP_HEADERS,
     Compression,
 )
 from opentelemetry.exporter.otlp.proto.http._common import (
     _is_retryable,
-    _load_session_from_envvar,
+    setup_session,
     DEFAULT_ENDPOINT,
     DEFAULT_TIMEOUT,
 )
@@ -129,21 +128,12 @@ class OTLPSpanExporter(SpanExporter):
             )
         )
         self._compression = compression or _compression_from_env()
-        self._session = (
-            session
-            or _load_session_from_envvar(
-                _OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER
-            )
-            or requests.Session()
+        self._session = setup_session(
+            session,
+            _OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER,
+            self._headers,
+            self._compression,
         )
-        self._session.headers.update(self._headers)
-        self._session.headers.update(_OTLP_HTTP_HEADERS)
-        # let users override our defaults
-        self._session.headers.update(self._headers)
-        if self._compression is not Compression.NoCompression:
-            self._session.headers.update(
-                {"Content-Encoding": self._compression.value}
-            )
         self._shutdown = False
 
         self._metrics = ExporterMetrics(

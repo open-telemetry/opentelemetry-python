@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from os import environ
-from typing import Literal, Optional
+from typing import Dict, Literal, Optional
 
 import requests
 
@@ -21,6 +21,7 @@ from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER,
 )
 from opentelemetry.exporter.otlp.proto.http import (
+    _OTLP_HTTP_HEADERS,
     Compression,
 )
 from opentelemetry.util._importlib_metadata import entry_points
@@ -71,3 +72,29 @@ def _load_session_from_envvar(
                 f" must be of type `requests.Session`."
             )
     return None
+
+
+def setup_session(
+    session: Optional[requests.Session],
+    cred_envvar: Literal[
+        "OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER",
+        "OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER",
+        "OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER",
+    ],
+    headers: Dict[str, str],
+    compression: Compression,
+) -> requests.Session:
+    configured_session = (
+        session
+        or _load_session_from_envvar(cred_envvar)
+        or requests.Session()
+    )
+    configured_session.headers.update(headers)
+    configured_session.headers.update(_OTLP_HTTP_HEADERS)
+    # let users override our defaults
+    configured_session.headers.update(headers)
+    if compression is not Compression.NoCompression:
+        configured_session.headers.update(
+            {"Content-Encoding": compression.value}
+        )
+    return configured_session
