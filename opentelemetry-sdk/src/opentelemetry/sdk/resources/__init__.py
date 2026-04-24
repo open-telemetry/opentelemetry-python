@@ -80,10 +80,6 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_SERVICE_NAME,
 )
 from opentelemetry.semconv.resource import ResourceAttributes
-from opentelemetry.util._importlib_metadata import (
-    entry_points,  # type: ignore[reportUnknownVariableType]
-    version,
-)
 from opentelemetry.util.types import AttributeValue
 
 psutil: Optional[ModuleType] = None
@@ -158,9 +154,6 @@ TELEMETRY_SDK_VERSION = ResourceAttributes.TELEMETRY_SDK_VERSION
 TELEMETRY_AUTO_VERSION = ResourceAttributes.TELEMETRY_AUTO_VERSION
 TELEMETRY_SDK_LANGUAGE = ResourceAttributes.TELEMETRY_SDK_LANGUAGE
 
-_OPENTELEMETRY_SDK_VERSION: str = version("opentelemetry-sdk")
-
-
 class Resource:
     """A Resource is an immutable representation of the entity producing telemetry as Attributes."""
 
@@ -195,46 +188,46 @@ class Resource:
         if not attributes:
             attributes = {}
 
-        otel_experimental_resource_detectors: list[str] = [
-            detector.strip()
-            for detector in environ.get(
-                OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, ""
-            ).split(",")
-            if detector.strip()
-        ]
+        # "otel" is always included and resolves to OTELResourceDetector (defined in
+        # this module), so we instantiate it directly to avoid an entry_points scan
+        # in the common case where no extra detectors are configured.
+        resource_detectors: List[ResourceDetector] = [OTELResourceDetector()]
 
-        resource_detectors: List[ResourceDetector] = []
+        extra_detector_names: Set[str] = {
+            name.strip()
+            for name in environ.get(OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, "").split(",")
+            if name.strip() and name.strip() != "otel"
+        }
 
-        if "*" in otel_experimental_resource_detectors:
-            otel_experimental_resource_detectors = [
-                name
-                for name in sorted(
-                    entry_points(group="opentelemetry_resource_detector").names
-                )
-                if name != "otel"
-            ]
-            otel_experimental_resource_detectors.append("otel")
-        elif "otel" not in otel_experimental_resource_detectors:
-            otel_experimental_resource_detectors.append("otel")
+        if extra_detector_names:
+            from opentelemetry.util._importlib_metadata import entry_points  # type: ignore[reportUnknownVariableType]
 
-        for resource_detector in otel_experimental_resource_detectors:
-            try:
-                resource_detectors.append(
-                    next(
-                        iter(
-                            entry_points(
-                                group="opentelemetry_resource_detector",
-                                name=resource_detector.strip(),
-                            )  # type: ignore[reportUnknownArgumentType]
-                        )
-                    ).load()()
+            if "*" in extra_detector_names:
+                # Expand wildcard to all registered detectors except "otel" (already added)
+                extra_detector_names = (
+                    set(entry_points(group="opentelemetry_resource_detector").names)  # type: ignore[reportUnknownArgumentType]
+                    - {"otel"}
                 )
-            except Exception:  # pylint: disable=broad-exception-caught
-                logger.exception(
-                    "Failed to load resource detector '%s', skipping",
-                    resource_detector,
-                )
-                continue
+
+            for name in extra_detector_names:
+                try:
+                    resource_detectors.append(
+                        next(
+                            iter(
+                                entry_points(
+                                    group="opentelemetry_resource_detector",
+                                    name=name,
+                                )  # type: ignore[reportUnknownArgumentType]
+                            )
+                        ).load()()
+                    )
+                except Exception:  # pylint: disable=broad-exception-caught
+                    logger.exception(
+                        "Failed to load resource detector '%s', skipping",
+                        name,
+                    )
+                    continue
+
         resource = get_aggregated_resources(
             resource_detectors, _DEFAULT_RESOURCE
         ).merge(Resource(attributes, schema_url))
@@ -323,6 +316,10 @@ class Resource:
 
 
 _EMPTY_RESOURCE = Resource({})
+
+
+from opentelemetry.sdk.version import __version__ as _OPENTELEMETRY_SDK_VERSION
+
 _DEFAULT_RESOURCE = Resource(
     {
         TELEMETRY_SDK_LANGUAGE: "python",
@@ -330,6 +327,7 @@ _DEFAULT_RESOURCE = Resource(
         TELEMETRY_SDK_VERSION: _OPENTELEMETRY_SDK_VERSION,
     }
 )
+
 
 
 class ResourceDetector(abc.ABC):
