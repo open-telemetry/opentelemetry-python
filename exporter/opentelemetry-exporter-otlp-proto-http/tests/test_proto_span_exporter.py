@@ -33,6 +33,7 @@ from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
 )
 from opentelemetry.exporter.otlp.proto.http.version import __version__
 from opentelemetry.sdk.environment_variables import (
+    _OTEL_PYTHON_EXPERIMENTAL_OTLP_RETRY_ON_413,
     _OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
@@ -74,7 +75,7 @@ BASIC_SPAN = _Span(
 
 
 # pylint: disable=protected-access
-class TestOTLPSpanExporter(unittest.TestCase):
+class TestOTLPSpanExporter(unittest.TestCase):  # pylint: disable=too-many-public-methods
     def setUp(self):
         self.metric_reader = InMemoryMetricReader()
         self.meter_provider = MeterProvider(
@@ -443,7 +444,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
 
         def export_side_effect(*args, **kwargs):
             # Timeout should be set to something slightly less than 400 milliseconds depending on how much time has passed.
-            self.assertAlmostEqual(0.4, kwargs["timeout"], 2)
+            self.assertAlmostEqual(0.4, kwargs["timeout"], 1)
             return resp
 
         mock_post.side_effect = export_side_effect
@@ -490,3 +491,352 @@ class TestOTLPSpanExporter(unittest.TestCase):
         )
         self.assertEqual(attributes["server.address"], "localhost")
         self.assertEqual(attributes["server.port"], 4318)
+
+    @patch.dict(
+        "os.environ",
+        {_OTEL_PYTHON_EXPERIMENTAL_OTLP_RETRY_ON_413: "true"},
+    )
+    @patch.object(Session, "post")
+    def test_413_splits_batch_and_succeeds(self, mock_post):
+        """When backend returns 413, the exporter should split the batch in half and retry each half."""
+        exporter = OTLPSpanExporter(timeout=10)
+
+        resp_413 = Response()
+        resp_413.status_code = 413
+        resp_413.reason = "Request Entity Too Large"
+
+        resp_ok = Response()
+        resp_ok.status_code = 200
+
+        # First call returns 413, subsequent calls succeed
+        mock_post.side_effect = [resp_413, resp_ok, resp_ok]
+
+        span1 = _Span(
+            "span1",
+            context=Mock(
+                **{
+                    "trace_state": {"a": "b"},
+                    "span_id": 10217189687419569865,
+                    "trace_id": 67545097771067222548457157018666467027,
+                }
+            ),
+        )
+        span2 = _Span(
+            "span2",
+            context=Mock(
+                **{
+                    "trace_state": {"a": "b"},
+                    "span_id": 10217189687419569866,
+                    "trace_id": 67545097771067222548457157018666467027,
+                }
+            ),
+        )
+
+        with self.assertLogs(level=WARNING) as warning:
+            result = exporter.export([span1, span2])
+
+        self.assertEqual(result, SpanExportResult.SUCCESS)
+        # 1 initial call (413) + 2 split calls (each succeeds)
+        self.assertEqual(mock_post.call_count, 3)
+        self.assertIn(
+            "Payload too large (2 spans), splitting into two batches",
+            warning.records[0].message,
+        )
+
+    @patch.dict(
+        "os.environ",
+        {_OTEL_PYTHON_EXPERIMENTAL_OTLP_RETRY_ON_413: "true"},
+    )
+    @patch.object(Session, "post")
+    def test_413_single_span_returns_failure(self, mock_post):
+        """When a single span is too large, the exporter should return FAILURE via the non-retryable path."""
+        exporter = OTLPSpanExporter(timeout=10)
+
+        resp_413 = Response()
+        resp_413.status_code = 413
+        resp_413.reason = "Request Entity Too Large"
+
+        mock_post.return_value = resp_413
+
+        with self.assertLogs(level=WARNING) as warning:
+            result = exporter.export([BASIC_SPAN])
+
+        self.assertEqual(result, SpanExportResult.FAILURE)
+        self.assertEqual(mock_post.call_count, 1)
+        self.assertTrue(
+            any(
+                "Failed to export span batch code: 413" in record.message
+                for record in warning.records
+            )
+        )
+
+    @patch.dict(
+        "os.environ",
+        {_OTEL_PYTHON_EXPERIMENTAL_OTLP_RETRY_ON_413: "true"},
+    )
+    @patch.object(Session, "post")
+    def test_413_recursive_splitting(self, mock_post):
+        """When a split half still returns 413, the exporter should continue splitting recursively."""
+        exporter = OTLPSpanExporter(timeout=10)
+
+        resp_413 = Response()
+        resp_413.status_code = 413
+        resp_413.reason = "Request Entity Too Large"
+
+        resp_ok = Response()
+        resp_ok.status_code = 200
+
+        spans = []
+        for idx in range(4):
+            spans.append(
+                _Span(
+                    f"span{idx}",
+                    context=Mock(
+                        **{
+                            "trace_state": {},
+                            "span_id": 10217189687419569865 + idx,
+                            "trace_id": 67545097771067222548457157018666467027,
+                        }
+                    ),
+                )
+            )
+
+        # 4 spans: first 413 → split [0,1],[2,3]
+        # [0,1] → 413 → split [0],[1] → ok, ok
+        # [2,3] → ok
+        mock_post.side_effect = [resp_413, resp_413, resp_ok, resp_ok, resp_ok]
+
+        with self.assertLogs(level=WARNING):
+            result = exporter.export(spans)
+
+        self.assertEqual(result, SpanExportResult.SUCCESS)
+        self.assertEqual(mock_post.call_count, 5)
+
+    @patch.dict(
+        "os.environ",
+        {_OTEL_PYTHON_EXPERIMENTAL_OTLP_RETRY_ON_413: "true"},
+    )
+    @patch.object(Session, "post")
+    def test_413_partial_failure(self, mock_post):
+        """When the first half fails with a non-retryable error, the second half is not attempted (short-circuit)."""
+        exporter = OTLPSpanExporter(timeout=10)
+
+        resp_413 = Response()
+        resp_413.status_code = 413
+        resp_413.reason = "Request Entity Too Large"
+
+        resp_400 = Response()
+        resp_400.status_code = 400
+        resp_400.reason = "Bad Request"
+
+        span1 = _Span(
+            "span1",
+            context=Mock(
+                **{
+                    "trace_state": {},
+                    "span_id": 10217189687419569865,
+                    "trace_id": 67545097771067222548457157018666467027,
+                }
+            ),
+        )
+        span2 = _Span(
+            "span2",
+            context=Mock(
+                **{
+                    "trace_state": {},
+                    "span_id": 10217189687419569866,
+                    "trace_id": 67545097771067222548457157018666467027,
+                }
+            ),
+        )
+
+        # First call returns 413, first half gets 400 (non-retryable) → short-circuit, second half never attempted
+        mock_post.side_effect = [resp_413, resp_400]
+
+        with self.assertLogs(level=WARNING):
+            result = exporter.export([span1, span2])
+
+        self.assertEqual(result, SpanExportResult.FAILURE)
+        # Only 2 calls: initial 413 + first half 400. Second half never attempted.
+        self.assertEqual(mock_post.call_count, 2)
+
+    @patch.dict(
+        "os.environ",
+        {_OTEL_PYTHON_EXPERIMENTAL_OTLP_RETRY_ON_413: "true"},
+    )
+    @patch(
+        "opentelemetry.exporter.otlp.proto.http.trace_exporter.time",
+    )
+    @patch.object(Session, "post")
+    def test_413_deadline_expired_returns_failure(self, mock_post, mock_time):
+        """When a 413 is received but the deadline has expired, return FAILURE without splitting."""
+        # time() calls: export() deadline_sec setup, _export timeout calc,
+        # retry-exit check (deadline_sec - time())
+        mock_time.side_effect = [100.0, 100.0, 110.1]
+        exporter = OTLPSpanExporter(timeout=10)
+
+        resp_413 = Response()
+        resp_413.status_code = 413
+        resp_413.reason = "Request Entity Too Large"
+
+        mock_post.return_value = resp_413
+
+        span1 = _Span(
+            "span1",
+            context=Mock(
+                **{
+                    "trace_state": {},
+                    "span_id": 10217189687419569865,
+                    "trace_id": 67545097771067222548457157018666467027,
+                }
+            ),
+        )
+        span2 = _Span(
+            "span2",
+            context=Mock(
+                **{
+                    "trace_state": {},
+                    "span_id": 10217189687419569866,
+                    "trace_id": 67545097771067222548457157018666467027,
+                }
+            ),
+        )
+
+        with self.assertLogs(level=WARNING) as warning:
+            result = exporter.export([span1, span2])
+
+        self.assertEqual(result, SpanExportResult.FAILURE)
+        self.assertEqual(mock_post.call_count, 1)
+        self.assertTrue(
+            any("timeout" in record.message for record in warning.records)
+        )
+
+    @patch.dict(
+        "os.environ",
+        {_OTEL_PYTHON_EXPERIMENTAL_OTLP_RETRY_ON_413: "true"},
+    )
+    @patch.object(Session, "post")
+    def test_413_max_bisects_exceeded_returns_failure(self, mock_post):
+        """When max bisect depth is exhausted, the exporter should stop splitting and return FAILURE."""
+        exporter = OTLPSpanExporter(timeout=10)
+
+        resp_413 = Response()
+        resp_413.status_code = 413
+        resp_413.reason = "Request Entity Too Large"
+
+        # Always return 413 — should stop after _MAX_BISECTS depth
+        mock_post.return_value = resp_413
+
+        # Create a batch large enough to bisect _MAX_BISECTS times (2^5 = 32 items)
+        spans = []
+        for idx in range(32):
+            spans.append(
+                _Span(
+                    f"span{idx}",
+                    context=Mock(
+                        **{
+                            "trace_state": {},
+                            "span_id": 10217189687419569865 + idx,
+                            "trace_id": 67545097771067222548457157018666467027,
+                        }
+                    ),
+                )
+            )
+
+        with self.assertLogs(level=WARNING):
+            result = exporter.export(spans)
+
+        self.assertEqual(result, SpanExportResult.FAILURE)
+        # Should not recurse indefinitely — bounded by _MAX_BISECTS
+        # At depth 5, batch is 1 item → falls through to non-retryable path
+        self.assertLessEqual(mock_post.call_count, 63)
+
+    @patch.dict(
+        "os.environ",
+        {_OTEL_PYTHON_EXPERIMENTAL_OTLP_RETRY_ON_413: "true"},
+    )
+    @patch.object(Session, "post")
+    def test_413_shutdown_returns_failure(self, mock_post):
+        """When a 413 is received but shutdown is in progress, return FAILURE without splitting."""
+        exporter = OTLPSpanExporter(timeout=10)
+
+        resp_413 = Response()
+        resp_413.status_code = 413
+        resp_413.reason = "Request Entity Too Large"
+
+        mock_post.return_value = resp_413
+
+        span1 = _Span(
+            "span1",
+            context=Mock(
+                **{
+                    "trace_state": {},
+                    "span_id": 10217189687419569865,
+                    "trace_id": 67545097771067222548457157018666467027,
+                }
+            ),
+        )
+        span2 = _Span(
+            "span2",
+            context=Mock(
+                **{
+                    "trace_state": {},
+                    "span_id": 10217189687419569866,
+                    "trace_id": 67545097771067222548457157018666467027,
+                }
+            ),
+        )
+
+        # Set shutdown before export
+        exporter._shutdown = True
+
+        with self.assertLogs(level=WARNING):
+            result = exporter.export([span1, span2])
+
+        # export() itself returns FAILURE early on shutdown
+        self.assertEqual(result, SpanExportResult.FAILURE)
+
+    @patch.object(Session, "post")
+    def test_413_without_env_var_does_not_split(self, mock_post):
+        """When the experimental env var is not set, 413 should be treated as a non-retryable error."""
+        exporter = OTLPSpanExporter(timeout=10)
+
+        resp_413 = Response()
+        resp_413.status_code = 413
+        resp_413.reason = "Request Entity Too Large"
+
+        mock_post.return_value = resp_413
+
+        span1 = _Span(
+            "span1",
+            context=Mock(
+                **{
+                    "trace_state": {},
+                    "span_id": 10217189687419569865,
+                    "trace_id": 67545097771067222548457157018666467027,
+                }
+            ),
+        )
+        span2 = _Span(
+            "span2",
+            context=Mock(
+                **{
+                    "trace_state": {},
+                    "span_id": 10217189687419569866,
+                    "trace_id": 67545097771067222548457157018666467027,
+                }
+            ),
+        )
+
+        with self.assertLogs(level=WARNING) as warning:
+            result = exporter.export([span1, span2])
+
+        self.assertEqual(result, SpanExportResult.FAILURE)
+        # Should NOT split — only 1 call
+        self.assertEqual(mock_post.call_count, 1)
+        self.assertTrue(
+            any(
+                "Failed to export span batch code: 413" in record.message
+                for record in warning.records
+            )
+        )

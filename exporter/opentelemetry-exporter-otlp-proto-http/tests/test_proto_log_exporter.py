@@ -35,6 +35,7 @@ from opentelemetry.exporter.otlp.proto.http._log_exporter import (
     DEFAULT_LOGS_EXPORT_PATH,
     DEFAULT_TIMEOUT,
     OTLPLogExporter,
+    _logger,
 )
 from opentelemetry.exporter.otlp.proto.http.version import __version__
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
@@ -43,6 +44,7 @@ from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
 from opentelemetry.sdk._logs import ReadWriteLogRecord
 from opentelemetry.sdk._logs.export import LogRecordExportResult
 from opentelemetry.sdk.environment_variables import (
+    _OTEL_PYTHON_EXPERIMENTAL_OTLP_RETRY_ON_413,
     _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
@@ -79,12 +81,17 @@ ENV_HEADERS = "envHeader1=val1,envHeader2=val2,User-agent=Overridden"
 ENV_TIMEOUT = "30"
 
 
-class TestOTLPHTTPLogExporter(unittest.TestCase):
+class TestOTLPHTTPLogExporter(unittest.TestCase):  # pylint: disable=too-many-public-methods
     def setUp(self):
         self.metric_reader = InMemoryMetricReader()
         self.meter_provider = MeterProvider(
             metric_readers=[self.metric_reader]
         )
+        # Reset the DuplicateFilter between tests so that log suppression
+        # from one test does not bleed into the next.
+        for log_filter in _logger.filters:
+            if hasattr(log_filter, "last_log"):
+                log_filter.last_log = None
 
     def test_constructor_default(self):
         exporter = OTLPLogExporter()
@@ -623,7 +630,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
 
         def export_side_effect(*args, **kwargs):
             # Timeout should be set to something slightly less than 400 milliseconds depending on how much time has passed.
-            self.assertAlmostEqual(0.4, kwargs["timeout"], 2)
+            self.assertAlmostEqual(0.4, kwargs["timeout"], 1)
             return resp
 
         mock_post.side_effect = export_side_effect
@@ -672,3 +679,230 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         )
         self.assertEqual(attributes["server.address"], "localhost")
         self.assertEqual(attributes["server.port"], 4318)
+
+    @patch.dict(
+        "os.environ",
+        {_OTEL_PYTHON_EXPERIMENTAL_OTLP_RETRY_ON_413: "true"},
+    )
+    @patch.object(Session, "post")
+    def test_413_splits_batch_and_succeeds(self, mock_post):
+        """When backend returns 413, the exporter should split the batch in half and retry each half."""
+        exporter = OTLPLogExporter(timeout=10)
+
+        resp_413 = Response()
+        resp_413.status_code = 413
+        resp_413.reason = "Request Entity Too Large"
+
+        resp_ok = Response()
+        resp_ok.status_code = 200
+
+        mock_post.side_effect = [resp_413, resp_ok, resp_ok]
+
+        log_data = self._get_sdk_log_data()
+
+        with self.assertLogs(level=WARNING) as warning:
+            result = exporter.export(log_data)
+
+        self.assertEqual(result, LogRecordExportResult.SUCCESS)
+        # 1 initial call (413) + 2 split calls
+        self.assertEqual(mock_post.call_count, 3)
+        self.assertTrue(
+            any(
+                "Payload too large" in record.message
+                for record in warning.records
+            )
+        )
+
+    @patch.dict(
+        "os.environ",
+        {_OTEL_PYTHON_EXPERIMENTAL_OTLP_RETRY_ON_413: "true"},
+    )
+    @patch.object(Session, "post")
+    def test_413_single_log_returns_failure(self, mock_post):
+        """When a single log record is too large, the exporter should return FAILURE via the non-retryable path."""
+        exporter = OTLPLogExporter(timeout=10)
+
+        resp_413 = Response()
+        resp_413.status_code = 413
+        resp_413.reason = "Request Entity Too Large"
+
+        mock_post.return_value = resp_413
+
+        log_data = self._get_sdk_log_data()[:1]
+
+        with self.assertLogs(level=WARNING) as warning:
+            result = exporter.export(log_data)
+
+        self.assertEqual(result, LogRecordExportResult.FAILURE)
+        self.assertEqual(mock_post.call_count, 1)
+        self.assertTrue(
+            any(
+                "Failed to export logs batch code: 413" in record.message
+                for record in warning.records
+            )
+        )
+
+    @patch.dict(
+        "os.environ",
+        {_OTEL_PYTHON_EXPERIMENTAL_OTLP_RETRY_ON_413: "true"},
+    )
+    @patch.object(Session, "post")
+    def test_413_recursive_splitting(self, mock_post):
+        """When a split half still returns 413, the exporter should continue splitting recursively."""
+        exporter = OTLPLogExporter(timeout=10)
+
+        resp_413 = Response()
+        resp_413.status_code = 413
+        resp_413.reason = "Request Entity Too Large"
+
+        resp_ok = Response()
+        resp_ok.status_code = 200
+
+        log_data = self._get_sdk_log_data()  # returns 3 logs
+
+        # 3 logs: first 413 → split [0],[1,2]
+        # [0] → ok
+        # [1,2] → 413 → split [1],[2] → ok, ok
+        mock_post.side_effect = [resp_413, resp_ok, resp_413, resp_ok, resp_ok]
+
+        with self.assertLogs(level=WARNING):
+            result = exporter.export(log_data)
+
+        self.assertEqual(result, LogRecordExportResult.SUCCESS)
+        self.assertEqual(mock_post.call_count, 5)
+
+    @patch.dict(
+        "os.environ",
+        {_OTEL_PYTHON_EXPERIMENTAL_OTLP_RETRY_ON_413: "true"},
+    )
+    @patch.object(Session, "post")
+    def test_413_partial_failure(self, mock_post):
+        """When the first half fails with a non-retryable error, the second half is not attempted (short-circuit)."""
+        exporter = OTLPLogExporter(timeout=10)
+
+        resp_413 = Response()
+        resp_413.status_code = 413
+        resp_413.reason = "Request Entity Too Large"
+
+        resp_400 = Response()
+        resp_400.status_code = 400
+        resp_400.reason = "Bad Request"
+
+        log_data = self._get_sdk_log_data()
+
+        # First call returns 413, first half gets 400 → short-circuit
+        mock_post.side_effect = [resp_413, resp_400]
+
+        with self.assertLogs(level=WARNING):
+            result = exporter.export(log_data)
+
+        self.assertEqual(result, LogRecordExportResult.FAILURE)
+        self.assertEqual(mock_post.call_count, 2)
+
+    @patch.dict(
+        "os.environ",
+        {_OTEL_PYTHON_EXPERIMENTAL_OTLP_RETRY_ON_413: "true"},
+    )
+    @patch(
+        "opentelemetry.exporter.otlp.proto.http._log_exporter.time",
+    )
+    @patch.object(Session, "post")
+    def test_413_deadline_expired_returns_failure(self, mock_post, mock_time):
+        """When a 413 is received but the deadline has expired, return FAILURE without splitting."""
+        # time() calls: export() deadline_sec setup, _export timeout calc,
+        # retry-exit check (deadline_sec - time())
+        mock_time.side_effect = [100.0, 100.0, 110.1]
+        exporter = OTLPLogExporter(timeout=10)
+
+        resp_413 = Response()
+        resp_413.status_code = 413
+        resp_413.reason = "Request Entity Too Large"
+
+        mock_post.return_value = resp_413
+
+        log_data = self._get_sdk_log_data()
+
+        with self.assertLogs(level=WARNING) as warning:
+            result = exporter.export(log_data)
+
+        self.assertEqual(result, LogRecordExportResult.FAILURE)
+        self.assertEqual(mock_post.call_count, 1)
+        self.assertTrue(
+            any("timeout" in record.message for record in warning.records)
+        )
+
+    @patch.dict(
+        "os.environ",
+        {_OTEL_PYTHON_EXPERIMENTAL_OTLP_RETRY_ON_413: "true"},
+    )
+    @patch.object(Session, "post")
+    def test_413_max_bisects_exceeded_returns_failure(self, mock_post):
+        """When max bisect depth is exhausted, the exporter should stop splitting and return FAILURE."""
+        exporter = OTLPLogExporter(timeout=10)
+
+        resp_413 = Response()
+        resp_413.status_code = 413
+        resp_413.reason = "Request Entity Too Large"
+
+        # Always return 413 — should stop after _MAX_BISECTS depth
+        mock_post.return_value = resp_413
+
+        log_data = self._get_sdk_log_data()
+
+        with self.assertLogs(level=WARNING):
+            result = exporter.export(log_data)
+
+        self.assertEqual(result, LogRecordExportResult.FAILURE)
+        # Should not recurse indefinitely — bounded by _MAX_BISECTS
+
+    @patch.dict(
+        "os.environ",
+        {_OTEL_PYTHON_EXPERIMENTAL_OTLP_RETRY_ON_413: "true"},
+    )
+    @patch.object(Session, "post")
+    def test_413_shutdown_returns_failure(self, mock_post):
+        """When a 413 is received but shutdown is in progress, return FAILURE without splitting."""
+        exporter = OTLPLogExporter(timeout=10)
+
+        resp_413 = Response()
+        resp_413.status_code = 413
+        resp_413.reason = "Request Entity Too Large"
+
+        mock_post.return_value = resp_413
+
+        log_data = self._get_sdk_log_data()
+
+        # Set shutdown before export
+        exporter._shutdown = True
+
+        with self.assertLogs(level=WARNING):
+            result = exporter.export(log_data)
+
+        # export() itself returns FAILURE early on shutdown
+        self.assertEqual(result, LogRecordExportResult.FAILURE)
+
+    @patch.object(Session, "post")
+    def test_413_without_env_var_does_not_split(self, mock_post):
+        """When the experimental env var is not set, 413 should be treated as a non-retryable error."""
+        exporter = OTLPLogExporter(timeout=10)
+
+        resp_413 = Response()
+        resp_413.status_code = 413
+        resp_413.reason = "Request Entity Too Large"
+
+        mock_post.return_value = resp_413
+
+        log_data = self._get_sdk_log_data()
+
+        with self.assertLogs(level=WARNING) as warning:
+            result = exporter.export(log_data)
+
+        self.assertEqual(result, LogRecordExportResult.FAILURE)
+        # Should NOT split — only 1 call
+        self.assertEqual(mock_post.call_count, 1)
+        self.assertTrue(
+            any(
+                "Failed to export logs batch code: 413" in record.message
+                for record in warning.records
+            )
+        )

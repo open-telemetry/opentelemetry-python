@@ -845,3 +845,20 @@ Default: opentelemetry.sdk._logs._internal._default_logger_configurator
 This is an experimental environment variable and the name of this variable and its behavior can
 change in a non-backwards compatible way.
 """
+
+_OTEL_PYTHON_EXPERIMENTAL_OTLP_RETRY_ON_413 = (
+    "OTEL_PYTHON_EXPERIMENTAL_OTLP_RETRY_ON_413"
+)
+"""
+.. envvar:: OTEL_PYTHON_EXPERIMENTAL_OTLP_RETRY_ON_413
+
+The :envvar:`OTEL_PYTHON_EXPERIMENTAL_OTLP_RETRY_ON_413` environment variable
+enables experimental payload splitting on HTTP 413 (Payload Too Large)
+responses. When set to ``"true"``, the OTLP HTTP exporters will bisect the
+batch and retry each half instead of dropping the entire batch.
+Default: ``"false"``
+
+This is not part of the OpenTelemetry specification. This is an experimental
+environment variable and the name of this variable and its behavior can change
+in a non-backwards compatible way.
+"""
