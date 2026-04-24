@@ -777,6 +777,13 @@ of names of resource detectors. These names must be the same as the names of
 entry points for the ```opentelemetry_resource_detector``` entry point. This is an
 experimental feature and the name of this variable and its behavior can change
 in a non-backwards compatible way.
+
+Detectors are run in the order they are listed and their attributes are merged
+in that order, with later detectors taking precedence over earlier ones on
+conflicting keys. The ``otel`` detector (which reads
+:envvar:`OTEL_RESOURCE_ATTRIBUTES` and :envvar:`OTEL_SERVICE_NAME`) is always
+appended last unless explicitly placed elsewhere in the list, ensuring
+environment variable attributes take highest priority among detectors.
 """
 
 OTEL_EXPORTER_PROMETHEUS_HOST = "OTEL_EXPORTER_PROMETHEUS_HOST"
