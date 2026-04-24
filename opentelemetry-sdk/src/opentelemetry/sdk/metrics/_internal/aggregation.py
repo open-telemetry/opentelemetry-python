@@ -888,7 +888,8 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                             offset=value_negative.offset,
                             bucket_counts=(value_negative.get_offset_counts()),
                         ),
-                        # FIXME: Find the right value for flags
+                        # This data point has recorded values, so no flags are set.
+                        # If no value was recorded, None is returned instead.
                         flags=0,
                         min=min_,
                         max=max_,
@@ -1064,7 +1065,8 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                             self._previous_value_negative.get_offset_counts()
                         ),
                     ),
-                    # FIXME: Find the right value for flags
+                    # This data point has recorded values, so no flags are set.
+                    # If no value was recorded, empty Buckets() are used instead.
                     flags=0,
                     min=self._previous_min,
                     max=self._previous_max,
