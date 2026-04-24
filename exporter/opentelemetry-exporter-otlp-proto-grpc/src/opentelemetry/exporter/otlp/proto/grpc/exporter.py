@@ -342,7 +342,7 @@ class OTLPExporterMixin(
         elif isinstance(self._headers, dict):
             self._headers = tuple(self._headers.items())
         if self._headers is None:
-            self._headers = tuple()
+            self._headers = ()
 
         if channel_options:
             # merge the default channel options with the one passed as parameter

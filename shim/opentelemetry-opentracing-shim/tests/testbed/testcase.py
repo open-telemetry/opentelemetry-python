@@ -43,4 +43,4 @@ class OpenTelemetryTestCase(unittest.TestCase):
         self.assertNotEqual(ctxA.span_id, ctxB.span_id)
 
     def assertNamesEqual(self, spans, names):
-        self.assertEqual(list(map(lambda x: x.name, spans)), names)
+        self.assertEqual([x.name for x in spans], names)
