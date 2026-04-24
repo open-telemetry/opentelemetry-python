@@ -7,11 +7,8 @@ Redis integration to automatically generate spans for each call to Redis.
 import pickle
 from functools import wraps
 
-# FIXME The pylint disablings are needed here because the code of this
-# example is being executed against the tox.ini of the main
-# opentelemetry-python project. Find a way to separate the two.
-import redis  # pylint: disable=import-error
-import redis_opentracing  # pylint: disable=import-error
+import redis
+import redis_opentracing
 
 
 class RedisCache:
