@@ -43,12 +43,11 @@ from opentelemetry.metrics._internal.instrument import (
     _ProxyObservableUpDownCounter,
     _ProxyUpDownCounter,
 )
+from opentelemetry.test.concurrency_test import ConcurrencyTestBase
 from opentelemetry.test.globals_test import (
     MetricsGlobalsTest,
     reset_metrics_globals,
 )
-
-# FIXME Test that the instrument methods can be called concurrently safely.
 
 
 @fixture
@@ -163,6 +162,26 @@ class TestGetMeter(TestCase):
         self.assertEqual(meter.name, "name")
         self.assertEqual(meter.version, "version")
         self.assertEqual(meter.schema_url, "schema_url")
+
+
+class TestConcurrency(ConcurrencyTestBase):
+    def test_no_op_meter_provider_get_meter_concurrent(self):
+        """Test that NoOpMeterProvider.get_meter can be called concurrently safely."""
+        meter_provider = NoOpMeterProvider()
+        results = self.run_with_many_threads(
+            lambda: meter_provider.get_meter("name")
+        )
+        self.assertEqual(len(results), 100)
+        self.assertTrue(all(isinstance(r, NoOpMeter) for r in results))
+
+    def test_proxy_meter_provider_get_meter_concurrent(self):
+        """Test that _ProxyMeterProvider.get_meter can be called concurrently safely."""
+        meter_provider = _ProxyMeterProvider()
+        results = self.run_with_many_threads(
+            lambda: meter_provider.get_meter("name")
+        )
+        self.assertEqual(len(results), 100)
+        self.assertTrue(all(isinstance(r, _ProxyMeter) for r in results))
 
 
 class TestProxy(MetricsGlobalsTest, TestCase):
