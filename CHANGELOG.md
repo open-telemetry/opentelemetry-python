@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `opentelemetry-sdk`: add `additional_properties` support to generated config models via custom `datamodel-codegen` template, enabling plugin/custom component names to flow through typed dataclasses
+  ([#5131](https://github.com/open-telemetry/opentelemetry-python/pull/5131))
 - Fix incorrect code example in `create_tracer()` docstring
   ([#5072](https://github.com/open-telemetry/opentelemetry-python/issues/5072))
 - `opentelemetry-sdk`: add `load_entry_point` shared utility to declarative file configuration for loading plugins via entry points; refactor propagator loading to use it
