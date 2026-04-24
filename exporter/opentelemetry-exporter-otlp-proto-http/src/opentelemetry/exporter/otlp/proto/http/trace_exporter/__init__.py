@@ -39,6 +39,8 @@ from opentelemetry.exporter.otlp.proto.http import (
 from opentelemetry.exporter.otlp.proto.http._common import (
     _is_retryable,
     _load_session_from_envvar,
+    DEFAULT_ENDPOINT,
+    DEFAULT_TIMEOUT,
 )
 from opentelemetry.metrics import MeterProvider
 from opentelemetry.sdk.environment_variables import (
@@ -71,10 +73,7 @@ from opentelemetry.util.re import parse_env_headers
 _logger = logging.getLogger(__name__)
 
 
-DEFAULT_COMPRESSION = Compression.NoCompression
-DEFAULT_ENDPOINT = "http://localhost:4318/"
 DEFAULT_TRACES_EXPORT_PATH = "v1/traces"
-DEFAULT_TIMEOUT = 10  # in seconds
 _MAX_RETRYS = 6
 
 

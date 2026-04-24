@@ -24,10 +24,12 @@ from requests.exceptions import ConnectionError
 from requests.models import Response
 
 from opentelemetry.exporter.otlp.proto.http import Compression
-from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+from opentelemetry.exporter.otlp.proto.http._common import (
     DEFAULT_COMPRESSION,
     DEFAULT_ENDPOINT,
     DEFAULT_TIMEOUT,
+)
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     DEFAULT_TRACES_EXPORT_PATH,
     OTLPSpanExporter,
 )

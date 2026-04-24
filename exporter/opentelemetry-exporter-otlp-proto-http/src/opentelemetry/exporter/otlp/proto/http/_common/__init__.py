@@ -20,7 +20,14 @@ import requests
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER,
 )
+from opentelemetry.exporter.otlp.proto.http import (
+    Compression,
+)
 from opentelemetry.util._importlib_metadata import entry_points
+
+DEFAULT_COMPRESSION = Compression.NoCompression
+DEFAULT_ENDPOINT = "http://localhost:4318/"
+DEFAULT_TIMEOUT = 10  # in seconds
 
 
 def _is_retryable(resp: requests.Response) -> bool:
