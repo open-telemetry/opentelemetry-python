@@ -36,6 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#5120](https://github.com/open-telemetry/opentelemetry-python/pull/5120))
 - Add WeaverLiveCheck test util
   ([#5088](https://github.com/open-telemetry/opentelemetry-python/pull/5088))
+- `opentelemetry-exporter-otlp-proto-http`: Add experimental opt-in support for handling HTTP 413 (Payload Too Large) responses in trace and log exporters by splitting the batch in half and retrying each half recursively. Enable via `OTEL_PYTHON_EXPERIMENTAL_OTLP_RETRY_ON_413=true`.
+  ([#5032](https://github.com/open-telemetry/opentelemetry-python/pull/5032))
 
 ## Version 1.41.0/0.62b0 (2026-04-09)
 

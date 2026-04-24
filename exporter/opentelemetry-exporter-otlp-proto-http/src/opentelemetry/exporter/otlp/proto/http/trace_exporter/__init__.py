@@ -28,6 +28,7 @@ from requests.exceptions import ConnectionError
 
 from opentelemetry.exporter.otlp.proto.common._exporter_metrics import (
     ExporterMetrics,
+    ExportResult,
 )
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
@@ -37,11 +38,13 @@ from opentelemetry.exporter.otlp.proto.http import (
     Compression,
 )
 from opentelemetry.exporter.otlp.proto.http._common import (
+    _is_payload_too_large,
     _is_retryable,
     _load_session_from_envvar,
 )
 from opentelemetry.metrics import MeterProvider
 from opentelemetry.sdk.environment_variables import (
+    _OTEL_PYTHON_EXPERIMENTAL_OTLP_RETRY_ON_413,
     _OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
@@ -76,6 +79,7 @@ DEFAULT_ENDPOINT = "http://localhost:4318/"
 DEFAULT_TRACES_EXPORT_PATH = "v1/traces"
 DEFAULT_TIMEOUT = 10  # in seconds
 _MAX_RETRYS = 6
+_MAX_BISECTS = 5
 
 
 class OTLPSpanExporter(SpanExporter):
@@ -146,6 +150,12 @@ class OTLPSpanExporter(SpanExporter):
                 {"Content-Encoding": self._compression.value}
             )
         self._shutdown = False
+        self._retry_entity_too_large = (
+            environ.get(_OTEL_PYTHON_EXPERIMENTAL_OTLP_RETRY_ON_413, "")
+            .strip()
+            .lower()
+            == "true"
+        )
 
         self._metrics = ExporterMetrics(
             OtelComponentTypeValues.OTLP_HTTP_SPAN_EXPORTER,
@@ -197,68 +207,108 @@ class OTLPSpanExporter(SpanExporter):
             return SpanExportResult.FAILURE
 
         with self._metrics.export_operation(len(spans)) as result:
-            serialized_data = encode_spans(spans).SerializePartialToString()
             deadline_sec = time() + self._timeout
-            for retry_num in range(_MAX_RETRYS):
-                # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
-                backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
-                export_error: Optional[Exception] = None
-                try:
-                    resp = self._export(serialized_data, deadline_sec - time())
-                    if resp.ok:
-                        return SpanExportResult.SUCCESS
-                except requests.exceptions.RequestException as error:
-                    reason = error
-                    export_error = error
-                    retryable = isinstance(error, ConnectionError)
-                    status_code = None
-                else:
-                    reason = resp.reason
-                    retryable = _is_retryable(resp)
-                    status_code = resp.status_code
+            return self._export_batch(
+                spans, deadline_sec, _MAX_BISECTS, result
+            )
 
-                if not retryable:
-                    _logger.error(
-                        "Failed to export span batch code: %s, reason: %s",
-                        status_code,
-                        reason,
-                    )
-                    error_attrs = (
-                        {HTTP_RESPONSE_STATUS_CODE: status_code}
-                        if status_code is not None
-                        else None
-                    )
-                    result.error = export_error
-                    result.error_attrs = error_attrs
-                    return SpanExportResult.FAILURE
+    def _export_batch(
+        self,
+        spans: Sequence[ReadableSpan],
+        deadline_sec: float,
+        remaining_bisects: int,
+        result: ExportResult,
+    ) -> SpanExportResult:
+        serialized_data = encode_spans(spans).SerializePartialToString()
 
-                if (
-                    retry_num + 1 == _MAX_RETRYS
-                    or backoff_seconds > (deadline_sec - time())
-                    or self._shutdown
-                ):
-                    _logger.error(
-                        "Failed to export span batch due to timeout, "
-                        "max retries or shutdown."
-                    )
-                    error_attrs = (
-                        {HTTP_RESPONSE_STATUS_CODE: status_code}
-                        if status_code is not None
-                        else None
-                    )
-                    result.error = export_error
-                    result.error_attrs = error_attrs
-                    return SpanExportResult.FAILURE
-                _logger.warning(
-                    "Transient error %s encountered while exporting span batch, retrying in %.2fs.",
-                    reason,
-                    backoff_seconds,
+        for retry_num in range(_MAX_RETRYS):
+            # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
+            backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
+            export_error: Optional[Exception] = None
+            try:
+                resp = self._export(serialized_data, deadline_sec - time())
+                if resp.ok:
+                    return SpanExportResult.SUCCESS
+            except requests.exceptions.RequestException as error:
+                reason = error
+                export_error = error
+                retryable = isinstance(error, ConnectionError)
+                status_code = None
+                bisectable = False
+            else:
+                reason = resp.reason
+                retryable = _is_retryable(resp)
+                status_code = resp.status_code
+                bisectable = (
+                    _is_payload_too_large(resp)
+                    and len(spans) > 1
+                    and remaining_bisects > 0
+                    and self._retry_entity_too_large
                 )
-                shutdown = self._shutdown_in_progress.wait(backoff_seconds)
-                if shutdown:
-                    _logger.warning("Shutdown in progress, aborting retry.")
-                    break
-            return SpanExportResult.FAILURE
+
+            if not retryable and not bisectable:
+                _logger.error(
+                    "Failed to export span batch code: %s, reason: %s",
+                    status_code,
+                    reason,
+                )
+                error_attrs = (
+                    {HTTP_RESPONSE_STATUS_CODE: status_code}
+                    if status_code is not None
+                    else None
+                )
+                result.error = export_error
+                result.error_attrs = error_attrs
+                return SpanExportResult.FAILURE
+
+            if (
+                retry_num + 1 == _MAX_RETRYS
+                or backoff_seconds > (deadline_sec - time())
+                or self._shutdown
+            ):
+                _logger.error(
+                    "Failed to export span batch due to timeout, "
+                    "max retries or shutdown."
+                )
+                error_attrs = (
+                    {HTTP_RESPONSE_STATUS_CODE: status_code}
+                    if status_code is not None
+                    else None
+                )
+                result.error = export_error
+                result.error_attrs = error_attrs
+                return SpanExportResult.FAILURE
+
+            if bisectable:
+                mid = len(spans) // 2
+                _logger.warning(
+                    "Payload too large (%d spans), splitting into two batches",
+                    len(spans),
+                )
+                first = self._export_batch(
+                    list(spans[:mid]),
+                    deadline_sec,
+                    remaining_bisects - 1,
+                    result,
+                )
+                if first != SpanExportResult.SUCCESS:
+                    return SpanExportResult.FAILURE
+                return self._export_batch(
+                    list(spans[mid:]),
+                    deadline_sec,
+                    remaining_bisects - 1,
+                    result,
+                )
+            _logger.warning(
+                "Transient error %s encountered while exporting span batch, retrying in %.2fs.",
+                reason,
+                backoff_seconds,
+            )
+            shutdown = self._shutdown_in_progress.wait(backoff_seconds)
+            if shutdown:
+                _logger.warning("Shutdown in progress, aborting retry.")
+                break
+        return SpanExportResult.FAILURE
 
     def shutdown(self):
         if self._shutdown:

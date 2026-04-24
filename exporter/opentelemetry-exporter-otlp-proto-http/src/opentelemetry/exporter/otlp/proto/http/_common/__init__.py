@@ -31,6 +31,10 @@ def _is_retryable(resp: requests.Response) -> bool:
     return False
 
 
+def _is_payload_too_large(resp: requests.Response) -> bool:
+    return resp.status_code == 413
+
+
 def _load_session_from_envvar(
     cred_envvar: Literal[
         "OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER",
