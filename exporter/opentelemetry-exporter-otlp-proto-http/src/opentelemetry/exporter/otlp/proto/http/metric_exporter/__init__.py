@@ -12,12 +12,9 @@
 # limitations under the License.
 from __future__ import annotations
 
-import gzip
 import logging
 import random
 import threading
-import zlib
-from io import BytesIO
 from os import environ
 from time import time
 from typing import (  # noqa: F401
@@ -50,6 +47,7 @@ from opentelemetry.exporter.otlp.proto.http import (
     Compression,
 )
 from opentelemetry.exporter.otlp.proto.http._common import (
+    _export,
     _is_retryable,
     setup_session,
     DEFAULT_ENDPOINT,
@@ -213,43 +211,6 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             meter_provider,
         )
 
-    def _export(
-        self, serialized_data: bytes, timeout_sec: Optional[float] = None
-    ):
-        data = serialized_data
-        if self._compression == Compression.Gzip:
-            gzip_data = BytesIO()
-            with gzip.GzipFile(fileobj=gzip_data, mode="w") as gzip_stream:
-                gzip_stream.write(serialized_data)
-            data = gzip_data.getvalue()
-        elif self._compression == Compression.Deflate:
-            data = zlib.compress(serialized_data)
-
-        if timeout_sec is None:
-            timeout_sec = self._timeout
-
-        # By default, keep-alive is enabled in Session's request
-        # headers. Backends may choose to close the connection
-        # while a post happens which causes an unhandled
-        # exception. This try/except will retry the post on such exceptions
-        try:
-            resp = self._session.post(
-                url=self._endpoint,
-                data=data,
-                verify=self._certificate_file,
-                timeout=timeout_sec,
-                cert=self._client_cert,
-            )
-        except ConnectionError:
-            resp = self._session.post(
-                url=self._endpoint,
-                data=data,
-                verify=self._certificate_file,
-                timeout=timeout_sec,
-                cert=self._client_cert,
-            )
-        return resp
-
     def _export_with_retries(
         self,
         export_request: ExportMetricsServiceRequest,
@@ -273,7 +234,15 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                 backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
                 export_error: Optional[Exception] = None
                 try:
-                    resp = self._export(serialized_data, deadline_sec - time())
+                    resp = _export(
+                        self._session,
+                        self._endpoint,
+                        serialized_data,
+                        self._compression,
+                        self._certificate_file,
+                        self._client_cert,
+                        deadline_sec - time() if deadline_sec - time() != None else self._timeout,
+                    )
                     if resp.ok:
                         return MetricExportResult.SUCCESS
                 except requests.exceptions.RequestException as error:

@@ -12,10 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import gzip
+import zlib
+from io import BytesIO
 from os import environ
-from typing import Dict, Literal, Optional
+from typing import Dict, Literal, Optional, Tuple, Union
 
 import requests
+from requests.exceptions import ConnectionError
 
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER,
@@ -98,3 +102,44 @@ def setup_session(
             {"Content-Encoding": compression.value}
         )
     return configured_session
+
+
+def _export(
+    session: requests.Session,
+    endpoint: str,
+    serialized_data: bytes,
+    compression: Compression,
+    certificate_file: Union[str, bool],
+    client_cert: Optional[Union[str, Tuple[str, str]]],
+    timeout_sec: float,
+) -> requests.Response:
+    data = serialized_data
+    if compression == Compression.Gzip:
+        gzip_data = BytesIO()
+        with gzip.GzipFile(fileobj=gzip_data, mode="w") as gzip_stream:
+            gzip_stream.write(serialized_data)
+        data = gzip_data.getvalue()
+    elif compression == Compression.Deflate:
+        data = zlib.compress(serialized_data)
+
+    # By default, keep-alive is enabled in Session's request
+    # headers. Backends may choose to close the connection
+    # while a post happens which causes an unhandled
+    # exception. This try/except will retry the post on such exceptions
+    try:
+        resp = session.post(
+            url=endpoint,
+            data=data,
+            verify=certificate_file,
+            timeout=timeout_sec,
+            cert=client_cert,
+        )
+    except ConnectionError:
+        resp = session.post(
+            url=endpoint,
+            data=data,
+            verify=certificate_file,
+            timeout=timeout_sec,
+            cert=client_cert,
+        )
+    return resp
