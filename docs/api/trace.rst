@@ -8,6 +8,7 @@ Submodules
 
    trace.status
    trace.span
+   trace.propagation
 
 Module contents
 ---------------

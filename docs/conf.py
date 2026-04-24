@@ -174,6 +174,7 @@ nitpick_ignore = [
         "py:class",
         "AnyValue",
     ),
+    ("py:class", "Token"),
 ]
 
 # Add any paths that contain templates here, relative to this directory.
