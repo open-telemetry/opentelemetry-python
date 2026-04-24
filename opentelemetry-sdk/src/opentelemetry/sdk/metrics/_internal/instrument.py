@@ -17,12 +17,21 @@ from __future__ import annotations
 
 from logging import getLogger
 from time import time_ns
-from typing import Generator, Iterable, List, Sequence, Union
+from typing import (
+    TYPE_CHECKING,
+    Generator,
+    Iterable,
+    List,
+    Protocol,
+    Sequence,
+    Union,
+    cast,
+    runtime_checkable,
+)
 
 # This kind of import is needed to avoid Sphinx errors.
-import opentelemetry.sdk.metrics
 from opentelemetry.context import Context, get_current
-from opentelemetry.metrics import CallbackT
+from opentelemetry.metrics import Asynchronous, CallbackT, Synchronous
 from opentelemetry.metrics import Counter as APICounter
 from opentelemetry.metrics import Histogram as APIHistogram
 from opentelemetry.metrics import ObservableCounter as APIObservableCounter
@@ -37,7 +46,16 @@ from opentelemetry.metrics._internal.instrument import (
     _MetricsHistogramAdvisory,
 )
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
-from opentelemetry.sdk.util.instrumentation import InstrumentationScope
+
+if TYPE_CHECKING:
+    from opentelemetry.sdk.metrics._internal import (
+        _ProxyMeterConfig,
+    )
+    from opentelemetry.sdk.metrics._internal.measurement_consumer import (
+        MeasurementConsumer,
+    )
+    from opentelemetry.sdk.util.instrumentation import InstrumentationScope
+
 
 _logger = getLogger(__name__)
 
@@ -47,14 +65,24 @@ _ERROR_MESSAGE = (
 )
 
 
-class _Synchronous:
+@runtime_checkable
+class _Instrument(Protocol):
+    name: str
+    unit: str
+    description: str
+    instrumentation_scope: InstrumentationScope
+
+
+class _Synchronous(_Instrument, Synchronous):
     def __init__(
         self,
         name: str,
         instrumentation_scope: InstrumentationScope,
-        measurement_consumer: "opentelemetry.sdk.metrics.MeasurementConsumer",
+        measurement_consumer: MeasurementConsumer,
         unit: str = "",
         description: str = "",
+        *,
+        _meter_config: _ProxyMeterConfig | None = None,
     ):
         # pylint: disable=no-member
         result = self._check_name_unit_description(name, unit, description)
@@ -69,25 +97,31 @@ class _Synchronous:
 
         name = result["name"]
         unit = result["unit"]
-        description = result["description"]
+        description = cast(str, result["description"])
 
         self.name = name.lower()
         self.unit = unit
         self.description = description
         self.instrumentation_scope = instrumentation_scope
         self._measurement_consumer = measurement_consumer
+        self._meter_config = _meter_config
         super().__init__(name, unit=unit, description=description)
 
+    def _is_enabled(self) -> bool:
+        return self._meter_config is None or self._meter_config.is_enabled
 
-class _Asynchronous:
+
+class _Asynchronous(_Instrument, Asynchronous):
     def __init__(
         self,
         name: str,
         instrumentation_scope: InstrumentationScope,
-        measurement_consumer: "opentelemetry.sdk.metrics.MeasurementConsumer",
-        callbacks: Iterable[CallbackT] | None = None,
+        measurement_consumer: MeasurementConsumer,
+        callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
+        *,
+        _meter_config: _ProxyMeterConfig | None = None,
     ):
         # pylint: disable=no-member
         result = self._check_name_unit_description(name, unit, description)
@@ -102,13 +136,14 @@ class _Asynchronous:
 
         name = result["name"]
         unit = result["unit"]
-        description = result["description"]
+        description = cast(str, result["description"])
 
         self.name = name.lower()
         self.unit = unit
         self.description = description
         self.instrumentation_scope = instrumentation_scope
         self._measurement_consumer = measurement_consumer
+        self._meter_config = _meter_config
         super().__init__(name, callbacks, unit=unit, description=description)
 
         self._callbacks: List[CallbackT] = []
@@ -132,9 +167,14 @@ class _Asynchronous:
                 else:
                     self._callbacks.append(callback)
 
+    def _is_enabled(self) -> bool:
+        return self._meter_config is None or self._meter_config.is_enabled
+
     def callback(
         self, callback_options: CallbackOptions
     ) -> Iterable[Measurement]:
+        if not self._is_enabled():
+            return
         for callback in self._callbacks:
             try:
                 for api_measurement in callback(callback_options):
@@ -163,6 +203,10 @@ class Counter(_Synchronous, APICounter):
         attributes: dict[str, str] | None = None,
         context: Context | None = None,
     ):
+        if not self._is_enabled():
+            super().add(amount, attributes=attributes, context=context)
+            return
+
         if amount < 0:
             _logger.warning(
                 "Add amount must be non-negative on Counter %s.", self.name
@@ -192,6 +236,10 @@ class UpDownCounter(_Synchronous, APIUpDownCounter):
         attributes: dict[str, str] | None = None,
         context: Context | None = None,
     ):
+        if not self._is_enabled():
+            super().add(amount, attributes=attributes, context=context)
+            return
+
         time_unix_nano = time_ns()
         self._measurement_consumer.consume_measurement(
             Measurement(
@@ -227,10 +275,12 @@ class Histogram(_Synchronous, APIHistogram):
         self,
         name: str,
         instrumentation_scope: InstrumentationScope,
-        measurement_consumer: "opentelemetry.sdk.metrics.MeasurementConsumer",
+        measurement_consumer: MeasurementConsumer,
         unit: str = "",
         description: str = "",
         explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
+        *,
+        _meter_config: _ProxyMeterConfig | None = None,
     ):
         super().__init__(
             name,
@@ -238,6 +288,7 @@ class Histogram(_Synchronous, APIHistogram):
             description=description,
             instrumentation_scope=instrumentation_scope,
             measurement_consumer=measurement_consumer,
+            _meter_config=_meter_config,
         )
         self._advisory = _MetricsHistogramAdvisory(
             explicit_bucket_boundaries=explicit_bucket_boundaries_advisory
@@ -254,6 +305,10 @@ class Histogram(_Synchronous, APIHistogram):
         attributes: dict[str, str] | None = None,
         context: Context | None = None,
     ):
+        if not self._is_enabled():
+            super().record(amount, attributes=attributes, context=context)
+            return
+
         if amount < 0:
             _logger.warning(
                 "Record amount must be non-negative on Histogram %s.",
@@ -284,6 +339,10 @@ class Gauge(_Synchronous, APIGauge):
         attributes: dict[str, str] | None = None,
         context: Context | None = None,
     ):
+        if not self._is_enabled():
+            super().set(amount, attributes=attributes, context=context)
+            return
+
         time_unix_nano = time_ns()
         self._measurement_consumer.consume_measurement(
             Measurement(

@@ -12,12 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Union
+from typing import TYPE_CHECKING, Union
 
 from opentelemetry.context import Context
-from opentelemetry.metrics import Instrument
 from opentelemetry.util.types import Attributes
+
+if TYPE_CHECKING:
+    from opentelemetry.sdk.metrics._internal.instrument import _Instrument
 
 
 @dataclass(frozen=True)
@@ -25,7 +29,7 @@ class Measurement:
     """
     Represents a data point reported via the metrics API to the SDK.
 
-    Attributes
+    Attributes:
         value: Measured value
         time_unix_nano: The time the API call was made to record the Measurement
         instrument: The instrument that produced this `Measurement`.
@@ -33,13 +37,8 @@ class Measurement:
         attributes: Measurement attributes
     """
 
-    # TODO Fix doc - if using valid Google `Attributes:` key, the attributes are duplicated
-    # one will come from napoleon extension and the other from autodoc extension. This
-    # will raise an sphinx error of duplicated object description
-    # See https://github.com/sphinx-doc/sphinx/issues/8664
-
     value: Union[int, float]
     time_unix_nano: int
-    instrument: Instrument
+    instrument: _Instrument
     context: Context
     attributes: Attributes = None

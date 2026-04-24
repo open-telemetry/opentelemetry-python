@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import copy
 import unittest
 
 from opentelemetry.sdk.util import BoundedList
@@ -142,3 +143,21 @@ class TestBoundedList(unittest.TestCase):
 
         for num in range(100):
             self.assertEqual(blist[num], num)
+
+    # pylint: disable=protected-access
+    def test_deepcopy(self):
+        blist = BoundedList(maxlen=10)
+        blist.append(1)
+        blist.append([2, 3])
+        blist.dropped = 5
+
+        blist_copy = copy.deepcopy(blist)
+
+        self.assertIsNot(blist, blist_copy)
+        self.assertIsNot(blist._dq, blist_copy._dq)
+        self.assertIsNot(blist._lock, blist_copy._lock)
+        self.assertEqual(list(blist), list(blist_copy))
+        self.assertEqual(blist.dropped, blist_copy.dropped)
+        self.assertEqual(blist._dq.maxlen, blist_copy._dq.maxlen)
+        self.assertIsNot(blist[1], blist_copy[1])
+        self.assertEqual(blist[1], blist_copy[1])
