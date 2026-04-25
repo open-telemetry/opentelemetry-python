@@ -14,6 +14,8 @@
 
 from __future__ import annotations
 
+import dataclasses
+import inspect
 import logging
 
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
@@ -22,7 +24,41 @@ from opentelemetry.util._importlib_metadata import entry_points
 _logger = logging.getLogger(__name__)
 
 
-def load_entry_point(group: str, name: str) -> type:
+def _additional_properties(cls):
+    """Decorator for dataclasses whose JSON Schema sets additionalProperties.
+
+    Wraps the dataclass-generated ``__init__`` so that unknown keyword
+    arguments are captured into an ``additional_properties`` instance
+    attribute instead of raising ``TypeError``.  This lets plugin/custom
+    component names flow through the config pipeline without modifying
+    the codegen output for known fields.
+
+    Applied automatically by the custom template in ``opentelemetry-sdk/codegen/``
+    when ``additionalPropertiesType`` is present in the template context
+    (set by ``datamodel-codegen`` for schema types with ``additionalProperties``).
+    """
+    original_init = cls.__init__
+    original_sig = inspect.signature(original_init)
+    known_fields = frozenset(f.name for f in dataclasses.fields(cls))
+
+    def _init(self, **kwargs):
+        known = {k: v for k, v in kwargs.items() if k in known_fields}
+        extra = {k: v for k, v in kwargs.items() if k not in known_fields}
+        original_init(self, **known)
+        self.additional_properties = extra
+
+    # Preserve the original parameter list for IDE autocompletion and
+    # inspect.signature(), adding **kwargs to signal extras are accepted.
+    # setattr used because pyright rejects direct __signature__ assignment.
+    params = list(original_sig.parameters.values())
+    params.append(inspect.Parameter("kwargs", inspect.Parameter.VAR_KEYWORD))
+    setattr(_init, "__signature__", original_sig.replace(parameters=params))  # noqa: B010
+
+    cls.__init__ = _init
+    return cls
+
+
+def load_entry_point(group: str, name: str) -> Type:
     """Load a plugin class from an entry point group by name.
 
     Returns the loaded class — callers are responsible for instantiation
