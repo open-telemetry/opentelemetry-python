@@ -58,7 +58,7 @@ def _additional_properties(cls):
     return cls
 
 
-def load_entry_point(group: str, name: str) -> Type:
+def load_entry_point(group: str, name: str) -> type:
     """Load a plugin class from an entry point group by name.
 
     Returns the loaded class — callers are responsible for instantiation
