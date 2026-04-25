@@ -193,22 +193,27 @@ class Resource:
         if not attributes:
             attributes = {}
 
-        otel_experimental_resource_detectors: set[str] = {"otel"}.union(
-            {
-                otel_experimental_resource_detector.strip()
-                for otel_experimental_resource_detector in environ.get(
-                    OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, ""
-                ).split(",")
-                if otel_experimental_resource_detector
-            }
-        )
+        otel_experimental_resource_detectors: list[str] = [
+            detector.strip()
+            for detector in environ.get(
+                OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, ""
+            ).split(",")
+            if detector.strip()
+        ]
 
         resource_detectors: list[ResourceDetector] = []
 
         if "*" in otel_experimental_resource_detectors:
-            otel_experimental_resource_detectors = entry_points(
-                group="opentelemetry_resource_detector"
-            ).names
+            otel_experimental_resource_detectors = [
+                name
+                for name in sorted(
+                    entry_points(group="opentelemetry_resource_detector").names
+                )
+                if name != "otel"
+            ]
+            otel_experimental_resource_detectors.append("otel")
+        elif "otel" not in otel_experimental_resource_detectors:
+            otel_experimental_resource_detectors.append("otel")
 
         for resource_detector in otel_experimental_resource_detectors:
             try:
