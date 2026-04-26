@@ -498,7 +498,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
                 exponential_histogram_aggregation._value_positive.offset,
             )
 
-            for index in range(0, 256):
+            for index in range(256):
                 self.assertLessEqual(
                     exponential_histogram_aggregation._value_positive[index],
                     6 * increment,
@@ -567,7 +567,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             exponential_histogram_aggregation_1._value_positive.offset,
         )
 
-        for index in range(0, 256):
+        for index in range(256):
             self.assertLessEqual(
                 exponential_histogram_aggregation_1._value_positive[index], 6
             )
