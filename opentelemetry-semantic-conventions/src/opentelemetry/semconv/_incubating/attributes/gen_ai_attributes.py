@@ -563,5 +563,5 @@ class GenAiTokenTypeValues(Enum):
     """Input tokens (prompt, input, etc.)."""
     COMPLETION = "output"
     """Deprecated: Replaced by `output`."""
-    OUTPUT = "output"
+    OUTPUT = "output"  # noqa: PIE796  # intentional deprecated alias for COMPLETION
     """Output tokens (completion, response, etc.)."""

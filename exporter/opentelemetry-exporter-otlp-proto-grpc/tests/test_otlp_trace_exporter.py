@@ -84,12 +84,9 @@ class TestOTLPSpanExporter(TestCase):
         self.tracer = tracer_provider.get_tracer(__name__)
 
         event_mock = Mock(
-            **{
-                "timestamp": 1591240820506462784,
-                "attributes": BoundedAttributes(
+            timestamp=1591240820506462784, attributes=BoundedAttributes(
                     attributes={"a": 1, "b": False}
-                ),
-            }
+                )
         )
 
         type(event_mock).name = PropertyMock(return_value="a")
@@ -97,14 +94,10 @@ class TestOTLPSpanExporter(TestCase):
         self.span = _Span(
             "a",
             context=Mock(
-                **{
-                    "trace_state": {"a": "b", "c": "d"},
-                    "span_id": 10217189687419569865,
-                    "trace_id": 67545097771067222548457157018666467027,
-                }
+                trace_state={"a": "b", "c": "d"}, span_id=10217189687419569865, trace_id=67545097771067222548457157018666467027
             ),
             resource=SDKResource({"a": 1, "b": False}),
-            parent=Mock(**{"span_id": 12345}),
+            parent=Mock(span_id=12345),
             attributes=BoundedAttributes(attributes={"a": 1, "b": True}),
             events=[event_mock],
             links=[
@@ -128,14 +121,10 @@ class TestOTLPSpanExporter(TestCase):
         self.span2 = _Span(
             "b",
             context=Mock(
-                **{
-                    "trace_state": {"a": "b", "c": "d"},
-                    "span_id": 10217189687419569865,
-                    "trace_id": 67545097771067222548457157018666467027,
-                }
+                trace_state={"a": "b", "c": "d"}, span_id=10217189687419569865, trace_id=67545097771067222548457157018666467027
             ),
             resource=SDKResource({"a": 2, "b": False}),
-            parent=Mock(**{"span_id": 12345}),
+            parent=Mock(span_id=12345),
             instrumentation_scope=InstrumentationScope(
                 name="name", version="version"
             ),
@@ -144,14 +133,10 @@ class TestOTLPSpanExporter(TestCase):
         self.span3 = _Span(
             "c",
             context=Mock(
-                **{
-                    "trace_state": {"a": "b", "c": "d"},
-                    "span_id": 10217189687419569865,
-                    "trace_id": 67545097771067222548457157018666467027,
-                }
+                trace_state={"a": "b", "c": "d"}, span_id=10217189687419569865, trace_id=67545097771067222548457157018666467027
             ),
             resource=SDKResource({"a": 1, "b": False}),
-            parent=Mock(**{"span_id": 12345}),
+            parent=Mock(span_id=12345),
             instrumentation_scope=InstrumentationScope(
                 name="name2", version="version2"
             ),
@@ -795,13 +780,9 @@ def _create_span_with_status(status: SDKStatus):
     span = _Span(
         "a",
         context=Mock(
-            **{
-                "trace_state": {"a": "b", "c": "d"},
-                "span_id": 10217189687419569865,
-                "trace_id": 67545097771067222548457157018666467027,
-            }
+            trace_state={"a": "b", "c": "d"}, span_id=10217189687419569865, trace_id=67545097771067222548457157018666467027
         ),
-        parent=Mock(**{"span_id": 12345}),
+        parent=Mock(span_id=12345),
         instrumentation_scope=InstrumentationScope(
             name="name", version="version"
         ),

@@ -56,7 +56,7 @@ class TestGlobals(unittest.TestCase):
             with patch("opentelemetry._logs._internal._load_provider", Mock()):
                 with patch(
                     "opentelemetry._logs._internal.cast",
-                    Mock(**{"return_value": "test_logger_provider"}),
+                    Mock(return_value="test_logger_provider"),
                 ):
                     self.assertEqual(
                         get_logger_provider(), "test_logger_provider"

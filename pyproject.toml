@@ -86,6 +86,7 @@ select = [
   "Q",   # flake8-quotes
   "G",   # https://docs.astral.sh/ruff/rules/#flake8-logging-format-g
   "TID", # flake8-tidy-imports
+  "PIE", # flake8-pie
   "UP011", # lru-cache-without-parameters
   "UP015", # redundant-open-modes
   "UP032", # f-string

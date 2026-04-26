@@ -105,7 +105,7 @@ def test_get_meter_provider(reset_meter_provider):
         with patch("opentelemetry.metrics._internal._load_provider", Mock()):
             with patch(
                 "opentelemetry.metrics._internal.cast",
-                Mock(**{"return_value": "test_meter_provider"}),
+                Mock(return_value="test_meter_provider"),
             ):
                 assert get_meter_provider() == "test_meter_provider"
 

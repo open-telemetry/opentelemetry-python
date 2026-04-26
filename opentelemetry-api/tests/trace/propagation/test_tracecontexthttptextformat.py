@@ -249,12 +249,7 @@ class TestTraceContextFormat(unittest.TestCase):
             return_value=Mock(
                 **{
                     "get_span_context.return_value": Mock(
-                        **{
-                            "trace_id": 1,
-                            "span_id": 2,
-                            "trace_flags": 3,
-                            "trace_state": TraceState([("a", "b")]),
-                        }
+                        trace_id=1, span_id=2, trace_flags=3, trace_state=TraceState([("a", "b")])
                     )
                 }
             )
