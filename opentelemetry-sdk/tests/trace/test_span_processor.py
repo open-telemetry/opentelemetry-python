@@ -274,7 +274,7 @@ class MultiSpanProcessorTestBase(abc.ABC):
     def test_on_start(self):
         multi_processor = self.create_multi_span_processor()
 
-        mocks = [mock.Mock(spec=trace.SpanProcessor) for _ in range(0, 5)]
+        mocks = [mock.Mock(spec=trace.SpanProcessor) for _ in range(5)]
         for mock_processor in mocks:
             multi_processor.add_span_processor(mock_processor)
 
@@ -291,7 +291,7 @@ class MultiSpanProcessorTestBase(abc.ABC):
     def test_on_ending(self):
         multi_processor = self.create_multi_span_processor()
 
-        mocks = [mock.Mock(spec=trace.SpanProcessor) for _ in range(0, 5)]
+        mocks = [mock.Mock(spec=trace.SpanProcessor) for _ in range(5)]
         for mock_processor in mocks:
             multi_processor.add_span_processor(mock_processor)
 
@@ -307,7 +307,7 @@ class MultiSpanProcessorTestBase(abc.ABC):
     def test_on_end(self):
         multi_processor = self.create_multi_span_processor()
 
-        mocks = [mock.Mock(spec=trace.SpanProcessor) for _ in range(0, 5)]
+        mocks = [mock.Mock(spec=trace.SpanProcessor) for _ in range(5)]
         for mock_processor in mocks:
             multi_processor.add_span_processor(mock_processor)
 
@@ -321,7 +321,7 @@ class MultiSpanProcessorTestBase(abc.ABC):
     def test_on_shutdown(self):
         multi_processor = self.create_multi_span_processor()
 
-        mocks = [mock.Mock(spec=trace.SpanProcessor) for _ in range(0, 5)]
+        mocks = [mock.Mock(spec=trace.SpanProcessor) for _ in range(5)]
         for mock_processor in mocks:
             multi_processor.add_span_processor(mock_processor)
 
@@ -333,7 +333,7 @@ class MultiSpanProcessorTestBase(abc.ABC):
     def test_force_flush(self):
         multi_processor = self.create_multi_span_processor()
 
-        mocks = [mock.Mock(spec=trace.SpanProcessor) for _ in range(0, 5)]
+        mocks = [mock.Mock(spec=trace.SpanProcessor) for _ in range(5)]
         for mock_processor in mocks:
             multi_processor.add_span_processor(mock_processor)
         timeout_millis = 100
@@ -471,7 +471,7 @@ class TestConcurrentMultiSpanProcessor(
 
         late_mock = mock.Mock(spec=trace.SpanProcessor)
         late_mock.force_flush = mock.Mock(side_effect=delayed_flush)
-        mocks = [mock.Mock(spec=trace.SpanProcessor) for _ in range(0, 4)]
+        mocks = [mock.Mock(spec=trace.SpanProcessor) for _ in range(4)]
         mocks.insert(0, late_mock)
 
         for mock_processor in mocks:
@@ -491,7 +491,7 @@ class TestConcurrentMultiSpanProcessor(
 
         late_mock = mock.Mock(spec=trace.SpanProcessor)
         late_mock.force_flush = mock.Mock(return_value=False)
-        mocks = [mock.Mock(spec=trace.SpanProcessor) for _ in range(0, 4)]
+        mocks = [mock.Mock(spec=trace.SpanProcessor) for _ in range(4)]
         mocks.insert(0, late_mock)
 
         for mock_processor in mocks:

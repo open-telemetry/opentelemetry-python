@@ -43,12 +43,10 @@ class TestErrorHandler(TestCase):
         )
 
         mock_entry_points.configure_mock(
-            **{
-                "return_value": [
+            return_value=[
                     mock_entry_point_zero_division_error_handler,
                     mock_entry_point_assertion_error_handler,
                 ]
-            }
         )
 
         error = ZeroDivisionError()
@@ -80,7 +78,7 @@ class TestErrorHandler(TestCase):
         )
 
         mock_entry_points.configure_mock(
-            **{"return_value": [mock_entry_point_error_error_handler]}
+            return_value=[mock_entry_point_error_error_handler]
         )
 
         error = ZeroDivisionError()
@@ -104,7 +102,7 @@ class TestErrorHandler(TestCase):
         )
 
         mock_entry_points.configure_mock(
-            **{"return_value": [mock_entry_point_error_handler]}
+            return_value=[mock_entry_point_error_handler]
         )
 
         error = IndexError()

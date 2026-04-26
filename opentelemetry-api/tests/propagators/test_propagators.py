@@ -30,7 +30,7 @@ class TestPropagators(TestCase):
             )
 
         mock_compositehttppropagator.configure_mock(
-            **{"side_effect": test_propagators}
+            side_effect=test_propagators
         )
 
         # pylint: disable=import-outside-toplevel
@@ -51,7 +51,7 @@ class TestPropagators(TestCase):
             )
 
         mock_compositehttppropagator.configure_mock(
-            **{"side_effect": test_propagators}
+            side_effect=test_propagators
         )
 
         # pylint: disable=import-outside-toplevel
@@ -74,7 +74,7 @@ class TestPropagators(TestCase):
             )
 
         mock_compositehttppropagator.configure_mock(
-            **{"side_effect": test_propagators}
+            side_effect=test_propagators
         )
 
         # pylint: disable=import-outside-toplevel
@@ -89,13 +89,12 @@ class TestPropagators(TestCase):
         self, mock_entry_points, mock_compositehttppropagator
     ):
         mock_entry_points.configure_mock(
-            **{
-                "side_effect": [
+            side_effect=[
                     [
                         Mock(
                             **{
                                 "load.return_value": Mock(
-                                    **{"return_value": "a"}
+                                    return_value="a"
                                 )
                             }
                         ),
@@ -104,7 +103,7 @@ class TestPropagators(TestCase):
                         Mock(
                             **{
                                 "load.return_value": Mock(
-                                    **{"return_value": "b"}
+                                    return_value="b"
                                 )
                             }
                         )
@@ -113,20 +112,19 @@ class TestPropagators(TestCase):
                         Mock(
                             **{
                                 "load.return_value": Mock(
-                                    **{"return_value": "c"}
+                                    return_value="c"
                                 )
                             }
                         )
                     ],
                 ]
-            }
         )
 
         def test_propagators(propagators):
             self.assertEqual(propagators, ["a", "b", "c"])
 
         mock_compositehttppropagator.configure_mock(
-            **{"side_effect": test_propagators}
+            side_effect=test_propagators
         )
 
         # pylint: disable=import-outside-toplevel
