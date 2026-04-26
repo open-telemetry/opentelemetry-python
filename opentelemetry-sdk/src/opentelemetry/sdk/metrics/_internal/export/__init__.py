@@ -349,7 +349,7 @@ class MetricReader(ABC):
             _logger.warning(
                 "Cannot call collect on a MetricReader until it is registered on a MeterProvider"
             )
-            return
+            return None
 
         start_time = perf_counter()
         try:
