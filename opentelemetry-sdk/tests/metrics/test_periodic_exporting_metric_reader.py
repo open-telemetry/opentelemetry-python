@@ -20,7 +20,7 @@ import weakref
 from logging import WARNING
 from time import sleep, time_ns
 from typing import Optional, cast
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -359,7 +359,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         assert isinstance(name, str)
         self.assertTrue(name.startswith("periodic_metric_reader/"))
 
-        mp.shutdown()                          
+        mp.shutdown()
 
     def test_force_flush_returns_true_on_success(self):
         exporter = FakeMetricsExporter()
@@ -398,7 +398,6 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
 
     def test_detach_called_on_export_failure(self):
         """detach(token) must run in finally even when export returns FAILURE."""
-        from unittest.mock import patch
 
         exporter = FakeMetricsExporter()
         exporter.export = Mock(return_value=MetricExportResult.FAILURE)
