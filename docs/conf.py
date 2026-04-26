@@ -250,3 +250,5 @@ def on_missing_reference(app, env, node, contnode):
 
 def setup(app):
     app.connect("missing-reference", on_missing_reference)
+
+// Contributed via automated bounty system
