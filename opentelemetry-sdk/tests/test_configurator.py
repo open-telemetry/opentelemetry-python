@@ -1464,7 +1464,7 @@ class TestImportExporters(TestCase):
 class TestImportConfigComponents(TestCase):
     @patch(
         "opentelemetry.sdk._configuration.entry_points",
-        **{"side_effect": KeyError},
+        side_effect=KeyError,
     )
     def test__import_config_components_missing_entry_point(
         self, mock_entry_points
@@ -1477,7 +1477,7 @@ class TestImportConfigComponents(TestCase):
 
     @patch(
         "opentelemetry.sdk._configuration.entry_points",
-        **{"side_effect": StopIteration},
+        side_effect=StopIteration,
     )
     def test__import_config_components_missing_component(
         self, mock_entry_points

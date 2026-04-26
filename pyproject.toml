@@ -88,6 +88,7 @@ select = [
   "Q",   # https://docs.astral.sh/ruff/rules/#flake8-quotes-q
   "G",   # https://docs.astral.sh/ruff/rules/#flake8-logging-format-g
   "TID", # https://docs.astral.sh/ruff/rules/#flake8-tidy-imports-tid
+  "PIE", # https://docs.astral.sh/ruff/rules/#flake8-pie-pie
   "UP",  # https://docs.astral.sh/ruff/rules/#pyupgrade-up
 ]
 
