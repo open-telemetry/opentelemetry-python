@@ -354,7 +354,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         assert isinstance(name, str)
         self.assertTrue(name.startswith("periodic_metric_reader/"))
 
-        mp.shutdown()                          
+        mp.shutdown()
 
     def test_force_flush_returns_true_on_success(self):
         exporter = FakeMetricsExporter()
@@ -393,15 +393,16 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
 
     def test_detach_called_on_export_failure(self):
         """detach(token) must run in finally even when export returns FAILURE."""
-        from unittest.mock import patch
+        import opentelemetry.sdk.metrics._internal.export as export_module
 
         exporter = FakeMetricsExporter()
         exporter.export = Mock(return_value=MetricExportResult.FAILURE)
         pmr = self._create_periodic_reader(metrics, exporter)
 
         with patch(
-            "opentelemetry.sdk.metrics._internal.export.detach"
+            "opentelemetry.sdk.metrics._internal.export.detach",
+            wraps=export_module.detach,
         ) as mock_detach:
             pmr.force_flush(timeout_millis=5_000)
+            pmr.shutdown()
             self.assertTrue(mock_detach.called)
-        pmr.shutdown()
