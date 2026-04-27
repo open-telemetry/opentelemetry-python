@@ -70,7 +70,7 @@ import typing
 from json import dumps
 from os import environ
 from types import ModuleType
-from typing import List, Optional, cast
+from typing import Optional, cast
 from urllib import parse
 
 from opentelemetry.attributes import BoundedAttributes
@@ -188,25 +188,28 @@ class Resource:
         if not attributes:
             attributes = {}
 
-        # "otel" is always included and resolves to OTELResourceDetector (defined in
-        # this module), so we instantiate it directly to avoid an entry_points scan
-        # in the common case where no extra detectors are configured.
-        resource_detectors: List[ResourceDetector] = [OTELResourceDetector()]
+        # Preserve env var ordering; deduplicate while keeping first occurrence.
+        # "otel" is excluded here and always appended last so OTEL_RESOURCE_ATTRIBUTES
+        # and OTEL_SERVICE_NAME take highest priority when merging.
+        extra_detector_names: list[str] = list(
+            dict.fromkeys(
+                name.strip()
+                for name in environ.get(OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, "").split(",")
+                if name.strip() and name.strip() != "otel"
+            )
+        )
 
-        extra_detector_names: Set[str] = {
-            name.strip()
-            for name in environ.get(OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, "").split(",")
-            if name.strip() and name.strip() != "otel"
-        }
+        resource_detectors: list[ResourceDetector] = []
 
         if extra_detector_names:
             from opentelemetry.util._importlib_metadata import entry_points  # type: ignore[reportUnknownVariableType]
 
             if "*" in extra_detector_names:
-                # Expand wildcard to all registered detectors except "otel" (already added)
-                extra_detector_names = (
-                    set(entry_points(group="opentelemetry_resource_detector").names)  # type: ignore[reportUnknownArgumentType]
-                    - {"otel"}
+                # Expand wildcard to all registered detectors except "otel" (appended last)
+                extra_detector_names = sorted(
+                    name
+                    for name in entry_points(group="opentelemetry_resource_detector").names  # type: ignore[reportUnknownArgumentType]
+                    if name != "otel"
                 )
 
             for name in extra_detector_names:
@@ -227,6 +230,10 @@ class Resource:
                         name,
                     )
                     continue
+
+        # OTELResourceDetector is instantiated directly (no entry_points scan) and
+        # appended last so env var attributes override all other detectors.
+        resource_detectors.append(OTELResourceDetector())
 
         resource = get_aggregated_resources(
             resource_detectors, _DEFAULT_RESOURCE
