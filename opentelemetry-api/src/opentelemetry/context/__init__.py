@@ -38,6 +38,7 @@ def _load_runtime_context() -> _RuntimeContext:
     if not configured_context:
         return ContextVarsRuntimeContext()
 
+    # pylint: disable=import-outside-toplevel,no-name-in-module
     from opentelemetry.util._importlib_metadata import entry_points
 
     try:
