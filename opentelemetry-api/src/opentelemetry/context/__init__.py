@@ -39,11 +39,17 @@ def _load_runtime_context() -> _RuntimeContext:
         return ContextVarsRuntimeContext()
 
     # pylint: disable=import-outside-toplevel,no-name-in-module
-    from opentelemetry.util._importlib_metadata import entry_points
+    from opentelemetry.util._importlib_metadata import (  # noqa: PLC0415
+        entry_points,
+    )
 
     try:
         return next(
-            iter(entry_points(group="opentelemetry_context", name=configured_context))
+            iter(
+                entry_points(
+                    group="opentelemetry_context", name=configured_context
+                )
+            )
         ).load()()
     except Exception:  # pylint: disable=broad-exception-caught
         logger.exception(
