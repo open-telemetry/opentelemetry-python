@@ -42,7 +42,7 @@ class TracerMetrics:
 
         self._started_spans = create_otel_sdk_span_started(meter)
         self._live_spans = create_otel_sdk_span_live(meter)
-        self._enabled = parse_boolean_environment_variable(
+        self._disabled = not parse_boolean_environment_variable(
             OTEL_PYTHON_SDK_METRICS_ENABLED
         )
 
@@ -51,7 +51,7 @@ class TracerMetrics:
         parent_span_context: SpanContext | None,
         sampling_decision: Decision,
     ) -> Callable[[], None]:
-        if not self._enabled:
+        if self._disabled:
             return noop
 
         sampling_result_value = sampling_result(sampling_decision)
@@ -72,7 +72,7 @@ class TracerMetrics:
         self._live_spans.add(1, live_span_attrs)
 
         def end_span() -> None:
-            if not self._enabled:
+            if self._disabled:
                 return
             self._live_spans.add(-1, live_span_attrs)
 

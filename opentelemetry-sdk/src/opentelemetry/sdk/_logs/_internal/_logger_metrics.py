@@ -28,11 +28,11 @@ class LoggerMetrics:
     def __init__(self, meter_provider: metrics_api.MeterProvider) -> None:
         meter = meter_provider.get_meter("opentelemetry-sdk")
         self._created_logs = create_otel_sdk_log_created(meter)
-        self._enabled = parse_boolean_environment_variable(
+        self._disabled = not parse_boolean_environment_variable(
             OTEL_PYTHON_SDK_METRICS_ENABLED
         )
 
     def emit_log(self) -> None:
-        if not self._enabled:
+        if self._disabled:
             return
         self._created_logs.add(1)
