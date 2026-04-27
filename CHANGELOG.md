@@ -36,6 +36,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#5120](https://github.com/open-telemetry/opentelemetry-python/pull/5120))
 - Add WeaverLiveCheck test util
   ([#5088](https://github.com/open-telemetry/opentelemetry-python/pull/5088))
+- `opentelemetry-sdk`: only load entrypoints for resource detectors if they are configured via `OTEL_EXPERIMENTAL_RESOURCE_DETECTORS`
+  ([#5145](https://github.com/open-telemetry/opentelemetry-python/pull/5145))
+  
 
 ## Version 1.41.0/0.62b0 (2026-04-09)
 
