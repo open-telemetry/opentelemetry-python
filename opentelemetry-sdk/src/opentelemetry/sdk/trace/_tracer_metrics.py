@@ -17,6 +17,12 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from opentelemetry import metrics as metrics_api
+from opentelemetry.sdk.environment_variables import (
+    OTEL_PYTHON_SDK_METRICS_ENABLED,
+)
+from opentelemetry.sdk.environment_variables._internal import (
+    parse_boolean_environment_variable,
+)
 from opentelemetry.sdk.trace.sampling import Decision
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
     OTEL_SPAN_PARENT_ORIGIN,
@@ -36,12 +42,18 @@ class TracerMetrics:
 
         self._started_spans = create_otel_sdk_span_started(meter)
         self._live_spans = create_otel_sdk_span_live(meter)
+        self._enabled = parse_boolean_environment_variable(
+            OTEL_PYTHON_SDK_METRICS_ENABLED
+        )
 
     def start_span(
         self,
         parent_span_context: SpanContext | None,
         sampling_decision: Decision,
     ) -> Callable[[], None]:
+        if not self._enabled:
+            return noop
+
         sampling_result_value = sampling_result(sampling_decision)
         self._started_spans.add(
             1,
@@ -60,6 +72,8 @@ class TracerMetrics:
         self._live_spans.add(1, live_span_attrs)
 
         def end_span() -> None:
+            if not self._enabled:
+                return
             self._live_spans.add(-1, live_span_attrs)
 
         return end_span

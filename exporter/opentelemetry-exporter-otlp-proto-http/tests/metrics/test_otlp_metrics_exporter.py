@@ -69,6 +69,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
     OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
     OTEL_EXPORTER_OTLP_TIMEOUT,
+    OTEL_PYTHON_SDK_METRICS_ENABLED,
 )
 from opentelemetry.sdk.metrics import (
     Counter,
@@ -334,6 +335,7 @@ class TestOTLPMetricExporter(TestCase):
                 ),
             )
 
+    @patch.dict("os.environ", {OTEL_PYTHON_SDK_METRICS_ENABLED: "true"})
     @patch.object(Session, "post")
     def test_success(self, mock_post):
         resp = Response()
@@ -372,6 +374,7 @@ class TestOTLPMetricExporter(TestCase):
             metrics[2].data.data_points[0].attributes
         )
 
+    @patch.dict("os.environ", {OTEL_PYTHON_SDK_METRICS_ENABLED: "true"})
     @patch.object(Session, "post")
     def test_failure(self, mock_post):
         resp = Response()
@@ -1291,6 +1294,7 @@ class TestOTLPMetricExporter(TestCase):
             exporter._preferred_aggregation[Histogram], histogram_aggregation
         )
 
+    @patch.dict("os.environ", {OTEL_PYTHON_SDK_METRICS_ENABLED: "true"})
     @patch.object(Session, "post")
     def test_retry_timeout(self, mock_post):
         exporter = OTLPMetricExporter(

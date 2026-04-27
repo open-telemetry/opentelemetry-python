@@ -28,6 +28,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_BSP_MAX_EXPORT_BATCH_SIZE,
     OTEL_BSP_MAX_QUEUE_SIZE,
     OTEL_BSP_SCHEDULE_DELAY,
+    OTEL_PYTHON_SDK_METRICS_ENABLED,
 )
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
@@ -146,6 +147,7 @@ class TestSimpleSpanProcessor(unittest.TestCase):
 
         self.assertListEqual([], spans_names_list)
 
+    @mock.patch.dict("os.environ", {OTEL_PYTHON_SDK_METRICS_ENABLED: "true"})
     def test_metrics(self):
         metric_reader = InMemoryMetricReader()
         meter_provider = MeterProvider(metric_readers=[metric_reader])
@@ -397,6 +399,7 @@ class TestBatchSpanProcessor(unittest.TestCase):
             max_export_batch_size=512,
         )
 
+    @mock.patch.dict("os.environ", {OTEL_PYTHON_SDK_METRICS_ENABLED: "true"})
     def test_metrics(self):  # pylint: disable=too-many-locals,too-many-statements
         metric_reader = InMemoryMetricReader()
         meter_provider = MeterProvider(metric_readers=[metric_reader])

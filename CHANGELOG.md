@@ -38,6 +38,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#5088](https://github.com/open-telemetry/opentelemetry-python/pull/5088))
 - ci: wait for tracecontext server readiness instead of a fixed sleep in `scripts/tracecontext-integration-test.sh`
   ([#5149](https://github.com/open-telemetry/opentelemetry-python/pull/5149))
+- Add ability to selectively enable exporting of SDK internal metrics with the `OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED` environment variable.
+  ([#5151](https://github.com/open-telemetry/opentelemetry-python/pull/5151))
 
 ## Version 1.41.0/0.62b0 (2026-04-09)
 

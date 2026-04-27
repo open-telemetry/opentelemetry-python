@@ -57,6 +57,10 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
     OTEL_EXPORTER_OTLP_TRACES_HEADERS,
     OTEL_EXPORTER_OTLP_TRACES_TIMEOUT,
+    OTEL_PYTHON_SDK_METRICS_ENABLED,
+)
+from opentelemetry.sdk.environment_variables._internal import (
+    parse_boolean_environment_variable,
 )
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
@@ -152,6 +156,9 @@ class OTLPSpanExporter(SpanExporter):
             "traces",
             urlparse(self._endpoint),
             meter_provider,
+            disabled=not parse_boolean_environment_variable(
+                OTEL_PYTHON_SDK_METRICS_ENABLED
+            ),
         )
 
     def _export(

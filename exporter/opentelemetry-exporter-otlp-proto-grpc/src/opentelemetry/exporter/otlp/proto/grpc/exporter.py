@@ -103,6 +103,10 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_HEADERS,
     OTEL_EXPORTER_OTLP_INSECURE,
     OTEL_EXPORTER_OTLP_TIMEOUT,
+    OTEL_PYTHON_SDK_METRICS_ENABLED,
+)
+from opentelemetry.sdk.environment_variables._internal import (
+    parse_boolean_environment_variable,
 )
 from opentelemetry.sdk.metrics.export import MetricExportResult, MetricsData
 from opentelemetry.sdk.resources import Resource as SDKResource
@@ -392,6 +396,9 @@ class OTLPExporterMixin(
             signal,
             parsed_url,
             meter_provider,
+            disabled=not parse_boolean_environment_variable(
+                OTEL_PYTHON_SDK_METRICS_ENABLED
+            ),
         )
 
         self._initialize_channel_and_stub()

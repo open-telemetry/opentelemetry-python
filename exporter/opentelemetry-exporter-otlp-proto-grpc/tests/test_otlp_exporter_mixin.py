@@ -54,6 +54,7 @@ from opentelemetry.proto.collector.trace.v1.trace_service_pb2_grpc import (
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_COMPRESSION,
+    OTEL_PYTHON_SDK_METRICS_ENABLED,
 )
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
@@ -387,13 +388,17 @@ class TestOTLPExporterMixin(TestCase):
             ),
         )
 
+    @patch.dict("os.environ", {OTEL_PYTHON_SDK_METRICS_ENABLED: "true"})
     def test_shutdown(self):
         add_TraceServiceServicer_to_server(
             TraceServiceServicerWithExportParams(StatusCode.OK),
             self.server,
         )
+        exporter = OTLPSpanExporterForTesting(
+            insecure=True, meter_provider=self.meter_provider
+        )
         self.assertEqual(
-            self.exporter.export([self.span]), SpanExportResult.SUCCESS
+            exporter.export([self.span]), SpanExportResult.SUCCESS
         )
         metrics_data = self.metric_reader.get_metrics_data()
         scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
@@ -415,10 +420,10 @@ class TestOTLPExporterMixin(TestCase):
             metrics[2].data.data_points[0].attributes
         )
 
-        self.exporter.shutdown()
+        exporter.shutdown()
         with self.assertLogs(level=WARNING) as warning:
             self.assertEqual(
-                self.exporter.export([self.span]), SpanExportResult.FAILURE
+                exporter.export([self.span]), SpanExportResult.FAILURE
             )
             self.assertEqual(
                 warning.records[0].message,
@@ -480,6 +485,7 @@ class TestOTLPExporterMixin(TestCase):
         system() == "Windows",
         "For gRPC + windows there's some added delay in the RPCs which breaks the assertion over amount of time passed.",
     )
+    @patch.dict("os.environ", {OTEL_PYTHON_SDK_METRICS_ENABLED: "true"})
     def test_retry_info_is_respected(self):
         mock_trace_service = TraceServiceServicerWithExportParams(
             StatusCode.UNAVAILABLE,
@@ -622,7 +628,11 @@ class TestOTLPExporterMixin(TestCase):
             (),
         )
 
+    @patch.dict("os.environ", {OTEL_PYTHON_SDK_METRICS_ENABLED: "true"})
     def test_permanent_failure(self):
+        exporter = OTLPSpanExporterForTesting(
+            insecure=True, meter_provider=self.meter_provider
+        )
         with self.assertLogs(level=WARNING) as warning:
             add_TraceServiceServicer_to_server(
                 TraceServiceServicerWithExportParams(
@@ -631,7 +641,7 @@ class TestOTLPExporterMixin(TestCase):
                 self.server,
             )
             self.assertEqual(
-                self.exporter.export([self.span]), SpanExportResult.FAILURE
+                exporter.export([self.span]), SpanExportResult.FAILURE
             )
             self.assertEqual(
                 warning.records[-1].message,
