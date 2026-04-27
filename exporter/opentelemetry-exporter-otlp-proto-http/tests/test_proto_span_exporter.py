@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import threading
 import time
 import unittest
@@ -51,6 +52,10 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
+from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
+    ExportTracePartialSuccess,
+    ExportTraceServiceResponse,
+)
 from opentelemetry.sdk.trace import _Span
 from opentelemetry.sdk.trace.export import SpanExportResult
 from opentelemetry.test.mock_test_classes import IterEntryPoint
@@ -478,6 +483,49 @@ class TestOTLPSpanExporter(unittest.TestCase):
             )
 
             assert after - before < 0.2
+
+    @patch.object(Session, "post")
+    def test_error_response_with_protobuf_body(self, mock_post):
+        proto_response = ExportTraceServiceResponse(
+            partial_success=ExportTracePartialSuccess(
+                rejected_spans=1,
+                error_message="invalid span data",
+            )
+        )
+        resp = Response()
+        resp.status_code = 400
+        resp.reason = "Bad Request"
+        resp._content = proto_response.SerializeToString()  # pylint: disable=protected-access
+        resp.headers["Content-Type"] = "application/x-protobuf"
+        mock_post.return_value = resp
+
+        exporter = OTLPSpanExporter()
+        with self.assertLogs(level="ERROR") as logs:
+            result = exporter.export([BASIC_SPAN])
+
+        self.assertEqual(result, SpanExportResult.FAILURE)
+        self.assertTrue(
+            any("invalid span data" in r.message for r in logs.records)
+        )
+
+    @patch.object(Session, "post")
+    def test_error_response_with_json_body(self, mock_post):
+        body = json.dumps({"message": "quota limit reached"}).encode()
+        resp = Response()
+        resp.status_code = 400
+        resp.reason = "Bad Request"
+        resp._content = body  # pylint: disable=protected-access
+        resp.headers["Content-Type"] = "application/json"
+        mock_post.return_value = resp
+
+        exporter = OTLPSpanExporter()
+        with self.assertLogs(level="ERROR") as logs:
+            result = exporter.export([BASIC_SPAN])
+
+        self.assertEqual(result, SpanExportResult.FAILURE)
+        self.assertTrue(
+            any("quota limit reached" in r.message for r in logs.records)
+        )
 
     def assert_standard_metric_attrs(self, attributes):
         self.assertEqual(

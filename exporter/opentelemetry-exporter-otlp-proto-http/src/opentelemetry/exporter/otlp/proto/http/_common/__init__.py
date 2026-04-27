@@ -12,15 +12,76 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 from os import environ
-from typing import Literal, Optional
+from typing import Literal, Optional, Type
 
 import requests
+from google.protobuf.message import Message
 
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER,
 )
 from opentelemetry.util._importlib_metadata import entry_points
+
+_logger = logging.getLogger(__name__)
+
+_CONTENT_TYPE_PROTOBUF = "application/x-protobuf"
+_CONTENT_TYPE_JSON = "application/json"
+
+
+def _parse_response_body(
+    resp: requests.Response, response_class: Type[Message]
+) -> str:
+    """Parse an HTTP response body based on its Content-Type header.
+
+    Args:
+        resp: The HTTP response from the OTLP endpoint.
+        response_class: The protobuf message class to use for deserialization
+            when the response content-type is ``application/x-protobuf``.
+
+    Returns:
+        A human-readable string describing the response body error details,
+        or ``resp.reason`` if the body is empty or cannot be parsed.
+    """
+    if not resp.content:
+        return resp.reason
+
+    content_type = resp.headers.get("Content-Type", "")
+
+    if content_type.startswith(_CONTENT_TYPE_PROTOBUF):
+        try:
+            message = response_class()
+            message.ParseFromString(resp.content)
+            partial_success = getattr(message, "partial_success", None)
+            if partial_success is not None:
+                error_message = getattr(partial_success, "error_message", "")
+                if error_message:
+                    return error_message
+        except Exception:  # pylint: disable=broad-except
+            _logger.debug(
+                "Failed to parse protobuf response body", exc_info=True
+            )
+        return resp.reason
+
+    if content_type.startswith(_CONTENT_TYPE_JSON):
+        try:
+            body = resp.json()
+            if isinstance(body, dict):
+                # OTLP partial_success uses camelCase in JSON
+                partial = body.get("partialSuccess", {})
+                error_message = partial.get("errorMessage", "")
+                if error_message:
+                    return error_message
+                # google.rpc.Status uses "message"
+                rpc_message = body.get("message", "")
+                if rpc_message:
+                    return rpc_message
+        except Exception:  # pylint: disable=broad-except
+            _logger.debug("Failed to parse JSON response body", exc_info=True)
+        return resp.text or resp.reason
+
+    return resp.text or resp.reason
 
 
 def _is_retryable(resp: requests.Response) -> bool:

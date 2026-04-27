@@ -14,6 +14,7 @@
 
 # pylint: disable=protected-access
 
+import logging
 import threading
 import time
 import unittest
@@ -38,7 +39,9 @@ from opentelemetry.exporter.otlp.proto.http._log_exporter import (
 )
 from opentelemetry.exporter.otlp.proto.http.version import __version__
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
+    ExportLogsPartialSuccess,
     ExportLogsServiceRequest,
+    ExportLogsServiceResponse,
 )
 from opentelemetry.sdk._logs import ReadWriteLogRecord
 from opentelemetry.sdk._logs.export import LogRecordExportResult
@@ -85,6 +88,13 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         self.meter_provider = MeterProvider(
             metric_readers=[self.metric_reader]
         )
+        # Reset DuplicateFilter state between tests so each test can log freely.
+        log_exporter_logger = logging.getLogger(
+            "opentelemetry.exporter.otlp.proto.http._log_exporter"
+        )
+        for log_filter in log_exporter_logger.filters:
+            if hasattr(log_filter, "last_log"):
+                del log_filter.last_log
 
     def test_constructor_default(self):
         exporter = OTLPLogExporter()
@@ -660,6 +670,30 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             )
 
             assert after - before < 0.2
+
+    @patch.object(Session, "post")
+    def test_error_response_with_protobuf_body(self, mock_post):
+        proto_response = ExportLogsServiceResponse(
+            partial_success=ExportLogsPartialSuccess(
+                rejected_log_records=2,
+                error_message="invalid log data",
+            )
+        )
+        resp = Response()
+        resp.status_code = 400
+        resp.reason = "Bad Request"
+        resp._content = proto_response.SerializeToString()  # pylint: disable=protected-access
+        resp.headers["Content-Type"] = "application/x-protobuf"
+        mock_post.return_value = resp
+
+        exporter = OTLPLogExporter()
+        with self.assertLogs(level="ERROR") as logs:
+            result = exporter.export(self._get_sdk_log_data())
+
+        self.assertEqual(result, LogRecordExportResult.FAILURE)
+        self.assertTrue(
+            any("invalid log data" in r.message for r in logs.records)
+        )
 
     def assert_standard_metric_attrs(self, attributes):
         self.assertEqual(
