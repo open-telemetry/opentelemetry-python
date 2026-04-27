@@ -192,62 +192,8 @@ class Resource:
         if not attributes:
             attributes = {}
 
-        # Preserve env var ordering; deduplicate while keeping first occurrence.
-        # "otel" is excluded here and always appended last so OTEL_RESOURCE_ATTRIBUTES
-        # and OTEL_SERVICE_NAME take highest priority when merging.
-        extra_detector_names: list[str] = list(
-            dict.fromkeys(
-                name.strip()
-                for name in environ.get(
-                    OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, ""
-                ).split(",")
-                if name.strip() and name.strip() != "otel"
-            )
-        )
-
-        resource_detectors: list[ResourceDetector] = []
-
-        if extra_detector_names:
-            # pylint: disable=import-outside-toplevel
-            from opentelemetry.util._importlib_metadata import (  # noqa: PLC0415
-                entry_points,  # type: ignore[reportUnknownVariableType]
-            )
-
-            if "*" in extra_detector_names:
-                # Expand wildcard to all registered detectors except "otel" (appended last)
-                extra_detector_names = sorted(
-                    name
-                    for name in entry_points(
-                        group="opentelemetry_resource_detector"
-                    ).names  # type: ignore[reportUnknownArgumentType]
-                    if name != "otel"
-                )
-
-            for name in extra_detector_names:
-                try:
-                    resource_detectors.append(
-                        next(
-                            iter(
-                                entry_points(
-                                    group="opentelemetry_resource_detector",
-                                    name=name,
-                                )  # type: ignore[reportUnknownArgumentType]
-                            )
-                        ).load()()
-                    )
-                except Exception:  # pylint: disable=broad-exception-caught
-                    logger.exception(
-                        "Failed to load resource detector '%s', skipping",
-                        name,
-                    )
-                    continue
-
-        # OTELResourceDetector is instantiated directly (no entry_points scan) and
-        # appended last so env var attributes override all other detectors.
-        resource_detectors.append(OTELResourceDetector())
-
         resource = get_aggregated_resources(
-            resource_detectors, _DEFAULT_RESOURCE
+            _build_resource_detectors(), _DEFAULT_RESOURCE
         ).merge(Resource(attributes, schema_url))
 
         if not resource.attributes.get(SERVICE_NAME, None):
@@ -526,6 +472,74 @@ class _HostResourceDetector(ResourceDetector):  # type: ignore[reportUnusedClass
                 HOST_ARCH: platform.machine(),
             }
         )
+
+
+def _build_resource_detectors() -> list["ResourceDetector"]:
+    """Returns the ordered list of resource detectors to use for Resource.create.
+
+    Fast path: if no extra detectors are configured, returns only
+    OTELResourceDetector without scanning entry_points.
+
+    "otel" (OTELResourceDetector) defaults to last position so that
+    OTEL_RESOURCE_ATTRIBUTES and OTEL_SERVICE_NAME take highest merge priority,
+    but an explicit position in OTEL_EXPERIMENTAL_RESOURCE_DETECTORS is respected.
+    """
+    detector_names: list[str] = list(
+        dict.fromkeys(
+            name.strip()
+            for name in environ.get(
+                OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, ""
+            ).split(",")
+            if name.strip()
+        )
+    )
+
+    if "otel" not in detector_names:
+        detector_names.append("otel")
+
+    # Fast path: only the built-in "otel" detector — no entry_points scan needed.
+    if detector_names == ["otel"]:
+        return [OTELResourceDetector()]
+
+    # pylint: disable=import-outside-toplevel
+    from opentelemetry.util._importlib_metadata import (  # noqa: PLC0415
+        entry_points,  # type: ignore[reportUnknownVariableType]
+    )
+
+    if "*" in detector_names:
+        registered = sorted(
+            name
+            for name in entry_points(
+                group="opentelemetry_resource_detector"
+            ).names  # type: ignore[reportUnknownArgumentType]
+            if name != "otel"
+        )
+        existing = set(detector_names) - {"*"}
+        expansion = [n for n in registered if n not in existing]
+        idx = detector_names.index("*")
+        detector_names = (
+            detector_names[:idx] + expansion + detector_names[idx + 1 :]
+        )
+
+    detectors: list[ResourceDetector] = []
+    for name in detector_names:
+        try:
+            detectors.append(
+                next(
+                    iter(
+                        entry_points(
+                            group="opentelemetry_resource_detector",
+                            name=name,
+                        )  # type: ignore[reportUnknownArgumentType]
+                    )
+                ).load()()
+            )
+        except Exception:  # pylint: disable=broad-exception-caught
+            logger.exception(
+                "Failed to load resource detector '%s', skipping",
+                name,
+            )
+    return detectors
 
 
 def get_aggregated_resources(
