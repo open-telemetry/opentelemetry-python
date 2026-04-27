@@ -48,7 +48,6 @@ class ProcessorMetrics:
         disabled: bool = False,
     ) -> None:
         self._signal = signal
-        self._enabled = not disabled
         meter = meter_provider.get_meter("opentelemetry-sdk")
         self._meter = meter
 
