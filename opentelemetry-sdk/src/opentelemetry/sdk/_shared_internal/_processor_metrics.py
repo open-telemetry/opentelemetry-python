@@ -19,12 +19,6 @@ from collections.abc import Callable
 from typing import Literal
 
 from opentelemetry.metrics import CallbackOptions, MeterProvider, Observation
-from opentelemetry.sdk.environment_variables import (
-    OTEL_PYTHON_SDK_METRICS_ENABLED,
-)
-from opentelemetry.sdk.environment_variables._internal import (
-    parse_boolean_environment_variable,
-)
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
     OTEL_COMPONENT_NAME,
     OTEL_COMPONENT_TYPE,
@@ -51,8 +45,10 @@ class ProcessorMetrics:
         meter_provider: MeterProvider,
         *,
         capacity: int | None = None,
+        disabled: bool = False,
     ) -> None:
         self._signal = signal
+        self._enabled = not disabled
         meter = meter_provider.get_meter("opentelemetry-sdk")
         self._meter = meter
 
@@ -81,17 +77,15 @@ class ProcessorMetrics:
             )
 
         self._processed = create_processed(meter)
-        self._enabled = parse_boolean_environment_variable(
-            OTEL_PYTHON_SDK_METRICS_ENABLED
-        )
+        self._disabled = disabled
 
         if capacity is not None:
             self._queue_capacity = create_queue_capacity(meter)
-            if self._enabled:
+            if not self._disabled:
                 self._queue_capacity.add(capacity, self._standard_attrs)
 
     def register_queue_size(self, get_queue_size: Callable[[], int]) -> None:
-        if not self._enabled:
+        if self._disabled:
             return
 
         def record_queue_size(
@@ -116,12 +110,12 @@ class ProcessorMetrics:
         )
 
     def drop_items(self, count: int) -> None:
-        if not self._enabled:
+        if self._disabled:
             return
         self._processed.add(count, self._dropped_attrs)
 
     def finish_items(self, count: int, error: Exception | None) -> None:
-        if not self._enabled:
+        if self._disabled:
             return
         if not error:
             self._processed.add(count, self._standard_attrs)

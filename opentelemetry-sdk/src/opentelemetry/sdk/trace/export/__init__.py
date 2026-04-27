@@ -33,6 +33,10 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_BSP_MAX_EXPORT_BATCH_SIZE,
     OTEL_BSP_MAX_QUEUE_SIZE,
     OTEL_BSP_SCHEDULE_DELAY,
+    OTEL_PYTHON_SDK_METRICS_ENABLED,
+)
+from opentelemetry.sdk.environment_variables._internal import (
+    parse_boolean_environment_variable,
 )
 from opentelemetry.sdk.trace import ReadableSpan, Span, SpanProcessor
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
@@ -106,6 +110,9 @@ class SimpleSpanProcessor(SpanProcessor):
             "traces",
             OtelComponentTypeValues.SIMPLE_SPAN_PROCESSOR,
             meter_provider or get_meter_provider(),
+            disabled=not parse_boolean_environment_variable(
+                OTEL_PYTHON_SDK_METRICS_ENABLED
+            ),
         )
 
     def on_start(
@@ -201,6 +208,9 @@ class BatchSpanProcessor(SpanProcessor):
                 OtelComponentTypeValues.BATCHING_SPAN_PROCESSOR,
                 meter_provider or get_meter_provider(),
                 capacity=max_queue_size,
+                disabled=not parse_boolean_environment_variable(
+                    OTEL_PYTHON_SDK_METRICS_ENABLED
+                ),
             ),
         )
 
