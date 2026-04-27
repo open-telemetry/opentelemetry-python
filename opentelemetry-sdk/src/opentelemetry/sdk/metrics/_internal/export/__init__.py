@@ -585,7 +585,7 @@ class PeriodicExportingMetricReader(MetricReader):
                     metrics_data, timeout_millis=timeout_millis
                 )
                 return result is MetricExportResult.SUCCESS
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             _logger.exception("Exception while exporting metrics")
             return False
         finally:
