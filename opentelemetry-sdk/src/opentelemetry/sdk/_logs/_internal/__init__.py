@@ -724,7 +724,6 @@ class Logger(APILogger):
         """
         if not self._is_enabled():
             return
-
         # If a record is provided, use it directly
         if record is not None:
             if not isinstance(record, ReadWriteLogRecord):
