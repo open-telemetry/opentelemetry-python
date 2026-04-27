@@ -291,7 +291,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         view_instrument_match.consume_measurement(
             Measurement(
                 value=0,
-                time_unix_nano=time_ns(),
+                time_unix_nano=123,
                 instrument=instrument,
                 attributes={"foo": "bar0"},
                 context=Context(),
@@ -303,9 +303,8 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             _default_reservoir_factory,
             start_time_unix_nano,
         )
-        collection_start_time_unix_nano = time_ns()
         collected_data_points = view_instrument_match.collect(
-            AggregationTemporality.CUMULATIVE, collection_start_time_unix_nano
+            AggregationTemporality.CUMULATIVE, 456
         )
         self.assertIsNotNone(collected_data_points)
         self.assertEqual(len(collected_data_points), 1)
@@ -314,7 +313,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         view_instrument_match.consume_measurement(
             Measurement(
                 value=0,
-                time_unix_nano=time_ns(),
+                time_unix_nano=789,
                 instrument=instrument,
                 attributes={"foo": "bar1"},
                 context=Context(),
@@ -323,20 +322,19 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         view_instrument_match._view._aggregation._create_aggregation.assert_called_with(
             instrument, {"foo": "bar1"}, _default_reservoir_factory, 1
         )
-        collection_start_time_unix_nano = time_ns()
         collected_data_points = view_instrument_match.collect(
-            AggregationTemporality.CUMULATIVE, collection_start_time_unix_nano
+            AggregationTemporality.CUMULATIVE, 999
         )
         self.assertIsNotNone(collected_data_points)
         self.assertEqual(len(collected_data_points), 2)
         collected_data_points = view_instrument_match.collect(
-            AggregationTemporality.CUMULATIVE, collection_start_time_unix_nano
+            AggregationTemporality.CUMULATIVE, 999
         )
         # +1 call to create_aggregation
         view_instrument_match.consume_measurement(
             Measurement(
                 value=0,
-                time_unix_nano=time_ns(),
+                time_unix_nano=1000,
                 instrument=instrument,
                 attributes={"foo": "bar"},
                 context=Context(),
@@ -349,7 +347,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         view_instrument_match.consume_measurement(
             Measurement(
                 value=0,
-                time_unix_nano=time_ns(),
+                time_unix_nano=1001,
                 instrument=instrument,
                 attributes={"foo": "bar"},
                 context=Context(),
@@ -358,7 +356,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         view_instrument_match.consume_measurement(
             Measurement(
                 value=0,
-                time_unix_nano=time_ns(),
+                time_unix_nano=1002,
                 instrument=instrument,
                 attributes={"foo": "bar"},
                 context=Context(),
