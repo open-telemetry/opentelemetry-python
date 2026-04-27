@@ -79,6 +79,9 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_RESOURCE_ATTRIBUTES,
     OTEL_SERVICE_NAME,
 )
+from opentelemetry.sdk.version import (
+    __version__ as _OPENTELEMETRY_SDK_VERSION,
+)
 from opentelemetry.semconv.resource import ResourceAttributes
 from opentelemetry.util.types import AttributeValue
 
@@ -154,6 +157,7 @@ TELEMETRY_SDK_VERSION = ResourceAttributes.TELEMETRY_SDK_VERSION
 TELEMETRY_AUTO_VERSION = ResourceAttributes.TELEMETRY_AUTO_VERSION
 TELEMETRY_SDK_LANGUAGE = ResourceAttributes.TELEMETRY_SDK_LANGUAGE
 
+
 class Resource:
     """A Resource is an immutable representation of the entity producing telemetry as Attributes."""
 
@@ -194,7 +198,9 @@ class Resource:
         extra_detector_names: list[str] = list(
             dict.fromkeys(
                 name.strip()
-                for name in environ.get(OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, "").split(",")
+                for name in environ.get(
+                    OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, ""
+                ).split(",")
                 if name.strip() and name.strip() != "otel"
             )
         )
@@ -202,13 +208,18 @@ class Resource:
         resource_detectors: list[ResourceDetector] = []
 
         if extra_detector_names:
-            from opentelemetry.util._importlib_metadata import entry_points  # type: ignore[reportUnknownVariableType]
+            # pylint: disable=import-outside-toplevel
+            from opentelemetry.util._importlib_metadata import (  # noqa: PLC0415
+                entry_points,  # type: ignore[reportUnknownVariableType]
+            )
 
             if "*" in extra_detector_names:
                 # Expand wildcard to all registered detectors except "otel" (appended last)
                 extra_detector_names = sorted(
                     name
-                    for name in entry_points(group="opentelemetry_resource_detector").names  # type: ignore[reportUnknownArgumentType]
+                    for name in entry_points(
+                        group="opentelemetry_resource_detector"
+                    ).names  # type: ignore[reportUnknownArgumentType]
                     if name != "otel"
                 )
 
@@ -324,9 +335,6 @@ class Resource:
 
 _EMPTY_RESOURCE = Resource({})
 
-
-from opentelemetry.sdk.version import __version__ as _OPENTELEMETRY_SDK_VERSION
-
 _DEFAULT_RESOURCE = Resource(
     {
         TELEMETRY_SDK_LANGUAGE: "python",
@@ -334,7 +342,6 @@ _DEFAULT_RESOURCE = Resource(
         TELEMETRY_SDK_VERSION: _OPENTELEMETRY_SDK_VERSION,
     }
 )
-
 
 
 class ResourceDetector(abc.ABC):
