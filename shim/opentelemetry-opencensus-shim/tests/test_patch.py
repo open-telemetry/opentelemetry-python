@@ -42,8 +42,7 @@ class TestPatch(unittest.TestCase):
     def test_install_shim_affects_existing_tracers(self):
         # Initially the shim is not installed. Store the original tracer instance.
         oc_tracer = Tracer()
-        original_tracer = oc_tracer.tracer
-        self.assertNotIsInstance(original_tracer, ShimTracer)
+        self.assertNotIsInstance(oc_tracer.tracer, ShimTracer)
 
         install_shim()
 
