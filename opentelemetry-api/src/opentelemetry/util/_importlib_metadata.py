@@ -12,23 +12,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
 from functools import cache
 
-# FIXME: Use importlib.metadata (not importlib_metadata)
-# when support for 3.11 is dropped if the rest of
-# the supported versions at that time have the same API.
-from importlib_metadata import (  # type: ignore
-    Distribution,
-    EntryPoint,
-    EntryPoints,
-    PackageNotFoundError,
-    distributions,
-    requires,
-    version,
-)
-from importlib_metadata import (
-    entry_points as original_entry_points,
-)
+if sys.version_info >= (3, 12):
+    from importlib.metadata import (
+        Distribution,
+        EntryPoint,
+        EntryPoints,
+        PackageNotFoundError,
+        distributions,
+        requires,
+        version,
+    )
+    from importlib.metadata import (
+        entry_points as original_entry_points,
+    )
+else:
+    from importlib_metadata import (
+        Distribution,
+        EntryPoint,
+        EntryPoints,
+        PackageNotFoundError,
+        distributions,
+        requires,
+        version,
+    )
+    from importlib_metadata import (
+        entry_points as original_entry_points,
+    )
 
 
 @cache
